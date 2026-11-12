@@ -233,7 +233,7 @@
               ],
               "output": "app",
               "errors": [],
-              "state": "Reads and checks the manifest, the build outputs, the handlers and the options, and returns the application (HY-48.2, HY-106.6).",
+              "state": "Reads and checks the manifest, the build outputs, the handlers and the options, and returns the application (HY-48.2, HY-106.18).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::open",
@@ -791,7 +791,7 @@
               ],
               "output": "response",
               "errors": [],
-              "state": "Answers a request of a route: the action of a POST with its checks, the renewal, the redirect or the page (HY-25.1, HY-72.2, HY-107.4).",
+              "state": "Answers a request of a route: the action of a POST with its checks, the renewal, the redirect or the page (HY-25.1, HY-72.2, HY-107.9).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::routed",
@@ -816,7 +816,7 @@
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Returns the code of an ORM error, or null for another error (HY-107.2).",
+              "state": "Returns the code of an ORM error, or null for another error (HY-107.7).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::ormCode",
@@ -3701,7 +3701,7 @@
               ],
               "output": "request",
               "errors": [],
-              "state": "Creates a request of the parts that a host gives, reads its query, its form values and its files, and fails in Node and Python for a path, a query or a header with a character above U+00FF (HY-42.6, HY-56, HY-57, HY-113).",
+              "state": "Creates a request of the parts that a host gives, reads its query, its form values and its files, and fails in Node and Python for a path, a query or a header with a character above U+00FF (HY-42.7, HY-56, HY-57, HY-113).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::__construct",
@@ -4858,7 +4858,7 @@
               ],
               "output": "reply",
               "errors": [],
-              "state": "Adds a cookie with an optional Max-Age, an integer of the data model that is not negative; a name, value or Max-Age of another type fails with TypeError and one outside HY-52 with the class of HY-46.2 (HY-52).",
+              "state": "Adds a cookie with an optional Max-Age, an integer of the data model that is not negative; a name, value or Max-Age of another type fails with TypeError and one outside HY-52 with the class of HY-46.3 (HY-52).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::cookie",
@@ -4908,7 +4908,7 @@
               ],
               "output": "reply",
               "errors": [],
-              "state": "Sets the Cache-Control of a page response with status 200; a value that is not a string fails with TypeError, and one that lets a shared cache store the page with the class of HY-46.2 (HY-52).",
+              "state": "Sets the Cache-Control of a page response with status 200; a value that is not a string fails with TypeError, and one that lets a shared cache store the page with the class of HY-46.3 (HY-52).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::cacheControl",
@@ -5002,7 +5002,7 @@
               ],
               "output": "reply",
               "errors": [],
-              "state": "Sets the Referrer-Policy of the page and JSON answers of the request; a value that is not a string fails with TypeError, and one that is not a token of the specification with the class of HY-46.2 (HY-103).",
+              "state": "Sets the Referrer-Policy of the page and JSON answers of the request; a value that is not a string fails with TypeError, and one that is not a token of the specification with the class of HY-46.3 (HY-103).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::referrerPolicy",
@@ -5073,7 +5073,7 @@
               ],
               "output": "reply",
               "errors": [],
-              "state": "Gives a page with status 200 the status 403; a value that is not an integer of the data model fails with TypeError, and another integer with the class of HY-46.2 (HY-69).",
+              "state": "Gives a page with status 200 the status 403; a value that is not an integer of the data model fails with TypeError, and another integer with the class of HY-46.3 (HY-69).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::status",
@@ -7652,7 +7652,7 @@
               "inputs": [],
               "output": "bytes",
               "errors": [],
-              "state": "Returns the bytes of the part as one value, read from its file when it has one, and fails with the class of HY-46.2 after a move (HY-113.3, HY-131.16).",
+              "state": "Returns the bytes of the part as one value, read from its file when it has one, and fails with the class of HY-46.3 after a move (HY-113.3, HY-131.16).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::content",
@@ -7677,7 +7677,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Moves the file to the path; a path that is not a string fails with TypeError, and a path that exists or a file that was moved fails with the class of HY-46.2 (HY-131.15, HY-131.16).",
+              "state": "Moves the file to the path; a path that is not a string fails with TypeError, and a path that exists or a file that was moved fails with the class of HY-46.3 (HY-131.15, HY-131.16).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::moveTo",
@@ -15438,16 +15438,16 @@
           "outcomes": {
             "open": {
               "compare": "raises",
-              "sentence": "HY-106.6"
+              "sentence": "HY-106.18"
             },
             "messageStart": {
               "compare": "exact",
-              "sentence": "HY-106.10",
+              "sentence": "HY-106.19",
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-106.10"
+                "sentence": "HY-106.19"
               }
             }
           },
@@ -15626,19 +15626,22 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-10.3",
-              "state": "`keys` are the keys of the shared data whose keys `shared` lists after the context takes its place in it, or null when it fails."
+              "state": "`keys` are the keys of the shared data whose keys `shared` lists after the context takes its place in it, or null when it fails.",
+              "optional": true
             },
             "context": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-10.3",
-              "state": "`context` is the value at the member `context` of the shared data after the context takes its place in it, or null when it fails."
+              "state": "`context` is the value at the member `context` of the shared data after the context takes its place in it, or null when it fails.",
+              "optional": true
             },
-            "fails": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-128.3",
-              "state": "`fails` states whether placing the context fails because the shared data already holds the member `context`."
+              "sentence": "HY-124.8",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           }
         },
@@ -15841,12 +15844,12 @@
               "state": "`value` is the masked value, 128 lowercase hexadecimal digits, that the random bytes `mask` give for the token `token`.",
               "optional": true
             },
-            "error": {
+            "raises": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
               "sentence": "HY-24.14",
-              "state": "`error` is the message of the error with which masking the token `token` with `mask` fails."
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           }
         },
@@ -15877,12 +15880,12 @@
               "state": "`valid` states whether the form value `value` is a masked value of the token `token`.",
               "optional": true
             },
-            "error": {
+            "raises": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
               "sentence": "HY-24.14",
-              "state": "`error` is the message of the error with which verifying the value `value` against the token `token` fails."
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           }
         },
@@ -15947,12 +15950,12 @@
               "sentence": "HY-24.10",
               "state": "`browser` is the digest that the masked value `value` gives, 64 lowercase hexadecimal digits, or null for the empty text."
             },
-            "error": {
+            "raises": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
               "sentence": "HY-24.13",
-              "state": "`error` is the message of the error with which the digest of the value `value` fails."
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -15985,13 +15988,22 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-57.2",
-              "state": "`fields` lists the values of `text` as `[name, values]` pairs in the order of their names, or is null when `text` fails with HY-42."
+              "state": "`fields` lists the values of `text` as `[name, values]` pairs in the order of their names, or is null when `text` fails with HY-42.",
+              "optional": true
             },
             "names": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-56.4",
-              "state": "`names` lists the names of the values of `text` in the order of their first occurrence, or is null when `fields` is null."
+              "state": "`names` lists the names of the values of `text` in the order of their first occurrence, or is null when `fields` is null.",
+              "optional": true
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-56.4",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -16132,7 +16144,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-131.16",
-              "state": "`moved` is null when `move` is `none`, and else tells the move of the first file: for `new`, to a path that does not exist, and then a second time; for `exists`, to a path that exists; for `type`, to the number 7. `content` is the text of the bytes at the path after the first move, or of the file when the move failed; `left` is the number of files in the directory after it, or null without a directory; `again` is the message of the failure of the second move or of the failed move; `read` is the message of the failure of `content()` after the move, or null when the move failed; `class` is `value` for the class of HY-46.2 and `type` for TypeError.",
+              "state": "`moved` is null when `move` is `none`, and else tells the move of the first file: for `new`, to a path that does not exist, and then a second time; for `exists`, to a path that exists; for `type`, to the number 7. `content` is the text of the bytes at the path after the first move, or of the file when the move failed; `left` is the number of files in the directory after it, or null without a directory; `again` is the message of the failure of the second move or of the failed move; `read` is the message of the failure of `content()` after the move, or null when the move failed; `class` is `value` for the class of HY-46.3 and `type` for TypeError.",
               "optional": true
             },
             "removed": {
@@ -16527,12 +16539,12 @@
             },
             "messageStart": {
               "compare": "exact",
-              "sentence": "HY-106.10",
+              "sentence": "HY-106.19",
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-106.10"
+                "sentence": "HY-106.19"
               }
             }
           }
@@ -16563,16 +16575,16 @@
           "outcomes": {
             "open": {
               "compare": "raises",
-              "sentence": "HY-106.6"
+              "sentence": "HY-106.18"
             },
             "messageStart": {
               "compare": "exact",
-              "sentence": "HY-106.10",
+              "sentence": "HY-106.19",
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-106.10"
+                "sentence": "HY-106.19"
               }
             }
           }
@@ -16942,13 +16954,8 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-125.5",
-              "state": "`build` is the build id that a `build.json` with the text `text` gives, or null when the file fails; a null `text` is a missing file."
-            },
-            "error": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-125.5",
-              "state": "`error` is `invalid-build` when the file fails with a message that names its path, or null when it gives a build id."
+              "state": "`build` is the build id that a `build.json` with the text `text` gives, or null when the file fails; a null `text` is a missing file.",
+              "optional": true
             },
             "message": {
               "role": "expected",
@@ -16956,6 +16963,13 @@
               "compare": "contains",
               "sentence": "HY-125.5",
               "state": "`message` is a text that the message of the failure of the file contains after its path."
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-106.18",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           }
         },
@@ -17066,19 +17080,22 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-46.1",
-              "state": "`redirect` is the location of the redirect to `location`, or null when making it fails; with `notUtf8` true the location ends with one unit that is not UTF-8 text in its host: the byte FF in PHP and the lone surrogate D800 in Node and Python."
+              "state": "`redirect` is the location of the redirect to `location`, or null when making it fails; with `notUtf8` true the location ends with one unit that is not UTF-8 text in its host: the byte FF in PHP and the lone surrogate D800 in Node and Python.",
+              "optional": true
             },
             "status": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-25.2",
-              "state": "`status` is the status of the redirect, 303, or null when making it fails."
+              "state": "`status` is the status of the redirect, 303, or null when making it fails.",
+              "optional": true
             },
-            "error": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-46.2",
-              "state": "`error` is the message of the error with which making a redirect to `location` fails, or null."
+              "sentence": "HY-46.3",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17109,19 +17126,15 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-58.3",
-              "state": "`result` is the status of the page with the status `status` and the data `data`, or null when making it fails."
+              "state": "`result` is the status of the page with the status `status` and the data `data`, or null when making it fails.",
+              "optional": true
             },
             "redirect": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-58.3",
-              "state": "`redirect` is the location of the page, null because a page is no redirect."
-            },
-            "error": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-58.6",
-              "state": "`error` is the message of the error with which making the page fails, or null."
+              "state": "`redirect` is the location of the page, null because a page is no redirect.",
+              "optional": true
             },
             "held": {
               "role": "expected",
@@ -17129,6 +17142,13 @@
               "compare": "exact",
               "sentence": "HY-58.3",
               "state": "`held` is the member `data` of the page."
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-58.6",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17206,11 +17226,12 @@
               "state": "`changedTopics` are the changed topics of that redirect after it records each list of `topics` in order.",
               "optional": true
             },
-            "error": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
               "sentence": "HY-25.4",
-              "state": "`error` is the message of the error of the data model with which storing a flash value fails, or null."
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17247,13 +17268,8 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-27.3",
-              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect` or the page with the status `page`, and `message` is null when making it fails."
-            },
-            "error": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-50.3",
-              "state": "`error` is the message of the error with which making the stop fails, or null."
+              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect` or the page with the status `page`, and `message` is null when making it fails.",
+              "optional": true
             },
             "location": {
               "role": "expected",
@@ -17261,6 +17277,13 @@
               "compare": "exact",
               "sentence": "HY-50.1",
               "state": "`location` is the location of the member `result` of a redirect stop."
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-50.3",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17291,11 +17314,12 @@
             "argument": {
               "role": "input"
             },
-            "error": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-25.6",
-              "state": "`error` is the message of the `TypeError` of the method `call` of a redirect, `flash` with the value null under the name or `changed` with the topic, for the JSON text `argument` as a handler gives it, or null when the method takes it."
+              "sentence": "HY-25.7",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           }
         }
@@ -17329,19 +17353,15 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-52.13",
-              "state": "`headers` are the `Set-Cookie` values of a reply after `calls`, each pair of a method of the reply and the JSON texts of its arguments as a handler gives them, in their order, with `Secure` when `secure` is true."
+              "state": "`headers` are the `Set-Cookie` values of a reply after `calls`, each pair of a method of the reply and the JSON texts of its arguments as a handler gives them, in their order, with `Secure` when `secure` is true.",
+              "optional": true
             },
-            "error": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-52.12",
-              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
-            },
-            "class": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-52.11",
-              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+              "sentence": "HY-52.16",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17370,19 +17390,15 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-52.5",
-              "state": "`value` is the `Cache-Control` of a reply after `calls`, or null when no call set it."
+              "state": "`value` is the `Cache-Control` of a reply after `calls`, or null when no call set it.",
+              "optional": true
             },
-            "error": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-52.12",
-              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
-            },
-            "class": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-52.11",
-              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+              "sentence": "HY-52.16",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17410,25 +17426,22 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-103.4",
-              "state": "`value` is the `Referrer-Policy` of a reply after `calls`, or null when no call set it."
+              "state": "`value` is the `Referrer-Policy` of a reply after `calls`, or null when no call set it.",
+              "optional": true
             },
             "headers": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-103.5",
-              "state": "`headers` are the headers that the reply gives a page or JSON answer: `Referrer-Policy` with that value, or none."
+              "state": "`headers` are the headers that the reply gives a page or JSON answer: `Referrer-Policy` with that value, or none.",
+              "optional": true
             },
-            "error": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-103.8",
-              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
-            },
-            "class": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-103.8",
-              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+              "sentence": "HY-103.9",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17457,19 +17470,15 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-69.1",
-              "state": "`value` is the page status of a reply after `calls`, or null when no call set it."
+              "state": "`value` is the page status of a reply after `calls`, or null when no call set it.",
+              "optional": true
             },
-            "error": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-69.6",
-              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
-            },
-            "class": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-69.6",
-              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+              "sentence": "HY-69.7",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17499,17 +17508,12 @@
               "sentence": "HY-60.29",
               "state": "`notes` are the notes of a reply after `calls`, a list of pairs of a name and its value in the order of the first note of each name."
             },
-            "error": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
-              "sentence": "HY-60.28",
-              "state": "`error` is the message of the error with which a call of `calls` fails, after which no later call runs, or null when every call returns."
-            },
-            "class": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-60.28",
-              "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
+              "sentence": "HY-60.32",
+              "state": "`raises` is the failure of the last call of `calls`, and `notes` holds the notes of the reply after it: the failure's `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null."
             }
           },
           "members": [
@@ -17583,7 +17587,7 @@
           "outcomes": {
             "request": {
               "compare": "raises",
-              "sentence": "HY-42.6"
+              "sentence": "HY-42.7"
             }
           }
         },
@@ -17857,14 +17861,14 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-116.16",
+              "sentence": "HY-116.21",
               "state": "`wantsJson` is what `wantsJson()` returns for a request with a selected type (HY-15.1), or the text `caller error` when the call fails with the error of a request without one."
             },
             "isRegionRequest": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-116.16",
+              "sentence": "HY-116.21",
               "state": "`isRegionRequest` is what `isRegionRequest()` returns for a request with a selected type (HY-15.1), or the text `caller error` when the call fails with the error of a request without one."
             },
             "original": {
@@ -17998,11 +18002,12 @@
               "sentence": "HY-25.2",
               "state": "`calls` is a list of pairs of a method of the session and the JSON texts of its arguments, applied in order to one session over a new `ArraySession` that holds the values `stored`, pairs of a key and the JSON text of its value as a shared record gives it; `results` holds one entry for each call: null for `putFlash`, and for `takeFlash` the map of `values`, the list of pairs of a name and its value in their order, and `changed`, the list of topics."
             },
-            "error": {
+            "raises": {
               "role": "expected",
+              "optional": true,
               "compare": "exact",
               "sentence": "HY-104.23",
-              "state": "`error` is null when every call of `calls` returns, and `stored` when a call fails because the session holds a stored value of another form than the session writes, after which no later call runs."
+              "state": "`raises` is the failure of the call of `calls` after the last one that `results` holds: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; `results` holds the results of the calls before it."
             }
           },
           "members": [
@@ -18043,18 +18048,12 @@
               "sentence": "HY-40.1",
               "state": "`calls` is a list of pairs of a method of the session and the JSON texts of its arguments, applied in order to one session over a new `ArraySession` that holds the values `stored`, pairs of a key and the JSON text of its value as a shared record gives it; `results` holds one entry for each call: null for `keep`, and for `kept` the list of pairs of a path and its value in storing order."
             },
-            "error": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-104.23",
-              "state": "`error` is null when every call of `calls` returns, and `stored` when a call fails because the session holds a stored value of another form than the session writes, after which no later call runs."
-            },
-            "failure": {
+            "raises": {
               "role": "expected",
               "optional": true,
-              "compare": "contains",
-              "sentence": "HY-40.4",
-              "state": "`failure` is a text that the message of the error of the data model contains, with which a call of `keep` fails for its value; no later call runs, and `results` holds the entries of the calls before it."
+              "compare": "exact",
+              "sentence": "HY-104.23",
+              "state": "`raises` is the failure of the call of `calls` after the last one that `results` holds: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; `results` holds the results of the calls before it."
             }
           },
           "members": [
@@ -18243,11 +18242,12 @@
               "role": "input",
               "optional": true
             },
-            "error": {
+            "raises": {
               "role": "expected",
-              "compare": "contains",
+              "optional": true,
+              "compare": "exact",
               "sentence": "HY-104.19",
-              "state": "`error` is part of the message of the error with which making the store of the directory `directory`, the temporary directory of the case for `temporary`, with the lifetime `lifetime` fails."
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -18345,11 +18345,12 @@
             "options": {
               "role": "input"
             },
-            "error": {
+            "raises": {
               "role": "expected",
-              "compare": "contains",
+              "optional": true,
+              "compare": "exact",
               "sentence": "HY-115.21",
-              "state": "`error` is part of the message of the error with which making the store with the options `options` fails."
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -18878,23 +18879,23 @@
               "role": "expected",
               "optional": true,
               "compare": "contains",
-              "sentence": "HY-106.6",
+              "sentence": "HY-106.18",
               "state": "`openError` is a text that the message of the open error contains."
             }
           },
           "outcomes": {
             "open": {
               "compare": "raises",
-              "sentence": "HY-106.6"
+              "sentence": "HY-106.18"
             },
             "messageStart": {
               "compare": "exact",
-              "sentence": "HY-106.10",
+              "sentence": "HY-106.19",
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-106.10"
+                "sentence": "HY-106.19"
               }
             }
           }
@@ -18996,12 +18997,12 @@
             },
             "messageStart": {
               "compare": "exact",
-              "sentence": "HY-106.10",
+              "sentence": "HY-106.19",
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-106.10"
+                "sentence": "HY-106.19"
               }
             }
           },
@@ -19113,7 +19114,8 @@
               "role": "expected",
               "compare": "ordered",
               "sentence": "HY-119.5",
-              "state": "`parameters` is a list of pairs of a name and a value, given to the constructor as a map in that order, with the content type `contentType` when the case states it; `read` is what `parameters()` returns."
+              "state": "`parameters` is a list of pairs of a name and a value, given to the constructor as a map in that order, with the content type `contentType` when the case states it; `read` is what `parameters()` returns.",
+              "optional": true
             },
             "etag": {
               "role": "expected",
@@ -19122,12 +19124,12 @@
               "sentence": "HY-122.11",
               "state": "`etag` is what `etag(value)` returns for the value of the JSON text `body`."
             },
-            "failure": {
+            "raises": {
               "role": "expected",
               "optional": true,
-              "compare": "contains",
+              "compare": "exact",
               "sentence": "HY-122.13",
-              "state": "`failure` is a text that the message of the error of the data model contains, with which `etag(value)` fails for the value of `body`; a case that states `failure` states no `etag`."
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [

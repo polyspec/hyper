@@ -83,8 +83,7 @@
           "values": [],
           "changed": []
         }
-      ],
-      "error": null
+      ]
     },
     {
       "id": "flash_values_without_changed_topics_are_taken_once",
@@ -121,8 +120,7 @@
           "values": [],
           "changed": []
         }
-      ],
-      "error": null
+      ]
     },
     {
       "id": "stored_flash_values_that_are_an_empty_list_are_an_empty_map",
@@ -144,8 +142,7 @@
           "values": [],
           "changed": []
         }
-      ],
-      "error": null
+      ]
     },
     {
       "id": "stored_flash_values_that_are_a_list_are_the_map_of_their_indexes",
@@ -174,8 +171,7 @@
             "t"
           ]
         }
-      ],
-      "error": null
+      ]
     },
     {
       "id": "stored_flash_values_that_are_an_empty_map_are_an_empty_map",
@@ -197,8 +193,7 @@
           "values": [],
           "changed": []
         }
-      ],
-      "error": null
+      ]
     },
     {
       "id": "stored_flash_values_that_are_a_map_with_the_keys_of_a_list_are_that_map",
@@ -227,8 +222,7 @@
             "t"
           ]
         }
-      ],
-      "error": null
+      ]
     },
     {
       "id": "stored_flash_that_is_no_map_fails",
@@ -246,7 +240,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "stored_flash_values_that_are_no_map_fail",
@@ -264,7 +263,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "stored_changed_topics_that_are_no_list_fail",
@@ -282,7 +286,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_stored_changed_topic_that_is_no_string_fails",
@@ -300,7 +309,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_stored_flash_map_without_members_is_an_empty_flash",
@@ -322,8 +336,7 @@
           "values": [],
           "changed": []
         }
-      ],
-      "error": null
+      ]
     },
     {
       "id": "a_stored_flash_map_without_changed_topics_has_none",
@@ -350,8 +363,7 @@
           ],
           "changed": []
         }
-      ],
-      "error": null
+      ]
     },
     {
       "id": "a_stored_flash_map_without_values_has_none",
@@ -375,8 +387,7 @@
             "t"
           ]
         }
-      ],
-      "error": null
+      ]
     },
     {
       "id": "stored_flash_values_that_are_null_fail",
@@ -394,7 +405,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "stored_changed_topics_that_are_null_fail",
@@ -412,7 +428,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     }
   ],
   "kept": [
@@ -463,8 +484,7 @@
           ]
         ],
         []
-      ],
-      "error": null
+      ]
     },
     {
       "id": "stored_kept_values_that_are_a_list_are_the_map_of_their_indexes",
@@ -523,8 +543,7 @@
             "title"
           ]
         ]
-      ],
-      "error": null
+      ]
     },
     {
       "id": "stored_kept_values_that_are_a_map_with_the_keys_of_a_list_are_that_map",
@@ -583,8 +602,7 @@
             "title"
           ]
         ]
-      ],
-      "error": null
+      ]
     },
     {
       "id": "stored_kept_values_that_are_an_empty_map_are_read_and_written_as_a_map",
@@ -626,8 +644,7 @@
             "title"
           ]
         ]
-      ],
-      "error": null
+      ]
     },
     {
       "id": "reading_stored_kept_values_of_a_region_that_are_no_map_fails",
@@ -647,7 +664,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "keeping_a_value_over_stored_kept_values_of_a_region_that_are_no_map_fails",
@@ -669,7 +691,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "reading_kept_values_from_stored_kept_values_that_are_no_map_fails",
@@ -689,7 +716,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "keeping_a_value_over_stored_kept_values_that_are_no_map_fails",
@@ -711,7 +743,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "keeping_a_value_while_the_stored_kept_values_of_another_region_are_no_map_fails",
@@ -733,7 +770,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "reading_stored_kept_values_of_a_region_that_are_null_fails",
@@ -753,7 +795,12 @@
         ]
       ],
       "results": [],
-      "error": "stored"
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "keeping_an_integer_outside_the_data_model_fails_and_stores_nothing",
@@ -775,8 +822,12 @@
         ]
       ],
       "results": [],
-      "error": null,
-      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "keeping_an_integer_outside_the_data_model_inside_a_list_fails",
@@ -802,8 +853,12 @@
       "results": [
         null
       ],
-      "error": null,
-      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "keeping_the_largest_integer_of_the_data_model_is_stored",
@@ -832,8 +887,7 @@
             9007199254740991
           ]
         ]
-      ],
-      "error": null
+      ]
     }
   ],
   "store": [

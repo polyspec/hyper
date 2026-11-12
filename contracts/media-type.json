@@ -47,8 +47,12 @@
       "parameters": [],
       "contentType": "application/json",
       "body": "9007199254740992",
-      "read": {},
-      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "the_tag_of_a_body_that_holds_a_number_outside_the_data_model_fails",
@@ -56,8 +60,12 @@
       "parameters": [],
       "contentType": "application/json",
       "body": "{\"a\":[9007199254740993]}",
-      "read": {},
-      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+      "raises": {
+        "kind": "E_DATA_NUMBER_RANGE",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     }
   ]
 }

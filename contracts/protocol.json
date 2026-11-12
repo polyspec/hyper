@@ -125,9 +125,9 @@
                 },
                 {
                   "id": "HY-2.8",
-                  "en": "The manifest file is JSON text as HY-54 decodes it, so a lone surrogate escape, a key that starts with U+0000 and 512 nested containers fail the open with the error of HY-106.6.",
-                  "ko": "매니페스트 파일은 HY-54가 decode하는 JSON text이므로, 짝 없는 surrogate escape, U+0000으로 시작하는 key, 512단계로 중첩된 container는 HY-106.6의 오류로 열기를 실패시킨다.",
-                  "koSource": "33cfd0dfc841cb079742e3d738888dda209d1c256850e1c869baecce927f8191"
+                  "en": "The manifest file is JSON text as HY-54 decodes it, so a lone surrogate escape, a key that starts with U+0000 and 512 nested containers fail the open with the error of HY-106.18.",
+                  "ko": "매니페스트 파일은 HY-54가 decode하는 JSON text이므로, 짝 없는 surrogate escape, U+0000으로 시작하는 key, 512단계로 중첩된 container는 HY-106.18의 오류로 열기를 실패시킨다.",
+                  "koSource": "fee1ce9395120abd486c26b795354adb0e1014bc914977055694831b7a9f0fc5"
                 }
               ]
             }
@@ -1096,9 +1096,9 @@
                 },
                 {
                   "id": "HY-131.16",
-                  "en": "`moveTo` fails with the class of HY-46.2 when the path exists or when the file was moved, and `content()` reads the file as one value and fails likewise after a move.",
-                  "ko": "`moveTo`는 path가 있거나 file이 이미 옮겨졌으면 HY-46.2의 class로 실패하고, `content()`는 file을 한 값으로 읽으며 옮긴 뒤에는 마찬가지로 실패한다.",
-                  "koSource": "2bb92b5e6e453ec01c4b78e9b5006f06beff97563782e7e68ebe02f49fa19d62"
+                  "en": "`moveTo` fails with the class of HY-46.3 when the path exists or when the file was moved, and `content()` reads the file as one value and fails likewise after a move.",
+                  "ko": "`moveTo`는 path가 있거나 file이 이미 옮겨졌으면 HY-46.3의 class로 실패하고, `content()`는 file을 한 값으로 읽으며 옮긴 뒤에는 마찬가지로 실패한다.",
+                  "koSource": "b52e6ac61024160a2c3b164a5778642604daa14d43550a36165c4a4330451515"
                 },
                 {
                   "id": "HY-131.17",
@@ -1174,7 +1174,8 @@
             7,
             8,
             9,
-            10
+            10,
+            16
           ],
           "blocks": [
             {
@@ -1247,10 +1248,10 @@
                   "id": "HY-116.15"
                 },
                 {
-                  "id": "HY-116.16",
-                  "en": "A request holds the selected media type only after the selection, and asking a request without it whether it wants JSON or is a region request is an error of the caller, which each runtime raises as its logic error: `LogicException` in PHP, `Error` in Node and `RuntimeError` in Python.",
-                  "ko": "요청은 선택이 끝난 뒤에만 선택된 media type을 가진다. 그것이 없는 요청에 JSON을 원하는지나 영역 요청인지를 묻는 것은 호출자의 오류이며, 각 런타임은 이를 자신의 논리 오류로 낸다: PHP는 `LogicException`, Node는 `Error`, Python은 `RuntimeError`이다.",
-                  "koSource": "e97d6bf0e895024a6a12f5b8649181a19c74c5d6f4943370f56e0a5e891ce318"
+                  "id": "HY-116.21",
+                  "en": "A request holds the selected media type only after the selection, and asking a request without it whether it wants JSON or is a region request fails with kind `not_selected`, of the category `type`, because it is an error of the order of the calls.",
+                  "ko": "요청은 선택이 끝난 뒤에만 선택된 media type을 가지며, 그것이 없는 요청에 JSON을 원하는지나 영역 요청인지를 물으면 호출 순서의 오류이므로 category `type`인 kind `not_selected`로 실패한다.",
+                  "koSource": "3e35336eb788e9405f74e7fdf5f6a0ba9bbc513862e98bb5b8353c3e8ee6da7a"
                 }
               ]
             }
@@ -1571,9 +1572,9 @@
                   "id": "HY-122.11"
                 },
                 {
-                  "en": "The response hook (HY-60, with a new empty reply), the frame policy (HY-45), the response limit (HY-66), the errors of the ORM (HY-107: `NO_ROWS` is 404 with the text `Not Found`, and `REVISION_CHANGED` is 412 with the text `Precondition Failed`, both plain text with `Cache-Control: no-store`) and the errors of HY-43 apply as to a page; HY-52, HY-53 for its weak tag and HY-103 do not, because the handler has no reply.",
-                  "ko": "응답 hook(HY-60, 새 빈 reply와 함께), frame 정책(HY-45), 응답 제한(HY-66), ORM의 오류(HY-107: `NO_ROWS`는 텍스트 `Not Found`와 함께 404, `REVISION_CHANGED`는 텍스트 `Precondition Failed`와 함께 412이며, 둘 다 `Cache-Control: no-store`를 가진 plain text다), HY-43의 오류는 페이지처럼 적용된다. HY-52, weak tag에 대한 HY-53, HY-103은 적용되지 않는다. handler에는 reply가 없기 때문이다.",
-                  "koSource": "62ee37cc86eb1b7437af06716c8a53fac9c5441b5bac89e93165f5b9eb0c46a5",
+                  "en": "The response hook (HY-60, with a new empty reply), the frame policy (HY-45), the response limit (HY-66), the errors of the ORM (HY-107: `no_rows` is 404 with the text `Not Found`, and `revision_changed` is 412 with the text `Precondition Failed`, both plain text with `Cache-Control: no-store`) and the errors of HY-43 apply as to a page; HY-52, HY-53 for its weak tag and HY-103 do not, because the handler has no reply.",
+                  "ko": "응답 hook(HY-60, 새 빈 reply와 함께), frame 정책(HY-45), 응답 제한(HY-66), ORM의 오류(HY-107: `no_rows`는 텍스트 `Not Found`와 함께 404, `revision_changed`는 텍스트 `Precondition Failed`와 함께 412이며, 둘 다 `Cache-Control: no-store`를 가진 plain text다), HY-43의 오류는 페이지처럼 적용된다. HY-52, weak tag에 대한 HY-53, HY-103은 적용되지 않는다. handler에는 reply가 없기 때문이다.",
+                  "koSource": "8d50d1b0087455b49b4f50f3a7a48caafb7b0b1eab6fcff7dda08a6433fded1a",
                   "id": "HY-122.12"
                 },
                 {
@@ -2938,7 +2939,9 @@
         {
           "kind": "rule",
           "id": "HY-25",
-          "retired": [],
+          "retired": [
+            6
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -2974,10 +2977,10 @@
                   "koSource": "854cbcee09c615a1f7c185050e29c19d6755703bfcddf74d5481418c442b66a2"
                 },
                 {
-                  "id": "HY-25.6",
-                  "en": "A flash name and a changed topic are strings: another value fails with `TypeError` and the message `a flash name is not a string (HY-25)` or `a changed topic is not a string (HY-25)` in the three servers, also for a PHP caller without strict types.",
-                  "ko": "flash 이름과 바뀐 topic은 문자열이다: 다른 값은 세 server에서 `TypeError`와 메시지 `a flash name is not a string (HY-25)` 또는 `a changed topic is not a string (HY-25)`로 실패하며, strict types가 없는 PHP 호출자에서도 그렇다.",
-                  "koSource": "41c8ab09863c4a6e10df0dd9666ff87f29b28a4a028be3447e2ca3d2efcdd4f1"
+                  "id": "HY-25.7",
+                  "en": "A flash name and a changed topic are strings: another value fails with kind `invalid_argument_type` of the binding in the three servers.",
+                  "ko": "flash 이름과 바뀐 topic은 문자열이다. 다른 값은 세 server에서 binding의 kind `invalid_argument_type`로 실패한다.",
+                  "koSource": "aa601a21267b86732344f7ab818d15507188787966376d663256df7048963404"
                 }
               ]
             }
@@ -4575,7 +4578,9 @@
         {
           "kind": "rule",
           "id": "HY-42",
-          "retired": [],
+          "retired": [
+            6
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -4611,10 +4616,10 @@
                   "koSource": "f95a97f62cbf6f4e4d5b5024989f306d5db7f012cebc00bc15b89903e7a7376c"
                 },
                 {
-                  "id": "HY-42.6",
-                  "en": "The path, the raw query and the header names and values that a host gives a request are text whose characters U+0000 to U+00FF are its bytes; creating a Node or a Python request with a character above U+00FF in one of them fails with the error class of HY-106.6 of the runtime, `Error` or `ValueError`, where Node cut the character to its low byte and Python failed later with another class, and a PHP string holds bytes.",
-                  "ko": "host가 요청에 주는 path, raw query, header 이름과 값은 문자 U+0000부터 U+00FF까지가 곧 byte인 text이다. 그중 하나에 U+00FF보다 큰 문자가 있는 Node나 Python 요청을 만들면 그 runtime의 HY-106.6 오류 class인 `Error`나 `ValueError`로 실패한다. 이전에 Node는 그 문자를 하위 byte로 잘랐고 Python은 나중에 다른 class로 실패했으며, PHP 문자열은 byte를 가진다.",
-                  "koSource": "82a064d8504265fe5b8f32334a8da7e6dd03ebbd01ea7de7f9c4582c6451db54"
+                  "id": "HY-42.7",
+                  "en": "The path, the raw query and the header names and values that a host gives a request are text whose characters U+0000 to U+00FF are its bytes, and a character above U+00FF in one of them fails with kind `invalid_text` of the binding, of the category `value`, while a PHP string holds bytes.",
+                  "ko": "host가 요청에 주는 path, raw query, header 이름과 값은 문자 U+0000부터 U+00FF까지가 곧 byte인 text이며, 그중 하나에 U+00FF보다 큰 문자가 있으면 category `value`인 binding의 kind `invalid_text`로 실패한다. PHP 문자열은 byte를 가진다.",
+                  "koSource": "8ca613cda4171b49e6447e8f77f43d7135c1177afcc08246e10f7809e22bf790"
                 }
               ]
             }
@@ -4746,7 +4751,9 @@
         {
           "kind": "rule",
           "id": "HY-44",
-          "retired": [],
+          "retired": [
+            8
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -4794,10 +4801,10 @@
                   "koSource": "2ba01cc5768542a57bc4f3e910c0f1e5abf811f7c12ddf5320a2950c367fab54"
                 },
                 {
-                  "id": "HY-44.8",
-                  "en": "A value outside the data model fails with an error of the classes of HY-46.2 whose message names the kind of the failure: `a number outside ±(2^53 − 1) is not a value of the data model (HY-44)`, `a number that is not finite is not a value of the data model (HY-44)`, `a string that is not UTF-8 text is not a value of the data model (HY-44)`, `lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)` and, for any other value or map key, `a value or a map key of another type is not a value of the data model (HY-44)`.",
-                  "ko": "data model 밖의 값은 HY-46.2의 클래스로 실패하며 그 메시지는 실패의 종류를 나타낸다: `a number outside ±(2^53 − 1) is not a value of the data model (HY-44)`, `a number that is not finite is not a value of the data model (HY-44)`, `a string that is not UTF-8 text is not a value of the data model (HY-44)`, `lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)`, 그리고 그 밖의 값이나 map key에는 `a value or a map key of another type is not a value of the data model (HY-44)`이다.",
-                  "koSource": "49dee704e8b7ef768bbd1322dc114072fbc749b4682ec34f80a11ef03299cd3a"
+                  "id": "HY-44.9",
+                  "en": "A value outside the data model fails with the error of the template data model, whose kind, such as `E_DATA_NUMBER_RANGE`, `E_DATA_NUMBER_NOT_FINITE`, `E_DATA_INVALID_UTF8`, `E_DATA_DEPTH` or `E_DATA_UNSUPPORTED_TYPE`, and message hyper passes on as they are (VAL-2, VAL-3, VAL-13, VAL-20).",
+                  "ko": "데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며, hyper는 그 kind(`E_DATA_NUMBER_RANGE`, `E_DATA_NUMBER_NOT_FINITE`, `E_DATA_INVALID_UTF8`, `E_DATA_DEPTH`, `E_DATA_UNSUPPORTED_TYPE` 등)와 message를 그대로 넘긴다(VAL-2, VAL-3, VAL-13, VAL-20).",
+                  "koSource": "1e59dad10751b7aca26cdbc66e302990a0fd84ede78fdf4047d8f0036baea956"
                 }
               ]
             }
@@ -4862,7 +4869,9 @@
         {
           "kind": "rule",
           "id": "HY-46",
-          "retired": [],
+          "retired": [
+            2
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -4874,10 +4883,10 @@
                   "koSource": "52578b620fec8ea0176252e4f661671fa3604bc4d5f365ee770923b8bc356d02"
                 },
                 {
-                  "id": "HY-46.2",
-                  "en": "Making a redirect to a location that is not an application path fails with the error `a redirect location is not an application path (HY-46)`, of the class `InvalidArgumentException` in PHP, `RangeError` in Node and `ValueError` in Python.",
-                  "ko": "애플리케이션 경로가 아닌 위치로 리다이렉트를 만들면 오류 `a redirect location is not an application path (HY-46)`로 실패하며, 그 클래스는 PHP에서 `InvalidArgumentException`, Node에서 `RangeError`, Python에서 `ValueError`다.",
-                  "koSource": "f603cc9aaa6597e4c943b0ed73ab3f3fd5b79704da8d866538c8a03464e94a8c"
+                  "id": "HY-46.3",
+                  "en": "Making a redirect to a location that is not an application path fails with kind `not_application_path` and the message `a redirect location is not an application path (HY-46)`, in the class of the category `value` (HY-132.2).",
+                  "ko": "애플리케이션 경로가 아닌 위치로 리다이렉트를 만들면 kind `not_application_path`와 message `a redirect location is not an application path (HY-46)`로 실패하며, class는 category `value`의 것이다(HY-132.2).",
+                  "koSource": "76007ff296b09b9ad520938687a022f4555e04dc900597b5ec2541ff673293fd"
                 }
               ]
             }
@@ -5165,9 +5174,9 @@
               "statements": [
                 {
                   "id": "HY-97.1",
-                  "en": "Every server takes an optional request hook `around`: an argument of `create_server`, `create_wsgi` and `create_asgi` (Python), an option of `App.listener` and `App.server` (Node), and an argument of `App::open` (PHP).",
-                  "ko": "모든 서버는 선택 요청 hook `around`를 받는다: `create_server`, `create_wsgi`, `create_asgi`(Python)의 인자, `App.listener`와 `App.server`(Node)의 옵션, `App::open`(PHP)의 인자다.",
-                  "koSource": "ed0e3a86051e100cc63e84d32397474b7dcecaa40495b2e8d2230953aadc950a"
+                  "en": "Every server takes an optional request hook `around`: an argument of `create_server`, `create_wsgi` and `create_asgi` (Python), an option of `listener` and `server` (Node), and an argument of `App::open` (PHP).",
+                  "ko": "모든 서버는 선택 요청 hook `around`를 받는다: `create_server`, `create_wsgi`, `create_asgi`(Python)의 인자, `listener`와 `server`(Node)의 옵션, `App::open`(PHP)의 인자다.",
+                  "koSource": "1e0afdd6af561ecf9fd1023b8390a8a600ac14551c994019891f2195dcf4513b"
                 },
                 {
                   "id": "HY-97.2",
@@ -5207,9 +5216,9 @@
                 },
                 {
                   "id": "HY-97.8",
-                  "en": "An error that `around` raises outside `answer`, and a return value that is not a response, are escaped errors (HY-60), also for PHP, where `App::run` writes the plain 500 of an uncaught exception: the server logs them and answers the plain 500, which the write hook receives (HY-99).",
-                  "ko": "`around`가 `answer` 밖에서 던지는 오류와 응답이 아닌 반환값은 escape된 오류다(HY-60); PHP에서도 마찬가지이며, 그때 `App::run`은 잡히지 않은 예외의 평문 500을 쓴다: 서버는 그것을 로그에 남기고 평문 500으로 응답하며, 그 500은 write hook이 받는다(HY-99).",
-                  "koSource": "53bb26774183d4dbbe69602122e2b4de373983706208b02700347b624a10cdfa"
+                  "en": "An error that `around` raises outside `answer`, and a return value that is not a response, are escaped errors (HY-60), also for PHP, where `run` writes the plain 500 of an uncaught exception: the server logs them and answers the plain 500, which the write hook receives (HY-99).",
+                  "ko": "`around`가 `answer` 밖에서 던지는 오류와 응답이 아닌 반환값은 escape된 오류다(HY-60); PHP에서도 마찬가지이며, 그때 `run`은 잡히지 않은 예외의 평문 500을 쓴다: 서버는 그것을 로그에 남기고 평문 500으로 응답하며, 그 500은 write hook이 받는다(HY-99).",
+                  "koSource": "022fb3d268cd113fa5170ef38e6f4f8c17eb7440389f9eb22e4f0d9320e3fb1d"
                 },
                 {
                   "id": "HY-97.11",
@@ -5260,9 +5269,9 @@
               "statements": [
                 {
                   "id": "HY-99.1",
-                  "en": "Every server takes an optional write hook `written`: an argument of `create_server`, `create_wsgi` and `create_asgi` (Python), an option of `App.listener` and `App.server` (Node), and an argument of `App::open` (PHP).",
-                  "ko": "모든 서버는 선택 write hook `written`을 받는다: `create_server`, `create_wsgi`, `create_asgi`(Python)의 인자, `App.listener`와 `App.server`(Node)의 옵션, `App::open`(PHP)의 인자다.",
-                  "koSource": "7b95e29140ed246553d12d3ea25a6be6880e3c54fe082bec024d78ca19a12a7f"
+                  "en": "Every server takes an optional write hook `written`: an argument of `create_server`, `create_wsgi` and `create_asgi` (Python), an option of `listener` and `server` (Node), and an argument of `App::open` (PHP).",
+                  "ko": "모든 서버는 선택 write hook `written`을 받는다: `create_server`, `create_wsgi`, `create_asgi`(Python)의 인자, `listener`와 `server`(Node)의 옵션, `App::open`(PHP)의 인자다.",
+                  "koSource": "79797b606505c19cb9145b92088d289a55453ccdd6f5588e81f9b67f7bd4fef8"
                 },
                 {
                   "id": "HY-99.2",
@@ -5290,21 +5299,21 @@
                 },
                 {
                   "id": "HY-99.6",
-                  "en": "PHP calls the hook from a shutdown function that `App::run` registers after its escape function; `ended` is false when `connection_aborted()` is 1 or a fatal error ended the script after the headers were sent, and true means that PHP gave the complete output to the web server.",
-                  "ko": "PHP는 `App::run`이 escape 함수 뒤에 등록하는 shutdown 함수에서 hook을 호출하며, `connection_aborted()`가 1이거나 header를 보낸 뒤 치명적 오류가 스크립트를 끝냈으면 `ended`는 false이고, true는 PHP가 완전한 출력을 web server에 준 것을 뜻한다.",
-                  "koSource": "537c96655768265c34ddd1501e964859bdfe7e598e41c4a5c029e70df07254cd"
+                  "en": "PHP calls the hook from a shutdown function that `run` registers after its escape function; `ended` is false when `connection_aborted()` is 1 or a fatal error ended the script after the headers were sent, and true means that PHP gave the complete output to the web server.",
+                  "ko": "PHP는 `run`이 escape 함수 뒤에 등록하는 shutdown 함수에서 hook을 호출하며, `connection_aborted()`가 1이거나 header를 보낸 뒤 치명적 오류가 스크립트를 끝냈으면 `ended`는 false이고, true는 PHP가 완전한 출력을 web server에 준 것을 뜻한다.",
+                  "koSource": "b28bd46760373df258370e099998432610929b3cb56d56e84811e2b8d4c82950"
                 },
                 {
                   "id": "HY-99.7",
-                  "en": "Under either output buffering mode, `ended` and the response follow what PHP sent: with output buffering on and no output flushed, a fatal error after `App::run` replaces the response with the plain 500, which the hook receives with `ended` true; with output buffering off, or after a flush that sent the headers, the hook receives the started response with `ended` false.",
-                  "ko": "출력 buffering의 두 모드 어느 쪽에서든 `ended`와 응답은 PHP가 보낸 것을 따른다: buffering이 켜져 있고 출력이 flush되지 않았으면 `App::run` 뒤의 치명적 오류가 응답을 평문 500으로 바꾸며, hook은 그것을 `ended` true로 받는다; buffering이 꺼져 있거나 header를 보낸 flush 뒤이면, hook은 시작된 응답을 `ended` false로 받는다.",
-                  "koSource": "f367dd64422513e73273cfa6b4378513f351f1d9f13fed8a6c369f8b36ffef59"
+                  "en": "Under either output buffering mode, `ended` and the response follow what PHP sent: with output buffering on and no output flushed, a fatal error after `run` replaces the response with the plain 500, which the hook receives with `ended` true; with output buffering off, or after a flush that sent the headers, the hook receives the started response with `ended` false.",
+                  "ko": "출력 buffering의 두 모드 어느 쪽에서든 `ended`와 응답은 PHP가 보낸 것을 따른다: buffering이 켜져 있고 출력이 flush되지 않았으면 `run` 뒤의 치명적 오류가 응답을 평문 500으로 바꾸며, hook은 그것을 `ended` true로 받는다; buffering이 꺼져 있거나 header를 보낸 flush 뒤이면, hook은 시작된 응답을 `ended` false로 받는다.",
+                  "koSource": "4ccea8310cf8a3a8a4f7dd8a5259466b88332bf1634b09e09479175e3ec4c17c"
                 },
                 {
                   "id": "HY-99.8",
-                  "en": "Node calls it after the `close` event of the `node:http` response and the end of the answer, with `ended` equal to `writableFinished`; the listener that `App.listener(sessions, options)` returns, which `App.server` installs, returns a promise that settles after the write hook and the disconnect hook of the request have run.",
-                  "ko": "Node는 `node:http` 응답의 `close` 이벤트와 요청 응답 처리의 끝 뒤에 hook을 호출하며, `ended`는 `writableFinished`와 같다; `App.listener(sessions, options)`가 돌려주고 `App.server`가 설치하는 listener는 요청의 write hook과 disconnect hook이 실행된 뒤에 확정되는 promise를 돌려준다.",
-                  "koSource": "1f2d6fa6b6163e4919fe1c5cfe37a7b9f0a0b3a046705b53cfa76383ccecc97b"
+                  "en": "Node calls it after the `close` event of the `node:http` response and the end of the answer, with `ended` equal to `writableFinished`; the listener that `listener(app, sessions, options)` returns, which `server` installs, returns a promise that settles after the write hook and the disconnect hook of the request have run.",
+                  "ko": "Node는 `node:http` 응답의 `close` 이벤트와 요청 응답 처리의 끝 뒤에 hook을 호출하며, `ended`는 `writableFinished`와 같다; `listener(app, sessions, options)`가 돌려주고 `server`가 설치하는 listener는 요청의 write hook과 disconnect hook이 실행된 뒤에 확정되는 promise를 돌려준다.",
+                  "koSource": "f98b39eeb6d79a076d489bf60ad8c2b3efc87a94d84c895d8835a681c7464b4f"
                 },
                 {
                   "id": "HY-99.9",
@@ -5368,9 +5377,9 @@
               "statements": [
                 {
                   "id": "HY-100.1",
-                  "en": "Every server is served through the standard host interface of its runtime, and a host answers each request as the server does (HY-97, HY-99): PHP through a front controller that calls `App::run` under a SAPI (the built-in server or php-fpm), Python through the WSGI callable of `create_wsgi`, the ASGI callable of `create_asgi` or the `http.server` server of `create_server`, and Node through the `node:http` request listener of `App.listener`, which `App.server` installs.",
-                  "ko": "모든 서버는 그 runtime의 표준 host 인터페이스로 제공되며, host는 각 요청에 서버가 하듯이 응답한다(HY-97, HY-99): PHP는 `App::run`을 SAPI(built-in server 또는 php-fpm) 아래에서 호출하는 front controller로, Python은 `create_wsgi`의 WSGI callable, `create_asgi`의 ASGI callable, `create_server`의 `http.server` 서버로, Node는 `App.server`가 설치하는 `App.listener`의 `node:http` request listener로 제공한다.",
-                  "koSource": "cd649118554d82462d0180e879af85d7c110b822da63d70a18cebdd6de2acf37"
+                  "en": "Every server is served through the standard host interface of its runtime, and a host answers each request as the server does (HY-97, HY-99): PHP through a front controller that calls `run` under a SAPI (the built-in server or php-fpm), Python through the WSGI callable of `create_wsgi`, the ASGI callable of `create_asgi` or the `http.server` server of `create_server`, and Node through the `node:http` request listener of `listener`, which `server` installs.",
+                  "ko": "모든 서버는 그 runtime의 표준 host 인터페이스로 제공되며, host는 각 요청에 서버가 하듯이 응답한다(HY-97, HY-99): PHP는 `run`을 SAPI(built-in server 또는 php-fpm) 아래에서 호출하는 front controller로, Python은 `create_wsgi`의 WSGI callable, `create_asgi`의 ASGI callable, `create_server`의 `http.server` 서버로, Node는 `server`가 설치하는 `listener`의 `node:http` request listener로 제공한다.",
+                  "koSource": "50266a488b338b32bf70e305961c90602b7fd23e0baeaad619c95809e85704d4"
                 },
                 {
                   "id": "HY-100.2",
@@ -5566,9 +5575,9 @@
                   "statements": [
                     {
                       "id": "HY-100.28",
-                      "en": "Node: `App.listener(sessions, options)` of the Node server returns the `node:http` request listener that `App.server` installs.",
-                      "ko": "Node: Node 서버의 `App.listener(sessions, options)`는 `App.server`가 설치하는 `node:http` 요청 listener를 돌려준다.",
-                      "koSource": "592e23d994441ebeb4f43d3733214439a51733b0e713807670aa83be150c4686"
+                      "en": "Node: `listener(app, sessions, options)` of the Node server returns the `node:http` request listener that `server` installs.",
+                      "ko": "Node: Node 서버의 `listener(app, sessions, options)`는 `server`가 설치하는 `node:http` 요청 listener를 돌려준다.",
+                      "koSource": "7af7bec8316b5885f6a4c64b52f1b3cfd35a773eeadbfc25706475e871f23829"
                     },
                     {
                       "id": "HY-100.29",
@@ -5583,9 +5592,9 @@
                   "statements": [
                     {
                       "id": "HY-100.30",
-                      "en": "PHP: `App::run` is the entry of the front controller; it turns `ignore_user_abort` off, registers the shutdown function that calls the write hook and the disconnect hook (HY-67, HY-99), and writes the plain 500 of an uncaught exception or a fatal error (HY-60).",
-                      "ko": "PHP: `App::run`은 front controller의 entry다; `ignore_user_abort`를 끄고, write hook과 disconnect hook(HY-67, HY-99)을 부르는 shutdown 함수를 등록하며, 잡히지 않은 예외나 치명적 오류의 평문 500을 쓴다(HY-60).",
-                      "koSource": "7700ad563a2a9c5a62f1a0aa7ec7a30f848392e4dfb8ab3e49fb1b97f465681a"
+                      "en": "PHP: `run` is the entry of the front controller; it turns `ignore_user_abort` off, registers the shutdown function that calls the write hook and the disconnect hook (HY-67, HY-99), and writes the plain 500 of an uncaught exception or a fatal error (HY-60).",
+                      "ko": "PHP: `run`은 front controller의 entry다; `ignore_user_abort`를 끄고, write hook과 disconnect hook(HY-67, HY-99)을 부르는 shutdown 함수를 등록하며, 잡히지 않은 예외나 치명적 오류의 평문 500을 쓴다(HY-60).",
+                      "koSource": "aac67334e914564deae8ba900932e526ea9a85fea036936769137999c9da8dcc"
                     }
                   ],
                   "blocks": []
@@ -5602,6 +5611,437 @@
         "ko": "오류"
       },
       "blocks": [
+        {
+          "kind": "rule",
+          "id": "HY-132",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                {
+                  "id": "HY-132.1",
+                  "en": "Every failure that hyper raises is an error with a kind that never changes, an HTTP status or none, and a category, and a caller tells failures apart by the kind and never by the class or the message.",
+                  "ko": "hyper가 내는 모든 실패는 바뀌지 않는 kind, HTTP 상태나 없음, category를 가진 오류이며, 호출자는 실패를 class나 message가 아니라 kind로 구별한다.",
+                  "koSource": "a0fb640afd5c5d1bf5216ee473aa03af7208163d300675cdb240037eac89b0e3"
+                },
+                {
+                  "id": "HY-132.2",
+                  "en": "In each runtime the error is of the class of its category, `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError` or `HyperInternalError`, which extends the base class of that category (PHP `InvalidArgumentException`, `TypeError` and `RuntimeException`; Python `ValueError`, `TypeError`, `OSError` and `RuntimeError`; Node `RangeError`, `TypeError` and `Error`), and it gives its kind and its status as PHP `kind()` and `status()` and as the properties `kind` and `status` in Python and Node.",
+                  "ko": "각 runtime에서 오류는 그 category의 class `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`이며, 그 category의 기반 class(PHP `InvalidArgumentException`, `TypeError`, `RuntimeException`, Python `ValueError`, `TypeError`, `OSError`, `RuntimeError`, Node `RangeError`, `TypeError`, `Error`)를 상속하고, kind와 상태를 PHP `kind()`와 `status()`, Python과 Node의 속성 `kind`와 `status`로 준다.",
+                  "koSource": "1a722445f763471e0c21b2603832dd6901a5a275682f7ffa1a63c91bb1c44525"
+                },
+                {
+                  "id": "HY-132.3",
+                  "en": "The kinds of hyper are those of the table below, and an error of a library that hyper uses, such as http-forms, http-negotiate, http-media-type, http-cookies, ordered-json, the template data model, the sessions library or the binding, reaches the caller with the kind, the status and the category of that library, in the class of that category of hyper.",
+                  "ko": "hyper의 kind는 아래 표의 것이며, http-forms, http-negotiate, http-media-type, http-cookies, ordered-json, template 데이터 모델, sessions 라이브러리, binding처럼 hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind, 상태, category를 가지고 hyper의 그 category class로 호출자에게 간다.",
+                  "koSource": "1f185a38a8a71c56018927ad31ce5073d9f11065867307c2f0547b79b7d754f0"
+                },
+                {
+                  "id": "HY-132.4",
+                  "en": "A message that a rule states is the message of the error in every runtime, with no prefix of a runtime, and no case compares a message that no rule states.",
+                  "ko": "규칙이 정한 message는 모든 runtime에서 runtime의 접두어 없이 오류의 message이며, 규칙이 정하지 않은 message를 비교하는 case는 없다.",
+                  "koSource": "99a0ef97677a2b1535d3fdfe2f433ba1e815ef08cb19beaa9257525eb9fbd367"
+                },
+                {
+                  "id": "HY-132.5",
+                  "en": "The only failures without a kind are the argument errors of HY-106.8 and HY-106.16, which the runtime raises in its own class, and an exception that code of the application raises, such as a handler, a hook or a session store, reaches the caller as it was raised and is no error of hyper.",
+                  "ko": "kind가 없는 실패는 runtime이 자기 class로 내는 HY-106.8과 HY-106.16의 인자 오류뿐이며, handler, hook, session 저장소처럼 애플리케이션 코드가 던진 예외는 던진 그대로 호출자에게 가고 hyper의 오류가 아니다.",
+                  "koSource": "9b28ebf73451dc1be255bb7458e923648fafd32fe55ca01641903409f4237d34"
+                },
+                {
+                  "id": "HY-132.6",
+                  "en": "A broken invariant of the core is kind `internal`, a panic of the core included, and a request that meets it fails with HY-43.",
+                  "ko": "core의 불변식이 깨지면 core의 panic을 포함해 kind `internal`이며, 그것을 만난 요청은 HY-43으로 실패한다.",
+                  "koSource": "1c959fcc8f2da78af627fbf0e451375beb7672b6586aec262c24a2965452b900"
+                }
+              ]
+            },
+            {
+              "kind": "table",
+              "header": [
+                {
+                  "en": "Kind",
+                  "ko": "Kind"
+                },
+                {
+                  "en": "Status",
+                  "ko": "상태"
+                },
+                {
+                  "en": "Category",
+                  "ko": "Category"
+                },
+                {
+                  "en": "Rule",
+                  "ko": "규칙"
+                }
+              ],
+              "rows": [
+                [
+                  {
+                    "en": "`invalid_application`",
+                    "ko": "`invalid_application`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-106.18",
+                    "ko": "HY-106.18"
+                  }
+                ],
+                [
+                  {
+                    "en": "`invalid_build`",
+                    "ko": "`invalid_build`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-106.18",
+                    "ko": "HY-106.18"
+                  }
+                ],
+                [
+                  {
+                    "en": "`not_application_path`",
+                    "ko": "`not_application_path`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-46.3",
+                    "ko": "HY-46.3"
+                  }
+                ],
+                [
+                  {
+                    "en": "`not_redirect_result`",
+                    "ko": "`not_redirect_result`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-50.3",
+                    "ko": "HY-50.3"
+                  }
+                ],
+                [
+                  {
+                    "en": "`page_status_not_allowed`",
+                    "ko": "`page_status_not_allowed`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-58.6",
+                    "ko": "HY-58.6"
+                  }
+                ],
+                [
+                  {
+                    "en": "`reply_status_not_allowed`",
+                    "ko": "`reply_status_not_allowed`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-69.7",
+                    "ko": "HY-69.7"
+                  }
+                ],
+                [
+                  {
+                    "en": "`cookie_name_not_allowed`",
+                    "ko": "`cookie_name_not_allowed`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-52.16",
+                    "ko": "HY-52.16"
+                  }
+                ],
+                [
+                  {
+                    "en": "`cookie_value_not_allowed`",
+                    "ko": "`cookie_value_not_allowed`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-52.16",
+                    "ko": "HY-52.16"
+                  }
+                ],
+                [
+                  {
+                    "en": "`negative_max_age`",
+                    "ko": "`negative_max_age`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-52.16",
+                    "ko": "HY-52.16"
+                  }
+                ],
+                [
+                  {
+                    "en": "`invalid_number`",
+                    "ko": "`invalid_number`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-52.14, HY-69.7",
+                    "ko": "HY-52.14, HY-69.7"
+                  }
+                ],
+                [
+                  {
+                    "en": "`cache_control_not_allowed`",
+                    "ko": "`cache_control_not_allowed`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-52.16, HY-122.6",
+                    "ko": "HY-52.16, HY-122.6"
+                  }
+                ],
+                [
+                  {
+                    "en": "`cache_control_shared`",
+                    "ko": "`cache_control_shared`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-52.16, HY-122.6",
+                    "ko": "HY-52.16, HY-122.6"
+                  }
+                ],
+                [
+                  {
+                    "en": "`referrer_policy_not_allowed`",
+                    "ko": "`referrer_policy_not_allowed`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-103.9",
+                    "ko": "HY-103.9"
+                  }
+                ],
+                [
+                  {
+                    "en": "`invalid_csrf_form`",
+                    "ko": "`invalid_csrf_form`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-24.14",
+                    "ko": "HY-24.14"
+                  }
+                ],
+                [
+                  {
+                    "en": "`malformed_json`",
+                    "ko": "`malformed_json`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-54.21",
+                    "ko": "HY-54.21"
+                  }
+                ],
+                [
+                  {
+                    "en": "`not_selected`",
+                    "ko": "`not_selected`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`type`",
+                    "ko": "`type`"
+                  },
+                  {
+                    "en": "HY-116.21",
+                    "ko": "HY-116.21"
+                  }
+                ],
+                [
+                  {
+                    "en": "`invalid_session_token`",
+                    "ko": "`invalid_session_token`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`store`",
+                    "ko": "`store`"
+                  },
+                  {
+                    "en": "HY-24.14",
+                    "ko": "HY-24.14"
+                  }
+                ],
+                [
+                  {
+                    "en": "`invalid_session_record`",
+                    "ko": "`invalid_session_record`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`store`",
+                    "ko": "`store`"
+                  },
+                  {
+                    "en": "HY-104.23",
+                    "ko": "HY-104.23"
+                  }
+                ],
+                [
+                  {
+                    "en": "`shared_holds_context`",
+                    "ko": "`shared_holds_context`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-124.8",
+                    "ko": "HY-124.8"
+                  }
+                ],
+                [
+                  {
+                    "en": "`internal`",
+                    "ko": "`internal`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`internal`",
+                    "ko": "`internal`"
+                  },
+                  {
+                    "en": "HY-132.6",
+                    "ko": "HY-132.6"
+                  }
+                ]
+              ]
+            }
+          ]
+        },
         {
           "kind": "rule",
           "id": "HY-27",
@@ -5672,9 +6112,9 @@
                 },
                 {
                   "id": "HY-50.3",
-                  "en": "Making a redirect stop of a result that is not a redirect fails with the error `a redirect stop needs a redirect result (HY-50)`, of the classes of HY-46.2; the message of a redirect stop is `redirect to` followed by a space and its location.",
-                  "ko": "리다이렉트가 아닌 결과로 리다이렉트 정지를 만들면 HY-46.2의 클래스로 오류 `a redirect stop needs a redirect result (HY-50)`를 내며 실패한다. 리다이렉트 정지의 메시지는 `redirect to` 뒤에 공백과 그 위치가 오는 문자열이다.",
-                  "koSource": "64b36d7269df0e905c87d7014fed93ae32a82a6ea5509df55f15d6680a8f4997"
+                  "en": "Making a redirect stop of a result that is not a redirect fails with the error `a redirect stop needs a redirect result (HY-50)`, of the classes of HY-46.3; the message of a redirect stop is `redirect to` followed by a space and its location.",
+                  "ko": "리다이렉트가 아닌 결과로 리다이렉트 정지를 만들면 HY-46.3의 클래스로 오류 `a redirect stop needs a redirect result (HY-50)`를 내며 실패한다. 리다이렉트 정지의 메시지는 `redirect to` 뒤에 공백과 그 위치가 오는 문자열이다.",
+                  "koSource": "f5b21340392776cd6f9b74e778cb9679a391035046402d3927dcc88726c0951a"
                 }
               ]
             }
@@ -5708,7 +6148,10 @@
           "kind": "rule",
           "id": "HY-52",
           "retired": [
-            3
+            3,
+            10,
+            11,
+            12
           ],
           "blocks": [
             {
@@ -5769,22 +6212,22 @@
                   "koSource": "610eb1a61386c2c5835af43268b074948194c2d397e6564e32caffa42c821d90"
                 },
                 {
-                  "id": "HY-52.10",
-                  "en": "A `Max-Age` is an integer of the data model that is not negative: a number within ±(2^53 − 1) without a fraction, so that `60.0` is the integer 60 and a bool is not an integer.",
-                  "ko": "`Max-Age`는 음수가 아닌 data model의 정수다: 소수부가 없는 ±(2^53 − 1) 안의 수이므로 `60.0`은 정수 60이고 bool은 정수가 아니다.",
-                  "koSource": "49e9251b031afcc1757c767ca86cd2f6442b71af7549fd62bd79c764157f5d7c"
+                  "id": "HY-52.14",
+                  "en": "A `Max-Age` is an integer of the interface contract that is not negative and within ±(2^53 − 1), so a float, a bool and a string are no `Max-Age` and fail with kind `invalid_number` of the binding, and an integer outside ±(2^53 − 1) fails with kind `invalid_number` of hyper.",
+                  "ko": "`Max-Age`는 음수가 아니고 ±(2^53 − 1) 안인 interface 계약의 정수이므로, float, bool, 문자열은 `Max-Age`가 아니며 binding의 kind `invalid_number`로 실패하고, ±(2^53 − 1) 밖의 정수는 hyper의 kind `invalid_number`로 실패한다.",
+                  "koSource": "e6eaccbffda4403d9e9ca70cc31e9341941297c0172b62085a51f26771d4c081"
                 },
                 {
-                  "id": "HY-52.11",
-                  "en": "A cookie name, a cookie value or a `Cache-Control` value that is not a string, and a `Max-Age` that is neither null nor such an integer, fail with `TypeError` and the message `a cookie name is not a string (HY-52)`, `a cookie value is not a string (HY-52)`, `a Cache-Control is not a string (HY-52)` or `a Max-Age is not an integer within ±(2^53 − 1) (HY-52)`, and the types of a cookie are checked in the order of its parameters before its values.",
-                  "ko": "문자열이 아닌 cookie 이름, cookie 값이나 `Cache-Control` 값, 그리고 null도 그런 정수도 아닌 `Max-Age`는 `TypeError`와 메시지 `a cookie name is not a string (HY-52)`, `a cookie value is not a string (HY-52)`, `a Cache-Control is not a string (HY-52)` 또는 `a Max-Age is not an integer within ±(2^53 − 1) (HY-52)`로 실패하며, cookie의 타입은 값보다 먼저 parameter 순서로 검사한다.",
-                  "koSource": "73ca7052012f10416560c0bc25671214ddf3de58e4766dc24839033cf3fbbc27"
+                  "id": "HY-52.15",
+                  "en": "A cookie name, a cookie value or a `Cache-Control` value that is not a string fails with kind `invalid_argument_type` of the binding before hyper reads it, so the types of a cookie are checked before its values.",
+                  "ko": "문자열이 아닌 cookie 이름, cookie 값이나 `Cache-Control` 값은 hyper가 읽기 전에 binding의 kind `invalid_argument_type`로 실패하므로, cookie의 타입은 그 값보다 먼저 검사된다.",
+                  "koSource": "d1aaf6c1fad14db6f1703ccee30ad2ab49ecc0e1513e3fb45cb93a925dbd1362"
                 },
                 {
-                  "id": "HY-52.12",
-                  "en": "A cookie of these types fails otherwise with the class of HY-46.2 and the message `cookie name <name> is not allowed (HY-52)`, `cookie value of <name> has a character that is not allowed (HY-52)` or `cookie <name> has a negative Max-Age (HY-52)` in this order, and a `Cache-Control` string with the message `Cache-Control has a character that is not allowed (HY-52)` or `Cache-Control <value> lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)`, where `<name>` and `<value>` are the given strings.",
-                  "ko": "이 타입의 cookie는 그 밖에는 HY-46.2의 class와 메시지 `cookie name <name> is not allowed (HY-52)`, `cookie value of <name> has a character that is not allowed (HY-52)` 또는 `cookie <name> has a negative Max-Age (HY-52)`로 이 순서에 따라 실패하고, `Cache-Control` 문자열은 메시지 `Cache-Control has a character that is not allowed (HY-52)` 또는 `Cache-Control <value> lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)`로 실패하며, `<name>`과 `<value>`는 주어진 문자열이다.",
-                  "koSource": "639c9e5db3453bb85aab9b6c7ff013e2496235be73b31dd0dc851bb63d3e4e4e"
+                  "id": "HY-52.16",
+                  "en": "A cookie of these types fails otherwise with kind `cookie_name_not_allowed` and the message `cookie name <name> is not allowed (HY-52)`, `cookie_value_not_allowed` and `cookie value of <name> has a character that is not allowed (HY-52)` or `negative_max_age` and `cookie <name> has a negative Max-Age (HY-52)` in this order, and a `Cache-Control` string with kind `cache_control_not_allowed` and the message `Cache-Control has a character that is not allowed (HY-52)` or `cache_control_shared` and `Cache-Control <value> lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)`, where `<name>` and `<value>` are the given strings.",
+                  "ko": "이 타입의 cookie는 그 밖에 이 순서로 kind `cookie_name_not_allowed`와 message `cookie name <name> is not allowed (HY-52)`, `cookie_value_not_allowed`와 `cookie value of <name> has a character that is not allowed (HY-52)`, 또는 `negative_max_age`와 `cookie <name> has a negative Max-Age (HY-52)`로 실패하고, `Cache-Control` 문자열은 kind `cache_control_not_allowed`와 message `Cache-Control has a character that is not allowed (HY-52)`, 또는 `cache_control_shared`와 `Cache-Control <value> lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)`로 실패한다. `<name>`과 `<value>`는 주어진 문자열이다.",
+                  "koSource": "ed5a4c52831badddd4b81be89dad482c48df2ef73b7b36c787a21ba054eff56f"
                 }
               ]
             }
@@ -5829,7 +6272,10 @@
         {
           "kind": "rule",
           "id": "HY-106",
-          "retired": [],
+          "retired": [
+            6,
+            10
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -5865,10 +6311,10 @@
                   "koSource": "e76be182161af359de5055338fb31917975c93c6ac39cbe22673f26196f0dc7e"
                 },
                 {
-                  "id": "HY-106.6",
-                  "en": "An application that fails to open raises the open error of its runtime, of exactly that class: `InvalidArgumentException` in PHP, `Error` in Node and `ValueError` in Python, also when a file that it reads is not valid JSON or not valid UTF-8; only the build file (HY-125.5), when it is missing, not readable, not valid UTF-8 or JSON, or does not hold a build id, raises the subclass `InvalidBuild` of that class.",
-                  "ko": "열리지 않는 애플리케이션은 자기 runtime의 open 오류를 정확히 그 클래스로 던진다: PHP에서는 `InvalidArgumentException`, Node에서는 `Error`, Python에서는 `ValueError`이며, 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아닐 때에도 그렇다. build 파일(HY-125.5)만, 없거나 읽을 수 없거나 유효한 UTF-8이나 JSON이 아니거나 build id를 담지 않으면, 그 클래스의 하위 클래스 `InvalidBuild`를 던진다.",
-                  "koSource": "b158ba4e2d24df680753ce5aedf0cc0aa10e9edd12f4dfe44d80d15db2340e86"
+                  "id": "HY-106.18",
+                  "en": "An application that fails to open raises an error of kind `invalid_application` (HY-132), also when a file that it reads is not valid JSON or not valid UTF-8, and only the build file (HY-125.5), when it is missing, not readable, not valid UTF-8 or JSON, or does not hold a build id, raises kind `invalid_build`.",
+                  "ko": "열리지 않는 애플리케이션은 kind `invalid_application`의 오류를 던지며(HY-132), 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아닐 때에도 그렇다. build 파일(HY-125.5)만, 없거나 읽을 수 없거나 유효한 UTF-8이나 JSON이 아니거나 build id를 담지 않을 때 kind `invalid_build`를 던진다.",
+                  "koSource": "055d55868b73f4bf3d8d52cbf73705a5325d4270618658b10624631631e87a2a"
                 },
                 {
                   "id": "HY-106.7",
@@ -5889,10 +6335,10 @@
                   "koSource": "a49aa9d495f89ff2b771668b286af032529f3544285d61086446e39683e464c0"
                 },
                 {
-                  "id": "HY-106.10",
-                  "en": "A message of an error of the class `Error` that the Node server raises starts with `hyper: `; a `TypeError` or a `RangeError` whose message a rule states for the three servers has that message without it.",
-                  "ko": "Node 서버가 내는 `Error` 클래스 오류의 message는 `hyper: `로 시작한다. 규칙이 세 서버에 대해 message를 정한 `TypeError`나 `RangeError`는 그것 없이 그 message를 가진다.",
-                  "koSource": "c7a8325d82fe5289c04a20171b5096ffae95c814485fdc6425c330f23685f24e"
+                  "id": "HY-106.19",
+                  "en": "A message of an error of hyper has no prefix that depends on the runtime (HY-132.4).",
+                  "ko": "hyper 오류의 message에는 runtime에 따라 다른 접두어가 없다(HY-132.4).",
+                  "koSource": "442442cef23723564332b73facaf7109d4dbaad7d628eb3118aa117dfac81857"
                 },
                 {
                   "id": "HY-106.11",
@@ -5935,6 +6381,12 @@
                   "en": "A response holds a status, headers and a body; `Response.text(status, body)` makes a response whose only header is `Content-Type: text/plain; charset=utf-8`, and `withHeader(name, value)` returns a copy that holds the header under the name as it is written and leaves the response unchanged.",
                   "ko": "response는 status, header, body를 가진다; `Response.text(status, body)`는 header가 `Content-Type: text/plain; charset=utf-8` 하나뿐인 response를 만들고, `withHeader(name, value)`는 쓰인 그대로의 이름으로 header를 가진 사본을 반환하며 원래 response는 바꾸지 않는다.",
                   "koSource": "2bdfc191478b822ff6c1d1410e50dac43965e33e828bdd21714579ff156bb09a"
+                },
+                {
+                  "id": "HY-106.20",
+                  "en": "A host entry of HY-100 is a function of the host code of its server that takes the application as its first argument, `listener(app, sessions, options)` and `server(app, sessions, options)` in Node, `run($app, ...)` in PHP and `create_server(app, ...)`, `create_wsgi(app, ...)` and `create_asgi(app, ...)` in Python, and no member of `App`, because the host code is written by hand in each runtime and `App` is generated from the interface contract.",
+                  "ko": "HY-100의 host 진입점은 애플리케이션을 첫 인자로 받는 그 server의 host 코드 함수이며(Node `listener(app, sessions, options)`와 `server(app, sessions, options)`, PHP `run($app, ...)`, Python `create_server(app, ...)`, `create_wsgi(app, ...)`, `create_asgi(app, ...)`), `App`의 member가 아니다. host 코드는 runtime마다 손으로 쓰고 `App`은 interface 계약에서 생성하기 때문이다.",
+                  "koSource": "8935e00202f745c48430a44e97142d2f4cebf2a8907896bd0341e4c95fa975e0"
                 }
               ]
             }
@@ -5943,7 +6395,11 @@
         {
           "kind": "rule",
           "id": "HY-107",
-          "retired": [],
+          "retired": [
+            2,
+            3,
+            4
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -5955,22 +6411,22 @@
                   "koSource": "5d00767c6d55e0af6010de1edb3fd1041cee3d6c13929d06d3596ac6b68bb9ae"
                 },
                 {
-                  "id": "HY-107.2",
-                  "en": "The server identifies the error without a dependency on the ORM, by the name of its class, `OrmException` in PHP and `OrmError` in Node and Python, and by its string code, the property `code_` in PHP and `code` in Node and Python.",
-                  "ko": "서버는 ORM에 의존하지 않고 오류를 그 class 이름(PHP에서 `OrmException`, Node와 Python에서 `OrmError`)과 문자열 code(PHP에서는 property `code_`, Node와 Python에서는 `code`)로 알아본다.",
-                  "koSource": "3fc6c31f958425c111f5ee13b48c54fd53f4cc0fc6e2e0dddb749b56292fa572"
+                  "id": "HY-107.7",
+                  "en": "The server recognizes an error of the ORM by the error classes of the orm package and by its kind, so hyper depends on the orm package, and the kinds `no_rows` and `revision_changed` are kinds that the orm library states.",
+                  "ko": "server는 ORM의 오류를 orm 패키지의 오류 class와 그 kind로 알아보므로 hyper는 orm 패키지에 의존하며, kind `no_rows`와 `revision_changed`는 orm 라이브러리가 정한 kind다.",
+                  "koSource": "0e78a81022ef8184bde36a5a8f7c952578cf48fe09b2284336de2af03fd18160"
                 },
                 {
-                  "id": "HY-107.3",
-                  "en": "The code `NO_ROWS`, a strict query for one row that matched no row, is answered as `NotFound` (HY-27: status 404 and the text `Not Found`).",
-                  "ko": "code `NO_ROWS`(한 행을 기대한 strict query가 행을 찾지 못한 것)는 `NotFound`로 응답한다(HY-27: 상태 404와 텍스트 `Not Found`).",
-                  "koSource": "30ebb2e682138ee84a4604314bdcd35844394e2d35895fca24426a070e3e4aaa"
+                  "id": "HY-107.8",
+                  "en": "The kind `no_rows`, a strict query for one row that matched no row, is answered as `NotFound` (HY-27: status 404 and the text `Not Found`).",
+                  "ko": "kind `no_rows`(한 행을 기대한 strict query가 행을 찾지 못한 것)는 `NotFound`로 응답한다(HY-27: 상태 404와 텍스트 `Not Found`).",
+                  "koSource": "44027799364226004a4b9c984bbbfe7ec712ca83bb53fbe9cdad3a807f28265b"
                 },
                 {
-                  "id": "HY-107.4",
-                  "en": "The code `REVISION_CHANGED`, a write with an expected revision that found the row at another revision or no row, is answered, when an action raises it, as the page of the route with status 409 and no data of its own (HY-58); a loader that raises it fails with HY-43, because the page cannot load.",
-                  "ko": "code `REVISION_CHANGED`(기대한 revision으로 쓰려 했는데 행이 다른 revision이거나 행이 없는 것)는 action이 그것을 던질 때 상태 409와 자기 데이터 없이 route의 page로 응답하고(HY-58), loader가 그것을 던지면 page를 로드할 수 없으므로 HY-43으로 실패한다.",
-                  "koSource": "00f0d49d6822b7972bc6cf0f72b84ee9f3387ec3ce272e6731c450d05f11345c"
+                  "id": "HY-107.9",
+                  "en": "The kind `revision_changed`, a write with an expected revision that found the row at another revision or no row, is answered, when an action raises it, as the page of the route with status 409 and no data of its own (HY-58); a loader that raises it fails with HY-43, because the page cannot load.",
+                  "ko": "kind `revision_changed`(기대한 revision으로 쓰려 했는데 행이 다른 revision이거나 행이 없는 것)는 action이 그것을 던질 때 상태 409와 자기 데이터 없이 route의 page로 응답하고(HY-58), loader가 그것을 던지면 page를 로드할 수 없으므로 HY-43으로 실패한다.",
+                  "koSource": "a191a59655aa252c1570d5c95db3c1770b5396a02b1c22f78df7c2f571f60937"
                 },
                 {
                   "id": "HY-107.5",
@@ -6027,7 +6483,9 @@
         {
           "kind": "rule",
           "id": "HY-103",
-          "retired": [],
+          "retired": [
+            8
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -6075,10 +6533,10 @@
                   "koSource": "7b70065a96c49106c6bb2da5221f128454fad691c491d8b5760c949402ef9577"
                 },
                 {
-                  "id": "HY-103.8",
-                  "en": "A value that is not a string fails with `TypeError` and the message `a Referrer-Policy is not a string (HY-103)`, and another string fails with the class of HY-46.2 and the message `Referrer-Policy <value> is not a token of the Referrer-Policy specification (HY-103)`.",
-                  "ko": "문자열이 아닌 값은 `TypeError`와 메시지 `a Referrer-Policy is not a string (HY-103)`로 실패하고, 다른 문자열은 HY-46.2의 class와 메시지 `Referrer-Policy <value> is not a token of the Referrer-Policy specification (HY-103)`로 실패한다.",
-                  "koSource": "d13b67050750c51383ff22323c4e99ce522b64a768afdd93df8139b005f056ac"
+                  "id": "HY-103.9",
+                  "en": "A value that is not a string fails with kind `invalid_argument_type` of the binding, and another string fails with kind `referrer_policy_not_allowed` and the message `Referrer-Policy <value> is not a token of the Referrer-Policy specification (HY-103)`.",
+                  "ko": "문자열이 아닌 값은 binding의 kind `invalid_argument_type`로 실패하고, 다른 문자열은 kind `referrer_policy_not_allowed`와 message `Referrer-Policy <value> is not a token of the Referrer-Policy specification (HY-103)`로 실패한다.",
+                  "koSource": "e890ef831c7a49fc1d8337ecba8c8fa00ccd1d0f9a8a7fc36001133f91869b18"
                 }
               ]
             }
@@ -6204,9 +6662,9 @@
                 },
                 {
                   "id": "HY-104.19",
-                  "en": "A session store of files of the Node and Python servers takes an existing absolute directory and a lifetime, a positive integer of seconds whose default is 1440, and making it with another directory or lifetime fails with the open error of HY-106.6.",
-                  "ko": "Node와 Python 서버의 파일 세션 저장소는 존재하는 절대 디렉터리와 수명을 받는다. 수명은 초 단위의 양의 정수이고 기본값은 1440이며, 다른 디렉터리나 수명으로 만들면 HY-106.6의 open 오류로 실패한다.",
-                  "koSource": "8db63e5d9ac991ca08993e63c80d329b6389a8786f4da13c2639c9539aee6f6e"
+                  "en": "A session store of files of the Node and Python servers takes an existing absolute directory and a lifetime, a positive integer of seconds whose default is 1440, and making it with another directory or lifetime fails with the open error of HY-106.18.",
+                  "ko": "Node와 Python 서버의 파일 세션 저장소는 존재하는 절대 디렉터리와 수명을 받는다. 수명은 초 단위의 양의 정수이고 기본값은 1440이며, 다른 디렉터리나 수명으로 만들면 HY-106.18의 open 오류로 실패한다.",
+                  "koSource": "c2eaf4d9c6c3971300d948276dfa9912cdfbf4a66948f03260e1676130ae6433"
                 },
                 {
                   "id": "HY-104.20",
@@ -6373,9 +6831,9 @@
                 },
                 {
                   "id": "HY-115.21",
-                  "en": "`lifetime` and `lockExpire` of `RedisSessions` are positive integers, and making the store with another value fails with the open error of HY-106.6.",
-                  "ko": "`RedisSessions`의 `lifetime`과 `lockExpire`는 양의 정수이며, 다른 값으로 저장소를 만들면 HY-106.6의 open 오류로 실패한다.",
-                  "koSource": "a7a4b4b38d4dfeb5c8f8270ecd192d77189ff5d7b2b64b008167c07c627943a3"
+                  "en": "`lifetime` and `lockExpire` of `RedisSessions` are positive integers, and making the store with another value fails with the open error of HY-106.18.",
+                  "ko": "`RedisSessions`의 `lifetime`과 `lockExpire`는 양의 정수이며, 다른 값으로 저장소를 만들면 HY-106.18의 open 오류로 실패한다.",
+                  "koSource": "c6a11d9d81a3686f91e2805f53179449ece75edfffd66c2566a8ac54718da106"
                 },
                 {
                   "id": "HY-115.22",
@@ -6427,9 +6885,9 @@
                 },
                 {
                   "id": "HY-58.6",
-                  "en": "Making a page with another status fails with the error `a page status`, a space, the status and ` is not 200, 409 or 422 (HY-58)`, of the classes of HY-46.2.",
-                  "ko": "다른 상태로 page를 만들면 HY-46.2의 클래스로 `a page status`, 공백, 그 상태, ` is not 200, 409 or 422 (HY-58)`로 이루어진 오류를 내며 실패한다.",
-                  "koSource": "85af7d170574a36ea823e0628e5a4abec0c88e568a33f3f7fcc6c28244384f90"
+                  "en": "Making a page with another status fails with the error `a page status`, a space, the status and ` is not 200, 409 or 422 (HY-58)`, of the classes of HY-46.3.",
+                  "ko": "다른 상태로 page를 만들면 HY-46.3의 클래스로 `a page status`, 공백, 그 상태, ` is not 200, 409 or 422 (HY-58)`로 이루어진 오류를 내며 실패한다.",
+                  "koSource": "62541a832f00f0132d1ed6ad2baef10aefc53bdb5bf6a5aef0ac79a1ee93a237"
                 }
               ]
             }
@@ -6438,7 +6896,9 @@
         {
           "kind": "rule",
           "id": "HY-69",
-          "retired": [],
+          "retired": [
+            6
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -6474,10 +6934,10 @@
                   "koSource": "a8cacf52b7f32dcf2b06779e44a924d668d8f701a6d9c07e67f7a9eccfc39c2e"
                 },
                 {
-                  "id": "HY-69.6",
-                  "en": "A status that is not an integer of the data model (HY-52) fails with `TypeError` and the message `a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)`, and another integer fails with the class of HY-46.2 and the message `page status <status> of a reply is not 403 (HY-69)`, where `<status>` is the integer in decimal digits.",
-                  "ko": "data model의 정수(HY-52)가 아닌 상태는 `TypeError`와 메시지 `a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)`로 실패하고, 다른 정수는 HY-46.2의 class와 메시지 `page status <status> of a reply is not 403 (HY-69)`로 실패하며, `<status>`는 그 정수의 십진수 숫자다.",
-                  "koSource": "642d8abd4c0ffae0922b5a52733f9a2701d0d6ed8bfe9cd4482279888afc289b"
+                  "id": "HY-69.7",
+                  "en": "A status that is not an integer within ±(2^53 − 1) fails with kind `invalid_number`, and another integer fails with kind `reply_status_not_allowed` and the message `page status <status> of a reply is not 403 (HY-69)`, where `<status>` is the integer in decimal digits.",
+                  "ko": "±(2^53 − 1) 안의 정수가 아닌 상태는 kind `invalid_number`로 실패하고, 다른 정수는 kind `reply_status_not_allowed`와 message `page status <status> of a reply is not 403 (HY-69)`로 실패한다. `<status>`는 십진수로 쓴 정수다.",
+                  "koSource": "98ff259990ecef122770b6300ab0e9138da788c070a9b3c36d9d78f9e2986c4d"
                 }
               ]
             }
@@ -6570,9 +7030,9 @@
               "statements": [
                 {
                   "id": "HY-59.9",
-                  "en": "`App::run` of PHP fails before it answers when `post_max_size` is smaller than the limit, when `multipart/form-data` is a form type and `enable_post_data_reading` is on (HY-57), or when `enable_post_data_reading` is on under a SAPI that serves requests, every SAPI but `cli` and `phpdbg`, because PHP then reads every request body with its own reader before the application runs.",
-                  "ko": "PHP의 `App::run`은 `post_max_size`가 한도보다 작거나, `multipart/form-data`가 form 타입이고 `enable_post_data_reading`이 켜져 있거나(HY-57), 요청을 처리하는 SAPI, 곧 `cli`와 `phpdbg`를 뺀 모든 SAPI 아래에서 `enable_post_data_reading`이 켜져 있으면 응답하기 전에 실패한다. 그때 PHP는 application이 실행되기 전에 모든 요청 body를 자신의 reader로 읽기 때문이다.",
-                  "koSource": "cec6a9942b8d947a54a4e95f66ab79b72f7d48585bdc7ce4172bd0307c38d5a5"
+                  "en": "`run` of PHP fails before it answers when `post_max_size` is smaller than the limit, when `multipart/form-data` is a form type and `enable_post_data_reading` is on (HY-57), or when `enable_post_data_reading` is on under a SAPI that serves requests, every SAPI but `cli` and `phpdbg`, because PHP then reads every request body with its own reader before the application runs.",
+                  "ko": "PHP의 `run`은 `post_max_size`가 한도보다 작거나, `multipart/form-data`가 form 타입이고 `enable_post_data_reading`이 켜져 있거나(HY-57), 요청을 처리하는 SAPI, 곧 `cli`와 `phpdbg`를 뺀 모든 SAPI 아래에서 `enable_post_data_reading`이 켜져 있으면 응답하기 전에 실패한다. 그때 PHP는 application이 실행되기 전에 모든 요청 body를 자신의 reader로 읽기 때문이다.",
+                  "koSource": "0b7ec674e492ee3c4b121d58407f6d7d228046f5328f83a718b6e7544cff5a0f"
                 },
                 {
                   "id": "HY-59.10",
@@ -6593,7 +7053,9 @@
         {
           "kind": "rule",
           "id": "HY-60",
-          "retired": [],
+          "retired": [
+            28
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -6624,9 +7086,9 @@
                 },
                 {
                   "id": "HY-60.5",
-                  "en": "The elapsed time counts on a monotonic clock from the start of the request: `App::run` and `handle` of PHP take the start from their caller as an `hrtime(true)` value, such as the value that the first statement of a front controller takes, or count from their own call; the Node server counts with `performance.now()` from the time when `node:http` gives the request.",
-                  "ko": "경과 시간은 요청의 시작부터 단조 시계로 측정한다: PHP의 `App::run`과 `handle`은 시작 시각을 호출자로부터 `hrtime(true)` 값으로 받거나(예: front controller의 첫 문장이 얻는 값), 자기 호출부터 측정한다; Node 서버는 `node:http`가 요청을 준 시각부터 `performance.now()`로 측정한다.",
-                  "koSource": "d2e2077211e0f930412b3de835a4467a79ee9c96cf08e601102d12b55254a8c4"
+                  "en": "The elapsed time counts on a monotonic clock from the start of the request: `run` and `handle` of PHP take the start from their caller as an `hrtime(true)` value, such as the value that the first statement of a front controller takes, or count from their own call; the Node server counts with `performance.now()` from the time when `node:http` gives the request.",
+                  "ko": "경과 시간은 요청의 시작부터 단조 시계로 측정한다: PHP의 `run`과 `handle`은 시작 시각을 호출자로부터 `hrtime(true)` 값으로 받거나(예: front controller의 첫 문장이 얻는 값), 자기 호출부터 측정한다; Node 서버는 `node:http`가 요청을 준 시각부터 `performance.now()`로 측정한다.",
+                  "koSource": "852eb110f63412a9f9d817ba84762d1f4a06c0aa8ec712aa7e81d3009aef03ef"
                 },
                 {
                   "id": "HY-60.6",
@@ -6740,9 +7202,9 @@
                     },
                     {
                       "id": "HY-60.23",
-                      "en": "`App::run` writes the same 500 for an uncaught exception, through `set_exception_handler`, and for a fatal error of the request, which the shutdown function reads from `error_get_last()` as E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR or E_USER_ERROR (a memory or time limit is an E_ERROR), when headers have not been sent.",
-                      "ko": "`App::run`은 header가 보내지지 않았을 때, 잡히지 않은 예외에 대해 `set_exception_handler`로 같은 500을 쓰고, 요청의 치명적 오류에 대해서도 같은 500을 쓴다; 치명적 오류는 shutdown 함수가 `error_get_last()`에서 E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR로 읽는 오류다(메모리나 시간 한도는 E_ERROR다).",
-                      "koSource": "fbeb179646860acad8090e87012f23d16a0d78472d5c9d129d80e8d1ceceff4a"
+                      "en": "`run` writes the same 500 for an uncaught exception, through `set_exception_handler`, and for a fatal error of the request, which the shutdown function reads from `error_get_last()` as E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR or E_USER_ERROR (a memory or time limit is an E_ERROR), when headers have not been sent.",
+                      "ko": "`run`은 header가 보내지지 않았을 때, 잡히지 않은 예외에 대해 `set_exception_handler`로 같은 500을 쓰고, 요청의 치명적 오류에 대해서도 같은 500을 쓴다; 치명적 오류는 shutdown 함수가 `error_get_last()`에서 E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR로 읽는 오류다(메모리나 시간 한도는 E_ERROR다).",
+                      "koSource": "924c86bdece76509778fc3834da40a2f64dae251f41ecff142de45d2f146a8b3"
                     }
                   ],
                   "blocks": []
@@ -6757,9 +7219,9 @@
                     },
                     {
                       "id": "HY-60.25",
-                      "en": "PHP keeps the headers of `headers_list()` at the call of `App::run`, and `sendReplacing` removes every other header and adds them again before the headers of the 500.",
-                      "ko": "PHP는 `App::run`의 호출 때 `headers_list()`의 header를 유지하고, `sendReplacing`이 다른 모든 header를 지운 뒤 500의 header 앞에 그것들을 다시 더한다.",
-                      "koSource": "84c18cb4cf5973bd0a2684bc89aa53d7d7656725cdbd77b0e255d7c4f6b770b8"
+                      "en": "PHP keeps the headers of `headers_list()` at the call of `run`, and `sendReplacing` removes every other header and adds them again before the headers of the 500.",
+                      "ko": "PHP는 `run`의 호출 때 `headers_list()`의 header를 유지하고, `sendReplacing`이 다른 모든 header를 지운 뒤 500의 header 앞에 그것들을 다시 더한다.",
+                      "koSource": "c97efd1bcbaa4aaf8e1f926dddfd16aacac4a0d3c3e69984df31d37fc0653bbf"
                     },
                     {
                       "id": "HY-60.26",
@@ -6782,10 +7244,10 @@
               "kind": "paragraph",
               "statements": [
                 {
-                  "id": "HY-60.28",
-                  "en": "A note name that is not a string fails with `TypeError` and the message `a note name is not a string (HY-60)`.",
-                  "ko": "문자열이 아닌 note 이름은 `TypeError`와 메시지 `a note name is not a string (HY-60)`로 실패한다.",
-                  "koSource": "252ce6bb974a079fffbea2a26a28be5a9c099f0c237ab33e98121f8158691977"
+                  "id": "HY-60.32",
+                  "en": "A note name that is not a string fails with kind `invalid_argument_type` of the binding.",
+                  "ko": "문자열이 아닌 note 이름은 binding의 kind `invalid_argument_type`로 실패한다.",
+                  "koSource": "ff0cf275d743bedb59290bc49d8c3ebc542ce44dafc3e02fc5e114c523f0cbb2"
                 },
                 {
                   "id": "HY-60.29",
@@ -6940,9 +7402,9 @@
                     },
                     {
                       "id": "HY-67.6",
-                      "en": "`App::run` turns `ignore_user_abort` off, so PHP ends the script at the first failed write of the response, and a shutdown function calls the disconnect hook when `connection_aborted()` is 1.",
-                      "ko": "`App::run`은 `ignore_user_abort`를 끄므로, PHP는 응답의 첫 쓰기 실패에서 스크립트를 끝내고, `connection_aborted()`가 1이면 shutdown 함수가 disconnect hook을 호출한다.",
-                      "koSource": "d029004ed3c1f86bb968e0dac5986236ea5bbf4da3ae5b30aec05073feb18218"
+                      "en": "`run` turns `ignore_user_abort` off, so PHP ends the script at the first failed write of the response, and a shutdown function calls the disconnect hook when `connection_aborted()` is 1.",
+                      "ko": "`run`은 `ignore_user_abort`를 끄므로, PHP는 응답의 첫 쓰기 실패에서 스크립트를 끝내고, `connection_aborted()`가 1이면 shutdown 함수가 disconnect hook을 호출한다.",
+                      "koSource": "8df7604d963b872e18f2ee83dcc11a33fe0268e4d5024fcaf93d91996358bc82"
                     },
                     {
                       "id": "HY-67.7",

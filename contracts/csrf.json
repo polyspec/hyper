@@ -33,21 +33,36 @@
       "label": "a token of 62 digits fails",
       "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e",
       "mask": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
-      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      "raises": {
+        "kind": "invalid_csrf_form",
+        "status": null,
+        "category": "value",
+        "message": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      }
     },
     {
       "id": "a_mask_with_upper_case_digits_fails",
       "label": "a mask with upper case digits fails",
       "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
       "mask": "A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5",
-      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      "raises": {
+        "kind": "invalid_csrf_form",
+        "status": null,
+        "category": "value",
+        "message": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      }
     },
     {
       "id": "a_mask_with_white_space_fails",
       "label": "a mask with white space fails",
       "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
       "mask": "a5 a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a",
-      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      "raises": {
+        "kind": "invalid_csrf_form",
+        "status": null,
+        "category": "value",
+        "message": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      }
     }
   ],
   "verify": [
@@ -126,7 +141,12 @@
       "label": "verifying against a token of 62 digits fails",
       "token": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e",
       "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
-      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      "raises": {
+        "kind": "invalid_csrf_form",
+        "status": null,
+        "category": "value",
+        "message": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      }
     }
   ],
   "masked": [
@@ -174,25 +194,45 @@
       "id": "a_value_one_digit_short_fails",
       "label": "a value of 127 digits fails",
       "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbb",
-      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      "raises": {
+        "kind": "invalid_csrf_form",
+        "status": null,
+        "category": "value",
+        "message": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      }
     },
     {
       "id": "a_value_one_digit_long_fails",
       "label": "a value of 129 digits fails",
       "value": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a4a7a6a1a0a3a2adacafaea9a8abaab5b4b7b6b1b0b3b2bdbcbfbeb9b8bbba0",
-      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      "raises": {
+        "kind": "invalid_csrf_form",
+        "status": null,
+        "category": "value",
+        "message": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      }
     },
     {
       "id": "the_token_itself_fails",
       "label": "a token of 64 digits in the place of the masked value fails",
       "value": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
-      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      "raises": {
+        "kind": "invalid_csrf_form",
+        "status": null,
+        "category": "value",
+        "message": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      }
     },
     {
       "id": "a_value_with_upper_case_digits_fails",
       "label": "a value with upper case digits fails",
       "value": "A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A5A4A7A6A1A0A3A2ADACAFAEA9A8ABAAB5B4B7B6B1B0B3B2BDBCBFBEB9B8BBBA",
-      "error": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      "raises": {
+        "kind": "invalid_csrf_form",
+        "status": null,
+        "category": "value",
+        "message": "a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)"
+      }
     }
   ]
 }

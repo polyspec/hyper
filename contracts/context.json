@@ -160,8 +160,7 @@
       ],
       "context": {
         "name": "Board"
-      },
-      "fails": false
+      }
     },
     {
       "id": "after_title_without_csrf",
@@ -177,8 +176,7 @@
       ],
       "context": {
         "name": "Board"
-      },
-      "fails": false
+      }
     },
     {
       "id": "after_title_alone",
@@ -192,8 +190,7 @@
       ],
       "context": {
         "name": "Board"
-      },
-      "fails": false
+      }
     },
     {
       "id": "after_csrf_without_title",
@@ -209,8 +206,7 @@
       ],
       "context": {
         "name": "Board"
-      },
-      "fails": false
+      }
     },
     {
       "id": "first_without_title_and_csrf",
@@ -224,8 +220,7 @@
       ],
       "context": {
         "name": "Board"
-      },
-      "fails": false
+      }
     },
     {
       "id": "alone_in_empty_shared_data",
@@ -236,8 +231,7 @@
       ],
       "context": {
         "name": "Board"
-      },
-      "fails": false
+      }
     },
     {
       "id": "shared_data_that_holds_a_context_fails",
@@ -247,9 +241,12 @@
         "csrf",
         "context"
       ],
-      "keys": null,
-      "context": null,
-      "fails": true
+      "raises": {
+        "kind": "shared_holds_context",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     }
   ],
   "applications": {
@@ -477,29 +474,29 @@
         "renewed": {},
         "unloadable": {
           "throw": {
-            "class": "OrmError",
-            "code": "REVISION_CHANGED"
+            "class": "OrmValueError",
+            "kind": "revision_changed"
           }
         }
       },
       "actions": {
         "conflict": {
           "throw": {
-            "class": "OrmError",
-            "code": "REVISION_CHANGED"
+            "class": "OrmValueError",
+            "kind": "revision_changed"
           }
         },
         "renewing": {
           "throw": {
-            "class": "OrmError",
-            "code": "REVISION_CHANGED"
+            "class": "OrmValueError",
+            "kind": "revision_changed"
           }
         },
         "renewed": {
           "renew": true,
           "throw": {
-            "class": "OrmError",
-            "code": "REVISION_CHANGED"
+            "class": "OrmValueError",
+            "kind": "revision_changed"
           }
         },
         "unloadable": {
@@ -559,8 +556,8 @@
         "home": {},
         "gone": {
           "throw": {
-            "class": "OrmError",
-            "code": "NO_ROWS"
+            "class": "OrmValueError",
+            "kind": "no_rows"
           }
         },
         "driver": {},
@@ -569,14 +566,14 @@
       "actions": {
         "gone": {
           "throw": {
-            "class": "OrmError",
-            "code": "NO_ROWS"
+            "class": "OrmValueError",
+            "kind": "no_rows"
           }
         },
         "driver": {
           "throw": {
-            "class": "OrmError",
-            "code": "DRIVER"
+            "class": "OrmStoreError",
+            "kind": "driver"
           }
         },
         "add": {
@@ -1467,7 +1464,7 @@
     },
     {
       "id": "an_action_that_finds_another_revision_renders_the_page_with_409",
-      "label": "an action that raises REVISION_CHANGED is answered as the page of the route with status 409 (HY-107.4)",
+      "label": "an action that raises REVISION_CHANGED is answered as the page of the route with status 409 (HY-107.9)",
       "application": "pages",
       "request": {
         "method": "POST",
@@ -1533,7 +1530,7 @@
     },
     {
       "id": "a_loader_that_finds_another_revision_fails_the_page_of_an_action",
-      "label": "a loader that raises REVISION_CHANGED fails with HY-43, also for the page that an action renders (HY-107.4)",
+      "label": "a loader that raises REVISION_CHANGED fails with HY-43, also for the page that an action renders (HY-107.9)",
       "application": "pages",
       "request": {
         "method": "POST",
@@ -1582,7 +1579,7 @@
     },
     {
       "id": "a_loader_that_finds_no_row_is_answered_as_not_found",
-      "label": "a loader that raises NO_ROWS is answered with the plain 404 (HY-107.3)",
+      "label": "a loader that raises NO_ROWS is answered with the plain 404 (HY-107.8)",
       "application": "b_stops",
       "request": {
         "method": "GET",
@@ -1605,7 +1602,7 @@
     },
     {
       "id": "an_action_that_finds_no_row_is_answered_as_not_found",
-      "label": "an action that raises NO_ROWS is answered with the plain 404 (HY-107.3)",
+      "label": "an action that raises NO_ROWS is answered with the plain 404 (HY-107.8)",
       "application": "b_stops",
       "request": {
         "method": "POST",
@@ -1636,7 +1633,7 @@
     },
     {
       "id": "the_409_document_of_an_action_that_finds_another_revision_is_not_stored",
-      "label": "an action that raises REVISION_CHANGED is answered to an HTML request as the document of the route with status 409 and no-store (HY-107.4)",
+      "label": "an action that raises REVISION_CHANGED is answered to an HTML request as the document of the route with status 409 and no-store (HY-107.9)",
       "application": "pages",
       "request": {
         "method": "POST",
@@ -1661,7 +1658,7 @@
     },
     {
       "id": "a_loader_that_finds_another_revision_fails_a_get_request",
-      "label": "a loader that raises REVISION_CHANGED for a GET request fails with HY-43, because the page cannot load (HY-107.4)",
+      "label": "a loader that raises REVISION_CHANGED for a GET request fails with HY-43, because the page cannot load (HY-107.9)",
       "application": "pages",
       "request": {
         "method": "GET",

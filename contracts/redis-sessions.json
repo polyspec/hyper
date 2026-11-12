@@ -324,13 +324,18 @@
       "options": {
         "lifetime": 0
       },
-      "error": "session lifetime must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_session_lifetime",
+        "status": null,
+        "category": "value",
+        "message": "session lifetime must be a positive number of seconds"
       }
     },
     {
@@ -339,13 +344,18 @@
       "options": {
         "lifetime": -1
       },
-      "error": "session lifetime must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_session_lifetime",
+        "status": null,
+        "category": "value",
+        "message": "session lifetime must be a positive number of seconds"
       }
     },
     {
@@ -354,13 +364,18 @@
       "options": {
         "lifetime": 1.5
       },
-      "error": "session lifetime must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_session_lifetime",
+        "status": null,
+        "category": "value",
+        "message": "session lifetime must be a positive number of seconds"
       }
     },
     {
@@ -369,13 +384,18 @@
       "options": {
         "lockExpire": 0
       },
-      "error": "must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_lock_expire",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -384,13 +404,18 @@
       "options": {
         "lockExpire": -1
       },
-      "error": "must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_lock_expire",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -399,13 +424,18 @@
       "options": {
         "lockExpire": 1.5
       },
-      "error": "must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_lock_expire",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -414,13 +444,18 @@
       "options": {
         "lifetime": "60"
       },
-      "error": "session lifetime must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_session_lifetime",
+        "status": null,
+        "category": "value",
+        "message": "session lifetime must be a positive number of seconds"
       }
     },
     {
@@ -429,13 +464,18 @@
       "options": {
         "lockExpire": "30"
       },
-      "error": "must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_lock_expire",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     },
     {
@@ -444,13 +484,18 @@
       "options": {
         "lifetime": true
       },
-      "error": "session lifetime must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_session_lifetime",
+        "status": null,
+        "category": "value",
+        "message": "session lifetime must be a positive number of seconds"
       }
     },
     {
@@ -459,13 +504,18 @@
       "options": {
         "lockExpire": true
       },
-      "error": "must be a positive number of seconds",
       "only": {
         "languages": [
           "node",
           "python"
         ],
         "sentence": "HY-115.25"
+      },
+      "raises": {
+        "kind": "invalid_lock_expire",
+        "status": null,
+        "category": "value",
+        "message": null
       }
     }
   ]

@@ -4,149 +4,209 @@
       "id": "a_build_id_of_64_lowercase_hexadecimal_digits_is_read",
       "label": "a build id of 64 lowercase hexadecimal digits is read",
       "text": "{\"build\":\"1111111111111111111111111111111111111111111111111111111111111111\"}",
-      "build": "1111111111111111111111111111111111111111111111111111111111111111",
-      "error": null
+      "build": "1111111111111111111111111111111111111111111111111111111111111111"
     },
     {
       "id": "every_lowercase_hexadecimal_digit_is_allowed",
       "label": "every lowercase hexadecimal digit is allowed",
       "text": "{\"build\":\"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"}",
-      "build": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-      "error": null
+      "build": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     },
     {
       "id": "whitespace_around_the_json_text_is_allowed",
       "label": "whitespace around the JSON text is allowed",
       "text": " {\"build\": \"1111111111111111111111111111111111111111111111111111111111111111\"}\n",
-      "build": "1111111111111111111111111111111111111111111111111111111111111111",
-      "error": null
+      "build": "1111111111111111111111111111111111111111111111111111111111111111"
     },
     {
       "id": "a_missing_file_fails",
       "label": "a missing file fails",
       "text": null,
-      "build": null,
-      "error": "invalid-build",
-      "message": "is missing or not readable (HY-125)"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "an_empty_file_fails",
       "label": "an empty file fails",
       "text": "",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "text_that_is_not_json_fails",
       "label": "text that is not JSON fails",
       "text": "not json",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "truncated_json_fails",
       "label": "truncated JSON fails",
       "text": "{\"build\":",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "an_empty_object_fails",
       "label": "an empty object fails",
       "text": "{}",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_list_fails",
       "label": "a list that holds a build id fails",
       "text": "[\"1111111111111111111111111111111111111111111111111111111111111111\"]",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "an_extra_key_fails",
       "label": "an extra key fails",
       "text": "{\"build\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"extra\":1}",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_short_build_id_fails",
       "label": "a short build id fails",
       "text": "{\"build\":\"abc\"}",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_build_id_of_63_digits_fails",
       "label": "a build id of 63 digits fails",
       "text": "{\"build\":\"111111111111111111111111111111111111111111111111111111111111111\"}",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_build_id_of_65_digits_fails",
       "label": "a build id of 65 digits fails",
       "text": "{\"build\":\"11111111111111111111111111111111111111111111111111111111111111111\"}",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "an_uppercase_digit_fails",
       "label": "an uppercase hexadecimal digit fails",
       "text": "{\"build\":\"A111111111111111111111111111111111111111111111111111111111111111\"}",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_build_id_with_a_trailing_newline_fails",
       "label": "a build id with a trailing newline fails",
       "text": "{\"build\":\"1111111111111111111111111111111111111111111111111111111111111111\\n\"}",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_build_id_that_is_a_number_fails",
       "label": "a build id that is a number fails",
       "text": "{\"build\":1}",
-      "build": null,
-      "error": "invalid-build"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_file_that_is_not_utf8_is_not_valid_json",
       "label": "a file whose bytes are not UTF-8 is not valid JSON",
       "text": null,
       "bytes": "7b226275696c64223a2231313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131227dff",
-      "build": null,
-      "error": "invalid-build",
-      "message": "is not valid JSON (HY-125)"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_file_that_starts_with_a_byte_order_mark_is_not_valid_json",
       "label": "a file that starts with U+FEFF is not valid JSON (HY-106.7)",
       "text": null,
       "bytes": "efbbbf7b226275696c64223a2231313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131227d",
-      "build": null,
-      "error": "invalid-build",
-      "message": "is not valid JSON (HY-125)"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_build_id_with_bytes_that_are_not_utf8_is_not_valid_json",
       "label": "a build id that holds a byte that is not UTF-8 is not valid JSON",
       "text": null,
       "bytes": "7b226275696c64223a22313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131313131ff227d",
-      "build": null,
-      "error": "invalid-build",
-      "message": "is not valid JSON (HY-125)"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "nesting_deeper_than_the_decoder_allows_is_not_valid_json",
       "label": "a build file nested 600 deep is not valid JSON, by the one nesting limit of the decoder (HY-54)",
       "text": "{\"build\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
-      "build": null,
-      "error": "invalid-build",
-      "message": "is not valid JSON (HY-125)"
+      "raises": {
+        "kind": "invalid_build",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     }
   ],
   "outputs": [

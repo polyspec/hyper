@@ -15,9 +15,7 @@
       ],
       "headers": [
         "session=v; Max-Age=60; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "a_cookie_on_https_is_secure",
@@ -35,9 +33,7 @@
       "secure": true,
       "headers": [
         "session=v; Max-Age=60; Path=/; Secure; HttpOnly; SameSite=Lax"
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "a_cookie_without_max_age_has_none",
@@ -53,9 +49,7 @@
       ],
       "headers": [
         "a=b; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "a_null_max_age_is_no_max_age",
@@ -72,9 +66,7 @@
       ],
       "headers": [
         "a=b; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "a_removed_cookie_has_an_empty_value_and_max_age_zero",
@@ -89,9 +81,7 @@
       ],
       "headers": [
         "session=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "cookies_keep_their_order",
@@ -115,9 +105,7 @@
       "headers": [
         "b=1; Path=/; HttpOnly; SameSite=Lax",
         "a=2; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "a_max_age_with_an_integer_value_is_that_integer",
@@ -134,9 +122,7 @@
       ],
       "headers": [
         "a=b; Max-Age=60; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "a_max_age_of_negative_zero_is_zero",
@@ -153,9 +139,7 @@
       ],
       "headers": [
         "a=b; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "the_largest_safe_max_age_is_taken",
@@ -172,9 +156,7 @@
       ],
       "headers": [
         "a=b; Max-Age=9007199254740991; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "a_name_with_an_upper_case_letter_is_not_allowed",
@@ -188,9 +170,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "cookie name X-Session is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cookie_name_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "cookie name X-Session is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_name_with_the_prefix_hy_is_not_allowed",
@@ -204,9 +189,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "cookie name hy-keep is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cookie_name_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "cookie name hy-keep is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_name_that_starts_with_a_digit_is_not_allowed",
@@ -220,9 +208,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "cookie name 1a is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cookie_name_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "cookie name 1a is not allowed (HY-52)"
+      }
     },
     {
       "id": "an_empty_name_is_not_allowed",
@@ -236,9 +227,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "cookie name  is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cookie_name_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "cookie name  is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_name_with_a_line_feed_at_its_end_is_not_allowed",
@@ -252,9 +246,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "cookie name a\n is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cookie_name_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "cookie name a\n is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_value_with_a_space_is_not_allowed",
@@ -268,9 +265,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "cookie value of session has a character that is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cookie_value_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "cookie value of session has a character that is not allowed (HY-52)"
+      }
     },
     {
       "id": "an_empty_value_is_not_allowed",
@@ -284,9 +284,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "cookie value of session has a character that is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cookie_value_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "cookie value of session has a character that is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_negative_max_age_is_not_allowed",
@@ -301,9 +304,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "cookie session has a negative Max-Age (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "negative_max_age",
+        "status": null,
+        "category": "value",
+        "message": "cookie session has a negative Max-Age (HY-52)"
+      }
     },
     {
       "id": "a_name_that_is_not_a_string_fails_with_its_type",
@@ -317,9 +323,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "a cookie name is not a string (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_argument_type",
+        "status": null,
+        "category": "type",
+        "message": null
+      }
     },
     {
       "id": "a_value_that_is_not_a_string_fails_with_its_type",
@@ -333,9 +342,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "a cookie value is not a string (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_argument_type",
+        "status": null,
+        "category": "type",
+        "message": null
+      }
     },
     {
       "id": "the_types_are_checked_before_the_values",
@@ -349,9 +361,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "a cookie value is not a string (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_argument_type",
+        "status": null,
+        "category": "type",
+        "message": null
+      }
     },
     {
       "id": "a_max_age_with_a_fraction_is_not_an_integer",
@@ -366,9 +381,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_max_age_of_true_is_not_an_integer",
@@ -383,9 +401,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_max_age_that_is_a_string_is_not_an_integer",
@@ -400,9 +421,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_max_age_above_the_safe_range_is_not_an_integer",
@@ -417,9 +441,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_negative_max_age_outside_the_safe_range_fails_with_its_type",
@@ -434,9 +461,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_failed_cookie_keeps_the_cookies_before_it",
@@ -464,11 +494,12 @@
           ]
         ]
       ],
-      "headers": [
-        "a=1; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "error": "cookie name X is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cookie_name_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "cookie name X is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_removed_cookie_with_a_name_that_is_not_allowed_fails",
@@ -481,9 +512,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "cookie name X is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cookie_name_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "cookie name X is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_removed_cookie_with_a_name_that_is_not_a_string_fails_with_its_type",
@@ -496,9 +530,12 @@
           ]
         ]
       ],
-      "headers": [],
-      "error": "a cookie name is not a string (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_argument_type",
+        "status": null,
+        "category": "type",
+        "message": null
+      }
     }
   ],
   "cacheControl": [
@@ -506,9 +543,7 @@
       "id": "no_cache_control_is_null",
       "label": "no cache control is null",
       "calls": [],
-      "value": null,
-      "error": null,
-      "class": null
+      "value": null
     },
     {
       "id": "the_cache_control_private_max_age_60_is_taken",
@@ -521,9 +556,7 @@
           ]
         ]
       ],
-      "value": "private, max-age=60",
-      "error": null,
-      "class": null
+      "value": "private, max-age=60"
     },
     {
       "id": "the_cache_control_no_store_is_taken",
@@ -536,9 +569,7 @@
           ]
         ]
       ],
-      "value": "no-store",
-      "error": null,
-      "class": null
+      "value": "no-store"
     },
     {
       "id": "the_cache_control_private_is_taken",
@@ -551,9 +582,7 @@
           ]
         ]
       ],
-      "value": "Private",
-      "error": null,
-      "class": null
+      "value": "Private"
     },
     {
       "id": "the_cache_control_max_age_0_private_is_taken",
@@ -566,9 +595,7 @@
           ]
         ]
       ],
-      "value": "max-age=0, private",
-      "error": null,
-      "class": null
+      "value": "max-age=0, private"
     },
     {
       "id": "the_cache_control_no_cache_no_store_is_taken",
@@ -581,9 +608,7 @@
           ]
         ]
       ],
-      "value": "no-cache, no-store",
-      "error": null,
-      "class": null
+      "value": "no-cache, no-store"
     },
     {
       "id": "the_cache_control_public_max_age_60_lets_a_shared_cache_store_the_page",
@@ -596,9 +621,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control public, max-age=60 lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_shared",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control public, max-age=60 lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)"
+      }
     },
     {
       "id": "the_cache_control_max_age_60_lets_a_shared_cache_store_the_page",
@@ -611,9 +639,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control max-age=60 lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_shared",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control max-age=60 lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)"
+      }
     },
     {
       "id": "the_cache_control_no_cache_lets_a_shared_cache_store_the_page",
@@ -626,9 +657,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control no-cache lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_shared",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control no-cache lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)"
+      }
     },
     {
       "id": "the_cache_control_private_s_maxage_60_lets_a_shared_cache_store_the_page",
@@ -641,9 +675,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control private, s-maxage=60 lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_shared",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control private, s-maxage=60 lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)"
+      }
     },
     {
       "id": "the_cache_control_private_public_lets_a_shared_cache_store_the_page",
@@ -656,9 +693,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control private, public lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_shared",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control private, public lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)"
+      }
     },
     {
       "id": "the_cache_control_public_private_lets_a_shared_cache_store_the_page",
@@ -671,9 +711,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control PUBLIC, private lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_shared",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control PUBLIC, private lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)"
+      }
     },
     {
       "id": "the_cache_control_privateer_lets_a_shared_cache_store_the_page",
@@ -686,9 +729,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control privateer lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_shared",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control privateer lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)"
+      }
     },
     {
       "id": "an_empty_cache_control_has_no_allowed_character",
@@ -701,9 +747,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control has a character that is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control has a character that is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_cache_control_with_a_tab_is_not_allowed",
@@ -716,9 +765,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control has a character that is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control has a character that is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_cache_control_with_a_letter_outside_ascii_is_not_allowed",
@@ -731,9 +783,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control has a character that is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control has a character that is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_cache_control_with_a_line_feed_at_its_end_is_not_allowed",
@@ -746,9 +801,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "Cache-Control has a character that is not allowed (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control has a character that is not allowed (HY-52)"
+      }
     },
     {
       "id": "a_later_cache_control_replaces_the_value",
@@ -767,9 +825,7 @@
           ]
         ]
       ],
-      "value": "private",
-      "error": null,
-      "class": null
+      "value": "private"
     },
     {
       "id": "a_failed_cache_control_keeps_the_value",
@@ -788,9 +844,12 @@
           ]
         ]
       ],
-      "value": "no-store",
-      "error": "Cache-Control public lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)",
-      "class": "value"
+      "raises": {
+        "kind": "cache_control_shared",
+        "status": null,
+        "category": "value",
+        "message": "Cache-Control public lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)"
+      }
     },
     {
       "id": "a_cache_control_that_is_not_a_string_fails_with_its_type",
@@ -803,9 +862,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "a Cache-Control is not a string (HY-52)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_argument_type",
+        "status": null,
+        "category": "type",
+        "message": null
+      }
     }
   ],
   "referrerPolicy": [
@@ -814,9 +876,7 @@
       "label": "no referrer policy is null and no header",
       "calls": [],
       "value": null,
-      "headers": {},
-      "error": null,
-      "class": null
+      "headers": {}
     },
     {
       "id": "the_referrer_policy_no_referrer_is_taken",
@@ -832,9 +892,7 @@
       "value": "no-referrer",
       "headers": {
         "Referrer-Policy": "no-referrer"
-      },
-      "error": null,
-      "class": null
+      }
     },
     {
       "id": "the_referrer_policy_no_referrer_when_downgrade_is_taken",
@@ -850,9 +908,7 @@
       "value": "no-referrer-when-downgrade",
       "headers": {
         "Referrer-Policy": "no-referrer-when-downgrade"
-      },
-      "error": null,
-      "class": null
+      }
     },
     {
       "id": "the_referrer_policy_origin_is_taken",
@@ -868,9 +924,7 @@
       "value": "origin",
       "headers": {
         "Referrer-Policy": "origin"
-      },
-      "error": null,
-      "class": null
+      }
     },
     {
       "id": "the_referrer_policy_origin_when_cross_origin_is_taken",
@@ -886,9 +940,7 @@
       "value": "origin-when-cross-origin",
       "headers": {
         "Referrer-Policy": "origin-when-cross-origin"
-      },
-      "error": null,
-      "class": null
+      }
     },
     {
       "id": "the_referrer_policy_same_origin_is_taken",
@@ -904,9 +956,7 @@
       "value": "same-origin",
       "headers": {
         "Referrer-Policy": "same-origin"
-      },
-      "error": null,
-      "class": null
+      }
     },
     {
       "id": "the_referrer_policy_strict_origin_is_taken",
@@ -922,9 +972,7 @@
       "value": "strict-origin",
       "headers": {
         "Referrer-Policy": "strict-origin"
-      },
-      "error": null,
-      "class": null
+      }
     },
     {
       "id": "the_referrer_policy_strict_origin_when_cross_origin_is_taken",
@@ -940,9 +988,7 @@
       "value": "strict-origin-when-cross-origin",
       "headers": {
         "Referrer-Policy": "strict-origin-when-cross-origin"
-      },
-      "error": null,
-      "class": null
+      }
     },
     {
       "id": "the_referrer_policy_unsafe_url_is_taken",
@@ -958,9 +1004,7 @@
       "value": "unsafe-url",
       "headers": {
         "Referrer-Policy": "unsafe-url"
-      },
-      "error": null,
-      "class": null
+      }
     },
     {
       "id": "an_empty_referrer_policy_is_not_a_token",
@@ -973,10 +1017,12 @@
           ]
         ]
       ],
-      "value": null,
-      "headers": {},
-      "error": "Referrer-Policy  is not a token of the Referrer-Policy specification (HY-103)",
-      "class": "value"
+      "raises": {
+        "kind": "referrer_policy_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Referrer-Policy  is not a token of the Referrer-Policy specification (HY-103)"
+      }
     },
     {
       "id": "the_referrer_policy_none_is_not_a_token",
@@ -989,10 +1035,12 @@
           ]
         ]
       ],
-      "value": null,
-      "headers": {},
-      "error": "Referrer-Policy none is not a token of the Referrer-Policy specification (HY-103)",
-      "class": "value"
+      "raises": {
+        "kind": "referrer_policy_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Referrer-Policy none is not a token of the Referrer-Policy specification (HY-103)"
+      }
     },
     {
       "id": "a_referrer_policy_in_upper_case_is_not_a_token",
@@ -1005,10 +1053,12 @@
           ]
         ]
       ],
-      "value": null,
-      "headers": {},
-      "error": "Referrer-Policy NO-REFERRER is not a token of the Referrer-Policy specification (HY-103)",
-      "class": "value"
+      "raises": {
+        "kind": "referrer_policy_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Referrer-Policy NO-REFERRER is not a token of the Referrer-Policy specification (HY-103)"
+      }
     },
     {
       "id": "the_referrer_policy_unsafe_is_not_a_token",
@@ -1021,10 +1071,12 @@
           ]
         ]
       ],
-      "value": null,
-      "headers": {},
-      "error": "Referrer-Policy unsafe is not a token of the Referrer-Policy specification (HY-103)",
-      "class": "value"
+      "raises": {
+        "kind": "referrer_policy_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Referrer-Policy unsafe is not a token of the Referrer-Policy specification (HY-103)"
+      }
     },
     {
       "id": "a_list_of_referrer_policies_is_not_a_token",
@@ -1037,10 +1089,12 @@
           ]
         ]
       ],
-      "value": null,
-      "headers": {},
-      "error": "Referrer-Policy origin, same-origin is not a token of the Referrer-Policy specification (HY-103)",
-      "class": "value"
+      "raises": {
+        "kind": "referrer_policy_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Referrer-Policy origin, same-origin is not a token of the Referrer-Policy specification (HY-103)"
+      }
     },
     {
       "id": "a_referrer_policy_with_a_space_at_its_end_is_not_a_token",
@@ -1053,10 +1107,12 @@
           ]
         ]
       ],
-      "value": null,
-      "headers": {},
-      "error": "Referrer-Policy no-referrer  is not a token of the Referrer-Policy specification (HY-103)",
-      "class": "value"
+      "raises": {
+        "kind": "referrer_policy_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "Referrer-Policy no-referrer  is not a token of the Referrer-Policy specification (HY-103)"
+      }
     },
     {
       "id": "a_later_referrer_policy_replaces_the_value",
@@ -1078,9 +1134,7 @@
       "value": "same-origin",
       "headers": {
         "Referrer-Policy": "same-origin"
-      },
-      "error": null,
-      "class": null
+      }
     },
     {
       "id": "a_referrer_policy_of_null_fails_with_its_type",
@@ -1093,10 +1147,12 @@
           ]
         ]
       ],
-      "value": null,
-      "headers": {},
-      "error": "a Referrer-Policy is not a string (HY-103)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_argument_type",
+        "status": null,
+        "category": "type",
+        "message": null
+      }
     }
   ],
   "status": [
@@ -1104,9 +1160,7 @@
       "id": "no_status_is_null",
       "label": "no status is null",
       "calls": [],
-      "value": null,
-      "error": null,
-      "class": null
+      "value": null
     },
     {
       "id": "the_status_403_is_taken",
@@ -1119,9 +1173,7 @@
           ]
         ]
       ],
-      "value": 403,
-      "error": null,
-      "class": null
+      "value": 403
     },
     {
       "id": "the_status_403_as_a_float_with_an_integer_value_is_taken",
@@ -1134,9 +1186,7 @@
           ]
         ]
       ],
-      "value": 403,
-      "error": null,
-      "class": null
+      "value": 403
     },
     {
       "id": "the_status_401_is_not_403",
@@ -1149,9 +1199,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "page status 401 of a reply is not 403 (HY-69)",
-      "class": "value"
+      "raises": {
+        "kind": "reply_status_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "page status 401 of a reply is not 403 (HY-69)"
+      }
     },
     {
       "id": "the_status_200_is_not_403",
@@ -1164,9 +1217,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "page status 200 of a reply is not 403 (HY-69)",
-      "class": "value"
+      "raises": {
+        "kind": "reply_status_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "page status 200 of a reply is not 403 (HY-69)"
+      }
     },
     {
       "id": "the_status_negative_zero_is_the_integer_0",
@@ -1179,9 +1235,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "page status 0 of a reply is not 403 (HY-69)",
-      "class": "value"
+      "raises": {
+        "kind": "reply_status_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "page status 0 of a reply is not 403 (HY-69)"
+      }
     },
     {
       "id": "the_largest_safe_status_is_written_in_decimal_digits",
@@ -1194,9 +1253,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "page status 9007199254740991 of a reply is not 403 (HY-69)",
-      "class": "value"
+      "raises": {
+        "kind": "reply_status_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "page status 9007199254740991 of a reply is not 403 (HY-69)"
+      }
     },
     {
       "id": "a_status_that_is_a_string_fails_with_its_type",
@@ -1209,9 +1271,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_status_of_true_fails_with_its_type",
@@ -1224,9 +1289,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_status_with_a_fraction_fails_with_its_type",
@@ -1239,9 +1307,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_status_above_the_safe_range_fails_with_its_type",
@@ -1254,9 +1325,12 @@
           ]
         ]
       ],
-      "value": null,
-      "error": "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     }
   ],
   "notes": [
@@ -1264,9 +1338,7 @@
       "id": "no_notes_are_empty",
       "label": "no notes are empty",
       "calls": [],
-      "notes": [],
-      "error": null,
-      "class": null
+      "notes": []
     },
     {
       "id": "a_note_of_the_same_name_replaces_its_value_at_its_place",
@@ -1303,9 +1375,7 @@
           "b",
           2
         ]
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "a_note_holds_any_value",
@@ -1341,9 +1411,7 @@
           "n",
           null
         ]
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "decimal_note_names_keep_their_values_and_places",
@@ -1380,9 +1448,7 @@
           "6",
           "y"
         ]
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "the_note_names_0_and_1_stay_names",
@@ -1412,9 +1478,7 @@
           "1",
           "y"
         ]
-      ],
-      "error": null,
-      "class": null
+      ]
     },
     {
       "id": "a_note_name_that_is_not_a_string_fails_with_its_type",
@@ -1441,8 +1505,12 @@
           1
         ]
       ],
-      "error": "a note name is not a string (HY-60)",
-      "class": "type"
+      "raises": {
+        "kind": "invalid_argument_type",
+        "status": null,
+        "category": "type",
+        "message": null
+      }
     }
   ],
   "flags": [
