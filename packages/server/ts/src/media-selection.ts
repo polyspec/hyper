@@ -2,18 +2,9 @@
 // HY-119), the list of the types that a path serves, and the Content-Type of a representation.
 import { Accept } from './accept.js';
 import type { MediaRange } from './media-range.js';
-import type { Entry } from './representation-entries.js';
+import type { RepresentationEntry } from './representation-entry.js';
 
 const TOKEN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
-
-// What a selection chose: the media type, and for a representation its entry and the values of its required parameters
-// by their lower-case names in declared order.
-/** @internal */
-export interface Selected {
-  readonly type: string;
-  readonly entry: Entry | null;
-  readonly values: ReadonlyMap<string, string>;
-}
 
 /** @internal */
 export class MediaSelection {
@@ -21,15 +12,15 @@ export class MediaSelection {
   // required parameters for a representation, or null when no type has a weight above 0. Among equal weights the first
   // wins: the page types in their order, then the entries in declared order (HY-116.11). Throws InvalidAccept as
   // `Accept.parse` does.
-  static select(accept: string | null, pages: readonly string[], entries: readonly Entry[]): Selected | null {
+  static select(accept: string | null, pages: readonly string[], entries: readonly RepresentationEntry[]): [string, RepresentationEntry | null, Map<string, string>] | null {
     const ranges = Accept.parse(accept);
     const [page, weight] = Accept.best(ranges, pages);
-    let selected: Selected | null = page === null ? null : { type: page, entry: null, values: new Map() };
+    let selected: [string, RepresentationEntry | null, Map<string, string>] | null = page === null ? null : [page, null, new Map()];
     let best = weight;
     for (const entry of entries) {
       const [weight, values] = MediaSelection.entryWeight(ranges, entry);
       if (weight > best) {
-        selected = { type: entry.media, entry, values };
+        selected = [entry.media, entry, values];
         best = weight;
       }
     }
@@ -39,7 +30,7 @@ export class MediaSelection {
   // Returns the weight in thousandths that the ranges give a declared type, and the parameter values of the range that
   // gives it: the highest weight, and the first in Accept order among equal ones, of the ranges that name the type with
   // a served value for every required parameter and no other parameter (HY-116.8, HY-119).
-  static entryWeight(ranges: readonly MediaRange[], entry: Entry): [number, Map<string, string>] {
+  static entryWeight(ranges: readonly MediaRange[], entry: RepresentationEntry): [number, Map<string, string>] {
     const slash = entry.media.indexOf('/');
     const name = entry.media.slice(0, slash);
     const subtype = entry.media.slice(slash + 1);
@@ -66,7 +57,7 @@ export class MediaSelection {
 
   // Returns the Content-Type of a representation: its type and, for each required parameter in declared order,
   // `; <name>=<value>` with the name in lower case and the value quoted when it is no token (HY-119.4).
-  static contentType(entry: Entry, values: ReadonlyMap<string, string>): string {
+  static contentType(entry: RepresentationEntry, values: ReadonlyMap<string, string>): string {
     let written = entry.type;
     for (const [parameter] of entry.parameters) {
       const value = values.get(parameter);
@@ -79,7 +70,7 @@ export class MediaSelection {
   // Returns the types that a path serves, each on a line that ends with a line feed: the page types, then each entry
   // once for each combination of one served value of every required parameter, ordered by the values of the first
   // parameter, then of the next (HY-116.13).
-  static listing(pages: readonly string[], entries: readonly Entry[]): string {
+  static listing(pages: readonly string[], entries: readonly RepresentationEntry[]): string {
     const lines = [...pages];
     for (const entry of entries) {
       let combinations: [string, string][][] = [[]];

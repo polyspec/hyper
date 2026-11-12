@@ -21,7 +21,7 @@ interface Calls {
 function representation(calls: Calls, response: Map<string, unknown>): RepresentationHandler<Services> {
   return ({ request, media }) => {
     calls.handled++;
-    calls.parameters = media.parameters;
+    calls.parameters = media.parameters();
     calls.request = request;
     const headers = response.get('headers');
     return new Representation(response.get('status') as number, response.get('body') ?? null, headers instanceof Map ? Object.fromEntries(headers as Map<string, string>) : {});

@@ -6,13 +6,17 @@ import { RepresentationResponse } from './representation-response.js';
 import { toValue } from './values.js';
 
 export class MediaType {
-  // The served value of each required parameter, by its lower-case name, in declared order (HY-119).
-  readonly parameters: ReadonlyMap<string, string>;
+  private readonly values: ReadonlyMap<string, string>;
   private readonly contentType: string;
 
   constructor(parameters: ReadonlyMap<string, string>, contentType = '') {
-    this.parameters = new Map(parameters);
+    this.values = new Map(parameters);
     this.contentType = contentType;
+  }
+
+  // Returns the served value of each required parameter, by its lower-case name, in declared order (HY-119).
+  parameters(): ReadonlyMap<string, string> {
+    return new Map(this.values);
   }
 
   // Returns the strong tag that a 200 response with this body of the selected type has, so that a handler compares

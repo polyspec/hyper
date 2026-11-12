@@ -9,7 +9,7 @@ from typing import Optional
 
 from ._json_codec import JsonCodec
 from ._region import Region
-from ._representation_entries import declare as declare_representations
+from ._representation_entries import RepresentationEntries
 from ._router import Router
 
 _REGION_NAME = re.compile(r"[A-Za-z][A-Za-z0-9_-]*\Z")
@@ -144,7 +144,7 @@ class Manifest:
                 "template": template,
                 "post": route.get("post") == True,  # noqa: E712 - only the JSON value true marks a post route, not any truthy value
                 "regions": route_regions,
-                "representations": declare_representations(
+                "representations": RepresentationEntries.declare(
                     name, _entries(route, "representations")
                 ),
             }

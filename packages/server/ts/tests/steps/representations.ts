@@ -39,7 +39,7 @@ const rejected: RepresentationHandler<None> = () => {
 // states.
 function handlerOf(spec: Map<string, unknown> | null, calls: Observed[]): RepresentationHandler<None> {
   return ({ request, media }) => {
-    calls.push({ method: request.method, parameters: media.parameters, request, body: request.json() });
+    calls.push({ method: request.method, parameters: media.parameters(), request, body: request.json() });
     if (spec === null) throw new Error('a case without a handler calls a representation handler');
     const thrown = spec.get('throw');
     if (thrown instanceof Map) {

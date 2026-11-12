@@ -9,7 +9,6 @@ namespace Polyspec\Hyper;
  * HY-119), the list of the types that a path serves, and the Content-Type of a representation.
  *
  * @internal
- * @phpstan-import-type RepresentationEntry from RepresentationEntries
  */
 final class MediaSelection
 {
@@ -35,7 +34,7 @@ final class MediaSelection
         foreach ($entries as $entry) {
             [$weight, $values] = self::entryWeight($ranges, $entry);
             if ($weight > $best) {
-                $selected = [$entry['media'], $entry, $values];
+                $selected = [$entry->media, $entry, $values];
                 $best = $weight;
             }
         }
@@ -49,15 +48,14 @@ final class MediaSelection
      * type with a served value for every required parameter and no other parameter (HY-116.8, HY-119).
      *
      * @param list<MediaRange> $ranges
-     * @param RepresentationEntry $entry
      * @return array{0: int, 1: array<array-key, string>}
      */
-    public static function entryWeight(array $ranges, array $entry): array
+    public static function entryWeight(array $ranges, RepresentationEntry $entry): array
     {
-        $slash = (int) strpos($entry['media'], '/');
-        $name = substr($entry['media'], 0, $slash);
-        $subtype = substr($entry['media'], $slash + 1);
-        $required = count($entry['parameters']);
+        $slash = (int) strpos($entry->media, '/');
+        $name = substr($entry->media, 0, $slash);
+        $subtype = substr($entry->media, $slash + 1);
+        $required = count($entry->parameters);
         $weight = 0;
         $values = [];
         foreach ($ranges as $range) {
@@ -73,7 +71,7 @@ final class MediaSelection
                 continue;
             }
             $chosen = [];
-            foreach ($entry['parameters'] as [$parameter, $served]) {
+            foreach ($entry->parameters as [$parameter, $served]) {
                 if (array_key_exists($parameter, $given) && in_array($given[$parameter], $served, true)) {
                     $chosen[$parameter] = $given[$parameter];
                 }
@@ -94,13 +92,12 @@ final class MediaSelection
      * Returns the Content-Type of a representation: its type and, for each required parameter in declared order,
      * `; <name>=<value>` with the name in lower case and the value quoted when it is no token (HY-119.4).
      *
-     * @param RepresentationEntry $entry
      * @param array<array-key, string> $values
      */
-    public static function contentType(array $entry, array $values): string
+    public static function contentType(RepresentationEntry $entry, array $values): string
     {
-        $written = $entry['type'];
-        foreach ($entry['parameters'] as [$parameter]) {
+        $written = $entry->type;
+        foreach ($entry->parameters as [$parameter]) {
             $value = $values[$parameter]
                 ?? throw new \LogicException("the selection has no value of the parameter {$parameter} (HY-119)");
             if (preg_match(self::TOKEN, $value) !== 1) {
@@ -125,7 +122,7 @@ final class MediaSelection
         $lines = $pages;
         foreach ($entries as $entry) {
             $combinations = [[]];
-            foreach ($entry['parameters'] as [$parameter, $served]) {
+            foreach ($entry->parameters as [$parameter, $served]) {
                 $next = [];
                 foreach ($combinations as $combination) {
                     foreach ($served as $value) {

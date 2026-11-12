@@ -21,7 +21,8 @@ import { negotiate, PAGE_AND_DATA, PAGE_TYPE, refusal } from './negotiate.js';
 import { MediaSelection } from './media-selection.js';
 import { MediaType } from './media-type.js';
 import type { Representation } from './representation.js';
-import { RepresentationEntries, type Entry } from './representation-entries.js';
+import { RepresentationEntries } from './representation-entries.js';
+import type { RepresentationEntry } from './representation-entry.js';
 import { RepresentationResponse } from './representation-response.js';
 import { HYPER_JSON, type Request } from './request.js';
 import { Response } from './response.js';
@@ -59,7 +60,7 @@ function readJsonText(path: string): string {
 // Returns the representations of each route of a checked manifest, by the route name (HY-118). The manifest is decoded
 // with maps for objects, because the parameters of an entry keep the order of the manifest, which a plain object does
 // not keep for a name that is an integer.
-function routeEntries(path: string): Map<string, Entry[]> {
+function routeEntries(path: string): Map<string, RepresentationEntry[]> {
   let decoded: DecodedValue;
   try {
     decoded = JsonCodec.decode(readJsonText(path));
@@ -67,7 +68,7 @@ function routeEntries(path: string): Map<string, Entry[]> {
     if (!(error instanceof JsonDecodeError)) throw error;
     throw new Error(`hyper: ${path} is not valid JSON`, { cause: error });
   }
-  const entries = new Map<string, Entry[]>();
+  const entries = new Map<string, RepresentationEntry[]>();
   const routes = decoded instanceof Map ? decoded.get('routes') : undefined;
   for (const route of Array.isArray(routes) ? routes : []) {
     if (!(route instanceof Map)) continue;
@@ -221,7 +222,7 @@ export class App<S extends object = Record<string, never>> {
   private readonly build: string;
   private readonly context: ContextHandler | null;
   // The representations of each route, by the route name (HY-118).
-  private readonly entries: Map<string, Entry[]>;
+  private readonly entries: Map<string, RepresentationEntry[]>;
   // The Vary of the html and JSON responses, with `Hyper-Context` for an application with a context (HY-117).
   private readonly vary: string;
 
@@ -245,7 +246,7 @@ export class App<S extends object = Record<string, never>> {
     reads: Record<string, RouteReads>,
     build: string,
     context: ContextHandler | null,
-    entries: Map<string, Entry[]>,
+    entries: Map<string, RepresentationEntry[]>,
   ) {
     this.entries = entries;
     this.context = context;
@@ -441,8 +442,9 @@ export class App<S extends object = Record<string, never>> {
     const chosen = negotiate(request, client === null ? PAGE_AND_DATA : [HYPER_JSON], entries, entries);
     if (chosen instanceof Response) return chosen;
     // HY-120, HY-121: a representation request opens no session and runs only its handler.
-    if (chosen.entry !== null) return this.representation(request.withRoute(path, match.params), handler, chosen.entry, chosen.values, basePath);
-    const selected = request.withSelectedType(chosen.type);
+    const [type, entry, values] = chosen;
+    if (entry !== null) return this.representation(request.withRoute(path, match.params), handler, entry, values, basePath);
+    const selected = request.withSelectedType(type);
     // HY-116, HY-27: a method other than GET or a declared POST is refused before the session is read (HY-120).
     if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
     // HY-127: a Hyper-Context value that is not 64 lowercase hexadecimal characters is refused before any handler runs.
@@ -475,13 +477,13 @@ export class App<S extends object = Record<string, never>> {
     // acceptable here, and they are not listed (HY-116.14).
     const selected = negotiate(request, [PAGE_TYPE], this.entries.get(match.name) ?? [], []);
     if (selected instanceof Response) return selected;
-    if (selected.entry !== null) return refusal(406, 'Not Acceptable');
+    if (selected[1] !== null) return refusal(406, 'Not Acceptable');
     return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: this.vary }, client.shell);
   }
 
   // Answers a representation request (HY-121, HY-122): the method check, the body checks, the handler of the entry, and
   // the response of what it returned with its tag.
-  private async representation(request: Request, handler: RouteHandlers<S>, entry: Entry, values: ReadonlyMap<string, string>, basePath: string): Promise<Response> {
+  private async representation(request: Request, handler: RouteHandlers<S>, entry: RepresentationEntry, values: ReadonlyMap<string, string>, basePath: string): Promise<Response> {
     const vary = ['Accept', ...entry.vary].join(', ');
     const method = request.method;
     if (!entry.methods.includes(method)) {

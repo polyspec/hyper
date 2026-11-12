@@ -9,6 +9,10 @@ from typing import Optional
 class Representation:
     """What a representation handler returns."""
 
+    status: int
+    body: object
+    headers: dict[str, str]
+
     def __init__(
         self,
         status: int,

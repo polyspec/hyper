@@ -35,9 +35,9 @@ export class RepresentationResponse {
       body = JsonCodec.encode(toValue(returned.body));
       headers['Content-Type'] = contentType;
     }
-    headers['Cache-Control'] = RepresentationResponse.cacheControl(status, given.get('cache-control'), authorized);
+    headers['Cache-Control'] = RepresentationResponse.cachePolicy(status, given.get('cache-control'), authorized);
     headers.Vary = vary;
-    if (given.has('location')) headers.Location = RepresentationResponse.location(given.get('location'), basePath);
+    if (given.has('location')) headers.Location = RepresentationResponse.sentLocation(given.get('location'), basePath);
     const challenge = given.get('www-authenticate');
     if (challenge !== undefined) {
       if (typeof challenge !== 'string') throw new Error('hyper: a WWW-Authenticate of a representation is not a string (HY-122)');
@@ -55,7 +55,7 @@ export class RepresentationResponse {
   // Returns the Cache-Control of a response: `no-store` for a status of 400 or more, which a handler must not set, the
   // value of the handler, which a request with Authorization keeps out of shared caches, or the default (HY-122.6,
   // HY-122.7).
-  private static cacheControl(status: number, given: unknown, authorized: boolean): string {
+  private static cachePolicy(status: number, given: unknown, authorized: boolean): string {
     if (status >= 400) {
       if (given !== undefined) throw new Error(`hyper: a representation handler set Cache-Control on a ${status} (HY-122)`);
       return 'no-store';
@@ -72,7 +72,7 @@ export class RepresentationResponse {
 
   // Returns the Location of a response: an absolute URI as it is, and an application path with the base path of the
   // request; another value fails (HY-122.5).
-  private static location(location: unknown, basePath: string): string {
+  private static sentLocation(location: unknown, basePath: string): string {
     if (typeof location !== 'string') throw new Error('hyper: a Location of a representation is not a string (HY-122)');
     if (ABSOLUTE.test(location)) return location;
     // Result.redirect checks that the location is an application path (HY-46).

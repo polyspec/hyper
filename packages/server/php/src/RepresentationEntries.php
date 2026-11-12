@@ -8,17 +8,7 @@ namespace Polyspec\Hyper;
  * The representations of a route: the declaration of each entry and its manifest check (HY-2, HY-118), and the check
  * of the representation handlers that an application provides at open (HY-118).
  *
- * An entry holds its type as the manifest writes it, its lower-case media type, its required parameters, each a
- * lower-case name with its served values, in declared order, its methods and its vary names.
- *
  * @internal
- * @phpstan-type RepresentationEntry array{
- *     type: string,
- *     media: string,
- *     parameters: list<array{0: string, 1: list<string>}>,
- *     methods: list<string>,
- *     vary: list<string>
- * }
  */
 final class RepresentationEntries
 {
@@ -56,10 +46,10 @@ final class RepresentationEntries
                 throw new \InvalidArgumentException('manifest representations contains a value that is not an object');
             }
             $entry = self::entry($route, $item);
-            if (in_array($entry['media'], $mediaTypes, true)) {
-                throw new \InvalidArgumentException("route {$route} declares the type {$entry['type']} twice (HY-118)");
+            if (in_array($entry->media, $mediaTypes, true)) {
+                throw new \InvalidArgumentException("route {$route} declares the type {$entry->type} twice (HY-118)");
             }
-            $mediaTypes[] = $entry['media'];
+            $mediaTypes[] = $entry->media;
             $entries[] = $entry;
         }
 
@@ -75,7 +65,7 @@ final class RepresentationEntries
      */
     public static function checkHandlers(string $route, array $entries, array $handlers): void
     {
-        $declared = array_column($entries, 'type');
+        $declared = array_map(static fn (RepresentationEntry $entry): string => $entry->type, $entries);
         foreach ($declared as $type) {
             if (!array_key_exists($type, $handlers)) {
                 throw new \InvalidArgumentException(
@@ -93,8 +83,7 @@ final class RepresentationEntries
         }
     }
 
-    /** @return RepresentationEntry */
-    private static function entry(string $route, \stdClass $item): array
+    private static function entry(string $route, \stdClass $item): RepresentationEntry
     {
         foreach (['type', 'parameters', 'methods', 'vary'] as $key) {
             if (!property_exists($item, $key)) {
@@ -122,17 +111,17 @@ final class RepresentationEntries
             throw new \InvalidArgumentException("route {$route} has the invalid representation type {$kind} (HY-118)");
         }
 
-        return [
-            'type' => $kind,
-            'media' => $media,
-            'parameters' => self::parameters($route, $kind, $item->parameters),
-            'methods' => self::methods($route, $kind, $item->methods),
-            'vary' => self::vary($route, $kind, $item->vary),
-        ];
+        return new RepresentationEntry(
+            $kind,
+            $media,
+            self::servedParameters($route, $kind, $item->parameters),
+            self::answeredMethods($route, $kind, $item->methods),
+            self::varyNames($route, $kind, $item->vary),
+        );
     }
 
     /** @return list<array{0: string, 1: list<string>}> */
-    private static function parameters(string $route, string $kind, mixed $raw): array
+    private static function servedParameters(string $route, string $kind, mixed $raw): array
     {
         if (!$raw instanceof \stdClass) {
             throw new \InvalidArgumentException(
@@ -175,7 +164,7 @@ final class RepresentationEntries
     }
 
     /** @return list<string> */
-    private static function methods(string $route, string $kind, mixed $raw): array
+    private static function answeredMethods(string $route, string $kind, mixed $raw): array
     {
         $methods = [];
         foreach (is_array($raw) ? $raw : [] as $method) {
@@ -194,7 +183,7 @@ final class RepresentationEntries
     }
 
     /** @return list<string> */
-    private static function vary(string $route, string $kind, mixed $raw): array
+    private static function varyNames(string $route, string $kind, mixed $raw): array
     {
         if (!is_array($raw)) {
             throw new \InvalidArgumentException(

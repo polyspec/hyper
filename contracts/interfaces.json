@@ -201,16 +201,124 @@
             },
             "node": {
               "file": "packages/server/ts/src/media-selection.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_media_selection.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "media-selection.select",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>",
+                "list<string>",
+                "list<representation-entry>"
+              ],
+              "output": "optional<list<value>>",
+              "errors": [
+                "invalid-accept"
+              ],
+              "state": "Selects the type of the highest weight among the page types and the entries, the first on a tie, and returns it with its entry and the values of its required parameters, or none when every weight is 0 (HY-116.11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaSelection.php::Polyspec\\Hyper\\MediaSelection::select",
+                  "signature": "public static function select(?string $accept, array $pages, array $entries): ?array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-selection.ts::MediaSelection.select",
+                  "signature": "static select(accept: string | null, pages: readonly string[], entries: readonly RepresentationEntry[]): [string, RepresentationEntry | null, Map<string, string>] | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_media_selection.py::MediaSelection.select",
+                  "signature": "def select(accept: Optional[str], pages: Sequence[str], entries: Sequence[RepresentationEntry]) -> Optional[tuple[str, Optional[RepresentationEntry], dict[str, str]]]"
+                }
+              }
+            },
+            {
+              "id": "media-selection.entryWeight",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "list<media-range>",
+                "representation-entry"
+              ],
+              "output": "list<value>",
+              "errors": [],
+              "state": "Returns the weight in thousandths that the ranges give a declared type, and the parameter values of the range that gives it (HY-119.1, HY-119.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaSelection.php::Polyspec\\Hyper\\MediaSelection::entryWeight",
+                  "signature": "public static function entryWeight(array $ranges, Polyspec\\Hyper\\RepresentationEntry $entry): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-selection.ts::MediaSelection.entryWeight",
+                  "signature": "static entryWeight(ranges: readonly MediaRange[], entry: RepresentationEntry): [number, Map<string, string>]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_media_selection.py::MediaSelection.entry_weight",
+                  "signature": "def entry_weight(ranges: Sequence[MediaRange], entry: RepresentationEntry) -> tuple[int, dict[str, str]]"
+                }
+              }
+            },
+            {
+              "id": "media-selection.contentType",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "representation-entry",
+                "map<string>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the Content-Type of a representation: its type and each required parameter with its selected value, quoted when it is no token (HY-119.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaSelection.php::Polyspec\\Hyper\\MediaSelection::contentType",
+                  "signature": "public static function contentType(Polyspec\\Hyper\\RepresentationEntry $entry, array $values): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-selection.ts::MediaSelection.contentType",
+                  "signature": "static contentType(entry: RepresentationEntry, values: ReadonlyMap<string, string>): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_media_selection.py::MediaSelection.content_type",
+                  "signature": "def content_type(entry: RepresentationEntry, values: dict[str, str]) -> str"
+                }
+              }
+            },
+            {
+              "id": "media-selection.listing",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "list<string>",
+                "list<representation-entry>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the types that a path serves, each on a line: the page types, then each entry once for each combination of its served values (HY-116.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaSelection.php::Polyspec\\Hyper\\MediaSelection::listing",
+                  "signature": "public static function listing(array $pages, array $entries): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-selection.ts::MediaSelection.listing",
+                  "signature": "static listing(pages: readonly string[], entries: readonly RepresentationEntry[]): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_media_selection.py::MediaSelection.listing",
+                  "signature": "def listing(pages: Sequence[str], entries: Sequence[RepresentationEntry]) -> str"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -755,7 +863,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/MediaRange.php::Polyspec\\Hyper\\MediaRange::type",
-                  "signature": "public protected(set) readonly string $type"
+                  "signature": "public readonly string $type"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/media-range.ts::MediaRange.type",
@@ -778,7 +886,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/MediaRange.php::Polyspec\\Hyper\\MediaRange::subtype",
-                  "signature": "public protected(set) readonly string $subtype"
+                  "signature": "public readonly string $subtype"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/media-range.ts::MediaRange.subtype",
@@ -801,7 +909,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/MediaRange.php::Polyspec\\Hyper\\MediaRange::parameters",
-                  "signature": "public protected(set) readonly array $parameters"
+                  "signature": "public readonly array $parameters"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/media-range.ts::MediaRange.parameters",
@@ -824,7 +932,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/MediaRange.php::Polyspec\\Hyper\\MediaRange::weight",
-                  "signature": "public protected(set) readonly int $weight"
+                  "signature": "public readonly int $weight"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/media-range.ts::MediaRange.weight",
@@ -864,7 +972,82 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "media-type.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "map<string>",
+                "string"
+              ],
+              "output": "media-type",
+              "errors": [],
+              "state": "Holds the selected values of the required parameters and the Content-Type of the selected type.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::__construct",
+                  "signature": "public function __construct(array $parameters, string $contentType)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-type.ts::MediaType.constructor",
+                  "signature": "constructor(parameters: ReadonlyMap<string, string>, contentType = '')"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.__init__",
+                  "signature": "def __init__(self, parameters: dict[str, str], content_type: str='')"
+                }
+              }
+            },
+            {
+              "id": "media-type.parameters",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Returns the selected value of each required parameter by its lower-case name, in declared order (HY-119.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::parameters",
+                  "signature": "public function parameters(): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-type.ts::MediaType.parameters",
+                  "signature": "parameters(): ReadonlyMap<string, string>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.parameters",
+                  "signature": "def parameters(self) -> dict[str, str]"
+                }
+              }
+            },
+            {
+              "id": "media-type.etag",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the strong tag that a 200 response with the body of the selected type has (HY-122.11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::etag",
+                  "signature": "public function etag(mixed $body): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/media-type.ts::MediaType.etag",
+                  "signature": "etag(body: unknown): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.etag",
+                  "signature": "def etag(self, body: object) -> str"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -1394,7 +1577,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::note",
-                  "signature": "public function note(mixed $name, mixed $value): Polyspec\\Hyper\\Reply"
+                  "signature": "public function note(mixed $name, mixed $value): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/reply.ts::Reply.note",
@@ -1444,7 +1627,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::cookie",
-                  "signature": "public function cookie(mixed $name, mixed $value, mixed $maxAge): Polyspec\\Hyper\\Reply"
+                  "signature": "public function cookie(mixed $name, mixed $value, mixed $maxAge): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/reply.ts::Reply.cookie",
@@ -1469,7 +1652,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::removeCookie",
-                  "signature": "public function removeCookie(mixed $name): Polyspec\\Hyper\\Reply"
+                  "signature": "public function removeCookie(mixed $name): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/reply.ts::Reply.removeCookie",
@@ -1494,7 +1677,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::cacheControl",
-                  "signature": "public function cacheControl(mixed $value): Polyspec\\Hyper\\Reply"
+                  "signature": "public function cacheControl(mixed $value): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/reply.ts::Reply.cacheControl",
@@ -1517,7 +1700,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::renewSession",
-                  "signature": "public function renewSession(): Polyspec\\Hyper\\Reply"
+                  "signature": "public function renewSession(): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/reply.ts::Reply.renewSession",
@@ -1588,7 +1771,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::referrerPolicy",
-                  "signature": "public function referrerPolicy(mixed $value): Polyspec\\Hyper\\Reply"
+                  "signature": "public function referrerPolicy(mixed $value): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/reply.ts::Reply.referrerPolicy",
@@ -1659,7 +1842,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::status",
-                  "signature": "public function status(mixed $status): Polyspec\\Hyper\\Reply"
+                  "signature": "public function status(mixed $status): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/reply.ts::Reply.status",
@@ -1705,7 +1888,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Reply.php::Polyspec\\Hyper\\Reply::embedData",
-                  "signature": "public function embedData(): Polyspec\\Hyper\\Reply"
+                  "signature": "public function embedData(): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/reply.ts::Reply.embedData",
@@ -1862,7 +2045,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::withHeader",
-                  "signature": "public function withHeader(string $name, string $value): Polyspec\\Hyper\\Response"
+                  "signature": "public function withHeader(string $name, string $value): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/response.ts::Response.withHeader",
@@ -1888,7 +2071,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::withCookies",
-                  "signature": "public function withCookies(Polyspec\\Hyper\\Reply $reply, bool $secure): Polyspec\\Hyper\\Response"
+                  "signature": "public function withCookies(Polyspec\\Hyper\\Reply $reply, bool $secure): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/response.ts::Response.withCookies",
@@ -1914,7 +2097,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::text",
-                  "signature": "public static function text(int $status, string $body): Polyspec\\Hyper\\Response"
+                  "signature": "public static function text(int $status, string $body): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/response.ts::Response.text",
@@ -2003,7 +2186,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::status",
-                  "signature": "public protected(set) readonly int $status"
+                  "signature": "public readonly int $status"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/response.ts::Response.status",
@@ -2026,7 +2209,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::headers",
-                  "signature": "public protected(set) readonly array $headers"
+                  "signature": "public readonly array $headers"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/response.ts::Response.headers",
@@ -2049,7 +2232,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Response.php::Polyspec\\Hyper\\Response::body",
-                  "signature": "public protected(set) readonly string $body"
+                  "signature": "public readonly string $body"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/response.ts::Response.body",
@@ -2142,7 +2325,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::redirect",
-                  "signature": "public static function redirect(string $location): Polyspec\\Hyper\\Result"
+                  "signature": "public static function redirect(string $location): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.redirect",
@@ -2168,7 +2351,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::page",
-                  "signature": "public static function page(int $status, array $data): Polyspec\\Hyper\\Result"
+                  "signature": "public static function page(int $status, array $data): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.page",
@@ -2193,7 +2376,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::invalid",
-                  "signature": "public static function invalid(array $data): Polyspec\\Hyper\\Result"
+                  "signature": "public static function invalid(array $data): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.invalid",
@@ -2219,7 +2402,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::flash",
-                  "signature": "public function flash(mixed $name, mixed $value): Polyspec\\Hyper\\Result"
+                  "signature": "public function flash(mixed $name, mixed $value): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.flash",
@@ -2244,7 +2427,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::changed",
-                  "signature": "public function changed(mixed ...$topics): Polyspec\\Hyper\\Result"
+                  "signature": "public function changed(mixed ...$topics): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.changed",
@@ -2315,7 +2498,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::location",
-                  "signature": "public protected(set) readonly ?string $location"
+                  "signature": "public readonly ?string $location"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.location",
@@ -2338,7 +2521,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::status",
-                  "signature": "public protected(set) readonly int $status"
+                  "signature": "public readonly int $status"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.status",
@@ -2361,7 +2544,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::data",
-                  "signature": "public protected(set) readonly array $data"
+                  "signature": "public readonly array $data"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.data",
@@ -2384,7 +2567,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::flashValues",
-                  "signature": "public protected(set) readonly array $flashValues"
+                  "signature": "public readonly array $flashValues"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.flashValues",
@@ -2407,7 +2590,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Result.php::Polyspec\\Hyper\\Result::changedTopics",
-                  "signature": "public protected(set) readonly array $changedTopics"
+                  "signature": "public readonly array $changedTopics"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/result.ts::Result.changedTopics",
@@ -2477,7 +2660,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Redirect.php::Polyspec\\Hyper\\Redirect::result",
-                  "signature": "public protected(set) readonly Polyspec\\Hyper\\Result $result"
+                  "signature": "public readonly Polyspec\\Hyper\\Result $result"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/redirect.ts::Redirect.result",
@@ -2672,7 +2855,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Fields.php::Polyspec\\Hyper\\Fields::empty",
-                  "signature": "public static function empty(): Polyspec\\Hyper\\Fields"
+                  "signature": "public static function empty(): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/fields.ts::Fields.empty",
@@ -2697,7 +2880,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Fields.php::Polyspec\\Hyper\\Fields::parse",
-                  "signature": "public static function parse(string $text): ?Polyspec\\Hyper\\Fields"
+                  "signature": "public static function parse(string $text): ?self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/fields.ts::Fields.parse",
@@ -2723,7 +2906,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Fields.php::Polyspec\\Hyper\\Fields::fromBody",
-                  "signature": "public static function fromBody(string $type, string $body): ?Polyspec\\Hyper\\Fields"
+                  "signature": "public static function fromBody(string $type, string $body): ?self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/fields.ts::Fields.fromBody",
@@ -2793,7 +2976,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Files.php::Polyspec\\Hyper\\Files::empty",
-                  "signature": "public static function empty(): Polyspec\\Hyper\\Files"
+                  "signature": "public static function empty(): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/files.ts::Files.empty",
@@ -2819,7 +3002,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Files.php::Polyspec\\Hyper\\Files::fromBody",
-                  "signature": "public static function fromBody(string $type, string $body): ?Polyspec\\Hyper\\Files"
+                  "signature": "public static function fromBody(string $type, string $body): ?self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/files.ts::Files.fromBody",
@@ -4093,7 +4276,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::stored",
-                  "signature": "public static function stored(string $name, string $filename, string $contentType, string $path, int $size): Polyspec\\Hyper\\UploadedFile"
+                  "signature": "public static function stored(string $name, string $filename, string $contentType, string $path, int $size): self"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/uploaded-file.ts::UploadedFile.stored",
@@ -6156,16 +6339,343 @@
             },
             "node": {
               "file": "packages/server/ts/src/representation-entries.ts",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_representation_entries.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "representation-entries.declare",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "value"
+              ],
+              "output": "list<representation-entry>",
+              "errors": [],
+              "state": "Returns the entries of a route in the order of the manifest, and fails for a declaration that the manifest check rejects (HY-118.5 to HY-118.7).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::declare",
+                  "signature": "public static function declare(string $route, mixed $raw): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entries.ts::RepresentationEntries.declare",
+                  "signature": "static declare(route: string, raw: unknown): RepresentationEntry[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entries.py::RepresentationEntries.declare",
+                  "signature": "def declare(route: str, raw: list[dict]) -> list[RepresentationEntry]"
+                }
+              }
+            },
+            {
+              "id": "representation-entries.checkHandlers",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "list<representation-entry>",
+                "map<value>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails the open for an entry without a handler and for a handler of a type that the route does not declare (HY-118.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::checkHandlers",
+                  "signature": "public static function checkHandlers(string $route, array $entries, array $handlers): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entries.ts::RepresentationEntries.checkHandlers",
+                  "signature": "static checkHandlers(route: string, entries: readonly RepresentationEntry[], handlers: Record<string, unknown>): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entries.py::RepresentationEntries.check_handlers",
+                  "signature": "def check_handlers(route: str, entries: list[RepresentationEntry], handlers: dict) -> None"
+                }
+              }
+            },
+            {
+              "id": "representation-entries.entry",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "map<value>"
+              ],
+              "output": "representation-entry",
+              "errors": [],
+              "state": "Reads one entry of a route and checks its type.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::entry",
+                  "signature": "private static function entry(string $route, stdClass $item): Polyspec\\Hyper\\RepresentationEntry"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entries.ts::RepresentationEntries.entry",
+                  "signature": "private static entry(route: string, item: Map<unknown, unknown>): RepresentationEntry"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entries.py::RepresentationEntries._entry",
+                  "signature": "def _entry(route: str, item: dict) -> RepresentationEntry"
+                }
+              }
+            },
+            {
+              "id": "representation-entries.servedParameters",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "string",
+                "value"
+              ],
+              "output": "list<list<value>>",
+              "errors": [],
+              "state": "Reads the required parameters of an entry with their served values and checks their names and values.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::servedParameters",
+                  "signature": "private static function servedParameters(string $route, string $kind, mixed $raw): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entries.ts::RepresentationEntries.servedParameters",
+                  "signature": "private static servedParameters(route: string, kind: string, raw: unknown): [string, string[]][]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entries.py::RepresentationEntries._served_parameters",
+                  "signature": "def _served_parameters(route: str, kind: str, raw: object) -> tuple[tuple[str, tuple[str, ...]], ...]"
+                }
+              }
+            },
+            {
+              "id": "representation-entries.answeredMethods",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "string",
+                "value"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Reads the methods of an entry and checks that they are a nonempty subset of GET, POST, PUT and DELETE.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::answeredMethods",
+                  "signature": "private static function answeredMethods(string $route, string $kind, mixed $raw): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entries.ts::RepresentationEntries.answeredMethods",
+                  "signature": "private static answeredMethods(route: string, kind: string, raw: unknown): string[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entries.py::RepresentationEntries._answered_methods",
+                  "signature": "def _answered_methods(route: str, kind: str, raw: object) -> tuple[str, ...]"
+                }
+              }
+            },
+            {
+              "id": "representation-entries.varyNames",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "string",
+                "value"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Reads the vary names of an entry and checks that each is a field name other than Accept and Cookie that is not repeated.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::varyNames",
+                  "signature": "private static function varyNames(string $route, string $kind, mixed $raw): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entries.ts::RepresentationEntries.varyNames",
+                  "signature": "private static varyNames(route: string, kind: string, raw: unknown): string[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entries.py::RepresentationEntries._vary_names",
+                  "signature": "def _vary_names(route: str, kind: str, raw: object) -> tuple[str, ...]"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "representation-entry",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/RepresentationEntry.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/server/ts/src/representation-entry.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_representation_entry.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "representation-entry.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "list<list<value>>",
+                "list<string>",
+                "list<string>"
+              ],
+              "output": "representation-entry",
+              "errors": [],
+              "state": "Holds the type, the media type, the parameters, the methods and the vary names of an entry.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntry.php::Polyspec\\Hyper\\RepresentationEntry::__construct",
+                  "signature": "public function __construct(string $type, string $media, array $parameters, array $methods, array $vary)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entry.ts::RepresentationEntry.constructor",
+                  "signature": "constructor(type: string, media: string, parameters: readonly (readonly [string, readonly string[]])[], methods: readonly string[], vary: readonly string[])"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entry.py::RepresentationEntry.__init__",
+                  "signature": "def __init__(self, type: str, media: str, parameters: tuple[tuple[str, tuple[str, ...]], ...], methods: tuple[str, ...], vary: tuple[str, ...]) -> None"
+                }
+              }
+            },
+            {
+              "id": "representation-entry.type",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the type as the manifest writes it.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntry.php::Polyspec\\Hyper\\RepresentationEntry::type",
+                  "signature": "public readonly string $type"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entry.ts::RepresentationEntry.type",
+                  "signature": "readonly type: string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entry.py::RepresentationEntry.type",
+                  "signature": "type: str"
+                }
+              }
+            },
+            {
+              "id": "representation-entry.media",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the type in lower case.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntry.php::Polyspec\\Hyper\\RepresentationEntry::media",
+                  "signature": "public readonly string $media"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entry.ts::RepresentationEntry.media",
+                  "signature": "readonly media: string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entry.py::RepresentationEntry.media",
+                  "signature": "media: str"
+                }
+              }
+            },
+            {
+              "id": "representation-entry.parameters",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<list<value>>",
+              "errors": [],
+              "state": "Holds the required parameters, each a lower-case name with its served values, in declared order.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntry.php::Polyspec\\Hyper\\RepresentationEntry::parameters",
+                  "signature": "public readonly array $parameters"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entry.ts::RepresentationEntry.parameters",
+                  "signature": "readonly parameters: readonly (readonly [string, readonly string[]])[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entry.py::RepresentationEntry.parameters",
+                  "signature": "parameters: tuple[tuple[str, tuple[str, ...]], ...]"
+                }
+              }
+            },
+            {
+              "id": "representation-entry.methods",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Holds the methods that the entry answers.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntry.php::Polyspec\\Hyper\\RepresentationEntry::methods",
+                  "signature": "public readonly array $methods"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entry.ts::RepresentationEntry.methods",
+                  "signature": "readonly methods: readonly string[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entry.py::RepresentationEntry.methods",
+                  "signature": "methods: tuple[str, ...]"
+                }
+              }
+            },
+            {
+              "id": "representation-entry.vary",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Holds the request header names that the responses of the entry depend on besides Accept.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationEntry.php::Polyspec\\Hyper\\RepresentationEntry::vary",
+                  "signature": "public readonly array $vary"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-entry.ts::RepresentationEntry.vary",
+                  "signature": "readonly vary: readonly string[]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_entry.py::RepresentationEntry.vary",
+                  "signature": "vary: tuple[str, ...]"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "representation",
@@ -6186,14 +6696,111 @@
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "representation.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "number",
+                "optional<value>",
+                "map<string>"
+              ],
+              "output": "representation",
+              "errors": [],
+              "state": "Holds the status, the body, or null for no body, and the headers that a representation handler returns (HY-122.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Representation.php::Polyspec\\Hyper\\Representation::__construct",
+                  "signature": "public function __construct(int $status, mixed $body, array $headers)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation.ts::Representation.constructor",
+                  "signature": "constructor(status: number, body: unknown = null, headers: Record<string, string> = {})"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/representation.py::Representation.__init__",
+                  "signature": "def __init__(self, status: int, body: object=None, headers: Optional[dict[str, str]]=None)"
+                }
+              }
+            },
+            {
+              "id": "representation.status",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Holds the status of the response.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Representation.php::Polyspec\\Hyper\\Representation::status",
+                  "signature": "public readonly int $status"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation.ts::Representation.status",
+                  "signature": "readonly status: number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/representation.py::Representation.status",
+                  "signature": "status: int"
+                }
+              }
+            },
+            {
+              "id": "representation.body",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "optional<value>",
+              "errors": [],
+              "state": "Holds the body, a value of the data model, or null for no body.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Representation.php::Polyspec\\Hyper\\Representation::body",
+                  "signature": "public readonly mixed $body"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation.ts::Representation.body",
+                  "signature": "readonly body: unknown"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/representation.py::Representation.body",
+                  "signature": "body: object"
+                }
+              }
+            },
+            {
+              "id": "representation.headers",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Holds the headers that the handler set.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Representation.php::Polyspec\\Hyper\\Representation::headers",
+                  "signature": "public readonly array $headers"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation.ts::Representation.headers",
+                  "signature": "readonly headers: Readonly<Record<string, string>>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/representation.py::Representation.headers",
+                  "signature": "headers: dict[str, str]"
+                }
+              }
+            }
+          ]
         },
         {
           "id": "representation-response",
           "native": {
             "php": {
               "file": "packages/server/php/src/RepresentationResponse.php",
-              "kind": "class",
+              "kind": "functions",
               "internal": true
             },
             "node": {
@@ -6207,7 +6814,116 @@
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "representation-response.of",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "string",
+                "string",
+                "boolean",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Returns the response of what a handler returned with its Content-Type, Vary, Cache-Control and Location, and fails for a value, a status, a header or a body that HY-122 does not allow (HY-122.2 to HY-122.9).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationResponse.php::Polyspec\\Hyper\\RepresentationResponse::of",
+                  "signature": "public static function of(mixed $returned, string $contentType, string $vary, bool $authorized, string $basePath): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-response.ts::RepresentationResponse.of",
+                  "signature": "static of(returned: unknown, contentType: string, vary: string, authorized: boolean, basePath: string): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_response.py::RepresentationResponse.of",
+                  "signature": "def of(returned: object, content_type: str, vary: str, authorized: bool, base_path: str) -> Response"
+                }
+              }
+            },
+            {
+              "id": "representation-response.etag",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the strong tag of a body of a type: the first 32 hexadecimal digits of the SHA-256 digest of the Content-Type, a line feed and the body, in quotes (HY-122.10).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationResponse.php::Polyspec\\Hyper\\RepresentationResponse::etag",
+                  "signature": "public static function etag(string $contentType, string $body): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-response.ts::RepresentationResponse.etag",
+                  "signature": "static etag(contentType: string, body: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_response.py::RepresentationResponse.etag",
+                  "signature": "def etag(content_type: str, body: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "representation-response.cachePolicy",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "number",
+                "value",
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the Cache-Control of a response: no-store for a status of 400 or more, the value of the handler, or the default (HY-122.6, HY-122.7).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationResponse.php::Polyspec\\Hyper\\RepresentationResponse::cachePolicy",
+                  "signature": "private static function cachePolicy(int $status, mixed $given, bool $authorized): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-response.ts::RepresentationResponse.cachePolicy",
+                  "signature": "private static cachePolicy(status: number, given: unknown, authorized: boolean): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_response.py::RepresentationResponse._cache_policy",
+                  "signature": "def _cache_policy(status: int, given: object, authorized: bool) -> str"
+                }
+              }
+            },
+            {
+              "id": "representation-response.sentLocation",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the Location of a response: an absolute URI as it is, and an application path with the base path of the request (HY-122.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RepresentationResponse.php::Polyspec\\Hyper\\RepresentationResponse::sentLocation",
+                  "signature": "private static function sentLocation(mixed $location, string $basePath): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/representation-response.ts::RepresentationResponse.sentLocation",
+                  "signature": "private static sentLocation(location: unknown, basePath: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_representation_response.py::RepresentationResponse._sent_location",
+                  "signature": "def _sent_location(location: object, base_path: str) -> str"
+                }
+              }
+            }
+          ]
         }
       ]
     },

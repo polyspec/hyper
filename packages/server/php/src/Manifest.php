@@ -17,7 +17,6 @@ namespace Polyspec\Hyper;
  *     regions: list<Region>,
  *     representations: list<RepresentationEntry>
  * }
- * @phpstan-import-type RepresentationEntry from RepresentationEntries
  */
 final class Manifest
 {

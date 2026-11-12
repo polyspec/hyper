@@ -64,10 +64,10 @@ final class RepresentationResponse
             $body = JsonCodec::encode($returned->body);
             $headers['Content-Type'] = $contentType;
         }
-        $headers['Cache-Control'] = self::cacheControl($status, $given['cache-control'] ?? null, $authorized);
+        $headers['Cache-Control'] = self::cachePolicy($status, $given['cache-control'] ?? null, $authorized);
         $headers['Vary'] = $vary;
         if (array_key_exists('location', $given)) {
-            $headers['Location'] = self::location($given['location'], $basePath);
+            $headers['Location'] = self::sentLocation($given['location'], $basePath);
         }
         if (array_key_exists('www-authenticate', $given)) {
             if (!is_string($given['www-authenticate'])) {
@@ -93,7 +93,7 @@ final class RepresentationResponse
      * the value of the handler, which a request with Authorization keeps out of shared caches, or the default
      * (HY-122.6, HY-122.7).
      */
-    private static function cacheControl(int $status, mixed $given, bool $authorized): string
+    private static function cachePolicy(int $status, mixed $given, bool $authorized): string
     {
         if ($status >= 400) {
             if ($given !== null) {
@@ -128,7 +128,7 @@ final class RepresentationResponse
      * Returns the Location of a response: an absolute URI as it is, and an application path with the base path of
      * the request; another value fails (HY-122.5).
      */
-    private static function location(mixed $location, string $basePath): string
+    private static function sentLocation(mixed $location, string $basePath): string
     {
         if (!is_string($location)) {
             throw new \LogicException('a Location of a representation is not a string (HY-122)');

@@ -59,12 +59,12 @@ class RepresentationResponse:
         if returned.body is not None:
             body = JsonCodec.encode(returned.body)
             headers["Content-Type"] = content_type
-        headers["Cache-Control"] = RepresentationResponse._cache_control(
+        headers["Cache-Control"] = RepresentationResponse._cache_policy(
             status, given.get("cache-control"), authorized
         )
         headers["Vary"] = vary
         if "location" in given:
-            headers["Location"] = RepresentationResponse._location(
+            headers["Location"] = RepresentationResponse._sent_location(
                 given["location"], base_path
             )
         if "www-authenticate" in given:
@@ -83,7 +83,7 @@ class RepresentationResponse:
         return f'"{digest[:32]}"'
 
     @staticmethod
-    def _cache_control(status: int, given: object, authorized: bool) -> str:
+    def _cache_policy(status: int, given: object, authorized: bool) -> str:
         """Returns the `Cache-Control` of a response: `no-store` for a status of 400 or more, which a handler must
         not set, the value of the handler, which a request with `Authorization` keeps out of shared caches, or the
         default (HY-122.6, HY-122.7)."""
@@ -113,7 +113,7 @@ class RepresentationResponse:
         return given
 
     @staticmethod
-    def _location(location: object, base_path: str) -> str:
+    def _sent_location(location: object, base_path: str) -> str:
         """Returns the `Location` of a response: an absolute URI as it is, and an application path with the base path
         of the request; another value fails (HY-122.5)."""
         if not isinstance(location, str):

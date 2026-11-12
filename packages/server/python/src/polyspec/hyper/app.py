@@ -15,7 +15,7 @@ from ._invalid_accept import InvalidAccept
 from .client import Choice, ClientRendering
 from .container import Container
 from ._build import Build
-from ._representation_entries import check_handlers as check_representation_handlers
+from ._representation_entries import RepresentationEntries
 from ._context import Context
 from ._csrf import Csrf
 from ._data_model import DataModel
@@ -23,10 +23,8 @@ from ._json_codec import JsonCodec
 from ._json_decode_error import JsonDecodeError
 from ._kept import Kept
 from ._media import JSON, TEXT_HTML
-from ._media_selection import content_type as media_content_type
-from ._media_selection import listing as media_listing
-from ._media_selection import select as select_media
-from ._representation_entries import Entry
+from ._media_selection import MediaSelection
+from ._representation_entry import RepresentationEntry
 from ._representation_response import RepresentationResponse
 from .media_type import MediaType
 from ._manifest import Manifest
@@ -220,7 +218,7 @@ class App:
         for name, route in declared.routes.items():
             if route["post"] and "post" not in route_handlers.get(name, {}):
                 raise ValueError(f"route {name} declares post but has no POST action")
-            check_representation_handlers(
+            RepresentationEntries.check_handlers(
                 name,
                 route["representations"],
                 route_handlers.get(name, {}).get("representations", {}),
@@ -383,17 +381,17 @@ class App:
         )._with_cookies(reply, self.https or request.https)
 
     def _negotiate(
-        self, request: Request, served: tuple[str, ...], entries: Sequence[Entry]
-    ) -> Union[tuple[str, Optional[Entry], dict[str, str]], Response]:
+        self, request: Request, served: tuple[str, ...], entries: Sequence[RepresentationEntry]
+    ) -> Union[tuple[str, Optional[RepresentationEntry], dict[str, str]], Response]:
         """Selects the media type of a request among text/html, application/vnd.hyper+json and the representations
         of its route (HY-116), or returns the response that refuses it: 400 for an invalid `Accept`, and 406 with the
         served types for a request that matches none of them."""
         try:
-            selected = select_media(request.header("Accept"), _PAGE_TYPES, entries)
+            selected = MediaSelection.select(request.header("Accept"), _PAGE_TYPES, entries)
         except InvalidAccept:
             return Response.text(400, "Bad Request").with_header("Vary", "Accept")
         if selected is None:
-            return Response.text(406, media_listing(served, entries)).with_header(
+            return Response.text(406, MediaSelection.listing(served, entries)).with_header(
                 "Vary", "Accept"
             )
         return selected
@@ -402,7 +400,7 @@ class App:
         self,
         request: Request,
         handler: dict,
-        entry: Entry,
+        entry: RepresentationEntry,
         values: dict[str, str],
         base_path: str,
     ) -> Response:
@@ -432,7 +430,7 @@ class App:
             # HY-121.8: a number outside the data model is no value that a handler reads.
             if not JsonCodec.in_data_model(value):
                 return Response.text(400, "Bad Request").with_header("Vary", vary)
-        content_type = media_content_type(entry, values)
+        content_type = MediaSelection.content_type(entry, values)
         given = request._as_representation(value)
         try:
             returned = handler["representations"][entry.type](
@@ -488,11 +486,11 @@ class App:
         # acceptable here, and they are not listed (HY-116.14).
         entries = self.manifest.routes[match["name"]]["representations"]
         try:
-            chosen = select_media(request.header("Accept"), _PAGE_TYPES, entries)
+            chosen = MediaSelection.select(request.header("Accept"), _PAGE_TYPES, entries)
         except InvalidAccept:
             return Response.text(400, "Bad Request").with_header("Vary", "Accept")
         if chosen is None:
-            return Response.text(406, media_listing((TEXT_HTML,), ())).with_header(
+            return Response.text(406, MediaSelection.listing((TEXT_HTML,), ())).with_header(
                 "Vary", "Accept"
             )
         if chosen[0] != TEXT_HTML:

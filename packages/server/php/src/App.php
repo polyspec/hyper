@@ -17,7 +17,6 @@ use Polyspec\Template\BoundMap;
  *     regions?: array<string, \Closure>,
  *     representations?: array<string, \Closure>
  * }
- * @phpstan-import-type RepresentationEntry from RepresentationEntries
  * @phpstan-type Handlers array{shared?: \Closure, regions?: array<string, \Closure>, routes?: array<string,
  *     RouteHandler>}
  */
@@ -568,25 +567,24 @@ final class App
      * entry, and the response of what it returned with its tag.
      *
      * @param RouteHandler $handler
-     * @param RepresentationEntry $entry
      * @param array<array-key, string> $values
      */
     private function representation(
         Request $request,
         array $handler,
-        array $entry,
+        RepresentationEntry $entry,
         array $values,
         string $basePath,
     ): Response {
-        $vary = implode(', ', ['Accept', ...$entry['vary']]);
+        $vary = implode(', ', ['Accept', ...$entry->vary]);
         $method = $request->method;
-        if (!in_array($method, $entry['methods'], true)) {
+        if (!in_array($method, $entry->methods, true)) {
             // HY-121.6: an entry with GET also answers HEAD, which reaches here as GET (HY-27.4).
             $answered = array_filter(
                 ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'],
                 static fn (string $name): bool => in_array(
                     $name === 'HEAD' ? 'GET' : $name,
-                    $entry['methods'],
+                    $entry->methods,
                     true,
                 ),
             );
@@ -613,8 +611,8 @@ final class App
             }
         }
         $contentType = MediaSelection::contentType($entry, $values);
-        $handle = $handler['representations'][$entry['type']]
-            ?? throw new \LogicException("the route has no representation handler for {$entry['type']} (HY-118)");
+        $handle = $handler['representations'][$entry->type]
+            ?? throw new \LogicException("the route has no representation handler for {$entry->type} (HY-118)");
         try {
             $returned = $this->container->call($handle, [
                 Request::class => $request->asRepresentation($value),
