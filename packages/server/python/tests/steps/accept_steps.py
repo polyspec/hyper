@@ -1,6 +1,6 @@
 # The steps of contracts/accept.json (HY-116): the parse of an Accept value and the selection of a media type.
-from polyspec.hyper._accept import Accept
-from polyspec.hyper._invalid_accept import InvalidAccept
+from polyspec.hyper.server._accept import Accept
+from polyspec.hyper.server._invalid_accept import InvalidAccept
 
 
 def parse(case) -> None:

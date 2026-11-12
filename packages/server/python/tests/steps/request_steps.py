@@ -1,7 +1,7 @@
 # The steps of contracts/request.json: the text that a host gives a request (HY-42.6), the files of a request
 # (HY-113.2), the path and the query of a request target (HY-42, HY-56) and the values that a request gives.
-from polyspec.hyper._cookies import Cookies
-from polyspec.hyper.request import Request
+from polyspec.hyper.server._cookies import Cookies
+from polyspec.hyper.server.request import Request
 
 _NO_MEDIA = "the request holds no selected media type"
 

@@ -3,11 +3,11 @@
 # that open the applications of the contract.
 from pathlib import Path
 
-from polyspec.hyper.app import App
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.request import Request
-from polyspec.hyper.not_found import NotFound
-from polyspec.hyper.result import Result
+from polyspec.hyper.server.app import App
+from polyspec.hyper.server.reply import Reply
+from polyspec.hyper.server.request import Request
+from polyspec.hyper.server.not_found import NotFound
+from polyspec.hyper.server.result import Result
 
 from .recorded import decoded
 

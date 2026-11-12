@@ -3,7 +3,7 @@
 # tests/scripts/session-shared-redis.test.mts checks the store on a real Redis server with PHP.
 import unittest
 
-from polyspec.hyper.redis_sessions import RedisSessions
+from polyspec.hyper.server.redis_sessions import RedisSessions
 
 IDENTIFIER = "a" * 32
 KEY = f"PHPREDIS_SESSION:{IDENTIFIER}"

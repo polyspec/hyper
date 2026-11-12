@@ -13,13 +13,13 @@ import time
 import warnings
 from pathlib import Path
 
-from polyspec.hyper._csrf import Csrf
-from polyspec.hyper._renderer import Renderer
-from polyspec.hyper._session import Session
-from polyspec.hyper.app import App
-from polyspec.hyper.array_session import ArraySession
-from polyspec.hyper.request import Request
-from polyspec.hyper.response import Response
+from polyspec.hyper.server._csrf import Csrf
+from polyspec.hyper.server._renderer import Renderer
+from polyspec.hyper.server._session import Session
+from polyspec.hyper.server.app import App
+from polyspec.hyper.server.array_session import ArraySession
+from polyspec.hyper.server.request import Request
+from polyspec.hyper.server.response import Response
 
 from ..render.render_functions import program_of
 from .app_handlers import SERVICES, Calls, handlers_of

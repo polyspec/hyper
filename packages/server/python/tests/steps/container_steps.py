@@ -1,5 +1,5 @@
 # The steps of contracts/container.json (HY-105): the services that the handlers receive.
-from polyspec.hyper.container import Container
+from polyspec.hyper.server.container import Container
 
 
 class Clock:

@@ -2,7 +2,7 @@
 import unittest
 from pathlib import Path
 
-import polyspec.hyper
+import polyspec.hyper.server
 
 PUBLIC_MODULES = [
     "app",
@@ -35,7 +35,7 @@ class PublicApiTest(unittest.TestCase):
     def test_the_modules_without_an_underscore_and_the_package_exports_are_the_public_api(
         self,
     ) -> None:
-        folder = Path(polyspec.hyper.__file__).parent
+        folder = Path(polyspec.hyper.server.__file__).parent
         found = sorted(
             file.stem for file in folder.glob("*.py") if not file.stem.startswith("_")
         )
@@ -66,5 +66,5 @@ class PublicApiTest(unittest.TestCase):
                 "create_server",
                 "create_wsgi",
             ],
-            sorted(polyspec.hyper.__all__),
+            sorted(polyspec.hyper.server.__all__),
         )

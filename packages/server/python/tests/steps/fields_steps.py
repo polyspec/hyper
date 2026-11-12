@@ -1,14 +1,14 @@
 # The steps of contracts/fields.json (HY-56, HY-57, HY-113): a urlencoded text is the UTF-8 encoding of its JSON
 # string, and a multipart type and body are text whose characters are their bytes.
-from polyspec.hyper._fields import Fields
+from polyspec.hyper.server._fields import Fields
 import os
 import shutil
 import tempfile
 
-from polyspec.hyper._files import Files
-from polyspec.hyper._multipart import Multipart
-from polyspec.hyper._request_body import RequestBody
-from polyspec.hyper.uploaded_file import UploadedFile
+from polyspec.hyper.server._files import Files
+from polyspec.hyper.server._multipart import Multipart
+from polyspec.hyper.server._request_body import RequestBody
+from polyspec.hyper.server.uploaded_file import UploadedFile
 
 
 def urlencoded(case) -> None:

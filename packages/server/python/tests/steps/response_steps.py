@@ -1,6 +1,6 @@
 # The steps of contracts/response.json (HY-106.1): a response that the constructor or Response.text makes, and the
 # copies that with_header returns.
-from polyspec.hyper.response import Response
+from polyspec.hyper.server.response import Response
 
 
 def values(case) -> None:

@@ -11,11 +11,11 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from .fixture_app import FIXTURES
-from polyspec.hyper.app import App
-from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper.request import Request
-from polyspec.hyper.response import Response
-from polyspec.hyper.server import create_server
+from polyspec.hyper.server.app import App
+from polyspec.hyper.server.file_sessions import FileSessions
+from polyspec.hyper.server.request import Request
+from polyspec.hyper.server.response import Response
+from polyspec.hyper.server.server import create_server
 
 TESTS = Path(__file__).resolve().parents[2]
 MANIFEST = TESTS.parent / "php" / "tests" / "fixtures" / "app.json"

@@ -3,10 +3,10 @@
 import json
 from typing import Optional
 
-from polyspec.hyper.array_session import ArraySession
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.request import Request
-from polyspec.hyper.response import Response
+from polyspec.hyper.server.array_session import ArraySession
+from polyspec.hyper.server.reply import Reply
+from polyspec.hyper.server.request import Request
+from polyspec.hyper.server.response import Response
 
 
 def decoded(text: object) -> object:

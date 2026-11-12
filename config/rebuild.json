@@ -52,7 +52,7 @@
     },
     "examples/board/python/main.py": {
       "kind": "ecosystem",
-      "tool": "the standard library http.server through create_server of polyspec.hyper serves the board example"
+      "tool": "the standard library http.server through create_server of polyspec.hyper.server serves the board example"
     },
     "examples/board/python/posts.py": {
       "kind": "ecosystem",

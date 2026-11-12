@@ -1,7 +1,7 @@
 # The steps of contracts/json.json (HY-17, HY-54): the JSON text of a decoded value, and the decoding of a text.
-from polyspec.hyper._json_codec import JsonCodec
-from polyspec.hyper._json_decode_error import JsonDecodeError
-from polyspec.hyper._outside_number import OutsideNumber
+from polyspec.hyper.server._json_codec import JsonCodec
+from polyspec.hyper.server._json_decode_error import JsonDecodeError
+from polyspec.hyper.server._outside_number import OutsideNumber
 
 
 def _finite(value):

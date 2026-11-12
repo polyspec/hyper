@@ -1,6 +1,6 @@
 # The steps of contracts/routes.json (HY-13, HY-18 to HY-20): the match of a path, also under the base path, and
 # refused paths; rest_steps.py runs the same match and refusal for contracts/rest.json.
-from polyspec.hyper._router import Router
+from polyspec.hyper.server._router import Router
 
 
 def cases(case) -> None:

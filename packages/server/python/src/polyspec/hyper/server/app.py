@@ -143,7 +143,7 @@ class App:
         response, the elapsed milliseconds, the reply of the request, which is empty when the server answered
         before routing, and the failure of a 500 of HY-43 or HY-66, else None (HY-60). `on_disconnect` is called once
         with the request, the elapsed milliseconds and the reply of a request whose response the server of
-        `polyspec.hyper.server` could not write because the client closed the connection (HY-67)."""
+        `polyspec.hyper.server.server` could not write because the client closed the connection (HY-67)."""
         # A limit is an integer (HY-59.2, HY-114.6, HY-131.10, HY-66.1); a boolean is an int of Python and no limit.
         if type(body_limit) is not int or body_limit < 1:
             raise ValueError(

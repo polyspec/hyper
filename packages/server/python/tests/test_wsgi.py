@@ -20,10 +20,10 @@ from .transport import (
     UploadCases,
 )
 from .render.fixture_handlers import Counter, fixture_app, handlers
-from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.response import Response
-from polyspec.hyper.wsgi import create_wsgi
+from polyspec.hyper.server.file_sessions import FileSessions
+from polyspec.hyper.server.reply import Reply
+from polyspec.hyper.server.response import Response
+from polyspec.hyper.server.wsgi import create_wsgi
 
 
 def environ(**changes) -> dict:

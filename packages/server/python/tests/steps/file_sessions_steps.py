@@ -5,8 +5,8 @@ import tempfile
 import time
 from pathlib import Path
 
-from polyspec.hyper._record_session import RecordSession
-from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.server._record_session import RecordSession
+from polyspec.hyper.server.file_sessions import FileSessions
 from polyspec.php_serialize import UnserializeError
 
 from .store_requests import StoreRequests

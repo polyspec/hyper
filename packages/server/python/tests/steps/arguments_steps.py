@@ -6,27 +6,27 @@ import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
-from polyspec.hyper.app import App
-from polyspec.hyper.array_session import ArraySession
-from polyspec.hyper.asgi import create_asgi
-from polyspec.hyper.bad_request import BadRequest
-from polyspec.hyper.choice import Choice
-from polyspec.hyper.client_rendering import ClientRendering
-from polyspec.hyper.container import Container
-from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper.forbidden import Forbidden
-from polyspec.hyper.media_type import MediaType
-from polyspec.hyper.not_found import NotFound
-from polyspec.hyper.redirect import Redirect
-from polyspec.hyper.redis_sessions import RedisSessions
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.representation import Representation
-from polyspec.hyper.request import Request
-from polyspec.hyper.response import Response
-from polyspec.hyper.result import Result
-from polyspec.hyper.server import create_server
-from polyspec.hyper.uploaded_file import UploadedFile
-from polyspec.hyper.wsgi import create_wsgi
+from polyspec.hyper.server.app import App
+from polyspec.hyper.server.array_session import ArraySession
+from polyspec.hyper.server.asgi import create_asgi
+from polyspec.hyper.server.bad_request import BadRequest
+from polyspec.hyper.server.choice import Choice
+from polyspec.hyper.server.client_rendering import ClientRendering
+from polyspec.hyper.server.container import Container
+from polyspec.hyper.server.file_sessions import FileSessions
+from polyspec.hyper.server.forbidden import Forbidden
+from polyspec.hyper.server.media_type import MediaType
+from polyspec.hyper.server.not_found import NotFound
+from polyspec.hyper.server.redirect import Redirect
+from polyspec.hyper.server.redis_sessions import RedisSessions
+from polyspec.hyper.server.reply import Reply
+from polyspec.hyper.server.representation import Representation
+from polyspec.hyper.server.request import Request
+from polyspec.hyper.server.response import Response
+from polyspec.hyper.server.result import Result
+from polyspec.hyper.server.server import create_server
+from polyspec.hyper.server.uploaded_file import UploadedFile
+from polyspec.hyper.server.wsgi import create_wsgi
 
 from ..render.fixture_app import FIXTURES, PROGRAM
 from ..render.fixture_handlers import Counter, fixture_app, handlers

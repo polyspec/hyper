@@ -6,10 +6,10 @@ import io
 import unittest
 
 from .transport import TransportCase, get_once, record_all
-from polyspec.hyper.app import App
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.response import Response
-from polyspec.hyper.server import create_server
+from polyspec.hyper.server.app import App
+from polyspec.hyper.server.reply import Reply
+from polyspec.hyper.server.response import Response
+from polyspec.hyper.server.server import create_server
 
 
 class AnsweringApplication:

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1727da0cff074912e54689cbf92bbe632aab9ac7901d1c44f71804ca5e72dff2 -->
+<!-- source-sha256: 0c6a175c30e037593af2d2e55b38015581e7351d2df35cbec40f6b47d87be9f0 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- server의 Python host 코드는 package `polyspec.hyper.server`다. 전에는 `polyspec.hyper`였다(binding P-1). `packages/server/python/src/polyspec/hyper/`의 파일 65개가 `src/polyspec/hyper/server/`로 옮겨 갔고, `polyspec.hyper`는 `__init__.py`가 없는 namespace이며, `create_server`의 module은 `polyspec.hyper.server.server`다. test, README, board 예제, package data test, owner 규칙이 새 경로를 이름한다. 애플리케이션은 `polyspec.hyper.server`와 그 module을 import하며, class와 함수의 이름은 그대로다(C-7).
 
 - server의 PHP host 코드는 namespace `Polyspec\Hyper\Server`다. 전에는 `Polyspec\Hyper`였다(binding P-1: component를 가진 저장소의 package는 namespace에 component를 더한다). `packages/server/php`의 source 55개와 test, 그 `composer.json`과 root `composer.json` 및 lock, namespace가 `Polyspec\Hyper\Server\Examples\Board`가 된 board 예제, benchmark server, Makefile의 생성 program namespace가 바뀌었다. 애플리케이션은 `Polyspec\Hyper\Server\App`과 공개 API의 다른 class를 새 namespace로 이름하며, class 이름과 오류 class `Hyper<Category>Error`는 그대로다(C-7).
 

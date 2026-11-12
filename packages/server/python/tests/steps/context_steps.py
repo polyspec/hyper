@@ -5,10 +5,10 @@ import io
 import json
 from urllib.parse import urlencode
 
-from polyspec.hyper._context import Context
-from polyspec.hyper._csrf import Csrf
-from polyspec.hyper.request import Request
-from polyspec.hyper.array_session import ArraySession
+from polyspec.hyper.server._context import Context
+from polyspec.hyper.server._csrf import Csrf
+from polyspec.hyper.server.request import Request
+from polyspec.hyper.server.array_session import ArraySession
 
 from .context_application import open_application, program_of
 from .recorded import decoded

@@ -5,8 +5,8 @@ import re
 import tempfile
 from pathlib import Path
 
-from polyspec.hyper._manifest import Manifest
-from polyspec.hyper.app import App
+from polyspec.hyper.server._manifest import Manifest
+from polyspec.hyper.server.app import App
 
 
 def checks(case) -> None:

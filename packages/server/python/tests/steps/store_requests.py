@@ -4,7 +4,7 @@
 import re
 from collections.abc import Callable
 
-from polyspec.hyper._record_session import RecordSession
+from polyspec.hyper.server._record_session import RecordSession
 
 from .recorded import decoded
 
