@@ -1570,7 +1570,7 @@ fn the_headers_of_a_page_and_the_kept_endpoint() {
 
 #[test]
 fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), bindgen_core::Failure<Error>> {
-    // HY-120.5, HY-24.1, HY-24.4, HY-25.2, HY-59.8, HY-40.1, HY-11.3
+    // HY-120.6, HY-120.7, HY-24.1, HY-24.4, HY-25.2, HY-59.8, HY-40.1, HY-11.3
     use polyspec_hyper::opening::{keep_request, open_page, KeepRequest, Opened, Opening};
     use polyspec_hyper::session::{kept, put_flash, token};
     use polyspec_hyper::steps::PageKind;
@@ -1660,5 +1660,19 @@ fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), bindgen_core::
         Some(&polyspec_template::Value::Bool(true))
     );
     assert_eq!(token(&mut store)?, first);
+    // The kept endpoint leaves the flash data to the next page request (HY-120.7).
+    put_flash(
+        &mut store,
+        &polyspec_template::OrderedMap::new(),
+        &["count".to_owned()],
+    )?;
+    assert_eq!(
+        keep_request(&pages, &mut store, &keep(&masked, "open", "false"))?.status,
+        204
+    );
+    let Opened::Page { input, .. } = open_page(&pages, &mut store, &opening(false, None))? else {
+        panic!("a GET page is refused");
+    };
+    assert_eq!(input.changed, ["count", "path"]);
     Ok(())
 }

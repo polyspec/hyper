@@ -4232,6 +4232,72 @@
       ]
     },
     {
+      "id": "a_keep_request_leaves_the_flash_values_to_the_next_page",
+      "label": "a request to the kept endpoint between a redirect and the next page leaves the flash values and the changed topics to that page (HY-120.7)",
+      "application": "a_board",
+      "before": [
+        {
+          "name": "add",
+          "method": "POST",
+          "target": "/add",
+          "headers": {
+            "Accept": "application/vnd.hyper+json",
+            "HX-Request": "true",
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          "form": {
+            "name": "a"
+          },
+          "csrf": true,
+          "status": 303
+        },
+        {
+          "name": "keep",
+          "method": "POST",
+          "target": "/_hyper/keep",
+          "headers": {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          "form": {
+            "region": "rows",
+            "path": "open",
+            "value": "true"
+          },
+          "csrf": true,
+          "status": 204
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "HX-Request": "true"
+        }
+      },
+      "status": 200,
+      "regionKeys": [
+        "content",
+        "side"
+      ],
+      "members": {
+        "regions": {
+          "content": {
+            "name": "n1"
+          },
+          "side": {
+            "count": 1,
+            "note": "added"
+          }
+        }
+      },
+      "requirements": [
+        "HY-120",
+        "HY-25",
+        "HY-40"
+      ]
+    },
+    {
       "id": "the_request_after_the_one_that_read_the_flash_values_has_the_page_region_alone",
       "label": "the flash values and the changed topics of a redirect reach one request, and the next has the page region alone",
       "application": "a_board",

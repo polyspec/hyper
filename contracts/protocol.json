@@ -1257,7 +1257,9 @@
         {
           "kind": "rule",
           "id": "HY-120",
-          "retired": [],
+          "retired": [
+            5
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -1287,10 +1289,16 @@
                   "id": "HY-120.4"
                 },
                 {
-                  "id": "HY-120.5",
-                  "en": "The opening reads and removes the flash data and then reads the token, which it sets when the session holds none.",
-                  "ko": "세션을 열 때 flash data를 읽고 지운 다음 토큰을 읽으며, 세션에 토큰이 없으면 토큰을 저장한다.",
-                  "koSource": "0a39f5342b39b6386760578375c6255135493544b3fc27d1918f2489f8c28001"
+                  "id": "HY-120.6",
+                  "en": "The opening of the session of a page request reads and removes the flash data and then reads the token, which it sets when the session holds none.",
+                  "ko": "page 요청의 세션을 열 때 flash data를 읽고 지운 다음 토큰을 읽으며, 세션에 토큰이 없으면 토큰을 저장한다.",
+                  "koSource": "0a83e0cd6d3a4af5a9f8c88e20a193591db4791fa475cc95f1ad7ebfc2d3cbc3"
+                },
+                {
+                  "id": "HY-120.7",
+                  "en": "The opening of the session of a request to `<base path>/_hyper/keep` reads only the token, which it sets when the session holds none, and leaves the flash data in the session, because the kept endpoint answers no page and the flash data belongs to the next page request (HY-25.2).",
+                  "ko": "`<base path>/_hyper/keep` 요청의 세션을 열 때는 토큰만 읽고, 세션에 토큰이 없으면 저장하며, flash data는 세션에 남긴다. kept endpoint는 page로 답하지 않고 flash data는 다음 page 요청의 것이기 때문이다(HY-25.2).",
+                  "koSource": "2d0cd468f0b1b7e481a1df12c41fa5fb06569aa72ea9ab77e077665b1c49402c"
                 }
               ]
             }

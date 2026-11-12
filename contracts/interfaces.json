@@ -15321,7 +15321,7 @@
               "role": "expected",
               "optional": true,
               "compare": "prefix",
-              "sentence": "HY-120.5",
+              "sentence": "HY-120.6",
               "state": "`firstStoreCalls` lists the first calls of the session store for the request in their order, in the written form of `storeCalls`."
             },
             "options": {

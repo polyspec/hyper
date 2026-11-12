@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8ea96b35c6230b0d92c7138b109e5ead36200559e221ac677cf6423f67afe9f9 -->
+<!-- source-sha256: cf058ccf2f2401b297ec7c92c1b36f46e744589e86c13f7a3b215a64975ef03b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 세션 열기는 page 요청에서만 flash data를 가져가고(HY-120.5를 대신하는 HY-120.6), `<base path>/_hyper/keep` 요청은 token만 읽고 flash data를 세션에 남긴다. kept endpoint는 page로 답하지 않고 flash data는 다음 page 요청의 것이기 때문이다(HY-120.7). `contracts/app.json`의 case `a_keep_request_leaves_the_flash_values_to_the_next_page`가 이를 말하며, Rust core의 테스트가 이를 검사한다.
 
 - Rust core가 라우팅된 요청의 session을 store interface로 연다(C-7). `opening::open_page`는 flash 값과 바뀐 topic을 가져간 뒤 token을 읽고, session에 없으면 둔다(HY-120.5, HY-25.2, HY-24.1). form token이 맞지 않는 `POST`는 403으로 거부하고(HY-24.4, HY-59.8), host가 뽑은 mask로 token을 가리며(HY-24.2), 바뀐 topic과 kept server 값을 가진 모든 region의 그 값과 함께 page의 입력을 준다(HY-19, HY-11.3, HY-40). `opening::keep_request`는 kept endpoint에 403, 400, 또는 값을 저장한 뒤 204로 답하며(HY-40.1), 다음 page가 찾도록 flash 데이터를 가져가지 않는다. interface 계약은 record `opening`과 `keep_request`, variant `opened`, 그리고 session-store 라이브러리의 store unit을 받는 이 함수들을 둔다.
 
