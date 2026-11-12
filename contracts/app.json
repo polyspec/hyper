@@ -4718,8 +4718,8 @@
       ]
     },
     {
-      "id": "a_keep_request_with_an_empty_content_type_is_refused_with_415",
-      "label": "a POST to the keep endpoint whose Content-Type header is empty is answered with 415",
+      "id": "a_keep_request_with_an_empty_content_type_is_a_bad_request",
+      "label": "a POST to the keep endpoint whose Content-Type header is empty, which is no media type, is answered with 400 (HY-59.12)",
       "application": "a_board",
       "request": {
         "method": "POST",
@@ -4729,7 +4729,7 @@
         },
         "body": "_csrf=wrong"
       },
-      "status": 415,
+      "status": 400,
       "requirements": [
         "HY-59"
       ]

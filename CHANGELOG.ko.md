@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 986838ff090232239c0338087513d2ce5908414e24f8120db9c066b5a339b90b -->
+<!-- source-sha256: 1bf04cfa77d2128d07a0429246852ff719496da6b1661e61c195a8290c0a1246 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 명세는 http-forms의 F-12대로 http-media-type의 MT-4로 `Content-Type`을 읽고, contract case가 그것을 따른다(S-3b). media type이 아닌 `Content-Type`(빈 값 포함)은 kind `malformed_content_type`의 400이며, 이전에 HY-59.7은 415로 응답했고 HY-57.10과 HY-113.11은 다른 type의 body로 읽었다(HY-59.12, HY-59.13, HY-57.11). media type 앞의 SP와 HTAB는 urlencoded body에서도 무시하고, `charset` 밖의 매개변수를 가진 urlencoded type은 `unknown_parameter`로 실패한다. boundary가 없거나 빈 `multipart/form-data` type은 `no_boundary`로 실패하고(HY-113.17), 끝이 없는 quoted 값은 body를 실패시키며(HY-113.20), `Content-Disposition`이 없거나 둘이거나 다른 disposition type이거나 이름이 없거나 매개변수가 둘인 part는 body를 실패시킨다(HY-113.19). `fileOver(limit)`은 부호 없는 정수가 아닌 limit에 `invalid_number`로 실패하고(HY-114.10), body의 첫 실패는 byte가 가장 앞인 실패이며(HY-131.23), 숫자가 아닌 `Content-Length`는 400이다(HY-131.24). Node host는 paused mode에서 `request.read()`가 주는 것을 넘긴다(HY-131.25). HY-59.7, HY-59.11, HY-57.4, HY-57.10, HY-113.6, HY-113.11, HY-113.13, HY-113.14, HY-114.9, HY-131.21은 은퇴했다. `contracts/fields.json`의 case 15개는 `raises`를 가진 실패 case로 바뀌고, `contracts/request.json`에 실패 case 4개가 더해지며, `contracts/app.json`은 keep endpoint의 빈 `Content-Type`에 400으로 응답한다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 
 - PHP server는 session store를 열지 못한 요청에 대해 애플리케이션이 응답하기 전에 plain 500으로 응답하고, Node와 Python server처럼 write hook만 그것을 받는다(HY-60.14, HY-60.16, HY-60.17). `NativeSession::start`가 실패의 message를 가진 내부 `SessionOpenError`를 던지며, 응답은 그것을 처리하지 않는다. 이전에는 PHP server가 그 실패를 response hook에 닿는 처리된 500으로 바꿨다. `tests/scripts/upload-servers.test.mts`의 scenario `session-open-error-is-the-plain-500`이 세 server에 대해 이것을 기술한다(H28.16).
 

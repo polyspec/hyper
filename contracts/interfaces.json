@@ -1150,8 +1150,8 @@
               "tests": [
                 "packages/server/ts/tests/http.test.ts::the write hook and App.listener > App.listener returns the request listener of the application (HY-100): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
                 "packages/server/ts/tests/http.test.ts::the write hook and App.listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
-                "packages/server/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.21), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
-                "packages/server/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.21), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
+                "packages/server/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.25), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
+                "packages/server/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.25), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
               ]
             }
           ]
@@ -4189,7 +4189,7 @@
               "inputs": [],
               "output": "string",
               "errors": [],
-              "state": "Returns the media type of the Content-Type header in lower case, without its parameters (HY-59.7).",
+              "state": "Returns the media type of the Content-Type header in lower case, without its parameters (HY-59.12).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::mediaType",
@@ -6167,7 +6167,7 @@
               ],
               "output": "optional<fields>",
               "errors": [],
-              "state": "Returns the values of an application/x-www-form-urlencoded body, the text fields of a multipart/form-data body and none for another type; returns null when the body fails with HY-42 (HY-57.10, HY-113.15).",
+              "state": "Returns the values of an application/x-www-form-urlencoded body, the text fields of a multipart/form-data body and none for another type; returns null when the body fails with HY-42 (HY-57.11, HY-113.15).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Fields.php::Polyspec\\Hyper\\Fields::fromBody",
@@ -6362,7 +6362,7 @@
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Returns the boundary of a multipart/form-data content type, or null for another type (HY-113.11).",
+              "state": "Returns the boundary of a multipart/form-data content type, or null for another type (HY-113.17).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::boundary",
@@ -6482,7 +6482,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Counts the part and reads its name, its filename and its content type from its header lines, opens the file of a file part in the directory, and returns false when the part limit or the value limit is passed or when one of the texts is not UTF-8 (HY-113.5, HY-113.13, HY-131.11, HY-131.13).",
+              "state": "Counts the part and reads its name, its filename and its content type from its header lines, opens the file of a file part in the directory, and returns false when the part limit or the value limit is passed or when one of the texts is not UTF-8 (HY-113.5, HY-113.18, HY-131.11, HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::partStarted",
@@ -6601,7 +6601,7 @@
               ],
               "output": "list<value>",
               "errors": [],
-              "state": "Returns the text before the first ; in lower case and the parameters after it by their names, the value of each a quoted string without its quotes or the text up to the next ;, space or tab, the first of a name counting (HY-113.13, HY-113.14).",
+              "state": "Returns the text before the first ; in lower case and the parameters after it by their names, the value of each a quoted string without its quotes or the text up to the next ;, space or tab, the first of a name counting (HY-113.18, HY-113.20).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Multipart.php::Polyspec\\Hyper\\Multipart::headerParameters",
@@ -6703,7 +6703,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when the bytes given to the files are written and the ended files are closed, and rejects with the first error of a write (HY-131.21).",
+              "state": "Resolves when the bytes given to the files are written and the ended files are closed, and rejects with the first error of a write (HY-131.25).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/multipart.ts::Multipart.written",
@@ -6714,7 +6714,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.21"
+                "sentence": "HY-131.25"
               }
             },
             {
@@ -6724,7 +6724,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when every file that was ended or released is closed, so that its directory can be removed (HY-131.21).",
+              "state": "Resolves when every file that was ended or released is closed, so that its directory can be removed (HY-131.25).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/multipart.ts::Multipart.settled",
@@ -6735,7 +6735,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.21"
+                "sentence": "HY-131.25"
               }
             },
             {
@@ -6748,7 +6748,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Ends the stream of a file, or destroys it, and keeps the promise of its close (HY-131.21).",
+              "state": "Ends the stream of a file, or destroys it, and keeps the promise of its close (HY-131.25).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/multipart.ts::Multipart.finish",
@@ -6759,7 +6759,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.21"
+                "sentence": "HY-131.25"
               }
             }
           ]
@@ -7270,7 +7270,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Removes the directory of the files with the files that were not moved, in Node after the files are closed (HY-131.14, HY-131.21).",
+              "state": "Removes the directory of the files with the files that were not moved, in Node after the files are closed (HY-131.14, HY-131.25).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/RequestBody.php::Polyspec\\Hyper\\RequestBody::remove",
@@ -7316,7 +7316,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when the bytes given to the files are written (HY-131.21).",
+              "state": "Resolves when the bytes given to the files are written (HY-131.25).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/request-body.ts::RequestBody.written",
@@ -7327,7 +7327,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.21"
+                "sentence": "HY-131.25"
               }
             }
           ]
@@ -7583,7 +7583,7 @@
               "inputs": [],
               "output": "string",
               "errors": [],
-              "state": "Returns the filename parameter of the part, with the escapes of its quoted string undone (HY-113.3, HY-113.14).",
+              "state": "Returns the filename parameter of the part, with the escapes of its quoted string undone (HY-113.3, HY-113.20).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::filename",
@@ -16012,13 +16012,22 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-57.3",
-              "state": "`fields` lists the form values of the body `body` of the type `type`, a text whose characters are its bytes, as `[name, values]` pairs, or is null when the body fails with HY-42."
+              "state": "`fields` lists the form values of the body `body` of the type `type`, a text whose characters are its bytes, as `[name, values]` pairs, or is null when the body fails with HY-42.",
+              "optional": true
             },
             "files": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-113.3",
-              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text for a part without a content type, or is null when `fields` is null."
+              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text for a part without a content type, or is null when `fields` is null.",
+              "optional": true
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-113.19",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -16071,31 +16080,36 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-131.11",
-              "state": "`stopped` is true when the body `body`, a text whose characters are its bytes, given in chunks of `chunk` bytes, passed a limit, after which no chunk is given."
+              "state": "`stopped` is true when the body `body`, a text whose characters are its bytes, given in chunks of `chunk` bytes, passed a limit, after which no chunk is given.",
+              "optional": true
             },
             "exceeded": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-131.11",
-              "state": "`exceeded` is true when the body passed the body limit `limit`, the value limit `valueLimit`, the part limit `partLimit` or the file limit `fileLimit`."
+              "state": "`exceeded` is true when the body passed the body limit `limit`, the value limit `valueLimit`, the part limit `partLimit` or the file limit `fileLimit`.",
+              "optional": true
             },
             "held": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-131.1",
-              "state": "`held` is the text of the bytes that the body holds as one value: empty text for a body that is read in chunks, which a multipart body of the type `type` is when `stream` is true, and for a body that passed the limit."
+              "state": "`held` is the text of the bytes that the body holds as one value: empty text for a body that is read in chunks, which a multipart body of the type `type` is when `stream` is true, and for a body that passed the limit.",
+              "optional": true
             },
             "fields": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-131.6",
-              "state": "`fields` lists the form values of the body as `[name, values]` pairs, read from the chunks or from the held bytes, or is null when the body failed or passed the limit."
+              "state": "`fields` lists the form values of the body as `[name, values]` pairs, read from the chunks or from the held bytes, or is null when the body failed or passed the limit.",
+              "optional": true
             },
             "files": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-131.15",
-              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType`, `content`, the text of the bytes of the file, and `size`, or is null when `fields` is null."
+              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType`, `content`, the text of the bytes of the file, and `size`, or is null when `fields` is null.",
+              "optional": true
             },
             "entries": {
               "role": "expected",
@@ -16108,13 +16122,22 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-131.16",
-              "state": "`moved` is null when `move` is `none`, and else tells the move of the first file: for `new`, to a path that does not exist, and then a second time; for `exists`, to a path that exists; for `type`, to the number 7. `content` is the text of the bytes at the path after the first move, or of the file when the move failed; `left` is the number of files in the directory after it, or null without a directory; `again` is the message of the failure of the second move or of the failed move; `read` is the message of the failure of `content()` after the move, or null when the move failed; `class` is `value` for the class of HY-46.2 and `type` for TypeError."
+              "state": "`moved` is null when `move` is `none`, and else tells the move of the first file: for `new`, to a path that does not exist, and then a second time; for `exists`, to a path that exists; for `type`, to the number 7. `content` is the text of the bytes at the path after the first move, or of the file when the move failed; `left` is the number of files in the directory after it, or null without a directory; `again` is the message of the failure of the second move or of the failed move; `read` is the message of the failure of `content()` after the move, or null when the move failed; `class` is `value` for the class of HY-46.2 and `type` for TypeError.",
+              "optional": true
             },
             "removed": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-131.14",
-              "state": "`removed` is true when the directory of the body does not exist after `remove()`, or null for a body without a directory."
+              "state": "`removed` is true when the directory of the body does not exist after `remove()`, or null for a body without a directory.",
+              "optional": true
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-113.19",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17559,19 +17582,22 @@
               "role": "input"
             },
             "names": {
-              "role": "input"
+              "role": "input",
+              "optional": true
             },
             "last": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-113.2",
-              "state": "`type` and `body` are text whose characters U+0000 to U+00FF are bytes, and `last` holds, for each name of `names` in order, the filename of the file that `file(name)` returns, or null when it returns none."
+              "state": "`type` and `body` are text whose characters U+0000 to U+00FF are bytes, and `last` holds, for each name of `names` in order, the filename of the file that `file(name)` returns, or null when it returns none.",
+              "optional": true
             },
             "pairs": {
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-113.2",
-              "state": "`pairs` is what `files()` returns, each file given as its filename."
+              "state": "`pairs` is what `files()` returns, each file given as its filename.",
+              "optional": true
             },
             "limits": {
               "role": "input",
@@ -17583,6 +17609,13 @@
               "compare": "exact",
               "sentence": "HY-106.5",
               "state": "`over` holds, for each number of bytes of `limits` in order, what `fileOver(limit)` returns."
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-114.10",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -17825,8 +17858,15 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-59.11",
+              "sentence": "HY-59.13",
               "state": "`mediaType` is what `mediaType()` returns."
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-59.13",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [

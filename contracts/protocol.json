@@ -755,8 +755,10 @@
           "kind": "rule",
           "id": "HY-57",
           "retired": [
+            4,
             8,
-            9
+            9,
+            10
           ],
           "blocks": [
             {
@@ -781,10 +783,10 @@
                   "koSource": "0057e223730275a97be5fa390b9f13ded060c42f11d5e7a8c7f4399a648a800d"
                 },
                 {
-                  "id": "HY-57.4",
-                  "en": "A body of another type has no form values.",
-                  "ko": "다른 type의 body에는 폼 값이 없다.",
-                  "koSource": "7c6c302aa8911cd16306323a1956f6188f1c14d381e78199af823e4451216d65"
+                  "id": "HY-57.12",
+                  "en": "A body of another type, and the body of a request without `Content-Type`, has no form values.",
+                  "ko": "다른 type의 body와 `Content-Type`이 없는 요청의 body에는 폼 값이 없다.",
+                  "koSource": "e7482a4a063c95be242126aa9921c2885891e8771dd1061930566aa9541b9821"
                 },
                 {
                   "id": "HY-57.5",
@@ -805,10 +807,10 @@
                   "koSource": "6144c4787600413b267641a811ece6382699fd18af245ee5dd57b1d4bb2e8a0a"
                 },
                 {
-                  "id": "HY-57.10",
-                  "en": "A body is `application/x-www-form-urlencoded` when its content type starts with that media type, compared without case, followed by spaces or tabs and then `;` or the end of the content type.",
-                  "ko": "content type이 대소문자를 구분하지 않고 그 media type으로 시작하고, 공백이나 tab 뒤에 `;`이나 content type의 끝이 오면 body는 `application/x-www-form-urlencoded`다.",
-                  "koSource": "f984cf58404969e086aafa8bed87ea05b460fa2210070f17f2f1386786482388"
+                  "id": "HY-57.11",
+                  "en": "A body is `application/x-www-form-urlencoded` when its `Content-Type` is that media type as F-12 of http-forms reads it: SP and HTAB around the value are ignored (MT-1.3), the type compares without case (MT-2.2), the parameter `charset` changes nothing, and another parameter fails with kind `unknown_parameter` and status 400.",
+                  "ko": "http-forms의 F-12가 읽어 `Content-Type`이 그 media type이면 body는 `application/x-www-form-urlencoded`다. 값 둘레의 SP와 HTAB는 무시하고(MT-1.3), type은 대소문자 없이 비교하며(MT-2.2), 매개변수 `charset`은 아무것도 바꾸지 않고, 다른 매개변수는 kind `unknown_parameter`와 상태 400으로 실패한다.",
+                  "koSource": "68ebe5c1b410cb015a600ada25cca87bd8f86479af31a627dcd34e1691e97a2a"
                 }
               ]
             }
@@ -818,8 +820,12 @@
           "kind": "rule",
           "id": "HY-113",
           "retired": [
+            6,
             9,
-            10
+            10,
+            11,
+            13,
+            14
           ],
           "blocks": [
             {
@@ -856,10 +862,10 @@
                   "koSource": "1610704c61c3b70195213dd05aee945d144b514e6f8f4b56d614ac51f7405c5c"
                 },
                 {
-                  "id": "HY-113.6",
-                  "en": "A part without a `name` parameter is neither a form value nor a file, and no rule gives it to the application.",
-                  "ko": "`name` 매개변수가 없는 part는 폼 값도 file도 아니며, 어떤 규칙도 이를 애플리케이션에 주지 않는다.",
-                  "koSource": "bf72baa86e3e9b3dd66e5603ea178f23853231c410a8f033bcc4bb015c7ee6bc"
+                  "id": "HY-113.19",
+                  "en": "A part without `Content-Disposition`, with two `Content-Disposition` lines, of a disposition type other than `form-data`, without a `name` parameter, or with a parameter given twice, its name compared without case, fails the body with HY-42 (F-16 of http-forms), because RFC 7578, section 4.2, requires each part to be `form-data` with a name, RFC 6266, section 4.1, makes a repeated parameter invalid, and ignoring such a part would drop what the client sent.",
+                  "ko": "`Content-Disposition`이 없거나, `Content-Disposition` 줄이 둘이거나, disposition type이 `form-data`가 아니거나, `name` 매개변수가 없거나, 이름을 대소문자 없이 비교해 같은 매개변수가 둘인 part는 body를 HY-42로 실패시킨다(http-forms의 F-16). RFC 7578 4.2절은 각 part가 이름을 가진 `form-data`이기를 요구하고, RFC 6266 4.1절은 반복된 매개변수를 무효로 하며, 그런 part를 무시하면 client가 보낸 것을 버리기 때문이다.",
+                  "koSource": "85c7cd391344917bb6a78ac461affd390dc88cf7cdbb9e04a9df7fe5dab23b3d"
                 },
                 {
                   "id": "HY-113.7",
@@ -874,10 +880,10 @@
                   "koSource": "3ad971980eb98e48987f67c1920f9abbffd603baa31037bf3e985896d9326049"
                 },
                 {
-                  "id": "HY-113.11",
-                  "en": "The boundary of a `multipart/form-data` body is the parameter `boundary` (HY-113.13) of a content type whose text before its first `;`, without the spaces and tabs around it and compared without case, is `multipart/form-data`, and a content type without that parameter, or with an empty one, has no boundary.",
-                  "ko": "`multipart/form-data` body의 boundary는 첫 `;` 앞의 text가 둘레의 공백과 tab을 빼고 대소문자를 구분하지 않아 `multipart/form-data`인 content type의 parameter `boundary`(HY-113.13)이며, 그 parameter가 없거나 비어 있는 content type은 boundary가 없다.",
-                  "koSource": "b9ec8b30ce45cfb07fc603b58586eec1fcb2372846d2ca65cf028ba29b5c3724"
+                  "id": "HY-113.17",
+                  "en": "The boundary of a `multipart/form-data` body is the value of the parameter `boundary` of its `Content-Type` as F-12 of http-forms reads it (MT-3.4), and a `multipart/form-data` type without that parameter, or with an empty one, fails with kind `no_boundary` and status 400 (F-7), because such a body cannot be read and dropping it would lose what the client sent.",
+                  "ko": "`multipart/form-data` body의 boundary는 http-forms의 F-12가 읽는 `Content-Type`의 매개변수 `boundary`의 값이며(MT-3.4), 그 매개변수가 없거나 비어 있는 `multipart/form-data` type은 kind `no_boundary`와 상태 400으로 실패한다(F-7). 그런 body는 읽을 수 없고, 버리면 client가 보낸 것을 잃기 때문이다.",
+                  "koSource": "8872ef61e81d302a839e51e622b241a2dde1702aa9516fb00ba5dd57464aa219"
                 },
                 {
                   "id": "HY-113.12",
@@ -886,16 +892,16 @@
                   "koSource": "609ee337408441188cbf2c88ddfc3231349dd9d1d098f687d597a7ddcbdb96e5"
                 },
                 {
-                  "id": "HY-113.13",
-                  "en": "A `Content-Disposition` is `form-data` when its text before its first `;`, without the spaces and tabs around it and compared without case, is `form-data`, and each parameter follows a `;` and spaces or tabs as a name up to its `=`, compared without case, and a value that is a quoted string without its quotes or the text up to the next `;`, space or tab; the first parameter of a name counts, the text inside a quoted string is no parameter, and another blank, such as a no-break space, separates nothing.",
-                  "ko": "`Content-Disposition`은 첫 `;` 앞의 text가 둘레의 공백과 tab을 빼고 대소문자를 구분하지 않아 `form-data`일 때 `form-data`이며, 각 parameter는 `;`과 공백이나 tab 뒤에 오고 `=`까지가 대소문자를 구분하지 않는 이름, 그 뒤가 따옴표를 뺀 quoted string이거나 다음 `;`, 공백, tab까지의 text인 값이다. 같은 이름의 parameter는 첫 번째가 쓰이고, quoted string 안의 text는 parameter가 아니며, no-break space 같은 다른 공백은 아무것도 나누지 않는다.",
-                  "koSource": "3608ddc3545461be53682f472dc7e93a6c1f0eb836d92a463180addfe58640ba"
+                  "id": "HY-113.18",
+                  "en": "A `Content-Disposition` is `form-data` when its text before its first `;`, without the spaces and tabs around it and compared without case, is `form-data`, and each parameter follows a `;` and spaces or tabs as a name up to its `=`, compared without case, and a value that is a quoted string without its quotes or the text up to the next `;`, space or tab; the text inside a quoted string is no parameter, and another blank, such as a no-break space, separates nothing.",
+                  "ko": "`Content-Disposition`은 첫 `;` 앞의 text가 둘레의 공백과 tab을 빼고 대소문자를 구분하지 않아 `form-data`일 때 `form-data`이며, 각 parameter는 `;`과 공백이나 tab 뒤에 오고 `=`까지가 대소문자를 구분하지 않는 이름, 그 뒤가 따옴표를 뺀 quoted string이거나 다음 `;`, 공백, tab까지의 text인 값이다. quoted string 안의 text는 parameter가 아니며, no-break space 같은 다른 공백은 아무것도 나누지 않는다.",
+                  "koSource": "5dc143eadef84d68ea9d2c57f4440c1fe671bb0641d3cbb87fa85584561db082"
                 },
                 {
-                  "id": "HY-113.14",
-                  "en": "A quoted value is the text between its first `\"` and the next `\"`, or the rest of the text when there is no next one, with every backslash kept, because a browser sends a backslash of a filename as it is and a `\"` as `%22`; a value that is not quoted is the text as it is, also when it holds a `\"`.",
-                  "ko": "quoted 값은 첫 `\"`와 다음 `\"` 사이의 text이고 다음 것이 없으면 text의 나머지이며 backslash를 모두 그대로 둔다. browser는 filename의 backslash를 그대로 보내고 `\"`는 `%22`로 보내기 때문이다. 따옴표로 감싸지 않은 값은 text 그대로이며 `\"`를 담아도 그렇다.",
-                  "koSource": "a47caa4e0105ee9b5c4ba567c0f39a0813929c390228dc607f8aac92a9f080ef"
+                  "id": "HY-113.20",
+                  "en": "A quoted value is the text between its first `\"` and the next `\"`, with every backslash kept, because a browser sends a backslash of a filename as it is and a `\"` as `%22`, and a quoted value without its next `\"` fails the body with HY-42 (F-6 of http-forms), because no client of a form sends one; a value that is not quoted is the text as it is, also when it holds a `\"`.",
+                  "ko": "quoted 값은 첫 `\"`와 다음 `\"` 사이의 text이며 backslash를 모두 그대로 둔다. browser는 filename의 backslash를 그대로 보내고 `\"`는 `%22`로 보내기 때문이다. 다음 `\"`가 없는 quoted 값은 body를 HY-42로 실패시킨다(http-forms의 F-6). 폼의 client는 그런 값을 보내지 않기 때문이다. 따옴표로 감싸지 않은 값은 text 그대로이며 `\"`를 담아도 그렇다.",
+                  "koSource": "a56aab4a6933663a80f2782cab3401084b07ba62ddb24440b95e765847b90cd9"
                 },
                 {
                   "id": "HY-113.15",
@@ -905,9 +911,9 @@
                 },
                 {
                   "id": "HY-113.16",
-                  "en": "The header lines of a part, from the end of its delimiter line to its empty line, are at most 8192 bytes, and a body with longer ones fails with HY-42.",
-                  "ko": "part의 header 줄은 delimiter 줄의 끝부터 빈 줄까지이며 8192 byte 이하이고, 더 긴 것을 가진 body는 HY-42로 실패한다.",
-                  "koSource": "03f9dee4a4f1b2799eabcf55ee2e77e73b229ba508cd9e4fc613d91a5f7cb10b"
+                  "en": "The header lines of a part, from the end of its delimiter line to its empty line, are at most 8192 bytes, and a body with longer ones fails with status 400 and kind `header_limit` of http-forms.",
+                  "ko": "part의 header 줄은 delimiter 줄의 끝부터 빈 줄까지이며 8192 byte 이하이고, 더 긴 것을 가진 body는 상태 400과 http-forms의 kind `header_limit`로 실패한다.",
+                  "koSource": "044d0b4b35de42749858510e3704e18c334b997efe01b13d223efc23cdd6ba7a"
                 }
               ]
             }
@@ -916,7 +922,9 @@
         {
           "kind": "rule",
           "id": "HY-114",
-          "retired": [],
+          "retired": [
+            9
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -970,10 +978,10 @@
                   "koSource": "8dbd3eec912d67f280b632fe6c0384f419b4a7ac414d2424ae3f8712980fff95"
                 },
                 {
-                  "id": "HY-114.9",
-                  "en": "`fileOver(limit)` of the request is true when a file of the body has more bytes than `limit`, and false when every file has at most `limit` bytes or the body holds no file.",
-                  "ko": "request의 `fileOver(limit)`은 body의 파일 하나가 `limit`보다 많은 byte를 가지면 true이고, 모든 파일이 `limit` byte 이하이거나 body에 파일이 없으면 false다.",
-                  "koSource": "df655c8e0cf9920b7a46f717a31dc68bb74e5eaaa0d8f8724ca30087faa209ab"
+                  "id": "HY-114.10",
+                  "en": "`fileOver(limit)` of the request is true when a file of the body has more bytes than `limit`, and false when every file has at most `limit` bytes or the body holds no file; `limit` is an unsigned integer, so a negative, fractional or boolean `limit` fails with kind `invalid_number` of the binding before the files are compared.",
+                  "ko": "request의 `fileOver(limit)`은 body의 파일 하나가 `limit`보다 많은 byte를 가지면 true이고, 모든 파일이 `limit` byte 이하이거나 body에 파일이 없으면 false다. `limit`은 부호 없는 정수이므로 음수, 소수, boolean `limit`은 파일을 비교하기 전에 binding의 kind `invalid_number`로 실패한다.",
+                  "koSource": "b651a2a654cfdf1dd6d0f4c57488543af1bc1e4f37c52f8567fcefc40037e4b9"
                 }
               ]
             }
@@ -983,7 +991,8 @@
           "kind": "rule",
           "id": "HY-131",
           "retired": [
-            20
+            20,
+            21
           ],
           "blocks": [
             {
@@ -997,9 +1006,9 @@
                 },
                 {
                   "id": "HY-131.2",
-                  "en": "The delimiter is `--` and the boundary (HY-113.11).",
-                  "ko": "delimiter는 `--`와 boundary다(HY-113.11).",
-                  "koSource": "20211248a84d827a85137f9b41db3b39c2bd6c6395f1f863a4b6255145f76733"
+                  "en": "The delimiter is `--` and the boundary (HY-113.17).",
+                  "ko": "delimiter는 `--`와 boundary다(HY-113.17).",
+                  "koSource": "1f6b2b43e1575bbe33a2bb963c3b5d52e1c45dca3c345bb6df8d10f57eceb2e1"
                 },
                 {
                   "id": "HY-131.3",
@@ -1024,6 +1033,12 @@
                   "en": "The result does not depend on the chunks: a body read in any division into chunks gives the values, the files and the failure of the body read as one chunk.",
                   "ko": "결과는 조각에 달려 있지 않아서, body를 어떤 조각으로 나눠 읽어도 한 조각으로 읽은 body의 값, file, 실패와 같다.",
                   "koSource": "1fe87a94ae4d3e30115591dffcb7ad1f2f00b114cb3a3986093086ec6b4aca8a"
+                },
+                {
+                  "id": "HY-131.23",
+                  "en": "The first failure of a body is the failure whose byte comes first, as F-8 of http-forms defines the byte of each failure, so a body read as one chunk whose invalid byte comes before the body limit receives 400, not 413.",
+                  "ko": "body의 첫 실패는 http-forms의 F-8이 실패마다 정한 byte가 가장 앞에 오는 실패이므로, 잘못된 byte가 body 제한 앞에 있는 body를 조각 하나로 읽으면 413이 아니라 400을 받는다.",
+                  "koSource": "e6f40bb9d74f3bb5caa4294dd4c0c3ebe7a845e445deaaa33642ab34efd671d1"
                 },
                 {
                   "id": "HY-131.7",
@@ -1057,9 +1072,9 @@
                 },
                 {
                   "id": "HY-131.12",
-                  "en": "The part limit counts every part, also one that is neither a value nor a file (HY-113.6).",
-                  "ko": "part 제한은 값도 file도 아닌 part(HY-113.6)를 포함해 모든 part를 센다.",
-                  "koSource": "ef627a1825fff23541279b42cc8f4530d551330a7aeb478dc0397533994eb523"
+                  "en": "The part limit counts every part, also one that is neither a value nor a file (HY-113.19).",
+                  "ko": "part 제한은 값도 file도 아닌 part(HY-113.19)를 포함해 모든 part를 센다.",
+                  "koSource": "12624d3bc5e5fd0105473968c119b4d68d2435bc160fef7014db0ec3efd74de0"
                 },
                 {
                   "id": "HY-131.13",
@@ -1093,9 +1108,15 @@
                 },
                 {
                   "id": "HY-131.18",
-                  "en": "The checks keep the order of HY-59.3: a `Content-Length` larger than the body limit receives 413 before the body is read; the limits of this rule and the failures of HY-42 answer while the body is read; then routing, the form type (HY-59.7) and the CSRF token (HY-59.8) answer, and a request that they refuse leaves no temporary file.",
-                  "ko": "검사는 HY-59.3의 순서를 유지하여, body 제한보다 큰 `Content-Length`는 body를 읽기 전에 413을 받고, 이 rule의 제한과 HY-42의 실패는 body를 읽는 동안 답하며, 그 뒤에 routing, form type(HY-59.7), CSRF token(HY-59.8)이 답하고 그것들이 거부한 요청은 임시 file을 남기지 않는다.",
-                  "koSource": "8f7a7882fee486d9a929b3f000aef9cc76d6b6ff6c77c74d29e8e1ddc696b16f"
+                  "en": "The checks keep the order of HY-59.3: a `Content-Length` larger than the body limit receives 413 before the body is read; the limits of this rule and the failures of HY-42 answer while the body is read; then routing, the form type (HY-59.12) and the CSRF token (HY-59.8) answer, and a request that they refuse leaves no temporary file.",
+                  "ko": "검사는 HY-59.3의 순서를 유지하여, body 제한보다 큰 `Content-Length`는 body를 읽기 전에 413을 받고, 이 rule의 제한과 HY-42의 실패는 body를 읽는 동안 답하며, 그 뒤에 routing, form type(HY-59.12), CSRF token(HY-59.8)이 답하고 그것들이 거부한 요청은 임시 file을 남기지 않는다.",
+                  "koSource": "bef3f82895ba609fb184a4fc92acbd8f87e57a52efd52ce14b1cea4fa4004f7e"
+                },
+                {
+                  "id": "HY-131.24",
+                  "en": "A `Content-Length` that is not one or more digits receives status 400 with kind `invalid_content_length` before the body is read (F-9 of http-forms; RFC 9110, section 8.6), and the host passes the field value to the core, which compares it with the body limit.",
+                  "ko": "하나 이상의 숫자가 아닌 `Content-Length`는 body를 읽기 전에 kind `invalid_content_length`와 상태 400을 받는다(http-forms의 F-9, RFC 9110 8.6절). host는 field 값을 core에 넘기고, core가 그것을 body 제한과 비교한다.",
+                  "koSource": "6e078c335225b25debc72b95160d68e0234cbe593903d04c392613edb1805725"
                 },
                 {
                   "id": "HY-131.19",
@@ -1104,10 +1125,10 @@
                   "koSource": "2701dc599b0bb82fe04770389b2c17678cde1759bef816c6aed0efb58672d2e7"
                 },
                 {
-                  "id": "HY-131.21",
-                  "en": "The Node server writes the content of a file through a stream of the file, reads the next chunk of a body after that stream emptied its buffer, and removes the directory of a request after its files are closed, so that a write of a file does not stop its other requests; the PHP and Python servers write a chunk before they read the next one.",
-                  "ko": "Node server는 file의 내용을 그 file의 stream으로 쓰고, 그 stream이 buffer를 비운 뒤에 body의 다음 조각을 읽으며, file들이 닫힌 뒤에 요청의 directory를 지우므로 file 쓰기가 다른 요청을 멈추지 않고, PHP와 Python server는 조각 하나를 쓴 뒤에 다음 조각을 읽는다.",
-                  "koSource": "afc690e98595803c3433a706669f0f12726f2e91fadc544323f2032e5476a2ae"
+                  "id": "HY-131.25",
+                  "en": "The Node host reads a body in paused mode: on each `'readable'` event it takes the bytes that `request.read()` gives as one buffer, awaits `feed` of that buffer and reads again only after it settled, and it joins no chunks, because joining would pass the bound of HY-131.1 and delay the check of a limit; the PHP and Python servers feed a chunk before they read the next one.",
+                  "ko": "Node host는 body를 paused mode로 읽는다. `'readable'` event마다 `request.read()`가 주는 byte를 buffer 하나로 받아 그 buffer의 `feed`를 기다리고, 그것이 끝난 뒤에만 다시 읽으며, 조각을 모으지 않는다. 모으면 HY-131.1의 한도를 넘고 제한의 판정이 늦어지기 때문이다. PHP와 Python server는 조각 하나를 넘긴 뒤에 다음 조각을 읽는다.",
+                  "koSource": "908fff78b871338e1007c7ca89a17994a06abc1ed104f88e81404a6cdef8c9fc"
                 },
                 {
                   "id": "HY-131.22",
@@ -1397,9 +1418,9 @@
                   "id": "HY-120.1"
                 },
                 {
-                  "en": "It opens it after the checks of HY-116, HY-62 (its 405, 406 and shell), HY-127, HY-59.7 and HY-114 that apply to the request, and before the token check of HY-24 and the first handler, because the token check is the first step that reads the session.",
-                  "ko": "요청에 적용되는 HY-116, HY-62(그 405, 406, 셸), HY-127, HY-59.7, HY-114의 검사 뒤, HY-24의 token 검사와 첫 handler 앞에서 연다. token 검사가 session을 읽는 첫 단계이기 때문이다.",
-                  "koSource": "526e61aaf78014848f7eac48c2b845fec2e98e427ec87bccdbb6fdf4b06e43d6",
+                  "en": "It opens it after the checks of HY-116, HY-62 (its 405, 406 and shell), HY-127, HY-59.12 and HY-114 that apply to the request, and before the token check of HY-24 and the first handler, because the token check is the first step that reads the session.",
+                  "ko": "요청에 적용되는 HY-116, HY-62(그 405, 406, 셸), HY-127, HY-59.12, HY-114의 검사 뒤, HY-24의 token 검사와 첫 handler 앞에서 연다. token 검사가 session을 읽는 첫 단계이기 때문이다.",
+                  "koSource": "8584ed8e85f4ddc917baf228ba2b38a893a343bedf5a12fbc82bc951293672c6",
                   "id": "HY-120.2"
                 },
                 {
@@ -1917,9 +1938,9 @@
                   "id": "HY-127.1"
                 },
                 {
-                  "en": "An application with a context checks the header of every request that selects `text/html` or `application/vnd.hyper+json` and that HY-62 does not answer with its 405, 406 or shell, right after the method check of HY-116 and before HY-59.7 and HY-59.8, the file limit of HY-114, the token check of HY-24, the context handler and any loader or action: a value that is not 64 lowercase hexadecimal characters makes the server respond with status 400 and the text `Bad Request` (HY-58).",
-                  "ko": "context가 있는 애플리케이션은 `text/html`이나 `application/vnd.hyper+json`을 선택했고 HY-62가 그 405, 406, 셸로 응답하지 않는 모든 요청의 이 header를, HY-116의 method 검사 바로 뒤, HY-59.7과 HY-59.8, HY-114의 파일 제한, HY-24의 token 검사, context handler, 어떤 loader나 action보다 먼저 검사한다: 소문자 16진수 64자가 아닌 값이면 서버는 상태 400과 텍스트 `Bad Request`로 응답한다(HY-58).",
-                  "koSource": "2bc12399407e8428289adc40fb3283f2cedaafbc9b60859dfd7ee6c6895f1cee",
+                  "en": "An application with a context checks the header of every request that selects `text/html` or `application/vnd.hyper+json` and that HY-62 does not answer with its 405, 406 or shell, right after the method check of HY-116 and before HY-59.12 and HY-59.8, the file limit of HY-114, the token check of HY-24, the context handler and any loader or action: a value that is not 64 lowercase hexadecimal characters makes the server respond with status 400 and the text `Bad Request` (HY-58).",
+                  "ko": "context가 있는 애플리케이션은 `text/html`이나 `application/vnd.hyper+json`을 선택했고 HY-62가 그 405, 406, 셸로 응답하지 않는 모든 요청의 이 header를, HY-116의 method 검사 바로 뒤, HY-59.12과 HY-59.8, HY-114의 파일 제한, HY-24의 token 검사, context handler, 어떤 loader나 action보다 먼저 검사한다: 소문자 16진수 64자가 아닌 값이면 서버는 상태 400과 텍스트 `Bad Request`로 응답한다(HY-58).",
+                  "koSource": "c7f3f6b16c2742d9a028a7628518a26c5641dadd33c083311ca4e4257fb7a949",
                   "id": "HY-127.2"
                 },
                 {
@@ -6503,7 +6524,10 @@
         {
           "kind": "rule",
           "id": "HY-59",
-          "retired": [],
+          "retired": [
+            7,
+            11
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -6558,10 +6582,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-59.7",
-                      "en": "After routing and HY-27, a `POST` request to an action or to `/_hyper/keep` whose `Content-Type` media type, without parameters and compared without case, is not a form type receives status 415 with the text `Unsupported Media Type`.",
-                      "ko": "라우팅과 HY-27 뒤에, `Content-Type`의 media type(매개변수 없이, 대소문자 무시하고 비교)이 form 타입이 아닌 action이나 `/_hyper/keep`으로의 `POST` 요청은 상태 415와 텍스트 `Unsupported Media Type`으로 응답한다.",
-                      "koSource": "e6c5a2ff4325f4d5b61e2fb1fb484434ab2c764371ec7cc9ce9375c49fea542a"
+                      "id": "HY-59.12",
+                      "en": "After routing and HY-27, a `POST` request to an action or to `/_hyper/keep` whose `Content-Type` is no media type, the empty value included, receives status 400 with the text `Bad Request`, as F-12 of http-forms reads it with MT-4 of http-media-type (kind `malformed_content_type`), and one whose media type, its type and subtype without parameters, is not a form type receives status 415 with the text `Unsupported Media Type`.",
+                      "ko": "라우팅과 HY-27 뒤에, `Content-Type`이 media type이 아닌(빈 값 포함) action이나 `/_hyper/keep`으로의 `POST` 요청은 http-forms의 F-12가 http-media-type의 MT-4로 읽는 대로 상태 400과 텍스트 `Bad Request`를 받고(kind `malformed_content_type`), media type(매개변수 없는 type과 subtype)이 form 타입이 아닌 요청은 상태 415와 텍스트 `Unsupported Media Type`을 받는다.",
+                      "koSource": "7ac44c49a8021b8413fafbb452b3d966815d48b545816ffebb764e93497e2fa0"
                     }
                   ],
                   "blocks": []
@@ -6595,10 +6619,10 @@
                   "koSource": "3f9af12a437ea0bc7b93da843e43a8f987e72abfc64a5ee605fc941abbb50118"
                 },
                 {
-                  "id": "HY-59.11",
-                  "en": "`mediaType()` of the request returns the media type that HY-59.7 compares, in lower case, and the empty text for a request without `Content-Type`.",
-                  "ko": "request의 `mediaType()`은 HY-59.7이 비교하는 media type을 소문자로 반환하고, `Content-Type`이 없는 request에 대해서는 빈 text를 반환한다.",
-                  "koSource": "765a20ec626bd0a0350b86772871262f85d0a49f95e1e648278be9c55bdb3c60"
+                  "id": "HY-59.13",
+                  "en": "`mediaType()` of the request returns the type and subtype of its `Content-Type` in lower case without parameters, as F-12 of http-forms reads them, the empty text for a request without `Content-Type`, and fails with kind `malformed_content_type` (status 400) for a `Content-Type` that is no media type.",
+                  "ko": "request의 `mediaType()`은 http-forms의 F-12가 읽는 대로 `Content-Type`의 type과 subtype을 매개변수 없이 소문자로 반환하고, `Content-Type`이 없는 request에는 빈 text를 반환하며, media type이 아닌 `Content-Type`에는 kind `malformed_content_type`(상태 400)으로 실패한다.",
+                  "koSource": "23b1bd3e4417c61ef301e7091445697d28dc6125fa38bb281b88f98330abeec2"
                 }
               ]
             }
