@@ -2821,7 +2821,9 @@
           "id": "HY-24",
           "retired": [
             7,
-            8
+            8,
+            9,
+            11
           ],
           "blocks": [
             {
@@ -2864,10 +2866,10 @@
                   "koSource": "a2032f2c3bdeb889870377a9b8b85493b5b1131780686fec0a82de7737d92b01"
                 },
                 {
-                  "id": "HY-24.9",
-                  "en": "A server holds the token as 64 lowercase hexadecimal digits, and a session that holds another value in the place of the token gets a new token, as a session that holds none (HY-24.1), so that no masked value of the other value is valid; masking or verifying with a token or a mask in any other form fails with HY-43, while a form value that is not 128 lowercase hexadecimal digits is not valid (HY-24.5).",
-                  "ko": "서버는 token을 소문자 16진수 64자리로 가지며, token 자리에 다른 값을 가진 session은 token이 없는 session처럼 새 token을 받으므로(HY-24.1) 그 다른 값을 가린 어떤 값도 올바르지 않다. 다른 형태의 token이나 mask로 가리거나 검증하면 HY-43으로 실패하고, 소문자 16진수 128자리가 아닌 form 값은 올바르지 않다(HY-24.5).",
-                  "koSource": "eb1af1b54409889b35a33f78202e3caa28560ee243e30b9adf3f721b5626fabc"
+                  "id": "HY-24.14",
+                  "en": "A server holds the token as 64 lowercase hexadecimal digits, and a session that holds another value in the place of the token fails the request with kind `invalid_session_token` (HY-43), as a stored flash value or kept value of another form does (HY-104.23), because replacing it with a new token would turn a damaged record into a valid session; masking or verifying with a token or a mask in any other form fails with HY-43, while a form value that is not 128 lowercase hexadecimal digits is not valid (HY-24.5).",
+                  "ko": "server는 token을 소문자 16진수 64자리로 가지며, token 자리에 다른 값을 가진 session은 다른 형식의 저장된 flash 값이나 kept 값처럼(HY-104.23) kind `invalid_session_token`으로 요청을 실패시킨다(HY-43). 새 token으로 바꾸면 손상된 record를 유효한 session으로 만들기 때문이다. 다른 형식의 token이나 mask로 mask하거나 검증하면 HY-43으로 실패하고, 소문자 16진수 128자리가 아닌 form 값은 유효하지 않다(HY-24.5).",
+                  "koSource": "5c0af722636c16c3cf82e84017db205b5a9863436863be80800b7be45c32658e"
                 },
                 {
                   "id": "HY-24.10",
@@ -2876,10 +2878,10 @@
                   "koSource": "1a8020d1b48ebef36da2a4b8445d8f8307cb07916157ef4356791de4824d485d"
                 },
                 {
-                  "id": "HY-24.11",
-                  "en": "The server computes the value from the masked token that the request holds, so the value is the same for every request of one session until the token is replaced: when an action renews the session (HY-72), the action reads the digest of the old token and the handlers that run after it read the digest of the new token, and a session that gets a new token by HY-24.9 gets a new value.",
-                  "ko": "서버는 요청이 가진 가린 token에서 이 값을 계산하므로, 이 값은 token이 바뀔 때까지 한 session의 모든 요청에서 같다: action이 session을 갱신하면(HY-72) 그 action은 예전 token의 digest를 읽고 그 뒤에 실행되는 handler는 새 token의 digest를 읽으며, HY-24.9로 새 token을 받는 session은 새 값을 받는다.",
-                  "koSource": "7b97a467707941375e1fb87d44ef7793abf8327b6aa2e0de5a215ea7d669970d"
+                  "id": "HY-24.15",
+                  "en": "The server computes the value from the masked token that the request holds, so the value is the same for every request of one session until the token is replaced: when an action renews the session (HY-72), the action reads the digest of the old token and the handlers that run after it read the digest of the new token.",
+                  "ko": "server는 요청이 가진 mask된 token에서 값을 계산하므로, 그 값은 token이 바뀔 때까지 한 session의 모든 요청에서 같다. action이 session을 갱신하면(HY-72) 그 action은 옛 token의 digest를 읽고 그 뒤에 실행되는 handler는 새 token의 digest를 읽는다.",
+                  "koSource": "cd331978f188537bffd8e0f3494fd1f1557b5054f5979615bba8ebaeefd6b122"
                 },
                 {
                   "id": "HY-24.12",
@@ -2889,9 +2891,9 @@
                 },
                 {
                   "id": "HY-24.13",
-                  "en": "A request whose masked token is neither the empty text nor 128 lowercase hexadecimal digits, which only a caller that creates a request by hand gives, fails `browser()` as masking with a token of another form does (HY-24.9).",
-                  "ko": "가린 token이 빈 text도 아니고 소문자 16진수 128자리도 아닌 요청은, 요청을 직접 만드는 호출자만 줄 수 있으며, 다른 형태의 token으로 가릴 때처럼(HY-24.9) `browser()`가 실패한다.",
-                  "koSource": "3d3ea51c1df733c0cd471f696b12b6de13a52a5aa34a40df0fbfd36010e92728"
+                  "en": "A request whose masked token is neither the empty text nor 128 lowercase hexadecimal digits, which only a caller that creates a request by hand gives, fails `browser()` as masking with a token of another form does (HY-24.14).",
+                  "ko": "가린 token이 빈 text도 아니고 소문자 16진수 128자리도 아닌 요청은, 요청을 직접 만드는 호출자만 줄 수 있으며, 다른 형태의 token으로 가릴 때처럼(HY-24.14) `browser()`가 실패한다.",
+                  "koSource": "b51e1b5d9d417d5eba05af44e3938677adc5395a90dd410a453b57295276f661"
                 }
               ]
             }
@@ -4935,6 +4937,7 @@
             7,
             8,
             9,
+            10,
             11,
             12
           ],
@@ -4967,10 +4970,10 @@
                   "koSource": "fd7b153c2ae982b7dda040a7827b4d69b933343252165b193eb3b9af4ec6455c"
                 },
                 {
-                  "id": "HY-129.10",
-                  "en": "No part of the PHP server reads `$_COOKIE`, whose names PHP changes as the names of its variables (`a.b` becomes `a_b`, and `a[x]` an array): its native session runs with `session.use_cookies` set to false, receives the identifier of HY-45 from this parse with `session_id()` before `session_start()`, or none when the parse gives no identifier, and the server sends the session cookie of HY-45 itself.",
-                  "ko": "PHP 서버의 어느 부분도 `$_COOKIE`를 읽지 않는데, PHP가 그 이름을 변수 이름처럼 바꾸기 때문이다(`a.b`는 `a_b`가 되고, `a[x]`는 배열이 된다): native session은 `session.use_cookies`를 false로 둔 채 실행되고, 이 파싱에서 나온 HY-45의 identifier를 `session_start()` 전에 `session_id()`로 받으며, 파싱에서 identifier가 나오지 않으면 아무것도 받지 않고, 서버는 HY-45의 session cookie를 직접 전송한다.",
-                  "koSource": "0c2035b3284ca047f408934edb2de3793ede7c46454ca704b12fab86c1a3b6ba"
+                  "id": "HY-129.16",
+                  "en": "No part of the PHP server reads `$_COOKIE`, whose names PHP changes as the names of its variables (`a.b` becomes `a_b`, and `a[x]` an array): it receives the identifier of HY-45 from the parse of HY-129.13 and sends the session cookie of HY-45 itself.",
+                  "ko": "PHP server의 어떤 부분도 PHP가 변수 이름처럼 이름을 바꾸는(`a.b`는 `a_b`가 되고 `a[x]`는 배열이 된다) `$_COOKIE`를 읽지 않는다. HY-45의 식별자는 HY-129.13의 parse에서 받고, HY-45의 session cookie는 스스로 보낸다.",
+                  "koSource": "e81c7610a104176b06421eb39988b5fd81e0bc1be5b7a3fe498ea905d0f558bf"
                 }
               ]
             }
@@ -6084,7 +6087,15 @@
         {
           "kind": "rule",
           "id": "HY-104",
-          "retired": [],
+          "retired": [
+            4,
+            5,
+            6,
+            16,
+            17,
+            18,
+            24
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -6094,6 +6105,12 @@
                   "en": "The PHP, Node and Python servers that share one session directory share its sessions, and so do the processes of one server.",
                   "ko": "같은 session 디렉터리를 공유하는 PHP, Node, Python 서버는 session을 공유하며, 한 서버의 프로세스들도 마찬가지다.",
                   "koSource": "840a2eacdcb1405dec66b6aea35c398ef7dc56a8e207229aa97299d2d1eddcb4"
+                },
+                {
+                  "id": "HY-104.25",
+                  "en": "The storage of a session, which is its identifier, its record bytes, its lock, its file or Redis key and its expiry, is the rule of the sessions library, and hyper uses its store interface; the session values that hyper keeps in a record, which are the token (HY-24), the flash values and the changed topics (HY-25), the kept values (HY-40), the conversion between a record and the data model (HY-104.13, HY-104.14) and the keys of HY-104.22 and HY-104.23, are rules of hyper.",
+                  "ko": "session의 저장(식별자, record 바이트, 잠금, 파일이나 Redis key, 만료)은 sessions 라이브러리의 규칙이고 hyper는 그 저장소 interface를 쓴다. hyper가 record에 두는 session 값, 곧 token(HY-24), flash 값과 바뀐 topic(HY-25), kept 값(HY-40), record와 데이터 모델 사이의 변환(HY-104.13, HY-104.14), HY-104.22와 HY-104.23의 key는 hyper의 규칙이다.",
+                  "koSource": "5843aee5ccb1fa304068d16b28053ee8ea57d50c9f97ababfb22ee24a00b55f5"
                 },
                 {
                   "id": "HY-104.2",
@@ -6108,22 +6125,16 @@
                   "koSource": "c27e6814b33c6456ec71891a7173a197626d0e44fd3d760ec14d155f56456a5d"
                 },
                 {
-                  "id": "HY-104.4",
-                  "en": "The PHP server keeps a session with the native session handler of PHP, with `serialize_handler` set to `php_serialize` by its session options.",
-                  "ko": "PHP 서버는 session을 PHP의 native session handler로 유지하며, session 옵션으로 `serialize_handler`를 `php_serialize`로 설정한다.",
-                  "koSource": "3cb4b31fb8217950b773ba46f77bfd2efd57950aa9d440d7293d1d0731ba9e80"
+                  "id": "HY-104.26",
+                  "en": "The PHP server keeps a session with the file store of the sessions library, as the Node and Python servers do, and not with the native session handler of PHP, with which it shares only the file name, the record form `php_serialize`, the file mode and `flock` with `LOCK_EX`.",
+                  "ko": "PHP server는 Node와 Python server처럼 sessions 라이브러리의 파일 저장소로 session을 가지며 PHP의 native session handler를 쓰지 않는다. native handler와는 파일 이름, record 형식 `php_serialize`, 파일 mode, `LOCK_EX`의 `flock`만 같다.",
+                  "koSource": "ffc1719919de8fc2c2b23608b740849206193979291a092dd39f5449bb788dd0"
                 },
                 {
-                  "id": "HY-104.5",
-                  "en": "The Python server blocks on `fcntl.flock`.",
-                  "ko": "Python 서버는 `fcntl.flock`에서 막힌다.",
-                  "koSource": "28e7b98e84434b7b42e23477266c3291fb33efff91e69fbd9b2765061e416097"
-                },
-                {
-                  "id": "HY-104.6",
-                  "en": "The Node server calls `flock` through `node:ffi` with `LOCK_NB` and tries again after a pause of at most 50 ms, because a call that blocks would stop its event loop.",
-                  "ko": "Node 서버는 `node:ffi`를 통해 `LOCK_NB`로 `flock`을 부르고 최대 50 ms의 쉼 뒤 다시 시도하는데, 막히는 호출은 event loop를 멈추기 때문이다.",
-                  "koSource": "b30d9c803d37c4f2baa04895ad8926c9cbed39e1b14e83ea61d346c42998d9c5"
+                  "id": "HY-104.27",
+                  "en": "Every server waits for the lock of a session file in the core of the sessions library, which blocks on `flock` with `LOCK_EX` on a thread of its own for each waiting session, with no retry and no interval, so the operating system orders the waiting requests as it orders the native files handler of PHP.",
+                  "ko": "모든 server는 sessions 라이브러리의 core에서 session 파일의 잠금을 기다리며, core는 기다리는 session마다 자기 스레드에서 `LOCK_EX`의 `flock`으로 블로킹하고 재시도와 간격을 두지 않는다. 그래서 운영체제가 PHP native files handler에서처럼 기다리는 요청의 순서를 정한다.",
+                  "koSource": "b23d614a1013c07159f532295be53948d94199f6864ccd09b4434d6cce9f67bd"
                 },
                 {
                   "id": "HY-104.7",
@@ -6180,22 +6191,16 @@
                   "koSource": "9a61eeb69f0db1607d328b28e328019698db13ba4b977622c1c30c57fcea7f11"
                 },
                 {
-                  "id": "HY-104.16",
-                  "en": "`tests/scripts/session-shared.test.mts` checks it with several processes of each of the three servers on one session, and `NativeSessionTest.php` with several processes of the PHP server on its native session.",
-                  "ko": "`tests/scripts/session-shared.test.mts`는 한 session 위에서 세 서버 각각의 여러 프로세스로, `NativeSessionTest.php`는 PHP 서버의 native session 위에서 여러 프로세스로 이것을 검사한다.",
-                  "koSource": "07ff969bd93ca82b25bd76a4c9d2d534d00448d1ca4b3ffb0b057d7297827ad1"
+                  "id": "HY-104.28",
+                  "en": "`tests/scripts/session-shared.test.mts` checks it with several processes of each of the three servers on one session.",
+                  "ko": "`tests/scripts/session-shared.test.mts`가 세 server 각각의 여러 process로 한 session에 대해 이것을 확인한다.",
+                  "koSource": "a7a17eef90599687ddba7eab09d55421e2cb21b89844fd6de9890b6d72d1a730"
                 },
                 {
-                  "id": "HY-104.17",
-                  "en": "A Node server answers its requests on one thread, so the requests of one session in one process wait in a queue of that process before they try the lock of the session, and the store of a request ends its turn when it closes; a Python server answers each request on a thread of its own, which waits on the lock itself.",
-                  "ko": "Node server는 한 thread에서 요청에 답하므로, 한 process 안에서 한 session의 요청들은 session의 lock을 시도하기 전에 그 process의 대기열에서 기다리고, 요청의 저장소는 닫힐 때 자기 차례를 끝낸다. Python server는 요청마다 자기 thread에서 답하며 그 thread가 lock 자체를 기다린다.",
-                  "koSource": "1e614dffa662e0708ec93d0b48e57d331e021e27e13945301ad032703295203a"
-                },
-                {
-                  "id": "HY-104.18",
-                  "en": "`App::open` of the PHP server takes `sessionSetup`, a function that the server calls just before the native session of a request starts, for the settings of the session module.",
-                  "ko": "PHP 서버의 `App::open`은 `sessionSetup`을 받는다. 서버는 요청의 native 세션이 시작되기 직전에 세션 모듈의 설정을 위해 이 함수를 호출한다.",
-                  "koSource": "2dd6231447619a5bf7ed8f0cb7982bb4786219648ea4f6c03201fb25a2c396c1"
+                  "id": "HY-104.29",
+                  "en": "The requests of one session in one process wait in a queue of that process before they wait for the lock of the session, and a request that leaves before its turn, such as one whose connection closed (HY-67), leaves the queue, and one that leaves while it waits for the lock releases the lock as soon as it holds it.",
+                  "ko": "한 process 안의 한 session의 요청들은 session의 잠금을 기다리기 전에 그 process의 queue에서 기다린다. 연결이 닫힌 요청(HY-67)처럼 차례 전에 떠나는 요청은 queue에서 빠지고, 잠금을 기다리는 동안 떠난 요청은 잠금을 얻자마자 놓는다.",
+                  "koSource": "c65f5a91a883b82c3d7a7ce7b1cb22e006a51caaefe4498648045361214b0496"
                 },
                 {
                   "id": "HY-104.19",
@@ -6228,10 +6233,10 @@
                   "koSource": "c80dece20175a916486c165621ffe7e846fd73c79dec8712b331f86920233fc3"
                 },
                 {
-                  "id": "HY-104.24",
-                  "en": "A session store returns null for a key that holds no value, replaces the value of a key that is set again, and removes a key without failing when it holds none.",
-                  "ko": "session store는 값이 없는 key에 대해 null을 반환하고, 다시 설정된 key의 값을 바꾸며, 값이 없는 key를 실패 없이 제거한다.",
-                  "koSource": "687c98c704e6bd5ce39a2e0cf3b9788da6fe5fdb18a5312c1e3442a7082df4dc"
+                  "id": "HY-104.30",
+                  "en": "A session store returns null for a key that holds no value, replaces the value of a key that is set again, and removes a key without failing when it holds none; a store that an application writes in its own language implements this interface, its locking and its sharing with other processes are the task of the application, and an exception that it raises reaches the caller of `App.handle` as it was raised.",
+                  "ko": "session 저장소는 값이 없는 key에 null을 반환하고, 다시 설정한 key의 값을 바꾸며, 값이 없는 key를 실패 없이 지운다. 애플리케이션이 자기 언어로 쓴 저장소는 이 interface를 구현하며, 그 잠금과 다른 process와의 공유는 애플리케이션의 일이고, 그것이 던진 예외는 던진 그대로 `App.handle`의 호출자에게 간다.",
+                  "koSource": "3934136cde12c4ebca7d44fe7c18249272c67da195de79bfd8e13506c205ec14"
                 }
               ]
             }
@@ -6240,7 +6245,14 @@
         {
           "kind": "rule",
           "id": "HY-115",
-          "retired": [],
+          "retired": [
+            6,
+            9,
+            10,
+            14,
+            15,
+            19
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -6276,10 +6288,10 @@
                   "koSource": "d9f80b5215d7a9aef0db8ebdd0affb73b7f9a824a97d4d701ac82cc14392810e"
                 },
                 {
-                  "id": "HY-115.6",
-                  "en": "The Node and Python servers close the session before they answer, so such a request fails with status 500 (HY-43); the PHP server closes it after the response, so phpredis writes a warning to the log and the response stands.",
-                  "ko": "Node와 Python 서버는 응답하기 전에 session을 닫으므로 그런 요청은 상태 500(HY-43)으로 실패하고; PHP 서버는 응답 뒤에 닫으므로 phpredis가 로그에 경고를 쓰고 응답은 유효하다.",
-                  "koSource": "cecaf62989a2a1132e89adee00a91032d15fd93f79d207f7655f380074ac5f85"
+                  "id": "HY-115.23",
+                  "en": "Every server closes the session before it answers, so a request that lost its lock fails with status 500 (HY-43) in the three servers.",
+                  "ko": "모든 server는 응답하기 전에 session을 닫으므로, 잠금을 잃은 요청은 세 server에서 상태 500으로 실패한다(HY-43).",
+                  "koSource": "2bacf598c909064594d5adbd81b06c159d0497af2e569afe098ed74f0fb164ee"
                 },
                 {
                   "id": "HY-115.7",
@@ -6294,16 +6306,16 @@
                   "koSource": "2ca374c75be634913e5518e2d1ced8a605ced6013dd1e5a3a7245f217e1820a8"
                 },
                 {
-                  "id": "HY-115.9",
-                  "en": "A PHP server sets `session.save_handler=redis`, `session.save_path`, `redis.session.locking_enabled=1` and `redis.session.lock_expire`, which must be set because a lock without an expiry outlives its process when `max_execution_time` is 0.",
-                  "ko": "PHP 서버는 `session.save_handler=redis`, `session.save_path`, `redis.session.locking_enabled=1`과 `redis.session.lock_expire`를 설정하는데, `max_execution_time`이 0이면 만료 없는 lock은 자기 프로세스보다 오래 살기 때문에 후자는 반드시 설정해야 한다.",
-                  "koSource": "d90f820a63c1b16df247e3720408e2dbcc45c86f5c9759057bb6a925427fc30d"
+                  "id": "HY-115.24",
+                  "en": "A phpredis peer shares the sessions of a server when it runs with `redis.session.locking_enabled=1`, a `redis.session.lock_expire` other than 0, a `redis.session.lock_retries` other than -1, `redis.session.lock_failure_readonly=0`, `redis.session.early_refresh=0`, `redis.session.compression=none` and `session.serialize_handler=php_serialize`, and with the lock wait of the server converted to the microseconds of `redis.session.lock_wait_time`; with another setting the sessions are not shared.",
+                  "ko": "phpredis peer는 `redis.session.locking_enabled=1`, 0이 아닌 `redis.session.lock_expire`, -1이 아닌 `redis.session.lock_retries`, `redis.session.lock_failure_readonly=0`, `redis.session.early_refresh=0`, `redis.session.compression=none`, `session.serialize_handler=php_serialize`로 실행하고 server의 잠금 대기를 `redis.session.lock_wait_time`의 마이크로초로 바꿔 설정할 때 server의 session을 공유한다. 다른 설정으로는 session을 공유하지 않는다.",
+                  "koSource": "9c1c88243f683cebacfc58117d9f8117fcbaa9f64582c2323346111b6e895b4e"
                 },
                 {
-                  "id": "HY-115.10",
-                  "en": "The Node and Python servers take a function that runs one command on a client of the application and returns a bulk string as bytes, and the options `lockExpire`, `lockRetries` and `lockWait` (Python `lock_expire`, `lock_retries`, `lock_wait`), which mean what those of phpredis mean; every server of one Redis server gives them the same values, and the expiry is longer than any request.",
-                  "ko": "Node와 Python 서버는 애플리케이션의 client에서 명령 하나를 실행하고 bulk string을 바이트로 돌려주는 함수, 그리고 `lockExpire`, `lockRetries`, `lockWait` 옵션(Python은 `lock_expire`, `lock_retries`, `lock_wait`)을 받으며, 이들은 phpredis의 같은 이름이 뜻하는 것을 뜻한다; 한 Redis 서버의 모든 서버는 같은 값을 주며, 만료 시간은 어떤 요청보다도 길다.",
-                  "koSource": "5450f9537e37072225a502111edae064eba62e51fd7047418c2f9cdd1a3aff60"
+                  "id": "HY-115.25",
+                  "en": "Every server takes the connection settings of the Redis store, which are the addresses, TLS and the ACL user, and not a client of the application, and the options `lockExpire`, `lockRetries` and `lockWait`, which mean what those of phpredis mean; every server of one Redis server gives them the same values, and the expiry is longer than any request.",
+                  "ko": "모든 server는 애플리케이션의 client가 아니라 Redis 저장소의 연결 설정(주소, TLS, ACL 사용자)과, phpredis의 것과 같은 뜻의 option `lockExpire`, `lockRetries`, `lockWait`을 받는다. 한 Redis server의 모든 server는 같은 값을 주고, 만료는 어떤 요청보다 길다.",
+                  "koSource": "5302f594072ba64db2655d0b9422a591e819172651b05c5cb4afc7173648b8b6"
                 },
                 {
                   "id": "HY-115.11",
@@ -6324,16 +6336,10 @@
                   "koSource": "22cb6ed55d5aed4dbd86c911d4720714875197d049f199f6914e59186b94ca2e"
                 },
                 {
-                  "id": "HY-115.14",
-                  "en": "On a primary with replicas, a server reaches the primary that Redis Sentinel names, the PHP server through `RedisSentinelSessions`, which sets `session.save_path` before the session starts and leaves the session module of phpredis in place.",
-                  "ko": "replica가 있는 primary에서 서버는 Redis Sentinel이 이름 붙인 primary에 닿는데, PHP 서버는 `RedisSentinelSessions`로 이를 하며, 그것은 session이 시작되기 전에 `session.save_path`를 설정하고 phpredis의 session module을 그대로 둔다.",
-                  "koSource": "5073adbff0d423a8d3076b908a5e46096b41d1fbbb9c8f2354dec25d0b5c6441"
-                },
-                {
-                  "id": "HY-115.15",
-                  "en": "The Python server asks Sentinel through the `setup` option of `RedisSessions` before the first command of a request that has a session, because a pooled connection of redis-py stays on the former primary, which accepts writes for some seconds after a promotion.",
-                  "ko": "Python 서버는 session을 가진 요청의 첫 명령 전에 `RedisSessions`의 `setup` 옵션으로 Sentinel에 묻는데, redis-py의 pool 연결이 이전 primary에 남아 승격 뒤 몇 초 동안 쓰기를 받기 때문이다.",
-                  "koSource": "dfafc739638e55cabf84c8a9148e40ac5521fe500481a278857d4897490981a1"
+                  "id": "HY-115.26",
+                  "en": "On a primary with replicas, every server asks Redis Sentinel for the primary before the first command of each request that has a session, also on a connection that it keeps, because a connection to a former primary accepts writes for some seconds after a promotion.",
+                  "ko": "replica가 있는 primary에서 모든 server는 session을 가진 요청마다 첫 명령 전에 Redis Sentinel에 primary를 묻고, 유지한 연결에서도 묻는다. 옛 primary로의 연결은 승격 뒤 몇 초 동안 쓰기를 받기 때문이다.",
+                  "koSource": "de6f6f8d727f010bafd62b9546dbe489fba937620fb8e89d9dfe0a938db4dd53"
                 },
                 {
                   "id": "HY-115.16",
@@ -6354,10 +6360,10 @@
                   "koSource": "3af6d64fa67bc49bb12e729f56806801c3f358385663522b2755cde452ffb557"
                 },
                 {
-                  "id": "HY-115.19",
-                  "en": "On Redis Cluster every command of the protocol has one key, so a session and its lock can live on different primaries; the PHP server speaks the protocol through `RedisClusterSessions`, because the `rediscluster` handler of phpredis takes no lock, and the Node and Python servers run through a cluster client.",
-                  "ko": "Redis Cluster에서는 프로토콜의 모든 명령이 key 하나를 가지므로, session과 그 lock은 서로 다른 primary에 있을 수 있다; PHP 서버는 `RedisClusterSessions`로 프로토콜을 쓰는데, phpredis의 `rediscluster` handler는 lock을 잡지 않기 때문이며, Node와 Python 서버는 cluster client를 통해 실행한다.",
-                  "koSource": "ac7580b6d7cda44e2d96423ea890a4866ca45839ec0b64af8666b8fe16ae31f8"
+                  "id": "HY-115.27",
+                  "en": "On Redis Cluster every command of the protocol has one key, so a session and its lock can live on different primaries, and every server speaks the protocol through a cluster connection; the `rediscluster` handler of phpredis takes no lock, so a phpredis peer does not share the sessions of a cluster.",
+                  "ko": "Redis Cluster에서 protocol의 모든 명령은 key 하나를 가지므로 session과 그 잠금은 다른 primary에 있을 수 있고, 모든 server는 cluster 연결로 protocol을 말한다. phpredis의 `rediscluster` handler는 잠금을 갖지 않으므로 phpredis peer는 cluster의 session을 공유하지 않는다.",
+                  "koSource": "f90579b5950db3e93a7b74ed816ea3f049c6e1adf724fbe13356beb29eb6532c"
                 },
                 {
                   "id": "HY-115.20",

@@ -8212,8 +8212,8 @@
       ]
     },
     {
-      "id": "a_stored_token_of_another_form_is_replaced_by_a_new_token",
-      "label": "a session that holds a value that is not 64 lowercase hexadecimal digits in the place of the token gets a new token, and the response carries a masked value of it",
+      "id": "a_stored_token_of_another_form_fails_the_request",
+      "label": "a session that holds a value that is not 64 lowercase hexadecimal digits in the place of the token fails the request with the plain 500 of HY-43 (HY-24.14)",
       "application": "b_board",
       "stored": {
         "_hyper_csrf": "conformance-token"
@@ -8226,12 +8226,12 @@
           "HX-Request": "true"
         }
       },
-      "status": 200,
-      "tokenForm": true,
-      "tokenOfSession": true,
+      "status": 500,
       "requirements": [
-        "HY-10"
-      ]
+        "HY-24",
+        "HY-43"
+      ],
+      "body": "Internal Server Error"
     },
     {
       "id": "a_region_request_holds_only_the_paths_that_the_templates_of_the_route_read",

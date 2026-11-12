@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5fcd2248a32eba6c5798e3e654b65bce50d1af20245b00918dd224ac7e8d28a6 -->
+<!-- source-sha256: c40d6677f08b21feab3ba2109f6d9fca03542b28d727cf643bc84b56d2dcfcb9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 명세는 hyper의 session 값과 sessions 라이브러리의 저장 사이의 경계를 정한다(S-3b; HY-104.25). token, flash 값과 바뀐 topic, kept 값, record와 데이터 모델 사이의 변환, `_hyper_*` key는 hyper의 규칙이고, 식별자, record 바이트, 잠금, 파일이나 Redis key, 만료는 sessions 라이브러리의 규칙이며 hyper는 그 저장소 interface를 쓴다. 바뀌는 것: token 자리에 다른 값을 가진 session은 요청을 실패시키며 이전에는 새 token을 받았다(HY-24.14). PHP server는 native session handler가 아니라 sessions 라이브러리의 파일 저장소에 session을 두고, `App::open`의 `sessionSetup`은 없어졌다(HY-104.26). 모든 server는 Node server의 50 ms 재시도 없이 자기 스레드에서 블로킹 `flock`으로 session 파일의 잠금을 기다린다(HY-104.27, HY-104.29). 애플리케이션이 쓴 저장소는 저장소 interface를 구현하고, 그 예외는 던진 그대로 호출자에게 간다(HY-104.30). Redis 저장소는 client 함수 대신 연결 설정을 받고, 모든 server에서 session을 가진 요청마다 Sentinel에 primary를 물으며, 모든 server는 잠금을 잃은 요청에 500으로 응답한다(HY-115.23부터 HY-115.27). PHP server는 HY-129의 parse에서 session 식별자를 받는다(HY-129.16). HY-24.9, HY-24.11, HY-104.4부터 HY-104.6, HY-104.16부터 HY-104.18, HY-104.24, HY-115.6, HY-115.9, HY-115.10, HY-115.14, HY-115.15, HY-115.19, HY-129.10은 은퇴했고, `contracts/app.json`의 case `a_stored_token_of_another_form_fails_the_request`가 새 token의 case를 대신한다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 
 - 명세는 JSON 텍스트를 ordered-json의 직렬화기로 쓰고 ordered-json의 `parse`와 template 데이터 모델의 VAL-12로 읽는다(S-3b; HY-54.18부터 HY-54.21, HY-121.11). 수는 VAL-9대로 쓰므로 `-0`은 `0`, `1e-5`는 `0.00001`, `5e-324`는 `5e-324`다. U+2028과 U+2029는 그대로 쓴다. 읽기 한도는 중첩 container 256개이고 데이터 모델은 64단계를 허용하며 kind가 다르다. U+0000으로 시작하는 key는 key다. ±(2^53 − 1) 밖의 수는 literal과 상관없이 데이터 모델의 오류로 실패하고, ordered-json이 거부하는 텍스트는 kind `malformed_json`으로 실패한다. 이전에 모든 server는 PHP `json_encode`의 바이트를 썼고, 511단계를 읽었으며, U+0000으로 시작하는 key를 거부했다. HY-54.4부터 HY-54.8과 HY-121.8은 은퇴했다. `contracts/json.json`은 실패를 `raises`로 쓰고 깊이 case 넷을 더하며, U+0000으로 시작하는 manifest key를 거부하던 `contracts/app.json`의 case는 지웠다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 

@@ -8775,7 +8775,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Fails for a token or a mask that is not 64 lowercase hexadecimal digits (HY-24.9).",
+              "state": "Fails for a token or a mask that is not 64 lowercase hexadecimal digits (HY-24.14).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::requireToken",
@@ -9036,13 +9036,13 @@
             "languages": [
               "php"
             ],
-            "sentence": "HY-104.4"
+            "sentence": "HY-104.26"
           },
           "tests": [
             "packages/server/php/tests/RequestTest.php::RequestTest::testSessionCookieOptions: NativeSession::options returns the options of session_start of PHP; the test asserts each option and the name and cookie_secure over HTTPS, which are settings of the PHP session module.",
             "packages/server/php/tests/NativeSessionTest.php::NativeSessionTest::testStartsTheSessionOnFirstUse: NativeSession starts the PHP session on the first use of a value and not at its creation; the test reads session_status() before and after.",
-            "packages/server/php/tests/NativeSessionTest.php::NativeSessionTest::testRunsTheSetupJustBeforeTheSessionStarts: NativeSession runs its setup just before session_start, with the session not yet started, so that it sets session.save_path (HY-115.14); the test reads session_status() and session_save_path().",
-            "packages/server/php/tests/NativeSessionTest.php::NativeSessionTest::testAnErrorOfTheSetupFailsTheRequest: An error of the setup of NativeSession leaves the call and no PHP session starts (HY-115.14).",
+            "packages/server/php/tests/NativeSessionTest.php::NativeSessionTest::testRunsTheSetupJustBeforeTheSessionStarts: NativeSession runs its setup just before session_start, with the session not yet started, so that it sets session.save_path (HY-115.26); the test reads session_status() and session_save_path().",
+            "packages/server/php/tests/NativeSessionTest.php::NativeSessionTest::testAnErrorOfTheSetupFailsTheRequest: An error of the setup of NativeSession leaves the call and no PHP session starts (HY-115.26).",
             "packages/server/php/tests/NativeSessionTest.php::NativeSessionTest::testFailsTheRequestWhenTheSessionCannotStart: NativeSession fails with its own error when session_start of PHP returns false for a save handler whose read fails (HY-115.3).",
             "packages/server/php/tests/NativeSessionTest.php::NativeSessionTest::testNamesTheCookieHySessionOverHttp: NativeSession gives the PHP session module the name hy-session and the cookie parameters of HY-45; the test reads session_name() and session_get_cookie_params().",
             "packages/server/php/tests/NativeSessionTest.php::NativeSessionTest::testNamesTheCookieWithTheHostPrefixOverHttps: NativeSession gives the PHP session module the name __Host-hy-session and secure over HTTPS; the test reads session_name() and session_get_cookie_params().",
@@ -9072,7 +9072,7 @@
             "languages": [
               "php"
             ],
-            "sentence": "HY-104.4"
+            "sentence": "HY-104.26"
           },
           "members": []
         },
@@ -9345,7 +9345,7 @@
             "languages": [
               "php"
             ],
-            "sentence": "HY-115.19"
+            "sentence": "HY-115.27"
           }
         },
         {
@@ -9416,7 +9416,7 @@
             "languages": [
               "php"
             ],
-            "sentence": "HY-115.14"
+            "sentence": "HY-115.26"
           }
         },
         {
@@ -9788,7 +9788,7 @@
               "node",
               "python"
             ],
-            "sentence": "HY-104.4"
+            "sentence": "HY-104.26"
           }
         },
         {
@@ -9851,7 +9851,7 @@
               "inputs": [],
               "output": "session-turns",
               "errors": [],
-              "state": "Holds the turns of the requests of this process (HY-104.17).",
+              "state": "Holds the turns of the requests of this process (HY-104.29).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/file-sessions.ts::FileSessions.turns",
@@ -9862,10 +9862,10 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-104.17"
+                "sentence": "HY-104.29"
               },
               "tests": [
-                "packages/server/ts/tests/sessions.test.ts::FileSessions > runs the requests of one session one after another: The requests of one session in one Node process wait in a queue of that process before they try the lock (HY-104.17); the test opens one session twice in one event loop and asserts that the second open reads the value that the first wrote."
+                "packages/server/ts/tests/sessions.test.ts::FileSessions > runs the requests of one session one after another: The requests of one session in one Node process wait in a queue of that process before they try the lock (HY-104.29); the test opens one session twice in one event loop and asserts that the second open reads the value that the first wrote."
               ]
             },
             {
@@ -9962,7 +9962,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Tries the lock of a session file once without blocking, and counts it only when the path still names the locked file (HY-104.6).",
+              "state": "Tries the lock of a session file once without blocking, and counts it only when the path still names the locked file (HY-104.27).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/file-sessions.ts::FileSessions.tryHold",
@@ -10041,7 +10041,7 @@
               "node",
               "python"
             ],
-            "sentence": "HY-104.4"
+            "sentence": "HY-104.26"
           }
         },
         {
@@ -10213,7 +10213,7 @@
               "node",
               "python"
             ],
-            "sentence": "HY-104.4"
+            "sentence": "HY-104.26"
           }
         },
         {
@@ -10238,7 +10238,7 @@
               "inputs": [],
               "output": "redisCommand",
               "errors": [],
-              "state": "Holds the function that runs one command on the Redis client of the application (HY-115.10).",
+              "state": "Holds the function that runs one command on the Redis client of the application (HY-115.25).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/redis-sessions.ts::RedisSessions.command",
@@ -10276,7 +10276,7 @@
               "inputs": [],
               "output": "session-turns",
               "errors": [],
-              "state": "Holds the turns of the requests of this process (HY-104.17).",
+              "state": "Holds the turns of the requests of this process (HY-104.29).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/redis-sessions.ts::RedisSessions.turns",
@@ -10287,7 +10287,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-104.17"
+                "sentence": "HY-104.29"
               }
             },
             {
@@ -10299,7 +10299,7 @@
               ],
               "output": "redis-sessions",
               "errors": [],
-              "state": "Holds the command of a Redis client, the lifetime, the key prefix and the lock options of the sessions (HY-115.10).",
+              "state": "Holds the command of a Redis client, the lifetime, the key prefix and the lock options of the sessions (HY-115.25).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/redis-sessions.ts::RedisSessions.constructor",
@@ -10446,7 +10446,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Runs the setup of a request that is about to send its first command (HY-115.15).",
+              "state": "Runs the setup of a request that is about to send its first command (HY-115.26).",
               "native": {
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/redis_sessions.py::RedisSessions._prepare",
@@ -10457,13 +10457,13 @@
                 "languages": [
                   "python"
                 ],
-                "sentence": "HY-115.15"
+                "sentence": "HY-115.26"
               },
               "tests": [
-                "packages/server/python/tests/test_redis_sessions.py::RedisSessionsTest.test_setup_runs_before_the_first_command_of_an_opened_session: RedisSessions of Python runs its setup before the first command of a request whose cookie names a session (HY-115.15); the test asserts that no command was sent when setup ran.",
-                "packages/server/python/tests/test_redis_sessions.py::RedisSessionsTest.test_setup_runs_before_a_new_session_is_written: RedisSessions of Python runs its setup before it writes a new session, and not when the session opens (HY-115.15).",
-                "packages/server/python/tests/test_redis_sessions.py::RedisSessionsTest.test_a_request_without_a_session_does_not_run_setup: RedisSessions of Python does not run its setup for a request that has no session and writes none (HY-115.15).",
-                "packages/server/python/tests/test_redis_sessions.py::RedisSessionsTest.test_a_setup_that_fails_fails_the_request_before_any_command: An error of the setup of RedisSessions of Python leaves the open before any command is sent (HY-115.15)."
+                "packages/server/python/tests/test_redis_sessions.py::RedisSessionsTest.test_setup_runs_before_the_first_command_of_an_opened_session: RedisSessions of Python runs its setup before the first command of a request whose cookie names a session (HY-115.26); the test asserts that no command was sent when setup ran.",
+                "packages/server/python/tests/test_redis_sessions.py::RedisSessionsTest.test_setup_runs_before_a_new_session_is_written: RedisSessions of Python runs its setup before it writes a new session, and not when the session opens (HY-115.26).",
+                "packages/server/python/tests/test_redis_sessions.py::RedisSessionsTest.test_a_request_without_a_session_does_not_run_setup: RedisSessions of Python does not run its setup for a request that has no session and writes none (HY-115.26).",
+                "packages/server/python/tests/test_redis_sessions.py::RedisSessionsTest.test_a_setup_that_fails_fails_the_request_before_any_command: An error of the setup of RedisSessions of Python leaves the open before any command is sent (HY-115.26)."
               ]
             }
           ],
@@ -10472,7 +10472,7 @@
               "node",
               "python"
             ],
-            "sentence": "HY-115.10"
+            "sentence": "HY-115.25"
           }
         },
         {
@@ -10558,7 +10558,7 @@
               "node",
               "python"
             ],
-            "sentence": "HY-104.4"
+            "sentence": "HY-104.26"
           }
         },
         {
@@ -10581,7 +10581,7 @@
               "node",
               "python"
             ],
-            "sentence": "HY-104.4"
+            "sentence": "HY-104.26"
           }
         },
         {
@@ -10618,7 +10618,7 @@
               "inputs": [],
               "output": "function(number) -> boolean",
               "errors": [],
-              "state": "Returns the function that tries the exclusive lock of a file descriptor through node:ffi, true when it holds the lock and false while another holds it (HY-104.6).",
+              "state": "Returns the function that tries the exclusive lock of a file descriptor through node:ffi, true when it holds the lock and false while another holds it (HY-104.27).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/flock.ts::exclusiveLock",
@@ -10631,7 +10631,7 @@
             "languages": [
               "node"
             ],
-            "sentence": "HY-104.6"
+            "sentence": "HY-104.27"
           }
         },
         {
@@ -10668,7 +10668,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Waits for the turn of an identifier, which lasts until it is left (HY-104.17).",
+              "state": "Waits for the turn of an identifier, which lasts until it is left (HY-104.29).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/session-turns.ts::SessionTurns.enter",
@@ -10685,7 +10685,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Ends the turn of an identifier, so that the next request of its session in this process goes on (HY-104.17).",
+              "state": "Ends the turn of an identifier, so that the next request of its session in this process goes on (HY-104.29).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/session-turns.ts::SessionTurns.leave",
@@ -10698,7 +10698,7 @@
             "languages": [
               "node"
             ],
-            "sentence": "HY-104.17"
+            "sentence": "HY-104.29"
           }
         }
       ]
@@ -14255,7 +14255,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-115.10"
+        "sentence": "HY-115.25"
       },
       "native": {
         "node": {
@@ -14282,7 +14282,7 @@
               "languages": [
                 "python"
               ],
-              "sentence": "HY-115.15"
+              "sentence": "HY-115.26"
             }
           }
         },
@@ -14591,7 +14591,7 @@
               "languages": [
                 "php"
               ],
-              "sentence": "HY-104.18"
+              "sentence": "HY-104.26"
             }
           },
           "log": {
@@ -14892,7 +14892,7 @@
               "languages": [
                 "php"
               ],
-              "sentence": "HY-104.18"
+              "sentence": "HY-104.26"
             }
           },
           "shell": "string",
@@ -15845,7 +15845,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-24.9",
+              "sentence": "HY-24.14",
               "state": "`error` is the message of the error with which masking the token `token` with `mask` fails."
             }
           }
@@ -15881,7 +15881,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-24.9",
+              "sentence": "HY-24.14",
               "state": "`error` is the message of the error with which verifying the value `value` against the token `token` fails."
             }
           }
@@ -17953,7 +17953,7 @@
             "hexadecimal": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-24.9",
+              "sentence": "HY-24.14",
               "state": "`hexadecimal` states whether every token that a call of `csrfToken` returned is 64 lowercase hexadecimal digits."
             },
             "renewals": {
@@ -18763,7 +18763,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-24.9",
+              "sentence": "HY-24.14",
               "state": "`tokenForm` true states that the session holds 64 lowercase hexadecimal digits as its token after the request."
             },
             "tokenInBody": {
@@ -18812,7 +18812,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-24.11",
+              "sentence": "HY-24.15",
               "state": "`browsers` lists, for each value that a step `observe` read during the request, in the order of `observed`, one word: `current` for the SHA-256 digest, as 64 lowercase hexadecimal digits, of the 32 bytes of the token that the session holds after the request, `previous` for that digest of the token that the session held when the request was sent, when that token differs, `none` for null, and `other` for every other value."
             },
             "valueReads": {
