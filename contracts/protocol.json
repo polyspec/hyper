@@ -1733,6 +1733,12 @@
                   "id": "HY-125.8"
                 },
                 {
+                  "id": "HY-125.14",
+                  "en": "The name `hyper-build` is the name of the build id element of a hyper application and has nothing to do with the names of the packages (HR-98), so it stays when a package is renamed.",
+                  "ko": "이름 `hyper-build`는 hyper 애플리케이션의 build id 요소의 이름이며 package 이름(HR-98)과 무관하므로, package 이름이 바뀌어도 그대로다.",
+                  "koSource": "d50edfa08c0787ae56d23319b8b3ea69fa1bb4e97015f988923d3602809e6756"
+                },
+                {
                   "en": "The server checks the context by HY-44 for every request that calls the context handler.",
                   "ko": "서버는 context handler를 호출하는 모든 요청에서 context를 HY-44로 검사한다.",
                   "koSource": "60dea498b824f0a20edce33c88fc9e4e52e6929c326fa94ecd340922834aa6f6",
