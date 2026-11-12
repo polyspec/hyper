@@ -18,6 +18,7 @@ pub mod keep;
 pub mod location;
 pub mod manifest;
 pub mod media;
+pub mod opening;
 pub mod orm;
 pub mod page;
 pub mod pipeline;

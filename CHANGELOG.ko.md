@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: da08de341d65168bc61b363cd383cc5a6b8951526c3cbe3c8a0a7b9a1b22b6e3 -->
+<!-- source-sha256: 8ea96b35c6230b0d92c7138b109e5ead36200559e221ac677cf6423f67afe9f9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 라우팅된 요청의 session을 store interface로 연다(C-7). `opening::open_page`는 flash 값과 바뀐 topic을 가져간 뒤 token을 읽고, session에 없으면 둔다(HY-120.5, HY-25.2, HY-24.1). form token이 맞지 않는 `POST`는 403으로 거부하고(HY-24.4, HY-59.8), host가 뽑은 mask로 token을 가리며(HY-24.2), 바뀐 topic과 kept server 값을 가진 모든 region의 그 값과 함께 page의 입력을 준다(HY-19, HY-11.3, HY-40). `opening::keep_request`는 kept endpoint에 403, 400, 또는 값을 저장한 뒤 204로 답하며(HY-40.1), 다음 page가 찾도록 flash 데이터를 가져가지 않는다. interface 계약은 record `opening`과 `keep_request`, variant `opened`, 그리고 session-store 라이브러리의 store unit을 받는 이 함수들을 둔다.
 
 - Rust core는 `polyspec-http-media-type`을 Git으로 이름하는 Git 저장소 branch에서 `polyspec-http-negotiation`을 받으며 다른 working tree를 읽지 않는다. spec, 기능 문서, core 주석은 라이브러리 http-negotiation, http-form, php-serialization, session-store를 이름한다. session-store 라이브러리가 다른 라이브러리의 kind interface를 받을 때까지 core는 `polyspec-sessions`와 `polyspec-php-serialize`를 유지하고, 모든 라이브러리를 kind interface가 `polyspec-bindgen-core`인 commit에 둔다(C-7, 9c).
 

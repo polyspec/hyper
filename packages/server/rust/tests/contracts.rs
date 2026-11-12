@@ -1567,3 +1567,98 @@ fn the_headers_of_a_page_and_the_kept_endpoint() {
     );
     assert_eq!(kept_value(&pages, "nowhere", "open", "true"), None);
 }
+
+#[test]
+fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), bindgen_core::Failure<Error>> {
+    // HY-120.5, HY-24.1, HY-24.4, HY-25.2, HY-59.8, HY-40.1, HY-11.3
+    use polyspec_hyper::opening::{keep_request, open_page, KeepRequest, Opened, Opening};
+    use polyspec_hyper::session::{kept, put_flash, token};
+    use polyspec_hyper::steps::PageKind;
+    use polyspec_sessions::MemoryStore;
+    let pages = board(false);
+    let mask = "ab".repeat(32);
+    let opening = |action: bool, form_csrf: Option<String>| Opening {
+        route: "list".to_owned(),
+        params: Vec::new(),
+        kind: PageKind::Html,
+        action,
+        path: "/list".to_owned(),
+        base_path: String::new(),
+        current_url: Some(b"http://host.example/other".to_vec()),
+        keep_cookie: None,
+        held_hash: None,
+        form_csrf,
+        mask: mask.clone(),
+        now: 0.0,
+    };
+    let mut store = MemoryStore::new();
+    let mut flash = polyspec_template::OrderedMap::new();
+    flash.insert("note".to_owned(), polyspec_template::Value::text("added"));
+    put_flash(&mut store, &flash, &["count".to_owned()])?;
+    let Opened::Page {
+        input,
+        flash,
+        token: first,
+    } = open_page(&pages, &mut store, &opening(false, None))?
+    else {
+        panic!("a GET page is refused");
+    };
+    assert_eq!(first.len(), 64);
+    assert_eq!(
+        input.csrf,
+        polyspec_hyper::csrf::mask(&first, &mask).map_err(bindgen_core::Failure::Kind)?
+    );
+    assert_eq!(input.changed, ["count", "path"]);
+    assert!(input
+        .stored
+        .get("rows")
+        .is_some_and(|paths| paths.is_empty()));
+    assert!(flash.get("note").is_some());
+    // The flash data belongs to the next request alone, and the token stays (HY-25.2, HY-24.1).
+    let Opened::Page {
+        input,
+        flash,
+        token: second,
+    } = open_page(&pages, &mut store, &opening(false, None))?
+    else {
+        panic!("a GET page is refused");
+    };
+    assert!(flash.is_empty());
+    assert_eq!(input.changed, ["path"]);
+    assert_eq!(second, first);
+    // A POST without the masked token is refused with 403, one with it opens the page (HY-24.4, HY-59.8).
+    match open_page(&pages, &mut store, &opening(true, None))? {
+        Opened::Refused { answer } => assert_eq!(answer.status, 403),
+        Opened::Page { .. } => panic!("a POST without its token opened the page"),
+    }
+    let masked = polyspec_hyper::csrf::mask(&first, &mask).map_err(bindgen_core::Failure::Kind)?;
+    assert!(matches!(
+        open_page(&pages, &mut store, &opening(true, Some(masked.clone())))?,
+        Opened::Page { .. }
+    ));
+    // The kept endpoint (HY-40.1).
+    let keep = |csrf: &str, path: &str, value: &str| KeepRequest {
+        form_csrf: Some(csrf.to_owned()),
+        region: "rows".to_owned(),
+        path: path.to_owned(),
+        value: value.to_owned(),
+    };
+    assert_eq!(
+        keep_request(&pages, &mut store, &keep("x", "open", "true"))?.status,
+        403
+    );
+    assert_eq!(
+        keep_request(&pages, &mut store, &keep(&masked, "mode", "\"b\""))?.status,
+        400
+    );
+    assert_eq!(
+        keep_request(&pages, &mut store, &keep(&masked, "open", "true"))?.status,
+        204
+    );
+    assert_eq!(
+        kept(&mut store, "rows")?.get("open"),
+        Some(&polyspec_template::Value::Bool(true))
+    );
+    assert_eq!(token(&mut store)?, first);
+    Ok(())
+}

@@ -2750,6 +2750,362 @@
       ]
     },
     {
+      "id": "opening",
+      "name": [
+        "opening"
+      ],
+      "module": "",
+      "kind": "record",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::opening::Opening",
+      "fields": [
+        {
+          "name": [
+            "route"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "params"
+          ],
+          "type": {
+            "list": {
+              "tuple": [
+                "text",
+                "text"
+              ]
+            }
+          },
+          "required": true
+        },
+        {
+          "name": [
+            "kind"
+          ],
+          "type": {
+            "unit": "page_kind"
+          },
+          "required": true
+        },
+        {
+          "name": [
+            "action"
+          ],
+          "type": "bool",
+          "required": true
+        },
+        {
+          "name": [
+            "path"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "base",
+            "path"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "current",
+            "url"
+          ],
+          "type": {
+            "optional": "latin1"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-11.4"
+        },
+        {
+          "name": [
+            "keep",
+            "cookie"
+          ],
+          "type": {
+            "optional": "text"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-38.10"
+        },
+        {
+          "name": [
+            "held",
+            "hash"
+          ],
+          "type": {
+            "optional": "text"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-127.1"
+        },
+        {
+          "name": [
+            "form",
+            "csrf"
+          ],
+          "type": {
+            "optional": "text"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-24.5"
+        },
+        {
+          "name": [
+            "mask"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "now"
+          ],
+          "type": "float",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "opened",
+      "name": [
+        "opened"
+      ],
+      "module": "",
+      "kind": "variant",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::opening::Opened",
+      "tag": [
+        "opened"
+      ],
+      "cases": [
+        {
+          "value": "refused",
+          "fields": [
+            {
+              "name": [
+                "answer"
+              ],
+              "type": {
+                "unit": "plain"
+              },
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "page",
+          "fields": [
+            {
+              "name": [
+                "input"
+              ],
+              "type": {
+                "unit": "page_input"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "flash"
+              ],
+              "type": {
+                "map": "template_value"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "token"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "keep_request",
+      "name": [
+        "keep",
+        "request"
+      ],
+      "module": "",
+      "kind": "record",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::opening::KeepRequest",
+      "fields": [
+        {
+          "name": [
+            "form",
+            "csrf"
+          ],
+          "type": {
+            "optional": "text"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-24.5"
+        },
+        {
+          "name": [
+            "region"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "path"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "value"
+          ],
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "opening_functions",
+      "name": [
+        "opening",
+        "functions"
+      ],
+      "module": "",
+      "kind": "functions",
+      "visibility": "internal",
+      "origin": "generated",
+      "members": [
+        {
+          "id": "opening_functions.open_page",
+          "name": [
+            "open",
+            "page"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "pages"
+              ],
+              "type": {
+                "unit": "pages"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "store"
+              ],
+              "type": {
+                "unit": "store",
+                "library": "sessions"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "opening"
+              ],
+              "type": {
+                "unit": "opening"
+              },
+              "required": true
+            }
+          ],
+          "returns": {
+            "unit": "opened"
+          },
+          "raises": [
+            "polyspec_hyper::Error::InvalidSessionToken",
+            "polyspec_hyper::Error::InvalidSessionRecord",
+            "polyspec_hyper::Error::InvalidCsrfForm",
+            "polyspec_hyper::Error::DataModel",
+            "polyspec_hyper::Error::Sessions",
+            "polyspec_hyper::Error::RecordValue"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::opening::open_page"
+        },
+        {
+          "id": "opening_functions.keep_request",
+          "name": [
+            "keep",
+            "request"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "pages"
+              ],
+              "type": {
+                "unit": "pages"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "store"
+              ],
+              "type": {
+                "unit": "store",
+                "library": "sessions"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "request"
+              ],
+              "type": {
+                "unit": "keep_request"
+              },
+              "required": true
+            }
+          ],
+          "returns": {
+            "unit": "plain"
+          },
+          "raises": [
+            "polyspec_hyper::Error::InvalidSessionToken",
+            "polyspec_hyper::Error::InvalidSessionRecord",
+            "polyspec_hyper::Error::InvalidCsrfForm",
+            "polyspec_hyper::Error::DataModel",
+            "polyspec_hyper::Error::Sessions",
+            "polyspec_hyper::Error::RecordValue"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::opening::keep_request"
+        }
+      ]
+    },
+    {
       "id": "record_error",
       "name": [
         "record",
