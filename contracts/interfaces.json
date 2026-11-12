@@ -181,7 +181,8 @@
         "tests/legacy/app-before-s3b.json",
         "tests/legacy/client-before-s3b.json",
         "tests/legacy/context-before-s3b.json",
-        "tests/legacy/representations-before-s3b.json"
+        "tests/legacy/representations-before-s3b.json",
+        "tests/legacy/request-before-s3b.json"
       ],
       "units": [
         {
@@ -1275,7 +1276,8 @@
         "HY-119"
       ],
       "cases": [
-        "contracts/request.json"
+        "contracts/request.json",
+        "tests/legacy/request-before-s3b.json"
       ],
       "units": [
         {
@@ -2509,7 +2511,8 @@
       ],
       "cases": [
         "contracts/request.json",
-        "contracts/hooks.json"
+        "contracts/hooks.json",
+        "tests/legacy/request-before-s3b.json"
       ],
       "units": [
         {
@@ -3771,7 +3774,8 @@
       "cases": [
         "contracts/request.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/request-before-s3b.json"
       ],
       "units": [
         {
@@ -6193,7 +6197,8 @@
         "tests/legacy/fields.json",
         "contracts/request.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/request-before-s3b.json"
       ],
       "units": [
         {
@@ -7862,7 +7867,8 @@
       ],
       "cases": [
         "contracts/cookies.json",
-        "contracts/request.json"
+        "contracts/request.json",
+        "tests/legacy/request-before-s3b.json"
       ],
       "units": [
         {
@@ -13163,7 +13169,8 @@
       "cases": [
         "contracts/request.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/request-before-s3b.json"
       ],
       "units": [
         {
@@ -17466,11 +17473,8 @@
           }
         },
         "files": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "request-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -17564,11 +17568,8 @@
           ]
         },
         "values": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "request-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {

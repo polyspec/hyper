@@ -1873,6 +1873,294 @@
           ]
         }
       }
+    },
+    "request-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "files": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "type": {
+              "role": "input"
+            },
+            "body": {
+              "role": "input"
+            },
+            "names": {
+              "role": "input"
+            },
+            "last": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-113.2",
+              "state": "`type` and `body` are text whose characters U+0000 to U+00FF are bytes, and `last` holds, for each name of `names` in order, the filename of the file that `file(name)` returns, or null when it returns none."
+            },
+            "pairs": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-113.2",
+              "state": "`pairs` is what `files()` returns, each file given as its filename."
+            },
+            "limits": {
+              "role": "input",
+              "optional": true
+            },
+            "over": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-106.5",
+              "state": "`over` holds, for each number of bytes of `limits` in order, what `fileOver(limit)` returns."
+            }
+          },
+          "members": [
+            "request.file",
+            "request.fileOver",
+            "request.files"
+          ]
+        },
+        "values": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "request": {
+              "role": "input",
+              "fields": {
+                "method": {
+                  "role": "input",
+                  "optional": true
+                },
+                "target": {
+                  "role": "input"
+                },
+                "headers": {
+                  "role": "input",
+                  "optional": true
+                },
+                "body": {
+                  "role": "input",
+                  "optional": true
+                },
+                "https": {
+                  "role": "input",
+                  "optional": true
+                },
+                "selection": {
+                  "role": "input",
+                  "optional": true
+                },
+                "media": {
+                  "role": "input",
+                  "optional": true
+                },
+                "cookies": {
+                  "role": "input",
+                  "optional": true
+                }
+              }
+            },
+            "with": {
+              "role": "input",
+              "optional": true
+            },
+            "integers": {
+              "role": "input",
+              "optional": true
+            },
+            "formNames": {
+              "role": "input",
+              "optional": true
+            },
+            "cookieNames": {
+              "role": "input",
+              "optional": true
+            },
+            "headerNames": {
+              "role": "input",
+              "optional": true
+            },
+            "method": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-97.11",
+              "state": "`method` is the member `method` of the read request."
+            },
+            "path": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-42.1",
+              "state": "`path` is what `path()` of the read request returns."
+            },
+            "rawQuery": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-56.1",
+              "state": "`rawQuery` is what `rawQuery()` returns."
+            },
+            "query": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-56.4",
+              "state": "`query` is what `query()` returns: a list of pairs of a name and the list of its values."
+            },
+            "queryInt": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-56.8",
+              "state": "`queryInt` holds, for each pair of a name and a default of `integers` in order, what `queryInt(name, default)` returns."
+            },
+            "form": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-57.1",
+              "state": "`form` is what `form()` returns: a list of pairs of a name and the list of its values."
+            },
+            "formString": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-57.7",
+              "state": "`formString` holds, for each name of `formNames` in order, what `formString(name)` returns."
+            },
+            "cookie": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-129.1",
+              "state": "`cookie` holds, for each name of `cookieNames` in order, what `cookie(name)` returns, or null."
+            },
+            "header": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-97.4",
+              "state": "`header` holds, for each name of `headerNames` in order, what `header(name)` of the read request returns, or null."
+            },
+            "https": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-97.11",
+              "state": "`https` is the member `https` of the read request."
+            },
+            "selection": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-97.11",
+              "state": "`selection` is what `selection()` of the read request returns."
+            },
+            "valid": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-42.3",
+              "state": "`valid` is what `validInput()` returns."
+            },
+            "bodySize": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-59.5",
+              "state": "`bodySize` is what `bodySize()` returns."
+            },
+            "currentPath": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-11.4",
+              "state": "`currentPath` is what `currentPath()` returns, or null."
+            },
+            "wantsJson": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-116.16",
+              "state": "`wantsJson` is what `wantsJson()` returns for a request with a selected type (HY-15.1), or the text `caller error` when the call fails with the error of a request without one."
+            },
+            "isRegionRequest": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-116.16",
+              "state": "`isRegionRequest` is what `isRegionRequest()` returns for a request with a selected type (HY-15.1), or the text `caller error` when the call fails with the error of a request without one."
+            },
+            "original": {
+              "role": "expected",
+              "optional": true,
+              "fields": {
+                "header": {
+                  "role": "expected",
+                  "optional": true,
+                  "compare": "exact",
+                  "sentence": "HY-97.11",
+                  "state": "`header` holds, for each name of `headerNames` in order, what `header(name)` of the request before `with` returns, or null."
+                }
+              }
+            },
+            "mediaType": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-59.11",
+              "state": "`mediaType` is what `mediaType()` returns."
+            }
+          },
+          "members": [
+            "cookies.parse",
+            "request.bodySize",
+            "request.constructor",
+            "request.cookie",
+            "request.currentPath",
+            "request.form",
+            "request.formString",
+            "request.header",
+            "request.https",
+            "request.isRegionRequest",
+            "request.mediaType",
+            "request.method",
+            "request.path",
+            "request.query",
+            "request.queryInt",
+            "request.rawQuery",
+            "request.selection",
+            "request.targetPath",
+            "request.targetQuery",
+            "request.validInput",
+            "request.wantsJson",
+            "request.withHeader",
+            "request.withMedia",
+            "request.withSelection"
+          ]
+        }
+      }
     }
   }
 }

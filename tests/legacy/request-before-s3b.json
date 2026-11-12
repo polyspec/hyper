@@ -1,0 +1,833 @@
+{
+  "files": [
+    {
+      "id": "the_last_file_of_a_name_and_the_pairs_in_request_order",
+      "label": "file(name) gives the last file of a name, null for a name with only a value or without a part, and files() pairs each name with its files in request order (HY-113.2)",
+      "type": "multipart/form-data; boundary=XyZ",
+      "body": "--XyZ\r\nContent-Disposition: form-data; name=\"f\"; filename=\"a.txt\"\r\n\r\nfirst\r\n--XyZ\r\nContent-Disposition: form-data; name=\"t\"\r\n\r\ntext\r\n--XyZ\r\nContent-Disposition: form-data; name=\"g\"; filename=\"g.txt\"\r\nContent-Type: text/plain\r\n\r\nthird\r\n--XyZ\r\nContent-Disposition: form-data; name=\"f\"; filename=\"b.txt\"\r\n\r\nsecond\r\n--XyZ--\r\n",
+      "names": [
+        "f",
+        "g",
+        "t",
+        "none"
+      ],
+      "last": [
+        "b.txt",
+        "g.txt",
+        null,
+        null
+      ],
+      "pairs": [
+        [
+          "f",
+          [
+            "a.txt",
+            "b.txt"
+          ]
+        ],
+        [
+          "g",
+          [
+            "g.txt"
+          ]
+        ]
+      ],
+      "limits": [
+        5,
+        6,
+        7
+      ],
+      "over": [
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "id": "a_file_with_an_empty_filename_is_the_file_of_its_name",
+      "label": "a file with an empty filename is the file of its name (HY-113.4)",
+      "type": "multipart/form-data; boundary=XyZ",
+      "body": "--XyZ\r\nContent-Disposition: form-data; name=\"f\"; filename=\"\"\r\n\r\n\r\n--XyZ--\r\n",
+      "names": [
+        "f"
+      ],
+      "last": [
+        ""
+      ],
+      "pairs": [
+        [
+          "f",
+          [
+            ""
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "names_of_digits_keep_the_order_of_their_first_files",
+      "label": "names of digits are names: the pairs keep the order of the first file of each name (HY-113.2)",
+      "type": "multipart/form-data; boundary=XyZ",
+      "body": "--XyZ\r\nContent-Disposition: form-data; name=\"1\"; filename=\"one.txt\"\r\n\r\n1\r\n--XyZ\r\nContent-Disposition: form-data; name=\"0\"; filename=\"zero.txt\"\r\n\r\n0\r\n--XyZ\r\nContent-Disposition: form-data; name=\"1\"; filename=\"uno.txt\"\r\n\r\nu\r\n--XyZ--\r\n",
+      "names": [
+        "0",
+        "1",
+        "2"
+      ],
+      "last": [
+        "zero.txt",
+        "uno.txt",
+        null
+      ],
+      "pairs": [
+        [
+          "1",
+          [
+            "one.txt",
+            "uno.txt"
+          ]
+        ],
+        [
+          "0",
+          [
+            "zero.txt"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "a_body_that_is_no_multipart_has_no_files",
+      "label": "a body of another type has no file (HY-113.1)",
+      "type": "application/x-www-form-urlencoded",
+      "body": "f=1",
+      "names": [
+        "f"
+      ],
+      "last": [
+        null
+      ],
+      "pairs": []
+    },
+    {
+      "id": "no_file_is_over_a_limit_in_a_request_without_files",
+      "label": "fileOver returns false for a body without a file part, also for the limit 0",
+      "type": "multipart/form-data; boundary=XyZ",
+      "body": "--XyZ\r\nContent-Disposition: form-data; name=\"t\"\r\n\r\ntext\r\n--XyZ--\r\n",
+      "names": [
+        "t"
+      ],
+      "last": [
+        null
+      ],
+      "pairs": [],
+      "limits": [
+        0
+      ],
+      "over": [
+        false
+      ],
+      "requirements": [
+        "HY-114"
+      ]
+    }
+  ],
+  "values": [
+    {
+      "id": "the_query_values_keep_the_order_of_the_first_value_of_each_name",
+      "label": "the raw query stops at the fragment, the pairs take each name once in the order of its first value, without nesting, and queryInt reads the last value (HY-56)",
+      "request": {
+        "target": "/board?b=1&roles[]=a&roles%5B%5D=b&1=x&b=2&q=a+b#top"
+      },
+      "path": "/board",
+      "rawQuery": "b=1&roles[]=a&roles%5B%5D=b&1=x&b=2&q=a+b",
+      "query": [
+        [
+          "b",
+          [
+            "1",
+            "2"
+          ]
+        ],
+        [
+          "roles[]",
+          [
+            "a",
+            "b"
+          ]
+        ],
+        [
+          "1",
+          [
+            "x"
+          ]
+        ],
+        [
+          "q",
+          [
+            "a b"
+          ]
+        ]
+      ],
+      "integers": [
+        [
+          "b",
+          7
+        ]
+      ],
+      "queryInt": [
+        2
+      ]
+    },
+    {
+      "id": "a_repeated_query_name_gives_its_last_value_as_an_integer_and_a_missing_name_the_default",
+      "label": "queryInt reads the last value of a repeated name, and the default for a name without a value (HY-56.5)",
+      "request": {
+        "target": "/x?z=1&y=2&x=3&y=4"
+      },
+      "query": [
+        [
+          "z",
+          [
+            "1"
+          ]
+        ],
+        [
+          "y",
+          [
+            "2",
+            "4"
+          ]
+        ],
+        [
+          "x",
+          [
+            "3"
+          ]
+        ]
+      ],
+      "integers": [
+        [
+          "y",
+          0
+        ],
+        [
+          "missing",
+          7
+        ]
+      ],
+      "queryInt": [
+        4,
+        7
+      ]
+    },
+    {
+      "id": "a_query_value_that_is_no_integer_of_at_most_15_digits_gives_the_default",
+      "label": "queryInt gives the default for a value of 16 digits and for a text, and the last value of a repeated name (HY-56.5)",
+      "request": {
+        "target": "/?page=2&page=3&n=1234567890123456&q=a+b%20c"
+      },
+      "integers": [
+        [
+          "page",
+          1
+        ],
+        [
+          "n",
+          7
+        ],
+        [
+          "q",
+          7
+        ]
+      ],
+      "queryInt": [
+        3,
+        7,
+        7
+      ]
+    },
+    {
+      "id": "digits_before_a_line_feed_are_no_integer",
+      "label": "queryInt gives the default for the digits 12 followed by a line feed (HY-56.5)",
+      "request": {
+        "target": "/?n=12%0A"
+      },
+      "integers": [
+        [
+          "n",
+          7
+        ]
+      ],
+      "queryInt": [
+        7
+      ]
+    },
+    {
+      "id": "a_target_without_a_query_has_no_query_values",
+      "label": "a target without `?` has an empty raw query and no query values (HY-56.1)",
+      "request": {
+        "target": "/"
+      },
+      "rawQuery": "",
+      "query": []
+    },
+    {
+      "id": "an_empty_query_has_no_query_values",
+      "label": "a target that ends with `?` has an empty raw query and no query values (HY-56.2)",
+      "request": {
+        "target": "/?"
+      },
+      "rawQuery": "",
+      "query": []
+    },
+    {
+      "id": "the_form_values_keep_the_order_of_the_first_value_of_each_name",
+      "label": "the form values of a urlencoded body take each name once in the order of its first value, without nesting, and formString reads the last value or empty text (HY-57)",
+      "request": {
+        "method": "POST",
+        "target": "/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "title=%ED%95%9C+%EA%B8%80&roles[]=a&empty&roles%5B%5D=b&x=1&x=2"
+      },
+      "form": [
+        [
+          "title",
+          [
+            "한 글"
+          ]
+        ],
+        [
+          "roles[]",
+          [
+            "a",
+            "b"
+          ]
+        ],
+        [
+          "empty",
+          [
+            ""
+          ]
+        ],
+        [
+          "x",
+          [
+            "1",
+            "2"
+          ]
+        ]
+      ],
+      "formNames": [
+        "x",
+        "missing",
+        "title",
+        "empty"
+      ],
+      "formString": [
+        "2",
+        "",
+        "한 글",
+        ""
+      ]
+    },
+    {
+      "id": "a_body_of_another_type_has_no_form_values",
+      "label": "a text/plain body has no form values (HY-57.4)",
+      "request": {
+        "method": "POST",
+        "target": "/",
+        "headers": {
+          "Content-Type": "text/plain"
+        },
+        "body": "a=1"
+      },
+      "form": [],
+      "formNames": [
+        "a"
+      ],
+      "formString": [
+        ""
+      ]
+    },
+    {
+      "id": "a_urlencoded_type_with_a_charset_parameter_is_a_form_and_the_first_cookie_of_a_name_counts",
+      "label": "a body whose type is application/x-www-form-urlencoded; charset=UTF-8 gives form values (HY-57.10), and cookie(name) gives the first cookie of a name with its value percent-decoded (HY-129.8, HY-129.9)",
+      "request": {
+        "method": "POST",
+        "target": "/?page=2",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "Cookie": "a=1; b=%7B%22x%22%3A1%7D; a=2"
+        },
+        "body": "title=%ED%95%9C+%EA%B8%80&empty&x=1&x=2"
+      },
+      "method": "POST",
+      "formNames": [
+        "title",
+        "empty",
+        "x",
+        "missing"
+      ],
+      "formString": [
+        "한 글",
+        "",
+        "2",
+        ""
+      ],
+      "cookieNames": [
+        "a",
+        "b"
+      ],
+      "cookie": [
+        "1",
+        "{\"x\":1}"
+      ]
+    },
+    {
+      "id": "a_cookie_with_a_decimal_name_is_found_by_its_name",
+      "label": "cookie(name) finds the cookie named 1 and gives null for a name without a cookie (HY-129.12)",
+      "request": {
+        "target": "/",
+        "headers": {
+          "Cookie": "1=a; b=2"
+        }
+      },
+      "cookieNames": [
+        "1",
+        "b",
+        "2"
+      ],
+      "cookie": [
+        "a",
+        "2",
+        null
+      ]
+    },
+    {
+      "id": "a_multipart_body_gives_its_text_fields_and_no_value_for_a_file",
+      "label": "formString reads a text field of a multipart body and gives empty text for a name that has only a file (HY-57.3)",
+      "request": {
+        "method": "POST",
+        "target": "/",
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=XyZ"
+        },
+        "body": "--XyZ\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\ní ê¸\r\n--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.txt\"\r\nContent-Type: text/plain\r\n\r\nfile body\r\n--XyZ--\r\n"
+      },
+      "valid": true,
+      "form": [
+        [
+          "title",
+          [
+            "한 글"
+          ]
+        ]
+      ],
+      "formNames": [
+        "title",
+        "file"
+      ],
+      "formString": [
+        "한 글",
+        ""
+      ]
+    },
+    {
+      "id": "a_multipart_value_that_is_not_utf8_is_invalid_input",
+      "label": "a multipart value of the byte ff under a quoted boundary is not valid input (HY-42.3, HY-57.5)",
+      "request": {
+        "method": "POST",
+        "target": "/",
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=\"XyZ\""
+        },
+        "body": "--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\nÿ\r\n--XyZ--\r\n"
+      },
+      "valid": false
+    },
+    {
+      "id": "a_bracketed_query_name_that_is_not_utf8_is_invalid_input",
+      "label": "the query a[%FF][x]=1 is not valid input (HY-42.3)",
+      "request": {
+        "target": "/?a[%FF][x]=1"
+      },
+      "valid": false
+    },
+    {
+      "id": "a_query_name_that_is_not_utf8_before_a_bracket_is_invalid_input",
+      "label": "the query a%FF[x]=1 is not valid input (HY-42.3)",
+      "request": {
+        "target": "/?a%FF[x]=1"
+      },
+      "valid": false
+    },
+    {
+      "id": "a_bracketed_query_name_of_ascii_is_valid_input",
+      "label": "the query a[b][c]=d is valid input (HY-42.3)",
+      "request": {
+        "target": "/?a[b][c]=d"
+      },
+      "valid": true,
+      "query": [
+        [
+          "a[b][c]",
+          [
+            "d"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "a_query_value_that_is_not_utf8_is_invalid_input_and_gives_no_query_values",
+      "label": "the query a=%ff is not valid input, and query() gives no pair for it (HY-42.3, HY-56.4)",
+      "request": {
+        "target": "/x?a=%ff"
+      },
+      "valid": false,
+      "query": []
+    },
+    {
+      "id": "a_query_value_of_utf8_bytes_is_valid_input",
+      "label": "the query a=%c3%a9 is valid input (HY-42.3)",
+      "request": {
+        "target": "/x?a=%c3%a9"
+      },
+      "valid": true,
+      "query": [
+        [
+          "a",
+          [
+            "é"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "a_path_with_a_space_is_invalid_input",
+      "label": "a path with a space is outside the printable ASCII characters ! to ~ (HY-42.3)",
+      "request": {
+        "target": "/a b"
+      },
+      "valid": false,
+      "path": "/a b"
+    },
+    {
+      "id": "a_path_with_an_encoded_space_is_valid_input",
+      "label": "the path /a%20b is valid input and is not decoded (HY-42.2, HY-42.3)",
+      "request": {
+        "target": "/a%20b"
+      },
+      "valid": true,
+      "path": "/a%20b"
+    },
+    {
+      "id": "a_bracketed_form_name_that_is_not_utf8_is_invalid_input",
+      "label": "the form body a[b][%C3]=v is not valid input (HY-42.3, HY-57.5)",
+      "request": {
+        "method": "POST",
+        "target": "/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "a[b][%C3]=v"
+      },
+      "valid": false
+    },
+    {
+      "id": "a_form_value_that_is_truncated_utf8_is_invalid_input",
+      "label": "the form body a=%E2%82 is not valid input (HY-42.3, HY-57.5)",
+      "request": {
+        "method": "POST",
+        "target": "/",
+        "headers": {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "body": "a=%E2%82"
+      },
+      "valid": false
+    },
+    {
+      "id": "cookies_that_are_not_utf8_are_valid_input_and_give_no_cookie",
+      "label": "cookies are not checked: a request whose hy-keep and hy-session cookies are %FF is valid input, and each gives no cookie (HY-42.4, HY-129.8)",
+      "request": {
+        "target": "/",
+        "headers": {
+          "Cookie": "hy-keep=%FF; hy-session=%FF"
+        }
+      },
+      "valid": true,
+      "cookieNames": [
+        "hy-keep",
+        "hy-session"
+      ],
+      "cookie": [
+        null,
+        null
+      ]
+    },
+    {
+      "id": "the_body_size_is_the_declared_length_when_that_is_larger",
+      "label": "a body of 3 bytes with Content-Length 5 has the size 5 (HY-59.5)",
+      "request": {
+        "method": "POST",
+        "target": "/x",
+        "headers": {
+          "Content-Length": "5"
+        },
+        "body": "123"
+      },
+      "bodySize": 5
+    },
+    {
+      "id": "the_body_size_without_a_declared_length_is_the_length_of_the_body",
+      "label": "a body of 3 bytes without Content-Length has the size 3 (HY-59.5)",
+      "request": {
+        "method": "POST",
+        "target": "/x",
+        "headers": {},
+        "body": "123"
+      },
+      "bodySize": 3
+    },
+    {
+      "id": "a_declared_length_that_is_no_number_does_not_count",
+      "label": "a body of 3 bytes with Content-Length x has the size 3 (HY-59.5)",
+      "request": {
+        "method": "POST",
+        "target": "/x",
+        "headers": {
+          "Content-Length": "x"
+        },
+        "body": "123"
+      },
+      "bodySize": 3
+    },
+    {
+      "id": "the_current_path_skips_the_authority_and_the_query",
+      "label": "HX-Current-URL http://host.example/list?a=b gives the current path /list (HY-11.3)",
+      "request": {
+        "target": "/",
+        "headers": {
+          "HX-Current-URL": "http://host.example/list?a=b"
+        }
+      },
+      "currentPath": "/list"
+    },
+    {
+      "id": "the_current_path_of_a_root_url_with_a_query",
+      "label": "HX-Current-URL http://localhost/?page=2 gives the current path / (HY-11.3)",
+      "request": {
+        "target": "/",
+        "headers": {
+          "HX-Current-URL": "http://localhost/?page=2"
+        }
+      },
+      "currentPath": "/"
+    },
+    {
+      "id": "the_current_path_stops_at_a_fragment",
+      "label": "HX-Current-URL http://localhost/board/1#top gives the current path /board/1 (HY-11.3)",
+      "request": {
+        "target": "/",
+        "headers": {
+          "HX-Current-URL": "http://localhost/board/1#top"
+        }
+      },
+      "currentPath": "/board/1"
+    },
+    {
+      "id": "a_current_url_without_a_path_has_no_current_path",
+      "label": "HX-Current-URL http://localhost gives no current path (HY-11.3)",
+      "request": {
+        "target": "/",
+        "headers": {
+          "HX-Current-URL": "http://localhost"
+        }
+      },
+      "currentPath": null
+    },
+    {
+      "id": "the_current_path_is_the_utf8_text_of_its_bytes",
+      "label": "HX-Current-URL whose path holds the bytes c3 a9 gives the current path /é, the bytes read as UTF-8 (HY-11.3)",
+      "request": {
+        "target": "/",
+        "headers": {
+          "HX-Current-URL": "http://host.example/cafÃ©"
+        }
+      },
+      "valid": true,
+      "currentPath": "/café"
+    },
+    {
+      "id": "a_current_url_that_is_not_utf8_has_no_current_path",
+      "label": "HX-Current-URL whose path holds the byte ff is not valid UTF-8: the request is not valid input and has no current path (HY-11.3, HY-42.3)",
+      "request": {
+        "target": "/",
+        "headers": {
+          "HX-Current-URL": "http://host.example/ÿ"
+        }
+      },
+      "valid": false,
+      "currentPath": null
+    },
+    {
+      "id": "percent_encoded_octets_of_the_current_path_stay_as_written",
+      "label": "HX-Current-URL http://host.example/%ED%95%9C?q=1 gives the current path /%ED%95%9C, which is not decoded (HY-11.3)",
+      "request": {
+        "target": "/",
+        "headers": {
+          "HX-Current-URL": "http://host.example/%ED%95%9C?q=1"
+        }
+      },
+      "currentPath": "/%ED%95%9C"
+    },
+    {
+      "id": "a_cookie_map_given_to_the_constructor_is_not_checked",
+      "label": "a request created with a cookie map whose values are the byte ff, which no parse of a header gives, is valid input (HY-42.4)",
+      "request": {
+        "target": "/",
+        "cookies": {
+          "hy-keep": "ÿ",
+          "hy-session": "ÿ"
+        }
+      },
+      "valid": true
+    },
+    {
+      "id": "a_request_without_hx_current_url_has_no_current_path",
+      "label": "a request without HX-Current-URL has no current path (HY-11.3)",
+      "request": {
+        "target": "/x"
+      },
+      "currentPath": null
+    },
+    {
+      "id": "the_selected_page_data_type_with_hx_request_is_a_region_request",
+      "label": "a request whose selected type is application/vnd.hyper+json and that has HX-Request: true is a region request (HY-15.1)",
+      "request": {
+        "target": "/x",
+        "headers": {
+          "HX-Request": "true"
+        },
+        "media": "application/vnd.hyper+json"
+      },
+      "wantsJson": true,
+      "isRegionRequest": true
+    },
+    {
+      "id": "the_selected_page_data_type_without_hx_request_is_no_region_request",
+      "label": "a request that selects application/vnd.hyper+json without HX-Request is a JSON request and no region request (HY-15.1)",
+      "request": {
+        "target": "/x",
+        "headers": {},
+        "media": "application/vnd.hyper+json"
+      },
+      "wantsJson": true,
+      "isRegionRequest": false
+    },
+    {
+      "id": "the_selected_page_type_with_hx_request_is_no_region_request",
+      "label": "a request that selects text/html is no JSON request and no region request, also with HX-Request: true (HY-15.2)",
+      "request": {
+        "target": "/x",
+        "headers": {
+          "HX-Request": "true"
+        },
+        "media": "text/html"
+      },
+      "wantsJson": false,
+      "isRegionRequest": false
+    },
+    {
+      "id": "a_request_without_a_selected_type_has_no_kind",
+      "label": "wantsJson and isRegionRequest fail for a request that the server did not select, whose Accept header they do not read (HY-116.16)",
+      "request": {
+        "target": "/x",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "HX-Request": "true"
+        }
+      },
+      "wantsJson": "caller error",
+      "isRegionRequest": "caller error"
+    },
+    {
+      "id": "a_copy_with_a_header_sets_it_without_case_and_keeps_every_other_part",
+      "label": "withHeader returns a copy whose header of a name in another case has the new value and which holds a new header; the request itself is unchanged, and the copy keeps the method, the path, the raw query, the form values, the cookies, https and the selection (HY-97.4)",
+      "request": {
+        "method": "POST",
+        "target": "/x?a=1",
+        "headers": {
+          "Accept": "text/html",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Cookie": "c=v"
+        },
+        "body": "name=n",
+        "https": true,
+        "selection": "s"
+      },
+      "with": [
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "X-Request-Id",
+          "r1"
+        ]
+      ],
+      "headerNames": [
+        "Accept",
+        "x-request-id"
+      ],
+      "header": [
+        "application/json",
+        "r1"
+      ],
+      "original": {
+        "header": [
+          "text/html",
+          null
+        ]
+      },
+      "method": "POST",
+      "path": "/x",
+      "rawQuery": "a=1",
+      "formNames": [
+        "name"
+      ],
+      "formString": [
+        "n"
+      ],
+      "cookieNames": [
+        "c"
+      ],
+      "cookie": [
+        "v"
+      ],
+      "https": true,
+      "selection": "s"
+    },
+    {
+      "id": "the_media_type_is_the_content_type_in_lower_case_without_its_parameters",
+      "label": "mediaType() returns the media type of Content-Type in lower case, without its parameters and the spaces around it (HY-59.7)",
+      "request": {
+        "method": "POST",
+        "target": "/x",
+        "headers": {
+          "Content-Type": " Application/X-WWW-Form-Urlencoded ; charset=UTF-8"
+        }
+      },
+      "mediaType": "application/x-www-form-urlencoded"
+    },
+    {
+      "id": "the_media_type_of_a_request_without_a_content_type_is_empty",
+      "label": "mediaType() of a request without Content-Type is the empty text",
+      "request": {
+        "target": "/x"
+      },
+      "mediaType": ""
+    }
+  ]
+}
