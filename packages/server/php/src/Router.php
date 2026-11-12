@@ -24,7 +24,7 @@ final class Router
     {
         $compiled = [];
         foreach ($routes as $route) {
-            $compiled[] = ['name' => $route['name'], 'segments' => self::compile($route['path'])];
+            $compiled[] = ['name' => $route['name'], 'segments' => self::compiledPath($route['path'])];
         }
         $this->routes = $compiled;
     }
@@ -64,7 +64,7 @@ final class Router
     }
 
     /** @return list<array{0: 'literal'|'param'|'rest', 1: string}> */
-    private static function compile(string $path): array
+    private static function compiledPath(string $path): array
     {
         if (!str_starts_with($path, '/')) {
             throw new \InvalidArgumentException("route path {$path} does not start with /");

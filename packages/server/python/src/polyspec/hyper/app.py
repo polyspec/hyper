@@ -37,7 +37,7 @@ from .forbidden import Forbidden
 from .not_found import NotFound
 from .redirect import Redirect
 from .result import Result
-from ._router import strip_base_path
+from ._router import Router
 from ._session import Flash, Session
 from .session import SessionStore
 from ._warnings_guard import WarningsGuard
@@ -332,7 +332,7 @@ class App:
         client = self._client if choice is not None and choice.chosen is True else None
         request = request._with_selection(None if choice is None else choice.value)
         base_path = self.base_path if client is None else client.base_path
-        path = strip_base_path(request.path(), base_path)
+        path = Router.strip_base_path(request.path(), base_path)
         if client is not None and path is None:
             return self._shell_response(request)
         if path == "/_hyper/keep":

@@ -148,7 +148,7 @@ final class Reads
      * @param array<mixed> $node
      * @return array<mixed>|null
      */
-    private static function keys(array $node): ?array
+    private static function namedKeys(array $node): ?array
     {
         $keys = $node['keys'] ?? null;
         if ($keys !== null && !is_array($keys)) {
@@ -177,14 +177,14 @@ final class Reads
      */
     private static function child(array $node, string $key): true|array|null
     {
-        $named = self::keys($node)[$key] ?? null;
+        $named = self::namedKeys($node)[$key] ?? null;
         $named = $named === null ? null : self::node($named);
         $each = self::each($node);
         if ($named === null || $each === null) {
             return $named ?? $each;
         }
 
-        return self::merge($named, $each);
+        return self::mergedNode($named, $each);
     }
 
     /**
@@ -192,26 +192,26 @@ final class Reads
      * @param true|array<mixed> $b
      * @return true|array<mixed>
      */
-    private static function merge(true|array $a, true|array $b): true|array
+    private static function mergedNode(true|array $a, true|array $b): true|array
     {
         if ($a === true || $b === true) {
             return true;
         }
         $merged = [];
-        $aKeys = self::keys($a);
-        $bKeys = self::keys($b);
+        $aKeys = self::namedKeys($a);
+        $bKeys = self::namedKeys($b);
         if ($aKeys !== null || $bKeys !== null) {
             $keys = $aKeys ?? [];
             foreach ($bKeys ?? [] as $key => $node) {
                 $node = self::node($node);
-                $keys[$key] = isset($keys[$key]) ? self::merge(self::node($keys[$key]), $node) : $node;
+                $keys[$key] = isset($keys[$key]) ? self::mergedNode(self::node($keys[$key]), $node) : $node;
             }
             $merged['keys'] = $keys;
         }
         $aEach = self::each($a);
         $bEach = self::each($b);
         if ($aEach !== null || $bEach !== null) {
-            $merged['each'] = $aEach !== null && $bEach !== null ? self::merge($aEach, $bEach) : ($aEach ?? $bEach);
+            $merged['each'] = $aEach !== null && $bEach !== null ? self::mergedNode($aEach, $bEach) : ($aEach ?? $bEach);
         }
 
         return $merged;

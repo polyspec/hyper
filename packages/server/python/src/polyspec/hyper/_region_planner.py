@@ -5,7 +5,7 @@ from __future__ import annotations
 from ._manifest import Manifest
 from ._region import Region
 from .request import Request
-from ._router import strip_base_path
+from ._router import Router
 from ._session import Flash
 
 
@@ -16,7 +16,7 @@ class RegionPlanner:
         topics = list(flash.changed)
         current = request.current_path()
         if current is not None:
-            stripped = strip_base_path(current, base_path)
+            stripped = Router.strip_base_path(current, base_path)
             if (stripped if stripped is not None else current) != request.path():
                 topics.append("path")
         return list(dict.fromkeys(topics))

@@ -7008,11 +7008,259 @@
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_manifest.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "manifest.constructor",
+              "kind": "constructor",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "string",
+                "list<region>",
+                "region",
+                "map<value>",
+                "router"
+              ],
+              "output": "manifest",
+              "errors": [],
+              "state": "Holds the layout, the title template, the regions, the page region, the routes and the router of a checked manifest.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::__construct",
+                  "signature": "private function __construct(string $layout, string $title, array $regions, Polyspec\\Hyper\\Region $page, array $routes, Polyspec\\Hyper\\Router $router)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest.__init__",
+                  "signature": "def __init__(self, layout: str, title: str, regions: list[Region], page: Region, routes: dict[str, dict], router: Router)"
+                }
+              }
+            },
+            {
+              "id": "manifest.fromFile",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "manifest",
+              "errors": [],
+              "state": "Reads a manifest file as HY-54 decodes JSON and checks it, and fails with the open error for a file that the manifest check rejects (HY-2, HY-118).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::fromFile",
+                  "signature": "public static function fromFile(string $file): self"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest.from_file",
+                  "signature": "def from_file(file: str) -> 'Manifest'"
+                }
+              }
+            },
+            {
+              "id": "manifest.entries",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "map<value>",
+                "string"
+              ],
+              "output": "list<map<value>>",
+              "errors": [],
+              "state": "Returns the objects of the list under a key, which may be absent, and fails for another value (HY-2.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::entries",
+                  "signature": "private static function entries(array $object, string $key): array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest._entries",
+                  "signature": "def _entries(obj: dict, key: str) -> list[dict]"
+                }
+              }
+            },
+            {
+              "id": "manifest.keptKinds",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "map<value>",
+                "string"
+              ],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Returns the kept paths of a route region by path (HY-37).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::keptKinds",
+                  "signature": "private static function keptKinds(array $region, string $name): array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest._kept_kinds",
+                  "signature": "def _kept_kinds(region: dict, name: str) -> dict[str, str]"
+                }
+              }
+            },
+            {
+              "id": "manifest.region",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<region>",
+              "errors": [],
+              "state": "Returns the region of a name among the regions of the manifest and of its routes, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::region",
+                  "signature": "public function region(string $name): ?Polyspec\\Hyper\\Region"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest.region",
+                  "signature": "def region(self, name: str) -> Optional[Region]"
+                }
+              }
+            },
+            {
+              "id": "manifest.regionName",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true for a name that a region may have (HY-2.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::regionName",
+                  "signature": "private static function regionName(string $name): bool"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest._region_name",
+                  "signature": "def _region_name(name: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "manifest.layout",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the name of the layout template.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::layout",
+                  "signature": "public readonly string $layout"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest.layout",
+                  "signature": "layout: str"
+                }
+              }
+            },
+            {
+              "id": "manifest.title",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the name of the title template.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::title",
+                  "signature": "public readonly string $title"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest.title",
+                  "signature": "title: str"
+                }
+              }
+            },
+            {
+              "id": "manifest.regions",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<region>",
+              "errors": [],
+              "state": "Holds the regions of the manifest in their order.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::regions",
+                  "signature": "public readonly array $regions"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest.regions",
+                  "signature": "regions: list[Region]"
+                }
+              }
+            },
+            {
+              "id": "manifest.page",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "region",
+              "errors": [],
+              "state": "Holds the page region.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::page",
+                  "signature": "public readonly Polyspec\\Hyper\\Region $page"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest.page",
+                  "signature": "page: Region"
+                }
+              }
+            },
+            {
+              "id": "manifest.routes",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Holds the routes by their names, each with its path, title, template, action flag, regions and representations.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::routes",
+                  "signature": "public readonly array $routes"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest.routes",
+                  "signature": "routes: dict[str, dict]"
+                }
+              }
+            },
+            {
+              "id": "manifest.router",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "router",
+              "errors": [],
+              "state": "Holds the router of the routes.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Manifest.php::Polyspec\\Hyper\\Manifest::router",
+                  "signature": "public readonly Polyspec\\Hyper\\Router $router"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_manifest.py::Manifest.router",
+                  "signature": "router: Router"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "php",
@@ -7035,7 +7283,170 @@
               "internal": true
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "region.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "boolean",
+                "optional<string>",
+                "list<string>",
+                "map<string>"
+              ],
+              "output": "region",
+              "errors": [],
+              "state": "Holds the name, the page flag, the template, the used topics and the kept paths of a region, and fails for a kept path or kind that HY-37 does not allow.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Region.php::Polyspec\\Hyper\\Region::__construct",
+                  "signature": "public function __construct(string $name, bool $page, ?string $template, array $uses, array $keep)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region.py::Region.__init__",
+                  "signature": "def __init__(self, name: str, page: bool, template: Optional[str], uses: list[str], keep: Optional[dict[str, str]]=None)"
+                }
+              }
+            },
+            {
+              "id": "region.keptPaths",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<string>"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Returns the kept paths whose kind is one of the given kinds (HY-37).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Region.php::Polyspec\\Hyper\\Region::keptPaths",
+                  "signature": "public function keptPaths(array $kinds): array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region.py::Region.kept_paths",
+                  "signature": "def kept_paths(self, kinds: list[str]) -> list[str]"
+                }
+              }
+            },
+            {
+              "id": "region.usesAny",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<string>"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the region uses one of the topics (HY-11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Region.php::Polyspec\\Hyper\\Region::usesAny",
+                  "signature": "public function usesAny(array $topics): bool"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region.py::Region.uses_any",
+                  "signature": "def uses_any(self, topics: list[str]) -> bool"
+                }
+              }
+            },
+            {
+              "id": "region.name",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the name of the region.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Region.php::Polyspec\\Hyper\\Region::name",
+                  "signature": "public readonly string $name"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region.py::Region.name",
+                  "signature": "name: str"
+                }
+              }
+            },
+            {
+              "id": "region.page",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Holds whether the region is the page region.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Region.php::Polyspec\\Hyper\\Region::page",
+                  "signature": "public readonly bool $page"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region.py::Region.page",
+                  "signature": "page: bool"
+                }
+              }
+            },
+            {
+              "id": "region.template",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Holds the template of the region, or null for the page region.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Region.php::Polyspec\\Hyper\\Region::template",
+                  "signature": "public readonly ?string $template"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region.py::Region.template",
+                  "signature": "template: Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "region.uses",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Holds the topics that the region uses.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Region.php::Polyspec\\Hyper\\Region::uses",
+                  "signature": "public readonly array $uses"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region.py::Region.uses",
+                  "signature": "uses: list[str]"
+                }
+              }
+            },
+            {
+              "id": "region.keep",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Holds the kept paths of the region with their kinds.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Region.php::Polyspec\\Hyper\\Region::keep",
+                  "signature": "public readonly array $keep"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_region.py::Region.keep",
+                  "signature": "keep: dict[str, str]"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "php",
@@ -7054,11 +7465,140 @@
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_router.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "router.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "list<map<string>>"
+              ],
+              "output": "router",
+              "errors": [],
+              "state": "Compiles the paths of the routes in their order, and fails for a path that HY-4 does not allow.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Router.php::Polyspec\\Hyper\\Router::__construct",
+                  "signature": "public function __construct(array $routes)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_router.py::Router.__init__",
+                  "signature": "def __init__(self, routes: list[dict[str, str]])"
+                }
+              }
+            },
+            {
+              "id": "router.match",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<map<value>>",
+              "errors": [],
+              "state": "Returns the name and the parameters of the first route that matches a path, or null (HY-5 to HY-7, HY-49).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Router.php::Polyspec\\Hyper\\Router::match",
+                  "signature": "public function match(string $path): ?array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_router.py::Router.match",
+                  "signature": "def match(self, path: str) -> Optional[dict[str, object]]"
+                }
+              }
+            },
+            {
+              "id": "router.stripBasePath",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns a path without the base path, or null for a path outside it (HY-8).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Router.php::Polyspec\\Hyper\\Router::stripBasePath",
+                  "signature": "public static function stripBasePath(string $path, string $basePath): ?string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_router.py::Router.strip_base_path",
+                  "signature": "def strip_base_path(path: str, base_path: str) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "router.compiledPath",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "list<list<string>>",
+              "errors": [],
+              "state": "Returns the segments of a route path, each a kind with its text, and fails for a path that HY-4 does not allow.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Router.php::Polyspec\\Hyper\\Router::compiledPath",
+                  "signature": "private static function compiledPath(string $path): array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_router.py::Router._compiled_path",
+                  "signature": "def _compiled_path(path: str) -> list[Segment]"
+                }
+              }
+            },
+            {
+              "id": "router.matchSegments",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "list<list<string>>",
+                "list<string>"
+              ],
+              "output": "optional<map<string>>",
+              "errors": [],
+              "state": "Returns the parameters of the parts of a path that match the segments of a route, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Router.php::Polyspec\\Hyper\\Router::matchSegments",
+                  "signature": "private static function matchSegments(array $segments, array $parts): ?array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_router.py::Router._match_segments",
+                  "signature": "def _match_segments(segments: list[Segment], parts: list[str]) -> Optional[dict[str, str]]"
+                }
+              }
+            },
+            {
+              "id": "router.decodeSegment",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns a path segment percent-decoded, or null when it is not valid (HY-5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Router.php::Polyspec\\Hyper\\Router::decodeSegment",
+                  "signature": "private static function decodeSegment(string $part): ?string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_router.py::Router._decode_segment",
+                  "signature": "def _decode_segment(part: str) -> Optional[str]"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "php",
@@ -7077,11 +7617,272 @@
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_reads.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "reads.constructor",
+              "kind": "constructor",
+              "visibility": "private",
+              "inputs": [
+                "map<value>"
+              ],
+              "output": "reads",
+              "errors": [],
+              "state": "Holds the read nodes of every route of a server program.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::__construct",
+                  "signature": "private function __construct(array $routes)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads.__init__",
+                  "signature": "def __init__(self, routes: dict)"
+                }
+              }
+            },
+            {
+              "id": "reads.open",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "reads",
+              "errors": [],
+              "state": "Reads reads.json of a server program, and fails with the open error for a file that is missing or not valid (HY-73).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::open",
+                  "signature": "public static function open(string $program): self"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads.open",
+                  "signature": "def open(program: str) -> 'Reads'"
+                }
+              }
+            },
+            {
+              "id": "reads.shared",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "map<value>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the part of the shared data that the templates of a route read (HY-73).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::shared",
+                  "signature": "public function shared(string $route, array $shared): array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads.shared",
+                  "signature": "def shared(self, route: str, shared: dict) -> dict"
+                }
+              }
+            },
+            {
+              "id": "reads.region",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "map<value>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the part of the data of a region that the templates of a route read (HY-73).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::region",
+                  "signature": "public function region(string $route, string $region, array $data): array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads.region",
+                  "signature": "def region(self, route: str, region: str, data: dict) -> dict"
+                }
+              }
+            },
+            {
+              "id": "reads.keep",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the part of a value that a read node keeps: a map keeps its named keys and every key under each, a list keeps its length, and another value stays as it is (HY-73).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::keep",
+                  "signature": "public static function keep(mixed $value, array|true $node): mixed"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads.keep",
+                  "signature": "def keep(value, node: Node)"
+                }
+              }
+            },
+            {
+              "id": "reads.keepArray",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "map<value>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the kept part of a map or of a list.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::keepArray",
+                  "signature": "private static function keepArray(array $value, array $node): stdClass|array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads._keep_array",
+                  "signature": "def _keep_array(value: Union[dict, list], node: dict) -> Union[dict, list]"
+                }
+              }
+            },
+            {
+              "id": "reads.keepMap",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "map<value>",
+                "value"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the kept part of the data of a region or of the shared data, which stays a map.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::keepMap",
+                  "signature": "private static function keepMap(array $data, array|true $node): array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads._keep_map",
+                  "signature": "def _keep_map(data: dict, node: Node) -> dict"
+                }
+              }
+            },
+            {
+              "id": "reads.node",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns a read node, which is true or a map, and fails for another value.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::node",
+                  "signature": "private static function node(mixed $node): array|true"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads._node",
+                  "signature": "def _node(node: object) -> Node"
+                }
+              }
+            },
+            {
+              "id": "reads.namedKeys",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "map<value>"
+              ],
+              "output": "optional<map<value>>",
+              "errors": [],
+              "state": "Returns the named keys of a read node, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::namedKeys",
+                  "signature": "private static function namedKeys(array $node): ?array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads._named_keys",
+                  "signature": "def _named_keys(node: dict) -> Optional[dict]"
+                }
+              }
+            },
+            {
+              "id": "reads.each",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "map<value>"
+              ],
+              "output": "optional<value>",
+              "errors": [],
+              "state": "Returns the node of every key of a read node, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::each",
+                  "signature": "private static function each(array $node): array|true|null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads._each",
+                  "signature": "def _each(node: dict) -> Optional[Node]"
+                }
+              }
+            },
+            {
+              "id": "reads.child",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "map<value>",
+                "string"
+              ],
+              "output": "optional<value>",
+              "errors": [],
+              "state": "Returns the node of a key of a read node: its named node merged with the node of every key, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::child",
+                  "signature": "private static function child(array $node, string $key): array|true|null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads._child",
+                  "signature": "def _child(node: dict, key: str) -> Optional[Node]"
+                }
+              }
+            },
+            {
+              "id": "reads.mergedNode",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the read node that keeps what either of two nodes keeps.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Reads.php::Polyspec\\Hyper\\Reads::mergedNode",
+                  "signature": "private static function mergedNode(array|true $a, array|true $b): array|true"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_reads.py::Reads._merged_node",
+                  "signature": "def _merged_node(a: Node, b: Node) -> Node"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "php",
@@ -7104,7 +7905,149 @@
               "internal": true
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "renderer.constructor",
+              "kind": "constructor",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "string"
+              ],
+              "output": "renderer",
+              "errors": [],
+              "state": "Holds the program of the template engine and the time zone of the application.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Renderer.php::Polyspec\\Hyper\\Renderer::__construct",
+                  "signature": "private function __construct(Polyspec\\Template\\Program $program, string $timezone)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_renderer.py::Renderer.__init__",
+                  "signature": "def __init__(self, program: Engine, timezone: str)"
+                }
+              }
+            },
+            {
+              "id": "renderer.open",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "map<value>"
+              ],
+              "output": "renderer",
+              "errors": [],
+              "state": "Opens the server program of a directory with the host functions of the application, and fails with the open error for a program that is missing or not valid (HY-48, HYC-24).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Renderer.php::Polyspec\\Hyper\\Renderer::open",
+                  "signature": "public static function open(string $program, string $timezone, array $functions): self"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_renderer.py::Renderer.open",
+                  "signature": "def open(program: str, timezone: str, functions: Optional[dict]=None) -> 'Renderer'"
+                }
+              }
+            },
+            {
+              "id": "renderer.bind",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Binds a root of the data of a document once, with the bound map of the template package.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Renderer.php::Polyspec\\Hyper\\Renderer::bind",
+                  "signature": "public function bind(stdClass|array $value): Polyspec\\Template\\BoundMap"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_renderer.py::Renderer.bind",
+                  "signature": "def bind(self, value: dict)"
+                }
+              }
+            },
+            {
+              "id": "renderer.document",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "value",
+                "map<value>",
+                "string",
+                "map<value>",
+                "optional<value>",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Renders the document of a route: the layout with the title, every region, the embedded data and the build definition (HY-12, HY-31, HY-125.7).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Renderer.php::Polyspec\\Hyper\\Renderer::document",
+                  "signature": "public function document(string $layout, string $title, Polyspec\\Template\\BoundMap $shared, array $regions, string $page, array $routeRegions, ?Polyspec\\Template\\BoundMap $data, string $build): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_renderer.py::Renderer.document",
+                  "signature": "def document(self, layout: str, title: str, shared, regions: dict, page: str, route_regions: dict, data, build: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "renderer.alone",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "value",
+                "value",
+                "map<value>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Renders one template alone with the shared data merged with the data of its region (HY-13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Renderer.php::Polyspec\\Hyper\\Renderer::alone",
+                  "signature": "public function alone(string $template, Polyspec\\Template\\BoundMap $shared, Polyspec\\Template\\BoundMap $data, array $routeRegions): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_renderer.py::Renderer.alone",
+                  "signature": "def alone(self, template: str, shared, data, route_regions: dict | None=None) -> str"
+                }
+              }
+            },
+            {
+              "id": "renderer.render",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "value",
+                "map<value>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Renders a template of the program with its root data and its definitions.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Renderer.php::Polyspec\\Hyper\\Renderer::render",
+                  "signature": "private function render(string $template, Polyspec\\Template\\BoundMap $assign, array $define): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_renderer.py::Renderer._render",
+                  "signature": "def _render(self, template: str, assign, define: dict) -> str"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "php",

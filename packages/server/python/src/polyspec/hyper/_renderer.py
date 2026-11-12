@@ -49,15 +49,9 @@ class Renderer:
             timezone,
         )
 
-    @staticmethod
-    def bind(value: dict):
+    def bind(self, value: dict):
         """Binds a root of the data of a document once, with the bound map of the template package (VAL-22)."""
         return template_bind(value)
-
-    @staticmethod
-    def merge(shared, data):
-        """Returns the bound root of a region rendered alone: merge(shared, data) (HY-13)."""
-        return template_merge(shared, data)
 
     def document(
         self,
@@ -77,8 +71,8 @@ class Renderer:
         root of `{# data}` (HY-31) or None when the document embeds no data (HY-92)."""
         # HY-125: the html definition `build` is the element that the layout places with `{# build}`.
         define = {
-            "title": {"html": self.render(title, shared, {})},
-            "data": {"html": "" if data is None else self.render(DATA_NAME, data, {})},
+            "title": {"html": self._render(title, shared, {})},
+            "data": {"html": "" if data is None else self._render(DATA_NAME, data, {})},
             "build": {"html": f'<meta name="hyper-build" content="{build}">'},
         }
         for name, region in regions.items():
@@ -90,7 +84,7 @@ class Renderer:
                     route_regions if name == page else {},
                 )
             }
-        return self.render(layout, shared, define)
+        return self._render(layout, shared, define)
 
     def alone(
         self, template: str, shared, data, route_regions: dict | None = None
@@ -102,9 +96,9 @@ class Renderer:
             define[name] = {
                 "html": self.alone(region["template"], shared, region["data"])
             }
-        return self.render(template, template_merge(shared, data), define)
+        return self._render(template, template_merge(shared, data), define)
 
-    def render(self, template: str, assign, define: dict) -> str:
+    def _render(self, template: str, assign, define: dict) -> str:
         """Renders one template with an assigned bound root and HTML definitions (HY-14)."""
         options = RenderOptions(env={"timezone": self.timezone})
         if define != {}:

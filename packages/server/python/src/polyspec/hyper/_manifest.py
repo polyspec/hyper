@@ -19,6 +19,13 @@ _TOPIC = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 class Manifest:
     """The checked manifest of an application."""
 
+    layout: str
+    title: str
+    regions: list[Region]
+    page: Region
+    routes: dict[str, dict]
+    router: Router
+
     def __init__(
         self,
         layout: str,
@@ -57,10 +64,10 @@ class Manifest:
 
         regions: dict[str, Region] = {}
         page: Optional[Region] = None
-        for region in _entries(data, "regions"):
+        for region in Manifest._entries(data, "regions"):
             name = region.get("name") if isinstance(region.get("name"), str) else ""
             if (
-                _REGION_NAME.fullmatch(name) is None
+                not Manifest._region_name(name)
                 or name in ("layout", "title", "data")
                 or name in regions
             ):
@@ -96,7 +103,7 @@ class Manifest:
 
         routes: dict[str, dict] = {}
         region_names = set(regions)
-        for route in _entries(data, "routes"):
+        for route in Manifest._entries(data, "routes"):
             name = route.get("name") if isinstance(route.get("name"), str) else ""
             title = route.get("title")
             template = route.get("template")
@@ -114,13 +121,13 @@ class Manifest:
                     f"manifest route {name} uses the reserved path /_hyper (HY-40)"
                 )
             route_regions: list[Region] = []
-            for region in _entries(route, "regions"):
+            for region in Manifest._entries(route, "regions"):
                 region_name = (
                     region.get("name") if isinstance(region.get("name"), str) else ""
                 )
                 region_template = region.get("template")
                 if (
-                    _REGION_NAME.fullmatch(region_name) is None
+                    not Manifest._region_name(region_name)
                     or region_name in region_names
                     or not isinstance(region_template, str)
                 ):
@@ -134,7 +141,7 @@ class Manifest:
                         False,
                         region_template,
                         [],
-                        _keep(region, region_name),
+                        Manifest._kept_kinds(region, region_name),
                     )
                 )
             routes[name] = {
@@ -145,7 +152,7 @@ class Manifest:
                 "post": route.get("post") == True,  # noqa: E712 - only the JSON value true marks a post route, not any truthy value
                 "regions": route_regions,
                 "representations": RepresentationEntries.declare(
-                    name, _entries(route, "representations")
+                    name, Manifest._entries(route, "representations")
                 ),
             }
 
@@ -174,26 +181,31 @@ class Manifest:
                     return region
         return None
 
+    @staticmethod
+    def _entries(obj: dict, key: str) -> list[dict]:
+        """Returns the objects of the list under a key, which may be absent (HY-2)."""
+        declared = obj.get(key, [])
+        if not isinstance(declared, list):
+            raise ValueError(f"manifest {key} is not a list")
+        for entry in declared:
+            if not isinstance(entry, dict):
+                raise ValueError(f"manifest {key} contains a value that is not an object")
+        return declared
 
-def _entries(obj: dict, key: str) -> list[dict]:
-    """Returns the objects of the list under a key, which may be absent (HY-2)."""
-    declared = obj.get(key, [])
-    if not isinstance(declared, list):
-        raise ValueError(f"manifest {key} is not a list")
-    for entry in declared:
-        if not isinstance(entry, dict):
-            raise ValueError(f"manifest {key} contains a value that is not an object")
-    return declared
+    @staticmethod
+    def _kept_kinds(region: dict, name: str) -> dict[str, str]:
+        """Returns the kept paths of a route region by path; the region checks the paths and kinds (HY-37)."""
+        declared = region.get("keep", {})
+        if not isinstance(declared, dict):
+            raise ValueError(f"region {name} has kept paths that are not an object")
+        keep: dict[str, str] = {}
+        for path, kind in declared.items():
+            if not isinstance(path, str) or not isinstance(kind, str):
+                raise ValueError(f"region {name} has an invalid kept path {path}")
+            keep[path] = kind
+        return keep
 
-
-def _keep(region: dict, name: str) -> dict[str, str]:
-    """Returns the kept paths of a route region by path; the region checks the paths and kinds (HY-37)."""
-    declared = region.get("keep", {})
-    if not isinstance(declared, dict):
-        raise ValueError(f"region {name} has kept paths that are not an object")
-    keep: dict[str, str] = {}
-    for path, kind in declared.items():
-        if not isinstance(path, str) or not isinstance(kind, str):
-            raise ValueError(f"region {name} has an invalid kept path {path}")
-        keep[path] = kind
-    return keep
+    @staticmethod
+    def _region_name(name: str) -> bool:
+        """Returns True for a name that a region may have (HY-2.3)."""
+        return _REGION_NAME.fullmatch(name) is not None

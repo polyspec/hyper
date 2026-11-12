@@ -663,7 +663,7 @@ class LimitTest(FixtureTest):
         token = self.token()
         with contextlib.redirect_stderr(io.StringIO()):
             responses = [
-                self.get("/", {"HX-Current-URL": "http://x/\udcff"}),
+                self.get("/", {"HX-Current-URL": "http://x/\xff"}),
                 self.get("/items/unreadable"),
                 self.get("/items/private"),
                 self.post("/add", {"_csrf": "wrong", "name": "a"}),

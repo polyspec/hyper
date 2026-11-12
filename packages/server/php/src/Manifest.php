@@ -126,7 +126,7 @@ final class Manifest
                     );
                 }
                 $regionNames[$regionName] = true;
-                $routeRegions[] = new Region($regionName, false, $regionTemplate, [], self::keep($region, $regionName));
+                $routeRegions[] = new Region($regionName, false, $regionTemplate, [], self::keptKinds($region, $regionName));
             }
             $routes[$name] = [
                 'name' => $name,
@@ -181,7 +181,7 @@ final class Manifest
      * @param array<mixed> $region
      * @return array<string, string>
      */
-    private static function keep(array $region, string $name): array
+    private static function keptKinds(array $region, string $name): array
     {
         $declared = $region['keep'] ?? [];
         if (!is_array($declared)) {
