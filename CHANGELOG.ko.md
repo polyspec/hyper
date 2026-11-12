@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5e3ec89dd682292b1d1e93f12140f35ea408a38877759313d3ef4951eec0a5ae -->
+<!-- source-sha256: da08de341d65168bc61b363cd383cc5a6b8951526c3cbe3c8a0a7b9a1b22b6e3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core는 `polyspec-http-media-type`을 Git으로 이름하는 Git 저장소 branch에서 `polyspec-http-negotiation`을 받으며 다른 working tree를 읽지 않는다. spec, 기능 문서, core 주석은 라이브러리 http-negotiation, http-form, php-serialization, session-store를 이름한다. session-store 라이브러리가 다른 라이브러리의 kind interface를 받을 때까지 core는 `polyspec-sessions`와 `polyspec-php-serialize`를 유지하고, 모든 라이브러리를 kind interface가 `polyspec-bindgen-core`인 commit에 둔다(C-7, 9c).
 
 - Rust core가 page 앞에서 요청을 라우팅한다(C-7). `front::route_request`는 page들, host가 부르는 client 렌더 selection의 `chosen`(HY-62.9), 그리고 method, 경로, `Accept`, `HX-Request`, `Hyper-Context`, body의 media type을 받아, HY-59.3과 HY-120의 순서로 plain 거부, shell, kept endpoint, representation, page 가운데 하나를 준다: base path나 data base path(HY-8.2, HY-62.16부터 HY-62.19까지), data base path 밖의 답(HY-62.22, HY-62.23, HY-62.34), 405와 form type을 가진 `/_hyper/keep`(HY-40, HY-59.12), route(404), data base path 아래에서도 page를 후보로 두되 그 406은 page를 나열하지 않는 media type(HY-116.13, HY-116.14), method(HY-27.6), data base path 아래 page의 406(HY-62.20), `Hyper-Context`(HY-127.2), action의 form type(HY-59.12). `front::page_headers`는 page의 `Content-Type`, `Cache-Control`, `Vary`, weak tag와 그 304를 주고(HY-15.3, HY-52, HY-53, HY-65, HY-117.1), `front::frame_headers`는 frame 정책과 실패의 `no-store`를(HY-45, HY-65.1), `front::kept_value`는 kept endpoint가 저장하는 값을 준다(HY-40.1). page들은 `Pages::open`의 record `pages_options`로 base path, data base path, form type을 가지며, interface 계약은 record `front`, `plain`, `page_response`, `page_headers`, variant `route`와 이 함수들을 둔다.
 

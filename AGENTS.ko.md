@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: dc7154cc78ef015e77a3e837d8b637f177b811eacd8bc90618ddd8c97294ac72 -->
+<!-- source-sha256: 94f55e8c26c76b336ee086bb231453f7e6084050debfb9732a323851dca21063 -->
 # 개발
 
 [English](AGENTS.md).
@@ -27,7 +27,7 @@
 
 ## 구현
 
-- Own: Rust core `packages/server/rust`는 polyspec 의존을 그 Git 저장소의 branch `v1/rust-core`에서 받는다. 그 저장소들이 아직 release하지 않은 채로 core를 개발하기 때문이며, 위의 release 의존 규칙은 core의 첫 release부터 적용된다. 저장소들이 새 이름을 커밋할 때까지 예외가 둘 있다. `polyspec-http-negotiation`은 이 저장소 옆의 checkout `http-negotiation`에 대한 path 의존으로, core가 다른 working tree에서 읽는 유일한 입력이다. `polyspec-php-serialize`는 sessions 라이브러리의 store interface가 그것을 쓰는 동안 옛 이름을 유지한다. core의 binding crate는 각 언어의 host package 옆 `packages/server/<lang>/native/`에 둔다(bindgen L-2a). host package는 지금 자리에 남는다. bindgen이 그 자리에 scaffold할 때까지 `packages/server/rust/interface.json`에 대한 bindgen 계약 검사는 binding crate에 대해 CK-19와 CK-20을 보고하며, 그 밖의 지적은 실패다.
+- Own: Rust core `packages/server/rust`는 polyspec 의존을 그 Git 저장소의 branch `v1/rust-core`에서 받는다. 그 저장소들이 아직 release하지 않은 채로 core를 개발하기 때문이며, 위의 release 의존 규칙은 core의 첫 release부터 적용된다. session-store 라이브러리가 다른 라이브러리의 kind interface를 받을 때까지 예외가 하나 있다. store interface가 `polyspec-php-serialize`의 값을 쓰므로 core는 라이브러리 `polyspec-sessions`와 `polyspec-php-serialize`를 옛 이름으로 유지하고, 모든 라이브러리를 kind interface가 `polyspec-bindgen-core`인 commit에 두며 lock이 그 commit을 고정한다. core의 binding crate는 각 언어의 host package 옆 `packages/server/<lang>/native/`에 둔다(bindgen L-2a). host package는 지금 자리에 남는다. bindgen이 그 자리에 scaffold할 때까지 `packages/server/rust/interface.json`에 대한 bindgen 계약 검사는 binding crate에 대해 CK-19와 CK-20을 보고하며, 그 밖의 지적은 실패다.
   Enforced by: none, `make core-test`가 이 의존으로 core를 build하고, bindgen의 계약 검사는 S-4까지 손으로 실행한다.
 - Own: 임시 script나 임시 폴더를 쓰지 않는다. 모든 검사는 Makefile target, `scripts/` 아래의 script 또는 커밋된 test이며, 멱등하다.
   Enforced by: none, script가 임시인지는 판단이다.

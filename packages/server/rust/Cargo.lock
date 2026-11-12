@@ -160,6 +160,7 @@ dependencies = [
 [[package]]
 name = "polyspec-http-negotiation"
 version = "0.0.1"
+source = "git+https://github.com/polyspec/http-negotiation.git?branch=v1%2Frust-core#42e358b524ad30e0b91e84126e9c45d20fe3dc72"
 dependencies = [
  "polyspec-bindgen-core",
  "polyspec-http-media-type",

@@ -1,6 +1,6 @@
 //! The values that hyper keeps in a session (HY-104.25): the token (HY-24), the flash values and the changed topics
 //! (HY-25), the kept server values (HY-40) under the keys of HY-104.22, and the conversion between the record of the
-//! sessions library, a PHP value, and the data model (HY-104.13, HY-104.14). The storage is the sessions library's;
+//! session-store library, a PHP value, and the data model (HY-104.13, HY-104.14). The storage is the session-store library's;
 //! hyper reads and writes through its store interface (SE-2).
 
 use std::sync::Arc;
@@ -337,7 +337,7 @@ fn set(store: &mut dyn Store, key: &str, value: &Value) -> Result<(), SessionFai
 /// when it holds none; a stored value of another form fails with `invalid_session_token`.
 ///
 /// # Errors
-/// `invalid_session_token`, the kind `random` of the sessions library, and a failure of the store.
+/// `invalid_session_token`, the kind `random` of the session-store library, and a failure of the store.
 pub fn token(store: &mut dyn Store) -> Result<String, SessionFailure> {
     match from_store(store.get(TOKEN_KEY))? {
         Some(record) => match record.root() {

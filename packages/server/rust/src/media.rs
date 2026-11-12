@@ -1,6 +1,6 @@
 //! The media type of a request (HY-116, HY-117, HY-119): the candidates of a path, their order among equal weights,
 //! the 406 of a request that accepts none of them and the `Vary` of each response. The grammar and the weights of
-//! `Accept` are http-negotiate's (NG-5 to NG-10); the writing of a media type is http-media-type's (MT-6).
+//! `Accept` are http-negotiation's (NG-5 to NG-10); the writing of a media type is http-media-type's (MT-6).
 
 use polyspec_http_media_type::{format, MediaType, Parameter};
 use polyspec_http_negotiation::{Accept, Candidate, CandidateParameter, Matching};
@@ -66,7 +66,7 @@ fn bare(r#type: &str, subtype: &str) -> Candidate {
 /// weight of 0 is not acceptable.
 ///
 /// # Errors
-/// The `invalid_accept` and `invalid_weight` of http-negotiate (HY-116.18), and `internal` when a weight names a range
+/// The `invalid_accept` and `invalid_weight` of http-negotiation (HY-116.18), and `internal` when a weight names a range
 /// that the field does not hold.
 pub fn select(
     accept_lines: &[Vec<u8>],

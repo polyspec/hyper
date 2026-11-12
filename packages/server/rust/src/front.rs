@@ -27,7 +27,7 @@ pub struct Front {
     pub hx_request: bool,
     /// The value of `Hyper-Context`, or `None` (HY-127).
     pub context_header: Option<Vec<u8>>,
-    /// The media type of the body as F-12 of http-forms reads it, or `None` without `Content-Type` (HY-59.12).
+    /// The media type of the body as F-12 of http-form reads it, or `None` without `Content-Type` (HY-59.12).
     pub media_type: Option<String>,
     /// Whether `Content-Type` is no media type, the empty value included (HY-59.12).
     pub malformed_content_type: bool,

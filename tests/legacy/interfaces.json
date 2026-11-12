@@ -1,5 +1,5 @@
 {
-  "note": "Fixed copies of case files as hyper held them before a library took their cases, with their caseFiles declarations: fields.json, whose cases http-forms holds (F-20 to F-27); redis-sessions.json, whose cases the sessions library holds; and file-store-sessions.json, the cases of contracts/file-sessions.json that the sessions library holds, under another name because contracts/file-sessions.json keeps the cases of hyper. The steps of the three servers read them until the servers call the core, and S-4 removes tests/legacy. Their sentences name the current statements of hyper.",
+  "note": "Fixed copies of case files as hyper held them before a library took their cases, with their caseFiles declarations: fields.json, whose cases http-form holds (F-20 to F-27); redis-sessions.json, whose cases the session-store library holds; and file-store-sessions.json, the cases of contracts/file-sessions.json that the session-store library holds, under another name because contracts/file-sessions.json keeps the cases of hyper. The steps of the three servers read them until the servers call the core, and S-4 removes tests/legacy. Their sentences name the current statements of hyper.",
   "caseFiles": {
     "fields.json": {
       "fixtures": {},

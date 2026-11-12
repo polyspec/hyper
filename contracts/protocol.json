@@ -718,9 +718,9 @@
                 },
                 {
                   "id": "HY-56.9",
-                  "en": "The query values are the values that `parse_urlencoded` of http-forms reads from the raw query without nesting (F-20), a list of each name in the order of its first occurrence with its values in request order (F-20.3); a name or a value that is not UTF-8 fails with HY-42.",
-                  "ko": "query 값은 http-forms의 `parse_urlencoded`가 raw query에서 중첩 없이 읽는 값(F-20)으로, 각 이름을 처음 나온 순서대로 그 값들과 요청 순서대로 담은 목록이다(F-20.3). UTF-8이 아닌 이름이나 값은 HY-42로 실패한다.",
-                  "koSource": "6de9e014ed6954445087bcb19d7f30d54b5b734f4a47e52d144d764fcf232aa3"
+                  "en": "The query values are the values that `parse_urlencoded` of http-form reads from the raw query without nesting (F-20), a list of each name in the order of its first occurrence with its values in request order (F-20.3); a name or a value that is not UTF-8 fails with HY-42.",
+                  "ko": "query 값은 http-form의 `parse_urlencoded`가 raw query에서 중첩 없이 읽는 값(F-20)으로, 각 이름을 처음 나온 순서대로 그 값들과 요청 순서대로 담은 목록이다(F-20.3). UTF-8이 아닌 이름이나 값은 HY-42로 실패한다.",
+                  "koSource": "b349776540ed0fefe7e85c66fdd030af1c9d69b22efc29f7a4f007bd4bd485d7"
                 },
                 {
                   "id": "HY-56.5",
@@ -765,9 +765,9 @@
               "statements": [
                 {
                   "id": "HY-57.13",
-                  "en": "The form values of a request are the form values of its body that F-21 of http-forms reads without nesting: an `application/x-www-form-urlencoded` body is read by F-20, a `multipart/form-data` body gives its parts without a `filename`, and a body of another type or without `Content-Type` has none (F-21.4); a name or a value that is not UTF-8 fails with HY-42 (F-21.5).",
-                  "ko": "요청의 form 값은 http-forms의 F-21이 중첩 없이 읽는 body의 form 값이다. `application/x-www-form-urlencoded` body는 F-20으로 읽고, `multipart/form-data` body는 `filename`이 없는 part를 주며, 다른 type의 body와 `Content-Type`이 없는 body에는 없다(F-21.4). UTF-8이 아닌 이름이나 값은 HY-42로 실패한다(F-21.5).",
-                  "koSource": "ef2bc80bc85475de178414705eb7fa17670386c7dfaef5be7e3374667d7f93a6"
+                  "en": "The form values of a request are the form values of its body that F-21 of http-form reads without nesting: an `application/x-www-form-urlencoded` body is read by F-20, a `multipart/form-data` body gives its parts without a `filename`, and a body of another type or without `Content-Type` has none (F-21.4); a name or a value that is not UTF-8 fails with HY-42 (F-21.5).",
+                  "ko": "요청의 form 값은 http-form의 F-21이 중첩 없이 읽는 body의 form 값이다. `application/x-www-form-urlencoded` body는 F-20으로 읽고, `multipart/form-data` body는 `filename`이 없는 part를 주며, 다른 type의 body와 `Content-Type`이 없는 body에는 없다(F-21.4). UTF-8이 아닌 이름이나 값은 HY-42로 실패한다(F-21.5).",
+                  "koSource": "fe25022b35e1e764e0936868a48b2bd1c3117217c7f33b9d420d16be09eb1b87"
                 },
                 {
                   "id": "HY-57.6",
@@ -783,9 +783,9 @@
                 },
                 {
                   "id": "HY-57.14",
-                  "en": "The type of a body is read from its `Content-Type` by F-12 of http-forms, and a parameter that its type does not define changes nothing (F-12.4): a `charset` or another parameter of an `application/x-www-form-urlencoded` body fails nothing, and the body is read as UTF-8.",
-                  "ko": "body의 type은 http-forms의 F-12가 `Content-Type`에서 읽고, 그 type이 정의하지 않는 매개변수는 아무것도 바꾸지 않는다(F-12.4). `application/x-www-form-urlencoded` body의 `charset`이나 다른 매개변수는 실패를 만들지 않으며 body는 UTF-8로 읽는다.",
-                  "koSource": "50db7c9dba1fa736dff68e6439890a6349ba3aa8219055969defd3dc86936c67"
+                  "en": "The type of a body is read from its `Content-Type` by F-12 of http-form, and a parameter that its type does not define changes nothing (F-12.4): a `charset` or another parameter of an `application/x-www-form-urlencoded` body fails nothing, and the body is read as UTF-8.",
+                  "ko": "body의 type은 http-form의 F-12가 `Content-Type`에서 읽고, 그 type이 정의하지 않는 매개변수는 아무것도 바꾸지 않는다(F-12.4). `application/x-www-form-urlencoded` body의 `charset`이나 다른 매개변수는 실패를 만들지 않으며 body는 UTF-8로 읽는다.",
+                  "koSource": "875cd9b72bf25e9c62d3992f7fde93069085d35bc743ea97478dea4c252ea0f6"
                 }
               ]
             }
@@ -820,15 +820,15 @@
               "statements": [
                 {
                   "id": "HY-113.21",
-                  "en": "The files of a `multipart/form-data` body are the files of F-22 of http-forms: a file is a part with a `name` and a `filename` parameter, also with an empty filename, and has its name, its filename as sent, its content type and its bytes (F-22.2), and `filename*` is not read (F-22.5).",
-                  "ko": "`multipart/form-data` body의 파일은 http-forms F-22의 파일이다. 파일은 `name`과 `filename` 매개변수를 가진 part이고 filename이 비어도 파일이며, 이름, 보낸 그대로의 filename, content type, byte를 가지고(F-22.2), `filename*`은 읽지 않는다(F-22.5).",
-                  "koSource": "94dce00e048ea94d31036eb99d0c67117c9efde9b50460e4b17501ac705d0996"
+                  "en": "The files of a `multipart/form-data` body are the files of F-22 of http-form: a file is a part with a `name` and a `filename` parameter, also with an empty filename, and has its name, its filename as sent, its content type and its bytes (F-22.2), and `filename*` is not read (F-22.5).",
+                  "ko": "`multipart/form-data` body의 파일은 http-form F-22의 파일이다. 파일은 `name`과 `filename` 매개변수를 가진 part이고 filename이 비어도 파일이며, 이름, 보낸 그대로의 filename, content type, byte를 가지고(F-22.2), `filename*`은 읽지 않는다(F-22.5).",
+                  "koSource": "853b0caf7e03fbc1471e73bc4cd3d53cb0a930bca10f5b95df67c9162d18ed6d"
                 },
                 {
                   "id": "HY-113.22",
-                  "en": "The header lines and the parameters of a part are read as F-23, F-6 and F-16 of http-forms state, and its boundary as F-12.3 and F-7 state; a part that fails with kind `invalid`, `header_limit` or `no_boundary` of http-forms fails the whole body (F-23.3) with status 400 as HY-42 does.",
-                  "ko": "part의 header 줄과 매개변수는 http-forms의 F-23, F-6, F-16대로, boundary는 F-12.3과 F-7대로 읽으며, http-forms의 kind `invalid`, `header_limit`, `no_boundary`로 실패하는 part는 body 전체를 실패시키고(F-23.3) HY-42처럼 상태 400을 받는다.",
-                  "koSource": "45e080aa98e4a8b3d53d39d07064d15b2c36818d17f2abaf008aa71a4bf48446"
+                  "en": "The header lines and the parameters of a part are read as F-23, F-6 and F-16 of http-form state, and its boundary as F-12.3 and F-7 state; a part that fails with kind `invalid`, `header_limit` or `no_boundary` of http-form fails the whole body (F-23.3) with status 400 as HY-42 does.",
+                  "ko": "part의 header 줄과 매개변수는 http-form의 F-23, F-6, F-16대로, boundary는 F-12.3과 F-7대로 읽으며, http-form의 kind `invalid`, `header_limit`, `no_boundary`로 실패하는 part는 body 전체를 실패시키고(F-23.3) HY-42처럼 상태 400을 받는다.",
+                  "koSource": "e94dd0e72a15adba0033fc06fef9d25edee642e89d4f68a7421093bedeab290a"
                 },
                 {
                   "id": "HY-113.2",
@@ -885,9 +885,9 @@
                 },
                 {
                   "id": "HY-114.11",
-                  "en": "The file limit is the file limit of F-25.4 of http-forms: it bounds the temporary storage of one file, and a file is never truncated and never passed in part.",
-                  "ko": "파일 한도는 http-forms F-25.4의 파일 한도다. 파일 하나의 임시 저장을 제한하며, 파일은 잘리지 않고 일부만 전달되지도 않는다.",
-                  "koSource": "b9032c27f15205aea081a174642c1e75ddb75124593d87787590ea9e86d6f6c2"
+                  "en": "The file limit is the file limit of F-25.4 of http-form: it bounds the temporary storage of one file, and a file is never truncated and never passed in part.",
+                  "ko": "파일 한도는 http-form F-25.4의 파일 한도다. 파일 하나의 임시 저장을 제한하며, 파일은 잘리지 않고 일부만 전달되지도 않는다.",
+                  "koSource": "64e301172df31516495424a2867c87b5b14b6b3de5c52a92d8bb4bd7c7b20c4f"
                 },
                 {
                   "id": "HY-114.6",
@@ -903,9 +903,9 @@
                 },
                 {
                   "id": "HY-114.12",
-                  "en": "`fileOver(limit)` of the request is `file_over` of F-27 of http-forms on the files of its body, and a `limit` that is no unsigned integer fails with kind `invalid_number` of the binding before the files are compared.",
-                  "ko": "요청의 `fileOver(limit)`는 body의 파일에 대한 http-forms F-27의 `file_over`이며, 부호 없는 정수가 아닌 `limit`는 파일을 비교하기 전에 binding의 kind `invalid_number`로 실패한다.",
-                  "koSource": "a126e599a9c6d3708126520c91df67ef3f2e79213794f651d408de6ab169b273"
+                  "en": "`fileOver(limit)` of the request is `file_over` of F-27 of http-form on the files of its body, and a `limit` that is no unsigned integer fails with kind `invalid_number` of the binding before the files are compared.",
+                  "ko": "요청의 `fileOver(limit)`는 body의 파일에 대한 http-form F-27의 `file_over`이며, 부호 없는 정수가 아닌 `limit`는 파일을 비교하기 전에 binding의 kind `invalid_number`로 실패한다.",
+                  "koSource": "dae7d2a29fa19a02b351609b3ac6139623e34deea1ac727712f432c166a84c58"
                 }
               ]
             }
@@ -939,15 +939,15 @@
               "statements": [
                 {
                   "id": "HY-131.26",
-                  "en": "The server reads a `multipart/form-data` body in chunks as it arrives, for an application whose form types include `multipart/form-data` (HY-59.1), by the reader of F-24 of http-forms, which holds neither the body nor the content of a file part as one value (F-24.1); its delimiters and the failures of its bytes are those of F-24.2 to F-24.5, the result does not depend on the chunks (F-24.6), and the first failure of a body is the failure whose byte comes first (F-8), so a body whose invalid byte comes before the body limit receives 400 as HY-42 does, not 413.",
-                  "ko": "서버는 form type에 `multipart/form-data`가 있는 애플리케이션(HY-59.1)의 `multipart/form-data` body를 도착하는 대로 http-forms F-24의 reader로 조각 단위로 읽으며, 이 reader는 body도 파일 part의 내용도 한 값으로 들고 있지 않는다(F-24.1). delimiter와 byte의 실패는 F-24.2부터 F-24.5까지의 것이고, 결과는 조각 나눔에 달려 있지 않으며(F-24.6), body의 첫 실패는 그 byte가 먼저 오는 실패다(F-8). 그래서 잘못된 byte가 body 한도보다 먼저 오는 body는 413이 아니라 HY-42처럼 400을 받는다.",
-                  "koSource": "f6c0848ee533524669d0aa17787220b3c224205490ada78e1234278d77d05273"
+                  "en": "The server reads a `multipart/form-data` body in chunks as it arrives, for an application whose form types include `multipart/form-data` (HY-59.1), by the reader of F-24 of http-form, which holds neither the body nor the content of a file part as one value (F-24.1); its delimiters and the failures of its bytes are those of F-24.2 to F-24.5, the result does not depend on the chunks (F-24.6), and the first failure of a body is the failure whose byte comes first (F-8), so a body whose invalid byte comes before the body limit receives 400 as HY-42 does, not 413.",
+                  "ko": "서버는 form type에 `multipart/form-data`가 있는 애플리케이션(HY-59.1)의 `multipart/form-data` body를 도착하는 대로 http-form F-24의 reader로 조각 단위로 읽으며, 이 reader는 body도 파일 part의 내용도 한 값으로 들고 있지 않는다(F-24.1). delimiter와 byte의 실패는 F-24.2부터 F-24.5까지의 것이고, 결과는 조각 나눔에 달려 있지 않으며(F-24.6), body의 첫 실패는 그 byte가 먼저 오는 실패다(F-8). 그래서 잘못된 byte가 body 한도보다 먼저 오는 body는 413이 아니라 HY-42처럼 400을 받는다.",
+                  "koSource": "7a991d2efda62c17440d4edb2b38234d35544f43807fee53be1823e697db762f"
                 },
                 {
                   "id": "HY-131.27",
-                  "en": "The application may declare a value limit, the value limit of F-25.2 of http-forms, which also bounds a body that an application or a test builds from bytes.",
-                  "ko": "애플리케이션은 http-forms F-25.2의 값 한도를 선언할 수 있으며, 이 한도는 애플리케이션이나 테스트가 byte로 만든 body도 제한한다.",
-                  "koSource": "2197652cebb8d15d1052679507ddbdea300aefcf23620922a8ab3b7feac1b834"
+                  "en": "The application may declare a value limit, the value limit of F-25.2 of http-form, which also bounds a body that an application or a test builds from bytes.",
+                  "ko": "애플리케이션은 http-form F-25.2의 값 한도를 선언할 수 있으며, 이 한도는 애플리케이션이나 테스트가 byte로 만든 body도 제한한다.",
+                  "koSource": "0ed19f1ef4a47728e3e65675b07da66bcdab6aa504445c32551070ee1cf535ab"
                 },
                 {
                   "id": "HY-131.8",
@@ -975,9 +975,9 @@
                 },
                 {
                   "id": "HY-131.28",
-                  "en": "The server writes the content of a file part, as it arrives, to the directory of the request of F-10 of http-forms, and `UploadedFile` gives the bytes of its file as `size()`, moves it with `moveTo(path)` (`move_to` in Python) and reads it with `content()` as F-11 states, so that a path that exists and a file that was moved fail with the kinds `exists` and `moved` of http-forms.",
-                  "ko": "서버는 파일 part의 내용을 도착하는 대로 http-forms F-10의 요청 디렉터리에 쓰고, `UploadedFile`은 F-11대로 파일의 byte 수를 `size()`로 주고 `moveTo(path)`(Python은 `move_to`)로 옮기며 `content()`로 읽는다. 그래서 이미 있는 경로와 이미 옮긴 파일은 http-forms의 kind `exists`와 `moved`로 실패한다.",
-                  "koSource": "5aed28505e9e696719a93c9311a216f341f2bfe53879b7488c3afdeb81d7bb74"
+                  "en": "The server writes the content of a file part, as it arrives, to the directory of the request of F-10 of http-form, and `UploadedFile` gives the bytes of its file as `size()`, moves it with `moveTo(path)` (`move_to` in Python) and reads it with `content()` as F-11 states, so that a path that exists and a file that was moved fail with the kinds `exists` and `moved` of http-form.",
+                  "ko": "서버는 파일 part의 내용을 도착하는 대로 http-form F-10의 요청 디렉터리에 쓰고, `UploadedFile`은 F-11대로 파일의 byte 수를 `size()`로 주고 `moveTo(path)`(Python은 `move_to`)로 옮기며 `content()`로 읽는다. 그래서 이미 있는 경로와 이미 옮긴 파일은 http-form의 kind `exists`와 `moved`로 실패한다.",
+                  "koSource": "00673cbb1e71ffc7eebb33eab59f51f4bcdf69d6775fb9f8e015c9d2b3b94bfe"
                 },
                 {
                   "id": "HY-131.14",
@@ -993,9 +993,9 @@
                 },
                 {
                   "id": "HY-131.29",
-                  "en": "A `Content-Length` that is no number receives status 400 with kind `invalid_content_length` of http-forms before the body is read (F-9), and the host passes the field value to the core, which compares it with the body limit (F-25.1).",
-                  "ko": "숫자가 아닌 `Content-Length`는 body를 읽기 전에 http-forms의 kind `invalid_content_length`와 상태 400을 받고(F-9), host는 그 field 값을 core에 넘겨 core가 body 한도와 비교한다(F-25.1).",
-                  "koSource": "e04d51d11f2f02fcbefb1bda15984839a30733f6b7a84e069b261cc665cb6f4f"
+                  "en": "A `Content-Length` that is no number receives status 400 with kind `invalid_content_length` of http-form before the body is read (F-9), and the host passes the field value to the core, which compares it with the body limit (F-25.1).",
+                  "ko": "숫자가 아닌 `Content-Length`는 body를 읽기 전에 http-form의 kind `invalid_content_length`와 상태 400을 받고(F-9), host는 그 field 값을 core에 넘겨 core가 body 한도와 비교한다(F-25.1).",
+                  "koSource": "2c99960ae716bb9e2eaf81e377fd1bdb77c6029533f4acb6f01098b5096131cb"
                 },
                 {
                   "id": "HY-131.19",
@@ -1068,9 +1068,9 @@
                 },
                 {
                   "id": "HY-116.17",
-                  "en": "The server reads the `Accept` field lines of a request, as its host gives them, with `Accept.parse` of http-negotiate (NG-5, NG-6): a request without `Accept` states no preference (NG-5.1), each field line is a list read on its own (NG-5.2), and a field whose lines hold no range is the empty list, which matches no type (NG-5.3).",
-                  "ko": "server는 host가 준 그대로의 요청 `Accept` field 줄을 http-negotiate의 `Accept.parse`로 읽는다(NG-5, NG-6). `Accept`가 없는 요청은 선호를 밝히지 않으며(NG-5.1), 각 field 줄은 따로 읽는 list이고(NG-5.2), 줄에 range가 없는 field는 빈 list로서 어떤 type에도 맞지 않는다(NG-5.3).",
-                  "koSource": "15d89744c7819411b092b841e41eb121b885ab3b30e4d6ca8769964e793b671d"
+                  "en": "The server reads the `Accept` field lines of a request, as its host gives them, with `Accept.parse` of http-negotiation (NG-5, NG-6): a request without `Accept` states no preference (NG-5.1), each field line is a list read on its own (NG-5.2), and a field whose lines hold no range is the empty list, which matches no type (NG-5.3).",
+                  "ko": "server는 host가 준 그대로의 요청 `Accept` field 줄을 http-negotiation의 `Accept.parse`로 읽는다(NG-5, NG-6). `Accept`가 없는 요청은 선호를 밝히지 않으며(NG-5.1), 각 field 줄은 따로 읽는 list이고(NG-5.2), 줄에 range가 없는 field는 빈 list로서 어떤 type에도 맞지 않는다(NG-5.3).",
+                  "koSource": "c18041bfe0afbc06f23fac0d3b546ea049f1567a2f1624898ba19ae72a59a4d6"
                 },
                 {
                   "id": "HY-116.18",
@@ -1080,9 +1080,9 @@
                 },
                 {
                   "id": "HY-116.19",
-                  "en": "The server weighs its types with `Accept.weigh` of http-negotiate (NG-7 to NG-10): `text/html` and `application/vnd.hyper+json` are candidates with `matching` `ignore` and `wildcards` true, because they have no parameters, and each declared type of the route (HY-118) is a candidate with `matching` `exact`, `wildcards` false and the served values of its required parameters, so that `type/*`, `*/*` and a range without a served value of every required parameter give it no weight.",
-                  "ko": "server는 http-negotiate의 `Accept.weigh`로 type의 무게를 정한다(NG-7부터 NG-10). `text/html`과 `application/vnd.hyper+json`은 매개변수가 없으므로 `matching` `ignore`와 `wildcards` true인 후보이고, route가 선언한 각 type(HY-118)은 `matching` `exact`, `wildcards` false와 필수 매개변수마다 제공하는 값을 가진 후보이므로, `type/*`, `*/*`, 모든 필수 매개변수의 제공 값을 갖지 않은 range는 그 type에 무게를 주지 않는다.",
-                  "koSource": "149d7435aa85d84cfeef920ecb2e2145923374d9c12197a54775eb42d38ec710"
+                  "en": "The server weighs its types with `Accept.weigh` of http-negotiation (NG-7 to NG-10): `text/html` and `application/vnd.hyper+json` are candidates with `matching` `ignore` and `wildcards` true, because they have no parameters, and each declared type of the route (HY-118) is a candidate with `matching` `exact`, `wildcards` false and the served values of its required parameters, so that `type/*`, `*/*` and a range without a served value of every required parameter give it no weight.",
+                  "ko": "server는 http-negotiation의 `Accept.weigh`로 type의 무게를 정한다(NG-7부터 NG-10). `text/html`과 `application/vnd.hyper+json`은 매개변수가 없으므로 `matching` `ignore`와 `wildcards` true인 후보이고, route가 선언한 각 type(HY-118)은 `matching` `exact`, `wildcards` false와 필수 매개변수마다 제공하는 값을 가진 후보이므로, `type/*`, `*/*`, 모든 필수 매개변수의 제공 값을 갖지 않은 range는 그 type에 무게를 주지 않는다.",
+                  "koSource": "fc336a6b42e4ca9d451b31527565f5b14cc773efd2829e0e777e47252a84d2e5"
                 },
                 {
                   "id": "HY-116.20",
@@ -5507,9 +5507,9 @@
                 },
                 {
                   "id": "HY-132.3",
-                  "en": "The kinds of hyper are those of the table below, and an error of a library that hyper uses, such as http-forms, http-negotiate, http-media-type, http-cookie, json, the template data model, the sessions library or the binding, reaches the caller with the kind, the status and the category of that library, in the class of that category of hyper.",
-                  "ko": "hyper의 kind는 아래 표의 것이며, http-forms, http-negotiate, http-media-type, http-cookie, json, template 데이터 모델, sessions 라이브러리, binding처럼 hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind, 상태, category를 가지고 hyper의 그 category class로 호출자에게 간다.",
-                  "koSource": "a59472dbd6405070aea1a62fcd51323342373ba5e17128a460381e1c3742a03a"
+                  "en": "The kinds of hyper are those of the table below, and an error of a library that hyper uses, such as http-form, http-negotiation, http-media-type, http-cookie, json, the template data model, the session-store library or the binding, reaches the caller with the kind, the status and the category of that library, in the class of that category of hyper.",
+                  "ko": "hyper의 kind는 아래 표의 것이며, http-form, http-negotiation, http-media-type, http-cookie, json, template 데이터 모델, session-store 라이브러리, binding처럼 hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind, 상태, category를 가지고 hyper의 그 category class로 호출자에게 간다.",
+                  "koSource": "a14248cc27a57ee2d6f96ff4ec12f334fd841ea9456451247b42222d4fbb4565"
                 },
                 {
                   "id": "HY-132.4",
@@ -6462,15 +6462,15 @@
                 },
                 {
                   "id": "HY-104.25",
-                  "en": "The storage of a session, which is its identifier, its record bytes, its lock, its file or Redis key and its expiry, is the rule of the sessions library, and hyper uses its store interface; the session values that hyper keeps in a record, which are the token (HY-24), the flash values and the changed topics (HY-25), the kept values (HY-40), the conversion between a record and the data model (HY-104.13, HY-104.14) and the keys of HY-104.22 and HY-104.23, are rules of hyper.",
-                  "ko": "session의 저장(식별자, record 바이트, 잠금, 파일이나 Redis key, 만료)은 sessions 라이브러리의 규칙이고 hyper는 그 저장소 interface를 쓴다. hyper가 record에 두는 session 값, 곧 token(HY-24), flash 값과 바뀐 topic(HY-25), kept 값(HY-40), record와 데이터 모델 사이의 변환(HY-104.13, HY-104.14), HY-104.22와 HY-104.23의 key는 hyper의 규칙이다.",
-                  "koSource": "5843aee5ccb1fa304068d16b28053ee8ea57d50c9f97ababfb22ee24a00b55f5"
+                  "en": "The storage of a session, which is its identifier, its record bytes, its lock, its file or Redis key and its expiry, is the rule of the session-store library, and hyper uses its store interface; the session values that hyper keeps in a record, which are the token (HY-24), the flash values and the changed topics (HY-25), the kept values (HY-40), the conversion between a record and the data model (HY-104.13, HY-104.14) and the keys of HY-104.22 and HY-104.23, are rules of hyper.",
+                  "ko": "session의 저장(식별자, record 바이트, 잠금, 파일이나 Redis key, 만료)은 session-store 라이브러리의 규칙이고 hyper는 그 저장소 interface를 쓴다. hyper가 record에 두는 session 값, 곧 token(HY-24), flash 값과 바뀐 topic(HY-25), kept 값(HY-40), record와 데이터 모델 사이의 변환(HY-104.13, HY-104.14), HY-104.22와 HY-104.23의 key는 hyper의 규칙이다.",
+                  "koSource": "ed407dc1f359937edf87dc67f8dc31ec49e94c4ae9f1a58bc9dbe3e6d6303aba"
                 },
                 {
                   "id": "HY-104.2",
-                  "en": "A session is the file `sess_<id>` of the directory, the form of the files handler of PHP: its bytes are the record of its values in the form `php_serialize` of PHP, read and written with `@polyspec/php-serialize` and `polyspec-php-serialize`, its mode is 0600, and a file without bytes is an empty session.",
-                  "ko": "session은 디렉터리의 파일 `sess_<id>`이며 PHP의 files handler 형태다: 그 바이트는 PHP의 `php_serialize` 형태로 된 값의 record이고, `@polyspec/php-serialize`와 `polyspec-php-serialize`로 읽고 쓰며, 모드는 0600이고, 바이트가 없는 파일은 빈 session이다.",
-                  "koSource": "da018b37aa828823d6fbb9d9a58a06907bbd89deefdce72a5fcc100db859d873"
+                  "en": "A session is the file `sess_<id>` of the directory, the form of the files handler of PHP: its bytes are the record of its values in the form `php_serialize` of PHP, read and written with `@polyspec/php-serialization` and `polyspec-php-serialization`, its mode is 0600, and a file without bytes is an empty session.",
+                  "ko": "session은 디렉터리의 파일 `sess_<id>`이며 PHP의 files handler 형태다: 그 바이트는 PHP의 `php_serialize` 형태로 된 값의 record이고, `@polyspec/php-serialization`와 `polyspec-php-serialization`로 읽고 쓰며, 모드는 0600이고, 바이트가 없는 파일은 빈 session이다.",
+                  "koSource": "4ed3e95a329b9896286fa8c84ecd2263eaedbcb7f3860584bc90fe6a6b63747b"
                 },
                 {
                   "id": "HY-104.3",
@@ -6480,15 +6480,15 @@
                 },
                 {
                   "id": "HY-104.26",
-                  "en": "The PHP server keeps a session with the file store of the sessions library, as the Node and Python servers do, and not with the native session handler of PHP, with which it shares only the file name, the record form `php_serialize`, the file mode and `flock` with `LOCK_EX`.",
-                  "ko": "PHP server는 Node와 Python server처럼 sessions 라이브러리의 파일 저장소로 session을 가지며 PHP의 native session handler를 쓰지 않는다. native handler와는 파일 이름, record 형식 `php_serialize`, 파일 mode, `LOCK_EX`의 `flock`만 같다.",
-                  "koSource": "ffc1719919de8fc2c2b23608b740849206193979291a092dd39f5449bb788dd0"
+                  "en": "The PHP server keeps a session with the file store of the session-store library, as the Node and Python servers do, and not with the native session handler of PHP, with which it shares only the file name, the record form `php_serialize`, the file mode and `flock` with `LOCK_EX`.",
+                  "ko": "PHP server는 Node와 Python server처럼 session-store 라이브러리의 파일 저장소로 session을 가지며 PHP의 native session handler를 쓰지 않는다. native handler와는 파일 이름, record 형식 `php_serialize`, 파일 mode, `LOCK_EX`의 `flock`만 같다.",
+                  "koSource": "eb1366b1ae934510b5c85fe91dd840dc6f522e59aecb7ed04580d4b04b845be8"
                 },
                 {
                   "id": "HY-104.27",
-                  "en": "Every server waits for the lock of a session file in the core of the sessions library, which blocks on `flock` with `LOCK_EX` on a thread of its own for each waiting session, with no retry and no interval, so the operating system orders the waiting requests as it orders the native files handler of PHP.",
-                  "ko": "모든 server는 sessions 라이브러리의 core에서 session 파일의 잠금을 기다리며, core는 기다리는 session마다 자기 스레드에서 `LOCK_EX`의 `flock`으로 블로킹하고 재시도와 간격을 두지 않는다. 그래서 운영체제가 PHP native files handler에서처럼 기다리는 요청의 순서를 정한다.",
-                  "koSource": "b23d614a1013c07159f532295be53948d94199f6864ccd09b4434d6cce9f67bd"
+                  "en": "Every server waits for the lock of a session file in the core of the session-store library, which blocks on `flock` with `LOCK_EX` on a thread of its own for each waiting session, with no retry and no interval, so the operating system orders the waiting requests as it orders the native files handler of PHP.",
+                  "ko": "모든 server는 session-store 라이브러리의 core에서 session 파일의 잠금을 기다리며, core는 기다리는 session마다 자기 스레드에서 `LOCK_EX`의 `flock`으로 블로킹하고 재시도와 간격을 두지 않는다. 그래서 운영체제가 PHP native files handler에서처럼 기다리는 요청의 순서를 정한다.",
+                  "koSource": "850dfd9cfa53b44788215fa683d5290400a5ad97c9a7f27f93e8c6666750751c"
                 },
                 {
                   "id": "HY-104.7",
@@ -6504,9 +6504,9 @@
                 },
                 {
                   "id": "HY-104.31",
-                  "en": "An identifier is 22 to 256 characters of `A-Za-z0-9,-`, the identifiers that PHP creates for its session handlers (`session.sid_length` from 22 to 256), as SE-5.1 of the sessions library states: every server creates 64 lowercase hexadecimal digits (SE-5.3) and accepts the identifier of another and of a PHP peer.",
-                  "ko": "식별자는 sessions 라이브러리의 SE-5.1대로 PHP가 session handler에 만드는 식별자(`session.sid_length` 22부터 256)인 `A-Za-z0-9,-`의 22자부터 256자다. 모든 server는 소문자 16진수 64자리를 만들고(SE-5.3) 다른 server와 PHP peer의 식별자를 받는다.",
-                  "koSource": "fbebed3d1d1c2f5fce33ae5c18e49cff341bb0f70010eaad97628ee278895e39"
+                  "en": "An identifier is 22 to 256 characters of `A-Za-z0-9,-`, the identifiers that PHP creates for its session handlers (`session.sid_length` from 22 to 256), as SE-5.1 of the session-store library states: every server creates 64 lowercase hexadecimal digits (SE-5.3) and accepts the identifier of another and of a PHP peer.",
+                  "ko": "식별자는 session-store 라이브러리의 SE-5.1대로 PHP가 session handler에 만드는 식별자(`session.sid_length` 22부터 256)인 `A-Za-z0-9,-`의 22자부터 256자다. 모든 server는 소문자 16진수 64자리를 만들고(SE-5.3) 다른 server와 PHP peer의 식별자를 받는다.",
+                  "koSource": "9456f16888e9bb48b15e2f501d6846708c97a662cf34b3eecb299775e603679e"
                 },
                 {
                   "id": "HY-104.10",
@@ -6570,9 +6570,9 @@
                 },
                 {
                   "id": "HY-104.32",
-                  "en": "A session store of files takes an existing absolute directory and a lifetime, an unsigned integer of seconds whose default is 1440, and making it with another directory or a lifetime of 0 fails with the kind of the sessions library (`invalid_directory`, `invalid_lifetime`).",
-                  "ko": "파일 session 저장소는 존재하는 절대 디렉터리와 lifetime(초 단위 부호 없는 정수, 기본값 1440)을 받으며, 다른 디렉터리나 0인 lifetime으로 만들면 sessions 라이브러리의 kind(`invalid_directory`, `invalid_lifetime`)로 실패한다.",
-                  "koSource": "16d42926bbbcc9fa395449f452111d1ccb582db18c6d9241e296ed87c7c2be1e"
+                  "en": "A session store of files takes an existing absolute directory and a lifetime, an unsigned integer of seconds whose default is 1440, and making it with another directory or a lifetime of 0 fails with the kind of the session-store library (`invalid_directory`, `invalid_lifetime`).",
+                  "ko": "파일 session 저장소는 존재하는 절대 디렉터리와 lifetime(초 단위 부호 없는 정수, 기본값 1440)을 받으며, 다른 디렉터리나 0인 lifetime으로 만들면 session-store 라이브러리의 kind(`invalid_directory`, `invalid_lifetime`)로 실패한다.",
+                  "koSource": "e98e2043110bf49d2d87e2875b197d2d3225967988107e7f9fd930b31ed61fbf"
                 },
                 {
                   "id": "HY-104.20",
@@ -6747,9 +6747,9 @@
                 },
                 {
                   "id": "HY-115.28",
-                  "en": "`lifetime` of the Redis store is an unsigned integer of seconds with the default 1440, and `lockExpire` is an unsigned integer of seconds that the caller states, with no default, because no value is longer than every request of every application; a lifetime or a lock expiry of 0 fails with the kind of the sessions library (`invalid_lifetime`, `invalid_lock_expire`).",
-                  "ko": "Redis 저장소의 `lifetime`은 기본값 1440인 초 단위 부호 없는 정수이고, `lockExpire`는 호출자가 밝히는 초 단위 부호 없는 정수로 기본값이 없다. 어떤 값도 모든 애플리케이션의 모든 요청보다 길지 않기 때문이다. 0인 lifetime이나 lock expiry는 sessions 라이브러리의 kind(`invalid_lifetime`, `invalid_lock_expire`)로 실패한다.",
-                  "koSource": "bffdeb28fd46c7d3ca198f015e55e34f82f5340c70f1106eb193751f134ce979"
+                  "en": "`lifetime` of the Redis store is an unsigned integer of seconds with the default 1440, and `lockExpire` is an unsigned integer of seconds that the caller states, with no default, because no value is longer than every request of every application; a lifetime or a lock expiry of 0 fails with the kind of the session-store library (`invalid_lifetime`, `invalid_lock_expire`).",
+                  "ko": "Redis 저장소의 `lifetime`은 기본값 1440인 초 단위 부호 없는 정수이고, `lockExpire`는 호출자가 밝히는 초 단위 부호 없는 정수로 기본값이 없다. 어떤 값도 모든 애플리케이션의 모든 요청보다 길지 않기 때문이다. 0인 lifetime이나 lock expiry는 session-store 라이브러리의 kind(`invalid_lifetime`, `invalid_lock_expire`)로 실패한다.",
+                  "koSource": "0b072b82de3ff88e6627c2aba1855bd3de1c8bf8943d4c7e5fd30b0cb8fa7f96"
                 },
                 {
                   "id": "HY-115.22",
@@ -6923,9 +6923,9 @@
                   "statements": [
                     {
                       "id": "HY-59.12",
-                      "en": "After routing and HY-27, a `POST` request to an action or to `/_hyper/keep` whose `Content-Type` is no media type, the empty value included, receives status 400 with the text `Bad Request`, as F-12 of http-forms reads it with MT-4 of http-media-type (kind `malformed_content_type`), and one whose media type, its type and subtype without parameters, is not a form type receives status 415 with the text `Unsupported Media Type`.",
-                      "ko": "라우팅과 HY-27 뒤에, `Content-Type`이 media type이 아닌(빈 값 포함) action이나 `/_hyper/keep`으로의 `POST` 요청은 http-forms의 F-12가 http-media-type의 MT-4로 읽는 대로 상태 400과 텍스트 `Bad Request`를 받고(kind `malformed_content_type`), media type(매개변수 없는 type과 subtype)이 form 타입이 아닌 요청은 상태 415와 텍스트 `Unsupported Media Type`을 받는다.",
-                      "koSource": "7ac44c49a8021b8413fafbb452b3d966815d48b545816ffebb764e93497e2fa0"
+                      "en": "After routing and HY-27, a `POST` request to an action or to `/_hyper/keep` whose `Content-Type` is no media type, the empty value included, receives status 400 with the text `Bad Request`, as F-12 of http-form reads it with MT-4 of http-media-type (kind `malformed_content_type`), and one whose media type, its type and subtype without parameters, is not a form type receives status 415 with the text `Unsupported Media Type`.",
+                      "ko": "라우팅과 HY-27 뒤에, `Content-Type`이 media type이 아닌(빈 값 포함) action이나 `/_hyper/keep`으로의 `POST` 요청은 http-form의 F-12가 http-media-type의 MT-4로 읽는 대로 상태 400과 텍스트 `Bad Request`를 받고(kind `malformed_content_type`), media type(매개변수 없는 type과 subtype)이 form 타입이 아닌 요청은 상태 415와 텍스트 `Unsupported Media Type`을 받는다.",
+                      "koSource": "a9cbadf23b8877774b1cf442ba66db38ed35fc58033877a3a00eb5e8dffeb1f4"
                     }
                   ],
                   "blocks": []
@@ -6960,9 +6960,9 @@
                 },
                 {
                   "id": "HY-59.13",
-                  "en": "`mediaType()` of the request returns the type and subtype of its `Content-Type` in lower case without parameters, as F-12 of http-forms reads them, the empty text for a request without `Content-Type`, and fails with kind `malformed_content_type` (status 400) for a `Content-Type` that is no media type.",
-                  "ko": "request의 `mediaType()`은 http-forms의 F-12가 읽는 대로 `Content-Type`의 type과 subtype을 매개변수 없이 소문자로 반환하고, `Content-Type`이 없는 request에는 빈 text를 반환하며, media type이 아닌 `Content-Type`에는 kind `malformed_content_type`(상태 400)으로 실패한다.",
-                  "koSource": "23b1bd3e4417c61ef301e7091445697d28dc6125fa38bb281b88f98330abeec2"
+                  "en": "`mediaType()` of the request returns the type and subtype of its `Content-Type` in lower case without parameters, as F-12 of http-form reads them, the empty text for a request without `Content-Type`, and fails with kind `malformed_content_type` (status 400) for a `Content-Type` that is no media type.",
+                  "ko": "request의 `mediaType()`은 http-form의 F-12가 읽는 대로 `Content-Type`의 type과 subtype을 매개변수 없이 소문자로 반환하고, `Content-Type`이 없는 request에는 빈 text를 반환하며, media type이 아닌 `Content-Type`에는 kind `malformed_content_type`(상태 400)으로 실패한다.",
+                  "koSource": "e886bb9ec8bfb366eab13102eec1c45097a897013786ae055c52c102656bf0ba"
                 }
               ]
             }

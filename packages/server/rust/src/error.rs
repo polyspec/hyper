@@ -51,9 +51,9 @@ pub enum Error {
     /// A broken invariant of a record that php-serialize reports, such as an identity that the record does not hold
     /// (HY-132.6).
     RecordValue(polyspec_php_serialize::Error),
-    /// A failure of the sessions library, with its kind (HY-104.25).
+    /// A failure of the session-store library, with its kind (HY-104.25).
     Sessions(polyspec_sessions::Error),
-    /// A failure of `Accept` (HY-116.18), with the kind and status of http-negotiate.
+    /// A failure of `Accept` (HY-116.18), with the kind and status of http-negotiation.
     Negotiate(polyspec_http_negotiation::Error),
     /// A failure of the `Set-Cookie` writer, with the kind of http-cookie (HY-45.8, HY-52.13).
     Cookies(polyspec_http_cookie::Error),
@@ -99,7 +99,7 @@ impl Error {
 }
 
 impl Error {
-    /// The byte offset in a session record of a failure to decode it, as the sessions library gives it, or none for
+    /// The byte offset in a session record of a failure to decode it, as the session-store library gives it, or none for
     /// every other failure (HY-104.8).
     #[must_use]
     pub fn offset(&self) -> Option<u64> {
@@ -268,7 +268,7 @@ impl From<polyspec_http_cookie::Error> for Error {
     }
 }
 
-/// The category of a failure of the sessions library, as its interface contract gives it (E-1b).
+/// The category of a failure of the session-store library, as its interface contract gives it (E-1b).
 fn sessions_category(error: &polyspec_sessions::Error) -> Category {
     use polyspec_sessions::Error as Sessions;
     match error {
