@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `AGENTS.md` states the dependencies of the Rust core: the branch `v1/rust-core` of each polyspec repository until its release, `polyspec-http-negotiation` as a path dependency on the checkout beside this repository until that repository commits the name, `polyspec-php-serialize` until the sessions library takes the new name, and the binding crates in `packages/server/<lang>/native/` beside the host packages, whose absence the contract check of bindgen reports as CK-19 and CK-20 until it scaffolds that place (C-7).
+
 - The pages of an application are an owned handle, `steps::Pages`, which `Pages::open` makes from the bytes of the manifest, the templates by name, the read paths of the build, the build id, the time zone and the declaration of a context handler, and whose `register` takes a function of the application before the first page request (HYC-24); a `PageRequest` holds the handle, so that a binding keeps it while the host calls the handlers. The interface contract lists the units `pages`, `page_request`, the record `page_input`, the enum `page_kind` and the variants `call`, `action_outcome`, `page_step_input`, `answer` and `step` (bindgen T-9), with the owner of `template_value`, and the contract check of bindgen passes them; its remaining findings ask for the binding packages beside the core (L-2), which S-4 places (C-7).
 
 - Every failure of the open of an application has one error, `InvalidApplication`, with the kind `invalid_application` and a message that names its cause, also the path of the static shell, the data base path or the route under it (HY-62.37); the message of a representation entry names HY-118 and that of client rendering HY-62, and no other message gains `(HY-118)` (C-7).

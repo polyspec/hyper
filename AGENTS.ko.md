@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: b954cf36775a393e64101d0fdb630ecbead657a9ebc7e8980fb6b5e3ffbd83ad -->
+<!-- source-sha256: dc7154cc78ef015e77a3e837d8b637f177b811eacd8bc90618ddd8c97294ac72 -->
 # 개발
 
 [English](AGENTS.md).
@@ -27,6 +27,8 @@
 
 ## 구현
 
+- Own: Rust core `packages/server/rust`는 polyspec 의존을 그 Git 저장소의 branch `v1/rust-core`에서 받는다. 그 저장소들이 아직 release하지 않은 채로 core를 개발하기 때문이며, 위의 release 의존 규칙은 core의 첫 release부터 적용된다. 저장소들이 새 이름을 커밋할 때까지 예외가 둘 있다. `polyspec-http-negotiation`은 이 저장소 옆의 checkout `http-negotiation`에 대한 path 의존으로, core가 다른 working tree에서 읽는 유일한 입력이다. `polyspec-php-serialize`는 sessions 라이브러리의 store interface가 그것을 쓰는 동안 옛 이름을 유지한다. core의 binding crate는 각 언어의 host package 옆 `packages/server/<lang>/native/`에 둔다(bindgen L-2a). host package는 지금 자리에 남는다. bindgen이 그 자리에 scaffold할 때까지 `packages/server/rust/interface.json`에 대한 bindgen 계약 검사는 binding crate에 대해 CK-19와 CK-20을 보고하며, 그 밖의 지적은 실패다.
+  Enforced by: none, `make core-test`가 이 의존으로 core를 build하고, bindgen의 계약 검사는 S-4까지 손으로 실행한다.
 - Own: 임시 script나 임시 폴더를 쓰지 않는다. 모든 검사는 Makefile target, `scripts/` 아래의 script 또는 커밋된 test이며, 멱등하다.
   Enforced by: none, script가 임시인지는 판단이다.
 - Own: 릴리즈 결과는 tree, manifest와 그 lock이 고정한 template release에만 의존한다. 또한 `make hyper-install`이 그 release의 Composer repository(`packages.json`)에서 PIE로 build하는, 그 release의 package `polyspec/template-php-ext`에도 의존한다. 저장소 밖의 모든 입력은 추적 파일에 이름이 적히고 쓰기 전에 확인한다. package는 정확한 version과 lock의 integrity 또는 shasum으로, build 출력은 입력의 hash로 확인하며, 각 설치는 자기가 설치하는 모든 template asset을 그 integrity로 확인한다(HR-80). 의존성은 `package.json`이나 `composer.json`에 선언하고 npm이나 Composer가 lock대로 설치한다(HR-70). Version 0.1 전까지 다른 polyspec 저장소에 대한 의존성은 그 저장소의 GitHub tag나 GitHub Release의 asset이며, branch나 commit이 아니다. 추적 파일은 Git commit을, 이 저장소의 것이든 다른 저장소의 것이든, 이름으로 적지 않는다. 최종 검증은 무시되는 `var/report/` 아래에 tree와 결과를 기록하고 release archive의 선언된 integrity 고정은 유지한다. 어떤 검사도 다른 checkout의 working tree를 그때 있는 그대로 읽지 않는다.

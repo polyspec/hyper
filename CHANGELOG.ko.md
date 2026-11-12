@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4e1c1eb33d7d0a45f3ccb2df7be5e2818edf65552c7b63cef27dbb56364e604e -->
+<!-- source-sha256: 05d9772d7e1f38240d8858d3ccf1f3b81b1dc58748df7eb53a28375d98485aa3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `AGENTS.md`는 Rust core의 의존을 적는다. release 전까지 각 polyspec 저장소의 branch `v1/rust-core`, 그 저장소가 이름을 커밋할 때까지 이 저장소 옆 checkout에 대한 path 의존인 `polyspec-http-negotiation`, sessions 라이브러리가 새 이름을 받을 때까지 `polyspec-php-serialize`, 그리고 host package 옆 `packages/server/<lang>/native/`의 binding crate이며, bindgen이 그 자리에 scaffold할 때까지 그 계약 검사는 binding crate가 없음을 CK-19와 CK-20으로 보고한다(C-7).
 
 - 애플리케이션의 page는 소유하는 handle `steps::Pages`다. `Pages::open`은 manifest의 byte, 이름별 template, build의 read path, build id, 시간대, context handler 선언으로 이를 만들고, `register`는 첫 page 요청 전에 애플리케이션의 함수를 받는다(HYC-24). `PageRequest`는 그 handle을 쥐므로, binding은 host가 handler를 부르는 동안 그것을 유지한다. interface 계약은 unit `pages`, `page_request`, record `page_input`, enum `page_kind`, variant `call`, `action_outcome`, `page_step_input`, `answer`, `step`(bindgen T-9)과 `template_value`의 소유자를 두며, bindgen의 계약 검사는 이를 통과시킨다. 남은 지적은 core 옆의 binding package를 요구하며(L-2), S-4가 이를 놓는다(C-7).
 

@@ -19,7 +19,8 @@ path = "src/lib.rs"
 polyspec-bindgen-core = { git = "https://github.com/polyspec/bindgen.git", branch = "v1/rust-core" }
 # The Cookie and Set-Cookie fields (CK-1 to CK-14; HY-129.13, HY-45.8, HY-52.13).
 polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", branch = "v1/rust-core" }
-# The weights of Accept (NG-5 to NG-10; HY-116.17 to HY-116.20).
+# The weights of Accept (NG-5 to NG-10; HY-116.17 to HY-116.20). A path dependency on the checkout http-negotiation
+# until that repository commits the name polyspec-http-negotiation on its branch (AGENTS.md).
 polyspec-http-negotiation = { path = "../../../../http-negotiation/packages/rust" }
 # The reading and writing of media types (MT-4, MT-6; HY-119.4, HY-121.11).
 polyspec-http-media-type = { git = "https://github.com/polyspec/http-media-type.git", branch = "v1/rust-core" }
