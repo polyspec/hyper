@@ -860,7 +860,12 @@
     },
     {
       "paths": [
-        "packages/server/rust/**"
+        "packages/server/rust/**",
+        "packages/server/*/native/**",
+        "Cargo.toml",
+        "Cargo.lock",
+        "clippy.toml",
+        "rust-toolchain.toml"
       ],
       "targets": [
         "core-test",

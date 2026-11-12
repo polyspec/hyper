@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cd1ca8e17eeed2984f4fa507b988aef7ea96769ef0299eb97c9989c4a49773af -->
+<!-- source-sha256: f50d017e9cb00a1e6d45bf3d0259000be4cdc82d4f08e401752e1852492d1104 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core와 그 binding crate는 저장소 root의 Cargo workspace 하나다(binding L-2, L-2a). root `Cargo.toml`은 `packages/server/rust`와 binding scaffold가 쓴 native module `packages/server/python/native`, `packages/server/ts/native`, `packages/server/php-ext/native`를 이름하며, 각각 `Cargo.toml`과 `src/lib.rs`를, Node의 것은 `build.rs`도 가진다. `Cargo.lock`, `clippy.toml`, `rust-toolchain.toml`은 root로 옮겼고, lock은 `polyspec-binding-core`를 branch 끝에 한 번 고정하며, `.gitignore`는 `native/generated/`를 뺀다. interface 계약은 세 언어 package를 host package로 표시한다(`host: true`). 계약 검사는 더는 CK-20이나 없는 binding crate를 보고하지 않고, host manifest의 여섯 항목에 대해 CK-19를 보고하며, 이는 host package가 binding과 함께 받는다(S-4).
 
 - Rust core는 저장소 binding의 `polyspec-binding-core`를 lock의 모든 라이브러리가 쓰는 하나의 kind interface로 받고, 라이브러리 `polyspec-session-store`와 `polyspec-php-serialization`을 새 이름으로, `polyspec-http-cookie`, `polyspec-json`, `polyspec-http-negotiation`, `polyspec-http-media-type`, `polyspec-template`을 branch 끝으로 받는다. 옛 이름에 대한 `AGENTS.md`의 예외는 없어졌고, interface 계약은 라이브러리 session-store와 `binding_core`의 경로를 이름한다. Node와 Python 서버가 설치하는 php-serialization 0.0.6의 release asset은 저장소 php-serialization의 URL로 이름하며, 새 이름의 release가 나올 때까지 package 이름 `@polyspec/php-serialize`와 `polyspec-php-serialize`를 유지한다. `docs/operations/dependencies.md`가 둘 다 적는다(C-7, 9c).
 

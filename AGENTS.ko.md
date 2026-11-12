@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 32239c0367c519a9bd2a993773d45e48dbb44a5b11aeddf29998826fa3255569 -->
+<!-- source-sha256: f1194d829016679bd1436ea809f1acafbdc07ddcd0f398b60513fa8781a1ab60 -->
 # 개발
 
 [English](AGENTS.md).
@@ -27,7 +27,7 @@
 
 ## 구현
 
-- Own: Rust core `packages/server/rust`는 polyspec 의존을 그 Git 저장소의 branch `v1/rust-core`에서 받는다. 그 저장소들이 아직 release하지 않은 채로 core를 개발하기 때문이며, 위의 release 의존 규칙은 core의 첫 release부터 적용된다. 그 lock은 kind interface를 하나만, 저장소 binding의 `polyspec-binding-core`를 가지며, lock의 모든 라이브러리가 그것을 쓰므로 라이브러리와 core의 실패가 한 타입이다. core의 binding crate는 각 언어의 host package 옆 `packages/server/<lang>/native/`에 둔다(binding L-2a). host package는 지금 자리에 남는다. binding 생성기가 그 자리에 scaffold할 때까지 `packages/server/rust/interface.json`에 대한 그 계약 검사는 binding crate에 대해 CK-19와 CK-20을 보고하며, 그 밖의 지적은 실패다.
+- Own: Rust core `packages/server/rust`는 polyspec 의존을 그 Git 저장소의 branch `v1/rust-core`에서 받는다. 그 저장소들이 아직 release하지 않은 채로 core를 개발하기 때문이며, 위의 release 의존 규칙은 core의 첫 release부터 적용된다. 그 lock은 kind interface를 하나만, 저장소 binding의 `polyspec-binding-core`를 가지며, lock의 모든 라이브러리가 그것을 쓰므로 라이브러리와 core의 실패가 한 타입이다. core와 그 binding crate는 저장소 root의 Cargo workspace 하나이며, `Cargo.lock`, `clippy.toml`, `rust-toolchain.toml`도 하나다. binding crate는 `packages/server/python/native`, `packages/server/ts/native`, `packages/server/php-ext/native`이고, binding scaffold가 쓰며 손으로 고치지 않는다(binding L-2a). host package는 지금 자리에 남고, 생성기가 `native/generated/`에 쓰는 파일은 추적하지 않는다. `packages/server/rust/interface.json`의 계약 검사는 host package의 manifest가 native module에 필요한 것을 갖추지 않은 점을 CK-19로 보고하며, 이는 host package가 binding을 받을 때(S-4)까지 남고, 그 밖의 지적은 실패다.
   Enforced by: none, `make core-test`가 이 의존으로 core를 build하고, binding 생성기의 계약 검사는 S-4까지 손으로 실행한다.
 - Own: 임시 script나 임시 폴더를 쓰지 않는다. 모든 검사는 Makefile target, `scripts/` 아래의 script 또는 커밋된 test이며, 멱등하다.
   Enforced by: none, script가 임시인지는 판단이다.

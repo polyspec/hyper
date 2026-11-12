@@ -40,23 +40,3 @@ serde_json = { version = "1", features = ["preserve_order"] }
 
 [lints]
 workspace = true
-
-[workspace]
-
-[workspace.lints.rust]
-warnings = "deny"
-unsafe_code = "forbid"
-unused_must_use = "deny"
-
-[workspace.lints.clippy]
-all = { level = "deny", priority = -1 }
-allow_attributes_without_reason = "deny"
-unwrap_used = "deny"
-expect_used = "deny"
-let_underscore_must_use = "deny"
-let_underscore_untyped = "deny"
-map_err_ignore = "deny"
-as_conversions = "deny"
-cast_possible_truncation = "deny"
-cast_possible_wrap = "deny"
-cast_sign_loss = "deny"

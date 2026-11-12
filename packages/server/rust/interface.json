@@ -13,11 +13,13 @@
   "packages": {
     "php": {
       "package": "polyspec/hyper",
-      "namespace": "Polyspec\\Hyper"
+      "namespace": "Polyspec\\Hyper",
+      "host": true
     },
     "python": {
       "package": "polyspec-hyper",
-      "module": "polyspec.hyper"
+      "module": "polyspec.hyper",
+      "host": true
     },
     "node": {
       "package": "@polyspec/hyper",
@@ -28,7 +30,8 @@
             "require"
           ]
         }
-      }
+      },
+      "host": true
     }
   },
   "naming": {

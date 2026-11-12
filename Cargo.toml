@@ -1,0 +1,32 @@
+# One workspace: the core crate and the binding crates of the three hosts, which the binding scaffold writes into
+# packages/server/<lang>/native/ (binding design L-2, L-2a). One Cargo.lock at the root pins every dependency of all of
+# them, the commit of polyspec-binding-core included.
+[workspace]
+resolver = "2"
+members = [
+  "packages/server/rust",
+  "packages/server/python/native",
+  "packages/server/ts/native",
+  "packages/server/php-ext/native",
+]
+
+# Every warning fails, no unsafe code, no unwrap or expect, no discarded result, and every allow attribute names its
+# rule; clippy.toml disallows the methods that turn an Err or a None into a value (plan R-1). The binding crates carry
+# the same lints themselves, with unsafe_code deny instead of forbid.
+[workspace.lints.rust]
+warnings = "deny"
+unsafe_code = "forbid"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+allow_attributes_without_reason = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
+let_underscore_must_use = "deny"
+let_underscore_untyped = "deny"
+map_err_ignore = "deny"
+as_conversions = "deny"
+cast_possible_truncation = "deny"
+cast_possible_wrap = "deny"
+cast_sign_loss = "deny"

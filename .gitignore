@@ -28,6 +28,8 @@ __pycache__/
 
 # Generated files of the install, build, cache and test runs (AGENTS.md, Generated files)
 target/
+# The files that the binding generator writes into the native module of each host package (binding L-2a)
+packages/server/*/native/generated/
 dist/
 dist.next/
 dist.old/
