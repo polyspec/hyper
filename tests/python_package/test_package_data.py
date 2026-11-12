@@ -1,10 +1,10 @@
 # The package data of `pyproject.toml` (H15.3-15): every key names a package under `src`, and the namespace package
-# `polyspec.hyper.server` declares its `py.typed` marker, so a built package carries the marker.
+# `polyspec.hyper` declares its `py.typed` marker, so a built package carries the marker.
 import tomllib
 import unittest
 from pathlib import Path
 
-PACKAGE = Path(__file__).resolve().parents[2] / "packages" / "server" / "python"
+PACKAGE = Path(__file__).resolve().parents[2] / "packages" / "python"
 SRC = PACKAGE / "src"
 
 
@@ -23,15 +23,15 @@ class PackageDataTest(unittest.TestCase):
             )
 
     def test_namespace_package_declares_py_typed(self) -> None:
-        entries = self.package_data().get("polyspec.hyper.server", [])
+        entries = self.package_data().get("polyspec.hyper", [])
         self.assertIn(
             "py.typed",
             entries,
-            f'package-data of polyspec.hyper.server: expected an entry "py.typed", actual {entries!r}',
+            f'package-data of polyspec.hyper: expected an entry "py.typed", actual {entries!r}',
         )
         self.assertTrue(
             (SRC / "polyspec" / "hyper" / "py.typed").is_file(),
-            "expected the marker src/polyspec/hyper/server/py.typed to exist",
+            "expected the marker src/polyspec/hyper/py.typed to exist",
         )
 
 

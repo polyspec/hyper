@@ -1,0 +1,34 @@
+# The package is the host code of src/ with the native module of the Rust core, which maturin builds from native/
+# (binding L-2a); the range of maturin is the one that the binding scaffold writes for every binding package.
+[build-system]
+requires = ["maturin>=1.16,<2"]
+build-backend = "maturin"
+
+[project]
+name = "polyspec-hyper"
+version = "0.0.39"
+description = "The server library of the polyspec region protocol for Python; the browser package is @polyspec/hyper-client. Manifest, routing, documents, JSON responses, actions and sessions"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    # The wheel asset of the template release v0.0.27 with the sha256 of that asset (H21.4, H23.5). uv.lock locks it with
+    # its dependencies, and `make hyper-install-python` installs that lock into the venv of the package (H23.15).
+    # The wheel asset of the php-serialization release v0.0.6, published under the package name polyspec-php-serialize, with the sha256 of that asset (HY-104).
+    "polyspec-php-serialize @ https://github.com/polyspec/php-serialization/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl#sha256=00d8022dd33432532dbbbd3bed072e33d9243784b5454ddc814f867be14bc716",
+    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.27/polyspec_template-0.0.27-py3-none-any.whl#sha256=f8c8f5de89095ae495ba398e4f4a3205ff1f48459ea9880dcb95a2858f3000d4",
+]
+
+# The client of the session tests against a real Redis server (HY-115); an application names its own client.
+[dependency-groups]
+dev = ["redis==8.1.0"]
+
+# The native module of the core is polyspec.hyper._binding._native, built from the crate of native/; the host code,
+# with its py.typed, is the Python source of src/.
+[tool.maturin]
+module-name = "polyspec.hyper._binding._native"
+manifest-path = "native/Cargo.toml"
+python-source = "src"
+
+# uv reuses a built package until a cache key changes, so a new source file content must be a key of the install.
+[tool.uv]
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*" }, { file = "native/**/*" }, { file = "../rust/src/**/*" }]

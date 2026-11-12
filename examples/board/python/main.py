@@ -16,10 +16,10 @@ import re
 import time
 from pathlib import Path
 
-from polyspec.hyper.server.app import App
-from polyspec.hyper.server.file_sessions import FileSessions
-from polyspec.hyper.server.redis_sessions import RedisSessions
-from polyspec.hyper.server.server import create_server
+from polyspec.hyper.app import App
+from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.redis_sessions import RedisSessions
+from polyspec.hyper import create_server
 
 from handlers import Services, handlers
 from posts import Posts
