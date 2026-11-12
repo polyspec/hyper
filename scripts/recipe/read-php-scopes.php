@@ -240,6 +240,40 @@ function parameterList(array $tree, string $file, array $tokens, int $open): arr
     return $out;
 }
 
+/**
+ * The class of the items of each parameter whose `@param` of the doc comment of a function writes a list of one class:
+ * `list<X>`, `array<K, X>`, `iterable<X>` and `X[]`.
+ *
+ * @return array<string, array{file: string, name: string}> the class by the name of the parameter
+ */
+function parameterItems(array $tree, string $file, ?string $doc): array
+{
+    if ($doc === null) {
+        return [];
+    }
+    $lists = '(?:list|non-empty-list|array|non-empty-array|iterable)<(?:[^<>,]+,\s*)?\\\\?([A-Za-z_][\w\\\\]*)>';
+    $pattern = '/@param\s+(?:' . $lists . '|\\\\?([A-Za-z_][\w\\\\]*)\[\])\s+(?:\.\.\.)?\$(\w+)/';
+    preg_match_all($pattern, $doc, $found, PREG_SET_ORDER);
+    $items = [];
+    foreach ($found as $match) {
+        $class = classNamed($tree, $file, $match[1] !== '' ? $match[1] : $match[2]);
+        if ($class !== null) {
+            $items[$match[3]] = $class;
+        }
+    }
+
+    return $items;
+}
+
+/** The doc comment of a function whose `function` is at $i: before the first of its modifiers. */
+function functionDoc(array $docs, array $tokens, int $i): ?string
+{
+    while ($i > 0 && in_array(tokenId($tokens[$i - 1]), SCOPE_MODIFIERS, true)) {
+        $i--;
+    }
+
+    return $docs[$i] ?? null;
+}
 
 /**
  * The classes and the scopes of the files, and the registry entries of the registry file (HYR-5, HYR-7).
@@ -250,8 +284,11 @@ function parameterList(array $tree, string $file, array $tokens, int $open): arr
 function phpScopes(string $root, array $files, ?string $registry): array
 {
     $tokensOf = [];
+    $docsOf = [];
     foreach ($files as $file) {
-        $tokensOf[$file] = significant((string) file_get_contents($root . '/' . $file));
+        $code = (string) file_get_contents($root . '/' . $file);
+        $tokensOf[$file] = significant($code);
+        $docsOf[$file] = docComments($code);
     }
     $tree = phpTree($tokensOf);
     $classes = [];
@@ -307,8 +344,9 @@ function phpScopes(string $root, array $files, ?string $registry): array
                 if ($id === T_FUNCTION && tokenId($t[$i + 1] ?? ';') === T_STRING) {
                     $method = tokenText($t[$i + 1]);
                     $scope = new PhpScope($tree, $file, $t, ['file' => $file, 'name' => $class['name']]);
+                    $items = parameterItems($tree, $file, functionDoc($docsOf[$file], $t, $i));
                     foreach (parameterList($tree, $file, $t, $i + 2) as $p) {
-                        $scope->parameters[] = $p;
+                        $scope->parameters[] = $p + (isset($items[$p['name']]) ? ['items' => $items[$p['name']]] : []);
                         if ($p['promoted']) {
                             $typed = $p['type'] === null ? [] : ['type' => $p['type']];
                             $properties[] = ['name' => $p['name']] + $typed;
@@ -344,8 +382,9 @@ function phpScopes(string $root, array $files, ?string $registry): array
             }
             if (tokenId($t[$i]) === T_FUNCTION && tokenId($t[$i + 1] ?? ';') === T_STRING) {
                 $scope = new PhpScope($tree, $file, $t);
+                $items = parameterItems($tree, $file, functionDoc($docsOf[$file], $t, $i));
                 foreach (parameterList($tree, $file, $t, $i + 2) as $p) {
-                    $scope->parameters[] = $p;
+                    $scope->parameters[] = $p + (isset($items[$p['name']]) ? ['items' => $items[$p['name']]] : []);
                 }
                 $close = closing($t, $i + 2);
                 $j = $close + 1;
@@ -370,7 +409,8 @@ function phpScopes(string $root, array $files, ?string $registry): array
 function scopeEntry(string $file, string $name, ?string $class, PhpScope $scope, ?array $returns): array
 {
     $parameters = array_map(
-        static fn ($p) => ['name' => $p['name']] + ($p['type'] === null ? [] : ['type' => $p['type']]),
+        static fn ($p) => ['name' => $p['name']] + ($p['type'] === null ? [] : ['type' => $p['type']])
+            + (isset($p['items']) ? ['items' => $p['items']] : []),
         $scope->parameters,
     );
 

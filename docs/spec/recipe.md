@@ -163,14 +163,22 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
       from what is written:
       - `this`, `self`, `cls` and `$this` have the class of the function; `super` and `parent` have the class that it
         extends.
-      - A class name, a class written after an imported module, and `new` of a class have that class.
+      - A class name, a class written after an imported module, and `new` of a class have that class. An interface of
+        TypeScript or of PHP and a protocol of Python are classes, and a class that implements one extends it.
       - A parameter, a property or a variable has the class of its written type: the type declaration of PHP, the type
         annotation of TypeScript and of Python, also inside `?`, `| null` and `Optional`.
       - A variable or a property that is assigned `new` of a class, a call whose class is known, or a conditional of
-        such values has that class.
+        such values (`??`, `?:`, `||`, `or`, `a if c else b` and a `match` of PHP) has that class. A name that an
+        object pattern of TypeScript binds, `const { a } = value`, is a read of the property of that name. A read of
+        PHP without a call, `$this->a`, reaches only a property, because PHP keeps properties and methods apart. A
+        class of TypeScript that writes no constructor and initializes a property has a constructor that calls the
+        constructor of the class it extends.
       - A call or a property read whose receiver has a known class is a member of the spec, and its value has the class
         that the `output` of that member names; the variable of a loop over such a value has the class inside `list` or
-        `map`.
+        `map`. A call of a function or a method that is no member of the spec has the class of its written return type.
+      - The variable of a loop over a parameter or a property whose written type is a list of a class (`X[]`,
+        `Array<X>`, `list[X]`, `Sequence[X]` and the like, and for a parameter of PHP the `@param list<X>`,
+        `array<K, X>` or `X[]` of the doc comment of its function) has that class.
       - A member of a class is also the member of that name of the nearest class that it extends, and a call on a class
         reaches the members of that name of the units that extend it.
       - An assignment to a property is no call. In PHP a name followed by `(` is a method and any other name a

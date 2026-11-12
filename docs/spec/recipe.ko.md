@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 4c1699deaf0d11a1f2e729337fb1d6c3a3ee3d97cd7d0504f0e26de68acc11bf -->
+<!-- source-sha256: 356bd29ab3c0ebd701dc7cf5df234eaa87398b60d87333ef24b35a237a644b4c -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -152,12 +152,21 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     - private member는 같은 두 조건으로 호출자를 통해 말해진다.
     - check는 소스의 호출을 member 이름과 그 receiver의 class로 읽으며, 그 class를 적힌 것에서만 얻는다:
       - `this`, `self`, `cls`, `$this`는 그 함수의 class를 가지고, `super`와 `parent`는 그것이 상속하는 class를 가진다.
-      - class 이름, import한 module 뒤에 쓴 class, class의 `new`는 그 class를 가진다.
+      - class 이름, import한 module 뒤에 쓴 class, class의 `new`는 그 class를 가진다. TypeScript와 PHP의 interface와
+        Python의 protocol은 class이고, 그것을 구현하는 class는 그것을 상속한다.
       - parameter, property, 변수는 적힌 타입의 class를 가진다: PHP의 타입 선언, TypeScript와 Python의 타입
         annotation이며, `?`, `| null`, `Optional` 안의 것도 같다.
-      - class의 `new`, class가 알려진 호출, 또는 그런 값들의 조건식이 대입된 변수나 property는 그 class를 가진다.
+      - class의 `new`, class가 알려진 호출, 또는 그런 값들의 조건식(`??`, `?:`, `||`, `or`, `a if c else b`, PHP의
+        `match`)이 대입된 변수나 property는 그 class를 가진다. TypeScript의 object pattern이 묶는 이름,
+        `const { a } = value`는 그 이름의 property를 읽는 것이다. 호출이 없는 PHP의 읽기, `$this->a`는 property에만
+        닿는다. PHP는 property와 method를 따로 두기 때문이다. constructor를 쓰지 않고 property를 초기화하는
+        TypeScript class는 그것이 상속하는 class의 constructor를 호출하는 constructor를 가진다.
       - receiver의 class가 알려진 호출이나 property 읽기는 spec의 member이고, 그 값은 그 member의 `output`이 가리키는
-        class를 가진다. 그런 값을 도는 loop의 변수는 `list`나 `map` 안의 class를 가진다.
+        class를 가진다. 그런 값을 도는 loop의 변수는 `list`나 `map` 안의 class를 가진다. spec의 member가 아닌 함수나
+        method의 호출은 그 적힌 반환 타입의 class를 가진다.
+      - 적힌 타입이 class의 목록(`X[]`, `Array<X>`, `list[X]`, `Sequence[X]` 등)인 parameter나 property를 도는 loop의
+        변수는 그 class를 가진다. PHP의 parameter는 그 함수의 doc comment에 있는 `@param list<X>`, `array<K, X>`,
+        `X[]`가 그 목록이다.
       - class의 member는 그것이 상속하는 가장 가까운 class의 그 이름의 member이기도 하며, class에 대한 호출은 그것을
         상속하는 unit들의 그 이름의 member에도 닿는다.
       - property에 대한 대입은 호출이 아니다. PHP에서 `(`가 뒤따르는 이름은 method이고 그 밖의 이름은 property다.

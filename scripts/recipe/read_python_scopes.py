@@ -15,6 +15,24 @@ from pathlib import Path
 
 OTHER: dict = {"kind": "other"}
 NONE_NAMES = {"None", "NoneType"}
+# The generic types whose one argument is the class of their items.
+LIST_NAMES = {
+    "list",
+    "List",
+    "Sequence",
+    "MutableSequence",
+    "Iterable",
+    "Iterator",
+    "Collection",
+    "set",
+    "Set",
+    "frozenset",
+    "FrozenSet",
+    "AbstractSet",
+    "MutableSet",
+    "deque",
+    "Deque",
+}
 
 
 class Files:
@@ -135,6 +153,8 @@ class Scope:
         if cls is not None:
             self.out["class"] = cls
         self.seen: set[str] = set()
+        # The names that the scope binds itself, which hide a name of the module.
+        self.locals: set[str] = set()
 
     def class_of_name(self, name: str) -> dict | None:
         found = self.files.resolve(self.rel, name)
@@ -175,12 +195,50 @@ class Scope:
             return {"file": expr["file"], "name": expr["name"]}
         return None
 
+    def items_of(self, node: ast.expr | None) -> dict | None:
+        """The class inside a written list type: `list[X]`, `Sequence[X]`, `Iterable[X]`, `set[X]`, `tuple[X, ...]` and
+        the like, also inside `Optional[...]`, `X | None` or a string."""
+        if node is None:
+            return None
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            try:
+                return self.items_of(ast.parse(node.value, mode="eval").body)
+            except SyntaxError:
+                return None
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+            parts = [
+                p
+                for p in (node.left, node.right)
+                if not (isinstance(p, ast.Constant) and p.value is None)
+                and not (isinstance(p, ast.Name) and p.id in NONE_NAMES)
+            ]
+            return self.items_of(parts[0]) if len(parts) == 1 else None
+        if not isinstance(node, ast.Subscript):
+            return None
+        base = node.value
+        name = base.attr if isinstance(base, ast.Attribute) else getattr(base, "id", "")
+        if name == "Optional":
+            return self.items_of(node.slice)
+        if name == "tuple":
+            inner = node.slice
+            if (
+                isinstance(inner, ast.Tuple)
+                and len(inner.elts) == 2
+                and isinstance(inner.elts[1], ast.Constant)
+                and inner.elts[1].value is Ellipsis
+            ):
+                return self.type_of(inner.elts[0])
+            return None
+        return self.type_of(node.slice) if name in LIST_NAMES else None
+
     def expression(self, node: ast.expr) -> dict:
         """The expression tree of a node (HYR-5): a receiver whose class is written, a member read, a construction, a
         conditional, or `other`."""
         if isinstance(node, ast.Name):
             if node.id in ("self", "cls"):
                 return {"kind": "own"}
+            if node.id in self.locals:
+                return {"kind": "variable", "name": node.id}
             found = self.files.resolve(self.rel, node.id)
             if found is None:
                 return {"kind": "variable", "name": node.id}
@@ -256,7 +314,11 @@ class Scope:
         is_self = (isinstance(node, ast.Name) and node.id == "Self") or (
             isinstance(node, ast.Constant) and node.value == "Self"
         )
-        written = {"file": self.rel, "name": own} if is_self and own is not None else self.type_of(node)
+        written = (
+            {"file": self.rel, "name": own}
+            if is_self and own is not None
+            else self.type_of(node)
+        )
         if written is not None:
             self.out["returns"] = written
 
@@ -264,10 +326,14 @@ class Scope:
         for arg in [*args.posonlyargs, *args.args, *args.kwonlyargs]:
             if arg.arg in ("self", "cls"):
                 continue
+            self.locals.add(arg.arg)
             entry: dict = {"name": arg.arg}
             written = self.type_of(arg.annotation)
             if written is not None:
                 entry["type"] = written
+            items = self.items_of(arg.annotation)
+            if items is not None:
+                entry["items"] = items
             self.out["parameters"].append(entry)
 
     def target(self, node: ast.expr) -> str | dict | None:
@@ -308,6 +374,14 @@ class Scope:
         callees: set[int] = set()
         for stmt in body:
             for node in ast.walk(stmt):
+                if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+                    self.locals.add(node.id)
+                elif isinstance(node, ast.arg):
+                    self.locals.add(node.arg)
+                elif isinstance(node, ast.ExceptHandler) and node.name is not None:
+                    self.locals.add(node.name)
+        for stmt in body:
+            for node in ast.walk(stmt):
                 if isinstance(node, ast.Assign):
                     for target in node.targets:
                         targets.add(id(target))
@@ -340,7 +414,8 @@ def class_entry(files: Files, rel: str, node: ast.ClassDef) -> dict:
     scope = Scope(files, rel, node.name, None)
     extends = []
     for base in node.bases:
-        expr = scope.expression(base)
+        # A generic base, `Base[T]`, is the class `Base`.
+        expr = scope.expression(base.value if isinstance(base, ast.Subscript) else base)
         if expr["kind"] == "class":
             extends.append({"file": expr["file"], "name": expr["name"]})
     properties = []
@@ -350,6 +425,9 @@ def class_entry(files: Files, rel: str, node: ast.ClassDef) -> dict:
             written = scope.type_of(stmt.annotation)
             if written is not None:
                 entry["type"] = written
+            items = scope.items_of(stmt.annotation)
+            if items is not None:
+                entry["items"] = items
             properties.append(entry)
     return {
         "file": rel,

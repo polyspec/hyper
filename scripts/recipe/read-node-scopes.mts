@@ -13,6 +13,8 @@ type Found = { kind: 'class' | 'function' | 'module' | 'steps'; file: string; na
 type Binding = { from: string; name: string } | { from: string; namespace: true };
 
 const OTHER: Expr = { kind: 'other' };
+/** The generic types whose one argument is the class of their items. */
+const LIST_TYPES = new Set(['Array', 'ReadonlyArray', 'Set', 'ReadonlySet', 'Iterable', 'IterableIterator', 'Iterator']);
 
 /** The parsed files of the tree and the resolution of a name of a file to a class, a function or a module. */
 export class NodeFiles {
@@ -114,6 +116,8 @@ function inType(node: ts.Node): boolean {
 class ScopeReader {
   readonly out: Scope;
   private readonly seen = new Set<string>();
+  /** The names that the scope binds itself: its parameters and its variables, which hide a name of the module. */
+  private readonly locals = new Set<string>();
   private readonly files: NodeFiles;
   private readonly file: string;
 
@@ -160,6 +164,20 @@ class ScopeReader {
     return undefined;
   }
 
+  /** The class inside a written list type: `X[]`, `readonly X[]`, `Array<X>`, `ReadonlyArray<X>`, `Set<X>`, `Iterable<X>`, also with `| null`. */
+  itemsOf(node: ts.TypeNode | undefined): ClassRef | undefined {
+    if (node === undefined) return undefined;
+    if (ts.isParenthesizedTypeNode(node) || (ts.isTypeOperatorNode(node) && node.operator === ts.SyntaxKind.ReadonlyKeyword)) return this.itemsOf(node.type);
+    if (ts.isUnionTypeNode(node)) {
+      const kept = node.types.filter((t) => !(t.kind === ts.SyntaxKind.UndefinedKeyword || (ts.isLiteralTypeNode(t) && t.literal.kind === ts.SyntaxKind.NullKeyword)));
+      const [only] = kept;
+      return kept.length === 1 ? this.itemsOf(only) : undefined;
+    }
+    if (ts.isArrayTypeNode(node)) return this.typeOf(node.elementType);
+    if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName) && LIST_TYPES.has(node.typeName.text) && node.typeArguments?.length === 1) return this.typeOf(node.typeArguments[0]);
+    return undefined;
+  }
+
   /** The expression tree of a node (HYR-5). */
   expression(node: ts.Expression): Expr {
     if (node.kind === ts.SyntaxKind.ThisKeyword) return { kind: 'own' };
@@ -168,6 +186,7 @@ class ScopeReader {
       return this.expression(node.expression);
     }
     if (ts.isIdentifier(node)) {
+      if (this.locals.has(node.text)) return { kind: 'variable', name: node.text };
       const found = this.files.resolve(this.file, node.text);
       if (found === undefined) return { kind: 'variable', name: node.text };
       if (found.kind === 'class') return { kind: 'class', file: found.file, name: found.name };
@@ -215,10 +234,12 @@ class ScopeReader {
   }
 
   parameters(params: readonly ts.ParameterDeclaration[]): void {
+    for (const p of params) this.bind(p.name);
     for (const p of params) {
       if (!ts.isIdentifier(p.name)) continue;
       const type = this.typeOf(p.type);
-      const entry: Parameter = type === undefined ? { name: p.name.text } : { name: p.name.text, type };
+      const items = this.itemsOf(p.type);
+      const entry: Parameter = { name: p.name.text, ...(type === undefined ? {} : { type }), ...(items === undefined ? {} : { items }) };
       this.out.parameters.push(entry);
     }
   }
@@ -235,11 +256,32 @@ class ScopeReader {
   }
 
   /** Reads every node below `node`, a nested function included; an assignment target and a callee are no use of their own. */
+  /** Adds the names that a binding binds, also inside a destructuring pattern. */
+  private bind(name: ts.BindingName): void {
+    if (ts.isIdentifier(name)) this.locals.add(name.text);
+    else for (const element of name.elements) if (!ts.isOmittedExpression(element)) this.bind(element.name);
+  }
+
   read(node: ts.Node): void {
+    const declare = (n: ts.Node): void => {
+      if (ts.isVariableDeclaration(n) || ts.isParameter(n)) this.bind(n.name);
+      if (ts.isCatchClause(n) && n.variableDeclaration !== undefined) this.bind(n.variableDeclaration.name);
+      ts.forEachChild(n, declare);
+    };
+    declare(node);
     const visit = (n: ts.Node): void => {
       if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name)) {
         const type = this.typeOf(n.type);
         this.out.assigns.push({ target: n.name.text, value: n.initializer === undefined ? OTHER : this.expression(n.initializer), ...(type === undefined ? {} : { type }) });
+      }
+      // `const { a, b: c } = value` reads the properties `a` and `b` of the value.
+      if (ts.isVariableDeclaration(n) && ts.isObjectBindingPattern(n.name) && n.initializer !== undefined) {
+        const of = this.expression(n.initializer);
+        for (const element of n.name.elements) {
+          if (!ts.isIdentifier(element.name) || element.dotDotDotToken !== undefined) continue;
+          const property = element.propertyName === undefined ? element.name.text : ts.isIdentifier(element.propertyName) ? element.propertyName.text : undefined;
+          if (property !== undefined) this.out.assigns.push({ target: element.name.text, value: { kind: 'member', of, name: property, call: false } });
+        }
       }
       if (ts.isBinaryExpression(n) && n.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
         const target = this.target(n.left);
@@ -284,6 +326,10 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
               if (p.name === undefined || !(ts.isIdentifier(p.name) || ts.isStringLiteral(p.name))) continue;
               const scope = new ScopeReader(files, file, `steps.${p.name.text}`, undefined);
               scope.read(p);
+              // A property that names a function of the file, `mask` or `mask: masking`, is a call of that function.
+              const named = ts.isShorthandPropertyAssignment(p) ? p.name : ts.isPropertyAssignment(p) && ts.isIdentifier(p.initializer) ? p.initializer : undefined;
+              const found = named === undefined ? undefined : files.resolve(file, named.text);
+              if (found?.kind === 'function') scope.out.uses.push({ kind: 'member', of: { kind: 'module', file: found.file }, name: found.name, call: true });
               scopes.push(scope.out);
             }
             continue;
@@ -304,7 +350,14 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
             if (expr.kind === 'class') extendsOf.push({ file: expr.file, name: expr.name });
           }
         }
-        classes.push({ file, name: st.name.text, extends: extendsOf, properties: [] });
+        const properties: { name: string; type?: ClassRef }[] = [];
+        for (const m of st.members) {
+          if (!ts.isPropertySignature(m) || !ts.isIdentifier(m.name)) continue;
+          const type = reader.typeOf(m.type);
+          const items = reader.itemsOf(m.type);
+          properties.push({ name: m.name.text, ...(type === undefined ? {} : { type }), ...(items === undefined ? {} : { items }) });
+        }
+        classes.push({ file, name: st.name.text, extends: extendsOf, properties });
       }
       if (ts.isClassDeclaration(st) && st.name !== undefined) {
         const cls = st.name.text;
@@ -322,7 +375,8 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
         for (const m of st.members) {
           if (ts.isPropertyDeclaration(m) && (ts.isIdentifier(m.name) || ts.isPrivateIdentifier(m.name))) {
             const type = reader.typeOf(m.type);
-            properties.push(type === undefined ? { name: m.name.text } : { name: m.name.text, type });
+            const items = reader.itemsOf(m.type);
+            properties.push({ name: m.name.text, ...(type === undefined ? {} : { type }), ...(items === undefined ? {} : { items }) });
             if (m.initializer !== undefined) {
               constructor.property(m.name.text, m.initializer);
               constructor.read(m.initializer);
@@ -333,7 +387,8 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
             for (const p of m.parameters) {
               if (ts.isIdentifier(p.name) && ts.canHaveModifiers(p) && (ts.getModifiers(p) ?? []).length > 0) {
                 const type = reader.typeOf(p.type);
-                properties.push(type === undefined ? { name: p.name.text } : { name: p.name.text, type });
+                const items = reader.itemsOf(p.type);
+                properties.push({ name: p.name.text, ...(type === undefined ? {} : { type }), ...(items === undefined ? {} : { items }) });
               }
             }
             constructor.parameters(m.parameters);
@@ -346,6 +401,11 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
             if (m.body !== undefined) scope.read(m.body);
             scopes.push(scope.out);
           }
+        }
+        // A class that writes no constructor but initializes a property has one, which calls the constructor of the class it extends.
+        const extendsClass = (st.heritageClauses ?? []).some((clause) => clause.token === ts.SyntaxKind.ExtendsKeyword);
+        if (!hasConstructor && extendsClass && constructor.out.assigns.length + constructor.out.uses.length > 0) {
+          constructor.out.uses.unshift({ kind: 'member', of: { kind: 'parent' }, name: 'constructor', call: true });
         }
         if (hasConstructor || constructor.out.assigns.length > 0 || constructor.out.uses.length > 0) scopes.push(constructor.out);
         classes.push({ file, name: cls, extends: extendsOf, properties });

@@ -9,6 +9,28 @@ final class Receivers
 {
     private ?Widget $kept = null;
 
+    public function match(): void
+    {
+        self::xor();
+    }
+
+    private static function xor(): void
+    {
+    }
+
+    /**
+     * Grows the widgets of two lists.
+     *
+     * @param list<Widget> $widgets
+     * @param array<string, Widget> $others
+     */
+    public function listed(array $widgets, array $others): void
+    {
+        foreach ([...$widgets, ...$others] as $widget) {
+            $widget->grow();
+        }
+    }
+
     public function made(): ?Widget
     {
         return null;

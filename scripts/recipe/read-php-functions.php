@@ -25,13 +25,41 @@ function phpFiles(string $root, string $dir): array
     return $found;
 }
 
-/** @return list<array> the tokens of a file without whitespace and comments */
+/**
+ * @return list<array> the tokens of a file without whitespace and comments; the parse mode reads a keyword in the place
+ *                     of a name, such as a method `match` or a call `self::xor()`, as a name
+ */
 function significant(string $code): array
 {
     return array_values(array_filter(
-        token_get_all($code),
+        token_get_all($code, TOKEN_PARSE),
         static fn($t) => !is_array($t) || !in_array($t[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true),
     ));
+}
+
+/**
+ * @return array<int, string> the doc comment before each significant token of a file that follows one, by the index
+ *                            of that token among the tokens that significant() returns
+ */
+function docComments(string $code): array
+{
+    $docs = [];
+    $pending = null;
+    $index = 0;
+    foreach (token_get_all($code, TOKEN_PARSE) as $t) {
+        $id = is_array($t) ? $t[0] : $t;
+        if ($id === T_DOC_COMMENT) {
+            $pending = $t[1];
+        } elseif ($id !== T_WHITESPACE && $id !== T_COMMENT) {
+            if ($pending !== null) {
+                $docs[$index] = $pending;
+                $pending = null;
+            }
+            $index++;
+        }
+    }
+
+    return $docs;
 }
 
 /** @return bool true when the token before index $i is `new` or `::`, so the keyword names no declaration */

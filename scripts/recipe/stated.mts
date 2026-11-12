@@ -57,17 +57,27 @@ class Language {
   private readonly parents = new Map<string, ClassRef[]>();
   private readonly children = new Map<string, ClassRef[]>();
   private readonly properties = new Map<string, ClassRef>();
+  /** The class inside the written list type of a property, by the key of the property. */
+  private readonly propertyItems = new Map<string, ClassRef>();
+  /** The class inside the written list type of a parameter, by the key of its scope and its name. */
+  private readonly parameterItems = new Map<string, ClassRef>();
   private readonly unitClass = new Map<string, ClassRef>();
   private readonly envs = new Map<string, Map<string, ClassRef>>();
 
   constructor(lang: Lang, spec: Spec, sources: Sources) {
     this.lang = lang;
-    for (const s of sources.scopes) this.scopes.set(scopeKey(s), s);
+    for (const s of sources.scopes) {
+      this.scopes.set(scopeKey(s), s);
+      for (const p of s.parameters) if (p.items !== undefined) this.parameterItems.set(`${scopeKey(s)}::${p.name}`, p.items);
+    }
     for (const c of sources.classes) {
       const key = refKey(c);
       this.parents.set(key, c.extends);
       for (const p of c.extends) this.children.set(refKey(p), [...(this.children.get(refKey(p)) ?? []), { file: c.file, name: c.name }]);
-      for (const p of c.properties) if (p.type !== undefined) this.properties.set(`${key}::${p.name}`, p.type);
+      for (const p of c.properties) {
+        if (p.type !== undefined) this.properties.set(`${key}::${p.name}`, p.type);
+        if (p.items !== undefined) this.propertyItems.set(`${key}::${p.name}`, p.items);
+      }
     }
     const byFile = new Map<string, string[]>();
     for (const c of sources.classes) byFile.set(c.file, [...(byFile.get(c.file) ?? []), c.name]);
@@ -151,7 +161,7 @@ class Language {
   }
 
   /** The keys of the member `name` of a class: the nearest class of its family upwards that has it, and the classes that extend it. */
-  lookup(ref: ClassRef, name: string, down = true): string[] {
+  lookup(ref: ClassRef, name: string, down = true, has = (key: string): boolean => this.members.has(key) || this.scopes.has(key)): string[] {
     const found: string[] = [];
     const seen = new Set<string>();
     const queue = [ref];
@@ -160,7 +170,7 @@ class Language {
       if (c === undefined || seen.has(refKey(c))) continue;
       seen.add(refKey(c));
       const key = memberKey(c.file, c.name, name);
-      if (this.members.has(key) || this.scopes.has(key)) {
+      if (has(key)) {
         found.push(key);
         break;
       }
@@ -174,7 +184,7 @@ class Language {
       if (c === undefined || done.has(refKey(c))) continue;
       done.add(refKey(c));
       const key = memberKey(c.file, c.name, name);
-      if ((this.members.has(key) || this.scopes.has(key)) && !found.includes(key)) found.push(key);
+      if (has(key) && !found.includes(key)) found.push(key);
       below.push(...(this.children.get(refKey(c)) ?? []));
     }
     return found;
@@ -207,8 +217,9 @@ class Language {
         if (key === undefined) return undefined;
         const written = this.properties.get(key);
         if (written !== undefined) return { kind: 'class', ref: written };
-        const output = this.members.get(key)?.output;
-        const ref = (output === undefined ? undefined : this.termClass(output)) ?? (e.call ? this.scopes.get(key)?.returns : undefined);
+        // A member of the spec has the class of its output; another function has the class of its written return type.
+        const member = this.members.get(key);
+        const ref = member !== undefined ? this.termClass(member.output) : e.call ? this.scopes.get(key)?.returns : undefined;
         return ref === undefined ? undefined : { kind: 'class', ref };
       }
       case 'either': {
@@ -225,9 +236,33 @@ class Language {
     }
   }
 
-  /** The class of the items of a loop over an expression: the class inside the `list` or `map` of the output of a member. */
+  /** The written list class of a property `name` of a class: of the nearest class of its family upwards that has it. */
+  private propertyItemsOf(ref: ClassRef, name: string): ClassRef | undefined {
+    const seen = new Set<string>();
+    const queue = [ref];
+    while (queue.length > 0) {
+      const c = queue.shift();
+      if (c === undefined || seen.has(refKey(c))) continue;
+      seen.add(refKey(c));
+      const found = this.propertyItems.get(`${refKey(c)}::${name}`);
+      if (found !== undefined) return found;
+      queue.push(...(this.parents.get(refKey(c)) ?? []));
+    }
+    return undefined;
+  }
+
+  /**
+   * The class of the items of a loop over an expression: the class inside the written list type of a parameter or a
+   * property, or inside the `list` or `map` of the output of a member.
+   */
   private elementOf(e: Expr, s: Scope, env: Map<string, ClassRef>): ClassRef | undefined {
+    if (e.kind === 'variable') return this.parameterItems.get(`${scopeKey(s)}::${e.name}`);
     if (e.kind !== 'member') return undefined;
+    if (!e.call) {
+      const of = this.classOf(this.value(e.of, s, env));
+      const items = of === undefined ? undefined : this.propertyItemsOf(of, e.name);
+      if (items !== undefined) return items;
+    }
     const [key] = this.keys(e, s, env);
     const output = key === undefined ? undefined : this.members.get(key)?.output;
     const inner = output === undefined ? undefined : element(output);
@@ -245,6 +280,8 @@ class Language {
       const key = memberKey(of.file, '', e.name);
       return this.members.has(key) || this.scopes.has(key) ? [key] : [];
     }
+    // PHP keeps the properties and the methods of a class apart: a read without a call reaches only a property.
+    if (this.lang === 'php' && !e.call) return this.lookup(of.ref, e.name, true, (key) => this.members.get(key)?.kind.endsWith('property') === true);
     return this.lookup(of.ref, e.name);
   }
 

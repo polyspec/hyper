@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { applyMutation, readMutations, track } from '../../scripts/recipe/mutations.mts';
 import { checkStated } from '../../scripts/recipe/stated.mts';
-import type { ClassRef, Expr, Lang, Member, Scope, SourceClass, Sources, Spec, Unit } from '../../scripts/recipe/types.mts';
+import type { ClassRef, Expr, Lang, Member, Parameter, Scope, SourceClass, Sources, Spec, Unit } from '../../scripts/recipe/types.mts';
 import { validators } from '../../scripts/recipe/validators.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -510,7 +510,7 @@ const cls = (unit: string): string => `${unit.charAt(0).toUpperCase()}${unit.sli
 function stated(
   units: Written[],
   named: string[],
-  scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr; ref: (unit: string) => ClassRef }) => { unit: string; method: string; uses?: Expr[]; assigns?: Scope['assigns']; loops?: Scope['loops']; returns?: ClassRef }[],
+  scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr; ref: (unit: string) => ClassRef }) => { unit: string; method: string; uses?: Expr[]; assigns?: Scope['assigns']; loops?: Scope['loops']; returns?: ClassRef; parameters?: Parameter[] }[],
 ): { findings: string[] } {
   const specUnits: Unit[] = units.map((w) => ({
     id: w.unit,
@@ -554,7 +554,7 @@ function stated(
       file: FILE[lang](s.unit),
       name: `${cls(s.unit)}.${s.method === 'constructor' && lang === 'php' ? '__construct' : s.method}`,
       class: cls(s.unit),
-      parameters: [],
+      parameters: s.parameters ?? [],
       uses: s.uses ?? [],
       assigns: s.assigns ?? [],
       loops: s.loops ?? [],
@@ -684,10 +684,79 @@ test('a call of a function that no member of the spec is has the class of its wr
   assert.deepEqual(stated(units, ['box.run'], run).findings, []);
 });
 
-test('the Node reader reads an interface as a class that a class implements, and a parameter of its type', () => {
+test('the Node reader reads an interface as a class that a class implements, with its typed properties, and a parameter of its type', () => {
   const out = readCopy('node', path.join(fixture, 'readers', 'node'), ['--sources', 'src', '--tests', 'tests']);
   const sized: ClassRef = { file: 'src/sized.ts', name: 'Sized' };
-  assert.deepEqual(out.classes.find((c) => c.name === 'Sized'), { ...sized, extends: [], properties: [] });
+  assert.deepEqual(out.classes.find((c) => c.name === 'Sized'), { ...sized, extends: [], properties: [{ name: 'next', type: sized }, { name: 'count' }] });
   assert.deepEqual(out.classes.find((c) => c.name === 'Widget')?.extends, [sized]);
   assert.deepEqual(out.scopes.find((s) => s.name === 'Receivers.sized')?.parameters, [{ name: 'item', type: sized }]);
+});
+
+test('each reader writes the class inside a written list type of a parameter, PHP in the doc comment', () => {
+  for (const lang of ['php', 'node', 'python'] as const) {
+    const out = readCopy(lang, path.join(fixture, 'readers', lang), ['--sources', 'src', '--tests', 'tests']);
+    const widget: ClassRef = { file: READER_FILES[lang].widget, name: 'Widget' };
+    const scope = out.scopes.find((s) => s.file === READER_FILES[lang].receivers && s.name === 'Receivers.listed');
+    assert.deepEqual(scope?.parameters, [{ name: 'widgets', items: widget }, { name: 'others', items: widget }], lang);
+  }
+});
+
+test('the variable of a loop over a parameter whose written type is a list of a class has that class', () => {
+  const run = (_lang: 'php' | 'node', e: { ref: (unit: string) => ClassRef }): ReturnType<Parameters<typeof stated>[2]> => [
+    {
+      unit: 'box',
+      method: 'run',
+      parameters: [{ name: 'items', items: e.ref('item') }],
+      loops: [{ variable: 'it', over: { kind: 'variable', name: 'items' } }],
+      uses: [{ kind: 'member', of: { kind: 'variable', name: 'it' }, name: 'size', call: true }],
+    },
+  ];
+  assert.deepEqual(stated(BOX, ['box.run', 'box.all'], run).findings, []);
+});
+
+test('the PHP reader reads a method whose name is a keyword, and a call of it', () => {
+  const out = readCopy('php', path.join(fixture, 'readers', 'php'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'Receivers.match');
+  assert.deepEqual(scope?.uses, [{ kind: 'member', of: { kind: 'own' }, name: 'xor', call: true }]);
+  assert.ok(out.scopes.some((s) => s.name === 'Receivers.xor'), 'no scope Receivers.xor');
+});
+
+test('the Node reader reads a name that an object pattern binds as a read of the property of that name', () => {
+  const out = readCopy('node', path.join(fixture, 'readers', 'node'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'Receivers.sized');
+  assert.deepEqual(scope?.assigns, [
+    { target: 'kept', value: { kind: 'member', of: { kind: 'own' }, name: 'kept', call: false } },
+    { target: 'renamed', value: { kind: 'member', of: { kind: 'own' }, name: 'other', call: false } },
+  ]);
+});
+
+test('the Python reader reads a generic base class with its arguments as the class that a class extends', () => {
+  const out = readCopy('python', path.join(fixture, 'readers', 'python'), ['--sources', 'src', '--tests', 'tests']);
+  assert.deepEqual(out.classes.find((c) => c.name === 'Widgets')?.extends, [{ file: 'src/receivers.py', name: 'Listed' }]);
+});
+
+test('a PHP read of a property reaches no method of that name, because PHP keeps properties and methods apart', () => {
+  const units: Written[] = [
+    {
+      unit: 'box',
+      members: [
+        { name: 'run', kind: 'method', visibility: 'public' },
+        { name: 'query', kind: 'method', visibility: 'internal' },
+      ],
+    },
+  ];
+  const run = (): ReturnType<Parameters<typeof stated>[2]> => [
+    { unit: 'box', method: 'run', uses: [{ kind: 'member', of: { kind: 'own' }, name: 'query', call: false }] },
+    { unit: 'box', method: 'query' },
+  ];
+  assert.deepEqual(
+    stated(units, ['box.run'], run).findings.filter((f) => f.includes('box.query')),
+    ['MEMBER_UNREACHED internal member box.query is named by no section and reached by no stated member in php'],
+  );
+});
+
+test('the Node reader writes the call of the parent constructor in the constructor that a class without one has', () => {
+  const out = readCopy('node', path.join(fixture, 'readers', 'node'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'Bigger.constructor');
+  assert.deepEqual(scope?.uses, [{ kind: 'member', of: { kind: 'parent' }, name: 'constructor', call: true }]);
 });
