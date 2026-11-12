@@ -1,6 +1,8 @@
+# The package is the host code of src/ with the native module of the Rust core, which maturin builds from native/
+# (binding L-2a); the range of maturin is the one that the binding scaffold writes for every binding package.
 [build-system]
-requires = ["setuptools==84.2.1"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.16,<2"]
+build-backend = "maturin"
 
 [project]
 name = "polyspec-hyper-server"
@@ -20,15 +22,13 @@ dependencies = [
 [dependency-groups]
 dev = ["redis==8.1.0"]
 
-[tool.setuptools]
-package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-"polyspec.hyper" = ["py.typed"]
+# The native module of the core is polyspec.hyper.server._native, built from the crate of native/; the host code,
+# with its py.typed, is the Python source of src/.
+[tool.maturin]
+module-name = "polyspec.hyper.server._native"
+manifest-path = "native/Cargo.toml"
+python-source = "src"
 
 # uv reuses a built package until a cache key changes, so a new source file content must be a key of the install.
 [tool.uv]
-cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*" }]
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*" }, { file = "native/**/*" }, { file = "../rust/src/**/*" }]

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 27fdf6418d555f8c1c61c6aac440c985f636cc92812e8dc774e0ed2c050f6131 -->
+<!-- source-sha256: 15589f2b950a5bb22e51ef19199bb5f297dcca4113dee752daa6d7465150a8f2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Python과 Node host package의 manifest가 native module에 필요한 것을 갖춘다(binding L-2a). `packages/server/python/pyproject.toml`은 setuptools 대신 maturin으로 `native/Cargo.toml`의 native module `polyspec.hyper.server._native`와 `src/`의 host 코드를 build하고, `packages/server/ts/package.json`은 `native/generated/*.node`를 담는다. `docs/operations/dependencies.md`가 maturin의 범위를 적는다. Python package는 binding 생성기가 native module의 source를 쓰고 host 코드가 `polyspec.hyper.server`로 옮겨질 때까지 build되지 않는다. 계약 검사는 PHP 확장 package의 manifest에 대해서만 CK-19를 보고하며, scaffold가 `packages/server/php/native/`를 지원하면 그 manifest를 쓴다(C-7).
 
 - Rust core와 그 interface 계약이 component를 가진 저장소의 이름을 쓴다(binding P-1). crate는 `polyspec-hyper-server`, 라이브러리는 `polyspec_hyper_server`이고, 계약은 라이브러리 hyper-server, Composer `polyspec/hyper-server`와 PHP namespace `Polyspec\Hyper\Server`, PyPI `polyspec-hyper-server`와 Python module `polyspec.hyper.server`, npm `@polyspec/hyper-server`를 이름하며, binding crate는 `polyspec-hyper-server-python`, `polyspec-hyper-server-node`, `polyspec-hyper-server-php-ext`, PHP 확장은 `polyspec_hyper_server`다. 오류 class는 이름 `Hyper<Category>Error`를 유지한다. 계약은 host 코드가 `Polyspec\Hyper`와 `polyspec.hyper`에서 옮겨 가는 것을 change로 적으며, 세 server의 host 코드는 아직 옮기지 않았다(C-7).
 
