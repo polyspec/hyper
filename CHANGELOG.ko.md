@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 771bde9eac7ac65fdf4cd51b7845bab9b6dfa8350d0b5ca561503b337876b3aa -->
+<!-- source-sha256: 8eba50890d65dd7947484b91c76ef6fa10d268efb62151d98bc4258bb50b4644 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `package.json`, npm lock, `pyproject.toml`, `uv.lock`의 php-serialize release asset URL은 `polyspec/php-serialize`의 새 이름인 저장소 `polyspec/php-serialization`을 가리킨다. asset과 그 integrity는 같다(H28.20).
 
 ## 0.0.40
 

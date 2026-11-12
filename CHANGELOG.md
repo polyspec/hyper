@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The URLs of the php-serialize release assets in `package.json`, the npm locks, `pyproject.toml` and `uv.lock` name the repository `polyspec/php-serialization`, the new name of `polyspec/php-serialize`; the assets and their integrity are the same (H28.20).
+
 ## 0.0.40
 
 - `config/rebuild.json` classifies the files that H28.13, H28.15 and H28.16 added: the two module scripts of the board example and the parts and the scope readers of the recipe check, so `make rebuild-check` passes; it failed on these nine files in the CI run of the version commit of 0.0.40.

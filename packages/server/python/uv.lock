@@ -54,7 +54,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "polyspec-php-serialize", url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl" },
+    { name = "polyspec-php-serialize", url = "https://github.com/polyspec/php-serialization/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl" },
     { name = "polyspec-template", url = "https://github.com/polyspec/template/releases/download/v0.0.27/polyspec_template-0.0.27-py3-none-any.whl" },
 ]
 
@@ -64,9 +64,9 @@ dev = [{ name = "redis", specifier = "==8.1.0" }]
 [[package]]
 name = "polyspec-php-serialize"
 version = "0.0.6"
-source = { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl" }
+source = { url = "https://github.com/polyspec/php-serialization/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl" }
 wheels = [
-    { url = "https://github.com/polyspec/php-serialize/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl", hash = "sha256:00d8022dd33432532dbbbd3bed072e33d9243784b5454ddc814f867be14bc716" },
+    { url = "https://github.com/polyspec/php-serialization/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl", hash = "sha256:00d8022dd33432532dbbbd3bed072e33d9243784b5454ddc814f867be14bc716" },
 ]
 
 [[package]]
