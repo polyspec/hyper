@@ -1230,9 +1230,9 @@
                   "id": "HY-116.12"
                 },
                 {
-                  "en": "A request that matches none of the types receives status 406 with `Content-Type: text/plain; charset=utf-8`, `Vary: Accept` and a body that lists the types that its path serves, each on a line that ends with a line feed, in the order `text/html`, `application/vnd.hyper+json` and the declared order; a declared type is listed once for each combination of one served value of every required parameter, ordered by the values of the first parameter of `parameters`, then of the next, and written as the `Content-Type` of HY-119.",
-                  "ko": "어떤 type에도 맞지 않는 요청은 상태 406, `Content-Type: text/plain; charset=utf-8`, `Vary: Accept`, 그리고 그 경로가 제공하는 type을 한 줄에 하나씩, 각 줄을 line feed로 끝내어 나열한 body를 받는다. 순서는 `text/html`, `application/vnd.hyper+json`, 선언 순서다. 선언된 type은 모든 필수 매개변수의 제공 값 하나씩으로 이루어진 조합마다 한 번 나열하며, 조합은 `parameters`의 첫 매개변수의 값 순서, 그다음 매개변수의 값 순서로 정렬하고, HY-119의 `Content-Type`으로 쓴다.",
-                  "koSource": "79f28e828c261d7b1606e9abe21a38e227be008c1146271a42e001df70035565",
+                  "en": "A request that matches none of the types receives status 406 with `Content-Type: text/plain; charset=utf-8`, `Vary: Accept` and a body that lists the types that its path serves, each on a line that ends with a line feed, in the order `text/html`, `application/vnd.hyper+json` and the declared order; a declared type is listed once for each combination of one served value of every required parameter, in the order in which `parameters` lists the served values of the first parameter, then of the next, which is the declared order and no sorted order, and written as the `Content-Type` of HY-119.",
+                  "ko": "어떤 type에도 맞지 않는 요청은 상태 406, `Content-Type: text/plain; charset=utf-8`, `Vary: Accept`, 그리고 그 경로가 제공하는 type을 한 줄에 하나씩, 각 줄을 line feed로 끝내어 나열한 body를 받는다. 순서는 `text/html`, `application/vnd.hyper+json`, 선언 순서다. 선언된 type은 모든 필수 매개변수의 제공 값 하나씩으로 이루어진 조합마다 한 번 나열하며, 조합은 `parameters`가 첫 매개변수의 제공 값을 나열한 순서, 그다음 매개변수의 순서를 따르며(정렬하지 않은 선언 순서), HY-119의 `Content-Type`으로 쓴다.",
+                  "koSource": "1fa85b91c5ab3a3e0c4079650a502bb78afac7104074a60007095194e3872d24",
                   "id": "HY-116.13"
                 },
                 {
@@ -5090,27 +5090,27 @@
                   "statements": [
                     {
                       "id": "HY-54.18",
-                      "en": "Every server writes JSON text with the serializer of ordered-json, the one JSON serializer of polyspec, and writes each number of the data model as VAL-9 of the template data model states, so the text of a value is the same bytes in every runtime.",
-                      "ko": "모든 server는 polyspec의 유일한 JSON 직렬화기인 ordered-json의 직렬화기로 JSON 텍스트를 쓰고, 데이터 모델의 수는 template 데이터 모델의 VAL-9대로 쓰므로, 한 값의 텍스트는 모든 runtime에서 같은 바이트다.",
-                      "koSource": "b2e15e46b5048257e4f125a63409f86ad0c1826503b870e7eeab4f046c3240bc"
+                      "en": "Every server writes JSON text with the serializer of ordered-json, the one JSON serializer of polyspec (RQ-011, RQ-034), and writes each number of the data model as VAL-9 of the template data model states, which is the number token of RQ-030, so the text of a value is the same bytes in every runtime.",
+                      "ko": "모든 server는 polyspec의 유일한 JSON 직렬화기인 ordered-json의 직렬화기로 JSON 텍스트를 쓰고(RQ-011, RQ-034), 데이터 모델의 수는 template 데이터 모델의 VAL-9, 곧 RQ-030의 수 token으로 쓰므로, 한 값의 텍스트는 모든 runtime에서 같은 바이트다.",
+                      "koSource": "bffb21e1385b3e0633605916e6000c9518310421682f1407d049e00a49c130fa"
                     },
                     {
                       "id": "HY-54.19",
-                      "en": "A string escapes `\"`, `\\` and the control characters U+0000 to U+001F, the characters that RFC 8259, section 7, requires to escape, and no other character, so U+2028 and U+2029 are written as themselves.",
-                      "ko": "문자열은 RFC 8259 7절이 escape를 요구하는 `\"`, `\\`, 제어 문자 U+0000부터 U+001F만 escape하고 다른 문자는 escape하지 않으므로, U+2028과 U+2029는 그대로 쓴다.",
-                      "koSource": "cc93313b62b3c0efe55f2bb2a678199237bf74d65f9aed5202fdc9ecc1649c57"
+                      "en": "A string escapes `\"`, `\\` and the control characters U+0000 to U+001F, the characters that RFC 8259, section 7, requires to escape, and no other character, as the string writer of ordered-json does (RQ-028), so U+2028 and U+2029 are written as themselves.",
+                      "ko": "문자열은 ordered-json의 문자열 쓰기처럼(RQ-028) RFC 8259 7절이 escape를 요구하는 `\"`, `\\`, 제어 문자 U+0000부터 U+001F만 escape하고 다른 문자는 escape하지 않으므로, U+2028과 U+2029는 그대로 쓴다.",
+                      "koSource": "70681778da7a9e540305dd3a839e0f18ec879c6d42f329af2dfc4e6b7c1c87e9"
                     },
                     {
                       "id": "HY-54.20",
-                      "en": "A server reads a JSON text, such as a kept value (HY-38, HY-40) or the body of a representation request (HY-121), with `parse` of ordered-json, which refuses a text with more than 256 nested containers (RQ-006), and converts its value to the data model as VAL-12 of the template data model states, so a number outside ±(2^53 − 1) or not finite (VAL-2), a string that is not UTF-8 text, an escaped lone surrogate included, and a value deeper than 64 levels (VAL-20) fail with the error of the data model.",
-                      "ko": "server는 kept 값(HY-38, HY-40)이나 representation 요청의 body(HY-121) 같은 JSON 텍스트를 중첩 container가 256개를 넘는 텍스트를 거부하는(RQ-006) ordered-json의 `parse`로 읽고, 그 값을 template 데이터 모델의 VAL-12대로 데이터 모델로 바꾼다. 그래서 ±(2^53 − 1) 밖이거나 유한하지 않은 수(VAL-2), escape된 짝 없는 surrogate를 포함해 UTF-8 텍스트가 아닌 문자열, 64단계보다 깊은 값(VAL-20)은 데이터 모델의 오류로 실패한다.",
-                      "koSource": "6cf9da928fe25fc3041a96d17eab2ba4266f6f4d1bdd73d1b63e50679de13af2"
+                      "en": "A server reads a JSON text, such as a kept value (HY-38, HY-40) or the body of a representation request (HY-121), with `parse` of ordered-json, which takes UTF-8 bytes (RQ-026, RQ-007) and refuses a text with more than 256 nested containers (RQ-006, RQ-035), and converts its value to the data model as VAL-12 of the template data model states, so a number outside ±(2^53 − 1) or not finite (VAL-2), a string that is not UTF-8 text, an escaped lone surrogate included, and a value deeper than 64 levels (VAL-20) fail with the error of the data model.",
+                      "ko": "server는 kept 값(HY-38, HY-40)이나 representation 요청의 body(HY-121) 같은 JSON 텍스트를 중첩 container가 256개를 넘는 텍스트를 거부하는(RQ-026, RQ-007, RQ-006, RQ-035) ordered-json의 `parse`로 읽고, 그 값을 template 데이터 모델의 VAL-12대로 데이터 모델로 바꾼다. 그래서 ±(2^53 − 1) 밖이거나 유한하지 않은 수(VAL-2), escape된 짝 없는 surrogate를 포함해 UTF-8 텍스트가 아닌 문자열, 64단계보다 깊은 값(VAL-20)은 데이터 모델의 오류로 실패한다.",
+                      "koSource": "856e99eb09e3480fc567bfd588cbcd736f91e080839c39a0c1d0d086e7b5d175"
                     },
                     {
                       "id": "HY-54.21",
-                      "en": "A text that ordered-json refuses fails with kind `malformed_json`, whose source is the rejection of ordered-json, and the reading limit of 256 and the depth of 64 of the data model are two limits with two kinds, because a text deeper than 256 levels is refused before it gives a value.",
-                      "ko": "ordered-json이 거부하는 텍스트는 kind `malformed_json`으로 실패하며 그 원인은 ordered-json의 거부다. 읽기 한도 256과 데이터 모델의 깊이 64는 kind가 다른 두 한도다. 256단계보다 깊은 텍스트는 값을 주기 전에 거부되기 때문이다.",
-                      "koSource": "26330434f07dc9acb88fc835a13c05ad426ea27d1a9a8f64c26bcffbcffdd9e9"
+                      "en": "A text that ordered-json refuses fails with kind `malformed_json`, whose source is the rejection of ordered-json with its kind and byte offset (RQ-004, RQ-005, RQ-033), and the reading limit of 256 and the depth of 64 of the data model are two limits with two kinds, because a text deeper than 256 levels is refused before it gives a value.",
+                      "ko": "ordered-json이 거부하는 텍스트는 kind `malformed_json`으로 실패하며 그 원인은 kind와 byte offset을 가진 ordered-json의 거부다(RQ-004, RQ-005, RQ-033). 읽기 한도 256과 데이터 모델의 깊이 64는 kind가 다른 두 한도다. 256단계보다 깊은 텍스트는 값을 주기 전에 거부되기 때문이다.",
+                      "koSource": "b2cb322107596eaf78ba902ace03df2d0303f0921f36746caa0c7dd33002e97f"
                     }
                   ],
                   "blocks": []
@@ -5782,8 +5782,8 @@
                     "ko": "`value`"
                   },
                   {
-                    "en": "HY-69.7",
-                    "ko": "HY-69.7"
+                    "en": "HY-69.8",
+                    "ko": "HY-69.8"
                   }
                 ],
                 [
@@ -5838,24 +5838,6 @@
                   {
                     "en": "HY-52.16",
                     "ko": "HY-52.16"
-                  }
-                ],
-                [
-                  {
-                    "en": "`invalid_number`",
-                    "ko": "`invalid_number`"
-                  },
-                  {
-                    "en": "none",
-                    "ko": "없음"
-                  },
-                  {
-                    "en": "`value`",
-                    "ko": "`value`"
-                  },
-                  {
-                    "en": "HY-52.14, HY-69.7",
-                    "ko": "HY-52.14, HY-69.7"
                   }
                 ],
                 [
@@ -6169,7 +6151,8 @@
             3,
             10,
             11,
-            12
+            12,
+            14
           ],
           "blocks": [
             {
@@ -6230,10 +6213,10 @@
                   "koSource": "610eb1a61386c2c5835af43268b074948194c2d397e6564e32caffa42c821d90"
                 },
                 {
-                  "id": "HY-52.14",
-                  "en": "A `Max-Age` is an integer of the interface contract that is not negative and within ±(2^53 − 1), so a float, a bool and a string are no `Max-Age` and fail with kind `invalid_number` of the binding, and an integer outside ±(2^53 − 1) fails with kind `invalid_number` of hyper.",
-                  "ko": "`Max-Age`는 음수가 아니고 ±(2^53 − 1) 안인 interface 계약의 정수이므로, float, bool, 문자열은 `Max-Age`가 아니며 binding의 kind `invalid_number`로 실패하고, ±(2^53 − 1) 밖의 정수는 hyper의 kind `invalid_number`로 실패한다.",
-                  "koSource": "e6eaccbffda4403d9e9ca70cc31e9341941297c0172b62085a51f26771d4c081"
+                  "id": "HY-52.17",
+                  "en": "A `Max-Age` is an integer of the interface contract that is not negative, so a value that the binding does not take as an integer, such as a float in PHP and Python, a bool, a string or a Node number outside ±(2^53 − 1), fails with kind `invalid_number` of the binding (B-2), and hyper makes no other check of its range.",
+                  "ko": "`Max-Age`는 음수가 아닌 interface 계약의 정수이므로, PHP와 Python의 float, bool, 문자열, ±(2^53 − 1) 밖의 Node 수처럼 binding이 정수로 받지 않는 값은 binding의 kind `invalid_number`로 실패하고(B-2), hyper는 그 범위를 따로 검사하지 않는다.",
+                  "koSource": "66bfc09a92746f31ceb1e699be0fbe2164f7d46d4a1dee7138fb4c71b3c7d1b4"
                 },
                 {
                   "id": "HY-52.15",
@@ -6915,7 +6898,8 @@
           "kind": "rule",
           "id": "HY-69",
           "retired": [
-            6
+            6,
+            7
           ],
           "blocks": [
             {
@@ -6952,10 +6936,10 @@
                   "koSource": "a8cacf52b7f32dcf2b06779e44a924d668d8f701a6d9c07e67f7a9eccfc39c2e"
                 },
                 {
-                  "id": "HY-69.7",
-                  "en": "A status that is not an integer within ±(2^53 − 1) fails with kind `invalid_number`, and another integer fails with kind `reply_status_not_allowed` and the message `page status <status> of a reply is not 403 (HY-69)`, where `<status>` is the integer in decimal digits.",
-                  "ko": "±(2^53 − 1) 안의 정수가 아닌 상태는 kind `invalid_number`로 실패하고, 다른 정수는 kind `reply_status_not_allowed`와 message `page status <status> of a reply is not 403 (HY-69)`로 실패한다. `<status>`는 십진수로 쓴 정수다.",
-                  "koSource": "98ff259990ecef122770b6300ab0e9138da788c070a9b3c36d9d78f9e2986c4d"
+                  "id": "HY-69.8",
+                  "en": "A status that the binding does not take as an integer fails with kind `invalid_number` of the binding (B-2), and another integer fails with kind `reply_status_not_allowed` and the message `page status <status> of a reply is not 403 (HY-69)`, where `<status>` is the integer in decimal digits.",
+                  "ko": "binding이 정수로 받지 않는 상태는 binding의 kind `invalid_number`로 실패하고(B-2), 다른 정수는 kind `reply_status_not_allowed`와 message `page status <status> of a reply is not 403 (HY-69)`로 실패한다. `<status>`는 십진수로 쓴 정수다.",
+                  "koSource": "b2c401d686b0c31e465e4129a81af92bc77e0d9f6b5bd1c9f203f08afa2539db"
                 }
               ]
             }

@@ -229,7 +229,7 @@ fn reply_cookies() {
 
 #[test]
 fn reply_cache_control_referrer_policy_and_status() {
-    // HY-52.6, HY-52.16, HY-103.2, HY-103.9, HY-69.7
+    // HY-52.6, HY-52.16, HY-103.2, HY-103.9, HY-69.8
     let file = cases("reply.json");
     for (name, group_name) in [
         ("cacheControl", "cacheControl"),

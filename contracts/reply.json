@@ -127,7 +127,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.14"
+        "sentence": "HY-52.17"
       }
     },
     {
@@ -154,7 +154,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.14"
+        "sentence": "HY-52.17"
       }
     },
     {
@@ -177,7 +177,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.14"
+        "sentence": "HY-52.17"
       }
     },
     {
@@ -204,7 +204,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.14"
+        "sentence": "HY-52.17"
       }
     },
     {
@@ -495,8 +495,8 @@
       }
     },
     {
-      "id": "a_max_age_above_the_safe_range_is_not_an_integer",
-      "label": "a max age above the safe range is not an integer",
+      "id": "a_max_age_above_the_safe_range_is_not_an_integer_in_node",
+      "label": "a max age above the safe range is not an integer in Node, whose binding takes a safe integer only (B-2)",
       "calls": [
         [
           "cookie",
@@ -512,11 +512,41 @@
         "status": null,
         "category": "value",
         "message": null
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-52.17"
       }
     },
     {
-      "id": "a_negative_max_age_outside_the_safe_range_fails_with_its_type",
-      "label": "a negative max age outside the safe range fails with its type",
+      "id": "a_max_age_above_the_safe_range_is_written_in_php_and_python",
+      "label": "a max age of 2^53 is an integer of PHP and Python, which hyper writes as it is (HY-52.17)",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "9007199254740992"
+          ]
+        ]
+      ],
+      "headers": [
+        "a=b; Max-Age=9007199254740992; Path=/; HttpOnly; SameSite=Lax"
+      ],
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-52.17"
+      }
+    },
+    {
+      "id": "a_negative_max_age_outside_the_safe_range_fails_with_its_type_in_node",
+      "label": "a negative max age outside the safe range fails with its type in Node, whose binding takes a safe integer only (B-2)",
       "calls": [
         [
           "cookie",
@@ -532,6 +562,39 @@
         "status": null,
         "category": "value",
         "message": null
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-52.17"
+      }
+    },
+    {
+      "id": "a_negative_max_age_outside_the_safe_range_is_negative_in_php_and_python",
+      "label": "a max age of -2^53 is a negative integer of PHP and Python (HY-52.16)",
+      "calls": [
+        [
+          "cookie",
+          [
+            "\"a\"",
+            "\"b\"",
+            "-9007199254740992"
+          ]
+        ]
+      ],
+      "raises": {
+        "kind": "negative_max_age",
+        "status": null,
+        "category": "value",
+        "message": "cookie a has a negative Max-Age (HY-52)"
+      },
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-52.17"
       }
     },
     {
@@ -1257,7 +1320,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.14"
+        "sentence": "HY-52.17"
       }
     },
     {
@@ -1282,7 +1345,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.14"
+        "sentence": "HY-52.17"
       }
     },
     {
@@ -1342,7 +1405,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.14"
+        "sentence": "HY-52.17"
       }
     },
     {
@@ -1367,7 +1430,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.14"
+        "sentence": "HY-52.17"
       }
     },
     {
@@ -1443,8 +1506,8 @@
       }
     },
     {
-      "id": "a_status_above_the_safe_range_fails_with_its_type",
-      "label": "a status above the safe range fails with its type",
+      "id": "a_status_above_the_safe_range_fails_with_its_type_in_node",
+      "label": "a status above the safe range fails with its type in Node, whose binding takes a safe integer only (B-2)",
       "calls": [
         [
           "status",
@@ -1458,6 +1521,37 @@
         "status": null,
         "category": "value",
         "message": null
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-52.17"
+      }
+    },
+    {
+      "id": "a_status_above_the_safe_range_is_not_403_in_php_and_python",
+      "label": "a status of 2^53 + 1 is an integer of PHP and Python that is not 403 (HY-69.8)",
+      "calls": [
+        [
+          "status",
+          [
+            "9007199254740993"
+          ]
+        ]
+      ],
+      "raises": {
+        "kind": "reply_status_not_allowed",
+        "status": null,
+        "category": "value",
+        "message": "page status 9007199254740993 of a reply is not 403 (HY-69)"
+      },
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-52.17"
       }
     }
   ],

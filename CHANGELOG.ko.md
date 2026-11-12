@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b74d8ef8917019f57993883942789681d3b6f49590ef16016c58c4924fe3aaac -->
+<!-- source-sha256: 392dbac7cb15671463e00a069595bf15885f0d93a90e009291572fb30d2bdc82 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- hyper는 reply의 `Max-Age`와 page 상태의 범위를 따로 검사하지 않는다. binding이 정수로 받지 않는 값은 `invalid_number`로 거부하므로(HY-52.17, HY-69.8) Node는 2^53을 거부하고 PHP와 Python은 그것을 쓰거나 다른 정수로 거부하며, `contracts/reply.json`의 case 셋을 runtime별로 나눈다. kind `invalid_number`는 HY-132의 표에서 빠진다. 406 목록은 조합이 제공 값의 선언 순서를 따른다고 적고(HY-116.13), JSON 규칙은 HY-54.18부터 HY-54.21에서 ordered-json의 요구(RQ-004부터 RQ-035)를 가리키며, interface 계약은 반환 타입 `uint`의 `page_status`와 `reply_status`를 선언한다(S-3b, C-7).
 
 - Rust core는 polyspec의 모든 core처럼 `polyspec-bindgen-core`를 bindgen의 Git 저장소에서 받으므로, core와 그 의존이 kind interface의 한 사본을 쓴다(C-7).
 

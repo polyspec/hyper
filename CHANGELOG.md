@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- hyper makes no range check of its own on a `Max-Age` or a page status of a reply: the binding refuses a value that it does not take as an integer with `invalid_number` (HY-52.17, HY-69.8), so Node refuses 2^53 while PHP and Python write it or refuse it as another integer, and the three cases of `contracts/reply.json` are split by runtime; the kind `invalid_number` leaves the table of HY-132. The 406 listing states that its combinations follow the declared order of the served values (HY-116.13), the JSON rules name the requirements of ordered-json (RQ-004 to RQ-035) in HY-54.18 to HY-54.21, and the interface contract declares `page_status` and `reply_status` with the return type `uint` (S-3b, C-7).
+
 - The Rust core takes `polyspec-bindgen-core` from the Git repository of bindgen, as every core of polyspec does, so that one copy of the kind interface serves the core and its dependencies (C-7).
 
 - The interface contract of hyper is `packages/server/rust/interface.json` in the schema of bindgen (C-7, design I-1): the packages `polyspec/hyper`, `polyspec-hyper` and `@polyspec/hyper`, the error classes `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError` and `HyperInternalError`, the kinds of HY-132 and those of http-negotiate and http-cookies that hyper passes on, the internal functions of the core that the hosts will call, the host functions `listener`, `server`, `run`, `create_server`, `create_wsgi` and `create_asgi` (HY-106.20), and the changes from the current API of S-3b. `docs/features.md` lists the rules that stay in the three servers until the core holds them and the servers call it (S-4).

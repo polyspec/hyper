@@ -116,10 +116,6 @@
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::InvalidNumber",
-        "category": "value"
-      },
-      {
         "variant": "polyspec_hyper::Error::CacheControlNotAllowed",
         "category": "value"
       },
@@ -604,6 +600,54 @@
           "core": "polyspec_hyper::etag::representation_tag"
         },
         {
+          "id": "rules.page_status",
+          "name": [
+            "page",
+            "status"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "status"
+              ],
+              "type": "int",
+              "required": true
+            }
+          ],
+          "returns": "uint",
+          "raises": [
+            "polyspec_hyper::Error::PageStatusNotAllowed"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::location::page_status"
+        },
+        {
+          "id": "rules.reply_status",
+          "name": [
+            "reply",
+            "status"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "status"
+              ],
+              "type": "int",
+              "required": true
+            }
+          ],
+          "returns": "uint",
+          "raises": [
+            "polyspec_hyper::Error::ReplyStatusNotAllowed"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::reply::status"
+        },
+        {
           "id": "rules.page_vary",
           "name": [
             "page",
@@ -1067,7 +1111,7 @@
     {
       "id": "argument-types",
       "rule": "HY-52.15",
-      "reason": "HY-52.15, HY-25.7, HY-60.32, HY-69.7, HY-103.9, B-2: an argument of another type is refused by the binding with invalid_argument_type or invalid_number, without a message of hyper",
+      "reason": "HY-52.15, HY-25.7, HY-60.32, HY-69.8, HY-103.9, B-2: an argument of another type is refused by the binding with invalid_argument_type or invalid_number, without a message of hyper",
       "symbol": "Reply.cookie, Reply.removeCookie, Reply.cacheControl, Reply.status, Reply.referrerPolicy, Reply.note, Result.flash, Result.changed",
       "from": {
         "php": "throws \\TypeError('a cookie name is not a string (HY-52)')",
@@ -1078,8 +1122,8 @@
     },
     {
       "id": "float-integer",
-      "rule": "HY-52.14",
-      "reason": "HY-52.14, B-2: a float is no integer of the interface contract in PHP and Python, so Max-Age 60.0 and status 403.0 fail with invalid_number",
+      "rule": "HY-52.17",
+      "reason": "HY-52.17, B-2: a float is no integer of the interface contract in PHP and Python, so Max-Age 60.0 and status 403.0 fail with invalid_number",
       "symbol": "Reply.cookie, Reply.status",
       "from": {
         "php": "cookie(string $name, string $value, int|float|null $maxAge = null)",
