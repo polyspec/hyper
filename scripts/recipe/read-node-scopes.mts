@@ -45,7 +45,7 @@ export class NodeFiles {
     const bindings = new Map<string, Binding>();
     const reexports = new Map<string, { from: string; name: string }>();
     for (const st of sf.statements) {
-      if (ts.isClassDeclaration(st) && st.name !== undefined) declared.set(st.name.text, { kind: 'class', file, name: st.name.text });
+      if ((ts.isClassDeclaration(st) || ts.isInterfaceDeclaration(st)) && st.name !== undefined) declared.set(st.name.text, { kind: 'class', file, name: st.name.text });
       if (ts.isFunctionDeclaration(st) && st.name !== undefined) declared.set(st.name.text, { kind: 'function', file, name: st.name.text });
       if (ts.isVariableStatement(st)) {
         for (const d of st.declarationList.declarations) {
@@ -121,6 +121,14 @@ class ScopeReader {
     this.files = files;
     this.file = file;
     this.out = { file, name, parameters: [], uses: [], assigns: [], loops: [], ...(cls === undefined ? {} : { class: cls }) };
+  }
+
+  /** Records the written return type of the function: one class, also inside `Promise<…>`; `this` is the own class. */
+  returns(node: ts.TypeNode | undefined): void {
+    let type = node;
+    if (type !== undefined && ts.isTypeReferenceNode(type) && ts.isIdentifier(type.typeName) && type.typeName.text === 'Promise') type = type.typeArguments?.[0];
+    const written = type !== undefined && type.kind === ts.SyntaxKind.ThisType && this.out.class !== undefined ? { file: this.file, name: this.out.class } : this.typeOf(type);
+    if (written !== undefined) this.out.returns = written;
   }
 
   classOfName(name: string): ClassRef | undefined {
@@ -263,6 +271,7 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
       if (ts.isFunctionDeclaration(st) && st.name !== undefined) {
         const scope = new ScopeReader(files, file, st.name.text, undefined);
         scope.parameters(st.parameters);
+        scope.returns(st.type);
         if (st.body !== undefined) scope.read(st.body);
         scopes.push(scope.out);
       }
@@ -280,9 +289,22 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
             continue;
           }
           const scope = new ScopeReader(files, file, d.name.text, undefined);
+          if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) scope.returns(init.type);
           scope.read(init);
           scopes.push(scope.out);
         }
+      }
+      if (ts.isInterfaceDeclaration(st)) {
+        // An interface is a class of the family of the classes that implement it; its members are the spec's.
+        const reader = new ScopeReader(files, file, st.name.text, undefined);
+        const extendsOf: ClassRef[] = [];
+        for (const clause of st.heritageClauses ?? []) {
+          for (const t of clause.types) {
+            const expr = reader.expression(t.expression);
+            if (expr.kind === 'class') extendsOf.push({ file: expr.file, name: expr.name });
+          }
+        }
+        classes.push({ file, name: st.name.text, extends: extendsOf, properties: [] });
       }
       if (ts.isClassDeclaration(st) && st.name !== undefined) {
         const cls = st.name.text;
@@ -320,6 +342,7 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
           if ((ts.isMethodDeclaration(m) || ts.isGetAccessorDeclaration(m) || ts.isSetAccessorDeclaration(m)) && (ts.isIdentifier(m.name) || ts.isPrivateIdentifier(m.name))) {
             const scope = new ScopeReader(files, file, `${cls}.${m.name.text}`, cls);
             scope.parameters(m.parameters);
+            scope.returns(m.type);
             if (m.body !== undefined) scope.read(m.body);
             scopes.push(scope.out);
           }

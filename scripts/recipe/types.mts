@@ -138,6 +138,8 @@ export type Scope = {
   uses: Expr[];
   assigns: { target: string | { own: string }; value: Expr; type?: ClassRef }[];
   loops: { variable: string; over: Expr }[];
+  /** The written return type of the function, when it names one class. */
+  returns?: ClassRef;
 };
 
 /** An entry of the registry of a runner: a section of a case file and the step that it maps it to. */

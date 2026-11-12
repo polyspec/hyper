@@ -250,6 +250,16 @@ class Scope:
             self.seen.add(key)
             self.out["uses"].append(expr)
 
+    def returns(self, node: ast.expr | None) -> None:
+        """Records the written return type of the function: one class, where `Self` is the class of the method."""
+        own = self.out.get("class")
+        is_self = (isinstance(node, ast.Name) and node.id == "Self") or (
+            isinstance(node, ast.Constant) and node.value == "Self"
+        )
+        written = {"file": self.rel, "name": own} if is_self and own is not None else self.type_of(node)
+        if written is not None:
+            self.out["returns"] = written
+
     def parameters(self, args: ast.arguments) -> None:
         for arg in [*args.posonlyargs, *args.args, *args.kwonlyargs]:
             if arg.arg in ("self", "cls"):
@@ -359,6 +369,7 @@ def read_scopes(root: Path, rels: list[str], out: dict) -> Files:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 scope = Scope(files, rel, node.name, None)
                 scope.parameters(node.args)
+                scope.returns(node.returns)
                 scope.read(node.body)
                 out["scopes"].append(scope.out)
             elif isinstance(node, ast.ClassDef):
@@ -367,6 +378,7 @@ def read_scopes(root: Path, rels: list[str], out: dict) -> Files:
                     if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
                         scope = Scope(files, rel, f"{node.name}.{item.name}", node.name)
                         scope.parameters(item.args)
+                        scope.returns(item.returns)
                         scope.read(item.body)
                         out["scopes"].append(scope.out)
     return files

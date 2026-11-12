@@ -9,6 +9,11 @@ final class Receivers
 {
     private ?Widget $kept = null;
 
+    public function made(): ?Widget
+    {
+        return null;
+    }
+
     public function run(Widget $widget, array $items): void
     {
         $widget->grow();
@@ -22,5 +27,10 @@ final class Receivers
         }
         $either = $widget ?? new Widget();
         $either->grow();
+        $opened = Widget::make("{$either->size}/x");
+        $matched = match (true) {
+            $opened === null => new Widget(),
+            default => Widget::make('x'),
+        };
     }
 }

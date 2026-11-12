@@ -1,7 +1,5 @@
 // The requests of the cases of contracts/file-sessions.json and contracts/redis-sessions.json (HY-104, HY-115): each
 // step of a case opens the store of one request, applies its calls and closes it.
-import { JsonCodec } from '../../src/json-codec.js';
-import { toValue } from '../../src/values.js';
 import { parsed } from '../case-rules.js';
 import { textOf } from '../inputs.js';
 
@@ -73,8 +71,8 @@ function cookieOf(value: unknown, made: readonly (string | null)[]): string | nu
 function applied(store: RequestStore, [method, args]: Call, host: Host, made: readonly (string | null)[]): unknown {
   switch (method) {
     case 'get': {
-      const value = store.get(textOf(args[0], 'the key of a call'));
-      return value === undefined ? 'null' : JsonCodec.encode(toValue(value));
+      // The value that the store read, null for no value (HY-104.13, HY-115.4).
+      return store.get(textOf(args[0], 'the key of a call')) ?? null;
     }
     case 'set':
       store.set(textOf(args[0], 'the key of a call'), args[1]);

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: af61422be55564c04e26c4fb6326ded5f5a67ac362ed0bfa7a898b9b389b5895 -->
+<!-- source-sha256: 986838ff090232239c0338087513d2ce5908414e24f8120db9c066b5a339b90b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- PHP server는 session store를 열지 못한 요청에 대해 애플리케이션이 응답하기 전에 plain 500으로 응답하고, Node와 Python server처럼 write hook만 그것을 받는다(HY-60.14, HY-60.16, HY-60.17). `NativeSession::start`가 실패의 message를 가진 내부 `SessionOpenError`를 던지며, 응답은 그것을 처리하지 않는다. 이전에는 PHP server가 그 실패를 response hook에 닿는 처리된 500으로 바꿨다. `tests/scripts/upload-servers.test.mts`의 scenario `session-open-error-is-the-plain-500`이 세 server에 대해 이것을 기술한다(H28.16).
 
 - native test만 기술하던 공개 member에 대해 세 server가 같은 결과를 내고, 공유 case가 그것을 기술한다(H28.16): 새 `contracts/media-type.json`과 `contracts/response.json`, section `fields.json#uploaded`, `session.json#store`, `client.json#declaration`, `representations.json#values`, 그리고 `request.json`의 field `mediaType`, `limits`, `over`, `result.json`의 `held`, `location`, `manifest.json#reads`의 `template`이다. HY-106.17, HY-104.24, HY-59.11, HY-114.9가 response, session store, `mediaType()`, `fileOver(limit)`을 기술한다. 데이터 모델 밖의 kept 값과 `etag(body)`의 body는 이제 PHP와 Python server에서도 Node server처럼 주어질 때 데이터 모델의 오류로 실패한다(HY-40.4, HY-122.13). 이전에는 PHP와 Python이 kept 값을 저장하고 body에 tag를 붙였다. client rendering의 Node selection은 PHP, Python처럼 `new Choice(chosen, value)`를 반환해야 한다(HY-62.8). 일반 객체 `{ chosen, value }`는 이제 HY-43의 500으로 요청을 실패시킨다. PHP `App::through`는 delivery가 없을 때 `respond`로 응답하고, Node와 Python host는 hook 뒤에 `release`로 request를 놓는다. PHP와 Python의 case reader는 Node reader처럼 `optional`이 아닌 field가 없는 case를 실패시킨다. case가 대신한 Python test는 제거되고(`render_requests.py`와 `render_files.py`의 37개, Makefile target `python-file-parts-test`와 함께), Python server만 가진 WSGI, ASGI callable의 test 44개는 `contracts/interfaces.json`에서 그 member 아래 이름으로 기재된다. `make recipe-run-php`(case 1428개), `make recipe-run-node`(1443개), `make recipe-run-python`(1450개)이 통과한다.
 

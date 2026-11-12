@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 use Polyspec\Hyper\Recipe\PhpScope;
 
+const SCOPE_OPENERS = ['(', '[', '{', T_CURLY_OPEN, T_DOLLAR_OPEN_CURLY_BRACES];
 const SCOPE_NAMES = [T_STRING, T_NAME_QUALIFIED, T_NAME_FULLY_QUALIFIED, T_NAME_RELATIVE];
 const SCOPE_ASSIGN = ['=', T_PLUS_EQUAL, T_MINUS_EQUAL, T_CONCAT_EQUAL, T_COALESCE_EQUAL, T_MUL_EQUAL, T_DIV_EQUAL];
 const SCOPE_MODIFIERS = [T_PUBLIC, T_PROTECTED, T_PRIVATE, T_READONLY, T_STATIC, T_VAR, T_ABSTRACT, T_FINAL];
@@ -195,7 +196,7 @@ function parameterList(array $tree, string $file, array $tokens, int $open): arr
     $depth = 0;
     for ($i = $open + 1; $i <= $close; $i++) {
         $id = tokenId($tokens[$i]);
-        if (in_array($id, ['(', '[', '{'], true)) {
+        if (in_array($id, SCOPE_OPENERS, true)) {
             $depth++;
         } elseif (in_array($id, [')', ']', '}'], true) && $i < $close) {
             $depth--;
@@ -313,13 +314,16 @@ function phpScopes(string $root, array $files, ?string $registry): array
                             $properties[] = ['name' => $p['name']] + $typed;
                         }
                     }
-                    $j = closing($t, $i + 2) + 1;
+                    $close = closing($t, $i + 2);
+                    $j = $close + 1;
                     while (!in_array(tokenId($t[$j]), ['{', ';'], true)) {
                         $j++;
                     }
                     $end = tokenId($t[$j]) === '{' ? closing($t, $j) : $j;
                     $scope->read($j + 1, $end);
-                    $scopes[] = scopeEntry($file, "{$class['name']}.{$method}", $class['name'], $scope);
+                    $own = ['file' => $file, 'name' => $class['name']];
+                    $returns = returnType($tree, $file, $t, $close + 1, $j, $own);
+                    $scopes[] = scopeEntry($file, "{$class['name']}.{$method}", $class['name'], $scope, $returns);
                     $i = $end;
                 }
             }
@@ -343,13 +347,15 @@ function phpScopes(string $root, array $files, ?string $registry): array
                 foreach (parameterList($tree, $file, $t, $i + 2) as $p) {
                     $scope->parameters[] = $p;
                 }
-                $j = closing($t, $i + 2) + 1;
+                $close = closing($t, $i + 2);
+                $j = $close + 1;
                 while (tokenId($t[$j]) !== '{') {
                     $j++;
                 }
                 $end = closing($t, $j);
                 $scope->read($j + 1, $end);
-                $scopes[] = scopeEntry($file, tokenText($t[$i + 1]), null, $scope);
+                $returns = returnType($tree, $file, $t, $close + 1, $j, null);
+                $scopes[] = scopeEntry($file, tokenText($t[$i + 1]), null, $scope, $returns);
                 $i = $end;
             }
         }
@@ -361,7 +367,7 @@ function phpScopes(string $root, array $files, ?string $registry): array
 }
 
 /** @return array the output entry of a scope */
-function scopeEntry(string $file, string $name, ?string $class, PhpScope $scope): array
+function scopeEntry(string $file, string $name, ?string $class, PhpScope $scope, ?array $returns): array
 {
     $parameters = array_map(
         static fn ($p) => ['name' => $p['name']] + ($p['type'] === null ? [] : ['type' => $p['type']]),
@@ -373,7 +379,34 @@ function scopeEntry(string $file, string $name, ?string $class, PhpScope $scope)
         'uses' => $scope->uses,
         'assigns' => $scope->assigns,
         'loops' => $scope->loops,
-    ];
+    ] + ($returns === null ? [] : ['returns' => $returns]);
+}
+
+/**
+ * The written return type of a function whose `)` is before $from and whose body or `;` is at $to: one class, also
+ * after `?` or with `|null`, where `self` and `static` are the class $own.
+ *
+ * @return ?array{file: string, name: string}
+ */
+function returnType(array $tree, string $file, array $tokens, int $from, int $to, ?array $own): ?array
+{
+    if (tokenId($tokens[$from] ?? ';') !== ':') {
+        return null;
+    }
+    $names = [];
+    for ($i = $from + 1; $i < $to; $i++) {
+        $id = tokenId($tokens[$i]);
+        if ($id === T_STATIC || (in_array($id, SCOPE_NAMES, true) && strtolower(tokenText($tokens[$i])) !== 'null')) {
+            $names[] = tokenText($tokens[$i]);
+        } elseif (!in_array($id, ['?', '|'], true)) {
+            return null;
+        }
+    }
+    if (count($names) !== 1) {
+        return null;
+    }
+
+    return in_array(strtolower($names[0]), ['self', 'static'], true) ? $own : classNamed($tree, $file, $names[0]);
 }
 
 /**

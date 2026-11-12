@@ -64,6 +64,7 @@
         "file": { "type": "string", "minLength": 1 },
         "name": { "type": "string", "minLength": 1 },
         "class": { "type": "string", "minLength": 1 },
+        "returns": { "$ref": "#/$defs/classRef" },
         "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameter" } },
         "uses": { "type": "array", "items": { "$ref": "#/$defs/expr" } },
         "assigns": {

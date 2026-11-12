@@ -120,7 +120,7 @@ final class PhpScope
         $depth = 0;
         for (; $i < $limit; $i++) {
             $id = tokenId($this->tokens[$i]);
-            if (in_array($id, ['(', '[', '{'], true)) {
+            if (in_array($id, SCOPE_OPENERS, true)) {
                 $depth++;
             } elseif (in_array($id, [')', ']', '}'], true)) {
                 if ($depth === 0) {
@@ -144,7 +144,7 @@ final class PhpScope
         $start = $from;
         for ($i = $from; $i < $to; $i++) {
             $id = tokenId($t[$i]);
-            if (in_array($id, ['(', '[', '{'], true)) {
+            if (in_array($id, SCOPE_OPENERS, true)) {
                 $depth++;
             } elseif (in_array($id, [')', ']', '}'], true)) {
                 $depth--;
@@ -164,6 +164,9 @@ final class PhpScope
 
             return ['kind' => 'either', 'of' => array_map(fn ($p) => $this->value($p[0], $p[1]), $parts)];
         }
+        if (tokenId($t[$from] ?? ';') === T_MATCH) {
+            return $this->matchValue($from, $to);
+        }
         if (tokenId($t[$from] ?? ';') === T_CLONE) {
             $from++;
         }
@@ -178,6 +181,36 @@ final class PhpScope
         return ['kind' => 'other'];
     }
 
+    /** A `match` from $from to $to: the conditional of the values of its arms, each after its `=>`. */
+    private function matchValue(int $from, int $to): array
+    {
+        $t = $this->tokens;
+        $open = $from + 1;
+        if (tokenId($t[$open] ?? ';') !== '(') {
+            return ['kind' => 'other'];
+        }
+        $body = closing($t, $open) + 1;
+        if (tokenId($t[$body] ?? ';') !== '{' || closing($t, $body) !== $to - 1) {
+            return ['kind' => 'other'];
+        }
+        $arms = [];
+        $i = $body + 1;
+        while ($i < $to - 1) {
+            $arrow = $this->valueEnd($i, $to - 1);
+            while ($arrow < $to - 1 && tokenId($t[$arrow]) === ',') {
+                $arrow = $this->valueEnd($arrow + 1, $to - 1);
+            }
+            if (tokenId($t[$arrow] ?? ';') !== T_DOUBLE_ARROW) {
+                break;
+            }
+            $end = $this->valueEnd($arrow + 1, $to - 1);
+            $arms[] = $this->value($arrow + 1, $end);
+            $i = $end + 1;
+        }
+
+        return $arms === [] ? ['kind' => 'other'] : ['kind' => 'either', 'of' => $arms];
+    }
+
     /** @return int the `:` of the conditional whose `?` is before $i */
     private function colon(int $i, int $to): int
     {
@@ -185,7 +218,7 @@ final class PhpScope
         $nested = 0;
         for (; $i < $to; $i++) {
             $id = tokenId($this->tokens[$i]);
-            if (in_array($id, ['(', '[', '{'], true)) {
+            if (in_array($id, SCOPE_OPENERS, true)) {
                 $depth++;
             } elseif (in_array($id, [')', ']', '}'], true)) {
                 $depth--;

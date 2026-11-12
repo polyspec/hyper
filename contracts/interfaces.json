@@ -9060,6 +9060,23 @@
           ]
         },
         {
+          "id": "session-open-error",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/SessionOpenError.php",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-104.4"
+          },
+          "members": []
+        },
+        {
           "id": "redis-cluster-sessions",
           "native": {
             "php": {
@@ -17964,7 +17981,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-104.13",
-              "state": "`steps` are run in order on one store over the temporary directory of the case, which first holds the session files `files`; `results` holds for each step the results of its calls of `get`, each the JSON text of the value (HY-54) with `null` for no value, and of `directory`, the list of file names, or the number that the collection of a `collect` step returned."
+              "state": "`steps` are run in order on one store over the temporary directory of the case, which first holds the session files `files`; `results` holds for each step the results of its calls of `get`, each the value of the data model (HY-44) that it returned, compared as a value, with `null` for no value, and of `directory`, the list of file names, or the number that the collection of a `collect` step returned."
             },
             "created": {
               "role": "expected",
@@ -18116,7 +18133,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-115.4",
-              "state": "`steps` are run in order on one store over the Redis server in memory of the case, which first holds the keys `keys`, pairs of a key and its bytes as text; `results` holds for each step the results of its calls of `get`, each the JSON text of the value (HY-54) with `null` for no value."
+              "state": "`steps` are run in order on one store over the Redis server in memory of the case, which first holds the keys `keys`, pairs of a key and its bytes as text; `results` holds for each step the results of its calls of `get`, each the value of the data model (HY-44) that it returned, compared as a value, with `null` for no value."
             },
             "created": {
               "role": "expected",

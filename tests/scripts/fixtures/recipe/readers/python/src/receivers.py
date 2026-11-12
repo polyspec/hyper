@@ -8,6 +8,9 @@ from .widget import Widget
 class Receivers:
     kept: Optional[Widget]
 
+    def made(self) -> "Optional[Widget]":
+        return self.kept
+
     def run(self, widget: Widget, text: str) -> None:
         widget.grow()
         Widget.make()

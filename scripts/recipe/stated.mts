@@ -208,7 +208,7 @@ class Language {
         const written = this.properties.get(key);
         if (written !== undefined) return { kind: 'class', ref: written };
         const output = this.members.get(key)?.output;
-        const ref = output === undefined ? undefined : this.termClass(output);
+        const ref = (output === undefined ? undefined : this.termClass(output)) ?? (e.call ? this.scopes.get(key)?.returns : undefined);
         return ref === undefined ? undefined : { kind: 'class', ref };
       }
       case 'either': {

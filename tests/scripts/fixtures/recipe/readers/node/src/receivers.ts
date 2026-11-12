@@ -1,3 +1,4 @@
+import type { Sized } from './sized.ts';
 import { Widget } from './widget.ts';
 
 /** The receivers of the scope reading (HYR-5): what the source writes about the class of each. */
@@ -19,6 +20,14 @@ export class Receivers {
   }
 
   other(): void {}
+
+  sized(item: Sized): void {
+    item.grow();
+  }
+
+  async made(): Promise<Widget | null> {
+    return this.kept;
+  }
 
   all(): Widget[] {
     return this.kept === null ? [] : [this.kept];

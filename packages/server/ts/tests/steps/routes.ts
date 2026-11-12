@@ -2,4 +2,6 @@
 import { Router, stripBasePath } from '@polyspec/hyper-client';
 import { routerSteps } from './router-cases.js';
 
-export const steps = routerSteps({ Router, stripBasePath });
+const { cases, baseCases, invalidPaths } = routerSteps({ Router, stripBasePath });
+
+export const steps = { cases, baseCases, invalidPaths };

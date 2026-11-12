@@ -510,7 +510,7 @@ const cls = (unit: string): string => `${unit.charAt(0).toUpperCase()}${unit.sli
 function stated(
   units: Written[],
   named: string[],
-  scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr; ref: (unit: string) => ClassRef }) => { unit: string; method: string; uses?: Expr[]; assigns?: Scope['assigns']; loops?: Scope['loops'] }[],
+  scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr; ref: (unit: string) => ClassRef }) => { unit: string; method: string; uses?: Expr[]; assigns?: Scope['assigns']; loops?: Scope['loops']; returns?: ClassRef }[],
 ): { findings: string[] } {
   const specUnits: Unit[] = units.map((w) => ({
     id: w.unit,
@@ -558,6 +558,7 @@ function stated(
       uses: s.uses ?? [],
       assigns: s.assigns ?? [],
       loops: s.loops ?? [],
+      ...(s.returns === undefined ? {} : { returns: s.returns }),
     }));
     return { language: lang, files: [], units: [], types: [], members: [], constants: [], exports: [], uses: [], tests: [], dynamicTests: [], calls: [], classes, scopes: all, registry: [] };
   };
@@ -650,4 +651,43 @@ test('a read of a property whose type is written has that class, also when a cla
     },
   ];
   assert.deepEqual(stated(units, ['box.run'], run).findings, []);
+});
+
+test('the PHP reader reads a value after a string with an embedded expression, and a match as a conditional of its arms', () => {
+  const out = readCopy('php', path.join(fixture, 'readers', 'php'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'Receivers.run');
+  const widget: ClassRef = { file: 'src/Widget.php', name: 'Widget' };
+  const made: Expr = { kind: 'member', of: { kind: 'class', ...widget }, name: 'make', call: true };
+  const assigned = (target: string): Expr | undefined => scope?.assigns.find((a) => a.target === target)?.value;
+  assert.deepEqual(assigned('opened'), made);
+  assert.deepEqual(assigned('matched'), { kind: 'either', of: [{ kind: 'new', class: widget }, made] });
+});
+
+test('each reader writes the return type of a function when it names one class', () => {
+  for (const lang of ['php', 'node', 'python'] as const) {
+    const out = readCopy(lang, path.join(fixture, 'readers', lang), ['--sources', 'src', '--tests', 'tests']);
+    const scope = (name: string): Scope | undefined => out.scopes.find((s) => s.file === READER_FILES[lang].receivers && s.name === name);
+    assert.deepEqual(scope('Receivers.made')?.returns, { file: READER_FILES[lang].widget, name: 'Widget' }, lang);
+    assert.equal(scope('Receivers.run')?.returns, undefined, lang);
+  }
+});
+
+test('a call of a function that no member of the spec is has the class of its written return type', () => {
+  const units: Written[] = [
+    { unit: 'box', members: [{ name: 'run', kind: 'method', visibility: 'public' }] },
+    { unit: 'item', members: [{ name: 'size', kind: 'method', visibility: 'internal' }] },
+  ];
+  const run = (_lang: 'php' | 'node', e: { ref: (unit: string) => ClassRef }): ReturnType<Parameters<typeof stated>[2]> => [
+    { unit: 'box', method: 'run', uses: [{ kind: 'member', of: { kind: 'member', of: { kind: 'own' }, name: 'helper', call: true }, name: 'size', call: true }] },
+    { unit: 'box', method: 'helper', returns: e.ref('item') },
+  ];
+  assert.deepEqual(stated(units, ['box.run'], run).findings, []);
+});
+
+test('the Node reader reads an interface as a class that a class implements, and a parameter of its type', () => {
+  const out = readCopy('node', path.join(fixture, 'readers', 'node'), ['--sources', 'src', '--tests', 'tests']);
+  const sized: ClassRef = { file: 'src/sized.ts', name: 'Sized' };
+  assert.deepEqual(out.classes.find((c) => c.name === 'Sized'), { ...sized, extends: [], properties: [] });
+  assert.deepEqual(out.classes.find((c) => c.name === 'Widget')?.extends, [sized]);
+  assert.deepEqual(out.scopes.find((s) => s.name === 'Receivers.sized')?.parameters, [{ name: 'item', type: sized }]);
 });
