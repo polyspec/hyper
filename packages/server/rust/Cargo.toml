@@ -7,7 +7,7 @@ description = "The rules of the hyper server that every runtime shares: media se
 repository = "https://github.com/polyspec/hyper.git"
 publish = false
 # The package holds the interface contract of the bindings beside the source, so that a repository that depends on
-# this crate reads the contract from the package that Cargo resolved (bindgen design I-1, T-3).
+# this crate reads the contract from the package that Cargo resolved (binding design I-1, T-3).
 include = ["/src/**/*.rs", "/interface.json"]
 
 [lib]
@@ -15,8 +15,8 @@ name = "polyspec_hyper"
 path = "src/lib.rs"
 
 [dependencies]
-# The kind interface of every error (plan F-2, bindgen design E-1).
-polyspec-bindgen-core = { git = "https://github.com/polyspec/bindgen.git", branch = "v1/rust-core" }
+# The kind interface of every error (plan F-2, binding design E-1).
+polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core" }
 # The Cookie and Set-Cookie fields (CK-1 to CK-14; HY-129.13, HY-45.8, HY-52.13).
 polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", branch = "v1/rust-core" }
 # The weights of Accept (NG-5 to NG-10; HY-116.17 to HY-116.20).
@@ -29,9 +29,9 @@ polyspec-json = { git = "https://github.com/polyspec/json.git", branch = "v1/rus
 polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core" }
 # The store interface of a session and its values (SE-2, SE-7; HY-104.25, HY-104.30), which the host entries take.
 # The stores of files and Redis are features of the library that the bindings build; the core needs the interface only.
-polyspec-sessions = { git = "https://github.com/polyspec/sessions.git", branch = "v1/rust-core", default-features = false }
+polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", branch = "v1/rust-core", default-features = false }
 # The values of a session record (RQ-001 to RQ-012; HY-104.13, HY-104.14).
-polyspec-php-serialize = { git = "https://github.com/polyspec/php-serialize.git", branch = "v1/rust-core" }
+polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", branch = "v1/rust-core" }
 # The digests of HY-24.10, HY-53 and HY-122.10.
 sha2 = "0.10"
 

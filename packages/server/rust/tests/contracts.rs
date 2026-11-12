@@ -1,11 +1,11 @@
 //! The cases of `contracts/` that this crate decides, run against the core (plan V-1). A case whose failure the binding
 //! decides before the core runs (`invalid_argument_type`, and `invalid_number` of a value that is no integer) is the
-//! binding's and is left to the generated tests (bindgen design G-5).
+//! binding's and is left to the generated tests (binding design G-5).
 
 use std::fs;
 use std::path::PathBuf;
 
-use bindgen_core::Kinds;
+use binding_core::Kinds;
 use polyspec_hyper::media::{select, Selected, Selection, Served};
 use polyspec_hyper::{csrf, etag, location, reply, Error};
 use serde_json::Value;
@@ -611,9 +611,9 @@ fn data_value(json: &str) -> Result<polyspec_template::Value, Error> {
 #[test]
 fn session_values_are_kept_in_the_record() {
     // HY-24.1, HY-24.14, HY-25.2, HY-40, HY-72.2, HY-104.13, HY-104.14, HY-104.23
-    use bindgen_core::Failure;
+    use binding_core::Failure;
     use polyspec_hyper::session;
-    use polyspec_sessions::{MemoryStore, Store};
+    use polyspec_session_store::{MemoryStore, Store};
     let file = cases("session.json");
     let mut ran = 0;
     for group_name in ["token", "flash", "kept"] {
@@ -1038,7 +1038,7 @@ fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
         Err(error) => panic!("{error}"),
     }
     match render("[1]", r#"{"rows":{"mode":"b"}}"#) {
-        Err(bindgen_core::Failure::Kind(Error::Template(_))) => {}
+        Err(binding_core::Failure::Kind(Error::Template(_))) => {}
         Err(error) => panic!("{error}"),
         Ok(document) => panic!("{document}"),
     }
@@ -1311,8 +1311,8 @@ fn a_page_refuses_the_result_of_another_call() {
     };
     assert!(matches!(page.next(&Input::Start), Ok(Step::Call { .. })));
     match page.next(&Input::Absent) {
-        Err(bindgen_core::Failure::Kind(error)) => {
-            assert_eq!(bindgen_core::Kinds::kind(&error), "internal")
+        Err(binding_core::Failure::Kind(error)) => {
+            assert_eq!(binding_core::Kinds::kind(&error), "internal")
         }
         other => panic!("{other:?}"),
     }
@@ -1569,12 +1569,12 @@ fn the_headers_of_a_page_and_the_kept_endpoint() {
 }
 
 #[test]
-fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), bindgen_core::Failure<Error>> {
+fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), binding_core::Failure<Error>> {
     // HY-120.6, HY-120.7, HY-24.1, HY-24.4, HY-25.2, HY-59.8, HY-40.1, HY-11.3
     use polyspec_hyper::opening::{keep_request, open_page, KeepRequest, Opened, Opening};
     use polyspec_hyper::session::{kept, put_flash, token};
     use polyspec_hyper::steps::PageKind;
-    use polyspec_sessions::MemoryStore;
+    use polyspec_session_store::MemoryStore;
     let pages = board(false);
     let mask = "ab".repeat(32);
     let opening = |action: bool, form_csrf: Option<String>| Opening {
@@ -1606,7 +1606,7 @@ fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), bindgen_core::
     assert_eq!(first.len(), 64);
     assert_eq!(
         input.csrf,
-        polyspec_hyper::csrf::mask(&first, &mask).map_err(bindgen_core::Failure::Kind)?
+        polyspec_hyper::csrf::mask(&first, &mask).map_err(binding_core::Failure::Kind)?
     );
     assert_eq!(input.changed, ["count", "path"]);
     assert!(input
@@ -1631,7 +1631,7 @@ fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), bindgen_core::
         Opened::Refused { answer } => assert_eq!(answer.status, 403),
         Opened::Page { .. } => panic!("a POST without its token opened the page"),
     }
-    let masked = polyspec_hyper::csrf::mask(&first, &mask).map_err(bindgen_core::Failure::Kind)?;
+    let masked = polyspec_hyper::csrf::mask(&first, &mask).map_err(binding_core::Failure::Kind)?;
     assert!(matches!(
         open_page(&pages, &mut store, &opening(true, Some(masked.clone())))?,
         Opened::Page { .. }

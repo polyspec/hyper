@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use bindgen_core::Failure;
+use binding_core::Failure;
 use polyspec_template::{
     bind, merge, AstProgram, BoundMap, DefineInput, EngineOptions, Env, HostFunction, MapLoader,
     OrderedMap, RenderError, RenderOptions, RenderTarget, TemplateError, Value,

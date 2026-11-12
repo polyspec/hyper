@@ -3,7 +3,7 @@
 //! through the store interface of the session-store library, check the token of a `POST` and give the input of the
 //! page. A refused request reads its session only for the token check, after the checks of `front` (HY-120.2).
 
-use polyspec_sessions::Store;
+use polyspec_session_store::Store;
 use polyspec_template::Value;
 
 use crate::csrf::{mask, verify};
@@ -11,7 +11,7 @@ use crate::front::{kept_value, Plain};
 use crate::page::{changed_topics, current_path};
 use crate::session::{keep, kept, take_flash, token, SessionFailure};
 use crate::steps::{Map, PageInput, PageKind, Pages};
-use bindgen_core::Failure;
+use binding_core::Failure;
 
 /// What the page of a routed request needs besides its session.
 #[derive(Debug, Clone)]

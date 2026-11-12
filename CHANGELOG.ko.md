@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cf058ccf2f2401b297ec7c92c1b36f46e744589e86c13f7a3b215a64975ef03b -->
+<!-- source-sha256: cd1ca8e17eeed2984f4fa507b988aef7ea96769ef0299eb97c9989c4a49773af -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core는 저장소 binding의 `polyspec-binding-core`를 lock의 모든 라이브러리가 쓰는 하나의 kind interface로 받고, 라이브러리 `polyspec-session-store`와 `polyspec-php-serialization`을 새 이름으로, `polyspec-http-cookie`, `polyspec-json`, `polyspec-http-negotiation`, `polyspec-http-media-type`, `polyspec-template`을 branch 끝으로 받는다. 옛 이름에 대한 `AGENTS.md`의 예외는 없어졌고, interface 계약은 라이브러리 session-store와 `binding_core`의 경로를 이름한다. Node와 Python 서버가 설치하는 php-serialization 0.0.6의 release asset은 저장소 php-serialization의 URL로 이름하며, 새 이름의 release가 나올 때까지 package 이름 `@polyspec/php-serialize`와 `polyspec-php-serialize`를 유지한다. `docs/operations/dependencies.md`가 둘 다 적는다(C-7, 9c).
 
 - 세션 열기는 page 요청에서만 flash data를 가져가고(HY-120.5를 대신하는 HY-120.6), `<base path>/_hyper/keep` 요청은 token만 읽고 flash data를 세션에 남긴다. kept endpoint는 page로 답하지 않고 flash data는 다음 page 요청의 것이기 때문이다(HY-120.7). `contracts/app.json`의 case `a_keep_request_leaves_the_flash_values_to_the_next_page`가 이를 말하며, Rust core의 테스트가 이를 검사한다.
 

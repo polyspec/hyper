@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 94f55e8c26c76b336ee086bb231453f7e6084050debfb9732a323851dca21063 -->
+<!-- source-sha256: 32239c0367c519a9bd2a993773d45e48dbb44a5b11aeddf29998826fa3255569 -->
 # 개발
 
 [English](AGENTS.md).
@@ -27,8 +27,8 @@
 
 ## 구현
 
-- Own: Rust core `packages/server/rust`는 polyspec 의존을 그 Git 저장소의 branch `v1/rust-core`에서 받는다. 그 저장소들이 아직 release하지 않은 채로 core를 개발하기 때문이며, 위의 release 의존 규칙은 core의 첫 release부터 적용된다. session-store 라이브러리가 다른 라이브러리의 kind interface를 받을 때까지 예외가 하나 있다. store interface가 `polyspec-php-serialize`의 값을 쓰므로 core는 라이브러리 `polyspec-sessions`와 `polyspec-php-serialize`를 옛 이름으로 유지하고, 모든 라이브러리를 kind interface가 `polyspec-bindgen-core`인 commit에 두며 lock이 그 commit을 고정한다. core의 binding crate는 각 언어의 host package 옆 `packages/server/<lang>/native/`에 둔다(bindgen L-2a). host package는 지금 자리에 남는다. bindgen이 그 자리에 scaffold할 때까지 `packages/server/rust/interface.json`에 대한 bindgen 계약 검사는 binding crate에 대해 CK-19와 CK-20을 보고하며, 그 밖의 지적은 실패다.
-  Enforced by: none, `make core-test`가 이 의존으로 core를 build하고, bindgen의 계약 검사는 S-4까지 손으로 실행한다.
+- Own: Rust core `packages/server/rust`는 polyspec 의존을 그 Git 저장소의 branch `v1/rust-core`에서 받는다. 그 저장소들이 아직 release하지 않은 채로 core를 개발하기 때문이며, 위의 release 의존 규칙은 core의 첫 release부터 적용된다. 그 lock은 kind interface를 하나만, 저장소 binding의 `polyspec-binding-core`를 가지며, lock의 모든 라이브러리가 그것을 쓰므로 라이브러리와 core의 실패가 한 타입이다. core의 binding crate는 각 언어의 host package 옆 `packages/server/<lang>/native/`에 둔다(binding L-2a). host package는 지금 자리에 남는다. binding 생성기가 그 자리에 scaffold할 때까지 `packages/server/rust/interface.json`에 대한 그 계약 검사는 binding crate에 대해 CK-19와 CK-20을 보고하며, 그 밖의 지적은 실패다.
+  Enforced by: none, `make core-test`가 이 의존으로 core를 build하고, binding 생성기의 계약 검사는 S-4까지 손으로 실행한다.
 - Own: 임시 script나 임시 폴더를 쓰지 않는다. 모든 검사는 Makefile target, `scripts/` 아래의 script 또는 커밋된 test이며, 멱등하다.
   Enforced by: none, script가 임시인지는 판단이다.
 - Own: 릴리즈 결과는 tree, manifest와 그 lock이 고정한 template release에만 의존한다. 또한 `make hyper-install`이 그 release의 Composer repository(`packages.json`)에서 PIE로 build하는, 그 release의 package `polyspec/template-php-ext`에도 의존한다. 저장소 밖의 모든 입력은 추적 파일에 이름이 적히고 쓰기 전에 확인한다. package는 정확한 version과 lock의 integrity 또는 shasum으로, build 출력은 입력의 hash로 확인하며, 각 설치는 자기가 설치하는 모든 template asset을 그 integrity로 확인한다(HR-80). 의존성은 `package.json`이나 `composer.json`에 선언하고 npm이나 Composer가 lock대로 설치한다(HR-70). Version 0.1 전까지 다른 polyspec 저장소에 대한 의존성은 그 저장소의 GitHub tag나 GitHub Release의 asset이며, branch나 commit이 아니다. 추적 파일은 Git commit을, 이 저장소의 것이든 다른 저장소의 것이든, 이름으로 적지 않는다. 최종 검증은 무시되는 `var/report/` 아래에 tree와 결과를 기록하고 release archive의 선언된 integrity 고정은 유지한다. 어떤 검사도 다른 checkout의 working tree를 그때 있는 그대로 읽지 않는다.

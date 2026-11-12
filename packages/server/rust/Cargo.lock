@@ -133,9 +133,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
-name = "polyspec-bindgen-core"
+name = "polyspec-binding-core"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/bindgen.git?branch=v1%2Frust-core#732c23fc8cc66f1fcd3e4e4fea4d86db92fd1ade"
+source = "git+https://github.com/polyspec/binding.git?branch=v1%2Frust-core#7cda8c03d825725366fd9957151711f5bac47eb7"
 dependencies = [
  "indexmap",
  "tokio-util",
@@ -144,25 +144,25 @@ dependencies = [
 [[package]]
 name = "polyspec-http-cookie"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/http-cookie.git?branch=v1%2Frust-core#cf1036048479bfc0a1baa3a581fa970672a664d8"
+source = "git+https://github.com/polyspec/http-cookie.git?branch=v1%2Frust-core#7fff8e92beb613711f306eb649b2bd27973a9ec9"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-binding-core",
 ]
 
 [[package]]
 name = "polyspec-http-media-type"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/http-media-type.git?branch=v1%2Frust-core#4b94c5b9d08a922b82ae562401f687e206c6ccd6"
+source = "git+https://github.com/polyspec/http-media-type.git?branch=v1%2Frust-core#750d7800811594fcfe03315b776929f3db363df7"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-binding-core",
 ]
 
 [[package]]
 name = "polyspec-http-negotiation"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/http-negotiation.git?branch=v1%2Frust-core#42e358b524ad30e0b91e84126e9c45d20fe3dc72"
+source = "git+https://github.com/polyspec/http-negotiation.git?branch=v1%2Frust-core#03708b42b6a5f5881fa0c7d7c3e4d76c77d17fd7"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-binding-core",
  "polyspec-http-media-type",
 ]
 
@@ -170,13 +170,13 @@ dependencies = [
 name = "polyspec-hyper"
 version = "0.0.0"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-binding-core",
  "polyspec-http-cookie",
  "polyspec-http-media-type",
  "polyspec-http-negotiation",
  "polyspec-json",
- "polyspec-php-serialize",
- "polyspec-sessions",
+ "polyspec-php-serialization",
+ "polyspec-session-store",
  "polyspec-template",
  "serde_json",
  "sha2",
@@ -185,47 +185,48 @@ dependencies = [
 [[package]]
 name = "polyspec-json"
 version = "0.0.25"
-source = "git+https://github.com/polyspec/json.git?branch=v1%2Frust-core#d7074976a790af82512d5a502cdabd936de9a955"
+source = "git+https://github.com/polyspec/json.git?branch=v1%2Frust-core#60f6a15bafc0c3c9bcbae1060370a2db686fc4c8"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-binding-core",
  "ryu-js",
  "serde",
  "serde_json",
 ]
 
 [[package]]
-name = "polyspec-php-serialize"
+name = "polyspec-php-serialization"
 version = "0.0.6"
-source = "git+https://github.com/polyspec/php-serialize.git?branch=v1%2Frust-core#948de5850c20bd4a28956571ae482964f2ebc6bd"
+source = "git+https://github.com/polyspec/php-serialization.git?branch=v1%2Frust-core#5dc75ffd80671e6bfe7bb28541ca0c1c56ec376e"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-binding-core",
  "ryu",
 ]
 
 [[package]]
-name = "polyspec-sessions"
+name = "polyspec-session-store"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/sessions.git?branch=v1%2Frust-core#a6b4e66d11e8d197c87c0e59fede718eca8d78a0"
+source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#6ca4ab7e89e735da2fcfd13845c8040d352e4829"
 dependencies = [
- "polyspec-sessions-core",
+ "polyspec-php-serialization",
+ "polyspec-session-store-core",
 ]
 
 [[package]]
-name = "polyspec-sessions-core"
+name = "polyspec-session-store-core"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/sessions.git?branch=v1%2Frust-core#a6b4e66d11e8d197c87c0e59fede718eca8d78a0"
+source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#6ca4ab7e89e735da2fcfd13845c8040d352e4829"
 dependencies = [
  "getrandom",
- "polyspec-bindgen-core",
- "polyspec-php-serialize",
+ "polyspec-binding-core",
+ "polyspec-php-serialization",
 ]
 
 [[package]]
 name = "polyspec-template"
 version = "0.0.27"
-source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#d23135a8a84cffcddb624fe308fb0589105e5516"
+source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#1875eda32217b9579ec5732062298ba92ac8d7e2"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-binding-core",
  "polyspec-json",
  "winapi-util",
 ]

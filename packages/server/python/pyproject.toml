@@ -11,8 +11,8 @@ requires-python = ">=3.14"
 dependencies = [
     # The wheel asset of the template release v0.0.27 with the sha256 of that asset (H21.4, H23.5). uv.lock locks it with
     # its dependencies, and `make hyper-install-python` installs that lock into the venv of the package (H23.15).
-    # The wheel asset of the php-serialize release v0.0.6 with the sha256 of that asset (HY-104).
-    "polyspec-php-serialize @ https://github.com/polyspec/php-serialize/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl#sha256=00d8022dd33432532dbbbd3bed072e33d9243784b5454ddc814f867be14bc716",
+    # The wheel asset of the php-serialization release v0.0.6, published under the package name polyspec-php-serialize, with the sha256 of that asset (HY-104).
+    "polyspec-php-serialize @ https://github.com/polyspec/php-serialization/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl#sha256=00d8022dd33432532dbbbd3bed072e33d9243784b5454ddc814f867be14bc716",
     "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.27/polyspec_template-0.0.27-py3-none-any.whl#sha256=f8c8f5de89095ae495ba398e4f4a3205ff1f48459ea9880dcb95a2858f3000d4",
 ]
 

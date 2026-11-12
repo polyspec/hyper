@@ -381,58 +381,58 @@
         "library": "template"
       },
       {
-        "variant": "polyspec_sessions::Error::Record",
-        "library": "sessions",
+        "variant": "polyspec_session_store::Error::Record",
+        "library": "session-store",
         "class": "record_error"
       },
       {
-        "variant": "polyspec_sessions::Error::RecordWrite",
-        "library": "sessions",
+        "variant": "polyspec_session_store::Error::RecordWrite",
+        "library": "session-store",
         "class": "record_error"
       },
       {
-        "variant": "polyspec_sessions::Error::Random",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::Random",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::RecordNotArray",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::RecordNotArray",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::Cancelled",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::Cancelled",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::IdentifierTaken",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::IdentifierTaken",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::Io",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::Io",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::LockTimeout",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::LockTimeout",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::LockLost",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::LockLost",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::Reply",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::Reply",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::Redis",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::Redis",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::Connection",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::Connection",
+        "library": "session-store"
       },
       {
-        "variant": "polyspec_sessions::Error::Internal",
-        "library": "sessions"
+        "variant": "polyspec_session_store::Error::Internal",
+        "library": "session-store"
       },
       {
         "variant": "polyspec_http_cookie::Error::InvalidName",
@@ -458,7 +458,7 @@
     "binding": [],
     "wrapped": [
       {
-        "library": "sessions",
+        "library": "session-store",
         "unit": "record_error",
         "property": [
           "offset"
@@ -1202,7 +1202,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "session-store"
               },
               "required": true
             },
@@ -1251,7 +1251,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "session-store"
               },
               "required": true
             },
@@ -1300,7 +1300,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "session-store"
               },
               "required": true
             },
@@ -1350,7 +1350,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "session-store"
               },
               "required": true
             },
@@ -1400,7 +1400,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "session-store"
               },
               "required": true
             },
@@ -1450,7 +1450,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "session-store"
               },
               "required": true
             },
@@ -3023,7 +3023,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "session-store"
               },
               "required": true
             },
@@ -3075,7 +3075,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "session-store"
               },
               "required": true
             },
@@ -3254,7 +3254,7 @@
     {
       "id": "session-setup",
       "rule": "HY-104.26",
-      "reason": "HY-104.26: the PHP server keeps its sessions in the file store of the sessions library, so the option of the native session module is gone",
+      "reason": "HY-104.26: the PHP server keeps its sessions in the file store of the session-store library, so the option of the native session module is gone",
       "symbol": "App::open sessionSetup",
       "from": {
         "php": "App::open(..., ?\\Closure $sessionSetup = null)"
@@ -3285,7 +3285,7 @@
     {
       "id": "array-session",
       "rule": "HY-104.30",
-      "reason": "HY-104.30, C-6: the store that keeps one session in memory belongs to the sessions library as MemoryStore, which hyper uses through the store interface",
+      "reason": "HY-104.30, C-6: the store that keeps one session in memory belongs to the session-store library as MemoryStore, which hyper uses through the store interface",
       "symbol": "ArraySession",
       "from": {
         "php": "Polyspec\\Hyper\\ArraySession",

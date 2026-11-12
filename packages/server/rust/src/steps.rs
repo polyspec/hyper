@@ -10,7 +10,7 @@
 
 use std::sync::Arc;
 
-use bindgen_core::Failure;
+use binding_core::Failure;
 use polyspec_template::{Env, HostFunction, OrderedMap, Value};
 
 use crate::context::{member, with_context};
@@ -21,8 +21,8 @@ use crate::reads::{keep, Read};
 use crate::render::{Document, Templates};
 use crate::Error;
 
-/// A map of the boundary of the bindings (bindgen T-2).
-pub type Map<T> = bindgen_core::OrderedMap<T>;
+/// A map of the boundary of the bindings (binding T-2).
+pub type Map<T> = binding_core::OrderedMap<T>;
 
 /// The read paths of a route (HY-73.23): of its shared data and of each region of its documents.
 pub struct RouteReads {

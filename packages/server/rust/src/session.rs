@@ -5,9 +5,9 @@
 
 use std::sync::Arc;
 
-use bindgen_core::Failure;
-use polyspec_php_serialize::{Key, Node, PhpValue};
-use polyspec_sessions::Store;
+use binding_core::Failure;
+use polyspec_php_serialization::{Key, Node, PhpValue};
+use polyspec_session_store::Store;
 use polyspec_template::{BindError, ErrorCode, OrderedMap, Value};
 
 use crate::csrf::stored_token;
@@ -27,7 +27,7 @@ const MAX_DEPTH: usize = 64;
 const MAX_SAFE: f64 = 9_007_199_254_740_991.0;
 
 /// A failure of a session operation: a kind, or the exception of a store of another language, which goes back
-/// unchanged (SE-3.2, bindgen design E-1c).
+/// unchanged (SE-3.2, binding design E-1c).
 pub type SessionFailure = Failure<Error>;
 
 fn data(code: ErrorCode, message: &str) -> Error {
@@ -37,7 +37,7 @@ fn data(code: ErrorCode, message: &str) -> Error {
     })
 }
 
-fn from_store<T>(result: Result<T, polyspec_sessions::Failure>) -> Result<T, SessionFailure> {
+fn from_store<T>(result: Result<T, polyspec_session_store::Failure>) -> Result<T, SessionFailure> {
     match result {
         Ok(value) => Ok(value),
         Err(Failure::Kind(error)) => Err(Failure::Kind(Error::Sessions(error))),
@@ -358,7 +358,7 @@ pub fn token(store: &mut dyn Store) -> Result<String, SessionFailure> {
 }
 
 fn new_token(store: &mut dyn Store) -> Result<String, SessionFailure> {
-    let token = match polyspec_sessions::random_hex(crate::csrf::TOKEN_BYTES) {
+    let token = match polyspec_session_store::random_hex(crate::csrf::TOKEN_BYTES) {
         Ok(token) => token,
         Err(error) => return Err(Failure::Kind(Error::Sessions(error))),
     };

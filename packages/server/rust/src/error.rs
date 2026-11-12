@@ -3,7 +3,7 @@
 
 use std::fmt;
 
-use bindgen_core::{Category, Kinds};
+use binding_core::{Category, Kinds};
 
 /// A failure of hyper or of a library that it passes on (HY-132.3).
 #[derive(Debug, Clone, PartialEq)]
@@ -50,9 +50,9 @@ pub enum Error {
     Template(polyspec_template::TemplateError),
     /// A broken invariant of a record that php-serialize reports, such as an identity that the record does not hold
     /// (HY-132.6).
-    RecordValue(polyspec_php_serialize::Error),
+    RecordValue(polyspec_php_serialization::Error),
     /// A failure of the session-store library, with its kind (HY-104.25).
-    Sessions(polyspec_sessions::Error),
+    Sessions(polyspec_session_store::Error),
     /// A failure of `Accept` (HY-116.18), with the kind and status of http-negotiation.
     Negotiate(polyspec_http_negotiation::Error),
     /// A failure of the `Set-Cookie` writer, with the kind of http-cookie (HY-45.8, HY-52.13).
@@ -269,8 +269,8 @@ impl From<polyspec_http_cookie::Error> for Error {
 }
 
 /// The category of a failure of the session-store library, as its interface contract gives it (E-1b).
-fn sessions_category(error: &polyspec_sessions::Error) -> Category {
-    use polyspec_sessions::Error as Sessions;
+fn sessions_category(error: &polyspec_session_store::Error) -> Category {
+    use polyspec_session_store::Error as Sessions;
     match error {
         Sessions::Random { .. } | Sessions::IdentifierTaken { .. } | Sessions::Internal { .. } => {
             Category::Internal

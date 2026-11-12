@@ -1,7 +1,7 @@
 //! The rules of this crate that no contract case states alone: the 406 listing, the representation entry and its
 //! response, the session cookie, the tags, the answers of the ORM and the order of a request.
 
-use bindgen_core::Kinds;
+use binding_core::Kinds;
 use polyspec_hyper::media::{
     content_type, listing, page_vary, representation_vary, select, Selected, Selection, Served,
 };
@@ -388,7 +388,7 @@ fn errors_name_their_kind_and_category() {
 #[test]
 fn integers_of_the_data_model_are_php_integers_in_a_record() -> Result<(), Error> {
     // HY-104.14: an integral number within ±(2^53 − 1) is written as a PHP integer, another number as a float.
-    use polyspec_php_serialize::Node;
+    use polyspec_php_serialization::Node;
     use polyspec_template::Value;
     for (number, expected) in [
         (7.0, Node::Int(7)),
