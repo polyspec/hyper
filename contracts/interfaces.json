@@ -1173,6 +1173,94 @@
             "sentence": "HY-67.4"
           },
           "members": []
+        },
+        {
+          "id": "hyper-value-error",
+          "native": {
+            "php": {
+              "file": "packages/php/src/HyperValueError.php",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/python/src/polyspec/hyper/_hyper_value_error.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "php",
+              "python"
+            ],
+            "sentence": "HY-132.2"
+          },
+          "members": [
+            {
+              "id": "hyper-value-error.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "hyper-value-error",
+              "errors": [],
+              "state": "Holds the kind and the message of a failure of the category value (HY-132.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/HyperValueError.php::Polyspec\\Hyper\\HyperValueError::__construct",
+                  "signature": "public function __construct(string $kind, string $message)"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/_hyper_value_error.py::HyperValueError.__init__",
+                  "signature": "def __init__(self, kind: str, message: str) -> None"
+                }
+              }
+            },
+            {
+              "id": "hyper-value-error.kind",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the kind of the failure (HY-132.1).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-132.2"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/HyperValueError.php::Polyspec\\Hyper\\HyperValueError::kind",
+                  "signature": "public function kind(): string"
+                }
+              }
+            },
+            {
+              "id": "hyper-value-error.status",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<number>",
+              "errors": [],
+              "state": "Returns null, the status of a failure of the category value (HY-132.1).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-132.2"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/HyperValueError.php::Polyspec\\Hyper\\HyperValueError::status",
+                  "signature": "public function status(): ?int"
+                }
+              }
+            }
+          ]
         }
       ]
     },

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 89826ea14829b3f221bdceb81bb6782086c6209951462183dff82d2e1489f362 -->
+<!-- source-sha256: 544b8b9db155836c3430a4af0f4e01c6e5ca6e686c3b653ced0ae2e1a5cb22e2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- PHP와 Python 서버는 브라우저 package와 Node 서버처럼, 이미 member `context`를 가진 shared data에 context를 놓을 때 category `value`, kind `shared_holds_context`의 오류로 실패한다(HY-124.8, HY-132). PHP는 `LogicException` 대신 `kind()`와 `status()`를 가진 `InvalidArgumentException`인 `Polyspec\Hyper\HyperValueError`를 던지고, Python은 그냥 `ValueError` 대신 `kind`와 `status`를 가진 `ValueError`인 `polyspec.hyper._hyper_value_error`의 `HyperValueError`를 던진다. 두 class는 서버가 HY-132의 모든 오류를 던질 때까지 내부 class다. PHP와 Python runner의 withContext step은 실패를 `raises`로 비교하고, 그 case reader는 Node reader처럼 case가 message를 적지 않은 실패의 message를 빼고 비교한다(HY-132.4). 이전에는 contract에 더는 없는 key `fails`를 비교했다. `contracts/interfaces.json`은 PHP와 Python의 unit `hyper-value-error`를 적는다.
 
 - HY-73.32가 build id가 해시하는(HY-125.15) `reads.json`의 순서를 정한다: 라우트는 manifest 순서로 각각 `shared`, 그다음 `regions`를 가지며, 템플릿이 있는 manifest 영역, page 영역, 라우트 영역이 manifest 순서로 온다. `keys`는 `each`보다 먼저 오고, `keys`의 키는 UTF-8 텍스트의 바이트 순서를 따른다. Rust core는 템플릿이 읽은 순서를 유지하던 것을 바꿔 키를 그 순서로 쓴다. core를 부르기 전까지(H-8) `hyper-build-server`가 유지하는 이전 구현, 곧 `JSON.stringify`를 쓰는 브라우저 package의 `routeReads`와 달라지는 점: 그 키는 템플릿이 읽은 순서를 따르고, ECMAScript가 객체 키를 정렬하듯 정수인 키가 먼저 오므로, 같은 경로를 다른 순서로 읽는 템플릿의 두 build는 다른 바이트를 썼다. `contracts/reads.json`의 `cases`와 `routes` case는 읽기 경로를 그 순서로 담고, core는 그 텍스트를 비교한다.
 

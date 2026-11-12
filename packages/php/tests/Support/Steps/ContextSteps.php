@@ -7,6 +7,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Context;
 use Polyspec\Hyper\Csrf;
+use Polyspec\Hyper\HyperValueError;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\CaseInput;
 use Polyspec\Hyper\Tests\Support\ContextRun;
@@ -44,20 +45,23 @@ final class ContextSteps
         }
         $keys = null;
         $context = null;
-        $fails = false;
+        $raises = null;
         try {
             $placed = Context::withContext($shared, ['name' => 'Board']);
             $keys = array_keys($placed);
             $context = $placed['context'];
-        } catch (\LogicException $error) {
-            if (!str_contains($error->getMessage(), 'already holds the member context')) {
-                throw $error;
-            }
-            $fails = true;
+        } catch (HyperValueError $error) {
+            // HY-132.2: HyperValueError is the class of the category value.
+            $raises = [
+                'kind' => $error->kind(),
+                'status' => $error->status(),
+                'category' => 'value',
+                'message' => $error->getMessage(),
+            ];
         }
         $case->compare('keys', $keys);
         $case->compare('context', $context);
-        $case->compare('fails', $fails);
+        $case->compare('raises', $raises);
     }
 
     /**

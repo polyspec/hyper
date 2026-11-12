@@ -30,22 +30,38 @@ def contexts(case) -> None:
         case.compare("reorderedHash", Context.hash(build, Context.text(context)))
 
 
+def _raises_of(error: Exception) -> dict:
+    """The failure of HY-132 that an error gives: its kind, its status, the category of its class (HY-132.2) and its
+    message."""
+    category = (
+        "value"
+        if isinstance(error, ValueError)
+        else "type"
+        if isinstance(error, TypeError)
+        else None
+    )
+    return {
+        "kind": getattr(error, "kind", None),
+        "status": getattr(error, "status", None),
+        "category": category,
+        "message": str(error),
+    }
+
+
 def with_context(case) -> None:
     shared = {name: name for name in _string_list(case, "shared")}
     keys = None
     context = None
-    fails = False
+    raises = None
     try:
         placed = Context.with_context(shared, {"name": "Board"})
         keys = list(placed)
         context = placed["context"]
-    except ValueError as error:
-        if "already holds the member context" not in str(error):
-            raise
-        fails = True
+    except (ValueError, TypeError) as error:
+        raises = _raises_of(error)
     case.compare("keys", keys)
     case.compare("context", context)
-    case.compare("fails", fails)
+    case.compare("raises", raises)
 
 
 def _string_list(case, name: str) -> list[str]:

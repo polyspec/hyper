@@ -72,7 +72,8 @@ final class Context
     /**
      * Returns the shared data of a document with the context in its place (HY-10): after `csrf`, and when HY-73
      * removed `csrf`, right after `title`; and first when they removed both. Shared data that already holds a member
-     * `context` fails, because the context has one place and one source (HY-124, HY-128).
+     * `context` fails with the kind `shared_holds_context` (HY-124.8, HY-132), because the context has one place and
+     * one source (HY-124, HY-128).
      *
      * @param array<array-key, mixed> $shared
      * @param array<array-key, mixed> $map
@@ -81,7 +82,10 @@ final class Context
     public static function withContext(array $shared, array $map): array
     {
         if (array_key_exists('context', $shared)) {
-            throw new \LogicException('the shared data already holds the member context (HY-128)');
+            throw new HyperValueError(
+                'shared_holds_context',
+                'the shared data already holds the member context (HY-128)',
+            );
         }
         $anchor = array_key_exists('csrf', $shared) ? 'csrf' : 'title';
         $placed = [];

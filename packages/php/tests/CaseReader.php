@@ -157,6 +157,7 @@ final class CaseReader
         }
         $this->compared[$name] = true;
         $this->checks++;
+        $observed = CaseRules::statedMessage($name, $expected, $observed);
         if (!self::matches(CaseRules::kind($field, $name), $expected, $observed, CaseRules::isHeaders($name))) {
             $this->differs ??= $name;
         }

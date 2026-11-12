@@ -115,6 +115,20 @@ def compared_names(section: dict, case: dict) -> list[str]:
     ]
 
 
+def stated_message(name: str, expected: Any, observed: Any) -> Any:
+    """The observed failure of a field `raises` without its message when the case states none: a case compares only a
+    message that a rule states (HY-132.4). Any other field as observed."""
+    if (
+        name != "raises"
+        or not isinstance(expected, dict)
+        or expected.get("message", "stated") is not None
+    ):
+        return observed
+    if not isinstance(observed, dict):
+        return observed
+    return {**observed, "message": None}
+
+
 def folded(value: Any) -> Any:
     """The names of a header map, or of a list of header names, in lower case."""
     if isinstance(value, dict):

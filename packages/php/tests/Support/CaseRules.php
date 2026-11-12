@@ -92,6 +92,21 @@ final class CaseRules
         return Json::string($field['compare'] ?? throw new \LogicException("$name declares no compare"));
     }
 
+    /**
+     * The observed failure of a field `raises` without its message when the case states none: a case compares only a
+     * message that a rule states (HY-132.4). Any other field as observed.
+     */
+    public static function statedMessage(string $name, mixed $expected, mixed $observed): mixed
+    {
+        $unstated = is_array($expected) && array_key_exists('message', $expected) && $expected['message'] === null;
+        if ($name !== 'raises' || !$unstated || !is_array($observed)) {
+            return $observed;
+        }
+        $observed['message'] = null;
+
+        return $observed;
+    }
+
     /** Header names compare without regard to ASCII case (HY-130). */
     public static function isHeaders(string $name): bool
     {

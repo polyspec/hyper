@@ -9,6 +9,7 @@ import re
 from typing import Callable, Optional
 
 from ._data_model import DataModel
+from ._hyper_value_error import HyperValueError
 from ._json_codec import JsonCodec
 
 
@@ -52,10 +53,12 @@ class Context:
     def with_context(shared: dict, map: dict) -> dict:
         """Returns the shared data of a document with the context in its place (HY-10): after `csrf`, and when HY-73
         removed `csrf`, right after `title`; and first when they removed both. Shared data that already holds a
-        member `context` fails, because the context has one place and one source (HY-124, HY-128)."""
+        member `context` fails with the kind `shared_holds_context` (HY-124.8, HY-132), because the context has one
+        place and one source (HY-124, HY-128)."""
         if "context" in shared:
-            raise ValueError(
-                "the shared data already holds the member context (HY-128)"
+            raise HyperValueError(
+                "shared_holds_context",
+                "the shared data already holds the member context (HY-128)",
             )
         anchor = "csrf" if "csrf" in shared else "title"
         placed: dict = {}

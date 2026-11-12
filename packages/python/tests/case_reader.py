@@ -80,6 +80,7 @@ class CaseReader:
                 raise ValueError(f"the case has no field {name}")
             return
         self._compared.add(name)
+        observed = rules.stated_message(name, expected, observed)
         if name.split(".")[-1] in rules.HEADER_FIELDS:
             expected, observed = rules.folded(expected), rules.folded(observed)
         if not CaseReader._matches(rules.kind(node, name), expected, observed):
