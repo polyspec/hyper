@@ -4802,7 +4802,9 @@
         {
           "kind": "rule",
           "id": "HY-45",
-          "retired": [],
+          "retired": [
+            7
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -4844,10 +4846,10 @@
                   "koSource": "c0dff00383edab38bfa249c5d8c426dfe22b29859a6f8e6a39f9c74685f057c5"
                 },
                 {
-                  "id": "HY-45.7",
-                  "en": "The Node and Python hosts write the attributes of the session cookie as PHP writes them: `path=/`, then `secure` for HTTPS, `HttpOnly` and `SameSite=Lax`.",
-                  "ko": "Node와 Python 호스트는 세션 쿠키의 속성을 PHP가 쓰는 대로 쓴다: `path=/`, 그다음 HTTPS이면 `secure`, `HttpOnly`, `SameSite=Lax`이다.",
-                  "koSource": "6b0cd0752117af5b883b6dc01ad7bb49a16f6e20b4cc15e17142b79428c470f4"
+                  "id": "HY-45.8",
+                  "en": "Every server writes the session cookie with `set_cookie` of http-cookies (CK-6 to CK-12), with the path `/`, `secure` under the condition of HY-45.1, `http_only`, `same_site` `Lax` and no `Max-Age`, so its field value is `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`, with `; Secure` only under that condition (CK-9).",
+                  "ko": "모든 server는 session cookie를 http-cookies의 `set_cookie`로 쓰며(CK-6부터 CK-12), path `/`, HY-45.1의 조건에서 `secure`, `http_only`, `same_site` `Lax`를 주고 `Max-Age`는 주지 않는다. 그래서 field 값은 `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`이고 `; Secure`는 그 조건에서만 있다(CK-9).",
+                  "koSource": "560a486e132b7ec9fe0b7bd243b2bf94c9eebba08b88ae310e2f3de6ef957dbe"
                 }
               ]
             }
@@ -4923,41 +4925,38 @@
           "kind": "rule",
           "id": "HY-129",
           "retired": [
-            11
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            11,
+            12
           ],
           "blocks": [
             {
               "kind": "paragraph",
               "statements": [
                 {
-                  "id": "HY-129.1",
-                  "en": "The cookies of a request are the result of one parse of its `Cookie` header, the same in every server.",
-                  "ko": "요청의 cookie는 그 `Cookie` header를 한 번 파싱한 결과이며, 모든 서버에서 같다.",
-                  "koSource": "48b694a13eff95835cc1eed109cf11fb1d97a1de98c8f5c17e3214ab7ffdbd6d"
+                  "id": "HY-129.13",
+                  "en": "The cookies of a request are what `parse` of http-cookies gives for its `Cookie` field lines (CK-2 to CK-5), the same in every server: an ordered map from names to values, where the first cookie of a name counts and a pair that gives no cookie changes nothing.",
+                  "ko": "요청의 cookie는 http-cookies의 `parse`가 그 `Cookie` field 줄에 대해 주는 것이며(CK-2부터 CK-5) 모든 server에서 같다. 이름에서 값으로 가는 순서 있는 map이고, 한 이름의 첫 cookie가 쓰이며, cookie를 주지 않는 쌍은 아무것도 바꾸지 않는다.",
+                  "koSource": "7db5f587f0a858dab1a75dd4ad7da1b17fd99795610219a0cb22cef5364ce3c7"
                 },
                 {
-                  "id": "HY-129.2",
-                  "en": "The header is the bytes of its field value as received.",
-                  "ko": "header는 받은 그대로의 field value 바이트다.",
-                  "koSource": "0667b2e3c8cb6fb2a6706ed7202769b949029ec511a50c7d7105c4109f2312f9"
+                  "id": "HY-129.14",
+                  "en": "A host passes the field values of the `Cookie` lines that it received, in order, and does not join them (CK-2.4): the Node host takes the `Cookie` lines of `rawHeaders` of `node:http`, the Python `create_server` reads every `Cookie` line and the Python ASGI callable passes the `cookie` headers of the scope.",
+                  "ko": "host는 받은 `Cookie` 줄의 field 값을 순서대로 넘기고 잇지 않는다(CK-2.4). Node host는 `node:http`의 `rawHeaders`에서 `Cookie` 줄을 받고, Python `create_server`는 모든 `Cookie` 줄을 읽으며, Python ASGI callable은 scope의 `cookie` header들을 넘긴다.",
+                  "koSource": "4ed34ee770aac3fa61dcf603e5e80ceffd74a5e3e798acd70835869864e3be7c"
                 },
                 {
-                  "id": "HY-129.3",
-                  "en": "A client sends one `Cookie` line (RFC 6265 section 5.4), and over HTTP/2 the server joins the cookie lines with `; ` (RFC 9113 section 8.2.3).",
-                  "ko": "클라이언트는 `Cookie` 줄을 하나만 보내며(RFC 6265 section 5.4), HTTP/2에서는 서버가 cookie 줄들을 `; `로 잇는다(RFC 9113 section 8.2.3).",
-                  "koSource": "aca68c0e5d46e76251e00fb5c5d19e712b7f308ee5d95e81eb82521bc16002b6"
-                },
-                {
-                  "id": "HY-129.4",
-                  "en": "A host that receives the lines apart joins them with `; ` before the parse: the Node server takes `cookie` of `node:http`, which joins with `; `, the Python `create_server` reads every `Cookie` line, and the Python ASGI callable joins the `cookie` headers of the scope with `; `.",
-                  "ko": "줄을 따로 받는 host는 파싱 전에 `; `로 잇는다: Node 서버는 `; `로 잇는 `node:http`의 `cookie`를 쓰고, Python `create_server`는 모든 `Cookie` 줄을 읽으며, Python ASGI callable은 scope의 `cookie` header들을 `; `로 잇는다.",
-                  "koSource": "2ca8d9e412cfa0ce420e3e11065a3a6de184205060251b9161d2a5d5805df784"
-                },
-                {
-                  "id": "HY-129.5",
-                  "en": "A host that receives the header joined takes it as given: PHP takes `$_SERVER['HTTP_COOKIE']` from its SAPI, and the Python WSGI callable takes `HTTP_COOKIE` and encodes it in Latin-1 back to its bytes.",
-                  "ko": "이어진 header를 받는 host는 받은 그대로 쓴다: PHP는 SAPI가 주는 `$_SERVER['HTTP_COOKIE']`를 쓰고, Python WSGI callable은 `HTTP_COOKIE`를 Latin-1로 encode해 바이트로 되돌린다.",
-                  "koSource": "e4295abc3e35df66b5334d43bbaf273e1b935341e5176de550e2542b406f7b58"
+                  "id": "HY-129.15",
+                  "en": "A host whose runtime gives the lines already joined passes that value as one line: PHP takes `$_SERVER['HTTP_COOKIE']` from its SAPI, and the Python WSGI callable takes `HTTP_COOKIE` and encodes it in Latin-1 back to its bytes.",
+                  "ko": "runtime이 이미 이어진 줄을 주는 host는 그 값을 줄 하나로 넘긴다. PHP는 SAPI가 주는 `$_SERVER['HTTP_COOKIE']`를 쓰고, Python WSGI callable은 `HTTP_COOKIE`를 Latin-1로 encode해 바이트로 되돌린다.",
+                  "koSource": "27c0fe763ab433abf3f673b4ccd41a2ef2ff3d2b084e93c56bb3c9392f1a2dfb"
                 },
                 {
                   "id": "HY-129.6",
@@ -4966,34 +4965,10 @@
                   "koSource": "fd7b153c2ae982b7dda040a7827b4d69b933343252165b193eb3b9af4ec6455c"
                 },
                 {
-                  "id": "HY-129.7",
-                  "en": "The header splits at each `;` into pairs, spaces and tabs at both ends of a pair are removed, and a pair splits at its first `=` into a name and a value.",
-                  "ko": "header는 `;`마다 쌍으로 나뉘고, 쌍 양끝의 space와 tab은 지워지며, 쌍은 첫 `=`에서 이름과 값으로 나뉜다.",
-                  "koSource": "031cbfd0e7da2aa44cc683b32dffdb30541845bd5cf5804339e7a49686414704"
-                },
-                {
-                  "id": "HY-129.8",
-                  "en": "A pair gives no cookie when it has no `=`, when its name is empty, when its name is not valid UTF-8, or when its value after percent-decoding is not valid UTF-8; the name is not decoded, and the value is percent-decoded, where `%` with two hexadecimal digits is the byte of those digits and every other byte, `+` included, is itself.",
-                  "ko": "`=`가 없거나, 이름이 비었거나, 이름이 올바른 UTF-8이 아니거나, percent-decoding한 값이 올바른 UTF-8이 아닌 쌍은 cookie가 되지 않는다; 이름은 decode하지 않고, 값은 percent-decode하며, `%`와 16진수 두 자리는 그 자리의 바이트이고 `+`를 포함한 다른 모든 바이트는 그 자신이다.",
-                  "koSource": "e3bd0262658c1d45f30bf3757800c7f6a0875bec8c8fd14533439dec430d1e2c"
-                },
-                {
-                  "id": "HY-129.9",
-                  "en": "Of the pairs that give a cookie, the first of a name counts.",
-                  "ko": "cookie가 되는 쌍 가운데 한 이름의 첫 쌍이 쓰인다.",
-                  "koSource": "5c510dbe8006d564bc7fc59f8f5344cb3d434ef6ffab320b02cca9251965ba25"
-                },
-                {
                   "id": "HY-129.10",
                   "en": "No part of the PHP server reads `$_COOKIE`, whose names PHP changes as the names of its variables (`a.b` becomes `a_b`, and `a[x]` an array): its native session runs with `session.use_cookies` set to false, receives the identifier of HY-45 from this parse with `session_id()` before `session_start()`, or none when the parse gives no identifier, and the server sends the session cookie of HY-45 itself.",
                   "ko": "PHP 서버의 어느 부분도 `$_COOKIE`를 읽지 않는데, PHP가 그 이름을 변수 이름처럼 바꾸기 때문이다(`a.b`는 `a_b`가 되고, `a[x]`는 배열이 된다): native session은 `session.use_cookies`를 false로 둔 채 실행되고, 이 파싱에서 나온 HY-45의 identifier를 `session_start()` 전에 `session_id()`로 받으며, 파싱에서 identifier가 나오지 않으면 아무것도 받지 않고, 서버는 HY-45의 session cookie를 직접 전송한다.",
                   "koSource": "0c2035b3284ca047f408934edb2de3793ede7c46454ca704b12fab86c1a3b6ba"
-                },
-                {
-                  "id": "HY-129.12",
-                  "en": "The cookies of a request are a map from names to values.",
-                  "ko": "요청의 cookie는 각 이름을 그 값에 대응시키는 map이다.",
-                  "koSource": "b0a8831b7454d8ff0309657272db6e407370b46de371b99696771c50fbaa12a0"
                 }
               ]
             }
@@ -5056,7 +5031,8 @@
           "retired": [
             9,
             10,
-            11
+            11,
+            16
           ],
           "blocks": [
             {
@@ -5163,10 +5139,10 @@
                       "koSource": "447f24e6d7e0d4b85789e4a3acb46342c8c7efbec64012a356b44d4ce41279bb"
                     },
                     {
-                      "id": "HY-54.16",
-                      "en": "It writes the session cookie with the attributes and the order of the PHP session cookie (`<name>=<id>; path=/; secure; HttpOnly; SameSite=Lax`, `secure` under the conditions of HY-45), and it runs the requests of one session one after another.",
-                      "ko": "session cookie는 PHP session cookie의 속성과 순서로 쓰며(`<name>=<id>; path=/; secure; HttpOnly; SameSite=Lax`, `secure`는 HY-45의 조건에서), 한 session의 요청들은 차례로 실행한다.",
-                      "koSource": "a4ae06bc86f286f7face97097ea9161158133478030748afec56f6049e8ec8f7"
+                      "id": "HY-54.17",
+                      "en": "It runs the requests of one session one after another (HY-104).",
+                      "ko": "한 session의 요청들은 차례로 실행한다(HY-104).",
+                      "koSource": "5a27d1081594f7f5efc741f5ab7b41e2b798be0c8c1c8ac820bd32fa67125226"
                     }
                   ],
                   "blocks": []
@@ -5727,7 +5703,9 @@
         {
           "kind": "rule",
           "id": "HY-52",
-          "retired": [],
+          "retired": [
+            3
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -5745,10 +5723,10 @@
                   "koSource": "d499c15ce72dd63517f15aa133c6b671d11088b5225e74ffd644dd1b7de0957b"
                 },
                 {
-                  "id": "HY-52.3",
-                  "en": "Each such cookie has `Path=/`, `HttpOnly`, `SameSite=Lax` and `Secure` under the conditions of HY-45.",
-                  "ko": "그런 cookie는 모두 `Path=/`, `HttpOnly`, `SameSite=Lax`를 가지며, HY-45의 조건에서 `Secure`다.",
-                  "koSource": "1c056b259f4b43581054a66572a391f39acea691a6323291c80d19fa342eb2c5"
+                  "id": "HY-52.13",
+                  "en": "Each such cookie is written by `set_cookie` of http-cookies with its `Max-Age`, the path `/`, `secure` under the conditions of HY-45, `http_only` and `same_site` `Lax`, so its field value is `<name>=<value>`, then `; Max-Age=<seconds>` when it has one, `; Path=/`, `; Secure` under those conditions, `; HttpOnly` and `; SameSite=Lax` (CK-9).",
+                  "ko": "그런 cookie는 모두 http-cookies의 `set_cookie`로 쓰며 그 `Max-Age`, path `/`, HY-45의 조건에서 `secure`, `http_only`, `same_site` `Lax`를 준다. 그래서 field 값은 `<name>=<value>`, 있으면 `; Max-Age=<seconds>`, `; Path=/`, 그 조건에서 `; Secure`, `; HttpOnly`, `; SameSite=Lax` 순이다(CK-9).",
+                  "koSource": "bb53ea91931760eb034d7dad44ab71b7efe5ff50f381303b7023c1bb9b55b5bd"
                 },
                 {
                   "id": "HY-52.4",

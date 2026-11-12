@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: bb4970eb3bfd569d8a9a64760c8b26ed4eb3a101a8b7e759b5066bd3c72f5163 -->
+<!-- source-sha256: aad40192c8cabd9070b59894d5e0223520af7f39fff97dab75fd6673361947ac -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 명세는 요청의 cookie를 http-cookies의 `parse`로 읽고 모든 cookie를 `set_cookie`로 쓴다(S-3b). host는 받은 `Cookie` 줄을 잇지 않고 넘기며, 줄을 이어서 주는 runtime은 줄 하나를 넘긴다(HY-129.13부터 HY-129.15, CK-2.4). 모든 server의 session cookie와 reply의 cookie는 한 형식으로 쓴다. `<name>=<value>`, 주어지면 `; Max-Age=<seconds>`, `; Path=/`, HY-45의 조건에서 `; Secure`, `; HttpOnly`, `; SameSite=Lax`이다(HY-45.8, HY-52.13, CK-9). 이전에 Node와 Python server는 session cookie를 PHP의 소문자 형식(`path=/; secure`)으로 썼고 reply는 `Max-Age`를 마지막에 썼다. HY-129.1부터 HY-129.5, HY-129.7부터 HY-129.9, HY-129.12, HY-45.7, HY-52.3, HY-54.16은 은퇴했다. `contracts/reply.json`, `contracts/app.json`, `contracts/file-sessions.json`의 `Set-Cookie` 값이 이것을 따른다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 
 - 명세는 `Accept`를 http-negotiate의 `Accept.parse`로 읽고 route의 type 무게를 `Accept.weigh`로 정하며(HY-116.17부터 HY-116.20, HY-119.5), representation의 `Content-Type`을 http-media-type의 `format`으로 쓴다(HY-119.4)(S-3b). 바뀌는 것: `Accept` field 줄은 각각 따로 읽으므로 quoted string이 다음 줄로 이어지지 않는다(NG-5.2). weight 뒤의 모든 것은 accept extension을 포함해 400이며(NG-5.5, RFC 9110 부록 B.3) 이전에는 무시했다. 끝의 `;`은 빈 매개변수이고 더는 400이 아니다(MT-3.2). 두 번 주어진 매개변수는 400이다(NG-3.5). `charset` 값은 대소문자 없이 비교한다(NG-8.4). HY-116.3부터 HY-116.10, HY-119.1, HY-119.2, HY-119.3은 은퇴했다. `contracts/accept.json`은 실패를 kind `invalid_accept`와 `invalid_weight`의 `raises`로 쓰고 case 넷을 바꾸며, `contracts/representations.json`의 case `a_parameter_after_q_is_a_bad_request`가 accept extension의 case를 대신한다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 

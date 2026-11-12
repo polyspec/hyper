@@ -6722,8 +6722,8 @@
       "status": 200,
       "headers": {
         "Set-Cookie": [
-          "member=token.1; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600",
-          "old=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+          "member=token.1; Max-Age=3600; Path=/; HttpOnly; SameSite=Lax",
+          "old=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
         ],
         "Cache-Control": "private, max-age=60"
       },
@@ -6828,7 +6828,7 @@
       "status": 200,
       "headers": {
         "Set-Cookie": [
-          "member=token.1; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=3600"
+          "member=token.1; Max-Age=3600; Path=/; Secure; HttpOnly; SameSite=Lax"
         ]
       },
       "requirements": [
@@ -6869,7 +6869,7 @@
       "status": 403,
       "headers": {
         "Set-Cookie": [
-          "member=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+          "member=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
         ]
       },
       "body": "Forbidden",

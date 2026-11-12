@@ -1167,7 +1167,7 @@
       "identifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "https": false,
       "name": "hy-session",
-      "header": "hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; path=/; HttpOnly; SameSite=Lax",
+      "header": "hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; Path=/; HttpOnly; SameSite=Lax",
       "only": {
         "languages": [
           "node",
@@ -1182,7 +1182,7 @@
       "identifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "https": true,
       "name": "__Host-hy-session",
-      "header": "__Host-hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; path=/; secure; HttpOnly; SameSite=Lax",
+      "header": "__Host-hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; Path=/; Secure; HttpOnly; SameSite=Lax",
       "only": {
         "languages": [
           "node",

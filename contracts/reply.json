@@ -14,7 +14,7 @@
         ]
       ],
       "headers": [
-        "session=v; Path=/; HttpOnly; SameSite=Lax; Max-Age=60"
+        "session=v; Max-Age=60; Path=/; HttpOnly; SameSite=Lax"
       ],
       "error": null,
       "class": null
@@ -34,7 +34,7 @@
       ],
       "secure": true,
       "headers": [
-        "session=v; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=60"
+        "session=v; Max-Age=60; Path=/; Secure; HttpOnly; SameSite=Lax"
       ],
       "error": null,
       "class": null
@@ -88,7 +88,7 @@
         ]
       ],
       "headers": [
-        "session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+        "session=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
       ],
       "error": null,
       "class": null
@@ -133,7 +133,7 @@
         ]
       ],
       "headers": [
-        "a=b; Path=/; HttpOnly; SameSite=Lax; Max-Age=60"
+        "a=b; Max-Age=60; Path=/; HttpOnly; SameSite=Lax"
       ],
       "error": null,
       "class": null
@@ -152,7 +152,7 @@
         ]
       ],
       "headers": [
-        "a=b; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+        "a=b; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
       ],
       "error": null,
       "class": null
@@ -171,7 +171,7 @@
         ]
       ],
       "headers": [
-        "a=b; Path=/; HttpOnly; SameSite=Lax; Max-Age=9007199254740991"
+        "a=b; Max-Age=9007199254740991; Path=/; HttpOnly; SameSite=Lax"
       ],
       "error": null,
       "class": null

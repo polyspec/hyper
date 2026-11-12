@@ -15804,7 +15804,7 @@
             "cookies": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-129.1",
+              "sentence": "HY-129.13",
               "state": "`header` is text whose characters U+0000 to U+00FF are its bytes, or null for a request without the header, and `cookies` is the map of names to values that its parse gives."
             }
           }
@@ -17312,7 +17312,7 @@
             "headers": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-52.3",
+              "sentence": "HY-52.13",
               "state": "`headers` are the `Set-Cookie` values of a reply after `calls`, each pair of a method of the reply and the JSON texts of its arguments as a handler gives them, in their order, with `Secure` when `secure` is true."
             },
             "error": {
@@ -17792,7 +17792,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-129.1",
+              "sentence": "HY-129.13",
               "state": "`cookie` holds, for each name of `cookieNames` in order, what `cookie(name)` returns, or null."
             },
             "header": {
@@ -18198,7 +18198,7 @@
             "header": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-45.7",
+              "sentence": "HY-45.8",
               "state": "`header` is the `Set-Cookie` value of a new session with the identifier `identifier`."
             }
           },
