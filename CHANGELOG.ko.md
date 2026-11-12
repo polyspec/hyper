@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4915b5d0ff23bb578167aa496c7e764ec4b305cf376f2cd68f8f08378d22704e -->
+<!-- source-sha256: 1381f6799b7fe83e7df53e0aa56b743636db40ad7ab94ce3770b8c63ccf0aabd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- contract case는 수의 binding 규칙과 세 server의 session 저장소를 따른다(S-3b). `60.0` 같은 float `Max-Age`나 page 상태는 PHP와 Python에서 정수가 아니므로 `invalid_number`로 실패하고, number에 float 타입이 없는 Node는 그것을 받는다(HY-52.14). 그래서 `contracts/reply.json`의 그런 case 넷은 각각 Node case와 PHP·Python case로 나뉜다. Node와 Python만 실행하던 `contracts/file-sessions.json`과 `contracts/redis-sessions.json`의 case는 세 server에 적용되고(HY-104.26, HY-115.25), 접두어 `hyper: `가 있는 message를 비교하던 Node case는 message를 비교하지 않는다(HY-106.19).
 
 - hyper의 모든 실패는 kind, 상태, category를 가진 오류다(S-3b; HY-132). 오류는 그 category의 class `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`이며 그 category의 기반 class를 상속하고 `kind`와 `status`를 주며, 호출자는 kind로 실패를 구별한다. HY-132의 표가 hyper의 kind를 적고, hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind를 유지한다. 바뀌는 것: open 오류는 kind `invalid_application`, build 파일은 kind `invalid_build`이며 이전에 PHP, Node, Python은 정확히 `InvalidArgumentException`, `Error`, `ValueError`와 하위 class `InvalidBuild`를 던졌다(HY-106.18). 어떤 message에도 Node 접두어 `hyper: `가 없다(HY-106.19). 다른 타입의 인자는 binding이 hyper의 message 없이 `invalid_argument_type`이나 `invalid_number`로 거부하며, 이전에 server는 HY-52, HY-25, HY-60, HY-69, HY-103의 message와 `TypeError`를 던졌고, `60.0` 같은 float `Max-Age`는 PHP와 Python에서 정수가 아니다(HY-52.14, HY-52.15, HY-25.7, HY-60.32, HY-69.7, HY-103.9). 데이터 모델 밖의 값은 template 데이터 모델의 kind와 message로 실패한다(HY-44.9). 요청의 U+00FF보다 큰 문자는 `invalid_text`로 실패한다(HY-42.7). 선택 없는 요청은 `not_selected`로 실패한다(HY-116.21). ORM의 오류는 orm 패키지의 오류 class와 kind `no_rows`, `revision_changed`로 알아보므로 hyper는 orm 패키지에 의존한다(HY-107.7부터 HY-107.9). host 진입점은 애플리케이션을 먼저 받는 host 코드의 함수 `listener(app, ...)`, `server(app, ...)`, `run($app, ...)`이며 `App`의 member가 아니다(HY-106.20). contract case는 각 실패를 `kind`, `status`, `category`, `message`를 가진 `raises`로 쓰며, `result.json`, `reply.json`, `csrf.json`, `build.json`, `session.json`, `media-type.json`, `context.json`, `fields.json`, `file-sessions.json`, `redis-sessions.json`에서 실패의 key `error`, `class`, `fails`, `failure`는 없어졌다. case가 던지는 ORM 오류는 `{"class", "kind"}`다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 

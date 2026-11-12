@@ -23,14 +23,7 @@
       ],
       "requirements": [
         "HY-45"
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "the_first_use_starts_the_session_and_writes_its_file",
@@ -68,14 +61,7 @@
       ],
       "requirements": [
         "HY-45"
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_session_file_that_holds_no_array_fails_the_request",
@@ -119,14 +105,7 @@
             "i:1;"
           ]
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_session_file_that_cannot_be_decoded_fails_the_request_and_starts_no_session",
@@ -169,14 +148,7 @@
             "s:5:\"token"
           ]
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "an_identifier_without_a_file_names_no_session_and_creates_no_file",
@@ -205,14 +177,7 @@
       ],
       "records": [
         []
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_session_file_without_bytes_is_an_empty_session",
@@ -254,14 +219,7 @@
             "a:0:{}"
           ]
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_request_that_changes_nothing_keeps_the_bytes_and_sets_a_new_modification_time",
@@ -342,14 +300,7 @@
         [
           "sess_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_shorter_record_leaves_no_bytes_of_the_longer_one",
@@ -389,14 +340,7 @@
             "a:0:{}"
           ]
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "the_values_of_php_arrays_are_read_as_the_data_model",
@@ -447,14 +391,7 @@
       ],
       "errors": [
         null
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_map_that_a_php_array_would_read_as_a_list_is_written_as_a_stdclass",
@@ -546,14 +483,7 @@
             "a:3:{s:5:\"empty\";O:8:\"stdClass\":0:{}s:8:\"numbered\";O:8:\"stdClass\":2:{s:1:\"0\";s:1:\"a\";s:1:\"1\";s:1:\"b\";}s:4:\"list\";a:1:{i:0;s:1:\"a\";}}"
           ]
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_session_that_the_store_created_is_read_and_sets_no_new_cookie",
@@ -621,14 +551,7 @@
       ],
       "requirements": [
         "HY-45"
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_short_cookie_value_starts_a_new_session",
@@ -667,14 +590,7 @@
       ],
       "requirements": [
         "HY-45"
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_cookie_value_that_is_a_path_starts_a_new_session",
@@ -713,14 +629,7 @@
       ],
       "requirements": [
         "HY-45"
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "an_identifier_of_lowercase_digits_without_a_file_starts_a_new_session",
@@ -759,14 +668,7 @@
       ],
       "requirements": [
         "HY-45"
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "an_identifier_of_uppercase_digits_without_a_file_starts_a_new_session",
@@ -805,14 +707,7 @@
       ],
       "requirements": [
         "HY-45"
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_cookie_value_of_129_characters_starts_a_new_session",
@@ -851,14 +746,7 @@
       ],
       "requirements": [
         "HY-45"
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_session_older_than_its_lifetime_ends_and_its_file_is_collected",
@@ -919,14 +807,7 @@
             "a:0:{}"
           ]
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_session_within_its_lifetime_is_not_collected",
@@ -983,14 +864,7 @@
             "a:1:{s:1:\"a\";i:1;}"
           ]
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "a_renewal_moves_the_values_to_a_new_identifier_and_removes_the_old_file",
@@ -1100,14 +974,7 @@
       ],
       "requirements": [
         "HY-72"
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      ]
     },
     {
       "id": "the_message_of_a_session_file_that_holds_no_array_starts_with_hyper",
@@ -1143,7 +1010,6 @@
           "record"
         ]
       ],
-      "message": "hyper: the session of eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee holds no map of values",
       "records": [
         [
           [
@@ -1151,13 +1017,7 @@
             "i:1;"
           ]
         ]
-      ],
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-106.19"
-      }
+      ]
     }
   ],
   "cookie": [
@@ -1167,14 +1027,7 @@
       "identifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "https": false,
       "name": "hy-session",
-      "header": "hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; Path=/; HttpOnly; SameSite=Lax",
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      "header": "hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; Path=/; HttpOnly; SameSite=Lax"
     },
     {
       "id": "the_session_cookie_over_https_is_host_prefixed_and_secure",
@@ -1182,14 +1035,7 @@
       "identifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "https": true,
       "name": "__Host-hy-session",
-      "header": "__Host-hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; Path=/; Secure; HttpOnly; SameSite=Lax",
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
+      "header": "__Host-hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; Path=/; Secure; HttpOnly; SameSite=Lax"
     }
   ],
   "open": [
@@ -1197,13 +1043,6 @@
       "id": "a_relative_session_directory_fails",
       "label": "a relative session directory fails",
       "directory": "var/sessions",
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      },
       "raises": {
         "kind": "invalid_session_directory",
         "status": null,
@@ -1216,13 +1055,6 @@
       "label": "a session lifetime of zero fails",
       "directory": "temporary",
       "lifetime": 0,
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      },
       "raises": {
         "kind": "invalid_session_lifetime",
         "status": null,
@@ -1235,13 +1067,6 @@
       "label": "a negative session lifetime fails",
       "directory": "temporary",
       "lifetime": -1,
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      },
       "raises": {
         "kind": "invalid_session_lifetime",
         "status": null,
@@ -1254,13 +1079,6 @@
       "label": "a session lifetime that is no integer fails",
       "directory": "temporary",
       "lifetime": 1.5,
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      },
       "raises": {
         "kind": "invalid_session_lifetime",
         "status": null,
@@ -1273,13 +1091,6 @@
       "label": "a session lifetime that is a text fails",
       "directory": "temporary",
       "lifetime": "60",
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      },
       "raises": {
         "kind": "invalid_session_lifetime",
         "status": null,
@@ -1292,13 +1103,6 @@
       "label": "a session lifetime that is a boolean fails",
       "directory": "temporary",
       "lifetime": true,
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      },
       "raises": {
         "kind": "invalid_session_lifetime",
         "status": null,

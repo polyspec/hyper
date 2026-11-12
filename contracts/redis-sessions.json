@@ -74,14 +74,7 @@
           "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
           "another holder"
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
-      }
+      ]
     },
     {
       "id": "a_request_that_lost_its_lock_writes_nothing_and_fails",
@@ -163,14 +156,7 @@
           "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
           "another holder"
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
-      }
+      ]
     },
     {
       "id": "a_request_that_changed_nothing_sets_only_a_new_expiry",
@@ -240,14 +226,7 @@
           "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "a:1:{s:1:\"n\";i:0;}"
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
-      }
+      ]
     },
     {
       "id": "a_reply_that_is_not_bytes_fails_and_releases_the_lock",
@@ -307,14 +286,7 @@
           "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "a:1:{s:1:\"n\";i:0;}"
         ]
-      ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
-      }
+      ]
     }
   ],
   "open": [
@@ -323,13 +295,6 @@
       "label": "a redis session lifetime of zero fails",
       "options": {
         "lifetime": 0
-      },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
       },
       "raises": {
         "kind": "invalid_session_lifetime",
@@ -344,13 +309,6 @@
       "options": {
         "lifetime": -1
       },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
-      },
       "raises": {
         "kind": "invalid_session_lifetime",
         "status": null,
@@ -363,13 +321,6 @@
       "label": "a redis session lifetime that is no integer fails",
       "options": {
         "lifetime": 1.5
-      },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
       },
       "raises": {
         "kind": "invalid_session_lifetime",
@@ -384,13 +335,6 @@
       "options": {
         "lockExpire": 0
       },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
-      },
       "raises": {
         "kind": "invalid_lock_expire",
         "status": null,
@@ -403,13 +347,6 @@
       "label": "a redis session lock expiry that is negative fails",
       "options": {
         "lockExpire": -1
-      },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
       },
       "raises": {
         "kind": "invalid_lock_expire",
@@ -424,13 +361,6 @@
       "options": {
         "lockExpire": 1.5
       },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
-      },
       "raises": {
         "kind": "invalid_lock_expire",
         "status": null,
@@ -443,13 +373,6 @@
       "label": "a redis session lifetime that is a text fails",
       "options": {
         "lifetime": "60"
-      },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
       },
       "raises": {
         "kind": "invalid_session_lifetime",
@@ -464,13 +387,6 @@
       "options": {
         "lockExpire": "30"
       },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
-      },
       "raises": {
         "kind": "invalid_lock_expire",
         "status": null,
@@ -484,13 +400,6 @@
       "options": {
         "lifetime": true
       },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
-      },
       "raises": {
         "kind": "invalid_session_lifetime",
         "status": null,
@@ -503,13 +412,6 @@
       "label": "a redis session lock expiry that is a boolean fails",
       "options": {
         "lockExpire": true
-      },
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-115.25"
       },
       "raises": {
         "kind": "invalid_lock_expire",
