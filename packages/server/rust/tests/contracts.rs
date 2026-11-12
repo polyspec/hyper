@@ -1045,9 +1045,9 @@ fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
 }
 
 /// The application `a_board` of `app.json` as the steps of a page hold it, every path read whole.
-fn board(context: bool) -> polyspec_hyper::steps::Application {
+fn board(context: bool) -> polyspec_hyper::steps::Pages {
     use polyspec_hyper::reads::Read;
-    use polyspec_hyper::steps::{Application, RouteReads};
+    use polyspec_hyper::steps::{Application, Pages, RouteReads};
     let file = cases("app.json");
     let (templates, manifest) = application(&file, "a_board");
     let fixture = &file["applications"]["a_board"];
@@ -1078,26 +1078,32 @@ fn board(context: bool) -> polyspec_hyper::steps::Application {
             )
         })
         .collect();
-    Application {
+    Pages::from_application(Application {
         manifest,
         templates,
         reads,
         build: text(fixture, "build").to_owned(),
         timezone: text(fixture, "timezone").to_owned(),
         context,
-    }
+    })
 }
 
-fn map(json: &str) -> polyspec_template::OrderedMap {
+fn map(json: &str) -> polyspec_hyper::steps::Map<polyspec_template::Value> {
     match data_value(json) {
-        Ok(polyspec_template::Value::Map(map)) => (*map).clone(),
+        Ok(polyspec_template::Value::Map(map)) => {
+            let mut boundary = polyspec_hyper::steps::Map::new();
+            for (key, value) in map.iter() {
+                boundary.insert(key.clone(), value.clone());
+            }
+            boundary
+        }
         Ok(_) | Err(_) => panic!("{json} is no map"),
     }
 }
 
 /// Runs the steps of a page, answering each call from the list in order, and gives the calls and the answer.
 fn run_page(
-    app: &polyspec_hyper::steps::Application,
+    app: &polyspec_hyper::steps::Pages,
     input: polyspec_hyper::steps::PageInput,
     results: Vec<polyspec_hyper::steps::Input>,
 ) -> (
@@ -1105,7 +1111,7 @@ fn run_page(
     polyspec_hyper::steps::Answer,
 ) {
     use polyspec_hyper::steps::{Input, PageRequest, Step};
-    let mut page = match PageRequest::new(app, input) {
+    let mut page = match PageRequest::new(app, &input) {
         Ok(page) => page,
         Err(error) => panic!("{error}"),
     };
@@ -1113,15 +1119,15 @@ fn run_page(
     let mut results = results.into_iter();
     let mut input = Input::Start;
     loop {
-        match page.next(input) {
-            Ok(Step::Call(call)) => {
+        match page.next(&input) {
+            Ok(Step::Call { call }) => {
                 calls.push(call);
                 input = match results.next() {
                     Some(result) => result,
                     None => panic!("no result for {calls:?}"),
                 };
             }
-            Ok(Step::Answer(answer)) => return (calls, answer),
+            Ok(Step::Answer { answer }) => return (calls, answer),
             Err(error) => panic!("{calls:?}: {error}"),
         }
     }
@@ -1134,12 +1140,12 @@ fn page_input(
 ) -> polyspec_hyper::steps::PageInput {
     polyspec_hyper::steps::PageInput {
         route: route.to_owned(),
-        params: Vec::new(),
+        params: polyspec_hyper::steps::Map::new(),
         kind,
         action,
         csrf: "t".to_owned(),
         changed: Vec::new(),
-        stored: Vec::new(),
+        stored: polyspec_hyper::steps::Map::new(),
         keep_cookie: None,
         held_hash: None,
         now: 0.0,
@@ -1156,9 +1162,13 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
         page_input("list", PageKind::Html, false),
         vec![
             Input::NoHandler,
-            Input::Loaded(map(r#"{"count":1,"note":null}"#)),
+            Input::Loaded {
+                data: map(r#"{"count":1,"note":null}"#),
+            },
             Input::NoHandler,
-            Input::Loaded(map(r#"{"items":["x"],"tags":[]}"#)),
+            Input::Loaded {
+                data: map(r#"{"items":["x"],"tags":[]}"#),
+            },
             Input::Reply {
                 embeds: false,
                 status: None,
@@ -1169,9 +1179,13 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
         calls,
         [
             Call::Shared,
-            Call::RegionLoader("side".to_owned()),
+            Call::RegionLoader {
+                region: "side".to_owned()
+            },
             Call::RouteLoader,
-            Call::RouteRegionLoader("rows".to_owned()),
+            Call::RouteRegionLoader {
+                region: "rows".to_owned()
+            },
             Call::Reply
         ]
     );
@@ -1218,7 +1232,9 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
     let (calls, answer) = run_page(
         &with_context,
         page_input("add", PageKind::Html, true),
-        vec![Input::Action(ActionOutcome::NoPage)],
+        vec![Input::Action {
+            outcome: ActionOutcome::NoPage,
+        }],
     );
     assert_eq!(calls, [Call::Action]);
     assert_eq!(answer, Answer::NoPage);
@@ -1229,13 +1245,19 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
         &with_context,
         page_input("add", PageKind::RegionJson, true),
         vec![
-            Input::Action(ActionOutcome::Page {
-                status: 422,
-                data: map(r#"{"error":"e"}"#),
-            }),
-            Input::Context(map(r#"{"name":"Board"}"#)),
+            Input::Action {
+                outcome: ActionOutcome::Page {
+                    status: 422,
+                    data: map(r#"{"error":"e"}"#),
+                },
+            },
+            Input::Context {
+                context: map(r#"{"name":"Board"}"#),
+            },
             Input::NoHandler,
-            Input::Loaded(map(r#"{"name":"n","error":null}"#)),
+            Input::Loaded {
+                data: map(r#"{"name":"n","error":null}"#),
+            },
             Input::Reply {
                 embeds: false,
                 status: Some(403),
@@ -1273,12 +1295,12 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
 fn a_page_refuses_the_result_of_another_call() {
     use polyspec_hyper::steps::{Input, PageKind, PageRequest, Step};
     let app = board(false);
-    let mut page = match PageRequest::new(&app, page_input("home", PageKind::Html, false)) {
+    let mut page = match PageRequest::new(&app, &page_input("home", PageKind::Html, false)) {
         Ok(page) => page,
         Err(error) => panic!("{error}"),
     };
-    assert!(matches!(page.next(Input::Start), Ok(Step::Call(_))));
-    match page.next(Input::Absent) {
+    assert!(matches!(page.next(&Input::Start), Ok(Step::Call { .. })));
+    match page.next(&Input::Absent) {
         Err(bindgen_core::Failure::Kind(error)) => {
             assert_eq!(bindgen_core::Kinds::kind(&error), "internal")
         }

@@ -9,8 +9,8 @@ use std::sync::Arc;
 
 use bindgen_core::Failure;
 use polyspec_template::{
-    bind, merge, AstProgram, BoundMap, DefineInput, Engine, EngineOptions, Env, HostFunction,
-    MapLoader, OrderedMap, RenderError, RenderOptions, RenderTarget, TemplateError, Value,
+    bind, merge, AstProgram, BoundMap, DefineInput, EngineOptions, Env, HostFunction, MapLoader,
+    OrderedMap, RenderError, RenderOptions, RenderTarget, TemplateError, Value,
 };
 
 use crate::keep::apply;
@@ -26,7 +26,7 @@ pub const DATA_SOURCE: &str =
 
 /// The template engine of an application: its templates and its functions.
 pub struct Templates {
-    engine: Engine,
+    program: AstProgram,
 }
 
 /// A failure of a render: a failure of the template language with its kind, or the exception of a function of the
@@ -72,8 +72,17 @@ impl Templates {
             ..EngineOptions::default()
         })
         .map_err(Error::Template)?;
-        Ok(Templates {
-            engine: Engine::new(program),
+        Ok(Templates { program })
+    }
+
+    /// Registers a function of the application (HYC-24.2, template FUN-43).
+    ///
+    /// # Errors
+    /// `invalid_application` for a name that the template language refuses, such as the name of a built-in function
+    /// (HYC-24.5).
+    pub fn register(&mut self, name: &str, function: HostFunction) -> Result<(), Error> {
+        self.program.register(name, function).map_err(|reason| {
+            Error::InvalidApplication(std::borrow::Cow::Owned(format!("{reason} (HYC-24)")))
         })
     }
 
@@ -88,7 +97,7 @@ impl Templates {
             define,
             env: Some(env.clone()),
         };
-        self.engine
+        self.program
             .render_bound(RenderTarget::Name(template), root, &options)
             .map_err(from_render)
     }

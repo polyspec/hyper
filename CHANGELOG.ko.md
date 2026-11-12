@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c23e271b9122db414f699178cb61d32d271686c3bc24e30e04d4ebe2b220a3e9 -->
+<!-- source-sha256: 4e1c1eb33d7d0a45f3ccb2df7be5e2818edf65552c7b63cef27dbb56364e604e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 애플리케이션의 page는 소유하는 handle `steps::Pages`다. `Pages::open`은 manifest의 byte, 이름별 template, build의 read path, build id, 시간대, context handler 선언으로 이를 만들고, `register`는 첫 page 요청 전에 애플리케이션의 함수를 받는다(HYC-24). `PageRequest`는 그 handle을 쥐므로, binding은 host가 handler를 부르는 동안 그것을 유지한다. interface 계약은 unit `pages`, `page_request`, record `page_input`, enum `page_kind`, variant `call`, `action_outcome`, `page_step_input`, `answer`, `step`(bindgen T-9)과 `template_value`의 소유자를 두며, bindgen의 계약 검사는 이를 통과시킨다. 남은 지적은 core 옆의 binding package를 요구하며(L-2), S-4가 이를 놓는다(C-7).
 
 - 애플리케이션 열기의 모든 실패는 kind `invalid_application`과 원인을 이름하는 메시지(static shell의 경로, data base path, 그 아래의 route도 포함, HY-62.37)를 가진 오류 하나 `InvalidApplication`이다. representation entry의 메시지는 HY-118을, client 렌더의 메시지는 HY-62를 이름하며, 다른 메시지에는 `(HY-118)`이 붙지 않는다(C-7).
 

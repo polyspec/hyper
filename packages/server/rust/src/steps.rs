@@ -11,7 +11,7 @@
 use std::sync::Arc;
 
 use bindgen_core::Failure;
-use polyspec_template::{Env, OrderedMap, Value};
+use polyspec_template::{Env, HostFunction, OrderedMap, Value};
 
 use crate::context::{member, with_context};
 use crate::keep::cookie_values;
@@ -20,6 +20,9 @@ use crate::page::{json_value, kept_values, regions, shared_data, Response};
 use crate::reads::{keep, Read};
 use crate::render::{Document, Templates};
 use crate::Error;
+
+/// A map of the boundary of the bindings (bindgen T-2).
+pub type Map<T> = bindgen_core::OrderedMap<T>;
 
 /// The read paths of a route (HY-73.23): of its shared data and of each region of its documents.
 pub struct RouteReads {
@@ -45,6 +48,101 @@ pub struct Application {
     pub context: bool,
 }
 
+/// The read paths of every route from the value that the build gives (HY-73.23): a map from the name of a route to a
+/// map with `shared`, the node of the shared data, and `regions`, the node of each region by name.
+///
+/// # Errors
+/// `invalid_application` for a value of another form.
+pub fn route_reads(value: &Value) -> Result<Vec<(String, RouteReads)>, Error> {
+    let invalid = || {
+        Error::InvalidApplication(std::borrow::Cow::Borrowed(
+            "the read paths of the build have another form (HY-73.23)",
+        ))
+    };
+    let Value::Map(routes) = value else {
+        return Err(invalid());
+    };
+    let mut reads = Vec::with_capacity(routes.len());
+    for (route, node) in routes.iter() {
+        let Value::Map(node) = node else {
+            return Err(invalid());
+        };
+        let (Some(shared), Some(Value::Map(regions))) = (node.get("shared"), node.get("regions"))
+        else {
+            return Err(invalid());
+        };
+        let mut by_region = Vec::with_capacity(regions.len());
+        for (region, read) in regions.iter() {
+            by_region.push((region.clone(), Read::from_value(read)?));
+        }
+        reads.push((
+            route.clone(),
+            RouteReads {
+                shared: Read::from_value(shared)?,
+                regions: by_region,
+            },
+        ));
+    }
+    Ok(reads)
+}
+
+/// The pages of an application, which every page request of the application shares: a handle that owns the
+/// application, so that a page request holds it while the host calls the handlers.
+#[derive(Clone)]
+pub struct Pages {
+    app: Arc<Application>,
+}
+
+impl Pages {
+    /// The pages of an application (HY-1, HY-12, HY-73, HY-124, HY-125): the bytes of its manifest, its templates by
+    /// name, the read paths of its build, its build id, the time zone of the server and whether it declares a context
+    /// handler.
+    ///
+    /// # Errors
+    /// `invalid_application` for a manifest, a template name or read paths that the application cannot open with.
+    pub fn open(
+        manifest: &[u8],
+        templates: &Map<String>,
+        reads: &Value,
+        build: &str,
+        timezone: &str,
+        context: bool,
+    ) -> Result<Pages, Error> {
+        let sources: Vec<(String, String)> = templates
+            .iter()
+            .map(|(name, source)| (name.to_owned(), source.clone()))
+            .collect();
+        Ok(Pages::from_application(Application {
+            manifest: crate::manifest::read(manifest)?,
+            templates: Templates::new(&sources, std::collections::HashMap::new())?,
+            reads: route_reads(reads)?,
+            build: build.to_owned(),
+            timezone: timezone.to_owned(),
+            context,
+        }))
+    }
+
+    /// The pages of an application that the caller built.
+    #[must_use]
+    pub fn from_application(app: Application) -> Pages {
+        Pages { app: Arc::new(app) }
+    }
+
+    /// Registers a function of the application for its templates (HYC-24.2), before its first page request.
+    ///
+    /// # Errors
+    /// `invalid_application` for a name that the template language refuses (HYC-24.5), and `internal` once a page
+    /// request holds the application.
+    pub fn register(&mut self, name: &str, function: HostFunction) -> Result<(), Error> {
+        match Arc::get_mut(&mut self.app) {
+            Some(app) => app.templates.register(name, function),
+            None => Err(Error::Internal(
+                "a function is registered after the first page request",
+            )),
+        }
+    }
+}
+
 /// The kind of a request that receives a page (HY-15).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PageKind {
@@ -57,10 +155,12 @@ pub enum PageKind {
 }
 
 /// What the page of a request needs that the host read before the first step.
+#[derive(Debug, Clone)]
 pub struct PageInput {
-    /// The route and its parameters.
+    /// The name of the route.
     pub route: String,
-    pub params: Vec<(String, String)>,
+    /// The parameters of the route, by name.
+    pub params: Map<String>,
     /// The kind of the request (HY-15).
     pub kind: PageKind,
     /// Whether the request is a `POST`, which runs the action of its route (HY-26).
@@ -69,8 +169,8 @@ pub struct PageInput {
     pub csrf: String,
     /// The changed topics of the request (HY-19).
     pub changed: Vec<String>,
-    /// The kept server values of the session, by region (HY-40).
-    pub stored: Vec<(String, OrderedMap)>,
+    /// The kept server values of the session, by region and path (HY-40).
+    pub stored: Map<Map<Value>>,
     /// The value of the cookie `hy-keep` of the request (HY-38.10), or `None`.
     pub keep_cookie: Option<String>,
     /// The value of `Hyper-Context`, which HY-127.2 checked, or `None`.
@@ -91,19 +191,19 @@ pub enum Call {
     /// The loader of the route (HY-18.3); its result is `Input::Loaded` or `Input::NoHandler`.
     RouteLoader,
     /// The loader of a route region (HY-75); its result is `Input::Loaded`, `Input::Absent` or `Input::NoHandler`.
-    RouteRegionLoader(String),
+    RouteRegionLoader { region: String },
     /// The loader of a manifest region; its result is `Input::Loaded` or `Input::NoHandler`.
-    RegionLoader(String),
+    RegionLoader { region: String },
     /// The reply of the request after its handlers: whether it embeds the data and the status that it states; its
     /// result is `Input::Reply`.
     Reply,
 }
 
 /// The outcome of the action of a request, as the host found it.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum ActionOutcome {
     /// The action returned the route page with a status of 200, 409 or 422 and data (HY-26, HY-58.3).
-    Page { status: u16, data: OrderedMap },
+    Page { status: u16, data: Map<Value> },
     /// The action let `REVISION_CHANGED` escape, which the server answers as the page with status 409 (HY-107).
     RevisionChanged,
     /// The action redirected, stopped or failed; the host answers it without a page (HY-124.4).
@@ -111,18 +211,18 @@ pub enum ActionOutcome {
 }
 
 /// The result of a call that the host gives to the next `next`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Input {
     /// The first `next` of a request.
     Start,
     /// The outcome of the action.
-    Action(ActionOutcome),
+    Action { outcome: ActionOutcome },
     /// The context map, which the binding converted to the data model (HY-125.9).
-    Context(OrderedMap),
+    Context { context: Map<Value> },
     /// The map of the shared handler.
-    Shared(OrderedMap),
+    Shared { shared: Map<Value> },
     /// The map that a loader returned.
-    Loaded(OrderedMap),
+    Loaded { data: Map<Value> },
     /// A route region loader returned null: the region is absent (HY-75.1).
     Absent,
     /// The application declares no such handler.
@@ -146,9 +246,9 @@ pub enum Answer {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Step {
     /// Call a handler and give its result to the next `next`.
-    Call(Call),
+    Call { call: Call },
     /// The answer; the request is done.
-    Answer(Answer),
+    Answer { answer: Answer },
 }
 
 /// The place of the page in its steps.
@@ -168,10 +268,12 @@ enum State {
 }
 
 /// The page of one request, which `next` moves on.
-pub struct PageRequest<'a> {
-    app: &'a Application,
-    route: &'a Route,
+pub struct PageRequest {
+    pages: Pages,
+    route: usize,
     input: PageInput,
+    params: Vec<(String, String)>,
+    stored: Vec<(String, OrderedMap)>,
     state: State,
     status: u16,
     invalid: OrderedMap,
@@ -189,34 +291,53 @@ fn unexpected() -> Failure<Error> {
     internal("the host gave a page a result of another call")
 }
 
-impl<'a> PageRequest<'a> {
+/// A map of the data model from a map of the boundary.
+fn data_map(map: &Map<Value>) -> OrderedMap {
+    let mut data = OrderedMap::with_capacity(map.len());
+    for (key, value) in map.iter() {
+        data.insert(key.to_owned(), value.clone());
+    }
+    data
+}
+
+fn call(call: Call) -> Step {
+    Step::Call { call }
+}
+
+impl PageRequest {
     /// The page of a request of a route of the application.
     ///
     /// # Errors
     /// `internal` for a route that the manifest does not hold, and for a manifest without its page region.
-    pub fn new(app: &'a Application, input: PageInput) -> Result<PageRequest<'a>, Error> {
-        let Some(route) = app
-            .manifest
+    pub fn new(pages: &Pages, input: &PageInput) -> Result<PageRequest, Error> {
+        let manifest = &pages.app.manifest;
+        let Some(route) = manifest
             .routes
             .iter()
-            .find(|route| route.name == input.route)
+            .position(|route| route.name == input.route)
         else {
             return Err(Error::Internal(
                 "the page of a route that the manifest does not hold",
             ));
         };
-        let selected = regions(
-            &app.manifest,
-            input.kind != PageKind::RegionJson,
-            &input.changed,
-        )?
-        .iter()
-        .map(|region| region.name.clone())
-        .collect();
+        let selected = regions(manifest, input.kind != PageKind::RegionJson, &input.changed)?
+            .iter()
+            .map(|region| region.name.clone())
+            .collect();
         Ok(PageRequest {
-            app,
+            pages: pages.clone(),
             route,
-            input,
+            input: input.clone(),
+            params: input
+                .params
+                .iter()
+                .map(|(name, value)| (name.to_owned(), value.clone()))
+                .collect(),
+            stored: input
+                .stored
+                .iter()
+                .map(|(region, paths)| (region.to_owned(), data_map(paths)))
+                .collect(),
             state: State::Start,
             status: 200,
             invalid: OrderedMap::new(),
@@ -227,53 +348,67 @@ impl<'a> PageRequest<'a> {
         })
     }
 
+    fn manifest(&self) -> &Manifest {
+        &self.pages.app.manifest
+    }
+
+    fn route(&self) -> Result<&Route, Failure<Error>> {
+        match self.manifest().routes.get(self.route) {
+            Some(route) => Ok(route),
+            None => Err(internal(
+                "a page of a route that the manifest does not hold",
+            )),
+        }
+    }
+
     /// Moves the page on with the result of the call of the last step.
     ///
     /// # Errors
     /// The failure of a value of the data model, of a check of hyper (`shared_holds_context`, HY-124.8) or of a render
     /// with its kind, the exception of a function of a template unchanged, and `internal` for a result of another
     /// call than the last step asked for.
-    pub fn next(&mut self, input: Input) -> Result<Step, Failure<Error>> {
+    pub fn next(&mut self, input: &Input) -> Result<Step, Failure<Error>> {
         let state = std::mem::replace(&mut self.state, State::Done);
         match (state, input) {
             (State::Start, Input::Start) => {
                 if self.input.action {
                     self.state = State::Action;
-                    Ok(Step::Call(Call::Action))
+                    Ok(call(Call::Action))
                 } else {
                     Ok(self.after_action())
                 }
             }
-            (State::Action, Input::Action(outcome)) => match outcome {
+            (State::Action, Input::Action { outcome }) => match outcome {
                 ActionOutcome::Page { status, data } => {
-                    self.status = status;
-                    self.invalid = data;
+                    self.status = *status;
+                    self.invalid = data_map(data);
                     Ok(self.after_action())
                 }
                 ActionOutcome::RevisionChanged => {
                     self.status = 409;
                     Ok(self.after_action())
                 }
-                ActionOutcome::NoPage => Ok(Step::Answer(Answer::NoPage)),
+                ActionOutcome::NoPage => Ok(Step::Answer {
+                    answer: Answer::NoPage,
+                }),
             },
-            (State::Context, Input::Context(context)) => {
-                self.context = Some(context);
+            (State::Context, Input::Context { context }) => {
+                self.context = Some(data_map(context));
                 self.state = State::Shared;
-                Ok(Step::Call(Call::Shared))
+                Ok(call(Call::Shared))
             }
-            (State::Shared, Input::Shared(returned)) => {
-                self.shared = Some(
-                    shared_data(&self.route.title, &self.input.csrf, Some(&returned))
-                        .map_err(Failure::Kind)?,
-                );
-                self.first_loader()
+            (State::Shared, Input::Shared { shared }) => {
+                let returned = data_map(shared);
+                let shared = shared_data(&self.route()?.title, &self.input.csrf, Some(&returned))
+                    .map_err(Failure::Kind)?;
+                self.shared = Some(shared);
+                self.call_for(0)
             }
             (State::Shared, Input::NoHandler) => {
-                self.shared = Some(
-                    shared_data(&self.route.title, &self.input.csrf, None)
-                        .map_err(Failure::Kind)?,
-                );
-                self.first_loader()
+                let shared = shared_data(&self.route()?.title, &self.input.csrf, None)
+                    .map_err(Failure::Kind)?;
+                self.shared = Some(shared);
+                self.call_for(0)
             }
             (
                 State::Loaders {
@@ -282,7 +417,7 @@ impl<'a> PageRequest<'a> {
                 },
                 input,
             ) => self.loaded(region, route_region, input),
-            (State::Reply, Input::Reply { embeds, status }) => self.answer(embeds, status),
+            (State::Reply, Input::Reply { embeds, status }) => self.answer(*embeds, *status),
             (_, _) => Err(unexpected()),
         }
     }
@@ -290,17 +425,17 @@ impl<'a> PageRequest<'a> {
     /// After the action: the context handler for an application that declares one (HY-124.2), then the shared
     /// handler.
     fn after_action(&mut self) -> Step {
-        if self.app.context {
+        if self.pages.app.context {
             self.state = State::Context;
-            Step::Call(Call::Context)
+            call(Call::Context)
         } else {
             self.state = State::Shared;
-            Step::Call(Call::Shared)
+            call(Call::Shared)
         }
     }
 
     fn is_page(&self, region: usize) -> Result<bool, Failure<Error>> {
-        let page = self.app.manifest.page().map_err(Failure::Kind)?;
+        let page = self.manifest().page().map_err(Failure::Kind)?;
         Ok(self.selected.get(region).map(String::as_str) == Some(page))
     }
 
@@ -308,33 +443,29 @@ impl<'a> PageRequest<'a> {
     fn call_for(&mut self, region: usize) -> Result<Step, Failure<Error>> {
         let Some(name) = self.selected.get(region).cloned() else {
             self.state = State::Reply;
-            return Ok(Step::Call(Call::Reply));
+            return Ok(call(Call::Reply));
         };
         self.state = State::Loaders {
             region,
             route_region: None,
         };
         if self.is_page(region)? {
-            Ok(Step::Call(Call::RouteLoader))
+            Ok(call(Call::RouteLoader))
         } else {
-            Ok(Step::Call(Call::RegionLoader(name)))
+            Ok(call(Call::RegionLoader { region: name }))
         }
     }
 
-    fn first_loader(&mut self) -> Result<Step, Failure<Error>> {
-        self.call_for(0)
-    }
-
     /// The data of a loader: its map, or the empty map without a loader (HY-18.3, HY-75.7).
-    fn loaded_map(input: Input) -> Result<Option<OrderedMap>, Failure<Error>> {
+    fn loaded_map(input: &Input) -> Result<Option<OrderedMap>, Failure<Error>> {
         match input {
-            Input::Loaded(map) => Ok(Some(map)),
+            Input::Loaded { data } => Ok(Some(data_map(data))),
             Input::NoHandler => Ok(Some(OrderedMap::new())),
             Input::Absent => Ok(None),
             Input::Start
-            | Input::Action(_)
-            | Input::Context(_)
-            | Input::Shared(_)
+            | Input::Action { .. }
+            | Input::Context { .. }
+            | Input::Shared { .. }
             | Input::Reply { .. } => Err(unexpected()),
         }
     }
@@ -343,7 +474,7 @@ impl<'a> PageRequest<'a> {
         &mut self,
         region: usize,
         route_region: Option<usize>,
-        input: Input,
+        input: &Input,
     ) -> Result<Step, Failure<Error>> {
         let Some(name) = self.selected.get(region).cloned() else {
             return Err(internal("a loader of a region that the page does not hold"));
@@ -367,9 +498,13 @@ impl<'a> PageRequest<'a> {
                 self.call_for(region + 1)
             }
             Some(position) => {
-                if let (Some(map), Some(route_region)) = (map, self.route.regions.get(position)) {
-                    self.data
-                        .push((route_region.name.clone(), Value::Map(Arc::new(map))));
+                let route_region = self
+                    .route()?
+                    .regions
+                    .get(position)
+                    .map(|region| region.name.clone());
+                if let (Some(map), Some(route_region)) = (map, route_region) {
+                    self.data.push((route_region, Value::Map(Arc::new(map))));
                 }
                 self.next_route_region(region, position + 1)
             }
@@ -382,15 +517,20 @@ impl<'a> PageRequest<'a> {
         region: usize,
         position: usize,
     ) -> Result<Step, Failure<Error>> {
-        match self.route.regions.get(position) {
+        let next = self
+            .route()?
+            .regions
+            .get(position)
+            .map(|region| region.name.clone());
+        match next {
             Some(route_region) => {
                 self.state = State::Loaders {
                     region,
                     route_region: Some(position),
                 };
-                Ok(Step::Call(Call::RouteRegionLoader(
-                    route_region.name.clone(),
-                )))
+                Ok(call(Call::RouteRegionLoader {
+                    region: route_region,
+                }))
             }
             None => self.call_for(region + 1),
         }
@@ -398,11 +538,12 @@ impl<'a> PageRequest<'a> {
 
     /// The answer after the handlers (HY-17, HY-31, HY-38, HY-73, HY-128, HY-69).
     fn answer(&mut self, embeds: bool, reply_status: Option<u16>) -> Result<Step, Failure<Error>> {
-        let Some(route_reads) = self
-            .app
+        let app = Arc::clone(&self.pages.app);
+        let route = self.route()?.clone();
+        let Some(route_reads) = app
             .reads
             .iter()
-            .find(|(route, _)| *route == self.route.name)
+            .find(|(name, _)| *name == route.name)
             .map(|(_, reads)| reads)
         else {
             return Err(internal("a route without its read paths (HY-73)"));
@@ -436,15 +577,14 @@ impl<'a> PageRequest<'a> {
             Some(text) => cookie_values(text),
             None => Vec::new(),
         };
-        let kept = kept_values(&self.app.manifest, &data, &self.input.stored, &cookie);
+        let kept = kept_values(&app.manifest, &data, &self.stored, &cookie);
         // HY-69: the reply gives a page with status 200 its status.
         let status = match (self.status, reply_status) {
             (200, Some(status)) => status,
             (status, _) => status,
         };
         let json = self.input.kind != PageKind::Html;
-        let route_regions: Vec<String> = self
-            .route
+        let route_regions: Vec<String> = route
             .regions
             .iter()
             .map(|region| region.name.clone())
@@ -454,7 +594,7 @@ impl<'a> PageRequest<'a> {
         let context = match (&self.context, json || embeds) {
             (Some(context), true) => Some(
                 member(
-                    &self.app.build,
+                    &app.build,
                     context,
                     if json {
                         self.input.held_hash.as_deref()
@@ -467,10 +607,10 @@ impl<'a> PageRequest<'a> {
             (Some(_) | None, _) => None,
         };
         let value = json_value(Response {
-            timezone: &self.app.timezone,
-            route: &self.route.name,
-            params: &self.input.params,
-            build: &self.app.build,
+            timezone: &app.timezone,
+            route: &route.name,
+            params: &self.params,
+            build: &app.build,
             context,
             shared: shared.clone(),
             regions: data.clone(),
@@ -479,7 +619,9 @@ impl<'a> PageRequest<'a> {
         if json {
             let text = crate::json::write(&Value::Map(Arc::new(value)))
                 .map_err(|error| Failure::Kind(Error::DataModel(error)))?;
-            return Ok(Step::Answer(Answer::Json { status, text }));
+            return Ok(Step::Answer {
+                answer: Answer::Json { status, text },
+            });
         }
         // HY-124.7, HY-128.4: a document renders with the context in the shared data.
         let shared = match &self.context {
@@ -487,19 +629,21 @@ impl<'a> PageRequest<'a> {
                 .map_err(Failure::Kind)?,
             None => shared,
         };
-        let html = self.app.templates.render_document(&Document {
-            manifest: &self.app.manifest,
-            route: self.route,
+        let html = app.templates.render_document(&Document {
+            manifest: &app.manifest,
+            route: &route,
             shared: &shared,
             regions: &data,
             kept: &kept,
             env: Env {
-                timezone: self.app.timezone.clone(),
+                timezone: app.timezone.clone(),
                 now: self.input.now,
             },
-            build: &self.app.build,
+            build: &app.build,
             embed: if embeds { Some(&value) } else { None },
         })?;
-        Ok(Step::Answer(Answer::Document { status, html }))
+        Ok(Step::Answer {
+            answer: Answer::Document { status, html },
+        })
     }
 }

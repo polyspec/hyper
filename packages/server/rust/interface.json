@@ -34,7 +34,12 @@
   "naming": {
     "exceptions": []
   },
-  "types": {},
+  "types": {
+    "template_value": {
+      "library": "template",
+      "unit": "template_value"
+    }
+  },
   "errors": {
     "classes": {
       "value": {
@@ -1469,6 +1474,673 @@
               "python"
             ],
             "reason": "HY-100.15"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pages",
+      "name": [
+        "pages"
+      ],
+      "module": "",
+      "kind": "class",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::Pages",
+      "constructible": true,
+      "final": true,
+      "members": [
+        {
+          "id": "pages.open",
+          "name": [
+            "open"
+          ],
+          "kind": "constructor",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "manifest"
+              ],
+              "type": "bytes",
+              "required": true
+            },
+            {
+              "name": [
+                "templates"
+              ],
+              "type": {
+                "map": "text"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "reads"
+              ],
+              "type": "template_value",
+              "required": true
+            },
+            {
+              "name": [
+                "build"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "timezone"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "context"
+              ],
+              "type": "bool",
+              "required": true
+            }
+          ],
+          "returns": "self",
+          "raises": [
+            "polyspec_hyper::Error::InvalidApplication"
+          ],
+          "wait": "none",
+          "core": {
+            "path": "polyspec_hyper::steps::Pages::open"
+          }
+        },
+        {
+          "id": "pages.register",
+          "name": [
+            "register"
+          ],
+          "kind": "method",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "name"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "function"
+              ],
+              "type": {
+                "function": {
+                  "parameters": [
+                    {
+                      "list": "template_value"
+                    },
+                    {
+                      "unit": "environment",
+                      "library": "template"
+                    }
+                  ],
+                  "returns": "template_value"
+                }
+              },
+              "required": true
+            }
+          ],
+          "returns": "none",
+          "raises": [
+            "polyspec_hyper::Error::InvalidApplication",
+            "polyspec_hyper::Error::Internal"
+          ],
+          "wait": "none",
+          "core": {
+            "path": "polyspec_hyper::steps::Pages::register",
+            "receiver": "&mut self"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_kind",
+      "name": [
+        "page",
+        "kind"
+      ],
+      "module": "",
+      "kind": "enum",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::PageKind",
+      "variants": [
+        {
+          "name": [
+            "html"
+          ],
+          "value": "html"
+        },
+        {
+          "name": [
+            "document",
+            "json"
+          ],
+          "value": "document_json"
+        },
+        {
+          "name": [
+            "region",
+            "json"
+          ],
+          "value": "region_json"
+        }
+      ]
+    },
+    {
+      "id": "page_input",
+      "name": [
+        "page",
+        "input"
+      ],
+      "module": "",
+      "kind": "record",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::PageInput",
+      "fields": [
+        {
+          "name": [
+            "route"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "params"
+          ],
+          "type": {
+            "map": "text"
+          },
+          "required": true
+        },
+        {
+          "name": [
+            "kind"
+          ],
+          "type": {
+            "unit": "page_kind"
+          },
+          "required": true
+        },
+        {
+          "name": [
+            "action"
+          ],
+          "type": "bool",
+          "required": true
+        },
+        {
+          "name": [
+            "csrf"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "changed"
+          ],
+          "type": {
+            "list": "text"
+          },
+          "required": true
+        },
+        {
+          "name": [
+            "stored"
+          ],
+          "type": {
+            "map": {
+              "map": "template_value"
+            }
+          },
+          "required": true
+        },
+        {
+          "name": [
+            "keep",
+            "cookie"
+          ],
+          "type": {
+            "optional": "text"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-38.10"
+        },
+        {
+          "name": [
+            "held",
+            "hash"
+          ],
+          "type": {
+            "optional": "text"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-127.1"
+        },
+        {
+          "name": [
+            "now"
+          ],
+          "type": "float",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "call",
+      "name": [
+        "call"
+      ],
+      "module": "",
+      "kind": "variant",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::Call",
+      "tag": [
+        "call"
+      ],
+      "cases": [
+        {
+          "value": "action",
+          "fields": []
+        },
+        {
+          "value": "context",
+          "fields": []
+        },
+        {
+          "value": "shared",
+          "fields": []
+        },
+        {
+          "value": "route_loader",
+          "fields": []
+        },
+        {
+          "value": "route_region_loader",
+          "fields": [
+            {
+              "name": [
+                "region"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "region_loader",
+          "fields": [
+            {
+              "name": [
+                "region"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "reply",
+          "fields": []
+        }
+      ]
+    },
+    {
+      "id": "action_outcome",
+      "name": [
+        "action",
+        "outcome"
+      ],
+      "module": "",
+      "kind": "variant",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::ActionOutcome",
+      "tag": [
+        "outcome"
+      ],
+      "cases": [
+        {
+          "value": "page",
+          "fields": [
+            {
+              "name": [
+                "status"
+              ],
+              "type": "uint",
+              "required": true
+            },
+            {
+              "name": [
+                "data"
+              ],
+              "type": {
+                "map": "template_value"
+              },
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "revision_changed",
+          "fields": []
+        },
+        {
+          "value": "no_page",
+          "fields": []
+        }
+      ]
+    },
+    {
+      "id": "page_step_input",
+      "name": [
+        "page",
+        "step",
+        "input"
+      ],
+      "module": "",
+      "kind": "variant",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::Input",
+      "tag": [
+        "input"
+      ],
+      "cases": [
+        {
+          "value": "start",
+          "fields": []
+        },
+        {
+          "value": "action",
+          "fields": [
+            {
+              "name": [
+                "outcome"
+              ],
+              "type": {
+                "unit": "action_outcome"
+              },
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "context",
+          "fields": [
+            {
+              "name": [
+                "context"
+              ],
+              "type": {
+                "map": "template_value"
+              },
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "shared",
+          "fields": [
+            {
+              "name": [
+                "shared"
+              ],
+              "type": {
+                "map": "template_value"
+              },
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "loaded",
+          "fields": [
+            {
+              "name": [
+                "data"
+              ],
+              "type": {
+                "map": "template_value"
+              },
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "absent",
+          "fields": []
+        },
+        {
+          "value": "no_handler",
+          "fields": []
+        },
+        {
+          "value": "reply",
+          "fields": [
+            {
+              "name": [
+                "embeds"
+              ],
+              "type": "bool",
+              "required": true
+            },
+            {
+              "name": [
+                "status"
+              ],
+              "type": {
+                "optional": "uint"
+              },
+              "default": {
+                "literal": null
+              },
+              "reason": "HY-69"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "answer",
+      "name": [
+        "answer"
+      ],
+      "module": "",
+      "kind": "variant",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::Answer",
+      "tag": [
+        "answer"
+      ],
+      "cases": [
+        {
+          "value": "document",
+          "fields": [
+            {
+              "name": [
+                "status"
+              ],
+              "type": "uint",
+              "required": true
+            },
+            {
+              "name": [
+                "html"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "json",
+          "fields": [
+            {
+              "name": [
+                "status"
+              ],
+              "type": "uint",
+              "required": true
+            },
+            {
+              "name": [
+                "text"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "no_page",
+          "fields": []
+        }
+      ]
+    },
+    {
+      "id": "step",
+      "name": [
+        "step"
+      ],
+      "module": "",
+      "kind": "variant",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::Step",
+      "tag": [
+        "step"
+      ],
+      "cases": [
+        {
+          "value": "call",
+          "fields": [
+            {
+              "name": [
+                "call"
+              ],
+              "type": {
+                "unit": "call"
+              },
+              "required": true
+            }
+          ]
+        },
+        {
+          "value": "answer",
+          "fields": [
+            {
+              "name": [
+                "answer"
+              ],
+              "type": {
+                "unit": "answer"
+              },
+              "required": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "page_request",
+      "name": [
+        "page",
+        "request"
+      ],
+      "module": "",
+      "kind": "class",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::PageRequest",
+      "constructible": true,
+      "final": true,
+      "members": [
+        {
+          "id": "page_request.new",
+          "name": [
+            "new"
+          ],
+          "kind": "constructor",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "pages"
+              ],
+              "type": {
+                "unit": "pages"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "input"
+              ],
+              "type": {
+                "unit": "page_input"
+              },
+              "required": true
+            }
+          ],
+          "returns": "self",
+          "raises": [
+            "polyspec_hyper::Error::Internal"
+          ],
+          "wait": "none",
+          "core": {
+            "path": "polyspec_hyper::steps::PageRequest::new"
+          }
+        },
+        {
+          "id": "page_request.next",
+          "name": [
+            "next"
+          ],
+          "kind": "method",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "input"
+              ],
+              "type": {
+                "unit": "page_step_input"
+              },
+              "required": true
+            }
+          ],
+          "returns": {
+            "unit": "step"
+          },
+          "raises": [
+            "polyspec_hyper::Error::Internal",
+            "polyspec_hyper::Error::SharedHoldsContext",
+            "polyspec_hyper::Error::DataModel",
+            "polyspec_hyper::Error::Template"
+          ],
+          "wait": "none",
+          "core": {
+            "path": "polyspec_hyper::steps::PageRequest::next",
+            "receiver": "&mut self"
           }
         }
       ]
