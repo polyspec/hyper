@@ -178,7 +178,8 @@
         "contracts/representations.json",
         "contracts/app.json",
         "contracts/hooks.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/client-before-s3b.json"
       ],
       "units": [
         {
@@ -13251,7 +13252,8 @@
       "cases": [
         "contracts/client.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/client-before-s3b.json"
       ],
       "units": [
         {
@@ -15504,11 +15506,8 @@
           ]
         },
         "openRejections": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "client-before-s3b.json",
           "uses": [
             "basePath",
             "shell"

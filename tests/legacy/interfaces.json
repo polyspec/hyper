@@ -976,6 +976,68 @@
           }
         }
       }
+    },
+    "client-before-s3b.json": {
+      "fixtures": {
+        "basePath": "input",
+        "shell": "input"
+      },
+      "sections": {
+        "openRejections": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [
+            "basePath",
+            "shell"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "shellFile": {
+              "role": "input"
+            },
+            "dataBasePath": {
+              "role": "input",
+              "optional": true
+            },
+            "openError": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-62.37",
+              "state": "`openError` is a text that the message of the open error contains."
+            }
+          },
+          "outcomes": {
+            "open": {
+              "compare": "raises",
+              "sentence": "HY-106.6"
+            },
+            "messageStart": {
+              "compare": "exact",
+              "sentence": "HY-106.10",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-106.10"
+              }
+            }
+          },
+          "members": [
+            "app.open",
+            "choice.constructor",
+            "client-rendering.constructor"
+          ]
+        }
+      }
     }
   }
 }

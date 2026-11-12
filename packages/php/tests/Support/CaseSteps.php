@@ -89,7 +89,7 @@ final class CaseSteps
             'request.json targets' => RequestSteps::targets(...),
             'request.json values' => RequestSteps::values(...),
             'build.json outputs' => BuildSteps::outputs(...),
-            'client.json openRejections' => ClientSteps::openRejections(...),
+            'client-before-s3b.json openRejections' => ClientSteps::openRejections(...),
             'app-before-s3b.json cases' => AppSteps::cases(...),
             'app-before-s3b.json opens' => AppSteps::opens(...),
             'app.json parts' => AppSteps::parts(...),

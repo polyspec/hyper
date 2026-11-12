@@ -41,7 +41,7 @@ STEPS = {
     ("accept-before-s3b.json", "parse"): accept_steps.parse,
     ("accept-before-s3b.json", "select"): accept_steps.select,
     ("client.json", "cases"): client_steps.cases,
-    ("client.json", "openRejections"): client_steps.open_rejections,
+    ("client-before-s3b.json", "openRejections"): client_steps.open_rejections,
     ("client.json", "declaration"): client_steps.declaration,
     ("context.json", "contexts"): context_steps.contexts,
     ("context.json", "withContext"): context_steps.with_context,
