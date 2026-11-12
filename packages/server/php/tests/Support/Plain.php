@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
 /**
  * Converts the decoded JSON of a case to the values that loaders return: arrays for lists and non-empty objects,

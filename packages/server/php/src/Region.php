@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * One manifest region: the page region, or a region with its own template and used topics (HY-2).

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
 /** A session handler whose session cannot start: its open fails, or its read gives no data (HY-45). */
 final class RefusingSessionHandler implements \SessionHandlerInterface

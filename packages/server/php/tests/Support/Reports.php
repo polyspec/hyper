@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
-use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
+use Polyspec\Hyper\Server\Reply;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Response;
 
 /** The calls of the response hook of an application (HY-60), which a step records. */
 final class Reports

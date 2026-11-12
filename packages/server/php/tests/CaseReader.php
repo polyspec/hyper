@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests;
+namespace Polyspec\Hyper\Server\Tests;
 
-use Polyspec\Hyper\Tests\Support\CaseRules;
-use Polyspec\Hyper\Tests\Support\Json;
-use Polyspec\Hyper\Tests\Support\Plain;
+use Polyspec\Hyper\Server\Tests\Support\CaseRules;
+use Polyspec\Hyper\Server\Tests\Support\Json;
+use Polyspec\Hyper\Server\Tests\Support\Plain;
 
 /**
  * One case of a file of contracts/, read through its declaration in contracts/interfaces.json `caseFiles` (HYR-4,

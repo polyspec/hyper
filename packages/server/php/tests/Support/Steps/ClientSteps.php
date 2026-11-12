@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Choice;
-use Polyspec\Hyper\ClientRendering;
-use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\ClientApp;
-use Polyspec\Hyper\Tests\Support\Counter;
-use Polyspec\Hyper\Tests\Support\CountingStore;
-use Polyspec\Hyper\Tests\Support\Json;
-use Polyspec\Hyper\Tests\Support\Plain;
-use Polyspec\Hyper\Tests\Support\Reports;
-use Polyspec\Hyper\Tests\Support\RepresentationCalls;
-use Polyspec\Hyper\Tests\Support\ServerLog;
-use Polyspec\Hyper\Tests\Support\Untyped;
+use Polyspec\Hyper\Server\Choice;
+use Polyspec\Hyper\Server\ClientRendering;
+use Polyspec\Hyper\Server\Reply;
+use Polyspec\Hyper\Server\Csrf;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Response;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\ClientApp;
+use Polyspec\Hyper\Server\Tests\Support\Counter;
+use Polyspec\Hyper\Server\Tests\Support\CountingStore;
+use Polyspec\Hyper\Server\Tests\Support\Json;
+use Polyspec\Hyper\Server\Tests\Support\Plain;
+use Polyspec\Hyper\Server\Tests\Support\Reports;
+use Polyspec\Hyper\Server\Tests\Support\RepresentationCalls;
+use Polyspec\Hyper\Server\Tests\Support\ServerLog;
+use Polyspec\Hyper\Server\Tests\Support\Untyped;
 
 /** HY-62: the cases of contracts/client.json. */
 final class ClientSteps

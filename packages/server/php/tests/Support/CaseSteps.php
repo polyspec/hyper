@@ -2,33 +2,33 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\Steps\AcceptSteps;
-use Polyspec\Hyper\Tests\Support\Steps\AppSteps;
-use Polyspec\Hyper\Tests\Support\Steps\ArgumentsSteps;
-use Polyspec\Hyper\Tests\Support\Steps\BuildSteps;
-use Polyspec\Hyper\Tests\Support\Steps\ClientSteps;
-use Polyspec\Hyper\Tests\Support\Steps\ContextSteps;
-use Polyspec\Hyper\Tests\Support\Steps\ContainerSteps;
-use Polyspec\Hyper\Tests\Support\Steps\CookiesSteps;
-use Polyspec\Hyper\Tests\Support\Steps\CsrfSteps;
-use Polyspec\Hyper\Tests\Support\Steps\FieldsSteps;
-use Polyspec\Hyper\Tests\Support\Steps\FunctionsSteps;
-use Polyspec\Hyper\Tests\Support\Steps\JsonSteps;
-use Polyspec\Hyper\Tests\Support\Steps\KeepSteps;
-use Polyspec\Hyper\Tests\Support\Steps\ManifestSteps;
-use Polyspec\Hyper\Tests\Support\Steps\MediaTypeSteps;
-use Polyspec\Hyper\Tests\Support\Steps\ReadsSteps;
-use Polyspec\Hyper\Tests\Support\Steps\RepresentationsSteps;
-use Polyspec\Hyper\Tests\Support\Steps\RequestSteps;
-use Polyspec\Hyper\Tests\Support\Steps\RestSteps;
-use Polyspec\Hyper\Tests\Support\Steps\ReplySteps;
-use Polyspec\Hyper\Tests\Support\Steps\ResponseSteps;
-use Polyspec\Hyper\Tests\Support\Steps\ResultSteps;
-use Polyspec\Hyper\Tests\Support\Steps\RoutesSteps;
-use Polyspec\Hyper\Tests\Support\Steps\SessionSteps;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\Steps\AcceptSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\AppSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ArgumentsSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\BuildSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ClientSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ContextSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ContainerSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\CookiesSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\CsrfSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\FieldsSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\FunctionsSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\JsonSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\KeepSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ManifestSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\MediaTypeSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ReadsSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\RepresentationsSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\RequestSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\RestSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ReplySteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ResponseSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ResultSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\RoutesSteps;
+use Polyspec\Hyper\Server\Tests\Support\Steps\SessionSteps;
 
 /** The step of each (file, section) of the case files that the PHP server runs. */
 final class CaseSteps

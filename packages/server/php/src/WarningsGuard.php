@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * Turns a warning, notice or deprecation that is raised while a request is answered into an error (HY-74).

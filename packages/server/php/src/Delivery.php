@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The write of the response of one PHP request, which `App::run` keeps for the write hook (HY-99): the response whose

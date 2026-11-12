@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
-use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\CaseReader;
 
 /** Reads one input of a case with the type that a step needs, and names the field in the failure. */
 final class CaseInput

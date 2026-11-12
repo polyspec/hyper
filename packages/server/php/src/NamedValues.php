@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The names of a request part in the order of their first occurrence and the values of each name in request order,

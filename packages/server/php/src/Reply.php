@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The cookies, the cache control, the page status and the embedding of the data that the loaders and actions of one

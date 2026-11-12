@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * A `build.json` that is missing, is not valid JSON or does not hold exactly the key `build` with a build id of 64

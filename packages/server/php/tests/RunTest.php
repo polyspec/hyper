@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests;
+namespace Polyspec\Hyper\Server\Tests;
 
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
-use Polyspec\Hyper\Result;
-use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Response;
+use Polyspec\Hyper\Server\Result;
+use Polyspec\Hyper\Server\Tests\Support\Json;
 
 /** HY-43, HY-52, HY-100: the PHP settings that `App::run` applies before it answers the request. */
 final class RunTest extends TestCase

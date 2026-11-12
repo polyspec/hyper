@@ -9,9 +9,9 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
-use Polyspec\Hyper\NativeSession;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
+use Polyspec\Hyper\Server\NativeSession;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Tests\Support\RefusingSessionHandler;
 
 $setup = null;
 if (($_GET['mode'] ?? '') === 'fail') {

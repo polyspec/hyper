@@ -2,32 +2,32 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\BadRequest;
-use Polyspec\Hyper\Choice;
-use Polyspec\Hyper\ClientRendering;
-use Polyspec\Hyper\Container;
-use Polyspec\Hyper\Forbidden;
-use Polyspec\Hyper\MediaType;
-use Polyspec\Hyper\NativeSession;
-use Polyspec\Hyper\NotFound;
-use Polyspec\Hyper\Redirect;
-use Polyspec\Hyper\RedisClusterSessions;
-use Polyspec\Hyper\RedisSentinelSessions;
-use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Representation;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
-use Polyspec\Hyper\Result;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\ClientApp;
-use Polyspec\Hyper\Tests\Support\Counter;
-use Polyspec\Hyper\Tests\Support\Json;
-use Polyspec\Hyper\Tests\Support\Untyped;
-use Polyspec\Hyper\UploadedFile;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\ArraySession;
+use Polyspec\Hyper\Server\BadRequest;
+use Polyspec\Hyper\Server\Choice;
+use Polyspec\Hyper\Server\ClientRendering;
+use Polyspec\Hyper\Server\Container;
+use Polyspec\Hyper\Server\Forbidden;
+use Polyspec\Hyper\Server\MediaType;
+use Polyspec\Hyper\Server\NativeSession;
+use Polyspec\Hyper\Server\NotFound;
+use Polyspec\Hyper\Server\Redirect;
+use Polyspec\Hyper\Server\RedisClusterSessions;
+use Polyspec\Hyper\Server\RedisSentinelSessions;
+use Polyspec\Hyper\Server\Reply;
+use Polyspec\Hyper\Server\Representation;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Response;
+use Polyspec\Hyper\Server\Result;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\ClientApp;
+use Polyspec\Hyper\Server\Tests\Support\Counter;
+use Polyspec\Hyper\Server\Tests\Support\Json;
+use Polyspec\Hyper\Server\Tests\Support\Untyped;
+use Polyspec\Hyper\Server\UploadedFile;
 
 /**
  * HY-106.8, HY-106.16: the cases of contracts/arguments.json, the count and the names of the arguments of a call of a

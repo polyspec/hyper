@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 use Polyspec\Template\Value\Bind;
 use Polyspec\Template\Value\BindError;

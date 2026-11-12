@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
-use Polyspec\Hyper\NativeSession;
-use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Server\NativeSession;
+use Polyspec\Hyper\Server\Request;
 
 ini_set('session.save_path', (string) getenv('HYPER_SESSION_DIRECTORY'));
 $cookies = getenv('HYPER_SESSION_ID') !== false ? ['hy-session' => (string) getenv('HYPER_SESSION_ID')] : [];

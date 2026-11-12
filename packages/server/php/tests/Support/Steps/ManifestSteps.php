@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\Manifest;
-use Polyspec\Hyper\Region;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\Json;
-use Polyspec\Hyper\Tests\Support\Plain;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\Manifest;
+use Polyspec\Hyper\Server\Region;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\Json;
+use Polyspec\Hyper\Server\Tests\Support\Plain;
 
 /** HY-2, HY-37: the cases of contracts/manifest.json, the manifest file that the manifest check reads or rejects. */
 final class ManifestSteps

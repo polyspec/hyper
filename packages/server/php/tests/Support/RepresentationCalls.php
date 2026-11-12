@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
-use Polyspec\Hyper\MediaType;
-use Polyspec\Hyper\Representation;
-use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Server\MediaType;
+use Polyspec\Hyper\Server\Representation;
+use Polyspec\Hyper\Server\Request;
 
 /**
  * The representation handlers of a case (HY-118): each records its call and what it received, and answers or throws

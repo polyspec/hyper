@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests;
+namespace Polyspec\Hyper\Server\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Polyspec\Hyper\Tests\Support\CaseRules;
-use Polyspec\Hyper\Tests\Support\CaseSteps;
+use Polyspec\Hyper\Server\Tests\Support\CaseRules;
+use Polyspec\Hyper\Server\Tests\Support\CaseSteps;
 
 /**
  * Runs every case of the case files that the PHP server runs (contracts/interfaces.json `caseFiles`) through its step,

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Fields;
-use Polyspec\Hyper\Files;
-use Polyspec\Hyper\Multipart;
-use Polyspec\Hyper\RequestBody;
-use Polyspec\Hyper\UploadedFile;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\CaseInput;
-use Polyspec\Hyper\Tests\Support\Bytes;
+use Polyspec\Hyper\Server\Fields;
+use Polyspec\Hyper\Server\Files;
+use Polyspec\Hyper\Server\Multipart;
+use Polyspec\Hyper\Server\RequestBody;
+use Polyspec\Hyper\Server\UploadedFile;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\CaseInput;
+use Polyspec\Hyper\Server\Tests\Support\Bytes;
 
 /**
  * HY-56, HY-57, HY-113: the cases of contracts/fields.json. A urlencoded text is the UTF-8 encoding of its JSON string,

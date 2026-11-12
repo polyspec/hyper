@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests;
+namespace Polyspec\Hyper\Server\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
-use Polyspec\Hyper\Result;
-use Polyspec\Hyper\Tests\Support\Counter;
-use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\ArraySession;
+use Polyspec\Hyper\Server\Reply;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Response;
+use Polyspec\Hyper\Server\Result;
+use Polyspec\Hyper\Server\Tests\Support\Counter;
+use Polyspec\Hyper\Server\Tests\Support\Json;
 
 /**
  * `around` in the process (HY-97), where contracts/app.json does not state it.

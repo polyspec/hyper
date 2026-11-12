@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The Accept field of a request: its parser (RFC 9110, section 12.5.1) and the selection of a media type by the

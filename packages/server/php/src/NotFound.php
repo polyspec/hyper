@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /** A resource that does not exist: a loader or an action throws this exception to answer with 404 (HY-27). */
 final class NotFound extends \RuntimeException

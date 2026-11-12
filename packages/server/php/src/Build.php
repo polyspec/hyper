@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The build id of the application, which `build.json` of a server program holds as `{"build":"<id>"}` (HY-125). The

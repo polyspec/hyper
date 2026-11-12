@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Build;
-use Polyspec\Hyper\InvalidBuild;
-use Polyspec\Hyper\Renderer;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Server\Build;
+use Polyspec\Hyper\Server\InvalidBuild;
+use Polyspec\Hyper\Server\Renderer;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\Json;
 
 /**
  * HY-48.2, HY-125: the cases of contracts/build.json, the build id that a `build.json` file gives and the outputs of a

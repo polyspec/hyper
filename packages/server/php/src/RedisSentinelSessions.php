@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The session setup of `App::open` that keeps the PHP session on the primary that Redis Sentinel names (HY-115).

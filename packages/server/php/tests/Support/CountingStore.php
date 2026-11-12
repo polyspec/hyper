@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
-use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\SessionStore;
+use Polyspec\Hyper\Server\ArraySession;
+use Polyspec\Hyper\Server\SessionStore;
 
 /** Records every call of the session store interface and keeps the values in memory (HY-120). */
 final class CountingStore implements SessionStore

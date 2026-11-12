@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Polyspec\Hyper\Examples\Board\Assets;
-use Polyspec\Hyper\Examples\Board\Posts;
-use Polyspec\Hyper\NotFound;
-use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Representation;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Result;
+use Polyspec\Hyper\Server\Examples\Board\Assets;
+use Polyspec\Hyper\Server\Examples\Board\Posts;
+use Polyspec\Hyper\Server\NotFound;
+use Polyspec\Hyper\Server\Reply;
+use Polyspec\Hyper\Server\Representation;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Result;
 
 $postsPerPage = 10;
 

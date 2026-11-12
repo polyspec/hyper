@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests;
+namespace Polyspec\Hyper\Server\Tests;
 
 use PHPUnit\Framework\TestCase;
 

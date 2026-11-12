@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /** Stores session values in memory for one process. */
 final class ArraySession implements SessionStore

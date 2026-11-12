@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\Flash;
-use Polyspec\Hyper\Session;
-use Polyspec\Hyper\SessionStore;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Server\ArraySession;
+use Polyspec\Hyper\Server\Flash;
+use Polyspec\Hyper\Server\Session;
+use Polyspec\Hyper\Server\SessionStore;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\Json;
 
 /**
  * HY-24, HY-25, HY-40, HY-72, HY-104.23: the cases of contracts/session.json. The calls of a case are applied in order

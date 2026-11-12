@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\Json;
-use Polyspec\Hyper\Tests\Support\Untyped;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\ArraySession;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\Json;
+use Polyspec\Hyper\Server\Tests\Support\Untyped;
 
 /** HYC-24: the cases of contracts/functions.json. */
 final class FunctionsSteps

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\BadRequest;
-use Polyspec\Hyper\Forbidden;
-use Polyspec\Hyper\NotFound;
-use Polyspec\Hyper\Redirect;
-use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Result;
-use Polyspec\Hyper\Tests\Support\Steps\ReplySteps;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\BadRequest;
+use Polyspec\Hyper\Server\Forbidden;
+use Polyspec\Hyper\Server\NotFound;
+use Polyspec\Hyper\Server\Redirect;
+use Polyspec\Hyper\Server\Reply;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Result;
+use Polyspec\Hyper\Server\Tests\Support\Steps\ReplySteps;
 
 /**
  * Opens one application of contracts/app.json, whose handlers are lists of steps of a closed vocabulary, and records

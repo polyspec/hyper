@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The body of a request as its host reads it (HY-59, HY-131): the bytes of a body that is one value, or the parts of

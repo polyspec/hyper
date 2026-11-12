@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
-use Polyspec\Hyper\Result;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Response;
+use Polyspec\Hyper\Server\Result;
 
 /**
  * The application of the front controllers of the disconnect and escape tests: the fixtures with a route `add`, a

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The read paths of the routes, which `hyper-build-server` of `@polyspec/hyper-build` writes to `reads.json`, and the

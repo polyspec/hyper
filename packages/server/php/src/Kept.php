@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * Kept values (HY-37, HY-38). Values outside the template data model are ignored; the cases of contracts/keep.json

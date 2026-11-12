@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\Context;
-use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\CaseInput;
-use Polyspec\Hyper\Tests\Support\ContextRun;
-use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Server\ArraySession;
+use Polyspec\Hyper\Server\Context;
+use Polyspec\Hyper\Server\Csrf;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\CaseInput;
+use Polyspec\Hyper\Server\Tests\Support\ContextRun;
+use Polyspec\Hyper\Server\Tests\Support\Json;
 
 /** HY-124 to HY-128: the cases of contracts/context.json. */
 final class ContextSteps

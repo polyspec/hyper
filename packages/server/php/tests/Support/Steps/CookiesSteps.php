@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Cookies;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\Bytes;
-use Polyspec\Hyper\Tests\Support\Plain;
+use Polyspec\Hyper\Server\Cookies;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\Bytes;
+use Polyspec\Hyper\Server\Tests\Support\Plain;
 
 /** HY-129: the cases of contracts/cookies.json. */
 final class CookiesSteps

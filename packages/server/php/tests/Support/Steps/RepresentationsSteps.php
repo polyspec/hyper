@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\Representation;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\Clock;
-use Polyspec\Hyper\Tests\Support\Json;
-use Polyspec\Hyper\Tests\Support\Mailer;
-use Polyspec\Hyper\Tests\Support\Plain;
-use Polyspec\Hyper\Tests\Support\RepresentationCalls;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\ArraySession;
+use Polyspec\Hyper\Server\Representation;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\Clock;
+use Polyspec\Hyper\Server\Tests\Support\Json;
+use Polyspec\Hyper\Server\Tests\Support\Mailer;
+use Polyspec\Hyper\Server\Tests\Support\Plain;
+use Polyspec\Hyper\Server\Tests\Support\RepresentationCalls;
 
 /**
  * HY-116 to HY-122: the cases of contracts/representations.json: the manifest and open rejections, and the cases of

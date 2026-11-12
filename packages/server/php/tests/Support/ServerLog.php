@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
 /** The log of the server of HY-43.4, which a step collects while a request runs. */
 final class ServerLog

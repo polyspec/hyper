@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
 /** An error shaped like the OrmException of polyspec/orm, which hyper identifies by its class name and its code (HY-107). */
 final class OrmException extends \RuntimeException

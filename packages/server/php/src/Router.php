@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * Route matching (HY-4 to HY-8, HY-49). The JavaScript router implements the same rules; both pass

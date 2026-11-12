@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\JsonCodec;
-use Polyspec\Hyper\JsonDecodeError;
-use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Server\JsonCodec;
+use Polyspec\Hyper\Server\JsonDecodeError;
+use Polyspec\Hyper\Server\Tests\CaseReader;
 
 /** HY-17, HY-54: the cases of contracts/json.json, the JSON text of a decoded value and the decoding of a text. */
 final class JsonSteps

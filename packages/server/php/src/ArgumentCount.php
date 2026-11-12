@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The count of the arguments of a call of a public member (HY-106.8): PHP counts a missing argument and not an extra

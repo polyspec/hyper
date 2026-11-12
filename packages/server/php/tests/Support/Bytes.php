@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
 /** The bytes of the text of a case, whose characters U+0000 to U+00FF are bytes. */
 final class Bytes

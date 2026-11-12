@@ -6,11 +6,11 @@ declare(strict_types=1);
 // start with display_errors off (HY-43).
 ini_set('display_errors', '0');
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\Examples\Board\Assets;
-use Polyspec\Hyper\Examples\Board\Posts;
-use Polyspec\Hyper\RedisClusterSessions;
-use Polyspec\Hyper\RedisSentinelSessions;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\Examples\Board\Assets;
+use Polyspec\Hyper\Server\Examples\Board\Posts;
+use Polyspec\Hyper\Server\RedisClusterSessions;
+use Polyspec\Hyper\Server\RedisSentinelSessions;
 
 require __DIR__ . '/../vendor/autoload.php';
 

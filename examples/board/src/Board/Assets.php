@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Examples\Board;
+namespace Polyspec\Hyper\Server\Examples\Board;
 
 /** Reads the URL of the client entry that the asset build writes to its manifest (HYC-16). */
 final class Assets

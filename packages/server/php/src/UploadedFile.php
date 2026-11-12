@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * A file that a request sent in a file part (HY-113): its name, its filename, its content type and its bytes. The

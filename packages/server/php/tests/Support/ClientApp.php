@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\ClientRendering;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Result;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\ClientRendering;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Result;
 
 /**
  * HY-62: the fixture application of contracts/client.json, which answers the client-rendered and the server-rendered

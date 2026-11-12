@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /** The redirect of a result: a loader or an action throws this exception to answer with it (HY-50). */
 final class Redirect extends \RuntimeException

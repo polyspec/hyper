@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Container;
-use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Server\Container;
+use Polyspec\Hyper\Server\Tests\CaseReader;
 
 /** HY-105: the cases of contracts/container.json, the services that the handlers receive. */
 final class ContainerSteps

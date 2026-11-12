@@ -221,13 +221,13 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Polyspec\\Hyper\\": "src/"
+                    "Polyspec\\Hyper\\Server\\": "src/"
                 }
             },
             "autoload-dev": {
                 "psr-4": {
-                    "Polyspec\\Hyper\\Tests\\": "tests/",
-                    "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/"
+                    "Polyspec\\Hyper\\Server\\Tests\\": "tests/",
+                    "Polyspec\\Hyper\\Server\\Tests\\Program\\": "tests/build/server/php/"
                 }
             },
             "scripts": {

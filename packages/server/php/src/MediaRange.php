@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * One media range of an Accept value (RFC 9110, section 12.5.1): its type and subtype in lower case (`*` for a

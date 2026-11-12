@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\BadRequest;
-use Polyspec\Hyper\Forbidden;
-use Polyspec\Hyper\NotFound;
-use Polyspec\Hyper\Redirect;
-use Polyspec\Hyper\Result;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\CaseInput;
-use Polyspec\Hyper\Tests\Support\Json;
-use Polyspec\Hyper\Tests\Support\Plain;
+use Polyspec\Hyper\Server\BadRequest;
+use Polyspec\Hyper\Server\Forbidden;
+use Polyspec\Hyper\Server\NotFound;
+use Polyspec\Hyper\Server\Redirect;
+use Polyspec\Hyper\Server\Result;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\CaseInput;
+use Polyspec\Hyper\Server\Tests\Support\Json;
+use Polyspec\Hyper\Server\Tests\Support\Plain;
 
 /** HY-25, HY-27, HY-46, HY-50, HY-58: the cases of contracts/result.json, the results of actions and the stops. */
 final class ResultSteps

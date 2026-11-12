@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Server\Reply;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\Json;
 
 /** HY-52, HY-60, HY-69, HY-72, HY-92, HY-103: the cases of contracts/reply.json, the reply of a request. */
 final class ReplySteps

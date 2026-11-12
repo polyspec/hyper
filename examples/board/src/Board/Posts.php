@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Examples\Board;
+namespace Polyspec\Hyper\Server\Examples\Board;
 
 use PDO;
 

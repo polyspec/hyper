@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Reads;
-use Polyspec\Hyper\Renderer;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\CaseInput;
-use Polyspec\Hyper\Tests\Support\Json;
+use Polyspec\Hyper\Server\Reads;
+use Polyspec\Hyper\Server\Renderer;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\CaseInput;
+use Polyspec\Hyper\Server\Tests\Support\Json;
 
 /**
  * HY-73: the cases of contracts/reads.json. A read node is true or a map. Each case is the application `reads_<id>`

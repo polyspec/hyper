@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Server\Csrf;
+use Polyspec\Hyper\Server\Tests\CaseReader;
 
 /** HY-24: the cases of contracts/csrf.json, the masked values of a token and their verification. */
 final class CsrfSteps

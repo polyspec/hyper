@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * Keeps the PHP session on Redis Cluster with the protocol of HY-115. The `rediscluster` session handler of phpredis

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests;
+namespace Polyspec\Hyper\Server\Tests;
 
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
-use Polyspec\Hyper\NativeSession;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
+use Polyspec\Hyper\Server\NativeSession;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Tests\Support\RefusingSessionHandler;
 
 /** HY-45, HY-72, HY-104, HY-129: the PHP session starts only when a request reads or writes session data, under the name that hyper sets. */
 final class NativeSessionTest extends TestCase

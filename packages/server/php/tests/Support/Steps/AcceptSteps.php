@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Accept;
-use Polyspec\Hyper\InvalidAccept;
-use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Server\Accept;
+use Polyspec\Hyper\Server\InvalidAccept;
+use Polyspec\Hyper\Server\Tests\CaseReader;
 
 /** HY-116: the cases of contracts/accept.json, the parse of an Accept value and the selection of a media type. */
 final class AcceptSteps

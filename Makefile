@@ -213,10 +213,10 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- --test-concurrency=1 package-install.test.ts
 
 server: packages assets ## Build the board server program from installed dependencies: its templates and generated PHP program (HY-48, HY-125)
-	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --build $(abspath $(BOARD)/build/build.json)
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Server\Examples\Board\Program' --build $(abspath $(BOARD)/build/build.json)
 
 server-fixtures: packages contract-programs ## Build the server program of the PHP test fixtures (HY-48, HY-125)
-	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --build $(abspath $(FIXTURES)/build.json)
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Server\Tests\Program' --build $(abspath $(FIXTURES)/build.json)
 
 contract-programs: packages ## Build the applications of contracts/context.json, contracts/functions.json, contracts/representations.json and contracts/app.json and one application per case of contracts/reads.json for the tests of the three servers (HY-73, HY-118, HY-124, HYC-24)
 	$(NODE) scripts/contract-programs.mts --contract $(abspath contracts/context.json) --contract $(abspath contracts/functions.json) --contract $(abspath contracts/representations.json) --contract $(abspath contracts/app.json) --reads $(abspath contracts/reads.json) --output $(abspath var/contract-programs)

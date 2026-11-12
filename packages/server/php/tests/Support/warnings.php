@@ -7,10 +7,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../../../vendor/autoload.php';
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Result;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\ArraySession;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Result;
 
 $app = App::open(
     __DIR__ . '/../fixtures/app.json',

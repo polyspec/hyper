@@ -34,14 +34,14 @@
     },
     "autoload": {
         "psr-4": {
-            "Polyspec\\Hyper\\": "packages/server/php/src/"
+            "Polyspec\\Hyper\\Server\\": "packages/server/php/src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Polyspec\\Hyper\\Tests\\": "packages/server/php/tests/",
-            "Polyspec\\Hyper\\Tests\\Program\\": "packages/server/php/tests/build/server/php/",
-            "Polyspec\\Hyper\\Tests\\Contract\\": "var/contract-programs/"
+            "Polyspec\\Hyper\\Server\\Tests\\": "packages/server/php/tests/",
+            "Polyspec\\Hyper\\Server\\Tests\\Program\\": "packages/server/php/tests/build/server/php/",
+            "Polyspec\\Hyper\\Server\\Tests\\Contract\\": "var/contract-programs/"
         }
     },
     "config": {

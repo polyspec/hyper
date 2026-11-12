@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
 /**
  * The rules that CaseReader applies to one case of a case file (HYR-7, HYR-11): the declaration checks, the field

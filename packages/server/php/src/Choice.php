@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The result of the selection of a client rendering (HY-62): whether the request is of a client-rendered page, and a

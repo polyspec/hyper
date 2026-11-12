@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
 /**
  * Gives a test a call or a class without the types of its parameters, for a case that hands a typed parameter a value

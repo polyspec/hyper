@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * Reads the parts of a `multipart/form-data` body without PHP's own reader, which needs `enable_post_data_reading`

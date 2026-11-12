@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 15589f2b950a5bb22e51ef19199bb5f297dcca4113dee752daa6d7465150a8f2 -->
+<!-- source-sha256: 1727da0cff074912e54689cbf92bbe632aab9ac7901d1c44f71804ca5e72dff2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- server의 PHP host 코드는 namespace `Polyspec\Hyper\Server`다. 전에는 `Polyspec\Hyper`였다(binding P-1: component를 가진 저장소의 package는 namespace에 component를 더한다). `packages/server/php`의 source 55개와 test, 그 `composer.json`과 root `composer.json` 및 lock, namespace가 `Polyspec\Hyper\Server\Examples\Board`가 된 board 예제, benchmark server, Makefile의 생성 program namespace가 바뀌었다. 애플리케이션은 `Polyspec\Hyper\Server\App`과 공개 API의 다른 class를 새 namespace로 이름하며, class 이름과 오류 class `Hyper<Category>Error`는 그대로다(C-7).
 
 - Python과 Node host package의 manifest가 native module에 필요한 것을 갖춘다(binding L-2a). `packages/server/python/pyproject.toml`은 setuptools 대신 maturin으로 `native/Cargo.toml`의 native module `polyspec.hyper.server._native`와 `src/`의 host 코드를 build하고, `packages/server/ts/package.json`은 `native/generated/*.node`를 담는다. `docs/operations/dependencies.md`가 maturin의 범위를 적는다. Python package는 binding 생성기가 native module의 source를 쓰고 host 코드가 `polyspec.hyper.server`로 옮겨질 때까지 build되지 않는다. 계약 검사는 PHP 확장 package의 manifest에 대해서만 CK-19를 보고하며, scaffold가 `packages/server/php/native/`를 지원하면 그 manifest를 쓴다(C-7).
 

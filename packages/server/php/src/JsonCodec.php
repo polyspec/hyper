@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The JSON text of the servers (HY-17, HY-54): the JSON response value, its text with the bytes of `json_encode` with

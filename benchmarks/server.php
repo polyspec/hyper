@@ -8,15 +8,15 @@ declare(strict_types=1);
 //
 // Usage: php benchmarks/server.php --app examples/board --iterations 300
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\ArraySession;
-use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\Examples\Board\Assets;
-use Polyspec\Hyper\Examples\Board\Posts;
-use Polyspec\Hyper\Build;
-use Polyspec\Hyper\JsonCodec;
-use Polyspec\Hyper\Renderer;
-use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\ArraySession;
+use Polyspec\Hyper\Server\Csrf;
+use Polyspec\Hyper\Server\Examples\Board\Assets;
+use Polyspec\Hyper\Server\Examples\Board\Posts;
+use Polyspec\Hyper\Server\Build;
+use Polyspec\Hyper\Server\JsonCodec;
+use Polyspec\Hyper\Server\Renderer;
+use Polyspec\Hyper\Server\Request;
 use Polyspec\Template\Value\Bind;
 
 $options = getopt('', ['app:', 'iterations:']);

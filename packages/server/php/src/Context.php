@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The context of an application (HY-124 to HY-128): the map that its handler returns, its JSON text (HY-54), its hash

@@ -10,9 +10,9 @@ declare(strict_types=1);
 require __DIR__ . '/../../../../../vendor/autoload.php';
 require_once __DIR__ . '/FrontController.php';
 
-use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Tests\Support\FrontController;
+use Polyspec\Hyper\Server\Reply;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Tests\Support\FrontController;
 
 $log = (string) getenv('HYPER_DISCONNECT_LOG');
 FrontController::open(

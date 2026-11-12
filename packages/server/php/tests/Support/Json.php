@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support;
+namespace Polyspec\Hyper\Server\Tests\Support;
 
 /**
  * Decodes the JSON of fixtures and responses and returns each value with the type that a test reads. A value of

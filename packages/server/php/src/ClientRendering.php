@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * Declares the client-rendered pages of an application (HY-62): the static shell that answers their HTML requests,

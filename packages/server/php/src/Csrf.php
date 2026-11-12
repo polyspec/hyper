@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * Masks the session token for a response and verifies a masked form value (HY-24). A masked value is 32 mask bytes

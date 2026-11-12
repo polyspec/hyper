@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\Renderer;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
-use Polyspec\Hyper\Session;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\AppRun;
-use Polyspec\Hyper\Tests\Support\Bytes;
-use Polyspec\Hyper\Tests\Support\CountingStore;
-use Polyspec\Hyper\Tests\Support\Json;
-use Polyspec\Hyper\Tests\Support\Plain;
-use Polyspec\Hyper\Tests\Support\ServerLog;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\Csrf;
+use Polyspec\Hyper\Server\Renderer;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Response;
+use Polyspec\Hyper\Server\Session;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\AppRun;
+use Polyspec\Hyper\Server\Tests\Support\Bytes;
+use Polyspec\Hyper\Server\Tests\Support\CountingStore;
+use Polyspec\Hyper\Server\Tests\Support\Json;
+use Polyspec\Hyper\Server\Tests\Support\Plain;
+use Polyspec\Hyper\Server\Tests\Support\ServerLog;
 
 /**
  * The cases of contracts/app.json: one request to a page application whose handlers are lists of steps, after the

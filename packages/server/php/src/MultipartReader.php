@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The state machine that reads a `multipart/form-data` body in chunks (HY-131): it finds the delimiters, gives the

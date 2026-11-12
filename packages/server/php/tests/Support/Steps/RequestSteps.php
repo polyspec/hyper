@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Support\Steps;
+namespace Polyspec\Hyper\Server\Tests\Support\Steps;
 
-use Polyspec\Hyper\Cookies;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Tests\CaseReader;
-use Polyspec\Hyper\Tests\Support\Bytes;
-use Polyspec\Hyper\Tests\Support\Json;
-use Polyspec\Hyper\UploadedFile;
+use Polyspec\Hyper\Server\Cookies;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Tests\CaseReader;
+use Polyspec\Hyper\Server\Tests\Support\Bytes;
+use Polyspec\Hyper\Server\Tests\Support\Json;
+use Polyspec\Hyper\Server\UploadedFile;
 
 /** HY-11, HY-42, HY-56, HY-57, HY-97, HY-113.2, HY-116.16, HY-129: the cases of contracts/request.json. */
 final class RequestSteps

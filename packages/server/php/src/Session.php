@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * Owns the CSRF token, the flash data and the kept values of one session (HY-24, HY-25, HY-40).

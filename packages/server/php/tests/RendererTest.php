@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests;
+namespace Polyspec\Hyper\Server\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Polyspec\Hyper\Renderer;
+use Polyspec\Hyper\Server\Renderer;
 
 /** HY-48: the server renders with the generated program, through the API of the template package. */
 final class RendererTest extends TestCase
@@ -21,7 +21,7 @@ final class RendererTest extends TestCase
         $first = Renderer::open(self::PROGRAM, 'Z');
         $second = Renderer::open(self::PROGRAM, 'Z');
 
-        self::assertTrue(class_exists('Polyspec\\Hyper\\Tests\\Program\\GeneratedProgram', false));
+        self::assertTrue(class_exists('Polyspec\\Hyper\\Server\\Tests\\Program\\GeneratedProgram', false));
         self::assertFalse(class_exists('GeneratedProgram', false));
         self::assertSame(
             $first->alone('side.tpl', $first->bind([]), $first->bind(['count' => 1])),
@@ -39,13 +39,13 @@ final class RendererTest extends TestCase
             mkdir("{$program}/templates");
             file_put_contents("{$program}/reads.json", '{"routes":{}}');
             file_put_contents("{$program}/build.json", '{"build":"' . str_repeat('1', 64) . '"}');
-            file_put_contents("{$program}/program.json", '{"namespace":"Polyspec\\\\Hyper\\\\Tests\\\\Unmapped"}');
+            file_put_contents("{$program}/program.json", '{"namespace":"Polyspec\\\\Hyper\\\\Server\\\\Tests\\\\Unmapped"}');
             try {
                 Renderer::open($program, 'Z');
                 self::fail('opened a program whose class the autoload does not load');
             } catch (\InvalidArgumentException $error) {
                 self::assertStringContainsString(
-                    'Polyspec\\Hyper\\Tests\\Unmapped\\GeneratedProgram',
+                    'Polyspec\\Hyper\\Server\\Tests\\Unmapped\\GeneratedProgram',
                     $error->getMessage(),
                 );
                 self::assertStringContainsString("{$program}/php", $error->getMessage());

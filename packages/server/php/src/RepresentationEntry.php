@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * One declared representation of a route (HY-118): its type as the manifest writes it, its lower-case media type, its

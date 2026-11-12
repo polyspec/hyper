@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * The representations of a route: the declaration of each entry and its manifest check (HY-2, HY-118), and the check

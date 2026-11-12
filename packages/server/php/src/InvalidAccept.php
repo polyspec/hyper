@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * An Accept value that does not follow the grammar of RFC 9110, section 12.5.1, or that has a weight that is not a

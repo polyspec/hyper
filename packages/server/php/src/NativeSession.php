@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper;
+namespace Polyspec\Hyper\Server;
 
 /**
  * Stores session values in the PHP session. The session runs with `use_cookies` off: it takes the identifier of the
