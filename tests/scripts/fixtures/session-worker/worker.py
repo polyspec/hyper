@@ -87,7 +87,7 @@ def main(directory, identifier, command, first=None, second=None):
                 session.set("n", session.get("n") + 1)
                 session.set(second, (session.get(second) or 0) + 1)
             finally:
-                session._close()
+                session.close()
         return
     session = sessions._open(identifier)
     if command == "hold":
@@ -109,9 +109,9 @@ def main(directory, identifier, command, first=None, second=None):
             for name, value in json.loads(first).items():
                 session.set(name, value)
     finally:
-        session._close()
+        session.close()
     if command == "renew":
-        print(session._created)
+        print(session.created())
 
 
 main(*sys.argv[1:])

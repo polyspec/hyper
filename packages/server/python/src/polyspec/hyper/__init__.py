@@ -1,7 +1,7 @@
 """The hyper server of the region protocol. The package exports the classes that an application uses everywhere; the
 rest of its public API is in the modules app, array_session, asgi, bad_request, choice, client_rendering, container,
 file_sessions, forbidden, media_type, not_found, redirect, redis_sessions, reply, representation, request, response,
-result, server, session_record, session_store, uploaded_file and wsgi. Modules that start with an underscore are
+result, server, session_lock_error, session_store, uploaded_file and wsgi. Modules that start with an underscore are
 internal (HY-106, HY-113)."""
 
 from .choice import Choice

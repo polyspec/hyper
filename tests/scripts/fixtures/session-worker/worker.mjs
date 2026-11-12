@@ -105,7 +105,7 @@ if (command === 'count') {
     store.renew();
     renewed = store;
   });
-  process.stdout.write(`${renewed.created}\n`);
+  process.stdout.write(`${String(renewed.created())}\n`);
 } else if (command === 'read') {
   process.stdout.write(JSON.stringify(await session((store) => JSON.parse(first).map((name) => canonical(store.get(name))))));
 } else {

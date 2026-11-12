@@ -2,7 +2,8 @@
 # the lock is taken or lost. tests/scripts/session-shared-redis.test.mts checks it on a real Redis server with PHP.
 import unittest
 
-from polyspec.hyper.redis_sessions import RedisSessions, SessionLockError
+from polyspec.hyper.redis_sessions import RedisSessions
+from polyspec.hyper.session_lock_error import SessionLockError
 
 IDENTIFIER = "a" * 32
 KEY = f"PHPREDIS_SESSION:{IDENTIFIER}"
@@ -67,14 +68,14 @@ class RedisSessionsTest(unittest.TestCase):
         session.set("n", 1)
         self.server.keys[LOCK] = b"another holder"
         with self.assertRaises(SessionLockError):
-            session._close()
+            session.close()
         self.assertEqual(RECORD, self.server.keys[KEY])
         self.assertEqual(b"another holder", self.server.keys[LOCK])
 
     def test_a_request_that_changed_nothing_sets_only_a_new_expiry(self) -> None:
         session = self.sessions._open(IDENTIFIER)
         self.assertEqual(0, session.get("n"))
-        session._close()
+        session.close()
         self.assertEqual(
             ["EXISTS", "SET", "GET", "EXPIRE", "EVAL"], self.server.commands
         )
@@ -85,7 +86,7 @@ class RedisSessionsTest(unittest.TestCase):
         sessions = RedisSessions(
             self.server.command, setup=lambda: calls.append(str(self.server.commands))
         )
-        sessions._open(IDENTIFIER)._close()
+        sessions._open(IDENTIFIER).close()
         self.assertEqual(["[]"], calls)
 
     def test_setup_runs_before_a_new_session_is_written(self) -> None:
@@ -96,14 +97,14 @@ class RedisSessionsTest(unittest.TestCase):
         session = sessions._open(None)
         self.assertEqual([], calls)
         session.set("n", 1)
-        session._close()
+        session.close()
         self.assertEqual(["[]"], calls)
         self.assertEqual(["SETEX"], self.server.commands)
 
     def test_a_request_without_a_session_does_not_run_setup(self) -> None:
         calls: list[int] = []
         sessions = RedisSessions(self.server.command, setup=lambda: calls.append(1))
-        sessions._open(None)._close()
+        sessions._open(None).close()
         self.assertEqual([], calls)
 
     def test_a_setup_that_fails_fails_the_request_before_any_command(self) -> None:

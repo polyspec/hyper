@@ -5853,6 +5853,12 @@
                   "en": "`tests/scripts/session-shared.test.mts` checks it with processes of the three servers on one session, and `NativeSessionTest.php`, `packages/server/python/tests/test_file_sessions.py` and `packages/server/ts/tests/sessions-race.test.ts` with several processes of one server.",
                   "ko": "`tests/scripts/session-shared.test.mts`는 한 session 위에서 세 서버의 프로세스로, `NativeSessionTest.php`, `packages/server/python/tests/test_file_sessions.py`, `packages/server/ts/tests/sessions-race.test.ts`는 한 서버의 여러 프로세스로 이것을 검사한다.",
                   "koSource": "7f07bfb54cc174af8321fec3a5b33de93cf45dc8d2645688237cb86b20e59205"
+                },
+                {
+                  "id": "HY-104.17",
+                  "en": "A Node server answers its requests on one thread, so the requests of one session in one process wait in a queue of that process before they try the lock of the session, and the store of a request ends its turn when it closes; a Python server answers each request on a thread of its own, which waits on the lock itself.",
+                  "ko": "Node server는 한 thread에서 요청에 답하므로, 한 process 안에서 한 session의 요청들은 session의 lock을 시도하기 전에 그 process의 대기열에서 기다리고, 요청의 저장소는 닫힐 때 자기 차례를 끝낸다. Python server는 요청마다 자기 thread에서 답하며 그 thread가 lock 자체를 기다린다.",
+                  "koSource": "1e614dffa662e0708ec93d0b48e57d331e021e27e13945301ad032703295203a"
                 }
               ]
             }

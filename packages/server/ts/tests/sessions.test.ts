@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { serialize, UnserializeError } from '@polyspec/php-serialize';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FileSessions } from '../src/index.js';
-import { sessionCookie, sessionCookieName } from '../src/session-record.js';
+import { RecordSession } from '../src/record-session.js';
 import { present } from './support.js';
 
 let directory: string;
@@ -23,15 +23,15 @@ describe('FileSessions', () => {
   it('starts the session on first use and creates no file for a request that does not use it', async () => {
     const unused = await sessions.open(null);
     await unused.close();
-    expect(unused.started).toBe(false);
+    expect(unused.serialized()).toBeNull();
     expect(readdirSync(directory)).toEqual([]);
 
     const session = await sessions.open(null);
     session.set('a', new Map([['b', [1, -0, 'c']]]));
     await session.close();
-    expect(session.started).toBe(true);
-    expect(session.created).toMatch(/^[0-9a-f]{64}$/);
-    expect(readdirSync(directory)).toEqual([`sess_${String(session.created)}`]);
+    expect(session.serialized()).not.toBeNull();
+    expect(session.created()).toMatch(/^[0-9a-f]{64}$/);
+    expect(readdirSync(directory)).toEqual([`sess_${String(session.created())}`]);
   });
 
   it('fails for a session file that holds no array by name', async () => {
@@ -39,7 +39,7 @@ describe('FileSessions', () => {
     const file = join(directory, `sess_${id}`);
     writeFileSync(file, serialize(1));
     const session = await sessions.open(id);
-    expect(() => session.get('a')).toThrow(`hyper: session file ${file} holds no map of values`);
+    expect(() => session.get('a')).toThrow(`hyper: the session of ${id} holds no map of values`);
     await session.close();
   });
 
@@ -49,7 +49,7 @@ describe('FileSessions', () => {
     const session = await sessions.open(id);
     expect(() => session.get('token')).toThrow(UnserializeError);
     await session.close();
-    expect(session.created).toBeNull();
+    expect(session.created()).toBeNull();
   });
 
   it('creates no file for an identifier without a session', async () => {
@@ -65,7 +65,7 @@ describe('FileSessions', () => {
     const session = await sessions.open(id);
     expect(session.get('a')).toBeUndefined();
     await session.close();
-    expect(session.created).toBeNull();
+    expect(session.created()).toBeNull();
     expect(readFileSync(join(directory, `sess_${id}`), 'latin1')).toBe('a:0:{}');
   });
 
@@ -114,7 +114,7 @@ describe('FileSessions', () => {
     first.set('numbered', new Map([['0', 'a'], ['1', 'b']]));
     first.set('list', ['a']);
     await first.close();
-    const id = present(first.created);
+    const id = present(first.created());
     expect(readFileSync(join(directory, `sess_${id}`), 'latin1')).toBe(
       'a:3:{s:5:"empty";O:8:"stdClass":0:{}s:8:"numbered";O:8:"stdClass":2:{s:1:"0";s:1:"a";s:1:"1";s:1:"b";}s:4:"list";a:1:{i:0;s:1:"a";}}',
     );
@@ -129,21 +129,21 @@ describe('FileSessions', () => {
     const first = await sessions.open(null);
     first.set('a', new Map([['b', [1, -0, 'c']]]));
     await first.close();
-    const second = await sessions.open(first.created);
+    const second = await sessions.open(first.created());
     expect(second.get('a')).toEqual(new Map([['b', [1, -0, 'c']]]));
     const stored = second.get('a');
     const numbers: unknown = stored instanceof Map ? stored.get('b') : undefined;
     expect(Array.isArray(numbers) && Object.is(numbers[1], -0)).toBe(true);
     await second.close();
-    expect(second.created).toBeNull();
+    expect(second.created()).toBeNull();
   });
 
   it('accepts only identifiers that it created (HY-45)', async () => {
     for (const cookie of ['abc', '../../etc/passwd', 'f'.repeat(64), 'F'.repeat(64), 'a'.repeat(129)]) {
       const session = await sessions.open(cookie);
       expect(session.get('a'), cookie).toBeUndefined();
-      expect(session.created, cookie).not.toBe(cookie);
-      expect(session.created, cookie).toMatch(/^[0-9a-f]{64}$/);
+      expect(session.created(), cookie).not.toBe(cookie);
+      expect(session.created(), cookie).toMatch(/^[0-9a-f]{64}$/);
       await session.close();
     }
   });
@@ -152,12 +152,12 @@ describe('FileSessions', () => {
     const first = await sessions.open(null);
     first.set('a', 1);
     await first.close();
-    const id = present(first.created);
+    const id = present(first.created());
     const old = new Date(Date.now() - 1441 * 1000);
     utimesSync(join(directory, `sess_${id}`), old, old);
     const later = await sessions.open(id);
     expect(later.get('a')).toBeUndefined();
-    expect(later.created).not.toBe(id);
+    expect(later.created()).not.toBe(id);
     await later.close();
     expect(sessions.collect()).toBe(1);
     expect(existsSync(join(directory, `sess_${id}`))).toBe(false);
@@ -167,7 +167,7 @@ describe('FileSessions', () => {
     const first = await sessions.open(null);
     first.set('n', 1);
     await first.close();
-    const id = present(first.created);
+    const id = present(first.created());
     const order: string[] = [];
     const a = await sessions.open(id);
     const opening = sessions.open(id).then(async (b) => {
@@ -183,24 +183,24 @@ describe('FileSessions', () => {
   });
 
   it('names the session cookie hy-session over HTTP and __Host-hy-session over HTTPS (HY-45)', () => {
-    expect(sessionCookieName(false)).toBe('hy-session');
-    expect(sessionCookieName(true)).toBe('__Host-hy-session');
-    expect(sessionCookie('a'.repeat(64), false)).toBe(`hy-session=${'a'.repeat(64)}; path=/; HttpOnly; SameSite=Lax`);
-    expect(sessionCookie('a'.repeat(64), true)).toBe(`__Host-hy-session=${'a'.repeat(64)}; path=/; secure; HttpOnly; SameSite=Lax`);
+    expect(RecordSession.cookieName(false)).toBe('hy-session');
+    expect(RecordSession.cookieName(true)).toBe('__Host-hy-session');
+    expect(RecordSession.cookieHeader('a'.repeat(64), false)).toBe(`hy-session=${'a'.repeat(64)}; path=/; HttpOnly; SameSite=Lax`);
+    expect(RecordSession.cookieHeader('a'.repeat(64), true)).toBe(`__Host-hy-session=${'a'.repeat(64)}; path=/; secure; HttpOnly; SameSite=Lax`);
   });
 
   it('renews a session: a new identifier with the same values, and no file of the old one (HY-72)', async () => {
     const first = await sessions.open(null);
     first.set('a', 1);
     await first.close();
-    const old = present(first.created);
+    const old = present(first.created());
     const session = await sessions.open(old);
     session.renew();
     await session.close();
-    expect(session.created).toMatch(/^[0-9a-f]{64}$/);
-    expect(session.created).not.toBe(old);
-    expect(readdirSync(directory)).toEqual([`sess_${String(session.created)}`]);
-    const next = await sessions.open(session.created);
+    expect(session.created()).toMatch(/^[0-9a-f]{64}$/);
+    expect(session.created()).not.toBe(old);
+    expect(readdirSync(directory)).toEqual([`sess_${String(session.created())}`]);
+    const next = await sessions.open(session.created());
     expect(next.get('a')).toBe(1);
     await next.close();
     const stale = await sessions.open(old);

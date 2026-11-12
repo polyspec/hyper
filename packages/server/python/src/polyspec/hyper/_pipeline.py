@@ -14,7 +14,8 @@ from typing import Callable, Optional
 
 from ._request_body import RequestBody
 from .app import App
-from .file_sessions import FileSessions, _cookie_header, _cookie_name
+from ._record_session import RecordSession
+from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from .reply import Reply
 from .request import Request
@@ -189,13 +190,13 @@ def answer_with(
     exchange for the disconnect hook (HY-67, HY-97)."""
 
     def answer(given: Request) -> Response:
-        session = sessions._open(given.cookie(_cookie_name(app.https)))
+        session = sessions._open(given.cookie(RecordSession.cookie_name(app.https)))
         try:
             response, reply = app._respond(given, session, exchange.started)
         finally:
-            session._close()
+            session.close()
         exchange.answered[:] = [(given, reply)]
-        created = session._created
+        created = session.created()
         if created is None:
             return response
         # A new session sets its cookie first, as PHP does when the session starts (HY-45).
@@ -205,7 +206,7 @@ def answer_with(
             {
                 **response.headers,
                 "Set-Cookie": [
-                    _cookie_header(created, app.https),
+                    RecordSession.cookie_header(created, app.https),
                     *(existing if isinstance(existing, list) else []),
                 ],
             },

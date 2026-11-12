@@ -12,7 +12,9 @@ import socket
 import time
 from typing import Callable, Optional
 
-from .session_record import RecordSession, _accepted
+from ._redis_session import RedisSession
+from ._record_session import RecordSession
+from .session_lock_error import SessionLockError
 
 _RELEASE = (
     'if redis.call("get",KEYS[1]) == ARGV[1] then return redis.call("del",KEYS[1]) '
@@ -22,11 +24,7 @@ _RELEASE = (
 
 # One command of a Redis server: it takes the words and returns a bulk string as bytes, as `execute_command` of `redis.Redis`
 # does with `decode_responses=False`.
-RedisCommand = Callable[..., object]
-
-
-class SessionLockError(RuntimeError):
-    """A request could not take the lock of its session, or lost it before it wrote the session (HY-43, HY-115)."""
+_RedisCommand = Callable[..., object]
 
 
 class RedisSessions:
@@ -35,9 +33,12 @@ class RedisSessions:
     every server of one Redis server gives them the same values, and `lock_expire` is longer than any request. `setup`
     runs before the first command of a request that has a session, so a client can find its server for that request."""
 
+    _command: _RedisCommand
+    _lifetime: int
+
     def __init__(
         self,
-        command: RedisCommand,
+        command: _RedisCommand,
         lifetime: int = 1440,
         prefix: str = "PHPREDIS_SESSION:",
         lock_expire: int = 30,
@@ -49,8 +50,8 @@ class RedisSessions:
             raise ValueError("session lifetime must be a positive number of seconds")
         if lock_expire <= 0:
             raise ValueError("session lock_expire must be a positive number of seconds")
-        self.command = command
-        self.lifetime = lifetime
+        self._command = command
+        self._lifetime = lifetime
         self.prefix = prefix
         self.lock_expire = lock_expire
         self.lock_retries = lock_retries
@@ -65,23 +66,19 @@ class RedisSessions:
     def _open(self, cookie: Optional[str]) -> "RedisSession":
         """Returns the store of a request with the value of its session cookie; it holds the lock of the session until
         `close`. An identifier in another form or without a key names no session (HY-45)."""
-        identifier = _accepted(cookie)
+        identifier = RecordSession.accepted(cookie)
         if identifier is None:
             return RedisSession(self, None, None, None)
         self._prepare()
         key = self._key(identifier)
-        if not self.command("EXISTS", key):
+        if not self._command("EXISTS", key):
             return RedisSession(self, None, None, None)
-        secret = self._lock(key)
+        secret = self._take_lock(key)
         try:
-            record = self.command("GET", key)
+            record = RedisSessions._bulk_bytes(self._command("GET", key))
             if record is None:
                 self._release(key, secret)
                 return RedisSession(self, None, None, None)
-            if not isinstance(record, bytes):
-                raise TypeError(
-                    "the Redis command must return bytes, as redis.Redis does with decode_responses=False"
-                )
         except BaseException:
             self._release(key, secret)
             raise
@@ -91,12 +88,12 @@ class RedisSessions:
         """Returns the key of the session of an identifier."""
         return f"{self.prefix}{identifier}"
 
-    def _lock(self, key: str) -> str:
+    def _take_lock(self, key: str) -> str:
         """Takes the lock of a session and returns its secret. Each lock has a secret of its own, so a thread of this
         process cannot release the lock that another thread of it took after its own expired."""
         secret = f"{socket.gethostname()}|{os.getpid()}|{secrets.token_hex(8)}"
         for attempt in range(self.lock_retries + 1):
-            if self.command(
+            if self._command(
                 "SET", f"{key}_LOCK", secret, "NX", "PX", self.lock_expire * 1000
             ):
                 return secret
@@ -106,53 +103,19 @@ class RedisSessions:
 
     def _holds(self, key: str, secret: str) -> bool:
         """Returns True while the lock of a session is the lock with this secret."""
-        return self.command("GET", f"{key}_LOCK") == secret.encode()
+        held = RedisSessions._bulk_bytes(self._command("GET", f"{key}_LOCK"))
+        return held == secret.encode()
 
     def _release(self, key: str, secret: str) -> None:
         """Releases the lock of a session unless another request holds it now."""
-        self.command("EVAL", _RELEASE, 1, f"{key}_LOCK", secret)
+        self._command("EVAL", _RELEASE, 1, f"{key}_LOCK", secret)
 
-
-class RedisSession(RecordSession):
-    """The session store of one request (HY-24, HY-45, HY-72)."""
-
-    def __init__(
-        self,
-        sessions: RedisSessions,
-        identifier: Optional[str],
-        secret: Optional[str],
-        record: Optional[bytes],
-    ):
-        super().__init__(identifier)
-        self._sessions = sessions
-        self._secret = secret
-        self._record_read = record
-
-    def _stored(self) -> Optional[bytes]:
-        return self._record_read
-
-    def _close(self) -> None:
-        """Writes a started session, removes a renewed one and lets the next request of the session start. A request
-        that lost its lock writes nothing and fails. A session that the request did not change keeps its bytes and takes
-        a new expiry, as phpredis does with `session.lazy_write`."""
-        sessions = self._sessions
-        held = None if self._cookie_id is None else sessions._key(self._cookie_id)
-        try:
-            record = self._serialized()
-            if record is None or self._id is None:
-                return
-            if held is None:
-                sessions._prepare()
-            key = sessions._key(self._id)
-            if not self._made and record == self._read:
-                sessions.command("EXPIRE", key, sessions.lifetime)
-                return
-            if held is not None and self._secret is not None:
-                if not sessions._holds(held, self._secret):
-                    raise SessionLockError(f"the lock of the session {held} expired")
-            sessions.command("SETEX", key, sessions.lifetime, record)
-            if self._renewed is not None:
-                sessions.command("DEL", sessions._key(self._renewed))
-        finally:
-            if held is not None and self._secret is not None:
-                sessions._release(held, self._secret)
+    @staticmethod
+    def _bulk_bytes(reply: object) -> Optional[bytes]:
+        """Returns a reply of a bulk string as bytes, or None. A client that returns text would change the bytes of a
+        record."""
+        if reply is None or isinstance(reply, bytes):
+            return reply
+        raise TypeError(
+            "the Redis command must return bytes, as redis.Redis does with decode_responses=False"
+        )

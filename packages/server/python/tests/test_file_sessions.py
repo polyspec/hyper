@@ -9,7 +9,8 @@ import unittest
 from pathlib import Path
 
 from polyspec.hyper._session import Session
-from polyspec.hyper.file_sessions import FileSessions, _cookie_header, _cookie_name
+from polyspec.hyper._record_session import RecordSession
+from polyspec.hyper.file_sessions import FileSessions
 from polyspec.hyper.array_session import ArraySession
 from polyspec.php_serialize import UnserializeError, serialize, unserialize
 
@@ -27,7 +28,7 @@ def write_rounds(directory: str, identifier: str, queue) -> None:
             session = sessions._open(identifier)
             session.set("number", number)
             try:
-                session._close()
+                session.close()
             except OSError as error:
                 errors.append(f"{type(error).__name__}: {error}")
     finally:
@@ -46,11 +47,11 @@ def count_requests(directory: str, identifier: str, queue) -> None:
             try:
                 if session.get("token") is None:
                     failures.append(
-                        f"a request started the new session {session._created}"
+                        f"a request started the new session {session.created()}"
                     )
                 session.set("count", (session.get("count") or 0) + 1)
             finally:
-                session._close()
+                session.close()
     finally:
         queue.put(failures)
 
@@ -142,17 +143,17 @@ class FileSessionsTest(unittest.TestCase):
     def test_ends_a_session_after_its_lifetime_and_removes_expired_files(self) -> None:
         first = self.sessions._open(None)
         first.set("a", 1)
-        first._close()
-        identifier = first._created
+        first.close()
+        identifier = first.created()
         old = time.time() - 1441
         os.utime(self.directory / f"sess_{identifier}", (old, old))
         later = self.sessions._open(identifier)
         self.assertIsNone(later.get("a"))
-        self.assertNotEqual(identifier, later._created)
-        later._close()
+        self.assertNotEqual(identifier, later.created())
+        later.close()
         self.assertEqual(1, self.sessions._collect())
         self.assertEqual(
-            [f"sess_{later._created}"], [file.name for file in self.directory.iterdir()]
+            [f"sess_{later.created()}"], [file.name for file in self.directory.iterdir()]
         )
 
     def test_raises_when_a_session_file_cannot_be_read_and_starts_no_new_session(
@@ -163,13 +164,13 @@ class FileSessionsTest(unittest.TestCase):
         session = self.sessions._open(identifier)
         with self.assertRaises(UnserializeError):
             session.get("token")
-        session._close()
-        self.assertIsNone(session._created)
+        session.close()
+        self.assertIsNone(session.created())
 
     def test_creates_no_file_for_an_identifier_without_a_session(self) -> None:
         unknown = self.sessions._open("e" * 64)
         self.assertEqual([], list(self.directory.iterdir()))
-        unknown._close()
+        unknown.close()
         self.assertEqual([], list(self.directory.iterdir()))
 
     def test_reads_a_session_file_without_bytes_as_an_empty_session(self) -> None:
@@ -177,8 +178,8 @@ class FileSessionsTest(unittest.TestCase):
         (self.directory / f"sess_{identifier}").write_bytes(b"")
         session = self.sessions._open(identifier)
         self.assertIsNone(session.get("a"))
-        session._close()
-        self.assertIsNone(session._created)
+        session.close()
+        self.assertIsNone(session.created())
         self.assertEqual(
             b"a:0:{}", (self.directory / f"sess_{identifier}").read_bytes()
         )
@@ -195,12 +196,12 @@ class FileSessionsTest(unittest.TestCase):
         os.utime(file, (old, old))
         session = self.sessions._open(identifier)
         self.assertEqual({"0": 1}, session.get("o"))
-        session._close()
+        session.close()
         self.assertEqual(record, file.read_bytes())
         self.assertGreater(file.stat().st_mtime, old + 50)
         changed = self.sessions._open(identifier)
         changed.set("n", 1)
-        changed._close()
+        changed.close()
         self.assertEqual(
             record[:-1].replace(b"a:3:", b"a:4:", 1) + b's:1:"n";i:1;}',
             file.read_bytes(),
@@ -212,7 +213,7 @@ class FileSessionsTest(unittest.TestCase):
         file.write_bytes(serialize({"a": "x" * 100}))
         session = self.sessions._open(identifier)
         session.remove("a")
-        session._close()
+        session.close()
         self.assertEqual(b"a:0:{}", file.read_bytes())
 
     def test_reads_the_values_of_php_arrays_as_the_data_model(self) -> None:
@@ -225,76 +226,76 @@ class FileSessionsTest(unittest.TestCase):
         self.assertEqual("z", session.get("0"))
         self.assertEqual({"7": "x", "y": 1}, session.get("m"))
         self.assertEqual({}, session.get("o"))
-        session._close()
+        session.close()
 
     def test_keeps_a_map_that_a_php_array_would_read_as_a_list(self) -> None:
         first = self.sessions._open(None)
         first.set("empty", {})
         first.set("numbered", {"0": "a", "1": "b"})
         first.set("list", ["a"])
-        first._close()
-        record = (self.directory / f"sess_{first._created}").read_bytes()
+        first.close()
+        record = (self.directory / f"sess_{first.created()}").read_bytes()
         self.assertEqual(
             b'a:3:{s:5:"empty";O:8:"stdClass":0:{}'
             b's:8:"numbered";O:8:"stdClass":2:{s:1:"0";s:1:"a";s:1:"1";s:1:"b";}'
             b's:4:"list";a:1:{i:0;s:1:"a";}}',
             record,
         )
-        later = self.sessions._open(first._created)
+        later = self.sessions._open(first.created())
         self.assertEqual({}, later.get("empty"))
         self.assertEqual({"0": "a", "1": "b"}, later.get("numbered"))
         self.assertEqual(["a"], later.get("list"))
-        later._close()
+        later.close()
 
     def test_an_identifier_that_a_renewal_removed_names_no_session(
         self,
     ) -> None:
         first = self.sessions._open(None)
         first.set("a", 1)
-        first._close()
-        holder = self.sessions._open(first._created)
+        first.close()
+        holder = self.sessions._open(first.created())
         holder.renew()
-        holder._close()
-        self.assertIsNone(self.sessions._hold(first._created, blocking=True))
+        holder.close()
+        self.assertIsNone(self.sessions._hold(first.created(), blocking=True))
 
     def test_names_the_session_cookie_hy_session_over_http_and_host_prefixed_over_https(
         self,
     ) -> None:
         identifier = "a" * 64
-        self.assertEqual("hy-session", _cookie_name(False))
-        self.assertEqual("__Host-hy-session", _cookie_name(True))
+        self.assertEqual("hy-session", RecordSession.cookie_name(False))
+        self.assertEqual("__Host-hy-session", RecordSession.cookie_name(True))
         self.assertEqual(
             f"hy-session={identifier}; path=/; HttpOnly; SameSite=Lax",
-            _cookie_header(identifier, False),
+            RecordSession.cookie_header(identifier, False),
         )
         self.assertEqual(
             f"__Host-hy-session={identifier}; path=/; secure; HttpOnly; SameSite=Lax",
-            _cookie_header(identifier, True),
+            RecordSession.cookie_header(identifier, True),
         )
 
     def test_accepts_only_identifiers_that_it_created(self) -> None:
         for cookie in ["abc", "../../etc/passwd", "f" * 64, "F" * 64, "a" * 129]:
             session = self.sessions._open(cookie)
             self.assertIsNone(session.get("a"), cookie)
-            self.assertNotEqual(cookie, session._created, cookie)
-            session._close()
+            self.assertNotEqual(cookie, session.created(), cookie)
+            session.close()
 
     def test_renews_a_session_with_the_same_values_and_no_file_of_the_old_one(
         self,
     ) -> None:
         first = self.sessions._open(None)
         first.set("a", 1)
-        first._close()
-        old = first._created
+        first.close()
+        old = first.created()
         session = self.sessions._open(old)
         session.renew()
-        session._close()
-        self.assertNotEqual(old, session._created)
+        session.close()
+        self.assertNotEqual(old, session.created())
         self.assertEqual(
-            [f"sess_{session._created}"],
+            [f"sess_{session.created()}"],
             [file.name for file in self.directory.iterdir()],
         )
-        self.assertEqual(1, self.sessions._open(session._created).get("a"))
+        self.assertEqual(1, self.sessions._open(session.created()).get("a"))
 
     def test_requires_an_existing_absolute_directory_and_a_positive_lifetime(
         self,

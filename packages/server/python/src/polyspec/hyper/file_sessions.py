@@ -15,25 +15,19 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from .session_record import _IDENTIFIER, RecordSession, _accepted
+from ._file_session import FileSession
+from ._record_session import _IDENTIFIER, RecordSession
 
 _PREFIX = "sess_"
 _OPEN = os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC
 
 
-def _cookie_name(secure: bool) -> str:
-    """Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45)."""
-    return "__Host-hy-session" if secure else "hy-session"
-
-
-def _cookie_header(identifier: str, secure: bool) -> str:
-    """Returns the Set-Cookie value of a new session, with the attributes of the PHP session cookie (HY-45)."""
-    return f"{_cookie_name(secure)}={identifier}; path=/{'; secure' if secure else ''}; HttpOnly; SameSite=Lax"
-
-
 class FileSessions:
     """Opens one session store per request; the requests of one session run one after another, in one process and in
     every process that keeps its sessions in the directory (HY-104)."""
+
+    _directory: Path
+    _lifetime: int
 
     def __init__(self, directory: str, lifetime: int = 1440):
         path = Path(directory)
@@ -43,13 +37,13 @@ class FileSessions:
             )
         if lifetime <= 0:
             raise ValueError("session lifetime must be a positive number of seconds")
-        self.directory = path
-        self.lifetime = lifetime
+        self._directory = path
+        self._lifetime = lifetime
 
     def _open(self, cookie: Optional[str]) -> "FileSession":
         """Returns the store of a request with the value of its session cookie; it holds the lock of the session
         file until `close`. An identifier in another form or without a file names no session (HY-45)."""
-        identifier = _accepted(cookie)
+        identifier = RecordSession.accepted(cookie)
         if identifier is None:
             return FileSession(self, None, None)
         held = self._hold(identifier, blocking=True)
@@ -57,7 +51,7 @@ class FileSessions:
 
     def _file(self, identifier: str) -> Path:
         """Returns the path of the session file of an identifier."""
-        return self.directory / f"{_PREFIX}{identifier}"
+        return self._directory / f"{_PREFIX}{identifier}"
 
     def _hold(self, identifier: str, blocking: bool) -> Optional[int]:
         """Takes the exclusive lock of a session file and returns its descriptor, which closing releases. It returns
@@ -98,11 +92,11 @@ class FileSessions:
         """Removes the files of sessions whose lifetime has passed and returns how many it removed. It skips a session
         whose lock a request holds."""
         removed = 0
-        for file in sorted(self.directory.iterdir()):
+        for file in sorted(self._directory.iterdir()):
             if not file.name.startswith(_PREFIX):
                 continue
             identifier = file.name.removeprefix(_PREFIX)
-            if _IDENTIFIER.fullmatch(identifier) is None or self._live(file):
+            if _IDENTIFIER.fullmatch(identifier) is None or self._live(identifier):
                 continue
             held = self._hold(identifier, blocking=False)
             if held is None:
@@ -116,92 +110,15 @@ class FileSessions:
                 os.close(held)
         return removed
 
-    def _live(self, file: Path) -> bool:
-        """Returns False when a session file is missing or older than the lifetime."""
+    def _live(self, identifier: str) -> bool:
+        """Returns False when the session file of an identifier is missing or older than the lifetime."""
         try:
-            return not self._expired(file.stat(follow_symlinks=False).st_mtime)
+            return not self._expired(
+                self._file(identifier).stat(follow_symlinks=False).st_mtime
+            )
         except FileNotFoundError:
             return False
 
     def _expired(self, modified: float) -> bool:
         """Returns True when a modification time is older than the lifetime."""
-        return time.time() - modified > self.lifetime
-
-
-class FileSession(RecordSession):
-    """The session store of one request (HY-24, HY-45, HY-72)."""
-
-    def __init__(
-        self, sessions: FileSessions, identifier: Optional[str], held: Optional[int]
-    ):
-        super().__init__(identifier)
-        self._sessions = sessions
-        self._held = held
-
-    def _stored(self) -> Optional[bytes]:
-        if self._held is None or self._sessions._expired(os.fstat(self._held).st_mtime):
-            return None
-        return _read(self._held)
-
-    def _close(self) -> None:
-        """Writes a started session to its file, removes the file of a renewed identifier and lets the next request of
-        the session start. A session that the request did not change keeps its bytes and takes a new modification
-        time, as PHP does with `session.lazy_write`."""
-        try:
-            record = self._serialized()
-            if record is None:
-                return
-            if self._made:
-                self._create(record)
-            elif self._held is not None:
-                self._replace(self._held, record)
-            if self._renewed is not None:
-                self._sessions._file(self._renewed).unlink(missing_ok=True)
-        finally:
-            if self._held is not None:
-                os.close(self._held)
-
-    def _create(self, record: bytes) -> None:
-        """Creates the file of a new identifier with the mode 0600; no other process knows the identifier yet."""
-        descriptor = os.open(
-            self._sessions._file(_present(self._id)),
-            _OPEN | os.O_CREAT | os.O_EXCL,
-            0o600,
-        )
-        try:
-            _write(descriptor, record)
-        finally:
-            os.close(descriptor)
-
-    def _replace(self, descriptor: int, record: bytes) -> None:
-        """Writes a record over the file of the session in place, under its lock, as PHP does."""
-        if record == self._read:
-            os.utime(descriptor)
-            return
-        _write(descriptor, record)
-        os.ftruncate(descriptor, len(record))
-
-
-def _present(identifier: Optional[str]) -> str:
-    """Returns the identifier of a session that has started."""
-    if identifier is None:
-        raise RuntimeError("a session without an identifier has no file")
-    return identifier
-
-
-def _read(descriptor: int) -> bytes:
-    """Returns the bytes of a session file from its start."""
-    chunks = []
-    offset = 0
-    while chunk := os.pread(descriptor, 1 << 20, offset):
-        chunks.append(chunk)
-        offset += len(chunk)
-    return b"".join(chunks)
-
-
-def _write(descriptor: int, record: bytes) -> None:
-    """Writes the bytes of a record at the start of a session file."""
-    view = memoryview(record)
-    offset = 0
-    while offset < len(view):
-        offset += os.pwrite(descriptor, view[offset:], offset)
+        return time.time() - modified > self._lifetime

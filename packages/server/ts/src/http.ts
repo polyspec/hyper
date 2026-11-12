@@ -9,7 +9,7 @@ import { Cookies } from './cookies.js';
 import { errorCode } from './error-code.js';
 import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
-import { sessionCookie, sessionCookieName } from './session-record.js';
+import { RecordSession } from './record-session.js';
 import { Reply } from './reply.js';
 import { Disconnected } from './page.js';
 import { Request } from './request.js';
@@ -114,7 +114,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       // Opens the session of the request by its session cookie, answers with the application, closes the session and
       // adds the cookie of a new session first (HY-45).
       const answerWith = async (given: Request): Promise<Response> => {
-        const session = await sessions.open(given.cookie(sessionCookieName(app.https || https)));
+        const session = await sessions.open(given.cookie(RecordSession.cookieName(app.https || https)));
         let answer;
         try {
           answer = await app.respond(given, session, started, closed.signal);
@@ -125,7 +125,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
         last.reply = answer.reply;
         // A request whose client closed the connection has no response to write (HY-67).
         if (answer.stopped) throw new Disconnected();
-        return withSessionCookie(app, sessions, answer.response, session.created, https);
+        return withSessionCookie(app, sessions, answer.response, session.created(), https);
       };
       try {
         const given = around === undefined ? await answerWith(request) : await around(request, answerWith);
@@ -184,7 +184,7 @@ function requestLine(packet: Buffer | undefined): Request | null {
 // Adds the cookie of a new session first, as PHP does when the session starts (HY-45).
 function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, response: Response, created: string | null, https: boolean): Response {
   if (created === null) return response;
-  const cookie = sessionCookie(created, app.https || https);
+  const cookie = RecordSession.cookieHeader(created, app.https || https);
   const cookies = response.headers['Set-Cookie'];
   return new Response(response.status, { ...response.headers, 'Set-Cookie': [cookie, ...(Array.isArray(cookies) ? cookies : [])] }, response.body);
 }

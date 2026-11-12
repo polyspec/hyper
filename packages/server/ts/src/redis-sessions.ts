@@ -2,7 +2,10 @@
 import { randomBytes } from 'node:crypto';
 import { hostname } from 'node:os';
 import { setTimeout as delay } from 'node:timers/promises';
-import { accepted, RecordSession, SessionTurns } from './session-record.js';
+import { RedisSession } from './redis-session.js';
+import { RecordSession } from './record-session.js';
+import { SessionLockError } from './session-lock-error.js';
+import { SessionTurns } from './session-turns.js';
 
 // One command of a Redis server: its words, and its reply with a bulk string as bytes. With node-redis:
 // (words) => client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).sendCommand(words.map((word) => Buffer.from(word)))
@@ -25,15 +28,6 @@ export interface RedisSessionsOptions {
 
 const RELEASE = 'if redis.call("get",KEYS[1]) == ARGV[1] then return redis.call("del",KEYS[1]) else return 0 end';
 
-// Returns a reply of a bulk string as bytes, or null. A client that returns text would change the bytes of a record.
-function bytesOf(reply: unknown): Uint8Array | null {
-  if (reply === null || reply instanceof Uint8Array) return reply;
-  throw new TypeError('hyper: the Redis command must return a bulk string as bytes');
-}
-
-// A request could not take the lock of its session, or lost it before it wrote the session (HY-43, HY-115).
-export class SessionLockError extends Error {}
-
 // Opens one session store per request. A session is the key `PHPREDIS_SESSION:<id>`, whose bytes are the php_serialize
 // record of its values and which expires after the lifetime, so the PHP, Node and Python servers that share the Redis
 // server share its sessions. A request holds the lock `<key>_LOCK`, which SET NX PX takes, from its opening to its closing,
@@ -48,9 +42,11 @@ export class RedisSessions {
   private readonly lockExpire: number;
   private readonly lockRetries: number;
   private readonly lockWait: number;
-  private readonly turns = new SessionTurns();
+  /** @internal */
+  readonly turns: SessionTurns;
 
   constructor(options: RedisSessionsOptions) {
+    this.turns = new SessionTurns();
     const lifetime = options.lifetime ?? 1440;
     if (!Number.isSafeInteger(lifetime) || lifetime <= 0) throw new Error('hyper: session lifetime must be a positive number of seconds');
     const lockExpire = options.lockExpire ?? 30;
@@ -65,30 +61,30 @@ export class RedisSessions {
 
   /** @internal */
   async open(cookie: string | null): Promise<RedisSession> {
-    const id = accepted(cookie);
-    if (id === null) return new RedisSession(this, null, null, null, () => {});
-    const leave = await this.turns.enter(id);
+    const id = RecordSession.accepted(cookie);
+    if (id === null) return new RedisSession(this, null, null, null);
+    await this.turns.enter(id);
     try {
       const key = this.key(id);
       if ((await this.command(['EXISTS', key])) !== 1) {
-        leave();
-        return new RedisSession(this, null, null, null, () => {});
+        this.turns.leave(id);
+        return new RedisSession(this, null, null, null);
       }
-      const secret = await this.lock(key);
+      const secret = await this.takeLock(key);
       try {
-        const record = bytesOf(await this.command(['GET', key]));
+        const record = RedisSessions.bulkBytes(await this.command(['GET', key]));
         if (record === null) {
           await this.release(key, secret);
-          leave();
-          return new RedisSession(this, null, null, null, () => {});
+          this.turns.leave(id);
+          return new RedisSession(this, null, null, null);
         }
-        return new RedisSession(this, id, secret, record, leave);
+        return new RedisSession(this, id, secret, record);
       } catch (error) {
         await this.release(key, secret);
         throw error;
       }
     } catch (error) {
-      leave();
+      this.turns.leave(id);
       throw error;
     }
   }
@@ -100,7 +96,7 @@ export class RedisSessions {
 
   /** @internal */
   async holds(key: string, secret: string): Promise<boolean> {
-    const held = bytesOf(await this.command(['GET', `${key}_LOCK`]));
+    const held = RedisSessions.bulkBytes(await this.command(['GET', `${key}_LOCK`]));
     return held !== null && Buffer.from(held).toString() === secret;
   }
 
@@ -111,7 +107,7 @@ export class RedisSessions {
 
   // Takes the lock of a session and returns its secret. Each lock has a secret of its own, so a request of this process
   // cannot release the lock that another request of it took after its own expired.
-  private async lock(key: string): Promise<string> {
+  private async takeLock(key: string): Promise<string> {
     const secret = `${hostname()}|${String(process.pid)}|${randomBytes(8).toString('hex')}`;
     for (let attempt = 0; attempt <= this.lockRetries; attempt++) {
       if ((await this.command(['SET', `${key}_LOCK`, secret, 'NX', 'PX', String(this.lockExpire * 1000)])) !== null) return secret;
@@ -119,54 +115,10 @@ export class RedisSessions {
     }
     throw new SessionLockError(`hyper: the lock of the session ${key} was not free`);
   }
-}
 
-// The session store of one request.
-export class RedisSession extends RecordSession {
-  private readonly sessions: RedisSessions;
-  private readonly lockedId: string | null;
-  private readonly secret: string | null;
-  private readonly leave: () => void;
-
-  constructor(sessions: RedisSessions, cookieId: string | null, secret: string | null, record: Uint8Array | null, leave: () => void) {
-    super(
-      cookieId,
-      () => record,
-      (id) => sessions.key(id),
-    );
-    this.sessions = sessions;
-    this.lockedId = cookieId;
-    this.secret = secret;
-    this.leave = leave;
-  }
-
-  // Writes a started session, removes a renewed one and lets the next request of the session start. A request that lost
-  // its lock writes nothing and fails. A session that the request did not change keeps its bytes and takes a new expiry,
-  // as phpredis does with session.lazy_write.
-  /** @internal */
-  async close(): Promise<void> {
-    const { sessions } = this;
-    const held = this.lockedId === null ? null : sessions.key(this.lockedId);
-    try {
-      const pending = this.pending();
-      if (pending === null) return;
-      const key = sessions.key(pending.id);
-      const lifetime = String(sessions.lifetime);
-      if (!pending.created && !pending.changed) {
-        await sessions.command(['EXPIRE', key, lifetime]);
-        return;
-      }
-      if (held !== null && this.secret !== null && !(await sessions.holds(held, this.secret))) {
-        throw new SessionLockError(`hyper: the lock of the session ${held} expired`);
-      }
-      await sessions.command(['SETEX', key, lifetime, pending.record]);
-      if (pending.renewed !== null) await sessions.command(['DEL', sessions.key(pending.renewed)]);
-    } finally {
-      try {
-        if (held !== null && this.secret !== null) await sessions.release(held, this.secret);
-      } finally {
-        this.leave();
-      }
-    }
+  // Returns a reply of a bulk string as bytes, or null. A client that returns text would change the bytes of a record.
+  private static bulkBytes(reply: unknown): Uint8Array | null {
+    if (reply === null || reply instanceof Uint8Array) return reply;
+    throw new TypeError('hyper: the Redis command must return a bulk string as bytes');
   }
 }

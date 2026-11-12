@@ -3,12 +3,8 @@
 const LOCK_EX = 2;
 const LOCK_NB = 4;
 
-interface Ffi {
-  dlopen(path: null, definitions: Record<string, { arguments: string[]; return: string }>): { functions: Record<string, ((...values: number[]) => unknown) | undefined> };
-  getInt32(pointer: unknown, offset: number): number;
-}
-
-function isFfi(module: unknown): module is Ffi {
+// Tells whether a module is node:ffi with the two functions that the lock uses.
+function isFfi(module: unknown): module is { dlopen(path: null, definitions: Record<string, { arguments: string[]; return: string }>): { functions: Record<string, ((...values: number[]) => unknown) | undefined> }; getInt32(pointer: unknown, offset: number): number; } {
   return typeof module === 'object' && module !== null && 'dlopen' in module && 'getInt32' in module;
 }
 

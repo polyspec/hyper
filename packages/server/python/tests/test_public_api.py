@@ -24,7 +24,7 @@ PUBLIC_MODULES = [
     "response",
     "result",
     "server",
-    "session_record",
+    "session_lock_error",  # HY-115: the error of a session lock.
     "session_store",  # HY-104: the interface of a session store.
     "uploaded_file",  # HY-113: the uploaded file class belongs to the public API.
     "wsgi",

@@ -22,7 +22,7 @@ const failures = [];
 for (let request = 0; request < Number(requests); request++) {
   const session = await sessions.open(id);
   try {
-    if (session.get('token') === undefined) failures.push('a request started the new session ' + session.created);
+    if (session.get('token') === undefined) failures.push('a request started the new session ' + String(session.created()));
     session.set('count', (session.get('count') ?? 0) + 1);
   } finally {
     await session.close();

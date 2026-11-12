@@ -19,6 +19,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { writeFileAtomic } from '../packages/build/lib/output-files.mjs';
+import { publish, staging } from '../packages/build/lib/publish.mjs';
 import { writeTemplateFiles } from '../packages/build/lib/template-files.mjs';
 import { buildId } from '../packages/build/lib/build-id.mjs';
 
@@ -79,32 +80,40 @@ for (const entry of cases) {
 
 const failures: string[] = [];
 for (const [key, { application }] of applications) {
-  const directory = join(values.output, key);
+  // HR-82: the application is built in a staging directory of this process and published file by file, so that a test
+  // that reads the application while another run builds it finds no file missing.
+  const target = join(values.output, key);
+  const directory = staging(target);
   rmSync(directory, { recursive: true, force: true });
-  const templates = join(directory, 'templates');
-  mkdirSync(templates, { recursive: true });
-  for (const [name, source] of Object.entries(application.templates)) {
-    writeFileSync(join(templates, name), source);
+  try {
+    const templates = join(directory, 'templates');
+    mkdirSync(templates, { recursive: true });
+    for (const [name, source] of Object.entries(application.templates)) {
+      writeFileSync(join(templates, name), source);
+    }
+    const manifest = join(directory, 'manifest.json');
+    writeFileSync(manifest, JSON.stringify(application.manifest));
+    const build = join(directory, 'build.json');
+    writeFileSync(build, JSON.stringify({ build: application.build }));
+    const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('')}\\Program`;
+    const run = spawnSync(
+      process.execPath,
+      [buildTool, '--manifest', manifest, '--templates', templates, '--output', join(directory, 'program'),
+        '--php-namespace', namespace, '--build', build],
+      { encoding: 'utf8' },
+    );
+    if (run.status !== 0) {
+      failures.push(`building the application ${key} failed with status ${run.status}: ${run.stdout}${run.stderr}`);
+      continue;
+    }
+    const node = join(directory, 'node');
+    const { index } = await writeTemplateFiles({ templates, output: join(node, 'templates'), urlPrefix: '/templates' });
+    writeFileAtomic(join(node, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
+    publish(directory, target);
+    process.stdout.write(`built ${key} into ${join(target, 'program')} and ${join(target, 'node')}\n`);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
-  const manifest = join(directory, 'manifest.json');
-  writeFileSync(manifest, JSON.stringify(application.manifest));
-  const build = join(directory, 'build.json');
-  writeFileSync(build, JSON.stringify({ build: application.build }));
-  const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('')}\\Program`;
-  const run = spawnSync(
-    process.execPath,
-    [buildTool, '--manifest', manifest, '--templates', templates, '--output', join(directory, 'program'),
-      '--php-namespace', namespace, '--build', build],
-    { encoding: 'utf8' },
-  );
-  if (run.status !== 0) {
-    failures.push(`building the application ${key} failed with status ${run.status}: ${run.stdout}${run.stderr}`);
-    continue;
-  }
-  const node = join(directory, 'node');
-  const { index } = await writeTemplateFiles({ templates, output: join(node, 'templates'), urlPrefix: '/templates' });
-  writeFileAtomic(join(node, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
-  process.stdout.write(`built ${key} into ${join(directory, 'program')} and ${node}\n`);
 }
 if (failures.length > 0) throw new Error(failures.join('\n'));
 

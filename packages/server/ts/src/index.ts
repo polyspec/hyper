@@ -2,9 +2,9 @@ export { App, type Action, type AppOptions, type HandlerArgument, type Handlers,
 export { Choice } from './choice.js';
 export { ClientRendering } from './client-rendering.js';
 export { type ContextHandler } from './context.js';
-export { FileSession, FileSessions, type FileSessionsOptions } from './file-sessions.js';
-export { RecordSession } from './session-record.js';
-export { RedisSession, RedisSessions, SessionLockError, type RedisCommand, type RedisSessionsOptions } from './redis-sessions.js';
+export { FileSessions, type FileSessionsOptions } from './file-sessions.js';
+export { RedisSessions, type RedisCommand, type RedisSessionsOptions } from './redis-sessions.js';
+export { SessionLockError } from './session-lock-error.js';
 export { type AroundHook, type Listener, type ServerOptions, type WriteHook } from './http.js';
 export { Reply } from './reply.js';
 export { Request, type RequestInit } from './request.js';
