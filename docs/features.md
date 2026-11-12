@@ -96,6 +96,38 @@
 | shared-runtime-runner | Every Python checking target uses the native Kit runner and its virtual-environment selection; no application unittest harness remains | configured | `make hyper-runner-owner-check`, `make hyper-test-python-render` |
 | native-browser-runner | Browser E2E execution must use a provider-owned Playwright adapter while application servers retain owned preparation and cleanup | pending provider support; release held | [Kit issue 13](https://github.com/polyspec/kit/issues/13) |
 
+## Case sections of the host runners
+
+The S-3b changes gave the cases of some sections a form that the host code of the three servers runs only when it calls the core (C-7). Until then the PHP, Node and Python runners read those sections from their fixed copy `tests/legacy/<name>-before-s3b.json`, the sections as they were before the S-3b case changes, and every other section from `contracts/` (HYR-7). The browser runner, the build runner and the tests of the Rust core read every section live. The commit that moves the rules of a section to the core makes it live again and removes it from its copy.
+
+| Case file | Live sections of the host runners | Sections from the fixed copy |
+|---|---|---|
+| `accept.json` | — | `parse`, `select` |
+| `app.json` | `parts` | `cases`, `opens` |
+| `arguments.json` | `counts`, `names` | — |
+| `build.json` | `outputs` | `read` |
+| `client.json` | `cases`, `declaration` | `openRejections` |
+| `container.json` | `services` | — |
+| `context.json` | `contexts`, `withContext` | `cases` |
+| `cookies.json` | `parse` | — |
+| `csrf.json` | `masked` | `mask`, `verify`, `browser` |
+| `file-sessions.json` | `requests` | `cookie` |
+| `functions.json` | `cases` | — |
+| `hooks.json` | `creation` | — |
+| `json.json` | — | `encode`, `decode` |
+| `keep.json` | `cases`, `select` | — |
+| `manifest.json` | `reads` | `checks` |
+| `media-type.json` | — | `values` |
+| `reads.json` | `cases` | — |
+| `reply.json` | `flags` | `cookies`, `cacheControl`, `referrerPolicy`, `status`, `notes` |
+| `representations.json` | `manifestRejections`, `openRejections`, `values` | `cases` |
+| `request.json` | `texts`, `targets` | `files`, `values` |
+| `response.json` | `values` | — |
+| `rest.json` | `cases`, `invalidPaths` | — |
+| `result.json` | `invalid` | `redirect`, `page`, `copies`, `stop`, `types` |
+| `routes.json` | `cases`, `baseCases`, `invalidPaths` | — |
+| `session.json` | `token`, `store` | `flash`, `kept` |
+
 ## Rules that stay in the three servers
 
 The Rust core (C-7) does not hold every rule yet. Until it does, the three servers keep these rules in their own code, and each server keeps the rules that the core holds until it calls the core through the generated bindings (S-4). A rule leaves this list in the change that adds it to the core and its cases.

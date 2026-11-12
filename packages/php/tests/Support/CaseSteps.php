@@ -30,7 +30,11 @@ use Polyspec\Hyper\Tests\Support\Steps\ResultSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RoutesSteps;
 use Polyspec\Hyper\Tests\Support\Steps\SessionSteps;
 
-/** The step of each (file, section) of the case files that the PHP server runs. */
+/**
+ * The step of each (file, section) of the case files that the PHP server runs. A file `<name>-before-s3b.json` is the
+ * fixed copy in tests/legacy of the sections of `<name>.json` that the host code runs in their form from before the S-3b
+ * case changes, with the steps of that file, until their rules move to the core (C-7); docs/features.md lists them.
+ */
 final class CaseSteps
 {
     /** @return ?callable(CaseReader): void null when no step exists */

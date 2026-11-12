@@ -32,6 +32,9 @@ from . import (
     session_steps,
 )
 
+# A file `<name>-before-s3b.json` is the fixed copy in tests/legacy of the sections of `<name>.json` that the host code
+# runs in their form from before the S-3b case changes, with the steps of that file, until their rules move to the core
+# (C-7); docs/features.md lists them.
 STEPS = {
     ("arguments.json", "counts"): arguments_steps.counts,
     ("arguments.json", "names"): arguments_steps.names,

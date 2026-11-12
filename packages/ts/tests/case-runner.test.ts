@@ -31,7 +31,8 @@ import { steps as responseSteps } from './steps/response.js';
 import { steps as routesSteps } from './steps/routes.js';
 import { steps as sessionSteps } from './steps/session.js';
 
-// The steps of this server, by case file and section (`file:section`). A section without a step fails its cases.
+// The steps of this server, by case file and section (`file:section`). A section without a step fails its cases. A file
+// `<name>-before-s3b.json` is a fixed copy (prefixed below); docs/features.md lists its sections.
 const STEPS: Record<string, Step> = {
   ...prefixed('accept.json', acceptSteps, ['parse', 'select']),
   ...prefixed('accept-before-s3b.json', acceptSteps, ['parse', 'select'], true),

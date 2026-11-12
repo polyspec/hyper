@@ -97,6 +97,38 @@
 | shared-runtime-runner | 모든 Python 검사 target은 native Kit runner와 virtual environment 선택을 사용하며 앱 unittest harness를 제거한다 | configured | `make hyper-runner-owner-check`, `make hyper-test-python-render` |
 | native-browser-runner | 앱 server의 준비와 정리 소유권을 유지하면서 browser E2E 실행에 provider 소유 Playwright adapter를 사용해야 한다 | pending provider support; release held | [Kit issue 13](https://github.com/polyspec/kit/issues/13) |
 
+## host runner의 case section
+
+S-3b 변경은 일부 section의 case를 세 server의 host 코드가 core를 부를 때(C-7)에만 실행하는 형태로 바꿨다. 그때까지 PHP, Node, Python runner는 그 section을 고정 사본 `tests/legacy/<name>-before-s3b.json`, 곧 S-3b case 변경 전의 section에서 읽고, 다른 section은 모두 `contracts/`에서 읽는다(HYR-7). browser runner, build runner, Rust core의 시험은 모든 section을 live로 읽는다. section의 규칙을 core로 옮기는 commit이 그 section을 다시 live로 만들고 사본에서 지운다.
+
+| case 파일 | host runner의 live section | 고정 사본에서 읽는 section |
+|---|---|---|
+| `accept.json` | — | `parse`, `select` |
+| `app.json` | `parts` | `cases`, `opens` |
+| `arguments.json` | `counts`, `names` | — |
+| `build.json` | `outputs` | `read` |
+| `client.json` | `cases`, `declaration` | `openRejections` |
+| `container.json` | `services` | — |
+| `context.json` | `contexts`, `withContext` | `cases` |
+| `cookies.json` | `parse` | — |
+| `csrf.json` | `masked` | `mask`, `verify`, `browser` |
+| `file-sessions.json` | `requests` | `cookie` |
+| `functions.json` | `cases` | — |
+| `hooks.json` | `creation` | — |
+| `json.json` | — | `encode`, `decode` |
+| `keep.json` | `cases`, `select` | — |
+| `manifest.json` | `reads` | `checks` |
+| `media-type.json` | — | `values` |
+| `reads.json` | `cases` | — |
+| `reply.json` | `flags` | `cookies`, `cacheControl`, `referrerPolicy`, `status`, `notes` |
+| `representations.json` | `manifestRejections`, `openRejections`, `values` | `cases` |
+| `request.json` | `texts`, `targets` | `files`, `values` |
+| `response.json` | `values` | — |
+| `rest.json` | `cases`, `invalidPaths` | — |
+| `result.json` | `invalid` | `redirect`, `page`, `copies`, `stop`, `types` |
+| `routes.json` | `cases`, `baseCases`, `invalidPaths` | — |
+| `session.json` | `token`, `store` | `flash`, `kept` |
+
 ## 세 server에 남는 규칙
 
 Rust core(C-7)는 아직 모든 규칙을 갖지 않는다. 가질 때까지 세 server는 아래 규칙을 자기 코드에 두며, core가 가진 규칙도 각 server가 생성된 binding으로 core를 부를 때(S-4)까지 자기 코드에 둔다. 규칙은 그것을 core와 그 case에 더하는 변경에서 이 목록을 떠난다.
