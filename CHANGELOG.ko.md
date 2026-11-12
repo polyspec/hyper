@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 55e912b2215b504c81396304a4905fc5857008091b62e42f2952b49bff532837 -->
+<!-- source-sha256: d676f4bcdd17a5d3b7306db2f3cd824758a18eae3d2fa2e1ffc616db3fb6c13a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-73.31이 HY-73.10을 대체하며, 숫자 리터럴을 가진 인덱스가 읽기 경로에 붙이는 키를 정한다: json의 숫자 텍스트다. json은 숫자를 ECMAScript `Number::toString`처럼 쓴다(json의 RQ-030). 예: `1.5`, `1e+21`, `1e-7`, `123456789012345680`. 음수는 리터럴에 붙은 연산자이므로 그 객체를 통째로 읽는다(HY-73.11). Rust core는 그 텍스트를 polyspec의 유일한 실수-텍스트 함수인 polyspec-json의 `number_text`에서 받는다. 이전에는 core가 숫자를 직접 형식화해 `1e21`을 `1000000000000000000000`으로, `1e-7`을 `0.0000001`로 썼다. `contracts/reads.json`의 case 넷이 소수, 두 지수 표기, 음수, 2^53을 넘는 정수를 정하며, 브라우저 package의 `templateReads`는 이들에 core와 같은 읽기 경로를 준다.
 
 - 브라우저 package의 `withContext`는 이미 member `context`를 가진 shared data에 대해, HY-124.8과 HY-132대로 category `value`의 class `RangeError`이며 kind `shared_holds_context`를 주고 status가 없는 오류로 실패한다. 이전에는 kind 없는 `Error`를 던졌고 message에 접두어 `hyper: `가 있었다. browser runner와 Node runner가 함께 쓰는 `contracts/context.json` section `withContext`의 step은 실패를 kind, status, category를 가진 `raises`로 비교하고, Node 시험 tree의 case reader는 case가 message를 적지 않은 실패의 message를 빼고 비교한다(HY-132.4). 이전에는 step이 contract에 더는 없는 key `fails`를 비교해 이 section의 case 일곱 개가 두 runner에서 실패했다.
 

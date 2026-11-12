@@ -829,6 +829,121 @@
         "count": 3
       },
       "text": "<b>3</b>\n"
+    },
+    {
+      "id": "a_number_key_with_a_fraction",
+      "label": "a number literal with a fraction adds its number text (HY-73.31)",
+      "templates": {
+        "page.tpl": "{= a[1.5]}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "a": {
+          "1.5": "x",
+          "2": "y"
+        },
+        "b": 1
+      },
+      "reads": {
+        "keys": {
+          "a": {
+            "keys": {
+              "1.5": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "a": {
+          "1.5": "x"
+        }
+      }
+    },
+    {
+      "id": "a_number_key_in_exponent_notation",
+      "label": "number literals beyond the positional range add their text in exponent notation (HY-73.31)",
+      "templates": {
+        "page.tpl": "{= a[1e21]}|{= a[0.0000001]}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "a": {
+          "1e+21": "x",
+          "1000000000000000000000": "y",
+          "1e-7": "z",
+          "0.0000001": "w"
+        }
+      },
+      "reads": {
+        "keys": {
+          "a": {
+            "keys": {
+              "1e+21": true,
+              "1e-7": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "a": {
+          "1e+21": "x",
+          "1e-7": "z"
+        }
+      }
+    },
+    {
+      "id": "a_negative_number_key_reads_its_object_whole",
+      "label": "a negative number is an operator on a literal, so its index reads its object whole (HY-73.11, HY-73.31)",
+      "templates": {
+        "page.tpl": "{= a[-1]}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "a": {
+          "-1": "x",
+          "2": "y"
+        },
+        "b": 1
+      },
+      "reads": {
+        "keys": {
+          "a": true
+        }
+      },
+      "kept": {
+        "a": {
+          "-1": "x",
+          "2": "y"
+        }
+      }
+    },
+    {
+      "id": "a_large_integer_key",
+      "label": "an integer literal beyond 2^53 adds the shortest text of its float (HY-73.31)",
+      "templates": {
+        "page.tpl": "{= a[123456789012345678]}"
+      },
+      "template": "page.tpl",
+      "data": {
+        "a": {
+          "123456789012345680": "x",
+          "123456789012345678": "y"
+        }
+      },
+      "reads": {
+        "keys": {
+          "a": {
+            "keys": {
+              "123456789012345680": true
+            }
+          }
+        }
+      },
+      "kept": {
+        "a": {
+          "123456789012345680": "x"
+        }
+      }
     }
   ],
   "routes": [

@@ -3227,6 +3227,7 @@
           "kind": "rule",
           "id": "HY-73",
           "retired": [
+            10,
             21,
             24,
             26,
@@ -3304,10 +3305,10 @@
                       "koSource": "d1a2439fee9167ed8ab86406b6df0094f10f180598a3d1c52baae0fa6998ad38"
                     },
                     {
-                      "id": "HY-73.10",
-                      "en": "A member, and an index whose key is a string or number literal, add the key to every path.",
-                      "ko": "멤버와, 키가 문자열이나 숫자 리터럴인 인덱스는 모든 경로에 그 키를 붙인다.",
-                      "koSource": "422a2ae417c5979bd90f139e34f295194053c5b8a894734bea51f18927b907ee"
+                      "id": "HY-73.31",
+                      "en": "A member, and an index whose key is a string or number literal, add the key to every path: a member its name, a string literal its text, and a number literal the number text of json, which writes the number as ECMAScript `Number::toString` does (RQ-030 of json), such as `1.5`, `1e+21`, `1e-7` and `123456789012345680`; a negative number is an operator on a literal, so its index is another index (HY-73.11).",
+                      "ko": "멤버와, 키가 문자열이나 숫자 리터럴인 인덱스는 모든 경로에 그 키를 붙인다: 멤버는 그 이름, 문자열 리터럴은 그 텍스트, 숫자 리터럴은 json의 숫자 텍스트를 붙인다. json은 숫자를 ECMAScript `Number::toString`처럼 쓴다(json의 RQ-030). 예: `1.5`, `1e+21`, `1e-7`, `123456789012345680`. 음수는 리터럴에 붙은 연산자이므로 그 인덱스는 다른 인덱스다(HY-73.11).",
+                      "koSource": "dd86507f75dc5d6df17ac8f95ace73d4e127059c180825d81da96179b9a05f08"
                     },
                     {
                       "id": "HY-73.11",

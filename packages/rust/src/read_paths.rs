@@ -97,9 +97,13 @@ fn template_node(loader: &mut Loader<'_>, name: &str) -> Result<Read, Error> {
     let mut reads = Reads {
         root: Read::part(&[]),
         loader,
+        failure: None,
     };
     reads.template(name, HashMap::new(), &[])?;
-    Ok(reads.root)
+    match reads.failure {
+        Some(error) => Err(error),
+        None => Ok(reads.root),
+    }
 }
 
 /// The templates of the application, each parsed once when the computation first reaches it.
@@ -148,6 +152,8 @@ struct Scope {
 struct Reads<'l, 'a> {
     root: Read,
     loader: &'l mut Loader<'a>,
+    /// A broken invariant that an expression met, which the computation returns when it ends.
+    failure: Option<Error>,
 }
 
 impl Reads<'_, '_> {
@@ -293,7 +299,8 @@ impl Reads<'_, '_> {
         Ok(())
     }
 
-    /// The paths of an expression; it reads whole the paths of the values that it uses (HY-73.9 to HY-73.13).
+    /// The paths of an expression; it reads whole the paths of the values that it uses (HY-73.9, HY-73.11 to HY-73.13,
+    /// HY-73.31).
     fn expr(&mut self, expr: &Expr, scope: &Scope) -> Vec<Path> {
         match expr {
             Expr::Var { name, .. } => variable(name, scope),
@@ -321,7 +328,13 @@ impl Reads<'_, '_> {
                     Expr::Literal {
                         value: LiteralValue::Number(number),
                         ..
-                    } => Some(number_text(*number)),
+                    } => match number_text(*number) {
+                        Ok(text) => Some(text),
+                        Err(error) => {
+                            self.failure = Some(error);
+                            None
+                        }
+                    },
                     _ => None,
                 };
                 if let Some(key) = key {
@@ -464,14 +477,13 @@ fn resolve(from: &str, path: &str) -> Result<String, Error> {
     }
 }
 
-/// The key of a number literal of an index (HY-73.10): its decimal text, as the data names a list index; an integer
-/// below 10^21 has no fraction and no exponent.
-fn number_text(number: f64) -> String {
-    if number == 0.0 {
-        "0".to_owned()
-    } else if number.fract() == 0.0 && number.abs() < 1e21 {
-        format!("{number:.0}")
-    } else {
-        format!("{number}")
+/// The key of a number literal of an index (HY-73.31): the number text of json, as ECMAScript `Number::toString` writes
+/// it (RQ-030 of json), the one float-to-text function of polyspec. A template literal is always finite.
+fn number_text(number: f64) -> Result<String, Error> {
+    match polyspec_json::number_text(number) {
+        Ok(text) => Ok(text),
+        Err(_) => Err(Error::Internal(
+            "a number literal of a template is not finite",
+        )),
     }
 }
