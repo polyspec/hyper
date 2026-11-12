@@ -8,6 +8,7 @@
 | ID | Feature | Status | Evidence |
 |---|---|---|---|
 | protocol | Region protocol specification (HY-1 to HR-94) | implemented | [Protocol](spec/protocol.md) |
+| rust-core | The Rust core of the server rules, `polyspec-hyper` at `packages/server/rust` (C-7): the errors of HY-132, the media selection with its 406 and `Vary` (HY-116, HY-117, HY-119), the representation entry, body and response checks (HY-118, HY-121, HY-122), the tags (HY-53, HY-122.10), the cookie names and the session cookie (HY-45, HY-38.10), the reply values (HY-52, HY-69, HY-103), application paths and page statuses (HY-46, HY-58), the token and `browser()` (HY-24), the answers of the ORM (HY-107) and the order of a request (HY-120); its interface contract `packages/server/rust/interface.json` | partial; the three servers do not call it until S-4 | `make core-test`, `make core-lint`, `make core-fmt-check` |
 | composition | Application authoring rules (HC-1 to HC-7) and the template check of HY-48 for HC-6 | documented; template check implemented | [Composition](operations/composition.md), `make templates-check` |
 | manifest | Application manifest read by PHP and the browser | implemented | `make test-php`, `make test-js` |
 | router | PHP and browser routers with shared conformance cases | implemented | `make test-php`, `make test-js` |
@@ -89,3 +90,16 @@
 | ci-environment-ownership | Each CI group selects its pinned tools through Kit, installs its native lock graphs and owns its build inputs without another language job’s artifacts; the common policy group declares no sibling template source | configured; native selector owner checks | `tests/scripts/ci-workflow.test.mts`, `tests/scripts/toolchain.test.mts` |
 | shared-runtime-runner | Every Python checking target uses the native Kit runner and its virtual-environment selection; no application unittest harness remains | configured | `make hyper-runner-owner-check`, `make hyper-test-python-render` |
 | native-browser-runner | Browser E2E execution must use a provider-owned Playwright adapter while application servers retain owned preparation and cleanup | pending provider support; release held | [Kit issue 13](https://github.com/polyspec/kit/issues/13) |
+
+## Rules that stay in the three servers
+
+The Rust core (C-7) does not hold every rule yet. Until it does, the three servers keep these rules in their own code, and each server keeps the rules that the core holds until it calls the core through the generated bindings (S-4). A rule leaves this list in the change that adds it to the core and its cases.
+
+| Rules | Why the core does not hold them yet | Until |
+|---|---|---|
+| The manifest and its check (HY-1 to HY-3, HY-118.7), the router and rest parameters (HY-4 to HY-8, HY-49) and the read paths (HY-73) | They read the manifest as a value of the data model, whose API the core takes from the template crate | the core reads the manifest |
+| The kept values and their conformance (HY-37, HY-38, HY-40), the flash values and the changed topics (HY-25), the record conversion and the keys `_hyper_*` (HY-104.13, HY-104.14, HY-104.22, HY-104.23) | They need the values of the data model and the store interface of the sessions library, whose interface contract does not exist yet | the store interface of the sessions library and the data model API |
+| The page and JSON responses (HY-10, HY-12 to HY-19, HY-31, HY-62, HY-92), the context and its hash (HY-124 to HY-128), the data model check (HY-44) and the JSON text (HY-54.18 to HY-54.21) | They write values of the data model with ordered-json and render templates | the core takes the template and ordered-json crates |
+| The body of a request (HY-56, HY-57, HY-113, HY-114, HY-131) and the cookies of a request (HY-129.13) | The libraries http-forms and http-cookies hold them; each server calls them through bindings | S-4 |
+| The hooks, the host entries and the runtime (HY-43, HY-60, HY-66, HY-67, HY-74, HY-97, HY-99, HY-100, HY-105) | They are host code (L-3), which stays in each runtime | never: they stay host code |
+| The recognition of an error of the ORM by its classes (HY-107.7) and the steps of a request that call handlers (HY-120, HY-121.5, HY-122.9) | The core gives the answer by kind and the order of the steps; the servers run the handlers | S-4 |

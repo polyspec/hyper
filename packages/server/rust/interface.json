@@ -1,0 +1,1190 @@
+{
+  "schema": "polyspec/interface@1",
+  "library": "hyper",
+  "core": {
+    "crate": "polyspec-hyper",
+    "path": "packages/server/rust"
+  },
+  "targets": [
+    "php",
+    "python",
+    "node"
+  ],
+  "packages": {
+    "php": {
+      "package": "polyspec/hyper",
+      "namespace": "Polyspec\\Hyper"
+    },
+    "python": {
+      "package": "polyspec-hyper",
+      "module": "polyspec.hyper"
+    },
+    "node": {
+      "package": "@polyspec/hyper",
+      "entries": {
+        ".": {
+          "formats": [
+            "import",
+            "require"
+          ]
+        }
+      }
+    }
+  },
+  "naming": {
+    "exceptions": []
+  },
+  "types": {},
+  "errors": {
+    "classes": {
+      "value": {
+        "php": "Polyspec\\Hyper\\HyperValueError",
+        "python": "HyperValueError",
+        "node": "HyperValueError"
+      },
+      "type": {
+        "php": "Polyspec\\Hyper\\HyperTypeError",
+        "python": "HyperTypeError",
+        "node": "HyperTypeError"
+      },
+      "io": {
+        "php": "Polyspec\\Hyper\\HyperIoError",
+        "python": "HyperIoError",
+        "node": "HyperIoError"
+      },
+      "store": {
+        "php": "Polyspec\\Hyper\\HyperStoreError",
+        "python": "HyperStoreError",
+        "node": "HyperStoreError"
+      },
+      "busy": {
+        "php": "Polyspec\\Hyper\\HyperBusyError",
+        "python": "HyperBusyError",
+        "node": "HyperBusyError"
+      },
+      "internal": {
+        "php": "Polyspec\\Hyper\\HyperInternalError",
+        "python": "HyperInternalError",
+        "node": "HyperInternalError"
+      }
+    },
+    "fixed": [
+      {
+        "lang": "php",
+        "class": "ArgumentCountError"
+      },
+      {
+        "lang": "php",
+        "class": "Error"
+      },
+      {
+        "lang": "python",
+        "class": "TypeError"
+      },
+      {
+        "lang": "node",
+        "class": "TypeError"
+      }
+    ],
+    "kinds": [
+      {
+        "variant": "polyspec_hyper::Error::NotApplicationPath",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::NotRedirectResult",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::PageStatusNotAllowed",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::ReplyStatusNotAllowed",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::CookieNameNotAllowed",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::CookieValueNotAllowed",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::NegativeMaxAge",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::InvalidNumber",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::CacheControlNotAllowed",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::CacheControlShared",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::ReferrerPolicyNotAllowed",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::InvalidCsrfForm",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::InvalidSessionToken",
+        "category": "store"
+      },
+      {
+        "variant": "polyspec_hyper::Error::InvalidSessionRecord",
+        "category": "store"
+      },
+      {
+        "variant": "polyspec_hyper::Error::SharedHoldsContext",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::NotSelected",
+        "category": "type"
+      },
+      {
+        "variant": "polyspec_hyper::Error::InvalidApplication",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::InvalidRepresentation",
+        "category": "value"
+      },
+      {
+        "variant": "polyspec_hyper::Error::Internal",
+        "category": "internal"
+      },
+      {
+        "variant": "polyspec_http_negotiate::Error::InvalidAccept",
+        "library": "http-negotiate"
+      },
+      {
+        "variant": "polyspec_http_negotiate::Error::InvalidWeight",
+        "library": "http-negotiate"
+      },
+      {
+        "variant": "polyspec_http_negotiate::Error::InvalidCandidate",
+        "library": "http-negotiate"
+      },
+      {
+        "variant": "polyspec_http_negotiate::Error::Internal",
+        "library": "http-negotiate"
+      },
+      {
+        "variant": "polyspec_http_cookies::Error::InvalidName",
+        "library": "http-cookies"
+      },
+      {
+        "variant": "polyspec_http_cookies::Error::InvalidCookiePath",
+        "library": "http-cookies"
+      },
+      {
+        "variant": "polyspec_http_cookies::Error::TooLarge",
+        "library": "http-cookies"
+      },
+      {
+        "variant": "polyspec_http_cookies::Error::PrefixNotMet",
+        "library": "http-cookies"
+      },
+      {
+        "variant": "polyspec_http_cookies::Error::SameSiteNoneNotSecure",
+        "library": "http-cookies"
+      }
+    ],
+    "binding": [],
+    "wrapped": []
+  },
+  "units": [
+    {
+      "id": "app",
+      "name": [
+        "app"
+      ],
+      "module": "",
+      "kind": "class",
+      "visibility": "public",
+      "origin": "generated",
+      "constructible": false,
+      "final": true,
+      "members": []
+    },
+    {
+      "id": "rules",
+      "name": [
+        "rules"
+      ],
+      "module": "",
+      "kind": "functions",
+      "visibility": "internal",
+      "origin": "generated",
+      "members": [
+        {
+          "id": "rules.csrf_mask",
+          "name": [
+            "csrf",
+            "mask"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "token"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "mask"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::Error::InvalidCsrfForm"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::csrf::mask"
+        },
+        {
+          "id": "rules.csrf_verify",
+          "name": [
+            "csrf",
+            "verify"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "token"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "value"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "bool",
+          "raises": [
+            "polyspec_hyper::Error::InvalidCsrfForm"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::csrf::verify"
+        },
+        {
+          "id": "rules.browser",
+          "name": [
+            "browser"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "masked"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": {
+            "optional": "text"
+          },
+          "optional_reason": "HY-24.12",
+          "raises": [
+            "polyspec_hyper::Error::InvalidCsrfForm"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::csrf::browser"
+        },
+        {
+          "id": "rules.stored_token",
+          "name": [
+            "stored",
+            "token"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "stored"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::Error::InvalidSessionToken"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::csrf::stored_token"
+        },
+        {
+          "id": "rules.is_application_path",
+          "name": [
+            "is",
+            "application",
+            "path"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "location"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "bool",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::location::is_application_path"
+        },
+        {
+          "id": "rules.redirect_location",
+          "name": [
+            "redirect",
+            "location"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "location"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::Error::NotApplicationPath"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::location::redirect_location"
+        },
+        {
+          "id": "rules.cache_control",
+          "name": [
+            "cache",
+            "control"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "value"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::Error::CacheControlNotAllowed",
+            "polyspec_hyper::Error::CacheControlShared"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::reply::cache_control"
+        },
+        {
+          "id": "rules.keeps_out_of_shared_caches",
+          "name": [
+            "keeps",
+            "out",
+            "of",
+            "shared",
+            "caches"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "value"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "bool",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::reply::keeps_out_of_shared_caches"
+        },
+        {
+          "id": "rules.referrer_policy",
+          "name": [
+            "referrer",
+            "policy"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "value"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::Error::ReferrerPolicyNotAllowed"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::reply::referrer_policy"
+        },
+        {
+          "id": "rules.session_name",
+          "name": [
+            "session",
+            "name"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "https"
+              ],
+              "type": "bool",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::cookies::session_name"
+        },
+        {
+          "id": "rules.keep_name",
+          "name": [
+            "keep",
+            "name"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "https"
+              ],
+              "type": "bool",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::cookies::keep_name"
+        },
+        {
+          "id": "rules.session_cookie",
+          "name": [
+            "session",
+            "cookie"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "identifier"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "https"
+              ],
+              "type": "bool",
+              "required": true
+            }
+          ],
+          "returns": "latin1",
+          "raises": [
+            "polyspec_http_cookies::Error::InvalidName",
+            "polyspec_http_cookies::Error::TooLarge"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::cookies::session_cookie"
+        },
+        {
+          "id": "rules.page_tag",
+          "name": [
+            "page",
+            "tag"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "body"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "masked",
+                "token"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "token"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::etag::page_tag"
+        },
+        {
+          "id": "rules.representation_tag",
+          "name": [
+            "representation",
+            "tag"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "content",
+                "type"
+              ],
+              "type": "latin1",
+              "required": true
+            },
+            {
+              "name": [
+                "body"
+              ],
+              "type": "bytes",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::etag::representation_tag"
+        },
+        {
+          "id": "rules.page_vary",
+          "name": [
+            "page",
+            "vary"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "has",
+                "context"
+              ],
+              "type": "bool",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::media::page_vary"
+        }
+      ]
+    },
+    {
+      "id": "host_options",
+      "name": [
+        "host",
+        "options"
+      ],
+      "module": "",
+      "kind": "record",
+      "visibility": "public",
+      "origin": "host",
+      "fields": [
+        {
+          "name": [
+            "files"
+          ],
+          "type": {
+            "optional": "path"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-97.6"
+        },
+        {
+          "name": [
+            "around"
+          ],
+          "type": {
+            "optional": {
+              "function": {
+                "parameters": [
+                  {
+                    "passthrough": "Request"
+                  },
+                  {
+                    "function": {
+                      "parameters": [
+                        {
+                          "passthrough": "Request"
+                        }
+                      ],
+                      "returns": {
+                        "passthrough": "Response"
+                      }
+                    }
+                  }
+                ],
+                "returns": {
+                  "passthrough": "Response"
+                }
+              }
+            }
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-97.1"
+        },
+        {
+          "name": [
+            "written"
+          ],
+          "type": {
+            "optional": {
+              "function": {
+                "parameters": [
+                  {
+                    "passthrough": "Request"
+                  },
+                  {
+                    "optional": {
+                      "passthrough": "Response"
+                    }
+                  },
+                  "bool",
+                  "float",
+                  {
+                    "optional": "text"
+                  }
+                ],
+                "returns": "none"
+              }
+            }
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-99.1"
+        }
+      ]
+    },
+    {
+      "id": "host",
+      "name": [
+        "host"
+      ],
+      "module": "",
+      "kind": "functions",
+      "visibility": "public",
+      "origin": "host",
+      "members": [
+        {
+          "id": "host.listener",
+          "name": [
+            "listener"
+          ],
+          "kind": "function",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": [
+                "app"
+              ],
+              "type": {
+                "unit": "app"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "sessions"
+              ],
+              "type": {
+                "unit": "store",
+                "library": "sessions"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "options"
+              ],
+              "type": {
+                "unit": "host_options"
+              },
+              "default": {
+                "empty": "object"
+              }
+            }
+          ],
+          "returns": "none",
+          "raises": [],
+          "wait": "none",
+          "only": {
+            "targets": [
+              "node"
+            ],
+            "reason": "HY-100.28"
+          }
+        },
+        {
+          "id": "host.server",
+          "name": [
+            "server"
+          ],
+          "kind": "function",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": [
+                "app"
+              ],
+              "type": {
+                "unit": "app"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "sessions"
+              ],
+              "type": {
+                "unit": "store",
+                "library": "sessions"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "options"
+              ],
+              "type": {
+                "unit": "host_options"
+              },
+              "default": {
+                "empty": "object"
+              }
+            }
+          ],
+          "returns": "none",
+          "raises": [],
+          "wait": "none",
+          "only": {
+            "targets": [
+              "node"
+            ],
+            "reason": "HY-100.28"
+          }
+        },
+        {
+          "id": "host.run",
+          "name": [
+            "run"
+          ],
+          "kind": "function",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": [
+                "app"
+              ],
+              "type": {
+                "unit": "app"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "sessions"
+              ],
+              "type": {
+                "unit": "store",
+                "library": "sessions"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "options"
+              ],
+              "type": {
+                "unit": "host_options"
+              },
+              "default": {
+                "empty": "object"
+              }
+            }
+          ],
+          "returns": "none",
+          "raises": [],
+          "wait": "none",
+          "only": {
+            "targets": [
+              "php"
+            ],
+            "reason": "HY-100.30"
+          }
+        },
+        {
+          "id": "host.create_server",
+          "name": [
+            "create",
+            "server"
+          ],
+          "kind": "function",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": [
+                "app"
+              ],
+              "type": {
+                "unit": "app"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "sessions"
+              ],
+              "type": {
+                "unit": "store",
+                "library": "sessions"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "options"
+              ],
+              "type": {
+                "unit": "host_options"
+              },
+              "default": {
+                "empty": "object"
+              }
+            }
+          ],
+          "returns": "none",
+          "raises": [],
+          "wait": "none",
+          "only": {
+            "targets": [
+              "python"
+            ],
+            "reason": "HY-100.3"
+          }
+        },
+        {
+          "id": "host.create_wsgi",
+          "name": [
+            "create",
+            "wsgi"
+          ],
+          "kind": "function",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": [
+                "app"
+              ],
+              "type": {
+                "unit": "app"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "sessions"
+              ],
+              "type": {
+                "unit": "store",
+                "library": "sessions"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "options"
+              ],
+              "type": {
+                "unit": "host_options"
+              },
+              "default": {
+                "empty": "object"
+              }
+            }
+          ],
+          "returns": "none",
+          "raises": [],
+          "wait": "none",
+          "only": {
+            "targets": [
+              "python"
+            ],
+            "reason": "HY-100.3"
+          }
+        },
+        {
+          "id": "host.create_asgi",
+          "name": [
+            "create",
+            "asgi"
+          ],
+          "kind": "function",
+          "visibility": "public",
+          "parameters": [
+            {
+              "name": [
+                "app"
+              ],
+              "type": {
+                "unit": "app"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "sessions"
+              ],
+              "type": {
+                "unit": "store",
+                "library": "sessions"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "options"
+              ],
+              "type": {
+                "unit": "host_options"
+              },
+              "default": {
+                "empty": "object"
+              }
+            }
+          ],
+          "returns": "none",
+          "raises": [],
+          "wait": "none",
+          "only": {
+            "targets": [
+              "python"
+            ],
+            "reason": "HY-100.15"
+          }
+        }
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "id": "package",
+      "rule": "P-1",
+      "reason": "P-1: one form of names in every repository: Composer polyspec/hyper, PHP Polyspec\\Hyper, PyPI polyspec-hyper, Python polyspec.hyper, npm @polyspec/hyper",
+      "symbol": "polyspec/hyper-server, polyspec-hyper-server, @polyspec/hyper-server",
+      "from": {
+        "php": "composer polyspec/hyper-server, namespace Polyspec\\Hyper",
+        "python": "pypi polyspec-hyper-server, import polyspec.hyper",
+        "node": "npm @polyspec/hyper-server"
+      },
+      "to": "app"
+    },
+    {
+      "id": "open-error",
+      "rule": "HY-106.18",
+      "reason": "HY-106.18, B-4: the open error is HyperValueError of kind invalid_application, and the build file kind invalid_build, so a caller tells the failures apart by the kind",
+      "symbol": "App::open, App.open",
+      "from": {
+        "php": "throws \\InvalidArgumentException, Polyspec\\Hyper\\InvalidBuild",
+        "python": "raises ValueError, InvalidBuild",
+        "node": "throws Error, InvalidBuild"
+      },
+      "to": "app"
+    },
+    {
+      "id": "message-prefix",
+      "rule": "HY-106.19",
+      "reason": "HY-106.19, B-1: a binding adds nothing to a message, so no message has the prefix hyper:",
+      "symbol": "Error messages",
+      "from": {
+        "node": "message starts with 'hyper: '"
+      },
+      "to": null
+    },
+    {
+      "id": "argument-types",
+      "rule": "HY-52.15",
+      "reason": "HY-52.15, HY-25.7, HY-60.32, HY-69.7, HY-103.9, B-2: an argument of another type is refused by the binding with invalid_argument_type or invalid_number, without a message of hyper",
+      "symbol": "Reply.cookie, Reply.removeCookie, Reply.cacheControl, Reply.status, Reply.referrerPolicy, Reply.note, Result.flash, Result.changed",
+      "from": {
+        "php": "throws \\TypeError('a cookie name is not a string (HY-52)')",
+        "python": "raises TypeError('a cookie name is not a string (HY-52)')",
+        "node": "throws TypeError('a cookie name is not a string (HY-52)')"
+      },
+      "to": null
+    },
+    {
+      "id": "float-integer",
+      "rule": "HY-52.14",
+      "reason": "HY-52.14, B-2: a float is no integer of the interface contract in PHP and Python, so Max-Age 60.0 and status 403.0 fail with invalid_number",
+      "symbol": "Reply.cookie, Reply.status",
+      "from": {
+        "php": "cookie(string $name, string $value, int|float|null $maxAge = null)",
+        "python": "cookie(name: str, value: str, max_age: int | float | None = None)"
+      },
+      "to": null
+    },
+    {
+      "id": "value-error-classes",
+      "rule": "HY-46.3",
+      "reason": "HY-46.3, HY-132.2, B-4: every error is the class Hyper<Category>Error of its category with kind and status, in place of the built-in classes",
+      "symbol": "Result.redirect, Result.page, Reply, Csrf",
+      "from": {
+        "php": "throws \\InvalidArgumentException",
+        "python": "raises ValueError",
+        "node": "throws RangeError"
+      },
+      "to": null
+    },
+    {
+      "id": "text-class",
+      "rule": "HY-42.7",
+      "reason": "HY-42.7, B-3: a character above U+00FF in a request text is invalid_text of the binding",
+      "symbol": "new Request",
+      "from": {
+        "python": "raises ValueError",
+        "node": "throws Error"
+      },
+      "to": null
+    },
+    {
+      "id": "not-selected",
+      "rule": "HY-116.21",
+      "reason": "HY-116.21, B-4: a request without a selection fails with kind not_selected in the class of the category type",
+      "symbol": "Request.wantsJson, Request.isRegionRequest",
+      "from": {
+        "php": "throws \\LogicException",
+        "python": "raises RuntimeError",
+        "node": "throws Error"
+      },
+      "to": null
+    },
+    {
+      "id": "host-listener",
+      "rule": "HY-106.20",
+      "reason": "HY-106.20, G-3: a host entry is a host function that takes the application first and no member of the generated App",
+      "symbol": "App.listener, App.server",
+      "from": {
+        "node": "app.listener(sessions, options), app.server(sessions, options)"
+      },
+      "to": "host.listener"
+    },
+    {
+      "id": "host-run",
+      "rule": "HY-106.20",
+      "reason": "HY-106.20, G-3: a host entry is a host function that takes the application first",
+      "symbol": "App::run",
+      "from": {
+        "php": "$app->run(?int $started = null): void"
+      },
+      "to": "host.run"
+    },
+    {
+      "id": "session-setup",
+      "rule": "HY-104.26",
+      "reason": "HY-104.26: the PHP server keeps its sessions in the file store of the sessions library, so the option of the native session module is gone",
+      "symbol": "App::open sessionSetup",
+      "from": {
+        "php": "App::open(..., ?\\Closure $sessionSetup = null)"
+      },
+      "to": null
+    },
+    {
+      "id": "redis-php-stores",
+      "rule": "HY-115.25",
+      "reason": "HY-115.25 to HY-115.27: the Redis store takes connection settings and asks Sentinel per request in every server, so the PHP stores of Sentinel and Cluster are gone",
+      "symbol": "RedisSentinelSessions, RedisClusterSessions",
+      "from": {
+        "php": "Polyspec\\Hyper\\RedisSentinelSessions, Polyspec\\Hyper\\RedisClusterSessions"
+      },
+      "to": null
+    },
+    {
+      "id": "redis-command-function",
+      "rule": "HY-115.25",
+      "reason": "HY-115.25: the Redis store takes connection settings, not a function that runs a command on a client of the application",
+      "symbol": "RedisSessions",
+      "from": {
+        "python": "RedisSessions(command, lifetime=..., lock_expire=...)",
+        "node": "new RedisSessions({ command, lifetime, lockExpire })"
+      },
+      "to": null
+    },
+    {
+      "id": "orm-recognition",
+      "rule": "HY-107.7",
+      "reason": "HY-107.7, B-4: an error of the ORM is recognized by the error classes of the orm package and its kind, not by the class name OrmException or OrmError and the property code_ or code",
+      "symbol": "App (loader, action and representation answers)",
+      "from": {
+        "php": "OrmException::$code_",
+        "python": "OrmError.code",
+        "node": "OrmError.code"
+      },
+      "to": null
+    }
+  ],
+  "cases": []
+}

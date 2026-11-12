@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 197add9674f4b57c27fef1ec579c4b356b36e03f6b9ac8d37929398a8809f3bf -->
+<!-- source-sha256: 299cfefdcd9c6f69d87e21bf78e46c1ac23ad094c205d2d0209937a6a0a93750 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- hyper의 interface 계약은 bindgen schema의 `packages/server/rust/interface.json`이다(C-7, 설계 I-1). 패키지 `polyspec/hyper`, `polyspec-hyper`, `@polyspec/hyper`, 오류 class `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`, HY-132의 kind와 hyper가 넘기는 http-negotiate와 http-cookies의 kind, host가 부를 core의 내부 함수, host 함수 `listener`, `server`, `run`, `create_server`, `create_wsgi`, `create_asgi`(HY-106.20), 그리고 S-3b에서 지금 API와 달라진 점을 담는다. `docs/features.md`는 core가 가질 때까지, 그리고 server가 core를 부를 때까지(S-4) 세 server에 남는 규칙을 적는다.
 
 - server 규칙의 Rust core는 `packages/server/rust`의 crate `polyspec-hyper`이며(C-7), `make core-test`, `make core-lint`, `make core-fmt-check`를 가진다. 담는 것: HY-132의 오류와 그 kind, 상태, category; http-negotiate의 무게로 요청의 media type을 고르는 선택, 같은 무게일 때의 순서, 406 목록, 각 응답의 `Vary`(HY-116, HY-117, HY-119); representation entry의 manifest 검사, 그 method와 `Allow`, 그 body와 handler 응답의 검사(HY-118, HY-121, HY-122); 약한 tag와 강한 tag(HY-53, HY-122.10); hyper cookie의 이름과 http-cookies로 쓰는 session cookie(HY-45, HY-38.10); reply의 cookie, `Cache-Control`, page 상태, `Referrer-Policy`(HY-52, HY-69, HY-103); 애플리케이션 경로와 page 상태(HY-46, HY-58); token, 그 mask, 검증, `browser()`(HY-24); ORM 오류의 kind별 응답(HY-107); 요청 단계의 순서와 session을 여는 요청(HY-120). 그 시험은 core가 정하는 `csrf.json`, `result.json`, `reply.json`, `accept.json`, `media-type.json`의 case를 실행한다. kind `invalid_representation`이 HY-132의 표에 더해지고, UTF-8 텍스트가 아닌 위치의 `result.json` case는 binding의 `invalid_text`를 기대한다. 세 server는 아직 이 crate를 쓰지 않는다(S-4).
 
