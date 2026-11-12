@@ -619,10 +619,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "polyspec-bindgen-core"
+version = "0.0.1"
+source = "git+https://github.com/polyspec/bindgen.git?rev=04f5ed595a40710f81cc0c3242142491fb3d7619#04f5ed595a40710f81cc0c3242142491fb3d7619"
+dependencies = [
+ "indexmap",
+ "tokio-util",
+]
+
+[[package]]
 name = "polyspec-http-cookies"
 version = "0.0.0"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-bindgen-core 0.0.1 (git+https://github.com/polyspec/bindgen.git?branch=v1%2Frust-core)",
 ]
 
 [[package]]
@@ -640,11 +649,12 @@ dependencies = [
 name = "polyspec-hyper"
 version = "0.0.0"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-bindgen-core 0.0.1 (git+https://github.com/polyspec/bindgen.git?branch=v1%2Frust-core)",
  "polyspec-http-cookies",
  "polyspec-http-media-type",
  "polyspec-http-negotiate",
  "polyspec-ordered-json",
+ "polyspec-sessions-core",
  "polyspec-template",
  "serde_json",
  "sha2",
@@ -654,10 +664,27 @@ dependencies = [
 name = "polyspec-ordered-json"
 version = "0.0.25"
 dependencies = [
- "polyspec-bindgen-core",
+ "polyspec-bindgen-core 0.0.1 (git+https://github.com/polyspec/bindgen.git?branch=v1%2Frust-core)",
  "ryu-js",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "polyspec-php-serialize"
+version = "0.0.6"
+source = "git+https://github.com/polyspec/php-serialize.git?rev=389b573573e52a474a07114238d98a95592fa121#389b573573e52a474a07114238d98a95592fa121"
+dependencies = [
+ "ryu",
+]
+
+[[package]]
+name = "polyspec-sessions-core"
+version = "0.0.0"
+dependencies = [
+ "getrandom",
+ "polyspec-bindgen-core 0.0.1 (git+https://github.com/polyspec/bindgen.git?rev=04f5ed595a40710f81cc0c3242142491fb3d7619)",
+ "polyspec-php-serialize",
 ]
 
 [[package]]
@@ -666,7 +693,7 @@ version = "0.0.27"
 dependencies = [
  "clap",
  "jsonschema",
- "polyspec-bindgen-core",
+ "polyspec-bindgen-core 0.0.1 (git+https://github.com/polyspec/bindgen.git?branch=v1%2Frust-core)",
  "polyspec-ordered-json",
  "serde",
  "serde_json",
@@ -787,6 +814,12 @@ name = "rustversion"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
+
+[[package]]
+name = "ryu"
+version = "1.0.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
 name = "ryu-js"

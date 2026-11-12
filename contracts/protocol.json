@@ -6552,9 +6552,11 @@
             4,
             5,
             6,
+            9,
             16,
             17,
             18,
+            19,
             24
           ],
           "blocks": [
@@ -6610,10 +6612,10 @@
                   "koSource": "38b888f6ba68431670d9dfe7a2d11d8eea4f5f681aeb98ed25f4e73f002237fc"
                 },
                 {
-                  "id": "HY-104.9",
-                  "en": "An identifier is 22 to 128 characters of `A-Za-z0-9,-`: the Python and Node servers create 64 lowercase hexadecimal digits, PHP creates its own, and each accepts the identifier of another.",
-                  "ko": "identifier는 `A-Za-z0-9,-`의 22개에서 128개 문자이며, Python과 Node 서버는 64자리 소문자 16진수를 만들고, PHP는 자기 것을 만들며, 각 서버는 다른 서버의 identifier를 받는다.",
-                  "koSource": "9f39429c0c3479a9318962af6d73cf8c49fb34c60553266d235fedd6686eff99"
+                  "id": "HY-104.31",
+                  "en": "An identifier is 22 to 256 characters of `A-Za-z0-9,-`, the identifiers that PHP creates for its session handlers (`session.sid_length` from 22 to 256), as SE-5.1 of the sessions library states: every server creates 64 lowercase hexadecimal digits (SE-5.3) and accepts the identifier of another and of a PHP peer.",
+                  "ko": "식별자는 sessions 라이브러리의 SE-5.1대로 PHP가 session handler에 만드는 식별자(`session.sid_length` 22부터 256)인 `A-Za-z0-9,-`의 22자부터 256자다. 모든 server는 소문자 16진수 64자리를 만들고(SE-5.3) 다른 server와 PHP peer의 식별자를 받는다.",
+                  "koSource": "fbebed3d1d1c2f5fce33ae5c18e49cff341bb0f70010eaad97628ee278895e39"
                 },
                 {
                   "id": "HY-104.10",
@@ -6652,6 +6654,12 @@
                   "koSource": "9a61eeb69f0db1607d328b28e328019698db13ba4b977622c1c30c57fcea7f11"
                 },
                 {
+                  "id": "HY-104.33",
+                  "en": "No server removes expired sessions while it answers a request: the application calls `collect` of its store (SF-5) when it chooses, such as from a scheduled task, because a removal during a request would make the time of an answer depend on the number of session files and, done by chance as PHP does with `session.gc_probability`, the result of a check depend on chance (HR-89), and a PHP peer that shares the directory removes expired files by its own settings.",
+                  "ko": "어떤 server도 요청에 응답하는 동안 만료된 session을 지우지 않는다. 애플리케이션이 예약 작업 등에서 원할 때 저장소의 `collect`를 부른다(SF-5). 요청 중의 삭제는 응답 시간을 session 파일 수에 기대게 하고, PHP의 `session.gc_probability`처럼 확률로 하면 검사 결과가 우연에 기대게 하며(HR-89), 디렉터리를 공유하는 PHP peer는 자기 설정으로 만료 파일을 지우기 때문이다.",
+                  "koSource": "478be6a3bd35fefc8cdbe9d770654851bbdf3a730464f0e5bb349272a49377ce"
+                },
+                {
                   "id": "HY-104.28",
                   "en": "`tests/scripts/session-shared.test.mts` checks it with several processes of each of the three servers on one session.",
                   "ko": "`tests/scripts/session-shared.test.mts`가 세 server 각각의 여러 process로 한 session에 대해 이것을 확인한다.",
@@ -6664,10 +6672,10 @@
                   "koSource": "c65f5a91a883b82c3d7a7ce7b1cb22e006a51caaefe4498648045361214b0496"
                 },
                 {
-                  "id": "HY-104.19",
-                  "en": "A session store of files of the Node and Python servers takes an existing absolute directory and a lifetime, a positive integer of seconds whose default is 1440, and making it with another directory or lifetime fails with the open error of HY-106.18.",
-                  "ko": "Node와 Python 서버의 파일 세션 저장소는 존재하는 절대 디렉터리와 수명을 받는다. 수명은 초 단위의 양의 정수이고 기본값은 1440이며, 다른 디렉터리나 수명으로 만들면 HY-106.18의 open 오류로 실패한다.",
-                  "koSource": "c2eaf4d9c6c3971300d948276dfa9912cdfbf4a66948f03260e1676130ae6433"
+                  "id": "HY-104.32",
+                  "en": "A session store of files takes an existing absolute directory and a lifetime, an unsigned integer of seconds whose default is 1440, and making it with another directory or a lifetime of 0 fails with the kind of the sessions library (`invalid_directory`, `invalid_lifetime`).",
+                  "ko": "파일 session 저장소는 존재하는 절대 디렉터리와 lifetime(초 단위 부호 없는 정수, 기본값 1440)을 받으며, 다른 디렉터리나 0인 lifetime으로 만들면 sessions 라이브러리의 kind(`invalid_directory`, `invalid_lifetime`)로 실패한다.",
+                  "koSource": "16d42926bbbcc9fa395449f452111d1ccb582db18c6d9241e296ed87c7c2be1e"
                 },
                 {
                   "id": "HY-104.20",
@@ -6712,7 +6720,9 @@
             10,
             14,
             15,
-            19
+            19,
+            21,
+            25
           ],
           "blocks": [
             {
@@ -6773,10 +6783,10 @@
                   "koSource": "9c1c88243f683cebacfc58117d9f8117fcbaa9f64582c2323346111b6e895b4e"
                 },
                 {
-                  "id": "HY-115.25",
-                  "en": "Every server takes the connection settings of the Redis store, which are the addresses, TLS and the ACL user, and not a client of the application, and the options `lockExpire`, `lockRetries` and `lockWait`, which mean what those of phpredis mean; every server of one Redis server gives them the same values, and the expiry is longer than any request.",
-                  "ko": "모든 server는 애플리케이션의 client가 아니라 Redis 저장소의 연결 설정(주소, TLS, ACL 사용자)과, phpredis의 것과 같은 뜻의 option `lockExpire`, `lockRetries`, `lockWait`을 받는다. 한 Redis server의 모든 server는 같은 값을 주고, 만료는 어떤 요청보다 길다.",
-                  "koSource": "5302f594072ba64db2655d0b9422a591e819172651b05c5cb4afc7173648b8b6"
+                  "id": "HY-115.29",
+                  "en": "Every server takes the connection settings of the Redis store, which are the addresses, TLS and the ACL user, and not a client of the application, and the options `lockExpire` in seconds, `lockRetries` and `lockWait` in microseconds, which are `redis.session.lock_expire`, `redis.session.lock_retries` and `redis.session.lock_wait_time` of phpredis; every server of one Redis server gives them the same values, and the expiry is longer than any request.",
+                  "ko": "모든 server는 애플리케이션의 client가 아니라 Redis 저장소의 연결 설정(주소, TLS, ACL 사용자)과, phpredis의 `redis.session.lock_expire`, `redis.session.lock_retries`, `redis.session.lock_wait_time`인 option `lockExpire`(초), `lockRetries`, `lockWait`(마이크로초)를 받는다. 한 Redis server의 모든 server는 같은 값을 주고, 만료는 어떤 요청보다 길다.",
+                  "koSource": "762541508b4ddc88adf8975b1ebda70b88c5a44eaf851dbca46aa67713c5ef55"
                 },
                 {
                   "id": "HY-115.11",
@@ -6833,10 +6843,10 @@
                   "koSource": "62e393cfbb922bcbca3e2c63a42f956c26afbf7ef34ed53b31f8664ab128c8b0"
                 },
                 {
-                  "id": "HY-115.21",
-                  "en": "`lifetime` and `lockExpire` of `RedisSessions` are positive integers, and making the store with another value fails with the open error of HY-106.18.",
-                  "ko": "`RedisSessions`의 `lifetime`과 `lockExpire`는 양의 정수이며, 다른 값으로 저장소를 만들면 HY-106.18의 open 오류로 실패한다.",
-                  "koSource": "c6a11d9d81a3686f91e2805f53179449ece75edfffd66c2566a8ac54718da106"
+                  "id": "HY-115.28",
+                  "en": "`lifetime` of the Redis store is an unsigned integer of seconds with the default 1440, and `lockExpire` is an unsigned integer of seconds that the caller states, with no default, because no value is longer than every request of every application; a lifetime or a lock expiry of 0 fails with the kind of the sessions library (`invalid_lifetime`, `invalid_lock_expire`).",
+                  "ko": "Redis 저장소의 `lifetime`은 기본값 1440인 초 단위 부호 없는 정수이고, `lockExpire`는 호출자가 밝히는 초 단위 부호 없는 정수로 기본값이 없다. 어떤 값도 모든 애플리케이션의 모든 요청보다 길지 않기 때문이다. 0인 lifetime이나 lock expiry는 sessions 라이브러리의 kind(`invalid_lifetime`, `invalid_lock_expire`)로 실패한다.",
+                  "koSource": "bffdeb28fd46c7d3ca198f015e55e34f82f5340c70f1106eb193751f134ce979"
                 },
                 {
                   "id": "HY-115.22",

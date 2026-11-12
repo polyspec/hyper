@@ -8852,8 +8852,7 @@
         "HY-115"
       ],
       "cases": [
-        "contracts/file-sessions.json",
-        "contracts/redis-sessions.json"
+        "contracts/file-sessions.json"
       ],
       "units": [
         {
@@ -9623,7 +9622,7 @@
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Returns the value of a session cookie in the form of an identifier, or null (HY-104.9).",
+              "state": "Returns the value of a session cookie in the form of an identifier, or null (HY-104.31).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/record-session.ts::RecordSession.accepted",
@@ -10238,7 +10237,7 @@
               "inputs": [],
               "output": "redisCommand",
               "errors": [],
-              "state": "Holds the function that runs one command on the Redis client of the application (HY-115.25).",
+              "state": "Holds the function that runs one command on the Redis client of the application (HY-115.29).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/redis-sessions.ts::RedisSessions.command",
@@ -10299,7 +10298,7 @@
               ],
               "output": "redis-sessions",
               "errors": [],
-              "state": "Holds the command of a Redis client, the lifetime, the key prefix and the lock options of the sessions (HY-115.25).",
+              "state": "Holds the command of a Redis client, the lifetime, the key prefix and the lock options of the sessions (HY-115.29).",
               "native": {
                 "node": {
                   "symbol": "packages/server/ts/src/redis-sessions.ts::RedisSessions.constructor",
@@ -10472,7 +10471,7 @@
               "node",
               "python"
             ],
-            "sentence": "HY-115.25"
+            "sentence": "HY-115.29"
           }
         },
         {
@@ -14255,7 +14254,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-115.25"
+        "sentence": "HY-115.29"
       },
       "native": {
         "node": {
@@ -18141,7 +18140,7 @@
             "created": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-104.9",
+              "sentence": "HY-104.31",
               "state": "`created` holds for each step null when the request created no identifier after its close, and `new` when it created 64 lowercase hexadecimal digits that are not the cookie value of the step, an identifier of `files` or an identifier that an earlier step created."
             },
             "errors": {
@@ -18220,141 +18219,6 @@
           "members": [
             "record-session.cookieHeader",
             "record-session.cookieName"
-          ]
-        },
-        "open": {
-          "runners": [
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "directory": {
-              "role": "input"
-            },
-            "lifetime": {
-              "role": "input",
-              "optional": true
-            },
-            "raises": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "sentence": "HY-104.19",
-              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
-            }
-          },
-          "members": [
-            "file-sessions.constructor"
-          ]
-        }
-      }
-    },
-    "redis-sessions.json": {
-      "fixtures": {},
-      "sections": {
-        "cases": {
-          "runners": [
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "keys": {
-              "role": "input"
-            },
-            "options": {
-              "role": "input",
-              "optional": true
-            },
-            "textReplies": {
-              "role": "input",
-              "optional": true
-            },
-            "steps": {
-              "role": "input"
-            },
-            "results": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-115.4",
-              "state": "`steps` are run in order on one store over the Redis server in memory of the case, which first holds the keys `keys`, pairs of a key and its bytes as text; `results` holds for each step the results of its calls of `get`, each the value of the data model (HY-44) that it returned, compared as a value, with `null` for no value."
-            },
-            "created": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-115.11",
-              "state": "`created` holds for each step null when the request created no identifier after its close, and `new` when it created 64 lowercase hexadecimal digits that are not the cookie value of the step or an identifier that an earlier step created."
-            },
-            "errors": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-115.3",
-              "state": "`errors` holds for each step null, or the pair of where the first failure happened (`open`, `call` or `close`) and its class: `lock` for `SessionLockError` and `type` for `TypeError`."
-            },
-            "commands": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-115.1",
-              "state": "`commands` are the commands that the server in memory received in order, each the list of its words as text, with `<secret>` for the value of a lock that the store took and `<release>` for the release script."
-            },
-            "stored": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-115.5",
-              "state": "`stored` are the keys of the server in memory after the steps, sorted by key, each a pair of the key and its bytes as text, with `<secret>` for the value of a lock that the store took."
-            }
-          },
-          "members": [
-            "record-session.close",
-            "record-session.created",
-            "record-session.get",
-            "record-session.remove",
-            "record-session.renew",
-            "record-session.set",
-            "redis-session.close",
-            "redis-sessions.constructor",
-            "redis-sessions.open"
-          ]
-        },
-        "open": {
-          "runners": [
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "options": {
-              "role": "input"
-            },
-            "raises": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "sentence": "HY-115.21",
-              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
-            }
-          },
-          "members": [
-            "redis-sessions.constructor"
           ]
         }
       }

@@ -796,7 +796,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "sessions-core"
               },
               "required": true
             },
@@ -845,7 +845,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "sessions-core"
               },
               "required": true
             },
@@ -894,7 +894,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "sessions-core"
               },
               "required": true
             },
@@ -944,7 +944,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "sessions-core"
               },
               "required": true
             },
@@ -994,7 +994,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "sessions-core"
               },
               "required": true
             },
@@ -1044,7 +1044,7 @@
               ],
               "type": {
                 "unit": "store",
-                "library": "sessions"
+                "library": "sessions-core"
               },
               "required": true
             },
@@ -1198,8 +1198,8 @@
     },
     {
       "id": "redis-php-stores",
-      "rule": "HY-115.25",
-      "reason": "HY-115.25 to HY-115.27: the Redis store takes connection settings and asks Sentinel per request in every server, so the PHP stores of Sentinel and Cluster are gone",
+      "rule": "HY-115.29",
+      "reason": "HY-115.26, HY-115.27, HY-115.29: the Redis store takes connection settings and asks Sentinel per request in every server, so the PHP stores of Sentinel and Cluster are gone",
       "symbol": "RedisSentinelSessions, RedisClusterSessions",
       "from": {
         "php": "Polyspec\\Hyper\\RedisSentinelSessions, Polyspec\\Hyper\\RedisClusterSessions"
@@ -1208,12 +1208,24 @@
     },
     {
       "id": "redis-command-function",
-      "rule": "HY-115.25",
-      "reason": "HY-115.25: the Redis store takes connection settings, not a function that runs a command on a client of the application",
+      "rule": "HY-115.29",
+      "reason": "HY-115.29: the Redis store takes connection settings, not a function that runs a command on a client of the application",
       "symbol": "RedisSessions",
       "from": {
         "python": "RedisSessions(command, lifetime=..., lock_expire=...)",
         "node": "new RedisSessions({ command, lifetime, lockExpire })"
+      },
+      "to": null
+    },
+    {
+      "id": "array-session",
+      "rule": "HY-104.30",
+      "reason": "HY-104.30, C-6: the store that keeps one session in memory belongs to the sessions library as MemoryStore, which hyper uses through the store interface",
+      "symbol": "ArraySession",
+      "from": {
+        "php": "Polyspec\\Hyper\\ArraySession",
+        "python": "polyspec.hyper.array_session.ArraySession",
+        "node": "ArraySession"
       },
       "to": null
     },

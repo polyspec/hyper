@@ -27,6 +27,8 @@ polyspec-http-media-type = { path = "../../../../http-media-type/packages/rust" 
 polyspec-ordered-json = { path = "../../../../ordered-json/packages/rust" }
 # The values of the data model and their JSON form (VAL-2, VAL-12, VAL-20; HY-44, HY-54.20).
 polyspec-template = { path = "../../../../template/packages/rust" }
+# The store interface of a session and its values (SE-2, SE-7; HY-104.25, HY-104.30), which the host entries take.
+polyspec-sessions-core = { path = "../../../../sessions/packages/core/rust" }
 # The digests of HY-24.10, HY-53 and HY-122.10.
 sha2 = "0.10"
 
