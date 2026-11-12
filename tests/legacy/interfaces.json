@@ -1,5 +1,5 @@
 {
-  "note": "A fixed copy of contracts/fields.json and its caseFiles declaration as hyper held them before http-forms took these cases (F-20 to F-27); the steps of the three servers read it until the servers call the core, and S-4 removes tests/legacy. Its sentences name the statements that point to the rules of http-forms.",
+  "note": "Fixed copies of case files as hyper held them before a library took their cases, with their caseFiles declarations: fields.json, whose cases http-forms holds (F-20 to F-27), and redis-sessions.json, whose cases the sessions library holds. The steps of the three servers read them until the servers call the core, and S-4 removes tests/legacy. Their sentences name the current statements of hyper.",
   "caseFiles": {
     "fields.json": {
       "fixtures": {},
@@ -212,6 +212,108 @@
             "uploaded-file.filename",
             "uploaded-file.name",
             "uploaded-file.size"
+          ]
+        }
+      }
+    },
+    "redis-sessions.json": {
+      "fixtures": {},
+      "sections": {
+        "cases": {
+          "runners": [
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "keys": {
+              "role": "input"
+            },
+            "options": {
+              "role": "input",
+              "optional": true
+            },
+            "textReplies": {
+              "role": "input",
+              "optional": true
+            },
+            "steps": {
+              "role": "input"
+            },
+            "results": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-115.4",
+              "state": "`steps` are run in order on one store over the Redis server in memory of the case, which first holds the keys `keys`, pairs of a key and its bytes as text; `results` holds for each step the results of its calls of `get`, each the value of the data model (HY-44) that it returned, compared as a value, with `null` for no value."
+            },
+            "created": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-115.11",
+              "state": "`created` holds for each step null when the request created no identifier after its close, and `new` when it created 64 lowercase hexadecimal digits that are not the cookie value of the step or an identifier that an earlier step created."
+            },
+            "errors": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-115.3",
+              "state": "`errors` holds for each step null, or the pair of where the first failure happened (`open`, `call` or `close`) and its class: `lock` for `SessionLockError` and `type` for `TypeError`."
+            },
+            "commands": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-115.1",
+              "state": "`commands` are the commands that the server in memory received in order, each the list of its words as text, with `<secret>` for the value of a lock that the store took and `<release>` for the release script."
+            },
+            "stored": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-115.5",
+              "state": "`stored` are the keys of the server in memory after the steps, sorted by key, each a pair of the key and its bytes as text, with `<secret>` for the value of a lock that the store took."
+            }
+          },
+          "members": [
+            "record-session.close",
+            "record-session.created",
+            "record-session.get",
+            "record-session.remove",
+            "record-session.renew",
+            "record-session.set",
+            "redis-session.close",
+            "redis-sessions.constructor",
+            "redis-sessions.open"
+          ]
+        },
+        "open": {
+          "runners": [
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "options": {
+              "role": "input"
+            },
+            "error": {
+              "role": "expected",
+              "compare": "contains",
+              "sentence": "HY-115.28",
+              "state": "`error` is part of the message of the error with which making the store with the options `options` fails."
+            }
+          },
+          "members": [
+            "redis-sessions.constructor"
           ]
         }
       }

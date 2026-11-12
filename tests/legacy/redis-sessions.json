@@ -1,0 +1,472 @@
+{
+  "cases": [
+    {
+      "id": "a_request_that_finds_the_lock_taken_fails_and_changes_nothing",
+      "label": "a request that finds the lock taken fails and changes nothing",
+      "keys": [
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "a:1:{s:1:\"n\";i:0;}"
+        ],
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "another holder"
+        ]
+      ],
+      "options": {
+        "lockRetries": 2,
+        "lockWait": 0
+      },
+      "steps": [
+        {
+          "cookie": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "calls": []
+        }
+      ],
+      "results": [
+        []
+      ],
+      "created": [
+        null
+      ],
+      "errors": [
+        [
+          "open",
+          "lock"
+        ]
+      ],
+      "commands": [
+        [
+          "EXISTS",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        [
+          "SET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "<secret>",
+          "NX",
+          "PX",
+          "30000"
+        ],
+        [
+          "SET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "<secret>",
+          "NX",
+          "PX",
+          "30000"
+        ],
+        [
+          "SET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "<secret>",
+          "NX",
+          "PX",
+          "30000"
+        ]
+      ],
+      "stored": [
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "a:1:{s:1:\"n\";i:0;}"
+        ],
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "another holder"
+        ]
+      ],
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_request_that_lost_its_lock_writes_nothing_and_fails",
+      "label": "a request that lost its lock writes nothing and fails",
+      "keys": [
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "a:1:{s:1:\"n\";i:0;}"
+        ]
+      ],
+      "steps": [
+        {
+          "cookie": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "calls": [
+            [
+              "set",
+              [
+                "\"n\"",
+                "1"
+              ]
+            ],
+            [
+              "setKey",
+              [
+                "\"PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK\"",
+                "\"another holder\""
+              ]
+            ]
+          ]
+        }
+      ],
+      "results": [
+        []
+      ],
+      "created": [
+        null
+      ],
+      "errors": [
+        [
+          "close",
+          "lock"
+        ]
+      ],
+      "commands": [
+        [
+          "EXISTS",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        [
+          "SET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "<secret>",
+          "NX",
+          "PX",
+          "30000"
+        ],
+        [
+          "GET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        [
+          "GET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK"
+        ],
+        [
+          "EVAL",
+          "<release>",
+          "1",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "<secret>"
+        ]
+      ],
+      "stored": [
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "a:1:{s:1:\"n\";i:0;}"
+        ],
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "another holder"
+        ]
+      ],
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_request_that_changed_nothing_sets_only_a_new_expiry",
+      "label": "a request that changed nothing sets only a new expiry",
+      "keys": [
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "a:1:{s:1:\"n\";i:0;}"
+        ]
+      ],
+      "steps": [
+        {
+          "cookie": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "calls": [
+            [
+              "get",
+              [
+                "\"n\""
+              ]
+            ]
+          ]
+        }
+      ],
+      "results": [
+        [
+          0
+        ]
+      ],
+      "created": [
+        null
+      ],
+      "errors": [
+        null
+      ],
+      "commands": [
+        [
+          "EXISTS",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        [
+          "SET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "<secret>",
+          "NX",
+          "PX",
+          "30000"
+        ],
+        [
+          "GET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        [
+          "EXPIRE",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "1440"
+        ],
+        [
+          "EVAL",
+          "<release>",
+          "1",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "<secret>"
+        ]
+      ],
+      "stored": [
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "a:1:{s:1:\"n\";i:0;}"
+        ]
+      ],
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_reply_that_is_not_bytes_fails_and_releases_the_lock",
+      "label": "a reply that is not bytes fails and releases the lock",
+      "keys": [
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "a:1:{s:1:\"n\";i:0;}"
+        ]
+      ],
+      "textReplies": true,
+      "steps": [
+        {
+          "cookie": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "calls": []
+        }
+      ],
+      "results": [
+        []
+      ],
+      "created": [
+        null
+      ],
+      "errors": [
+        [
+          "open",
+          "type"
+        ]
+      ],
+      "commands": [
+        [
+          "EXISTS",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        [
+          "SET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "<secret>",
+          "NX",
+          "PX",
+          "30000"
+        ],
+        [
+          "GET",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        ],
+        [
+          "EVAL",
+          "<release>",
+          "1",
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_LOCK",
+          "<secret>"
+        ]
+      ],
+      "stored": [
+        [
+          "PHPREDIS_SESSION:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "a:1:{s:1:\"n\";i:0;}"
+        ]
+      ],
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    }
+  ],
+  "open": [
+    {
+      "id": "a_redis_session_lifetime_of_zero_fails",
+      "label": "a redis session lifetime of zero fails",
+      "options": {
+        "lifetime": 0
+      },
+      "error": "session lifetime must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_redis_session_lifetime_that_is_negative_fails",
+      "label": "a redis session lifetime that is negative fails",
+      "options": {
+        "lifetime": -1
+      },
+      "error": "session lifetime must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_redis_session_lifetime_that_is_no_integer_fails",
+      "label": "a redis session lifetime that is no integer fails",
+      "options": {
+        "lifetime": 1.5
+      },
+      "error": "session lifetime must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_redis_session_lock_expiry_of_zero_fails",
+      "label": "a redis session lock expiry of zero fails",
+      "options": {
+        "lockExpire": 0
+      },
+      "error": "must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_redis_session_lock_expiry_that_is_negative_fails",
+      "label": "a redis session lock expiry that is negative fails",
+      "options": {
+        "lockExpire": -1
+      },
+      "error": "must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_redis_session_lock_expiry_that_is_no_integer_fails",
+      "label": "a redis session lock expiry that is no integer fails",
+      "options": {
+        "lockExpire": 1.5
+      },
+      "error": "must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_redis_session_lifetime_that_is_a_text_fails",
+      "label": "a redis session lifetime that is a text fails",
+      "options": {
+        "lifetime": "60"
+      },
+      "error": "session lifetime must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_redis_session_lock_expiry_that_is_a_text_fails",
+      "label": "a redis session lock expiry that is a text fails",
+      "options": {
+        "lockExpire": "30"
+      },
+      "error": "must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_redis_session_lifetime_that_is_a_boolean_fails",
+      "label": "a redis session lifetime that is a boolean fails",
+      "options": {
+        "lifetime": true
+      },
+      "error": "session lifetime must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    },
+    {
+      "id": "a_redis_session_lock_expiry_that_is_a_boolean_fails",
+      "label": "a redis session lock expiry that is a boolean fails",
+      "options": {
+        "lockExpire": true
+      },
+      "error": "must be a positive number of seconds",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.29"
+      }
+    }
+  ]
+}

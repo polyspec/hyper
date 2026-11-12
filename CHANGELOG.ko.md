@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7b070f553dc2e26472464caba241b287c90835f4905f7ef4a1a03af04d2109ec -->
+<!-- source-sha256: 968a0bfb6ce5148c07f9f3fe5c65c83cd5ae904d36b240ef53d6be2661b5c526 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- recipe check는 다시 server에 없는 것만 찾는다. concern `app`은 HY-132를, concern `build`는 HY-106을 이름하며, `app.json`과 `build.json`의 case가 그 실패를 말한다. 음수 한도를 가진 `request.json`의 case는 field `raises`가 HY-114를 말하므로 더는 HY-114를 요구하지 않는다. Redis store case를 읽는 Node와 Python server의 step은 `tests/legacy/redis-sessions.json`을 읽는다. 이는 sessions 라이브러리가 case를 가져가기 전에 hyper가 가졌던 case 파일의 고정 사본이며, S-4에서 `tests/legacy`와 함께 지운다(C-6).
 
 - 폼 case를 읽는 세 server의 step은 `tests/legacy/fields.json`을 읽는다. 이는 http-forms가 case를 가져가기 전에 hyper가 가졌던 `contracts/fields.json`의 고정 사본이고, 선언은 `tests/legacy/interfaces.json`에 있으며 그 sentence는 http-forms를 가리키는 문장을 이름한다. PHP, Node, Python의 case reader와 recipe check는 `tests/legacy`의 case 파일을 `contracts/`의 것과 함께 읽으며, server가 core를 부르면 S-4에서 이 디렉터리를 지운다(C-3). `accept.json`의 section `select`의 field `selected`는 선언에 case가 들어가 있던 자리에 문장 HY-116.19를 이름하여, 선언이 다시 유효하다.
 

@@ -168,7 +168,8 @@
         "HY-67",
         "HY-107",
         "HY-27",
-        "HY-106"
+        "HY-106",
+        "HY-132"
       ],
       "cases": [
         "contracts/context.json",
@@ -2054,7 +2055,8 @@
       "id": "build",
       "rules": [
         "HY-48",
-        "HY-125"
+        "HY-125",
+        "HY-106"
       ],
       "cases": [
         "contracts/build.json",
@@ -8852,7 +8854,8 @@
         "HY-115"
       ],
       "cases": [
-        "contracts/file-sessions.json"
+        "contracts/file-sessions.json",
+        "tests/legacy/redis-sessions.json"
       ],
       "units": [
         {
