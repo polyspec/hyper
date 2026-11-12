@@ -1401,6 +1401,48 @@
           ]
         }
       }
+    },
+    "manifest-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "checks": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "rejected": {
+              "role": "expected",
+              "compare": "raises",
+              "sentence": "HY-2.7",
+              "state": "`rejected` true states a manifest file that the manifest check rejects with the open error, and false one that it reads."
+            },
+            "manifest": {
+              "role": "input",
+              "optional": true
+            },
+            "text": {
+              "role": "input",
+              "optional": true
+            },
+            "bytes": {
+              "role": "input",
+              "optional": true
+            }
+          },
+          "members": [
+            "app.open"
+          ]
+        }
+      }
     }
   }
 }

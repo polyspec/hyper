@@ -64,7 +64,7 @@ STEPS = {
     ("json-before-s3b.json", "decode"): json_steps.decode,
     ("keep.json", "cases"): keep_steps.cases,
     ("keep.json", "select"): keep_steps.select,
-    ("manifest.json", "checks"): manifest_steps.checks,
+    ("manifest-before-s3b.json", "checks"): manifest_steps.checks,
     ("manifest.json", "reads"): manifest_steps.reads,
     ("reads.json", "cases"): reads_steps.cases,
     (

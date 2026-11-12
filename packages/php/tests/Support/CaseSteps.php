@@ -84,7 +84,7 @@ final class CaseSteps
             'session.json token' => SessionSteps::token(...),
             'session.json flash' => SessionSteps::flash(...),
             'session.json kept' => SessionSteps::kept(...),
-            'manifest.json checks' => ManifestSteps::checks(...),
+            'manifest-before-s3b.json checks' => ManifestSteps::checks(...),
             'manifest.json reads' => ManifestSteps::reads(...),
             'request.json targets' => RequestSteps::targets(...),
             'request.json values' => RequestSteps::values(...),
