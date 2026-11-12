@@ -1,0 +1,793 @@
+{
+  "flash": [
+    {
+      "id": "flash_values_are_taken_once",
+      "label": "flash values are taken once",
+      "calls": [
+        [
+          "putFlash",
+          [
+            "{\"created\":7}",
+            "[\"posts\"]"
+          ]
+        ],
+        [
+          "takeFlash",
+          []
+        ],
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [
+        null,
+        {
+          "values": [
+            [
+              "created",
+              7
+            ]
+          ],
+          "changed": [
+            "posts"
+          ]
+        },
+        {
+          "values": [],
+          "changed": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "flash_values_without_changed_topics_are_taken_once",
+      "label": "flash values without changed topics are taken once",
+      "calls": [
+        [
+          "putFlash",
+          [
+            "{\"created\":7}",
+            "[]"
+          ]
+        ],
+        [
+          "takeFlash",
+          []
+        ],
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [
+        null,
+        {
+          "values": [
+            [
+              "created",
+              7
+            ]
+          ],
+          "changed": []
+        },
+        {
+          "values": [],
+          "changed": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "stored_flash_values_that_are_an_empty_list_are_an_empty_map",
+      "label": "stored flash values that are an empty list are an empty map",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":[],\"changed\":[]}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [
+        {
+          "values": [],
+          "changed": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "stored_flash_values_that_are_a_list_are_the_map_of_their_indexes",
+      "label": "stored flash values that are a list are the map of their indexes",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":[\"a\"],\"changed\":[\"t\"]}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [
+        {
+          "values": [
+            [
+              "0",
+              "a"
+            ]
+          ],
+          "changed": [
+            "t"
+          ]
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "stored_flash_values_that_are_an_empty_map_are_an_empty_map",
+      "label": "stored flash values that are an empty map are an empty map",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":{},\"changed\":[]}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [
+        {
+          "values": [],
+          "changed": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "stored_flash_values_that_are_a_map_with_the_keys_of_a_list_are_that_map",
+      "label": "stored flash values that are a map with the keys of a list are that map",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":{\"0\":\"a\"},\"changed\":[\"t\"]}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [
+        {
+          "values": [
+            [
+              "0",
+              "a"
+            ]
+          ],
+          "changed": [
+            "t"
+          ]
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "stored_flash_that_is_no_map_fails",
+      "label": "stored flash that is no map fails",
+      "stored": [
+        [
+          "_hyper_flash",
+          "1"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "stored_flash_values_that_are_no_map_fail",
+      "label": "stored flash values that are no map fail",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":1,\"changed\":[]}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "stored_changed_topics_that_are_no_list_fail",
+      "label": "stored changed topics that are no list fail",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":{},\"changed\":\"t\"}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "a_stored_changed_topic_that_is_no_string_fails",
+      "label": "a stored changed topic that is no string fails",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":{},\"changed\":[1]}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "a_stored_flash_map_without_members_is_an_empty_flash",
+      "label": "a stored flash map without members is an empty flash",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [
+        {
+          "values": [],
+          "changed": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "a_stored_flash_map_without_changed_topics_has_none",
+      "label": "a stored flash map without changed topics has none",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":{\"a\":1}}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [
+        {
+          "values": [
+            [
+              "a",
+              1
+            ]
+          ],
+          "changed": []
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "a_stored_flash_map_without_values_has_none",
+      "label": "a stored flash map without values has none",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"changed\":[\"t\"]}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [
+        {
+          "values": [],
+          "changed": [
+            "t"
+          ]
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "stored_flash_values_that_are_null_fail",
+      "label": "stored flash values that are null fail",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":null,\"changed\":[]}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "stored_changed_topics_that_are_null_fail",
+      "label": "stored changed topics that are null fail",
+      "stored": [
+        [
+          "_hyper_flash",
+          "{\"values\":{},\"changed\":null}"
+        ]
+      ],
+      "calls": [
+        [
+          "takeFlash",
+          []
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    }
+  ],
+  "kept": [
+    {
+      "id": "kept_values_are_stored_by_region_and_path",
+      "label": "kept values are stored by region and path",
+      "calls": [
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"open\"",
+            "true"
+          ]
+        ],
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"sort\"",
+            "\"title\""
+          ]
+        ],
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ],
+        [
+          "kept",
+          [
+            "\"reader\""
+          ]
+        ]
+      ],
+      "results": [
+        null,
+        null,
+        [
+          [
+            "open",
+            true
+          ],
+          [
+            "sort",
+            "title"
+          ]
+        ],
+        []
+      ],
+      "error": null
+    },
+    {
+      "id": "stored_kept_values_that_are_a_list_are_the_map_of_their_indexes",
+      "label": "stored kept values that are a list are the map of their indexes",
+      "stored": [
+        [
+          "_hyper_keep",
+          "{\"rows\":[\"a\",\"b\"]}"
+        ]
+      ],
+      "calls": [
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ],
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"sort\"",
+            "\"title\""
+          ]
+        ],
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [
+        [
+          [
+            "0",
+            "a"
+          ],
+          [
+            "1",
+            "b"
+          ]
+        ],
+        null,
+        [
+          [
+            "0",
+            "a"
+          ],
+          [
+            "1",
+            "b"
+          ],
+          [
+            "sort",
+            "title"
+          ]
+        ]
+      ],
+      "error": null
+    },
+    {
+      "id": "stored_kept_values_that_are_a_map_with_the_keys_of_a_list_are_that_map",
+      "label": "stored kept values that are a map with the keys of a list are that map",
+      "stored": [
+        [
+          "_hyper_keep",
+          "{\"rows\":{\"0\":\"a\",\"1\":\"b\"}}"
+        ]
+      ],
+      "calls": [
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ],
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"sort\"",
+            "\"title\""
+          ]
+        ],
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [
+        [
+          [
+            "0",
+            "a"
+          ],
+          [
+            "1",
+            "b"
+          ]
+        ],
+        null,
+        [
+          [
+            "0",
+            "a"
+          ],
+          [
+            "1",
+            "b"
+          ],
+          [
+            "sort",
+            "title"
+          ]
+        ]
+      ],
+      "error": null
+    },
+    {
+      "id": "stored_kept_values_that_are_an_empty_map_are_read_and_written_as_a_map",
+      "label": "stored kept values that are an empty map, which another server wrote, are read and written as a map",
+      "stored": [
+        [
+          "_hyper_keep",
+          "{}"
+        ]
+      ],
+      "calls": [
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ],
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"sort\"",
+            "\"title\""
+          ]
+        ],
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [
+        [],
+        null,
+        [
+          [
+            "sort",
+            "title"
+          ]
+        ]
+      ],
+      "error": null
+    },
+    {
+      "id": "reading_stored_kept_values_of_a_region_that_are_no_map_fails",
+      "label": "reading stored kept values of a region that are no map fails",
+      "stored": [
+        [
+          "_hyper_keep",
+          "{\"rows\":1}"
+        ]
+      ],
+      "calls": [
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "keeping_a_value_over_stored_kept_values_of_a_region_that_are_no_map_fails",
+      "label": "keeping a value over stored kept values of a region that are no map fails",
+      "stored": [
+        [
+          "_hyper_keep",
+          "{\"rows\":1}"
+        ]
+      ],
+      "calls": [
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"sort\"",
+            "\"title\""
+          ]
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "reading_kept_values_from_stored_kept_values_that_are_no_map_fails",
+      "label": "reading kept values from stored kept values that are no map fails",
+      "stored": [
+        [
+          "_hyper_keep",
+          "1"
+        ]
+      ],
+      "calls": [
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "keeping_a_value_over_stored_kept_values_that_are_no_map_fails",
+      "label": "keeping a value over stored kept values that are no map fails",
+      "stored": [
+        [
+          "_hyper_keep",
+          "1"
+        ]
+      ],
+      "calls": [
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"sort\"",
+            "\"title\""
+          ]
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "keeping_a_value_while_the_stored_kept_values_of_another_region_are_no_map_fails",
+      "label": "keeping a value while the stored kept values of another region are no map fails",
+      "stored": [
+        [
+          "_hyper_keep",
+          "{\"rows\":1}"
+        ]
+      ],
+      "calls": [
+        [
+          "keep",
+          [
+            "\"notice\"",
+            "\"sort\"",
+            "\"title\""
+          ]
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "reading_stored_kept_values_of_a_region_that_are_null_fails",
+      "label": "reading stored kept values of a region that are null fails",
+      "stored": [
+        [
+          "_hyper_keep",
+          "{\"rows\":null}"
+        ]
+      ],
+      "calls": [
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [],
+      "error": "stored"
+    },
+    {
+      "id": "keeping_an_integer_outside_the_data_model_fails_and_stores_nothing",
+      "label": "keep of the integer 2^53, which is outside the data model, fails with the error of the data model, and the region holds no kept value",
+      "calls": [
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"open\"",
+            "9007199254740992"
+          ]
+        ],
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [],
+      "error": null,
+      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+    },
+    {
+      "id": "keeping_an_integer_outside_the_data_model_inside_a_list_fails",
+      "label": "keep of a list that holds an integer below -(2^53 - 1) fails with the error of the data model",
+      "calls": [
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"sort\"",
+            "\"title\""
+          ]
+        ],
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"tags\"",
+            "[1,-9007199254740992]"
+          ]
+        ]
+      ],
+      "results": [
+        null
+      ],
+      "error": null,
+      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+    },
+    {
+      "id": "keeping_the_largest_integer_of_the_data_model_is_stored",
+      "label": "keep of the integer 2^53 - 1 is stored and read",
+      "calls": [
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"open\"",
+            "9007199254740991"
+          ]
+        ],
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [
+        null,
+        [
+          [
+            "open",
+            9007199254740991
+          ]
+        ]
+      ],
+      "error": null
+    }
+  ]
+}

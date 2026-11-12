@@ -105,7 +105,7 @@ STEPS = {
     ("redis-sessions.json", "cases"): redis_sessions_steps.cases,
     ("redis-sessions.json", "open"): redis_sessions_steps.open,
     ("session.json", "token"): session_steps.token,
-    ("session.json", "flash"): session_steps.flash,
-    ("session.json", "kept"): session_steps.kept,
+    ("session-before-s3b.json", "flash"): session_steps.flash,
+    ("session-before-s3b.json", "kept"): session_steps.kept,
     ("session.json", "store"): session_steps.store,
 }

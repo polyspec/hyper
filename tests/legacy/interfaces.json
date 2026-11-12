@@ -2388,6 +2388,105 @@
           }
         }
       }
+    },
+    "session-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "flash": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "stored": {
+              "role": "input",
+              "optional": true
+            },
+            "calls": {
+              "role": "input"
+            },
+            "results": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-25.2",
+              "state": "`calls` is a list of pairs of a method of the session and the JSON texts of its arguments, applied in order to one session over a new `ArraySession` that holds the values `stored`, pairs of a key and the JSON text of its value as a shared record gives it; `results` holds one entry for each call: null for `putFlash`, and for `takeFlash` the map of `values`, the list of pairs of a name and its value in their order, and `changed`, the list of topics."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-104.23",
+              "state": "`error` is null when every call of `calls` returns, and `stored` when a call fails because the session holds a stored value of another form than the session writes, after which no later call runs."
+            }
+          },
+          "members": [
+            "array-session.constructor",
+            "array-session.set",
+            "flash.changed",
+            "flash.constructor",
+            "flash.values",
+            "session.constructor",
+            "session.putFlash",
+            "session.takeFlash"
+          ]
+        },
+        "kept": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "stored": {
+              "role": "input",
+              "optional": true
+            },
+            "calls": {
+              "role": "input"
+            },
+            "results": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-40.1",
+              "state": "`calls` is a list of pairs of a method of the session and the JSON texts of its arguments, applied in order to one session over a new `ArraySession` that holds the values `stored`, pairs of a key and the JSON text of its value as a shared record gives it; `results` holds one entry for each call: null for `keep`, and for `kept` the list of pairs of a path and its value in storing order."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-104.23",
+              "state": "`error` is null when every call of `calls` returns, and `stored` when a call fails because the session holds a stored value of another form than the session writes, after which no later call runs."
+            },
+            "failure": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-40.4",
+              "state": "`failure` is a text that the message of the error of the data model contains, with which a call of `keep` fails for its value; no later call runs, and `results` holds the entries of the calls before it."
+            }
+          },
+          "members": [
+            "array-session.constructor",
+            "array-session.set",
+            "session.constructor",
+            "session.keep",
+            "session.kept"
+          ]
+        }
+      }
     }
   }
 }

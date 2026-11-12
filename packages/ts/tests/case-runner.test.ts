@@ -75,7 +75,8 @@ const STEPS: Record<string, Step> = {
   ...prefixed('result.json', resultSteps, ['copies', 'page', 'redirect', 'stop', 'types']),
   ...prefixed('result-before-s3b.json', resultSteps, ['copies', 'page', 'redirect', 'stop', 'types'], true),
   ...prefixed('routes.json', routesSteps),
-  ...prefixed('session.json', sessionSteps),
+  ...prefixed('session.json', sessionSteps, ['flash', 'kept']),
+  ...prefixed('session-before-s3b.json', sessionSteps, ['flash', 'kept'], true),
 };
 
 // The steps of a case file by `file:section`. A file `<name>-before-s3b.json` is the fixed copy in tests/legacy of the

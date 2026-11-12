@@ -5633,7 +5633,8 @@
         "contracts/context.json",
         "tests/legacy/app-before-s3b.json",
         "tests/legacy/context-before-s3b.json",
-        "tests/legacy/result-before-s3b.json"
+        "tests/legacy/result-before-s3b.json",
+        "tests/legacy/session-before-s3b.json"
       ],
       "units": [
         {
@@ -8129,7 +8130,8 @@
         "contracts/session.json",
         "contracts/file-sessions.json",
         "tests/legacy/file-store-sessions.json",
-        "tests/legacy/file-sessions-before-s3b.json"
+        "tests/legacy/file-sessions-before-s3b.json",
+        "tests/legacy/session-before-s3b.json"
       ],
       "units": [
         {
@@ -8437,7 +8439,8 @@
         "tests/legacy/file-store-sessions.json",
         "tests/legacy/app-before-s3b.json",
         "tests/legacy/context-before-s3b.json",
-        "tests/legacy/file-sessions-before-s3b.json"
+        "tests/legacy/file-sessions-before-s3b.json",
+        "tests/legacy/session-before-s3b.json"
       ],
       "units": [
         {
@@ -8766,7 +8769,8 @@
         "contracts/representations.json",
         "tests/legacy/app-before-s3b.json",
         "tests/legacy/csrf-before-s3b.json",
-        "tests/legacy/representations-before-s3b.json"
+        "tests/legacy/representations-before-s3b.json",
+        "tests/legacy/session-before-s3b.json"
       ],
       "units": [
         {
@@ -11580,7 +11584,8 @@
         "contracts/manifest.json",
         "contracts/app.json",
         "tests/legacy/app-before-s3b.json",
-        "tests/legacy/manifest-before-s3b.json"
+        "tests/legacy/manifest-before-s3b.json",
+        "tests/legacy/session-before-s3b.json"
       ],
       "units": [
         {
@@ -17837,11 +17842,8 @@
           ]
         },
         "flash": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "session-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -17883,11 +17885,8 @@
           ]
         },
         "kept": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "session-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
