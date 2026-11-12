@@ -153,9 +153,14 @@ function deriveSpec(spec: Spec, sources: Record<Lang, Sources>, handWritten: str
     types.push(type);
   }
 
-  const concerns: Concern[] = [...units.values()].map((unit) => ({ id: unit.id, rules: [], cases: [], units: [unit] }));
+  const concerns: Concern[] = [...units.values()].map((unit) => {
+    const group = groupOf(spec, unit);
+    return { id: unit.id, rules: [], cases: [], ...(group === undefined ? {} : { group }), units: [unit] };
+  });
   if (LANGS.some((lang) => spec.languages[lang].barrel.length > 0)) concerns.push({ id: 'index', rules: [], cases: [], units: [] });
   spec.concerns = concerns;
+  const groups = [...new Set(concerns.flatMap((c) => (c.group === undefined ? [] : [c.group])))].sort();
+  if (groups.length > 0) spec.groups = groups;
   spec.types = types;
 
   const pointers = (base: string, item: object): void => {
@@ -171,6 +176,22 @@ function deriveSpec(spec: Spec, sources: Record<Lang, Sources>, handWritten: str
   types.forEach((type, ti) => pointers(`/types/${ti}`, type));
 }
 
+/**
+ * The group of a derived unit (HYR-4): the words of the directory below a source root that holds its file in the first
+ * language that has one, or undefined for a file at the root.
+ */
+function groupOf(spec: Spec, unit: Unit): string | undefined {
+  for (const lang of LANGS) {
+    const file = unit.native[lang]?.file;
+    if (file === undefined) continue;
+    const root = spec.languages[lang].sources.find((r) => file.startsWith(`${r}/`));
+    if (root === undefined) continue;
+    const [first, ...rest] = file.slice(root.length + 1).split('/');
+    return rest.length === 0 || first === undefined ? undefined : words(first);
+  }
+  return undefined;
+}
+
 export function buildCandidate(root: string, phpAutoload: string, v: Validators): Candidate {
   const specDoc: unknown = JSON.parse(readFileSync(path.join(root, 'contracts', 'interfaces.json'), 'utf8'));
   if (!v.spec(specDoc)) {
@@ -181,10 +202,12 @@ export function buildCandidate(root: string, phpAutoload: string, v: Validators)
   const handWritten: string[] = [];
   const stale: string[] = [];
   if (spec.concerns.length === 0) deriveSpec(spec, sources, handWritten);
+  handWritten.push('/groups');
 
   spec.concerns.forEach((concern, ci) => {
     const at = `/concerns/${ci}`;
     handWritten.push(`${at}/rules`, `${at}/cases`, `${at}/units`);
+    if (concern.group !== undefined) handWritten.push(`${at}/group`);
     concern.units.forEach((unit, ui) => {
       const ua = `${at}/units/${ui}`;
       if (unit.only !== undefined) handWritten.push(`${ua}/only`);
