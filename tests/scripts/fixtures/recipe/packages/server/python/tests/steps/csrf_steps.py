@@ -1,4 +1,4 @@
-from polyspec.hyper._csrf import Csrf
+from polyspec.hyper.session._csrf import Csrf
 
 
 def mask(case) -> None:

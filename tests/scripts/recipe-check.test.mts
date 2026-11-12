@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { applyMutation, readMutations, track } from '../../scripts/recipe/mutations.mts';
 import { checkStated } from '../../scripts/recipe/stated.mts';
+import { expectedDirectory } from '../../scripts/recipe/names.mts';
 import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type Unit } from '../../scripts/recipe/types.mts';
 import { validators } from '../../scripts/recipe/validators.mts';
 
@@ -129,12 +130,12 @@ test('a constructor of each case reader is one member, whatever the language cal
 test('an internal member of a public Python module is named with a leading underscore', () => {
   withFixtureCopy('recipe-internal-', (root, replaceIn) => {
     // The essence calls the new member, so that a stated member reaches it (HYR-5).
-    replaceIn('packages/server/php/src/MediaType.php', "return $this->folded(new Csrf('k'));", "return $this->folded(new Csrf('k')) . $this->label();");
-    replaceIn('packages/server/php/src/MediaType.php', "        return $csrf->raw();\n    }\n", "        return $csrf->raw();\n    }\n\n    /** @internal */\n    public function label(): string\n    {\n        return 'html';\n    }\n");
-    replaceIn('packages/server/ts/src/media-type.ts', "return this.folded(new Csrf('k'));", "return this.folded(new Csrf('k')) + this.label();");
-    replaceIn('packages/server/ts/src/media-type.ts', "    return csrf.raw();\n  }\n", "    return csrf.raw();\n  }\n\n  /** @internal */\n  label(): string {\n    return 'html';\n  }\n");
-    replaceIn('packages/server/python/src/polyspec/hyper/media_type.py', 'return self._folded(Csrf("k"))', 'return self._folded(Csrf("k")) + self._label()');
-    replaceIn('packages/server/python/src/polyspec/hyper/media_type.py', '        return csrf.raw()\n', '        return csrf.raw()\n\n    def _label(self) -> str:\n        return "html"\n');
+    replaceIn('packages/server/php/src/Representation/MediaType.php', "return $this->folded(new Csrf('k'));", "return $this->folded(new Csrf('k')) . $this->label();");
+    replaceIn('packages/server/php/src/Representation/MediaType.php', "        return $csrf->raw();\n    }\n", "        return $csrf->raw();\n    }\n\n    /** @internal */\n    public function label(): string\n    {\n        return 'html';\n    }\n");
+    replaceIn('packages/server/ts/src/representation/media-type.ts', "return this.folded(new Csrf('k'));", "return this.folded(new Csrf('k')) + this.label();");
+    replaceIn('packages/server/ts/src/representation/media-type.ts', "    return csrf.raw();\n  }\n", "    return csrf.raw();\n  }\n\n  /** @internal */\n  label(): string {\n    return 'html';\n  }\n");
+    replaceIn('packages/server/python/src/polyspec/hyper/representation/media_type.py', 'return self._folded(Csrf("k"))', 'return self._folded(Csrf("k")) + self._label()');
+    replaceIn('packages/server/python/src/polyspec/hyper/representation/media_type.py', '        return csrf.raw()\n', '        return csrf.raw()\n\n    def _label(self) -> str:\n        return "html"\n');
     const { unit, write } = unitOf(root, 'media-type');
     unit.members.push({
       id: 'media-type.label',
@@ -145,9 +146,9 @@ test('an internal member of a public Python module is named with a leading under
       errors: [],
       state: 'Returns the label.',
       native: {
-        php: { symbol: 'packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::label', signature: 'public function label(): string' },
-        node: { symbol: 'packages/server/ts/src/media-type.ts::MediaType.label', signature: 'label(): string' },
-        python: { symbol: 'packages/server/python/src/polyspec/hyper/media_type.py::MediaType._label', signature: 'def _label(self) -> str' },
+        php: { symbol: 'packages/server/php/src/Representation/MediaType.php::Polyspec\\Hyper\\MediaType::label', signature: 'public function label(): string' },
+        node: { symbol: 'packages/server/ts/src/representation/media-type.ts::MediaType.label', signature: 'label(): string' },
+        python: { symbol: 'packages/server/python/src/polyspec/hyper/representation/media_type.py::MediaType._label', signature: 'def _label(self) -> str' },
       },
     });
     write();
@@ -160,12 +161,12 @@ test('an internal member of a public Python module is named with a leading under
 test('a Python parameter named cls or self after the receiver is an input', () => {
   withFixtureCopy('recipe-receiver-', (root, replaceIn) => {
     // The member is internal and the essence calls it, so that a stated member reaches it (HYR-5).
-    replaceIn('packages/server/php/src/MediaType.php', "return $this->folded(new Csrf('k'));", "return $this->folded(new Csrf('k')) . $this->named('x');");
-    replaceIn('packages/server/php/src/MediaType.php', "        return $csrf->raw();\n    }\n", "        return $csrf->raw();\n    }\n\n    /** @internal */\n    public function named(string $cls): string\n    {\n        return $cls;\n    }\n");
-    replaceIn('packages/server/ts/src/media-type.ts', "return this.folded(new Csrf('k'));", "return this.folded(new Csrf('k')) + this.named('x');");
-    replaceIn('packages/server/ts/src/media-type.ts', "    return csrf.raw();\n  }\n", "    return csrf.raw();\n  }\n\n  /** @internal */\n  named(cls: string): string {\n    return cls;\n  }\n");
-    replaceIn('packages/server/python/src/polyspec/hyper/media_type.py', 'return self._folded(Csrf("k"))', 'return self._folded(Csrf("k")) + self._named("x")');
-    replaceIn('packages/server/python/src/polyspec/hyper/media_type.py', '        return csrf.raw()\n', '        return csrf.raw()\n\n    def _named(self, cls: str) -> str:\n        return cls\n');
+    replaceIn('packages/server/php/src/Representation/MediaType.php', "return $this->folded(new Csrf('k'));", "return $this->folded(new Csrf('k')) . $this->named('x');");
+    replaceIn('packages/server/php/src/Representation/MediaType.php', "        return $csrf->raw();\n    }\n", "        return $csrf->raw();\n    }\n\n    /** @internal */\n    public function named(string $cls): string\n    {\n        return $cls;\n    }\n");
+    replaceIn('packages/server/ts/src/representation/media-type.ts', "return this.folded(new Csrf('k'));", "return this.folded(new Csrf('k')) + this.named('x');");
+    replaceIn('packages/server/ts/src/representation/media-type.ts', "    return csrf.raw();\n  }\n", "    return csrf.raw();\n  }\n\n  /** @internal */\n  named(cls: string): string {\n    return cls;\n  }\n");
+    replaceIn('packages/server/python/src/polyspec/hyper/representation/media_type.py', 'return self._folded(Csrf("k"))', 'return self._folded(Csrf("k")) + self._named("x")');
+    replaceIn('packages/server/python/src/polyspec/hyper/representation/media_type.py', '        return csrf.raw()\n', '        return csrf.raw()\n\n    def _named(self, cls: str) -> str:\n        return cls\n');
     const { unit, write } = unitOf(root, 'media-type');
     unit.members.push({
       id: 'media-type.named',
@@ -176,9 +177,9 @@ test('a Python parameter named cls or self after the receiver is an input', () =
       errors: [],
       state: 'Returns the name.',
       native: {
-        php: { symbol: 'packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::named', signature: 'public function named(string $cls): string' },
-        node: { symbol: 'packages/server/ts/src/media-type.ts::MediaType.named', signature: 'named(cls: string): string' },
-        python: { symbol: 'packages/server/python/src/polyspec/hyper/media_type.py::MediaType._named', signature: 'def _named(self, cls: str) -> str' },
+        php: { symbol: 'packages/server/php/src/Representation/MediaType.php::Polyspec\\Hyper\\MediaType::named', signature: 'public function named(string $cls): string' },
+        node: { symbol: 'packages/server/ts/src/representation/media-type.ts::MediaType.named', signature: 'named(cls: string): string' },
+        python: { symbol: 'packages/server/python/src/polyspec/hyper/representation/media_type.py::MediaType._named', signature: 'def _named(self, cls: str) -> str' },
       },
     });
     write();
@@ -216,6 +217,9 @@ test('the candidate derives the units and concerns from an empty skeleton', () =
     const csrf = listAt(readJson(output), 'concerns').find((c) => at(c, 'id') === 'csrf');
     assert.ok(csrf !== undefined, 'no concern csrf');
     assert.deepEqual(keysAt(csrf, 'units', 0, 'native').sort(), ['node', 'php', 'python']);
+    // HYR-4: the group of a derived concern is the directory of its files, and the groups are those of the concerns.
+    assert.equal(at(csrf, 'group'), 'session');
+    assert.deepEqual(listAt(readJson(output), 'groups'), ['representation', 'session']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
     rmSync(root, { recursive: true, force: true });
@@ -538,7 +542,8 @@ function stated(
     },
     caseReaders: { php: 'tests/Reader.php::Reader', node: 'tests/reader.ts::Reader', python: 'tests/reader.py::Reader' },
     outside: [],
-    concerns: [{ id: 'all', rules: [], cases: ['contracts/all.json'], units: specUnits }],
+    groups: ['all'],
+    concerns: [{ id: 'all', rules: [], cases: ['contracts/all.json'], group: 'all', units: specUnits }],
     types: [],
     caseFiles: { 'all.json': { fixtures: {}, sections: { all: { runners: ['php', 'node'], uses: [], members: named, fields: {} } } } },
   };
@@ -759,4 +764,14 @@ test('the Node reader writes the call of the parent constructor in the construct
   const out = readCopy('node', path.join(fixture, 'readers', 'node'), ['--sources', 'src', '--tests', 'tests']);
   const scope = out.scopes.find((s) => s.name === 'Bigger.constructor');
   assert.deepEqual(scope?.uses, [{ kind: 'member', of: { kind: 'parent' }, name: 'constructor', call: true }]);
+});
+
+test('the PSR-4 list of each composer.json is the directory of each group that holds a PHP unit (HYR-4)', () => {
+  const spec = specOf(path.join(repo, 'contracts', 'interfaces.json'));
+  const groups = spec.groups.filter((g) => spec.concerns.some((c) => c.group === g && c.units.some((u) => u.native.php !== undefined)));
+  const directories = groups.map((g) => `src/${expectedDirectory('php', g)}/`).sort();
+  assert.ok(directories.length > 0, 'no group of the spec holds a PHP unit');
+  const psr4 = (file: string): unknown => at(readJson(path.join(repo, file)), 'autoload', 'psr-4', 'Polyspec\\Hyper\\');
+  assert.deepEqual(psr4('packages/server/php/composer.json'), directories);
+  assert.deepEqual(psr4('composer.json'), directories.map((d) => `packages/server/php/${d}`));
 });

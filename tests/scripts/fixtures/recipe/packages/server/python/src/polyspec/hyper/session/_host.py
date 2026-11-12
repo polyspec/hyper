@@ -1,6 +1,6 @@
 """The host of the fixture, which only Python has."""
 
-from polyspec.hyper._csrf import Csrf
+from polyspec.hyper.session._csrf import Csrf
 
 
 class Host:

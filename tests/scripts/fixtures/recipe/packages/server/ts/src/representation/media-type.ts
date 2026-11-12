@@ -1,4 +1,4 @@
-import { Csrf } from './csrf.ts';
+import { Csrf } from '../session/csrf.ts';
 import { JsonCodec } from './json-codec.ts';
 
 /**
