@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4b2611c4277d1a659d56ed118957c89943e0e82058be0e1cb8f966fc2c4b795a -->
+<!-- source-sha256: 42ef73dd1867e657d2d7816663221ae19ebe6fbd0a4109c3a6f90b18de47b54e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 page를 조립한다(C-7). `page::shared_data`는 `title`, `csrf`, shared handler의 값을 주고 반환된 `context`에는 `shared_holds_context`로 실패한다(HY-10.2, HY-124.8). `page::current_path`는 `HX-Current-URL`의 현재 경로를 읽는다(HY-11.4). `page::changed_topics`는 기록된 topic과 `path`를 준다(HY-19.1, HY-11.3). `page::regions`는 문서 요청과 region 요청의 region을 준다(HY-18). `page::kept_values`는 맞는 `server`와 `cookie` kept 값을 region과 경로별로 준다(HY-38.8). `page::json_value`는 `build`와 `context`를 가진 응답의 JSON 값을 HY-17의 순서로 준다(HY-128.1). `page::embeds`와 `page::embedded_data`는 문서가 데이터를 넣는지와 그 데이터를 준다(HY-31.2, HY-31.3). 테스트는 `request.json`의 현재 경로 case 8개와 나머지의 규칙 테스트를 실행하며, interface 계약은 `current_path`를 둔다. template 렌더는 세 server에 남는다.
 
 - Rust core가 kept 값(HY-38)과 context(HY-124부터 HY-128까지)를 정한다. `keep::select`는 region 데이터에 맞는 kept 값을 경로별로, 앞의 값을 적용한 뒤 다음 값을 보아 주고, `keep::apply`는 그 값을 적용한 데이터를 준다(HY-38.2부터 HY-38.9까지, HY-38.13, HY-38.19). `keep::cookie_values`는 cookie `hy-keep`을 읽으며, 데이터 모델 밖의 값은 그 값만 버린다(HY-38.2, HY-38.11). `context::with_context`는 공유 데이터에 context를 놓거나 `shared_holds_context`로 실패한다(HY-10.3, HY-124.8). `context::text`, `context::hash`, `context::member`는 응답의 JSON 텍스트, hash, member `context`를 주고(HY-125.10, HY-125.12, HY-128.2), `context::valid_header`는 `Hyper-Context`를 검사한다(HY-127.2). 테스트는 `keep.json`의 34개 case와 `context.json`의 group `contexts`와 `withContext`의 11개 case를 실행하며, interface 계약은 `context_hash`와 `valid_context_header`를 둔다(C-7).
 

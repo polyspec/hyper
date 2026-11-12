@@ -792,6 +792,33 @@
           "core": "polyspec_hyper::context::hash"
         },
         {
+          "id": "rules.current_path",
+          "name": [
+            "current",
+            "path"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "header"
+              ],
+              "type": {
+                "optional": "latin1"
+              },
+              "required": true
+            }
+          ],
+          "returns": {
+            "optional": "text"
+          },
+          "optional_reason": "HY-11.4",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::page::current_path"
+        },
+        {
           "id": "rules.valid_context_header",
           "name": [
             "valid",

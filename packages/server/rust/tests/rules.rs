@@ -447,3 +447,151 @@ fn the_context_header_and_member() -> Result<(), Error> {
     assert_eq!(keys(&member(build, &context, Some(&found))?), ["hash"]);
     Ok(())
 }
+
+fn page_manifest() -> Result<polyspec_hyper::manifest::Manifest, Error> {
+    polyspec_hyper::manifest::read(
+        br#"{"layout":"layout.tpl","title":"title.tpl","regions":[
+            {"name":"left","template":"left.tpl","uses":["posts"]},
+            {"name":"content","page":true},
+            {"name":"nav","template":"nav.tpl","uses":["path"]}],
+           "routes":[{"name":"board.show","path":"/board/{id}","title":"Post","template":"show.tpl",
+             "regions":[{"name":"comments","template":"comments.tpl","keep":{"page":"cookie"}},
+               {"name":"reader","template":"reader.tpl",
+                "keep":{"large":"server","sort":"cookie","open":"localStorage"}}]}]}"#,
+    )
+}
+
+fn data(json: &str) -> polyspec_template::Value {
+    match polyspec_hyper::json::read(json.as_bytes()) {
+        Ok(value) => value,
+        Err(error) => panic!("{json}: {error:?}"),
+    }
+}
+
+fn written(value: &polyspec_template::OrderedMap) -> String {
+    match polyspec_hyper::json::write(&polyspec_template::Value::Map(std::sync::Arc::new(
+        value.clone(),
+    ))) {
+        Ok(text) => text,
+        Err(error) => panic!("{error}"),
+    }
+}
+
+#[test]
+fn the_shared_data_and_the_changed_topics() -> Result<(), Error> {
+    // HY-10.2, HY-124.8, HY-19.1, HY-11.3
+    use polyspec_hyper::page::{changed_topics, shared_data};
+    let mut returned = polyspec_template::OrderedMap::new();
+    returned.insert("site".to_owned(), polyspec_template::Value::text("Board"));
+    returned.insert("title".to_owned(), polyspec_template::Value::text("Mine"));
+    assert_eq!(
+        written(&shared_data("Post", "t", Some(&returned))?),
+        r#"{"title":"Mine","csrf":"t","site":"Board"}"#
+    );
+    returned.insert("context".to_owned(), polyspec_template::Value::Null);
+    assert!(matches!(
+        shared_data("Post", "t", Some(&returned)),
+        Err(Error::SharedHoldsContext)
+    ));
+    let recorded = ["posts".to_owned(), "posts".to_owned()];
+    assert_eq!(changed_topics(&recorded, None, "/a", ""), ["posts"]);
+    assert_eq!(
+        changed_topics(&[], Some("/a"), "/a", ""),
+        Vec::<String>::new()
+    );
+    assert_eq!(changed_topics(&[], Some("/b"), "/a", ""), ["path"]);
+    assert_eq!(
+        changed_topics(&[], Some("/app/a"), "/a", "/app"),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        changed_topics(&[], Some("/app"), "/", "/app"),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        changed_topics(&[], Some("/other/a"), "/a", "/app"),
+        ["path"]
+    );
+    Ok(())
+}
+
+#[test]
+fn the_regions_of_a_response() -> Result<(), Error> {
+    // HY-18.1, HY-18.2
+    use polyspec_hyper::page::regions;
+    let manifest = page_manifest()?;
+    let names = |selected: Vec<&polyspec_hyper::manifest::Region>| -> Vec<String> {
+        selected.iter().map(|region| region.name.clone()).collect()
+    };
+    assert_eq!(
+        names(regions(&manifest, true, &[])?),
+        ["left", "content", "nav"]
+    );
+    assert_eq!(names(regions(&manifest, false, &[])?), ["content"]);
+    assert_eq!(
+        names(regions(
+            &manifest,
+            false,
+            &["path".to_owned(), "posts".to_owned()]
+        )?),
+        ["content", "left", "nav"]
+    );
+    Ok(())
+}
+
+#[test]
+fn the_kept_values_the_json_value_and_the_embedded_data() -> Result<(), Error> {
+    // HY-38.8, HY-17.1, HY-128.1, HY-31.2, HY-31.3
+    use polyspec_hyper::page::{embedded_data, embeds, json_value, kept_values, Response};
+    let manifest = page_manifest()?;
+    let regions = vec![
+        ("content".to_owned(), data(r#"{"post":{"id":7}}"#)),
+        ("comments".to_owned(), data(r#"{"page":1}"#)),
+        (
+            "reader".to_owned(),
+            data(r#"{"large":false,"sort":"","open":false}"#),
+        ),
+    ];
+    let mut stored = polyspec_template::OrderedMap::new();
+    stored.insert("large".to_owned(), polyspec_template::Value::Bool(true));
+    let server = vec![("reader".to_owned(), stored)];
+    let cookie = polyspec_hyper::keep::cookie_values(
+        r#"{"reader":{"sort":"title","open":true},"comments":{"page":"x"}}"#,
+    );
+    let kept = kept_values(&manifest, &regions, &server, &cookie);
+    assert_eq!(
+        written(&kept),
+        r#"{"reader":{"large":true,"sort":"title"}}"#
+    );
+    let value = json_value(Response {
+        timezone: "+09:00",
+        route: "board.show",
+        params: &[("id".to_owned(), "7".to_owned())],
+        build: "b",
+        context: None,
+        shared: polyspec_hyper::page::shared_data("Post", "t", None)?,
+        regions: regions.clone(),
+        kept,
+    });
+    assert_eq!(
+        written(&value),
+        concat!(
+            r#"{"env":{"timezone":"+09:00"},"route":"board.show","params":{"id":"7"},"build":"b","#,
+            r#""shared":{"title":"Post","csrf":"t"},"regions":{"content":{"post":{"id":7}},"#,
+            r#""comments":{"page":1},"reader":{"large":false,"sort":"","open":false}},"#,
+            r#""kept":{"reader":{"large":true,"sort":"title"}}}"#
+        )
+    );
+    let route_regions = ["comments".to_owned()];
+    assert!(embeds(true, &route_regions, &regions));
+    assert!(!embeds(false, &route_regions, &regions));
+    assert!(!embeds(true, &route_regions, &regions[..1]));
+    assert_eq!(
+        written(&embedded_data(&value, &route_regions)),
+        concat!(
+            r#"{"env":{"timezone":"+09:00"},"route":"board.show","params":{"id":"7"},"build":"b","#,
+            r#""shared":{"title":"Post","csrf":"t"},"regions":{"comments":{"page":1}},"kept":{}}"#
+        )
+    );
+    Ok(())
+}

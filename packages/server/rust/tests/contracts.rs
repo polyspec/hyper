@@ -829,3 +829,37 @@ fn the_context_hash_and_its_place() {
     }
     assert!(ran > 0);
 }
+
+/// The bytes of a header as a case writes them: each character is one byte (HY-97.4).
+fn latin1(text: &str) -> Vec<u8> {
+    text.chars()
+        .map(|ch| match u8::try_from(u32::from(ch)) {
+            Ok(byte) => byte,
+            Err(error) => panic!("{text}: {error}"),
+        })
+        .collect()
+}
+
+#[test]
+fn the_current_path_of_a_request() {
+    // HY-11.4
+    use polyspec_hyper::page::current_path;
+    let file = cases("request.json");
+    let mut ran = 0;
+    for case in group(&file, "values") {
+        let Some(expected) = case.get("currentPath") else {
+            continue;
+        };
+        let header = case["request"]["headers"]["HX-Current-URL"]
+            .as_str()
+            .map(latin1);
+        assert_eq!(
+            current_path(header.as_deref()).as_deref(),
+            expected.as_str(),
+            "{}",
+            case["id"]
+        );
+        ran += 1;
+    }
+    assert!(ran > 0);
+}

@@ -17,6 +17,7 @@ pub mod location;
 pub mod manifest;
 pub mod media;
 pub mod orm;
+pub mod page;
 pub mod pipeline;
 pub mod reads;
 pub mod reply;
