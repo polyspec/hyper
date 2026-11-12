@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8472e5488acd0395a3689fa834c65e5f795b4a55ae387c8b240a8775abf82a6a -->
+<!-- source-sha256: 55e912b2215b504c81396304a4905fc5857008091b62e42f2952b49bff532837 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 브라우저 package의 `withContext`는 이미 member `context`를 가진 shared data에 대해, HY-124.8과 HY-132대로 category `value`의 class `RangeError`이며 kind `shared_holds_context`를 주고 status가 없는 오류로 실패한다. 이전에는 kind 없는 `Error`를 던졌고 message에 접두어 `hyper: `가 있었다. browser runner와 Node runner가 함께 쓰는 `contracts/context.json` section `withContext`의 step은 실패를 kind, status, category를 가진 `raises`로 비교하고, Node 시험 tree의 case reader는 case가 message를 적지 않은 실패의 message를 빼고 비교한다(HY-132.4). 이전에는 step이 contract에 더는 없는 key `fails`를 비교해 이 section의 case 일곱 개가 두 runner에서 실패했다.
 
 - Rust core의 lock은 `polyspec-binding-core`를 binding branch 끝, 곧 binding crate를 쓰는 scaffold의 commit에 고정하고, 그 commit의 scaffold는 `packages/python/native/src/lib.rs`에 Python module `polyspec.hyper._binding._native`를 적는다. 그 contract check는 `packages/ts/package.json` `optionalDependencies`의 platform별 Node addon package(binding T-2)에도 CK-19를 보고하며, `docs/features.md`는 생성된 binding을 기다리는 다른 항목과 함께 그것을 적는다.
 

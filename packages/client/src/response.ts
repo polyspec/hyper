@@ -261,9 +261,12 @@ function embeddedHtml(app: Application, decoded: DecodedResponse, env: { timezon
 
 // Returns the shared data with the context in its place (HY-10, HY-128): right after `csrf`; right after `title` when
 // the read paths of the route (HY-73) removed `csrf`; and first when they removed both. Shared data that already holds a
-// member `context` fails, because the context has one place and one source (HY-124, HY-128).
+// member `context` fails with the kind `shared_holds_context` in the class of the category `value` (HY-124.8, HY-132),
+// because the context has one place and one source (HY-124, HY-128).
 export function withContext(shared: MapValue, context: MapValue): MapValue {
-  if (shared.has('context')) throw new Error('hyper: the shared data already holds the member context (HY-128)');
+  if (shared.has('context')) {
+    throw Object.assign(new RangeError('the shared data already holds the member context (HY-128)'), { kind: 'shared_holds_context', status: null });
+  }
   const anchor = shared.has('csrf') ? 'csrf' : 'title';
   const entries: [string, Value][] = [];
   let placed = false;

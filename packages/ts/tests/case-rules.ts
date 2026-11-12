@@ -166,6 +166,15 @@ export function kind(declared: Field, name: string, section: string): Compare {
   return compare;
 }
 
+/**
+ * The observed failure of a field `raises` without its message when the case states none: a case compares only a
+ * message that a rule states (HY-132.4). Any other field as observed.
+ */
+export function statedMessage(name: string, expected: unknown, observed: unknown): unknown {
+  if (name !== 'raises' || member(expected, 'message') !== null || entriesOf(observed) === undefined) return observed;
+  return Object.fromEntries((entriesOf(observed) ?? []).map(([key, item]): [string, unknown] => [key, key === 'message' ? null : item]));
+}
+
 /** The names of a header map, or of a list of header names, in ASCII lower case, for a header field; other values as given. */
 export function folded(name: string, value: unknown): unknown {
   if (!HEADER_FIELDS.has(name)) return value;

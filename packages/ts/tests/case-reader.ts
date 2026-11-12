@@ -3,7 +3,7 @@
 // the cases of its section with the inputs that it reads and the comparisons that it makes. The steps of the Node server
 // and the browser and build runners read their cases through this reader; the reader has no test of its own.
 import { readFileSync } from 'node:fs';
-import { type Compare, caseFileUrl, caseFiles, entriesOf, field, folded, kind, lookup, member, parsed, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
+import { type Compare, caseFileUrl, caseFiles, entriesOf, field, folded, kind, lookup, member, parsed, statedMessage, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
 
 // Returns an expected value that is a list of strings, and fails for any other value.
 function stringsOf(expected: unknown): string[] {
@@ -96,7 +96,7 @@ export class CaseReader {
     const comparison = kind(declared, name, this.sectionName);
     this.compared.add(name);
     this.read.add(name);
-    if (!this.matches(comparison, folded(name, expected), folded(name, observed))) this.differs.push(name);
+    if (!this.matches(comparison, folded(name, expected), folded(name, statedMessage(name, expected, observed)))) this.differs.push(name);
   }
 
   // Compares an outcome of the section. A `raises` outcome holds when the step raised the open error; any other outcome
