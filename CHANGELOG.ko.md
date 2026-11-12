@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d20bf77488c4d7435505e9634ede059af33be419b5b3f39e26a9a3e6ff43d2e2 -->
+<!-- source-sha256: 42709f2fdd8e76bd3bd77b9c5e81a234f1d60cba18c08f7ff8c12406913739f8 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+## 0.0.40
 
 - `config/release.json`은 recipe 검사의 Node reader가 읽는 TypeScript compiler API의 private 설치 `scripts/recipe/typescript/package.json`을 release하지 않는 것으로 적어 `make release-coverage`가 통과한다. 전에는 분류되지 않은 그 manifest에서 실패했다(H28.16).
 

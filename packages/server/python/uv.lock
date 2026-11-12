@@ -40,7 +40,7 @@ wheels = [
 
 [[package]]
 name = "polyspec-hyper-server"
-version = "0.0.39"
+version = "0.0.40"
 source = { editable = "." }
 dependencies = [
     { name = "polyspec-php-serialize" },
