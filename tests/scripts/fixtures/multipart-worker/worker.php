@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 require dirname(__DIR__, 4) . '/vendor/autoload.php';
 
-use Polyspec\Hyper\RequestBody;
+use Polyspec\Hyper\Server\RequestBody;
 
 $cases = json_decode((string) file_get_contents($argv[1]), true, 16, JSON_THROW_ON_ERROR);
 foreach ($cases as $index => $case) {

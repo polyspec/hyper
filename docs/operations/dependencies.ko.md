@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: faa78df1176ad66e5c9f8bb50652521d775bee4fe543777154eb516be47a8b9f -->
+<!-- source-sha256: 9421a5de03b151f0b14153f5a15a46c9eae68226fadd6785a83b6bbcd5f01d61 -->
 # 의존성
 
 [English](dependencies.md).
@@ -41,7 +41,7 @@ Template PHP archive 0.0.27은 PHP >=8.4를 요구하며 SHA-256은 `a9394a9a678
 | 서버 | 현재 파서 | 후보와 버전 | 결과와 이유 | 교체의 조건 |
 |---|---|---|---|---|
 | PHP | `packages/server/php/src/Multipart.php`의 `Multipart::read`, `Fields.php`와 `Files.php`가 호출한다 | `riverline/multipart-parser` 2.3.0(MIT, 2026-11-05 배포) | 유지. part의 본문을 `Content-Transfer-Encoding`으로 디코딩하는데(`src/StreamedPart.php`의 `getBody`, 318행과 321행, base64와 quoted-printable), HY-57은 part의 내용을 있는 그대로 읽는다. header 값을 MIME word로 디코딩한다(`decodeHeaderValue`, 533행). `filename*` 값이 filename을 대신하는데(`doParseHeaderContent`, 694행부터 729행까지) HY-113은 추가 디코딩을 금한다. 2.3.0은 옵션을 quoted string 밖의 `;`에서만 나누므로(`splitHeaderContent`) 인용된 filename을 자르던 2.2.2의 결함은 없어졌다. | part의 내용, header 값, 옵션을 있는 그대로 유지하는 버전. |
-| Python | `polyspec/hyper/_multipart.py`의 `read`, `_fields.py`와 `_files.py`가 호출한다 | `python-multipart` 0.0.33(Apache-2.0, 2026-10-31 배포) | 유지. HY-57과 HY-113을 한 단계를 제외하고 지킨다. `parse_options_header`(`python_multipart/multipart.py`, 249행부터 250행까지)는 `C:\` 같은 drive나 `\\`로 시작하는 filename을 마지막 segment로 바꾸는데, HY-113은 이를 금한다. | 그 단계가 없는 버전, 또는 filename을 있는 그대로 유지하는 옵션. 그때 H26.3의 하위 row에서 파서를 교체한다. |
+| Python | `polyspec/hyper/server/_multipart.py`의 `read`, `_fields.py`와 `_files.py`가 호출한다 | `python-multipart` 0.0.33(Apache-2.0, 2026-10-31 배포) | 유지. HY-57과 HY-113을 한 단계를 제외하고 지킨다. `parse_options_header`(`python_multipart/multipart.py`, 249행부터 250행까지)는 `C:\` 같은 drive나 `\\`로 시작하는 filename을 마지막 segment로 바꾸는데, HY-113은 이를 금한다. | 그 단계가 없는 버전, 또는 filename을 있는 그대로 유지하는 옵션. 그때 H26.3의 하위 row에서 파서를 교체한다. |
 | Node | `packages/server/ts/src/multipart.ts`의 `read`, `fields.ts`와 `files.ts`가 호출한다 | `busboy` 1.6.0(MIT), 최신 릴리스 | 유지. HY-57, HY-113, HY-42와 다섯 단계가 다르다. `filename*`이 `filename`보다 우선한다(`lib/types/multipart.js`, 316행부터 319행까지). `preservePath`가 없으면 filename을 basename으로 자른다(321행부터 322행까지). filename이 없고 타입이 `application/octet-stream`인 part를 file로 본다(337행). HY-57은 이를 값으로 본다. part의 내용을 `Content-Transfer-Encoding`으로 디코딩한다(335행과 363행). field 값을 잘못된 UTF-8을 대체하는 `TextDecoder`로 디코딩하므로(`lib/utils.js`, 465행부터 468행까지), HY-42가 요구하는 거절을 하지 않는다. | filename과 part의 내용을 있는 그대로 유지하고, field 값의 잘못된 UTF-8을 거절하는 버전. |
 
 PHP 8.4의 기본 `request_parse_body()`도 검토했으나 채택하지 않았다. `$_POST`처럼 괄호 이름을 중첩하므로 HY-57이 거절한다.

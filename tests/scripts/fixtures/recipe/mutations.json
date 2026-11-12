@@ -15,7 +15,7 @@
   },
   {
     "id": "member-renamed",
-    "file": "packages/server/python/src/polyspec/hyper/_csrf.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/_csrf.py",
     "from": "def raw(self)",
     "to": "def rawer(self)",
     "code": "MEMBER_MISSING"
@@ -43,8 +43,8 @@
   },
   {
     "id": "member-moved-file",
-    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
-    "rename": "packages/server/python/src/polyspec/hyper/media_extra.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
+    "rename": "packages/server/python/src/polyspec/hyper/server/media_extra.py",
     "code": "MEMBER_MOVED"
   },
   {
@@ -95,14 +95,14 @@
   },
   {
     "id": "private-name-used-elsewhere",
-    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
     "from": "class MediaType:",
-    "to": "from polyspec.hyper._csrf import Csrf\n\nVALUE = Csrf()._fold()\n\n\nclass MediaType:",
+    "to": "from polyspec.hyper.server._csrf import Csrf\n\nVALUE = Csrf()._fold()\n\n\nclass MediaType:",
     "code": "PRIVATE_USED"
   },
   {
     "id": "private-constructor-called-elsewhere",
-    "file": "packages/server/python/src/polyspec/hyper/__init__.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/__init__.py",
     "from": "__all__ = [\"MediaType\"]",
     "to": "VALUE = MediaType()\n\n__all__ = [\"MediaType\"]",
     "code": "PRIVATE_USED",
@@ -110,31 +110,31 @@
   },
   {
     "id": "private-constructor-called-through-an-alias",
-    "file": "packages/server/python/src/polyspec/hyper/__init__.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/__init__.py",
     "from": "__all__ = [\"MediaType\"]",
-    "to": "from polyspec.hyper.media_type import MediaType as Kind\n\nVALUE = Kind()\n\n__all__ = [\"MediaType\"]",
+    "to": "from polyspec.hyper.server.media_type import MediaType as Kind\n\nVALUE = Kind()\n\n__all__ = [\"MediaType\"]",
     "code": "PRIVATE_USED",
     "detail": "calls the private constructor of MediaType"
   },
   {
     "id": "private-constructor-called-through-its-module",
-    "file": "packages/server/python/src/polyspec/hyper/__init__.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/__init__.py",
     "from": "__all__ = [\"MediaType\"]",
-    "to": "from polyspec.hyper import media_type\n\nVALUE = media_type.MediaType()\n\n__all__ = [\"MediaType\"]",
+    "to": "from polyspec.hyper.server import media_type\n\nVALUE = media_type.MediaType()\n\n__all__ = [\"MediaType\"]",
     "code": "PRIVATE_USED",
     "detail": "calls the private constructor of MediaType"
   },
   {
     "id": "private-constructor-called-through-the-absolute-package",
-    "file": "packages/server/python/src/polyspec/hyper/__init__.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/__init__.py",
     "from": "__all__ = [\"MediaType\"]",
-    "to": "from polyspec.hyper import MediaType\n\nVALUE = MediaType()\n\n__all__ = [\"MediaType\"]",
+    "to": "from polyspec.hyper.server import MediaType\n\nVALUE = MediaType()\n\n__all__ = [\"MediaType\"]",
     "code": "PRIVATE_USED",
     "detail": "calls the private constructor of MediaType"
   },
   {
     "id": "private-python-method-with-two-underscores",
-    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
     "from": "    def essence(self) -> str:",
     "to": "    def __spare(self) -> str:\n        return \"x\"\n\n    def essence(self) -> str:",
     "code": "MEMBER_NAME",
@@ -362,7 +362,7 @@
   },
   {
     "id": "python-const-public",
-    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
     "from": "class MediaType:",
     "to": "LIMIT = 1\n\n\nclass MediaType:",
     "code": "CONST_PUBLIC"
@@ -398,7 +398,7 @@
   {
     "id": "python-sources-missing",
     "file": "contracts/interfaces.json",
-    "from": "\"packages/server/python/src/polyspec/hyper\"",
+    "from": "\"packages/server/python/src/polyspec/hyper/server\"",
     "to": "\"packages/server/python/src/polyspec/missing\"",
     "code": "READER_FAILED"
   },
@@ -411,7 +411,7 @@
   },
   {
     "id": "python-typed-field-renamed",
-    "file": "packages/server/python/src/polyspec/hyper/_csrf.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/_csrf.py",
     "from": "    raw: str",
     "to": "    token: str",
     "code": "TYPE_SHAPE"
@@ -683,7 +683,7 @@
     "id": "step-codec-php",
     "file": "packages/server/php/tests/Steps/CsrfSteps.php",
     "from": "self::masked('token')",
-    "to": "self::masked(\\Polyspec\\Hyper\\JsonCodec::decode('token'))",
+    "to": "self::masked(\\Polyspec\\Hyper\\Server\\JsonCodec::decode('token'))",
     "code": "STEP_CODEC"
   },
   {
@@ -696,8 +696,8 @@
   {
     "id": "step-codec-python",
     "file": "packages/server/python/tests/steps/csrf_steps.py",
-    "from": "from polyspec.hyper._csrf import Csrf\n\n\ndef mask(case) -> None:\n    case.compare(\"expected\", _masked(\"token\"))\n",
-    "to": "from polyspec.hyper._csrf import Csrf\nfrom polyspec.hyper._json_codec import JsonCodec\n\n\ndef mask(case) -> None:\n    case.compare(\"expected\", _masked(JsonCodec.decode(\"token\")))\n",
+    "from": "from polyspec.hyper.server._csrf import Csrf\n\n\ndef mask(case) -> None:\n    case.compare(\"expected\", _masked(\"token\"))\n",
+    "to": "from polyspec.hyper.server._csrf import Csrf\nfrom polyspec.hyper.server._json_codec import JsonCodec\n\n\ndef mask(case) -> None:\n    case.compare(\"expected\", _masked(JsonCodec.decode(\"token\")))\n",
     "code": "STEP_CODEC"
   },
   {
@@ -732,7 +732,7 @@
   },
   {
     "id": "member-unreached-internal-python",
-    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
     "from": "return csrf.raw()",
     "to": "return \"x\"",
     "code": "MEMBER_UNREACHED",
@@ -756,7 +756,7 @@
   },
   {
     "id": "member-unreached-private-python",
-    "file": "packages/server/python/src/polyspec/hyper/_csrf.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/_csrf.py",
     "from": "return self._fold()",
     "to": "return \"x\"",
     "code": "MEMBER_UNREACHED",
@@ -795,7 +795,7 @@
   },
   {
     "id": "reach-typed-parameter-python",
-    "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
     "from": "def _folded(self, csrf: Csrf) -> str:",
     "to": "def _folded(self, csrf) -> str:",
     "code": "MEMBER_UNREACHED",
@@ -835,7 +835,7 @@
   },
   {
     "id": "reach-parent-constructor",
-    "file": "packages/server/python/src/polyspec/hyper/_signed_token.py",
+    "file": "packages/server/python/src/polyspec/hyper/server/_signed_token.py",
     "from": "        super().__init__()",
     "to": "        pass",
     "code": "MEMBER_UNREACHED",

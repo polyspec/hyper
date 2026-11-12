@@ -1,6 +1,6 @@
 """The signed token of a JSON text of HY-2."""
 
-from polyspec.hyper._token import Token
+from polyspec.hyper.server._token import Token
 
 
 class SignedToken(Token):

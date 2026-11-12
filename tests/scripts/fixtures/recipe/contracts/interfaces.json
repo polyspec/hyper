@@ -12,9 +12,9 @@
       "barrel": ["packages/server/ts/src/index.ts"]
     },
     "python": {
-      "sources": ["packages/server/python/src/polyspec/hyper"],
+      "sources": ["packages/server/python/src/polyspec/hyper/server"],
       "tests": ["packages/server/python/tests"],
-      "barrel": ["packages/server/python/src/polyspec/hyper/__init__.py"]
+      "barrel": ["packages/server/python/src/polyspec/hyper/server/__init__.py"]
     }
   },
   "runners": {
@@ -71,7 +71,7 @@
               "internal": true
             },
             "python": {
-              "file": "packages/server/python/src/polyspec/hyper/_csrf.py",
+              "file": "packages/server/python/src/polyspec/hyper/server/_csrf.py",
               "kind": "class",
               "internal": true
             }
@@ -87,7 +87,7 @@
               "state": "Checks the secret.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::__construct",
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Server\\Csrf::__construct",
                   "signature": "public function __construct(string $secret)"
                 },
                 "node": {
@@ -95,7 +95,7 @@
                   "signature": "constructor(secret: string)"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.__init__",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_csrf.py::Csrf.__init__",
                   "signature": "def __init__(self, secret: str) -> None"
                 }
               }
@@ -110,7 +110,7 @@
               "state": "Masks the token.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::mask",
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Server\\Csrf::mask",
                   "signature": "public function mask(string $token): string"
                 },
                 "node": {
@@ -118,7 +118,7 @@
                   "signature": "mask(token: string): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.mask",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_csrf.py::Csrf.mask",
                   "signature": "def mask(self, token: str) -> str"
                 }
               }
@@ -133,7 +133,7 @@
               "state": "Returns the raw token.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::raw",
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Server\\Csrf::raw",
                   "signature": "public function raw(): string"
                 },
                 "node": {
@@ -141,7 +141,7 @@
                   "signature": "raw(): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.raw",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_csrf.py::Csrf.raw",
                   "signature": "def raw(self) -> str"
                 }
               }
@@ -156,7 +156,7 @@
               "state": "Folds the token for the mask.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::fold",
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Server\\Csrf::fold",
                   "signature": "private function fold(): string"
                 },
                 "node": {
@@ -164,7 +164,7 @@
                   "signature": "private fold(): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf._fold",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_csrf.py::Csrf._fold",
                   "signature": "def _fold(self) -> str"
                 }
               }
@@ -179,11 +179,11 @@
               "state": "Checks the token.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::check",
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Server\\Csrf::check",
                   "signature": "public function check(): bool"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.check",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_csrf.py::Csrf.check",
                   "signature": "def check(self) -> bool"
                 }
               },
@@ -216,7 +216,7 @@
               "internal": false
             },
             "python": {
-              "file": "packages/server/python/src/polyspec/hyper/media_type.py",
+              "file": "packages/server/python/src/polyspec/hyper/server/media_type.py",
               "kind": "class",
               "internal": false
             }
@@ -232,12 +232,12 @@
               "state": "Makes a media type.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::__construct",
+                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\Server\\MediaType::__construct",
                   "signature": "private function __construct()"
                 },
                 "node": { "symbol": "packages/server/ts/src/media-type.ts::MediaType.constructor", "signature": "private constructor()" },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.__init__",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/media_type.py::MediaType.__init__",
                   "signature": "def __init__(self) -> None"
                 }
               }
@@ -252,7 +252,7 @@
               "state": "Returns the essence.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::essence",
+                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\Server\\MediaType::essence",
                   "signature": "public function essence(): string"
                 },
                 "node": {
@@ -260,7 +260,7 @@
                   "signature": "essence(): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.essence",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/media_type.py::MediaType.essence",
                   "signature": "def essence(self) -> str"
                 }
               }
@@ -275,7 +275,7 @@
               "state": "Makes the media type of a text.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::parse",
+                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\Server\\MediaType::parse",
                   "signature": "public static function parse(string $text): self"
                 },
                 "node": {
@@ -283,7 +283,7 @@
                   "signature": "static parse(text: string): MediaType"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType.parse",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/media_type.py::MediaType.parse",
                   "signature": "def parse(text: str) -> MediaType"
                 }
               }
@@ -298,15 +298,15 @@
               "state": "Folds the token of a CSRF value.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::folded",
-                  "signature": "private function folded(Polyspec\\Hyper\\Csrf $csrf): string"
+                  "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\Server\\MediaType::folded",
+                  "signature": "private function folded(Polyspec\\Hyper\\Server\\Csrf $csrf): string"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/media-type.ts::MediaType.folded",
                   "signature": "private folded(csrf: Csrf): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/media_type.py::MediaType._folded",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/media_type.py::MediaType._folded",
                   "signature": "def _folded(self, csrf: Csrf) -> str"
                 }
               }
@@ -327,7 +327,7 @@
               "internal": true
             },
             "python": {
-              "file": "packages/server/python/src/polyspec/hyper/_token.py",
+              "file": "packages/server/python/src/polyspec/hyper/server/_token.py",
               "kind": "class",
               "internal": true
             }
@@ -343,7 +343,7 @@
               "state": "Seeds the token.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Token.php::Polyspec\\Hyper\\Token::__construct",
+                  "symbol": "packages/server/php/src/Token.php::Polyspec\\Hyper\\Server\\Token::__construct",
                   "signature": "public function __construct()"
                 },
                 "node": {
@@ -351,7 +351,7 @@
                   "signature": "constructor()"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_token.py::Token.__init__",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_token.py::Token.__init__",
                   "signature": "def __init__(self) -> None"
                 }
               }
@@ -366,7 +366,7 @@
               "state": "Returns the text of the token.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Token.php::Polyspec\\Hyper\\Token::text",
+                  "symbol": "packages/server/php/src/Token.php::Polyspec\\Hyper\\Server\\Token::text",
                   "signature": "public function text(): string"
                 },
                 "node": {
@@ -374,7 +374,7 @@
                   "signature": "text(): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_token.py::Token.text",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_token.py::Token.text",
                   "signature": "def text(self) -> str"
                 }
               }
@@ -389,7 +389,7 @@
               "state": "Returns the shape of the token.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Token.php::Polyspec\\Hyper\\Token::shape",
+                  "symbol": "packages/server/php/src/Token.php::Polyspec\\Hyper\\Server\\Token::shape",
                   "signature": "public function shape(): string"
                 },
                 "node": {
@@ -397,7 +397,7 @@
                   "signature": "shape(): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_token.py::Token.shape",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_token.py::Token.shape",
                   "signature": "def shape(self) -> str"
                 }
               }
@@ -412,7 +412,7 @@
               "state": "Seeds the token.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/Token.php::Polyspec\\Hyper\\Token::seed",
+                  "symbol": "packages/server/php/src/Token.php::Polyspec\\Hyper\\Server\\Token::seed",
                   "signature": "private function seed(): void"
                 },
                 "node": {
@@ -420,7 +420,7 @@
                   "signature": "private seed(): void"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_token.py::Token._seed",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_token.py::Token._seed",
                   "signature": "def _seed(self) -> None"
                 }
               }
@@ -441,7 +441,7 @@
               "internal": true
             },
             "python": {
-              "file": "packages/server/python/src/polyspec/hyper/_signed_token.py",
+              "file": "packages/server/python/src/polyspec/hyper/server/_signed_token.py",
               "kind": "class",
               "internal": true
             }
@@ -457,7 +457,7 @@
               "state": "Makes a signed token.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/SignedToken.php::Polyspec\\Hyper\\SignedToken::__construct",
+                  "symbol": "packages/server/php/src/SignedToken.php::Polyspec\\Hyper\\Server\\SignedToken::__construct",
                   "signature": "public function __construct()"
                 },
                 "node": {
@@ -465,7 +465,7 @@
                   "signature": "constructor()"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_signed_token.py::SignedToken.__init__",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_signed_token.py::SignedToken.__init__",
                   "signature": "def __init__(self) -> None"
                 }
               }
@@ -480,7 +480,7 @@
               "state": "Returns the tokens.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/SignedToken.php::Polyspec\\Hyper\\SignedToken::all",
+                  "symbol": "packages/server/php/src/SignedToken.php::Polyspec\\Hyper\\Server\\SignedToken::all",
                   "signature": "public static function all(): array"
                 },
                 "node": {
@@ -488,7 +488,7 @@
                   "signature": "static all(): Token[]"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_signed_token.py::SignedToken.all",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_signed_token.py::SignedToken.all",
                   "signature": "def all() -> list[Token]"
                 }
               }
@@ -503,7 +503,7 @@
               "state": "Returns the signed shape.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/SignedToken.php::Polyspec\\Hyper\\SignedToken::shape",
+                  "symbol": "packages/server/php/src/SignedToken.php::Polyspec\\Hyper\\Server\\SignedToken::shape",
                   "signature": "public function shape(): string"
                 },
                 "node": {
@@ -511,7 +511,7 @@
                   "signature": "shape(): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_signed_token.py::SignedToken.shape",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_signed_token.py::SignedToken.shape",
                   "signature": "def shape(self) -> str"
                 }
               }
@@ -526,7 +526,7 @@
               "state": "Signs the token.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/SignedToken.php::Polyspec\\Hyper\\SignedToken::sign",
+                  "symbol": "packages/server/php/src/SignedToken.php::Polyspec\\Hyper\\Server\\SignedToken::sign",
                   "signature": "private function sign(): string"
                 },
                 "node": {
@@ -534,7 +534,7 @@
                   "signature": "private sign(): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_signed_token.py::SignedToken._sign",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_signed_token.py::SignedToken._sign",
                   "signature": "def _sign(self) -> str"
                 }
               }
@@ -555,7 +555,7 @@
               "internal": true
             },
             "python": {
-              "file": "packages/server/python/src/polyspec/hyper/_json_codec.py",
+              "file": "packages/server/python/src/polyspec/hyper/server/_json_codec.py",
               "kind": "class",
               "internal": true
             }
@@ -571,7 +571,7 @@
               "state": "Decodes a JSON text.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::decode",
+                  "symbol": "packages/server/php/src/JsonCodec.php::Polyspec\\Hyper\\Server\\JsonCodec::decode",
                   "signature": "public static function decode(string $text): string"
                 },
                 "node": {
@@ -579,7 +579,7 @@
                   "signature": "static decode(text: string): string"
                 },
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_json_codec.py::JsonCodec.decode",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_json_codec.py::JsonCodec.decode",
                   "signature": "def decode(text: str) -> str"
                 }
               }
@@ -617,7 +617,7 @@
               "state": "Reads the session of an identifier.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\SessionStore::read",
+                  "symbol": "packages/server/php/src/SessionStore.php::Polyspec\\Hyper\\Server\\SessionStore::read",
                   "signature": "abstract public function read(string $id): ?string"
                 }
               }
@@ -651,7 +651,7 @@
               "state": "Reads the session of an identifier.",
               "native": {
                 "php": {
-                  "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\ArraySession::read",
+                  "symbol": "packages/server/php/src/ArraySession.php::Polyspec\\Hyper\\Server\\ArraySession::read",
                   "signature": "public function read(string $id): ?string"
                 }
               }
@@ -669,7 +669,7 @@
           ],
           "native": {
             "python": {
-              "file": "packages/server/python/src/polyspec/hyper/_host.py",
+              "file": "packages/server/python/src/polyspec/hyper/server/_host.py",
               "kind": "class",
               "internal": true
             }
@@ -685,7 +685,7 @@
               "state": "Serves the host.",
               "native": {
                 "python": {
-                  "symbol": "packages/server/python/src/polyspec/hyper/_host.py::Host.serve",
+                  "symbol": "packages/server/python/src/polyspec/hyper/server/_host.py::Host.serve",
                   "signature": "def serve(self) -> bool"
                 }
               }
@@ -746,7 +746,7 @@
       },
       "native": {
         "python": {
-          "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::CsrfParts",
+          "symbol": "packages/server/python/src/polyspec/hyper/server/_csrf.py::CsrfParts",
           "declaration": "class CsrfParts(TypedDict):\n    raw: str"
         }
       }

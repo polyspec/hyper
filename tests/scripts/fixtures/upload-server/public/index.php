@@ -21,13 +21,13 @@ declare(strict_types=1);
 //   UPLOAD_HTTPS   1: the application declares https
 //   UPLOAD_GATE    the port of the gate of the test; UPLOAD_GATE_AT=shared stops the shared handler at it
 
-use Polyspec\Hyper\App;
-use Polyspec\Hyper\MediaType;
-use Polyspec\Hyper\Reply;
-use Polyspec\Hyper\Representation;
-use Polyspec\Hyper\Request;
-use Polyspec\Hyper\Response;
-use Polyspec\Hyper\Result;
+use Polyspec\Hyper\Server\App;
+use Polyspec\Hyper\Server\MediaType;
+use Polyspec\Hyper\Server\Reply;
+use Polyspec\Hyper\Server\Representation;
+use Polyspec\Hyper\Server\Request;
+use Polyspec\Hyper\Server\Response;
+use Polyspec\Hyper\Server\Result;
 
 $loader = require dirname(__DIR__, 5) . '/vendor/autoload.php';
 if (getenv('UPLOAD_ERRORS') !== false) {

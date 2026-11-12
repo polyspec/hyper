@@ -12,10 +12,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../../vendor/autoload.php';
 
-use Polyspec\Hyper\NativeSession;
-use Polyspec\Hyper\RedisClusterSessions;
-use Polyspec\Hyper\RedisSentinelSessions;
-use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Server\NativeSession;
+use Polyspec\Hyper\Server\RedisClusterSessions;
+use Polyspec\Hyper\Server\RedisSentinelSessions;
+use Polyspec\Hyper\Server\Request;
 
 [, $directory, $identifier, $command, $first, $second] = [...$argv, null, null];
 $port = getenv('HYPER_SESSION_REDIS');

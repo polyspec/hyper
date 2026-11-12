@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0c6a175c30e037593af2d2e55b38015581e7351d2df35cbec40f6b47d87be9f0 -->
+<!-- source-sha256: 66afcee8d5e6096ae0f6ef3e00cc748506c5c8d8d055e98e1481e4bb79bca0ac -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- spec, 개발 spec, recipe check가 옮긴 host 코드를 이름한다(C-7). `contracts/protocol.json`의 문장 셋은 `polyspec.hyper.server`와 그 module `polyspec.hyper.server.server`를, `contracts/interfaces.json`과 운영 문서는 경로 `packages/server/python/src/polyspec/hyper/server/`와 namespace `Polyspec\Hyper\Server`를 이름하고, recipe reader와 script test가 이를 읽으며, recipe check의 fixture tree는 Python package를 `src/polyspec/hyper/server/`로, PHP class를 새 namespace로 옮긴다. 옛 namespace나 module 경로에 대한 참조는 changelog, 끝난 task의 plan, interface 계약 change의 `from` 값 밖에는 남지 않았다.
 
 - server의 Python host 코드는 package `polyspec.hyper.server`다. 전에는 `polyspec.hyper`였다(binding P-1). `packages/server/python/src/polyspec/hyper/`의 파일 65개가 `src/polyspec/hyper/server/`로 옮겨 갔고, `polyspec.hyper`는 `__init__.py`가 없는 namespace이며, `create_server`의 module은 `polyspec.hyper.server.server`다. test, README, board 예제, package data test, owner 규칙이 새 경로를 이름한다. 애플리케이션은 `polyspec.hyper.server`와 그 module을 import하며, class와 함수의 이름은 그대로다(C-7).
 

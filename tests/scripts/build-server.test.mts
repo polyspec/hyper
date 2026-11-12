@@ -14,7 +14,7 @@ const id = '1111111111111111111111111111111111111111111111111111111111111111';
 function server(output: string, ...options: string[]) {
   return spawnSync(process.execPath, [
     'packages/build/bin/hyper-build-server.mjs', '--manifest', join(fixtures, 'app.json'), '--templates', join(fixtures, 'templates'),
-    '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Tests\\Program', ...options,
+    '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Server\\Tests\\Program', ...options,
   ], { encoding: 'utf8' });
 }
 
@@ -95,7 +95,7 @@ test('builds a template placed with scope arguments, which keeps its inputs (HY-
     const output = join(directory, 'server');
     const result = spawnSync(process.execPath, [
       'packages/build/bin/hyper-build-server.mjs', '--manifest', join(fixtures, 'app.json'), '--templates', templates,
-      '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Tests\\Program', '--build', buildFile(directory, `{"build":"${id}"}`),
+      '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Server\\Tests\\Program', '--build', buildFile(directory, `{"build":"${id}"}`),
     ], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
     assert.ok(existsSync(join(output, 'php', 'GeneratedProgram.php')));

@@ -133,8 +133,8 @@ test('an internal member of a public Python module is named with a leading under
     replaceIn('packages/server/php/src/MediaType.php', "        return $csrf->raw();\n    }\n", "        return $csrf->raw();\n    }\n\n    /** @internal */\n    public function label(): string\n    {\n        return 'html';\n    }\n");
     replaceIn('packages/server/ts/src/media-type.ts', "return this.folded(new Csrf('k'));", "return this.folded(new Csrf('k')) + this.label();");
     replaceIn('packages/server/ts/src/media-type.ts', "    return csrf.raw();\n  }\n", "    return csrf.raw();\n  }\n\n  /** @internal */\n  label(): string {\n    return 'html';\n  }\n");
-    replaceIn('packages/server/python/src/polyspec/hyper/media_type.py', 'return self._folded(Csrf("k"))', 'return self._folded(Csrf("k")) + self._label()');
-    replaceIn('packages/server/python/src/polyspec/hyper/media_type.py', '        return csrf.raw()\n', '        return csrf.raw()\n\n    def _label(self) -> str:\n        return "html"\n');
+    replaceIn('packages/server/python/src/polyspec/hyper/server/media_type.py', 'return self._folded(Csrf("k"))', 'return self._folded(Csrf("k")) + self._label()');
+    replaceIn('packages/server/python/src/polyspec/hyper/server/media_type.py', '        return csrf.raw()\n', '        return csrf.raw()\n\n    def _label(self) -> str:\n        return "html"\n');
     const { unit, write } = unitOf(root, 'media-type');
     unit.members.push({
       id: 'media-type.label',
@@ -145,9 +145,9 @@ test('an internal member of a public Python module is named with a leading under
       errors: [],
       state: 'Returns the label.',
       native: {
-        php: { symbol: 'packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::label', signature: 'public function label(): string' },
+        php: { symbol: 'packages/server/php/src/MediaType.php::Polyspec\\Hyper\\Server\\MediaType::label', signature: 'public function label(): string' },
         node: { symbol: 'packages/server/ts/src/media-type.ts::MediaType.label', signature: 'label(): string' },
-        python: { symbol: 'packages/server/python/src/polyspec/hyper/media_type.py::MediaType._label', signature: 'def _label(self) -> str' },
+        python: { symbol: 'packages/server/python/src/polyspec/hyper/server/media_type.py::MediaType._label', signature: 'def _label(self) -> str' },
       },
     });
     write();
@@ -164,8 +164,8 @@ test('a Python parameter named cls or self after the receiver is an input', () =
     replaceIn('packages/server/php/src/MediaType.php', "        return $csrf->raw();\n    }\n", "        return $csrf->raw();\n    }\n\n    /** @internal */\n    public function named(string $cls): string\n    {\n        return $cls;\n    }\n");
     replaceIn('packages/server/ts/src/media-type.ts', "return this.folded(new Csrf('k'));", "return this.folded(new Csrf('k')) + this.named('x');");
     replaceIn('packages/server/ts/src/media-type.ts', "    return csrf.raw();\n  }\n", "    return csrf.raw();\n  }\n\n  /** @internal */\n  named(cls: string): string {\n    return cls;\n  }\n");
-    replaceIn('packages/server/python/src/polyspec/hyper/media_type.py', 'return self._folded(Csrf("k"))', 'return self._folded(Csrf("k")) + self._named("x")');
-    replaceIn('packages/server/python/src/polyspec/hyper/media_type.py', '        return csrf.raw()\n', '        return csrf.raw()\n\n    def _named(self, cls: str) -> str:\n        return cls\n');
+    replaceIn('packages/server/python/src/polyspec/hyper/server/media_type.py', 'return self._folded(Csrf("k"))', 'return self._folded(Csrf("k")) + self._named("x")');
+    replaceIn('packages/server/python/src/polyspec/hyper/server/media_type.py', '        return csrf.raw()\n', '        return csrf.raw()\n\n    def _named(self, cls: str) -> str:\n        return cls\n');
     const { unit, write } = unitOf(root, 'media-type');
     unit.members.push({
       id: 'media-type.named',
@@ -176,9 +176,9 @@ test('a Python parameter named cls or self after the receiver is an input', () =
       errors: [],
       state: 'Returns the name.',
       native: {
-        php: { symbol: 'packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::named', signature: 'public function named(string $cls): string' },
+        php: { symbol: 'packages/server/php/src/MediaType.php::Polyspec\\Hyper\\Server\\MediaType::named', signature: 'public function named(string $cls): string' },
         node: { symbol: 'packages/server/ts/src/media-type.ts::MediaType.named', signature: 'named(cls: string): string' },
-        python: { symbol: 'packages/server/python/src/polyspec/hyper/media_type.py::MediaType._named', signature: 'def _named(self, cls: str) -> str' },
+        python: { symbol: 'packages/server/python/src/polyspec/hyper/server/media_type.py::MediaType._named', signature: 'def _named(self, cls: str) -> str' },
       },
     });
     write();
@@ -455,7 +455,7 @@ test('each reader writes the receiver of a name: an object, a class, the own cla
 const RECIPE_TREES: Record<Lang, string[]> = {
   php: ['--sources', 'packages/server/php/src', '--tests', 'packages/server/php/tests', '--registry', 'packages/server/php/tests/CaseSteps.php'],
   node: ['--sources', 'packages/server/ts/src', '--tests', 'packages/server/ts/tests', '--registry', 'packages/server/ts/tests/case-runner.test.mts'],
-  python: ['--sources', 'packages/server/python/src/polyspec/hyper', '--tests', 'packages/server/python/tests', '--registry', 'packages/server/python/tests/steps/__init__.py'],
+  python: ['--sources', 'packages/server/python/src/polyspec/hyper/server', '--tests', 'packages/server/python/tests', '--registry', 'packages/server/python/tests/steps/__init__.py'],
 };
 const STEP_FILES: Record<Lang, [string, string, string]> = {
   php: ['packages/server/php/tests/Steps/CsrfSteps.php', 'packages/server/php/tests/Steps/MediaTypeSteps.php', 'packages/server/php/tests/Steps/EssenceReader.php'],

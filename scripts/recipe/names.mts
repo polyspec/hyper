@@ -56,7 +56,7 @@ export function expectedNative(lang: Lang, member: Pick<Member, 'id' | 'kind' | 
   return member.visibility === 'private' || (member.visibility === 'internal' && publicModule) ? `_${snake}` : snake;
 }
 
-/** The last name of a native symbol: `Csrf.raw`, `Polyspec\Hyper\Csrf::raw` and `_csrf.py::Csrf.__init__` all give the member. */
+/** The last name of a native symbol: `Csrf.raw`, `Polyspec\Hyper\Server\Csrf::raw` and `_csrf.py::Csrf.__init__` all give the member. */
 export function symbolName(symbol: string): string {
   return symbol.split('::').pop()?.split('.').pop() ?? symbol;
 }

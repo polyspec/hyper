@@ -64,7 +64,7 @@ test('the server build writes the templates on a virtiofs bind mount', { timeout
     '--manifest', join(root, 'examples', 'board', 'app', 'app.json'),
     '--templates', templates,
     '--output', '/output/server',
-    '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
+    '--php-namespace', 'Polyspec\\Hyper\\Server\\Examples\\Board\\Program',
     '--build', join(root, 'packages', 'server', 'php', 'tests', 'fixtures', 'build.json'),
   ]);
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);

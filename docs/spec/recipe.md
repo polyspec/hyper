@@ -31,7 +31,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - `units`: its units.
 
   Every file of `git ls-files` below `packages/server/php/src`, `packages/server/ts/src` and
-  `packages/server/python/src/polyspec/hyper` belongs to exactly one concern, and every named file exists. A file of a
+  `packages/server/python/src/polyspec/hyper/server` belongs to exactly one concern, and every named file exists. A file of a
   unit holds exactly one unit (HYR-3). The barrel files (`index.ts`, `__init__.py`) and `py.typed` belong to the
   concern `index` and hold no unit. They hold only the re-exports of the public members and the public types of
   HY-106, and HYR-8 checks that list instead of the unit checks.
@@ -52,7 +52,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     Result and its four stops, Session and Flash, ClientRendering and Choice, SessionStore and ArraySession.
 
 - **HYR-4 File names.** The file of a unit is the words of the unit, written by the rule of its language.
-  - PHP: PascalCase, `<Words>.php`, in the namespace `Polyspec\Hyper`.
+  - PHP: PascalCase, `<Words>.php`, in the namespace `Polyspec\Hyper\Server`.
   - Node: kebab-case, `<words>.ts`.
   - Python: snake_case.
     - `<words>.py` is a module that HY-106 or HY-100 makes public.
@@ -65,7 +65,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - Member names follow the same boundaries (HYR-5).
   - Test units. A unit of the test tree, such as the case runner and the case reader of HYR-7, follows the same words
     in the test directory of its language: PHP `packages/server/php/tests/<Words>.php` in the namespace
-    `Polyspec\Hyper\Tests`, Node `packages/server/ts/tests/<words>.ts`, and Python
+    `Polyspec\Hyper\Server\Tests`, Node `packages/server/ts/tests/<words>.ts`, and Python
     `packages/server/python/tests/<words>.py` without a leading `_`, because no test module is public or internal API of
     HY-106. The case runner and the case reader of a language are the `runners` and `caseReaders` entries of
     `contracts/interfaces.json`, as HYR-7 states.
@@ -115,7 +115,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
       language. A field that only some languages have carries `only` (HYR-6), as a member does.
   - **Symbol.** The symbol is `<path>::<qualified name>`.
     - `<path>` is the repository-relative path of the file.
-    - The qualified name of a PHP member is `Polyspec\Hyper\<Unit>::<member>`.
+    - The qualified name of a PHP member is `Polyspec\Hyper\Server\<Unit>::<member>`.
     - In Node and Python it is `<Unit>.<member>` for a class member, and `<member>` for a module function.
     - A constructor is `__construct` in PHP, `constructor` in Node and `__init__` in Python.
     - The member `invoke` of a PHP class is its method `__invoke`, which makes its object callable.

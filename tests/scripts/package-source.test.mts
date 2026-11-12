@@ -59,7 +59,7 @@ test('builds the templates and the server program from another working directory
     assert.equal(templates.status, 0, templates.stderr);
     const server = spawnSync(process.execPath, [
       join(build, 'bin', 'hyper-build-server.mjs'), '--manifest', join(board, 'app', 'app.json'), '--templates', join(board, 'templates'),
-      '--output', join(output, 'server'), '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
+      '--output', join(output, 'server'), '--php-namespace', 'Polyspec\\Hyper\\Server\\Examples\\Board\\Program',
       '--build', join(repository, 'packages', 'server', 'php', 'tests', 'fixtures', 'build.json'),
     ], { cwd: output, encoding: 'utf8' });
     assert.equal(server.status, 0, server.stderr);
@@ -70,7 +70,7 @@ test('builds the templates and the server program from another working directory
     assert.ok(php.every((file) => file.endsWith('.php')), `server/php holds ${php.join(', ')}`);
     assert.ok(!existsSync(join(output, 'server', 'program.php')), 'the build writes program.php');
     const declaration = parseJsonObject(readFileSync(join(output, 'server', 'program.json'), 'utf8'), 'server/program.json');
-    assert.equal(declaration.namespace, 'Polyspec\\Hyper\\Examples\\Board\\Program');
+    assert.equal(declaration.namespace, 'Polyspec\\Hyper\\Server\\Examples\\Board\\Program');
   } finally {
     rmSync(output, { recursive: true, force: true });
   }

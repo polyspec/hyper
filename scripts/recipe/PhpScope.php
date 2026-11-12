@@ -6,7 +6,7 @@ declare(strict_types=1);
 // requires and scripts/recipe/read-php-scopes.php uses. Its helpers (tokenId, tokenText, closing, classNamed,
 // writtenType, parameterList) are global functions of that file, which PHP finds from this namespace.
 
-namespace Polyspec\Hyper\Recipe;
+namespace Polyspec\Hyper\Server\Recipe;
 
 /** The reading of the expressions of one scope of a file. */
 final class PhpScope

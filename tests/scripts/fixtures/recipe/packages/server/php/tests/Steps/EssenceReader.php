@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Polyspec\Hyper\Tests\Steps;
+namespace Polyspec\Hyper\Server\Tests\Steps;
 
-use Polyspec\Hyper\MediaType;
+use Polyspec\Hyper\Server\MediaType;
 
 final class EssenceReader
 {
