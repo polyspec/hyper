@@ -30,6 +30,7 @@ pub mod representation;
 pub mod router;
 pub mod session;
 pub mod steps;
+pub mod template_rules;
 
 pub use error::Error;
 

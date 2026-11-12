@@ -1009,5 +1009,525 @@
       ],
       "template": "rows.tpl"
     }
+  ],
+  "templateChecks": [
+    {
+      "id": "the_templates_of_an_application_pass",
+      "label": "an application whose templates follow every rule has no problem",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body><nav id=\"side\">{# side}</nav><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "<p>{= text}</p>\n"
+      },
+      "problems": []
+    },
+    {
+      "id": "every_region_placement_that_breaks_the_rules_is_reported",
+      "label": "a manifest region outside an element with its id, a route region with block arguments, a route region inside an element with another id and a route region that no template of the route places are reported; a route region placed in an included template or inside a branch passes (HY-75)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "left",
+            "template": "left.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "list",
+            "path": "/",
+            "title": "List",
+            "template": "list.tpl",
+            "regions": [
+              {
+                "name": "notice",
+                "template": "notice.tpl"
+              },
+              {
+                "name": "rows",
+                "template": "rows.tpl"
+              }
+            ]
+          },
+          {
+            "name": "view",
+            "path": "/view",
+            "title": "View",
+            "template": "view.tpl",
+            "regions": [
+              {
+                "name": "panel",
+                "template": "panel.tpl"
+              },
+              {
+                "name": "lost",
+                "template": "panel.tpl"
+              }
+            ]
+          },
+          {
+            "name": "branch",
+            "path": "/branch",
+            "title": "Branch",
+            "template": "branch.tpl",
+            "regions": [
+              {
+                "name": "direct",
+                "template": "panel.tpl"
+              },
+              {
+                "name": "deep",
+                "template": "panel.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "templates": {
+        "branch-part.tpl": "{?# deep}<div id=\"deep\">{# deep}</div>{/}\n",
+        "branch.tpl": "{? kind == \"a\"}<div id=\"direct\">{# direct}</div>{:? kind == \"b\"}{+ branch-part.tpl}{:}<p>none</p>{/}\n",
+        "layout.tpl": "<title>{# title}</title>{# build}\n<aside class=\"side\">{# left}</aside>\n<main id=\"content\">{# content}</main>\n{# data}\n",
+        "left.tpl": "L",
+        "list.tpl": "<div id=\"notice\">{# notice x:1}</div>\n<div id=\"other\">{# rows}</div>\n",
+        "notice.tpl": "N",
+        "panel.tpl": "<p>{= text}</p>\n",
+        "part.tpl": "{?# panel}<div id=\"panel\">{# panel}</div>{/}\n",
+        "rows.tpl": "R",
+        "title.tpl": "T",
+        "view.tpl": "<h1>{= title}</h1>{+ part.tpl}\n"
+      },
+      "problems": [
+        "layout.tpl: {# left} is not directly inside an element with id=\"left\" (HY-3, HY-30)",
+        "list.tpl: {# notice} has block arguments (HY-3, HY-30)",
+        "list.tpl: {# rows} is not directly inside an element with id=\"rows\" (HY-3, HY-30)",
+        "view.tpl: places {# lost} 0 times, expected once (HY-3, HY-30)"
+      ]
+    },
+    {
+      "id": "a_layout_without_the_build_fails",
+      "label": "a layout that does not place {# build} fails (HY-125.7)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title></head>\n<body><nav id=\"side\">{# side}</nav><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "<p>{= text}</p>\n"
+      },
+      "problems": [
+        "layout.tpl: places {# build} 0 times, expected once (HY-125)"
+      ]
+    },
+    {
+      "id": "a_layout_that_places_the_build_twice_fails",
+      "label": "a layout that places {# build} twice fails (HY-125.7)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}{# build}</head>\n<body><nav id=\"side\">{# side}</nav><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "<p>{= text}</p>\n"
+      },
+      "problems": [
+        "layout.tpl: places {# build} 2 times, expected once (HY-125)"
+      ]
+    },
+    {
+      "id": "a_layout_that_places_the_title_and_the_data_twice_fails",
+      "label": "a layout that places {# title} and {# data} twice fails (HY-3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body><nav id=\"side\">{# side}</nav><main id=\"content\">{# content}</main>{# data}{# data}{# title}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "<p>{= text}</p>\n"
+      },
+      "problems": [
+        "layout.tpl: places {# title} 2 times, expected once (HY-3)",
+        "layout.tpl: places {# data} 2 times, expected once (HY-3)"
+      ]
+    },
+    {
+      "id": "an_hx_attribute_outside_the_layout_fails_with_its_line",
+      "label": "an hx- attribute in any case after white space in a template other than the layout fails with the line of each, and the layout may hold one (HC-6)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body hx-boost=\"true\"><nav id=\"side\">{# side}</nav><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "<a hx-target=\"#x\">S</a>",
+        "home.tpl": "<p>{= text}</p>\n<a\thx-get=\"/x\">x</a>\n<b HX-Post=\"/y\">y</b><i data-hx-get=\"/z\">z</i>\n"
+      },
+      "problems": [
+        "home.tpl:2: hx- attribute outside the layout (HC-6)",
+        "home.tpl:3: hx- attribute outside the layout (HC-6)",
+        "side.tpl:1: hx- attribute outside the layout (HC-6)"
+      ]
+    },
+    {
+      "id": "a_file_that_is_not_a_template_is_not_checked_for_hx_attributes",
+      "label": "only the files whose names end with .tpl are checked for hx- attributes (HC-6)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body><nav id=\"side\">{# side}</nav><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "<p>{= text}</p>\n",
+        "notes.txt": "<a hx-get=\"/x\">x</a>\n"
+      },
+      "problems": []
+    },
+    {
+      "id": "a_manifest_region_inside_an_element_with_more_attributes_passes",
+      "label": "the id attribute may follow other attributes and come before others, after any white space, and the element name may hold digits and hyphens (HY-3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body><my-nav2 class=\"a\"\n  id=\"side\" data-x=\"1\">{# side}</my-nav2><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "<p>{= text}</p>\n"
+      },
+      "problems": []
+    },
+    {
+      "id": "a_manifest_region_after_text_in_its_element_fails",
+      "label": "a placement that does not follow the start tag of its element directly fails (HY-3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body><nav id=\"side\"> {# side}</nav><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "<p>{= text}</p>\n"
+      },
+      "problems": [
+        "layout.tpl: {# side} is not directly inside an element with id=\"side\" (HY-3, HY-30)"
+      ]
+    },
+    {
+      "id": "a_manifest_region_in_an_element_whose_id_is_another_fails",
+      "label": "a placement inside an element whose id only begins with the region name fails (HY-3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body><nav id=\"sidebar\">{# side}</nav><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "<p>{= text}</p>\n"
+      },
+      "problems": [
+        "layout.tpl: {# side} is not directly inside an element with id=\"side\" (HY-3, HY-30)"
+      ]
+    },
+    {
+      "id": "a_manifest_region_placed_twice_fails",
+      "label": "a manifest region placed twice fails (HY-3)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body><nav id=\"side\">{# side}</nav><main id=\"content\">{# content}</main><div id=\"side\">{# side}</div>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "<p>{= text}</p>\n"
+      },
+      "problems": [
+        "layout.tpl: places {# side} 2 times, expected once (HY-3, HY-30)"
+      ]
+    },
+    {
+      "id": "a_route_region_placed_by_a_placed_template_passes",
+      "label": "a route region placed in a template that the route template places by path passes, and the region inside a loop is placed once (HY-75)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl",
+            "regions": [
+              {
+                "name": "rows",
+                "template": "rows.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body><nav id=\"side\">{# side}</nav><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "{# parts/list.tpl}",
+        "parts/list.tpl": "{@ x = items}{/}<ul id=\"rows\">{# rows}</ul>{+ ../side.tpl}",
+        "rows.tpl": "<li>r</li>"
+      },
+      "problems": []
+    },
+    {
+      "id": "a_route_region_in_a_loop_counts_once_for_each_placement",
+      "label": "a route region placed in the body of a loop and in its empty branch is placed twice (HY-30)",
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl"
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl",
+            "regions": [
+              {
+                "name": "rows",
+                "template": "rows.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<html><head><title>{# title}</title>{# build}</head>\n<body><nav id=\"side\">{# side}</nav><main id=\"content\">{# content}</main>{# data}</body></html>\n",
+        "title.tpl": "Home",
+        "side.tpl": "S",
+        "home.tpl": "{@ x = items}<ul id=\"rows\">{# rows}</ul>{:}<ul id=\"rows\">{# rows}</ul>{/}",
+        "rows.tpl": "<li>r</li>"
+      },
+      "problems": [
+        "home.tpl: places {# rows} 2 times, expected once (HY-3, HY-30)"
+      ]
+    }
   ]
 }

@@ -569,6 +569,12 @@
                   "koSource": "570040fa329970e0645b600293e9e00a47d6c69dfc4dc6784cec959ce4d7f2f3"
                 },
                 {
+                  "id": "HY-48.13",
+                  "en": "One rule of the Rust core holds that check and gives every problem as a line that names the template, in this order: the `hx-*` attributes of each template other than the layout whose name ends with `.tpl`, in the byte order of the names and the order of their lines, then the placements of `{# title}`, `{# data}` and `{# build}`, of the manifest regions and of the page region in the layout, then the route regions of each route in manifest order.",
+                  "ko": "Rust core의 규칙 하나가 그 검사를 가지며 모든 문제를 템플릿 이름을 밝힌 줄로 이 순서대로 준다: 이름이 `.tpl`로 끝나는 layout 외 템플릿의 `hx-*` 속성을 이름의 바이트 순서와 줄 순서로, 그다음 layout의 `{# title}`, `{# data}`, `{# build}`, manifest 영역, page 영역 배치를, 그다음 manifest 순서로 각 라우트의 라우트 영역을.",
+                  "koSource": "a9cf95d9dbef17510d6324ba551d671f3f5a2cfd29cedcf88b121082298149ec"
+                },
+                {
                   "id": "HY-48.12",
                   "en": "Node: `App.open` fails when the template index is not a template index or does not hold a template of a route.",
                   "ko": "Node: `App.open`은 template index가 template index가 아니거나 라우트의 template을 담고 있지 않을 때 실패한다.",

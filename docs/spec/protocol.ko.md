@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: cf452baa4cbc22b29c4bbceb6ec08a644c65b1bf41fe92c43542a74c5a67c30f -->
+<!-- source-sha256: 8f34ce050dcfea22caa77fd36c99e2181c599a002b202448d57026b05d58ce3b -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -61,7 +61,7 @@
 
 - **HY-14** <a id="HY-14.1"></a> 서버와 브라우저는 같은 환경으로 렌더한다. <a id="HY-14.2"></a> 서버는 모든 JSON 응답에 시간대를 담아 보낸다.
 
-- **HY-48** <a id="HY-48.1"></a> 서버는 자기 런타임의 템플릿 엔진으로, 빌드(HR-96)의 출력 곧 매니페스트, 애플리케이션의 템플릿, 읽기 경로 `reads.json`(HY-73), build id `build.json`(HY-125)에서 HY-12와 HY-13이 정한 대로 문서와 영역을 렌더한다. <a id="HY-48.2"></a> 서버는 필요한 출력이 모두 있을 때만 애플리케이션을 열며, 하나라도 없으면 `open`이 처음 없는 출력의 절대 경로와 함께 실패하므로 빠진 빌드는 애플리케이션을 열 때 실패하고 빠진 파일을 밝힌다. <a id="HY-48.3"></a> 빌드는 먼저 레이아웃 밖의 `hx-*` 속성을 거부하고([애플리케이션 작성 규칙](../operations/composition.ko.md)의 HC-6), `make templates-check`와 같은 HY-3(배치 `{# build}` 포함, HY-125), HY-30, HY-75 규칙으로 템플릿을 검사하며, 위반이 있으면 출력을 지우거나 쓰기 전에 모든 문제와 함께 실패하므로 서버 프로그램은 이 규칙을 어기는 템플릿을 제공하지 않는다. <a id="HY-48.12"></a> Node: `App.open`은 template index가 template index가 아니거나 라우트의 template을 담고 있지 않을 때 실패한다.
+- **HY-48** <a id="HY-48.1"></a> 서버는 자기 런타임의 템플릿 엔진으로, 빌드(HR-96)의 출력 곧 매니페스트, 애플리케이션의 템플릿, 읽기 경로 `reads.json`(HY-73), build id `build.json`(HY-125)에서 HY-12와 HY-13이 정한 대로 문서와 영역을 렌더한다. <a id="HY-48.2"></a> 서버는 필요한 출력이 모두 있을 때만 애플리케이션을 열며, 하나라도 없으면 `open`이 처음 없는 출력의 절대 경로와 함께 실패하므로 빠진 빌드는 애플리케이션을 열 때 실패하고 빠진 파일을 밝힌다. <a id="HY-48.3"></a> 빌드는 먼저 레이아웃 밖의 `hx-*` 속성을 거부하고([애플리케이션 작성 규칙](../operations/composition.ko.md)의 HC-6), `make templates-check`와 같은 HY-3(배치 `{# build}` 포함, HY-125), HY-30, HY-75 규칙으로 템플릿을 검사하며, 위반이 있으면 출력을 지우거나 쓰기 전에 모든 문제와 함께 실패하므로 서버 프로그램은 이 규칙을 어기는 템플릿을 제공하지 않는다. <a id="HY-48.13"></a> Rust core의 규칙 하나가 그 검사를 가지며 모든 문제를 템플릿 이름을 밝힌 줄로 이 순서대로 준다: 이름이 `.tpl`로 끝나는 layout 외 템플릿의 `hx-*` 속성을 이름의 바이트 순서와 줄 순서로, 그다음 layout의 `{# title}`, `{# data}`, `{# build}`, manifest 영역, page 영역 배치를, 그다음 manifest 순서로 각 라우트의 라우트 영역을. <a id="HY-48.12"></a> Node: `App.open`은 template index가 template index가 아니거나 라우트의 template을 담고 있지 않을 때 실패한다.
 
   - <a id="HY-48.4"></a> PHP: PHP 서버는 빌드가 애플리케이션 템플릿에서 컴파일한 프로그램으로, 같은 템플릿의 generated PHP 프로그램을 template package의 API를 통해 렌더하며, PHP가 네이티브 템플릿 확장 `polyspec_template`을 불러왔으면 확장이 같은 이름으로 그 API를 등록하므로 서버에는 확장에 대한 분기가 없다. <a id="HY-48.5"></a> 프로그램은 확장이 있을 때와 없을 때 같은 테스트와 `make parity`를 통과한다. <a id="HY-48.6"></a> 빌드는 generated 프로그램을 애플리케이션이 고른 PHP namespace로 컴파일하여, 클래스마다 그 이름을 딴 파일 하나인 PSR-4 파일로 프로그램 디렉터리의 디렉터리 `php`에 쓰며, 그래서 전역 이름을 선언하지 않고 여러 애플리케이션의 프로그램이 한 PHP 프로세스에서 불러와진다. <a id="HY-48.7"></a> 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 namespace를 그 디렉터리에 연결하고, 서버는 `program.json`이 밝힌 namespace의 클래스 `GeneratedProgram`을 Composer의 autoload로 얻으며 프로그램의 파일을 직접 require하지 않는다. <a id="HY-48.8"></a> `App::open`은 프로그램 디렉터리에 디렉터리 `php`, `program.json`, `reads.json`(HY-73), `build.json`(HY-125), 디렉터리 `templates` 중 하나가 없으면, 처음 없는 것의 절대 경로와 함께 실패한다. <a id="HY-48.9"></a> autoload가 그 클래스를 불러오지 못할 때도 실패하며, 그 클래스와 `autoload.psr-4`가 그 namespace에 연결해야 하는 디렉터리 `php`를 밝힌다.
   - <a id="HY-48.10"></a> Python: 프로그램 디렉터리에는 `reads.json`, `build.json`, 디렉터리 `templates`가 있고, `App.open`은 처음 없는 것을 밝히는 `ValueError`(HY-106)로 실패한다.

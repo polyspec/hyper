@@ -11651,6 +11651,7 @@
         "HY-14",
         "HY-30",
         "HY-31",
+        "HY-48",
         "HY-49",
         "HY-54",
         "HY-71",
@@ -18085,6 +18086,32 @@
             "region.name",
             "region.template"
           ]
+        },
+        "templateChecks": {
+          "runners": [
+            "build"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "manifest": {
+              "role": "input"
+            },
+            "templates": {
+              "role": "input"
+            },
+            "problems": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-48.13",
+              "state": "`problems` is the problems that the template check of HY-48.3 gives for the templates `templates`, a map from template names to their sources, and the manifest `manifest`, in the order of HY-48.13."
+            }
+          }
         }
       }
     },

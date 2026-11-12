@@ -1161,6 +1161,43 @@
           "core": "polyspec_hyper::build::read"
         },
         {
+          "id": "rules.template_problems",
+          "name": [
+            "template",
+            "problems"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "manifest"
+              ],
+              "type": "bytes",
+              "required": true
+            },
+            {
+              "name": [
+                "templates"
+              ],
+              "type": {
+                "map": "text"
+              },
+              "required": true
+            }
+          ],
+          "returns": {
+            "list": "text"
+          },
+          "raises": [
+            "polyspec_hyper::Error::InvalidApplication",
+            "polyspec_hyper::Error::Template",
+            "polyspec_hyper::Error::DataModel"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::template_rules::problems"
+        },
+        {
           "id": "rules.valid_context_header",
           "name": [
             "valid",

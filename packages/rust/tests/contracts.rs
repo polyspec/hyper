@@ -1781,3 +1781,27 @@ fn a_build_file_holds_a_build_id() {
     }
     assert!(ran > 0);
 }
+
+#[test]
+fn the_template_check_of_an_application() {
+    // HY-48.3, HY-48.13, HC-6, HY-3, HY-30, HY-75, HY-125.7
+    use polyspec_hyper::steps::Map;
+    use polyspec_hyper::template_rules::problems;
+    let file = cases("manifest.json");
+    let mut ran = 0;
+    for case in group(&file, "templateChecks") {
+        let mut templates = Map::new();
+        for (name, source) in case["templates"].as_object().into_iter().flatten() {
+            templates.insert(name.clone(), text_of(source).to_owned());
+        }
+        match problems(case["manifest"].to_string().as_bytes(), &templates) {
+            Ok(found) => {
+                let found: Vec<Value> = found.into_iter().map(Value::from).collect();
+                assert_eq!(Value::Array(found), case["problems"], "{}", case["id"]);
+            }
+            Err(error) => panic!("{}: {error}", case["id"]),
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+}
