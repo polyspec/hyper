@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 77e8ab5b748098badcd164144e4e1861c536d387c9fa914354d8a3f0c98b73b2 -->
+<!-- source-sha256: 719bdc3e9abd30eab0c61865acc3ce9064933323b145a523542316848cfa9a5a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-106.4는 PHP 요청의 `query()`, `form()`, `files()`가 code와 HY-56, HY-113처럼 이름과 그 값 목록의 쌍의 list를 돌려준다고 적는다. 전에는 그것이 `IteratorAggregate`를 노출한다고 적었다(H28.18).
 
 - `AGENTS.md`는 `[-]`로 철회한 task가 완료라고 적는다. 원인이 재개 조건을 적은 task는 그 조건이 성립한 뒤 재개하고, 재개 조건이 없거나 성립하지 않는 task는 그대로 완료다.
 
