@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 88cb241c9f24071105c2722888182eb2a9389d7905425bffa6b1a9b81c8fcc81 -->
+<!-- source-sha256: 6ef94a39e43f2990d6f74b8f1a868e115f7af9aa4451825a92b5ddc7d116cc76 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- form을 읽는 규칙은 http-forms의 것이다(C-3). query 값, form 값, 파일, part의 header 줄, body를 조각 단위로 읽는 reader, 그 첫 실패, 요청의 디렉터리, `moveTo`와 `fileOver`는 http-forms의 F-6, F-7, F-8부터 F-12까지, F-16, F-20부터 F-27까지의 규칙이며, 이를 말하던 hyper 문장은 은퇴하고 그 규칙을 가리키는 문장으로 바뀌었다(HY-56.9, HY-57.13, HY-113.21, HY-113.22, HY-114.11, HY-114.12, HY-131.26부터 HY-131.29까지). 바뀌는 것: body의 type이 정의하지 않는 매개변수는 아무것도 바꾸지 않는다(F-12.4). 전에는 `application/x-www-form-urlencoded` body의 `charset` 아닌 매개변수가 kind `unknown_parameter`와 상태 400으로 실패했다(HY-57.14). 실패한 이동은 http-forms의 kind `exists`와 `moved`를 준다(F-11). hyper는 요청의 API, 애플리케이션이 선언하는 한도와 그 기본값, 상태 413과 그 텍스트, hook 뒤의 디렉터리 제거, 검사 순서, Node host의 읽기를 유지한다. http-forms가 case를 가지므로 `contracts/fields.json`은 지웠고, 그 case를 실행하던 세 server의 step은 server가 core를 부를 때까지 남는다(S-4).
 
 - `contracts/app.json`의 case는 열리지 않는 애플리케이션을 kind `invalid_application`(build 파일이면 `invalid_build`), category `value`, 그리고 HY-106.11이 말하는 경우에만 message를 가진 `raises`로 줍니다. case의 키 `openError`는 없어졌습니다(S-3b, HY-106.18).
 

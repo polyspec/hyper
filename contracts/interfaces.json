@@ -15963,253 +15963,6 @@
         }
       }
     },
-    "fields.json": {
-      "fixtures": {},
-      "sections": {
-        "urlencoded": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "text": {
-              "role": "input"
-            },
-            "fields": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-57.2",
-              "state": "`fields` lists the values of `text` as `[name, values]` pairs in the order of their names, or is null when `text` fails with HY-42.",
-              "optional": true
-            },
-            "names": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-56.4",
-              "state": "`names` lists the names of the values of `text` in the order of their first occurrence, or is null when `fields` is null.",
-              "optional": true
-            },
-            "raises": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "sentence": "HY-56.4",
-              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
-            }
-          },
-          "members": [
-            "named-values.names"
-          ]
-        },
-        "multipart": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "type": {
-              "role": "input"
-            },
-            "body": {
-              "role": "input"
-            },
-            "fields": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-57.3",
-              "state": "`fields` lists the form values of the body `body` of the type `type`, a text whose characters are its bytes, as `[name, values]` pairs, or is null when the body fails with HY-42.",
-              "optional": true
-            },
-            "files": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-113.3",
-              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text for a part without a content type, or is null when `fields` is null.",
-              "optional": true
-            },
-            "raises": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "sentence": "HY-113.19",
-              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
-            }
-          },
-          "members": [
-            "files.fromBody",
-            "multipart-reader.buffered"
-          ]
-        },
-        "streamed": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "type": {
-              "role": "input"
-            },
-            "body": {
-              "role": "input"
-            },
-            "chunk": {
-              "role": "input"
-            },
-            "limit": {
-              "role": "input"
-            },
-            "valueLimit": {
-              "role": "input"
-            },
-            "partLimit": {
-              "role": "input"
-            },
-            "fileLimit": {
-              "role": "input"
-            },
-            "stream": {
-              "role": "input"
-            },
-            "move": {
-              "role": "input"
-            },
-            "stopped": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-131.11",
-              "state": "`stopped` is true when the body `body`, a text whose characters are its bytes, given in chunks of `chunk` bytes, passed a limit, after which no chunk is given.",
-              "optional": true
-            },
-            "exceeded": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-131.11",
-              "state": "`exceeded` is true when the body passed the body limit `limit`, the value limit `valueLimit`, the part limit `partLimit` or the file limit `fileLimit`.",
-              "optional": true
-            },
-            "held": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-131.1",
-              "state": "`held` is the text of the bytes that the body holds as one value: empty text for a body that is read in chunks, which a multipart body of the type `type` is when `stream` is true, and for a body that passed the limit.",
-              "optional": true
-            },
-            "fields": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-131.6",
-              "state": "`fields` lists the form values of the body as `[name, values]` pairs, read from the chunks or from the held bytes, or is null when the body failed or passed the limit.",
-              "optional": true
-            },
-            "files": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-131.15",
-              "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType`, `content`, the text of the bytes of the file, and `size`, or is null when `fields` is null.",
-              "optional": true
-            },
-            "entries": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "sentence": "HY-131.13",
-              "state": "`entries` is the number of files in the directory of the body after its last chunk, or null for a body without a directory."
-            },
-            "moved": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-131.16",
-              "state": "`moved` is null when `move` is `none`, and else tells the move of the first file: for `new`, to a path that does not exist, and then a second time; for `exists`, to a path that exists; for `type`, to the number 7. `content` is the text of the bytes at the path after the first move, or of the file when the move failed; `left` is the number of files in the directory after it, or null without a directory; `again` is the message of the failure of the second move or of the failed move; `read` is the message of the failure of `content()` after the move, or null when the move failed; `class` is `value` for the class of HY-46.3 and `type` for TypeError.",
-              "optional": true
-            },
-            "removed": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-131.14",
-              "state": "`removed` is true when the directory of the body does not exist after `remove()`, or null for a body without a directory.",
-              "optional": true
-            },
-            "raises": {
-              "role": "expected",
-              "optional": true,
-              "compare": "exact",
-              "sentence": "HY-113.19",
-              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
-            }
-          },
-          "members": [
-            "request-body.directory",
-            "uploaded-file.moveTo"
-          ]
-        },
-        "uploaded": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
-          "uses": [],
-          "fields": {
-            "id": {
-              "role": "id"
-            },
-            "label": {
-              "role": "label"
-            },
-            "name": {
-              "role": "input"
-            },
-            "filename": {
-              "role": "input"
-            },
-            "contentType": {
-              "role": "input"
-            },
-            "content": {
-              "role": "input"
-            },
-            "file": {
-              "role": "expected",
-              "compare": "exact",
-              "sentence": "HY-106.5",
-              "state": "`content` is a text whose characters U+0000 to U+00FF are bytes; `file` holds what `name()`, `filename()`, `contentType()`, `size()` and `content()` of `new UploadedFile(name, filename, contentType, bytes)` return, the content written as such a text."
-            }
-          },
-          "members": [
-            "uploaded-file.constructor",
-            "uploaded-file.content",
-            "uploaded-file.contentType",
-            "uploaded-file.filename",
-            "uploaded-file.name",
-            "uploaded-file.size"
-          ]
-        }
-      }
-    },
     "functions.json": {
       "fixtures": {
         "functionKinds": "input",
@@ -17643,7 +17396,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-114.10",
+              "sentence": "HY-114.12",
               "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
@@ -17783,7 +17536,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-56.4",
+              "sentence": "HY-56.9",
               "state": "`query` is what `query()` returns: a list of pairs of a name and the list of its values."
             },
             "queryInt": {
@@ -17797,7 +17550,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-57.1",
+              "sentence": "HY-57.13",
               "state": "`form` is what `form()` returns: a list of pairs of a name and the list of its values."
             },
             "formString": {

@@ -8,7 +8,7 @@ use crate::media::Selected;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Step {
     /// A `Content-Length` that is no number (400) or larger than the body limit (413), before the body is read
-    /// (HY-131.24, HY-131.18).
+    /// (HY-131.29, HY-131.18).
     DeclaredLength,
     /// The limits of the body and the failures of HY-42 while the body is read (HY-131.18).
     Body,
