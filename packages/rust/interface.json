@@ -1,9 +1,9 @@
 {
   "schema": "polyspec/interface@1",
-  "library": "hyper-server",
+  "library": "hyper",
   "core": {
-    "crate": "polyspec-hyper-server",
-    "path": "packages/server/rust"
+    "crate": "polyspec-hyper",
+    "path": "packages/rust"
   },
   "targets": [
     "php",
@@ -12,17 +12,17 @@
   ],
   "packages": {
     "php": {
-      "package": "polyspec/hyper-server",
-      "namespace": "Polyspec\\Hyper\\Server",
+      "package": "polyspec/hyper",
+      "namespace": "Polyspec\\Hyper",
       "host": true
     },
     "python": {
-      "package": "polyspec-hyper-server",
-      "module": "polyspec.hyper.server",
+      "package": "polyspec-hyper",
+      "module": "polyspec.hyper",
       "host": true
     },
     "node": {
-      "package": "@polyspec/hyper-server",
+      "package": "@polyspec/hyper",
       "entries": {
         ".": {
           "formats": [
@@ -46,32 +46,32 @@
   "errors": {
     "classes": {
       "value": {
-        "php": "Polyspec\\Hyper\\Server\\HyperValueError",
+        "php": "Polyspec\\Hyper\\HyperValueError",
         "python": "HyperValueError",
         "node": "HyperValueError"
       },
       "type": {
-        "php": "Polyspec\\Hyper\\Server\\HyperTypeError",
+        "php": "Polyspec\\Hyper\\HyperTypeError",
         "python": "HyperTypeError",
         "node": "HyperTypeError"
       },
       "io": {
-        "php": "Polyspec\\Hyper\\Server\\HyperIoError",
+        "php": "Polyspec\\Hyper\\HyperIoError",
         "python": "HyperIoError",
         "node": "HyperIoError"
       },
       "store": {
-        "php": "Polyspec\\Hyper\\Server\\HyperStoreError",
+        "php": "Polyspec\\Hyper\\HyperStoreError",
         "python": "HyperStoreError",
         "node": "HyperStoreError"
       },
       "busy": {
-        "php": "Polyspec\\Hyper\\Server\\HyperBusyError",
+        "php": "Polyspec\\Hyper\\HyperBusyError",
         "python": "HyperBusyError",
         "node": "HyperBusyError"
       },
       "internal": {
-        "php": "Polyspec\\Hyper\\Server\\HyperInternalError",
+        "php": "Polyspec\\Hyper\\HyperInternalError",
         "python": "HyperInternalError",
         "node": "HyperInternalError"
       }
@@ -96,83 +96,83 @@
     ],
     "kinds": [
       {
-        "variant": "polyspec_hyper_server::Error::NotApplicationPath",
+        "variant": "polyspec_hyper::Error::NotApplicationPath",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::NotRedirectResult",
+        "variant": "polyspec_hyper::Error::NotRedirectResult",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::PageStatusNotAllowed",
+        "variant": "polyspec_hyper::Error::PageStatusNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::ReplyStatusNotAllowed",
+        "variant": "polyspec_hyper::Error::ReplyStatusNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::CookieNameNotAllowed",
+        "variant": "polyspec_hyper::Error::CookieNameNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::CookieValueNotAllowed",
+        "variant": "polyspec_hyper::Error::CookieValueNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::NegativeMaxAge",
+        "variant": "polyspec_hyper::Error::NegativeMaxAge",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::IntegerRange",
+        "variant": "polyspec_hyper::Error::IntegerRange",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::CacheControlNotAllowed",
+        "variant": "polyspec_hyper::Error::CacheControlNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::CacheControlShared",
+        "variant": "polyspec_hyper::Error::CacheControlShared",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::ReferrerPolicyNotAllowed",
+        "variant": "polyspec_hyper::Error::ReferrerPolicyNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::InvalidCsrfForm",
+        "variant": "polyspec_hyper::Error::InvalidCsrfForm",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::InvalidSessionToken",
+        "variant": "polyspec_hyper::Error::InvalidSessionToken",
         "category": "store"
       },
       {
-        "variant": "polyspec_hyper_server::Error::InvalidSessionRecord",
+        "variant": "polyspec_hyper::Error::InvalidSessionRecord",
         "category": "store"
       },
       {
-        "variant": "polyspec_hyper_server::Error::SharedHoldsContext",
+        "variant": "polyspec_hyper::Error::SharedHoldsContext",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::NotSelected",
+        "variant": "polyspec_hyper::Error::NotSelected",
         "category": "type"
       },
       {
-        "variant": "polyspec_hyper_server::Error::InvalidApplication",
+        "variant": "polyspec_hyper::Error::InvalidApplication",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::InvalidRepresentation",
+        "variant": "polyspec_hyper::Error::InvalidRepresentation",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper_server::Error::Internal",
+        "variant": "polyspec_hyper::Error::Internal",
         "category": "internal"
       },
       {
-        "variant": "polyspec_hyper_server::Error::RecordValue",
+        "variant": "polyspec_hyper::Error::RecordValue",
         "category": "internal"
       },
       {
@@ -520,10 +520,10 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper_server::Error::InvalidCsrfForm"
+            "polyspec_hyper::Error::InvalidCsrfForm"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::csrf::mask"
+          "core": "polyspec_hyper::csrf::mask"
         },
         {
           "id": "rules.csrf_verify",
@@ -551,10 +551,10 @@
           ],
           "returns": "bool",
           "raises": [
-            "polyspec_hyper_server::Error::InvalidCsrfForm"
+            "polyspec_hyper::Error::InvalidCsrfForm"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::csrf::verify"
+          "core": "polyspec_hyper::csrf::verify"
         },
         {
           "id": "rules.browser",
@@ -577,10 +577,10 @@
           },
           "optional_reason": "HY-24.12",
           "raises": [
-            "polyspec_hyper_server::Error::InvalidCsrfForm"
+            "polyspec_hyper::Error::InvalidCsrfForm"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::csrf::browser"
+          "core": "polyspec_hyper::csrf::browser"
         },
         {
           "id": "rules.stored_token",
@@ -601,10 +601,10 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper_server::Error::InvalidSessionToken"
+            "polyspec_hyper::Error::InvalidSessionToken"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::csrf::stored_token"
+          "core": "polyspec_hyper::csrf::stored_token"
         },
         {
           "id": "rules.is_application_path",
@@ -627,7 +627,7 @@
           "returns": "bool",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::location::is_application_path"
+          "core": "polyspec_hyper::location::is_application_path"
         },
         {
           "id": "rules.redirect_location",
@@ -648,10 +648,10 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper_server::Error::NotApplicationPath"
+            "polyspec_hyper::Error::NotApplicationPath"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::location::redirect_location"
+          "core": "polyspec_hyper::location::redirect_location"
         },
         {
           "id": "rules.cache_control",
@@ -672,11 +672,11 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper_server::Error::CacheControlNotAllowed",
-            "polyspec_hyper_server::Error::CacheControlShared"
+            "polyspec_hyper::Error::CacheControlNotAllowed",
+            "polyspec_hyper::Error::CacheControlShared"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::reply::cache_control"
+          "core": "polyspec_hyper::reply::cache_control"
         },
         {
           "id": "rules.keeps_out_of_shared_caches",
@@ -701,7 +701,7 @@
           "returns": "bool",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::reply::keeps_out_of_shared_caches"
+          "core": "polyspec_hyper::reply::keeps_out_of_shared_caches"
         },
         {
           "id": "rules.referrer_policy",
@@ -722,10 +722,10 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper_server::Error::ReferrerPolicyNotAllowed"
+            "polyspec_hyper::Error::ReferrerPolicyNotAllowed"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::reply::referrer_policy"
+          "core": "polyspec_hyper::reply::referrer_policy"
         },
         {
           "id": "rules.session_name",
@@ -747,7 +747,7 @@
           "returns": "text",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::cookies::session_name"
+          "core": "polyspec_hyper::cookies::session_name"
         },
         {
           "id": "rules.keep_name",
@@ -769,7 +769,7 @@
           "returns": "text",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::cookies::keep_name"
+          "core": "polyspec_hyper::cookies::keep_name"
         },
         {
           "id": "rules.session_cookie",
@@ -801,7 +801,7 @@
             "polyspec_http_cookie::Error::TooLarge"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::cookies::session_cookie"
+          "core": "polyspec_hyper::cookies::session_cookie"
         },
         {
           "id": "rules.page_tag",
@@ -838,7 +838,7 @@
           "returns": "text",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::etag::page_tag"
+          "core": "polyspec_hyper::etag::page_tag"
         },
         {
           "id": "rules.representation_tag",
@@ -868,7 +868,7 @@
           "returns": "text",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::etag::representation_tag"
+          "core": "polyspec_hyper::etag::representation_tag"
         },
         {
           "id": "rules.page_status",
@@ -889,10 +889,10 @@
           ],
           "returns": "uint",
           "raises": [
-            "polyspec_hyper_server::Error::PageStatusNotAllowed"
+            "polyspec_hyper::Error::PageStatusNotAllowed"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::location::page_status"
+          "core": "polyspec_hyper::location::page_status"
         },
         {
           "id": "rules.reply_status",
@@ -913,11 +913,11 @@
           ],
           "returns": "uint",
           "raises": [
-            "polyspec_hyper_server::Error::IntegerRange",
-            "polyspec_hyper_server::Error::ReplyStatusNotAllowed"
+            "polyspec_hyper::Error::IntegerRange",
+            "polyspec_hyper::Error::ReplyStatusNotAllowed"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::reply::status"
+          "core": "polyspec_hyper::reply::status"
         },
         {
           "id": "rules.page_vary",
@@ -940,7 +940,7 @@
           "returns": "text",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::media::page_vary"
+          "core": "polyspec_hyper::media::page_vary"
         },
         {
           "id": "rules.context_hash",
@@ -969,7 +969,7 @@
           "returns": "text",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::context::hash"
+          "core": "polyspec_hyper::context::hash"
         },
         {
           "id": "rules.current_path",
@@ -996,7 +996,7 @@
           "optional_reason": "HY-11.4",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::page::current_path"
+          "core": "polyspec_hyper::page::current_path"
         },
         {
           "id": "rules.check_shell_path",
@@ -1018,10 +1018,10 @@
           ],
           "returns": "none",
           "raises": [
-            "polyspec_hyper_server::Error::InvalidApplication"
+            "polyspec_hyper::Error::InvalidApplication"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::client::check_shell_path"
+          "core": "polyspec_hyper::client_rendering::check_shell_path"
         },
         {
           "id": "rules.shell_text",
@@ -1049,10 +1049,10 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper_server::Error::InvalidApplication"
+            "polyspec_hyper::Error::InvalidApplication"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::client::shell_text"
+          "core": "polyspec_hyper::client_rendering::shell_text"
         },
         {
           "id": "rules.valid_context_header",
@@ -1077,7 +1077,7 @@
           "returns": "bool",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::context::valid_header"
+          "core": "polyspec_hyper::context::valid_header"
         }
       ]
     },
@@ -1124,13 +1124,15 @@
                       ],
                       "returns": {
                         "passthrough": "Response"
-                      }
+                      },
+                      "async_allowed": true
                     }
                   }
                 ],
                 "returns": {
                   "passthrough": "Response"
-                }
+                },
+                "async_allowed": true
               }
             }
           },
@@ -1161,7 +1163,8 @@
                     "optional": "text"
                   }
                 ],
-                "returns": "none"
+                "returns": "none",
+                "async_allowed": false
               }
             }
           },
@@ -1491,7 +1494,7 @@
       "kind": "record",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::PagesOptions",
+      "core_type": "polyspec_hyper::steps::PagesOptions",
       "fields": [
         {
           "name": [
@@ -1557,7 +1560,7 @@
       "kind": "class",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::Pages",
+      "core_type": "polyspec_hyper::steps::Pages",
       "constructible": true,
       "final": true,
       "members": [
@@ -1604,11 +1607,11 @@
           ],
           "returns": "self",
           "raises": [
-            "polyspec_hyper_server::Error::InvalidApplication"
+            "polyspec_hyper::Error::InvalidApplication"
           ],
           "wait": "none",
           "core": {
-            "path": "polyspec_hyper_server::steps::Pages::open"
+            "path": "polyspec_hyper::steps::Pages::open"
           }
         },
         {
@@ -1641,7 +1644,8 @@
                       "library": "template"
                     }
                   ],
-                  "returns": "template_value"
+                  "returns": "template_value",
+                  "async_allowed": false
                 }
               },
               "required": true
@@ -1649,12 +1653,12 @@
           ],
           "returns": "none",
           "raises": [
-            "polyspec_hyper_server::Error::InvalidApplication",
-            "polyspec_hyper_server::Error::Internal"
+            "polyspec_hyper::Error::InvalidApplication",
+            "polyspec_hyper::Error::Internal"
           ],
           "wait": "none",
           "core": {
-            "path": "polyspec_hyper_server::steps::Pages::register",
+            "path": "polyspec_hyper::steps::Pages::register",
             "receiver": "&mut self"
           }
         }
@@ -1670,7 +1674,7 @@
       "kind": "enum",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::PageKind",
+      "core_type": "polyspec_hyper::steps::PageKind",
       "variants": [
         {
           "name": [
@@ -1704,7 +1708,7 @@
       "kind": "record",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::PageInput",
+      "core_type": "polyspec_hyper::steps::PageInput",
       "fields": [
         {
           "name": [
@@ -1809,7 +1813,7 @@
       "kind": "variant",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::Call",
+      "core_type": "polyspec_hyper::steps::Call",
       "tag": [
         "call"
       ],
@@ -1870,7 +1874,7 @@
       "kind": "variant",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::ActionOutcome",
+      "core_type": "polyspec_hyper::steps::ActionOutcome",
       "tag": [
         "outcome"
       ],
@@ -1917,7 +1921,7 @@
       "kind": "variant",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::Input",
+      "core_type": "polyspec_hyper::steps::Input",
       "tag": [
         "input"
       ],
@@ -2025,7 +2029,7 @@
       "kind": "variant",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::Answer",
+      "core_type": "polyspec_hyper::steps::Answer",
       "tag": [
         "answer"
       ],
@@ -2083,7 +2087,7 @@
       "kind": "variant",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::Step",
+      "core_type": "polyspec_hyper::steps::Step",
       "tag": [
         "step"
       ],
@@ -2128,7 +2132,7 @@
       "kind": "class",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::steps::PageRequest",
+      "core_type": "polyspec_hyper::steps::PageRequest",
       "constructible": true,
       "final": true,
       "members": [
@@ -2161,11 +2165,11 @@
           ],
           "returns": "self",
           "raises": [
-            "polyspec_hyper_server::Error::Internal"
+            "polyspec_hyper::Error::Internal"
           ],
           "wait": "none",
           "core": {
-            "path": "polyspec_hyper_server::steps::PageRequest::new"
+            "path": "polyspec_hyper::steps::PageRequest::new"
           }
         },
         {
@@ -2190,14 +2194,14 @@
             "unit": "step"
           },
           "raises": [
-            "polyspec_hyper_server::Error::Internal",
-            "polyspec_hyper_server::Error::SharedHoldsContext",
-            "polyspec_hyper_server::Error::DataModel",
-            "polyspec_hyper_server::Error::Template"
+            "polyspec_hyper::Error::Internal",
+            "polyspec_hyper::Error::SharedHoldsContext",
+            "polyspec_hyper::Error::DataModel",
+            "polyspec_hyper::Error::Template"
           ],
           "wait": "none",
           "core": {
-            "path": "polyspec_hyper_server::steps::PageRequest::next",
+            "path": "polyspec_hyper::steps::PageRequest::next",
             "receiver": "&mut self"
           }
         }
@@ -2212,7 +2216,7 @@
       "kind": "record",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::front::Front",
+      "core_type": "polyspec_hyper::front::Front",
       "fields": [
         {
           "name": [
@@ -2291,7 +2295,7 @@
       "kind": "record",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::front::Plain",
+      "core_type": "polyspec_hyper::front::Plain",
       "fields": [
         {
           "name": [
@@ -2338,7 +2342,7 @@
       "kind": "variant",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::front::Route",
+      "core_type": "polyspec_hyper::front::Route",
       "tag": [
         "route"
       ],
@@ -2461,7 +2465,7 @@
       "kind": "record",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::front::PageResponse",
+      "core_type": "polyspec_hyper::front::PageResponse",
       "fields": [
         {
           "name": [
@@ -2552,7 +2556,7 @@
       "kind": "record",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::front::PageHeaders",
+      "core_type": "polyspec_hyper::front::PageHeaders",
       "fields": [
         {
           "name": [
@@ -2634,10 +2638,10 @@
             "unit": "route"
           },
           "raises": [
-            "polyspec_hyper_server::Error::Internal"
+            "polyspec_hyper::Error::Internal"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::front::route_request"
+          "core": "polyspec_hyper::front::route_request"
         },
         {
           "id": "front_functions.page_headers",
@@ -2663,7 +2667,7 @@
           },
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::front::page_headers"
+          "core": "polyspec_hyper::front::page_headers"
         },
         {
           "id": "front_functions.frame_headers",
@@ -2700,7 +2704,7 @@
           },
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::front::frame_headers"
+          "core": "polyspec_hyper::front::frame_headers"
         },
         {
           "id": "front_functions.kept_value",
@@ -2748,7 +2752,7 @@
           "optional_reason": "HY-40.1",
           "raises": [],
           "wait": "none",
-          "core": "polyspec_hyper_server::front::kept_value"
+          "core": "polyspec_hyper::front::kept_value"
         }
       ]
     },
@@ -2761,7 +2765,7 @@
       "kind": "record",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::opening::Opening",
+      "core_type": "polyspec_hyper::opening::Opening",
       "fields": [
         {
           "name": [
@@ -2892,7 +2896,7 @@
       "kind": "variant",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::opening::Opened",
+      "core_type": "polyspec_hyper::opening::Opened",
       "tag": [
         "opened"
       ],
@@ -2953,7 +2957,7 @@
       "kind": "record",
       "visibility": "internal",
       "origin": "generated",
-      "core_type": "polyspec_hyper_server::opening::KeepRequest",
+      "core_type": "polyspec_hyper::opening::KeepRequest",
       "fields": [
         {
           "name": [
@@ -3044,15 +3048,15 @@
             "unit": "opened"
           },
           "raises": [
-            "polyspec_hyper_server::Error::InvalidSessionToken",
-            "polyspec_hyper_server::Error::InvalidSessionRecord",
-            "polyspec_hyper_server::Error::InvalidCsrfForm",
-            "polyspec_hyper_server::Error::DataModel",
-            "polyspec_hyper_server::Error::Sessions",
-            "polyspec_hyper_server::Error::RecordValue"
+            "polyspec_hyper::Error::InvalidSessionToken",
+            "polyspec_hyper::Error::InvalidSessionRecord",
+            "polyspec_hyper::Error::InvalidCsrfForm",
+            "polyspec_hyper::Error::DataModel",
+            "polyspec_hyper::Error::Sessions",
+            "polyspec_hyper::Error::RecordValue"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::opening::open_page"
+          "core": "polyspec_hyper::opening::open_page"
         },
         {
           "id": "opening_functions.keep_request",
@@ -3096,15 +3100,15 @@
             "unit": "plain"
           },
           "raises": [
-            "polyspec_hyper_server::Error::InvalidSessionToken",
-            "polyspec_hyper_server::Error::InvalidSessionRecord",
-            "polyspec_hyper_server::Error::InvalidCsrfForm",
-            "polyspec_hyper_server::Error::DataModel",
-            "polyspec_hyper_server::Error::Sessions",
-            "polyspec_hyper_server::Error::RecordValue"
+            "polyspec_hyper::Error::InvalidSessionToken",
+            "polyspec_hyper::Error::InvalidSessionRecord",
+            "polyspec_hyper::Error::InvalidCsrfForm",
+            "polyspec_hyper::Error::DataModel",
+            "polyspec_hyper::Error::Sessions",
+            "polyspec_hyper::Error::RecordValue"
           ],
           "wait": "none",
-          "core": "polyspec_hyper_server::opening::keep_request"
+          "core": "polyspec_hyper::opening::keep_request"
         }
       ]
     },
@@ -3134,7 +3138,7 @@
           "raises": [],
           "wait": "none",
           "core": {
-            "path": "polyspec_hyper_server::Error::offset",
+            "path": "polyspec_hyper::Error::offset",
             "receiver": "&self"
           }
         }
@@ -3145,13 +3149,26 @@
     {
       "id": "package",
       "rule": "P-1",
-      "reason": "P-1: a repository with components names each package <repository>-<component> and adds one level to its namespace and module path, so the server is Composer polyspec/hyper-server with PHP Polyspec\\Hyper\\Server, PyPI polyspec-hyper-server with Python polyspec.hyper.server, and npm @polyspec/hyper-server",
-      "symbol": "Polyspec\\Hyper, polyspec.hyper",
+      "reason": "P-1: the main spec package of a repository has the name of the repository and other components add their name, so the server library is Composer polyspec/hyper, PyPI polyspec-hyper and npm @polyspec/hyper, whose namespace and module stay Polyspec\\Hyper and polyspec.hyper; server is the role of the specification, not a package name. Before 0.0.7 @polyspec/hyper was the browser package, which is @polyspec/hyper-client",
+      "symbol": "polyspec/hyper, polyspec-hyper, @polyspec/hyper",
       "from": {
-        "php": "namespace Polyspec\\Hyper",
-        "python": "import polyspec.hyper"
+        "php": "composer require polyspec/hyper-server",
+        "python": "pip install polyspec-hyper-server",
+        "node": "npm install @polyspec/hyper-server"
       },
       "to": "app"
+    },
+    {
+      "id": "native",
+      "rule": "L-2a",
+      "reason": "L-2a, H-1b: a host package without a component has its native module in packages/<lang>/native/: the PHP extension polyspec_hyper of the Composer package polyspec/hyper-native, which polyspec/hyper requires as ext-polyspec_hyper, the Python module polyspec.hyper._binding._native and the Node addon hyper.<target>.node of the crate polyspec-hyper-node, over the core crate polyspec-hyper with the library polyspec_hyper",
+      "symbol": "polyspec/hyper-native, polyspec.hyper._binding._native, hyper.<target>.node",
+      "from": {
+        "php": "extension polyspec_hyper_server of crate polyspec-hyper-server-php-ext",
+        "python": "module polyspec.hyper.server._native of crate polyspec-hyper-server-python",
+        "node": "addon of crate polyspec-hyper-server-node"
+      },
+      "to": null
     },
     {
       "id": "open-error",

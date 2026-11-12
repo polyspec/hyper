@@ -2,15 +2,15 @@
 //! response, the session cookie, the tags, the answers of the ORM and the order of a request.
 
 use binding_core::Kinds;
-use polyspec_hyper_server::media::{
+use polyspec_hyper::media::{
     content_type, listing, page_vary, representation_vary, select, Selected, Selection, Served,
 };
-use polyspec_hyper_server::orm::{answer, Escape, OrmAnswer};
-use polyspec_hyper_server::pipeline::{opens_session, Step, ORDER};
-use polyspec_hyper_server::representation::{
+use polyspec_hyper::orm::{answer, Escape, OrmAnswer};
+use polyspec_hyper::pipeline::{opens_session, Step, ORDER};
+use polyspec_hyper::representation::{
     allow, answers, body_check, entries, entry, response, BodyCheck, Entry,
 };
-use polyspec_hyper_server::{cookies, etag, Error};
+use polyspec_hyper::{cookies, etag, Error};
 
 fn post_entry() -> Result<Entry, Error> {
     entry(
@@ -401,7 +401,7 @@ fn integers_of_the_data_model_are_php_integers_in_a_record() -> Result<(), Error
         (2.0_f64.powi(53), Node::Float(2.0_f64.powi(53))),
         (5e-324, Node::Float(5e-324)),
     ] {
-        let record = polyspec_hyper_server::session::to_record(&Value::Number(number))?;
+        let record = polyspec_hyper::session::to_record(&Value::Number(number))?;
         assert_eq!(record.root(), &expected, "{number}");
     }
     Ok(())
@@ -410,7 +410,7 @@ fn integers_of_the_data_model_are_php_integers_in_a_record() -> Result<(), Error
 #[test]
 fn the_kept_cookie_gives_each_value_of_the_data_model() {
     // HY-38.2, HY-38.10, HY-38.11: a value outside the data model is ignored, the others of the cookie count.
-    use polyspec_hyper_server::keep::cookie_values;
+    use polyspec_hyper::keep::cookie_values;
     let values =
         cookie_values(r#"{"reader":{"large":true,"big":9007199254740992,"zoom":2.5},"left":3}"#);
     assert_eq!(values.len(), 1);
@@ -426,7 +426,7 @@ fn the_kept_cookie_gives_each_value_of_the_data_model() {
 #[test]
 fn the_context_header_and_member() -> Result<(), Error> {
     // HY-127.2, HY-128.2
-    use polyspec_hyper_server::context::{hash, member, text, valid_header};
+    use polyspec_hyper::context::{hash, member, text, valid_header};
     use polyspec_template::{OrderedMap, Value};
     let held = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
     assert!(valid_header(None));
@@ -448,8 +448,8 @@ fn the_context_header_and_member() -> Result<(), Error> {
     Ok(())
 }
 
-fn page_manifest() -> Result<polyspec_hyper_server::manifest::Manifest, Error> {
-    polyspec_hyper_server::manifest::read(
+fn page_manifest() -> Result<polyspec_hyper::manifest::Manifest, Error> {
+    polyspec_hyper::manifest::read(
         br#"{"layout":"layout.tpl","title":"title.tpl","regions":[
             {"name":"left","template":"left.tpl","uses":["posts"]},
             {"name":"content","page":true},
@@ -462,14 +462,14 @@ fn page_manifest() -> Result<polyspec_hyper_server::manifest::Manifest, Error> {
 }
 
 fn data(json: &str) -> polyspec_template::Value {
-    match polyspec_hyper_server::json::read(json.as_bytes()) {
+    match polyspec_hyper::json::read(json.as_bytes()) {
         Ok(value) => value,
         Err(error) => panic!("{json}: {error:?}"),
     }
 }
 
 fn written(value: &polyspec_template::OrderedMap) -> String {
-    match polyspec_hyper_server::json::write(&polyspec_template::Value::Map(std::sync::Arc::new(
+    match polyspec_hyper::json::write(&polyspec_template::Value::Map(std::sync::Arc::new(
         value.clone(),
     ))) {
         Ok(text) => text,
@@ -480,7 +480,7 @@ fn written(value: &polyspec_template::OrderedMap) -> String {
 #[test]
 fn the_shared_data_and_the_changed_topics() -> Result<(), Error> {
     // HY-10.2, HY-124.8, HY-19.1, HY-11.3
-    use polyspec_hyper_server::page::{changed_topics, shared_data};
+    use polyspec_hyper::page::{changed_topics, shared_data};
     let mut returned = polyspec_template::OrderedMap::new();
     returned.insert("site".to_owned(), polyspec_template::Value::text("Board"));
     returned.insert("title".to_owned(), polyspec_template::Value::text("Mine"));
@@ -518,9 +518,9 @@ fn the_shared_data_and_the_changed_topics() -> Result<(), Error> {
 #[test]
 fn the_regions_of_a_response() -> Result<(), Error> {
     // HY-18.1, HY-18.2
-    use polyspec_hyper_server::page::regions;
+    use polyspec_hyper::page::regions;
     let manifest = page_manifest()?;
-    let names = |selected: Vec<&polyspec_hyper_server::manifest::Region>| -> Vec<String> {
+    let names = |selected: Vec<&polyspec_hyper::manifest::Region>| -> Vec<String> {
         selected.iter().map(|region| region.name.clone()).collect()
     };
     assert_eq!(
@@ -542,7 +542,7 @@ fn the_regions_of_a_response() -> Result<(), Error> {
 #[test]
 fn the_kept_values_the_json_value_and_the_embedded_data() -> Result<(), Error> {
     // HY-38.8, HY-17.1, HY-128.1, HY-31.2, HY-31.3
-    use polyspec_hyper_server::page::{embedded_data, embeds, json_value, kept_values, Response};
+    use polyspec_hyper::page::{embedded_data, embeds, json_value, kept_values, Response};
     let manifest = page_manifest()?;
     let regions = vec![
         ("content".to_owned(), data(r#"{"post":{"id":7}}"#)),
@@ -555,7 +555,7 @@ fn the_kept_values_the_json_value_and_the_embedded_data() -> Result<(), Error> {
     let mut stored = polyspec_template::OrderedMap::new();
     stored.insert("large".to_owned(), polyspec_template::Value::Bool(true));
     let server = vec![("reader".to_owned(), stored)];
-    let cookie = polyspec_hyper_server::keep::cookie_values(
+    let cookie = polyspec_hyper::keep::cookie_values(
         r#"{"reader":{"sort":"title","open":true},"comments":{"page":"x"}}"#,
     );
     let kept = kept_values(&manifest, &regions, &server, &cookie);
@@ -569,7 +569,7 @@ fn the_kept_values_the_json_value_and_the_embedded_data() -> Result<(), Error> {
         params: &[("id".to_owned(), "7".to_owned())],
         build: "b",
         context: None,
-        shared: polyspec_hyper_server::page::shared_data("Post", "t", None)?,
+        shared: polyspec_hyper::page::shared_data("Post", "t", None)?,
         regions: regions.clone(),
         kept,
     });
@@ -599,7 +599,7 @@ fn the_kept_values_the_json_value_and_the_embedded_data() -> Result<(), Error> {
 #[test]
 fn a_chosen_request_outside_the_data_base_path() -> Result<(), Error> {
     // HY-62.20, HY-62.22, HY-62.23, HY-62.34
-    use polyspec_hyper_server::client::{refuses_page, shell_answer, ShellAnswer};
+    use polyspec_hyper::client_rendering::{refuses_page, shell_answer, ShellAnswer};
     let manifest = page_manifest()?;
     let accept = |value: &str| vec![value.as_bytes().to_vec()];
     assert_eq!(

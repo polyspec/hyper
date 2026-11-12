@@ -4,7 +4,7 @@
 //! gives its `chosen` to `route_request`; the host opens the session only for a request that this module sends to a
 //! page or to the kept endpoint (HY-120.1).
 
-use crate::client::{refuses_page, shell_answer, ShellAnswer};
+use crate::client_rendering::{refuses_page, shell_answer, ShellAnswer};
 use crate::context::valid_header;
 use crate::media::{listing, select, Selected, Selection, Served};
 use crate::page::strip_base_path;
