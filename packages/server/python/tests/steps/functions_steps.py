@@ -33,7 +33,11 @@ def cases(case) -> None:
     # holds only its own result.
     with contextlib.redirect_stderr(io.StringIO()):
         response = app.handle(
-            Request(request["method"], Request.target_path(request["target"]), dict(request["headers"])),
+            Request(
+                request["method"],
+                Request.target_path(request["target"]),
+                dict(request["headers"]),
+            ),
             store,
         )
     case.compare("status", response.status)

@@ -554,6 +554,30 @@ test('response-hook-error-is-the-plain-500 (HY-60.13 to HY-60.17, HY-99.2, HY-99
   });
 });
 
+test('handler-error-is-the-plain-500-and-is-reported (HY-43.1, HY-43.2, HY-43.4, HY-43.5, HY-60.2, HY-60.8, HY-60.11, HY-65.1, HY-99.2)', SCENARIO, async (t) => {
+  const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_LOAD: 'throws' } });
+  await eachHost(t, hosts, async (host, check) => {
+    // The error is handled (HY-43): the response hook receives the 500 with the message and the notes of the reply, and
+    // the write hook receives no failure, which is the message of an escaped error only (HY-99.2).
+    check.response('GET /', await ask(host, requestBytes('GET', '/')), { ...PLAIN_500, absent: [], cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); path=/; HttpOnly; SameSite=Lax$`) });
+    check.log('GET /', HOOKS, ['load shared mark=-', 'load home mark=-', responseLine(500, 'GET /', '-', '"handler boom"'), writtenLine(500, true, 'GET /')]);
+    check.errors('GET /', 'handler boom');
+  });
+});
+
+test('session-open-error-is-the-plain-500 (HY-60.14 to HY-60.17, HY-99.2, HY-99.5, HY-100.2)', SCENARIO, async (t) => {
+  // The session store of each server fails to open: the store of App.server in Node, the store of create_server in
+  // Python and the session save handler of PHP, which `App::run` starts.
+  const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_SESSIONS_OPEN: 'throws' } });
+  await eachHost(t, hosts, async (host, check) => {
+    check.response('GET /', await ask(host, requestBytes('GET', '/')), PLAIN_500);
+    // The error escapes before a handler runs: no loader runs, the response hook receives no response, and the write
+    // hook receives the plain 500 once with the failure (HY-60.16, HY-60.17, HY-99.5).
+    check.log('GET /', HOOKS, [writtenLine(500, true, 'GET /', '"the session directory is gone"')]);
+    check.errors('GET /', 'the session directory is gone');
+  });
+});
+
 test('escaped-500-keeps-the-headers-of-the-caller (HY-60.24 to HY-60.27, HY-99.2)', SCENARIO, async (t) => {
   // The `http.server` server of Python has no caller before hyper, so it is not run.
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_HOOK: 'throws', UPLOAD_BEFORE: '1' }, servers: ['php', 'node'] });

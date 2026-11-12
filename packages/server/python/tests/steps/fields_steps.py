@@ -8,6 +8,7 @@ import tempfile
 from polyspec.hyper._files import Files
 from polyspec.hyper._multipart import Multipart
 from polyspec.hyper._request_body import RequestBody
+from polyspec.hyper.uploaded_file import UploadedFile
 
 
 def urlencoded(case) -> None:
@@ -151,6 +152,27 @@ def streamed(case) -> None:
     finally:
         read.remove()
         shutil.rmtree(scratch)
+
+
+def uploaded(case) -> None:
+    """Makes a file with the public constructor, its content being the bytes of the characters of `content`, and
+    compares its four parts and its size (HY-113.3)."""
+    made = UploadedFile(
+        _text(case, "name"),
+        _text(case, "filename"),
+        _text(case, "contentType"),
+        _text(case, "content").encode("latin-1"),
+    )
+    case.compare(
+        "file",
+        {
+            "name": made.name(),
+            "filename": made.filename(),
+            "contentType": made.content_type(),
+            "size": made.size(),
+            "content": made.content().decode("latin-1"),
+        },
+    )
 
 
 def _failure(work):

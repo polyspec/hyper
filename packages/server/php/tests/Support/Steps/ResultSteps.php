@@ -10,6 +10,8 @@ use Polyspec\Hyper\NotFound;
 use Polyspec\Hyper\Redirect;
 use Polyspec\Hyper\Result;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseInput;
+use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Plain;
 
 /** HY-25, HY-27, HY-46, HY-50, HY-58: the cases of contracts/result.json, the results of actions and the stops. */
@@ -23,7 +25,7 @@ final class ResultSteps
         try {
             // `notUtf8` appends the byte FF, which is not UTF-8 text.
             $notUtf8 = $case->has('notUtf8') && $case->input('notUtf8') === true;
-            $result = Result::redirect(self::text($case, 'location') . ($notUtf8 ? "\xFF" : ''));
+            $result = Result::redirect(CaseInput::text($case, 'location') . ($notUtf8 ? "\xFF" : ''));
         } catch (\InvalidArgumentException $failure) {
             $error = $failure->getMessage();
         }
@@ -38,13 +40,16 @@ final class ResultSteps
         $result = null;
         $error = null;
         try {
-            $result = Result::page(self::integer($case, 'status'), self::data($case, 'data'));
+            $result = Result::page(CaseInput::integer($case, 'status'), self::data($case, 'data'));
         } catch (\InvalidArgumentException $failure) {
             $error = $failure->getMessage();
         }
         $case->compare('result', $result?->status);
         $case->compare('redirect', $result?->location);
         $case->compare('error', $error);
+        if ($case->has('held') && $result !== null) {
+            $case->compare('held', Plain::map($result->data));
+        }
     }
 
     /** Makes the invalid result with the data (HY-26). */
@@ -70,7 +75,7 @@ final class ResultSteps
                 throw new \UnexpectedValueException('a flash of the case is not a name and a JSON text');
             }
             // The JSON text gives the value as a handler returns it, with arrays for maps (HY-44).
-            $flashes[] = [$pair[0], json_decode($pair[1], true, 512, JSON_THROW_ON_ERROR)];
+            $flashes[] = [$pair[0], Json::value($pair[1])];
         }
         $topics = [];
         foreach (self::list($case, 'topics') as $names) {
@@ -103,8 +108,8 @@ final class ResultSteps
      */
     public static function types(CaseReader $case): void
     {
-        $call = self::text($case, 'call');
-        $argument = json_decode(self::text($case, 'argument'), true, 512, JSON_THROW_ON_ERROR);
+        $call = CaseInput::text($case, 'call');
+        $argument = Json::value(CaseInput::text($case, 'argument'));
         $result = Result::redirect('/');
         $error = null;
         try {
@@ -126,7 +131,7 @@ final class ResultSteps
     {
         $stop = null;
         $error = null;
-        $kind = self::text($case, 'kind');
+        $kind = CaseInput::text($case, 'kind');
         try {
             $stop = match ($kind) {
                 'NotFound' => new NotFound(),
@@ -134,8 +139,8 @@ final class ResultSteps
                 'BadRequest' => new BadRequest(),
                 'Redirect' => new Redirect(
                     $case->has('redirect')
-                        ? Result::redirect(self::text($case, 'redirect'))
-                        : Result::page(self::integer($case, 'page'), []),
+                        ? Result::redirect(CaseInput::text($case, 'redirect'))
+                        : Result::page(CaseInput::integer($case, 'page'), []),
                 ),
                 default => throw new \UnexpectedValueException("the stop {$kind} of the case is unknown"),
             };
@@ -144,24 +149,9 @@ final class ResultSteps
         }
         $case->compare('message', $stop?->getMessage());
         $case->compare('error', $error);
-    }
-
-    private static function text(CaseReader $case, string $name): string
-    {
-        $value = $case->input($name);
-
-        return is_string($value)
-            ? $value
-            : throw new \UnexpectedValueException("the case field {$name} is not a string");
-    }
-
-    private static function integer(CaseReader $case, string $name): int
-    {
-        $value = $case->input($name);
-
-        return is_int($value)
-            ? $value
-            : throw new \UnexpectedValueException("the case field {$name} is not an integer");
+        if ($case->has('location') && $stop instanceof Redirect) {
+            $case->compare('location', $stop->result->location);
+        }
     }
 
     /** @return list<mixed> */

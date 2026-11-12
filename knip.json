@@ -3,13 +3,16 @@
 //   - the tests, the scripts and the benchmarks, which node, vitest and make start;
 //   - examples/board/client/main.ts, the browser script of the board example, which make assets bundles with
 //     hyper-build-assets --app examples/board;
+//   - examples/board/public/assets/reader.js and after-reader.js, the module scripts that the layout of the board example
+//     names on the post page;
 //   - examples/board/node/main.ts, the board Node server, which make node-server bundles with esbuild;
 //   - tests/e2e/playwright.config.ts, the Playwright configuration that scripts/run-e2e.mts passes to playwright test --config;
 //   - tests/scripts/fixtures/chunks/client/main.ts, the fixture app of the chunk tests of hyper-build-assets;
 //   - tests/scripts/fixtures/session-worker/worker.mjs, one Node server process of tests/scripts/session-shared.test.mts.
 //   - tests/scripts/fixtures/multipart-worker/worker.mjs, one Node server process of
 //     tests/scripts/multipart-compare.test.mts;
-//   - tests/scripts/fixtures/upload-server/server.mjs, the Node server of tests/scripts/upload-servers.test.mts.
+//   - tests/scripts/fixtures/upload-server/server.mjs, the Node server of tests/scripts/upload-servers.test.mts;
+//   - tests/scripts/fixtures/recipe/**/*.ts, the fixture tree of the recipe check, which the readers of scripts/recipe read.
 // The binaries are the programs that the scripts start from PATH: container (Apple container, make virtiofs-check on Darwin),
 // make (the dry runs of the recipe tests), openssl (the TLS certificates of session-redis-failover.test.mts), php
 // (scripts/check-parity.mts asks it whether the polyspec_template extension loads) and php-fpm (benchmarks/uploads.mts).
@@ -25,12 +28,15 @@
       "scripts/**/*.{ts,mts,cts,mjs,cjs,js}",
       "benchmarks/**/*.{ts,mts,cts,mjs,cjs,js}",
       "examples/board/client/main.ts",
+      "examples/board/public/assets/reader.js",
+      "examples/board/public/assets/after-reader.js",
       "examples/board/node/main.ts",
       "tests/e2e/playwright.config.ts",
       "tests/scripts/fixtures/chunks/client/main.ts",
       "tests/scripts/fixtures/session-worker/worker.mjs",
       "tests/scripts/fixtures/multipart-worker/worker.mjs",
-      "tests/scripts/fixtures/upload-server/server.mjs"
+      "tests/scripts/fixtures/upload-server/server.mjs",
+      "tests/scripts/fixtures/recipe/**/*.ts"
     ]
   },
   "ignoreBinaries": ["container", "make", "openssl", "php", "php-fpm"],

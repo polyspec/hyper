@@ -14,8 +14,23 @@ const repo = path.resolve(here, '..', '..');
 const fixture = path.join(here, 'fixtures', 'spec-docs');
 const script = path.join(repo, 'scripts', 'spec-docs.mts');
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Json = any;
+/** Sets the value at a path of the contract. */
+type Edit = (at: (string | number)[], value: unknown) => void;
+
+/** Sets the value at a path of a parsed JSON document; a step that is missing fails the test. */
+function setAt(root: unknown, at: (string | number)[], value: unknown): void {
+  const last = at.at(-1);
+  if (last === undefined) throw new Error('the path of a value names no step');
+  let node: unknown = root;
+  for (const step of at.slice(0, -1)) {
+    const next: unknown = typeof step === 'number' ? (Array.isArray(node) ? node[step] : undefined) : typeof node === 'object' && node !== null && !Array.isArray(node) ? Reflect.get(node, step) : undefined;
+    if (next === undefined) throw new Error(`the contract has no ${at.join('/')}`);
+    node = next;
+  }
+  const holds = typeof last === 'number' ? Array.isArray(node) : typeof node === 'object' && node !== null && !Array.isArray(node);
+  if (!holds || typeof node !== 'object' || node === null) throw new Error(`the contract has no ${at.join('/')}`);
+  Reflect.set(node, last, value);
+}
 
 const roots: string[] = [];
 after(() => {
@@ -23,15 +38,15 @@ after(() => {
 });
 
 /** A fresh root with the fixture contract, and the expected documents in docs/spec when `docs` is set. */
-function makeRoot(options: { docs?: boolean; contract?: (j: Json) => void } = {}): string {
+function makeRoot(options: { docs?: boolean; contract?: (edit: Edit) => void } = {}): string {
   const root = mkdtempSync(path.join(tmpdir(), 'spec-docs-'));
   roots.push(root);
   mkdirSync(path.join(root, 'contracts'));
   cpSync(path.join(fixture, 'contracts', 'protocol.json'), path.join(root, 'contracts', 'protocol.json'));
   if (options.contract) {
     const file = path.join(root, 'contracts', 'protocol.json');
-    const json = JSON.parse(readFileSync(file, 'utf8')) as Json;
-    options.contract(json);
+    const json: unknown = JSON.parse(readFileSync(file, 'utf8'));
+    options.contract((at, value) => { setAt(json, at, value); });
     writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
   }
   if (options.docs) {
@@ -98,9 +113,7 @@ test('check fails when a document is missing', () => {
 
 test('an unknown block kind fails the schema at its path', () => {
   const root = makeRoot({
-    contract: (j) => {
-      j.sections[2].blocks[0].kind = 'quote';
-    },
+    contract: (edit) => { edit(['sections', 2, 'blocks', 0, 'kind'], 'quote'); },
   });
   assertFails(run('write', root), ['/sections/2/blocks/0/kind']);
 });
@@ -109,73 +122,60 @@ test('a stale koSource names the statement and the sha256 of its en', () => {
   const en = 'A rule states one sentence.';
   const sha = createHash('sha256').update(en, 'utf8').digest('hex');
   const root = makeRoot({
-    contract: (j) => {
-      j.sections[1].blocks[0].blocks[0].statements[0].en = en;
-    },
+    contract: (edit) => { edit(['sections', 1, 'blocks', 0, 'blocks', 0, 'statements', 0, 'en'], en); },
   });
   assertFails(run('check', root), ['HY-1.1', 'koSource is stale', sha]);
 });
 
-test('a duplicate rule id fails', () => {
-  const root = makeRoot({
-    contract: (j) => {
-      j.sections[1].blocks[1].id = 'HY-1';
-    },
+/** A root whose contract names the rule id HY-1 twice. */
+function duplicateRuleRoot(): string {
+  return makeRoot({
+    contract: (edit) => { edit(['sections', 1, 'blocks', 1, 'id'], 'HY-1'); },
   });
+}
+
+test('a duplicate rule id fails', () => {
+  const root = duplicateRuleRoot();
   assertFails(run('write', root), ['duplicate rule id HY-1']);
 });
 
 test('a duplicate statement id fails and leaves a numbering gap', () => {
   const root = makeRoot({
-    contract: (j) => {
-      j.sections[1].blocks[0].blocks[0].statements[1].id = 'HY-1.1';
-    },
+    contract: (edit) => { edit(['sections', 1, 'blocks', 0, 'blocks', 0, 'statements', 1, 'id'], 'HY-1.1'); },
   });
   assertFails(run('write', root), ['duplicate statement id HY-1.1', 'numbering gap in HY-1: 3']);
 });
 
 test('an unused number that is not retired is a numbering gap', () => {
   const root = makeRoot({
-    contract: (j) => {
-      j.sections[1].blocks[0].retired = [];
-    },
+    contract: (edit) => { edit(['sections', 1, 'blocks', 0, 'retired'], []); },
   });
   assertFails(run('write', root), ['numbering gap in HY-1: 2']);
 });
 
 test('a statement number that is also retired fails', () => {
   const root = makeRoot({
-    contract: (j) => {
-      j.sections[1].blocks[0].retired = [1, 2];
-    },
+    contract: (edit) => { edit(['sections', 1, 'blocks', 0, 'retired'], [1, 2]); },
   });
   assertFails(run('write', root), ['statement id HY-1.1 is used and retired']);
 });
 
 test('a rule listed in retiredRules fails', () => {
   const root = makeRoot({
-    contract: (j) => {
-      j.retiredRules = ['HY-2'];
-    },
+    contract: (edit) => { edit(['retiredRules'], ['HY-2']); },
   });
   assertFails(run('write', root), ['HY-2 is a rule and in retiredRules']);
 });
 
 test('an English statement of two sentences fails', () => {
   const root = makeRoot({
-    contract: (j) => {
-      j.sections[1].blocks[1].blocks[0].statements[0].en = 'The second rule has one statement. It has two.';
-    },
+    contract: (edit) => { edit(['sections', 1, 'blocks', 1, 'blocks', 0, 'statements', 0, 'en'], 'The second rule has one statement. It has two.'); },
   });
   assertFails(run('write', root), ['HY-2.1 is 2 sentences']);
 });
 
 test('write leaves the documents untouched when the contract is broken', () => {
-  const root = makeRoot({
-    contract: (j) => {
-      j.sections[1].blocks[1].id = 'HY-1';
-    },
-  });
+  const root = duplicateRuleRoot();
   assertFails(run('write', root), ['duplicate rule id HY-1']);
   assert.equal(existsSync(path.join(root, 'docs', 'spec', 'protocol.md')), false);
 });

@@ -2,20 +2,23 @@
 // before it in one session, and the opens that fail. The handlers of an application are lists of steps of a closed
 // vocabulary, which the three servers build the same way.
 import { createHash } from 'node:crypto';
-import { cpSync, mkdtempSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkManifest, createApplication, decodeResponse, renderDocument, renderParts, type TemplateIndex } from '@polyspec/hyper-client';
+import { decodeTemplate } from '@polyspec/template/render';
 import type { ContextHandler } from '../../src/context.js';
 import { Csrf } from '../../src/csrf.js';
 import { App, ArraySession, BadRequest, Forbidden, NotFound, Redirect, Result, type Action, type AppOptions, type Container, type Handlers, type Loader, type Reply, type Request, type Response, type RouteHandlers } from '../../src/index.js';
-import { requestOf } from '../../src/http-host.js';
-import { JsonCodec } from '../../src/json-codec.js';
 import { Session } from '../../src/session.js';
+import { toValue } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
-import { bytesOf, OrmError } from '../support.js';
-import { hostValue } from './host-value.js';
-import { listOf, mapOf, Recorded, RecordingStore, textOf } from './recorded.js';
+import { parsed } from '../case-rules.js';
+import { bytesOf, OrmError, parsedBody, record, requestFrom } from '../support.js';
+import { listOf, mapOf, textOf } from '../inputs.js';
+import { comparesParts } from './parts-cases.js';
+import { comparesOpen, failureOf, Recorded, RecordingStore } from './recorded.js';
 import { call as replyCall } from './reply.js';
 import { callsOf, decoded } from './session-requests.js';
 
@@ -111,6 +114,10 @@ function expression(spec: Map<string, unknown>, argument: Argument): unknown {
       return argument.request.method;
     case 'selection':
       return argument.request.selection();
+    case 'browser':
+      return argument.request.browser();
+    case 'csrfToken':
+      return argument.request.csrfToken();
     case 'service':
       return argument.services.get(serviceName(spec.get('name')))[textOf(spec.get('member'), 'the member of a service')];
     case 'text':
@@ -133,7 +140,7 @@ function expression(spec: Map<string, unknown>, argument: Argument): unknown {
 // order: a JSON object is a Map, and an integer outside ±(2^53 − 1) is a bigint (HY-44).
 function evaluated(value: unknown, argument: Argument): unknown {
   if (Array.isArray(value)) return value.map((item: unknown) => evaluated(item, argument));
-  if (!(value instanceof Map)) return hostValue(value);
+  if (!(value instanceof Map)) return value;
   const map = mapOf(value, 'a data value of a handler');
   if (map.has('$')) return expression(map, argument);
   return new Map([...map].map(([key, item]) => [key, evaluated(item, argument)]));
@@ -351,7 +358,7 @@ function openingOf(reader: CaseReader): Opening & { name: string } {
     // @ts-expect-error -- the context handler of a case returns the decoded text as it is, also a value that is no Map
     const context: ContextHandler = () => {
       run.calls.push('context');
-      return hostValue(JsonCodec.decode(text));
+      return decoded(text);
     };
     options.context = context;
   }
@@ -392,7 +399,7 @@ function unmasked(body: string, token: unknown): string {
 function jsonObject(text: string): Map<string, unknown> | null {
   let value: unknown;
   try {
-    value = JsonCodec.decode(text);
+    value = parsed(text);
   } catch {
     return null;
   }
@@ -416,6 +423,9 @@ class Requests {
   readonly inner = new ArraySession();
   readonly store = new RecordingStore(this.inner);
   private readonly named = new Map<string, Sent>();
+  // The least and the most milliseconds from the start of the last request to its report: from the start to the call
+  // of `handle`, and from the start to its return.
+  elapsed: [number, number] = [0, 0];
   private readonly app: App<Services>;
 
   constructor(app: App<Services>) {
@@ -491,16 +501,22 @@ class Requests {
       if (csrf !== false) throw new Error('the csrf of a request needs a form');
       if (request.has('body')) body = bytesOf(this.text(request.get('body')));
     }
-    const host = requestOf({
+    const host = requestFrom({
       method: textOf(request.get('method'), 'the method of a request'),
       target: this.text(request.get('target')),
       headers,
       ...(body === undefined ? {} : { body }),
       https: request.has('https') && request.get('https') === true,
     });
-    if (!request.has('startedBefore')) return () => this.app.handle(host, this.store);
-    const before = integerOf(request.get('startedBefore'), 'the startedBefore of a request');
-    return () => this.app.handle(host, this.store, performance.now() - before);
+    const before = request.has('startedBefore') ? integerOf(request.get('startedBefore'), 'the startedBefore of a request') : null;
+    return async () => {
+      // The clock of `handle`, read just before its call and just after its return (HY-60.5).
+      const called = performance.now();
+      const start = before === null ? called : called - before;
+      const response = await (before === null ? this.app.handle(host, this.store) : this.app.handle(host, this.store, start));
+      this.elapsed = [called - start, performance.now() - start];
+      return response;
+    };
   }
 
   // Sends the requests of `before` in order, requires the status that an item states, and keeps the response of each
@@ -514,6 +530,18 @@ class Requests {
       if (name !== null) this.named.set(name, { response, token: this.inner.get(TOKEN_KEY) });
     }
   }
+}
+
+// Returns the word of a value that a handler read as `browser()`: `none` for null, `current` for the digest of the
+// token that the session holds after the request, `previous` for the digest of another token that it held when the
+// request was sent, and `other` for every other value.
+function browserWord(value: unknown, after: unknown, before: unknown): string {
+  const digest = (token: unknown): string | null =>
+    typeof token === 'string' && /^[0-9a-f]{64}$/u.test(token) ? createHash('sha256').update(Buffer.from(token, 'hex')).digest('hex') : null;
+  if (value === null) return 'none';
+  if (digest(after) !== null && value === digest(after)) return 'current';
+  if (digest(before) !== null && before !== after && value === digest(before)) return 'previous';
+  return 'other';
 }
 
 // Emits a warning of the runtime outside of every request and returns true when it is delivered and no error is raised
@@ -549,7 +577,7 @@ export const steps = {
     const app = await App.open<Services>({ ...programOf(join(PROGRAMS, opening.name)), ...opening.options });
     bind(app, opening);
     const requests = new Requests(app);
-    for (const [key, value] of reader.has('stored') ? mapOf(reader.input('stored'), 'the case field stored') : []) requests.inner.set(key, hostValue(value));
+    for (const [key, value] of reader.has('stored') ? mapOf(reader.input('stored'), 'the case field stored') : []) requests.inner.set(key, value);
     await requests.before(reader.has('before') ? listOf(reader.input('before'), 'the case field before') : []);
     // The calls, the observations, the reports and the log of the requests before are discarded; the state stays.
     const request = mapOf(reader.input('request'), 'the case field request');
@@ -612,18 +640,24 @@ export const steps = {
     reader.compare('firstCalls', run.calls);
     reader.compare('handlerCalls', run.calls);
     reader.compare('actions', run.calls.filter((name) => name.startsWith('action:')).length);
-    reader.compare('observed', run.observed);
+    // A value that is a masked value of the token that the session holds after the request is written `masked`.
+    reader.compare('observed', run.observed.map(([name, value]): [string, unknown] => [name, typeof value === 'string' && /^[0-9a-f]{128}$/u.test(value) ? unmasked(value, token) : value]));
+    if (reader.has('browsers')) reader.compare('browsers', run.observed.map(([, value]) => browserWord(value, token, tokenBefore)));
     if (reader.has('serviceValues')) {
       const names = opening.application.has('services') ? [...mapOf(opening.application.get('services'), 'the services of the application').keys()] : [];
       reader.compare('serviceValues', Object.fromEntries(names.map((name) => [name, opening.made.get(serviceName(name)) ?? null])));
     }
     recorded.compare(reader, requests.store);
-    if (reader.has('failure')) reader.compare('failure', recorded.last().failure ?? '');
+    if (reader.has('failure')) reader.compare('failure', recorded.last().failure);
     if (reader.has('failureReported')) reader.compare('failureReported', recorded.last().failure !== null);
+    if (reader.has('failureLogged')) {
+      const { failure } = recorded.last();
+      reader.compare('failureLogged', failure !== null && recorded.logged.includes(`hyper: ${failure}`));
+    }
     if (reader.has('elapsedFromStart')) {
       const { elapsed } = recorded.last();
-      const least = request.has('startedBefore') ? integerOf(request.get('startedBefore'), 'the startedBefore of a request') : 0;
-      reader.compare('elapsedFromStart', typeof elapsed === 'number' && elapsed >= least);
+      const [least, most] = requests.elapsed;
+      reader.compare('elapsedFromStart', typeof elapsed === 'number' && elapsed >= least && elapsed <= most);
     }
     // The keys of the session unit, each with the value that the store holds after the request, or null.
     reader.compare('storedAfter', Object.fromEntries([TOKEN_KEY, '_hyper_flash', '_hyper_keep'].map((key) => [key, requests.inner.get(key) ?? null])));
@@ -637,6 +671,39 @@ export const steps = {
     reader.compare('tokenInBody', typeof token === 'string' && body.includes(token));
     reader.compare('session', token !== undefined);
     if (reader.has('restored')) reader.compare('restored', await warnedOutside());
+  },
+
+  // Renders the title and each region of the case alone with the browser code, as the Node server renders (HY-54.3),
+  // and compares them with their places in the document of the same data and in the page region (HY-13).
+  async parts(reader: CaseReader): Promise<void> {
+    const name = textOf(reader.input('application'), 'the case field application');
+    const applications = mapOf(reader.input('applications'), 'the fixture applications');
+    if (!applications.has(name)) throw new Error(`the contract has no application ${name}`);
+    const stated = mapOf(applications.get(name), `the application ${name}`);
+    const program = programOf(join(PROGRAMS, name));
+    const manifest = checkManifest(parsedBody(readFileSync(program.manifest, 'utf8')));
+    const index: TemplateIndex = Object.fromEntries(
+      Object.entries(record(parsedBody(readFileSync(program.templates.index, 'utf8')))).map(([template, entry]) => [template, { url: textOf(record(entry).url, `the url of the template ${template}`) }]),
+    );
+    const application = createApplication(manifest, index, async (url) => Promise.resolve(decodeTemplate(parsedBody(readFileSync(join(program.templates.root, url), 'utf8')))));
+    await application.templates.ensure(Object.keys(index));
+    const routeName = textOf(reader.input('route'), 'the case field route');
+    const route = manifest.routes.find((item) => item.name === routeName);
+    if (route === undefined) throw new Error(`the application ${name} has no route ${routeName}`);
+    if (route.path.includes('{')) throw new Error(`the path of the route ${routeName} has a parameter`);
+    const regions = mapOf(reader.input('regions'), 'the case field regions');
+    const value = toValue(new Map<string, unknown>([
+      ['env', new Map([['timezone', stated.has('timezone') ? textOf(stated.get('timezone'), 'the time zone of the application') : '+09:00']])],
+      ['route', routeName],
+      ['params', new Map()],
+      ['build', textOf(stated.get('build'), 'the build of the application')],
+      ['shared', mapOf(reader.input('shared'), 'the case field shared')],
+      ['regions', regions],
+      ['kept', new Map()],
+    ]));
+    const rendered = renderParts(application, decodeResponse(application, value, route.path));
+    const document = renderDocument(application, decodeResponse(application, value, route.path), { embed: false });
+    comparesParts(reader, rendered, document, manifest, route, regions);
   },
 
   // Opens the application of the case from a copy of its program whose files the case changes, and compares the error
@@ -657,15 +724,10 @@ export const steps = {
         if (content === null) unlinkSync(path);
         else writeFileSync(path, bytesOf(textOf(content, `the file ${name}`)));
       }
-      try {
-        await App.open<Services>({ ...program, ...opening.options });
-      } catch (error) {
-        failure = error;
-      }
+      failure = await failureOf(App.open<Services>({ ...program, ...opening.options }));
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
-    reader.outcome('open', failure);
-    reader.compare('openError', failure instanceof Error ? failure.message : '');
+    comparesOpen(reader, failure);
   },
 };

@@ -8,7 +8,8 @@ import { FileSessions } from '../../src/file-sessions.js';
 import { RecordSession } from '../../src/record-session.js';
 import type { CaseReader } from '../case-reader.js';
 import { bytesOf } from '../support.js';
-import { requests, textOf } from './session-requests.js';
+import { textOf } from '../inputs.js';
+import { requests } from './session-requests.js';
 
 const PREFIX = 'sess_';
 

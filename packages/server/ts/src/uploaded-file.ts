@@ -2,6 +2,7 @@
 // type, which is empty text when the part has none, and its bytes, as the part sent them. The bytes are a value, or a
 // temporary file of the request for a body that the server read in chunks (HY-131).
 import { closeSync, copyFileSync, constants, linkSync, openSync, readFileSync, unlinkSync, writeSync } from 'node:fs';
+import { ArgumentCountError } from './argument-count-error.js';
 
 export class UploadedFile {
   private readonly fileName: string;
@@ -13,6 +14,7 @@ export class UploadedFile {
   private moved: boolean;
 
   constructor(name: string, filename: string, contentType: string, content: Uint8Array) {
+    ArgumentCountError.between(arguments.length, 4, 4);
     this.partName = name;
     this.fileName = filename;
     this.type = contentType;
@@ -37,26 +39,31 @@ export class UploadedFile {
 
   // Returns the name of the part, the `name` parameter of its Content-Disposition.
   name(): string {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.partName;
   }
 
   // Returns the filename parameter of the part, as it was sent (HY-113.14).
   filename(): string {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.fileName;
   }
 
   // Returns the Content-Type header of the part as it was sent, or the empty text when it has none.
   contentType(): string {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.type;
   }
 
   // Returns the number of bytes of the part (HY-131.15).
   size(): number {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.length;
   }
 
   // Returns the bytes of the part as one value, and fails after a move (HY-131.16).
   content(): Uint8Array {
+    ArgumentCountError.between(arguments.length, 0, 0);
     if (this.moved) throw new RangeError('the file was moved (HY-131)');
     if (this.bytes !== null) return this.bytes;
     if (this.path === null) throw new Error('hyper: a stored file has no path');
@@ -65,6 +72,7 @@ export class UploadedFile {
 
   // Moves the file to the path, and fails when the path exists or when the file was moved (HY-131.15, HY-131.16).
   moveTo(path: string): void {
+    ArgumentCountError.between(arguments.length, 1, 1);
     if (typeof path !== 'string') throw new TypeError('a path is not a string (HY-131)');
     if (this.moved) throw new RangeError('the file was moved (HY-131)');
     if (this.path === null) {

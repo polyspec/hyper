@@ -1,8 +1,11 @@
 <?php
 
+namespace Fixture\Readers;
+
 /**
  * @internal
  */
-class Sealed {
+class Sealed
+{
     public int $size = 0;
 }

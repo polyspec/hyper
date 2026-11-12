@@ -27,11 +27,13 @@ final class RedisSentinelSessions
         private readonly string $scheme = 'tcp',
         private readonly float $timeout = 0.5,
     ) {
+        ArgumentCount::most(\func_num_args(), 5);
     }
 
     /** Sets `session.save_path` to the primary; when no Sentinel names it, the request fails. */
     public function __invoke(): void
     {
+        ArgumentCount::most(\func_num_args(), 0);
         foreach ($this->sentinels as $sentinel) {
             $address = $this->asked($sentinel);
             if ($address !== null) {

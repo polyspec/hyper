@@ -13,6 +13,7 @@ use Polyspec\Hyper\Result;
  * HY-62: the fixture application of contracts/client.json, which answers the client-rendered and the server-rendered
  * pages of the fixture manifest with the client fixture handlers.
  *
+ * @phpstan-import-type Handlers from App
  * @phpstan-type Options array{bodyLimit?: int, frameAncestors?: string, onResponse?: \Closure, manifest?: string}
  */
 final class ClientApp
@@ -37,6 +38,29 @@ final class ClientApp
         array $representations = [],
         ?\Closure $observe = null,
     ): App {
+        $handlers = self::handlers($representations, $observe);
+        $app = App::open(...[
+            'manifest' => self::MANIFEST,
+            'program' => self::PROGRAM,
+            'handlers' => $handlers,
+            'timezone' => '+09:00',
+            'clientRendering' => $client,
+            ...$options,
+        ]);
+        $app->bind(Counter::class, static fn (): Counter => $counter);
+
+        return $app;
+    }
+
+    /**
+     * Returns the client fixture handlers.
+     *
+     * @param array<string, array<string, \Closure>> $representations
+     * @param ?\Closure(string, mixed): void $observe
+     * @return Handlers
+     */
+    public static function handlers(array $representations = [], ?\Closure $observe = null): array
+    {
         // Each handler first gives its name and the selection value of its request to `$observe`.
         $named = static function (string $name, \Closure $handler) use ($observe): \Closure {
             if ($observe === null) {
@@ -63,14 +87,17 @@ final class ClientApp
 
                 return Result::redirect('/');
             })],
-            'list' => ['regions' => ['rows' => $named('region:rows', static fn (Request $request, Counter $counter): array => [
-                'items' => [],
-                'open' => false,
-                'mode' => 'a',
-                'view' => 'x',
-                'filter' => ['a' => 1],
-                'tags' => [],
-            ])]],
+            'list' => ['regions' => ['rows' => $named(
+                'region:rows',
+                static fn (Request $request, Counter $counter): array => [
+                    'items' => [],
+                    'open' => false,
+                    'mode' => 'a',
+                    'view' => 'x',
+                    'filter' => ['a' => 1],
+                    'tags' => [],
+                ],
+            )]],
             'item' => ['load' => $named(
                 'load:item',
                 static fn (Request $request, Counter $counter): array => ['id' => $request->param('id')],
@@ -93,16 +120,7 @@ final class ClientApp
                 return [];
             };
         }
-        $app = App::open(...[
-            'manifest' => self::MANIFEST,
-            'program' => self::PROGRAM,
-            'handlers' => $handlers,
-            'timezone' => '+09:00',
-            'clientRendering' => $client,
-            ...$options,
-        ]);
-        $app->bind(Counter::class, static fn (): Counter => $counter);
 
-        return $app;
+        return $handlers;
     }
 }

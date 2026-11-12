@@ -2,11 +2,16 @@ import { expect, test, type BrowserContext, type Page, type Response } from '@pl
 import { isJsonObject } from '../../scripts/json.mts';
 import { csr, ssr } from './origins.js';
 
-// The globals that the tests set in a page: a marker of the document and the max-width of the post body.
+// The globals that the tests set in a page: a marker of the document, the max-width of the post body, the runs of
+// the module scripts of the post page and the first Hyper instance of a page.
 declare global {
   interface Window {
     documentMarker?: number;
     postWidth?: string;
+    // the runs of the module scripts of the post page, in their order (HYC-25)
+    scriptRuns?: string[];
+    // the Hyper instance of the page when a flow starts; main.ts sets window.hyper each time the entry runs
+    firstHyper?: unknown;
   }
 }
 
@@ -416,4 +421,111 @@ test('the comparison page shows identical SSR and CSR bodies', async ({ page }) 
   await expect(page.locator('#ssr-path')).toHaveText('/board');
   await expect(page.locator('#csr-path')).toHaveText('/board');
   await expect(page.locator('#status')).toHaveText('body 일치');
+});
+
+// These flows create their own posts, so they stand after the flows that count the posts of the shared database.
+// Returns the paths of the module scripts with a src of the head in order.
+function moduleScripts(page: Page): Promise<string[]> {
+  return page.evaluate(() => Array.from(document.head.querySelectorAll<HTMLScriptElement>('script[type="module"][src]'), (script) => new URL(script.src).pathname));
+}
+
+// Creates a post with a title through the form of the board; the list then shows it (HY-25). A flow reads only the
+// post that it created, by its title.
+async function createPost(page: Page, origin: string, title: string): Promise<void> {
+  await page.goto(`${origin}/board/create`);
+  await expect(page.locator('#content h1')).toHaveText('글쓰기');
+  await page.locator('input[name="title"]').fill(title);
+  await page.locator('input[name="author"]').fill('김작가');
+  await page.locator('textarea[name="body"]').fill('본문');
+  await page.getByRole('button', { name: '등록' }).click();
+  await expect(page.getByRole('link', { name: title, exact: true })).toBeVisible();
+}
+
+// The module scripts that the layout names on the post page, in its order, and their runs.
+const POST_SCRIPTS = ['/assets/reader.js', '/assets/after-reader.js'];
+const POST_RUNS = ['reader', 'after-reader'];
+
+// HYC-25: the post page names the module scripts reader.js and after-reader.js. A navigation to the post creates them,
+// they run once in the order of the layout, also when the first arrives after the second, they stay in the page, and
+// the client entry runs once.
+async function moduleScriptFlow(page: Page, origin: string, title: string): Promise<void> {
+  await createPost(page, origin, title);
+  const errors = collectErrors(page);
+  const post = page.getByRole('link', { name: title, exact: true });
+  const requested: string[] = [];
+  page.on('request', (request) => {
+    const path = new URL(request.url()).pathname;
+    if (/^\/assets\/(reader|after-reader|hyper-(?!chunk-)[^/]+)\.js$/.test(path)) requested.push(path);
+  });
+  // The first script arrives after the second, so the order of the runs is not the order of the arrivals.
+  await page.route('**/assets/reader.js', async (route) => {
+    await new Promise((done) => setTimeout(done, 300));
+    await route.continue();
+  });
+  await page.goto(`${origin}/board`);
+  await expect(page.locator('#content h1')).toHaveText('게시판');
+  // Server-side rendering names the entry in the head of its document; the static shell inlines it.
+  const entry = await moduleScripts(page);
+  expect(entry).toHaveLength(origin === csr ? 0 : 1);
+  expect(await page.evaluate(() => window.scriptRuns)).toBeUndefined();
+  await page.evaluate(() => { window.firstHyper = window.hyper; });
+
+  // The post is shown, each script has run once, in the order of the layout, and the head holds each once after the
+  // entry.
+  const postShown = async (): Promise<void> => {
+    await expect(page.locator('.post-body')).toBeVisible();
+    expect(await page.evaluate(() => window.scriptRuns)).toEqual(POST_RUNS);
+    expect(await moduleScripts(page)).toEqual([...entry, ...POST_SCRIPTS]);
+  };
+  // The list is shown; it does not name the scripts, which stay.
+  const listShown = async (): Promise<void> => {
+    await expect(page.locator('#content h1')).toHaveText('게시판');
+    expect(await moduleScripts(page)).toEqual([...entry, ...POST_SCRIPTS]);
+  };
+
+  // 1. A navigation to the post creates the scripts, and they have run in their order when the post is shown.
+  await post.click();
+  await postShown();
+  // 2. A navigation to the list removes no script.
+  await page.getByRole('link', { name: '목록' }).click();
+  await listShown();
+  // 3. A second navigation to the post creates no script and runs none.
+  await post.click();
+  await postShown();
+  // 4. History restorations keep it.
+  await page.goBack();
+  await listShown();
+  await page.goForward();
+  await postShown();
+
+  // 5. The page requested each script once, and the entry ran once: main.ts sets window.hyper each time it runs, and
+  // client-side rendering, whose shell inlines the entry, requested no entry file (HYC-16).
+  expect(requested).toEqual([...entry, ...POST_SCRIPTS]);
+  expect(await page.evaluate(() => window.hyper === window.firstHyper)).toBe(true);
+  expect(errors).toEqual([]);
+}
+
+test('SSR creates the module scripts of the layout on navigation and runs each once (HYC-25)', async ({ page }) => {
+  await moduleScriptFlow(page, ssr, '모듈 스크립트 SSR');
+});
+
+test('CSR creates the module scripts of the rendered layout, runs each once and does not run the entry again (HYC-25, HYC-16)', async ({ page }) => {
+  await moduleScriptFlow(page, csr, '모듈 스크립트 CSR');
+});
+
+test('a module script that fails to load keeps the page and marks the region (HYC-14, HYC-25)', async ({ page }) => {
+  // The two origins show the posts of one database.
+  await createPost(page, ssr, '불러오지 못한 스크립트');
+  await page.route('**/assets/reader.js', (route) => route.fulfill({ status: 404, body: '' }));
+  for (const origin of [ssr, csr]) {
+    await page.goto(`${origin}/board`);
+    await expect(page.locator('#content h1')).toHaveText('게시판');
+    const entry = await moduleScripts(page);
+    await page.getByRole('link', { name: '불러오지 못한 스크립트', exact: true }).click();
+    await expect(page.locator('#content')).toHaveAttribute('hy-error', '0');
+    await expect(page.locator('#content h1')).toHaveText('게시판');
+    // The failed application removed its script and the stylesheet link that it inserted.
+    expect(await moduleScripts(page)).toEqual(entry);
+    expect(await stylesheets(page)).toEqual(['/assets/app.css']);
+  }
 });

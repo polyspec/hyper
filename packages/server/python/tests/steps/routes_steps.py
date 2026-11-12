@@ -1,4 +1,5 @@
-# The steps of contracts/routes.json (HY-13, HY-18 to HY-20): the match of a path, under the base path and refused paths.
+# The steps of contracts/routes.json and contracts/rest.json (HY-13, HY-18 to HY-20): the match of a path, also under
+# the base path, and refused paths.
 from polyspec.hyper._router import Router
 
 

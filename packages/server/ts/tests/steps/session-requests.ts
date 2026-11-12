@@ -2,7 +2,8 @@
 // step of a case opens the store of one request, applies its calls and closes it.
 import { JsonCodec } from '../../src/json-codec.js';
 import { toValue } from '../../src/values.js';
-import { hostValue } from './host-value.js';
+import { parsed } from '../case-rules.js';
+import { textOf } from '../inputs.js';
 
 // A call of a case: a method and the decoded values of its arguments.
 type Call = [string, unknown[]];
@@ -46,7 +47,7 @@ interface Outcome {
 // Returns the value of a JSON text of a case as a caller gives it: a Map in document order for an object.
 export function decoded(text: unknown): unknown {
   if (typeof text !== 'string') throw new Error('an argument of the case is not a JSON text');
-  return hostValue(JsonCodec.decode(text));
+  return parsed(text);
 }
 
 // Returns the calls of a case with their decoded arguments, and fails for a call of another form.
@@ -56,12 +57,6 @@ export function callsOf(value: unknown): Call[] {
     if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== 'string' || !Array.isArray(entry[1])) throw new Error('a call of the case is not a method and a list of JSON texts');
     return [entry[0], entry[1].map((text: unknown) => decoded(text))];
   });
-}
-
-// Returns a value of a case that is a string, and fails for any other value.
-export function textOf(value: unknown, what: string): string {
-  if (typeof value !== 'string') throw new Error(`${what} is not a string`);
-  return value;
 }
 
 // Returns the cookie value of a step: null, a text, or the identifier that an earlier step created.

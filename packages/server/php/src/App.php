@@ -115,10 +115,10 @@ final class App
      *     that `around` returns (HY-97)
      * @param ?\Closure(): void $sessionSetup called just before a session starts, for the settings of the session
      *     that a request reads, such as the primary of `RedisSentinelSessions`; an error fails the request (HY-115)
-     * @param ?\Closure(mixed): array<string, mixed> $context the context handler, which receives the selection value and returns the
-     *     context of the application, a map of the data model (HY-124)
-     * @param array<string, callable(): mixed> $functions the host functions of the application, a map from names to functions,
-     *     which the template engine registers (HYC-24, HY-106)
+     * @param ?\Closure(mixed): array<string, mixed> $context the context handler, which receives the selection value
+     *     and returns the context of the application, a map of the data model (HY-124)
+     * @param array<string, callable(): mixed> $functions the host functions of the application, a map from names to
+     *     functions, which the template engine registers (HYC-24, HY-106)
      */
     public static function open(
         string $manifest,
@@ -143,6 +143,7 @@ final class App
         ?\Closure $context = null,
         array $functions = [],
     ): self {
+        ArgumentCount::most(\func_num_args(), 21);
         if ($bodyLimit < 1) {
             throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
         }
@@ -300,6 +301,7 @@ final class App
     /** Registers the factory of an application service. */
     public function bind(string $class, \Closure $factory): void
     {
+        ArgumentCount::most(\func_num_args(), 2);
         $this->container->bind($class, $factory);
     }
 
@@ -311,6 +313,7 @@ final class App
      */
     public function handle(Request $request, SessionStore $store, ?int $started = null): Response
     {
+        ArgumentCount::most(\func_num_args(), 3);
         return $this->through($request, $store, $started ?? hrtime(true), null);
     }
 
@@ -323,13 +326,14 @@ final class App
     private function through(Request $request, SessionStore $store, int|float $started, ?Delivery $delivery): Response
     {
         $answer = function (Request $given) use ($store, $started, $delivery): Response {
-            $reply = new Reply();
+            if ($delivery === null) {
+                return $this->respond($given, $store, $started)[0];
+            }
             // HY-67: the request and the reply are kept before the answer runs, so that the disconnect hook receives
             // them also when the script ends during the answer.
-            if ($delivery !== null) {
-                $delivery->request = $given;
-                $delivery->reply = $reply;
-            }
+            $reply = new Reply();
+            $delivery->request = $given;
+            $delivery->reply = $reply;
 
             return $this->respondWith($given, $store, $started, $reply);
         };
@@ -932,6 +936,7 @@ final class App
      */
     public function run(?int $started = null): void
     {
+        ArgumentCount::most(\func_num_args(), 1);
         // The headers that the caller set before this call stay on the plain 500 of an escaped error (HY-60).
         $kept = headers_list();
         $started ??= hrtime(true);
@@ -1007,7 +1012,8 @@ final class App
         register_shutdown_function(static function () use ($request): void {
             $request->release();
         });
-        $response = $this->through($request, new NativeSession($this->https, $request, $this->sessionSetup), $started, $delivery);
+        $store = new NativeSession($this->https, $request, $this->sessionSetup);
+        $response = $this->through($request, $store, $started, $delivery);
         $delivery->response = $response;
         $response->send();
     }

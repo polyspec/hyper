@@ -7,6 +7,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
+from ._csrf import Csrf
 from ._fields import Fields
 from ._files import Files
 from ._multipart import Multipart
@@ -238,7 +239,7 @@ class Request:
     def query_int(self, name: str, default: int) -> int:
         """Returns the last query value of a name as an integer, or the default when it is absent or not an
         integer."""
-        value = (self._query_fields or Fields.empty()).last(name)
+        value = None if self._query_fields is None else self._query_fields.last(name)
         if value is not None and _INTEGER.fullmatch(value) is not None:
             return int(value)
         return default
@@ -250,7 +251,9 @@ class Request:
 
     def form_string(self, name: str) -> str:
         """Returns the last form value of a name; an absent name gives the empty string."""
-        return (self._form_fields or Fields.empty()).last(name) or ""
+        return (
+            None if self._form_fields is None else self._form_fields.last(name)
+        ) or ""
 
     def files(self) -> list[tuple[str, list[UploadedFile]]]:
         """Returns the file parts of the body as pairs of a name and its files in request order, in the order of the
@@ -259,11 +262,11 @@ class Request:
 
     def file(self, name: str) -> Optional[UploadedFile]:
         """Returns the last file of a name, or None (HY-113)."""
-        return (self._file_parts or Files.empty()).last(name)
+        return None if self._file_parts is None else self._file_parts.last(name)
 
     def file_over(self, limit: int) -> bool:
         """Returns True when a file of the body is larger than `limit` bytes (HY-114)."""
-        return (self._file_parts or Files.empty()).largest() > limit
+        return (0 if self._file_parts is None else self._file_parts.largest()) > limit
 
     def flash(self, name: str) -> object:
         """Returns a flash value stored by the previous action, or None."""
@@ -272,6 +275,11 @@ class Request:
     def csrf_token(self) -> str:
         """Returns the CSRF token of the session."""
         return self._csrf_token
+
+    def browser(self) -> Optional[str]:
+        """Returns the digest of the session token, which names the browser of the request, or None for a request
+        without a session (HY-24.10)."""
+        return Csrf.browser_of(self._csrf_token)
 
     @staticmethod
     def target_path(target: str) -> str:

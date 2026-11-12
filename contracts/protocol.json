@@ -505,6 +505,12 @@
                   "en": "Every render of the response uses those bound maps and `merge`, so the number of binds does not grow with the number of renders; a shared value is bound in the shared data and once more in the embedded data of a document that embeds its data, because the embedded data carries the shared data.",
                   "ko": "응답의 모든 렌더는 그 bound map과 `merge`를 쓰므로 bind 횟수는 렌더 횟수에 따라 늘지 않으며, 공유 값은 공유 데이터에서 한 번, 데이터를 내장하는 문서의 내장 데이터에서 한 번 더 bind되는데, 내장 데이터가 공유 데이터를 담기 때문이다.",
                   "koSource": "65bea62561de694d2ba00c6b769aaaae2cf902066f1a0e266045fb3d3625bfb6"
+                },
+                {
+                  "id": "HY-13.7",
+                  "en": "The PHP and Python servers read a shared value that a handler returns once for the check of HY-44, once in the bound shared data of a document, once more in the embedded data of a document that embeds its data, and once for the JSON text of a JSON response, so they read the value twice for a document, three times for a document that embeds its data and twice for a JSON response.",
+                  "ko": "PHP 서버와 Python 서버는 handler가 반환한 공유 값을 HY-44의 검사에서 한 번, 문서의 bind된 공유 데이터에서 한 번, 데이터를 내장하는 문서의 내장 데이터에서 한 번 더, JSON 응답의 JSON text에서 한 번 읽으므로, 그 값을 문서에서는 두 번, 데이터를 내장하는 문서에서는 세 번, JSON 응답에서는 두 번 읽는다.",
+                  "koSource": "44823b50831a792888b6439d6ae56a4b94c13f8c8382f50953bd24cbd55526bb"
                 }
               ]
             }
@@ -962,6 +968,12 @@
                   "en": "The server never truncates a file and never passes part of one; a file within the limit is passed whole.",
                   "ko": "서버는 file을 자르지 않으며 file의 일부를 넘기지도 않고, 제한 안의 file은 전부 넘긴다.",
                   "koSource": "8dbd3eec912d67f280b632fe6c0384f419b4a7ac414d2424ae3f8712980fff95"
+                },
+                {
+                  "id": "HY-114.9",
+                  "en": "`fileOver(limit)` of the request is true when a file of the body has more bytes than `limit`, and false when every file has at most `limit` bytes or the body holds no file.",
+                  "ko": "request의 `fileOver(limit)`은 body의 파일 하나가 `limit`보다 많은 byte를 가지면 true이고, 모든 파일이 `limit` byte 이하이거나 body에 파일이 없으면 false다.",
+                  "koSource": "df655c8e0cf9920b7a46f717a31dc68bb74e5eaaa0d8f8724ca30087faa209ab"
                 }
               ]
             }
@@ -1563,6 +1575,12 @@
                   "ko": "응답 hook(HY-60, 새 빈 reply와 함께), frame 정책(HY-45), 응답 제한(HY-66), ORM의 오류(HY-107: `NO_ROWS`는 텍스트 `Not Found`와 함께 404, `REVISION_CHANGED`는 텍스트 `Precondition Failed`와 함께 412이며, 둘 다 `Cache-Control: no-store`를 가진 plain text다), HY-43의 오류는 페이지처럼 적용된다. HY-52, weak tag에 대한 HY-53, HY-103은 적용되지 않는다. handler에는 reply가 없기 때문이다.",
                   "koSource": "62ee37cc86eb1b7437af06716c8a53fac9c5441b5bac89e93165f5b9eb0c46a5",
                   "id": "HY-122.12"
+                },
+                {
+                  "id": "HY-122.13",
+                  "en": "`etag(body)` fails with the error of the data model (HY-44) for a body that is not a value of the data model.",
+                  "ko": "`etag(body)`는 데이터 모델의 값이 아닌 body에 대해 데이터 모델(HY-44)의 오류로 실패한다.",
+                  "koSource": "51bae374549459d0f92b25c262686f8b48a1e0824d2080c422c67aa68d9b88a9"
                 }
               ]
             }
@@ -2035,9 +2053,9 @@
                   "id": "HYC-2.2"
                 },
                 {
-                  "en": "Before htmx swaps, the browser applies the stylesheet links of the layout of the response (HYC-15).",
-                  "ko": "htmx가 스왑하기 전에 브라우저는 응답의 layout의 stylesheet link를 적용한다(HYC-15).",
-                  "koSource": "e4aedad10ce2dfb3e014e9daeb0a764c2d06decd78d00946365862a7611d9370",
+                  "en": "Before htmx swaps, the browser applies the stylesheet links of the layout of the response (HYC-15) and creates its module scripts (HYC-25).",
+                  "ko": "htmx가 스왑하기 전에 브라우저는 응답의 layout의 stylesheet link를 적용하고(HYC-15) 그 module script를 만든다(HYC-25).",
+                  "koSource": "a33f1544a307e530c1031c5658803abfaabbf0ef1b4a570609b3dcb009731328",
                   "id": "HYC-2.3"
                 },
                 {
@@ -2071,9 +2089,9 @@
                   "id": "HYC-8.1"
                 },
                 {
-                  "en": "The browser code requests the document JSON for the current path while it loads the templates of the route (HYC-12), routes the response URL after redirects (HYC-1), renders the document (HY-12), applies the stylesheet links of its head (HYC-15), replaces the attributes of the `html` element (HYC-6), the title and the body with the rendered ones, and lets htmx process the new body.",
-                  "ko": "브라우저 코드는 현재 경로의 문서 JSON을 요청하면서 라우트의 템플릿을 불러오고(HYC-12), 리다이렉트를 따른 뒤의 응답 URL을 라우팅하고(HYC-1), 문서를 렌더하며(HY-12), 렌더한 문서의 head의 stylesheet link를 적용하고(HYC-15), `html` 요소의 속성(HYC-6), 제목, body를 렌더한 것으로 바꾸고, htmx가 새 body를 처리하게 한다.",
-                  "koSource": "1203dd01c7d4654d9f7bf9764bee1c13a4c46744c44eedfe10bedfb4c05a983b",
+                  "en": "The browser code requests the document JSON for the current path while it loads the templates of the route (HYC-12), routes the response URL after redirects (HYC-1), renders the document (HY-12), applies the stylesheet links of its head (HYC-15), creates its module scripts (HYC-25), replaces the attributes of the `html` element (HYC-6), the title and the body with the rendered ones, and lets htmx process the new body.",
+                  "ko": "브라우저 코드는 현재 경로의 문서 JSON을 요청하면서 라우트의 템플릿을 불러오고(HYC-12), 리다이렉트를 따른 뒤의 응답 URL을 라우팅하고(HYC-1), 문서를 렌더하며(HY-12), 렌더한 문서의 head의 stylesheet link를 적용하고(HYC-15), 그 module script를 만들고(HYC-25), `html` 요소의 속성(HYC-6), 제목, body를 렌더한 것으로 바꾸고, htmx가 새 body를 처리하게 한다.",
+                  "koSource": "aa2c1c5971b9440579fc7b9f2d3ab9bbfd77053ca69d2c121a8ae99a4af301d2",
                   "id": "HYC-8.2"
                 },
                 {
@@ -2255,9 +2273,9 @@
                   "id": "HYC-15.14"
                 },
                 {
-                  "en": "When a link fails to load, the browser removes the links that it inserted for this application, does not show the content and reports the failure as HYC-14 defines.",
-                  "ko": "link 불러오기가 실패하면 브라우저는 이 적용에서 넣은 link를 제거하고, 내용을 보이지 않으며, 실패를 HYC-14대로 알린다.",
-                  "koSource": "88bc7add66cf0f25798d86c9ac452dcbb04b25bc467bfed1fb32634459c38aa3",
+                  "en": "When a link, or a module script of the same application (HYC-25), fails to load, the browser removes the links that it inserted for this application, does not show the content and reports the failure as HYC-14 defines.",
+                  "ko": "link나 같은 적용의 module script(HYC-25) 불러오기가 실패하면 브라우저는 이 적용에서 넣은 link를 제거하고, 내용을 보이지 않으며, 실패를 HYC-14대로 알린다.",
+                  "koSource": "be804568b3bf355a4127a6f554643fda7fabb4fc40cdac2e2b0bf3a2ec2c3fcd",
                   "id": "HYC-15.15"
                 },
                 {
@@ -2265,6 +2283,96 @@
                   "ko": "서버 렌더의 첫 문서는 이미 stylesheet link를 가지므로 적용이 필요 없다.",
                   "koSource": "d0e412b6111484020e1702d8a46a96b3569e6efe5c460b1e9f0aeff39d32bad4",
                   "id": "HYC-15.16"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "rule",
+          "id": "HYC-25",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                {
+                  "id": "HYC-25.1",
+                  "en": "The module scripts of a head are its `script` elements that have a `src` attribute and whose `type` attribute, without leading and trailing ASCII whitespace, is `module`, compared without regard to ASCII case.",
+                  "ko": "head의 module script는 `src` 속성이 있고, 앞뒤 ASCII 공백을 뺀 `type` 속성이 ASCII 대소문자 구분 없이 `module`인 `script` 요소다.",
+                  "koSource": "6d123f7813d75c87a02fd478c145e62ac74eb465bdfe06d96f5a665ef973e148"
+                },
+                {
+                  "id": "HYC-25.2",
+                  "en": "The key of a script is the value of its `src` attribute resolved against the URL of the page.",
+                  "ko": "script의 키는 페이지 URL을 기준으로 해석한 `src` 속성 값이다.",
+                  "koSource": "b7afa6d37ec2058f6de9fc9af34a10c4f258ff97ed6b1af3847de440f84ca4ba"
+                },
+                {
+                  "id": "HYC-25.3",
+                  "en": "When the browser applies the stylesheet links of a source document (HYC-15), it also creates the module scripts of the head of that document in the page, as part of the same application.",
+                  "ko": "브라우저는 원본 문서의 stylesheet link를 적용할 때(HYC-15) 같은 적용의 일부로 그 문서의 head의 module script도 페이지에 만든다.",
+                  "koSource": "cc78a094abf061a58ac865b909be432fe3cd16a5fda2b9d9558e509a0e70a3c3"
+                },
+                {
+                  "id": "HYC-25.4",
+                  "en": "The page holds the key of each `script` element of its document, in the head or the body, that has a `src` attribute and the type `module` as defined above, and the key of the `content` of its `<meta name=\"hyper-entry\">`, the client entry that a static shell inlines (HYC-16).",
+                  "ko": "페이지는 head든 body든 자기 문서의 `script` 요소 가운데 `src` 속성이 있고 위에서 정한 대로 type이 `module`인 것 각각의 키와, 정적 셸이 인라인한 클라이언트 진입 파일을 가리키는 `<meta name=\"hyper-entry\">`의 `content`의 키(HYC-16)를 가진다.",
+                  "koSource": "dda5d3b66871048cf87c7b15fbff7e135ffb9bba902e86293039884bbebda7bc"
+                },
+                {
+                  "id": "HYC-25.5",
+                  "en": "In a page with `<meta name=\"hyper-api\">` and without `<meta name=\"hyper-entry\">`, such as a shell that the asset build did not write, the browser cannot tell the entry from another module script, so an application that would create a script fails before it creates one, as a script that does not load (HYC-14).",
+                  "ko": "`<meta name=\"hyper-api\">`는 있고 `<meta name=\"hyper-entry\">`는 없는 페이지, 예를 들어 에셋 빌드가 쓰지 않은 셸에서는 브라우저가 진입 파일을 다른 module script와 구별할 수 없으므로, script를 만들어야 하는 적용은 하나도 만들기 전에 실패하며, 이는 불러오지 못한 script와 같다(HYC-14).",
+                  "koSource": "060f8e117142a6820a0d328d223bc1aa9275241d7cfda987dc2083e3d54d577c"
+                },
+                {
+                  "id": "HYC-25.6",
+                  "en": "The browser walks the module scripts of the source in order; a key that appears again counts only at its first script.",
+                  "ko": "브라우저는 원본의 module script를 순서대로 살핀다. 다시 나오는 키는 첫 script에서만 센다.",
+                  "koSource": "cd24da440ea785f80e7ced1b75de41e754694c1834ec83bed52caefb89c15ed8"
+                },
+                {
+                  "id": "HYC-25.7",
+                  "en": "For each key that the page does not hold, it creates a `script` element of the page with the attributes of the source script and puts it at the end of the head of the page.",
+                  "ko": "페이지가 가지지 않은 키마다 원본 script의 속성을 가진 페이지의 `script` 요소를 만들어 페이지 head의 끝에 넣는다.",
+                  "koSource": "262af39edb9e82c969891674e90f821e4a12c8ead8c43e892c1531cf5acc09b4"
+                },
+                {
+                  "id": "HYC-25.8",
+                  "en": "It sets the `async` property of a created script to whether the source script has the attribute `async`, so that the created scripts of one application run in the order of the source, as the module scripts of a parsed head do.",
+                  "ko": "만든 script의 `async` property는 원본 script에 `async` 속성이 있는지로 정하므로, 한 적용이 만든 script는 파싱한 head의 module script처럼 원본의 순서로 실행된다.",
+                  "koSource": "4a5a99eed156a7cb211a67f9d128d7e1cc0d94cdbd84eb8768863cdb5da5680e"
+                },
+                {
+                  "id": "HYC-25.9",
+                  "en": "It shows the content only after every created script, and every module script of the page with a key of the source that an earlier application created and that is still loading, has loaded, so a module script runs before the new content is in the page.",
+                  "ko": "만든 모든 script와, 원본의 키를 가진 페이지 module script 가운데 앞선 적용이 만들어 아직 불러오는 중인 것이 모두 불러와진 뒤에야 내용을 보이므로, module script는 새 내용이 페이지에 들어오기 전에 실행된다.",
+                  "koSource": "37d14a1c6badd225623865a93c3f69774854a81df10f620acb5599c00fc4fa2c"
+                },
+                {
+                  "id": "HYC-25.10",
+                  "en": "It removes no script when it shows content, so a script of the page stays when a later source does not name it.",
+                  "ko": "내용을 보일 때 script를 제거하지 않으므로, 나중 원본이 적지 않은 페이지의 script도 그대로 남는다.",
+                  "koSource": "9e870877cf71a6d097e0209a1edc7324d6d493be6a6fd00d8be8fb8fc60964bc"
+                },
+                {
+                  "id": "HYC-25.11",
+                  "en": "When a script or a stylesheet link of the application fails to load, the browser removes the scripts that it created for this application, does not show the content and reports the failure as HYC-14 defines.",
+                  "ko": "적용의 script나 stylesheet link 불러오기가 실패하면 브라우저는 이 적용에서 만든 script를 제거하고, 내용을 보이지 않으며, 실패를 HYC-14대로 알린다.",
+                  "koSource": "46fa4a649b117d7c27c83ef8fe70eb39a7c2ad95a3eeaac83cc36bbba7149b2f"
+                },
+                {
+                  "id": "HYC-25.12",
+                  "en": "The browser creates no other `script` element of a source head, such as a script without `src` or a script of another type.",
+                  "ko": "브라우저는 `src`가 없는 script나 다른 type의 script 같은 원본 head의 다른 `script` 요소는 만들지 않는다.",
+                  "koSource": "5ff7e9df86b9a81d28d437b96456c27fac59522375aacb8d7a11706c2c0755e7"
+                },
+                {
+                  "id": "HYC-25.13",
+                  "en": "The first document of server-side rendering already runs its module scripts and needs no application.",
+                  "ko": "서버 렌더의 첫 문서는 이미 자기 module script를 실행하므로 적용이 필요 없다.",
+                  "koSource": "a7f4ae953d45ba79e59664a95a147a6e9bcb2a74e1e9c9cfd5d7d35af02b0521"
                 }
               ]
             }
@@ -2485,9 +2593,9 @@
                     },
                     {
                       "id": "HY-62.8",
-                      "en": "In PHP the choice is `new Choice(chosen: <bool>, value: <value>)`; in Node it is an object `{ chosen, value }` whose `chosen` is `true` or `false` and whose `value` is not `undefined`.",
-                      "ko": "PHP에서 choice는 `new Choice(chosen: <bool>, value: <value>)`이고, Node에서는 `chosen`이 `true` 또는 `false`이고 `value`가 `undefined`가 아닌 객체 `{ chosen, value }`다.",
-                      "koSource": "e0da01cecc0a11a836c9017b6316c4eeb3196c5d650305853e9d4ac8daf910ed"
+                      "en": "In PHP the choice is `new Choice(chosen: <bool>, value: <value>)`, and in Node it is `new Choice(chosen, value)` whose `chosen` is `true` or `false` and whose `value` is not `undefined`; a selection that returns another value fails as HY-62.11 states.",
+                      "ko": "PHP에서 choice는 `new Choice(chosen: <bool>, value: <value>)`이고, Node에서는 `chosen`이 `true` 또는 `false`이고 `value`가 `undefined`가 아닌 `new Choice(chosen, value)`다; 다른 값을 반환하는 selection은 HY-62.11대로 실패한다.",
+                      "koSource": "ada235704c0c2dc26f8655cb7e3b75f4cc3fb81f3ea8eb1115b61552d9969be5"
                     },
                     {
                       "id": "HY-62.9",
@@ -2760,6 +2868,30 @@
                   "en": "A server holds the token as 64 lowercase hexadecimal digits, and a session that holds another value in the place of the token gets a new token, as a session that holds none (HY-24.1), so that no masked value of the other value is valid; masking or verifying with a token or a mask in any other form fails with HY-43, while a form value that is not 128 lowercase hexadecimal digits is not valid (HY-24.5).",
                   "ko": "서버는 token을 소문자 16진수 64자리로 가지며, token 자리에 다른 값을 가진 session은 token이 없는 session처럼 새 token을 받으므로(HY-24.1) 그 다른 값을 가린 어떤 값도 올바르지 않다. 다른 형태의 token이나 mask로 가리거나 검증하면 HY-43으로 실패하고, 소문자 16진수 128자리가 아닌 form 값은 올바르지 않다(HY-24.5).",
                   "koSource": "eb1af1b54409889b35a33f78202e3caa28560ee243e30b9adf3f721b5626fabc"
+                },
+                {
+                  "id": "HY-24.10",
+                  "en": "A request that opens a session (HY-120) gives its handlers `browser()`: the SHA-256 digest of the 32 bytes of the session token, written as 64 lowercase hexadecimal digits, a value that names the browser of the request and from which the token cannot be computed.",
+                  "ko": "session을 여는 요청(HY-120)은 handler에 `browser()`를 준다: session token 32바이트의 SHA-256 digest를 소문자 16진수 64자리로 쓴 값으로, 요청의 browser를 가리키며 이 값에서 token을 계산할 수 없다.",
+                  "koSource": "1a8020d1b48ebef36da2a4b8445d8f8307cb07916157ef4356791de4824d485d"
+                },
+                {
+                  "id": "HY-24.11",
+                  "en": "The server computes the value from the masked token that the request holds, so the value is the same for every request of one session until the token is replaced: when an action renews the session (HY-72), the action reads the digest of the old token and the handlers that run after it read the digest of the new token, and a session that gets a new token by HY-24.9 gets a new value.",
+                  "ko": "서버는 요청이 가진 가린 token에서 이 값을 계산하므로, 이 값은 token이 바뀔 때까지 한 session의 모든 요청에서 같다: action이 session을 갱신하면(HY-72) 그 action은 예전 token의 digest를 읽고 그 뒤에 실행되는 handler는 새 token의 digest를 읽으며, HY-24.9로 새 token을 받는 session은 새 값을 받는다.",
+                  "koSource": "7b97a467707941375e1fb87d44ef7793abf8327b6aa2e0de5a215ea7d669970d"
+                },
+                {
+                  "id": "HY-24.12",
+                  "en": "A request that opens no session holds the empty text in the place of the masked token and has no such value, so its `browser()` returns null, in Python `None`: the request that a representation handler receives (HY-120.4) and a request that a host creates.",
+                  "ko": "session을 열지 않는 요청은 가린 token 자리에 빈 text를 가지며 이 값이 없으므로 그 `browser()`는 null(Python에서는 `None`)을 돌려준다: representation handler가 받는 요청(HY-120.4)과 host가 만드는 요청이 그렇다.",
+                  "koSource": "8395419c9ad01764eff224750d21f6e8fe61f1b049340493a5241f09d62f8c97"
+                },
+                {
+                  "id": "HY-24.13",
+                  "en": "A request whose masked token is neither the empty text nor 128 lowercase hexadecimal digits, which only a caller that creates a request by hand gives, fails `browser()` as masking with a token of another form does (HY-24.9).",
+                  "ko": "가린 token이 빈 text도 아니고 소문자 16진수 128자리도 아닌 요청은, 요청을 직접 만드는 호출자만 줄 수 있으며, 다른 형태의 token으로 가릴 때처럼(HY-24.9) `browser()`가 실패한다.",
+                  "koSource": "3d3ea51c1df733c0cd471f696b12b6de13a52a5aa34a40df0fbfd36010e92728"
                 }
               ]
             }
@@ -3973,6 +4105,12 @@
                   "koSource": "ab770c75878b7df2e1df0a956e66ca35056bac49fb4e4f5bd3a00b377ebe7251"
                 },
                 {
+                  "id": "HYC-16.10",
+                  "en": "The layout names only the module scripts of the content that it renders, and the browser creates each module script of a rendered head once and removes none (HYC-25); a module script that the layout names on every page is one that every page uses.",
+                  "ko": "레이아웃은 자기가 렌더하는 내용의 module script만 적고, 브라우저는 렌더한 head의 module script를 각각 한 번 만들며 제거하지 않는다(HYC-25). 레이아웃이 모든 페이지에 적는 module script는 모든 페이지가 쓰는 script다.",
+                  "koSource": "59f75c951c87ea0b3e1497fc96aed7de1885acdabe76feb0925e1eca1b1463c8"
+                },
+                {
                   "id": "HYC-16.5",
                   "en": "The asset build writes the client entry `public/assets/hyper-<hash>.js` and, for code that the entry imports with `import()` and does not import statically, chunk files `public/assets/hyper-chunk-<hash>.js`; the browser loads a chunk when that code first runs, by an absolute URL below `/assets/`, so the entry that the static shell inlines loads it too, and the browser loads a module once.",
                   "ko": "에셋 빌드는 클라이언트 진입 파일 `public/assets/hyper-<hash>.js`를 쓰고, 진입 파일이 정적으로 불러오지 않고 `import()`로만 불러오는 코드는 조각 파일 `public/assets/hyper-chunk-<hash>.js`로 쓴다. 브라우저는 그 코드가 처음 실행될 때 `/assets/` 아래의 절대 URL로 조각을 불러온다. 그래서 정적 셸이 인라인한 진입 파일도 조각을 불러오고, 브라우저는 모듈 하나를 한 번만 불러온다.",
@@ -3995,6 +4133,12 @@
                   "en": "The static shell contains `<meta name=\"hyper-api\">`, the inlined entry and no stylesheet, because the browser applies the stylesheet links of the rendered layout before it shows the page (HYC-8, HYC-15).",
                   "ko": "정적 셸은 `<meta name=\"hyper-api\">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저는 페이지를 보이기 전에 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HYC-8, HYC-15).",
                   "koSource": "93c365a57494d4df0d9355233f84b716694135494a913f732438bbf4b8f49e66"
+                },
+                {
+                  "id": "HYC-16.11",
+                  "en": "The static shell also contains `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`, whose content is the member `hyper` of `manifest.json`, the URL of the entry that it inlines, because an inlined script has no address and a layout that names the entry as a module script must not load it again (HYC-25).",
+                  "ko": "정적 셸은 `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`도 담으며, 그 content는 `manifest.json`의 member `hyper`, 곧 셸이 인라인한 진입 파일의 URL이다. 인라인한 script에는 주소가 없고, 진입 파일을 module script로 적은 레이아웃이 그것을 다시 불러오면 안 되기 때문이다(HYC-25).",
+                  "koSource": "be0815da12df456aba1ba89687cb35157271e3c808d5d4e60d64b92b3de8eb41"
                 },
                 {
                   "id": "HYC-16.9",
@@ -4407,6 +4551,12 @@
                   "en": "The kept values of a region that stored none are an empty map.",
                   "ko": "아무것도 저장하지 않은 영역의 kept 값은 빈 map이다.",
                   "koSource": "2afce1aad4aad1b3a36918cae2b8b6f379c2f9e19ecbc8bd2e264e931a35e84d"
+                },
+                {
+                  "id": "HY-40.4",
+                  "en": "A kept value that the session stores is a value of the data model (HY-44): storing a value outside it fails when it is stored, with the error of the data model, as a flash value does (HY-25.4).",
+                  "ko": "세션이 저장하는 kept 값은 데이터 모델(HY-44)의 값이다: 그 밖의 값을 저장하면 flash 값(HY-25.4)처럼 저장할 때 데이터 모델의 오류로 실패한다.",
+                  "koSource": "f1600d4d51f660547294e51a9e9fbfe8173dcec70abdb141c6d65bef7811cbbb"
                 }
               ]
             }
@@ -4505,6 +4655,12 @@
                   "en": "The text that a server gives to its log for an unhandled error starts with `hyper: ` and contains the message of the error; the rest of the line is the runtime's.",
                   "ko": "처리되지 않은 오류에 대해 서버가 로그에 주는 text는 `hyper: `로 시작하고 그 오류의 message를 포함한다. 줄의 나머지는 런타임의 형식이다.",
                   "koSource": "93dac452f0708675a06dc974600e95d2acfc9da61c6ac5fef22d8d13aeaf6aea"
+                },
+                {
+                  "id": "HY-43.6",
+                  "en": "An exception of Python that is not an `Exception`, such as `SystemExit`, `KeyboardInterrupt` or `GeneratorExit`, ends the process or the task and is not an error of the application: the Python server closes the session of the request and lets the exception pass to its caller, and it writes no response and no log line and calls no hook for it.",
+                  "ko": "`Exception`이 아닌 Python 예외(`SystemExit`, `KeyboardInterrupt`, `GeneratorExit` 등)는 프로세스나 task를 끝내며 애플리케이션의 오류가 아니다. Python 서버는 요청의 session을 닫고 그 예외를 호출자에게 그대로 넘기며, 그 예외에 대해 응답도 로그 줄도 쓰지 않고 어떤 hook도 호출하지 않는다.",
+                  "koSource": "8d4cd8b7fe17f8c514051aac9e1a27c65ba1f4fd8262174812c5acda98e00ebd"
                 }
               ]
             }
@@ -4733,9 +4889,9 @@
               "statements": [
                 {
                   "id": "HYC-14.1",
-                  "en": "When a region request receives a response that is not JSON, or when rendering, saving a kept value, loading templates or loading a stylesheet (HYC-15) fails, the browser does not swap and does not change history.",
-                  "ko": "영역 요청이 JSON이 아닌 응답을 받거나, 렌더, 보관된 값 저장, 템플릿 로드, 스타일시트 로드(HYC-15)가 실패하면, 브라우저는 교체하지 않고 히스토리도 바꾸지 않는다.",
-                  "koSource": "8efd6849fef3d1204c00584d9122044f27e1d744d4f8c3f64aeff51240d0482c"
+                  "en": "When a region request receives a response that is not JSON, or when rendering, saving a kept value, loading templates, loading a stylesheet (HYC-15) or loading a module script (HYC-25) fails, the browser does not swap and does not change history.",
+                  "ko": "영역 요청이 JSON이 아닌 응답을 받거나, 렌더, 보관된 값 저장, 템플릿 로드, 스타일시트 로드(HYC-15), module script 로드(HYC-25)가 실패하면, 브라우저는 교체하지 않고 히스토리도 바꾸지 않는다.",
+                  "koSource": "cffb3eb865a4d1bc4df787452eeff3c8f25eabd8bfc07fac32bd4ec39de805d7"
                 },
                 {
                   "id": "HYC-14.2",
@@ -4757,9 +4913,9 @@
                 },
                 {
                   "id": "HYC-14.5",
-                  "en": "When client-side rendering of a document fails, or a stylesheet of a history restoration in server-side rendering fails to load, the browser sets `hy-error` on the body.",
-                  "ko": "클라이언트에서 문서 렌더가 실패하거나, 서버 렌더의 히스토리 복원에서 스타일시트 로드가 실패하면, 브라우저는 body에 `hy-error`를 설정한다.",
-                  "koSource": "1bc861bcf7d743ad0b1e7d5174fa64753c1ac7e8011dd7ac6fe7375891fb8004"
+                  "en": "When client-side rendering of a document fails, or a stylesheet or a module script of a history restoration in server-side rendering fails to load, the browser sets `hy-error` on the body.",
+                  "ko": "클라이언트에서 문서 렌더가 실패하거나, 서버 렌더의 히스토리 복원에서 스타일시트나 module script 로드가 실패하면, 브라우저는 body에 `hy-error`를 설정한다.",
+                  "koSource": "414a12959139f2e57554dee7254c3f3ed215aef603f5e55ac467759e72eca0d8"
                 }
               ]
             }
@@ -5742,9 +5898,9 @@
                 },
                 {
                   "id": "HY-106.8",
-                  "en": "A call of a public method with another number of arguments than its parameters is outside the public API: each runtime answers it by its own calling convention, so that PHP and Python fail it with their `TypeError` and its own message, Node and PHP ignore an extra argument and Node gives a missing argument as `undefined`, and the errors and messages that the rules state hold for a call that gives each parameter.",
-                  "ko": "parameter와 다른 개수의 인자로 공개 method를 부르는 호출은 공개 API 밖이다: 각 runtime이 자기 호출 규약으로 답하므로 PHP와 Python은 자체 `TypeError`와 자체 메시지로 실패시키고, Node와 PHP는 남는 인자를 무시하며 Node는 빠진 인자를 `undefined`로 주고, 규칙이 정한 오류와 메시지는 각 parameter를 준 호출에 대해 성립한다.",
-                  "koSource": "b13cf0adca2867dc29785adeb71dc0891a5307a3d1071f5174bf5de81c53f84c"
+                  "en": "A call of a public member with fewer arguments than its required parameters, or with more arguments than its parameters, fails with `TypeError` in the three servers before the member runs; an optional parameter may be left out, and a parameter that takes the rest of the arguments, as the topics of `changed` are, takes any number of them.",
+                  "ko": "공개 member를 필수 parameter보다 적은 인자로, 또는 parameter보다 많은 인자로 부르는 호출은 세 서버에서 그 member가 실행되기 전에 `TypeError`로 실패한다. 선택 parameter는 생략할 수 있고, `changed`의 topic처럼 나머지 인자를 받는 parameter는 인자를 몇 개든 받는다.",
+                  "koSource": "d99d5e1a277d23c25414301d5e24ab9ad0d1fa33577f0ec6eec61c3dbd48a7f1"
                 },
                 {
                   "id": "HY-106.9",
@@ -5754,15 +5910,51 @@
                 },
                 {
                   "id": "HY-106.10",
-                  "en": "A message of an error that the Node server raises starts with `hyper: `.",
-                  "ko": "Node 서버가 내는 오류의 message는 `hyper: `로 시작한다.",
-                  "koSource": "78a302027f7743bdb3b202b59e3697e75137f314ae81006f423e51eb192c83f1"
+                  "en": "A message of an error of the class `Error` that the Node server raises starts with `hyper: `; a `TypeError` or a `RangeError` whose message a rule states for the three servers has that message without it.",
+                  "ko": "Node 서버가 내는 `Error` 클래스 오류의 message는 `hyper: `로 시작한다. 규칙이 세 서버에 대해 message를 정한 `TypeError`나 `RangeError`는 그것 없이 그 message를 가진다.",
+                  "koSource": "c7a8325d82fe5289c04a20171b5096ffae95c814485fdc6425c330f23685f24e"
                 },
                 {
                   "id": "HY-106.11",
                   "en": "The open error of a handler that does not match the manifest names the handler: `route handler <name> has no route in the manifest`, `route <name> has a loader for undeclared region <region>`, and `route <name> declares post but has no POST action`.",
                   "ko": "manifest와 맞지 않는 handler의 open 오류는 그 handler를 말한다: `route handler <name> has no route in the manifest`, `route <name> has a loader for undeclared region <region>`, `route <name> declares post but has no POST action`이다.",
                   "koSource": "6f822c99b4642971b7249fb052267ea059511014472881a7c87ab4e9c842afe3"
+                },
+                {
+                  "id": "HY-106.12",
+                  "en": "The request has `browser()` (HY-24.10) in each runtime form: PHP `Request::browser(): ?string`, Node `browser(): string | null` and Python `browser() -> Optional[str]`.",
+                  "ko": "요청은 `browser()`(HY-24.10)를 각 런타임의 형태로 가진다: PHP `Request::browser(): ?string`, Node `browser(): string | null`, Python `browser() -> Optional[str]`.",
+                  "koSource": "4ebc0c6043cfb74694f0943d6a381b89caa4d35849e5173afd20944ed9177788"
+                },
+                {
+                  "id": "HY-106.13",
+                  "en": "The open error of a hook that is not callable names the hook in Node and Python: `the request hook is not callable (HY-97)`, `the write hook is not callable (HY-99)` and `the disconnect hook is not callable (HY-67)`.",
+                  "ko": "호출할 수 없는 hook의 open 오류는 Node와 Python에서 그 hook을 말한다: `the request hook is not callable (HY-97)`, `the write hook is not callable (HY-99)`, `the disconnect hook is not callable (HY-67)`이다.",
+                  "koSource": "4860d586eddbce935dd0634d8533b0d0952920288daa902c67ce59da607f2597"
+                },
+                {
+                  "id": "HY-106.14",
+                  "en": "The runtime raises that error where it counts the arguments, and the server raises it where its runtime does not: PHP raises its `ArgumentCountError`, which is a `TypeError`, for a missing argument and the PHP server raises the same class for an extra one, Python raises `TypeError` for both, and the Node server raises a `TypeError` for both, because JavaScript counts no arguments.",
+                  "ko": "runtime이 인자를 세는 곳에서는 runtime이 그 오류를 내고, runtime이 세지 않는 곳에서는 서버가 낸다: PHP는 빠진 인자에 대해 `TypeError`인 자신의 `ArgumentCountError`를 내고 PHP 서버는 남는 인자에 대해 같은 클래스를 내며, Python은 둘 다에 `TypeError`를 내고, JavaScript는 인자를 세지 않으므로 Node 서버가 둘 다에 `TypeError`를 낸다.",
+                  "koSource": "938e5ca3ef8881e841275d3d525deac0bcdb84150299d2b08751decf329c4c26"
+                },
+                {
+                  "id": "HY-106.15",
+                  "en": "The members of an options record of Node (HY-106.9) are the arguments of its function: a call without the record, with an argument after the last parameter or with a record that lacks a required member fails with the `TypeError` of HY-106.8, and a member whose value is `undefined` is left out.",
+                  "ko": "Node의 options record(HY-106.9)의 member는 그 함수의 인자이다: record 없는 호출, 마지막 parameter 뒤에 인자를 준 호출, 필수 member가 없는 record를 준 호출은 HY-106.8의 `TypeError`로 실패하며, 값이 `undefined`인 member는 생략된 것이다.",
+                  "koSource": "45e737883add0fbe9c9eddaab1331b16424f78c3db417b78b84b98c8ed68be58"
+                },
+                {
+                  "id": "HY-106.16",
+                  "en": "An argument whose name is no parameter fails in every runtime before the member runs, with the class of the runtime: `Error` in PHP, which its `TypeError` extends, `TypeError` in Python, and in Node the `TypeError` of HY-106.8 for a member of an options record that is no parameter.",
+                  "ko": "이름이 parameter가 아닌 인자는 모든 runtime에서 그 member가 실행되기 전에 runtime의 클래스로 실패한다: PHP에서는 `TypeError`가 상속하는 `Error`, Python에서는 `TypeError`, Node에서는 parameter가 아닌 options record의 member에 대해 HY-106.8의 `TypeError`이다.",
+                  "koSource": "6c3fd254e49e03f7fa8179b51ddc58900addfb0599dc68d923cab08f6dbca27f"
+                },
+                {
+                  "id": "HY-106.17",
+                  "en": "A response holds a status, headers and a body; `Response.text(status, body)` makes a response whose only header is `Content-Type: text/plain; charset=utf-8`, and `withHeader(name, value)` returns a copy that holds the header under the name as it is written and leaves the response unchanged.",
+                  "ko": "response는 status, header, body를 가진다; `Response.text(status, body)`는 header가 `Content-Type: text/plain; charset=utf-8` 하나뿐인 response를 만들고, `withHeader(name, value)`는 쓰인 그대로의 이름으로 header를 가진 사본을 반환하며 원래 response는 바꾸지 않는다.",
+                  "koSource": "2bdfc191478b822ff6c1d1410e50dac43965e33e828bdd21714579ff156bb09a"
                 }
               ]
             }
@@ -6057,6 +6249,12 @@
                   "en": "A stored flash value or kept value of another form fails the request with HY-43, and no server repairs it.",
                   "ko": "다른 형태로 저장된 flash 값이나 kept 값은 HY-43으로 요청을 실패시키며, 어떤 서버도 그것을 고쳐 쓰지 않는다.",
                   "koSource": "c80dece20175a916486c165621ffe7e846fd73c79dec8712b331f86920233fc3"
+                },
+                {
+                  "id": "HY-104.24",
+                  "en": "A session store returns null for a key that holds no value, replaces the value of a key that is set again, and removes a key without failing when it holds none.",
+                  "ko": "session store는 값이 없는 key에 대해 null을 반환하고, 다시 설정된 key의 값을 바꾸며, 값이 없는 key를 실패 없이 제거한다.",
+                  "koSource": "687c98c704e6bd5ce39a2e0cf3b9788da6fe5fdb18a5312c1e3442a7082df4dc"
                 }
               ]
             }
@@ -6395,6 +6593,12 @@
                   "en": "Every host reads a body that the request sends in chunks, and the body limit applies to it.",
                   "ko": "모든 호스트는 요청이 chunk로 보내는 body를 읽으며, body 한도가 그것에 적용된다.",
                   "koSource": "3f9af12a437ea0bc7b93da843e43a8f987e72abfc64a5ee605fc941abbb50118"
+                },
+                {
+                  "id": "HY-59.11",
+                  "en": "`mediaType()` of the request returns the media type that HY-59.7 compares, in lower case, and the empty text for a request without `Content-Type`.",
+                  "ko": "request의 `mediaType()`은 HY-59.7이 비교하는 media type을 소문자로 반환하고, `Content-Type`이 없는 request에 대해서는 빈 text를 반환한다.",
+                  "koSource": "765a20ec626bd0a0350b86772871262f85d0a49f95e1e648278be9c55bdb3c60"
                 }
               ]
             }
@@ -6608,6 +6812,12 @@
                   "en": "The `http.server` server has no caller before it, so its plain 500 keeps no header of a caller.",
                   "ko": "`http.server` 서버는 그 앞에 호출자가 없으므로, 그 plain 500은 호출자의 header를 유지하지 않는다.",
                   "koSource": "e5ee751e747c655aa6bbbdf67aeba23074c0e41e9c7eba7d773036621078daba"
+                },
+                {
+                  "id": "HY-60.31",
+                  "en": "`handle` of every server takes the start of the request as an optional value of its monotonic clock, `hrtime(true)` in PHP, `performance.now()` in Node and `time.perf_counter_ns()` in Python, and counts from its own call without it.",
+                  "ko": "모든 서버의 `handle`은 요청의 시작을 자기 단조 시계의 값으로 선택적으로 받는다. PHP에서는 `hrtime(true)`, Node에서는 `performance.now()`, Python에서는 `time.perf_counter_ns()`의 값이며, 그 값이 없으면 자기 호출부터 측정한다.",
+                  "koSource": "2e8598cc046da9c8e6da319d28d7bf6ea59cb52e451fbb271a06dbfdf58333bf"
                 }
               ]
             }

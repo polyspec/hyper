@@ -7,25 +7,22 @@ from urllib.parse import urlencode
 
 from polyspec.hyper._context import Context
 from polyspec.hyper._csrf import Csrf
-from polyspec.hyper._json_codec import JsonCodec
-from polyspec.hyper._session import Session
 from polyspec.hyper.request import Request
 from polyspec.hyper.array_session import ArraySession
 
-from ..render.render_context import open_application, program_of
+from .context_application import open_application, program_of
+from .recorded import decoded
 
 
 def contexts(case) -> None:
     build = _string_field(case, "build")
-    text = Context.text(
-        _map_of(JsonCodec.decode(_string_field(case, "context")), "context")
-    )
+    text = Context.text(_map_of(decoded(_string_field(case, "context")), "context"))
     case.compare("context", text)
     case.compare("text", '{"build":"' + build + '","context":' + text + "}")
     case.compare("hash", Context.hash(build, text))
     if case.has("reorderedText"):
         reordered = _map_of(
-            JsonCodec.decode(_string_field(case, "reorderedText")), "reorderedText"
+            decoded(_string_field(case, "reorderedText")), "reorderedText"
         )
         if "context" not in reordered:
             raise ValueError("reorderedText has no member context")
@@ -69,7 +66,7 @@ def _string_field(case, name: str) -> str:
 
 def _map_of(value: object, name: str) -> dict:
     """Returns a decoded value that is a map of the data model, and fails for any other value."""
-    if not isinstance(value, dict) or not JsonCodec.in_data_model(value):
+    if not isinstance(value, dict):
         raise TypeError(f"{name} is not a map of the data model")
     return value
 
@@ -114,7 +111,10 @@ def cases(case) -> None:
         app.handle(Request("GET", "/", {"Accept": "text/html"}), store)
         calls.clear()
         selections.clear()
-        fields["_csrf"] = Csrf.masked(Session(store).csrf_token())
+        created = store.get("_hyper_csrf")
+        if not isinstance(created, str):
+            raise LookupError("the first response of the session created no token")
+        fields["_csrf"] = Csrf.masked(created)
     body = urlencode(fields).encode("utf-8") if fields else b""
     target = _text(request, "target")
     sent = Request(
@@ -150,10 +150,11 @@ def cases(case) -> None:
     if case.has("tokenOfSession"):
         # HY-72.3: the masked token of the body is a masked value of the token that the session holds now.
         masked = _member(response.body, "shared").get("csrf")
+        token = store.get("_hyper_csrf")
+        if not isinstance(token, str):
+            raise LookupError("the session holds no token after the request")
         case.compare(
-            "tokenOfSession",
-            isinstance(masked, str)
-            and Csrf.verify(Session(store).csrf_token(), masked),
+            "tokenOfSession", isinstance(masked, str) and Csrf.verify(token, masked)
         )
     # HY-72.2: how many times the request renewed the session; the store of the run counts its renewals.
     case.compare("renewals", store._renewals())
@@ -166,7 +167,9 @@ def _member(body: str, name: str) -> dict:
     """Returns a member of the JSON object of a response body that is a map, and fails for any other body."""
     document = json.loads(body)
     if not isinstance(document, dict) or not isinstance(document.get(name), dict):
-        raise TypeError(f"the body of the response is not a JSON object with the map {name}")
+        raise TypeError(
+            f"the body of the response is not a JSON object with the map {name}"
+        )
     return document[name]
 
 

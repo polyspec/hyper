@@ -10,8 +10,14 @@ import type { Sources, Spec } from './types.mts';
 
 const schemaDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'schema');
 
+/** True for a JSON object, which a schema document is. */
+export function isSchema(value: unknown): value is SchemaObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 function readSchema(file: string): SchemaObject {
-  const doc: SchemaObject = JSON.parse(readFileSync(path.join(schemaDir, file), 'utf8'));
+  const doc: unknown = JSON.parse(readFileSync(path.join(schemaDir, file), 'utf8'));
+  if (!isSchema(doc)) throw new Error(`${file} is no JSON object`);
   return doc;
 }
 

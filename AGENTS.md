@@ -86,6 +86,8 @@ The working principles of every polyspec repository, and the rules of work that 
   Enforced by: none, the directness of a sentence is judged by review.
 - Own: Every change adds its entry under `## Unreleased` at the top of `CHANGELOG.md` and `CHANGELOG.ko.md`.
   Enforced by: none, no tool checks that a change has its entry.
+- Own: Each branch and worktree other than `main` is in one of five states, and it is handled by its state; keeping one "for now" or as a work in progress for preservation is no state. A branch is done when its development, its Red and Green and its checks are done, and it is needed when the checklist or the spec uses what it holds. (1) Done and needed: merge it into `main`, then remove the branch, its worktree and its remote branch. (2) Not done and needed: develop it to the end until it is (1), and commit to its worktree while it is developed, so that an ended session loses nothing. (3) Not done and not needed: remove it; it is not needed when the same content entered `main` by another path or `main` removed the content on purpose. (4) Done and not needed: remove it. (5) Kept only as a reference, in its state, to compare with or to read: rename it, its documents and its remote branch so that the name states that role and does not read as work that waits for a merge. A merge that breaks something is no reason for (5): fix it and merge it (2).
+  Enforced by: none, whether a branch is done and needed is a judgement.
 
 ## Required checks
 

@@ -19,7 +19,7 @@ function eventStream(chunks: string[], end: boolean): Response {
 }
 
 const idlePage: DocumentAdapter = {
-  stylesheets: async () => () => undefined,
+  head: async () => () => undefined,
   mount: () => undefined,
   text: () => undefined,
   fail: () => undefined,

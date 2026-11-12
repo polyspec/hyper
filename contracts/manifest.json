@@ -851,7 +851,8 @@
       },
       "keptPaths": [
         "open"
-      ]
+      ],
+      "template": "rows.tpl"
     }
   ]
 }

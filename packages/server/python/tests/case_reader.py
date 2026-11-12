@@ -74,6 +74,10 @@ class CaseReader:
             return
         present, expected = rules.lookup(self._case, name)
         if not present:
+            # A field that the declaration does not state as optional is held by every case, as the Node reader
+            # requires.
+            if node.get("optional") is not True:
+                raise ValueError(f"the case has no field {name}")
             return
         self._compared.add(name)
         if name.split(".")[-1] in rules.HEADER_FIELDS:

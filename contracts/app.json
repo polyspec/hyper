@@ -8,7 +8,8 @@
     "largeFloat": "The float 1e20.",
     "floatTwoTo53": "The float 9007199254740992.0.",
     "loneSurrogate": "Node and Python: the string U+D800; PHP: the three bytes ED A0 80.",
-    "function": "A function of no parameter that returns 1."
+    "function": "A function of no parameter that returns 1.",
+    "countingMap": "A map with the member a = 1 that counts each time the server enumerates its entries: PHP a JsonSerializable that gives {\"a\":1} and counts the calls of jsonSerialize, Python a dict subclass that holds a = 1 and counts the calls of items; Node has no such value."
   },
   "applications": {
     "a_board": {
@@ -497,6 +498,93 @@
         "home.tpl": "<p>Home</p>\n"
       },
       "build": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "c_counting": {
+      "manifest": {
+        "layout": "layout.tpl",
+        "title": "title.tpl",
+        "regions": [
+          {
+            "name": "side",
+            "template": "side.tpl",
+            "uses": []
+          },
+          {
+            "name": "content",
+            "page": true
+          }
+        ],
+        "routes": [
+          {
+            "name": "home",
+            "path": "/",
+            "title": "Home",
+            "template": "home.tpl"
+          },
+          {
+            "name": "list",
+            "path": "/list",
+            "title": "List",
+            "template": "list.tpl",
+            "regions": [
+              {
+                "name": "rows",
+                "template": "rows.tpl"
+              }
+            ]
+          }
+        ]
+      },
+      "templates": {
+        "layout.tpl": "<title>{# title}</title>{# build}\n<aside id=\"side\">{# side}</aside>\n<main id=\"content\">{# content}</main>\n{# data}\n",
+        "title.tpl": "{= title} {= json(probe) | raw}",
+        "side.tpl": "<b>{= json(probe) | raw}</b>\n",
+        "home.tpl": "<p>{= json(probe) | raw}</p>\n",
+        "list.tpl": "<h1>{= json(probe) | raw}</h1>{?# rows}<ul id=\"rows\">{# rows}</ul>{/}\n",
+        "rows.tpl": "{@ r = items}<li>{= r}</li>{/}"
+      },
+      "build": "5555555555555555555555555555555555555555555555555555555555555555",
+      "handlers": {
+        "shared": [
+          {
+            "return": {
+              "probe": {
+                "$": "kind",
+                "name": "countingMap"
+              }
+            }
+          }
+        ],
+        "regions": {
+          "side": [
+            {
+              "return": {}
+            }
+          ]
+        },
+        "routes": {
+          "home": {
+            "load": [
+              {
+                "return": {}
+              }
+            ]
+          },
+          "list": {
+            "regions": {
+              "rows": [
+                {
+                  "return": {
+                    "items": [
+                      "a"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
     }
   },
   "cases": [
@@ -6408,7 +6496,7 @@
     },
     {
       "id": "the_elapsed_time_counts_from_the_start_that_the_caller_gives",
-      "label": "a request whose caller gives a start of 2000 milliseconds ago is reported with an elapsed time of at least 2000 milliseconds",
+      "label": "a request whose caller gives a start of 2000 milliseconds ago is reported with an elapsed time of at least 2000 milliseconds and at most the time from that start to the return of handle",
       "application": "b_board",
       "options": {
         "bodyLimit": 256
@@ -8480,9 +8568,9 @@
       ],
       "requirements": [
         "HY-45",
-        "HY-65",
-        "HY-66"
-      ]
+        "HY-65"
+      ],
+      "failureLogged": true
     },
     {
       "id": "a_json_response_larger_than_the_response_limit_is_not_sent",
@@ -8520,9 +8608,9 @@
       ],
       "requirements": [
         "HY-45",
-        "HY-65",
-        "HY-66"
-      ]
+        "HY-65"
+      ],
+      "failureLogged": true
     },
     {
       "id": "a_document_within_the_response_limit_is_sent",
@@ -8788,6 +8876,469 @@
         "HY-65",
         "HY-117",
         "HY-127"
+      ]
+    },
+    {
+      "id": "a_loader_reads_the_browser_of_the_first_request_of_a_session",
+      "label": "a route loader of the first request of a session reads as browser the digest of the token that the session then holds",
+      "application": "b_board",
+      "handlers": {
+        "routes": {
+          "item": {
+            "load": [
+              {
+                "observe": {
+                  "$": "browser"
+                }
+              },
+              {
+                "return": {
+                  "id": {
+                    "$": "param",
+                    "name": "id"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/items/7",
+        "headers": {}
+      },
+      "status": 200,
+      "browsers": [
+        "current"
+      ],
+      "tokenForm": true,
+      "requirements": [
+        "HY-106"
+      ]
+    },
+    {
+      "id": "a_loader_of_the_second_request_of_a_session_reads_the_same_browser",
+      "label": "a route loader of the second request of a session, which does not replace the token, reads the digest of that token, as the first request did",
+      "application": "b_board",
+      "handlers": {
+        "routes": {
+          "item": {
+            "load": [
+              {
+                "observe": {
+                  "$": "browser"
+                }
+              },
+              {
+                "return": {
+                  "id": {
+                    "$": "param",
+                    "name": "id"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "before": [
+        {
+          "name": "first",
+          "method": "GET",
+          "target": "/items/7",
+          "headers": {},
+          "status": 200
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "target": "/items/7",
+        "headers": {}
+      },
+      "status": 200,
+      "browsers": [
+        "current"
+      ],
+      "tokenRenewed": false,
+      "requirements": [
+        "HY-106"
+      ]
+    },
+    {
+      "id": "an_action_that_renews_the_session_reads_the_old_browser_and_the_shared_handler_after_it_the_new",
+      "label": "an action that renews the session and returns the page reads the digest of the old token, and the shared handler that runs after it reads the digest of the new token",
+      "application": "b_board",
+      "handlers": {
+        "shared": [
+          {
+            "observe": {
+              "$": "browser"
+            }
+          },
+          {
+            "return": {}
+          }
+        ],
+        "routes": {
+          "add": {
+            "post": [
+              {
+                "observe": {
+                  "$": "browser"
+                }
+              },
+              {
+                "calls": [
+                  [
+                    "renewSession",
+                    []
+                  ]
+                ]
+              },
+              {
+                "page": 200,
+                "data": {
+                  "name": "renewed"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "HX-Request": "true",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {
+          "name": "sign-in-page"
+        },
+        "csrf": true
+      },
+      "status": 200,
+      "handlerCalls": [
+        "action:add",
+        "shared"
+      ],
+      "renewals": 1,
+      "tokenRenewed": true,
+      "browsers": [
+        "previous",
+        "current"
+      ],
+      "requirements": [
+        "HY-58"
+      ]
+    },
+    {
+      "id": "a_document_reads_a_shared_value_twice_whatever_the_number_of_its_renders",
+      "label": "a document whose title, manifest region and page region render a shared value reads the value twice: for the check and for the bound shared data",
+      "application": "c_counting",
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {}
+      },
+      "status": 200,
+      "bodyContains": [
+        "<title>Home {\"a\":1}</title>",
+        "<b>{\"a\":1}</b>",
+        "<p>{\"a\":1}</p>"
+      ],
+      "valueReads": 2,
+      "requirements": [
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-54.3"
+      }
+    },
+    {
+      "id": "a_document_json_reads_a_shared_value_twice",
+      "label": "a document JSON reads a shared value twice: for the check and for its JSON text",
+      "application": "c_counting",
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 200,
+      "members": {
+        "shared": {
+          "title": "Home",
+          "probe": {
+            "a": 1
+          }
+        }
+      },
+      "valueReads": 2,
+      "requirements": [
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-54.3"
+      }
+    },
+    {
+      "id": "a_region_json_reads_a_shared_value_twice",
+      "label": "a region response reads a shared value twice: for the check and for its JSON text",
+      "application": "c_counting",
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "HX-Request": "true"
+        }
+      },
+      "status": 200,
+      "valueReads": 2,
+      "requirements": [
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-54.3"
+      }
+    },
+    {
+      "id": "a_document_of_a_route_with_a_route_region_reads_a_shared_value_twice",
+      "label": "a document of a route with a route region that embeds no data reads a shared value twice",
+      "application": "c_counting",
+      "request": {
+        "method": "GET",
+        "target": "/list",
+        "headers": {}
+      },
+      "status": 200,
+      "bodyNotContains": [
+        "id=\"hy-data\""
+      ],
+      "valueReads": 2,
+      "requirements": [
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-54.3"
+      }
+    },
+    {
+      "id": "a_document_that_embeds_its_data_reads_a_shared_value_three_times",
+      "label": "a document that embeds its data reads a shared value once more, for the embedded data, which carries the shared data",
+      "application": "c_counting",
+      "handlers": {
+        "routes": {
+          "list": {
+            "regions": {
+              "rows": [
+                {
+                  "calls": [
+                    [
+                      "embedData",
+                      []
+                    ]
+                  ]
+                },
+                {
+                  "return": {
+                    "items": [
+                      "a"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/list",
+        "headers": {}
+      },
+      "status": 200,
+      "bodyContains": [
+        "id=\"hy-data\""
+      ],
+      "valueReads": 3,
+      "requirements": [
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-54.3"
+      }
+    },
+    {
+      "id": "a_file_part_whose_filename_is_not_utf8_is_a_bad_request_before_the_action",
+      "label": "a multipart request with a valid token whose file part has a filename with a byte that is not UTF-8 is answered with 400, and no action runs",
+      "application": "a_board",
+      "options": {
+        "formTypes": [
+          "application/x-www-form-urlencoded",
+          "multipart/form-data"
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=x"
+        },
+        "body": [
+          "--x\r\nContent-Disposition: form-data; name=\"_csrf\"\r\n\r\n",
+          {
+            "token": "masked"
+          },
+          "\r\n--x\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\na\r\n--x\r\nContent-Disposition: form-data; name=\"upload\"; filename=\"ÿ.txt\"\r\n\r\na\r\n--x--\r\n"
+        ]
+      },
+      "status": 400,
+      "actions": 0,
+      "requirements": [
+        "HY-42",
+        "HY-113"
+      ]
+    },
+    {
+      "id": "a_handler_reads_a_masked_value_of_the_session_token_from_its_request",
+      "label": "csrfToken() of the request of the shared handler is a masked value of the token that the session holds after the request (HY-24)",
+      "application": "a_board",
+      "handlers": {
+        "shared": [
+          {
+            "observe": {
+              "$": "csrfToken"
+            }
+          },
+          {
+            "return": {
+              "site": "fixture"
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "GET",
+        "target": "/list",
+        "headers": {}
+      },
+      "status": 200,
+      "observed": [
+        [
+          "shared",
+          "masked"
+        ]
+      ],
+      "requirements": [
+        "HY-24"
+      ]
+    },
+    {
+      "id": "a_map_in_shared_data_passes_for_a_document",
+      "label": "a map of the data model in shared data passes for a document",
+      "application": "a_board",
+      "handlers": {
+        "shared": [
+          {
+            "return": {
+              "value": {
+                "a": 1
+              }
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {}
+      },
+      "status": 200,
+      "requirements": [
+        "HY-44",
+        "HY-54"
+      ]
+    },
+    {
+      "id": "a_map_in_shared_data_passes_for_a_document_json",
+      "label": "a map of the data model in shared data passes for a document JSON",
+      "application": "a_board",
+      "handlers": {
+        "shared": [
+          {
+            "return": {
+              "value": {
+                "a": 1
+              }
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 200,
+      "requirements": [
+        "HY-44",
+        "HY-54"
+      ]
+    },
+    {
+      "id": "a_map_in_shared_data_passes_for_a_region_request",
+      "label": "a map of the data model in shared data passes for a region request",
+      "application": "a_board",
+      "handlers": {
+        "shared": [
+          {
+            "return": {
+              "value": {
+                "a": 1
+              }
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "HX-Request": "true"
+        }
+      },
+      "status": 200,
+      "requirements": [
+        "HY-44",
+        "HY-54"
       ]
     }
   ],
@@ -9261,6 +9812,91 @@
         ],
         "sentence": "HY-48.10"
       }
+    }
+  ],
+  "parts": [
+    {
+      "id": "the_title_and_each_manifest_region_rendered_alone_are_their_places_in_the_document",
+      "label": "the document is the layout with the title and each manifest region rendered alone at its place, and a value of the region data replaces the shared value of its name",
+      "application": "a_board",
+      "route": "home",
+      "shared": {
+        "title": "T",
+        "name": "shared"
+      },
+      "regions": {
+        "side": {
+          "count": 1,
+          "note": "x"
+        },
+        "content": {
+          "title": "region",
+          "name": "n"
+        }
+      },
+      "title": "T - Site",
+      "parts": {
+        "side": "<b>1</b> x\n",
+        "content": "<p>region|n</p>\n"
+      },
+      "frame": "<title>{# title}</title><meta name=\"hyper-build\" content=\"1111111111111111111111111111111111111111111111111111111111111111\">\n<aside id=\"side\">{# side}</aside>\n<main id=\"content\">{# content}</main>\n"
+    },
+    {
+      "id": "the_page_region_rendered_alone_holds_its_route_regions_rendered_alone",
+      "label": "the page region rendered alone holds each route region rendered alone at its place, and the document holds that page region",
+      "application": "a_board",
+      "route": "list",
+      "shared": {
+        "title": "T"
+      },
+      "regions": {
+        "side": {
+          "count": 1,
+          "note": null
+        },
+        "content": {},
+        "rows": {
+          "items": [
+            "x"
+          ],
+          "tags": []
+        }
+      },
+      "title": "T - Site",
+      "parts": {
+        "side": "<b>1</b>\n",
+        "content": "<h1>T</h1><ul id=\"rows\"><li>x</li></ul>\n",
+        "rows": "<li>x</li>"
+      },
+      "frame": "<title>{# title}</title><meta name=\"hyper-build\" content=\"1111111111111111111111111111111111111111111111111111111111111111\">\n<aside id=\"side\">{# side}</aside>\n<main id=\"content\">{# content}</main>\n",
+      "pageFrame": "<h1>T</h1><ul id=\"rows\">{# rows}</ul>\n",
+      "requirements": [
+        "HY-30"
+      ]
+    },
+    {
+      "id": "the_parts_of_the_home_document_rendered_alone_are_its_title_and_its_regions",
+      "label": "the data of the document of the request GET / of the application renders alone as the title `Home - Site`, the manifest region and the page region of that document",
+      "application": "a_board",
+      "route": "home",
+      "shared": {
+        "title": "Home"
+      },
+      "regions": {
+        "side": {
+          "count": 0,
+          "note": null
+        },
+        "content": {
+          "name": "n0"
+        }
+      },
+      "title": "Home - Site",
+      "parts": {
+        "side": "<b>0</b>\n",
+        "content": "<p>Home|n0</p>\n"
+      },
+      "frame": "<title>{# title}</title><meta name=\"hyper-build\" content=\"1111111111111111111111111111111111111111111111111111111111111111\">\n<aside id=\"side\">{# side}</aside>\n<main id=\"content\">{# content}</main>\n"
     }
   ]
 }

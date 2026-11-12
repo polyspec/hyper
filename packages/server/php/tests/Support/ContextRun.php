@@ -20,9 +20,6 @@ use Polyspec\Hyper\Result;
  */
 final class ContextRun
 {
-    /** @var array<string, true> the namespaces whose programs the autoloader maps */
-    private static array $mapped = [];
-
     /** @var list<string> the calls of the handlers in order: `action:<route>`, `context` and `shared` */
     public array $calls = [];
 
@@ -45,23 +42,21 @@ final class ContextRun
      * application that declares no shared data and a case that gives none opens with no shared handler.
      *
      * @param array<array-key, mixed>|null $shared
-     * @param array<string, callable|string> $functions the host functions of the case (HYC-24)
      * @param ?string $context the JSON text of the context of the case, which replaces the context of the application
      */
-    public function open(?array $shared, array $functions = [], ?string $context = null): App
+    public function open(?array $shared, ?string $context = null): App
     {
         $directory = "{$this->programs}/{$this->key}";
-        self::autoload($directory);
         $routes = [];
         $names = array_map(
             static fn (array $route): string => self::string($route['name'] ?? null, 'a route name'),
             $this->routes(),
         );
         // An absent member declares none; a member that is present must have its type.
-        foreach (self::map($this->application['loaders'] ?? null, 'the loaders') as $name => $spec) {
+        foreach (Json::map($this->application['loaders'] ?? null, 'the loaders') as $name => $spec) {
             // PHP keeps a decimal name as an integer key; the name is its string.
             $name = (string) $name;
-            $loader = $this->loader($name, self::map($spec, "the loader {$name}"));
+            $loader = $this->loader($name, Json::map($spec, "the loader {$name}"));
             if (in_array($name, $names, true)) {
                 $routes[$name]['load'] = $loader;
 
@@ -70,14 +65,14 @@ final class ContextRun
             $routes[$this->routeOfRegion($name)]['regions'][$name] = $loader;
         }
         if (array_key_exists('actions', $this->application)) {
-            foreach (self::map($this->application['actions'], 'the actions') as $route => $spec) {
+            foreach (Json::map($this->application['actions'], 'the actions') as $route => $spec) {
                 // PHP keeps a decimal name as an integer key; the name is its string.
                 $route = (string) $route;
-                $routes[$route]['post'] = $this->action($route, self::map($spec, "the action of {$route}"));
+                $routes[$route]['post'] = $this->action($route, Json::map($spec, "the action of {$route}"));
             }
         }
         $data = $shared ?? (array_key_exists('shared', $this->application)
-            ? self::map($this->application['shared'], 'the shared data')
+            ? Json::map($this->application['shared'], 'the shared data')
             : null);
         $handlers = ['routes' => $routes];
         if ($data !== null) {
@@ -95,7 +90,7 @@ final class ContextRun
         if ($text !== null) {
             // The handler returns the decoded text as it is, also a value that is not a map, so that the server
             // checks it (HY-124).
-            $value = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
+            $value = Json::value($text);
             $handler = function (mixed $selection) use ($value): mixed {
                 $this->calls[] = 'context';
                 $this->selections[] = $selection;
@@ -104,42 +99,29 @@ final class ContextRun
             };
         }
 
-        return App::open(
+        // A case hands the server a context that is not a map, which the type of App::open excludes, so the step calls
+        // it without that type; the server refuses the value (HY-124).
+        $app = Untyped::call(App::open(...))(
             "{$directory}/manifest.json",
             "{$directory}/program",
             $handlers,
             'Z',
-            onResponse: function (Request $request, Response $response, float $elapsed, Reply $reply, ?string $failure): void {
+            onResponse: function (
+                Request $request,
+                Response $response,
+                float $elapsed,
+                Reply $reply,
+                ?string $failure,
+            ): void {
                 $this->failure = $failure;
             },
-            // @phpstan-ignore argument.type (a case hands the server a value that is not a map, which the type of the handler excludes)
             context: $handler,
-            // @phpstan-ignore argument.type (the cases of functions.json hand the engine a value that is not a function, which it refuses)
-            functions: $functions,
         );
-    }
-
-    /**
-     * Maps the namespace that program.json of the program names to its directory php, as the autoload of Composer maps
-     * the program of the fixtures (HY-48). Each namespace is mapped once.
-     */
-    public static function autoload(string $directory): void
-    {
-        $declaration = Json::file("{$directory}/program/program.json");
-        $namespace = Json::string($declaration['namespace'] ?? null) . '\\';
-        if (isset(self::$mapped[$namespace])) {
-            return;
+        if (!$app instanceof App) {
+            throw new \LogicException('App::open returned no application');
         }
-        self::$mapped[$namespace] = true;
-        spl_autoload_register(static function (string $class) use ($namespace, $directory): void {
-            if (!str_starts_with($class, $namespace)) {
-                return;
-            }
-            $file = "{$directory}/program/php/" . str_replace('\\', '/', substr($class, strlen($namespace))) . '.php';
-            if (is_file($file)) {
-                require $file;
-            }
-        });
+
+        return $app;
     }
 
     /** Returns the masked token of the session, which a first response of the session created (HY-24). */
@@ -210,14 +192,7 @@ final class ContextRun
      */
     private static function texts(array $request, string $field): array
     {
-        $value = $request[$field] ?? null;
-        // Plain gives an empty JSON object as stdClass, so that it differs from an empty list.
-        if ($value instanceof \stdClass && get_object_vars($value) === []) {
-            return [];
-        }
-        if (!is_array($value) || ($value !== [] && array_is_list($value))) {
-            throw new \UnexpectedValueException("the request field {$field} is not a map");
-        }
+        $value = Json::map($request[$field] ?? null, "the request field {$field}");
         $texts = [];
         foreach ($value as $name => $text) {
             if (!is_string($name) || !is_string($text)) {
@@ -254,24 +229,6 @@ final class ContextRun
     }
 
     /**
-     * Returns a map of the application, and fails for any other value. Plain gives an empty JSON object as stdClass,
-     * so that it differs from an empty list.
-     *
-     * @return array<array-key, mixed>
-     */
-    private static function map(mixed $value, string $what): array
-    {
-        if ($value instanceof \stdClass && get_object_vars($value) === []) {
-            return [];
-        }
-        if (!is_array($value) || ($value !== [] && array_is_list($value))) {
-            throw new \UnexpectedValueException("{$what} is not a map");
-        }
-
-        return $value;
-    }
-
-    /**
      * Returns a map of the application whose keys are names, and fails for any other value; a decimal name, which PHP
      * keeps as an integer key, is not a name of the data of a page.
      *
@@ -280,7 +237,7 @@ final class ContextRun
     private static function stringMap(mixed $value, string $what): array
     {
         $names = [];
-        foreach (self::map($value, $what) as $key => $item) {
+        foreach (Json::map($value, $what) as $key => $item) {
             if (!is_string($key)) {
                 throw new \UnexpectedValueException("{$what} has a key that is not a name");
             }
@@ -360,7 +317,7 @@ final class ContextRun
     /** Returns the code of the ORM error that a handler of the application raises (HY-107.2). */
     private static function ormCodeOf(mixed $thrown, string $what): string
     {
-        $thrown = self::map($thrown, "the member throw of {$what}");
+        $thrown = Json::map($thrown, "the member throw of {$what}");
         if (($thrown['class'] ?? null) !== 'OrmError') {
             throw new \UnexpectedValueException("{$what} raises a class other than OrmError");
         }
@@ -375,12 +332,12 @@ final class ContextRun
      */
     private function routes(): array
     {
-        $routes = self::map($this->application['manifest'] ?? null, 'the manifest')['routes'] ?? null;
+        $routes = Json::map($this->application['manifest'] ?? null, 'the manifest')['routes'] ?? null;
         if (!is_array($routes) || !array_is_list($routes)) {
             throw new \UnexpectedValueException('the routes of the manifest are not a list');
         }
 
-        return array_map(static fn (mixed $route): array => self::map($route, 'a route'), $routes);
+        return array_map(static fn (mixed $route): array => Json::map($route, 'a route'), $routes);
     }
 
     private function routeOfRegion(string $region): string
@@ -391,7 +348,7 @@ final class ContextRun
                 throw new \UnexpectedValueException('the regions of a route are not a list');
             }
             foreach ($regions as $declared) {
-                if ((self::map($declared, 'a region')['name'] ?? null) === $region) {
+                if ((Json::map($declared, 'a region')['name'] ?? null) === $region) {
                     return self::string($route['name'], 'a route name');
                 }
             }

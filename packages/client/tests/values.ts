@@ -17,11 +17,6 @@ export function listOf(value: Value | undefined): Value[] {
   return value;
 }
 
-export function stringOf(value: Value | undefined): string {
-  if (typeof value !== 'string') throw new Error(`expected a string, got ${typeof value}`);
-  return value;
-}
-
 // A JSON object of a contract file.
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -30,4 +25,11 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 // A JSON object whose values are strings, such as the templates of a case by their names.
 export function isStringRecord(value: unknown): value is Record<string, string> {
   return isRecord(value) && Object.values(value).every((item) => typeof item === 'string');
+}
+
+// A template value as a case file gives it: null, a boolean, a number, a string, a list of values or a map of values.
+export function isValue(value: unknown): value is Value {
+  if (value === null || typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return true;
+  if (Array.isArray(value)) return value.every(isValue);
+  return value instanceof Map && [...value].every(([key, item]) => typeof key === 'string' && isValue(item));
 }

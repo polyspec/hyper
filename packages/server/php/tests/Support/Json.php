@@ -36,6 +36,35 @@ final class Json
         return self::array(json_decode($json, true, flags: JSON_THROW_ON_ERROR));
     }
 
+    /** Reads the JSON text of a case into the value that a handler gives: a map is an array (HY-44). */
+    public static function value(string $text): mixed
+    {
+        return json_decode($text, true, 512, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * Returns a map of a contract, and fails for any other value. Plain gives an empty JSON object as stdClass, so
+     * that it differs from an empty list.
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function map(mixed $value, string $what): array
+    {
+        if ($value instanceof \stdClass && get_object_vars($value) === []) {
+            return [];
+        }
+        if (!is_array($value) || ($value !== [] && array_is_list($value))) {
+            throw new \UnexpectedValueException("{$what} is not a map");
+        }
+
+        return $value;
+    }
+
+    public static function integer(mixed $value, string $what): int
+    {
+        return is_int($value) ? $value : throw new \UnexpectedValueException("{$what} is not an integer");
+    }
+
     /** @return array<array-key, mixed> */
     public static function array(mixed $value): array
     {

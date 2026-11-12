@@ -7,8 +7,8 @@ namespace Polyspec\Hyper\Tests;
 use PHPUnit\Framework\TestCase;
 
 /**
- * HY-45, HY-129: the session cookie that the server sends over HTTP, through the PHP built-in server. PHP sends no cookie
- * for the session, so these checks read the `Set-Cookie` lines of the responses.
+ * HY-45, HY-129: the session cookie that the server sends over HTTP, through the PHP built-in server. PHP sends no
+ * cookie for the session, so these checks read the `Set-Cookie` lines of the responses.
  */
 final class SessionCookieTest extends TestCase
 {
@@ -28,7 +28,18 @@ final class SessionCookieTest extends TestCase
         $this->directory = sys_get_temp_dir() . '/hyper-session-cookie-' . bin2hex(random_bytes(6));
         mkdir($this->directory);
         $server = proc_open(
-            [PHP_BINARY, '-d', 'display_errors=0', '-d', 'error_log=/dev/null', '-d', "session.save_path={$this->directory}", '-S', '127.0.0.1:0', self::PAGE],
+            [
+                PHP_BINARY,
+                '-d',
+                'display_errors=0',
+                '-d',
+                'error_log=/dev/null',
+                '-d',
+                "session.save_path={$this->directory}",
+                '-S',
+                '127.0.0.1:0',
+                self::PAGE,
+            ],
             [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['pipe', 'w']],
             $pipes,
             null,

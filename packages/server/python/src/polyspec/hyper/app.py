@@ -25,6 +25,7 @@ from ._representation_response import RepresentationResponse
 from .media_type import MediaType
 from ._manifest import Manifest
 from ._page import Page
+from ._region import Region
 from .reply import Reply
 from .request import Request
 from .response import Response
@@ -187,7 +188,7 @@ class App:
                 f"base path {base_path} must start with / and must not end with /"
             )
         if on_disconnect is not None and not callable(on_disconnect):
-            raise ValueError("on_disconnect must be a callable or None")
+            raise ValueError("the disconnect hook is not callable (HY-67)")
         declared = Manifest.from_file(manifest)
         App._check_handlers(declared, handlers)
         shell = (
@@ -268,7 +269,7 @@ class App:
         handlers of each route (HY-120)."""
         region_loaders = handlers.get("regions", {})
         for name in region_loaders:
-            region = next(
+            region: Optional[Region] = next(
                 (entry for entry in manifest.regions if entry.name == name), None
             )
             if region is None or region.page:

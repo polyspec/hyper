@@ -8,6 +8,7 @@ import { compare } from './compare.mts';
 import { readSources, readTree } from './readers.mts';
 import { checkResults, type Results } from './results.mts';
 import { readProtocol } from './protocol.mts';
+import type { Counts } from './stated.mts';
 import type { Finding, Lang, Sources, Spec } from './types.mts';
 
 export type Validators = { spec: ValidateFunction<Spec>; sources: ValidateFunction<Sources> };
@@ -26,7 +27,8 @@ export function readAllSources(root: string, spec: Spec, v: Validators, phpAutol
   };
 }
 
-export function runChecks(root: string, v: Validators, results: Results, phpAutoload: string): Finding[] {
+/** Runs the checks of a tree; `counts`, when given, receives the three numbers of HYR-5. */
+export function runChecks(root: string, v: Validators, results: Results, phpAutoload: string, counts?: Counts): Finding[] {
   const specDoc: unknown = JSON.parse(readFileSync(path.join(root, 'contracts', 'interfaces.json'), 'utf8'));
   if (!v.spec(specDoc)) {
     return (v.spec.errors ?? []).map((e) => ({ code: 'SPEC_INVALID', message: `${e.instancePath} ${e.message}` }));
@@ -35,5 +37,5 @@ export function runChecks(root: string, v: Validators, results: Results, phpAuto
   const sources = readAllSources(root, spec, v, phpAutoload);
   const readDir = (lang: Lang, dir: string): Sources => readTree(root, lang, [dir], [], v.sources, extraOf(lang, phpAutoload));
   const protocol = readProtocol(readFileSync(path.join(root, 'contracts', 'protocol.json'), 'utf8'));
-  return [...compare(spec, sources, root, protocol, readDir), ...checkResults(root, spec, results)];
+  return [...compare(spec, sources, root, protocol, readDir, counts), ...checkResults(root, spec, results)];
 }

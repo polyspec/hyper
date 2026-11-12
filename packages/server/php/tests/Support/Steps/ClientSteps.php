@@ -18,6 +18,7 @@ use Polyspec\Hyper\Tests\Support\Plain;
 use Polyspec\Hyper\Tests\Support\Reports;
 use Polyspec\Hyper\Tests\Support\RepresentationCalls;
 use Polyspec\Hyper\Tests\Support\ServerLog;
+use Polyspec\Hyper\Tests\Support\Untyped;
 
 /** HY-62: the cases of contracts/client.json. */
 final class ClientSteps
@@ -141,7 +142,7 @@ final class ClientSteps
         $case->compare('bodyNotContains', $response->body);
         if ($case->has('json')) {
             // The maps of the response stay objects, so an empty map of the contract is an empty object.
-            $json = json_decode($response->body) ?? new \stdClass();
+            $json = Json::object(json_decode($response->body) ?? new \stdClass());
             $case->compare('json.route', $json->route ?? null);
             $case->compare('json.params', $json->params ?? null);
             $case->compare('json.regions', $json->regions ?? null);
@@ -150,6 +151,10 @@ final class ClientSteps
         $case->compare('session', $store->holds('_hyper_csrf'));
         $case->compare('actions', $counter->actions);
         $case->compare('handled', $calls->handled);
+        // `received` is optional: a case without it compares none of its fields.
+        if (!$case->has('received')) {
+            return;
+        }
         $case->compare('received.parameters', Plain::map($calls->parameters));
         $case->compare('received.selection', $calls->request?->selection());
         $case->compare('received.absentHeaders', $calls->headers(array_map(strval(...), array_keys($headers))));
@@ -200,6 +205,31 @@ final class ClientSteps
         $case->compare('openError', $failure?->getMessage() ?? '');
     }
 
+    /** HY-62: a choice and a client rendering hold what they were made with; no application opens. */
+    public static function declaration(CaseReader $case): void
+    {
+        $chosen = $case->input('chosen');
+        if (!is_bool($chosen)) {
+            throw new \UnexpectedValueException('the case field chosen is not a boolean');
+        }
+        $choice = new Choice($chosen, $case->input('value'));
+        $rendering = new ClientRendering(
+            Json::string($case->input('shellPath')),
+            Json::string($case->input('dataBasePath')),
+            static fn (Request $request): Choice => $choice,
+        );
+        $selected = ($rendering->selects)(new Request('GET', '/'));
+        if (!$selected instanceof Choice) {
+            throw new \UnexpectedValueException('the selection of the case returned no choice');
+        }
+        $case->compare('choice', ['chosen' => $choice->chosen, 'value' => $choice->value]);
+        $case->compare('rendering', [
+            'shell' => $rendering->shell,
+            'basePath' => $rendering->basePath,
+            'selected' => ['chosen' => $selected->chosen, 'value' => $selected->value],
+        ]);
+    }
+
     private static function written(string $file, string $bytes): string
     {
         file_put_contents($file, $bytes);
@@ -228,17 +258,22 @@ final class ClientSteps
     private static function selection(string $name, string $chosenHost): \Closure
     {
         return match ($name) {
-            'host' => static fn (Request $request): Choice => new Choice($request->header('Host') === $chosenHost, null),
+            'host' => static fn (Request $request): Choice => new Choice(
+                $request->header('Host') === $chosenHost,
+                null,
+            ),
             'hostValue' => static fn (Request $request): Choice => new Choice(
                 $request->header('Host') === $chosenHost,
                 ['host' => $request->header('Host') ?? ''],
             ),
             'text' => static fn (): string => 'csr',
             'boolean' => static fn (): bool => true,
+            // HY-62.11: a record with the members of a choice is not a Choice.
+            'record' => static fn (): array => ['chosen' => true, 'value' => null],
             'throws' => static fn (): never => throw new \RuntimeException('selection'),
-            // The constructor refuses a `chosen` that is no boolean under strict types, so the selection throws.
-            // @phpstan-ignore argument.type (the case gives a `chosen` that is no boolean)
-            'chosenNotBoolean' => static fn (): Choice => new Choice('yes', null),
+            // The constructor refuses a `chosen` that is no boolean under strict types, so the selection throws; the
+            // class is named without its type, because the type of the constructor excludes the value of the case.
+            'chosenNotBoolean' => static fn (): object => new (Untyped::name(Choice::class))('yes', null),
             default => throw new \UnexpectedValueException("the selection {$name} of the case is unknown"),
         };
     }

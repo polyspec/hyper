@@ -1,5 +1,5 @@
-// The urlencoded and multipart steps of contracts/fields.json (HY-56, HY-57, HY-113): a urlencoded text is the UTF-8
-// encoding of its JSON string, and a multipart type and body are text whose characters are their bytes.
+// The urlencoded, multipart and uploaded steps of contracts/fields.json (HY-56, HY-57, HY-106.5, HY-113): a urlencoded
+// text is the UTF-8 encoding of its JSON string, and a multipart type and body are text whose characters are their bytes.
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -7,6 +7,7 @@ import { Fields } from '../../src/fields.js';
 import { Files } from '../../src/files.js';
 import { Multipart } from '../../src/multipart.js';
 import { RequestBody } from '../../src/request-body.js';
+import { UploadedFile } from '../../src/uploaded-file.js';
 import type { CaseReader } from '../case-reader.js';
 import { bytesOf } from '../support.js';
 
@@ -28,6 +29,11 @@ function filesOf(files: Files | null): unknown {
 }
 
 export const steps = {
+  // Makes a file with the public constructor, as an application makes one, and compares its members (HY-106.5).
+  uploaded(reader: CaseReader): void {
+    const file = new UploadedFile(text(reader, 'name'), text(reader, 'filename'), text(reader, 'contentType'), bytesOf(text(reader, 'content')));
+    reader.compare('file', { name: file.name(), filename: file.filename(), contentType: file.contentType(), size: file.size(), content: Buffer.from(file.content()).toString('latin1') });
+  },
   // Parses the text and records its pairs and its names, or null for both when it fails with HY-42 (HY-56).
   urlencoded(reader: CaseReader): void {
     const fields = Fields.parse(Buffer.from(text(reader, 'text'), 'utf8'));

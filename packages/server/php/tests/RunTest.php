@@ -57,7 +57,8 @@ final class RunTest extends TestCase
                 'silenced',
                 200,
                 '{"env":{"timezone":"Z"},"route":"item","params":{"id":"silenced"},'
-                . '"build":"1111111111111111111111111111111111111111111111111111111111111111","shared":{"title":"Item"},'
+                . '"build":"1111111111111111111111111111111111111111111111111111111111111111",'
+                . '"shared":{"title":"Item"},'
                 . '"regions":{"side":{},"content":{"id":"silenced"}},"kept":{}}',
             ],
             ['handler', true],

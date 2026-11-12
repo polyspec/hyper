@@ -3,7 +3,7 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { RUNNERS, type Finding, type Runner, type Spec } from './types.mts';
+import { RUNNERS, isObject, type Finding, type Runner, type Spec } from './types.mts';
 import type { CaseFile } from './types.mts';
 
 export type Results = Partial<Record<Runner, string>>;
@@ -21,16 +21,15 @@ function onlyRunners(only: unknown): Runner[] {
 
 /** The case ids of a case file: the items of each section, for the runners the section names and the item's `only` keeps. */
 function caseIds(file: string, entry: CaseFile | undefined, data: unknown): CaseId[] {
-  if (entry === undefined || typeof data !== 'object' || data === null) return [];
-  const record = data as Record<string, unknown>;
+  if (entry === undefined || !isObject(data)) return [];
   const out: CaseId[] = [];
   for (const [name, section] of Object.entries(entry.sections)) {
-    const items = record[name];
+    const items = data[name];
     if (!Array.isArray(items)) continue;
-    for (const item of items) {
-      if (typeof item !== 'object' || item === null || !('id' in item) || typeof item.id !== 'string') continue;
-      const only = 'only' in item ? item.only : undefined;
-      const kept = onlyRunners(only);
+    const list: unknown[] = items;
+    for (const item of list) {
+      if (!isObject(item) || typeof item.id !== 'string') continue;
+      const kept = onlyRunners(item.only);
       out.push({ file, id: item.id, runners: section.runners.filter((r) => kept.includes(r)) });
     }
   }

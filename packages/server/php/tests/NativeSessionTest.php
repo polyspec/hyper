@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
 
 /** HY-45, HY-72, HY-104, HY-129: the PHP session starts only when a request reads or writes session data, under the name that hyper sets. */
 final class NativeSessionTest extends TestCase
@@ -67,37 +68,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testFailsTheRequestWhenTheSessionCannotStart(): void
     {
-        session_set_save_handler(new class () implements \SessionHandlerInterface {
-            public function open(string $path, string $name): bool
-            {
-                return true;
-            }
-
-            public function close(): bool
-            {
-                return true;
-            }
-
-            public function read(string $id): string|false
-            {
-                return false;
-            }
-
-            public function write(string $id, string $data): bool
-            {
-                return true;
-            }
-
-            public function destroy(string $id): bool
-            {
-                return true;
-            }
-
-            public function gc(int $max_lifetime): int
-            {
-                return 0;
-            }
-        });
+        session_set_save_handler(new RefusingSessionHandler(true));
         set_error_handler(static fn (): bool => true);
         try {
             (new NativeSession(false, self::request()))->set('a', 1);

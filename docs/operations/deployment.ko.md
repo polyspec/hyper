@@ -30,12 +30,13 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 ## 정적 셸
 
-`make assets`는 `examples/board/build/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HYC-16), 템플릿마다 파일 하나를 담은 `assets/templates/`, 그리고 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`다(HYC-15). `make assets`는 `--static`으로 `public/assets/`의 이 둘을 밝힌다.
+`make assets`는 `examples/board/build/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HYC-16), 템플릿마다 파일 하나를 담은 `assets/templates/`, 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`(HYC-15), 그리고 페이지의 head가 적고 브라우저가 그 페이지를 보이기 전에 만드는 module script `assets/reader.js`와 `assets/after-reader.js`다(HYC-25). `make assets`는 `--static`으로 `public/assets/`의 이 넷을 밝힌다.
 
 1. S3 버킷에 다음과 같이 올린다.
    - `index.html`: `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`
    - `assets/templates/*`: `Content-Type: application/json`, `Cache-Control: public, max-age=31536000, immutable`
    - `assets/*.css`: 이름에 해시가 없으므로 `Content-Type: text/css; charset=utf-8`, `Cache-Control: no-cache`
+   - `assets/reader.js`, `assets/after-reader.js`: 이름에 해시가 없으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: no-cache`
 2. PHP를 환경 변수 `BOARD_BASE_PATH=/api`로 실행한다(HY-8).
 3. 라우팅을 다음과 같이 설정한다.
    - `/api/*`: 위 표와 같이 PHP로 보낸다.
@@ -81,7 +82,7 @@ server는 `multipart/form-data` body를 조각으로 요청의 file에 읽으며
   part 하나의 header 줄은 8192 byte 이하다(HY-113.16). 이 제한은 고정이다. 큰 file을 받는 application은 body 제한과 file 제한을 올린다. 요청의 메모리는 그에 따라 늘지 않는다. form이 1000개보다 많은 part를 가지는 application은 part 제한을 올린다. part 2701개의 form은 기본값에서 413을 받는다.
 - **앞단 server.** hyper는 시간 제한을 두지 않는다(HY-131.19). application 앞단의 server가 느린 client와 요청의 크기를 application이 읽기 전에 묶는다. nginx의 `client_max_body_size`, `client_body_timeout`, 연결 제한, PHP-FPM의 `request_terminate_timeout`, Node HTTP server의 `requestTimeout`과 `headersTimeout`, WSGI나 ASGI server의 timeout이 그것이다. 앞단 server의 크기 제한은 application의 body 제한 이상으로 둔다. 그렇지 않으면 application보다 그 server가 먼저 답한다. nginx는 요청 body를 넘기기 전에 자신의 임시 파일에 쓴다(`fastcgi_request_buffering`과 `proxy_request_buffering`, 기본값 on). 이는 upload를 한 번 더 쓰는 것이다. 그 directive를 끄면 nginx는 body를 도착하는 대로 넘기고, 그때 느린 client는 upload 시간 동안 application의 worker 하나를 붙잡는다.
 - **PHP 설정.** `enable_post_data_reading=Off`에서 PHP는 body를 스스로 읽지 않으므로, 자체 reader의 `upload_max_filesize`, `max_file_uploads`, `max_input_vars`, `max_multipart_body_parts`, `upload_tmp_dir`은 아무것도 묶지 않고 `$_POST`, `$_FILES`, `is_uploaded_file()`, `move_uploaded_file()`은 아무것도 담지 않는다. 위의 네 제한과 `UploadedFile`의 `moveTo()`가 그 자리를 맡는다. `post_max_size`는 여전히 적용된다. PHP는 `php://input`이 준 것을 `sys_temp_dir`의 자체 임시 file에 두므로, 요청은 끝날 때까지 그 disk에서 body의 약 두 배를 쓴다.
-- **임시 directory.** multipart body를 가진 요청마다 system의 임시 directory(PHP의 `sys_temp_dir`, Node와 Python의 `TMPDIR`) 아래에 directory `hyper-…`가 생기며 server의 user만 읽는다. server는 요청의 response hook, write hook, disconnect hook이 반환한 뒤에 그것을 지우고, 요청이 실패했을 때도 그렇다. application이 `moveTo()`로 옮긴 file은 지우지 않는다. `moveTo()`는 file의 이름을 바꾸거나 다른 file system으로는 복사하므로, 임시 directory와 같은 file system의 대상은 복사 비용이 없다. 답하는 중에 강제 종료된 server는 그 요청의 directory를 남긴다. server가 시작할 때 임시 directory의 `hyper-*` directory를 지운다.
+- **임시 directory.** multipart body를 가진 요청마다 system의 임시 directory(PHP의 `sys_temp_dir`, 그것이 설정되지 않았으면 `TMPDIR`, Node와 Python의 `TMPDIR`; `upload_tmp_dir`은 이것을 바꾸지 않는다) 아래에 directory `hyper-…`가 생기며 server의 user만 읽는다. server는 요청의 response hook, write hook, disconnect hook이 반환한 뒤에 그것을 지우고, 요청이 실패했을 때도 그렇다. application이 `moveTo()`로 옮긴 file은 지우지 않는다. `moveTo()`는 file의 이름을 바꾸거나 다른 file system으로는 복사하므로, 임시 directory와 같은 file system의 대상은 복사 비용이 없다. 답하는 중에 강제 종료된 server는 그 요청의 directory를 남긴다. server가 시작할 때 임시 directory의 `hyper-*` directory를 지운다.
 - **요청이 쓰는 것.** `make bench-uploads`가 이것을 측정하며 [벤치마크](benchmark.ko.md#upload)가 방법과 한 번의 실행 수치를 담는다. 1 GiB body는 PHP-FPM worker에서 13 MiB, Python `http.server` server에서 36 MiB, Node server에서 152 MiB를 썼고 98 MiB body도 같은 양을 썼다. PHP 자체의 reader는 6 MiB를 썼고 hyper의 PHP server보다 processor 시간을 덜 썼다. PHP script는 거기에 도달할 수 없다. PHP가 script가 읽기 전에 body를 자신의 임시 file에 쓰기 때문이다.
 
 ## 로컬 재현

@@ -80,6 +80,13 @@ for (const entry of cases) {
 
 const failures: string[] = [];
 for (const [key, { application }] of applications) {
+  // The PHP program of the application <key> is written to <output>/<key>/program/php, and its namespace repeats that
+  // path below the prefix Polyspec\Hyper\Tests\Contract\, which a PSR-4 entry maps to the output directory. The name
+  // of an application is therefore a segment of a PHP namespace.
+  if (!/^[a-z_][a-z0-9_]*$/u.test(key)) {
+    failures.push(`the application ${key} has a name that is no segment of a PHP namespace`);
+    continue;
+  }
   // HR-82: the application is built in a staging directory of this process and published file by file, so that a test
   // that reads the application while another run builds it finds no file missing.
   const target = join(values.output, key);
@@ -95,7 +102,7 @@ for (const [key, { application }] of applications) {
     writeFileSync(manifest, JSON.stringify(application.manifest));
     const build = join(directory, 'build.json');
     writeFileSync(build, JSON.stringify({ build: application.build }));
-    const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('')}\\Program`;
+    const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key}\\program\\php`;
     const run = spawnSync(
       process.execPath,
       [buildTool, '--manifest', manifest, '--templates', templates, '--output', join(directory, 'program'),

@@ -16,6 +16,7 @@ final class Container
     /** Registers the factory that creates the service of a class. */
     public function bind(string $class, \Closure $factory): void
     {
+        ArgumentCount::most(\func_num_args(), 2);
         $this->factories[$class] = $factory;
         unset($this->instances[$class]);
     }
@@ -27,6 +28,7 @@ final class Container
      */
     public function call(\Closure $function, array $provided): mixed
     {
+        ArgumentCount::most(\func_num_args(), 2);
         $arguments = [];
         foreach ((new \ReflectionFunction($function))->getParameters() as $parameter) {
             $type = $parameter->getType();

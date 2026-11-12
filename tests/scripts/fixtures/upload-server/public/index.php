@@ -15,6 +15,8 @@ declare(strict_types=1);
 //                  loader, of the response hook, of the write hook and of the disconnect hook
 //   UPLOAD_ERRORS  the file that receives the log of the application (error_log)
 //   UPLOAD_HOOK    throws: the response hook throws after its line
+//   UPLOAD_LOAD    throws: the loader of the route home throws after its line
+//   UPLOAD_SESSIONS_OPEN  throws: the open of the session save handler, which the session of `App::run` starts, throws
 //   UPLOAD_BEFORE  1: the header X-Before is set before the application receives the request
 //   UPLOAD_HTTPS   1: the application declares https
 //   UPLOAD_GATE    the port of the gate of the test; UPLOAD_GATE_AT=shared stops the shared handler at it
@@ -143,6 +145,9 @@ $loaded = static function (string $name, Request $request) use ($line): void {
 $handlers = ['routes' => [
     'home' => ['load' => static function (Request $request) use ($loaded): array {
         $loaded('home', $request);
+        if (getenv('UPLOAD_LOAD') === 'throws') {
+            throw new \RuntimeException('handler boom');
+        }
 
         return [];
     }],
@@ -238,6 +243,41 @@ $written = static function (
     $end = $ended ? 'true' : 'false';
     $line("written {$status} {$end} {$mark($request)} elapsed={$elapsed($time)} failure={$failed($failure)}");
 };
+// The session store of UPLOAD_SESSIONS_OPEN=throws: PHP starts the session of `App::run` through its save handler,
+// whose open fails (HY-60.14).
+if (getenv('UPLOAD_SESSIONS_OPEN') === 'throws') {
+    session_set_save_handler(new class implements \SessionHandlerInterface {
+        public function open(string $path, string $name): bool
+        {
+            throw new \RuntimeException('the session directory is gone');
+        }
+
+        public function close(): bool
+        {
+            return true;
+        }
+
+        public function read(string $id): string|false
+        {
+            return '';
+        }
+
+        public function write(string $id, string $data): bool
+        {
+            return true;
+        }
+
+        public function destroy(string $id): bool
+        {
+            return true;
+        }
+
+        public function gc(int $max_lifetime): int|false
+        {
+            return 0;
+        }
+    }, false);
+}
 if (getenv('UPLOAD_BEFORE') === '1') {
     header('X-Before: kept');
 }

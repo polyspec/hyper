@@ -5,11 +5,11 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Csrf } from '../../src/csrf.js';
-import { App, ArraySession, Representation, Result, type AppOptions, type Choice, type ClientRendering, type Handlers, type Loader, type RepresentationHandler, type Request, type RouteHandlers } from '../../src/index.js';
-import { requestOf } from '../../src/http-host.js';
+import { App, ArraySession, Choice, ClientRendering, Representation, Result, type AppOptions, type Handlers, type Loader, type RepresentationHandler, Request, type RouteHandlers } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
-import { FIXTURES, list, parsed, plain, record, TEMPLATES, TOKEN, type Services } from '../support.js';
-import { mapOf, Recorded, RecordingStore, textOf, textsOf } from './recorded.js';
+import { FIXTURES, list, listAndItem, parsedBody, plain, record, requestFrom, TEMPLATES, TOKEN, type Counter, type Services } from '../support.js';
+import { mapOf, textOf, textsOf } from '../inputs.js';
+import { comparesOpen, failureOf, Recorded, RecordingStore } from './recorded.js';
 
 // What the representation handlers of a case received: the number of their calls, and the media parameters and the
 // request of the last call.
@@ -49,8 +49,7 @@ export function fixtureHandlers(): { regions: Record<string, Loader<Services>>; 
           return Result.redirect('/');
         },
       },
-      list: { regions: { rows: () => ({ items: [], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] }) } },
-      item: { load: ({ request }) => ({ id: request.param('id') }) },
+      ...listAndItem(() => []),
     },
   };
 }
@@ -82,7 +81,7 @@ function observing(handlers: ReturnType<typeof fixtureHandlers>, observed: [stri
 // response `handler` of the case, or its own.
 function declared(directory: string, handlers: Handlers<Services>, representations: Map<string, unknown>, handler: Map<string, unknown> | null, calls: Calls): { manifest: string; handlers: Handlers<Services> } {
   const manifest = join(directory, 'app.json');
-  const document = record(parsed(readFileSync(`${FIXTURES}app.json`, 'utf8')));
+  const document = record(parsedBody(readFileSync(`${FIXTURES}app.json`, 'utf8')));
   const routes = { ...handlers.routes };
   for (const route of list(document.routes).map(record)) {
     const name = textOf(route.name, 'a route name of the fixture manifest');
@@ -98,16 +97,24 @@ function declared(directory: string, handlers: Handlers<Services>, representatio
   return { manifest, handlers: { ...handlers, routes } };
 }
 
+// Opens the client fixture application with a client rendering, the manifest and the handlers of the case and further
+// options of `open`, and binds its counter. Both sections of the file open through it.
+async function clientApp(rendering: ClientRendering, counter: Counter, application: { manifest: string; handlers: Handlers<Services> }, options: Partial<AppOptions<Services>>): Promise<App<Services>> {
+  const app = await App.open<Services>({ manifest: application.manifest, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: application.handlers, timezone: '+09:00', clientRendering: rendering, ...options });
+  app.bind('counter', () => counter);
+  return app;
+}
+
 // Returns the selection of a case by its name; `host` chooses the request whose Host header is the chosen host. The
-// selections other than `host`, `hostValue` and `promiseHost` return what is no choice, which the server checks at run
-// time (HY-62.11).
+// selections other than `host`, `hostValue` and `promiseHost` return what is no choice, a Choice whose value is
+// undefined and a record of chosen and value included, which the server checks at run time (HY-62.8, HY-62.11).
 function selection(name: string, chosenHost: string): ClientRendering['selects'] {
-  const host = (request: Request): Choice => ({ chosen: request.header('Host') === chosenHost, value: null });
+  const host = (request: Request): Choice => new Choice(request.header('Host') === chosenHost, null);
   switch (name) {
     case 'host':
       return host;
     case 'hostValue':
-      return (request) => ({ chosen: request.header('Host') === chosenHost, value: new Map([['host', request.header('Host') ?? '']]) });
+      return (request) => new Choice(request.header('Host') === chosenHost, new Map([['host', request.header('Host') ?? '']]));
     case 'text':
       // @ts-expect-error -- a text is no choice
       return () => 'csr';
@@ -122,7 +129,10 @@ function selection(name: string, chosenHost: string): ClientRendering['selects']
       // @ts-expect-error -- a choice whose chosen is a text is no choice
       return () => ({ chosen: 'yes', value: null });
     case 'valueUndefined':
-      return () => ({ chosen: true, value: undefined });
+      return () => new Choice(true, undefined);
+    case 'record':
+      // A record of chosen and value is no choice: only an instance of Choice is one (HY-62.8).
+      return () => ({ chosen: true, value: null });
     case 'promiseHost':
       return (request) => Promise.resolve(host(request));
     case 'promiseRejects':
@@ -172,6 +182,17 @@ function textInput(reader: CaseReader, name: string): string {
 }
 
 export const steps = {
+  // Makes a choice and a client rendering whose selection returns it with their public constructors, and compares their
+  // members and the choice that the selection gives a request GET / (HY-62.2, HY-62.7). No application opens.
+  async declaration(reader: CaseReader): Promise<void> {
+    const chosen = reader.input('chosen');
+    if (typeof chosen !== 'boolean') throw new Error('the case field chosen is not a boolean');
+    const choice = new Choice(chosen, reader.input('value'));
+    const rendering = new ClientRendering(textInput(reader, 'shellPath'), textInput(reader, 'dataBasePath'), () => choice);
+    const selected = await rendering.selects(new Request({ method: 'GET', path: '/' }));
+    reader.compare('choice', { chosen: choice.chosen, value: choice.value });
+    reader.compare('rendering', { shell: rendering.shell, basePath: rendering.basePath, selected: { chosen: selected.chosen, value: selected.value } });
+  },
   async cases(reader: CaseReader): Promise<void> {
     const basePath = textInput(reader, 'basePath');
     const chosenHost = textInput(reader, 'chosenHost');
@@ -211,26 +232,12 @@ export const steps = {
         reader.has('handler') ? mapOf(reader.input('handler'), 'the case field handler') : null,
         calls,
       );
-      const app = await App.open<Services>({
-        manifest: application.manifest,
-        build: `${FIXTURES}build.json`,
-        templates: TEMPLATES,
-        handlers: application.handlers,
-        timezone: '+09:00',
-        log: recorded.log,
-        onResponse: recorded.onResponse,
-        clientRendering: {
-          shell: shellFile,
-          basePath,
-          selects: (request) => {
-            selections++;
-            return selects(request);
-          },
-        },
-        ...optionsOf(reader),
-      });
-      app.bind('counter', () => counter);
-      response = await app.handle(requestOf({ method, target, headers: sent, ...(body === undefined ? {} : { body }) }), store);
+      const counted: ClientRendering['selects'] = (request) => {
+        selections++;
+        return selects(request);
+      };
+      const app = await clientApp(new ClientRendering(shellFile, basePath, counted), counter, application, { log: recorded.log, onResponse: recorded.onResponse, ...optionsOf(reader) });
+      response = await app.handle(requestFrom({ method, target, headers: sent, ...(body === undefined ? {} : { body }) }), store);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
@@ -242,7 +249,7 @@ export const steps = {
     reader.compare('bodyNotContains', response.body);
     reader.compare('absentHeaders', response.headers);
     if (reader.has('json')) {
-      const json = record(parsed(response.body));
+      const json = record(parsedBody(response.body));
       reader.compare('json.route', json.route);
       reader.compare('json.params', json.params);
       reader.compare('json.regions', record(json.regions));
@@ -310,25 +317,13 @@ export const steps = {
         default:
           throw new Error('the shell file of the case is unknown');
       }
-      try {
-        await App.open<Services>({
-          manifest: `${FIXTURES}app.json`,
-          build: `${FIXTURES}build.json`,
-          templates: TEMPLATES,
-          handlers: fixtureHandlers(),
-          timezone: '+09:00',
-          log: () => {},
-          clientRendering: { shell, basePath: dataBasePath, selects: () => ({ chosen: true, value: null }) },
-        });
-      } catch (error) {
-        failure = error;
-      }
+      const rendering = new ClientRendering(shell, dataBasePath, () => new Choice(true, null));
+      failure = await failureOf(clientApp(rendering, { count: 0, actions: 0 }, { manifest: `${FIXTURES}app.json`, handlers: fixtureHandlers() }, { log: () => {} }));
     } finally {
       // A mode that lets the step remove the file of the case `unreadable`.
       if (reader.input('shellFile') === 'unreadable') chmodSync(join(directory, 'index.html'), 0o600);
       rmSync(directory, { recursive: true, force: true });
     }
-    reader.outcome('open', failure);
-    reader.compare('openError', failure instanceof Error ? failure.message : '');
+    comparesOpen(reader, failure);
   },
 };

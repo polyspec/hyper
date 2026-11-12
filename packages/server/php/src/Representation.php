@@ -10,11 +10,12 @@ namespace Polyspec\Hyper;
  */
 final class Representation
 {
-    /** @param array<string, string> $headers */
+    /** @param array<string, mixed> $headers the headers by name, whose values the server checks (HY-122) */
     public function __construct(
         public readonly int $status,
         public readonly mixed $body = null,
         public readonly array $headers = [],
     ) {
+        ArgumentCount::most(\func_num_args(), 3);
     }
 }

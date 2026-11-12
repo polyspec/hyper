@@ -2,11 +2,11 @@
 // shared build of var/contract-programs holds (scripts/contract-programs.mts). `suffix` returns its first argument followed
 // by `!`, and `not_a_function` is the string "x" in the place of a function; the open must refuse it.
 import { fileURLToPath } from 'node:url';
-import { App, ArraySession, Request, type Handlers } from '../../src/index.js';
-import type { HostFunction } from '@polyspec/template/render';
-import type { Value } from '../../src/values.js';
+import { App, ArraySession, type Handlers } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
-import { requestOf } from '../../src/http-host.js';
+import { mapOf, textMapOf, textOf, textsOf } from '../inputs.js';
+import { requestFrom } from '../support.js';
+import { failureOf } from './recorded.js';
 
 const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
 
@@ -16,54 +16,52 @@ const IMPLEMENTATIONS: Record<string, unknown> = {
 };
 
 // Maps the kinds of a case to the values of the `functions` option, failing on a kind that the contract does not state.
-function functionsOf(kinds: Map<string, string>, declared: Map<string, string>): Record<string, HostFunction> {
+// A value is given without the type of a host function, because the kind `not_a_function` is no function.
+function functionsOf(kinds: Map<string, string>, declared: Map<string, string>): Record<string, unknown> {
   return Object.fromEntries(
     [...kinds].map(([name, kind]) => {
-      if (!declared.has(kind) || !(kind in IMPLEMENTATIONS)) throw new Error(`the contract has no function kind ${kind}`);
-      return [name, IMPLEMENTATIONS[kind] as HostFunction];
+      if (!declared.has(kind) || !Object.hasOwn(IMPLEMENTATIONS, kind)) throw new Error(`the contract has no function kind ${kind}`);
+      return [name, IMPLEMENTATIONS[kind]];
     }),
   );
 }
 
-// The error of a rejected open, or null when the open did not fail.
-function failureOf(open: Promise<unknown>): Promise<unknown> {
-  return open.then(
-    () => null,
-    (error: unknown) => error,
-  );
+// Opens the application with options that the declaration of `open` may exclude, which the open checks at run time.
+async function opened(options: Record<string, unknown>): Promise<App> {
+  const app: unknown = await Reflect.apply(App.open.bind(App), undefined, [options]);
+  if (!(app instanceof App)) throw new Error('App.open returned no application');
+  return app;
 }
 
 export const steps = {
   async cases(reader: CaseReader): Promise<void> {
-    const application = reader.input('application') as string;
-    const applications = reader.input('applications') as Map<string, Map<string, Map<string, Map<string, Value>>>>;
-    const loaders = applications.get(application)?.get('loaders');
-    if (loaders === undefined) throw new Error(`the contract has no application ${application}`);
+    const application = textOf(reader.input('application'), 'application');
+    const loaders = mapOf(mapOf(mapOf(reader.input('applications'), 'applications').get(application), application).get('loaders'), 'loaders');
+    const home = loaders.has('home') ? mapOf(loaders.get('home'), 'the loader home') : new Map<string, unknown>();
     const dir = `${PROGRAMS}${application}`;
     const handlers: Handlers<Record<string, never>> = {
-      routes: { home: { load: () => new Map(loaders.get('home') ?? []) } },
+      routes: { home: { load: () => new Map(home) } },
     };
-    const options = {
+    const options: Record<string, unknown> = {
       manifest: `${dir}/manifest.json`,
       build: `${dir}/build.json`,
       templates: { index: `${dir}/node/templates.index.json`, root: `${dir}/node` },
       handlers,
       timezone: '+09:00',
       log: () => {},
-      functions: functionsOf(reader.input('functions') as Map<string, string>, reader.input('functionKinds') as Map<string, string>),
+      functions: functionsOf(textMapOf(reader.input('functions'), 'functions'), textMapOf(reader.input('functionKinds'), 'functionKinds')),
     };
     if (reader.has('openFails')) {
-      const failure = await failureOf(App.open<Record<string, never>>(options));
+      const failure = await failureOf(opened(options));
       reader.compare('openFails', failure);
       reader.compare('openError', failure instanceof Error ? failure.message : null);
       return;
     }
-    const app = await App.open<Record<string, never>>(options);
-    const headers = reader.has('request.headers') ? (reader.input('request.headers') as Map<string, string>) : new Map();
-    const request = requestOf({
-      method: reader.has('request.method') ? (reader.input('request.method') as string) : 'GET',
-      target: reader.has('request.target') ? (reader.input('request.target') as string) : '/',
-      headers: Object.fromEntries(headers),
+    const app = await opened(options);
+    const request = requestFrom({
+      method: reader.has('request.method') ? textOf(reader.input('request.method'), 'request.method') : 'GET',
+      target: reader.has('request.target') ? textOf(reader.input('request.target'), 'request.target') : '/',
+      headers: reader.has('request.headers') ? textsOf(reader.input('request.headers'), 'request.headers') : {},
     });
     const response = await app.handle(request, new ArraySession());
     reader.compare('status', response.status);

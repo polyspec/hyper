@@ -35,7 +35,26 @@ final class Csrf
             return false;
         }
 
-        return hash_equals(self::bytes($token), self::xor(self::bytes(substr($value, 64)), self::bytes(substr($value, 0, 64))));
+        $unmasked = self::xor(self::bytes(substr($value, 64)), self::bytes(substr($value, 0, 64)));
+
+        return hash_equals(self::bytes($token), $unmasked);
+    }
+
+    /**
+     * Returns the SHA-256 digest, as 64 lowercase hexadecimal digits, of the token that a masked value holds, or null
+     * for the empty text, which a request without a session holds (HY-24.10, HY-24.12).
+     */
+    public static function browserOf(string $masked): ?string
+    {
+        if ($masked === '') {
+            return null;
+        }
+        $mask = substr($masked, 0, 64);
+        $rest = substr($masked, 64);
+        self::requireToken($mask);
+        self::requireToken($rest);
+
+        return hash('sha256', self::xor(self::bytes($rest), self::bytes($mask)));
     }
 
     /** Fails for a token or a mask that is not 64 lowercase hexadecimal digits (HY-24.9). */

@@ -68,3 +68,10 @@ export function testApplicationFailing(): Application {
     throw new Error('404');
   });
 }
+
+// A JSON response whose URL is `url`, as the server answers it (HY-17).
+export function jsonResponse(url: string, body: string): Response {
+  const response = new Response(body, { headers: { 'content-type': 'application/vnd.hyper+json' } });
+  Object.defineProperty(response, 'url', { value: url });
+  return response;
+}

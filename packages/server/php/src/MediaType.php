@@ -16,6 +16,7 @@ final class MediaType
         private readonly array $parameters,
         private readonly string $contentType = '',
     ) {
+        ArgumentCount::most(\func_num_args(), 2);
     }
 
     /**
@@ -25,6 +26,7 @@ final class MediaType
      */
     public function parameters(): array
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->parameters;
     }
 
@@ -34,6 +36,10 @@ final class MediaType
      */
     public function etag(mixed $body): string
     {
+        ArgumentCount::most(\func_num_args(), 1);
+        // HY-122.13: a body outside the data model fails with the error of the data model.
+        DataModel::check($body);
+
         return RepresentationResponse::etag($this->contentType, JsonCodec::encode($body));
     }
 }

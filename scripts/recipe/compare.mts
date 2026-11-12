@@ -11,6 +11,7 @@ import { checkUnits } from './units.mts';
 import { checkMembers } from './members.mts';
 import { checkShapes } from './shapes.mts';
 import { checkBarrels } from './barrels.mts';
+import { checkStated, type Counts } from './stated.mts';
 
 export function compare(
   spec: Spec,
@@ -18,6 +19,7 @@ export function compare(
   root: string,
   protocol: Protocol,
   readDir: Ctx['readDir'],
+  counts?: Counts,
 ): Finding[] {
   const out: Finding[] = [];
   const ctx: Ctx = { spec, root, protocol, sources, readDir, add: (code, message) => out.push({ code, message }) };
@@ -40,5 +42,7 @@ export function compare(
   checkMembers(ctx);
   checkShapes(ctx);
   checkBarrels(ctx);
+  const stated = checkStated(ctx);
+  if (counts !== undefined) Object.assign(counts, stated);
   return out;
 }

@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyKept, decodeResponse, Hyper, parseAssignments, renderDocument, StylesheetError, valueToJson, type Fetch, type HtmxApi, type KeepStorage, type RegionElement, type RequestContext } from '../src/index.js';
+import { applyKept, decodeResponse, Hyper, parseAssignments, renderDocument, ScriptError, StylesheetError, valueToJson, type Fetch, type HtmxApi, type KeepStorage, type RegionElement, type RequestContext } from '../src/index.js';
 import { parseJson } from '@polyspec/template';
 import { NativeObject, SafeString } from '@polyspec/template/render';
 import { defined, listOf, mapOf } from './values.js';
-import { sources, testApplication, testApplicationFailing } from './application.js';
+import { jsonResponse, sources, testApplication, testApplicationFailing } from './application.js';
 
 interface Swap { region: string; text: string; swap: string }
 
@@ -40,7 +40,7 @@ class FakeDocument {
   readonly events: string[] = [];
   // waits for the links of an application; a test replaces it to hold or fail an application
   load: (html: string) => Promise<void> = async () => undefined;
-  async stylesheets(html: string): Promise<() => void> {
+  async head(html: string): Promise<() => void> {
     this.sources.push(html);
     this.events.push('stylesheets');
     await this.load(html);
@@ -127,12 +127,6 @@ function startRequest(hyper: Hyper<RegionElement>, action: string, body: string)
 // A client-side rendering application on the base path /api that mounts its documents into `page` and fetches with `fetch`.
 function clientRendering(page: FakeDocument, fetch: Fetch): Hyper<RegionElement> {
   return new Hyper(testApplication(), fakeHtmx(), { basePath: '/api', storage: new FakeStorage(), document: page, fetch });
-}
-
-function jsonResponse(url: string, body: string): Response {
-  const response = new Response(body, { headers: { 'content-type': 'application/vnd.hyper+json' } });
-  Object.defineProperty(response, 'url', { value: url });
-  return response;
 }
 
 // Runs one region request through the extension hooks with a stubbed network response.
@@ -972,21 +966,25 @@ describe('stylesheet links (HYC-15)', () => {
     expect(page.events).toEqual(['stylesheets', 'settle']);
   });
 
-  it('marks the body when a link of a history restoration in server-side rendering fails to load', async () => {
-    const page = new FakeDocument();
-    page.load = async () => { throw new StylesheetError('http://localhost/a.css'); };
-    const { hyper } = setup('', [], new FakeStorage(), page);
-    const extension = hyper.extension();
-    const body = regionElement('');
-    const ctx = context('/items/7', body);
-    ctx.request.headers['HX-History-Restore-Request'] = 'true';
-    extension.htmx_config_request(null, { ctx });
-    extension.htmx_before_request(null, { ctx });
-    vi.stubGlobal('fetch', async () => new Response('<html><head></head><body></body></html>', { headers: { 'content-type': 'text/html' } }));
-    const error = await defined(ctx.fetch, 'the fetch of the request context')(ctx.request.action, {}).catch((failure: unknown) => failure);
-    extension.htmx_error(null, { ctx, error });
-    expect(body.attributes.get('hy-error')).toBe('0');
-  });
+  // A stylesheet link (HYC-15) and a module script (HYC-25) fail the restoration in the same way.
+  const failures: [string, Error][] = [['a link', new StylesheetError('http://localhost/a.css')], ['a module script', new ScriptError('http://localhost/a.js')]];
+  for (const [what, failure] of failures) {
+    it(`marks the body when ${what} of a history restoration in server-side rendering fails to load`, async () => {
+      const page = new FakeDocument();
+      page.load = async () => { throw failure; };
+      const { hyper } = setup('', [], new FakeStorage(), page);
+      const extension = hyper.extension();
+      const body = regionElement('');
+      const ctx = context('/items/7', body);
+      ctx.request.headers['HX-History-Restore-Request'] = 'true';
+      extension.htmx_config_request(null, { ctx });
+      extension.htmx_before_request(null, { ctx });
+      vi.stubGlobal('fetch', async () => new Response('<html><head></head><body></body></html>', { headers: { 'content-type': 'text/html' } }));
+      const error = await defined(ctx.fetch, 'the fetch of the request context')(ctx.request.action, {}).catch((caught: unknown) => caught);
+      extension.htmx_error(null, { ctx, error });
+      expect(body.attributes.get('hy-error')).toBe('0');
+    });
+  }
 });
 
 describe('absent route regions (HY-75)', () => {

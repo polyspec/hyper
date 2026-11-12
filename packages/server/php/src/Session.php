@@ -70,6 +70,8 @@ final class Session
     /** Stores a kept value of a region (HY-38, HY-40). */
     public function keep(string $region, string $path, mixed $value): void
     {
+        // HY-40.4: a kept value is a value of the data model, checked before anything is stored.
+        DataModel::check($value);
         $kept = self::storedMap($this->store->get(self::KEEP)) ?? [];
         if (!is_array($kept)) {
             throw new \UnexpectedValueException('the session holds kept values that are not a map');

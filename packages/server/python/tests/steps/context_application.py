@@ -1,7 +1,6 @@
 # The applications of contracts/context.json (HY-10, HY-124 to HY-128): the cases run in steps/context_steps.py, which
 # open each application with its build, its context, its shared data and its handlers. This module keeps the helpers
 # that open the applications of the contract.
-import json
 from pathlib import Path
 
 from polyspec.hyper.app import App
@@ -9,6 +8,8 @@ from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
 from polyspec.hyper.not_found import NotFound
 from polyspec.hyper.result import Result
+
+from .recorded import decoded
 
 
 ROOT = Path(__file__).resolve().parents[5]
@@ -31,11 +32,6 @@ def program_of(name: str) -> tuple[Path, Path]:
         if not path.exists():
             raise FileNotFoundError(f"{path} is missing: run make contract-programs")
     return root / "manifest.json", root / "program"
-
-
-def _reject(name: str) -> None:
-    """Fails for a constant of a JSON text that JSON does not define."""
-    raise ValueError(f"the case context holds {name}, which is not JSON")
 
 
 def _thrown(handler: str, thrown: object) -> OrmError:
@@ -155,7 +151,7 @@ def open_application(
 
     text = context if context is not None else application.get("context")
     # NaN and Infinity are not JSON, which PHP and Node refuse; an integer stays an int of Python (HY-44).
-    value = None if text is None else json.loads(text, parse_constant=_reject)
+    value = None if text is None else decoded(text)
 
     def context_handler(selection: object) -> object:
         calls.append("context")

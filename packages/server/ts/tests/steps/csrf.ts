@@ -35,6 +35,13 @@ export const steps = {
     reader.compare('valid', outcome.result);
     reader.compare('error', outcome.error);
   },
+  // Gives the digest of the masked value, or records the message of the error with which it fails (HY-24.13).
+  browser(reader: CaseReader): void {
+    const value = text(reader, 'value');
+    const outcome = failureOf(() => Csrf.browserOf(value));
+    reader.compare('browser', outcome.result);
+    reader.compare('error', outcome.error);
+  },
   masked(reader: CaseReader): void {
     const token = text(reader, 'token');
     const first = Csrf.masked(token);

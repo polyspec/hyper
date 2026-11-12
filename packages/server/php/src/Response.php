@@ -13,11 +13,13 @@ final class Response
         public readonly array $headers,
         public readonly string $body,
     ) {
+        ArgumentCount::most(\func_num_args(), 3);
     }
 
     /** Returns a copy with one more header. */
     public function withHeader(string $name, string $value): self
     {
+        ArgumentCount::most(\func_num_args(), 2);
         return new self($this->status, [...$this->headers, $name => $value], $this->body);
     }
 
@@ -40,6 +42,7 @@ final class Response
     /** Returns a plain text response. */
     public static function text(int $status, string $body): self
     {
+        ArgumentCount::most(\func_num_args(), 2);
         return new self($status, ['Content-Type' => 'text/plain; charset=utf-8'], $body);
     }
 

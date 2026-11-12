@@ -21,6 +21,7 @@ from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
 
 from ..render.fixture_app import FIXTURES, PROGRAM
+from .inputs import options_of
 from .recorded import RecordingStore, Reports, compare_log
 
 # A session token of HY-24; the form carries a masked value of it.
@@ -52,11 +53,7 @@ def cases(case) -> None:
     handler = case.input("handler")
     spec = case.input("request")
     selects = case.input("selects") if case.has("selects") else "host"
-    options = {}
-    for name, value in (case.input("options") if case.has("options") else {}).items():
-        if name not in _OPTIONS:
-            raise LookupError(f"the option {name} of the case is unknown")
-        options[_OPTIONS[name]] = value
+    options = options_of(case, _OPTIONS)
 
     headers = {name: str(value) for name, value in (spec.get("headers") or {}).items()}
     counter = Counter(tuple(headers))
@@ -130,6 +127,8 @@ def cases(case) -> None:
     case.compare("observed", counter.observed)
     reports.compare(case)
     compare_log(case, log.getvalue())
+    if not case.has("received"):
+        return
     received = counter.received or {}
     case.compare("received.parameters", received.get("parameters"))
     case.compare("received.selection", received.get("selection"))
@@ -190,6 +189,25 @@ def open_rejections(case) -> None:
     case.compare("openError", "" if error is None else str(error))
 
 
+def declaration(case) -> None:
+    """Makes a choice and a client rendering with their constructors and compares what they hold; the selection of the
+    rendering is called with a request GET / and returns that choice. No application opens, so no shell is read."""
+    choice = Choice(case.input("chosen"), case.input("value"))
+    rendering = ClientRendering(
+        case.input("shellPath"), case.input("dataBasePath"), lambda request: choice
+    )
+    case.compare("choice", {"chosen": choice.chosen, "value": choice.value})
+    selected = rendering.selects(Request("GET", "/"))
+    case.compare(
+        "rendering",
+        {
+            "shell": rendering.shell,
+            "basePath": rendering.base_path,
+            "selected": {"chosen": selected.chosen, "value": selected.value},
+        },
+    )
+
+
 def _selection(name: str, chosen_host: str, calls: list) -> Callable[[Request], object]:
     """Returns the selection of the client rendering that the case names, which records each of its calls."""
 
@@ -212,6 +230,7 @@ def _selection(name: str, chosen_host: str, calls: list) -> Callable[[Request], 
         "boolean": lambda request: True,
         "throws": throws,
         "chosenNotBoolean": lambda request: Choice("yes", None),
+        "record": lambda request: {"chosen": True, "value": None},
     }
     if name not in selections:
         raise LookupError(f"the selection {name} of the case is unknown")
@@ -226,7 +245,7 @@ def _selection(name: str, chosen_host: str, calls: list) -> Callable[[Request], 
 def _app(
     directory: str,
     counter: Counter,
-    client: ClientRendering,
+    client: ClientRendering | None,
     representations: dict,
     observed: bool,
     **options,

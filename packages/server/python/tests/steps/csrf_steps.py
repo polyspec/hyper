@@ -41,6 +41,19 @@ def masked(case) -> None:
     case.compare("valid", Csrf.verify(token, first) and Csrf.verify(token, second))
 
 
+def browser(case) -> None:
+    """Gives the digest of the masked value, or records the message of the error with which it fails (HY-24.13)."""
+    value = _string_field(case, "value")
+    result = None
+    error = None
+    try:
+        result = Csrf.browser_of(value)
+    except ValueError as failure:
+        error = str(failure)
+    case.compare("browser", result)
+    case.compare("error", error)
+
+
 def _string_field(case, name: str) -> str:
     """Returns a string field of a case, and fails for any other value."""
     value = case.input(name)

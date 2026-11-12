@@ -126,8 +126,10 @@ final class Manifest
                     );
                 }
                 $regionNames[$regionName] = true;
-                $routeRegions[] = new Region($regionName, false, $regionTemplate, [], self::keptKinds($region, $regionName));
+                $kept = self::keptKinds($region, $regionName);
+                $routeRegions[] = new Region($regionName, false, $regionTemplate, [], $kept);
             }
+            $routeObject = $routeObjects[$index] ?? null;
             $routes[$name] = [
                 'name' => $name,
                 'path' => $path,
@@ -137,7 +139,11 @@ final class Manifest
                 'regions' => $routeRegions,
                 'representations' => RepresentationEntries::declare(
                     $name,
-                    array_key_exists('representations', $route) ? ($routeObjects[$index]->representations ?? null) : [],
+                    match (true) {
+                        !array_key_exists('representations', $route) => [],
+                        $routeObject instanceof \stdClass => $routeObject->representations ?? null,
+                        default => null,
+                    },
                 ),
             ];
         }

@@ -3,9 +3,11 @@ lowercase hexadecimal digits, so no response contains the token."""
 
 from __future__ import annotations
 
+import hashlib
 import hmac
 import re
 import secrets
+from typing import Optional
 
 _MASKED = re.compile(r"[0-9a-f]{128}\Z")
 _TOKEN = re.compile(r"[0-9a-f]{64}\Z")
@@ -33,6 +35,19 @@ class Csrf:
             return False
         unmasked = Csrf._xor(Csrf._bytes(value[64:]), Csrf._bytes(value[:64]))
         return hmac.compare_digest(Csrf._bytes(token), unmasked)
+
+    @staticmethod
+    def browser_of(masked: str) -> Optional[str]:
+        """Returns the SHA-256 digest, as 64 lowercase hexadecimal digits, of the token that a masked value holds, or
+        None for the empty text, which a request without a session holds (HY-24.10, HY-24.12)."""
+        if masked == "":
+            return None
+        mask, rest = masked[:64], masked[64:]
+        Csrf._require_token(mask)
+        Csrf._require_token(rest)
+        return hashlib.sha256(
+            Csrf._xor(Csrf._bytes(rest), Csrf._bytes(mask))
+        ).hexdigest()
 
     @staticmethod
     def _require_token(text: str) -> None:

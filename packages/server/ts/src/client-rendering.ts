@@ -2,6 +2,7 @@
 // requests and actions use the data base path.
 import type { Choice } from './choice.js';
 import type { Request } from './request.js';
+import { ArgumentCountError } from './argument-count-error.js';
 
 export class ClientRendering {
   // The absolute path of the static shell, which declares the data base path with <meta name="hyper-api"> (HYC-8).
@@ -12,6 +13,7 @@ export class ClientRendering {
   readonly selects: (request: Request) => Choice | Promise<Choice>;
 
   constructor(shell: string, basePath: string, selects: (request: Request) => Choice | Promise<Choice>) {
+    ArgumentCountError.between(arguments.length, 3, 3);
     this.shell = shell;
     this.basePath = basePath;
     this.selects = selects;

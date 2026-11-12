@@ -5,6 +5,17 @@
 import { readFileSync } from 'node:fs';
 import { type Compare, CONTRACTS, caseFiles, entriesOf, field, folded, kind, lookup, member, parsed, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
 
+// Returns an expected value that is a list of strings, and fails for any other value.
+function stringsOf(expected: unknown): string[] {
+  if (!Array.isArray(expected) || !expected.every((item): item is string => typeof item === 'string')) throw new Error('the expected value of the comparison is not a list of texts');
+  return expected;
+}
+
+// Returns the texts of a contains or an excludes comparison, which takes one text or a list of texts.
+function textsOf(expected: unknown): string[] {
+  return typeof expected === 'string' ? [expected] : stringsOf(expected);
+}
+
 export class CaseReader {
   private readonly read = new Set<string>();
   private readonly compared = new Set<string>();
@@ -95,12 +106,13 @@ export class CaseReader {
     if (declared === undefined) throw new Error(`${this.sectionName} declares no outcome ${name}`);
     if (!visible(declared, this.runner)) return;
     this.compared.add(name);
-    const pair = observed as [unknown, unknown];
-    const ok =
-      declared.compare === 'raises'
-        ? this.matches('raises', true, observed)
-        : this.equal(pair[0], pair[1], false);
-    if (!ok) this.differs.push(name);
+    if (declared.compare === 'raises') {
+      if (!this.matches('raises', true, observed)) this.differs.push(name);
+      return;
+    }
+    if (!Array.isArray(observed) || observed.length !== 2) throw new Error(`the outcome ${name} is not a pair of values`);
+    const pair: unknown[] = observed;
+    if (!this.equal(pair[0], pair[1], false)) this.differs.push(name);
   }
 
   // Marks the case as failed with a reason that the runner states as CASE_ERROR.
@@ -149,10 +161,6 @@ export class CaseReader {
   }
 
   private matches(comparison: Compare, expected: unknown, observed: unknown): boolean {
-    // The contains and excludes comparisons take one text or a list of texts.
-    const texts = typeof expected === 'string' ? [expected] : (expected as string[]);
-    const names = expected as string[];
-    const items = expected as unknown[];
     switch (comparison) {
       case 'exact':
         return this.equal(expected, observed, false);
@@ -162,13 +170,14 @@ export class CaseReader {
         // HYR-11: every key of the expected map is a key of the observed map with an equal value, as `exact` compares.
         return (entriesOf(expected) ?? []).every(([name, value]) => (entriesOf(observed) ?? []).some(([key]) => key === name) && this.equal(value, member(observed, name), false));
       case 'absent':
-        return names.every((name) => member(observed, name) === undefined);
+        return stringsOf(expected).every((name) => member(observed, name) === undefined);
       case 'contains':
-        return typeof observed === 'string' && texts.every((text) => observed.includes(text));
+        return typeof observed === 'string' && textsOf(expected).every((text) => observed.includes(text));
       case 'excludes':
-        return typeof observed === 'string' && texts.every((text) => !observed.includes(text));
+        return typeof observed === 'string' && textsOf(expected).every((text) => !observed.includes(text));
       case 'prefix':
-        return Array.isArray(observed) && this.equal(expected, observed.slice(0, items.length), true);
+        if (!Array.isArray(expected)) throw new Error('the expected value of a prefix comparison is not a list');
+        return Array.isArray(observed) && this.equal(expected, observed.slice(0, expected.length), true);
       case 'keys':
         return this.equal(expected, (entriesOf(observed) ?? []).map(([key]) => key), true);
       case 'raises':

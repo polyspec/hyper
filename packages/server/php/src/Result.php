@@ -29,6 +29,7 @@ final class Result
     /** Returns a redirect to a path of this application (HY-46). */
     public static function redirect(string $location): self
     {
+        ArgumentCount::most(\func_num_args(), 1);
         if (
             preg_match('#^/(?![/\\\\])[^\x{00}-\x{20}\x{7F}-\x{9F}\\\\]*$#Du', $location) !== 1
             || self::hasDotSegment($location)
@@ -46,6 +47,7 @@ final class Result
      */
     public static function page(int $status, array $data): self
     {
+        ArgumentCount::most(\func_num_args(), 2);
         if (!in_array($status, [200, 409, 422], true)) {
             throw new \InvalidArgumentException("a page status {$status} is not 200, 409 or 422 (HY-58)");
         }
@@ -60,6 +62,7 @@ final class Result
      */
     public static function invalid(array $data): self
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return self::page(422, $data);
     }
 
@@ -69,6 +72,7 @@ final class Result
      */
     public function flash(mixed $name, mixed $value): self
     {
+        ArgumentCount::most(\func_num_args(), 2);
         // HY-25.6: a declared type would convert an integer name for a caller without strict types.
         if (!is_string($name)) {
             throw new \TypeError('a flash name is not a string (HY-25)');

@@ -41,6 +41,9 @@ final class AppRun
     /** @var list<array{0: string, 1: mixed}> the pairs of a handler and a value that a step `observe` read */
     public array $observed = [];
 
+    /** How many times the server enumerated the entries of the values of the kind `countingMap`. */
+    public int $reads = 0;
+
     /** The calls of the response hook. */
     public readonly Reports $reports;
 
@@ -63,7 +66,7 @@ final class AppRun
     /** Opens the application from its manifest file and its program directory, and binds its services. */
     public function open(string $manifest, string $program): App
     {
-        $given = self::map($this->application['handlers'] ?? [], 'the handlers of the application');
+        $given = Json::map($this->application['handlers'] ?? [], 'the handlers of the application');
         $handlers = [];
         foreach (['shared' => 'shared'] as $key => $name) {
             $steps = array_key_exists($key, $this->handlers) ? $this->handlers[$key] : ($given[$key] ?? null);
@@ -77,10 +80,10 @@ final class AppRun
                 $handlers['regions'][(string) $region] = $this->handler("region:{$region}", $steps);
             }
         }
-        $routes = self::map($given['routes'] ?? [], 'the route handlers of the application');
-        foreach (self::map($this->handlers['routes'] ?? [], 'the route handlers of the case') as $route => $entry) {
-            $base = self::map($routes[$route] ?? [], "the handlers of the route {$route}");
-            $entry = self::map($entry, "the handlers of the route {$route}");
+        $routes = Json::map($given['routes'] ?? [], 'the route handlers of the application');
+        foreach (Json::map($this->handlers['routes'] ?? [], 'the route handlers of the case') as $route => $entry) {
+            $base = Json::map($routes[$route] ?? [], "the handlers of the route {$route}");
+            $entry = Json::map($entry, "the handlers of the route {$route}");
             foreach ($entry as $key => $value) {
                 $base[$key] = $key === 'regions'
                     ? self::merged($base['regions'] ?? [], $value, "the region handlers of the route {$route}")
@@ -90,13 +93,13 @@ final class AppRun
         }
         foreach ($routes as $route => $entry) {
             $built = [];
-            foreach (self::map($entry, "the handlers of the route {$route}") as $key => $value) {
+            foreach (Json::map($entry, "the handlers of the route {$route}") as $key => $value) {
                 if ($key === 'load' && $value !== null) {
                     $built['load'] = $this->handler("load:{$route}", $value);
                 } elseif ($key === 'post' && $value !== null) {
                     $built['post'] = $this->handler("action:{$route}", $value);
                 } elseif ($key === 'regions') {
-                    foreach (self::map($value, "the region handlers of the route {$route}") as $region => $steps) {
+                    foreach (Json::map($value, "the region handlers of the route {$route}") as $region => $steps) {
                         if ($steps !== null) {
                             $built['regions'][(string) $region] = $this->handler("region:{$region}", $steps);
                         }
@@ -118,7 +121,7 @@ final class AppRun
         if (array_key_exists('context', $this->application)) {
             // The handler returns the decoded text (HY-124), which is a map in every application of the file.
             $value = [];
-            $decoded = json_decode(Json::string($this->application['context']), true, flags: JSON_THROW_ON_ERROR);
+            $decoded = Json::value(Json::string($this->application['context']));
             foreach (Json::array($decoded) as $key => $item) {
                 $value[(string) $key] = $item;
             }
@@ -130,7 +133,7 @@ final class AppRun
         }
         // Each option is passed with the type of its parameter; an option that the maps do not hold is not passed.
         $options = [
-            ...self::map($this->application['options'] ?? [], 'the options of the application'),
+            ...Json::map($this->application['options'] ?? [], 'the options of the application'),
             ...$this->options,
         ];
         $unknown = array_diff(array_keys($options), self::OPTIONS);
@@ -165,9 +168,9 @@ final class AppRun
             $arguments['formTypes'] = Json::strings($options['formTypes']);
         }
         $app = App::open(...$arguments);
-        foreach (self::map($this->application['services'] ?? [], 'the services') as $name => $members) {
+        foreach (Json::map($this->application['services'] ?? [], 'the services') as $name => $members) {
             $class = self::serviceClass((string) $name);
-            $members = self::map($members, "the members of the service {$name}");
+            $members = Json::map($members, "the members of the service {$name}");
             $app->bind($class, function () use ($class, $name, $members): object {
                 $record = new $class();
                 foreach ($members as $member => $value) {
@@ -189,6 +192,7 @@ final class AppRun
     {
         $this->calls = [];
         $this->observed = [];
+        $this->reads = 0;
         $this->reports->calls = [];
     }
 
@@ -201,12 +205,12 @@ final class AppRun
     public function serviceValues(): array
     {
         $values = [];
-        foreach (self::map($this->application['services'] ?? [], 'the services') as $name => $members) {
+        foreach (Json::map($this->application['services'] ?? [], 'the services') as $name => $members) {
             $record = $this->created[(string) $name] ?? null;
             $values[(string) $name] = null;
             if ($record !== null) {
                 $values[(string) $name] = [];
-                foreach (array_keys(self::map($members, 'the members of a service')) as $member) {
+                foreach (array_keys(Json::map($members, 'the members of a service')) as $member) {
                     $values[(string) $name][(string) $member] = $record->{$member};
                 }
             }
@@ -222,11 +226,14 @@ final class AppRun
     private function handler(string $name, mixed $steps): \Closure
     {
         $steps = array_map(
-            static fn (mixed $step): array => self::map($step, "a step of the handler {$name}"),
+            static fn (mixed $step): array => Json::map($step, "a step of the handler {$name}"),
             Json::list($steps),
         );
         foreach ($steps as $index => $step) {
-            $words = array_values(array_intersect([...self::STEPS, ...self::RESULTS], array_map(strval(...), array_keys($step))));
+            $words = array_values(array_intersect(
+                [...self::STEPS, ...self::RESULTS],
+                array_map(strval(...), array_keys($step)),
+            ));
             $word = $words[0] ?? null;
             // A redirect stop and a page carry `redirect` and `data` beside their word.
             $result = array_key_exists('stop', $step) || in_array($word, self::RESULTS, true);
@@ -278,13 +285,13 @@ final class AppRun
     private function perform(string $name, array $steps, Request $request, Reply $reply, array $services): mixed
     {
         $this->calls[] = $name;
-        $value = fn (mixed $data): mixed => self::value($data, $request, $services);
+        $value = fn (mixed $data): mixed => $this->value($data, $request, $services);
         foreach ($steps as $step) {
             if (array_key_exists('calls', $step)) {
                 foreach (Json::list($step['calls']) as $call) {
                     $call = Json::list($call);
                     ReplySteps::call($reply, Json::string($call[0] ?? null), array_map(
-                        static fn (string $text): mixed => json_decode($text, true, 512, JSON_THROW_ON_ERROR),
+                        static fn (string $text): mixed => Json::value($text),
                         Json::strings($call[1] ?? null),
                     ));
                 }
@@ -310,7 +317,7 @@ final class AppRun
                     default => new \UnexpectedValueException("the handler {$name} stops with an unknown kind"),
                 };
             } elseif (array_key_exists('throw', $step)) {
-                $thrown = self::map($step['throw'], 'the member throw');
+                $thrown = Json::map($step['throw'], 'the member throw');
                 throw match ($thrown['class'] ?? null) {
                     'OrmError' => new OrmException(Json::string($thrown['code'] ?? null)),
                     'Error' => new \RuntimeException(Json::string($thrown['message'] ?? null)),
@@ -344,7 +351,7 @@ final class AppRun
         $result = Result::redirect(Json::string($step['redirect'] ?? null));
         foreach (Json::list($step['flashes'] ?? []) as $flash) {
             $flash = Json::strings($flash);
-            $result = $result->flash($flash[0], json_decode($flash[1], true, 512, JSON_THROW_ON_ERROR));
+            $result = $result->flash($flash[0], Json::value($flash[1]));
         }
         foreach (Json::strings($step['topics'] ?? []) as $topic) {
             $result = $result->changed($topic);
@@ -359,7 +366,7 @@ final class AppRun
      *
      * @param array<array-key, object> $services
      */
-    private static function value(mixed $data, Request $request, array $services): mixed
+    private function value(mixed $data, Request $request, array $services): mixed
     {
         if ($data instanceof \stdClass) {
             return [];
@@ -367,7 +374,7 @@ final class AppRun
         if (!is_array($data)) {
             return $data;
         }
-        $next = static fn (mixed $item): mixed => self::value($item, $request, $services);
+        $next = fn (mixed $item): mixed => $this->value($item, $request, $services);
         if (!array_key_exists('$', $data)) {
             return array_map($next, $data);
         }
@@ -382,6 +389,8 @@ final class AppRun
             'path' => $request->path(),
             'method' => $request->method,
             'selection' => $request->selection(),
+            'browser' => $request->browser(),
+            'csrfToken' => $request->csrfToken(),
             'service' => $services[$name()]->{Json::string($data['member'] ?? null)},
             'text' => implode('', array_map(
                 static function (mixed $part) use ($next): string {
@@ -394,15 +403,28 @@ final class AppRun
                 },
                 Json::list($data['parts'] ?? null),
             )),
-            'kind' => self::kind($name()),
+            'kind' => $this->kind($name()),
             default => throw new \UnexpectedValueException('the expression of a handler is unknown'),
         };
     }
 
     /** Returns a new value of a kind of the fixture `valueKinds`. */
-    private static function kind(string $name): mixed
+    private function kind(string $name): mixed
     {
         return match ($name) {
+            'countingMap' => new class ($this) implements \JsonSerializable {
+                public function __construct(private readonly AppRun $run)
+                {
+                }
+
+                /** @return array<string, int> */
+                public function jsonSerialize(): array
+                {
+                    $this->run->reads++;
+
+                    return ['a' => 1];
+                }
+            },
             'date' => new \DateTimeImmutable('2026-01-01T00:00:00Z'),
             'applicationObject' => new class () {
                 public int $id = 1;
@@ -470,23 +492,6 @@ final class AppRun
      */
     private static function merged(mixed $base, mixed $over, string $what): array
     {
-        return array_replace(self::map($base, $what), self::map($over, $what));
-    }
-
-    /**
-     * Returns a map of the contract, and fails for any other value. Plain gives an empty JSON object as stdClass.
-     *
-     * @return array<array-key, mixed>
-     */
-    public static function map(mixed $value, string $what): array
-    {
-        if ($value instanceof \stdClass && get_object_vars($value) === []) {
-            return [];
-        }
-        if (!is_array($value) || ($value !== [] && array_is_list($value))) {
-            throw new \UnexpectedValueException("{$what} is not a map");
-        }
-
-        return $value;
+        return array_replace(Json::map($base, $what), Json::map($over, $what));
     }
 }

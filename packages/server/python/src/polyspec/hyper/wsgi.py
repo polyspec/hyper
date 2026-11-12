@@ -20,13 +20,12 @@ from .redis_sessions import RedisSessions
 from ._pipeline import (
     Around,
     Written,
-    CONTENT_TYPES,
     answer_with,
     declared_length,
     escape,
     head_request,
     header_lines,
-    public_file,
+    served_file,
     read_body,
     validate,
 )
@@ -150,15 +149,10 @@ def _answer(
         https,
         declared,
     )
-    served = None if files is None else public_file(files, method, target)
+    served = served_file(files, method, target)
     if served is not None:
         # HY-100: the files of the public directory are served before `around`; no hook runs.
-        data = served.read_bytes()
-        return FileResponse(
-            CONTENT_TYPES.get(served.suffix, "application/octet-stream"),
-            len(data),
-            b"" if method == "HEAD" else data,
-        )
+        return served
     # HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
     exchange.body = RequestBody(
         environ.get("CONTENT_TYPE", ""),

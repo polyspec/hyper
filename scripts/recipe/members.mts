@@ -5,7 +5,7 @@
 import path from 'node:path';
 import { LANGS, type Lang, type Member, type Only, type Runner, type Spec } from './types.mts';
 import type { Ctx } from './context.mts';
-import { errorKnown, expectedNative, expectedVisibility, hasAcronym, readerKey, specKey, symbolName, termKnown, words } from './names.mts';
+import { errorKnown, expectedNative, expectedVisibility, fieldWords, hasAcronym, readerKey, specKey, symbolName, termKnown, words } from './names.mts';
 
 /** The terms of the vocabulary (HYR-5): the units and types of the spec. */
 export function vocabulary(spec: Spec): Set<string> {
@@ -38,10 +38,7 @@ export function checkOnly(
 function recordNames(spec: Spec, term: string, lang: Lang): string[] | undefined {
   const t = spec.types.find((x) => x.id === term);
   if (t === undefined || t.shape.fields === undefined) return undefined;
-  return Object.entries(t.shape.fields)
-    .filter(([, f]) => typeof f === 'string' || f.only === undefined || f.only.languages.includes(lang))
-    .map(([key]) => words(key.replace(/^["']|["']$/gu, '')))
-    .sort();
+  return fieldWords(t, lang);
 }
 
 export function checkMembers(ctx: Ctx): void {

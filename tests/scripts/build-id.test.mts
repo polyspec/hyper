@@ -1,17 +1,17 @@
 // Tests the build id of HY-125 with the builds of contracts/context.json (HYR-7): the order of the paths, the stream of the
 // hashed bytes, the digest and the excluded outputs. The expected values are read from the contract file and never computed here.
 import assert from 'node:assert/strict';
-import { mkdirSync, renameSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
 import { test } from 'node:test';
 import { buildId, buildStream, sortFiles } from '../../packages/build/lib/build-id.mjs';
 import { CaseReader } from '../../packages/server/ts/tests/case-reader.ts';
+import { writeResults } from '../../packages/server/ts/tests/case-run.ts';
+import { mapsOf, textOf } from '../../packages/server/ts/tests/inputs.ts';
 
 type BuildFile = { path: string; bytes: Buffer };
 
 // The files of a case as the build passes them: the path and the bytes of the UTF-8 content of the case.
 function filesOf(value: unknown): BuildFile[] {
-  return (value as Map<string, string>[]).map((file) => ({ path: file.get('path') as string, bytes: Buffer.from(file.get('content') as string, 'utf8') }));
+  return mapsOf(value, 'files').map((file) => ({ path: textOf(file.get('path'), 'path'), bytes: Buffer.from(textOf(file.get('content'), 'content'), 'utf8') }));
 }
 
 const lines: string[] = [];
@@ -31,11 +31,7 @@ test('cases', () => {
     }
     lines.push(reader.line());
   }
-  const temporary = `${results}.tmp`;
-  mkdirSync(dirname(results), { recursive: true });
-  writeFileSync(temporary, `${lines.join('\n')}\n`);
-  renameSync(temporary, results);
-  const failed = lines.filter((line) => line.includes(' FAIL ')).length;
+  const failed = writeResults(results, lines);
   assert.equal(failed, 0, `${failed} of ${lines.length} cases fail; see ${results}`);
 });
 

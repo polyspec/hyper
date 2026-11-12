@@ -4,15 +4,26 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { LANGS, type CaseField, type CaseFile, type Only, type Runner, type Spec } from './types.mts';
+import { LANGS, RUNNERS, isObject, type CaseField, type CaseFile, type Json, type Only, type Runner, type Spec } from './types.mts';
 import type { Ctx } from './context.mts';
 import { checkRuleId, checkStatement, rulesOfFile } from './rules.mts';
 import { readerKey } from './names.mts';
 
 const COMPARE_KINDS = ['exact', 'ordered', 'subset', 'absent', 'contains', 'excludes', 'prefix', 'keys', 'raises'];
 
-type Json = Record<string, unknown>;
-const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
+/** True for the `only` of a case: its runners and its sentence, as the schema of the spec states an `only`. */
+function isOnly(v: unknown): v is Only {
+  if (!isObject(v) || typeof v.sentence !== 'string' || !Array.isArray(v.languages)) return false;
+  const named: unknown[] = v.languages;
+  return named.every((runner) => RUNNERS.some((known) => known === runner));
+}
+
+/** The `only` of a case item of `where`; an `only` of another form stops the check, which cannot read it. */
+function onlyOf(item: Json, where: string): Only | undefined {
+  if (item.only === undefined) return undefined;
+  if (!isOnly(item.only)) throw new Error(`${where} holds an only that is no object of the runners (languages) and a sentence: ${JSON.stringify(item.only)}`);
+  return item.only;
+}
 
 /** The key of a case file in `caseFiles`: its name in contracts/, `contracts/csrf.json` gives `csrf.json`. */
 export function keyOf(file: string): string {
@@ -51,7 +62,11 @@ export function caseOnlys(spec: Spec, root: string): Only[] {
     const data = dataOf(root, key);
     for (const [name, section] of Object.entries(entry.sections)) {
       if (isObject(data) && Array.isArray(data[name])) {
-        for (const item of data[name]) if (isObject(item) && isObject(item.only)) out.push(item.only as unknown as Only);
+        const items: unknown[] = data[name];
+        for (const item of items) {
+          const only = isObject(item) ? onlyOf(item, `${key} section ${name}`) : undefined;
+          if (only !== undefined) out.push(only);
+        }
       }
       for (const o of Object.values(section.outcomes ?? {})) if (o.only) out.push(o.only);
       for (const f of fieldsDeep(section.fields)) if (f.only) out.push(f.only);
@@ -191,7 +206,7 @@ function checkFiles(ctx: Ctx, entries: [string, CaseFile][]): void {
         const cased = items.some(
           (it) =>
             isObject(it) &&
-            keeps(it.only as Only | undefined, runner) &&
+            keeps(onlyOf(it, where), runner) &&
             (outcomesKept ||
               statedFields(section.fields, it).some(
                 (f) => f.fields === undefined && keeps(f.only, runner) && (f.role === 'response' || f.compare !== undefined),
@@ -226,7 +241,7 @@ function checkReaders(ctx: Ctx): void {
     try {
       src = ctx.readDir(lang, path.posix.dirname(file));
     } catch (err) {
-      add('CASE_READER_MISSING', `${lang} caseReader ${file} could not be read: ${(err as Error).message}`);
+      add('CASE_READER_MISSING', `${lang} caseReader ${file} could not be read: ${err instanceof Error ? err.message : String(err)}`);
       continue;
     }
     if (!src.units.some((u) => u.file === file && u.name === name)) {

@@ -5,7 +5,10 @@ import re
 from polyspec.hyper._flash import Flash
 from polyspec.hyper._session import Session
 from polyspec.hyper.array_session import ArraySession
+from polyspec.hyper.session_store import SessionStore
 
+from .data_model_errors import data_model_message
+from .inputs import calls_of
 from .recorded import decoded
 
 _HEXADECIMAL = re.compile(r"[0-9a-f]{64}\Z")
@@ -17,7 +20,7 @@ def token(case) -> None:
     session = Session(store)
     distinct: list[str] = []
     numbers = []
-    for method, texts in _calls(case):
+    for method, texts in calls_of(case):
         result = _call(session, method, texts)
         if method == "csrfToken":
             if result not in distinct:
@@ -33,15 +36,15 @@ def token(case) -> None:
 
 def flash(case) -> None:
     """Records the result of each call and whether a call failed for a stored value of another form."""
-    _stored_calls(case)
+    _storedcalls_of(case)
 
 
 def kept(case) -> None:
     """Records the result of each call and whether a call failed for a stored value of another form."""
-    _stored_calls(case)
+    _storedcalls_of(case)
 
 
-def _stored_calls(case) -> None:
+def _storedcalls_of(case) -> None:
     store = ArraySession()
     for pair in case.input("stored") if case.has("stored") else []:
         key, text = pair
@@ -49,32 +52,49 @@ def _stored_calls(case) -> None:
     session = Session(store)
     results = []
     error = None
-    for method, texts in _calls(case):
+    for method, texts in calls_of(case):
         try:
             results.append(_written(_call(session, method, texts)))
         except ValueError as failure:
             # The stored-value error is exactly ValueError; a subclass is an error of the step.
             if type(failure) is not ValueError:
                 raise
+            # The error of the data model is also exactly ValueError; its message tells it from the stored-value
+            # error (HY-40.4), and only a case that states `failure` expects it.
+            message = data_model_message(failure)
+            if message is not None:
+                if not case.has("failure"):
+                    raise
+                case.compare("failure", message)
+                break
             error = "stored"
             break
     case.compare("results", results)
     case.compare("error", error)
 
 
-def _calls(case) -> list:
-    calls = case.input("calls")
-    for entry in calls:
-        if (
-            not isinstance(entry, list)
-            or len(entry) != 2
-            or not isinstance(entry[0], str)
-            or not isinstance(entry[1], list)
-        ):
-            raise LookupError(
-                "a call of the case is not a method and a list of JSON texts"
-            )
-    return calls
+def store(case) -> None:
+    """Applies each call to one store in memory held as a session store, with a written call per method, and records
+    the value of get and None for the other methods."""
+    memory = ArraySession()
+    held: SessionStore = memory
+    results = []
+    for method, texts in calls_of(case):
+        arguments = [decoded(text) for text in texts]
+        if method == "get":
+            results.append(held.get(*arguments))
+            continue
+        if method == "set":
+            held.set(*arguments)
+        elif method == "remove":
+            held.remove(*arguments)
+        elif method == "renew":
+            held.renew(*arguments)
+        else:
+            raise LookupError(f"the method {method} of the case is unknown")
+        results.append(None)
+    case.compare("results", results)
+    case.compare("renewals", memory._renewals())
 
 
 def _call(session: Session, method: str, texts: list) -> object:

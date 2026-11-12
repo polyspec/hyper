@@ -12,6 +12,8 @@ The variables of a start (the hooks are installed only when UPLOAD_LOG is set, s
                  prints `ended <client port>` when the thread of a connection returned
   UPLOAD_ERRORS  the file that receives the log of the application (the standard error)
   UPLOAD_HOOK    throws: the response hook throws after its line
+  UPLOAD_LOAD    throws: the loader of the route home throws after its line
+  UPLOAD_SESSIONS_OPEN  throws: the open of the session store raises
   UPLOAD_HTTPS   1: the application declares https
   UPLOAD_FILES   the directory of public files
   UPLOAD_GATE    the port of the gate of the test; UPLOAD_GATE_AT=shared stops the shared handler at it"""
@@ -184,6 +186,8 @@ def shared(request: Request, reply: Reply) -> dict:
 
 def home(request: Request) -> dict:
     loaded("home", request)
+    if os.environ.get("UPLOAD_LOAD") == "throws":
+        raise RuntimeError("handler boom")
     return {}
 
 
@@ -251,9 +255,23 @@ app = App.open(
     on_response=None if log is None else on_response,
     on_disconnect=None if log is None else on_disconnect,
 )
+
+
+class BrokenSessions(FileSessions):
+    """The session store of UPLOAD_SESSIONS_OPEN=throws, whose open fails before the application runs (HY-60.14)."""
+
+    def _open(self, cookie):
+        raise OSError("the session directory is gone")
+
+
+sessions = (
+    BrokenSessions
+    if os.environ.get("UPLOAD_SESSIONS_OPEN") == "throws"
+    else FileSessions
+)
 server = create_server(
     app,
-    FileSessions(os.environ["UPLOAD_SESSIONS"]),
+    sessions(os.environ["UPLOAD_SESSIONS"]),
     files=os.environ.get("UPLOAD_FILES"),
     around=None if mode == "none" else around,
     written=None if log is None else written,

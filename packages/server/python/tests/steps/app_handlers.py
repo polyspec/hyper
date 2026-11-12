@@ -14,7 +14,7 @@ from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
 
 from .recorded import decoded
-from .reply_steps import METHODS
+from . import reply_steps
 from .representations_steps import OrmError
 
 _STEPS = ("calls", "observe", "add", "warn")
@@ -37,6 +37,18 @@ class ApplicationObject:
         self.id = 1
 
 
+class CountingMap(dict):
+    """The value of the kind `countingMap`: a map that counts how many times its entries are enumerated."""
+
+    def __init__(self, calls: "Calls") -> None:
+        super().__init__({"a": 1})
+        self._calls = calls
+
+    def items(self):
+        self._calls.reads += 1
+        return super().items()
+
+
 SERVICES = {"counter": Counter, "mailer": Mailer}
 _KINDS: dict[str, Callable[[], object]] = {
     "date": lambda: datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc),
@@ -57,10 +69,12 @@ class Calls:
         self.started: list[str] = []
         self.observed: list[list] = []
         self.kinds: set[str] = set()
+        self.reads = 0
 
     def discard(self) -> None:
         self.started.clear()
         self.observed.clear()
+        self.reads = 0
 
 
 def handlers_of(spec: dict, calls: Calls) -> dict:
@@ -183,11 +197,7 @@ class _Run:
     def perform(self, step: dict) -> None:
         if "calls" in step:
             for method, texts in step["calls"]:
-                if method not in METHODS:
-                    raise LookupError(f"the method {method} of the case is unknown")
-                getattr(self._reply, METHODS[method])(
-                    *(decoded(text) for text in texts)
-                )
+                reply_steps.call(self._reply, method, [decoded(text) for text in texts])
         elif "observe" in step:
             self._calls.observed.append([self._name, self._value(step["observe"])])
         elif "add" in step:
@@ -245,12 +255,19 @@ class _Run:
                 return request.method
             case "selection":
                 return request.selection()
+            case "browser":
+                return request.browser()
+            case "csrfToken":
+                return request.csrf_token()
             case "service":
                 return getattr(self._records[value["name"]], value["member"])
             case "text":
                 parts = [self._value(part) for part in value["parts"]]
                 return "".join("" if part is None else str(part) for part in parts)
             case "kind":
+                if value["name"] == "countingMap":
+                    self._calls.kinds.add(value["name"])
+                    return CountingMap(self._calls)
                 if value["name"] not in _KINDS:
                     raise LookupError(
                         f"the kind {value['name']} has no value in Python"

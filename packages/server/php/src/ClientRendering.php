@@ -23,5 +23,6 @@ final class ClientRendering
         public readonly string $basePath,
         public readonly \Closure $selects,
     ) {
+        ArgumentCount::most(\func_num_args(), 3);
     }
 }

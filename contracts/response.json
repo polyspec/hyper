@@ -1,0 +1,128 @@
+{
+  "values": [
+    {
+      "id": "a_response_holds_its_status_headers_and_body",
+      "label": "a response made with a status, headers and a body holds them",
+      "make": "constructor",
+      "status": 201,
+      "headers": [
+        [
+          "Content-Type",
+          "text/html; charset=utf-8"
+        ],
+        [
+          "X-A",
+          "b"
+        ]
+      ],
+      "body": "<p>x</p>",
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "text/html; charset=utf-8",
+          "X-A": "b"
+        },
+        "body": "<p>x</p>"
+      }
+    },
+    {
+      "id": "a_text_response_has_the_plain_text_content_type",
+      "label": "Response.text makes a response whose only header is Content-Type: text/plain; charset=utf-8",
+      "make": "text",
+      "status": 404,
+      "body": "Not Found",
+      "response": {
+        "status": 404,
+        "headers": {
+          "Content-Type": "text/plain; charset=utf-8"
+        },
+        "body": "Not Found"
+      }
+    },
+    {
+      "id": "a_copy_with_a_header_adds_it_and_leaves_the_response_unchanged",
+      "label": "withHeader returns a copy with one more header, and the response itself keeps its headers",
+      "make": "text",
+      "status": 200,
+      "body": "x",
+      "with": [
+        [
+          "X-A",
+          "b"
+        ]
+      ],
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "text/plain; charset=utf-8",
+          "X-A": "b"
+        },
+        "body": "x"
+      },
+      "original": {
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    },
+    {
+      "id": "a_copy_with_a_header_of_the_same_name_replaces_its_value",
+      "label": "withHeader with a name that the response holds, written the same way, replaces the value, and a second copy keeps the first",
+      "make": "constructor",
+      "status": 200,
+      "headers": [
+        [
+          "X-A",
+          "1"
+        ]
+      ],
+      "body": "",
+      "with": [
+        [
+          "X-A",
+          "2"
+        ],
+        [
+          "X-B",
+          "3"
+        ]
+      ],
+      "response": {
+        "status": 200,
+        "headers": {
+          "X-A": "2",
+          "X-B": "3"
+        },
+        "body": ""
+      },
+      "original": {
+        "X-A": "1"
+      }
+    },
+    {
+      "id": "a_copy_with_a_header_name_in_another_case_holds_both_names",
+      "label": "withHeader compares a name as it is written: a name in another case is another header of the response",
+      "make": "constructor",
+      "status": 200,
+      "headers": [
+        [
+          "X-A",
+          "1"
+        ]
+      ],
+      "body": "",
+      "with": [
+        [
+          "x-a",
+          "2"
+        ]
+      ],
+      "response": {
+        "status": 200,
+        "headers": {
+          "X-A": "1",
+          "x-a": "2"
+        },
+        "body": ""
+      }
+    }
+  ]
+}

@@ -3,9 +3,11 @@
 import { ArraySession } from '../../src/array-session.js';
 import { Flash } from '../../src/flash.js';
 import { Session } from '../../src/session.js';
+import type { SessionStore } from '../../src/session-store.js';
 import { toValue, type Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
-import { callsOf, decoded, textOf } from './session-requests.js';
+import { textOf } from '../inputs.js';
+import { callsOf, decoded } from './session-requests.js';
 
 // Returns a map as the list of its pairs in iteration order, with the maps inside it written the same way.
 function pairsOf(map: ReadonlyMap<string, unknown>): [string, unknown][] {
@@ -32,7 +34,13 @@ function applied(session: Session, [method, args]: [string, unknown[]]): unknown
       session.putFlash(flashOf(args[0], args[1]));
       return null;
     case 'keep':
-      session.keep(textOf(args[0], 'the region of a call'), textOf(args[1], 'the path of a call'), toValue(args[2]));
+      // @ts-expect-error -- the case gives keep a value that may lie outside the data model, which keep refuses (HY-40.4)
+      session.keep(textOf(args[0], 'the region of a call'), textOf(args[1], 'the path of a call'), args[2]);
+      return null;
+    case 'csrfToken':
+      return session.csrfToken();
+    case 'renew':
+      session.renew();
       return null;
     case 'kept':
       return pairsOf(session.kept(textOf(args[0], 'the region of a call')));
@@ -54,10 +62,16 @@ function stored(reader: CaseReader): void {
   }
   const results: unknown[] = [];
   let error: string | null = null;
+  let failed: string | null = null;
   for (const call of callsOf(reader.input('calls'))) {
     try {
       results.push(applied(session, call));
     } catch (failure) {
+      // HY-40.4: keep of a value outside the data model fails with the error of the data model, a RangeError.
+      if (call[0] === 'keep' && failure instanceof RangeError && reader.has('failure')) {
+        failed = failure.message;
+        break;
+      }
       if (!(failure instanceof Error) || failure.constructor !== Error) throw failure;
       error = 'stored';
       break;
@@ -65,6 +79,26 @@ function stored(reader: CaseReader): void {
   }
   reader.compare('results', results);
   reader.compare('error', error);
+  if (failed !== null) reader.compare('failure', failed);
+}
+
+// Applies one call to the session store and returns its entry of `results`: the value of `get`, null for the others.
+function storeCall(store: SessionStore, [method, args]: [string, unknown[]]): unknown {
+  switch (method) {
+    case 'get':
+      return store.get(textOf(args[0], 'the key of a call')) ?? null;
+    case 'set':
+      store.set(textOf(args[0], 'the key of a call'), args[1]);
+      return null;
+    case 'remove':
+      store.remove(textOf(args[0], 'the key of a call'));
+      return null;
+    case 'renew':
+      store.renew();
+      return null;
+    default:
+      throw new Error(`the method ${method} of the case is unknown`);
+  }
 }
 
 export const steps = {
@@ -75,13 +109,13 @@ export const steps = {
     const session = new Session(store);
     const distinct: string[] = [];
     const tokens: number[] = [];
-    for (const [method] of callsOf(reader.input('calls'))) {
-      if (method === 'renew') session.renew();
-      else if (method === 'csrfToken') {
-        const token = session.csrfToken();
+    for (const call of callsOf(reader.input('calls'))) {
+      const token = applied(session, call);
+      if (call[0] === 'csrfToken') {
+        if (typeof token !== 'string') throw new Error('csrfToken returned no text');
         if (!distinct.includes(token)) distinct.push(token);
         tokens.push(distinct.indexOf(token) + 1);
-      } else throw new Error(`the method ${method} of the case is unknown`);
+      } else if (call[0] !== 'renew') throw new Error(`the method ${call[0]} of the case is unknown`);
     }
     reader.compare('tokens', tokens);
     reader.compare('hexadecimal', distinct.every((token) => /^[0-9a-f]{64}$/u.test(token)));
@@ -89,4 +123,12 @@ export const steps = {
   },
   flash: stored,
   kept: stored,
+  // Applies the calls of the case to one ArraySession through the session store interface and compares what get
+  // returned and the renewals that the ArraySession counts (HY-104, HY-72).
+  store(reader: CaseReader): void {
+    const session = new ArraySession();
+    const store: SessionStore = session;
+    reader.compare('results', callsOf(reader.input('calls')).map((call) => storeCall(store, call)));
+    reader.compare('renewals', session.renewals());
+  },
 };

@@ -4,7 +4,7 @@
   "title": "Output of a recipe reader (HYR-8): what a language's sources and tests declare",
   "type": "object",
   "additionalProperties": false,
-  "required": ["language", "files", "units", "types", "members", "constants", "exports", "uses", "calls", "tests", "dynamicTests"],
+  "required": ["language", "files", "units", "types", "members", "constants", "exports", "uses", "calls", "tests", "dynamicTests", "classes", "scopes", "registry"],
   "properties": {
     "language": { "enum": ["php", "node", "python"] },
     "files": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
@@ -16,9 +16,100 @@
     "uses": { "type": "array", "items": { "$ref": "#/$defs/name" } },
     "calls": { "type": "array", "items": { "$ref": "#/$defs/call" } },
     "tests": { "type": "array", "items": { "$ref": "#/$defs/name" } },
+    "classes": { "type": "array", "items": { "$ref": "#/$defs/class" } },
+    "scopes": { "type": "array", "items": { "$ref": "#/$defs/scope" } },
+    "registry": { "type": "array", "items": { "$ref": "#/$defs/registryEntry" } },
     "dynamicTests": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["file", "line"], "properties": { "file": { "type": "string", "minLength": 1 }, "line": { "type": "integer", "minimum": 1 } } } }
   },
   "$defs": {
+    "classRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "name"],
+      "properties": { "file": { "type": "string", "minLength": 1 }, "name": { "type": "string", "minLength": 1 } }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": { "name": { "type": "string", "minLength": 1 }, "type": { "$ref": "#/$defs/classRef" } }
+    },
+    "class": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "name", "extends", "properties"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "extends": { "type": "array", "items": { "$ref": "#/$defs/classRef" } },
+        "properties": { "type": "array", "items": { "$ref": "#/$defs/parameter" } }
+      }
+    },
+    "expr": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "enum": ["own", "parent", "other"] } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "file", "name"], "properties": { "kind": { "const": "class" }, "file": { "type": "string", "minLength": 1 }, "name": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "file"], "properties": { "kind": { "const": "module" }, "file": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "name"], "properties": { "kind": { "const": "variable" }, "name": { "type": "string", "minLength": 1 } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "class"], "properties": { "kind": { "const": "new" }, "class": { "$ref": "#/$defs/classRef" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "of", "name", "call"], "properties": { "kind": { "const": "member" }, "of": { "$ref": "#/$defs/expr" }, "name": { "type": "string", "minLength": 1 }, "call": { "type": "boolean" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "of"], "properties": { "kind": { "const": "either" }, "of": { "type": "array", "items": { "$ref": "#/$defs/expr" } } } }
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "name", "parameters", "uses", "assigns", "loops"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "class": { "type": "string", "minLength": 1 },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameter" } },
+        "uses": { "type": "array", "items": { "$ref": "#/$defs/expr" } },
+        "assigns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["target", "value"],
+            "properties": {
+              "target": {
+                "oneOf": [
+                  { "type": "string", "minLength": 1 },
+                  { "type": "object", "additionalProperties": false, "required": ["own"], "properties": { "own": { "type": "string", "minLength": 1 } } }
+                ]
+              },
+              "value": { "$ref": "#/$defs/expr" },
+              "type": { "$ref": "#/$defs/classRef" }
+            }
+          }
+        },
+        "loops": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["variable", "over"],
+            "properties": { "variable": { "type": "string", "minLength": 1 }, "over": { "$ref": "#/$defs/expr" } }
+          }
+        }
+      }
+    },
+    "registryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "section", "step"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "section": { "type": "string" },
+        "step": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "name"],
+          "properties": { "file": { "type": "string" }, "name": { "type": "string", "minLength": 1 } }
+        }
+      }
+    },
     "visibility": { "enum": ["public", "internal", "private", "protected"] },
     "unit": {
       "type": "object",

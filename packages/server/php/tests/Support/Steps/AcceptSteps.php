@@ -38,7 +38,10 @@ final class AcceptSteps
         $value = $case->input('accept');
         $types = $case->input('types');
         try {
-            $selected = Accept::select(is_string($value) ? $value : null, is_array($types) ? array_values(array_filter($types, is_string(...))) : []);
+            $selected = Accept::select(
+                is_string($value) ? $value : null,
+                is_array($types) ? array_values(array_filter($types, is_string(...))) : [],
+            );
         } catch (InvalidAccept) {
             $case->compare('invalid', true);
 

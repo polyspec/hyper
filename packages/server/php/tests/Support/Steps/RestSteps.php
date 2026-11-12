@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseInput;
 
 /** HY-49: the cases of contracts/rest.json. */
 final class RestSteps
 {
     public static function cases(CaseReader $case): void
     {
-        $case->compare('result', RoutesSteps::route($case->input('routes'), (string) $case->input('path')));
+        $case->compare('result', RoutesSteps::route($case->input('routes'), CaseInput::text($case, 'path')));
     }
 
     public static function invalidPaths(CaseReader $case): void
     {
-        $case->outcome('router', RoutesSteps::refusal((string) $case->input('path')));
+        $case->outcome('router', RoutesSteps::refusal(CaseInput::text($case, 'path')));
     }
 }

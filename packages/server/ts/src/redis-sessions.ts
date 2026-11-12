@@ -6,6 +6,7 @@ import { RedisSession } from './redis-session.js';
 import { RecordSession } from './record-session.js';
 import { SessionLockError } from './session-lock-error.js';
 import { SessionTurns } from './session-turns.js';
+import { ArgumentCountError } from './argument-count-error.js';
 
 // One command of a Redis server: its words, and its reply with a bulk string as bytes. With node-redis:
 // (words) => client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).sendCommand(words.map((word) => Buffer.from(word)))
@@ -26,6 +27,9 @@ export interface RedisSessionsOptions {
   lockWait?: number;
 }
 
+// The names of the options of the store, the members of its options record (HY-106.9).
+const REDIS_SESSIONS_REQUIRED = ['command'];
+const REDIS_SESSIONS_OPTIONAL = ['lifetime', 'prefix', 'lockExpire', 'lockRetries', 'lockWait'];
 const RELEASE = 'if redis.call("get",KEYS[1]) == ARGV[1] then return redis.call("del",KEYS[1]) else return 0 end';
 
 // Opens one session store per request. A session is the key `PHPREDIS_SESSION:<id>`, whose bytes are the php_serialize
@@ -46,6 +50,8 @@ export class RedisSessions {
   readonly turns: SessionTurns;
 
   constructor(options: RedisSessionsOptions) {
+    ArgumentCountError.between(arguments.length, 1, 1);
+    ArgumentCountError.members(options, REDIS_SESSIONS_REQUIRED, REDIS_SESSIONS_OPTIONAL);
     this.turns = new SessionTurns();
     const lifetime = options.lifetime ?? 1440;
     if (!Number.isSafeInteger(lifetime) || lifetime <= 0) throw new Error('hyper: session lifetime must be a positive number of seconds');

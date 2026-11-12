@@ -1,0 +1,2362 @@
+{
+  "counts": [
+    {
+      "id": "app_open_without_manifest_is_refused",
+      "label": "`app.open` without `manifest` fails with the count error (HY-106.8)",
+      "member": "app.open",
+      "call": "missing",
+      "parameter": "manifest",
+      "refused": true
+    },
+    {
+      "id": "app_open_without_handlers_is_refused",
+      "label": "`app.open` without `handlers` fails with the count error (HY-106.8)",
+      "member": "app.open",
+      "call": "missing",
+      "parameter": "handlers",
+      "refused": true
+    },
+    {
+      "id": "app_open_without_timezone_is_refused",
+      "label": "`app.open` without `timezone` fails with the count error (HY-106.8)",
+      "member": "app.open",
+      "call": "missing",
+      "parameter": "timezone",
+      "refused": true
+    },
+    {
+      "id": "app_open_without_program_is_refused",
+      "label": "`app.open` without `program` fails with the count error (HY-106.8)",
+      "member": "app.open",
+      "call": "missing",
+      "parameter": "program",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-48.8"
+      }
+    },
+    {
+      "id": "app_open_without_build_is_refused",
+      "label": "`app.open` without `build` fails with the count error (HY-106.8)",
+      "member": "app.open",
+      "call": "missing",
+      "parameter": "build",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-48.11"
+      }
+    },
+    {
+      "id": "app_open_without_templates_is_refused",
+      "label": "`app.open` without `templates` fails with the count error (HY-106.8)",
+      "member": "app.open",
+      "call": "missing",
+      "parameter": "templates",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-48.11"
+      }
+    },
+    {
+      "id": "app_open_with_its_required_arguments_runs",
+      "label": "`app.open` with only its required arguments runs (HY-106.8)",
+      "member": "app.open",
+      "call": "required",
+      "refused": false
+    },
+    {
+      "id": "app_open_with_every_argument_runs",
+      "label": "`app.open` with every argument runs (HY-106.8)",
+      "member": "app.open",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "app_open_with_one_more_argument_is_refused",
+      "label": "`app.open` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "app.open",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "app_bind_without_its_last_required_argument_is_refused",
+      "label": "`app.bind` without its last required argument fails with the count error (HY-106.8)",
+      "member": "app.bind",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "app_bind_with_every_argument_runs",
+      "label": "`app.bind` with every argument runs (HY-106.8)",
+      "member": "app.bind",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "app_bind_with_one_more_argument_is_refused",
+      "label": "`app.bind` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "app.bind",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "app_handle_without_its_last_required_argument_is_refused",
+      "label": "`app.handle` without its last required argument fails with the count error (HY-106.8)",
+      "member": "app.handle",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "app_handle_with_its_required_arguments_runs",
+      "label": "`app.handle` with only its required arguments runs (HY-106.8)",
+      "member": "app.handle",
+      "call": "required",
+      "refused": false
+    },
+    {
+      "id": "app_handle_with_every_argument_runs",
+      "label": "`app.handle` with every argument runs (HY-106.8)",
+      "member": "app.handle",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "app_handle_with_one_more_argument_is_refused",
+      "label": "`app.handle` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "app.handle",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "app_run_with_one_more_argument_is_refused",
+      "label": "`app.run` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "app.run",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-100.30"
+      }
+    },
+    {
+      "id": "app_server_without_its_last_required_argument_is_refused",
+      "label": "`app.server` without its last required argument fails with the count error (HY-106.8)",
+      "member": "app.server",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-97.9"
+      }
+    },
+    {
+      "id": "app_server_with_its_required_arguments_runs",
+      "label": "`app.server` with only its required arguments runs (HY-106.8)",
+      "member": "app.server",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-97.9"
+      }
+    },
+    {
+      "id": "app_server_with_every_argument_runs",
+      "label": "`app.server` with every argument runs (HY-106.8)",
+      "member": "app.server",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-97.9"
+      }
+    },
+    {
+      "id": "app_server_with_one_more_argument_is_refused",
+      "label": "`app.server` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "app.server",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-97.9"
+      }
+    },
+    {
+      "id": "app_listener_without_its_last_required_argument_is_refused",
+      "label": "`app.listener` without its last required argument fails with the count error (HY-106.8)",
+      "member": "app.listener",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-100.29"
+      }
+    },
+    {
+      "id": "app_listener_with_its_required_arguments_runs",
+      "label": "`app.listener` with only its required arguments runs (HY-106.8)",
+      "member": "app.listener",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-100.29"
+      }
+    },
+    {
+      "id": "app_listener_with_every_argument_runs",
+      "label": "`app.listener` with every argument runs (HY-106.8)",
+      "member": "app.listener",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-100.29"
+      }
+    },
+    {
+      "id": "app_listener_with_one_more_argument_is_refused",
+      "label": "`app.listener` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "app.listener",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-100.29"
+      }
+    },
+    {
+      "id": "media_type_constructor_without_its_last_required_argument_is_refused",
+      "label": "`media-type.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "media-type.constructor",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "media_type_constructor_with_its_required_arguments_runs",
+      "label": "`media-type.constructor` with only its required arguments runs (HY-106.8)",
+      "member": "media-type.constructor",
+      "call": "required",
+      "refused": false
+    },
+    {
+      "id": "media_type_constructor_with_every_argument_runs",
+      "label": "`media-type.constructor` with every argument runs (HY-106.8)",
+      "member": "media-type.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "media_type_constructor_with_one_more_argument_is_refused",
+      "label": "`media-type.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "media-type.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "media_type_parameters_with_every_argument_runs",
+      "label": "`media-type.parameters` with every argument runs (HY-106.8)",
+      "member": "media-type.parameters",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "media_type_parameters_with_one_more_argument_is_refused",
+      "label": "`media-type.parameters` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "media-type.parameters",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "media_type_etag_without_its_last_required_argument_is_refused",
+      "label": "`media-type.etag` without its last required argument fails with the count error (HY-106.8)",
+      "member": "media-type.etag",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "media_type_etag_with_every_argument_runs",
+      "label": "`media-type.etag` with every argument runs (HY-106.8)",
+      "member": "media-type.etag",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "media_type_etag_with_one_more_argument_is_refused",
+      "label": "`media-type.etag` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "media-type.etag",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "server_create_server_without_its_last_required_argument_is_refused",
+      "label": "`server.createServer` without its last required argument fails with the count error (HY-106.8)",
+      "member": "server.createServer",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.1"
+      }
+    },
+    {
+      "id": "server_create_server_with_its_required_arguments_runs",
+      "label": "`server.createServer` with only its required arguments runs (HY-106.8)",
+      "member": "server.createServer",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.1"
+      }
+    },
+    {
+      "id": "server_create_server_with_every_argument_runs",
+      "label": "`server.createServer` with every argument runs (HY-106.8)",
+      "member": "server.createServer",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.1"
+      }
+    },
+    {
+      "id": "server_create_server_with_one_more_argument_is_refused",
+      "label": "`server.createServer` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "server.createServer",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.1"
+      }
+    },
+    {
+      "id": "wsgi_create_wsgi_without_its_last_required_argument_is_refused",
+      "label": "`wsgi.createWsgi` without its last required argument fails with the count error (HY-106.8)",
+      "member": "wsgi.createWsgi",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.3"
+      }
+    },
+    {
+      "id": "wsgi_create_wsgi_with_its_required_arguments_runs",
+      "label": "`wsgi.createWsgi` with only its required arguments runs (HY-106.8)",
+      "member": "wsgi.createWsgi",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.3"
+      }
+    },
+    {
+      "id": "wsgi_create_wsgi_with_every_argument_runs",
+      "label": "`wsgi.createWsgi` with every argument runs (HY-106.8)",
+      "member": "wsgi.createWsgi",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.3"
+      }
+    },
+    {
+      "id": "wsgi_create_wsgi_with_one_more_argument_is_refused",
+      "label": "`wsgi.createWsgi` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "wsgi.createWsgi",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.3"
+      }
+    },
+    {
+      "id": "asgi_create_asgi_without_its_last_required_argument_is_refused",
+      "label": "`asgi.createAsgi` without its last required argument fails with the count error (HY-106.8)",
+      "member": "asgi.createAsgi",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.15"
+      }
+    },
+    {
+      "id": "asgi_create_asgi_with_its_required_arguments_runs",
+      "label": "`asgi.createAsgi` with only its required arguments runs (HY-106.8)",
+      "member": "asgi.createAsgi",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.15"
+      }
+    },
+    {
+      "id": "asgi_create_asgi_with_every_argument_runs",
+      "label": "`asgi.createAsgi` with every argument runs (HY-106.8)",
+      "member": "asgi.createAsgi",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.15"
+      }
+    },
+    {
+      "id": "asgi_create_asgi_with_one_more_argument_is_refused",
+      "label": "`asgi.createAsgi` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "asgi.createAsgi",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-100.15"
+      }
+    },
+    {
+      "id": "request_constructor_without_method_is_refused",
+      "label": "`request.constructor` without `method` fails with the count error (HY-106.8)",
+      "member": "request.constructor",
+      "call": "missing",
+      "parameter": "method",
+      "refused": true
+    },
+    {
+      "id": "request_constructor_without_path_is_refused",
+      "label": "`request.constructor` without `path` fails with the count error (HY-106.8)",
+      "member": "request.constructor",
+      "call": "missing",
+      "parameter": "path",
+      "refused": true
+    },
+    {
+      "id": "request_constructor_with_its_required_arguments_runs",
+      "label": "`request.constructor` with only its required arguments runs (HY-106.8)",
+      "member": "request.constructor",
+      "call": "required",
+      "refused": false
+    },
+    {
+      "id": "request_constructor_with_every_argument_runs",
+      "label": "`request.constructor` with every argument runs (HY-106.8)",
+      "member": "request.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_constructor_with_one_more_argument_is_refused",
+      "label": "`request.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_with_header_without_its_last_required_argument_is_refused",
+      "label": "`request.withHeader` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.withHeader",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_with_header_with_every_argument_runs",
+      "label": "`request.withHeader` with every argument runs (HY-106.8)",
+      "member": "request.withHeader",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_with_header_with_one_more_argument_is_refused",
+      "label": "`request.withHeader` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.withHeader",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_json_with_every_argument_runs",
+      "label": "`request.json` with every argument runs (HY-106.8)",
+      "member": "request.json",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_json_with_one_more_argument_is_refused",
+      "label": "`request.json` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.json",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_selection_with_every_argument_runs",
+      "label": "`request.selection` with every argument runs (HY-106.8)",
+      "member": "request.selection",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_selection_with_one_more_argument_is_refused",
+      "label": "`request.selection` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.selection",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_params_with_every_argument_runs",
+      "label": "`request.params` with every argument runs (HY-106.8)",
+      "member": "request.params",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_params_with_one_more_argument_is_refused",
+      "label": "`request.params` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.params",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_cookie_without_its_last_required_argument_is_refused",
+      "label": "`request.cookie` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.cookie",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_cookie_with_every_argument_runs",
+      "label": "`request.cookie` with every argument runs (HY-106.8)",
+      "member": "request.cookie",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_cookie_with_one_more_argument_is_refused",
+      "label": "`request.cookie` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.cookie",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_param_without_its_last_required_argument_is_refused",
+      "label": "`request.param` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.param",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_param_with_every_argument_runs",
+      "label": "`request.param` with every argument runs (HY-106.8)",
+      "member": "request.param",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_param_with_one_more_argument_is_refused",
+      "label": "`request.param` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.param",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_valid_input_with_every_argument_runs",
+      "label": "`request.validInput` with every argument runs (HY-106.8)",
+      "member": "request.validInput",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_valid_input_with_one_more_argument_is_refused",
+      "label": "`request.validInput` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.validInput",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_body_size_with_every_argument_runs",
+      "label": "`request.bodySize` with every argument runs (HY-106.8)",
+      "member": "request.bodySize",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_body_size_with_one_more_argument_is_refused",
+      "label": "`request.bodySize` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.bodySize",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_media_type_with_every_argument_runs",
+      "label": "`request.mediaType` with every argument runs (HY-106.8)",
+      "member": "request.mediaType",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_media_type_with_one_more_argument_is_refused",
+      "label": "`request.mediaType` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.mediaType",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_header_without_its_last_required_argument_is_refused",
+      "label": "`request.header` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.header",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_header_with_every_argument_runs",
+      "label": "`request.header` with every argument runs (HY-106.8)",
+      "member": "request.header",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_header_with_one_more_argument_is_refused",
+      "label": "`request.header` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.header",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_wants_json_with_every_argument_runs",
+      "label": "`request.wantsJson` with every argument runs (HY-106.8)",
+      "member": "request.wantsJson",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_wants_json_with_one_more_argument_is_refused",
+      "label": "`request.wantsJson` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.wantsJson",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_is_region_request_with_every_argument_runs",
+      "label": "`request.isRegionRequest` with every argument runs (HY-106.8)",
+      "member": "request.isRegionRequest",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_is_region_request_with_one_more_argument_is_refused",
+      "label": "`request.isRegionRequest` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.isRegionRequest",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_current_path_with_every_argument_runs",
+      "label": "`request.currentPath` with every argument runs (HY-106.8)",
+      "member": "request.currentPath",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_current_path_with_one_more_argument_is_refused",
+      "label": "`request.currentPath` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.currentPath",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_path_with_every_argument_runs",
+      "label": "`request.path` with every argument runs (HY-106.8)",
+      "member": "request.path",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_path_with_one_more_argument_is_refused",
+      "label": "`request.path` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.path",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_raw_query_with_every_argument_runs",
+      "label": "`request.rawQuery` with every argument runs (HY-106.8)",
+      "member": "request.rawQuery",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_raw_query_with_one_more_argument_is_refused",
+      "label": "`request.rawQuery` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.rawQuery",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_query_with_every_argument_runs",
+      "label": "`request.query` with every argument runs (HY-106.8)",
+      "member": "request.query",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_query_with_one_more_argument_is_refused",
+      "label": "`request.query` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.query",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_query_int_without_its_last_required_argument_is_refused",
+      "label": "`request.queryInt` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.queryInt",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_query_int_with_every_argument_runs",
+      "label": "`request.queryInt` with every argument runs (HY-106.8)",
+      "member": "request.queryInt",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_query_int_with_one_more_argument_is_refused",
+      "label": "`request.queryInt` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.queryInt",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_form_with_every_argument_runs",
+      "label": "`request.form` with every argument runs (HY-106.8)",
+      "member": "request.form",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_form_with_one_more_argument_is_refused",
+      "label": "`request.form` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.form",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_form_string_without_its_last_required_argument_is_refused",
+      "label": "`request.formString` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.formString",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_form_string_with_every_argument_runs",
+      "label": "`request.formString` with every argument runs (HY-106.8)",
+      "member": "request.formString",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_form_string_with_one_more_argument_is_refused",
+      "label": "`request.formString` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.formString",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_files_with_every_argument_runs",
+      "label": "`request.files` with every argument runs (HY-106.8)",
+      "member": "request.files",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_files_with_one_more_argument_is_refused",
+      "label": "`request.files` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.files",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_file_without_its_last_required_argument_is_refused",
+      "label": "`request.file` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.file",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_file_with_every_argument_runs",
+      "label": "`request.file` with every argument runs (HY-106.8)",
+      "member": "request.file",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_file_with_one_more_argument_is_refused",
+      "label": "`request.file` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.file",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_file_over_without_its_last_required_argument_is_refused",
+      "label": "`request.fileOver` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.fileOver",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_file_over_with_every_argument_runs",
+      "label": "`request.fileOver` with every argument runs (HY-106.8)",
+      "member": "request.fileOver",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_file_over_with_one_more_argument_is_refused",
+      "label": "`request.fileOver` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.fileOver",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_flash_without_its_last_required_argument_is_refused",
+      "label": "`request.flash` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.flash",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_flash_with_every_argument_runs",
+      "label": "`request.flash` with every argument runs (HY-106.8)",
+      "member": "request.flash",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_flash_with_one_more_argument_is_refused",
+      "label": "`request.flash` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.flash",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_csrf_token_with_every_argument_runs",
+      "label": "`request.csrfToken` with every argument runs (HY-106.8)",
+      "member": "request.csrfToken",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_csrf_token_with_one_more_argument_is_refused",
+      "label": "`request.csrfToken` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.csrfToken",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_browser_with_every_argument_runs",
+      "label": "`request.browser` with every argument runs (HY-106.8)",
+      "member": "request.browser",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_browser_with_one_more_argument_is_refused",
+      "label": "`request.browser` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.browser",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_target_path_without_its_last_required_argument_is_refused",
+      "label": "`request.targetPath` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.targetPath",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_target_path_with_every_argument_runs",
+      "label": "`request.targetPath` with every argument runs (HY-106.8)",
+      "member": "request.targetPath",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_target_path_with_one_more_argument_is_refused",
+      "label": "`request.targetPath` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.targetPath",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "request_target_query_without_its_last_required_argument_is_refused",
+      "label": "`request.targetQuery` without its last required argument fails with the count error (HY-106.8)",
+      "member": "request.targetQuery",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "request_target_query_with_every_argument_runs",
+      "label": "`request.targetQuery` with every argument runs (HY-106.8)",
+      "member": "request.targetQuery",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "request_target_query_with_one_more_argument_is_refused",
+      "label": "`request.targetQuery` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "request.targetQuery",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "reply_note_without_its_last_required_argument_is_refused",
+      "label": "`reply.note` without its last required argument fails with the count error (HY-106.8)",
+      "member": "reply.note",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "reply_note_with_every_argument_runs",
+      "label": "`reply.note` with every argument runs (HY-106.8)",
+      "member": "reply.note",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "reply_note_with_one_more_argument_is_refused",
+      "label": "`reply.note` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "reply.note",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "reply_notes_with_every_argument_runs",
+      "label": "`reply.notes` with every argument runs (HY-106.8)",
+      "member": "reply.notes",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "reply_notes_with_one_more_argument_is_refused",
+      "label": "`reply.notes` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "reply.notes",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "reply_cookie_without_its_last_required_argument_is_refused",
+      "label": "`reply.cookie` without its last required argument fails with the count error (HY-106.8)",
+      "member": "reply.cookie",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "reply_cookie_with_its_required_arguments_runs",
+      "label": "`reply.cookie` with only its required arguments runs (HY-106.8)",
+      "member": "reply.cookie",
+      "call": "required",
+      "refused": false
+    },
+    {
+      "id": "reply_cookie_with_every_argument_runs",
+      "label": "`reply.cookie` with every argument runs (HY-106.8)",
+      "member": "reply.cookie",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "reply_cookie_with_one_more_argument_is_refused",
+      "label": "`reply.cookie` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "reply.cookie",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "reply_remove_cookie_without_its_last_required_argument_is_refused",
+      "label": "`reply.removeCookie` without its last required argument fails with the count error (HY-106.8)",
+      "member": "reply.removeCookie",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "reply_remove_cookie_with_every_argument_runs",
+      "label": "`reply.removeCookie` with every argument runs (HY-106.8)",
+      "member": "reply.removeCookie",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "reply_remove_cookie_with_one_more_argument_is_refused",
+      "label": "`reply.removeCookie` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "reply.removeCookie",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "reply_cache_control_without_its_last_required_argument_is_refused",
+      "label": "`reply.cacheControl` without its last required argument fails with the count error (HY-106.8)",
+      "member": "reply.cacheControl",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "reply_cache_control_with_every_argument_runs",
+      "label": "`reply.cacheControl` with every argument runs (HY-106.8)",
+      "member": "reply.cacheControl",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "reply_cache_control_with_one_more_argument_is_refused",
+      "label": "`reply.cacheControl` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "reply.cacheControl",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "reply_renew_session_with_every_argument_runs",
+      "label": "`reply.renewSession` with every argument runs (HY-106.8)",
+      "member": "reply.renewSession",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "reply_renew_session_with_one_more_argument_is_refused",
+      "label": "`reply.renewSession` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "reply.renewSession",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "reply_referrer_policy_without_its_last_required_argument_is_refused",
+      "label": "`reply.referrerPolicy` without its last required argument fails with the count error (HY-106.8)",
+      "member": "reply.referrerPolicy",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "reply_referrer_policy_with_every_argument_runs",
+      "label": "`reply.referrerPolicy` with every argument runs (HY-106.8)",
+      "member": "reply.referrerPolicy",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "reply_referrer_policy_with_one_more_argument_is_refused",
+      "label": "`reply.referrerPolicy` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "reply.referrerPolicy",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "reply_status_without_its_last_required_argument_is_refused",
+      "label": "`reply.status` without its last required argument fails with the count error (HY-106.8)",
+      "member": "reply.status",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "reply_status_with_every_argument_runs",
+      "label": "`reply.status` with every argument runs (HY-106.8)",
+      "member": "reply.status",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "reply_status_with_one_more_argument_is_refused",
+      "label": "`reply.status` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "reply.status",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "reply_embed_data_with_every_argument_runs",
+      "label": "`reply.embedData` with every argument runs (HY-106.8)",
+      "member": "reply.embedData",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "reply_embed_data_with_one_more_argument_is_refused",
+      "label": "`reply.embedData` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "reply.embedData",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "response_constructor_without_its_last_required_argument_is_refused",
+      "label": "`response.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "response.constructor",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "response_constructor_with_every_argument_runs",
+      "label": "`response.constructor` with every argument runs (HY-106.8)",
+      "member": "response.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "response_constructor_with_one_more_argument_is_refused",
+      "label": "`response.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "response.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "response_with_header_without_its_last_required_argument_is_refused",
+      "label": "`response.withHeader` without its last required argument fails with the count error (HY-106.8)",
+      "member": "response.withHeader",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "response_with_header_with_every_argument_runs",
+      "label": "`response.withHeader` with every argument runs (HY-106.8)",
+      "member": "response.withHeader",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "response_with_header_with_one_more_argument_is_refused",
+      "label": "`response.withHeader` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "response.withHeader",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "response_text_without_its_last_required_argument_is_refused",
+      "label": "`response.text` without its last required argument fails with the count error (HY-106.8)",
+      "member": "response.text",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "response_text_with_every_argument_runs",
+      "label": "`response.text` with every argument runs (HY-106.8)",
+      "member": "response.text",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "response_text_with_one_more_argument_is_refused",
+      "label": "`response.text` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "response.text",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "result_redirect_without_its_last_required_argument_is_refused",
+      "label": "`result.redirect` without its last required argument fails with the count error (HY-106.8)",
+      "member": "result.redirect",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "result_redirect_with_every_argument_runs",
+      "label": "`result.redirect` with every argument runs (HY-106.8)",
+      "member": "result.redirect",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "result_redirect_with_one_more_argument_is_refused",
+      "label": "`result.redirect` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "result.redirect",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "result_page_without_its_last_required_argument_is_refused",
+      "label": "`result.page` without its last required argument fails with the count error (HY-106.8)",
+      "member": "result.page",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "result_page_with_every_argument_runs",
+      "label": "`result.page` with every argument runs (HY-106.8)",
+      "member": "result.page",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "result_page_with_one_more_argument_is_refused",
+      "label": "`result.page` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "result.page",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "result_invalid_without_its_last_required_argument_is_refused",
+      "label": "`result.invalid` without its last required argument fails with the count error (HY-106.8)",
+      "member": "result.invalid",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "result_invalid_with_every_argument_runs",
+      "label": "`result.invalid` with every argument runs (HY-106.8)",
+      "member": "result.invalid",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "result_invalid_with_one_more_argument_is_refused",
+      "label": "`result.invalid` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "result.invalid",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "result_flash_without_its_last_required_argument_is_refused",
+      "label": "`result.flash` without its last required argument fails with the count error (HY-106.8)",
+      "member": "result.flash",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "result_flash_with_every_argument_runs",
+      "label": "`result.flash` with every argument runs (HY-106.8)",
+      "member": "result.flash",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "result_flash_with_one_more_argument_is_refused",
+      "label": "`result.flash` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "result.flash",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "result_changed_with_every_argument_runs",
+      "label": "`result.changed` with every argument runs (HY-106.8)",
+      "member": "result.changed",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "redirect_constructor_without_its_last_required_argument_is_refused",
+      "label": "`redirect.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redirect.constructor",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "redirect_constructor_with_every_argument_runs",
+      "label": "`redirect.constructor` with every argument runs (HY-106.8)",
+      "member": "redirect.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "redirect_constructor_with_one_more_argument_is_refused",
+      "label": "`redirect.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redirect.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "not_found_constructor_with_every_argument_runs",
+      "label": "`not-found.constructor` with every argument runs (HY-106.8)",
+      "member": "not-found.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "not_found_constructor_with_one_more_argument_is_refused",
+      "label": "`not-found.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "not-found.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "forbidden_constructor_with_every_argument_runs",
+      "label": "`forbidden.constructor` with every argument runs (HY-106.8)",
+      "member": "forbidden.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "forbidden_constructor_with_one_more_argument_is_refused",
+      "label": "`forbidden.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "forbidden.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "bad_request_constructor_with_every_argument_runs",
+      "label": "`bad-request.constructor` with every argument runs (HY-106.8)",
+      "member": "bad-request.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "bad_request_constructor_with_one_more_argument_is_refused",
+      "label": "`bad-request.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "bad-request.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "uploaded_file_constructor_without_its_last_required_argument_is_refused",
+      "label": "`uploaded-file.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "uploaded-file.constructor",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "uploaded_file_constructor_with_every_argument_runs",
+      "label": "`uploaded-file.constructor` with every argument runs (HY-106.8)",
+      "member": "uploaded-file.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "uploaded_file_constructor_with_one_more_argument_is_refused",
+      "label": "`uploaded-file.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "uploaded-file.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "uploaded_file_name_with_every_argument_runs",
+      "label": "`uploaded-file.name` with every argument runs (HY-106.8)",
+      "member": "uploaded-file.name",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "uploaded_file_name_with_one_more_argument_is_refused",
+      "label": "`uploaded-file.name` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "uploaded-file.name",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "uploaded_file_filename_with_every_argument_runs",
+      "label": "`uploaded-file.filename` with every argument runs (HY-106.8)",
+      "member": "uploaded-file.filename",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "uploaded_file_filename_with_one_more_argument_is_refused",
+      "label": "`uploaded-file.filename` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "uploaded-file.filename",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "uploaded_file_content_type_with_every_argument_runs",
+      "label": "`uploaded-file.contentType` with every argument runs (HY-106.8)",
+      "member": "uploaded-file.contentType",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "uploaded_file_content_type_with_one_more_argument_is_refused",
+      "label": "`uploaded-file.contentType` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "uploaded-file.contentType",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "uploaded_file_size_with_every_argument_runs",
+      "label": "`uploaded-file.size` with every argument runs (HY-106.8)",
+      "member": "uploaded-file.size",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "uploaded_file_size_with_one_more_argument_is_refused",
+      "label": "`uploaded-file.size` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "uploaded-file.size",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "uploaded_file_content_with_every_argument_runs",
+      "label": "`uploaded-file.content` with every argument runs (HY-106.8)",
+      "member": "uploaded-file.content",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "uploaded_file_content_with_one_more_argument_is_refused",
+      "label": "`uploaded-file.content` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "uploaded-file.content",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "uploaded_file_move_to_without_its_last_required_argument_is_refused",
+      "label": "`uploaded-file.moveTo` without its last required argument fails with the count error (HY-106.8)",
+      "member": "uploaded-file.moveTo",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "uploaded_file_move_to_with_every_argument_runs",
+      "label": "`uploaded-file.moveTo` with every argument runs (HY-106.8)",
+      "member": "uploaded-file.moveTo",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "uploaded_file_move_to_with_one_more_argument_is_refused",
+      "label": "`uploaded-file.moveTo` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "uploaded-file.moveTo",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "container_bind_without_its_last_required_argument_is_refused",
+      "label": "`container.bind` without its last required argument fails with the count error (HY-106.8)",
+      "member": "container.bind",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "container_bind_with_every_argument_runs",
+      "label": "`container.bind` with every argument runs (HY-106.8)",
+      "member": "container.bind",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "container_bind_with_one_more_argument_is_refused",
+      "label": "`container.bind` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "container.bind",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "container_call_without_its_last_required_argument_is_refused",
+      "label": "`container.call` without its last required argument fails with the count error (HY-106.8)",
+      "member": "container.call",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-105.4"
+      }
+    },
+    {
+      "id": "container_call_with_every_argument_runs",
+      "label": "`container.call` with every argument runs (HY-106.8)",
+      "member": "container.call",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-105.4"
+      }
+    },
+    {
+      "id": "container_call_with_one_more_argument_is_refused",
+      "label": "`container.call` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "container.call",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php",
+          "python"
+        ],
+        "sentence": "HY-105.4"
+      }
+    },
+    {
+      "id": "container_get_without_its_last_required_argument_is_refused",
+      "label": "`container.get` without its last required argument fails with the count error (HY-106.8)",
+      "member": "container.get",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-105.4"
+      }
+    },
+    {
+      "id": "container_get_with_every_argument_runs",
+      "label": "`container.get` with every argument runs (HY-106.8)",
+      "member": "container.get",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-105.4"
+      }
+    },
+    {
+      "id": "container_get_with_one_more_argument_is_refused",
+      "label": "`container.get` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "container.get",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-105.4"
+      }
+    },
+    {
+      "id": "array_session_constructor_with_every_argument_runs",
+      "label": "`array-session.constructor` with every argument runs (HY-106.8)",
+      "member": "array-session.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "array_session_constructor_with_one_more_argument_is_refused",
+      "label": "`array-session.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "array-session.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "array_session_get_without_its_last_required_argument_is_refused",
+      "label": "`array-session.get` without its last required argument fails with the count error (HY-106.8)",
+      "member": "array-session.get",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "array_session_get_with_every_argument_runs",
+      "label": "`array-session.get` with every argument runs (HY-106.8)",
+      "member": "array-session.get",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "array_session_get_with_one_more_argument_is_refused",
+      "label": "`array-session.get` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "array-session.get",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "array_session_set_without_its_last_required_argument_is_refused",
+      "label": "`array-session.set` without its last required argument fails with the count error (HY-106.8)",
+      "member": "array-session.set",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "array_session_set_with_every_argument_runs",
+      "label": "`array-session.set` with every argument runs (HY-106.8)",
+      "member": "array-session.set",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "array_session_set_with_one_more_argument_is_refused",
+      "label": "`array-session.set` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "array-session.set",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "array_session_remove_without_its_last_required_argument_is_refused",
+      "label": "`array-session.remove` without its last required argument fails with the count error (HY-106.8)",
+      "member": "array-session.remove",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "array_session_remove_with_every_argument_runs",
+      "label": "`array-session.remove` with every argument runs (HY-106.8)",
+      "member": "array-session.remove",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "array_session_remove_with_one_more_argument_is_refused",
+      "label": "`array-session.remove` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "array-session.remove",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "array_session_renew_with_every_argument_runs",
+      "label": "`array-session.renew` with every argument runs (HY-106.8)",
+      "member": "array-session.renew",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "array_session_renew_with_one_more_argument_is_refused",
+      "label": "`array-session.renew` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "array-session.renew",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "native_session_constructor_without_its_last_required_argument_is_refused",
+      "label": "`native-session.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "native-session.constructor",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_constructor_with_its_required_arguments_runs",
+      "label": "`native-session.constructor` with only its required arguments runs (HY-106.8)",
+      "member": "native-session.constructor",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_constructor_with_every_argument_runs",
+      "label": "`native-session.constructor` with every argument runs (HY-106.8)",
+      "member": "native-session.constructor",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_constructor_with_one_more_argument_is_refused",
+      "label": "`native-session.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "native-session.constructor",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_get_without_its_last_required_argument_is_refused",
+      "label": "`native-session.get` without its last required argument fails with the count error (HY-106.8)",
+      "member": "native-session.get",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_get_with_one_more_argument_is_refused",
+      "label": "`native-session.get` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "native-session.get",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_set_without_its_last_required_argument_is_refused",
+      "label": "`native-session.set` without its last required argument fails with the count error (HY-106.8)",
+      "member": "native-session.set",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_set_with_one_more_argument_is_refused",
+      "label": "`native-session.set` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "native-session.set",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_remove_without_its_last_required_argument_is_refused",
+      "label": "`native-session.remove` without its last required argument fails with the count error (HY-106.8)",
+      "member": "native-session.remove",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_remove_with_one_more_argument_is_refused",
+      "label": "`native-session.remove` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "native-session.remove",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "native_session_renew_with_one_more_argument_is_refused",
+      "label": "`native-session.renew` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "native-session.renew",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_constructor_without_its_last_required_argument_is_refused",
+      "label": "`redis-cluster-sessions.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.constructor",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_constructor_with_its_required_arguments_runs",
+      "label": "`redis-cluster-sessions.constructor` with only its required arguments runs (HY-106.8)",
+      "member": "redis-cluster-sessions.constructor",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_constructor_with_every_argument_runs",
+      "label": "`redis-cluster-sessions.constructor` with every argument runs (HY-106.8)",
+      "member": "redis-cluster-sessions.constructor",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_constructor_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.constructor",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_invoke_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.invoke` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.invoke",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_open_without_its_last_required_argument_is_refused",
+      "label": "`redis-cluster-sessions.open` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.open",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_open_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.open` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.open",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_close_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.close` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.close",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_validate_id_without_its_last_required_argument_is_refused",
+      "label": "`redis-cluster-sessions.validateId` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.validateId",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_validate_id_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.validateId` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.validateId",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_update_timestamp_without_its_last_required_argument_is_refused",
+      "label": "`redis-cluster-sessions.updateTimestamp` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.updateTimestamp",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_update_timestamp_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.updateTimestamp` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.updateTimestamp",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_read_without_its_last_required_argument_is_refused",
+      "label": "`redis-cluster-sessions.read` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.read",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_read_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.read` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.read",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_write_without_its_last_required_argument_is_refused",
+      "label": "`redis-cluster-sessions.write` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.write",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_write_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.write` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.write",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_destroy_without_its_last_required_argument_is_refused",
+      "label": "`redis-cluster-sessions.destroy` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.destroy",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_destroy_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.destroy` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.destroy",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_gc_without_its_last_required_argument_is_refused",
+      "label": "`redis-cluster-sessions.gc` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.gc",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_cluster_sessions_gc_with_one_more_argument_is_refused",
+      "label": "`redis-cluster-sessions.gc` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-cluster-sessions.gc",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.19"
+      }
+    },
+    {
+      "id": "redis_sentinel_sessions_constructor_without_its_last_required_argument_is_refused",
+      "label": "`redis-sentinel-sessions.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "redis-sentinel-sessions.constructor",
+      "call": "missing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.14"
+      }
+    },
+    {
+      "id": "redis_sentinel_sessions_constructor_with_its_required_arguments_runs",
+      "label": "`redis-sentinel-sessions.constructor` with only its required arguments runs (HY-106.8)",
+      "member": "redis-sentinel-sessions.constructor",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.14"
+      }
+    },
+    {
+      "id": "redis_sentinel_sessions_constructor_with_every_argument_runs",
+      "label": "`redis-sentinel-sessions.constructor` with every argument runs (HY-106.8)",
+      "member": "redis-sentinel-sessions.constructor",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.14"
+      }
+    },
+    {
+      "id": "redis_sentinel_sessions_constructor_with_one_more_argument_is_refused",
+      "label": "`redis-sentinel-sessions.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-sentinel-sessions.constructor",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.14"
+      }
+    },
+    {
+      "id": "redis_sentinel_sessions_invoke_with_one_more_argument_is_refused",
+      "label": "`redis-sentinel-sessions.invoke` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-sentinel-sessions.invoke",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-115.14"
+      }
+    },
+    {
+      "id": "file_sessions_constructor_without_directory_is_refused",
+      "label": "`file-sessions.constructor` without `directory` fails with the count error (HY-106.8)",
+      "member": "file-sessions.constructor",
+      "call": "missing",
+      "parameter": "directory",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "file_sessions_constructor_with_its_required_arguments_runs",
+      "label": "`file-sessions.constructor` with only its required arguments runs (HY-106.8)",
+      "member": "file-sessions.constructor",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "file_sessions_constructor_with_every_argument_runs",
+      "label": "`file-sessions.constructor` with every argument runs (HY-106.8)",
+      "member": "file-sessions.constructor",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "file_sessions_constructor_with_one_more_argument_is_refused",
+      "label": "`file-sessions.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "file-sessions.constructor",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "redis_sessions_constructor_without_command_is_refused",
+      "label": "`redis-sessions.constructor` without `command` fails with the count error (HY-106.8)",
+      "member": "redis-sessions.constructor",
+      "call": "missing",
+      "parameter": "command",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.10"
+      }
+    },
+    {
+      "id": "redis_sessions_constructor_with_its_required_arguments_runs",
+      "label": "`redis-sessions.constructor` with only its required arguments runs (HY-106.8)",
+      "member": "redis-sessions.constructor",
+      "call": "required",
+      "refused": false,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.10"
+      }
+    },
+    {
+      "id": "redis_sessions_constructor_with_every_argument_runs",
+      "label": "`redis-sessions.constructor` with every argument runs (HY-106.8)",
+      "member": "redis-sessions.constructor",
+      "call": "all",
+      "refused": false,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.10"
+      }
+    },
+    {
+      "id": "redis_sessions_constructor_with_one_more_argument_is_refused",
+      "label": "`redis-sessions.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "redis-sessions.constructor",
+      "call": "extra",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.10"
+      }
+    },
+    {
+      "id": "client_rendering_constructor_without_its_last_required_argument_is_refused",
+      "label": "`client-rendering.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "client-rendering.constructor",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "client_rendering_constructor_with_every_argument_runs",
+      "label": "`client-rendering.constructor` with every argument runs (HY-106.8)",
+      "member": "client-rendering.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "client_rendering_constructor_with_one_more_argument_is_refused",
+      "label": "`client-rendering.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "client-rendering.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "choice_constructor_without_its_last_required_argument_is_refused",
+      "label": "`choice.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "choice.constructor",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "choice_constructor_with_every_argument_runs",
+      "label": "`choice.constructor` with every argument runs (HY-106.8)",
+      "member": "choice.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "choice_constructor_with_one_more_argument_is_refused",
+      "label": "`choice.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "choice.constructor",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "representation_constructor_without_its_last_required_argument_is_refused",
+      "label": "`representation.constructor` without its last required argument fails with the count error (HY-106.8)",
+      "member": "representation.constructor",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "representation_constructor_with_its_required_arguments_runs",
+      "label": "`representation.constructor` with only its required arguments runs (HY-106.8)",
+      "member": "representation.constructor",
+      "call": "required",
+      "refused": false
+    },
+    {
+      "id": "representation_constructor_with_every_argument_runs",
+      "label": "`representation.constructor` with every argument runs (HY-106.8)",
+      "member": "representation.constructor",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "representation_constructor_with_one_more_argument_is_refused",
+      "label": "`representation.constructor` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "representation.constructor",
+      "call": "extra",
+      "refused": true
+    }
+  ],
+  "names": [
+    {
+      "id": "app_open_with_a_name_that_is_no_parameter_is_refused",
+      "label": "`app.open` with an argument whose name is no parameter fails",
+      "member": "app.open",
+      "parameter": "nothing",
+      "refused": true
+    },
+    {
+      "id": "request_constructor_with_a_name_that_is_no_parameter_is_refused",
+      "label": "`request.constructor` with an argument whose name is no parameter fails",
+      "member": "request.constructor",
+      "parameter": "nothing",
+      "refused": true
+    },
+    {
+      "id": "file_sessions_constructor_with_a_name_that_is_no_parameter_is_refused",
+      "label": "`file-sessions.constructor` with an argument whose name is no parameter fails",
+      "member": "file-sessions.constructor",
+      "parameter": "nothing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "redis_sessions_constructor_with_a_name_that_is_no_parameter_is_refused",
+      "label": "`redis-sessions.constructor` with an argument whose name is no parameter fails",
+      "member": "redis-sessions.constructor",
+      "parameter": "nothing",
+      "refused": true,
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-115.10"
+      }
+    }
+  ]
+}

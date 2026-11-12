@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 import secrets
 
+from ._data_model import DataModel
 from ._flash import Flash
 from .session_store import SessionStore
 
@@ -64,7 +65,8 @@ class Session:
 
     def keep(self, region: str, path: str, value: object) -> None:
         """Stores a kept value of a region (HY-38, HY-40); stored kept values of another form than the session
-        writes fail, of every region (HY-104.23)."""
+        writes fail, of every region (HY-104.23). A value outside the data model fails first (HY-40.4)."""
+        value = DataModel.check(value)
         stored = self._store.get(_KEEP_KEY)
         kept = {
             name: Session._stored_map(values)

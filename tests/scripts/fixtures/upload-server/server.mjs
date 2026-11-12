@@ -12,6 +12,8 @@
 //                  prints `ended <client port>` when the listener of the application settled for a request
 //   UPLOAD_ERRORS  the file that receives the log of the application
 //   UPLOAD_HOOK    throws: the response hook throws after its line
+//   UPLOAD_LOAD    throws: the loader of the route home throws after its line
+//   UPLOAD_SESSIONS_OPEN  throws: the open of the session store throws
 //   UPLOAD_BEFORE  1: the header X-Before is set before the application receives the request
 //   UPLOAD_HTTPS   1: the application declares https
 //   UPLOAD_FILES   the directory of public files
@@ -136,6 +138,7 @@ const app = await App.open({
       home: {
         load: ({ request }) => {
           loaded('home', request);
+          if (process.env.UPLOAD_LOAD === 'throws') throw new Error('handler boom');
           return {};
         },
       },
@@ -184,7 +187,14 @@ const app = await App.open({
         onDisconnect: (request, time, reply) => line(`disconnect ${mark(request)} elapsed=${elapsed(time)} notes=${notes(reply)}`),
       }),
 });
-const server = app.server(new FileSessions({ directory: process.env.UPLOAD_SESSIONS }), {
+// The session store of UPLOAD_SESSIONS_OPEN=throws, whose open fails before the application runs (HY-60.14).
+class BrokenSessions extends FileSessions {
+  async open() {
+    throw new Error('the session directory is gone');
+  }
+}
+const sessions = process.env.UPLOAD_SESSIONS_OPEN === 'throws' ? BrokenSessions : FileSessions;
+const server = app.server(new sessions({ directory: process.env.UPLOAD_SESSIONS }), {
   ...(mode === 'none' ? {} : { around }),
   ...(log === undefined ? {} : { written: (request, response, ended, time, failure) => line(`written ${response === null ? 'null' : response.status} ${ended} ${mark(request)} elapsed=${elapsed(time)} failure=${JSON.stringify(failure)}`) }),
   ...(process.env.UPLOAD_FILES === undefined ? {} : { files: process.env.UPLOAD_FILES }),

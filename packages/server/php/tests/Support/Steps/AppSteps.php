@@ -6,13 +6,13 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\Csrf;
+use Polyspec\Hyper\Renderer;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Session;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\AppRun;
 use Polyspec\Hyper\Tests\Support\Bytes;
-use Polyspec\Hyper\Tests\Support\ContextRun;
 use Polyspec\Hyper\Tests\Support\CountingStore;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Plain;
@@ -40,12 +40,11 @@ final class AppSteps
     public static function cases(CaseReader $case): void
     {
         $case->input('valueKinds');
-        [$run, $directory] = self::run($case);
+        [$run, $directory, $store] = self::run($case);
         $app = $run->open("{$directory}/manifest.json", "{$directory}/program");
-        $store = new CountingStore();
         $keys = self::KEYS;
         if ($case->has('stored')) {
-            foreach (AppRun::map($case->input('stored'), 'the stored values') as $key => $value) {
+            foreach (Json::map($case->input('stored'), 'the stored values') as $key => $value) {
                 $store->preset((string) $key, self::hostValue($value));
                 $keys[] = (string) $key;
             }
@@ -53,7 +52,7 @@ final class AppSteps
         // The responses of the requests of `before` by their names, each with the token that the session held after it.
         $earlier = [];
         foreach ($case->has('before') ? Json::list($case->input('before')) : [] as $index => $item) {
-            $item = AppRun::map($item, 'a request of before');
+            $item = Json::map($item, 'a request of before');
             $name = array_key_exists('name', $item) ? Json::string($item['name']) : (string) $index;
             $held = null;
             $response = self::send($app, $store, $item, $earlier, $held)[0];
@@ -69,9 +68,11 @@ final class AppSteps
         $run->reset();
         $handler = self::errorHandler();
         $tokenBefore = null;
-        [[$response, $started], $log] = ServerLog::during(
+        [[$response, $least, $most], $log] = ServerLog::during(
             static function () use ($app, $store, $case, $earlier, &$tokenBefore): array {
-                return self::send($app, $store, AppRun::map($case->input('request'), 'the request'), $earlier, $tokenBefore);
+                $request = Json::map($case->input('request'), 'the request');
+
+                return self::send($app, $store, $request, $earlier, $tokenBefore);
             },
         );
         $calls = $store->log;
@@ -119,7 +120,8 @@ final class AppSteps
         $case->compare('tagOfBody', ($response->headers['ETag'] ?? null) === self::tag($body, $token));
         if ($case->has('sameAsEarlier')) {
             $name = Json::string($case->input('earlier'));
-            [$first, $firstToken] = $earlier[$name] ?? throw new \UnexpectedValueException("before has no request {$name}");
+            [$first, $firstToken] = $earlier[$name]
+                ?? throw new \UnexpectedValueException("before has no request {$name}");
             $tag = $response->headers['ETag'] ?? null;
             $mask = self::maskOf($body);
             $case->compare('sameAsEarlier', [
@@ -135,18 +137,33 @@ final class AppSteps
             $run->calls,
             static fn (string $call): bool => str_starts_with($call, 'action:'),
         )));
-        $case->compare('observed', $run->observed);
+        // A masked value of the token that the session holds after the request is written `masked`.
+        $case->compare('observed', array_map(
+            static fn (array $pair): array => [
+                $pair[0],
+                is_string($pair[1]) && is_string($token) && Csrf::verify($token, $pair[1]) ? 'masked' : $pair[1],
+            ],
+            $run->observed,
+        ));
+        if ($case->has('browsers')) {
+            $case->compare('browsers', array_map(
+                static fn (array $pair): string => self::browserWord($pair[1], $token, $tokenBefore),
+                $run->observed,
+            ));
+        }
         $case->compare('serviceValues', Plain::map($run->serviceValues()));
+        $case->compare('valueReads', $run->reads);
 
         $case->compare('reported', $run->reports->reported());
-        $hook = ['reportedHeaders', 'notes', 'failure', 'failureReported', 'elapsedFromStart'];
+        $hook = ['reportedHeaders', 'notes', 'failure', 'failureReported', 'failureLogged', 'elapsedFromStart'];
         if (array_filter($hook, $case->has(...)) !== []) {
             $last = $run->reports->last();
             $case->compare('reportedHeaders', $last[1]->headers);
             $case->compare('notes', $last[3]->notes());
             $case->compare('failure', $last[4]);
             $case->compare('failureReported', $last[4] !== null);
-            $case->compare('elapsedFromStart', $last[2] >= $started);
+            $case->compare('failureLogged', is_string($last[4]) && ServerLog::holds($log, 'hyper: ' . $last[4]));
+            $case->compare('elapsedFromStart', $last[2] >= $least && $last[2] <= $most);
         }
 
         if ($case->has('storedAfter')) {
@@ -188,7 +205,7 @@ final class AppSteps
                 mkdir($copy);
                 copy("{$directory}/manifest.json", "{$copy}/manifest.json");
                 self::copy("{$directory}/program", "{$copy}/program");
-                foreach (AppRun::map($case->input('files'), 'the files') as $name => $text) {
+                foreach (Json::map($case->input('files'), 'the files') as $name => $text) {
                     $path = "{$copy}/" . (self::FILES[$name] ?? throw new \UnexpectedValueException(
                         "{$name} is no file of an application of this runtime",
                     ));
@@ -214,41 +231,150 @@ final class AppSteps
     }
 
     /**
-     * Returns the run of the application of a case and the directory of its built program, whose namespace the
-     * autoload maps.
+     * HY-12, HY-13: renders the title and each region of a route alone and the document, and records the document and
+     * the page region with each part replaced by its place.
+     */
+    public static function parts(CaseReader $case): void
+    {
+        $name = Json::string($case->input('application'));
+        $application = Json::map(Json::array($case->input('applications'))[$name] ?? null, "the application {$name}");
+        $directory = self::PROGRAMS . "/{$name}";
+        $manifest = Json::map($application['manifest'] ?? null, 'the manifest');
+        $wanted = Json::string($case->input('route'));
+        $route = null;
+        foreach (Json::arrays($manifest['routes'] ?? null) as $declared) {
+            $route = ($declared['name'] ?? null) === $wanted ? $declared : $route;
+        }
+        if ($route === null) {
+            throw new \UnexpectedValueException("the manifest has no route {$wanted}");
+        }
+        $renderer = Renderer::open("{$directory}/program", Json::string($application['timezone'] ?? '+09:00'));
+        $shared = $renderer->bind(Json::map($case->input('shared'), 'the shared data'));
+        $bound = [];
+        foreach (Json::map($case->input('regions'), 'the regions') as $region => $data) {
+            $bound[(string) $region] = $renderer->bind(Json::map($data, "the data of the region {$region}"));
+        }
+        $routeRegions = [];
+        foreach (Json::arrays($route['regions'] ?? []) as $region) {
+            $regionName = Json::string($region['name'] ?? null);
+            if (array_key_exists($regionName, $bound)) {
+                $routeRegions[$regionName] = [
+                    'template' => Json::string($region['template'] ?? null),
+                    'data' => $bound[$regionName],
+                ];
+            }
+        }
+        $title = $renderer->alone(Json::string($manifest['title'] ?? null), $shared, $renderer->bind([]));
+        $manifestRegions = [];
+        $page = '';
+        $parts = [];
+        foreach (Json::arrays($manifest['regions'] ?? null) as $region) {
+            $regionName = Json::string($region['name'] ?? null);
+            $isPage = ($region['page'] ?? false) === true;
+            $page = $isPage ? $regionName : $page;
+            $manifestRegions[$regionName] = [
+                'template' => Json::string($isPage ? ($route['template'] ?? null) : ($region['template'] ?? null)),
+                'data' => $bound[$regionName]
+                    ?? throw new \UnexpectedValueException("the case has no data of {$regionName}"),
+            ];
+            $parts[$regionName] = $renderer->alone(
+                $manifestRegions[$regionName]['template'],
+                $shared,
+                $manifestRegions[$regionName]['data'],
+                $isPage ? $routeRegions : [],
+            );
+        }
+        $pageFrame = $parts[$page] ?? throw new \UnexpectedValueException('the manifest has no page region');
+        $frame = self::placed(
+            $renderer->document(
+                Json::string($manifest['layout'] ?? null),
+                Json::string($manifest['title'] ?? null),
+                $shared,
+                $manifestRegions,
+                $page,
+                $routeRegions,
+                null,
+                Json::string($application['build'] ?? null),
+            ),
+            $title,
+            'title',
+        );
+        foreach (array_keys($manifestRegions) as $regionName) {
+            $frame = self::placed($frame, $parts[$regionName], $regionName);
+        }
+        foreach ($routeRegions as $regionName => $region) {
+            $parts[$regionName] = $renderer->alone($region['template'], $shared, $region['data']);
+            $pageFrame = self::placed($pageFrame, $parts[$regionName], $regionName);
+        }
+        $case->compare('title', $title);
+        $case->compare('parts', $parts);
+        $case->compare('frame', $frame);
+        $case->compare('pageFrame', $pageFrame);
+    }
+
+    /** Returns the text with the first occurrence of a part replaced by its place, and fails for a part without one. */
+    private static function placed(string $text, string $part, string $name): string
+    {
+        $at = $part === '' ? false : strpos($text, $part);
+        if ($at === false) {
+            throw new \UnexpectedValueException("the part {$name} is empty or does not occur where it is placed");
+        }
+
+        return substr_replace($text, "{# {$name}}", $at, strlen($part));
+    }
+
+    /**
+     * Returns the run of the application of a case and the directory of its built program, with a new
+     * recording store.
      *
-     * @return array{0: AppRun, 1: string}
+     * @return array{0: AppRun, 1: string, 2: CountingStore}
      */
     private static function run(CaseReader $case): array
     {
         $name = Json::string($case->input('application'));
         $applications = Json::array($case->input('applications'));
         $directory = self::PROGRAMS . "/{$name}";
-        ContextRun::autoload($directory);
 
         return [
             new AppRun(
-                AppRun::map($applications[$name] ?? null, "the application {$name}"),
-                $case->has('handlers') ? AppRun::map($case->input('handlers'), 'the handlers') : [],
-                $case->has('options') ? AppRun::map($case->input('options'), 'the options') : [],
+                Json::map($applications[$name] ?? null, "the application {$name}"),
+                $case->has('handlers') ? Json::map($case->input('handlers'), 'the handlers') : [],
+                $case->has('options') ? Json::map($case->input('options'), 'the options') : [],
             ),
             $directory,
+            new CountingStore(),
         ];
     }
 
     /**
      * Sends a request of the request form: the texts are bytes, the references are resolved now, and nothing is added.
-     * Returns the response and the milliseconds of `startedBefore`, or 0. The calls of the store before the request are
-     * forgotten, and `$tokenBefore` receives the token that the session holds when the request is sent.
+     * Returns the response and the least and the most elapsed milliseconds that the response hook may receive: from the
+     * start that `handle` counts from to the clock just before and just after `handle`. The calls of the store before
+     * the request are forgotten, and `$tokenBefore` receives the token that the session holds when the request is sent.
      *
      * @param array<array-key, mixed> $request
      * @param array<string, array{0: Response, 1: mixed}> $earlier
-     * @return array{0: Response, 1: int}
+     * @return array{0: Response, 1: float, 2: float}
      */
-    private static function send(App $app, CountingStore $store, array $request, array $earlier, mixed &$tokenBefore): array
-    {
+    private static function send(
+        App $app,
+        CountingStore $store,
+        array $request,
+        array $earlier,
+        mixed &$tokenBefore,
+    ): array {
         $unknown = array_diff(array_keys($request), [
-            'name', 'status', 'method', 'target', 'headers', 'cookies', 'form', 'csrf', 'body', 'https', 'startedBefore',
+            'name',
+            'status',
+            'method',
+            'target',
+            'headers',
+            'cookies',
+            'form',
+            'csrf',
+            'body',
+            'https',
+            'startedBefore',
         ]);
         if ($unknown !== []) {
             throw new \UnexpectedValueException('a request holds the unknown member ' . implode(', ', $unknown));
@@ -256,7 +382,7 @@ final class AppSteps
         $text = static fn (mixed $value): string => self::text($value, $store, $earlier);
         $texts = static function (string $member) use ($request, $text): array {
             $map = [];
-            foreach (AppRun::map($request[$member] ?? [], "the member {$member} of a request") as $name => $value) {
+            foreach (Json::map($request[$member] ?? [], "the member {$member} of a request") as $name => $value) {
                 $map[Bytes::of((string) $name)] = $text($value);
             }
 
@@ -285,8 +411,8 @@ final class AppSteps
         } elseif ($csrf !== false) {
             throw new \UnexpectedValueException('the member csrf of a request needs a form');
         }
-        $started = $request['startedBefore'] ?? 0;
-        if (!is_int($started)) {
+        $before = $request['startedBefore'] ?? null;
+        if ($before !== null && !is_int($before)) {
             throw new \UnexpectedValueException('the member startedBefore of a request is no integer');
         }
         $given = new Request(
@@ -301,15 +427,16 @@ final class AppSteps
         $store->log = [];
         $tokenBefore = $store->peek(self::TOKEN);
 
-        // PHPUnit lowers error_reporting() while a test runs; a host reports every level, which the server reads (HY-74.5).
+        // PHPUnit lowers error_reporting() while a test runs; a host reports every level, which the server reads
+        // (HY-74.5).
         $reporting = error_reporting(E_ALL);
         try {
-            return [
-                array_key_exists('startedBefore', $request)
-                    ? $app->handle($given, $store, hrtime(true) - $started * 1000000)
-                    : $app->handle($given, $store),
-                $started,
-            ];
+            $t0 = hrtime(true);
+            $start = $before === null ? $t0 : $t0 - $before * 1000000;
+            $response = $before === null ? $app->handle($given, $store) : $app->handle($given, $store, $start);
+            $t1 = hrtime(true);
+
+            return [$response, ($t0 - $start) / 1e6, ($t1 - $start) / 1e6];
         } finally {
             error_reporting($reporting);
         }
@@ -327,12 +454,16 @@ final class AppSteps
         }
         $value = Json::array($value);
         if (array_is_list($value)) {
-            return implode('', array_map(static fn (mixed $part): string => self::text($part, $store, $earlier), $value));
+            return implode('', array_map(
+                static fn (mixed $part): string => self::text($part, $store, $earlier),
+                $value,
+            ));
         }
         if (array_key_exists('repeat', $value)) {
-            $times = $value['times'] ?? null;
-
-            return str_repeat(Bytes::of(Json::string($value['repeat'])), is_int($times) ? $times : throw new \UnexpectedValueException('a repeat has no count'));
+            return str_repeat(
+                Bytes::of(Json::string($value['repeat'])),
+                Json::integer($value['times'] ?? null, 'the count of a repeat'),
+            );
         }
         if (array_key_exists('token', $value)) {
             $token = (new Session($store))->csrfToken();
@@ -371,6 +502,31 @@ final class AppSteps
         }
 
         throw new \UnexpectedValueException("the response to {$name} sets no cookie {$cookie}");
+    }
+
+    /**
+     * Returns the word of a value that a handler read as `browser()`: `none` for null, `current` for the digest of
+     * the token that the session holds after the request, `previous` for the digest of another token that it held
+     * when the request was sent, and `other` for every other value.
+     */
+    private static function browserWord(mixed $value, mixed $after, mixed $before): string
+    {
+        $digest = static fn (mixed $token): ?string => (
+            is_string($token) && preg_match('/^[0-9a-f]{64}$/D', $token) === 1
+                ? hash('sha256', (string) hex2bin($token))
+                : null
+        );
+        if ($value === null) {
+            return 'none';
+        }
+        if ($digest($after) !== null && $value === $digest($after)) {
+            return 'current';
+        }
+        if ($digest($before) !== null && $before !== $after && $value === $digest($before)) {
+            return 'previous';
+        }
+
+        return 'other';
     }
 
     /** Returns the body with every masked value of the token replaced by the text `masked` (HY-24). */
@@ -444,7 +600,9 @@ final class AppSteps
     {
         mkdir($to);
         foreach (array_diff((array) scandir($from), ['.', '..']) as $name) {
-            is_dir("{$from}/{$name}") ? self::copy("{$from}/{$name}", "{$to}/{$name}") : copy("{$from}/{$name}", "{$to}/{$name}");
+            is_dir("{$from}/{$name}")
+                ? self::copy("{$from}/{$name}", "{$to}/{$name}")
+                : copy("{$from}/{$name}", "{$to}/{$name}");
         }
     }
 

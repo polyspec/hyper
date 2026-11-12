@@ -47,7 +47,12 @@ class Exchange:
             )
 
     def release(self) -> None:
-        """Removes the directory of the files of the body after the hooks of the request returned (HY-131.14)."""
+        """Removes the directory of the files of the body after the hooks of the request returned (HY-131.14): through
+        the request that was made with the body, and through the body itself, because the request stays the one as
+        received (HY-60), made without the body, when the body was not read to its end; a second removal does
+        nothing."""
+        if self.request is not None:
+            self.request._release()
         if self.body is not None:
             self.body.remove()
 

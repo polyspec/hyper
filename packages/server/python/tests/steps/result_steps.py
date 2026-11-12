@@ -1,11 +1,11 @@
 # The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58): the results of actions and the stops.
-import json
-
 from polyspec.hyper.bad_request import BadRequest
 from polyspec.hyper.forbidden import Forbidden
 from polyspec.hyper.not_found import NotFound
 from polyspec.hyper.redirect import Redirect
 from polyspec.hyper.result import Result
+
+from .recorded import decoded
 
 
 def redirect(case) -> None:
@@ -38,6 +38,8 @@ def page(case) -> None:
         error = str(failure)
     case.compare("result", None if result is None else result.status)
     case.compare("redirect", None if result is None else result.location)
+    if result is not None:
+        case.compare("held", result.data)
     case.compare("error", error)
 
 
@@ -61,9 +63,7 @@ def copies(case) -> None:
         ):
             raise TypeError("a flash of the case is not a name and a JSON text")
     # The JSON text gives the value as a handler returns it (HY-44).
-    values = [
-        (name, json.loads(text, parse_constant=_reject)) for name, text in flashes
-    ]
+    values = [(name, decoded(text)) for name, text in flashes]
     for names in topics:
         if not isinstance(names, list) or not all(
             isinstance(name, str) for name in names
@@ -90,7 +90,7 @@ def types(case) -> None:
     call = _text(case, "call")
     if call not in ("flash", "changed"):
         raise ValueError(f"the call {call} of the case is unknown")
-    argument = json.loads(_text(case, "argument"), parse_constant=_reject)
+    argument = decoded(_text(case, "argument"))
     result = Result.redirect("/")
     error = None
     try:
@@ -126,11 +126,9 @@ def stop(case) -> None:
     else:
         raise TypeError(f"the stop {kind} of the case is unknown")
     case.compare("message", None if stopped is None else str(stopped))
+    if isinstance(stopped, Redirect):
+        case.compare("location", stopped.result.location)
     case.compare("error", error)
-
-
-def _reject(name: str) -> None:
-    raise ValueError(f"the JSON text of the case holds {name}, which is not JSON")
 
 
 def _text(case, name: str) -> str:

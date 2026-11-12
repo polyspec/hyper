@@ -21,7 +21,10 @@ final class Plain
         return is_array($value) ? array_map(self::value(...), $value) : $value;
     }
 
-    /** @param array<array-key, mixed> $value an observed map: empty, it is an object, not a list */
+    /**
+     * @param array<array-key, mixed> $value an observed map: empty, it is an object, not a list
+     * @return array<array-key, mixed>|\stdClass
+     */
     public static function map(array $value): array|\stdClass
     {
         return $value === [] ? new \stdClass() : $value;

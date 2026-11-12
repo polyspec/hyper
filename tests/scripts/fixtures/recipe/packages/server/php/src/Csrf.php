@@ -25,7 +25,12 @@ final class Csrf
 
     public function raw(): string
     {
-        return 'x';
+        return $this->fold();
+    }
+
+    public function check(): bool
+    {
+        return true;
     }
 
     private function fold(): string

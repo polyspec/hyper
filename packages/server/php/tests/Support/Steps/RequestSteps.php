@@ -57,6 +57,12 @@ final class RequestSteps
             ],
             $request->files(),
         ));
+        if ($case->has('limits')) {
+            $case->compare('over', array_map(
+                static fn (mixed $limit): bool => $request->fileOver(Json::integer($limit, 'a limit of the case')),
+                Json::list($case->input('limits')),
+            ));
+        }
     }
 
     /** Records the path and the raw query of a request target, whose characters are bytes (HY-42, HY-56). */
@@ -118,6 +124,7 @@ final class RequestSteps
         $case->compare('method', $request->method);
         $case->compare('path', $request->path());
         $case->compare('rawQuery', $request->rawQuery());
+        $case->compare('mediaType', $request->mediaType());
         $case->compare('query', $request->query());
         if ($case->has('queryInt')) {
             $case->compare('queryInt', array_map(
@@ -134,7 +141,8 @@ final class RequestSteps
         }
         $case->compare('form', $request->form());
         if ($case->has('formString')) {
-            $case->compare('formString', array_map($request->formString(...), Json::strings($case->input('formNames'))));
+            $names = Json::strings($case->input('formNames'));
+            $case->compare('formString', array_map($request->formString(...), $names));
         }
         if ($case->has('cookie')) {
             $case->compare('cookie', array_map($request->cookie(...), Json::strings($case->input('cookieNames'))));
@@ -143,7 +151,8 @@ final class RequestSteps
             $case->compare('header', array_map($request->header(...), Json::strings($case->input('headerNames'))));
         }
         if ($case->has('original.header')) {
-            $case->compare('original.header', array_map($original->header(...), Json::strings($case->input('headerNames'))));
+            $names = Json::strings($case->input('headerNames'));
+            $case->compare('original.header', array_map($original->header(...), $names));
         }
         $case->compare('https', $request->https);
         $case->compare('selection', $request->selection());

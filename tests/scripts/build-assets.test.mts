@@ -65,6 +65,8 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
     assert.ok(code.includes(homeUrl), code);
     const shell = readFileSync(join(output, 'csr', 'index.html'), 'utf8');
     assert.ok(shell.includes(code), shell);
+    // The shell declares the URL of the entry that it inlines (HYC-16).
+    assert.equal(shell.split(`<meta name="hyper-entry" content="/assets/${entry}">`).length - 1, 1, shell);
     assert.doesNotMatch(shell, /<style|<link/);
     assert.equal(readFileSync(join(output, 'csr', 'assets', chunk), 'utf8'), readFileSync(join(assets, chunk), 'utf8'));
     // A build after a change of the chunk code and a template adds the new chunk and template file and keeps every

@@ -12,7 +12,7 @@ use Polyspec\Hyper\Tests\Support\Plain;
  * HY-38: the cases of contracts/keep.json. The data of a case is given as arrays and as the stdClass maps of decoded
  * JSON, and both must give the expected values.
  */
-final class KeptSteps
+final class KeepSteps
 {
     public static function cases(CaseReader $case): void
     {
@@ -41,7 +41,8 @@ final class KeptSteps
     {
         $data = $case->input('data');
         $arrays = is_array($data) ? $data : [];
-        $objects = (array) json_decode(json_encode((object) $arrays, JSON_THROW_ON_ERROR), false, 512, JSON_THROW_ON_ERROR);
+        $text = json_encode((object) $arrays, JSON_THROW_ON_ERROR);
+        $objects = (array) json_decode($text, false, 512, JSON_THROW_ON_ERROR);
         $kept = [];
         foreach (is_array($case->input('kept')) ? $case->input('kept') : [] as $pair) {
             if (is_array($pair) && is_string($pair[0] ?? null) && array_key_exists(1, $pair)) {

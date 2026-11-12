@@ -7,10 +7,10 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Context;
 use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\JsonCodec;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseInput;
 use Polyspec\Hyper\Tests\Support\ContextRun;
-use Polyspec\Hyper\Tests\Support\Plain;
+use Polyspec\Hyper\Tests\Support\Json;
 
 /** HY-124 to HY-128: the cases of contracts/context.json. */
 final class ContextSteps
@@ -21,19 +21,17 @@ final class ContextSteps
     public static function contexts(CaseReader $case): void
     {
         $build = self::stringField($case, 'build');
-        $text = Context::text(self::mapOf(JsonCodec::decode(self::stringField($case, 'context')), 'context'));
+        $text = Context::text(Json::map(Json::value(self::stringField($case, 'context')), 'context'));
         $case->compare('context', $text);
         $case->compare('text', '{"build":"' . $build . '","context":' . $text . '}');
         $case->compare('hash', Context::hash($build, $text));
         if ($case->has('reorderedText')) {
-            $reordered = JsonCodec::decode(self::stringField($case, 'reorderedText'));
-            if (!$reordered instanceof \stdClass || !property_exists($reordered, 'context')) {
+            $reordered = Json::map(Json::value(self::stringField($case, 'reorderedText')), 'reorderedText');
+            if (!array_key_exists('context', $reordered)) {
                 throw new \UnexpectedValueException('reorderedText has no member context');
             }
-            $case->compare(
-                'reorderedHash',
-                Context::hash($build, Context::text(self::mapOf($reordered->context, 'the member context of reorderedText'))),
-            );
+            $context = Json::map($reordered['context'], 'the member context of reorderedText');
+            $case->compare('reorderedHash', Context::hash($build, Context::text($context)));
         }
     }
 
@@ -96,27 +94,6 @@ final class ContextSteps
     }
 
     /**
-     * Returns a decoded JSON object as the map that a context handler returns: an empty object is the empty map.
-     *
-     * @return array<array-key, mixed>
-     */
-    private static function mapOf(mixed $value, string $name): array
-    {
-        if (!$value instanceof \stdClass) {
-            throw new \UnexpectedValueException("{$name} is not a map");
-        }
-        $map = Plain::value($value);
-        if ($map instanceof \stdClass) {
-            return [];
-        }
-        if (!is_array($map)) {
-            throw new \UnexpectedValueException("{$name} is not a map");
-        }
-
-        return $map;
-    }
-
-    /**
      * Opens the application of a case with its shared data and its context, sends its request and compares the
      * response, the failure that the response hook received (HY-60), the context calls and the shared data.
      */
@@ -129,11 +106,11 @@ final class ContextSteps
         }
         $run = new ContextRun($name, $applications[$name], self::PROGRAMS);
         $app = $run->open(
-            $case->has('shared') ? self::arrayField($case, 'shared') : null,
+            $case->has('shared') ? CaseInput::map($case, 'shared') : null,
             context: $case->has('context') ? self::stringField($case, 'context') : null,
         );
         $session = new ArraySession();
-        $response = $run->send($app, $session, self::arrayField($case, 'request'));
+        $response = $run->send($app, $session, CaseInput::map($case, 'request'));
 
         $case->compare('status', $response->status);
         $case->compare('headers', $response->headers);
@@ -179,27 +156,8 @@ final class ContextSteps
             $case->compare('renewals', $session->renewals());
         }
         $calls = $run->calls;
-        $case->compare('contextCalls', count(array_filter($calls, static fn (string $call): bool => $call === 'context')));
+        $case->compare('contextCalls', count(array_keys($calls, 'context', true)));
         $case->compare('firstCalls', $calls);
         $case->compare('selection', $run->selections);
-    }
-
-    /**
-     * Returns a field of a case that is a map, and fails for any other value.
-     *
-     * @return array<array-key, mixed>
-     */
-    private static function arrayField(CaseReader $case, string $name): array
-    {
-        $value = $case->input($name);
-        // Plain gives an empty JSON object as stdClass, so that it differs from an empty list.
-        if ($value instanceof \stdClass && get_object_vars($value) === []) {
-            return [];
-        }
-        if (!is_array($value) || ($value !== [] && array_is_list($value))) {
-            throw new \UnexpectedValueException("the case field {$name} is not a map");
-        }
-
-        return $value;
     }
 }

@@ -12,10 +12,10 @@ namespace Polyspec\Hyper;
 final class Cookies
 {
     /**
-     * Returns the cookies of a `Cookie` header, or none for a request without the header. The header splits at each `;`,
-     * spaces and tabs at both ends of a pair are removed, and a pair splits at its first `=`. A pair gives no cookie
-     * when it has no `=`, an empty name, a name that is not UTF-8 (the name is not decoded), or a value that is not
-     * UTF-8 after percent-decoding. Of the pairs that give a cookie, the first of a name counts.
+     * Returns the cookies of a `Cookie` header, or none for a request without the header. The header splits at each
+     * `;`, spaces and tabs at both ends of a pair are removed, and a pair splits at its first `=`. A pair gives no
+     * cookie when it has no `=`, an empty name, a name that is not UTF-8 (the name is not decoded), or a value that is
+     * not UTF-8 after percent-decoding. Of the pairs that give a cookie, the first of a name counts.
      *
      * PHP turns a decimal name into an integer key, so the keys are `array-key`; a lookup by the string name finds it.
      *

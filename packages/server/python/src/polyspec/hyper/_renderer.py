@@ -26,7 +26,9 @@ class Renderer:
         self.timezone = timezone
 
     @staticmethod
-    def open(program: str, timezone: str, functions: Optional[dict] = None) -> "Renderer":
+    def open(
+        program: str, timezone: str, functions: Optional[dict] = None
+    ) -> "Renderer":
         """Opens the server program that `hyper-build-server` of `@polyspec/hyper-build` wrote to a directory; a
         missing build fails here and names the missing file (HY-48). `functions` are the host functions of the
         application, which the engine registers as template RT-5 states: a name that is a built-in function or a value

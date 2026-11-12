@@ -13,6 +13,6 @@ final class ArraySession implements SessionStore
 {
     public function read(string $id): ?string
     {
-        return null;
+        return (new Csrf('k'))->check() ? null : $id;
     }
 }

@@ -60,7 +60,9 @@ class Accept:
         return Accept.best(Accept.parse(value), types)[0]
 
     @staticmethod
-    def best(ranges: Sequence[MediaRange], types: Sequence[str]) -> tuple[Optional[str], int]:
+    def best(
+        ranges: Sequence[MediaRange], types: Sequence[str]
+    ) -> tuple[Optional[str], int]:
         """Returns the type of the highest weight among the given types with that weight in thousandths, the first
         on a tie, or None and 0 when no type has a weight above 0 (HY-116)."""
         selected: Optional[str] = None

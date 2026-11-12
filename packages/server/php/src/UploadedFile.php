@@ -24,6 +24,7 @@ final class UploadedFile
         private readonly string $contentType,
         string $content,
     ) {
+        ArgumentCount::most(\func_num_args(), 4);
         $this->bytes = $content;
         $this->length = strlen($content);
     }
@@ -46,30 +47,35 @@ final class UploadedFile
     /** Returns the name of the part, the `name` parameter of its Content-Disposition. */
     public function name(): string
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->name;
     }
 
     /** Returns the filename parameter of the part, as it was sent (HY-113.14). */
     public function filename(): string
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->filename;
     }
 
     /** Returns the Content-Type header of the part as it was sent, or the empty text when it has none. */
     public function contentType(): string
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->contentType;
     }
 
     /** Returns the number of bytes of the part (HY-131.15). */
     public function size(): int
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->length;
     }
 
     /** Returns the bytes of the part as one value, and fails after a move (HY-131.16). */
     public function content(): string
     {
+        ArgumentCount::most(\func_num_args(), 0);
         if ($this->moved) {
             throw new \InvalidArgumentException('the file was moved (HY-131)');
         }
@@ -92,6 +98,7 @@ final class UploadedFile
      */
     public function moveTo(mixed $path): void
     {
+        ArgumentCount::most(\func_num_args(), 1);
         if (!is_string($path)) {
             throw new \TypeError('a path is not a string (HY-131)');
         }

@@ -57,7 +57,9 @@ final class ContainerSteps
         $names = [];
         foreach ($value as $name) {
             if ($name !== 'clock' && $name !== 'mailer') {
-                throw new \UnexpectedValueException("the case field {$field} names the unknown service " . var_export($name, true));
+                throw new \UnexpectedValueException(
+                    "the case field {$field} names the unknown service " . var_export($name, true),
+                );
             }
             $names[] = $name;
         }

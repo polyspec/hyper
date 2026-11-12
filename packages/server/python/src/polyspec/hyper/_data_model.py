@@ -30,7 +30,7 @@ class DataModel:
     def contains(value: object) -> bool:
         """Returns True for a value of the data model; for example, integers outside ±(2^53 − 1) are not."""
         try:
-            DataModel._walk(value)
+            DataModel.check(value)
             return True
         except ValueError as error:
             # HY-44.8: only a message of the data model is a value outside it; another failure is not swallowed.

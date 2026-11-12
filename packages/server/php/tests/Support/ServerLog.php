@@ -35,6 +35,12 @@ final class ServerLog
         }
     }
 
+    /** Returns whether one text that the server gave to its log is exactly `$text`, after the time stamp of its line. */
+    public static function holds(string $log, string $text): bool
+    {
+        return preg_match('/^\[[^\]\n]*\] ' . preg_quote($text, '/') . '$/m', $log) === 1;
+    }
+
     /**
      * Returns the number of texts that the server gave to its log: the lines that hold `hyper: ` right after the time
      * stamp that PHP writes at the start of each `error_log` call.

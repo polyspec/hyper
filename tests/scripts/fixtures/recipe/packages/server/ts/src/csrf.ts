@@ -13,7 +13,7 @@ export class Csrf {
   }
 
   raw(): string {
-    return 'x';
+    return this.fold();
   }
 
   private fold(): string {

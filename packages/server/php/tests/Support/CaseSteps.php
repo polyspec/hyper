@@ -7,6 +7,7 @@ namespace Polyspec\Hyper\Tests\Support;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Steps\AcceptSteps;
 use Polyspec\Hyper\Tests\Support\Steps\AppSteps;
+use Polyspec\Hyper\Tests\Support\Steps\ArgumentsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\BuildSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ClientSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ContextSteps;
@@ -16,13 +17,15 @@ use Polyspec\Hyper\Tests\Support\Steps\CsrfSteps;
 use Polyspec\Hyper\Tests\Support\Steps\FieldsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\FunctionsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\JsonSteps;
-use Polyspec\Hyper\Tests\Support\Steps\KeptSteps;
+use Polyspec\Hyper\Tests\Support\Steps\KeepSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ManifestSteps;
+use Polyspec\Hyper\Tests\Support\Steps\MediaTypeSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ReadsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RepresentationsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RequestSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RestSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ReplySteps;
+use Polyspec\Hyper\Tests\Support\Steps\ResponseSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ResultSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RoutesSteps;
 use Polyspec\Hyper\Tests\Support\Steps\SessionSteps;
@@ -42,13 +45,14 @@ final class CaseSteps
             'csrf.json mask' => CsrfSteps::mask(...),
             'csrf.json masked' => CsrfSteps::masked(...),
             'csrf.json verify' => CsrfSteps::verify(...),
+            'csrf.json browser' => CsrfSteps::browser(...),
             'fields.json urlencoded' => FieldsSteps::urlencoded(...),
             'fields.json multipart' => FieldsSteps::multipart(...),
             'fields.json streamed' => FieldsSteps::streamed(...),
             'json.json encode' => JsonSteps::encode(...),
             'json.json decode' => JsonSteps::decode(...),
-            'keep.json cases' => KeptSteps::cases(...),
-            'keep.json select' => KeptSteps::select(...),
+            'keep.json cases' => KeepSteps::cases(...),
+            'keep.json select' => KeepSteps::select(...),
             'reads.json cases' => ReadsSteps::cases(...),
             'result.json copies' => ResultSteps::copies(...),
             'result.json invalid' => ResultSteps::invalid(...),
@@ -88,6 +92,15 @@ final class CaseSteps
             'client.json openRejections' => ClientSteps::openRejections(...),
             'app.json cases' => AppSteps::cases(...),
             'app.json opens' => AppSteps::opens(...),
+            'app.json parts' => AppSteps::parts(...),
+            'arguments.json counts' => ArgumentsSteps::counts(...),
+            'arguments.json names' => ArgumentsSteps::names(...),
+            'media-type.json values' => MediaTypeSteps::values(...),
+            'response.json values' => ResponseSteps::values(...),
+            'fields.json uploaded' => FieldsSteps::uploaded(...),
+            'session.json store' => SessionSteps::store(...),
+            'client.json declaration' => ClientSteps::declaration(...),
+            'representations.json values' => RepresentationsSteps::values(...),
             default => null,
         };
     }

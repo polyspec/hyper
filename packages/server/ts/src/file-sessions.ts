@@ -6,6 +6,7 @@ import { exclusiveLock } from './flock.js';
 import { FileSession } from './file-session.js';
 import { RecordSession } from './record-session.js';
 import { SessionTurns } from './session-turns.js';
+import { ArgumentCountError } from './argument-count-error.js';
 
 export interface FileSessionsOptions {
   // An existing absolute directory; the server processes that share it share its sessions (HY-104).
@@ -14,6 +15,9 @@ export interface FileSessionsOptions {
   lifetime?: number;
 }
 
+// The names of the options of the store, the members of its options record (HY-106.9).
+const FILE_SESSIONS_REQUIRED = ['directory'];
+const FILE_SESSIONS_OPTIONAL = ['lifetime'];
 const IDENTIFIER = /^[A-Za-z0-9,-]{22,128}$/;
 const PREFIX = 'sess_';
 const OPEN = constants.O_RDWR | constants.O_NOFOLLOW;
@@ -39,6 +43,8 @@ export class FileSessions {
   readonly turns: SessionTurns;
 
   constructor(options: FileSessionsOptions) {
+    ArgumentCountError.between(arguments.length, 1, 1);
+    ArgumentCountError.members(options, FILE_SESSIONS_REQUIRED, FILE_SESSIONS_OPTIONAL);
     this.turns = new SessionTurns();
     if (!isAbsolute(options.directory) || !statSync(options.directory).isDirectory()) {
       throw new Error(`hyper: session directory ${options.directory} must be an existing absolute directory`);

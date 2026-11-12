@@ -7,6 +7,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Flash;
 use Polyspec\Hyper\Session;
+use Polyspec\Hyper\SessionStore;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Json;
 
@@ -44,31 +45,60 @@ final class SessionSteps
 
     public static function flash(CaseReader $case): void
     {
-        self::stored($case);
+        self::stored($case, false);
     }
 
     public static function kept(CaseReader $case): void
     {
-        self::stored($case);
+        self::stored($case, $case->has('failure'));
+    }
+
+    /** Applies the calls to one ArraySession through the session store interface (HY-72, HY-104). */
+    public static function store(CaseReader $case): void
+    {
+        $session = new ArraySession();
+        $store = self::asStore($session);
+        $results = [];
+        foreach (self::calls($case) as [$method, $arguments]) {
+            $key = static fn (): string => Json::string($arguments[0] ?? null);
+            $result = null;
+            match ($method) {
+                'get' => $result = $store->get($key()),
+                'set' => $store->set($key(), $arguments[1] ?? null),
+                'remove' => $store->remove($key()),
+                'renew' => $store->renew(),
+                default => throw new \LogicException("the method {$method} of the case is unknown"),
+            };
+            $results[] = $result;
+        }
+        $case->compare('results', $results);
+        $case->compare('renewals', $session->renewals());
+    }
+
+    private static function asStore(SessionStore $store): SessionStore
+    {
+        return $store;
     }
 
     /**
      * Applies the calls over the stored values of the case until one fails with the error of a stored value of another
-     * form (HY-104.23), and compares the result of each call that returned and whether a call failed so.
+     * form (HY-104.23), and compares the result of each call that returned and whether a call failed so. When the case
+     * expects a failure, a call that fails with the error of the data model also stops, and its message is compared.
      */
-    private static function stored(CaseReader $case): void
+    private static function stored(CaseReader $case, bool $fails): void
     {
         $store = new ArraySession();
         if ($case->has('stored')) {
             foreach (Json::list($case->input('stored')) as $pair) {
                 $pair = Json::list($pair);
-                $text = Json::string($pair[1] ?? null);
-                $store->set(Json::string($pair[0] ?? null), self::record(json_decode($text, false, 512, JSON_THROW_ON_ERROR)));
+                $value = json_decode(Json::string($pair[1] ?? null), false, 512, JSON_THROW_ON_ERROR);
+                $store->set(Json::string($pair[0] ?? null), self::record($value));
             }
         }
         $session = new Session($store);
         $results = [];
         $error = null;
+        $failed = null;
         foreach (self::calls($case) as [$method, $arguments]) {
             try {
                 $result = self::call($session, $method, $arguments);
@@ -77,6 +107,13 @@ final class SessionSteps
                     throw $failure;
                 }
                 $error = 'stored';
+                break;
+            } catch (\InvalidArgumentException $failure) {
+                // HY-40.4: a kept value outside the data model fails with the error of the data model.
+                if ($failure::class !== \InvalidArgumentException::class || !$fails) {
+                    throw $failure;
+                }
+                $failed = $failure->getMessage();
                 break;
             }
             $results[] = match (true) {
@@ -87,6 +124,9 @@ final class SessionSteps
         }
         $case->compare('results', $results);
         $case->compare('error', $error);
+        if ($fails) {
+            $case->compare('failure', $failed);
+        }
     }
 
     /**
@@ -101,7 +141,7 @@ final class SessionSteps
             $entry = Json::list($entry);
             $arguments = [];
             foreach (Json::strings($entry[1] ?? null) as $text) {
-                $arguments[] = json_decode($text, true, 512, JSON_THROW_ON_ERROR);
+                $arguments[] = Json::value($text);
             }
             $calls[] = [Json::string($entry[0] ?? null), $arguments];
         }
@@ -116,8 +156,14 @@ final class SessionSteps
             'csrfToken' => $session->csrfToken(),
             'renew' => $session->renew(),
             'takeFlash' => $session->takeFlash(),
-            'putFlash' => $session->putFlash(new Flash(Json::array($arguments[0] ?? null), Json::strings($arguments[1] ?? null))),
-            'keep' => $session->keep(Json::string($arguments[0] ?? null), Json::string($arguments[1] ?? null), $arguments[2] ?? null),
+            'putFlash' => $session->putFlash(
+                new Flash(Json::array($arguments[0] ?? null), Json::strings($arguments[1] ?? null)),
+            ),
+            'keep' => $session->keep(
+                Json::string($arguments[0] ?? null),
+                Json::string($arguments[1] ?? null),
+                $arguments[2] ?? null,
+            ),
             'kept' => $session->kept(Json::string($arguments[0] ?? null)),
             default => throw new \LogicException("the method {$method} of the case is unknown"),
         };

@@ -27,7 +27,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     `outside` entry with an empty reason, fails HYR-8.
   - `cases`: the case files under `contracts/` that state its behaviour. A concern without a unit, or whose every unit
     has `only` for one language, may have `none` with the reason and the native tests of HYR-7; the check fails `none`
-    for any other concern.
+    for any other concern. An empty list fails as `none` does.
   - `units`: its units.
 
   Every file of `git ls-files` below `packages/server/php/src`, `packages/server/ts/src` and
@@ -150,6 +150,40 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
         one of them.
     - The PHP and Node readers take private from the modifier, and the check fails a member whose modifier differs
       from its neutral visibility.
+  - **Stated members.** Every member that two or more languages have is stated.
+    - A public member is stated directly: for each language that has it, a section of `caseFiles` whose `runners` name
+      that language names it in `members`, and the step of that language calls it (HYR-7).
+    - A member that only one language has is directly stated in that language when a section names it or a native test
+      of HYR-7 is named under it.
+    - An internal member is stated directly, as a public one, or through its callers: in each language that has it, a
+      directly stated member reaches it by the calls of the sources, and the directly stated members that reach it are
+      the same in every language that has it. Two languages are compared over the members that both have.
+    - A private member is stated through its callers, by the same two conditions.
+    - The check reads a call of the sources as a member name with the class of its receiver, and takes that class only
+      from what is written:
+      - `this`, `self`, `cls` and `$this` have the class of the function; `super` and `parent` have the class that it
+        extends.
+      - A class name, a class written after an imported module, and `new` of a class have that class.
+      - A parameter, a property or a variable has the class of its written type: the type declaration of PHP, the type
+        annotation of TypeScript and of Python, also inside `?`, `| null` and `Optional`.
+      - A variable or a property that is assigned `new` of a class, a call whose class is known, or a conditional of
+        such values has that class.
+      - A call or a property read whose receiver has a known class is a member of the spec, and its value has the class
+        that the `output` of that member names; the variable of a loop over such a value has the class inside `list` or
+        `map`.
+      - A member of a class is also the member of that name of the nearest class that it extends, and a call on a class
+        reaches the members of that name of the units that extend it.
+      - An assignment to a property is no call. In PHP a name followed by `(` is a method and any other name a
+        property.
+      - Every other receiver has no class, and a name after it is no call. So the check reads no call through an item
+        of a PHP array or of a list that no member returned, through a variable of a generator, through a value whose
+        type only a compiler infers, or through a name that is computed at run time. A member that the sources call
+        only so is reported as unreached; its fix is a written type at that place or a section that names the member.
+    - The check fails a public member that is not stated directly for a language, an internal member that no section
+      names and no directly stated member reaches, a private member that none reaches, and an internal or private
+      member whose reaching members differ between two languages. It counts three numbers apart: the members stated
+      directly, the internal members stated through their callers, and the private members stated through their
+      callers.
 
 - **HYR-6 Only some languages.** A unit, a member, a field of a type or a case that only some languages have carries
   `only: {languages, sentence}`:
@@ -174,6 +208,20 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     It runs every section of every case file under `contracts/` whose `runners` in `caseFiles` names its language.
     `runners` names the runner of each of `php`, `node`, `python`, `browser` and `build`. `browser` and `build` read
     their sections through `caseReaders.node`, and the check counts the results of all five runners.
+    For `php`, `node` and `python`, `runners` also names the directory of the steps (`steps`) and the registry of the
+    runner (`registry`), the file that maps each section to its step.
+  - **Steps.** The step of a section in a language is one function below the `steps` directory of that language, at the
+    place that the words of the case file and the name of the section give: PHP the static method `<section>` of the
+    class `<Words>Steps` in `<Words>Steps.php`, Node the property `<section>` of the exported object `steps` in
+    `<words>.ts`, and Python the function `<section>` in snake_case in `<words>_steps.py`. The registry of a language
+    maps each section whose `runners` name the language to that function and holds no other entry. The check fails a
+    section without a step at that place, and a registry entry that is missing, that names another function, or that
+    names a section that `caseFiles` does not give to the language.
+    - A step prepares no input and writes no observed value with the code under test: it reads a JSON text of a case
+      with the reader of its test tree (PHP `Support\Json`, Node `parsed` of `case-rules.ts`, Python `decoded` of
+      `steps/recorded.py`), and only a section that names a member of the JSON codec in `members` calls the codec. The
+      check fails a step that reaches a member of the unit `json-codec` or `outside-number` that its section does not
+      name.
   - **Reading a case.** A runner reads each case only through the case reader of its language, one unit of the test
     tree with the same members in every language: the public members `cases`, `section`, `id`, `has`, `input`,
     `compare`, `outcome`, `fail` and `line`, and the private members `declaration`, `matches` and `equal`. `compare`
@@ -181,10 +229,20 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - `caseFiles` of `contracts/interfaces.json` is the one source of the roles and comparisons of the case files
       (HYR-11). For each file it names its top-level keys (`fixtures`) and, for each case array
       (`sections`), its `runners`, the fixtures that its cases use (`uses`), the members whose result its cases state
-      (`members`, each a member id of the spec), every field with its role and, for each
+      (`members`, below), every field with its role and, for each
       expected field, each input field that a step also checks and each outcome of a step, the comparison, its `state`,
       and the `sentence` that states the observed behaviour. The check verifies each `sentence` as it verifies `only`
       (HYR-6).
+    - `members` of a section names member ids of the spec. A section names a member only when an expected field or an
+      outcome of the section compares a value that the member returns or a change that it makes; a section that
+      compares only whether a call is refused names none. A language of `runners` has each named member. The step of
+      each runner language that has a named member calls it: the step, or a function of the test tree that the step
+      reaches, writes `new` of its class for a constructor (in Python the call of the class), its name after its class
+      or its import for a static method or a module function, and its name after an object for any other member. A step
+      reaches a function that it names, and every method of a class of the test tree that it constructs. The check
+      reads the call as HYR-5 reads the sources. So a name that is computed at run time is not a call, a member that
+      only the server calls is not a call, an object written in the place of a class is not a call of its constructor,
+      and a call on a receiver without a written class is not a call.
     - The case reader gives the input fields and the used fixtures of a case to the runner, and compares each expected
       field with the observed value itself, by the comparison that `caseFiles` names. The runner does not compare.
     - The reader fails a file with `FILE_UNDECLARED <path>` before its first case when the file holds a key, a section
@@ -197,6 +255,8 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
       fixture that was not read and with `FIELD_UNCOMPARED <name>` for an expected field that was not compared. The
       reason of a failed case is the first of these in that order. A nested field is named by its dotted path, such as
       `received.headers`.
+    - `compare` of a field that the case does not hold fails the case with `CASE_ERROR the case has no field <name>`,
+      unless `caseFiles` declares the field `optional`.
     - A case may carry `only` (HYR-6); the reader reads it and gives the case only to the runners of the languages
       that it names.
   - **Results.**
@@ -243,9 +303,11 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - a barrel file whose re-exports differ from the public members and the public types of the spec;
   - a file of `git ls-files contracts/*.json` other than `interfaces.json` and `protocol.json` with no `caseFiles`
     entry, and an entry, section or field of `caseFiles` that no file holds;
-  - a result, a case reader or a native test against HYR-7.
+  - a result, a case reader, a step, a registry or a native test against HYR-7;
+  - a `members` entry of a section against HYR-7, and a member that is not stated against HYR-5.
 
-  Each run first runs the readers' mutation cases, and fails when a reader passes a mutation.
+  Each run first runs the readers' mutation cases, and fails when a reader passes a mutation. A run that passes prints
+  the three numbers of HYR-5.
 
 - **HYR-9 Analyzers.** Each language also runs its own analyzers: `make analyse-php`, `make typecheck` and
   `make hyper-lint`.
@@ -256,7 +318,8 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - These fields are written by hand in the reviewed change of the spec:
     - the neutral fields `inputs`, `output`, `errors`, `state` and the `shape` of a type;
     - the concern fields `rules` and `cases`;
-    - `caseFiles`, the case files and the comparison of each of their fields (HYR-11);
+    - `caseFiles`, the case files, the `members` of each section and the comparison of each of their fields (HYR-11);
+    - `runners`, with `steps` and `registry`;
     - the unit grouping;
     - `only`.
   - The candidate marks each of these fields as hand-written.

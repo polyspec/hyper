@@ -3,10 +3,9 @@ import { BadRequest } from '../../src/bad-request.js';
 import { Forbidden } from '../../src/forbidden.js';
 import { NotFound } from '../../src/not-found.js';
 import { Redirect } from '../../src/redirect.js';
-import { JsonCodec } from '../../src/json-codec.js';
 import { Result } from '../../src/result.js';
 import type { CaseReader } from '../case-reader.js';
-import { hostValue } from './host-value.js';
+import { decoded } from './session-requests.js';
 
 function text(reader: CaseReader, name: string): string {
   const value = reader.input(name);
@@ -27,7 +26,7 @@ function list(reader: CaseReader, name: string): unknown[] {
 }
 
 function data(reader: CaseReader, name: string): Map<string, unknown> {
-  const value = hostValue(reader.input(name));
+  const value = reader.input(name);
   if (!(value instanceof Map)) throw new Error(`the case field ${name} is not a map`);
   const map = new Map<string, unknown>();
   value.forEach((item: unknown, key: unknown) => {
@@ -66,6 +65,7 @@ export const steps = {
     reader.compare('result', outcome.result?.status ?? null);
     reader.compare('redirect', outcome.result?.location ?? null);
     reader.compare('error', outcome.error);
+    if (reader.has('held') && outcome.result !== null) reader.compare('held', outcome.result.data);
   },
   // Makes the invalid result with the data (HY-26).
   invalid(reader: CaseReader): void {
@@ -79,7 +79,7 @@ export const steps = {
     const flashes = list(reader, 'flashes').map((pair): [string, unknown] => {
       if (!Array.isArray(pair) || pair.length !== 2 || typeof pair[0] !== 'string' || typeof pair[1] !== 'string') throw new Error('a flash of the case is not a name and a JSON text');
       // The JSON text gives the value as a handler returns it: an integer outside ±(2^53 − 1) is a bigint (HY-44).
-      return [pair[0], hostValue(JsonCodec.decode(pair[1]))];
+      return [pair[0], decoded(pair[1])];
     });
     const topics = list(reader, 'topics').map((names) => {
       if (!Array.isArray(names)) throw new Error('topics of the case are not a list of strings');
@@ -103,7 +103,7 @@ export const steps = {
   types(reader: CaseReader): void {
     const call = text(reader, 'call');
     if (call !== 'flash' && call !== 'changed') throw new Error(`the call ${call} of the case is unknown`);
-    const argument = hostValue(JsonCodec.decode(text(reader, 'argument')));
+    const argument = decoded(text(reader, 'argument'));
     const result = Result.redirect('/');
     let message: string | null = null;
     try {
@@ -132,5 +132,9 @@ export const steps = {
     }, RangeError);
     reader.compare('message', outcome.result?.message ?? null);
     reader.compare('error', outcome.error);
+    if (reader.has('location') && outcome.result instanceof Redirect) {
+      const stopped: Redirect = outcome.result;
+      reader.compare('location', stopped.result.location);
+    }
   },
 };

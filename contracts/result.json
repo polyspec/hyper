@@ -180,7 +180,10 @@
       },
       "result": 200,
       "redirect": null,
-      "error": null
+      "error": null,
+      "held": {
+        "name": "taken"
+      }
     },
     {
       "id": "a_page_with_status_409_is_a_page",
@@ -419,7 +422,8 @@
       "kind": "Redirect",
       "redirect": "/board",
       "message": "redirect to /board",
-      "error": null
+      "error": null,
+      "location": "/board"
     },
     {
       "id": "a_redirect_stop_of_a_page_fails",

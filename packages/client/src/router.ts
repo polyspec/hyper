@@ -76,8 +76,7 @@ function matchSegments(segments: Segment[], parts: string[]): Record<string, str
     return params;
   }
   if (segments.length !== parts.length) return null;
-  // A null prototype keeps a parameter named __proto__ as a key with its own value (HY-5).
-  const params: Record<string, string> = Object.create(null);
+  const params = emptyParams();
   for (const [index, segment] of segments.entries()) {
     const part = parts[index];
     // segments and parts have the same length, checked above.
@@ -119,4 +118,16 @@ function decodeSegment(part: string): string | null {
     if (error instanceof TypeError) return null;
     throw error;
   }
+}
+
+// Returns an object without a prototype: a null prototype keeps a parameter named __proto__ as a key with its own
+// value (HY-5).
+function emptyParams(): Record<string, string> {
+  const made: unknown = Object.create(null);
+  if (!isParams(made)) throw new TypeError('hyper: Object.create returned no object');
+  return made;
+}
+
+function isParams(value: unknown): value is Record<string, string> {
+  return typeof value === 'object' && value !== null;
 }

@@ -4,7 +4,8 @@ import { RedisSessions, type RedisSessionsOptions } from '../../src/redis-sessio
 import { SessionLockError } from '../../src/session-lock-error.js';
 import type { CaseReader } from '../case-reader.js';
 import { bytesOf } from '../support.js';
-import { requests, textOf } from './session-requests.js';
+import { textOf } from '../inputs.js';
+import { requests } from './session-requests.js';
 
 const RELEASE = 'if redis.call("get",KEYS[1]) == ARGV[1] then return redis.call("del",KEYS[1]) else return 0 end';
 

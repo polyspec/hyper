@@ -1,8 +1,7 @@
 // The steps of contracts/reply.json (HY-52, HY-60, HY-69, HY-72, HY-92, HY-103): the reply of a request.
-import { JsonCodec } from '../../src/json-codec.js';
 import { Reply } from '../../src/reply.js';
 import type { CaseReader } from '../case-reader.js';
-import { hostValue } from './host-value.js';
+import { decoded } from './session-requests.js';
 
 // Calls a method of the reply with the arguments as a JavaScript caller may give them, of any type (HY-52.11).
 export function call(reply: Reply, method: string, args: unknown[]): void {
@@ -53,11 +52,8 @@ function applied(reader: CaseReader, compareFailure: boolean): Reply {
   try {
     for (const entry of calls) {
       if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== 'string' || !Array.isArray(entry[1])) throw new Error('a call of the case is not a method and a list of JSON texts');
-      const args = entry[1].map((text: unknown) => {
-        if (typeof text !== 'string') throw new Error('an argument of the case is not a JSON text');
-        // The JSON text gives the value as a handler gives it: an integer outside ±(2^53 − 1) is a bigint (HY-44).
-        return hostValue(JsonCodec.decode(text));
-      });
+      // The JSON text gives the value as a handler gives it: an integer outside ±(2^53 − 1) is a bigint (HY-44).
+      const args = entry[1].map((text: unknown) => decoded(text));
       call(reply, entry[0], args);
     }
   } catch (failure) {

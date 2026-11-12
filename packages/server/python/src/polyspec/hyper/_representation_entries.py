@@ -37,7 +37,9 @@ class RepresentationEntries:
         return entries
 
     @staticmethod
-    def check_handlers(route: str, entries: list[RepresentationEntry], handlers: dict) -> None:
+    def check_handlers(
+        route: str, entries: list[RepresentationEntry], handlers: dict
+    ) -> None:
         """Fails the open when an entry has no handler or a handler is keyed by a type that the route does not declare;
         the keys compare exactly as the manifest writes them (HY-118)."""
         declared = [entry.type for entry in entries]
@@ -56,10 +58,14 @@ class RepresentationEntries:
     def _entry(route: str, item: dict) -> RepresentationEntry:
         for key in ("type", "parameters", "methods", "vary"):
             if key not in item:
-                raise ValueError(f"route {route} has a representation without {key} (HY-118)")
+                raise ValueError(
+                    f"route {route} has a representation without {key} (HY-118)"
+                )
         kind = item["type"]
         if not isinstance(kind, str):
-            raise ValueError(f"route {route} has a representation type that is not text (HY-118)")
+            raise ValueError(
+                f"route {route} has a representation type that is not text (HY-118)"
+            )
         # The type and the subtype are tokens as the manifest writes them, so that lower case changes only ASCII letters.
         main, slash, sub = kind.partition("/")
         media = kind.lower()
@@ -70,53 +76,84 @@ class RepresentationEntries:
             or "*" in (main, sub)
             or media in _PAGE_TYPES
         ):
-            raise ValueError(f"route {route} has the invalid representation type {kind} (HY-118)")
+            raise ValueError(
+                f"route {route} has the invalid representation type {kind} (HY-118)"
+            )
         return RepresentationEntry(
             type=kind,
             media=media,
-            parameters=RepresentationEntries._served_parameters(route, kind, item["parameters"]),
-            methods=RepresentationEntries._answered_methods(route, kind, item["methods"]),
+            parameters=RepresentationEntries._served_parameters(
+                route, kind, item["parameters"]
+            ),
+            methods=RepresentationEntries._answered_methods(
+                route, kind, item["methods"]
+            ),
             vary=RepresentationEntries._vary_names(route, kind, item["vary"]),
         )
 
     @staticmethod
-    def _served_parameters(route: str, kind: str, raw: object) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    def _served_parameters(
+        route: str, kind: str, raw: object
+    ) -> tuple[tuple[str, tuple[str, ...]], ...]:
         if not isinstance(raw, dict):
-            raise ValueError(f"route {route} has parameters of {kind} that are not an object (HY-118)")
+            raise ValueError(
+                f"route {route} has parameters of {kind} that are not an object (HY-118)"
+            )
         parameters: list[tuple[str, tuple[str, ...]]] = []
         names: set[str] = set()
         for name, values in raw.items():
             lower = name.lower()
             if _TOKEN.fullmatch(name) is None or lower == "q" or lower in names:
-                raise ValueError(f"route {route} has the invalid parameter {name} of {kind} (HY-118)")
+                raise ValueError(
+                    f"route {route} has the invalid parameter {name} of {kind} (HY-118)"
+                )
             names.add(lower)
             if not isinstance(values, list) or values == []:
-                raise ValueError(f"route {route} has no served value for {name} of {kind} (HY-118)")
+                raise ValueError(
+                    f"route {route} has no served value for {name} of {kind} (HY-118)"
+                )
             served: list[str] = []
             for value in values:
                 if not isinstance(value, str) or (
-                    _TOKEN.fullmatch(value) is None and _QUOTABLE.fullmatch(value) is None
+                    _TOKEN.fullmatch(value) is None
+                    and _QUOTABLE.fullmatch(value) is None
                 ):
-                    raise ValueError(f"route {route} has the invalid value of {name} of {kind} (HY-118)")
+                    raise ValueError(
+                        f"route {route} has the invalid value of {name} of {kind} (HY-118)"
+                    )
                 served.append(value)
             parameters.append((lower, tuple(served)))
         return tuple(parameters)
 
     @staticmethod
     def _answered_methods(route: str, kind: str, raw: object) -> tuple[str, ...]:
-        if not isinstance(raw, list) or raw == [] or any(m not in _METHODS for m in raw):
-            raise ValueError(f"route {route} has methods of {kind} that are not a nonempty subset of GET, POST, PUT, DELETE (HY-118)")
+        if (
+            not isinstance(raw, list)
+            or raw == []
+            or any(m not in _METHODS for m in raw)
+        ):
+            raise ValueError(
+                f"route {route} has methods of {kind} that are not a nonempty subset of GET, POST, PUT, DELETE (HY-118)"
+            )
         return tuple(raw)
 
     @staticmethod
     def _vary_names(route: str, kind: str, raw: object) -> tuple[str, ...]:
         if not isinstance(raw, list):
-            raise ValueError(f"route {route} has vary names of {kind} that are not a list (HY-118)")
+            raise ValueError(
+                f"route {route} has vary names of {kind} that are not a list (HY-118)"
+            )
         names: list[str] = []
         for name in raw:
             if not isinstance(name, str) or _TOKEN.fullmatch(name) is None:
-                raise ValueError(f"route {route} has the vary name {name} of {kind} that is not a field name (HY-118)")
-            if name.lower() in _REJECTED_VARY or name.lower() in (n.lower() for n in names):
-                raise ValueError(f"route {route} has the vary name {name} of {kind} that is rejected or repeated (HY-118)")
+                raise ValueError(
+                    f"route {route} has the vary name {name} of {kind} that is not a field name (HY-118)"
+                )
+            if name.lower() in _REJECTED_VARY or name.lower() in (
+                n.lower() for n in names
+            ):
+                raise ValueError(
+                    f"route {route} has the vary name {name} of {kind} that is rejected or repeated (HY-118)"
+                )
             names.append(name)
         return tuple(names)

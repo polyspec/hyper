@@ -22,9 +22,9 @@
     "additionalProperties": false,
     "required": ["php", "node", "python", "browser", "build"],
     "properties": {
-      "php": { "$ref": "#/$defs/runner" },
-      "node": { "$ref": "#/$defs/runner" },
-      "python": { "$ref": "#/$defs/runner" },
+      "php": { "$ref": "#/$defs/stepRunner" },
+      "node": { "$ref": "#/$defs/stepRunner" },
+      "python": { "$ref": "#/$defs/stepRunner" },
       "browser": { "$ref": "#/$defs/runner" },
       "build": { "$ref": "#/$defs/runner" }
     }
@@ -66,6 +66,16 @@
       "additionalProperties": false,
       "required": ["runner"],
       "properties": { "runner": { "type": "string", "pattern": "::" } }
+    },
+    "stepRunner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runner", "steps", "registry"],
+      "properties": {
+        "runner": { "type": "string", "pattern": "::" },
+        "steps": { "type": "string", "pattern": "^[^:]+$" },
+        "registry": { "type": "string", "pattern": "^[^:]+$" }
+      }
     },
     "kebab": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" },
     "camel": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9]*$" },

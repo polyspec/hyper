@@ -2,9 +2,9 @@
 import type { Server } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { App, ArraySession, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
+import { App, ArraySession, Choice, ClientRendering, Request, Result, type AppOptions, type Container, type Handlers, type RequestInit, type Response, type RouteHandlers } from '../src/index.js';
 import type { SessionStore } from '../src/session-store.js';
-import { requestOf } from '../src/http-host.js';
+import { Cookies } from '../src/cookies.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
 // The template files of the fixtures, which `make hyper-test-node` builds with scripts/build-templates.mts.
@@ -19,6 +19,14 @@ export interface Counter {
 
 export interface Services {
   counter: Counter;
+}
+
+// The route region `rows` of `list` with the given items, and the load of `item`, which both handler sets hold.
+export function listAndItem(items: (services: Container<Services>) => string[]): { list: RouteHandlers<Services>; item: RouteHandlers<Services> } {
+  return {
+    list: { regions: { rows: ({ services }) => ({ items: items(services), open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] }) } },
+    item: { load: ({ request }) => ({ id: request.param('id') }) },
+  };
 }
 
 // The handlers of the fixture application for the tests of one language: the region `side`, the loads of `home` and
@@ -38,8 +46,7 @@ export function handlers(): Handlers<Services> {
           return Result.redirect('/').flash('note', 'added').changed('count');
         },
       },
-      list: { regions: { rows: ({ services }) => ({ items: ['a<', `b${services.get('counter').count}`], open: false, mode: 'a', view: 'x', filter: { a: 1 }, tags: [] }) } },
-      item: { load: ({ request }) => ({ id: request.param('id') }) },
+      ...listAndItem((services) => ['a<', `b${services.get('counter').count}`]),
     },
   };
 }
@@ -77,7 +84,7 @@ export class Fixture {
 
   async handle(init: { method?: string; target: string; headers?: Record<string, string>; body?: string; https?: boolean }, options: Partial<AppOptions<Services>> = {}, session: SessionStore = this.session): Promise<Response> {
     const headers = init.body === undefined ? init.headers : { 'Content-Type': 'application/x-www-form-urlencoded', ...init.headers };
-    const request = requestOf({ method: init.method ?? 'GET', target: init.target, headers, body: init.body === undefined ? undefined : Buffer.from(init.body, 'latin1'), https: init.https });
+    const request = requestFrom({ method: init.method ?? 'GET', target: init.target, ...(headers === undefined ? {} : { headers }), ...(init.body === undefined ? {} : { body: Buffer.from(init.body, 'latin1') }), ...(init.https === undefined ? {} : { https: init.https }) });
     return (await this.app(options)).handle(request, session);
   }
 
@@ -88,8 +95,18 @@ export class Fixture {
 
 // The JSON of a page response: its shared data, the data of its regions and its kept values (HY-17).
 export function json(response: Response): Record<string, unknown> & { shared: Record<string, unknown>; regions: Record<string, unknown>; kept: Record<string, unknown> } {
-  const page = record(parsed(response.body));
+  const page = record(parsedBody(response.body));
   return { ...page, shared: record(page.shared), regions: record(page.regions), kept: record(page.kept) };
+}
+
+// The request of a case as the PHP and Python steps make it: the method in upper case, the path and the raw query of
+// the target, the headers by lower-case names, and the cookies of the one parse of the Cookie header (HY-129).
+export function requestFrom(parts: { method: string; target: string; headers?: Record<string, string>; body?: Uint8Array; https?: boolean }): Request {
+  const headers = Object.fromEntries(Object.entries(parts.headers ?? {}).map(([name, value]) => [name.toLowerCase(), value]));
+  const { method, target, body, https = false } = parts;
+  const init: RequestInit = { method: method.toUpperCase(), path: Request.targetPath(target), query: Request.targetQuery(target), headers, cookies: Cookies.parse(headers.cookie ?? null), https };
+  if (body !== undefined) init.body = body;
+  return new Request(init);
 }
 
 // Converts the Maps of a parsed contract value into plain objects, the shape the manifest file holds.
@@ -107,7 +124,7 @@ export function bytesOf(text: string): Buffer {
 }
 
 // The value of a JSON text, which a test narrows with record and text.
-export function parsed(body: string): unknown {
+export function parsedBody(body: string): unknown {
   return JSON.parse(body);
 }
 
@@ -123,7 +140,7 @@ export function record(value: unknown): Record<string, unknown> {
 }
 
 // Returns a value that is a string; another value fails the test.
-export function text(value: unknown): string {
+function text(value: unknown): string {
   if (typeof value !== 'string') throw new TypeError(`${JSON.stringify(value)} is not a string`);
   return value;
 }
@@ -148,10 +165,10 @@ export function port(server: Server): number {
 }
 
 // The contract of the client rendering (HY-62) and the declaration that its cases run against.
-const conformance = record(parsed(readFileSync(new URL('../../../../contracts/client.json', import.meta.url), 'utf8')));
+const conformance = record(parsedBody(readFileSync(new URL('../../../../contracts/client.json', import.meta.url), 'utf8')));
 const BASE_PATH = text(conformance.basePath);
 const CHOSEN_HOST = text(conformance.chosenHost);
 export const SHELL = `${FIXTURES}shell/index.html`;
 // A session token of HY-24; the form carries a masked value of it.
 export const TOKEN = '00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff';
-export const client = (selects: ClientRendering['selects'] = (request) => ({ chosen: request.header('Host') === CHOSEN_HOST, value: null })): ClientRendering => ({ shell: SHELL, basePath: BASE_PATH, selects });
+export const client = (selects: ClientRendering['selects'] = (request) => new Choice(request.header('Host') === CHOSEN_HOST, null)): ClientRendering => new ClientRendering(SHELL, BASE_PATH, selects);

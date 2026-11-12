@@ -4,9 +4,13 @@
 # disconnect hook on a write that a premature close of the body iterable ends (HY-67).
 import contextlib
 import io
+import tempfile
+import unittest
 from pathlib import Path
 
 from .transport import (
+    HTTPS_CASES,
+    https_application,
     Application,
     TransportCase,
     record_ended,
@@ -15,6 +19,8 @@ from .transport import (
     Upload,
     UploadCases,
 )
+from .render.fixture_handlers import Counter, fixture_app, handlers
+from polyspec.hyper.file_sessions import FileSessions
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.response import Response
 from polyspec.hyper.wsgi import create_wsgi
@@ -125,15 +131,9 @@ class WsgiTest(UploadCases, TransportCase):
     ) -> None:
         # The request is HTTPS when the application was opened with https or `wsgi.url_scheme` is https, and the
         # cookie of a new session then has the name and the attribute of HTTPS (HY-45).
-        for opened, scheme, https in (
-            (False, "http", False),
-            (False, "https", True),
-            (True, "http", True),
-            (True, "https", True),
-        ):
+        for opened, scheme, https in HTTPS_CASES:
             with self.subTest(opened=opened, scheme=scheme):
-                app = Application(opens_session=True)
-                app.https = opened
+                app = https_application(opened)
                 application = create_wsgi(app, self.sessions)
                 _, headers, _ = call(
                     application, environ(**{"wsgi.url_scheme": scheme})
@@ -141,9 +141,7 @@ class WsgiTest(UploadCases, TransportCase):
                 self.assertIs(https, app.requests[0].https)
                 cookies = [value for name, value in headers if name == "Set-Cookie"]
                 self.assertEqual(1, len(cookies))
-                self.assertEqual(
-                    https, cookies[0].startswith("__Host-hy-session=")
-                )
+                self.assertEqual(https, cookies[0].startswith("__Host-hy-session="))
                 self.assertEqual(https, "; secure" in cookies[0])
                 self.assertEqual(not https, cookies[0].startswith("hy-session="))
 
@@ -270,7 +268,9 @@ class WsgiTest(UploadCases, TransportCase):
             (self.app.requests[0].path(), self.app.requests[0].raw_query()),
         )
 
-    def test_a_missing_target_answers_the_plain_failure_and_reports_nothing(self) -> None:
+    def test_a_missing_target_answers_the_plain_failure_and_reports_nothing(
+        self,
+    ) -> None:
         # HY-100: PATH_INFO is never re-encoded into a path; the request has no target, so no request is reported.
         written = []
         application = create_wsgi(
@@ -354,7 +354,9 @@ class WsgiTest(UploadCases, TransportCase):
         self.assertIn("around boom", stderr.getvalue())
         self.assertEqual([("/list", 500, True)], written)
 
-    def test_a_premature_close_of_the_plain_failure_reports_a_failed_write(self) -> None:
+    def test_a_premature_close_of_the_plain_failure_reports_a_failed_write(
+        self,
+    ) -> None:
         # HY-60, HY-99: the server closes the iterable of the 500 before its end; the write failed and is reported once.
         written = []
 
@@ -472,6 +474,36 @@ class WsgiTest(UploadCases, TransportCase):
         self.assertEqual([], written)
         self.assertEqual([b""], list(body))
         self.assertEqual([(204, True, None)], written)
+
+
+class BaseExceptionTest(unittest.TestCase):
+    def test_an_exception_that_is_no_exception_passes_through_the_application_and_the_callable(
+        self,
+    ) -> None:
+        # HY-43 (python-base-exception): SystemExit is no error of the application.
+        reports: list = []
+        written: list = []
+        started: list = []
+
+        def leave():
+            raise SystemExit(3)
+
+        given = handlers()
+        given["routes"]["home"]["load"] = leave
+        app = fixture_app(
+            Counter(), handlers=given, on_response=lambda *call: reports.append(call)
+        )
+        with tempfile.TemporaryDirectory(prefix="hyper-wsgi-") as directory:
+            application = create_wsgi(
+                app, FileSessions(directory), written=lambda *call: written.append(call)
+            )
+            with (
+                contextlib.redirect_stderr(io.StringIO()) as log,
+                self.assertRaises(SystemExit) as raised,
+            ):
+                application(environ(RAW_URI="/"), lambda *head: started.append(head))
+        self.assertEqual(3, raised.exception.code)
+        self.assertEqual(([], [], [], ""), (started, reports, written, log.getvalue()))
 
 
 class BrokenInput:

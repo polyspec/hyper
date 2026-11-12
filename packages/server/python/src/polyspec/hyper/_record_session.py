@@ -55,12 +55,18 @@ class RecordSession:
 
     def serialized(self) -> Optional[bytes]:
         """Returns the record to keep at closing, or None when the request did not use the session."""
-        return None if self._items is None or self._id is None else serialize(self._items)
+        return (
+            None if self._items is None or self._id is None else serialize(self._items)
+        )
 
     @staticmethod
     def accepted(cookie: Optional[str]) -> Optional[str]:
         """Returns the value of a session cookie in the form of an identifier, or None (HY-104.9)."""
-        return cookie if cookie is not None and _IDENTIFIER.fullmatch(cookie) is not None else None
+        return (
+            cookie
+            if cookie is not None and _IDENTIFIER.fullmatch(cookie) is not None
+            else None
+        )
 
     @staticmethod
     def cookie_name(secure: bool) -> str:
@@ -127,7 +133,9 @@ class RecordSession:
             if list(items) == [str(index) for index in range(len(items))]:
                 return StdClass(items)
             return items
-        if input is None or isinstance(input, (bool, int, float, str, bytes, StdClass, Reference)):
+        if input is None or isinstance(
+            input, (bool, int, float, str, bytes, StdClass, Reference)
+        ):
             return input
         raise TypeError("a session value is outside the data model")
 

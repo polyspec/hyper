@@ -4,6 +4,7 @@ a body of the type (HY-122.11)."""
 
 from __future__ import annotations
 
+from ._data_model import DataModel
 from ._json_codec import JsonCodec
 from ._representation_response import RepresentationResponse
 
@@ -21,5 +22,7 @@ class MediaType:
 
     def etag(self, body: object) -> str:
         """Returns the strong tag that a 200 response with this body of the selected type has, so that a handler
-        compares `If-Match` with it (HY-122.11)."""
-        return RepresentationResponse.etag(self._content_type, JsonCodec.encode(body))
+        compares `If-Match` with it (HY-122.11); a body outside the data model fails with its error (HY-122.13)."""
+        return RepresentationResponse.etag(
+            self._content_type, JsonCodec.encode(DataModel.check(body))
+        )

@@ -3,6 +3,7 @@
 import { Cookies } from '../../src/cookies.js';
 import { Request } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
+import { listOf, textOf } from '../inputs.js';
 import { bytesOf } from '../support.js';
 
 // Returns a member of the request of a case that is a string, or the default for a case without it.
@@ -113,6 +114,7 @@ export const steps = {
     reader.compare('valid', read.validInput());
     reader.compare('bodySize', read.bodySize());
     reader.compare('currentPath', read.currentPath());
+    reader.compare('mediaType', read.mediaType());
     if (reader.has('wantsJson')) reader.compare('wantsJson', kindOf(() => read.wantsJson()));
     if (reader.has('isRegionRequest')) reader.compare('isRegionRequest', kindOf(() => read.isRegionRequest()));
     if (reader.has('original.header')) reader.compare('original.header', headerNames.map((name) => original.header(name)));
@@ -123,9 +125,9 @@ export const steps = {
     try {
       new Request({
         method: 'GET',
-        path: reader.input('path') as string,
-        query: reader.input('query') as string,
-        headers: Object.fromEntries(reader.input('headers') as Map<string, string>),
+        path: textOf(reader.input('path'), 'path'),
+        query: textOf(reader.input('query'), 'query'),
+        headers: textsIn(reader.input('headers'), 'headers'),
       });
     } catch (error) {
       failure = error;
@@ -134,8 +136,15 @@ export const steps = {
   },
   // Reads the body of the case as a request and records the last file of each name and the pairs of the files.
   files(reader: CaseReader): void {
-    const request = new Request({ method: 'POST', path: '/', headers: { 'Content-Type': bytesOf(reader.input('type') as string).toString('latin1') }, body: bytesOf(reader.input('body') as string) });
-    reader.compare('last', (reader.input('names') as string[]).map((name) => request.file(name)?.filename() ?? null));
+    const request = new Request({ method: 'POST', path: '/', headers: { 'Content-Type': bytesOf(textOf(reader.input('type'), 'type')).toString('latin1') }, body: bytesOf(textOf(reader.input('body'), 'body')) });
+    reader.compare('last', namesIn(reader, 'names').map((name) => request.file(name)?.filename() ?? null));
     reader.compare('pairs', request.files().map(([name, files]) => [name, files.map((file) => file.filename())]));
+    if (reader.has('limits')) {
+      const limits = listOf(reader.input('limits'), 'the case field limits').map((limit) => {
+        if (typeof limit !== 'number' || !Number.isInteger(limit)) throw new Error('a limit of the case is not an integer');
+        return limit;
+      });
+      reader.compare('over', limits.map((limit) => request.fileOver(limit)));
+    }
   },
 };

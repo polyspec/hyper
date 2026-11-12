@@ -1,4 +1,4 @@
-import { describe, it, test } from 'node:test';
+import { describe, it, test } from 'vitest';
 describe('suite', () => {
   it.each`
     a    | b

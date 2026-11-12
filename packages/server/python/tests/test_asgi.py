@@ -9,6 +9,8 @@ import threading
 from pathlib import Path
 
 from .transport import (
+    HTTPS_CASES,
+    https_application,
     Application,
     TransportCase,
     Upload,
@@ -144,15 +146,9 @@ class AsgiTest(UploadCases, TransportCase):
     ) -> None:
         # The request is HTTPS when the application was opened with https or the `scheme` of the scope is https, and
         # the cookie of a new session then has the name and the attribute of HTTPS (HY-45).
-        for opened, scheme, https in (
-            (False, "http", False),
-            (False, "https", True),
-            (True, "http", True),
-            (True, "https", True),
-        ):
+        for opened, scheme, https in HTTPS_CASES:
             with self.subTest(opened=opened, scheme=scheme):
-                app = Application(opens_session=True)
-                app.https = opened
+                app = https_application(opened)
                 application = create_asgi(app, self.sessions)
                 sends = Sends()
                 run(application, scope(scheme=scheme), sends, Receives(b""))
@@ -163,16 +159,19 @@ class AsgiTest(UploadCases, TransportCase):
                     if name == b"set-cookie"
                 ]
                 self.assertEqual(1, len(cookies))
-                self.assertEqual(
-                    https, cookies[0].startswith(b"__Host-hy-session=")
-                )
+                self.assertEqual(https, cookies[0].startswith(b"__Host-hy-session="))
                 self.assertEqual(https, b"; secure" in cookies[0])
                 self.assertEqual(not https, cookies[0].startswith(b"hy-session="))
 
     def test_the_method_reaches_the_application_in_upper_case(self) -> None:
         # HY-100.31: the host passes the method in upper case.
         app = Application()
-        run(create_asgi(app, self.sessions), scope(method="purge"), Sends(), Receives(b""))
+        run(
+            create_asgi(app, self.sessions),
+            scope(method="purge"),
+            Sends(),
+            Receives(b""),
+        )
         self.assertEqual("PURGE", app.requests[0].method)
 
     def test_a_body_over_the_limit_reads_no_more(self) -> None:
@@ -270,7 +269,9 @@ class AsgiTest(UploadCases, TransportCase):
                 request = self.app.requests[-1]
                 self.assertEqual((path, query), (request.path(), request.raw_query()))
 
-    def test_a_missing_raw_path_answers_the_plain_failure_and_reports_nothing(self) -> None:
+    def test_a_missing_raw_path_answers_the_plain_failure_and_reports_nothing(
+        self,
+    ) -> None:
         # HY-100: the path is never built from the decoded `path`; the request has no target, so it is not reported.
         without = {
             key: value

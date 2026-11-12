@@ -4,13 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { Context, type ContextHandler } from '../../src/context.js';
 import { Csrf } from '../../src/csrf.js';
-import { JsonCodec } from '../../src/json-codec.js';
-import { hostValue } from './host-value.js';
-import { App, ArraySession, NotFound, Request, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
+import { parsed } from '../case-rules.js';
+import { placesContext } from './context-place.js';
+import { decoded } from './session-requests.js';
+import { App, ArraySession, NotFound, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
-import { OrmError, parsed, record } from '../support.js';
-import { requestOf } from '../../src/http-host.js';
+import { OrmError, parsedBody, record, requestFrom } from '../support.js';
 
 // An action of an application of a case: it renews the session when `renew` is true, and then raises the ORM error of
 // the code `raises`, redirects, or returns a page with its data.
@@ -180,23 +180,27 @@ function stringField(reader: CaseReader, name: string): string {
   return value;
 }
 
-// Returns a field of a case that is a list of strings, and fails for any other value.
-function stringList(reader: CaseReader, name: string): string[] {
-  const value = reader.input(name);
-  if (!Array.isArray(value) || !value.every((item): item is string => typeof item === 'string')) throw new Error(`the case field ${name} is not a list of strings`);
-  return value;
-}
-
 // Returns a decoded map of a case as the host values that a handler returns (hostValue), and fails for any other value:
 // the server, not the step, checks that the values belong to the data model, as in PHP and Python (HY-44).
 function hostMap(value: unknown, what: string): Map<string, unknown> {
-  return new Map([...mapIn(value, what)].map(([key, item]) => [key, hostValue(item)]));
+  return new Map(mapIn(value, what));
 }
 
 // Returns a decoded value that is a map, and fails for any other value.
 function mapOf(value: unknown, name: string): Map<string, Value> {
-  if (!(value instanceof Map) || !JsonCodec.inDataModel(value)) throw new Error(`${name} is not a map of the data model`);
+  if (!isMap(value)) throw new Error(`${name} is not a map of values`);
   return value;
+}
+
+// Returns true for a value that a JSON text of a case gives: null, a boolean, a number, a string, a list or a map.
+function isJson(value: unknown): value is Value {
+  if (value === null || typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return true;
+  return Array.isArray(value) ? value.every(isJson) : isMap(value);
+}
+
+// Returns true for a map of string keys to values that a JSON text of a case gives.
+function isMap(value: unknown): value is Map<string, Value> {
+  return value instanceof Map && [...value].every(([key, item]) => typeof key === 'string' && isJson(item));
 }
 
 
@@ -223,30 +227,16 @@ function bodyOf(form: Map<string, string> | undefined, token: string | null): st
 
 export const steps = {
   withContext(reader: CaseReader): void {
-    const shared = new Map<string, Value>(stringList(reader, 'shared').map((name) => [name, name]));
-    let keys: string[] | null = null;
-    let context: Value | null = null;
-    let fails = false;
-    try {
-      const placed = Context.withContext(shared, new Map<string, Value>([['name', 'Board']]));
-      keys = [...placed.keys()];
-      context = placed.get('context') ?? null;
-    } catch (error) {
-      if (!(error instanceof Error) || !error.message.includes('already holds the member context')) throw error;
-      fails = true;
-    }
-    reader.compare('keys', keys);
-    reader.compare('context', context);
-    reader.compare('fails', fails);
+    placesContext(reader, (shared, context) => Context.withContext(shared, context));
   },
   contexts(reader: CaseReader): void {
     const build = stringField(reader, 'build');
-    const text = Context.text(mapOf(JsonCodec.decode(stringField(reader, 'context')), 'context'));
+    const text = Context.text(mapOf(parsed(stringField(reader, 'context')), 'context'));
     reader.compare('context', text);
     reader.compare('text', `{"build":"${build}","context":${text}}`);
     reader.compare('hash', Context.hash(build, text));
     if (reader.has('reorderedText')) {
-      const reordered = mapOf(JsonCodec.decode(stringField(reader, 'reorderedText')), 'reorderedText');
+      const reordered = mapOf(parsed(stringField(reader, 'reorderedText')), 'reorderedText');
       reader.compare('reorderedHash', Context.hash(build, Context.text(mapOf(reordered.get('context'), 'the member context of reorderedText'))));
     }
   },
@@ -274,7 +264,7 @@ export const steps = {
       contextHandler = (selection) => {
         calls.push('context');
         selections.push(selection);
-        return hostValue(JsonCodec.decode(contextText));
+        return decoded(contextText);
       };
     }
     const app = await App.open<Record<string, never>>({
@@ -297,7 +287,7 @@ export const steps = {
     if (csrf) {
       // A first response of the same session makes its token (HY-24); the case masks the token that the session holds.
       // Its calls are not the case's calls.
-      await app.handle(requestOf({ method: 'GET', target: '/', headers: { Accept: 'text/html' } }), store);
+      await app.handle(requestFrom({ method: 'GET', target: '/', headers: { Accept: 'text/html' } }), store);
       const held = store.get('_hyper_csrf');
       if (typeof held !== 'string') throw new Error('the first response of the session created no token');
       token = Csrf.masked(held);
@@ -308,7 +298,7 @@ export const steps = {
     const body = bodyOf(form, token);
     const headers = Object.fromEntries(textMap(reader, 'request.headers'));
     const response = await app.handle(
-      requestOf({
+      requestFrom({
         method: stringField(reader, 'request.method'),
         target: stringField(reader, 'request.target'),
         headers,
@@ -325,14 +315,14 @@ export const steps = {
     reader.compare('bodyNotContains', response.body);
     reader.compare('failure', failure);
     if (reader.has('keys') || reader.has('sharedKeys')) {
-      const json = record(parsed(response.body));
+      const json = record(parsedBody(response.body));
       reader.compare('keys', json);
       reader.compare('sharedKeys', record(json.shared));
     }
-    if (reader.has('regionKeys')) reader.compare('regionKeys', record(record(parsed(response.body)).regions));
+    if (reader.has('regionKeys')) reader.compare('regionKeys', record(record(parsedBody(response.body)).regions));
     if (reader.has('tokenOfSession')) {
       // HY-72.3: the masked token of the body is a masked value of the token that the session holds after the request.
-      const masked = record(record(parsed(response.body)).shared).csrf;
+      const masked = record(record(parsedBody(response.body)).shared).csrf;
       const held = store.get('_hyper_csrf');
       if (typeof held !== 'string') throw new Error('the session holds no token after the request');
       reader.compare('tokenOfSession', typeof masked === 'string' && Csrf.verify(held, masked));

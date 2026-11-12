@@ -11,7 +11,9 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { kitTool } from './kit-tools.mts';
+import { dryRun } from './make-dry-run.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -59,4 +61,19 @@ test('every recipe runs npm and Composer offline, and $(ONLINE) lifts it (HR-89)
   for (const [name, value] of Object.entries(OFFLINE)) assert.equal(recipe[name], value, `${name} of a recipe`);
   const online = run('hyper-online-env');
   for (const name of Object.keys(OFFLINE)) assert.equal(online[name], undefined, `${name} under $(ONLINE)`);
+});
+
+// The Node reader of the recipe check imports the compiler of scripts/recipe/typescript/node_modules, a package of
+// its own beside the TypeScript of the root, so an install target installs it from its lock (HR-80, HR-81).
+test('the TypeScript of the recipe reader is pinned and installed by install-packages', () => {
+  const folder = path.join(ROOT, 'scripts/recipe/typescript');
+  const manifest = parseJsonObject(readFileSync(path.join(folder, 'package.json'), 'utf8'), 'scripts/recipe/typescript/package.json');
+  const version = jsonString(jsonObject(manifest.devDependencies, 'devDependencies').typescript, 'devDependencies.typescript');
+  assert.match(version, /^\d+\.\d+\.\d+$/, `the version ${version} of typescript is not exact`);
+  const lock = parseJsonObject(readFileSync(path.join(folder, 'package-lock.json'), 'utf8'), 'scripts/recipe/typescript/package-lock.json');
+  const locked = jsonObject(jsonObject(lock.packages, 'packages')['node_modules/typescript'], 'packages.node_modules/typescript');
+  assert.equal(jsonString(locked.version, 'the locked version'), version);
+  assert.match(jsonString(locked.integrity, 'the locked integrity'), /^sha512-/);
+  const lines = dryRun('install-packages');
+  assert.ok(lines.some((line) => / ci .*--prefix scripts\/recipe\/typescript\b/.test(line)), `make install-packages installs no scripts/recipe/typescript:\n${lines.join('\n')}`);
 });

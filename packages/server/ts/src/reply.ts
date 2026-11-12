@@ -1,6 +1,8 @@
 // The cookies, the cache control, the page status and the embedding of the data that the loaders and actions of one
 // request give its response (HY-52, HY-69, HY-92), and the notes that they give the response hook (HY-60).
 // The tokens of the Referrer-Policy specification that a reply may set (HY-103).
+import { ArgumentCountError } from './argument-count-error.js';
+
 const REFERRER_POLICIES: readonly string[] = [
   'no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin',
   'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url',
@@ -18,6 +20,7 @@ export class Reply {
   // Records a value of the request for the response hook; a later note of the same name replaces the value and keeps
   // its position. The notes are not part of the response (HY-60).
   note(name: string, value: unknown): this {
+    ArgumentCountError.between(arguments.length, 2, 2);
     // HY-60.28: a JavaScript caller may pass a name that is not a string.
     if (typeof name !== 'string') throw new TypeError('a note name is not a string (HY-60)');
     this.noted.set(name, value);
@@ -26,12 +29,14 @@ export class Reply {
 
   // Returns the notes as pairs of a name and its value, in the order of their first names (HY-60.29).
   notes(): [string, unknown][] {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return [...this.noted];
   }
 
   // Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails. The types are
   // checked before the values, in the order of the parameters.
   cookie(name: string, value: string, maxAge: number | null = null): this {
+    ArgumentCountError.between(arguments.length, 2, 3);
     if (typeof name !== 'string') throw new TypeError('a cookie name is not a string (HY-52)');
     if (typeof value !== 'string') throw new TypeError('a cookie value is not a string (HY-52)');
     const age = maxAge === null ? null : Reply.integer(maxAge);
@@ -45,6 +50,7 @@ export class Reply {
 
   // Removes a cookie with Max-Age=0.
   removeCookie(name: string): this {
+    ArgumentCountError.between(arguments.length, 1, 1);
     this.cookie(name, 'x');
     this.cookies[this.cookies.length - 1] = [name, '', 0];
     return this;
@@ -53,6 +59,7 @@ export class Reply {
   // Sets the Cache-Control of a page response with status 200. A page carries the session token of its visitor, so the
   // value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor `s-maxage` (HY-52).
   cacheControl(value: string): this {
+    ArgumentCountError.between(arguments.length, 1, 1);
     if (typeof value !== 'string') throw new TypeError('a Cache-Control is not a string (HY-52)');
     if (!/^[\x20-\x7e]+$/.test(value)) throw new RangeError('Cache-Control has a character that is not allowed (HY-52)');
     const directives = value.split(',').map((part) => (part.includes('=') ? part.slice(0, part.indexOf('=')) : part).trim().toLowerCase());
@@ -65,6 +72,7 @@ export class Reply {
 
   // Renews the session after the action of the request returns (HY-72).
   renewSession(): this {
+    ArgumentCountError.between(arguments.length, 0, 0);
     this.renewal = true;
     return this;
   }
@@ -85,6 +93,7 @@ export class Reply {
   // Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is not a
   // token of the Referrer-Policy specification fails (HY-103).
   referrerPolicy(value: string): this {
+    ArgumentCountError.between(arguments.length, 1, 1);
     if (typeof value !== 'string') throw new TypeError('a Referrer-Policy is not a string (HY-103)');
     if (!REFERRER_POLICIES.includes(value)) throw new RangeError(`Referrer-Policy ${value} is not a token of the Referrer-Policy specification (HY-103)`);
     this.referrerPolicyText = value;
@@ -104,6 +113,7 @@ export class Reply {
   // Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in place of
   // the data that the request may not see; another status fails (HY-69).
   status(status: number): this {
+    ArgumentCountError.between(arguments.length, 1, 1);
     const code = Reply.integer(status);
     if (code === null) throw new TypeError('a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)');
     if (code !== 403) throw new RangeError(`page status ${code} of a reply is not 403 (HY-69)`);
@@ -118,6 +128,7 @@ export class Reply {
 
   // Makes the HTML document of the response embed its data (HY-31, HY-92).
   embedData(): this {
+    ArgumentCountError.between(arguments.length, 0, 0);
     this.embed = true;
     return this;
   }

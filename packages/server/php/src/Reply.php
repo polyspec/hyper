@@ -38,6 +38,7 @@ final class Reply
      */
     public function note(mixed $name, mixed $value): self
     {
+        ArgumentCount::most(\func_num_args(), 2);
         // HY-60.28: a declared type would convert an integer name for a caller without strict types.
         if (!is_string($name)) {
             throw new \TypeError('a note name is not a string (HY-60)');
@@ -55,6 +56,7 @@ final class Reply
      */
     public function notes(): array
     {
+        ArgumentCount::most(\func_num_args(), 0);
         $pairs = [];
         foreach ($this->notes as $name => $value) {
             $pairs[] = [(string) $name, $value];
@@ -70,6 +72,7 @@ final class Reply
      */
     public function cookie(mixed $name, mixed $value, mixed $maxAge = null): self
     {
+        ArgumentCount::most(\func_num_args(), 3);
         if (!is_string($name)) {
             throw new \TypeError('a cookie name is not a string (HY-52)');
         }
@@ -97,6 +100,7 @@ final class Reply
     /** Removes a cookie with Max-Age=0. */
     public function removeCookie(mixed $name): self
     {
+        ArgumentCount::most(\func_num_args(), 1);
         $this->cookie($name, 'x');
         // The cookie that `cookie` checked and added holds the name as a string.
         $last = count($this->cookies) - 1;
@@ -112,6 +116,7 @@ final class Reply
      */
     public function cacheControl(mixed $value): self
     {
+        ArgumentCount::most(\func_num_args(), 1);
         if (!is_string($value)) {
             throw new \TypeError('a Cache-Control is not a string (HY-52)');
         }
@@ -139,6 +144,7 @@ final class Reply
     /** Renews the session after the action of the request returns (HY-72). */
     public function renewSession(): self
     {
+        ArgumentCount::most(\func_num_args(), 0);
         $this->renewal = true;
 
         return $this;
@@ -169,6 +175,7 @@ final class Reply
      */
     public function referrerPolicy(mixed $value): self
     {
+        ArgumentCount::most(\func_num_args(), 1);
         if (!is_string($value)) {
             throw new \TypeError('a Referrer-Policy is not a string (HY-103)');
         }
@@ -204,6 +211,7 @@ final class Reply
      */
     public function status(mixed $status): self
     {
+        ArgumentCount::most(\func_num_args(), 1);
         $code = self::integer($status);
         if ($code === null) {
             throw new \TypeError('a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)');
@@ -225,6 +233,7 @@ final class Reply
     /** Makes the HTML document of the response embed its data (HY-31, HY-92). */
     public function embedData(): self
     {
+        ArgumentCount::most(\func_num_args(), 0);
         $this->embed = true;
 
         return $this;

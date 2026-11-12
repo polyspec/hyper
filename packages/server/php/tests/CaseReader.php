@@ -26,7 +26,10 @@ final class CaseReader
     private ?string $failure = null;
     private ?string $differs = null;
 
-    /** @param array<string, mixed> $decl declaration of the section, with `fields`, `outcomes`, `uses` */
+    /**
+     * @param array<array-key, mixed> $decl declaration of the section, with `fields`, `outcomes`, `uses`
+     * @param array<array-key, mixed> $fixtures the fixtures of the file by their names
+     */
     private function __construct(
         private readonly string $file,
         private readonly string $section,
@@ -47,8 +50,8 @@ final class CaseReader
     public static function cases(string $file): array
     {
         $decl = self::declaration($file);
-        $fixtures = $decl['fixtures'] ?? [];
-        $sections = $decl['sections'] ?? [];
+        $fixtures = Json::map($decl['fixtures'] ?? [], 'fixtures');
+        $sections = CaseRules::declarations($decl['sections'] ?? [], 'sections');
         $data = Json::objectFile(CaseRules::CONTRACTS . $file);
         $error = CaseRules::undeclared($sections, $fixtures, $data);
 
@@ -58,7 +61,8 @@ final class CaseReader
                 continue;
             }
             $section = $sections[$key] ?? null;
-            if ($error === null && ($section === null || !in_array(CaseRules::LANGUAGE, $section['runners'], true))) {
+            $runs = $section !== null && in_array(CaseRules::LANGUAGE, Json::strings($section['runners'] ?? []), true);
+            if ($error === null && !$runs) {
                 continue;
             }
             if (!is_array($value)) {
@@ -68,7 +72,11 @@ final class CaseReader
                 if (!$case instanceof \stdClass) {
                     continue;
                 }
-                if (isset($case->only) && !in_array(CaseRules::LANGUAGE, $case->only->languages ?? [], true)) {
+                $only = $case->only ?? null;
+                $languages = $only === null
+                    ? [CaseRules::LANGUAGE]
+                    : Json::strings(Json::object($only)->languages ?? []);
+                if (!in_array(CaseRules::LANGUAGE, $languages, true)) {
                     continue;
                 }
                 $readers[] = new self($file, (string) $key, $case, $section ?? [], $fixtures, $data, $error);
@@ -85,13 +93,13 @@ final class CaseReader
 
     public function id(): string
     {
-        return (string) ($this->case->id ?? '');
+        return Json::string($this->case->id ?? '');
     }
 
     /** Whether the case has the field; the field is read. A field that another language only compares is absent. */
     public function has(string $name): bool
     {
-        $field = CaseRules::field($this->decl['fields'] ?? [], $name, $this->section);
+        $field = CaseRules::field(Json::map($this->decl['fields'] ?? [], 'fields'), $name, $this->section);
         foreach (CaseRules::ancestors($name) as $read) {
             $this->read[$read] = true;
         }
@@ -105,9 +113,10 @@ final class CaseReader
      */
     public function input(string $name): mixed
     {
-        $fields = $this->decl['fields'] ?? [];
+        $fields = Json::map($this->decl['fields'] ?? [], 'fields');
+        $uses = Json::strings($this->decl['uses'] ?? []);
         $fixture = !array_key_exists($name, $fields)
-            && (array_key_exists($name, $this->fixtures) || in_array($name, $this->decl['uses'] ?? [], true));
+            && (array_key_exists($name, $this->fixtures) || in_array($name, $uses, true));
         if ($fixture) {
             if (!property_exists($this->data, $name)) {
                 throw new \LogicException("the file has no fixture $name");
@@ -131,15 +140,22 @@ final class CaseReader
     /** Compares an observed value with the expected one of the case by the kind of the field (HYR-11). */
     public function compare(string $name, mixed $observed): void
     {
-        $field = CaseRules::field($this->decl['fields'] ?? [], $name, $this->section);
-        $this->compared[$name] = true;
+        $field = CaseRules::field(Json::map($this->decl['fields'] ?? [], 'fields'), $name, $this->section);
         if (!CaseRules::visible($field)) {
+            $this->compared[$name] = true;
+
             return;
         }
         [$found, $expected] = CaseRules::lookup($this->case, $name);
         if (!$found) {
+            // A field that the case does not hold is an error of the case unless its declaration is optional.
+            if (($field['optional'] ?? false) !== true) {
+                throw new \LogicException("the case has no field {$name}");
+            }
+
             return;
         }
+        $this->compared[$name] = true;
         $this->checks++;
         if (!self::matches(CaseRules::kind($field, $name), $expected, $observed, CaseRules::isHeaders($name))) {
             $this->differs ??= $name;
@@ -152,14 +168,17 @@ final class CaseReader
      */
     public function outcome(string $name, mixed $observed, mixed $expected = true): void
     {
-        $outcome = $this->decl['outcomes'][$name]
-            ?? throw new \LogicException("$name is no outcome of {$this->section}");
+        $outcome = Json::map(
+            Json::map($this->decl['outcomes'] ?? [], 'outcomes')[$name]
+                ?? throw new \LogicException("$name is no outcome of {$this->section}"),
+            "the outcome {$name}",
+        );
         $this->comparedOutcomes[$name] = true;
         if (!CaseRules::visible($outcome)) {
             return;
         }
         $this->checks++;
-        if (!self::matches($outcome['compare'], $expected, $observed, false)) {
+        if (!self::matches(Json::string($outcome['compare'] ?? null), $expected, $observed, false)) {
             $this->differs ??= $name;
         }
     }
@@ -195,7 +214,7 @@ final class CaseReader
         return $uncompared === null ? "$head PASS" : "$head FAIL FIELD_UNCOMPARED $uncompared";
     }
 
-    /** @return array<string, mixed> the declaration of a case file of contracts/interfaces.json */
+    /** @return array<array-key, mixed> the declaration of a case file of contracts/interfaces.json */
     private static function declaration(string $file): array
     {
         $caseFiles = CaseRules::caseFiles();
@@ -230,6 +249,7 @@ final class CaseReader
             'contains' => CaseRules::contains($expected, $observed),
             'excludes' => !CaseRules::contains($expected, $observed) && CaseRules::none($expected, $observed),
             'prefix' => (static function () use ($expected, $observed): bool {
+                $expected = Json::list($expected);
                 if (!is_array($observed) || !array_is_list($observed) || count($observed) < count($expected)) {
                     return false;
                 }

@@ -14,15 +14,16 @@ final class NativeSession implements SessionStore
     private ?string $clientId = null;
 
     /**
-     * Prepares the PHP session; it starts on the first read or write, so a request that never uses it creates no session
-     * (HY-45) and `setup` runs just before it starts (HY-115). `$request` gives the cookies of the request, parsed once
-     * (HY-129).
+     * Prepares the PHP session; it starts on the first read or write, so a request that never uses it creates no
+     * session (HY-45) and `setup` runs just before it starts (HY-115). `$request` gives the cookies of the request,
+     * parsed once (HY-129).
      */
     public function __construct(
         private readonly bool $https,
         private readonly Request $request,
         private readonly ?\Closure $setup = null,
     ) {
+        ArgumentCount::most(\func_num_args(), 3);
     }
 
     private function start(): void
@@ -54,8 +55,8 @@ final class NativeSession implements SessionStore
     }
 
     /**
-     * Sends the session cookie of HY-45 when the session identifier differs from the one that the client holds, with the
-     * attributes of `options()`. A session whose identifier the server kept sends nothing.
+     * Sends the session cookie of HY-45 when the session identifier differs from the one that the client holds, with
+     * the attributes of `options()`. A session whose identifier the server kept sends nothing.
      */
     private function sendCookie(): void
     {
@@ -100,7 +101,8 @@ final class NativeSession implements SessionStore
     /**
      * Returns the session options: the cookie name of HY-45 with `Path=/` and no `Domain`, HttpOnly, SameSite=Lax,
      * Secure on HTTPS, only identifiers that the server created, no cookie from PHP (`use_cookies`, HY-129), no caching
-     * headers, because the application sets Cache-Control (HY-52), and the record form that the other servers read (HY-104).
+     * headers, because the application sets Cache-Control (HY-52), and the record form that the other servers read
+     * (HY-104).
      *
      * @return array{name: string, cookie_path: '/', cookie_domain: '', cookie_httponly: true, cookie_samesite: 'Lax',
      *     cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, use_cookies: false, cache_limiter: '',
@@ -127,6 +129,7 @@ final class NativeSession implements SessionStore
 
     public function get(string $key): mixed
     {
+        ArgumentCount::most(\func_num_args(), 1);
         $this->start();
 
         return $_SESSION[$key] ?? null;
@@ -134,18 +137,21 @@ final class NativeSession implements SessionStore
 
     public function set(string $key, mixed $value): void
     {
+        ArgumentCount::most(\func_num_args(), 2);
         $this->start();
         $_SESSION[$key] = $value;
     }
 
     public function remove(string $key): void
     {
+        ArgumentCount::most(\func_num_args(), 1);
         $this->start();
         unset($_SESSION[$key]);
     }
 
     public function renew(): void
     {
+        ArgumentCount::most(\func_num_args(), 0);
         $this->start();
         session_regenerate_id(true);
         $this->sendCookie();

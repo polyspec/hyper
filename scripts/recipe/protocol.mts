@@ -1,8 +1,7 @@
 // The protocol of contracts/protocol.json as the recipe check reads it (HYR-2, HYR-5, HYR-6): its rules with their
 // statements and retired statement numbers, the retired rules, the terms of its vocabulary and its statuses.
 
-type Json = Record<string, unknown>;
-const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v);
+import { isObject } from './types.mts';
 
 export type ProtocolRule = { statements: Set<string>; retired: Set<number> };
 

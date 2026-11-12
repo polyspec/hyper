@@ -1,18 +1,10 @@
 // Types of the recipe check (HYR-3, HYR-5): each type of the spec is where it says with its declaration and visibility,
 // its shape (fields, optional fields and function parameters) is the one the reader sees, and a type is never a unit.
 
-import { LANGS, type Lang, type SpecType } from './types.mts';
+import { LANGS, type Lang } from './types.mts';
 import type { Ctx } from './context.mts';
-import { expectedVisibility, termKnown, words } from './names.mts';
+import { expectedVisibility, fieldWords, termKnown, words } from './names.mts';
 import { checkOnly, termsOf } from './members.mts';
-
-/** The field keys of a spec type that apply to a language, as words; quotes around a key do not count. */
-function fieldWords(t: SpecType, lang: Lang): string[] {
-  return Object.entries(t.shape.fields ?? {})
-    .filter(([, f]) => typeof f === 'string' || f.only === undefined || f.only.languages.includes(lang))
-    .map(([key]) => words(key.replace(/^["']|["']$/gu, '')))
-    .sort();
-}
 
 export function checkShapes(ctx: Ctx): void {
   const { spec, sources, add } = ctx;
@@ -30,8 +22,8 @@ export function checkShapes(ctx: Ctx): void {
       if (!(field in (t.shape.fields ?? {}))) add('TYPE_SHAPE', `${t.id} marks ${field} optional, which is no field of it`);
     }
     if (t.shape.term !== undefined && !termKnown(t.shape.term, ids)) add('TERM_UNKNOWN', `${t.id} uses ${t.shape.term}, which is outside the vocabulary (HYR-5)`);
-    const fn = t.shape.function as { inputs?: string[]; output?: string } | undefined;
-    fn?.inputs?.forEach((term, i) => {
+    const fn = t.shape.function;
+    fn?.inputs.forEach((term, i) => {
       if (!termKnown(term, ids)) add('TERM_UNKNOWN', `${t.id} function input ${i + 1} uses ${term}, which is outside the vocabulary (HYR-5)`);
     });
     if (fn?.output !== undefined && !termKnown(fn.output, ids)) add('TERM_UNKNOWN', `${t.id} function output uses ${fn.output}, which is outside the vocabulary (HYR-5)`);
@@ -54,8 +46,8 @@ export function checkShapes(ctx: Ctx): void {
       const read = (rt.fields ?? []).map((f) => words(f.replace(/^["']|["']$/gu, ''))).sort();
       const want = t.shape.fields === undefined ? [] : fieldWords(t, lang);
       if (want.join(',') !== read.join(',')) add('TYPE_SHAPE', `${lang} type ${t.id} fields differ from spec`);
-      const fn = t.shape.function as { inputs?: string[] } | undefined;
-      if (fn?.inputs !== undefined && rt.parameters !== undefined && rt.parameters !== fn.inputs.length) {
+      const fn = t.shape.function;
+      if (fn !== undefined && rt.parameters !== undefined && rt.parameters !== fn.inputs.length) {
         add('TYPE_SHAPE', `${lang} type ${t.id} takes ${rt.parameters} parameters, spec says ${fn.inputs.length}`);
       }
     }

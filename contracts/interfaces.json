@@ -143,6 +143,10 @@
     {
       "rule": "HYC-9",
       "reason": "A rule of the browser code, which no server unit implements."
+    },
+    {
+      "rule": "HYC-25",
+      "reason": "A rule of the browser code, which no server unit implements."
     }
   ],
   "concerns": [
@@ -1934,8 +1938,13 @@
     },
     {
       "id": "media-type",
-      "rules": [],
-      "cases": [],
+      "rules": [
+        "HY-119",
+        "HY-122"
+      ],
+      "cases": [
+        "contracts/media-type.json"
+      ],
       "units": [
         {
           "id": "media-type",
@@ -2645,6 +2654,25 @@
               }
             },
             {
+              "id": "pipeline.servedFile",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>",
+                "string",
+                "string"
+              ],
+              "output": "optional<value>",
+              "errors": [],
+              "state": "Returns the file of the public directory that a GET or HEAD request names, with its content type, its length and its bytes, which are none for HEAD, or none without a public directory or such a file (HY-100.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::served_file",
+                  "signature": "def served_file(files: Optional[str], method: str, target: str) -> Optional[FileResponse]"
+                }
+              }
+            },
+            {
               "id": "pipeline.readBody",
               "kind": "function",
               "visibility": "internal",
@@ -2740,7 +2768,10 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::escape",
                   "signature": "def escape(app: App, error: BaseException) -> Response"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_escape.py::EscapeTest.test_a_write_that_fails_after_the_headers_started_reports_an_unended_write_with_its_failure: Only the Python server writes the response itself to the socket file of http.server (HY-100.1); the test replaces that file with one whose second write fails and asserts that the write hook receives the started response with ended false and the failure. The scenario `client-closes-the-connection-during-the-answer` states the closed connection over HTTP for the three servers; a write error after the status line cannot be produced from a client."
+              ]
             },
             {
               "id": "pipeline.plainFailure",
@@ -2819,7 +2850,22 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::create_wsgi",
                   "signature": "def create_wsgi(app: App, sessions: FileSessions | RedisSessions, files: Optional[str]=None, around: Optional[Around]=None, written: Optional[Written]=None) -> Callable[[dict, Callable], object]"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_body_over_the_limit_reads_no_more: Only the Python server has a WSGI callable (HY-100.3); it reads the body from its transport up to the body limit and no more.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_multipart_body_is_read_into_files_that_are_removed_after_the_write_hook: Only the Python server has a WSGI callable (HY-100.3); it reads a multipart body from its transport into files and removes them after the write hook.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_multipart_body_without_its_end_leaves_no_directory: Only the Python server has a WSGI callable (HY-100.3); it leaves no directory for a multipart body without its end.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_new_session_sets_its_cookie_first: Only the Python server has a WSGI callable (HY-100.3); it sets the cookie of a new session as the first Set-Cookie of the response.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_public_file_is_served_before_around: Only the Python server has a WSGI callable (HY-100.3); it serves a public file before around through its transport.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_an_around_error_answers_the_plain_failure_and_reports_the_request: Only the Python server has a WSGI callable (HY-100.3); it answers an error of around with the plain 500 through its transport.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_around_answers_without_the_application: Only the Python server has a WSGI callable (HY-100.3); it writes the response of an around that does not call the application.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_the_method_reaches_the_application_in_upper_case: Only the Python server has a WSGI callable (HY-100.3); it passes the method in upper case.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_the_request_is_https_when_the_application_or_the_server_says_so: Only the Python server has a WSGI callable (HY-100.3); it takes https from the application option or from the scheme that its transport gives, which no other host has.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_the_request_reaches_the_application: Only the Python server has a WSGI callable (HY-100.3); it builds the request from its transport and reports the written response.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_the_write_hook_reports_a_premature_close_and_disconnects: Only the Python server has a WSGI callable (HY-100.3); it reports a close of the iterable before its end as an unended write and a disconnect.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_the_write_hook_reports_the_end: Only the Python server has a WSGI callable (HY-100.3); it reports the end of the write when the server consumed the iterable.",
+                "packages/server/python/tests/test_wsgi.py::BaseExceptionTest.test_an_exception_that_is_no_exception_passes_through_the_application_and_the_callable: Only the Python server has a WSGI callable (HY-100.3) and exceptions that are no Exception; such an exception passes through the application and the callable (HY-43.6)."
+              ]
             },
             {
               "id": "wsgi.encode",
@@ -2836,7 +2882,11 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_encode",
                   "signature": "def _encode(response: Response) -> tuple[str, list[tuple[str, str]], bytes]"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_body_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_failure: Only the Python server has a WSGI callable (HY-100.3); it answers a body that cannot be encoded with the plain 500 through start_response.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_header_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_failure: Only the Python server has a WSGI callable (HY-100.3); it answers a header value that is not latin-1 with the plain 500 and passes no other header to start_response."
+              ]
             },
             {
               "id": "wsgi.escape",
@@ -2858,7 +2908,10 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_escape",
                   "signature": "def _escape(app: App, exchange: Exchange, error: BaseException, start_response: Callable, head: bool, exc_info=None) -> WsgiBody"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_start_response_that_raises_is_an_escape_answered_through_start_response_again: Only the Python server has a WSGI callable (HY-100.3); it passes the plain 500 to start_response with the exception information when start_response raised."
+              ]
             },
             {
               "id": "wsgi.answer",
@@ -2880,7 +2933,10 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_answer",
                   "signature": "def _answer(app: App, sessions: FileSessions | RedisSessions, around: Optional[Callable], files: Optional[str], environ: dict, exchange: Exchange) -> Union[Response, FileResponse]"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_failed_body_read_answers_the_plain_failure_and_reports_the_request: Only the Python server has a WSGI callable (HY-100.3); it answers a body that its transport cannot read with the plain 500 and reports the request with an empty body."
+              ]
             },
             {
               "id": "wsgi.cookieHeader",
@@ -2914,7 +2970,13 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_request_target",
                   "signature": "def _request_target(environ: dict) -> str"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_missing_target_answers_the_plain_failure_and_reports_nothing: Only the Python server has a WSGI callable (HY-100.3); it answers the plain 500 and reports no request when the environ holds neither RAW_URI nor REQUEST_URI.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_request_uri_is_read_when_raw_uri_is_absent: Only the Python server has a WSGI callable (HY-100.3); it reads REQUEST_URI when the server gives no RAW_URI.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_the_raw_target_is_used_and_not_the_decoded_path_info: Only the Python server has a WSGI callable (HY-100.3); it reads the target from RAW_URI, because a WSGI server decodes PATH_INFO.",
+                "packages/server/python/tests/test_request_target.py::RequestTargetTest.test_the_three_transports_give_equal_requests_and_responses: Only the Python server has three transports (HY-100.1, HY-100.3, HY-100.15); the test asserts that `create_server`, the WSGI callable and the ASGI callable give the application the same path and raw query for the same target and answer alike. `request.json#targets` states the path and the query of a target for the three servers."
+              ]
             },
             {
               "id": "wsgi.status",
@@ -2931,7 +2993,10 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_status",
                   "signature": "def _status(code: int) -> str"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_status_that_cannot_be_written_is_an_escape_answered_with_the_plain_failure: Only the Python server has a WSGI callable (HY-100.3); it answers a status that PEP 3333 cannot write with the plain 500."
+              ]
             },
             {
               "id": "wsgi.environHeaders",
@@ -2987,7 +3052,21 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::create_asgi",
                   "signature": "def create_asgi(app: App, sessions: FileSessions | RedisSessions, files: Optional[str]=None, around: Optional[Around]=None, written: Optional[Written]=None) -> Callable"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_body_over_the_limit_reads_no_more: Only the Python server has an ASGI callable (HY-100.15); it reads the body from its transport up to the body limit and no more.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_failed_send_reports_and_disconnects: Only the Python server has an ASGI callable (HY-100.15); it reports a failed send as an unended write and a disconnect.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_multipart_body_is_read_into_files_that_are_removed_after_the_write_hook: Only the Python server has an ASGI callable (HY-100.15); it reads a multipart body from its transport into files and removes them after the write hook.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_multipart_body_without_its_end_leaves_no_directory: Only the Python server has an ASGI callable (HY-100.15); it leaves no directory for a multipart body without its end.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_new_session_sets_its_cookie_first: Only the Python server has an ASGI callable (HY-100.15); it sets the cookie of a new session as the first Set-Cookie of the response.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_public_file_is_served_before_around: Only the Python server has an ASGI callable (HY-100.15); it serves a public file before around through its transport.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_around_answers_without_the_application: Only the Python server has an ASGI callable (HY-100.15); it writes the response of an around that does not call the application.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_several_cookie_headers_join_with_a_semicolon: Only the Python server has an ASGI callable (HY-100.15); it joins the cookie headers of the scope with `; `.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_the_method_reaches_the_application_in_upper_case: Only the Python server has an ASGI callable (HY-100.15); it passes the method in upper case.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_the_pipeline_runs_in_a_worker_thread: Only the Python server has an ASGI callable (HY-100.15); it runs the pipeline in a worker thread, off the event loop.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_the_request_is_https_when_the_application_or_the_server_says_so: Only the Python server has an ASGI callable (HY-100.15); it takes https from the application option or from the scheme that its transport gives, which no other host has.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_the_request_reaches_the_application: Only the Python server has an ASGI callable (HY-100.15); it builds the request from its transport and reports the written response."
+              ]
             },
             {
               "id": "asgi.messages",
@@ -3027,7 +3106,11 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_answer",
                   "signature": "def _answer(app: App, sessions: FileSessions | RedisSessions, around: Optional[Callable], files: Optional[str], scope: dict, receive: Callable, exchange: Exchange) -> Union[Response, FileResponse]"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_cancelled_send_reports_an_unended_write_and_propagates_the_cancellation: Only the Python server has an ASGI callable (HY-100.15); it reports an unended write for a cancelled send, runs no disconnect hook and lets the cancellation pass.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_failed_send_of_the_plain_failure_reports_it_and_propagates: Only the Python server has an ASGI callable (HY-100.15); it reports a failed send of the plain 500 and lets the error reach the server."
+              ]
             },
             {
               "id": "asgi.readBody",
@@ -3045,7 +3128,11 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_read_body",
                   "signature": "def _read_body(receive: Callable, body: RequestBody) -> None"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_cancellation_before_the_answer_reports_a_null_response: Only the Python server has an ASGI callable (HY-100.15); it reports a null response for a task that is cancelled while it reads the body.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_failed_body_read_answers_the_plain_failure_and_reports_the_request: Only the Python server has an ASGI callable (HY-100.15); it answers a body that its transport cannot read with the plain 500 and reports the request with an empty body."
+              ]
             },
             {
               "id": "asgi.rawPath",
@@ -3062,7 +3149,11 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_raw_path",
                   "signature": "def _raw_path(scope: dict) -> str"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_a_missing_raw_path_answers_the_plain_failure_and_reports_nothing: Only the Python server has an ASGI callable (HY-100.15); it answers the plain 500 and reports no request when the scope holds no raw_path.",
+                "packages/server/python/tests/test_asgi.py::AsgiTest.test_the_raw_path_is_used_and_not_the_decoded_path: Only the Python server has an ASGI callable (HY-100.15); it reads the path from raw_path, because an ASGI server decodes path."
+              ]
             },
             {
               "id": "asgi.header",
@@ -3324,7 +3415,10 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/_wsgi_body.py::WsgiBody.__iter__",
                   "signature": "def __iter__(self)"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_an_empty_response_reports_its_write_at_the_end_of_the_iterable: Only the Python server has a WSGI callable (HY-100.3); it reports the write of an empty body when the server consumed the iterable."
+              ]
             },
             {
               "id": "wsgi-body.close",
@@ -3339,7 +3433,11 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/_wsgi_body.py::WsgiBody.close",
                   "signature": "def close(self) -> None"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_a_premature_close_of_the_plain_failure_reports_a_failed_write: Only the Python server has a WSGI callable (HY-100.3); it reports a failed write when the server closes the iterable of the plain 500 before its end.",
+                "packages/server/python/tests/test_wsgi.py::WsgiTest.test_closing_the_body_before_its_first_item_reports_an_unended_write: Only the Python server has a WSGI callable (HY-100.3); it reports an unended write when the server closes the iterable before its first item."
+              ]
             },
             {
               "id": "wsgi-body.finish",
@@ -4460,6 +4558,29 @@
               }
             },
             {
+              "id": "request.browser",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the digest of the session token, which names the browser of the request, or none for a request without a session (HY-24.10).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::browser",
+                  "signature": "public function browser(): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.browser",
+                  "signature": "browser(): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.browser",
+                  "signature": "def browser(self) -> Optional[str]"
+                }
+              }
+            },
+            {
               "id": "request.targetPath",
               "kind": "static method",
               "visibility": "public",
@@ -5088,9 +5209,12 @@
     {
       "id": "response",
       "rules": [
-        "HY-130"
+        "HY-130",
+        "HY-106"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/response.json"
+      ],
       "units": [
         {
           "id": "response",
@@ -5950,7 +6074,8 @@
         "HY-57",
         "HY-113",
         "HY-114",
-        "HY-131"
+        "HY-131",
+        "HY-106"
       ],
       "cases": [
         "contracts/fields.json",
@@ -7875,7 +8000,8 @@
     {
       "id": "session-store",
       "rules": [
-        "HY-104"
+        "HY-104",
+        "HY-106"
       ],
       "cases": [
         "contracts/session.json",
@@ -8508,7 +8634,8 @@
       "cases": [
         "contracts/csrf.json",
         "contracts/session.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "contracts/representations.json"
       ],
       "units": [
         {
@@ -8605,6 +8732,31 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.verify",
                   "signature": "def verify(token: str, value: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "csrf.browserOf",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the SHA-256 digest, as 64 lowercase hexadecimal digits, of the token that a masked value holds, or none for the empty text (HY-24.10, HY-24.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Csrf.php::Polyspec\\Hyper\\Csrf::browserOf",
+                  "signature": "public static function browserOf(string $masked): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/csrf.ts::Csrf.browserOf",
+                  "signature": "static browserOf(masked: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_csrf.py::Csrf.browser_of",
+                  "signature": "def browser_of(masked: str) -> Optional[str]"
                 }
               }
             },
@@ -10516,7 +10668,9 @@
       "rules": [
         "HY-44"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/app.json"
+      ],
       "units": [
         {
           "id": "data-model",
@@ -13794,6 +13948,127 @@
         ]
       },
       "units": []
+    },
+    {
+      "id": "argument-count",
+      "rules": [
+        "HY-106"
+      ],
+      "cases": [
+        "contracts/arguments.json"
+      ],
+      "units": [
+        {
+          "id": "argument-count",
+          "native": {
+            "php": {
+              "file": "packages/server/php/src/ArgumentCount.php",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "argument-count.most",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "number",
+                "number"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails a call that gives more arguments than the parameters of its member, with the class ArgumentCountError (HY-106.8).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-106.14"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/ArgumentCount.php::Polyspec\\Hyper\\ArgumentCount::most",
+                  "signature": "public static function most(int $given, int $most): void"
+                }
+              }
+            }
+          ],
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-106.14"
+          }
+        },
+        {
+          "id": "argument-count-error",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/argument-count-error.ts",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "argument-count-error.between",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "number",
+                "number",
+                "number"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails a call whose number of arguments is below the required parameters of its member or above its parameters (HY-106.8).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-106.14"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/argument-count-error.ts::ArgumentCountError.between",
+                  "signature": "static between(given: number, least: number, most: number): void"
+                }
+              }
+            },
+            {
+              "id": "argument-count-error.members",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "list<string>",
+                "list<string>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails an options record that is no object, lacks a required member or holds a member that is no parameter; a member whose value is undefined is left out (HY-106.8).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-106.14"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/argument-count-error.ts::ArgumentCountError.members",
+                  "signature": "static members(record: unknown, required: readonly string[], optional: readonly string[]): void"
+                }
+              }
+            }
+          ],
+          "only": {
+            "languages": [
+              "node"
+            ],
+            "sentence": "HY-106.14"
+          }
+        }
+      ]
     }
   ],
   "types": [
@@ -15111,12 +15386,72 @@
             "open": {
               "compare": "raises",
               "sentence": "HY-106.6"
+            },
+            "messageStart": {
+              "compare": "exact",
+              "sentence": "HY-106.10",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-106.10"
+              }
             }
           },
           "members": [
             "app.open",
             "choice.constructor",
             "client-rendering.constructor"
+          ]
+        },
+        "declaration": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "chosen": {
+              "role": "input"
+            },
+            "value": {
+              "role": "input"
+            },
+            "shellPath": {
+              "role": "input"
+            },
+            "dataBasePath": {
+              "role": "input"
+            },
+            "choice": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-62.7",
+              "state": "`choice` holds the members `chosen` and `value` of the choice made with `chosen` and `value` (PHP `new Choice(chosen, value)`, Node `new Choice(chosen, value)`, Python `Choice(chosen, value)`)."
+            },
+            "rendering": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-62.2",
+              "state": "`rendering` holds the members `shell` and `basePath` of the client rendering made with `shellPath`, `dataBasePath` and a selection that returns that choice, and `selected`, the members `chosen` and `value` of what its member `selects` returns for a `GET /` request."
+            }
+          },
+          "members": [
+            "choice.chosen",
+            "choice.constructor",
+            "choice.value",
+            "client-rendering.basePath",
+            "client-rendering.constructor",
+            "client-rendering.selects",
+            "client-rendering.shell",
+            "request.constructor"
           ]
         }
       }
@@ -15534,6 +15869,42 @@
               "state": "`valid` states whether each of the two masked values is a masked value of the token `token`."
             }
           }
+        },
+        "browser": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "value": {
+              "role": "input"
+            },
+            "browser": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.10",
+              "state": "`browser` is the digest that the masked value `value` gives, 64 lowercase hexadecimal digits, or null for the empty text."
+            },
+            "error": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.13",
+              "state": "`error` is the message of the error with which the digest of the value `value` fails."
+            }
+          },
+          "members": [
+            "csrf.browserOf"
+          ]
         }
       }
     },
@@ -15696,6 +16067,48 @@
               "state": "`removed` is true when the directory of the body does not exist after `remove()`, or null for a body without a directory."
             }
           }
+        },
+        "uploaded": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "name": {
+              "role": "input"
+            },
+            "filename": {
+              "role": "input"
+            },
+            "contentType": {
+              "role": "input"
+            },
+            "content": {
+              "role": "input"
+            },
+            "file": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-106.5",
+              "state": "`content` is a text whose characters U+0000 to U+00FF are bytes; `file` holds what `name()`, `filename()`, `contentType()`, `size()` and `content()` of `new UploadedFile(name, filename, contentType, bytes)` return, the content written as such a text."
+            }
+          },
+          "members": [
+            "uploaded-file.constructor",
+            "uploaded-file.content",
+            "uploaded-file.contentType",
+            "uploaded-file.filename",
+            "uploaded-file.name",
+            "uploaded-file.size"
+          ]
         }
       }
     },
@@ -15996,6 +16409,16 @@
             "open": {
               "compare": "raises",
               "sentence": "HY-118.5"
+            },
+            "messageStart": {
+              "compare": "exact",
+              "sentence": "HY-106.10",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-106.10"
+              }
             }
           }
         },
@@ -16026,6 +16449,16 @@
             "open": {
               "compare": "raises",
               "sentence": "HY-106.6"
+            },
+            "messageStart": {
+              "compare": "exact",
+              "sentence": "HY-106.10",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-106.10"
+              }
             }
           }
         },
@@ -16156,6 +16589,13 @@
                   "compare": "exact",
                   "sentence": "HY-121.10",
                   "state": "`params` is the route parameters of the request that the handler received."
+                },
+                "browser": {
+                  "role": "expected",
+                  "optional": true,
+                  "compare": "exact",
+                  "sentence": "HY-24.12",
+                  "state": "`browser` is what `browser()` of the request that the handler received returns, or null."
                 }
               }
             },
@@ -16166,7 +16606,47 @@
           },
           "members": [
             "app.bind",
+            "request.browser",
             "request.params"
+          ]
+        },
+        "values": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "status": {
+              "role": "input"
+            },
+            "body": {
+              "role": "input",
+              "optional": true
+            },
+            "headers": {
+              "role": "input",
+              "optional": true
+            },
+            "held": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-122.1",
+              "state": "`held` holds the members `status`, `body` and `headers` of the representation made with `status`, with the value of the JSON text `body` when the case states it and with the map `headers` when the case states it."
+            }
+          },
+          "members": [
+            "representation.body",
+            "representation.constructor",
+            "representation.headers",
+            "representation.status"
           ]
         }
       }
@@ -16519,6 +16999,13 @@
               "compare": "exact",
               "sentence": "HY-58.6",
               "state": "`error` is the message of the error with which making the page fails, or null."
+            },
+            "held": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-58.3",
+              "state": "`held` is the member `data` of the page."
             }
           }
         },
@@ -16631,6 +17118,13 @@
               "compare": "exact",
               "sentence": "HY-50.3",
               "state": "`error` is the message of the error with which making the stop fails, or null."
+            },
+            "location": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-50.1",
+              "state": "`location` is the location of the member `result` of a redirect stop."
             }
           }
         },
@@ -16963,6 +17457,17 @@
               "compare": "exact",
               "sentence": "HY-113.2",
               "state": "`pairs` is what `files()` returns, each file given as its filename."
+            },
+            "limits": {
+              "role": "input",
+              "optional": true
+            },
+            "over": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-106.5",
+              "state": "`over` holds, for each number of bytes of `limits` in order, what `fileOver(limit)` returns."
             }
           }
         },
@@ -17195,6 +17700,13 @@
                   "state": "`header` holds, for each name of `headerNames` in order, what `header(name)` of the request before `with` returns, or null."
                 }
               }
+            },
+            "mediaType": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-59.11",
+              "state": "`mediaType` is what `mediaType()` returns."
             }
           },
           "members": [
@@ -17349,6 +17861,13 @@
               "compare": "exact",
               "sentence": "HY-104.23",
               "state": "`error` is null when every call of `calls` returns, and `stored` when a call fails because the session holds a stored value of another form than the session writes, after which no later call runs."
+            },
+            "failure": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-40.4",
+              "state": "`failure` is a text that the message of the error of the data model contains, with which a call of `keep` fails for its value; no later call runs, and `results` holds the entries of the calls before it."
             }
           },
           "members": [
@@ -17357,6 +17876,49 @@
             "session.constructor",
             "session.keep",
             "session.kept"
+          ]
+        },
+        "store": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "calls": {
+              "role": "input"
+            },
+            "results": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-106.1",
+              "state": "`calls` is a list of pairs of a method of the session store interface (`get`, `set`, `remove`, `renew`) and the JSON texts of its arguments, applied in order to one new `ArraySession` through the session store interface; `results` holds one entry for each call: the value that `get` returns, and null for every other method."
+            },
+            "renewals": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-72.2",
+              "state": "`renewals` is the number of renewals that the `ArraySession` counts after `calls`."
+            }
+          },
+          "members": [
+            "array-session.constructor",
+            "array-session.get",
+            "array-session.remove",
+            "array-session.renew",
+            "array-session.renewals",
+            "array-session.set",
+            "session-store.get",
+            "session-store.remove",
+            "session-store.renew",
+            "session-store.set"
           ]
         }
       }
@@ -17703,6 +18265,13 @@
               "compare": "exact",
               "sentence": "HY-37.4",
               "state": "`keptPaths` is the kept paths of the region `region` whose kind is one of `kinds`, in the order of the manifest."
+            },
+            "template": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-2.4",
+              "state": "`template` is the member `template` of the region `region`: its template, or null for the page region."
             }
           },
           "members": [
@@ -17713,7 +18282,8 @@
             "manifest.routes",
             "region.keep",
             "region.keptPaths",
-            "region.name"
+            "region.name",
+            "region.template"
           ]
         }
       }
@@ -17955,9 +18525,9 @@
             "failure": {
               "role": "expected",
               "optional": true,
-              "compare": "contains",
+              "compare": "exact",
               "sentence": "HY-60.11",
-              "state": "`failure` is a text that the failure of the response, as the response hook receives it, contains."
+              "state": "`failure` is the failure of the response as the last report of the response hook received it."
             },
             "failureReported": {
               "role": "expected",
@@ -17971,7 +18541,7 @@
               "optional": true,
               "compare": "exact",
               "sentence": "HY-60.5",
-              "state": "`elapsedFromStart` true states that the elapsed time of the last report is a number of milliseconds that is not less than `request.startedBefore`, or than 0 without it."
+              "state": "`elapsedFromStart` true states that the elapsed time of the last report is a number of milliseconds that is not less than the time from the start of the request to the call of `handle` and not more than the time from that start to the return of `handle`, both read by the step on the clock of `handle`, where the start is `request.startedBefore` milliseconds before the call and is given to `handle`, or is the call itself without it."
             },
             "storedAfter": {
               "role": "expected",
@@ -18049,6 +18619,34 @@
               "compare": "exact",
               "sentence": "HY-43.5",
               "state": "`logCount` is the number of texts that the server gave to its log of HY-43.4 during the request."
+            },
+            "browsers": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.11",
+              "state": "`browsers` lists, for each value that a step `observe` read during the request, in the order of `observed`, one word: `current` for the SHA-256 digest, as 64 lowercase hexadecimal digits, of the 32 bytes of the token that the session holds after the request, `previous` for that digest of the token that the session held when the request was sent, when that token differs, `none` for null, and `other` for every other value."
+            },
+            "valueReads": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-13.7",
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-54.3"
+              },
+              "state": "`valueReads` is how many times the server enumerated, during the request, the entries of the values of the kind `countingMap` that the handlers of the request returned."
+            },
+            "failureLogged": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-66.3",
+              "state": "`failureLogged` true states that one text that the server gave to its log of HY-43.4 during the request is exactly `hyper: ` followed by the failure that the last report of the response hook received."
             }
           }
         },
@@ -18095,8 +18693,80 @@
             "open": {
               "compare": "raises",
               "sentence": "HY-106.6"
+            },
+            "messageStart": {
+              "compare": "exact",
+              "sentence": "HY-106.10",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-106.10"
+              }
             }
           }
+        },
+        "parts": {
+          "runners": [
+            "php",
+            "node",
+            "python",
+            "browser"
+          ],
+          "uses": [
+            "applications"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "application": {
+              "role": "input"
+            },
+            "route": {
+              "role": "input"
+            },
+            "shared": {
+              "role": "input"
+            },
+            "regions": {
+              "role": "input"
+            },
+            "title": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-13.3",
+              "state": "`title` is the text that the title template of the application renders alone with the shared data `shared`."
+            },
+            "parts": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-13.1",
+              "state": "`parts` holds, for each region of `regions` by its name, the text that the region renders alone with the shared data `shared` and its data, where the page region receives each route region of `regions` rendered alone as an html definition."
+            },
+            "frame": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-12.1",
+              "state": "`frame` is the document of the route `route` with the shared data `shared`, the data `regions` and no embedded data, after the first text equal to the title rendered alone is replaced by `{# title}` and then, for each manifest region in the order of the manifest, the first text equal to that region rendered alone is replaced by `{# ` followed by its name and `}`."
+            },
+            "pageFrame": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-13.2",
+              "state": "`pageFrame` is the page region rendered alone, after the first text equal to each route region of `regions` rendered alone, in the order of the route, is replaced by `{# ` followed by its name and `}`."
+            }
+          },
+          "members": [
+            "renderer.alone",
+            "renderer.bind",
+            "renderer.document",
+            "renderer.open"
+          ]
         }
       }
     },
@@ -18118,12 +18788,28 @@
             },
             "hook": {
               "role": "input"
+            },
+            "message": {
+              "role": "expected",
+              "compare": "contains",
+              "sentence": "HY-106.13",
+              "state": "`message` is a text that the message of the error of every entry that takes the hook contains."
             }
           },
           "outcomes": {
             "creation": {
               "compare": "raises",
               "sentence": "HY-97.7"
+            },
+            "messageStart": {
+              "compare": "exact",
+              "sentence": "HY-106.10",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-106.10"
+              }
             }
           },
           "members": [
@@ -18133,6 +18819,187 @@
             "asgi.createAsgi",
             "server.createServer",
             "wsgi.createWsgi"
+          ]
+        }
+      }
+    },
+    "arguments.json": {
+      "fixtures": {},
+      "sections": {
+        "counts": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "member": {
+              "role": "input"
+            },
+            "call": {
+              "role": "input"
+            },
+            "parameter": {
+              "role": "input",
+              "optional": true
+            },
+            "refused": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-106.8",
+              "state": "`refused` is true when the call of `member` fails with the error of HY-106.8 before the member runs, and false when the member runs: `call` is `missing` for its required parameters without the last one, or without `parameter` when the case names one, `required` for its required parameters only, `all` for every parameter, and `extra` for every parameter and one more argument."
+            }
+          }
+        },
+        "names": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "member": {
+              "role": "input"
+            },
+            "parameter": {
+              "role": "input"
+            },
+            "refused": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-106.16",
+              "state": "`refused` is true when the call of `member` with its required parameters and one more argument under the name `parameter`, which is no parameter of it, fails before the member runs with the error that the statement names for the runtime."
+            }
+          }
+        }
+      }
+    },
+    "media-type.json": {
+      "fixtures": {},
+      "sections": {
+        "values": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "parameters": {
+              "role": "input"
+            },
+            "contentType": {
+              "role": "input",
+              "optional": true
+            },
+            "body": {
+              "role": "input",
+              "optional": true
+            },
+            "read": {
+              "role": "expected",
+              "compare": "ordered",
+              "sentence": "HY-119.3",
+              "state": "`parameters` is a list of pairs of a name and a value, given to the constructor as a map in that order, with the content type `contentType` when the case states it; `read` is what `parameters()` returns."
+            },
+            "etag": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-122.11",
+              "state": "`etag` is what `etag(value)` returns for the value of the JSON text `body`."
+            },
+            "failure": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-122.13",
+              "state": "`failure` is a text that the message of the error of the data model contains, with which `etag(value)` fails for the value of `body`; a case that states `failure` states no `etag`."
+            }
+          },
+          "members": [
+            "media-type.constructor",
+            "media-type.etag",
+            "media-type.parameters"
+          ]
+        }
+      }
+    },
+    "response.json": {
+      "fixtures": {},
+      "sections": {
+        "values": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "make": {
+              "role": "input"
+            },
+            "status": {
+              "role": "input"
+            },
+            "headers": {
+              "role": "input",
+              "optional": true
+            },
+            "body": {
+              "role": "input"
+            },
+            "with": {
+              "role": "input",
+              "optional": true
+            },
+            "response": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-106.17",
+              "state": "`make` is `constructor` for `new Response(status, headers, body)` with the map of the pairs `headers`, or `text` for `Response.text(status, body)`; each pair of `with` in order is applied with `withHeader(name, value)` to the response that the pair before it returned; `response` holds the members `status`, `headers` and `body` of the last response."
+            },
+            "original": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-106.17",
+              "state": "`original` is the member `headers` of the first response after every `withHeader` returned."
+            }
+          },
+          "members": [
+            "response.body",
+            "response.constructor",
+            "response.headers",
+            "response.status",
+            "response.text",
+            "response.withHeader"
           ]
         }
       }

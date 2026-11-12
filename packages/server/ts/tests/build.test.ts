@@ -14,6 +14,9 @@ async function openWith(build: string): Promise<unknown> {
 
 describe('App.open takes the build file by an absolute path (HY-48.11)', () => {
   it('fails with the path of a build file whose option is relative', async () => {
-    await expect(openWith('build.json')).resolves.toEqual(expect.objectContaining({ message: expect.stringContaining('build.json') }));
+    const error = await openWith('build.json');
+    expect(error).toBeInstanceOf(Error);
+    if (!(error instanceof Error)) throw error;
+    expect(error.message).toContain('build.json');
   });
 });

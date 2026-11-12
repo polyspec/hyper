@@ -10,6 +10,7 @@ use Polyspec\Hyper\Multipart;
 use Polyspec\Hyper\RequestBody;
 use Polyspec\Hyper\UploadedFile;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseInput;
 use Polyspec\Hyper\Tests\Support\Bytes;
 
 /**
@@ -21,7 +22,7 @@ final class FieldsSteps
     /** Parses the text and records its pairs and its names, or null for both when it fails with HY-42 (HY-56). */
     public static function urlencoded(CaseReader $case): void
     {
-        $fields = Fields::parse(self::text($case, 'text'));
+        $fields = Fields::parse(CaseInput::text($case, 'text'));
         $case->compare('fields', $fields?->pairs());
         $case->compare('names', $fields?->names());
     }
@@ -32,8 +33,8 @@ final class FieldsSteps
      */
     public static function multipart(CaseReader $case): void
     {
-        $type = self::bytes(self::text($case, 'type'));
-        $body = self::bytes(self::text($case, 'body'));
+        $type = self::bytes(CaseInput::text($case, 'type'));
+        $body = self::bytes(CaseInput::text($case, 'body'));
         $whole = [self::fieldsOf(Fields::fromBody($type, $body)), self::filesOf(Files::fromBody($type, $body))];
         // HY-131.6: the body read in two chunks, divided at every position, gives the result of the whole body, and
         // the reader holds between two chunks at most its bound; the first division that differs is the result of
@@ -70,11 +71,11 @@ final class FieldsSteps
      */
     public static function streamed(CaseReader $case): void
     {
-        $type = self::text($case, 'type');
-        $body = self::bytes(self::text($case, 'body'));
+        $type = CaseInput::text($case, 'type');
+        $body = self::bytes(CaseInput::text($case, 'body'));
         $chunk = $case->input('chunk');
         $limit = $case->input('limit');
-        $move = self::text($case, 'move');
+        $move = CaseInput::text($case, 'move');
         if (!is_int($chunk) || $chunk < 1 || !is_int($limit)) {
             throw new \UnexpectedValueException('the chunk or the limit of the case is not a number');
         }
@@ -147,6 +148,24 @@ final class FieldsSteps
         }
     }
 
+    /** Makes a file as an application makes it and records what its members return (HY-113). */
+    public static function uploaded(CaseReader $case): void
+    {
+        $file = new UploadedFile(
+            CaseInput::text($case, 'name'),
+            CaseInput::text($case, 'filename'),
+            CaseInput::text($case, 'contentType'),
+            self::bytes(CaseInput::text($case, 'content')),
+        );
+        $case->compare('file', [
+            'name' => $file->name(),
+            'filename' => $file->filename(),
+            'contentType' => $file->contentType(),
+            'size' => $file->size(),
+            'content' => self::latin($file->content()),
+        ]);
+    }
+
     /**
      * Runs the work and returns the message and the class of its failure, `type` for a TypeError and `value` for the
      * class of HY-46.2, or null when it does not fail.
@@ -204,15 +223,6 @@ final class FieldsSteps
         }
 
         return $entries;
-    }
-
-    private static function text(CaseReader $case, string $name): string
-    {
-        $value = $case->input($name);
-
-        return is_string($value)
-            ? $value
-            : throw new \UnexpectedValueException("the case field {$name} is not a string");
     }
 
     /** Returns the bytes of text whose characters are bytes. */

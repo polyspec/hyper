@@ -14,7 +14,14 @@ use Polyspec\Hyper\RequestBody;
 $cases = json_decode((string) file_get_contents($argv[1]), true, 16, JSON_THROW_ON_ERROR);
 foreach ($cases as $index => $case) {
     $started = hrtime(true);
-    $read = new RequestBody($case['type'], $case['limit'], true, $case['valueLimit'], $case['partLimit'], $case['fileLimit']);
+    $read = new RequestBody(
+        $case['type'],
+        $case['limit'],
+        true,
+        $case['valueLimit'],
+        $case['partLimit'],
+        $case['fileLimit'],
+    );
     $input = fopen($case['body'], 'rb');
     $stopped = false;
     while (!$stopped && !feof($input)) {
@@ -44,7 +51,8 @@ foreach ($cases as $index => $case) {
                 $bytes += $file->size();
                 $target = "{$argv[2]}/php-{$index}-{$files}";
                 $file->moveTo($target);
-                hash_update($hash, "F\0{$name}\0{$file->filename()}\0{$file->contentType()}\0{$file->size()}\0" . hash_file('sha256', $target) . "\0");
+                $described = "F\0{$name}\0{$file->filename()}\0{$file->contentType()}\0{$file->size()}\0";
+                hash_update($hash, $described . hash_file('sha256', $target) . "\0");
                 unlink($target);
             }
         }
@@ -54,6 +62,9 @@ foreach ($cases as $index => $case) {
     echo json_encode([
         'result' => [$parts !== null, $stopped, $read->exceeded(), $values, $files, $bytes, hash_final($hash)],
         'ms' => round($ms, 1),
-        'cpu' => round(($usage['ru_utime.tv_sec'] + $usage['ru_stime.tv_sec']) * 1000 + ($usage['ru_utime.tv_usec'] + $usage['ru_stime.tv_usec']) / 1000),
+        'cpu' => round(
+            ($usage['ru_utime.tv_sec'] + $usage['ru_stime.tv_sec']) * 1000
+            + ($usage['ru_utime.tv_usec'] + $usage['ru_stime.tv_usec']) / 1000,
+        ),
     ]), "\n";
 }

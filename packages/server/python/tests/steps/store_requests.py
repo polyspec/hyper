@@ -59,8 +59,12 @@ class StoreRequests:
                     raise LookupError(f"the method {method} of the case is unknown")
                 elif method == "get":
                     results.append(JsonCodec.encode(store.get(*arguments)))
+                elif method == "set":
+                    store.set(*arguments)
+                elif method == "remove":
+                    store.remove(*arguments)
                 else:
-                    getattr(store, method)(*arguments)
+                    store.renew(*arguments)
         except Exception as error:  # noqa: BLE001 - the classes of the case decide what the failure is
             failure = self._failed("call", error, store)
         try:

@@ -32,6 +32,8 @@ export {
   type DecodedResponse,
   type RenderedParts,
 } from './response.js';
+export { applyHead, HeadError, type HeadPart } from './head.js';
+export { PageScripts, ScriptError, scriptKey, type ScriptElement, type ScriptPage } from './scripts.js';
 export { PageStylesheets, planStylesheets, StylesheetError, stylesheetKey, type StylesheetStep } from './stylesheets.js';
 export {
   Hyper,

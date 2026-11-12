@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import BinaryIO, Callable, Optional
 
 from ._exchange import Exchange
+from ._file_response import FileResponse
 from ._request_body import RequestBody
 from .app import App
 from ._record_session import RecordSession
@@ -56,9 +57,9 @@ def validate(
     ):
         raise ValueError(f"{files} is not an absolute directory")
     if around is not None and not callable(around):
-        raise ValueError("around must be a callable or None")
+        raise ValueError("the request hook is not callable (HY-97)")
     if written is not None and not callable(written):
-        raise ValueError("written must be a callable or None")
+        raise ValueError("the write hook is not callable (HY-99)")
 
 
 def header_lines(response: Response) -> list[tuple[str, str]]:
@@ -79,6 +80,22 @@ def public_file(files: str, method: str, target: str) -> Optional[Path]:
         return None
     file = Path(files) / path.lstrip("/")
     return file if file.is_file() else None
+
+
+def served_file(
+    files: Optional[str], method: str, target: str
+) -> Optional[FileResponse]:
+    """Returns the file of the public directory that a GET or HEAD request names, with its content type, its length
+    and its bytes, which are none for HEAD, or None without a public directory or such a file (HY-100)."""
+    served = None if files is None else public_file(files, method, target)
+    if served is None:
+        return None
+    data = served.read_bytes()
+    return FileResponse(
+        CONTENT_TYPES.get(served.suffix, "application/octet-stream"),
+        len(data),
+        b"" if method == "HEAD" else data,
+    )
 
 
 def read_body(read: Callable[[int], bytes], body: RequestBody, length: int) -> None:

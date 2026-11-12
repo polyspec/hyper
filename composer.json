@@ -40,7 +40,8 @@
     "autoload-dev": {
         "psr-4": {
             "Polyspec\\Hyper\\Tests\\": "packages/server/php/tests/",
-            "Polyspec\\Hyper\\Tests\\Program\\": "packages/server/php/tests/build/server/php/"
+            "Polyspec\\Hyper\\Tests\\Program\\": "packages/server/php/tests/build/server/php/",
+            "Polyspec\\Hyper\\Tests\\Contract\\": "var/contract-programs/"
         }
     },
     "config": {

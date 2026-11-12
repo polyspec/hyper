@@ -3,12 +3,12 @@
 // and their numbering, koSource, and one sentence (HYR-6) per English statement. `write` renders the documents; `check`
 // also fails when a committed document differs from its rendering. Usage: spec-docs.mts write|check [--root <dir>]
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import type { SchemaObject } from 'ajv';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sentences } from './recipe/rules.mts';
+import { isSchema } from './recipe/validators.mts';
 
 type Lang = 'en' | 'ko';
 type Text = { en: string; ko: string };
@@ -202,15 +202,19 @@ function main(argv: string[]): number {
   try {
     model = JSON.parse(readFileSync(contractPath, 'utf8'));
   } catch (error) {
-    problems.push(`contracts/protocol.json: ${(error as Error).message}`);
+    problems.push(`contracts/protocol.json: ${error instanceof Error ? error.message : String(error)}`);
   }
 
+  // The contract is the model that passed the schema.
+  let contract: Contract | undefined;
   if (model !== undefined) {
     const ajv = new Ajv2020({ strict: true, allErrors: true });
-    const schema = JSON.parse(readFileSync(path.join(here, 'schema', 'protocol.schema.json'), 'utf8')) as SchemaObject;
-    const validate = ajv.compile(schema);
+    const schema: unknown = JSON.parse(readFileSync(path.join(here, 'schema', 'protocol.schema.json'), 'utf8'));
+    if (!isSchema(schema)) throw new Error('scripts/schema/protocol.schema.json is no JSON object');
+    const validate = ajv.compile<Contract>(schema);
     if (validate(model)) {
-      problems.push(...semanticProblems(model as Contract));
+      contract = model;
+      problems.push(...semanticProblems(model));
     } else {
       for (const error of validate.errors ?? []) {
         problems.push(`contracts/protocol.json${error.instancePath}: ${error.message}`);
@@ -218,12 +222,11 @@ function main(argv: string[]): number {
     }
   }
 
-  if (problems.length > 0 || model === undefined) {
+  if (problems.length > 0 || contract === undefined) {
     for (const problem of problems) process.stderr.write(`${problem}\n`);
     return 1;
   }
 
-  const contract = model as Contract;
   const english = render(contract, 'en');
   const korean = render(contract, 'ko', sha256(english));
   const outputs: [string, string][] = [

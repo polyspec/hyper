@@ -44,5 +44,5 @@ export function readTree(
 /** The sources and tests the spec declares for one language. */
 export function readSources(root: string, lang: Lang, spec: Spec, validate: ValidateFunction<Sources>, extra: string[] = []): Sources {
   const language = spec.languages[lang];
-  return readTree(root, lang, language.sources, language.tests, validate, extra);
+  return readTree(root, lang, language.sources, language.tests, validate, [...extra, '--registry', spec.runners[lang].registry]);
 }

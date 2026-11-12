@@ -25,28 +25,50 @@ final class CaseRules
         'bodyNotContains' => 'excludes',
     ];
 
-    /** @return array<string, array<string, mixed>> the `caseFiles` of contracts/interfaces.json */
+    /** @return array<string, array<array-key, mixed>> the `caseFiles` of contracts/interfaces.json */
     public static function caseFiles(): array
     {
-        return Json::file(self::CONTRACTS . 'interfaces.json')['caseFiles'];
+        return self::declarations(Json::file(self::CONTRACTS . 'interfaces.json')['caseFiles'] ?? null, 'caseFiles');
     }
 
-    /** @param array<string, mixed> $declaration a field or an outcome */
+    /**
+     * Returns a map of declarations, such as the fields of a section, each of them a map.
+     *
+     * @return array<string, array<array-key, mixed>>
+     */
+    public static function declarations(mixed $value, string $what): array
+    {
+        $declarations = [];
+        foreach (Json::map($value, $what) as $name => $declaration) {
+            $declarations[(string) $name] = Json::map($declaration, "{$what}.{$name}");
+        }
+
+        return $declarations;
+    }
+
+    /** @param array<array-key, mixed> $declaration a field or an outcome */
     public static function visible(array $declaration): bool
     {
         $only = $declaration['only'] ?? null;
+        if ($only === null) {
+            return true;
+        }
 
-        return $only === null || in_array(self::LANGUAGE, $only['languages'] ?? [], true);
+        return in_array(self::LANGUAGE, Json::strings(Json::map($only, 'only')['languages'] ?? []), true);
     }
 
-    /** The comparison of a field: a response field has the comparison of its name (HYR-11). */
+    /**
+     * The comparison of a field: a response field has the comparison of its name (HYR-11).
+     *
+     * @param array<array-key, mixed> $field
+     */
     public static function kind(array $field, string $name): string
     {
         if (($field['role'] ?? null) === 'response') {
             return self::RESPONSE_KINDS[$name] ?? throw new \LogicException("$name has no response comparison");
         }
 
-        return $field['compare'] ?? throw new \LogicException("$name declares no compare");
+        return Json::string($field['compare'] ?? throw new \LogicException("$name declares no compare"));
     }
 
     /** Header names compare without regard to ASCII case (HY-130). */
@@ -57,16 +79,19 @@ final class CaseRules
         return str_contains(strtolower(end($parts)), 'header');
     }
 
-    /** @return array<string, mixed> the declaration of a dotted field name; undeclared names throw */
+    /**
+     * @param array<array-key, mixed> $fields
+     * @return array<array-key, mixed> the declaration of a dotted field name; undeclared names throw
+     */
     public static function field(array $fields, string $name, string $section): array
     {
-        $field = null;
+        $field = [];
         foreach (explode('.', $name) as $part) {
             if (!array_key_exists($part, $fields)) {
                 throw new \LogicException("$name is no declared field of $section");
             }
-            $field = $fields[$part];
-            $fields = $field['fields'] ?? [];
+            $field = Json::map($fields[$part], $name);
+            $fields = Json::map($field['fields'] ?? [], $name);
         }
 
         return $field;
@@ -112,20 +137,20 @@ final class CaseRules
     /**
      * The first visible input field of the case, or used fixture, that no step has read.
      *
-     * @param array<string, mixed> $decl
+     * @param array<array-key, mixed> $decl
      * @param array<string, true> $read
      */
     public static function unknownInput(array $decl, \stdClass $case, array $read): ?string
     {
-        foreach ($decl['fields'] ?? [] as $name => $field) {
+        foreach (self::declarations($decl['fields'] ?? [], 'fields') as $name => $field) {
             if (($field['role'] ?? null) !== 'input' || !self::visible($field)) {
                 continue;
             }
-            if (self::lookup($case, (string) $name)[0] && !self::covered($read, (string) $name)) {
-                return (string) $name;
+            if (self::lookup($case, $name)[0] && !self::covered($read, $name)) {
+                return $name;
             }
         }
-        foreach ($decl['uses'] ?? [] as $name) {
+        foreach (Json::strings($decl['uses'] ?? []) as $name) {
             if (!self::covered($read, $name)) {
                 return $name;
             }
@@ -137,7 +162,7 @@ final class CaseRules
     /**
      * The first visible expected field, or outcome, of the case that no step has compared.
      *
-     * @param array<string, mixed> $decl
+     * @param array<array-key, mixed> $decl
      * @param array<string, true> $compared
      * @param array<string, true> $comparedOutcomes
      */
@@ -147,36 +172,32 @@ final class CaseRules
         if ($path !== null) {
             return $path;
         }
-        foreach ($decl['outcomes'] ?? [] as $name => $outcome) {
+        foreach (self::declarations($decl['outcomes'] ?? [], 'outcomes') as $name => $outcome) {
             if (self::visible($outcome) && !isset($comparedOutcomes[$name])) {
-                return (string) $name;
+                return $name;
             }
         }
 
         return null;
     }
 
-    /** @param array<string, array<string, mixed>> $fields @param array<string, true> $compared */
-    private static function uncomparedField(array $fields, \stdClass $value, string $prefix, array $compared): ?string
+    /** @param array<string, true> $compared */
+    private static function uncomparedField(mixed $fields, \stdClass $value, string $prefix, array $compared): ?string
     {
-        foreach ($fields as $name => $field) {
-            $path = $prefix === '' ? (string) $name : "$prefix.$name";
-            $present = property_exists($value, (string) $name);
-            if (($field['role'] ?? null) !== 'expected' || !self::visible($field) || !$present) {
+        foreach (self::declarations($fields, 'fields') as $name => $field) {
+            $expected = ($field['role'] ?? null) === 'expected' && self::visible($field);
+            if (!$expected || !property_exists($value, $name)) {
                 continue;
             }
-            if (isset($field['fields'])) {
-                $child = $value->$name;
-                if ($child instanceof \stdClass) {
-                    $inner = self::uncomparedField($field['fields'], $child, $path, $compared);
-                    if ($inner !== null) {
-                        return $inner;
-                    }
-                }
-                continue;
-            }
-            if (!isset($compared[$path])) {
-                return $path;
+            $path = $prefix === '' ? $name : "$prefix.$name";
+            $child = $value->$name;
+            $inner = match (true) {
+                !isset($field['fields']) => isset($compared[$path]) ? null : $path,
+                $child instanceof \stdClass => self::uncomparedField($field['fields'], $child, $path, $compared),
+                default => null,
+            };
+            if ($inner !== null) {
+                return $inner;
             }
         }
 
@@ -192,15 +213,15 @@ final class CaseRules
     /** @return list<string> */
     public static function needles(mixed $expected): array
     {
-        return is_string($expected) ? [$expected] : array_map(strval(...), (array) $expected);
+        return is_string($expected) ? [$expected] : Json::strings($expected);
     }
 
     /** `absent`: no expected name is in the observed map, names without regard to case. */
     public static function absent(mixed $expected, mixed $observed): bool
     {
         $have = self::normalize(self::mapOf($observed, true) ?? [], true);
-        foreach ($expected as $name) {
-            if (array_key_exists(strtolower((string) $name), $have)) {
+        foreach (Json::strings($expected) as $name) {
+            if (array_key_exists(strtolower($name), $have)) {
                 return false;
             }
         }
@@ -246,10 +267,14 @@ final class CaseRules
     {
         $have = self::mapOf($observed, true) ?? [];
 
-        return array_map(strval(...), array_keys($have)) === array_map(strval(...), (array) $expected);
+        return array_map(strval(...), array_keys($have)) === Json::strings($expected);
     }
 
-    /** The members of a map, or null for a value that is not a map. An empty array counts as a map only if asked. */
+    /**
+     * The members of a map, or null for a value that is not a map. An empty array counts as a map only if asked.
+     *
+     * @return ?array<array-key, mixed>
+     */
     public static function mapOf(mixed $value, bool $emptyIsMap): ?array
     {
         if ($value instanceof \stdClass) {
@@ -265,7 +290,10 @@ final class CaseRules
         return array_is_list($value) ? null : $value;
     }
 
-    /** @param array<array-key, mixed> $map @return array<string, mixed> */
+    /**
+     * @param array<array-key, mixed> $map
+     * @return array<string, mixed>
+     */
     public static function normalize(array $map, bool $ci): array
     {
         $out = [];
@@ -285,8 +313,8 @@ final class CaseRules
      * The first key of the file, or of a case, that its declaration does not declare, or an expected field without
      * `fields` that has no comparison or sentence.
      *
-     * @param array<string, array<string, mixed>> $sections
-     * @param array<string, mixed> $fixtures
+     * @param array<array-key, mixed> $sections
+     * @param array<array-key, mixed> $fixtures
      */
     public static function undeclared(array $sections, array $fixtures, \stdClass $data): ?string
     {
@@ -297,7 +325,7 @@ final class CaseRules
             if (!array_key_exists($key, $sections) || !is_array($value)) {
                 return "FILE_UNDECLARED $key";
             }
-            $fields = $sections[$key]['fields'] ?? [];
+            $fields = Json::map($sections[$key], "the section {$key}")['fields'] ?? [];
             foreach ($value as $index => $case) {
                 $path = self::unknownKey($case, $fields, "$key.$index", true);
                 if ($path !== null) {
@@ -313,43 +341,42 @@ final class CaseRules
         return null;
     }
 
-    /** @param array<string, array<string, mixed>> $fields */
-    private static function unknownKey(mixed $value, array $fields, string $path, bool $case): ?string
+    /** Returns the path of the first key of a value of a case that the fields do not declare, or null. */
+    private static function unknownKey(mixed $value, mixed $fields, string $path, bool $case): ?string
     {
-        if (!$value instanceof \stdClass) {
-            return null;
-        }
-        foreach (get_object_vars($value) as $name => $child) {
-            $name = (string) $name;
-            $childPath = "$path.$name";
-            if (!array_key_exists($name, $fields) && !($case && in_array($name, self::CASE_KEYS, true))) {
-                return $childPath;
-            }
-            if (isset($fields[$name]['fields'])) {
-                $inner = self::unknownKey($child, $fields[$name]['fields'], $childPath, false);
-                if ($inner !== null) {
-                    return $inner;
-                }
+        $declared = self::declarations($fields, 'fields');
+        foreach ($value instanceof \stdClass ? get_object_vars($value) : [] as $name => $child) {
+            $known = array_key_exists($name, $declared) || ($case && in_array($name, self::CASE_KEYS, true));
+            $inner = match (true) {
+                !$known => "$path.$name",
+                isset($declared[$name]['fields']) => self::unknownKey(
+                    $child,
+                    $declared[$name]['fields'],
+                    "$path.$name",
+                    false,
+                ),
+                default => null,
+            };
+            if ($inner !== null) {
+                return $inner;
             }
         }
 
         return null;
     }
 
-    /** @param array<string, array<string, mixed>> $fields */
-    private static function undeclaredLeaf(array $fields, string $path): ?string
+    /** Returns the path of the first expected field without `fields`, comparison and sentence, or null. */
+    private static function undeclaredLeaf(mixed $fields, string $path): ?string
     {
-        foreach ($fields as $name => $field) {
-            $fieldPath = "$path.$name";
-            if (isset($field['fields'])) {
-                $inner = self::undeclaredLeaf($field['fields'], "$fieldPath.fields");
-                if ($inner !== null) {
-                    return $inner;
-                }
-                continue;
-            }
-            if (($field['role'] ?? null) === 'expected' && !isset($field['compare']) && !isset($field['sentence'])) {
-                return $fieldPath;
+        foreach (self::declarations($fields, 'fields') as $name => $field) {
+            $stated = isset($field['compare']) || isset($field['sentence']);
+            $inner = match (true) {
+                isset($field['fields']) => self::undeclaredLeaf($field['fields'], "$path.$name.fields"),
+                ($field['role'] ?? null) === 'expected' && !$stated => "$path.$name",
+                default => null,
+            };
+            if ($inner !== null) {
+                return $inner;
             }
         }
 

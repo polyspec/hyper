@@ -36,6 +36,10 @@ def files(case) -> None:
             for name, items in request.files()
         ],
     )
+    if case.has("limits"):
+        case.compare(
+            "over", [request.file_over(limit) for limit in case.input("limits")]
+        )
 
 
 def targets(case) -> None:
@@ -106,6 +110,7 @@ def values(case) -> None:
     case.compare("valid", request.valid_input())
     case.compare("bodySize", request.body_size())
     case.compare("currentPath", request.current_path())
+    case.compare("mediaType", request.media_type())
     if case.has("wantsJson"):
         case.compare("wantsJson", _kind(request.wants_json))
     if case.has("isRegionRequest"):

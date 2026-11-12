@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
+use Polyspec\Hyper\App;
 use Polyspec\Hyper\Manifest;
 use Polyspec\Hyper\Region;
 use Polyspec\Hyper\Tests\CaseReader;
@@ -13,7 +14,7 @@ use Polyspec\Hyper\Tests\Support\Plain;
 /** HY-2, HY-37: the cases of contracts/manifest.json, the manifest file that the manifest check reads or rejects. */
 final class ManifestSteps
 {
-    /** Records the error of the read of the manifest file of the case, or null. */
+    /** Records the error with which the open of an application refuses the manifest file of the case, or null. */
     public static function checks(CaseReader $case): void
     {
         $stated = array_values(array_filter(['manifest', 'text', 'bytes'], $case->has(...)));
@@ -31,11 +32,24 @@ final class ManifestSteps
                 throw new \UnexpectedValueException('the case field bytes is not hexadecimal digits');
             }
         }
+        $directory = sys_get_temp_dir() . '/hyper-manifest-' . bin2hex(random_bytes(6));
+        mkdir($directory);
+        $file = "{$directory}/manifest.json";
+        // The program does not exist: an open that fails only for it has read the manifest (HY-2.7).
+        $program = "{$directory}/absent";
         $failure = null;
         try {
-            self::read($bytes);
-        } catch (\Throwable $error) {
-            $failure = $error;
+            file_put_contents($file, $bytes);
+            App::open(manifest: $file, program: $program, handlers: [], timezone: 'Z');
+
+            throw new \LogicException('the application opened without a program');
+        } catch (\InvalidArgumentException $error) {
+            $failure = str_starts_with($error->getMessage(), "{$program}/php of the server program") ? null : $error;
+        } finally {
+            if (is_file($file)) {
+                unlink($file);
+            }
+            rmdir($directory);
         }
         $case->compare('rejected', $failure);
     }
@@ -49,8 +63,12 @@ final class ManifestSteps
         $case->compare('routes', array_map(strval(...), array_keys($manifest->routes)));
         if ($case->has('region')) {
             $name = Json::string($case->input('region'));
-            $region = $manifest->region($name) ?? throw new \UnexpectedValueException("the manifest has no region {$name}");
+            $region = $manifest->region($name)
+                ?? throw new \UnexpectedValueException("the manifest has no region {$name}");
             $case->compare('keep', Plain::map($region->keep));
+            if ($case->has('template')) {
+                $case->compare('template', $region->template);
+            }
             if ($case->has('kinds')) {
                 $case->compare('keptPaths', $region->keptPaths(Json::strings($case->input('kinds'))));
             }

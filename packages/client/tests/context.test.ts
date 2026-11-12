@@ -1,8 +1,8 @@
 import { parse, type Template } from '@polyspec/template';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApplication, Hyper, type Application, type DocumentAdapter, type HtmxApi, type KeepStorage, type RegionElement, type RequestContext, type TemplateIndex } from '../src/index.js';
-import { defined } from './values.js';
-import { manifest, sources } from './application.js';
+import { defined, isStringRecord } from './values.js';
+import { jsonResponse, manifest, sources } from './application.js';
 
 // The build id of the test page, which its meta element holds (HY-125), and another build id (HYC-22).
 const BUILD = 'a'.repeat(64);
@@ -24,7 +24,7 @@ class ContextDocument implements DocumentAdapter {
   readonly mounted: string[] = [];
   // The HTML of every stylesheet step, which holds the layout of a region response (HYC-15).
   readonly styled: string[] = [];
-  async stylesheets(html: string): Promise<() => void> {
+  async head(html: string): Promise<() => void> {
     this.styled.push(html);
     return () => undefined;
   }
@@ -92,13 +92,6 @@ function contextBody(context: object | null, build = BUILD): string {
   return responseBody('context', build, context, { content: {} });
 }
 
-// A JSON response whose URL is `url`, as the server answers it (HY-17).
-function jsonResponse(url: string, body: string): Response {
-  const response = new Response(body, { headers: { 'content-type': 'application/vnd.hyper+json' } });
-  Object.defineProperty(response, 'url', { value: url });
-  return response;
-}
-
 // The client of a test: its page, its swaps, its elements and the requests that it sends (HYC-3, HYC-22).
 function client(options: { page?: ContextDocument; basePath?: string; currentUrl?: string; elements?: Map<string, ReturnType<typeof element>>; hy?: { textContent: string }; layout?: string } = {}) {
   const page = options.page ?? new ContextDocument();
@@ -142,7 +135,9 @@ async function regionRequest(c: Client, action: string, answer: () => Response):
   const ctx = startRegion(c, action);
   const sent: Record<string, string>[] = [];
   vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
-    sent.push({ ...(init.headers as Record<string, string>) });
+    const headers = init.headers;
+    if (!isStringRecord(headers)) throw new Error('the request headers are not a record of strings');
+    sent.push({ ...headers });
     return answer();
   });
   try {
@@ -195,15 +190,15 @@ describe('the build of the page (HYC-22, HY-125)', () => {
 
   it('loads the page URL of a region response of another build as a new document, without rendering (HYC-22)', async () => {
     const c = client();
-    const { hyper, swaps, page } = c;
-    const { ctx } = await regionRequest(c, '/context', () => jsonResponse('http://localhost/context?page=2', contextBody(null, OTHER_BUILD)));
+    const { swaps, page } = c;
+    await regionRequest(c, '/context', () => jsonResponse('http://localhost/context?page=2', contextBody(null, OTHER_BUILD)));
     expect(page.assigned).toEqual(['/context?page=2']);
     expect(swaps).toEqual([]);
   });
 
   it('strips the base path from the page URL of another build (HYC-22, HY-62)', async () => {
     const c = client({ basePath: '/api' });
-    const { hyper, page, swaps } = c;
+    const { page, swaps } = c;
     await regionRequest(c, '/context?page=2', () => jsonResponse('http://localhost/api/context?page=2', contextBody(null, OTHER_BUILD)));
     expect(page.assigned).toEqual(['/context?page=2']);
     expect(swaps).toEqual([]);
@@ -226,7 +221,7 @@ describe('the build of the page (HYC-22, HY-125)', () => {
 describe('the context of the application (HYC-22, HY-122, HY-128)', () => {
   it('sends no Hyper-Context header before a response holds the context, and sends the held hash after one (HYC-22, HY-127)', async () => {
     const c = client();
-    const { hyper, swaps } = c;
+    const { swaps } = c;
     const first = await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody({ hash: HASH, value: { name: 'Board' } })));
     expect(first.headers).not.toHaveProperty('Hyper-Context');
     expect(swaps).toEqual([{ region: 'content', text: rendered('Board') }]);
@@ -236,7 +231,7 @@ describe('the context of the application (HYC-22, HY-122, HY-128)', () => {
 
   it('keeps the held context when a response without value has the held hash, and renders it in shared.context (HYC-22)', async () => {
     const c = client();
-    const { hyper, swaps } = c;
+    const { swaps } = c;
     await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody({ hash: HASH, value: { name: 'Board' } })));
     await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody({ hash: HASH })));
     expect(swaps.map((swap) => swap.text)).toEqual([rendered('Board'), rendered('Board')]);
@@ -244,7 +239,7 @@ describe('the context of the application (HYC-22, HY-122, HY-128)', () => {
 
   it('replaces the held context with the value of a response (HYC-22)', async () => {
     const c = client();
-    const { hyper, swaps } = c;
+    const { swaps } = c;
     await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody({ hash: HASH, value: { name: 'Board' } })));
     const replaced = await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody({ hash: OTHER_HASH, value: { name: 'Post' } })));
     expect(swaps.map((swap) => swap.text)).toEqual([rendered('Board'), rendered('Post')]);
@@ -253,7 +248,7 @@ describe('the context of the application (HYC-22, HY-122, HY-128)', () => {
 
   it('marks the region and renders nothing for a response without value whose hash differs from the held hash (HYC-14, HYC-22)', async () => {
     const c = client();
-    const { hyper, swaps, elements } = c;
+    const { swaps, elements } = c;
     await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody({ hash: HASH, value: { name: 'Board' } })));
     await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody({ hash: OTHER_HASH })));
     expect(swaps.map((swap) => swap.text)).toEqual([rendered('Board')]);
@@ -262,7 +257,7 @@ describe('the context of the application (HYC-22, HY-122, HY-128)', () => {
 
   it('marks the region for a response without value when no context is held (HYC-14, HYC-22)', async () => {
     const c = client();
-    const { hyper, swaps, elements } = c;
+    const { swaps, elements } = c;
     await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody({ hash: HASH })));
     expect(swaps).toEqual([]);
     expect(defined(elements.get('content'), 'the element content').attributes.get('hy-error')).toBe('0');
@@ -270,7 +265,6 @@ describe('the context of the application (HYC-22, HY-122, HY-128)', () => {
 
   it('sends no Hyper-Context header for an application without a context member, and keeps the held hash of none (HY-128)', async () => {
     const c = client();
-    const { hyper } = c;
     await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody(null)));
     const next = await regionRequest(c, '/context', () => jsonResponse('http://localhost/context', contextBody(null)));
     expect(next.headers).not.toHaveProperty('Hyper-Context');
@@ -293,7 +287,9 @@ describe('the context of the application (HYC-22, HY-122, HY-128)', () => {
     }, {
       basePath: '', element: (id) => element(id), storage: emptyStorage, document: new ContextDocument(), currentUrl: () => 'http://localhost/list?page=2',
       fetch: async (_url, init) => {
-        requests.push({ ...(init.headers as Record<string, string>) });
+        const headers = init.headers;
+        if (!isStringRecord(headers)) throw new Error('the request headers are not a record of strings');
+        requests.push({ ...headers });
         return jsonResponse('http://localhost/list?page=2', list);
       },
     });

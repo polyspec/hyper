@@ -75,9 +75,9 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
   const files = options.files;
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
   const written = options.written;
-  if (written !== undefined && typeof written !== 'function') throw new Error('hyper: the write hook must be a function');
+  if (written !== undefined && typeof written !== 'function') throw new Error('hyper: the write hook is not callable (HY-99)');
   const around = options.around;
-  if (around !== undefined && typeof around !== 'function') throw new Error('hyper: the request hook must be a function');
+  if (around !== undefined && typeof around !== 'function') throw new Error('hyper: the request hook is not callable (HY-97)');
   return async (incoming, outgoing) => {
     const started = performance.now();
     // The connection closed before the response was written (HY-67).
@@ -99,6 +99,8 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     let disconnectedRequest: Request | null = null;
     // The body as it is read, whose directory holds the files of a body read in chunks (HY-131).
     let read: RequestBody | null = null;
+    // The request that holds `read`, which releases the files of the body (HY-131.14).
+    let holder: Request | null = null;
     try {
       const file = files === undefined ? null : publicFile(files, incoming);
       if (file !== null) {
@@ -111,6 +113,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       read = new RequestBody(incoming.headers['content-type'] ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'), app.valueLimit, app.partLimit, app.fileLimit);
       await readBody(incoming, read, app.bodyLimit);
       request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body: read.held(), bodySize: read.size(), https }, read);
+      holder = request;
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
       const last: { request?: Request; reply?: Reply } = {};
       // Opens the session of the request by its session cookie, answers with the application, closes the session and
@@ -168,8 +171,10 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       try {
         if (stopped && reply !== null) app.disconnected(disconnectedRequest ?? request, started, reply);
       } finally {
-        // HY-131.14: the files of the request are removed after its hooks returned.
-        await read?.remove();
+        // HY-131.14: the files of the request are removed after its hooks returned; a body that failed while it was read
+        // has no request that holds it.
+        if (holder === null) await read?.remove();
+        else await holder.release();
       }
     }
   };

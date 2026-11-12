@@ -63,7 +63,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `onResponse` | hyper가 스스로 응답하는 것을 포함해 모든 응답마다 요청, 응답, 경과 밀리초, 요청의 reply로 한 번 호출한다. 요청은 `node:http`가 request line을 읽지 못한 경우에만 null이고, 서버가 라우팅 전에 응답했으면 reply는 비어 있다(HY-60). |
 | `onDisconnect` | 서버가 응답을 쓰기 전에 client가 연결을 닫은 요청의 요청, 경과 밀리초, reply로 한 번 호출한다. 서버는 그 요청의 다른 loader, action, 렌더를 실행하지 않고 응답을 쓰지 않는다(HY-67). |
 | `log` | 처리하지 않은 오류의 log 줄을 받는다(HY-43). 기본값은 표준 오류에 쓴다. |
-| `clientRendering` | 클라이언트 렌더 페이지. `shell`은 정적 셸의 절대 경로, `basePath`는 `/_props` 같은 데이터 기본 경로, `selects(request)`는 choice `{ chosen, value }`나 서버가 기다리는 그 promise를 반환한다. 클라이언트 렌더 페이지의 요청이면 `chosen`은 `true`이고, 요청의 모든 loader와 action은 `request.selection()`으로 `value`를 읽는다. 선택이 고른 페이지의 HTML 요청은 `Cache-Control: no-cache`와 함께 셸을 받고, 그 JSON 요청과 action은 데이터 기본 경로를 쓴다. 다른 요청은 `basePath`로 응답한다(HY-62). |
+| `clientRendering` | 클라이언트 렌더 페이지. `shell`은 정적 셸의 절대 경로, `basePath`는 `/_props` 같은 데이터 기본 경로, `selects(request)`는 choice `new Choice(chosen, value)`나 서버가 기다리는 그 promise를 반환하고, 다른 값은 일반 객체 `{ chosen, value }`도 요청을 실패시킨다(HY-62.8, HY-62.11). 클라이언트 렌더 페이지의 요청이면 `chosen`은 `true`이고, 요청의 모든 loader와 action은 `request.selection()`으로 `value`를 읽는다. 선택이 고른 페이지의 HTML 요청은 `Cache-Control: no-cache`와 함께 셸을 받고, 그 JSON 요청과 action은 데이터 기본 경로를 쓴다. 다른 요청은 `basePath`로 응답한다(HY-62). |
 
 `app.bind(key, factory)`는 애플리케이션 service를 등록한다. service는 처음 쓸 때 한 번 만든다. factory가 없는 key의 `services.get(key)`는 요청을 500으로 실패시킨다.
 
@@ -73,7 +73,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 
 | 필드 | 타입 | 뜻 |
 |---|---|---|
-| `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
+| `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `browser()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
 | `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `private`나 `no-store`를 담은 `cacheControl(value)`(HY-52), Referrer-Policy 명세의 토큰을 받는 `referrerPolicy(value)`(HY-103), 액션의 `renewSession()`(HY-72). `note(name, value)`는 응답 hook을 위한 값을 기록하며, hook은 이름과 값의 쌍 목록인 `notes()`로 읽는다(HY-60) |
 | `services` | `Container<S>` | `get(key)`는 `app.bind`가 등록한 service를 반환한다 |
 

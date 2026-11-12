@@ -1,4 +1,5 @@
 // Applies the stylesheet links of the head of a source document to the head of the page (HYC-15).
+import { applyHead, HeadError, type HeadPart } from './head.js';
 
 // One step of an application: the index of a source link, and the index of the page link that is kept for it, or
 // null when a copy of the source link is inserted.
@@ -33,7 +34,7 @@ export function planStylesheets(page: readonly string[], source: readonly string
 }
 
 // A stylesheet link that failed to load (HYC-14, HYC-15).
-export class StylesheetError extends Error {
+export class StylesheetError extends HeadError {
   constructor(href: string) {
     super(`hyper: stylesheet ${href} failed to load`);
     this.name = 'StylesheetError';
@@ -56,11 +57,11 @@ export class PageStylesheets {
     this.page = page;
   }
 
-  // Inserts the missing stylesheet links of the head of a source document in its order and waits until every inserted
-  // link and every kept link that is still loading has loaded. The returned function removes every other stylesheet
-  // link of the page; it removes nothing when a later application has started. When a link fails to load, the links
-  // that this application inserted are removed and the promise rejects (HYC-15).
-  async apply(source: Document): Promise<() => void> {
+  // Inserts the missing stylesheet links of the head of a source document in its order. The part waits until every
+  // inserted link and every kept link that is still loading has loaded, and it removes the links that it inserted.
+  // After the content is shown it removes every other stylesheet link of the page; it removes nothing when a later
+  // application has started (HYC-15).
+  insert(source: Document): HeadPart {
     const generation = ++this.generation;
     const present = this.links(this.page);
     const wanted = this.links(source);
@@ -84,16 +85,25 @@ export class PageStylesheets {
       chosen.push(link);
       inserted.push(link);
     }
-    try {
-      await Promise.all(chosen.flatMap((link) => this.loading.get(link) ?? []));
-    } catch (error) {
-      for (const link of inserted) link.remove();
-      throw error;
-    }
-    return () => {
-      if (generation !== this.generation) return;
-      for (const { element } of this.links(this.page)) if (!chosen.includes(element)) element.remove();
+    return {
+      wait: async () => {
+        await Promise.all(chosen.flatMap((link) => this.loading.get(link) ?? []));
+      },
+      remove: () => {
+        for (const link of inserted) link.remove();
+      },
+      settle: () => {
+        if (generation !== this.generation) return;
+        for (const { element } of this.links(this.page)) if (!chosen.includes(element)) element.remove();
+      },
     };
+  }
+
+  // Inserts the missing stylesheet links of the head of a source document and waits until they have loaded; the
+  // returned function removes every other stylesheet link of the page. When a link fails to load, the links that this
+  // application inserted are removed and the promise rejects (HYC-15).
+  apply(source: Document): Promise<() => void> {
+    return applyHead([() => this.insert(source)]);
   }
 
   private links(document: Document): Link[] {

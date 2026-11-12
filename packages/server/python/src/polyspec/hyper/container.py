@@ -13,7 +13,9 @@ from typing import Callable
 class Container:
     """Calls a function with arguments chosen by parameter type (HY-62)."""
 
-    __factories: dict[type, Callable[[], object]] = field(default_factory=dict, init=False)
+    __factories: dict[type, Callable[[], object]] = field(
+        default_factory=dict, init=False
+    )
     __instances: dict[type, object] = field(default_factory=dict, init=False)
 
     def bind(self, cls: type, factory: "callable[[], object]") -> None:

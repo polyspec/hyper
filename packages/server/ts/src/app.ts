@@ -5,7 +5,7 @@ import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
 import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type TemplateIndex } from '@polyspec/hyper-client';
 import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@polyspec/template/render';
-import type { Choice } from './choice.js';
+import { Choice } from './choice.js';
 import type { ClientRendering } from './client-rendering.js';
 import { Disconnected } from './disconnected.js';
 import { InvalidAccept } from './invalid-accept.js';
@@ -38,6 +38,7 @@ import { Flash } from './flash.js';
 import { Session } from './session.js';
 import type { SessionStore } from './session-store.js';
 import type { Data, Value } from './values.js';
+import { ArgumentCountError } from './argument-count-error.js';
 
 // The one argument of every loader and action: the request, the reply of the request and the services that the
 // application binds by key.
@@ -161,6 +162,12 @@ export interface AppParts<S extends object> {
  */
 export type Answer = { stopped: false; response: Response; reply: Reply } | { stopped: true; reply: Reply };
 
+// The names of the options of `open` and of a server, the members of their options records (HY-106.9).
+const APP_REQUIRED = ['manifest', 'build', 'templates', 'handlers', 'timezone'];
+const APP_OPTIONAL = ['basePath', 'https', 'frameAncestors', 'bodyLimit', 'formTypes', 'fileLimit', 'responseLimit', 'valueLimit', 'partLimit', 'onResponse', 'clientRendering', 'onDisconnect', 'log', 'context', 'functions'];
+const SERVER_REQUIRED: string[] = [];
+const SERVER_OPTIONAL = ['files', 'written', 'around'];
+
 // The media types of the request bodies that an application may accept (HY-59).
 const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
 // The media types of the page and of the JSON of hyper, in the order of ties (HY-116).
@@ -234,6 +241,8 @@ export class App<S extends object = Record<string, never>> {
   // Creates an application from its manifest, the template files of the asset build and the handlers that load
   // data and run actions. It loads every template that a route needs, so a missing template fails here.
   static async open<S extends object = Record<string, never>>(options: AppOptions<S>): Promise<App<S>> {
+    ArgumentCountError.between(arguments.length, 1, 1);
+    ArgumentCountError.members(options, APP_REQUIRED, APP_OPTIONAL);
     const basePath = options.basePath ?? '';
     if (basePath !== '' && (!basePath.startsWith('/') || basePath.endsWith('/'))) {
       throw new Error(`hyper: base path ${basePath} must start with / and must not end with /`);
@@ -259,7 +268,7 @@ export class App<S extends object = Record<string, never>> {
     App.absolutePaths(options);
     const build = Build.read(options.build);
     if (options.context !== undefined && typeof options.context !== 'function') throw new Error('hyper: the context must be a function (HY-106)');
-    if (options.onDisconnect !== undefined && typeof options.onDisconnect !== 'function') throw new Error('hyper: the disconnect hook must be a function (HY-67)');
+    if (options.onDisconnect !== undefined && typeof options.onDisconnect !== 'function') throw new Error('hyper: the disconnect hook is not callable (HY-67)');
     const manifest = checkManifest(App.readJsonFile(options.manifest));
     // HY-118: the representations of each route, by the route name. The manifest is decoded with maps for objects,
     // because the parameters of an entry keep the order of the manifest, which a plain object does not keep for a name
@@ -416,16 +425,21 @@ export class App<S extends object = Record<string, never>> {
 
   // Registers the factory of an application service.
   bind<K extends keyof S>(key: K, factory: () => S[K]): void {
+    ArgumentCountError.between(arguments.length, 2, 2);
     this.services.bind(key, factory);
   }
 
   // Returns an HTTP server that answers every request with this application and its sessions.
   server(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server {
+    ArgumentCountError.between(arguments.length, 1, 2);
+    ArgumentCountError.members(options, SERVER_REQUIRED, SERVER_OPTIONAL);
     return createServer(this, sessions, options);
   }
 
   // Returns the node:http request listener that `server` installs (HY-100).
   listener(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener {
+    ArgumentCountError.between(arguments.length, 1, 2);
+    ArgumentCountError.members(options, SERVER_REQUIRED, SERVER_OPTIONAL);
     return createListener(this, sessions, options);
   }
 
@@ -434,6 +448,7 @@ export class App<S extends object = Record<string, never>> {
   // response is reported with the milliseconds since `started`, a performance.now() value that defaults to now
   // (HY-60).
   async handle(request: Request, store: SessionStore, started = performance.now()): Promise<Response> {
+    ArgumentCountError.between(arguments.length, 2, 3);
     const answer = await this.respond(request, store, started);
     if (answer.stopped) throw new Error('hyper: a request stopped without the signal of a closed connection');
     return answer.response;
@@ -546,10 +561,11 @@ export class App<S extends object = Record<string, never>> {
   private async clientChoice(request: Request): Promise<Choice | null> {
     if (this.client === null) return null;
     const choice: unknown = await this.client.selects(request);
-    if (typeof choice !== 'object' || choice === null || !('chosen' in choice) || typeof choice.chosen !== 'boolean' || !('value' in choice) || choice.value === undefined) {
+    // HY-62.8: only an instance of Choice whose chosen is a boolean and whose value is not undefined is a choice.
+    if (!(choice instanceof Choice) || typeof choice.chosen !== 'boolean' || choice.value === undefined) {
       throw new Error('hyper: the selection of the client rendering did not return a choice');
     }
-    return { chosen: choice.chosen, value: choice.value };
+    return choice;
   }
 
   // Answers a client-rendered request outside the data base path: the static shell for a page (HY-62). The path is

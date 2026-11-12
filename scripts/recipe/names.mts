@@ -2,7 +2,7 @@
 // the vocabulary terms. Pure functions; the checks that use them live in the modules next to this one.
 
 import path from 'node:path';
-import { type Lang, type Member, type Visibility } from './types.mts';
+import { type Lang, type Member, type SpecType, type Visibility } from './types.mts';
 
 const CTOR_NAMES = ['__construct', '__init__', 'constructor'];
 
@@ -59,6 +59,14 @@ export function expectedNative(lang: Lang, member: Pick<Member, 'id' | 'kind' | 
 /** The last name of a native symbol: `Csrf.raw`, `Polyspec\Hyper\Csrf::raw` and `_csrf.py::Csrf.__init__` all give the member. */
 export function symbolName(symbol: string): string {
   return symbol.split('::').pop()?.split('.').pop() ?? symbol;
+}
+
+/** The field keys of a spec type that apply to a language, as words; quotes around a key do not count. */
+export function fieldWords(t: SpecType, lang: Lang): string[] {
+  return Object.entries(t.shape.fields ?? {})
+    .filter(([, f]) => typeof f === 'string' || f.only === undefined || f.only.languages.includes(lang))
+    .map(([key]) => words(key.replace(/^["']|["']$/gu, '')))
+    .sort();
 }
 
 /** Python has no `private`: a private member is `_`-prefixed and reads as internal. */

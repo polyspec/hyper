@@ -66,10 +66,11 @@ test('fails with the path when --build is not an absolute path (HY-125)', () => 
   }
 });
 
-test('fails with the absolute path of a missing --build file (HY-125)', () => {
+/** Runs the server build with a build file of the given content, or with a missing file, and expects its refusal with the path. */
+function refusesBuild(content: string | undefined): void {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-server-build-'));
   try {
-    const file = join(directory, 'missing', 'build.json');
+    const file = content === undefined ? join(directory, 'missing', 'build.json') : buildFile(directory, content);
     const output = join(directory, 'server');
     const result = server(output, '--build', file);
     assert.notEqual(result.status, 0);
@@ -78,6 +79,10 @@ test('fails with the absolute path of a missing --build file (HY-125)', () => {
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
+}
+
+test('fails with the absolute path of a missing --build file (HY-125)', () => {
+  refusesBuild(undefined);
 });
 
 test('builds a template placed with scope arguments, which keeps its inputs (HY-73.16)', () => {
@@ -100,29 +105,9 @@ test('builds a template placed with scope arguments, which keeps its inputs (HY-
 });
 
 test('fails with the path when the build id is not 64 lowercase hexadecimal characters (HY-125)', () => {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-server-build-'));
-  try {
-    const file = buildFile(directory, '{"build":"ABC"}');
-    const output = join(directory, 'server');
-    const result = server(output, '--build', file);
-    assert.notEqual(result.status, 0);
-    assert.ok(result.stderr.includes(file), result.stderr);
-    assert.equal(existsSync(output), false);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
+  refusesBuild('{"build":"ABC"}');
 });
 
 test('fails with the path when the file holds another key besides build (HY-125)', () => {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-server-build-'));
-  try {
-    const file = buildFile(directory, `{"build":"${id}","other":"x"}`);
-    const output = join(directory, 'server');
-    const result = server(output, '--build', file);
-    assert.notEqual(result.status, 0);
-    assert.ok(result.stderr.includes(file), result.stderr);
-    assert.equal(existsSync(output), false);
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
+  refusesBuild(`{"build":"${id}","other":"x"}`);
 });

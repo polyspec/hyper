@@ -234,7 +234,7 @@ node-fixtures: packages contract-programs ## Build the template files of the PHP
 lint-ts: packages
 
 assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
-	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
 
 hyper-test-js: ## Run the browser code tests, including the browser case runner (HYR-7), and the type check
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
@@ -252,12 +252,6 @@ hyper-test-php: server-fixtures ext ## Run the server package tests, the case ru
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,PHPUnit with the generated program,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE)) \
 	$(call check,PHPUnit with the native extension,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php-extension.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
-	$(checks_result)
-
-.PHONY: python-file-parts-test
-python-file-parts-test: server-fixtures ## Run the Python multipart rendering cases (HY-113, HY-114); the cases of contracts/fields.json run in hyper-test-python
-	@failed=; \
-	$(call check,multipart application cases,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests/render -t $(PYTHON_PACKAGE) -p render_files.py) \
 	$(checks_result)
 
 hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7)
@@ -287,6 +281,7 @@ templates-check: ## Check hx- attributes (HC-6) and region placements (HY-3, HY-
 # itself (S9 of kit). scripts/check-parity.mts imports the types of @polyspec/hyper-client, which the package's build writes
 # to its dist, so packages runs first.
 typecheck: packages ## Check the types of the TypeScript of scripts/, tests/ and benchmarks/ with the tsc of node_modules (tsconfig.json)
+	@test -d $(RECIPE_TYPESCRIPT) || { echo 'typecheck needs the pinned TypeScript of scripts/recipe/typescript, whose declarations scripts/recipe/read-node.mts imports: run make install-packages'; exit 1; }
 	$(TSC) -p tsconfig.json
 
 .PHONY: toolchain-policy-test
@@ -300,7 +295,7 @@ hyper-test-scripts: packages assets server node-server ## Run the tests of the c
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),$(wildcard tests/scripts/*.test.mts))
 
 # The recipe check (HYR-8) and the candidate of its spec (HYR-10). The TypeScript reader needs the pinned TypeScript of
-# scripts/recipe/typescript, which `npm ci --prefix scripts/recipe/typescript` installs. The case results (HYR-7) are the
+# scripts/recipe/typescript, which `make install-packages` installs from its lock; `typecheck` and `lint-ts` read its declarations. The case results (HYR-7) are the
 # files that each language's case runner writes under RECIPE_RESULTS_DIR; a missing file fails the check.
 RECIPE_TYPESCRIPT := scripts/recipe/typescript/node_modules
 RECIPE_RESULTS_DIR := $(CURDIR)/var/recipe/results
@@ -329,7 +324,7 @@ recipe-run-build: packages ## Run the build case runner with its results file (H
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/build-id.test.mts
 
 recipe-check: ## Check contracts/interfaces.json against the sources of the three servers and their case results (HYR-7, HYR-8)
-	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-check needs the pinned TypeScript: run npm ci --prefix scripts/recipe/typescript'; exit 1; }
+	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-check needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
 	@failed=; \
 	$(call check,the PHP case runner,$(MAKE) --no-print-directory recipe-run-php) \
 	$(call check,the Node case runner,$(MAKE) --no-print-directory recipe-run-node) \
@@ -340,7 +335,7 @@ recipe-check: ## Check contracts/interfaces.json against the sources of the thre
 	$(checks_result)
 
 recipe-candidates: ## Write the candidate of contracts/interfaces.json under var/recipe, with the hand-written fields listed beside it (HYR-10)
-	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-candidates needs the pinned TypeScript: run npm ci --prefix scripts/recipe/typescript'; exit 1; }
+	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-candidates needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
 	$(NODE) scripts/recipe/candidate.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --output var/recipe/interfaces.candidate.json
 
 .PHONY: spec-docs spec-docs-check
@@ -400,12 +395,12 @@ bench: bench-server bench-browser bench-uploads ## Run the measurements; results
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
 GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
-CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
+CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
 # The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
 # `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once
-# (tests/scripts/ci-workflow.test.mts). An entry gathers the targets that need the same setup: docs only Node.js, php and
-# node PHP, the template build and the install, board also Chromium, python only the Python of its pins.
+# (tests/scripts/ci-workflow.test.mts). An entry gathers the targets that need the same setup: docs Node.js, PHP and Python for the case runners of
+# recipe-check, php and node PHP, the template build and the install, board also Chromium, python only the Python of its pins.
 
 # The targets of the full suite that exist on one platform only. Apple `container`, whose bind mounts are virtiofs,
 # exists on Darwin, so `make virtiofs-check` belongs to the full suite there and nowhere else; on Darwin a missing
@@ -439,8 +434,9 @@ else
 	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-tools.$(KIT_EXT) --no-self-update $(TOOLS)
 endif
 
-install-packages: ## Install the packages of package-lock.json, @polyspec/kit included, with the npm of var/tools; ONLINE
+install-packages: ## Install the packages of package-lock.json, @polyspec/kit included, and the pinned TypeScript of the recipe reader (scripts/recipe/typescript), with the npm of var/tools; ONLINE
 	$(ONLINE) $(NPM) ci
+	$(ONLINE) $(NPM) ci --prefix scripts/recipe/typescript --ignore-scripts --no-audit
 
 install-symbols: ## Install the symbol extractors of EXTRACTORS, such as php, whose php-parser lint-php reads; ONLINE
 	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-symbols.$(KIT_EXT) $(EXTRACTORS)
@@ -565,6 +561,7 @@ suppression-check: ## Fail on a suppression of a lint finding that states no rea
 # phpstan.dist.neon (also for packages/server/php, whose phpstan-max.neon only make analyse-php reads, H27.85), ruff.toml
 # and [tool.vulture] of each pyproject.toml.
 lint-ts: ## Lint the TypeScript: oxlint, knip and tsc of each project; offline
+	@test -d $(RECIPE_TYPESCRIPT) || { echo 'lint-ts needs the pinned TypeScript of scripts/recipe/typescript, whose declarations scripts/recipe/read-node.mts imports: run make install-packages'; exit 1; }
 	$(NODE) $(KIT)/lint-ts.$(KIT_EXT)
 
 lint-php: ## Lint the PHP: phpcs and PHPStan on each Composer package; offline

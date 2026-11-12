@@ -3,6 +3,7 @@
 from polyspec.hyper.redis_sessions import RedisSessions
 from polyspec.hyper.session_lock_error import SessionLockError
 
+from .inputs import options_of
 from .store_requests import StoreRequests
 
 _RELEASE = (
@@ -83,11 +84,11 @@ def cases(case) -> None:
         case.input("keys"),
         case.has("textReplies") and case.input("textReplies") is True,
     )
-    options = {}
-    for name, value in (case.input("options") if case.has("options") else {}).items():
-        if name not in _OPTIONS:
-            raise LookupError(f"the option {name} of the case is unknown")
-        options[_OPTIONS[name]] = value / 1000 if name == "lockWait" else value
+    options = options_of(
+        case,
+        _OPTIONS,
+        lambda name, value: value / 1000 if name == "lockWait" else value,
+    )
     store = RedisSessions(server.command, **options)
     run = StoreRequests(store._open, _failure_class, {"setKey": server.set_key}, [])
     for step in case.input("steps"):

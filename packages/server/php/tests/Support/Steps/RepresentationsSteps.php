@@ -6,10 +6,10 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
+use Polyspec\Hyper\Representation;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Clock;
-use Polyspec\Hyper\Tests\Support\ContextRun;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Mailer;
 use Polyspec\Hyper\Tests\Support\Plain;
@@ -102,7 +102,12 @@ final class RepresentationsSteps
         $case->compare('page', is_string($type) ? trim(explode(';', $type, 2)[0]) : null);
         $case->compare('handled', $calls->handled);
         $case->compare('session', $store->get('_hyper_csrf') !== null);
+        // `received` is optional: a case without it compares none of its fields.
+        if (!$case->has('received')) {
+            return;
+        }
         $case->compare('received.method', $calls->request?->method);
+        $case->compare('received.browser', $calls->request?->browser());
         $case->compare('received.parameters', Plain::map($calls->parameters));
         $case->compare('received.body', $calls->request?->json());
         $case->compare('received.headers', $received);
@@ -112,6 +117,27 @@ final class RepresentationsSteps
             $calls->service !== null && is_string($service) && $calls->service === ($created[$service] ?? null),
         );
         $case->compare('received.params', $calls->request === null ? null : Plain::map($calls->request->params()));
+    }
+
+    /** HY-122: a representation holds the status, the body and the headers that it was made with. */
+    public static function values(CaseReader $case): void
+    {
+        $status = Json::integer($case->input('status'), 'the case field status');
+        $body = $case->has('body') ? Json::value(Json::string($case->input('body'))) : null;
+        $made = match (true) {
+            $case->has('headers') => new Representation(
+                $status,
+                $body,
+                Json::stringMap(Json::map($case->input('headers'), 'the case field headers')),
+            ),
+            $case->has('body') => new Representation($status, $body),
+            default => new Representation($status),
+        };
+        $case->compare('held', [
+            'status' => $made->status,
+            'body' => $made->body,
+            'headers' => Plain::map($made->headers),
+        ]);
     }
 
     /**
@@ -151,7 +177,6 @@ final class RepresentationsSteps
         \Closure $handler,
         string $basePath,
     ): App {
-        ContextRun::autoload(self::PROGRAM);
         $loaders = Json::array(Json::at(self::application($case), 'loaders'));
         $routes = [];
         foreach ($types as $name => $declared) {

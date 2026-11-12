@@ -122,14 +122,15 @@ final class Page
         }
         if ($json) {
             // HY-128: the member context holds the hash, and the value unless the request holds that hash (HY-127).
+            $member = $context === null
+                ? null
+                : Context::member($this->build, $context, $request->header('Hyper-Context'));
             $response = JsonCodec::value(
                 $this->timezone,
                 $route['name'],
                 $request->params(),
                 $this->build,
-                $context === null
-                    ? null
-                    : Context::member($this->build, $context, $request->header('Hyper-Context')),
+                $member,
                 $shared,
                 $data,
                 $kept,
@@ -367,12 +368,13 @@ final class Page
         if ($embed && $routeRegionNames !== []) {
             $embedded = array_intersect_key($data, array_flip($routeRegionNames));
             // HY-31: an embedded document holds build and context with its value, whatever the request holds.
+            $member = $context === null ? null : Context::member($this->build, $context, null);
             $response = JsonCodec::value(
                 $this->timezone,
                 $route['name'],
                 $request->params(),
                 $this->build,
-                $context === null ? null : Context::member($this->build, $context, null),
+                $member,
                 $shared,
                 $embedded,
                 array_intersect_key($kept, $embedded),

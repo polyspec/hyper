@@ -24,8 +24,8 @@ final class Reads
         $file = "{$program}/reads.json";
         try {
             $reads = json_decode((string) file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
-            throw new \InvalidArgumentException("{$file} is not valid JSON or UTF-8");
+        } catch (\JsonException $error) {
+            throw new \InvalidArgumentException("{$file} is not valid JSON or UTF-8", 0, $error);
         }
         if (!is_array($reads) || !is_array($reads['routes'] ?? null)) {
             throw new \InvalidArgumentException("{$file} has no routes");
@@ -211,7 +211,9 @@ final class Reads
         $aEach = self::each($a);
         $bEach = self::each($b);
         if ($aEach !== null || $bEach !== null) {
-            $merged['each'] = $aEach !== null && $bEach !== null ? self::mergedNode($aEach, $bEach) : ($aEach ?? $bEach);
+            $merged['each'] = $aEach !== null && $bEach !== null
+                ? self::mergedNode($aEach, $bEach)
+                : ($aEach ?? $bEach);
         }
 
         return $merged;

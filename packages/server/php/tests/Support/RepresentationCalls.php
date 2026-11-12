@@ -34,9 +34,24 @@ final class RepresentationCalls
     public function handler(mixed $response): \Closure
     {
         return match (is_array($response) ? $response['service'] ?? null : null) {
-            null => fn (Request $request, MediaType $media): Representation => $this->answer($request, $media, null, $response),
-            'clock' => fn (MediaType $media, Clock $clock, Request $request): Representation => $this->answer($request, $media, $clock, $response),
-            'mailer' => fn (MediaType $media, Mailer $mailer, Request $request): Representation => $this->answer($request, $media, $mailer, $response),
+            null => fn (Request $request, MediaType $media): Representation => $this->answer(
+                $request,
+                $media,
+                null,
+                $response,
+            ),
+            'clock' => fn (MediaType $media, Clock $clock, Request $request): Representation => $this->answer(
+                $request,
+                $media,
+                $clock,
+                $response,
+            ),
+            'mailer' => fn (MediaType $media, Mailer $mailer, Request $request): Representation => $this->answer(
+                $request,
+                $media,
+                $mailer,
+                $response,
+            ),
             default => throw new \LogicException('the handler of the case takes an unknown service'),
         };
     }

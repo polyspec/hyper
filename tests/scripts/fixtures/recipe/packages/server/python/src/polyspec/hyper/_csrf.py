@@ -18,7 +18,10 @@ class Csrf:
         return token + "!"
 
     def raw(self) -> str:
-        return "x"
+        return self._fold()
+
+    def check(self) -> bool:
+        return True
 
     def _fold(self) -> str:
         return "x"

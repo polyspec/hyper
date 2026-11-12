@@ -63,9 +63,10 @@ final class Renderer
     private static function program(string $program, array $functions): Program
     {
         try {
-            $declaration = json_decode((string) file_get_contents("{$program}/program.json"), true, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
-            throw new \InvalidArgumentException("{$program}/program.json is not valid JSON or UTF-8");
+            $text = (string) file_get_contents("{$program}/program.json");
+            $declaration = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
+        } catch (\JsonException $error) {
+            throw new \InvalidArgumentException("{$program}/program.json is not valid JSON or UTF-8", 0, $error);
         }
         $namespace = is_array($declaration) ? $declaration['namespace'] ?? null : null;
         if (!is_string($namespace)) {

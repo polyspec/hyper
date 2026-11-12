@@ -62,7 +62,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | `onResponse` | Called once for every response with the request, the response, the elapsed milliseconds and the reply of the request, also for the responses that hyper answers itself; the request is null only when `node:http` could not read the request line, and the reply is empty when the server answered before routing (HY-60). |
 | `onDisconnect` | Called once with the request, the elapsed milliseconds and the reply of a request whose client closed the connection before the server wrote its response; the server runs no further loader, action or rendering of the request and writes no response (HY-67). |
 | `log` | Receives the log line of an unhandled error (HY-43); the default writes to the standard error. |
-| `clientRendering` | The client-rendered pages: `shell`, the absolute path of the static shell; `basePath`, the data base path such as `/_props`; `selects(request)`, which returns a choice `{ chosen, value }`, or a promise of it that the server awaits: `chosen` is `true` for a request of a client-rendered page, and every loader and action of the request reads `value` with `request.selection()`. A chosen HTML request of a page receives the shell with `Cache-Control: no-cache`, and its JSON requests and actions use the data base path; another request is served with `basePath` (HY-62). |
+| `clientRendering` | The client-rendered pages: `shell`, the absolute path of the static shell; `basePath`, the data base path such as `/_props`; `selects(request)`, which returns a choice `new Choice(chosen, value)`, or a promise of it that the server awaits, and any other value, a plain object `{ chosen, value }` included, fails the request (HY-62.8, HY-62.11): `chosen` is `true` for a request of a client-rendered page, and every loader and action of the request reads `value` with `request.selection()`. A chosen HTML request of a page receives the shell with `Cache-Control: no-cache`, and its JSON requests and actions use the data base path; another request is served with `basePath` (HY-62). |
 
 `app.bind(key, factory)` registers an application service. A service is created once, on first use; `services.get(key)` of a key without a factory fails the request with 500.
 
@@ -72,7 +72,7 @@ Every loader and action receives one context object:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
+| `request` | `Request` | `method`, `path()`, `params()`, `param(name)`, `query()`, `rawQuery()`, `queryInt(name, fallback)`, `form()`, `formString(name)`, `flash(name)`, `cookie(name)`, `header(name)`, `csrfToken()`, `browser()`, `currentPath()`, `wantsJson()`, `isRegionRequest()`, `https` |
 | `reply` | `Reply` | `cookie(name, value, maxAge?)`, `removeCookie(name)`, `cacheControl(value)` with `private` or `no-store` (HY-52); `referrerPolicy(value)` with a token of the Referrer-Policy specification (HY-103); `renewSession()` in an action (HY-72); `note(name, value)` records a value for the response hook, which reads `notes()`, the pairs of a name and its value (HY-60) |
 | `services` | `Container<S>` | `get(key)` returns the service that `app.bind` registered |
 

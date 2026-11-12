@@ -36,16 +36,19 @@ final class RedisClusterSessions implements \SessionHandlerInterface, \SessionUp
         #[\SensitiveParameter] private readonly mixed $auth = null,
         private readonly ?array $context = null,
     ) {
+        ArgumentCount::most(\func_num_args(), 7);
     }
 
     /** Installs this handler for the session that starts next. */
     public function __invoke(): void
     {
+        ArgumentCount::most(\func_num_args(), 0);
         session_set_save_handler($this, false);
     }
 
     public function open(string $path, string $name): bool
     {
+        ArgumentCount::most(\func_num_args(), 2);
         $this->cluster = new \RedisCluster(
             null,
             $this->seeds,
@@ -61,6 +64,7 @@ final class RedisClusterSessions implements \SessionHandlerInterface, \SessionUp
 
     public function close(): bool
     {
+        ArgumentCount::most(\func_num_args(), 0);
         $released = $this->release();
         $this->cluster = null;
 
@@ -69,11 +73,13 @@ final class RedisClusterSessions implements \SessionHandlerInterface, \SessionUp
 
     public function validateId(string $id): bool
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return $this->connected()->exists(self::key($id)) > 0;
     }
 
     public function updateTimestamp(string $id, string $data): bool
     {
+        ArgumentCount::most(\func_num_args(), 2);
         $this->connected()->expire(self::key($id), self::lifetime());
 
         return true;
@@ -81,6 +87,7 @@ final class RedisClusterSessions implements \SessionHandlerInterface, \SessionUp
 
     public function read(string $id): string|false
     {
+        ArgumentCount::most(\func_num_args(), 1);
         if (!$this->acquire($id)) {
             trigger_error('hyper: the session lock is taken', E_USER_WARNING);
 
@@ -93,6 +100,7 @@ final class RedisClusterSessions implements \SessionHandlerInterface, \SessionUp
 
     public function write(string $id, string $data): bool
     {
+        ArgumentCount::most(\func_num_args(), 2);
         try {
             if ($this->lock === null || $this->connected()->get($this->lock) !== $this->secret) {
                 $this->lock = null;
@@ -111,6 +119,7 @@ final class RedisClusterSessions implements \SessionHandlerInterface, \SessionUp
 
     public function destroy(string $id): bool
     {
+        ArgumentCount::most(\func_num_args(), 1);
         $this->release();
         $this->connected()->del(self::key($id));
 
@@ -119,6 +128,7 @@ final class RedisClusterSessions implements \SessionHandlerInterface, \SessionUp
 
     public function gc(int $max_lifetime): int
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return 0;
     }
 

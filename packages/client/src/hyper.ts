@@ -2,7 +2,9 @@ import { BindError, bindValue, parseJson, type HostFunction, type MapValue, type
 import { createEngine } from './engine.js';
 import { applyRegionKept, copyValue, decodeResponse, presentRouteRegions, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, withContext, type Application, type DecodedResponse } from './response.js';
 import { documentHeaders, ObtainError, requestDocument, type Fetch } from './obtain.js';
-import { PageStylesheets, StylesheetError } from './stylesheets.js';
+import { applyHead, HeadError } from './head.js';
+import { PageScripts } from './scripts.js';
+import { PageStylesheets } from './stylesheets.js';
 import { stripBasePath } from './router.js';
 import { isHyperJson } from './media-type.js';
 import { routeTemplates } from './templates.js';
@@ -55,11 +57,12 @@ export interface HyperExtension {
 
 // Mounts documents that client-side rendering produces.
 export interface DocumentAdapter {
-  // Inserts the missing stylesheet links of the head of an HTML document and waits until they load; the returned
-  // function removes the other stylesheet links after the content is shown (HYC-15).
-  stylesheets(html: string): Promise<() => void>;
+  // Inserts the missing stylesheet links and creates the missing module scripts of the head of an HTML document and
+  // waits until they load; the returned function removes the other stylesheet links after the content is shown
+  // (HYC-15, HYC-25).
+  head(html: string): Promise<() => void>;
   // Replaces the attributes of the html element (HYC-6), the title and the body with those of a rendered document and
-  // lets htmx process the body. The stylesheet links of the document are applied before (HYC-15).
+  // lets htmx process the body. The head of the document is applied before (HYC-15, HYC-25).
   mount(html: string): void;
   // Replaces the body with text, for a path without a route or a response that is not JSON.
   text(text: string): void;
@@ -476,7 +479,7 @@ export class Hyper<E extends RegionElement = Element> {
       this.applyBrowserKept(decoded);
       // A client-rendered document never embeds its data, because the browser holds the data of the JSON (HY-31).
       const html = await this.app.templates.render(() => renderDocument(this.app, decoded, { embed: false }));
-      const settle = await this.page.stylesheets(html);
+      const settle = await this.page.head(html);
       if (generation !== this.location) return;
       this.hold(decoded);
       this.page.mount(html);
@@ -507,11 +510,12 @@ export class Hyper<E extends RegionElement = Element> {
       },
       htmx_before_request: (_elt, { ctx }) => {
         if (ctx.hyperRegion === undefined) {
-          // The HTML document of a history restoration in server-side rendering brings its stylesheet links (HYC-15).
+          // The HTML document of a history restoration in server-side rendering brings its stylesheet links and its module
+          // scripts (HYC-15, HYC-25).
           if (basePath === '' && ctx.request.headers['HX-History-Restore-Request'] === 'true') {
             ctx.fetch = async (url, init) => {
               const response = await fetch(url, init);
-              if ((response.headers.get('content-type') ?? '').startsWith('text/html')) ctx.hyperStylesheets = await this.page.stylesheets(await response.clone().text());
+              if ((response.headers.get('content-type') ?? '').startsWith('text/html')) ctx.hyperStylesheets = await this.page.head(await response.clone().text());
               return response;
             };
           }
@@ -540,14 +544,14 @@ export class Hyper<E extends RegionElement = Element> {
           if (ctx.hyperLocation !== this.location) return response;
           const final = this.routeOf(response.url || url);
           if (final !== null && final !== requested) await this.app.templates.ensure(routeTemplates(this.app.manifest, final));
-          // The stylesheet links of the layout of the response load before htmx swaps (HYC-15).
+          // The stylesheet links and the module scripts of the layout of the response load before htmx swaps (HYC-15, HYC-25).
           if (isHyperJson(response.headers.get('content-type'))) {
             const root = requireMap(parseJson(await response.clone().text()), 'response');
             // A response of another build renders nothing here; the after-request hook loads its page (HYC-22).
             if (this.buildOf(root) === this.build) {
               const decoded = decodeResponse(this.app, root, this.responsePath(response.url || url).path);
               this.adoptContext(decoded);
-              ctx.hyperStylesheets = await this.page.stylesheets(await this.app.templates.render(() => renderLayout(this.app, decoded.shared, decoded.timezone, this.build)));
+              ctx.hyperStylesheets = await this.page.head(await this.app.templates.render(() => renderLayout(this.app, decoded.shared, decoded.timezone, this.build)));
               // Load the templates that the rendering of the response reaches before htmx renders it synchronously (HYC-12).
               this.applyBrowserKept(decoded);
               await this.app.templates.render(() => toHtml(this.app, decoded));
@@ -593,8 +597,9 @@ export class Hyper<E extends RegionElement = Element> {
       },
       htmx_error: (_elt, detail) => {
         const ctx = detail.ctx;
-        // A stylesheet of a history restoration in server-side rendering failed to load: the target is the body (HYC-14, HYC-15).
-        if (ctx !== undefined && ctx.hyperRegion === undefined && detail.error instanceof StylesheetError) markError(ctx.target, '0');
+        // A stylesheet or a module script of a history restoration in server-side rendering failed to load: the target is
+        // the body (HYC-14, HYC-15, HYC-25).
+        if (ctx !== undefined && ctx.hyperRegion === undefined && detail.error instanceof HeadError) markError(ctx.target, '0');
         if (ctx?.hyperRegion === undefined) return;
         if (detail.error instanceof Error && detail.error.name === 'AbortError' && !this.timedOut(ctx)) return;
         markError(ctx.target, '0');
@@ -823,7 +828,7 @@ function valueAt(data: Value | undefined, path: string): Value | undefined {
 // Marks a region element as failed with a status, or clears the mark (HYC-14).
 /**
  * Takes the failure of a render, a decode or a load that HYC-14 marks with hy-error instead of rejecting: any Error, since a template,
- * a kept value (a TypeError for an application object, HY-44), an obtain and a stylesheet each fail with one. A thrown value that is
+ * a kept value (a TypeError for an application object, HY-44), an obtain, a stylesheet and a module script each fail with one. A thrown value that is
  * no Error is no such failure and propagates.
  */
 function failure(error: unknown): void {
@@ -869,6 +874,7 @@ export function replaceAttributes(target: AttributeElement, source: AttributeEle
 // The document adapter of a browser page.
 function browserDocument(htmx: { process(element: Element): void }): DocumentAdapter {
   let stylesheets: PageStylesheets | null = null;
+  let scripts: PageScripts<HTMLScriptElement> | null = null;
   const replaceBody = (source: HTMLElement | null, nodes: Node[]): void => {
     const body = document.createElement('body');
     for (const attribute of Array.from(source?.attributes ?? [])) body.setAttribute(attribute.name, attribute.value);
@@ -876,7 +882,19 @@ function browserDocument(htmx: { process(element: Element): void }): DocumentAda
     document.body.replaceWith(body);
   };
   return {
-    stylesheets: (html) => (stylesheets ??= new PageStylesheets(document)).apply(new DOMParser().parseFromString(html, 'text/html')),
+    head: (html) => {
+      const source = new DOMParser().parseFromString(html, 'text/html');
+      const links = (stylesheets ??= new PageStylesheets(document));
+      const modules = (scripts ??= new PageScripts<HTMLScriptElement>({
+        base: () => document.baseURI,
+        scripts: () => Array.from(document.scripts),
+        shell: () => document.querySelector('meta[name="hyper-api"]') !== null,
+        entry: () => document.querySelector('meta[name="hyper-entry"]')?.getAttribute('content') ?? null,
+        element: () => document.createElement('script'),
+        append: (script) => document.head.append(script),
+      }));
+      return applyHead([() => links.insert(source), () => modules.create(Array.from(source.head.querySelectorAll('script')))]);
+    },
     mount: (html) => {
       const parsed = new DOMParser().parseFromString(html, 'text/html');
       replaceAttributes(document.documentElement, parsed.documentElement);

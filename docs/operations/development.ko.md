@@ -22,7 +22,7 @@
 | 타깃 | 동작 |
 |---|---|
 | `make install-tools` | `devEngines`가 이름하는 `mise.toml`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치하고 `var/tools/bin`의 명령을 쓰며, 각 download를 pin한 digest로 확인한다(HR-81) |
-| `make install-packages` | `var/tools`의 npm으로 `@polyspec/kit`과 npm workspace를 포함한 `package-lock.json`을 `$(ONLINE)`으로 설치한다 |
+| `make install-packages` | `var/tools`의 npm으로 `@polyspec/kit`과 npm workspace를 포함한 `package-lock.json`과 `scripts/recipe/typescript`의 고정된 TypeScript를 `$(ONLINE)`으로 설치한다 |
 | `make layout-check` | `config/layout.kit.yml`을 extend하는 `config/layout.yml`에 대해 `var/tools`의 alint로 폴더 배치를 검사한다 |
 | `make hyper-install` | pin한 도구를 설치하고, `$(ONLINE)`을 거쳐 template release의 Composer repository에서 PIE로 네이티브 확장을 build하며(`make template-ext`; H14.1-7, H27.45), `make hyper-install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HR-70) |
 | `make hyper-install-python` | kit의 `python-venv` 유틸리티로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 새로 만들고, release의 template wheel을 포함한 의존성과 함께 package를 non-editable로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
@@ -230,9 +230,9 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
    - 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 애플리케이션은 자기 스타일시트를 직접 두고 링크한다.
 4. `--tailwind <source>=<output>`이 있으면 output stylesheet. source를 Tailwind CSS의 theme과, `templates/`와 `client/` 아래 file이 쓰는 utility class로 compile하고, source의 rule은 layer `components`에 두며 layer `base`의 rule은 두지 않는다(HR-77). Tailwind CSS는 `@polyspec/hyper-build`의 의존성이므로, npm 12.2.0으로 기본값 `allow-remote=none`에서 lock을 쓰는 애플리케이션은 Tag 릴리스 절의 npm 결함을 만난다. npm 릴리스가 수정을 담을 때까지 npm은 `@tailwindcss/oxide-wasm32-wasi`의 tarball을 `EALLOWREMOTE`로 거부한다([npm/cli#9818](https://github.com/npm/cli/pull/9818)).
 5. `<output>/csr/`: CSR 배포물.
-   - `index.html`은 `<meta name="hyper-api">`와 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HYC-15, HYC-16).
+   - `index.html`은 `<meta name="hyper-api">`, 진입 파일의 URL을 담은 `<meta name="hyper-entry">`, 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HYC-15, HYC-16).
    - `assets/templates/`는 이 build의 템플릿 파일을 담는다.
-   - `assets/`는 이 build의 조각 파일을 담는다. 배포물은 `--static`이 밝히는 `public/` 아래 파일을 같은 경로에 담는다. 애플리케이션은 렌더한 layout이 link하는 스타일시트를 밝히며, `make assets`는 board 예제의 `public/assets/app.css`와 `public/assets/reader.css`를 밝힌다. 배포물은 파일 단위로, `index.html`을 마지막으로 publish한다(HR-82).
+   - `assets/`는 이 build의 조각 파일을 담는다. 배포물은 `--static`이 밝히는 `public/` 아래 파일을 같은 경로에 담는다. 애플리케이션은 렌더한 layout이 link하는 스타일시트를 밝히며, `make assets`는 board 예제의 `public/assets/app.css`, `public/assets/reader.css`, module script `public/assets/reader.js`와 `public/assets/after-reader.js`를 밝힌다. 배포물은 파일 단위로, `index.html`을 마지막으로 publish한다(HR-82).
    - 진입 파일에 `</script`가 들어 있으면 빌드는 실패한다. 빌드는 인라인한 진입 파일의 해시를 담은 Content Security Policy를 출력한다.
 
 빌드는 이전 결과를 교체하므로, 반복해서 빌드해도 결과마다 파일이 하나만 남는다. 빌드 결과는 커밋하지 않는다.

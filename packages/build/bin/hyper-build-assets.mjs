@@ -17,7 +17,8 @@
 //                                                utilities that templates/ and client/ use, its rules in the
 //                                                layer components (HR-77)
 //   <output>/csr/                               the static deployment for client-side rendering: index.html with the
-//                                                entry inlined and no stylesheet, assets/templates/ with the template
+//                                                entry inlined, its URL as <meta name="hyper-entry"> (HYC-16) and
+//                                                no stylesheet, assets/templates/ with the template
 //                                                files of this build and its chunk files, and the files that
 //                                                --static names: the application names the stylesheets that its
 //                                                rendered layouts link (HYC-15, HYC-16). The deployment is published
@@ -117,6 +118,8 @@ const shell = [
   '<meta name="viewport" content="width=device-width, initial-scale=1">',
   `<meta name="hyper-api" content="${values.api}">`,
   `<meta name="hyper-build" content="${id}">`,
+  // The inlined entry has no address, so the shell declares the one that the manifest gives the layout (HYC-16, HYC-25).
+  `<meta name="hyper-entry" content="/assets/${entry.name}">`,
   '<title></title>',
   `<script type="module">${entry.code}</script>`,
   '</head>',

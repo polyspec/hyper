@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: f34217dc1b5e9c2fe7c83dcda0afd91634ea62fe320f52efbcd658cc39f3e804 -->
+<!-- source-sha256: 4c1699deaf0d11a1f2e729337fb1d6c3a3ee3d97cd7d0504f0e26de68acc11bf -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -27,7 +27,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     해당하는 규칙이 그러하다. concern이 가리키는 `outside`의 규칙이거나 reason이 빈 `outside` 항목이면 HYR-8에 실패한다.
   - `cases`: concern의 동작을 적는 `contracts/` 아래의 case 파일. unit이 없는 concern, 또는 모든 unit이 한 언어를 가리키는
     `only`를 가진 concern만 `none`을 가질 수 있으며, 이때 reason과 HYR-7의 native test를 함께 적는다. 그 밖의 concern이
-    `none`이면 check가 실패시킨다.
+    `none`이면 check가 실패시킨다. 빈 목록은 `none`처럼 실패한다.
   - `units`: concern의 unit들.
 
   `packages/server/php/src`, `packages/server/ts/src`, `packages/server/python/src/polyspec/hyper` 아래의 `git ls-files`
@@ -141,6 +141,34 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
         이름, alias, 또는 attribute 이름(`ast.Attribute.attr`)으로 나타나면 실패시킨다. 따라서 private 이름은 package 안에서
         유일하며, 같은 이름은 spec과 source가 둘 중 하나의 이름을 바꿀 때까지 실패한다.
     - PHP와 Node reader는 private을 modifier에서 읽으며, modifier가 중립 `visibility`와 다른 member는 check가 실패시킨다.
+  - **Stated members.** 둘 이상의 언어가 가지는 모든 member는 말해진다.
+    - public member는 직접 말해진다: 그 member를 가지는 언어마다, `runners`가 그 언어를 가리키는 `caseFiles`의 section
+      하나가 `members`에 그것을 적고, 그 언어의 step이 그것을 호출한다(HYR-7).
+    - 한 언어만 가지는 member는 section이 그것을 적거나 HYR-7의 native test가 그 아래에 적혀 있으면 그 언어에서 직접
+      말해진다.
+    - internal member는 public member처럼 직접 말해지거나, 호출자를 통해 말해진다: 그 member를 가지는 언어마다 직접 말해진
+      member 하나가 소스의 호출로 그것에 닿고, 그것에 닿는 직접 말해진 member들이 그 member를 가지는 모든 언어에서 같다.
+      두 언어는 둘 다 가지는 member에 대해서만 비교한다.
+    - private member는 같은 두 조건으로 호출자를 통해 말해진다.
+    - check는 소스의 호출을 member 이름과 그 receiver의 class로 읽으며, 그 class를 적힌 것에서만 얻는다:
+      - `this`, `self`, `cls`, `$this`는 그 함수의 class를 가지고, `super`와 `parent`는 그것이 상속하는 class를 가진다.
+      - class 이름, import한 module 뒤에 쓴 class, class의 `new`는 그 class를 가진다.
+      - parameter, property, 변수는 적힌 타입의 class를 가진다: PHP의 타입 선언, TypeScript와 Python의 타입
+        annotation이며, `?`, `| null`, `Optional` 안의 것도 같다.
+      - class의 `new`, class가 알려진 호출, 또는 그런 값들의 조건식이 대입된 변수나 property는 그 class를 가진다.
+      - receiver의 class가 알려진 호출이나 property 읽기는 spec의 member이고, 그 값은 그 member의 `output`이 가리키는
+        class를 가진다. 그런 값을 도는 loop의 변수는 `list`나 `map` 안의 class를 가진다.
+      - class의 member는 그것이 상속하는 가장 가까운 class의 그 이름의 member이기도 하며, class에 대한 호출은 그것을
+        상속하는 unit들의 그 이름의 member에도 닿는다.
+      - property에 대한 대입은 호출이 아니다. PHP에서 `(`가 뒤따르는 이름은 method이고 그 밖의 이름은 property다.
+      - 그 밖의 receiver는 class가 없고, 그 뒤의 이름은 호출이 아니다. 그래서 check는 PHP 배열의 원소나 어떤 member도
+        돌려주지 않은 목록의 원소를 통한 호출, generator의 변수를 통한 호출, compiler만 추론하는 타입의 값을 통한 호출,
+        실행 중에 계산되는 이름을 통한 호출을 읽지 않는다. 소스가 그렇게만 호출하는 member는 닿지 않는 것으로
+        보고되며, 그 고침은 그 자리에 타입을 적거나 그 member를 적는 section이다.
+    - check는 어떤 언어에 대해 직접 말해지지 않은 public member, 어느 section도 적지 않고 직접 말해진 member가 닿지도
+      않는 internal member, 아무것도 닿지 않는 private member, 닿는 member들이 두 언어 사이에서 다른 internal 또는
+      private member를 실패시킨다. check는 세 수를 따로 센다: 직접 말해진 member, 호출자를 통해 말해진 internal member,
+      호출자를 통해 말해진 private member.
 
 - **HYR-6 Only some languages.** 일부 언어에만 있는 unit, member, type의 필드 또는 case는 `only: {languages, sentence}`를
   가진다.
@@ -163,14 +191,34 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     이 runner는 `contracts/` 아래 모든 case 파일의 section 가운데 `caseFiles`의 `runners`가 그 언어를 가리키는 section을 실행한다.
     `runners`는 `php`, `node`, `python`, `browser`, `build` 각각의 runner를 적는다. `browser`와 `build`는 section을
     `caseReaders.node`를 통해 읽으며, check는 다섯 runner의 결과를 모두 센다.
+    `runners`는 `php`, `node`, `python`에 대해 step의 디렉터리(`steps`)와 runner의 registry(`registry`), 곧 각 section을
+    그 step에 대응시키는 파일도 적는다.
+  - **Steps.** 한 언어에서 section의 step은 그 언어의 `steps` 디렉터리 아래, case 파일의 words와 section의 이름이 정하는
+    자리에 있는 함수 하나다: PHP는 `<Words>Steps.php`의 class `<Words>Steps`의 static method `<section>`, Node는
+    `<words>.ts`가 export하는 객체 `steps`의 property `<section>`, Python은 `<words>_steps.py`의 snake_case 함수
+    `<section>`이다. 한 언어의 registry는 `runners`가 그 언어를 가리키는 section 각각을 그 함수에 대응시키고 다른 항목을
+    가지지 않는다. check는 그 자리에 step이 없는 section과, 빠졌거나 다른 함수를 가리키거나 `caseFiles`가 그 언어에 주지
+    않은 section을 가리키는 registry 항목을 실패시킨다.
+    - step은 검사 대상 코드로 입력을 준비하지 않고 관찰한 값을 쓰지도 않는다: case의 JSON 텍스트는 자기 test tree의
+      reader로 읽으며(PHP `Support\Json`, Node `case-rules.ts`의 `parsed`, Python `steps/recorded.py`의 `decoded`),
+      `members`에 JSON codec의 member를 적은 section만 codec을 호출한다. check는 자기 section이 적지 않은 unit
+      `json-codec` 또는 `outside-number`의 member에 닿는 step을 실패시킨다.
   - **Reading a case.** runner는 각 case를 그 언어의 case reader를 통해서만 읽는다. case reader는 모든 언어에서 같은
     member를 가진 test tree의 unit 하나다: public member `cases`, `section`, `id`, `has`, `input`, `compare`, `outcome`,
     `fail`, `line`과 private member `declaration`, `matches`, `equal`. `compare`는 필드를, `outcome`은 단계의 결과를
     비교한다.
     - `contracts/interfaces.json`의 `caseFiles`는 case 파일의 역할과 비교의 유일한 출처다(HYR-11). 파일마다 최상위 key(`fixtures`)를,
-      case 배열(`sections`)마다 그 `runners`, case가 쓰는 fixture(`uses`), case가 결과를 말하는 member(`members`, 각각 spec의 member id), 모든 필드와 그 역할, 그리고 각 expected 필드, 단계가 함께
+      case 배열(`sections`)마다 그 `runners`, case가 쓰는 fixture(`uses`), case가 결과를 말하는 member(`members`, 아래), 모든 필드와 그 역할, 그리고 각 expected 필드, 단계가 함께
       확인하는 각 input 필드, 단계의 각 결과에 대해 비교 방법, 그 `state`, 관찰된 동작을 적는 `sentence`를 적는다. check는 각
       `sentence`를 `only`(HYR-6)처럼 검증한다.
+    - section의 `members`는 spec의 member id를 적는다. section은 자기 expected 필드나 outcome이 그 member가 돌려주는 값
+      또는 그 member가 만든 변화를 비교할 때에만 그 member를 적으며, 호출이 거부되는지만 비교하는 section은 아무것도
+      적지 않는다. 적힌 member마다 `runners`의 언어 하나가 그것을 가진다. 적힌 member를 가지는 각 runner 언어의 step은
+      그것을 호출한다: step, 또는 step이 닿는 test tree의 함수가 constructor는 그 class의 `new`(Python은 class의 호출)를,
+      static method나 module 함수는 class나 import 뒤의 그 이름을, 그 밖의 member는 객체 뒤의 그 이름을 쓴다. step은
+      자기가 이름을 쓴 함수에, 그리고 자기가 만든 test tree의 class의 모든 method에 닿는다. check는 HYR-5가 소스를 읽듯이
+      호출을 읽는다. 그래서 실행 중에 계산되는 이름은 호출이 아니고, 서버만 호출하는 member는 호출이 아니며, class
+      자리에 쓴 객체는 그 constructor의 호출이 아니고, 적힌 class가 없는 receiver에 대한 호출은 호출이 아니다.
     - case reader는 case의 입력 필드와 쓰는 fixture를 runner에 넘기며, 각 expected 필드를 관찰된 값과 `caseFiles`가
       정한 비교로 직접 비교한다. runner는 비교하지 않는다.
     - 파일이 `caseFiles`가 선언하지 않은 key, section, 필드를 가지거나(`only`(HYR-6)와 `requirements`(HYR-11)는 뺀다), `fields`가 없고
@@ -180,6 +228,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       `CASE_EMPTY`(HYR-11)로, 비교가 실패한 첫 expected 필드에 `FIELD_DIFFERS <name>`으로, case가 끝난 뒤 읽히지 않은 입력 필드나
       쓰는 fixture에 `FIELD_UNKNOWN <name>`으로, 비교되지 않은 expected 필드에 `FIELD_UNCOMPARED <name>`으로 case를 실패시킨다.
       실패한 case의 reason은 이 순서에서 첫 번째 것이다. 중첩된 필드는 `received.headers`처럼 점으로 이은 경로로 부른다.
+    - case가 가지지 않은 필드의 `compare`는, `caseFiles`가 그 필드를 `optional`로 선언하지 않았으면, case를
+      `CASE_ERROR the case has no field <name>`으로 실패시킨다.
     - case는 `only`(HYR-6)를 가질 수 있다. reader는 그것을 읽고, 그것이 가리키는 언어의 runner에만 그 case를 준다.
   - **Results.**
     - 모든 runner는 case마다 한 줄을 `RECIPE_RESULTS`가 가리키는 결과 파일에 쓴다: `CASE <file> <id> PASS` 또는
@@ -222,9 +272,11 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - re-export가 spec의 public member 및 public type과 다른 barrel 파일;
   - `git ls-files contracts/*.json`의 파일 가운데 `interfaces.json`과 `protocol.json`이 아니며 `caseFiles` 항목이 없는 파일,
     그리고 어떤 파일도 가지지 않는 `caseFiles`의 항목, section 또는 필드;
-  - HYR-7에 어긋나는 결과, case reader 또는 native test.
+  - HYR-7에 어긋나는 결과, case reader, step, registry, native test;
+  - HYR-7에 어긋나는 section의 `members` 항목, 그리고 HYR-5에 따라 말해지지 않은 member.
 
-  실행할 때마다 먼저 reader의 mutation case를 실행하며, reader가 mutation을 통과시키면 실패한다.
+  실행할 때마다 먼저 reader의 mutation case를 실행하며, reader가 mutation을 통과시키면 실패한다. 통과한 실행은 HYR-5의
+  세 수를 출력한다.
 
 - **HYR-9 Analyzers.** 각 언어는 자기 analyzer도 실행한다: `make analyse-php`, `make typecheck`, `make hyper-lint`.
 
@@ -234,7 +286,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - 다음 필드는 검토된 spec 변경에서 손으로 쓴다:
     - 중립 필드 `inputs`, `output`, `errors`, `state`와 type의 `shape`;
     - concern 필드 `rules`와 `cases`;
-    - `caseFiles`: 각 case 파일과 그 필드의 비교 방법(HYR-11);
+    - `caseFiles`: 각 case 파일, 각 section의 `members`, 그 필드 각각의 비교 방법(HYR-11);
+    - `steps`와 `registry`를 가진 `runners`;
     - unit 묶음;
     - `only`.
   - candidate는 이 필드들 각각을 손으로 쓴 것으로 표시한다.

@@ -1,19 +1,25 @@
 # The steps of contracts/reply.json (HY-52, HY-60, HY-69, HY-72, HY-92, HY-103): the reply of a request.
-import json
-
 from polyspec.hyper.reply import Reply
 
-# The methods of the reply by their names in the case file.
-METHODS = {
-    "cookie": "cookie",
-    "removeCookie": "remove_cookie",
-    "cacheControl": "cache_control",
-    "referrerPolicy": "referrer_policy",
-    "status": "status",
-    "note": "note",
-    "renewSession": "renew_session",
-    "embedData": "embed_data",
-}
+from .inputs import calls_of
+from .recorded import decoded
+
+
+def call(reply: Reply, method: str, arguments: list) -> None:
+    """Applies one call of a case to the reply; every method of the vocabulary is written here."""
+    calls = {
+        "cookie": reply.cookie,
+        "removeCookie": reply.remove_cookie,
+        "cacheControl": reply.cache_control,
+        "referrerPolicy": reply.referrer_policy,
+        "status": reply.status,
+        "note": reply.note,
+        "renewSession": reply.renew_session,
+        "embedData": reply.embed_data,
+    }
+    if method not in calls:
+        raise LookupError(f"the method {method} of the case is unknown")
+    calls[method](*arguments)
 
 
 def cookies(case) -> None:
@@ -55,33 +61,15 @@ def flags(case) -> None:
 def _applied(case, compare_failure: bool) -> Reply:
     """Makes a reply and applies the calls of the case in order until one fails, and compares the message and the
     class of the failure: `type` for a TypeError and `value` for the ValueError of HY-46.2."""
-    calls = case.input("calls")
-    if not isinstance(calls, list):
-        raise ValueError("the calls of the case are not a list")
+    calls = calls_of(case)
     reply = Reply()
     error = None
     kind = None
     try:
         for entry in calls:
-            if (
-                not isinstance(entry, list)
-                or len(entry) != 2
-                or not isinstance(entry[0], str)
-                or not isinstance(entry[1], list)
-            ):
-                raise LookupError(
-                    "a call of the case is not a method and a list of JSON texts"
-                )
-            if entry[0] not in METHODS:
-                raise LookupError(f"the method {entry[0]} of the case is unknown")
-            arguments = []
-            for text in entry[1]:
-                if not isinstance(text, str):
-                    raise LookupError("an argument of the case is not a JSON text")
-                # The JSON text gives the value as a handler gives it (HY-44).
-                arguments.append(json.loads(text, parse_constant=_reject))
-            # A caller passes the decoded arguments, of any type (HY-52.11).
-            getattr(reply, METHODS[entry[0]])(*arguments)
+            # The JSON text gives the value as a handler gives it (HY-44); a caller passes the decoded arguments, of
+            # any type (HY-52.11).
+            call(reply, entry[0], [decoded(text) for text in entry[1]])
     except TypeError as failure:
         kind = "type"
         error = str(failure)
@@ -94,7 +82,3 @@ def _applied(case, compare_failure: bool) -> Reply:
     elif error is not None:
         raise LookupError(f"a call of the case fails: {error}")
     return reply
-
-
-def _reject(name: str) -> None:
-    raise LookupError(f"the JSON text {name} is not a value of the case")

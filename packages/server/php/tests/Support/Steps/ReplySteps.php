@@ -6,6 +6,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\Json;
 
 /** HY-52, HY-60, HY-69, HY-72, HY-92, HY-103: the cases of contracts/reply.json, the reply of a request. */
 final class ReplySteps
@@ -76,7 +77,7 @@ final class ReplySteps
                         throw new \UnexpectedValueException('an argument of the case is not a JSON text');
                     }
                     // The JSON text gives the value as a handler gives it (HY-44).
-                    $arguments[] = json_decode($text, true, 512, JSON_THROW_ON_ERROR);
+                    $arguments[] = Json::value($text);
                 }
                 self::call($reply, $entry[0], $arguments);
             }

@@ -51,6 +51,7 @@ final class Request
         private readonly ?RequestBody $read = null,
         private readonly mixed $json = null,
     ) {
+        ArgumentCount::most(\func_num_args(), 15);
         $this->headers = array_change_key_case($headers, CASE_LOWER);
         $this->queryFields = Fields::parse($query);
         $boundary = Multipart::boundary($this->header('Content-Type') ?? '');
@@ -127,6 +128,7 @@ final class Request
      */
     public function withHeader(string $name, string $value): self
     {
+        ArgumentCount::most(\func_num_args(), 2);
         return $this->copy(['headers' => [...$this->headers, strtolower($name) => $value]]);
     }
 
@@ -180,6 +182,7 @@ final class Request
      */
     public function json(): mixed
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->json;
     }
 
@@ -237,6 +240,7 @@ final class Request
      */
     public function selection(): mixed
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->selection;
     }
 
@@ -247,18 +251,21 @@ final class Request
      */
     public function params(): array
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->params;
     }
 
     /** Returns a cookie value, or null. */
     public function cookie(string $name): ?string
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return $this->cookies[$name] ?? null;
     }
 
     /** Returns a route parameter, or null. */
     public function param(string $name): ?string
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return $this->params[$name] ?? null;
     }
 
@@ -268,6 +275,7 @@ final class Request
      */
     public function validInput(): bool
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1
             && self::validUtf8($this->header('HX-Current-URL') ?? '')
             && $this->queryFields !== null
@@ -286,6 +294,7 @@ final class Request
      */
     public function bodySize(): int
     {
+        ArgumentCount::most(\func_num_args(), 0);
         $declared = $this->header('Content-Length') ?? '';
 
         return max(
@@ -298,6 +307,7 @@ final class Request
     /** Returns the media type of the Content-Type header in lower case, without its parameters (HY-59). */
     public function mediaType(): string
     {
+        ArgumentCount::most(\func_num_args(), 0);
         $type = $this->header('Content-Type') ?? '';
 
         return strtolower(trim(substr($type, 0, strcspn($type, ';'))));
@@ -306,6 +316,7 @@ final class Request
     /** Returns the value of a header, or null. */
     public function header(string $name): ?string
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return $this->headers[strtolower($name)] ?? null;
     }
 
@@ -315,6 +326,7 @@ final class Request
      */
     public function wantsJson(): bool
     {
+        ArgumentCount::most(\func_num_args(), 0);
         if ($this->media === null) {
             throw new \LogicException('the request holds no selected media type (HY-116)');
         }
@@ -325,6 +337,7 @@ final class Request
     /** Returns true for a region request: JSON from htmx, which sends HX-Request with every request (HY-15). */
     public function isRegionRequest(): bool
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->wantsJson() && $this->header('HX-Request') === 'true';
     }
 
@@ -334,6 +347,7 @@ final class Request
      */
     public function currentPath(): ?string
     {
+        ArgumentCount::most(\func_num_args(), 0);
         $url = $this->header('HX-Current-URL');
         if ($url === null || !self::validUtf8($url)) {
             return null;
@@ -346,12 +360,14 @@ final class Request
     /** Returns the request path; after routing, the path without the base path. */
     public function path(): string
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->path;
     }
 
     /** Returns the raw query of the request target, or the empty string (HY-56). */
     public function rawQuery(): string
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->query;
     }
 
@@ -363,12 +379,14 @@ final class Request
      */
     public function query(): array
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return ($this->queryFields ?? Fields::empty())->pairs();
     }
 
     /** Returns the last query value of a name as an integer, or the default when it is absent or not an integer. */
     public function queryInt(string $name, int $default): int
     {
+        ArgumentCount::most(\func_num_args(), 2);
         $value = $this->queryFields?->last($name);
         if ($value !== null && preg_match('/^-?\d{1,15}$/D', $value) === 1) {
             return (int) $value;
@@ -385,12 +403,14 @@ final class Request
      */
     public function form(): array
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return ($this->formFields ?? Fields::empty())->pairs();
     }
 
     /** Returns the last form value of a name; an absent name gives the empty string. */
     public function formString(string $name): string
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return $this->formFields?->last($name) ?? '';
     }
 
@@ -402,31 +422,46 @@ final class Request
      */
     public function files(): array
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return ($this->fileParts ?? Files::empty())->pairs();
     }
 
     /** Returns the last file of a name, or null (HY-113). */
     public function file(string $name): ?UploadedFile
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return $this->fileParts?->last($name);
     }
 
     /** Returns true when a file of the body is larger than `$limit` bytes (HY-114). */
     public function fileOver(int $limit): bool
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return ($this->fileParts?->largest() ?? 0) > $limit;
     }
 
     /** Returns a flash value stored by the previous action, or null. */
     public function flash(string $name): mixed
     {
+        ArgumentCount::most(\func_num_args(), 1);
         return $this->flash[$name] ?? null;
     }
 
     /** Returns the CSRF token of the session. */
     public function csrfToken(): string
     {
+        ArgumentCount::most(\func_num_args(), 0);
         return $this->csrfToken;
+    }
+
+    /**
+     * Returns the digest of the session token, which names the browser of the request, or null for a request
+     * without a session (HY-24.10).
+     */
+    public function browser(): ?string
+    {
+        ArgumentCount::most(\func_num_args(), 0);
+        return Csrf::browserOf($this->csrfToken);
     }
 
     /**
@@ -435,6 +470,7 @@ final class Request
      */
     public static function targetPath(string $target): string
     {
+        ArgumentCount::most(\func_num_args(), 1);
         $path = substr($target, 0, strcspn($target, '?#'));
         if (preg_match('#^[A-Za-z][A-Za-z0-9+.-]*://[^/]*#', $path, $authority) === 1) {
             $path = substr($path, strlen($authority[0]));
@@ -446,6 +482,7 @@ final class Request
     /** Returns the raw query of a request target: the target after its first `?` up to its first `#` (HY-56). */
     public static function targetQuery(string $target): string
     {
+        ArgumentCount::most(\func_num_args(), 1);
         $target = substr($target, 0, strcspn($target, '#'));
         $question = strpos($target, '?');
 

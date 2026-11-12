@@ -13,8 +13,20 @@ final class MediaType
     {
     }
 
+    public static function parse(string $text): self
+    {
+        JsonCodec::decode($text);
+
+        return new self();
+    }
+
     public function essence(): string
     {
-        return 'text/html';
+        return $this->folded(new Csrf('k'));
+    }
+
+    private function folded(Csrf $csrf): string
+    {
+        return $csrf->raw();
     }
 }

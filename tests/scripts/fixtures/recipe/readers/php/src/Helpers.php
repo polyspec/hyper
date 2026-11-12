@@ -1,9 +1,13 @@
 <?php
 
-class Helpers {
+namespace Fixture\Readers;
+
+class Helpers
+{
     public static int $calls = 0;
 
-    public static function twice(int $n): int {
+    public static function twice(int $n): int
+    {
         return 2 * $n;
     }
 }

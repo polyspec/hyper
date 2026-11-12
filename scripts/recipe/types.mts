@@ -8,10 +8,16 @@ export const RUNNERS: Runner[] = ['php', 'node', 'python', 'browser', 'build'];
 export type Visibility = 'public' | 'internal' | 'private' | 'protected';
 export type Only = { languages: Runner[]; sentence: string };
 
+/** A JSON object as a parsed document holds it, and the check that a value is one. */
+export type Json = Record<string, unknown>;
+export function isObject(v: unknown): v is Json {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
 export type Spec = {
   schema: 1;
   languages: Record<Lang, { sources: string[]; tests: string[]; barrel: string[] }>;
-  runners: Record<Runner, { runner: string }>;
+  runners: Record<Lang, { runner: string; steps: string; registry: string }> & Record<'browser' | 'build', { runner: string }>;
   caseReaders: Record<Lang, string>;
   outside: { rule: string; reason: string }[];
   concerns: Concern[];
@@ -51,7 +57,7 @@ export type SpecType = {
   id: string;
   visibility: 'public' | 'internal' | 'private';
   unit: string;
-  shape: { fields?: Record<string, string | { term: string; only: Only }>; optional?: string[]; function?: unknown; term?: string };
+  shape: { fields?: Record<string, string | { term: string; only: Only }>; optional?: string[]; function?: { inputs: string[]; output: string }; term?: string };
   only?: Only;
   native: Partial<Record<Lang, { symbol: string; declaration: string }>>;
 };
@@ -95,6 +101,46 @@ export type Sources = {
   dynamicTests: { file: string; line: number }[];
   // The calls of a name in a source file; only Python, whose constructor has no private form, records them (HYR-8).
   calls: { file: string; name: string; module: string }[];
+  // The classes and the scopes of every file of the sources and of the test tree, and the step registry (HYR-5, HYR-7).
+  classes: SourceClass[];
+  scopes: Scope[];
+  registry: RegistryEntry[];
 };
+
+/** A class that a file declares, named by that file and its name. */
+export type ClassRef = { file: string; name: string };
+
+/**
+ * An expression as a reader writes it (HYR-5): a receiver whose class is written, a module, a member read or call, a
+ * construction, a conditional of several values, or any other expression.
+ */
+export type Expr =
+  | { kind: 'own' }
+  | { kind: 'parent' }
+  | { kind: 'class'; file: string; name: string }
+  | { kind: 'module'; file: string }
+  | { kind: 'variable'; name: string }
+  | { kind: 'new'; class: ClassRef }
+  | { kind: 'member'; of: Expr; name: string; call: boolean }
+  | { kind: 'either'; of: Expr[] }
+  | { kind: 'other' };
+
+export type Parameter = { name: string; type?: ClassRef };
+
+export type SourceClass = { file: string; name: string; extends: ClassRef[]; properties: Parameter[] };
+
+/** A function or a method: `<Class>.<method>`, `<function>` or `steps.<property>`, with what it writes. */
+export type Scope = {
+  file: string;
+  name: string;
+  class?: string;
+  parameters: Parameter[];
+  uses: Expr[];
+  assigns: { target: string | { own: string }; value: Expr; type?: ClassRef }[];
+  loops: { variable: string; over: Expr }[];
+};
+
+/** An entry of the registry of a runner: a section of a case file and the step that it maps it to. */
+export type RegistryEntry = { file: string; section: string; step: { file: string; name: string } };
 
 export type Finding = { code: string; message: string };

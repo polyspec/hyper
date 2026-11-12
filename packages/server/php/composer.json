@@ -21,7 +21,8 @@
     "autoload-dev": {
         "psr-4": {
             "Polyspec\\Hyper\\Tests\\": "tests/",
-            "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/"
+            "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/",
+            "Polyspec\\Hyper\\Tests\\Contract\\": "../../../var/contract-programs/"
         }
     },
     "scripts": {

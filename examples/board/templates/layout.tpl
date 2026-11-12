@@ -7,6 +7,8 @@
 {# build}
 <link rel="stylesheet" href="/assets/app.css">
 {? reader}<link rel="stylesheet" href="/assets/reader.css">
+<script type="module" src="/assets/reader.js"></script>
+<script type="module" src="/assets/after-reader.js"></script>
 {/}<script type="module" src="{= assets.hyper}"></script>
 </head>
 <body hx-boost:inherited="true" hx-target:inherited="#content" hx-swap:inherited="innerMorph">

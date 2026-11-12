@@ -55,6 +55,23 @@ class Application:
         self.disconnected_calls.append((request, reply))
 
 
+# The HTTPS test of a host: whether the application was opened with https, the scheme that the server states, and
+# whether the request is then HTTPS (HY-45).
+HTTPS_CASES = (
+    (False, "http", False),
+    (False, "https", True),
+    (True, "http", True),
+    (True, "https", True),
+)
+
+
+def https_application(opened: bool) -> "Application":
+    """The application of the HTTPS test, which opens a session, opened with or without https."""
+    app = Application(opens_session=True)
+    app.https = opened
+    return app
+
+
 def record_ended(written: list):
     """The write hook that appends (request, ended) of each write to `written`."""
     return lambda request, response, ended, elapsed, failure: written.append(

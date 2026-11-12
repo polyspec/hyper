@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 from polyspec.hyper._manifest import Manifest
+from polyspec.hyper.app import App
 
 
 def checks(case) -> None:
@@ -31,12 +32,20 @@ def checks(case) -> None:
             ):
                 raise TypeError("the case field bytes is not hexadecimal digits")
             file.write_bytes(bytes.fromhex(content))
-        error = None
+        # The open reads the manifest before the server program, which the step does not give: an open that fails
+        # only for the missing program has read the manifest.
+        program = str(Path(directory) / "absent")
         try:
-            Manifest.from_file(str(file))
+            App.open(manifest=str(file), program=program, handlers={}, timezone="Z")
         except Exception as failure:  # noqa: BLE001 - the reader checks the class of the error
             error = failure
-    case.compare("rejected", error)
+        else:
+            raise LookupError("the application opened without its server program")
+    missing = f"of the server program {program} is missing"
+    case.compare(
+        "rejected",
+        None if type(error) is ValueError and missing in str(error) else error,
+    )
 
 
 def reads(case) -> None:
@@ -55,5 +64,6 @@ def reads(case) -> None:
         if region is None:
             raise LookupError(f"the manifest has no region {name}")
         case.compare("keep", region.keep)
+        case.compare("template", region.template)
         if case.has("kinds"):
             case.compare("keptPaths", region.kept_paths(case.input("kinds")))

@@ -14,5 +14,6 @@ final class Choice
         public readonly bool $chosen,
         public readonly mixed $value,
     ) {
+        ArgumentCount::most(\func_num_args(), 2);
     }
 }

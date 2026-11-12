@@ -754,6 +754,264 @@
       ],
       "results": [],
       "error": "stored"
+    },
+    {
+      "id": "keeping_an_integer_outside_the_data_model_fails_and_stores_nothing",
+      "label": "keep of the integer 2^53, which is outside the data model, fails with the error of the data model, and the region holds no kept value",
+      "calls": [
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"open\"",
+            "9007199254740992"
+          ]
+        ],
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [],
+      "error": null,
+      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+    },
+    {
+      "id": "keeping_an_integer_outside_the_data_model_inside_a_list_fails",
+      "label": "keep of a list that holds an integer below -(2^53 - 1) fails with the error of the data model",
+      "calls": [
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"sort\"",
+            "\"title\""
+          ]
+        ],
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"tags\"",
+            "[1,-9007199254740992]"
+          ]
+        ]
+      ],
+      "results": [
+        null
+      ],
+      "error": null,
+      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)"
+    },
+    {
+      "id": "keeping_the_largest_integer_of_the_data_model_is_stored",
+      "label": "keep of the integer 2^53 - 1 is stored and read",
+      "calls": [
+        [
+          "keep",
+          [
+            "\"rows\"",
+            "\"open\"",
+            "9007199254740991"
+          ]
+        ],
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [
+        null,
+        [
+          [
+            "open",
+            9007199254740991
+          ]
+        ]
+      ],
+      "error": null
+    }
+  ],
+  "store": [
+    {
+      "id": "a_value_that_is_set_is_read_and_a_removed_value_is_null",
+      "label": "get returns null for a key without a value, the value that set stored, and null again after remove",
+      "calls": [
+        [
+          "get",
+          [
+            "\"a\""
+          ]
+        ],
+        [
+          "set",
+          [
+            "\"a\"",
+            "1"
+          ]
+        ],
+        [
+          "get",
+          [
+            "\"a\""
+          ]
+        ],
+        [
+          "remove",
+          [
+            "\"a\""
+          ]
+        ],
+        [
+          "get",
+          [
+            "\"a\""
+          ]
+        ]
+      ],
+      "results": [
+        null,
+        null,
+        1,
+        null,
+        null
+      ],
+      "renewals": 0,
+      "requirements": [
+        "HY-104"
+      ]
+    },
+    {
+      "id": "a_set_of_a_key_replaces_its_value_and_keeps_the_other_keys",
+      "label": "set of a key that holds a value replaces it, and remove of one key leaves the other",
+      "calls": [
+        [
+          "set",
+          [
+            "\"a\"",
+            "\"x\""
+          ]
+        ],
+        [
+          "set",
+          [
+            "\"b\"",
+            "[1,2]"
+          ]
+        ],
+        [
+          "set",
+          [
+            "\"a\"",
+            "\"y\""
+          ]
+        ],
+        [
+          "remove",
+          [
+            "\"b\""
+          ]
+        ],
+        [
+          "get",
+          [
+            "\"a\""
+          ]
+        ],
+        [
+          "get",
+          [
+            "\"b\""
+          ]
+        ]
+      ],
+      "results": [
+        null,
+        null,
+        null,
+        null,
+        "y",
+        null
+      ],
+      "renewals": 0,
+      "requirements": [
+        "HY-104"
+      ]
+    },
+    {
+      "id": "a_remove_of_a_key_without_a_value_changes_nothing",
+      "label": "remove of a key that holds no value returns and changes nothing",
+      "calls": [
+        [
+          "set",
+          [
+            "\"a\"",
+            "true"
+          ]
+        ],
+        [
+          "remove",
+          [
+            "\"b\""
+          ]
+        ],
+        [
+          "get",
+          [
+            "\"a\""
+          ]
+        ]
+      ],
+      "results": [
+        null,
+        null,
+        true
+      ],
+      "renewals": 0,
+      "requirements": [
+        "HY-104"
+      ]
+    },
+    {
+      "id": "a_renewal_is_counted_and_keeps_the_values",
+      "label": "renew counts one renewal each time and keeps the stored values (HY-72)",
+      "calls": [
+        [
+          "set",
+          [
+            "\"a\"",
+            "1"
+          ]
+        ],
+        [
+          "renew",
+          []
+        ],
+        [
+          "renew",
+          []
+        ],
+        [
+          "get",
+          [
+            "\"a\""
+          ]
+        ]
+      ],
+      "results": [
+        null,
+        null,
+        null,
+        1
+      ],
+      "renewals": 2,
+      "requirements": [
+        "HY-104"
+      ]
     }
   ]
 }

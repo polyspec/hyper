@@ -30,7 +30,8 @@ final class BuildSteps
                 throw new \UnexpectedValueException('the case field text is neither a string nor null');
             } elseif ($case->has('bytes')) {
                 $bytes = $case->input('bytes');
-                $data = is_string($bytes) && preg_match('/^(?:[0-9a-f]{2})*$/D', $bytes) === 1 ? hex2bin($bytes) : false;
+                $hexadecimal = is_string($bytes) && preg_match('/^(?:[0-9a-f]{2})*$/D', $bytes) === 1;
+                $data = $hexadecimal ? hex2bin($bytes) : false;
                 if ($data === false) {
                     throw new \UnexpectedValueException('the case field bytes is not hexadecimal digits');
                 }
@@ -57,7 +58,13 @@ final class BuildSteps
     }
 
     /** The outputs of a program in the order in which the open needs them; true for a directory. */
-    private const OUTPUTS = ['php' => true, 'program.json' => false, 'reads.json' => false, 'build.json' => false, 'templates' => true];
+    private const OUTPUTS = [
+        'php' => true,
+        'program.json' => false,
+        'reads.json' => false,
+        'build.json' => false,
+        'templates' => true,
+    ];
 
     /** Opens a program directory that holds every output but those of `missing`, and records the error of the open. */
     public static function outputs(CaseReader $case): void

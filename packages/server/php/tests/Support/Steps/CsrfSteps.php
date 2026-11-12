@@ -48,6 +48,20 @@ final class CsrfSteps
         $case->compare('valid', Csrf::verify($token, $first) && Csrf::verify($token, $second));
     }
 
+    /** Gives the digest of the masked value, or records the message of the error with which it fails (HY-24.13). */
+    public static function browser(CaseReader $case): void
+    {
+        $browser = null;
+        $error = null;
+        try {
+            $browser = Csrf::browserOf(self::text($case, 'value'));
+        } catch (\InvalidArgumentException $failure) {
+            $error = $failure->getMessage();
+        }
+        $case->compare('browser', $browser);
+        $case->compare('error', $error);
+    }
+
     private static function text(CaseReader $case, string $name): string
     {
         $value = $case->input($name);

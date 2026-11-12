@@ -11,41 +11,12 @@ require __DIR__ . '/../../../../../vendor/autoload.php';
 
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
 
 $setup = null;
 if (($_GET['mode'] ?? '') === 'fail') {
     $setup = static function (): void {
-        session_set_save_handler(new class () implements \SessionHandlerInterface {
-            public function open(string $path, string $name): bool
-            {
-                return false;
-            }
-
-            public function close(): bool
-            {
-                return true;
-            }
-
-            public function read(string $id): string|false
-            {
-                return false;
-            }
-
-            public function write(string $id, string $data): bool
-            {
-                return true;
-            }
-
-            public function destroy(string $id): bool
-            {
-                return true;
-            }
-
-            public function gc(int $max_lifetime): int
-            {
-                return 0;
-            }
-        }, false);
+        session_set_save_handler(new RefusingSessionHandler(false), false);
     };
 }
 $store = new NativeSession(isset($_GET['https']), Request::fromGlobals(), $setup);

@@ -30,8 +30,7 @@ class CaseRunner(unittest.TestCase):
                 else:
                     try:
                         step(reader)
-                    # HYR-7: every error that a step raises is the CASE_ERROR of its case.
-                    except Exception as error:  # noqa: BLE001
+                    except Exception as error:  # noqa: BLE001 - HYR-7: every error of a step is the CASE_ERROR of its case
                         reader.fail(str(error) or type(error).__name__)
                 lines.append(reader.line())
         path = Path(results)

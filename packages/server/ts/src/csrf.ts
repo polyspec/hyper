@@ -1,6 +1,6 @@
 // Masks the session token for a response and verifies a masked form value (HY-24). A masked value is 32 mask bytes
 // followed by the mask XOR the token, as 128 lowercase hexadecimal digits, so no response contains the token.
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
 const MASKED = /^[0-9a-f]{128}$/u;
 const TOKEN = /^[0-9a-f]{64}$/u;
@@ -24,6 +24,17 @@ export class Csrf {
     Csrf.requireToken(token);
     if (!MASKED.test(value)) return false;
     return timingSafeEqual(Csrf.bytes(token), Csrf.xor(Csrf.bytes(value.slice(64)), Csrf.bytes(value.slice(0, 64))));
+  }
+
+  // Returns the SHA-256 digest, as 64 lowercase hexadecimal digits, of the token that a masked value holds, or null
+  // for the empty text, which a request without a session holds (HY-24.10, HY-24.12).
+  static browserOf(masked: string): string | null {
+    if (masked === '') return null;
+    const mask = masked.slice(0, 64);
+    const rest = masked.slice(64);
+    Csrf.requireToken(mask);
+    Csrf.requireToken(rest);
+    return createHash('sha256').update(Csrf.xor(Csrf.bytes(rest), Csrf.bytes(mask))).digest('hex');
   }
 
   // Fails for a token or a mask that is not 64 lowercase hexadecimal digits (HY-24.9).

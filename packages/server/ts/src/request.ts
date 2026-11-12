@@ -1,4 +1,5 @@
 // One HTTP request with the session values that the application reads.
+import { Csrf } from './csrf.js';
 import { Fields } from './fields.js';
 import { Files } from './files.js';
 import { Multipart } from './multipart.js';
@@ -7,6 +8,7 @@ import type { Flash } from './flash.js';
 import type { UploadedFile } from './uploaded-file.js';
 import type { Value } from './values.js';
 import { Disconnected } from './disconnected.js';
+import { ArgumentCountError } from './argument-count-error.js';
 
 // The parts of a request as its host gives them, the named parameters of the constructor (HY-106): the path and the raw
 // query of the request target and the header values are text whose characters are bytes, and the body is bytes. The
@@ -48,6 +50,10 @@ export interface RequestInit {
   signal?: AbortSignal;
 }
 
+// The names of the parts of a request, the members of its options record (HY-106.9).
+const REQUEST_REQUIRED = ['method', 'path'];
+const REQUEST_OPTIONAL = ['headers', 'query', 'body', 'flash', 'csrfToken', 'params', 'cookies', 'https', 'selection', 'bodySize', 'media', 'read', 'json', 'signal'];
+
 // The media type of the JSON of hyper (HY-15).
 /** @internal */
 export const HYPER_JSON = 'application/vnd.hyper+json';
@@ -80,6 +86,8 @@ export class Request {
   // application/x-www-form-urlencoded body and from the text fields of a multipart/form-data body, without nesting
   // (HY-57); a body that a host read in chunks gives its parts (HY-131).
   constructor(init: RequestInit) {
+    ArgumentCountError.between(arguments.length, 1, 1);
+    ArgumentCountError.members(init, REQUEST_REQUIRED, REQUEST_OPTIONAL);
     // HY-42.6: the text that a host gives holds bytes, one for each character.
     for (const text of [init.path, init.query ?? '', ...Object.entries(init.headers ?? {}).flat()]) {
       if (/[\u0100-\uffff]/.test(text)) throw new Error('hyper: a path, a query or a header of a request holds a character above U+00FF (HY-42)');
@@ -149,6 +157,7 @@ export class Request {
   // Returns the path of a request target: the target before `?` or `#`, after the authority of an absolute-form
   // target, without decoding (HY-42).
   static targetPath(target: string): string {
+    ArgumentCountError.between(arguments.length, 1, 1);
     let path = target.split(/[?#]/, 1)[0] ?? '';
     const authority = /^[A-Za-z][A-Za-z0-9+.-]*:\/\/[^/]*/.exec(path);
     if (authority !== null) path = path.slice(authority[0].length);
@@ -157,6 +166,7 @@ export class Request {
 
   // Returns the raw query of a request target: the target after its first `?` up to its first `#` (HY-56).
   static targetQuery(target: string): string {
+    ArgumentCountError.between(arguments.length, 1, 1);
     const before = target.split('#', 1)[0] ?? '';
     const question = before.indexOf('?');
     return question < 0 ? '' : before.slice(question + 1);
@@ -176,6 +186,7 @@ export class Request {
 
   // Returns a copy whose header of the name, compared without case as `header` reads it, has the value (HY-97).
   withHeader(name: string, value: string): Request {
+    ArgumentCountError.between(arguments.length, 2, 2);
     return this.copy({ headers: { ...Object.fromEntries(this.headerValues), [name.toLowerCase()]: value } });
   }
 
@@ -208,6 +219,7 @@ export class Request {
 
   // Returns the value of the JSON body of a representation request, or null for a request without a body (HY-121.9).
   json(): Value {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.init.json ?? null;
   }
 
@@ -233,28 +245,33 @@ export class Request {
   // Returns the value of the choice that the client rendering selection returned for this request, or null for an
   // application without client rendering (HY-62).
   selection(): unknown {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.init.selection ?? null;
   }
 
   // Returns the route parameters.
   params(): Record<string, string> {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return { ...this.init.params };
   }
 
   // Returns a route parameter, or null.
   param(name: string): string | null {
+    ArgumentCountError.between(arguments.length, 1, 1);
     const params = this.init.params ?? {};
     return Object.hasOwn(params, name) ? params[name] ?? null : null;
   }
 
   // Returns a cookie value, or null.
   cookie(name: string): string | null {
+    ArgumentCountError.between(arguments.length, 1, 1);
     return this.init.cookies?.get(name) ?? null;
   }
 
   // Returns true when the path consists of printable ASCII characters and every query and form name and value
   // and HX-Current-URL are UTF-8 (HY-42). Cookies are not checked; hyper ignores invalid ones.
   validInput(): boolean {
+    ArgumentCountError.between(arguments.length, 0, 0);
     const current = this.headerValues.get('hx-current-url');
     return /^[\x21-\x7e]*$/.test(this.routePath) && (current === undefined || Request.validUtf8(current)) && this.queryFields !== null && this.formFields !== null && this.fileParts !== null;
   }
@@ -262,50 +279,59 @@ export class Request {
   // Returns the file parts of the body as pairs of a name and its files in request order, in the order of the first
   // file of each name (HY-113).
   files(): [string, UploadedFile[]][] {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return (this.fileParts ?? Files.empty()).pairs();
   }
 
   // Returns the last file of a name, or null (HY-113).
   file(name: string): UploadedFile | null {
+    ArgumentCountError.between(arguments.length, 1, 1);
     return this.fileParts?.last(name) ?? null;
   }
 
   // Returns true when a file of the body is larger than `limit` bytes (HY-114).
   fileOver(limit: number): boolean {
-    return (this.fileParts ?? Files.empty()).largest() > limit;
+    ArgumentCountError.between(arguments.length, 1, 1);
+    return (this.fileParts?.largest() ?? 0) > limit;
   }
 
   // Returns the size of the body in bytes: its length, or the Content-Length header when that is larger (HY-59).
   bodySize(): number {
+    ArgumentCountError.between(arguments.length, 0, 0);
     const declared = this.headerValues.get('content-length') ?? '';
     return Math.max(this.init.bodySize ?? this.body.byteLength, this.read?.size() ?? 0, /^[0-9]+$/.test(declared) ? Number(declared) : 0);
   }
 
   // Returns the media type of the Content-Type header in lower case, without its parameters (HY-59).
   mediaType(): string {
+    ArgumentCountError.between(arguments.length, 0, 0);
     const type = this.header('Content-Type') ?? '';
     return (type.split(';', 1)[0] ?? '').trim().toLowerCase();
   }
 
   // Returns the value of a header as text whose characters are its bytes, or null.
   header(name: string): string | null {
+    ArgumentCountError.between(arguments.length, 1, 1);
     return this.headerValues.get(name.toLowerCase()) ?? null;
   }
 
   // Returns true when the selected media type of the request is the JSON of hyper (HY-15, HY-116). The selection is
   // read from the request and Accept is not read again; a request without a selection fails.
   wantsJson(): boolean {
+    ArgumentCountError.between(arguments.length, 0, 0);
     if (this.media === null) throw new Error('hyper: the request holds no selected media type (HY-116)');
     return this.media === HYPER_JSON;
   }
 
   // Returns true for a region request: JSON from htmx, which sends HX-Request with every request (HY-15).
   isRegionRequest(): boolean {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.wantsJson() && this.header('HX-Request') === 'true';
   }
 
   // Returns the path of the page that sent the request, or null (HY-11).
   currentPath(): string | null {
+    ArgumentCountError.between(arguments.length, 0, 0);
     const header = this.header('HX-Current-URL');
     if (header === null || !Request.validUtf8(header)) return null;
     const url = Buffer.from(header, 'latin1').toString('utf8');
@@ -316,23 +342,27 @@ export class Request {
 
   // Returns the request path; after routing, the path without the base path.
   path(): string {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.routePath;
   }
 
   // Returns the raw query of the request target, or the empty string (HY-56). Its characters are bytes, as
   // node:http gives the request target.
   rawQuery(): string {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.queryText;
   }
 
   // Returns every query value without nesting, as pairs of a name and its values in request order, in the order of the
   // first value of each name (HY-56).
   query(): [string, string[]][] {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return (this.queryFields ?? Fields.empty()).pairs();
   }
 
   // Returns the last query value of a name as an integer, or the default when it is absent or not an integer.
   queryInt(name: string, fallback: number): number {
+    ArgumentCountError.between(arguments.length, 2, 2);
     const value = this.queryFields?.last(name) ?? null;
     return value !== null && /^-?[0-9]{1,15}$/.test(value) ? Number(value) : fallback;
   }
@@ -340,22 +370,33 @@ export class Request {
   // Returns every form value of the body without nesting, as pairs of a name and its values in request order, in the
   // order of the first value of each name (HY-57).
   form(): [string, string[]][] {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return (this.formFields ?? Fields.empty()).pairs();
   }
 
   // Returns the last form value of a name; an absent name gives the empty string.
   formString(name: string): string {
+    ArgumentCountError.between(arguments.length, 1, 1);
     return this.formFields?.last(name) ?? '';
   }
 
   // Returns a flash value stored by the previous action, or null.
   flash(name: string): Value {
+    ArgumentCountError.between(arguments.length, 1, 1);
     return this.init.flash?.get(name) ?? null;
   }
 
   // Returns the CSRF token of the session.
   csrfToken(): string {
+    ArgumentCountError.between(arguments.length, 0, 0);
     return this.init.csrfToken ?? '';
+  }
+
+  // Returns the digest of the session token, which names the browser of the request, or null for a request without
+  // a session (HY-24.10).
+  browser(): string | null {
+    ArgumentCountError.between(arguments.length, 0, 0);
+    return Csrf.browserOf(this.csrfToken());
   }
 
   // Returns true when the bytes of a header value, a text whose characters are bytes, are valid UTF-8 (HY-42).

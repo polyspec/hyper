@@ -4,31 +4,6 @@ import type { Reply, Request, Response } from '../../src/index.js';
 import type { SessionStore } from '../../src/session-store.js';
 import type { CaseReader } from '../case-reader.js';
 
-// Returns a value of a case that is a string, and fails for any other value.
-export function textOf(value: unknown, what: string): string {
-  if (typeof value !== 'string') throw new Error(`${what} is not a string`);
-  return value;
-}
-
-// Returns a list of a case, and fails for any other value.
-export function listOf(value: unknown, what: string): unknown[] {
-  if (!Array.isArray(value)) throw new Error(`${what} is not a list`);
-  return value;
-}
-
-// Returns a map of a case with its string keys, and fails for any other value.
-export function mapOf(value: unknown, what: string): Map<string, unknown> {
-  if (!(value instanceof Map)) throw new Error(`${what} is not a map`);
-  const map = new Map<string, unknown>();
-  for (const [key, item] of value) map.set(textOf(key, `a key of ${what}`), item);
-  return map;
-}
-
-// Returns a map of names to texts of a case as a record, and fails for any other value.
-export function textsOf(value: unknown, what: string): Record<string, string> {
-  return Object.fromEntries([...mapOf(value, what)].map(([name, item]) => [name, textOf(item, `a value of ${what}`)]));
-}
-
 // A session store that records every call that the application makes of the four methods of the store, each as the
 // method name and its key, and keeps the values in the store it wraps.
 export class RecordingStore implements SessionStore {
@@ -58,6 +33,27 @@ export class RecordingStore implements SessionStore {
     this.calls.push('renew');
     this.inner.renew();
   }
+}
+
+// Gives the reader the first seven characters of the message of a failure and the text that the message of an error of
+// the Node server starts with (HY-106.10).
+export function messageStart(reader: CaseReader, failure: unknown): void {
+  reader.outcome('messageStart', [failure instanceof Error ? failure.message.slice(0, 7) : '', 'hyper: ']);
+}
+
+// Returns the error of a rejected open, or null when the open did not fail.
+export function failureOf(open: Promise<unknown>): Promise<unknown> {
+  return open.then(
+    () => null,
+    (error: unknown) => error,
+  );
+}
+
+// Gives the reader the failure of an open: the outcome `open`, the start of its message and the field `openError`.
+export function comparesOpen(reader: CaseReader, failure: unknown): void {
+  reader.outcome('open', failure);
+  messageStart(reader, failure);
+  reader.compare('openError', failure instanceof Error ? failure.message : '');
 }
 
 // A call of the response hook: what it received (HY-60).

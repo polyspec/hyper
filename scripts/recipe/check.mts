@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import type { Results } from './results.mts';
 import { runChecks } from './run.mts';
 import { selfTest } from './selftest.mts';
+import type { Counts } from './stated.mts';
 import { LANGS, RUNNERS } from './types.mts';
 import { validators } from './validators.mts';
 
@@ -44,9 +45,15 @@ function main(): number {
     if (failures.length > 0) return 1;
   }
 
-  const findings = runChecks(root, v, resultArguments(), path.resolve(phpAutoload));
+  const counts: Counts = { direct: 0, internal: 0, private: 0 };
+  const findings = runChecks(root, v, resultArguments(), path.resolve(phpAutoload), counts);
   for (const f of findings) process.stdout.write(`${f.code} ${f.message}\n`);
-  if (findings.length === 0) process.stdout.write(`recipe-check: ${LANGS.length} languages agree with the spec\n`);
+  if (findings.length === 0) {
+    // HYR-8: a run that passes prints the three numbers of HYR-5.
+    process.stdout.write(
+      `recipe-check: ${LANGS.length} languages agree with the spec; ${counts.direct} members stated directly, ${counts.internal} internal and ${counts.private} private members stated through their callers\n`,
+    );
+  }
   return findings.length === 0 ? 0 : 1;
 }
 

@@ -6,7 +6,6 @@ import json
 import tempfile
 from pathlib import Path
 
-from polyspec.hyper._json_codec import JsonCodec
 from polyspec.hyper._session import _TOKEN_KEY
 from polyspec.hyper.app import App
 from polyspec.hyper.media_type import MediaType
@@ -18,6 +17,7 @@ from polyspec.hyper.array_session import ArraySession
 from ..case_reader import CaseReader
 from ..render.render_functions import program_of
 from .container_steps import SERVICES
+from .recorded import decoded
 
 
 class OrmError(Exception):
@@ -102,17 +102,44 @@ def cases(case: CaseReader) -> None:
     case.compare("page", _page_of(response.headers))
     case.compare("handled", len(calls))
     case.compare("session", store.get(_TOKEN_KEY) is not None)
+    if not case.has("received"):
+        return
     case.compare("received.method", observed.get("method"))
+    case.compare("received.browser", observed.get("browser"))
     case.compare("received.parameters", observed.get("parameters"))
     case.compare("received.body", observed.get("body"))
-    case.compare("received.headers", observed.get("headers", {}))
-    case.compare("received.absentHeaders", observed.get("headers", {}))
+    # The headers that the handler received are among the headers of the request of the case.
+    received = {}
+    if "request" in observed:
+        for name in request_spec["headers"]:
+            value = observed["request"].header(name)
+            if value is not None:
+                received[name] = value
+    case.compare("received.headers", received)
+    case.compare("received.absentHeaders", received)
     service = None if handler_spec is None else handler_spec.get("service")
     case.compare(
         "received.service",
         "service" in observed and observed["service"] is created.get(service),
     )
     case.compare("received.params", observed.get("params"))
+
+
+def values(case: CaseReader) -> None:
+    """Makes a representation with the status, with the value of the body when the case states it and with the
+    headers when the case states them, and compares the three members."""
+    status = case.input("status")
+    if case.has("headers"):
+        made = Representation(
+            status, decoded(case.input("body")), case.input("headers")
+        )
+    elif case.has("body"):
+        made = Representation(status, decoded(case.input("body")))
+    else:
+        made = Representation(status)
+    case.compare(
+        "held", {"status": made.status, "body": made.body, "headers": made.headers}
+    )
 
 
 def _declared_types(application: dict) -> dict:
@@ -209,14 +236,15 @@ def _handler(spec: dict | None, calls: list):
 
 
 def _observed(request: Request, media: object) -> dict:
-    """Returns what the handler receives: the method, the media parameters, the headers and the decoded JSON body."""
-    body = request._body
+    """Returns what the handler receives: the method, the media parameters, the request and the value of its JSON
+    body."""
     return {
         "method": request.method,
         "parameters": media.parameters(),
-        "headers": dict(request._headers),
+        "request": request,
+        "browser": request.browser(),
         "params": request.params(),
-        "body": JsonCodec.decode(body.decode("utf-8")) if body else None,
+        "body": request.json(),
     }
 
 

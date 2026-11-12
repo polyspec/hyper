@@ -81,9 +81,23 @@ export function parsed(text: string): unknown {
 
 let cached: Record<string, Declaration> | undefined;
 
+/** Whether a value is an object that is no list. */
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** Whether a value is the declarations of the case files: an object whose entries are objects with fixtures and sections. */
+function isDeclarations(value: unknown): value is Record<string, Declaration> {
+  return isObject(value) && Object.values(value).every((entry) => isObject(entry) && isObject(entry.fixtures) && isObject(entry.sections));
+}
+
 /** The `caseFiles` of contracts/interfaces.json, read once. */
 export function caseFiles(): Record<string, Declaration> {
-  cached ??= (JSON.parse(readFileSync(new URL('interfaces.json', CONTRACTS), 'utf8')) as { caseFiles: Record<string, Declaration> }).caseFiles;
+  if (cached !== undefined) return cached;
+  const document: unknown = JSON.parse(readFileSync(new URL('interfaces.json', CONTRACTS), 'utf8'));
+  const declarations: unknown = isObject(document) ? document.caseFiles : undefined;
+  if (!isDeclarations(declarations)) throw new Error('interfaces.json holds no caseFiles');
+  cached = declarations;
   return cached;
 }
 

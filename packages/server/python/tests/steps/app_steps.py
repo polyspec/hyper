@@ -14,6 +14,7 @@ import warnings
 from pathlib import Path
 
 from polyspec.hyper._csrf import Csrf
+from polyspec.hyper._renderer import Renderer
 from polyspec.hyper._session import Session
 from polyspec.hyper.app import App
 from polyspec.hyper.array_session import ArraySession
@@ -124,21 +125,39 @@ def cases(case) -> None:
     case.compare("handlerCalls", started)
     case.compare("actions", sum(1 for name in started if name.startswith("action:")))
     case.compare(
-        "observed", [[name, _json_value(value)] for name, value in run.calls.observed]
+        "observed",
+        [
+            [name, _masked_word(_json_value(value), answered.token)]
+            for name, value in run.calls.observed
+        ],
     )
+    if case.has("browsers"):
+        case.compare(
+            "browsers",
+            [
+                _browser_word(value, token, answered.token_before)
+                for _name, value in run.calls.observed
+            ],
+        )
     case.compare("serviceValues", run.service_values())
+    case.compare("valueReads", run.calls.reads)
     run.reports.compare(case)
     if any(
-        case.has(name) for name in ("failure", "failureReported", "elapsedFromStart")
+        case.has(name)
+        for name in ("failure", "failureReported", "failureLogged", "elapsedFromStart")
     ):
         _, _, elapsed, _, failure = run.reports.last()
         case.compare("failure", "" if failure is None else failure)
         case.compare("failureReported", failure is not None)
         case.compare(
+            "failureLogged",
+            failure is not None and f"hyper: {failure}" in answered.logged.splitlines(),
+        )
+        case.compare(
             "elapsedFromStart",
             isinstance(elapsed, (int, float))
             and not isinstance(elapsed, bool)
-            and elapsed >= answered.started_before,
+            and answered.least <= elapsed <= answered.most,
         )
     case.compare(
         "storedAfter",
@@ -192,6 +211,82 @@ def opens(case) -> None:
             error = failure
     case.outcome("open", error)
     case.compare("openError", "" if error is None else str(error))
+
+
+def parts(case) -> None:
+    """Renders the title and each region of the case alone and the document of its route, and compares the parts
+    with their places in the document and in the page region."""
+    name = case.input("application")
+    application = case.input("applications")[name]
+    manifest = application["manifest"]
+    route = next(
+        (item for item in manifest["routes"] if item["name"] == case.input("route")),
+        None,
+    )
+    if route is None:
+        raise LookupError(f"the application {name} has no route {case.input('route')}")
+    renderer = Renderer.open(
+        str(program_of(name)[1]), application.get("timezone", "+09:00")
+    )
+    shared = renderer.bind(case.input("shared"))
+    bound = {
+        region: renderer.bind(data) for region, data in case.input("regions").items()
+    }
+    route_regions = {
+        region["name"]: {"template": region["template"], "data": bound[region["name"]]}
+        for region in route.get("regions", [])
+        if region["name"] in bound
+    }
+    page = next(region["name"] for region in manifest["regions"] if region.get("page"))
+    title = renderer.alone(manifest["title"], shared, renderer.bind({}))
+    texts = {}
+    manifest_regions = {}
+    for region in manifest["regions"]:
+        template = route["template"] if region["name"] == page else region["template"]
+        manifest_regions[region["name"]] = {
+            "template": template,
+            "data": bound[region["name"]],
+        }
+        texts[region["name"]] = renderer.alone(
+            template,
+            shared,
+            bound[region["name"]],
+            route_regions if region["name"] == page else None,
+        )
+    for region, entry in route_regions.items():
+        texts[region] = renderer.alone(entry["template"], shared, entry["data"])
+    frame = _placed(
+        renderer.document(
+            manifest["layout"],
+            manifest["title"],
+            shared,
+            manifest_regions,
+            page,
+            route_regions,
+            None,
+            application["build"],
+        ),
+        "title",
+        title,
+    )
+    for region in manifest["regions"]:
+        frame = _placed(frame, region["name"], texts[region["name"]])
+    page_frame = texts[page]
+    for region in route_regions:
+        page_frame = _placed(page_frame, region, texts[region])
+    case.compare("title", title)
+    case.compare("parts", {region: texts[region] for region in bound})
+    case.compare("frame", frame)
+    case.compare("pageFrame", page_frame)
+
+
+def _placed(text: str, name: str, part: str) -> str:
+    """The text with the first occurrence of a part replaced by the marker of its name."""
+    if part == "" or part not in text:
+        raise LookupError(
+            f"the part {name} is empty or does not occur where it is placed"
+        )
+    return text.replace(part, "{# " + name + "}", 1)
 
 
 class _Application:
@@ -304,7 +399,7 @@ def _without_null(value: dict) -> dict:
 
 class _Answered:
     """One answered request: its response, the token that the session held before and after it, the text that the
-    server logged and the start that the step gave."""
+    server logged, and the least and the most milliseconds from the start of the request to its answer."""
 
     def __init__(
         self,
@@ -312,13 +407,15 @@ class _Answered:
         token_before: object,
         token: object,
         logged: str,
-        started_before: int,
+        least: float,
+        most: float,
     ) -> None:
         self.response = response
         self.token_before = token_before
         self.token = token
         self.logged = logged
-        self.started_before = started_before
+        self.least = least
+        self.most = most
 
     def unmasked(self) -> str:
         """The body with each masked value of the token that the session held after the request replaced."""
@@ -416,19 +513,26 @@ class _Session:
             cookies=cookies,
             https=spec.get("https", False),
         )
-        before = spec.get("startedBefore", 0)
         token_before = self.session.get(_TOKEN_KEY)
         self.store.calls.clear()
         log = io.StringIO()
         with contextlib.redirect_stderr(log):
+            # The clock of `handle`, read just before the call and just after its return (HY-60.5).
+            called = time.perf_counter_ns()
             if "startedBefore" in spec:
-                response = self._app.handle(
-                    request, self.store, time.perf_counter_ns() - before * 1_000_000
-                )
+                start = called - spec["startedBefore"] * 1_000_000
+                response = self._app.handle(request, self.store, start)
             else:
+                start = called
                 response = self._app.handle(request, self.store)
+            returned = time.perf_counter_ns()
         return _Answered(
-            response, token_before, self.session.get(_TOKEN_KEY), log.getvalue(), before
+            response,
+            token_before,
+            self.session.get(_TOKEN_KEY),
+            log.getvalue(),
+            (called - start) / 1e6,
+            (returned - start) / 1e6,
         )
 
     def _token(self) -> str:
@@ -522,6 +626,38 @@ def _member(body: str, name: str) -> dict:
 def _json_value(value: object) -> object:
     """A value of the runtime as the JSON value that a case states."""
     return json.loads(json.dumps(value))
+
+
+def _masked_word(value: object, token: object) -> object:
+    """A value that a handler read, with a masked value of the token that the session holds after the request written
+    as `masked`, as `members` and `embedded` write it (HY-24)."""
+    if (
+        isinstance(value, str)
+        and isinstance(token, str)
+        and _MASKED.fullmatch(value) is not None
+        and Csrf.verify(token, value)
+    ):
+        return "masked"
+    return value
+
+
+def _browser_word(value: object, after: object, before: object) -> str:
+    """Returns the word of a value that a handler read as `browser()`: `none` for None, `current` for the digest of
+    the token that the session holds after the request, `previous` for the digest of another token that it held when
+    the request was sent, and `other` for every other value."""
+
+    def digest(token: object) -> str | None:
+        if isinstance(token, str) and _TOKEN.match(token) is not None:
+            return hashlib.sha256(bytes.fromhex(token)).hexdigest()
+        return None
+
+    if value is None:
+        return "none"
+    if digest(after) is not None and value == digest(after):
+        return "current"
+    if digest(before) is not None and before != after and value == digest(before):
+        return "previous"
+    return "other"
 
 
 def _warning_outside() -> bool:

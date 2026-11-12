@@ -48,7 +48,7 @@ jobs:
             composer: true
             python: true
             redis: true
-            targets: typecheck hyper-test-scripts spec-docs-check
+            targets: typecheck hyper-test-scripts spec-docs-check recipe-check
           - name: php
             tools: node php composer pie
             php: true

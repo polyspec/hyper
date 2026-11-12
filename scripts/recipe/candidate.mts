@@ -8,7 +8,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { readAllSources, type Validators } from './run.mts';
 import { readerKey, words } from './names.mts';
-import { LANGS, type Concern, type Lang, type Member, type Sources, type Spec, type SpecType, type Unit } from './types.mts';
+import { LANGS, type Concern, type Lang, type Member, type Sources, type Spec, type SpecType, type Unit, type Visibility } from './types.mts';
 import { validators } from './validators.mts';
 
 export type Candidate = { spec: Spec; handWritten: string[]; stale: string[] };
@@ -31,12 +31,29 @@ function camel(kebab: string): string {
   return kebab.split('-').map((part, i) => (i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1))).join('');
 }
 
+/** What the readers of the languages read of one member or type, in the order of the languages. */
+function readOf<T>(entry: Partial<Record<Lang, T>>): T[] {
+  return LANGS.flatMap((lang) => {
+    const read = entry[lang];
+    return read === undefined ? [] : [read];
+  });
+}
+
+/**
+ * The visibility of a member or a type of the spec, which has no `protected`: the readers record a protected method,
+ * and a candidate cannot state one, so it stops with the name of what it read.
+ */
+function specVisibility(visibility: Visibility, what: string): Member['visibility'] {
+  if (visibility === 'protected') throw new Error(`${what} is protected, which the spec has no visibility for`);
+  return visibility;
+}
+
 /**
  * Derives the members of a unit from the sources of its files (HYR-5): the members of each file joined across languages
  * by their reader key. The neutral fields take placeholders; a kind, a visibility or an `only` that the languages do
  * not agree on is flagged.
  */
-function deriveMembers(unit: Unit, sources: Record<Lang, Sources>, flag: (item: object, what: string) => void): void {
+function deriveMembers(unit: Unit, sources: Record<Lang, Sources>, flag: (item: Member, what: string) => void): void {
   const byKey = new Map<string, Partial<Record<Lang, ReaderMember>>>();
   for (const lang of LANGS) {
     const file = unit.native[lang]?.file;
@@ -49,16 +66,13 @@ function deriveMembers(unit: Unit, sources: Record<Lang, Sources>, flag: (item: 
     }
   }
   for (const [key, entry] of byKey) {
-    const list = LANGS.flatMap((lang) => {
-      const r = entry[lang];
-      return r === undefined ? [] : [r];
-    });
+    const list = readOf(entry);
     const first = list[0];
     if (first === undefined) continue;
     const member: Member = {
       id: `${unit.id}.${camel(key)}`,
       kind: first.kind,
-      visibility: first.visibility as Member['visibility'],
+      visibility: specVisibility(first.visibility, `the member ${first.symbol}`),
       inputs: first.parameters.map(() => PLACEHOLDER_TERM),
       output: PLACEHOLDER_TERM,
       errors: [],
@@ -118,15 +132,14 @@ function deriveSpec(spec: Spec, sources: Record<Lang, Sources>, handWritten: str
   }
   const types: SpecType[] = [];
   for (const [key, entry] of typeEntries) {
-    const list = LANGS.flatMap((lang) => {
-      const r = entry[lang];
-      return r === undefined ? [] : [r];
-    });
+    const list = readOf(entry);
     const first = list[0];
+    // An entry holds the type of at least one language; without one there is nothing to derive.
+    if (first === undefined) continue;
     const fields = first.fields ?? [];
     const type: SpecType = {
       id: camel(key),
-      visibility: first.visibility as SpecType['visibility'],
+      visibility: specVisibility(first.visibility, `the type ${first.file}::${first.name}`),
       unit: keyOf(first.file),
       shape: fields.length > 0 ? { fields: Object.fromEntries(fields.map((f) => [f, PLACEHOLDER_TERM])), optional: [] } : { term: PLACEHOLDER_TERM },
       native: {},
@@ -185,7 +198,7 @@ export function buildCandidate(root: string, phpAutoload: string, v: Validators)
       // A unit that the spec lists without members takes the members of its sources, with their neutral fields to write.
       if (unit.members.length === 0) {
         deriveMembers(unit, sources, (item, what) => {
-          const mi = unit.members.indexOf(item as Member);
+          const mi = unit.members.indexOf(item);
           handWritten.push(`${ua}/members/${mi < 0 ? unit.members.length : mi}/${what}`);
         });
       }

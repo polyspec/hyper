@@ -1,25 +1,33 @@
 // Reads the Node server sources for the recipe check (HYR-8) with the TypeScript compiler API and prints one JSON
-// document on stdout. Usage: node read-node.mts <root> --sources <dir>... [--tests <dir>...]
-// The compiler comes from the private package scripts/recipe/typescript (TypeScript 6.0.3, see its description).
+// document on stdout. Usage: node read-node.mts <root> --sources <dir>... [--tests <dir>...] [--registry <file>]
+// The compiler is the one of the private package scripts/recipe/typescript (TypeScript 6.0.3, see its description),
+// imported by its path, so that its own declarations give the types of the compiler API.
 
-import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
 import { basename, join } from 'node:path';
-
-const require = createRequire(new URL('./typescript/package.json', import.meta.url));
-const ts = require('typescript') as typeof import('typescript');
+import ts from './typescript/node_modules/typescript/lib/typescript.js';
+import { NodeFiles, readRegistry, readScopes } from './read-node-scopes.mts';
+import type { Sources, Visibility } from './types.mts';
 
 const [root, ...rest] = process.argv.slice(2);
 if (root === undefined) {
   console.error('usage: read-node.mts <root> --sources <dir>... [--tests <dir>...]');
   process.exit(2);
 }
+const base: string = root;
 const groups: Record<'sources' | 'tests', string[]> = { sources: [], tests: [] };
 let current: 'sources' | 'tests' | undefined;
-for (const arg of rest) {
+let registry: string | undefined;
+for (const [i, arg] of rest.entries()) {
+  if (rest[i - 1] === '--registry') continue;
+  if (arg === '--registry') {
+    registry = rest[i + 1];
+    if (registry === undefined) throw new Error('--registry takes a file');
+    continue;
+  }
   if (arg === '--sources' || arg === '--tests') {
-    current = arg.slice(2) as 'sources' | 'tests';
+    current = arg === '--sources' ? 'sources' : 'tests';
     continue;
   }
   if (current === undefined) {
@@ -31,29 +39,16 @@ for (const arg of rest) {
 // The files git tracks below the directories, relative to the root; a file git does not track is not part of the tree.
 function listFiles(dirs: string[], keep: (path: string) => boolean): string[] {
   for (const dir of dirs) {
-    if (!statSync(join(root!, dir), { throwIfNoEntry: false })?.isDirectory()) {
-      throw new Error(`no such directory ${dir} under ${root}`);
+    if (!statSync(join(base, dir), { throwIfNoEntry: false })?.isDirectory()) {
+      throw new Error(`no such directory ${dir} under ${base}`);
     }
   }
-  const listed = execFileSync('git', ['-c', 'core.quotePath=false', 'ls-files', '-z', '--', ...dirs], { cwd: root!, encoding: 'utf8' });
+  const listed = execFileSync('git', ['-c', 'core.quotePath=false', 'ls-files', '-z', '--', ...dirs], { cwd: base, encoding: 'utf8' });
   return listed.split('\0').filter((path) => path !== '' && keep(path)).sort();
 }
 
-type Visibility = 'public' | 'internal' | 'private' | 'protected';
-type Out = {
-  language: 'node';
-  files: string[];
-  units: { file: string; name: string; kind: string; internal: boolean }[];
-  types: { file: string; name: string; visibility: Visibility; declaration: string; fields?: string[]; parameters?: number }[];
-  members: { file: string; unit: string; name: string; kind: string; visibility: Visibility; symbol: string; signature: string; parameters: string[] }[];
-  constants: { file: string; name: string; visibility: Visibility }[];
-  exports: { file: string; name: string }[];
-  uses: { file: string; name: string }[];
-  tests: { file: string; name: string }[];
-  dynamicTests: { file: string; line: number }[];
-  // A private constructor is private by the language in Node, so the reader records no calls (HYR-8).
-  calls: { file: string; name: string; module: string }[];
-};
+// A private constructor is private by the language in Node, so the reader records no calls (HYR-8).
+type Out = Sources & { language: 'node' };
 
 const sourceFiles = listFiles(groups.sources, (n) => n.endsWith('.ts') && !n.endsWith('.d.ts') && !basename(n).includes('.test.'));
 const testFiles = listFiles(groups.tests, (n) => /\.test\.m?ts$/.test(n));
@@ -69,6 +64,9 @@ const out: Out = {
   tests: [],
   dynamicTests: [],
   calls: [],
+  classes: [],
+  scopes: [],
+  registry: [],
 };
 
 function modifiers(node: ts.Node): readonly ts.ModifierLike[] {
@@ -125,8 +123,8 @@ function parameterNames(params: readonly ts.ParameterDeclaration[]): string[] {
 }
 
 function readSource(file: string): void {
-  const sf = ts.createSourceFile(file, readFileSync(join(root!, file), 'utf8'), ts.ScriptTarget.Latest, true);
-  const stem = file.split('/').pop()!.replace(/\.ts$/, '');
+  const sf = ts.createSourceFile(file, readFileSync(join(base, file), 'utf8'), ts.ScriptTarget.Latest, true);
+  const stem = basename(file).replace(/\.ts$/, '');
   const functions: ts.FunctionDeclaration[] = [];
 
   for (const st of sf.statements) {
@@ -325,9 +323,15 @@ function visitTests(node: ts.Node, sf: ts.SourceFile, stack: string[]): void {
 try {
   for (const file of sourceFiles) readSource(file);
   for (const file of testFiles) {
-    const sf = ts.createSourceFile(file, readFileSync(join(root!, file), 'utf8'), ts.ScriptTarget.Latest, true);
+    const sf = ts.createSourceFile(file, readFileSync(join(base, file), 'utf8'), ts.ScriptTarget.Latest, true);
     visitTests(sf, sf, []);
   }
+  // HYR-5, HYR-7: the scopes of every file of the sources and of the test tree, and the registry of the steps.
+  const scoped = new NodeFiles(base, [...sourceFiles, ...listFiles(groups.tests, (n) => /\.m?ts$/.test(n) && !n.endsWith('.d.ts'))]);
+  const { classes, scopes } = readScopes(scoped);
+  out.classes = classes;
+  out.scopes = scopes;
+  out.registry = registry === undefined ? [] : readRegistry(scoped, registry);
 } catch (error) {
   console.error(`read-node.mts: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
