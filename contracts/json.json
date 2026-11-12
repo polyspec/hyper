@@ -71,7 +71,7 @@
       "label": "float 1e16 is outside the data model (VAL-2)",
       "json": "1e16",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -82,7 +82,7 @@
       "label": "float 1e17 is outside the data model (VAL-2)",
       "json": "1e17",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -93,7 +93,7 @@
       "label": "float above the safe range is outside the data model (VAL-2)",
       "json": "1.2345678901234568e17",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -104,7 +104,7 @@
       "label": "float 2^53 + 1 rounds to 2^53 is outside the data model (VAL-2)",
       "json": "9007199254740993.0",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -115,7 +115,7 @@
       "label": "integer literal longer than 64 bits is outside the data model (VAL-2)",
       "json": "99999999999999999999",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -126,7 +126,7 @@
       "label": "large exponent is outside the data model (VAL-2)",
       "json": "1.5e300",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -137,7 +137,7 @@
       "label": "largest float is outside the data model (VAL-2)",
       "json": "1.7976931348623157e308",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -264,7 +264,7 @@
       "label": "integer outside the safe range",
       "json": "9007199254740993",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -275,7 +275,7 @@
       "label": "negative integer outside the safe range",
       "json": "-9007199254740992",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -286,7 +286,7 @@
       "label": "largest 64-bit integer",
       "json": "9223372036854775807",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -297,7 +297,7 @@
       "label": "integer literal longer than 64 bits",
       "json": "9223372036854775808",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -308,7 +308,7 @@
       "label": "float outside the safe range",
       "json": "1e20",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -325,7 +325,7 @@
       "label": "number that is not finite",
       "json": "1e400",
       "raises": {
-        "kind": "E_DATA_NUMBER_NOT_FINITE",
+        "kind": "data_number_not_finite",
         "status": null,
         "category": "value",
         "message": null
@@ -336,7 +336,7 @@
       "label": "nested integer outside the safe range",
       "json": "{\"a\":[1,{\"b\":9007199254740993}]}",
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -353,7 +353,7 @@
       "label": "lone surrogate",
       "json": "\"\\ud800\"",
       "raises": {
-        "kind": "E_DATA_INVALID_UTF8",
+        "kind": "data_invalid_utf8",
         "status": null,
         "category": "value",
         "message": null
@@ -481,7 +481,7 @@
       "label": "65 nested lists are read and fail with the depth of the data model (VAL-20)",
       "json": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
       "raises": {
-        "kind": "E_DATA_DEPTH",
+        "kind": "data_depth",
         "status": null,
         "category": "value",
         "message": null
@@ -492,7 +492,7 @@
       "label": "256 nested lists are within the reading limit and fail with the depth of the data model",
       "json": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
       "raises": {
-        "kind": "E_DATA_DEPTH",
+        "kind": "data_depth",
         "status": null,
         "category": "value",
         "message": null

@@ -21,7 +21,12 @@
         ],
         "routes": []
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_kept_path_on_the_page_region_is_rejected",
@@ -40,7 +45,12 @@
         ],
         "routes": []
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_kept_path_on_a_manifest_region_is_rejected",
@@ -66,7 +76,12 @@
         ],
         "routes": []
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_manifest_region_with_two_topics_and_a_kept_path_is_rejected",
@@ -99,7 +114,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_route_at_the_reserved_keep_path_is_rejected",
@@ -122,7 +142,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "the_home_route_at_the_reserved_keep_path_is_rejected",
@@ -145,7 +170,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_topic_that_is_no_name_is_rejected",
@@ -168,7 +198,12 @@
         ],
         "routes": []
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "routes_that_are_text_are_rejected",
@@ -184,7 +219,12 @@
         ],
         "routes": "home"
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_route_name_that_is_a_number_is_rejected",
@@ -207,7 +247,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_region_name_that_is_a_list_is_rejected",
@@ -223,7 +268,12 @@
         ],
         "routes": []
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_page_region_with_a_template_is_rejected",
@@ -247,7 +297,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "regions_without_a_page_region_are_rejected",
@@ -270,7 +325,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_region_name_that_starts_with_a_digit_is_rejected",
@@ -297,7 +357,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_region_name_that_is_layout_is_rejected",
@@ -324,7 +389,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_region_name_that_is_title_is_rejected",
@@ -351,7 +421,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_region_name_that_is_data_is_rejected",
@@ -378,7 +453,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_region_name_that_holds_a_space_is_rejected",
@@ -405,7 +485,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "two_page_regions_are_rejected",
@@ -432,7 +517,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_route_region_with_the_name_of_a_manifest_region_is_rejected",
@@ -461,7 +551,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_kept_path_with_an_empty_key_is_rejected",
@@ -493,7 +588,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_route_region_with_a_kept_kind_that_is_no_kind_is_rejected",
@@ -525,7 +625,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_manifest_with_one_page_region_and_one_route_is_read",
@@ -548,7 +653,7 @@
           }
         ]
       },
-      "rejected": false
+      "read": true
     },
     {
       "id": "a_route_region_without_kept_paths_is_read",
@@ -577,7 +682,7 @@
           }
         ]
       },
-      "rejected": false
+      "read": true
     },
     {
       "id": "a_region_named_build_is_rejected",
@@ -604,7 +709,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_route_region_named_build_is_rejected",
@@ -633,7 +743,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_route_region_named_layout_is_rejected",
@@ -662,7 +777,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_route_region_named_title_is_rejected",
@@ -691,7 +811,12 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_route_region_named_data_is_rejected",
@@ -720,49 +845,79 @@
           }
         ]
       },
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
-      "id": "a_manifest_of_511_nested_containers_is_read",
-      "label": "a manifest whose key k holds 510 nested lists, 511 nested containers with the manifest object, is read (HY-2.8)",
-      "text": "{\"k\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]],\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
-      "rejected": false
+      "id": "a_manifest_of_64_levels_is_read",
+      "label": "a manifest whose key k holds 63 nested lists, 64 levels with the manifest object, is read (HY-2.9, VAL-20)",
+      "text": "{\"k\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]],\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
+      "read": true
     },
     {
-      "id": "a_manifest_of_512_nested_containers_is_rejected",
-      "label": "a manifest whose key k holds 511 nested lists, 512 nested containers with the manifest object, is rejected (HY-2.8)",
-      "text": "{\"k\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]],\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
-      "rejected": true
+      "id": "a_manifest_of_65_levels_is_rejected",
+      "label": "a manifest whose key k holds 64 nested lists, 65 levels with the manifest object, is deeper than the data model allows and fails the open (HY-2.9, VAL-20)",
+      "text": "{\"k\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]],\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "truncated_json_is_rejected",
       "label": "a manifest file that holds truncated JSON fails the open with the open error (HY-106.18)",
       "text": "{\"layout\":",
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_file_that_is_not_utf8_is_rejected",
       "label": "a manifest file with the byte ff in a string is not valid UTF-8 (HY-106.18)",
       "bytes": "7b226c61796f7574223a22ff227d",
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_file_that_starts_with_a_byte_order_mark_is_rejected",
       "label": "a valid manifest after U+FEFF is not valid JSON (HY-106.7)",
       "bytes": "efbbbf7b226c61796f7574223a226c61796f75742e74706c222c227469746c65223a227469746c652e74706c222c22726567696f6e73223a5b7b226e616d65223a22636f6e74656e74222c2270616765223a747275657d5d2c22726f75746573223a5b7b226e616d65223a22686f6d65222c2270617468223a222f222c227469746c65223a22486f6d65222c2274656d706c617465223a22706167652e74706c227d5d7d",
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
-      "id": "a_key_that_starts_with_u_0000_is_rejected",
-      "label": "a manifest that is valid without its key that starts with U+0000 is rejected (HY-2.8)",
+      "id": "a_key_that_starts_with_u_0000_is_read",
+      "label": "a manifest key that starts with U+0000 is a key, and the manifest is read (HY-2.9)",
       "text": "{\"\\u0000k\":1,\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
-      "rejected": true
+      "read": true
     },
     {
       "id": "a_lone_surrogate_escape_is_rejected",
-      "label": "a manifest that is valid without its lone surrogate escape is rejected (HY-2.8)",
+      "label": "a manifest that is valid without its lone surrogate escape is rejected (HY-2.9)",
       "text": "{\"k\":\"\\ud800\",\"layout\":\"layout.tpl\",\"title\":\"title.tpl\",\"regions\":[{\"name\":\"content\",\"page\":true}],\"routes\":[{\"name\":\"home\",\"path\":\"/\",\"title\":\"Home\",\"template\":\"page.tpl\"}]}",
-      "rejected": true
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     }
   ],
   "reads": [

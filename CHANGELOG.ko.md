@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 392dbac7cb15671463e00a069595bf15885f0d93a90e009291572fb30d2bdc82 -->
+<!-- source-sha256: db1e50d4090575ea6c75114073d474bab591351540bf653eb2c2cfbc75bf0bda -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core는 manifest를 읽고 검사하고(HY-1, HY-2, HY-37, HY-40.2, HY-118, HY-4.6), rest 매개변수와 base path로 요청 path의 route를 찾으며(HY-4부터 HY-8, HY-49), ordered-json과 template 데이터 모델로 hyper의 JSON 텍스트를 읽고 쓴다(HY-54.18부터 HY-54.21). 그 시험은 `manifest.json`, `routes.json`, `rest.json`, `json.json`을 실행한다(C-7). manifest 파일은 HY-54.20이 JSON 텍스트를 읽듯 읽는다(HY-2.9). U+0000으로 시작하는 key는 읽히고, 데이터 모델의 64단계보다 깊은 manifest는 open을 실패시키며, 이전에는 중첩 container 511개를 읽었다. `contracts/manifest.json`은 실패를 `raises`로 쓴다. 데이터 모델의 kind는 `data_number_range`처럼 template 데이터 모델의 snake_case kind다.
 
 - hyper는 reply의 `Max-Age`와 page 상태의 범위를 따로 검사하지 않는다. binding이 정수로 받지 않는 값은 `invalid_number`로 거부하므로(HY-52.17, HY-69.8) Node는 2^53을 거부하고 PHP와 Python은 그것을 쓰거나 다른 정수로 거부하며, `contracts/reply.json`의 case 셋을 runtime별로 나눈다. kind `invalid_number`는 HY-132의 표에서 빠진다. 406 목록은 조합이 제공 값의 선언 순서를 따른다고 적고(HY-116.13), JSON 규칙은 HY-54.18부터 HY-54.21에서 ordered-json의 요구(RQ-004부터 RQ-035)를 가리키며, interface 계약은 반환 타입 `uint`의 `page_status`와 `reply_status`를 선언한다(S-3b, C-7).
 

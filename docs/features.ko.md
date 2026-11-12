@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: f724b68feef94118ef19c25800319ba99e72aa9638dfeaeffda400b227256cf8 -->
+<!-- source-sha256: 55bfba7116d35ac6116d42540ea1e6674aa1e4f954882e1f00e6743d149fc8a1 -->
 # 기능 상태
 
 [English](features.md).
@@ -9,7 +9,7 @@
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
 | protocol | 영역 프로토콜 명세(HY-1 ~ HR-94) | implemented | [프로토콜](spec/protocol.ko.md) |
-| rust-core | server 규칙의 Rust core, `packages/server/rust`의 `polyspec-hyper`(C-7): HY-132의 오류, 406과 `Vary`를 가진 media 선택(HY-116, HY-117, HY-119), representation entry·body·응답 검사(HY-118, HY-121, HY-122), tag(HY-53, HY-122.10), cookie 이름과 session cookie(HY-45, HY-38.10), reply 값(HY-52, HY-69, HY-103), 애플리케이션 경로와 page 상태(HY-46, HY-58), token과 `browser()`(HY-24), ORM 응답(HY-107), 요청의 순서(HY-120); 그 interface 계약 `packages/server/rust/interface.json` | 일부; 세 server는 S-4까지 부르지 않는다 | `make core-test`, `make core-lint`, `make core-fmt-check` |
+| rust-core | server 규칙의 Rust core, `packages/server/rust`의 `polyspec-hyper`(C-7): HY-132의 오류, 406과 `Vary`를 가진 media 선택(HY-116, HY-117, HY-119), representation entry·body·응답 검사(HY-118, HY-121, HY-122), tag(HY-53, HY-122.10), cookie 이름과 session cookie(HY-45, HY-38.10), reply 값(HY-52, HY-69, HY-103), 애플리케이션 경로와 page 상태(HY-46, HY-58), manifest와 그 검사(HY-1, HY-2, HY-37, HY-40.2, HY-118), rest 매개변수와 base path를 가진 route(HY-4부터 HY-8, HY-49), JSON 텍스트(HY-54.18부터 HY-54.21), token과 `browser()`(HY-24), ORM 응답(HY-107), 요청의 순서(HY-120); 그 interface 계약 `packages/server/rust/interface.json` | 일부; 세 server는 S-4까지 부르지 않는다 | `make core-test`, `make core-lint`, `make core-fmt-check` |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
@@ -98,7 +98,7 @@ Rust core(C-7)는 아직 모든 규칙을 갖지 않는다. 가질 때까지 세
 
 | 규칙 | core가 아직 갖지 않는 이유 | 기간 |
 |---|---|---|
-| manifest와 그 검사(HY-1부터 HY-3, HY-118.7), router와 rest 매개변수(HY-4부터 HY-8, HY-49), read path(HY-73) | manifest를 데이터 모델의 값으로 읽으며, core는 그 API를 template crate에서 받는다 | core가 manifest를 읽을 때 |
+| read path(HY-73)와 읽는 데이터의 보존(HY-73.29) | core는 manifest, route, JSON 텍스트를 읽고, read path는 build에서 온다 | core가 읽는 데이터를 보존할 때 |
 | kept 값과 그 적합성(HY-37, HY-38, HY-40), flash 값과 바뀐 topic(HY-25), record 변환과 `_hyper_*` key(HY-104.13, HY-104.14, HY-104.22, HY-104.23) | 데이터 모델의 값과 sessions 라이브러리의 저장소 interface가 필요하며, 그 interface 계약이 아직 없다 | sessions 라이브러리의 저장소 interface와 데이터 모델 API |
 | page와 JSON 응답(HY-10, HY-12부터 HY-19, HY-31, HY-62, HY-92), context와 그 hash(HY-124부터 HY-128), 데이터 모델 검사(HY-44), JSON 텍스트(HY-54.18부터 HY-54.21) | 데이터 모델의 값을 ordered-json으로 쓰고 template을 렌더한다 | core가 template과 ordered-json crate를 받을 때 |
 | 요청의 body(HY-56, HY-57, HY-113, HY-114, HY-131)와 요청의 cookie(HY-129.13) | http-forms와 http-cookies 라이브러리가 가지며, 각 server가 binding으로 부른다 | S-4 |

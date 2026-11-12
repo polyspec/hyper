@@ -348,3 +348,189 @@ fn representation_tags() {
     }
     assert!(ran > 0);
 }
+
+fn route_list(file: &Value) -> Vec<(String, String)> {
+    group(file, "routes")
+        .iter()
+        .map(|route| {
+            (
+                text(route, "name").to_owned(),
+                text(route, "path").to_owned(),
+            )
+        })
+        .collect()
+}
+
+fn check_match(case: &Value, found: Option<polyspec_hyper::router::Match>) {
+    let expected = &case["result"];
+    match found {
+        None => assert!(expected.is_null(), "{}", case["id"]),
+        Some(found) => {
+            assert_eq!(
+                Some(found.name.as_str()),
+                expected["name"].as_str(),
+                "{}",
+                case["id"]
+            );
+            let params: Vec<(String, Value)> = found
+                .params
+                .into_iter()
+                .map(|(n, v)| (n, Value::from(v)))
+                .collect();
+            let expected: Vec<(String, Value)> = match expected["params"].as_object() {
+                Some(map) => map.iter().map(|(n, v)| (n.clone(), v.clone())).collect(),
+                None => panic!("{}: no params", case["id"]),
+            };
+            assert_eq!(params, expected, "{}", case["id"]);
+        }
+    }
+}
+
+#[test]
+fn routes_match_in_manifest_order() -> Result<(), Error> {
+    // HY-4 to HY-8, HY-49
+    for file_name in ["routes.json", "rest.json"] {
+        let file = cases(file_name);
+        let router = polyspec_hyper::router::Router::new(&route_list(&file))?;
+        for case in group(&file, "cases") {
+            check_match(case, router.find(text(case, "path")));
+        }
+        if let Some(base) = file["basePath"].as_str() {
+            for case in group(&file, "baseCases") {
+                check_match(case, router.find_under(base, text(case, "path")));
+            }
+        }
+        for case in group(&file, "invalidPaths") {
+            let refused = polyspec_hyper::router::route("x", text(case, "path"));
+            assert!(
+                matches!(refused, Err(Error::InvalidApplication(_))),
+                "{}",
+                case["id"]
+            );
+        }
+    }
+    Ok(())
+}
+
+fn from_hex(text: &str) -> Vec<u8> {
+    let digit = |byte: u8| match byte {
+        b'0'..=b'9' => byte - b'0',
+        b'a'..=b'f' => byte - b'a' + 10,
+        _ => panic!("no hexadecimal digit {byte}"),
+    };
+    text.as_bytes()
+        .chunks(2)
+        .map(|pair| digit(pair[0]) << 4 | digit(pair[1]))
+        .collect()
+}
+
+#[test]
+fn manifest_checks() {
+    // HY-2, HY-2.9, HY-37, HY-40.2, HY-106.18
+    let file = cases("manifest.json");
+    let mut ran = 0;
+    for case in group(&file, "checks") {
+        let bytes = if let Some(manifest) = case.get("manifest") {
+            manifest.to_string().into_bytes()
+        } else if let Some(text) = case["text"].as_str() {
+            text.as_bytes().to_vec()
+        } else {
+            from_hex(text(case, "bytes"))
+        };
+        let result = polyspec_hyper::manifest::read(&bytes);
+        match (&result, case.get("raises")) {
+            (Ok(_), None) => assert_eq!(case["read"].as_bool(), Some(true), "{}", case["id"]),
+            (Err(error), Some(_)) => check_raises(case, error),
+            (other, _) => panic!("{}: {other:?}", case["id"]),
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+    for case in group(&file, "reads") {
+        let manifest = match polyspec_hyper::manifest::read(case["manifest"].to_string().as_bytes())
+        {
+            Ok(manifest) => manifest,
+            Err(error) => panic!("{}: {error}", case["id"]),
+        };
+        let regions: Vec<&str> = manifest
+            .regions
+            .iter()
+            .map(|region| region.name.as_str())
+            .collect();
+        assert_eq!(Value::from(regions), case["regions"], "{}", case["id"]);
+        let routes: Vec<&str> = manifest
+            .routes
+            .iter()
+            .map(|route| route.name.as_str())
+            .collect();
+        assert_eq!(Value::from(routes), case["routes"], "{}", case["id"]);
+        assert_eq!(
+            match manifest.page() {
+                Ok(page) => Some(page),
+                Err(error) => panic!("{}: {error}", case["id"]),
+            },
+            case["page"].as_str(),
+            "{}",
+            case["id"]
+        );
+        if let Some(name) = case["region"].as_str() {
+            let Some(region) = manifest.region(name) else {
+                panic!("{}: no region {name}", case["id"])
+            };
+            let keep: serde_json::Map<String, Value> = region
+                .keep
+                .iter()
+                .map(|(path, kind)| (path.clone(), Value::from(kind.name())))
+                .collect();
+            assert_eq!(Value::Object(keep), case["keep"], "{}", case["id"]);
+            assert_eq!(
+                region.template.as_deref(),
+                case["template"].as_str(),
+                "{}",
+                case["id"]
+            );
+            if let Some(kinds) = case["kinds"].as_array() {
+                let wanted: Vec<&str> = kinds.iter().filter_map(Value::as_str).collect();
+                let kept: Vec<&str> = region
+                    .keep
+                    .iter()
+                    .filter(|(_, kind)| wanted.contains(&kind.name()))
+                    .map(|(path, _)| path.as_str())
+                    .collect();
+                assert_eq!(Value::from(kept), case["keptPaths"], "{}", case["id"]);
+            }
+        }
+    }
+}
+
+#[test]
+fn json_text_is_written_and_read() {
+    // HY-54.18 to HY-54.21, HY-44.9
+    use polyspec_hyper::json::{read, write, JsonError};
+    let file = cases("json.json");
+    let kind = |error: &JsonError| match error {
+        JsonError::Malformed(_) => "malformed_json".to_owned(),
+        JsonError::DataModel(error) => error.code.as_str().to_owned(),
+    };
+    for section in ["encode", "decode"] {
+        for case in group(&file, section) {
+            let result = read(text(case, "json").as_bytes());
+            match (&result, case.get("raises")) {
+                (Ok(value), None) => {
+                    if let Some(expected) = case["expected"].as_str() {
+                        match write(value) {
+                            Ok(written) => assert_eq!(written, expected, "{}", case["id"]),
+                            Err(error) => panic!("{}: {error}", case["id"]),
+                        }
+                    } else {
+                        assert_eq!(case["result"].as_str(), Some("value"), "{}", case["id"]);
+                    }
+                }
+                (Err(error), Some(raises)) => {
+                    assert_eq!(kind(error), text(raises, "kind"), "{}", case["id"])
+                }
+                (other, _) => panic!("{}: {other:?}", case["id"]),
+            }
+        }
+    }
+}

@@ -18376,12 +18376,6 @@
             "label": {
               "role": "label"
             },
-            "rejected": {
-              "role": "expected",
-              "compare": "raises",
-              "sentence": "HY-2.7",
-              "state": "`rejected` true states a manifest file that the manifest check rejects with the open error, and false one that it reads."
-            },
             "manifest": {
               "role": "input",
               "optional": true
@@ -18393,6 +18387,20 @@
             "bytes": {
               "role": "input",
               "optional": true
+            },
+            "read": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-2.7",
+              "state": "`read` true states a manifest file that the manifest check reads."
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-2.9",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [

@@ -10,12 +10,15 @@ pub mod cookies;
 pub mod csrf;
 pub mod error;
 pub mod etag;
+pub mod json;
 pub mod location;
+pub mod manifest;
 pub mod media;
 pub mod orm;
 pub mod pipeline;
 pub mod reply;
 pub mod representation;
+pub mod router;
 
 pub use error::Error;
 

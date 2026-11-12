@@ -23,11 +23,15 @@ polyspec-http-cookies = { path = "../../../../http-cookies/packages/rust" }
 polyspec-http-negotiate = { path = "../../../../http-negotiate/packages/rust" }
 # The reading and writing of media types (MT-4, MT-6; HY-119.4, HY-121.11).
 polyspec-http-media-type = { path = "../../../../http-media-type/packages/rust" }
+# The JSON text of HY-54.18 to HY-54.21 (RQ-006, RQ-011, RQ-028, RQ-030).
+polyspec-ordered-json = { path = "../../../../ordered-json/packages/rust" }
+# The values of the data model and their JSON form (VAL-2, VAL-12, VAL-20; HY-44, HY-54.20).
+polyspec-template = { path = "../../../../template/packages/rust" }
 # The digests of HY-24.10, HY-53 and HY-122.10.
 sha2 = "0.10"
 
 [dev-dependencies]
-serde_json = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
 
 [lints]
 workspace = true

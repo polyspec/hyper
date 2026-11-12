@@ -823,7 +823,7 @@
       ],
       "results": [],
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null
@@ -854,7 +854,7 @@
         null
       ],
       "raises": {
-        "kind": "E_DATA_NUMBER_RANGE",
+        "kind": "data_number_range",
         "status": null,
         "category": "value",
         "message": null

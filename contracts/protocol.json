@@ -76,7 +76,9 @@
         {
           "kind": "rule",
           "id": "HY-2",
-          "retired": [],
+          "retired": [
+            8
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -124,10 +126,10 @@
                   "koSource": "0f65cec5a969ef11f6e75c81c72664f4a8a314cd1dffd0c2bd49fbcff82080b6"
                 },
                 {
-                  "id": "HY-2.8",
-                  "en": "The manifest file is JSON text as HY-54 decodes it, so a lone surrogate escape, a key that starts with U+0000 and 512 nested containers fail the open with the error of HY-106.18.",
-                  "ko": "매니페스트 파일은 HY-54가 decode하는 JSON text이므로, 짝 없는 surrogate escape, U+0000으로 시작하는 key, 512단계로 중첩된 container는 HY-106.18의 오류로 열기를 실패시킨다.",
-                  "koSource": "fee1ce9395120abd486c26b795354adb0e1014bc914977055694831b7a9f0fc5"
+                  "id": "HY-2.9",
+                  "en": "The manifest file is JSON text as HY-54.20 reads it, so a text that ordered-json refuses, such as one with more than 256 nested containers, and a value outside the data model, such as one with a lone surrogate escape or deeper than 64 levels, fail the open with kind `invalid_application` (HY-106.18).",
+                  "ko": "manifest 파일은 HY-54.20이 읽는 JSON 텍스트이므로, 중첩 container가 256개를 넘는 텍스트처럼 ordered-json이 거부하는 텍스트와, 짝 없는 surrogate escape를 가지거나 64단계보다 깊은 값처럼 데이터 모델 밖의 값은 kind `invalid_application`으로 open을 실패시킨다(HY-106.18).",
+                  "koSource": "ad9e31b56d233f1684265f6d06c89d1eb586055909bb2a8cdca89c2cbe906667"
                 }
               ]
             }
@@ -4802,9 +4804,9 @@
                 },
                 {
                   "id": "HY-44.9",
-                  "en": "A value outside the data model fails with the error of the template data model, whose kind, such as `E_DATA_NUMBER_RANGE`, `E_DATA_NUMBER_NOT_FINITE`, `E_DATA_INVALID_UTF8`, `E_DATA_DEPTH` or `E_DATA_UNSUPPORTED_TYPE`, and message hyper passes on as they are (VAL-2, VAL-3, VAL-13, VAL-20).",
-                  "ko": "데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며, hyper는 그 kind(`E_DATA_NUMBER_RANGE`, `E_DATA_NUMBER_NOT_FINITE`, `E_DATA_INVALID_UTF8`, `E_DATA_DEPTH`, `E_DATA_UNSUPPORTED_TYPE` 등)와 message를 그대로 넘긴다(VAL-2, VAL-3, VAL-13, VAL-20).",
-                  "koSource": "1e59dad10751b7aca26cdbc66e302990a0fd84ede78fdf4047d8f0036baea956"
+                  "en": "A value outside the data model fails with the error of the template data model, whose kind, such as `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth` or `data_unsupported_type`, and message hyper passes on as they are (VAL-2, VAL-3, VAL-13, VAL-20).",
+                  "ko": "데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며, hyper는 그 kind(`data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`, `data_unsupported_type` 등)와 message를 그대로 넘긴다(VAL-2, VAL-3, VAL-13, VAL-20).",
+                  "koSource": "9db70dc460932177a39be716f1a747ed1becc1c3a010e5181fb7d153e2d8659c"
                 }
               ]
             }

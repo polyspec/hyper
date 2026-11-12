@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The Rust core reads and checks the manifest (HY-1, HY-2, HY-37, HY-40.2, HY-118, HY-4.6), routes a request path with rest parameters and a base path (HY-4 to HY-8, HY-49), and reads and writes the JSON text of hyper with ordered-json and the template data model (HY-54.18 to HY-54.21); its tests run `manifest.json`, `routes.json`, `rest.json` and `json.json` (C-7). The manifest file is read as HY-54.20 reads JSON text (HY-2.9): a key that starts with U+0000 is read, and a manifest deeper than the 64 levels of the data model fails the open, where 511 nested containers were read; `contracts/manifest.json` gives its failures as `raises`. The kinds of the data model are the snake_case kinds of the template data model, such as `data_number_range`.
+
 - hyper makes no range check of its own on a `Max-Age` or a page status of a reply: the binding refuses a value that it does not take as an integer with `invalid_number` (HY-52.17, HY-69.8), so Node refuses 2^53 while PHP and Python write it or refuse it as another integer, and the three cases of `contracts/reply.json` are split by runtime; the kind `invalid_number` leaves the table of HY-132. The 406 listing states that its combinations follow the declared order of the served values (HY-116.13), the JSON rules name the requirements of ordered-json (RQ-004 to RQ-035) in HY-54.18 to HY-54.21, and the interface contract declares `page_status` and `reply_status` with the return type `uint` (S-3b, C-7).
 
 - The Rust core takes `polyspec-bindgen-core` from the Git repository of bindgen, as every core of polyspec does, so that one copy of the kind interface serves the core and its dependencies (C-7).
