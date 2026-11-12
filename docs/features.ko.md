@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 4050ab0062128a35064cc94040420dce66614d718759b1b929f6e2a004e45d10 -->
+<!-- source-sha256: 7b3ea378e7c8d78533ee426f1cc2080a61c1e28e1c2337393630e1f0e70be628 -->
 # 기능 상태
 
 [English](features.md).
@@ -100,6 +100,6 @@ Rust core(C-7)는 아직 모든 규칙을 갖지 않는다. 가질 때까지 세
 |---|---|---|
 | template AST에서 read path를 계산하는 일(HY-73.1부터 HY-73.20) | build가 template AST에서 계산하고 Node server는 browser 패키지로 계산하며(HY-73.23), core는 그것으로 읽는 데이터를 보존한다 | template 언어의 compiler가 그것을 줄 때 |
 | page 앞의 요청 단계: client 렌더 selection 호출(HY-62.7부터 HY-62.11까지), data base path 아래의 라우팅(HY-62.17부터 HY-62.19까지), session 열기(HY-120), handler가 반환한 값의 데이터 모델 변환(HY-44) | core는 page의 handler를 host에게 부르라고 요청하고(HY-26, HY-124.2부터 HY-124.4까지, HY-92), client 렌더 선언을 검사하며 data base path 밖의 선택된 요청에 답한다. 요청의 앞 단계는 server에서 실행된다 | S-4 |
-| 요청의 body(HY-56, HY-57, HY-113, HY-114, HY-131)와 요청의 cookie(HY-129.13) | http-forms와 http-cookies 라이브러리가 가지며, 각 server가 binding으로 부른다 | S-4 |
+| 요청의 body(HY-56, HY-57, HY-113, HY-114, HY-131)와 요청의 cookie(HY-129.13) | http-forms와 http-cookie 라이브러리가 가지며, 각 server가 binding으로 부른다 | S-4 |
 | hook, host 진입점, runtime(HY-43, HY-60, HY-66, HY-67, HY-74, HY-97, HY-99, HY-100, HY-105) | host 코드(L-3)이며 각 runtime에 남는다 | 없음: host 코드로 남는다 |
 | ORM 오류를 class로 알아보는 일(HY-107.7)과 handler를 부르는 요청 단계(HY-120, HY-121.5, HY-122.9) | core는 kind별 응답과 단계의 순서를 주고, server가 handler를 실행한다 | S-4 |

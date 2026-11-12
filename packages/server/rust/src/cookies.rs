@@ -1,7 +1,7 @@
 //! The cookies of hyper (HY-45, HY-38.10): their names, which the application does not choose, and the session cookie
 //! that every server writes.
 
-use polyspec_http_cookies::{set_cookie, Attributes, SameSite};
+use polyspec_http_cookie::{set_cookie, Attributes, SameSite};
 
 use crate::Error;
 
@@ -43,7 +43,7 @@ pub fn find<'a>(cookies: &'a [(String, String)], name: &str) -> Option<&'a str> 
 /// `SameSite=Lax`, `Secure` on HTTPS and no `Max-Age`.
 ///
 /// # Errors
-/// The error of http-cookies, which an identifier of the sessions library does not give.
+/// The error of http-cookie, which an identifier of the sessions library does not give.
 pub fn session_cookie(identifier: &str, https: bool) -> Result<Vec<u8>, Error> {
     let attributes = Attributes {
         path: "/".to_owned(),

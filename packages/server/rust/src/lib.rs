@@ -1,6 +1,6 @@
 //! The rules of the hyper server that every runtime shares (C-7), each named by its rule of
 //! `contracts/protocol.json`. The libraries that hyper uses keep their own rules: the grammar and the weights of
-//! `Accept` (http-negotiate), the media types (http-media-type), the cookies (http-cookies) and the form bodies
+//! `Accept` (http-negotiate), the media types (http-media-type), the cookies (http-cookie) and the form bodies
 //! (http-forms).
 //!
 //! Every function is pure: no I/O, no clock, no random source and no state between calls (`wait: none`). The caller

@@ -1,7 +1,7 @@
 //! The values that a reply gives the response of its request (HY-52, HY-69, HY-103): the cookies that it writes, its
 //! `Cache-Control`, its page status and its `Referrer-Policy`.
 
-use polyspec_http_cookies::{set_cookie, Attributes, SameSite};
+use polyspec_http_cookie::{set_cookie, Attributes, SameSite};
 
 use crate::Error;
 
@@ -105,11 +105,11 @@ pub fn removed_cookie(name: &str) -> Result<ReplyCookie, Error> {
     })
 }
 
-/// The `Set-Cookie` field value of a reply cookie (HY-52.13): written by `set_cookie` of http-cookies with the path `/`,
+/// The `Set-Cookie` field value of a reply cookie (HY-52.13): written by `set_cookie` of http-cookie with the path `/`,
 /// `secure` on HTTPS (HY-45.6), `http_only` and `same_site` `Lax`.
 ///
 /// # Errors
-/// The error of http-cookies, which a checked cookie does not give.
+/// The error of http-cookie, which a checked cookie does not give.
 pub fn set_cookie_field(cookie: &ReplyCookie, https: bool) -> Result<Vec<u8>, Error> {
     let attributes = Attributes {
         path: "/".to_owned(),

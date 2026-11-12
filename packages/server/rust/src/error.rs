@@ -57,9 +57,9 @@ pub enum Error {
     /// A failure of the sessions library, with its kind (HY-104.25).
     Sessions(polyspec_sessions::Error),
     /// A failure of `Accept` (HY-116.18), with the kind and status of http-negotiate.
-    Negotiate(polyspec_http_negotiate::Error),
-    /// A failure of the `Set-Cookie` writer, with the kind of http-cookies (HY-45.8, HY-52.13).
-    Cookies(polyspec_http_cookies::Error),
+    Negotiate(polyspec_http_negotiation::Error),
+    /// A failure of the `Set-Cookie` writer, with the kind of http-cookie (HY-45.8, HY-52.13).
+    Cookies(polyspec_http_cookie::Error),
     /// A broken invariant of the core (HY-132.6).
     Internal(&'static str),
 }
@@ -87,10 +87,10 @@ impl Error {
             | Error::InvalidRepresentation(_)
             | Error::Cookies(_) => Category::Value,
             Error::Negotiate(error) => match error {
-                polyspec_http_negotiate::Error::Internal => Category::Internal,
-                polyspec_http_negotiate::Error::InvalidAccept
-                | polyspec_http_negotiate::Error::InvalidWeight
-                | polyspec_http_negotiate::Error::InvalidCandidate => Category::Value,
+                polyspec_http_negotiation::Error::Internal => Category::Internal,
+                polyspec_http_negotiation::Error::InvalidAccept
+                | polyspec_http_negotiation::Error::InvalidWeight
+                | polyspec_http_negotiation::Error::InvalidCandidate => Category::Value,
             },
             Error::NotSelected => Category::Type,
             Error::DataModel(_) => Category::Value,
@@ -265,14 +265,14 @@ impl std::error::Error for Error {
     }
 }
 
-impl From<polyspec_http_negotiate::Error> for Error {
-    fn from(error: polyspec_http_negotiate::Error) -> Self {
+impl From<polyspec_http_negotiation::Error> for Error {
+    fn from(error: polyspec_http_negotiation::Error) -> Self {
         Error::Negotiate(error)
     }
 }
 
-impl From<polyspec_http_cookies::Error> for Error {
-    fn from(error: polyspec_http_cookies::Error) -> Self {
+impl From<polyspec_http_cookie::Error> for Error {
+    fn from(error: polyspec_http_cookie::Error) -> Self {
         Error::Cookies(error)
     }
 }

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c25bc48dc5a900c73e4ff48afa587d85b6252e0f98771f5a30a0d905d8958db9 -->
+<!-- source-sha256: 9cefe91f4f1409fb21409fa8ceb8f5b8bbf49c5153ce93a0bfccc092d3027693 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 이름이 바뀐 라이브러리를 쓴다. `polyspec-ordered-json` 대신 저장소 json의 `polyspec-json`, `polyspec-http-cookies` 대신 http-cookie의 `polyspec-http-cookie`, Git branch의 `polyspec-http-media-type`, branch 끝의 template 언어를 쓰며, template의 계약이 bindgen 검사를 통과하므로 interface 계약의 지적 CK-10은 없어졌다. spec과 interface 계약은 라이브러리 json과 http-cookie를 이름한다(C-7, 9c). `polyspec-http-negotiation`은 그 branch가 이 이름을 가질 때까지 경로 의존으로 남고, `polyspec-php-serialize`는 그 값을 store interface에 쓰는 sessions 라이브러리가 `polyspec-php-serialization`을 받을 때까지 남는다.
 
 - Rust core가 요청의 page를 단계로 준다(C-7). `steps::PageRequest`는 I/O 없는 상태기계이며, `next`는 host에게 애플리케이션 handler 하나(action, context handler, shared handler, route·route region·manifest region의 loader, reply)를 부르라고 요청하거나, 답(문서, JSON 텍스트, page 없음)을 준다. core는 언어 객체를 쥐지 않고, Node handler는 event loop에서 기다리며, handler의 예외는 Rust frame을 지나지 않는다. template 함수는 엔진이 렌더 중에 부르는 callback으로 남는데, 렌더는 엔진이 멈추지 않는 한 번의 호출이기 때문이다. 단계는 page를 반환하거나 `REVISION_CHANGED`를 내보낸 action 뒤, shared handler 앞에서 context handler를 부르고, redirect·stop·실패 뒤에는 부르지 않으며(HY-124.2부터 HY-124.4까지), action의 데이터를 route 데이터에 합치고(HY-26.2, HY-58.3), 없는 route region을 빼며(HY-75.1), 상태 200인 page에 reply의 상태를 준다(HY-69). core는 client 렌더 선언(shell 경로, 그 텍스트와 data base path 선언, 그 아래의 route)을 검사하고(HY-62.5, HY-62.6, HY-62.15, HY-62.39), data base path 밖의 선택된 요청에 404, 405, 400, 406 또는 shell로 답한다(HY-62.22, HY-62.23, HY-62.34). 실패한 client 렌더 열기는 kind `invalid_application`을 주며(HY-62.35를 대신하는 HY-62.39), `contracts/client.json`의 group `openRejections` case는 이를 `raises`로 준다. 접두사 `hyper: `의 Node case는 없어졌다(HY-106.19). interface 계약은 `check_shell_path`와 `shell_text`를 둔다.
 

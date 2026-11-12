@@ -172,20 +172,20 @@
         "category": "internal"
       },
       {
-        "variant": "polyspec_http_negotiate::Error::InvalidAccept",
-        "library": "http-negotiate"
+        "variant": "polyspec_http_negotiation::Error::InvalidAccept",
+        "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_http_negotiate::Error::InvalidWeight",
-        "library": "http-negotiate"
+        "variant": "polyspec_http_negotiation::Error::InvalidWeight",
+        "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_http_negotiate::Error::InvalidCandidate",
-        "library": "http-negotiate"
+        "variant": "polyspec_http_negotiation::Error::InvalidCandidate",
+        "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_http_negotiate::Error::Internal",
-        "library": "http-negotiate"
+        "variant": "polyspec_http_negotiation::Error::Internal",
+        "library": "http-negotiation"
       },
       {
         "variant": "polyspec_template::ErrorCode::E_LEX_INVALID_UTF8",
@@ -434,24 +434,24 @@
         "library": "sessions"
       },
       {
-        "variant": "polyspec_http_cookies::Error::InvalidName",
-        "library": "http-cookies"
+        "variant": "polyspec_http_cookie::Error::InvalidName",
+        "library": "http-cookie"
       },
       {
-        "variant": "polyspec_http_cookies::Error::InvalidCookiePath",
-        "library": "http-cookies"
+        "variant": "polyspec_http_cookie::Error::InvalidCookiePath",
+        "library": "http-cookie"
       },
       {
-        "variant": "polyspec_http_cookies::Error::TooLarge",
-        "library": "http-cookies"
+        "variant": "polyspec_http_cookie::Error::TooLarge",
+        "library": "http-cookie"
       },
       {
-        "variant": "polyspec_http_cookies::Error::PrefixNotMet",
-        "library": "http-cookies"
+        "variant": "polyspec_http_cookie::Error::PrefixNotMet",
+        "library": "http-cookie"
       },
       {
-        "variant": "polyspec_http_cookies::Error::SameSiteNoneNotSecure",
-        "library": "http-cookies"
+        "variant": "polyspec_http_cookie::Error::SameSiteNoneNotSecure",
+        "library": "http-cookie"
       }
     ],
     "binding": [],
@@ -793,8 +793,8 @@
           ],
           "returns": "latin1",
           "raises": [
-            "polyspec_http_cookies::Error::InvalidName",
-            "polyspec_http_cookies::Error::TooLarge"
+            "polyspec_http_cookie::Error::InvalidName",
+            "polyspec_http_cookie::Error::TooLarge"
           ],
           "wait": "none",
           "core": "polyspec_hyper::cookies::session_cookie"

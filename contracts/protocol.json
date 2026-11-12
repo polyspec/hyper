@@ -127,9 +127,9 @@
                 },
                 {
                   "id": "HY-2.9",
-                  "en": "The manifest file is JSON text as HY-54.20 reads it, so a text that ordered-json refuses, such as one with more than 256 nested containers, and a value outside the data model, such as one with a lone surrogate escape or deeper than 64 levels, fail the open with kind `invalid_application` (HY-106.18).",
-                  "ko": "manifest 파일은 HY-54.20이 읽는 JSON 텍스트이므로, 중첩 container가 256개를 넘는 텍스트처럼 ordered-json이 거부하는 텍스트와, 짝 없는 surrogate escape를 가지거나 64단계보다 깊은 값처럼 데이터 모델 밖의 값은 kind `invalid_application`으로 open을 실패시킨다(HY-106.18).",
-                  "koSource": "ad9e31b56d233f1684265f6d06c89d1eb586055909bb2a8cdca89c2cbe906667"
+                  "en": "The manifest file is JSON text as HY-54.20 reads it, so a text that json refuses, such as one with more than 256 nested containers, and a value outside the data model, such as one with a lone surrogate escape or deeper than 64 levels, fail the open with kind `invalid_application` (HY-106.18).",
+                  "ko": "manifest 파일은 HY-54.20이 읽는 JSON 텍스트이므로, 중첩 container가 256개를 넘는 텍스트처럼 json이 거부하는 텍스트와, 짝 없는 surrogate escape를 가지거나 64단계보다 깊은 값처럼 데이터 모델 밖의 값은 kind `invalid_application`으로 open을 실패시킨다(HY-106.18).",
+                  "koSource": "f0437a258545248acc8a7b7258826f85b231f092f4f79885ca902a52c7bc7022"
                 }
               ]
             }
@@ -1350,9 +1350,9 @@
                 },
                 {
                   "id": "HY-121.11",
-                  "en": "A `POST` or `PUT` without `Content-Type`, or whose media type (MT-4) is not `application/json`, receives 415, and one whose `Content-Type` is no media type receives 400 with the text `Bad Request` (HY-59.12); the body limit of HY-59 applies, and a body that is not valid UTF-8, that ordered-json refuses or whose value is outside the data model, as HY-54.20 reads it, receives 400 with the text `Bad Request`.",
-                  "ko": "`Content-Type`이 없거나 media type(MT-4)이 `application/json`이 아닌 `POST`나 `PUT`은 415를 받고, `Content-Type`이 media type이 아닌 요청은 텍스트 `Bad Request`와 함께 400을 받는다(HY-59.12). HY-59의 body 제한이 적용되며, HY-54.20이 읽을 때 유효한 UTF-8이 아니거나 ordered-json이 거부하거나 값이 데이터 모델 밖인 body는 텍스트 `Bad Request`와 함께 400을 받는다.",
-                  "koSource": "8f32f76a4d329a1871b72f4f8ccd8ed2a4ae3479b376381983e3e55fbf828811"
+                  "en": "A `POST` or `PUT` without `Content-Type`, or whose media type (MT-4) is not `application/json`, receives 415, and one whose `Content-Type` is no media type receives 400 with the text `Bad Request` (HY-59.12); the body limit of HY-59 applies, and a body that is not valid UTF-8, that json refuses or whose value is outside the data model, as HY-54.20 reads it, receives 400 with the text `Bad Request`.",
+                  "ko": "`Content-Type`이 없거나 media type(MT-4)이 `application/json`이 아닌 `POST`나 `PUT`은 415를 받고, `Content-Type`이 media type이 아닌 요청은 텍스트 `Bad Request`와 함께 400을 받는다(HY-59.12). HY-59의 body 제한이 적용되며, HY-54.20이 읽을 때 유효한 UTF-8이 아니거나 json이 거부하거나 값이 데이터 모델 밖인 body는 텍스트 `Bad Request`와 함께 400을 받는다.",
+                  "koSource": "d825c05ca8fcb20d8e46587f35b347568624c48961614da0a9ac56021e461e9a"
                 },
                 {
                   "en": "The handler reads the decoded value with `json()` of its request (PHP `Request::json()`, Node and Python `request.json()`).",
@@ -4732,9 +4732,9 @@
                 },
                 {
                   "id": "HY-45.8",
-                  "en": "Every server writes the session cookie with `set_cookie` of http-cookies (CK-6 to CK-12), with the path `/`, `secure` under the condition of HY-45.1, `http_only`, `same_site` `Lax` and no `Max-Age`, so its field value is `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`, with `; Secure` only under that condition (CK-9).",
-                  "ko": "모든 server는 session cookie를 http-cookies의 `set_cookie`로 쓰며(CK-6부터 CK-12), path `/`, HY-45.1의 조건에서 `secure`, `http_only`, `same_site` `Lax`를 주고 `Max-Age`는 주지 않는다. 그래서 field 값은 `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`이고 `; Secure`는 그 조건에서만 있다(CK-9).",
-                  "koSource": "560a486e132b7ec9fe0b7bd243b2bf94c9eebba08b88ae310e2f3de6ef957dbe"
+                  "en": "Every server writes the session cookie with `set_cookie` of http-cookie (CK-6 to CK-12), with the path `/`, `secure` under the condition of HY-45.1, `http_only`, `same_site` `Lax` and no `Max-Age`, so its field value is `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`, with `; Secure` only under that condition (CK-9).",
+                  "ko": "모든 server는 session cookie를 http-cookie의 `set_cookie`로 쓰며(CK-6부터 CK-12), path `/`, HY-45.1의 조건에서 `secure`, `http_only`, `same_site` `Lax`를 주고 `Max-Age`는 주지 않는다. 그래서 field 값은 `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`이고 `; Secure`는 그 조건에서만 있다(CK-9).",
+                  "koSource": "d4a4e5cb8845625201a2dbbbbf55833ec6aa2791926fd2ece884219f4ac67d86"
                 }
               ]
             }
@@ -4830,9 +4830,9 @@
               "statements": [
                 {
                   "id": "HY-129.13",
-                  "en": "The cookies of a request are what `parse` of http-cookies gives for its `Cookie` field lines (CK-2 to CK-5), the same in every server: an ordered map from names to values, where the first cookie of a name counts and a pair that gives no cookie changes nothing.",
-                  "ko": "요청의 cookie는 http-cookies의 `parse`가 그 `Cookie` field 줄에 대해 주는 것이며(CK-2부터 CK-5) 모든 server에서 같다. 이름에서 값으로 가는 순서 있는 map이고, 한 이름의 첫 cookie가 쓰이며, cookie를 주지 않는 쌍은 아무것도 바꾸지 않는다.",
-                  "koSource": "7db5f587f0a858dab1a75dd4ad7da1b17fd99795610219a0cb22cef5364ce3c7"
+                  "en": "The cookies of a request are what `parse` of http-cookie gives for its `Cookie` field lines (CK-2 to CK-5), the same in every server: an ordered map from names to values, where the first cookie of a name counts and a pair that gives no cookie changes nothing.",
+                  "ko": "요청의 cookie는 http-cookie의 `parse`가 그 `Cookie` field 줄에 대해 주는 것이며(CK-2부터 CK-5) 모든 server에서 같다. 이름에서 값으로 가는 순서 있는 map이고, 한 이름의 첫 cookie가 쓰이며, cookie를 주지 않는 쌍은 아무것도 바꾸지 않는다.",
+                  "koSource": "8b5da0fefa76c74f85616ab8ba42df9068d214c2a1bd3aeef388f52ebe4f2b8d"
                 },
                 {
                   "id": "HY-129.14",
@@ -4964,27 +4964,27 @@
                   "statements": [
                     {
                       "id": "HY-54.18",
-                      "en": "Every server writes JSON text with the serializer of ordered-json, the one JSON serializer of polyspec (RQ-011, RQ-034), and writes each number of the data model as VAL-9 of the template data model states, which is the number token of RQ-030, so the text of a value is the same bytes in every runtime.",
-                      "ko": "모든 server는 polyspec의 유일한 JSON 직렬화기인 ordered-json의 직렬화기로 JSON 텍스트를 쓰고(RQ-011, RQ-034), 데이터 모델의 수는 template 데이터 모델의 VAL-9, 곧 RQ-030의 수 token으로 쓰므로, 한 값의 텍스트는 모든 runtime에서 같은 바이트다.",
-                      "koSource": "bffb21e1385b3e0633605916e6000c9518310421682f1407d049e00a49c130fa"
+                      "en": "Every server writes JSON text with the serializer of json, the one JSON serializer of polyspec (RQ-011, RQ-034), and writes each number of the data model as VAL-9 of the template data model states, which is the number token of RQ-030, so the text of a value is the same bytes in every runtime.",
+                      "ko": "모든 server는 polyspec의 유일한 JSON 직렬화기인 json의 직렬화기로 JSON 텍스트를 쓰고(RQ-011, RQ-034), 데이터 모델의 수는 template 데이터 모델의 VAL-9, 곧 RQ-030의 수 token으로 쓰므로, 한 값의 텍스트는 모든 runtime에서 같은 바이트다.",
+                      "koSource": "378d5e4bee199b710bd355461d1c0196134bfe220957b30d7b49cfda140b74bc"
                     },
                     {
                       "id": "HY-54.19",
-                      "en": "A string escapes `\"`, `\\` and the control characters U+0000 to U+001F, the characters that RFC 8259, section 7, requires to escape, and no other character, as the string writer of ordered-json does (RQ-028), so U+2028 and U+2029 are written as themselves.",
-                      "ko": "문자열은 ordered-json의 문자열 쓰기처럼(RQ-028) RFC 8259 7절이 escape를 요구하는 `\"`, `\\`, 제어 문자 U+0000부터 U+001F만 escape하고 다른 문자는 escape하지 않으므로, U+2028과 U+2029는 그대로 쓴다.",
-                      "koSource": "70681778da7a9e540305dd3a839e0f18ec879c6d42f329af2dfc4e6b7c1c87e9"
+                      "en": "A string escapes `\"`, `\\` and the control characters U+0000 to U+001F, the characters that RFC 8259, section 7, requires to escape, and no other character, as the string writer of json does (RQ-028), so U+2028 and U+2029 are written as themselves.",
+                      "ko": "문자열은 json의 문자열 쓰기처럼(RQ-028) RFC 8259 7절이 escape를 요구하는 `\"`, `\\`, 제어 문자 U+0000부터 U+001F만 escape하고 다른 문자는 escape하지 않으므로, U+2028과 U+2029는 그대로 쓴다.",
+                      "koSource": "839438aab4cee773e915291a11963515f136ce747485fe0e74b8826dded8d617"
                     },
                     {
                       "id": "HY-54.20",
-                      "en": "A server reads a JSON text, such as a kept value (HY-38, HY-40) or the body of a representation request (HY-121), with `parse` of ordered-json, which takes UTF-8 bytes (RQ-026, RQ-007) and refuses a text with more than 256 nested containers (RQ-006, RQ-035), and converts its value to the data model as VAL-12 of the template data model states, so a number outside ±(2^53 − 1) or not finite (VAL-2), a string that is not UTF-8 text, an escaped lone surrogate included, and a value deeper than 64 levels (VAL-20) fail with the error of the data model.",
-                      "ko": "server는 kept 값(HY-38, HY-40)이나 representation 요청의 body(HY-121) 같은 JSON 텍스트를 중첩 container가 256개를 넘는 텍스트를 거부하는(RQ-026, RQ-007, RQ-006, RQ-035) ordered-json의 `parse`로 읽고, 그 값을 template 데이터 모델의 VAL-12대로 데이터 모델로 바꾼다. 그래서 ±(2^53 − 1) 밖이거나 유한하지 않은 수(VAL-2), escape된 짝 없는 surrogate를 포함해 UTF-8 텍스트가 아닌 문자열, 64단계보다 깊은 값(VAL-20)은 데이터 모델의 오류로 실패한다.",
-                      "koSource": "856e99eb09e3480fc567bfd588cbcd736f91e080839c39a0c1d0d086e7b5d175"
+                      "en": "A server reads a JSON text, such as a kept value (HY-38, HY-40) or the body of a representation request (HY-121), with `parse` of json, which takes UTF-8 bytes (RQ-026, RQ-007) and refuses a text with more than 256 nested containers (RQ-006, RQ-035), and converts its value to the data model as VAL-12 of the template data model states, so a number outside ±(2^53 − 1) or not finite (VAL-2), a string that is not UTF-8 text, an escaped lone surrogate included, and a value deeper than 64 levels (VAL-20) fail with the error of the data model.",
+                      "ko": "server는 kept 값(HY-38, HY-40)이나 representation 요청의 body(HY-121) 같은 JSON 텍스트를 중첩 container가 256개를 넘는 텍스트를 거부하는(RQ-026, RQ-007, RQ-006, RQ-035) json의 `parse`로 읽고, 그 값을 template 데이터 모델의 VAL-12대로 데이터 모델로 바꾼다. 그래서 ±(2^53 − 1) 밖이거나 유한하지 않은 수(VAL-2), escape된 짝 없는 surrogate를 포함해 UTF-8 텍스트가 아닌 문자열, 64단계보다 깊은 값(VAL-20)은 데이터 모델의 오류로 실패한다.",
+                      "koSource": "b7589a67408244a15b25be5d4e2b453834ec8cc38c8219ec92565e5b04dac9ab"
                     },
                     {
                       "id": "HY-54.21",
-                      "en": "A text that ordered-json refuses fails with kind `malformed_json`, whose source is the rejection of ordered-json with its kind and byte offset (RQ-004, RQ-005, RQ-033), and the reading limit of 256 and the depth of 64 of the data model are two limits with two kinds, because a text deeper than 256 levels is refused before it gives a value.",
-                      "ko": "ordered-json이 거부하는 텍스트는 kind `malformed_json`으로 실패하며 그 원인은 kind와 byte offset을 가진 ordered-json의 거부다(RQ-004, RQ-005, RQ-033). 읽기 한도 256과 데이터 모델의 깊이 64는 kind가 다른 두 한도다. 256단계보다 깊은 텍스트는 값을 주기 전에 거부되기 때문이다.",
-                      "koSource": "b2cb322107596eaf78ba902ace03df2d0303f0921f36746caa0c7dd33002e97f"
+                      "en": "A text that json refuses fails with kind `malformed_json`, whose source is the rejection of json with its kind and byte offset (RQ-004, RQ-005, RQ-033), and the reading limit of 256 and the depth of 64 of the data model are two limits with two kinds, because a text deeper than 256 levels is refused before it gives a value.",
+                      "ko": "json이 거부하는 텍스트는 kind `malformed_json`으로 실패하며 그 원인은 kind와 byte offset을 가진 json의 거부다(RQ-004, RQ-005, RQ-033). 읽기 한도 256과 데이터 모델의 깊이 64는 kind가 다른 두 한도다. 256단계보다 깊은 텍스트는 값을 주기 전에 거부되기 때문이다.",
+                      "koSource": "30c10741bf6b3127229f7ac69a741aec1c9c50c2e76a3ce640f15a616622a5a3"
                     }
                   ],
                   "blocks": []
@@ -5507,9 +5507,9 @@
                 },
                 {
                   "id": "HY-132.3",
-                  "en": "The kinds of hyper are those of the table below, and an error of a library that hyper uses, such as http-forms, http-negotiate, http-media-type, http-cookies, ordered-json, the template data model, the sessions library or the binding, reaches the caller with the kind, the status and the category of that library, in the class of that category of hyper.",
-                  "ko": "hyper의 kind는 아래 표의 것이며, http-forms, http-negotiate, http-media-type, http-cookies, ordered-json, template 데이터 모델, sessions 라이브러리, binding처럼 hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind, 상태, category를 가지고 hyper의 그 category class로 호출자에게 간다.",
-                  "koSource": "1f185a38a8a71c56018927ad31ce5073d9f11065867307c2f0547b79b7d754f0"
+                  "en": "The kinds of hyper are those of the table below, and an error of a library that hyper uses, such as http-forms, http-negotiate, http-media-type, http-cookie, json, the template data model, the sessions library or the binding, reaches the caller with the kind, the status and the category of that library, in the class of that category of hyper.",
+                  "ko": "hyper의 kind는 아래 표의 것이며, http-forms, http-negotiate, http-media-type, http-cookie, json, template 데이터 모델, sessions 라이브러리, binding처럼 hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind, 상태, category를 가지고 hyper의 그 category class로 호출자에게 간다.",
+                  "koSource": "a59472dbd6405070aea1a62fcd51323342373ba5e17128a460381e1c3742a03a"
                 },
                 {
                   "id": "HY-132.4",
@@ -6065,9 +6065,9 @@
                 },
                 {
                   "id": "HY-52.13",
-                  "en": "Each such cookie is written by `set_cookie` of http-cookies with its `Max-Age`, the path `/`, `secure` under the conditions of HY-45, `http_only` and `same_site` `Lax`, so its field value is `<name>=<value>`, then `; Max-Age=<seconds>` when it has one, `; Path=/`, `; Secure` under those conditions, `; HttpOnly` and `; SameSite=Lax` (CK-9).",
-                  "ko": "그런 cookie는 모두 http-cookies의 `set_cookie`로 쓰며 그 `Max-Age`, path `/`, HY-45의 조건에서 `secure`, `http_only`, `same_site` `Lax`를 준다. 그래서 field 값은 `<name>=<value>`, 있으면 `; Max-Age=<seconds>`, `; Path=/`, 그 조건에서 `; Secure`, `; HttpOnly`, `; SameSite=Lax` 순이다(CK-9).",
-                  "koSource": "bb53ea91931760eb034d7dad44ab71b7efe5ff50f381303b7023c1bb9b55b5bd"
+                  "en": "Each such cookie is written by `set_cookie` of http-cookie with its `Max-Age`, the path `/`, `secure` under the conditions of HY-45, `http_only` and `same_site` `Lax`, so its field value is `<name>=<value>`, then `; Max-Age=<seconds>` when it has one, `; Path=/`, `; Secure` under those conditions, `; HttpOnly` and `; SameSite=Lax` (CK-9).",
+                  "ko": "그런 cookie는 모두 http-cookie의 `set_cookie`로 쓰며 그 `Max-Age`, path `/`, HY-45의 조건에서 `secure`, `http_only`, `same_site` `Lax`를 준다. 그래서 field 값은 `<name>=<value>`, 있으면 `; Max-Age=<seconds>`, `; Path=/`, 그 조건에서 `; Secure`, `; HttpOnly`, `; SameSite=Lax` 순이다(CK-9).",
+                  "koSource": "46d923ff5b3096255ef57a477215dd1b7e3cec8336b9fda6a6c6f5acf70a542e"
                 },
                 {
                   "id": "HY-52.4",

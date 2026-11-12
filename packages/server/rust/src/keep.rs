@@ -3,7 +3,7 @@
 
 use std::sync::Arc;
 
-use polyspec_ordered_json::{parse, Kind, ParseOptions};
+use polyspec_json::{parse, Kind, ParseOptions};
 use polyspec_template::{bind_json, OrderedMap, Value};
 
 /// The kind of a value of the data model, which a kept value keeps (HY-38.3): a safe string is a string.

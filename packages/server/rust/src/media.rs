@@ -3,7 +3,7 @@
 //! `Accept` are http-negotiate's (NG-5 to NG-10); the writing of a media type is http-media-type's (MT-6).
 
 use polyspec_http_media_type::{format, MediaType, Parameter};
-use polyspec_http_negotiate::{Accept, Candidate, CandidateParameter, Matching};
+use polyspec_http_negotiation::{Accept, Candidate, CandidateParameter, Matching};
 
 use crate::representation::Entry;
 use crate::Error;
