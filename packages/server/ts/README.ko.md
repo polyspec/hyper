@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-server-node-readme -->
-<!-- source-sha256: abe9a7b05cf9770046a0201c68a067878836b223dbc5819339b78ed38bb4f4b8 -->
+<!-- source-sha256: 71564459e5979610decd1c4f9815991d8905d06a120ef1c67b27635ca0a5fff8 -->
 # @polyspec/hyper-server
 
 [English](README.md).

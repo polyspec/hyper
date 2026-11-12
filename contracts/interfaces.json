@@ -35,13 +35,19 @@
   },
   "runners": {
     "php": {
-      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases"
+      "runner": "packages/server/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases",
+      "steps": "packages/server/php/tests/Support/Steps",
+      "registry": "packages/server/php/tests/Support/CaseSteps.php"
     },
     "node": {
-      "runner": "packages/server/ts/tests/case-runner.test.ts::cases"
+      "runner": "packages/server/ts/tests/case-runner.test.ts::cases",
+      "steps": "packages/server/ts/tests/steps",
+      "registry": "packages/server/ts/tests/case-runner.test.ts"
     },
     "python": {
-      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases"
+      "runner": "packages/server/python/tests/test_case_runner.py::CaseRunner.test_cases",
+      "steps": "packages/server/python/tests/steps",
+      "registry": "packages/server/python/tests/steps/__init__.py"
     },
     "browser": {
       "runner": "packages/client/tests/case-runner.test.ts::cases"

@@ -1,5 +1,5 @@
 <!-- doc-id: benchmark -->
-<!-- source-sha256: a918c5437b541057d82fae326d506481c8e058ffc8a802cb2fd33fa7b74bf336 -->
+<!-- source-sha256: 256dd8dddad9b3abac2eafcc26b14d342106dd67bfd27a7c729cb872a15aeead -->
 # 성능 측정
 
 [English](benchmark.md).
@@ -105,7 +105,7 @@
 | hyper PHP(PHP-FPM) | 16 (3-40) | 5 (4-7) | 13.3 |
 | hyper Node(`App.server`) | 20 (5-50) | 19 (4-46) | 157.6 |
 
-server의 메모리는 1 GiB body와 98 MiB body에서 같으므로 body에 따라 늘지 않는다. hyper의 PHP server는 file이 있는 두 body에서 PHP 자체 reader의 1.2배에서 1.8배의 processor 시간을 쓴다. PHP는 script가 `php://input`을 읽기 전에 body를 자신의 임시 file에 쓰므로 file의 내용이 두 번 쓰인다. PHP 자체 reader는 반복된 이름의 마지막 값만 두고 대괄호 이름을 중첩하므로, 세 번째 body에서 hyper의 세 server가 주는 것을 주지 않는다.
+server의 메모리는 1 GiB body와 98 MiB body에서 많아야 2.5 MiB 다르므로 body에 따라 늘지 않는다. hyper의 PHP server는 file이 있는 두 body에서 PHP 자체 reader의 1.2배에서 1.8배의 processor 시간을 쓴다. PHP는 script가 `php://input`을 읽기 전에 body를 자신의 임시 file에 쓰므로 file의 내용이 두 번 쓰인다. PHP 자체 reader는 반복된 이름의 마지막 값만 두고 대괄호 이름을 중첩하므로, 세 번째 body에서 hyper의 세 server가 주는 것을 주지 않는다.
 
 ### 브라우저
 

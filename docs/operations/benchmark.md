@@ -104,7 +104,7 @@ One file of 1 GiB:
 | hyper PHP (PHP-FPM) | 16 (3-40) | 5 (4-7) | 13.3 |
 | hyper Node (`App.server`) | 20 (5-50) | 19 (4-46) | 157.6 |
 
-The memory of a server is the same for a body of 1 GiB and for a body of 98 MiB, so it does not grow with the body. The PHP server of hyper uses 1.2 to 1.8 times the processor time of the reader of PHP itself for the two bodies with files: PHP writes a body to its own temporary file before a script reads `php://input`, so the content of a file is written twice. The reader of PHP itself keeps the last value of a repeated name and nests bracketed names, so it does not give what the three servers of hyper give for the third body.
+The memory of a server differs by at most 2.5 MiB between a body of 1 GiB and a body of 98 MiB, so it does not grow with the body. The PHP server of hyper uses 1.2 to 1.8 times the processor time of the reader of PHP itself for the two bodies with files: PHP writes a body to its own temporary file before a script reads `php://input`, so the content of a file is written twice. The reader of PHP itself keeps the last value of a repeated name and nests bracketed names, so it does not give what the three servers of hyper give for the third body.
 
 ### Browser
 

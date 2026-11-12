@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 247742fe7d196c4ad20379348e5c8b897616fa07c181e0b9495cfe72c5309483 -->
+<!-- source-sha256: 5f39653be5be3880fd439aac736bdce5a3cc89c95fc7448b493e091b64106876 -->
 # 개발
 
 [English](development.md).
