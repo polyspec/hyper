@@ -1,0 +1,34 @@
+{
+  "cookie": [
+    {
+      "id": "the_session_cookie_over_http_is_hy_session",
+      "label": "the session cookie over http is hy session",
+      "identifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "https": false,
+      "name": "hy-session",
+      "header": "hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; path=/; HttpOnly; SameSite=Lax",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-104.4"
+      }
+    },
+    {
+      "id": "the_session_cookie_over_https_is_host_prefixed_and_secure",
+      "label": "the session cookie over https is host prefixed and secure",
+      "identifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "https": true,
+      "name": "__Host-hy-session",
+      "header": "__Host-hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; path=/; secure; HttpOnly; SameSite=Lax",
+      "only": {
+        "languages": [
+          "node",
+          "python"
+        ],
+        "sentence": "HY-104.4"
+      }
+    }
+  ]
+}

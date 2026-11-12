@@ -1295,6 +1295,48 @@
           }
         }
       }
+    },
+    "file-sessions-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "cookie": {
+          "runners": [
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "identifier": {
+              "role": "input"
+            },
+            "https": {
+              "role": "input"
+            },
+            "name": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-45.1",
+              "state": "`name` is the name of the session cookie of a request that uses HTTPS when `https` is true."
+            },
+            "header": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-45.7",
+              "state": "`header` is the `Set-Cookie` value of a new session with the identifier `identifier`."
+            }
+          },
+          "members": [
+            "record-session.cookieHeader",
+            "record-session.cookieName"
+          ]
+        }
+      }
     }
   }
 }

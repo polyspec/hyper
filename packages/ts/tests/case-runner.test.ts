@@ -49,7 +49,8 @@ const STEPS: Record<string, Step> = {
   ...prefixed('csrf.json', csrfSteps, ['browser', 'mask', 'verify']),
   ...prefixed('csrf-before-s3b.json', csrfSteps, ['browser', 'mask', 'verify'], true),
   ...prefixed('fields.json', fieldsSteps),
-  ...prefixed('file-sessions.json', fileSessionsSteps),
+  ...prefixed('file-sessions.json', fileSessionsSteps, ['cookie']),
+  ...prefixed('file-sessions-before-s3b.json', fileSessionsSteps, ['cookie'], true),
   // The fixed copy of the store cases that the sessions library holds (tests/legacy), until S-4 removes it.
   ...prefixed('file-store-sessions.json', fileStoreSessionsSteps),
   ...prefixed('functions.json', functionsSteps),

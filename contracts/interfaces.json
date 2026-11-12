@@ -8117,7 +8117,8 @@
       "cases": [
         "contracts/session.json",
         "contracts/file-sessions.json",
-        "tests/legacy/file-store-sessions.json"
+        "tests/legacy/file-store-sessions.json",
+        "tests/legacy/file-sessions-before-s3b.json"
       ],
       "units": [
         {
@@ -8424,7 +8425,8 @@
         "contracts/app.json",
         "tests/legacy/file-store-sessions.json",
         "tests/legacy/app-before-s3b.json",
-        "tests/legacy/context-before-s3b.json"
+        "tests/legacy/context-before-s3b.json",
+        "tests/legacy/file-sessions-before-s3b.json"
       ],
       "units": [
         {
@@ -8965,7 +8967,8 @@
       "cases": [
         "contracts/file-sessions.json",
         "tests/legacy/redis-sessions.json",
-        "tests/legacy/file-store-sessions.json"
+        "tests/legacy/file-store-sessions.json",
+        "tests/legacy/file-sessions-before-s3b.json"
       ],
       "units": [
         {
@@ -18071,10 +18074,8 @@
           ]
         },
         "cookie": {
-          "runners": [
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "file-sessions-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {

@@ -98,7 +98,7 @@ STEPS = {
     ("routes.json", "baseCases"): routes_steps.base_cases,
     ("routes.json", "invalidPaths"): routes_steps.invalid_paths,
     ("file-sessions.json", "requests"): file_sessions_steps.requests,
-    ("file-sessions.json", "cookie"): file_sessions_steps.cookie,
+    ("file-sessions-before-s3b.json", "cookie"): file_sessions_steps.cookie,
     # The fixed copy of the store cases that the sessions library holds (tests/legacy), until S-4 removes it.
     ("file-store-sessions.json", "requests"): file_store_sessions_steps.requests,
     ("file-store-sessions.json", "open"): file_store_sessions_steps.open,
