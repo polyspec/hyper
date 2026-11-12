@@ -47,7 +47,7 @@ STEPS = {
     ("context.json", "withContext"): context_steps.with_context,
     ("context.json", "cases"): context_steps.cases,
     ("cookies.json", "parse"): cookies_steps.parse,
-    ("build.json", "read"): build_steps.read,
+    ("build-before-s3b.json", "read"): build_steps.read,
     ("build.json", "outputs"): build_steps.outputs,
     ("container.json", "services"): container_steps.services,
     ("csrf.json", "mask"): csrf_steps.mask,

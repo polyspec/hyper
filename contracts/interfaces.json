@@ -2151,7 +2151,8 @@
       "cases": [
         "contracts/build.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/build-before-s3b.json"
       ],
       "units": [
         {
@@ -11768,7 +11769,8 @@
         "contracts/manifest.json",
         "contracts/build.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/build-before-s3b.json"
       ],
       "units": [
         {
@@ -16797,11 +16799,8 @@
       "fixtures": {},
       "sections": {
         "read": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "build-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {

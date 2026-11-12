@@ -929,6 +929,53 @@
           }
         }
       }
+    },
+    "build-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "read": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "text": {
+              "role": "input"
+            },
+            "bytes": {
+              "role": "input",
+              "optional": true
+            },
+            "build": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-125.5",
+              "state": "`build` is the build id that a `build.json` with the text `text` gives, or null when the file fails; a null `text` is a missing file."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-125.5",
+              "state": "`error` is `invalid-build` when the file fails with a message that names its path, or null when it gives a build id."
+            },
+            "message": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-125.5",
+              "state": "`message` is a text that the message of the failure of the file contains after its path."
+            }
+          }
+        }
+      }
     }
   }
 }

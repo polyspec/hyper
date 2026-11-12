@@ -40,7 +40,7 @@ final class CaseSteps
             'accept-before-s3b.json parse' => AcceptSteps::parse(...),
             'accept-before-s3b.json select' => AcceptSteps::select(...),
             'cookies.json parse' => CookiesSteps::parse(...),
-            'build.json read' => BuildSteps::read(...),
+            'build-before-s3b.json read' => BuildSteps::read(...),
             'container.json services' => ContainerSteps::services(...),
             'csrf.json mask' => CsrfSteps::mask(...),
             'csrf.json masked' => CsrfSteps::masked(...),
