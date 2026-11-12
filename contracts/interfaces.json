@@ -179,7 +179,8 @@
         "contracts/app.json",
         "contracts/hooks.json",
         "tests/legacy/app-before-s3b.json",
-        "tests/legacy/client-before-s3b.json"
+        "tests/legacy/client-before-s3b.json",
+        "tests/legacy/context-before-s3b.json"
       ],
       "units": [
         {
@@ -2255,7 +2256,8 @@
         "contracts/context.json",
         "contracts/functions.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/context-before-s3b.json"
       ],
       "units": [
         {
@@ -5622,7 +5624,8 @@
         "contracts/session.json",
         "contracts/app.json",
         "contracts/context.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/context-before-s3b.json"
       ],
       "units": [
         {
@@ -8420,7 +8423,8 @@
         "contracts/file-sessions.json",
         "contracts/app.json",
         "tests/legacy/file-store-sessions.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/context-before-s3b.json"
       ],
       "units": [
         {
@@ -12872,7 +12876,8 @@
       "cases": [
         "contracts/context.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/context-before-s3b.json"
       ],
       "units": [
         {
@@ -15735,11 +15740,8 @@
           }
         },
         "cases": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "context-before-s3b.json",
           "uses": [
             "applications"
           ],

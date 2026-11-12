@@ -45,7 +45,7 @@ STEPS = {
     ("client.json", "declaration"): client_steps.declaration,
     ("context.json", "contexts"): context_steps.contexts,
     ("context.json", "withContext"): context_steps.with_context,
-    ("context.json", "cases"): context_steps.cases,
+    ("context-before-s3b.json", "cases"): context_steps.cases,
     ("cookies.json", "parse"): cookies_steps.parse,
     ("build-before-s3b.json", "read"): build_steps.read,
     ("build.json", "outputs"): build_steps.outputs,

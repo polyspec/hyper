@@ -1038,6 +1038,150 @@
           ]
         }
       }
+    },
+    "context-before-s3b.json": {
+      "fixtures": {
+        "applications": "input"
+      },
+      "sections": {
+        "cases": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [
+            "applications"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "application": {
+              "role": "input"
+            },
+            "shared": {
+              "role": "input",
+              "optional": true
+            },
+            "context": {
+              "role": "input",
+              "optional": true
+            },
+            "request": {
+              "role": "input",
+              "fields": {
+                "method": {
+                  "role": "input"
+                },
+                "target": {
+                  "role": "input"
+                },
+                "headers": {
+                  "role": "input"
+                },
+                "form": {
+                  "role": "input",
+                  "optional": true
+                },
+                "csrf": {
+                  "role": "input",
+                  "optional": true
+                }
+              }
+            },
+            "status": {
+              "role": "response"
+            },
+            "headers": {
+              "role": "response",
+              "optional": true
+            },
+            "absentHeaders": {
+              "role": "response",
+              "optional": true
+            },
+            "body": {
+              "role": "response",
+              "optional": true
+            },
+            "bodyContains": {
+              "role": "response",
+              "optional": true
+            },
+            "bodyNotContains": {
+              "role": "response",
+              "optional": true
+            },
+            "failure": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-60.11",
+              "state": "`failure` is a text that the failure of the response, as the response hook receives it, contains."
+            },
+            "keys": {
+              "role": "expected",
+              "optional": true,
+              "compare": "keys",
+              "sentence": "HY-128.1",
+              "state": "`keys` lists the keys of the JSON response object in their order."
+            },
+            "sharedKeys": {
+              "role": "expected",
+              "optional": true,
+              "compare": "keys",
+              "sentence": "HY-128.3",
+              "state": "`sharedKeys` lists the keys of the member `shared` of the JSON response in their order."
+            },
+            "contextCalls": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-124.2",
+              "state": "`contextCalls` is the number of calls of the context handler during the request."
+            },
+            "firstCalls": {
+              "role": "expected",
+              "optional": true,
+              "compare": "prefix",
+              "sentence": "HY-124.2",
+              "state": "`firstCalls` lists the first calls of the request in the order in which they run, written `action:<route>`, `context` and `shared`."
+            },
+            "selection": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-124.2",
+              "state": "`selection` lists the selection value that the context handler received, one item for each call."
+            },
+            "regionKeys": {
+              "role": "expected",
+              "optional": true,
+              "compare": "keys",
+              "sentence": "HY-75.7",
+              "state": "`regionKeys` is the names of the regions that the JSON response holds under `regions`, in their order."
+            },
+            "tokenOfSession": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-72.3",
+              "state": "`tokenOfSession` true states that the masked token of the response body is a masked value of the token that the session holds after the request."
+            },
+            "renewals": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-72.2",
+              "state": "`renewals` is how many times the request renewed the session."
+            }
+          }
+        }
+      }
     }
   }
 }
