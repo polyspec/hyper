@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cb11e94b551d1d3b2d5b3cb25d258089",
+    "content-hash": "bcd23c4af6a51f7644310f4697bbfac9",
     "packages": [
         {
             "name": "min-0-max/json-schema",
@@ -202,12 +202,12 @@
             "time": "2021-05-22T15:57:08+00:00"
         },
         {
-            "name": "polyspec/hyper-server",
+            "name": "polyspec/hyper",
             "version": "0.0.39",
             "dist": {
                 "type": "path",
-                "url": "packages/server/php",
-                "reference": "716f828a0ce8f5065112f8b30eb3ffc00e1ebb90"
+                "url": "packages/php",
+                "reference": "534b2fb2dc755996a61a6b656ca185e68b42edb4"
             },
             "require": {
                 "php": ">=8.4",
@@ -221,13 +221,13 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Polyspec\\Hyper\\Server\\": "src/"
+                    "Polyspec\\Hyper\\": "src/"
                 }
             },
             "autoload-dev": {
                 "psr-4": {
-                    "Polyspec\\Hyper\\Server\\Tests\\": "tests/",
-                    "Polyspec\\Hyper\\Server\\Tests\\Program\\": "tests/build/server/php/"
+                    "Polyspec\\Hyper\\Tests\\": "tests/",
+                    "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/"
                 }
             },
             "scripts": {
@@ -241,7 +241,7 @@
             "license": [
                 "MIT"
             ],
-            "description": "Server side of the region protocol: routes, actions and region JSON for template language layouts",
+            "description": "The server library of the region protocol for PHP; the browser package is @polyspec/hyper-client. Routes, actions and region JSON for template language layouts",
             "transport-options": {
                 "relative": true
             }

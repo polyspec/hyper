@@ -1,12 +1,12 @@
 {
     "name": "polyspec/hyper-workspace",
-    "description": "The development install of the PHP package packages/server/php with the PHP package polyspec/template from the Composer repository of the template release; not published",
+    "description": "The development install of the PHP package packages/php with the PHP package polyspec/template from the Composer repository of the template release; not published",
     "type": "project",
     "license": "MIT",
     "repositories": [
         {
             "type": "path",
-            "url": "packages/server/php",
+            "url": "packages/php",
             "options": {
                 "reference": "config"
             }
@@ -24,7 +24,7 @@
     "require": {
         "php": ">=8.4",
         "min-0-max/json-schema": "2.6.0-p2",
-        "polyspec/hyper-server": "0.0.39",
+        "polyspec/hyper": "0.0.39",
         "polyspec/template": "0.0.27"
     },
     "require-dev": {
@@ -34,14 +34,14 @@
     },
     "autoload": {
         "psr-4": {
-            "Polyspec\\Hyper\\Server\\": "packages/server/php/src/"
+            "Polyspec\\Hyper\\": "packages/php/src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Polyspec\\Hyper\\Server\\Tests\\": "packages/server/php/tests/",
-            "Polyspec\\Hyper\\Server\\Tests\\Program\\": "packages/server/php/tests/build/server/php/",
-            "Polyspec\\Hyper\\Server\\Tests\\Contract\\": "var/contract-programs/"
+            "Polyspec\\Hyper\\Tests\\": "packages/php/tests/",
+            "Polyspec\\Hyper\\Tests\\Program\\": "packages/php/tests/build/server/php/",
+            "Polyspec\\Hyper\\Tests\\Contract\\": "var/contract-programs/"
         }
     },
     "config": {

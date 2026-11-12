@@ -1,0 +1,58 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Polyspec\Hyper;
+
+/** Creates application services once and passes them to loaders and actions by parameter type. */
+final class Container
+{
+    /** @var array<string, \Closure> */
+    private array $factories = [];
+
+    /** @var array<string, object> */
+    private array $instances = [];
+
+    /** Registers the factory that creates the service of a class. */
+    public function bind(string $class, \Closure $factory): void
+    {
+        ArgumentCount::most(\func_num_args(), 2);
+        $this->factories[$class] = $factory;
+        unset($this->instances[$class]);
+    }
+
+    /**
+     * Calls a function with arguments chosen by parameter type.
+     *
+     * @param array<string, object> $provided objects for this call keyed by class name
+     */
+    public function call(\Closure $function, array $provided): mixed
+    {
+        ArgumentCount::most(\func_num_args(), 2);
+        $arguments = [];
+        foreach ((new \ReflectionFunction($function))->getParameters() as $parameter) {
+            $type = $parameter->getType();
+            if (!$type instanceof \ReflectionNamedType || $type->isBuiltin()) {
+                throw new \LogicException("parameter \${$parameter->getName()} has no class type");
+            }
+            $arguments[] = $provided[$type->getName()] ?? $this->service($type->getName());
+        }
+
+        return $function(...$arguments);
+    }
+
+    /** Returns the service of a class, which its factory creates on the first use (HY-105.2). */
+    private function service(string $class): object
+    {
+        if (!isset($this->instances[$class])) {
+            $factory = $this->factories[$class] ?? throw new \LogicException("no factory is bound for {$class}");
+            $instance = $factory();
+            if (!is_object($instance)) {
+                throw new \LogicException("the factory of {$class} did not return an object");
+            }
+            $this->instances[$class] = $instance;
+        }
+
+        return $this->instances[$class];
+    }
+}

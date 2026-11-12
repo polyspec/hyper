@@ -1,0 +1,38 @@
+{
+    "name": "polyspec/hyper",
+    "version": "0.0.39",
+    "description": "The server library of the region protocol for PHP; the browser package is @polyspec/hyper-client. Routes, actions and region JSON for template language layouts",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4",
+        "polyspec/template": "0.0.27"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.32.1",
+        "phpstan/phpstan": "^2.2.16",
+        "phpunit/phpunit": "^13.4.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Polyspec\\Hyper\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Polyspec\\Hyper\\Tests\\": "tests/",
+            "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/",
+            "Polyspec\\Hyper\\Tests\\Contract\\": "../../var/contract-programs/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "lint": "pint --test"
+    },
+    "config": {
+        "platform": {
+            "php": "8.4.1"
+        },
+        "sort-packages": true
+    }
+}
