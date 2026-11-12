@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 299cfefdcd9c6f69d87e21bf78e46c1ac23ad094c205d2d0209937a6a0a93750 -->
+<!-- source-sha256: b74d8ef8917019f57993883942789681d3b6f49590ef16016c58c4924fe3aaac -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core는 polyspec의 모든 core처럼 `polyspec-bindgen-core`를 bindgen의 Git 저장소에서 받으므로, core와 그 의존이 kind interface의 한 사본을 쓴다(C-7).
 
 - hyper의 interface 계약은 bindgen schema의 `packages/server/rust/interface.json`이다(C-7, 설계 I-1). 패키지 `polyspec/hyper`, `polyspec-hyper`, `@polyspec/hyper`, 오류 class `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`, HY-132의 kind와 hyper가 넘기는 http-negotiate와 http-cookies의 kind, host가 부를 core의 내부 함수, host 함수 `listener`, `server`, `run`, `create_server`, `create_wsgi`, `create_asgi`(HY-106.20), 그리고 S-3b에서 지금 API와 달라진 점을 담는다. `docs/features.md`는 core가 가질 때까지, 그리고 server가 core를 부를 때까지(S-4) 세 server에 남는 규칙을 적는다.
 

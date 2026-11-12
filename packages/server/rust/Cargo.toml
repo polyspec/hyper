@@ -16,7 +16,7 @@ path = "src/lib.rs"
 
 [dependencies]
 # The kind interface of every error (plan F-2, bindgen design E-1).
-polyspec-bindgen-core = { path = "../../../../bindgen/packages/core/rust" }
+polyspec-bindgen-core = { git = "https://github.com/polyspec/bindgen.git", branch = "v1/rust-core" }
 # The Cookie and Set-Cookie fields (CK-1 to CK-14; HY-129.13, HY-45.8, HY-52.13).
 polyspec-http-cookies = { path = "../../../../http-cookies/packages/rust" }
 # The weights of Accept (NG-5 to NG-10; HY-116.17 to HY-116.20).

@@ -123,6 +123,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 [[package]]
 name = "polyspec-bindgen-core"
 version = "0.0.1"
+source = "git+https://github.com/polyspec/bindgen.git?branch=v1%2Frust-core#1b20ddaf05d1252e81de2b87d0f6ac26c7345bf9"
 dependencies = [
  "indexmap",
  "tokio-util",
@@ -131,6 +132,9 @@ dependencies = [
 [[package]]
 name = "polyspec-http-cookies"
 version = "0.0.0"
+dependencies = [
+ "polyspec-bindgen-core",
+]
 
 [[package]]
 name = "polyspec-http-media-type"
