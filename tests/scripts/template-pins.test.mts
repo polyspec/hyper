@@ -83,16 +83,18 @@ test('Composer release declarations name the Composer repository of the release 
   assert.doesNotMatch(readFileSync('packages/server/php/phpstan-max.neon', 'utf8'), /polyspec_template\.stub\.php/);
 });
 
-test('both Composer roots require the json-schema fork by a release and their locks pin its tag', () => {
-  // A branch of the fork moves, so each root requires a release of the fork, as its FORK.md states, and its lock records the tag
-  // of that release (H27.82).
+test('both Composer roots require the json-schema fork from a release and their locks pin its tag', () => {
+  // A branch of the fork moves, so each root requires the fork from a release, as its FORK.md states, and its lock records the
+  // tag of that release (H27.82). The range starts at the release, because composer validate --strict fails an exact
+  // constraint (H28.17).
   for (const manifest of ['composer.json', 'examples/board/composer.json']) {
     const required = jsonString(jsonObject(readObject(manifest).require, `${manifest} require`)['min-0-max/json-schema'], `${manifest} require min-0-max/json-schema`);
-    assert.match(required, /^\d+\.\d+\.\d+-p\d+$/, `${manifest}: the json-schema fork is required by a release`);
+    const release = /^\^(\d+\.\d+\.\d+-p\d+)$/.exec(required)?.[1];
+    assert.ok(release !== undefined, `${manifest}: the json-schema fork is required by a caret range from a release, not ${required}`);
     const lockFile = manifest.replace(/\.json$/, '.lock');
     const entry = jsonObjects(readObject(lockFile).packages, `${lockFile} packages`).find(({ name }) => name === 'min-0-max/json-schema');
     assert.ok(entry !== undefined, `${lockFile} has no min-0-max/json-schema`);
-    assert.equal(entry.version, `v${required}`, `${lockFile}: the lock pins the tag of the release`);
+    assert.equal(entry.version, `v${release}`, `${lockFile}: the lock pins the tag of the release`);
   }
 });
 

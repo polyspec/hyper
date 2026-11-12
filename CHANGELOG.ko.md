@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f2c54d7864c9f054372525e8cc62a9f25a28a7038b51bc164b476411ca75e300 -->
+<!-- source-sha256: 0c8f34b52ed9369bbbac96710b8c91da892ffff4f5f16661b0b4c2c23f184e9f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `composer.json`과 `examples/board/composer.json`은 json-schema fork를 정확한 제약 `2.6.0-p2` 대신 범위 `^2.6.0-p2`로 요구하고, 두 lock은 여전히 release `v2.6.0-p2`를 그 dist로 pin하므로 설치되는 fork는 바뀌지 않는다. 전에는 두 root의 `composer validate --strict`가 Composer 2.10.3이 정확한 제약에 내는 경고로 실패했고(exit 1), 이제 통과한다(H28.17).
 
 - `config/layout.yml`는 server의 scope와 함수를 읽는 recipe 검사의 PHP와 Python reader(`read-php-functions.php`, `read-php-scopes.php`, `PhpScope.php`, `read_python_scopes.py`)를 앞의 두 reader와 같은 이유로 S9의 예외로 선언한다. 이 reader는 PHP의 reflection과 token, Python의 ast module로 code를 읽으며 TypeScript에는 이것이 없다(H28.16).
 
