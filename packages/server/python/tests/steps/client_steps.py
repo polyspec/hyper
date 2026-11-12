@@ -16,6 +16,7 @@ from polyspec.hyper.app import App
 from polyspec.hyper.array_session import ArraySession
 from polyspec.hyper.choice import Choice
 from polyspec.hyper.client_rendering import ClientRendering
+from polyspec.hyper.media_type import MediaType
 from polyspec.hyper.representation import Representation
 from polyspec.hyper.request import Request
 from polyspec.hyper.result import Result
@@ -336,7 +337,7 @@ def _handlers(representations: dict, observed: bool) -> dict:
 def _representation(response: dict) -> Callable:
     """Returns a representation handler that answers `response` and records its call and what it received (HY-122)."""
 
-    def handler(request: Request, media, counter: Counter) -> Representation:
+    def handler(request: Request, media: MediaType, counter: Counter) -> Representation:
         counter.handled += 1
         counter.received = {
             "parameters": media.parameters(),

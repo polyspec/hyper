@@ -118,7 +118,7 @@ def streamed(case) -> None:
         if move == "none" or not pairs:
             case.compare("moved", None)
         else:
-            first = pairs[0][1][0]
+            first: UploadedFile = pairs[0][1][0]
             target = os.path.join(scratch, "target")
             if move == "exists":
                 with open(target, "wb") as taken:

@@ -127,6 +127,12 @@ final class ResultSteps
     }
 
     /** Makes the stop of the kind, or records the message of the error with which it fails (HY-27, HY-50). */
+    /** Compares the location of the result of a redirect stop. */
+    private static function compareLocation(CaseReader $case, Redirect $redirect): void
+    {
+        $case->compare('location', $redirect->result->location);
+    }
+
     public static function stop(CaseReader $case): void
     {
         $stop = null;
@@ -150,7 +156,7 @@ final class ResultSteps
         $case->compare('message', $stop?->getMessage());
         $case->compare('error', $error);
         if ($case->has('location') && $stop instanceof Redirect) {
-            $case->compare('location', $stop->result->location);
+            self::compareLocation($case, $stop);
         }
     }
 

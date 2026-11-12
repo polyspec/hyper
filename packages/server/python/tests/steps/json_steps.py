@@ -10,7 +10,12 @@ def _finite(value):
         return [_finite(item) for item in value]
     if isinstance(value, dict):
         return {key: _finite(item) for key, item in value.items()}
-    return float(value.literal) if isinstance(value, OutsideNumber) else value
+    return _outside(value) if isinstance(value, OutsideNumber) else value
+
+
+def _outside(value: OutsideNumber) -> float:
+    """A number outside the data model as a float."""
+    return float(value.literal)
 
 
 def encode(case) -> None:

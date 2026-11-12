@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { App, ArraySession, Representation, Request, type Handlers, type RepresentationHandler, type RouteHandlers } from '../../src/index.js';
+import { App, ArraySession, Representation, Request, type Handlers, type RepresentationArgument, type RepresentationHandler, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
@@ -47,7 +47,8 @@ const rejected: RepresentationHandler<Services> = () => {
 // names (HY-105), and answers or throws what the case states.
 function handlerOf(spec: Map<string, unknown> | null, calls: Observed[]): RepresentationHandler<Services> {
   const service = spec?.has('service') === true ? serviceName(spec.get('service')) : null;
-  return ({ request, media, services }) => {
+  return (argument: RepresentationArgument<Services>) => {
+    const { request, media, services } = argument;
     calls.push({ method: request.method, parameters: media.parameters(), request, body: request.json(), params: request.params(), service: service === null ? null : services.get(service) });
     if (spec === null) throw new Error('a case without a handler calls a representation handler');
     const thrown = spec.get('throw');
@@ -176,7 +177,7 @@ export const steps = {
       requestFrom({ method: textOf(reader.input('request.method'), 'request.method'), target: textOf(reader.input('request.target'), 'request.target'), headers, ...(body === undefined ? {} : { body }) }),
       store,
     );
-    const observed = calls.at(-1);
+    const observed: Observed | undefined = calls.at(-1);
     // The headers that the handler received are among the headers of the request.
     const received: Record<string, string> = {};
     for (const name of Object.keys(headers)) {

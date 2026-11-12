@@ -118,8 +118,13 @@ def _call(session: Session, method: str, texts: list) -> object:
 def _written(result: object) -> object:
     """The result of a call as the case writes it: a flash is the map of its values as pairs and its topics."""
     if isinstance(result, Flash):
-        return {"values": _pairs(result.values), "changed": list(result.changed)}
+        return _flash_written(result)
     return result
+
+
+def _flash_written(flash: Flash) -> object:
+    """A flash as the map of its values as pairs and its topics."""
+    return {"values": _pairs(flash.values), "changed": list(flash.changed)}
 
 
 def _pairs(values: object) -> object:

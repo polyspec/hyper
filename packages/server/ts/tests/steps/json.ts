@@ -7,7 +7,10 @@ import type { CaseReader } from '../case-reader.js';
 
 // Encoding writes every finite number, also one outside the data model, as PHP json_encode does.
 function finite(value: DecodedValue): Value {
-  if (value instanceof OutsideNumber) return Number(value.literal);
+  if (value instanceof OutsideNumber) {
+    const outside: OutsideNumber = value;
+    return Number(outside.literal);
+  }
   if (Array.isArray(value)) return value.map(finite);
   if (value instanceof Map) return new Map([...value].map(([key, item]) => [key, finite(item)]));
   return value;

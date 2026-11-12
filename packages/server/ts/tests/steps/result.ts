@@ -65,7 +65,10 @@ export const steps = {
     reader.compare('result', outcome.result?.status ?? null);
     reader.compare('redirect', outcome.result?.location ?? null);
     reader.compare('error', outcome.error);
-    if (reader.has('held') && outcome.result !== null) reader.compare('held', outcome.result.data);
+    if (reader.has('held') && outcome.result !== null) {
+      const page: Result = outcome.result;
+      reader.compare('held', page.data);
+    }
   },
   // Makes the invalid result with the data (HY-26).
   invalid(reader: CaseReader): void {

@@ -5,7 +5,7 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Csrf } from '../../src/csrf.js';
-import { App, ArraySession, Choice, ClientRendering, Representation, Result, type AppOptions, type Handlers, type Loader, type RepresentationHandler, Request, type RouteHandlers } from '../../src/index.js';
+import { App, ArraySession, Choice, ClientRendering, Representation, Result, type AppOptions, type Handlers, type Loader, type RepresentationArgument, type RepresentationHandler, Request, type RouteHandlers } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
 import { FIXTURES, list, listAndItem, parsedBody, plain, record, requestFrom, TEMPLATES, TOKEN, type Counter, type Services } from '../support.js';
 import { mapOf, textOf, textsOf } from '../inputs.js';
@@ -21,7 +21,8 @@ interface Calls {
 
 // Returns a representation handler that answers `response` and records its calls and what it receives (HY-122).
 function representation(calls: Calls, response: Map<string, unknown>): RepresentationHandler<Services> {
-  return ({ request, media }) => {
+  return (argument: RepresentationArgument<Services>) => {
+    const { request, media } = argument;
     calls.handled++;
     calls.parameters = media.parameters();
     calls.request = request;

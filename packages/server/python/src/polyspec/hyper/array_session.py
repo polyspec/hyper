@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from .session_store import SessionStore
 
-class ArraySession:
+
+class ArraySession(SessionStore):
     """Stores session values in memory for one process."""
 
     def __init__(self) -> None:

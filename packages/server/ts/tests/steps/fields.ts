@@ -97,7 +97,7 @@ export const steps = {
       reader.compare('fields', fieldsOf(fields));
       reader.compare('files', files === null ? null : files.pairs().flatMap(([, list]) => list.map((file) => ({ name: file.name(), filename: file.filename(), contentType: file.contentType(), content: Buffer.from(file.content()).toString('latin1'), size: file.size() }))));
       reader.compare('entries', count());
-      const first = files?.pairs()[0]?.[1][0];
+      const first: UploadedFile | undefined = files?.pairs()[0]?.[1][0];
       if (move === 'none' || first === undefined) {
         reader.compare('moved', null);
       } else {

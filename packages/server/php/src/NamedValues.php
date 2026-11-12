@@ -51,7 +51,7 @@ abstract class NamedValues
      */
     public function last(string $name): mixed
     {
-        $values = $this->get($name);
+        $values = $this->values[$name] ?? [];
 
         return $values === [] ? null : $values[count($values) - 1];
     }

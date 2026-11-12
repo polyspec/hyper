@@ -5,14 +5,17 @@ from __future__ import annotations
 
 import re
 import secrets
+from abc import abstractmethod
 from typing import Optional
 
 from polyspec.php_serialize import Reference, StdClass, serialize, unserialize
 
+from .session_store import SessionStore
+
 _IDENTIFIER = re.compile(r"[A-Za-z0-9,-]{22,128}\Z")
 
 
-class RecordSession:
+class RecordSession(SessionStore):
     """The values of one session in one request (HY-24, HY-45, HY-72): the record as it was read and as the request
     changed it. A value that the request did not set stays what PHP wrote, so a request that does not change it writes
     the same bytes back. A store of a request extends this class and gives the record of its session with `stored`."""
@@ -29,6 +32,10 @@ class RecordSession:
         """Returns the identifier that this request created, which the response sets as the session cookie, or
         None."""
         return self._id if self._made else None
+
+    @abstractmethod
+    def close(self) -> None:
+        """Writes the values that the request changed and releases the session; the store of the request gives it."""
 
     def get(self, key: str) -> object:
         return RecordSession._record_value(self._start().get(key))

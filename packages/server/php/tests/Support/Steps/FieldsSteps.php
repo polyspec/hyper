@@ -118,11 +118,11 @@ final class FieldsSteps
                 if ($move === 'exists') {
                     file_put_contents($target, 'taken');
                 }
-                $failed = self::failure(static fn () => $first->moveTo($move === 'type' ? 7 : $target));
+                $failed = self::failure(static fn () => self::moveFile($first, $move === 'type' ? 7 : $target));
                 $after = null;
                 if ($failed === null) {
                     $content = self::latin((string) file_get_contents($target));
-                    $failed = self::failure(static fn () => $first->moveTo("{$scratch}/second"));
+                    $failed = self::failure(static fn () => self::moveFile($first, "{$scratch}/second"));
                     $after = self::failure(static fn () => $first->content())[0] ?? null;
                 } else {
                     $content = self::latin($first->content());
@@ -164,6 +164,12 @@ final class FieldsSteps
             'size' => $file->size(),
             'content' => self::latin($file->content()),
         ]);
+    }
+
+    /** Moves an uploaded file to the target, which a case also gives as a value of another type (HY-131). */
+    private static function moveFile(UploadedFile $file, mixed $target): void
+    {
+        $file->moveTo($target);
     }
 
     /**

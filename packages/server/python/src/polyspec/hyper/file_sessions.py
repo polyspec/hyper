@@ -13,13 +13,16 @@ import fcntl
 import os
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from ._file_session import FileSession
 from ._record_session import _IDENTIFIER, RecordSession
 
 _PREFIX = "sess_"
 _OPEN = os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC
+# The seconds between two tries of a lock that another process holds, from the first to the longest.
+_FIRST_TRY = 0.002
+_LONGEST_TRY = 0.05
 
 
 class FileSessions:
@@ -56,8 +59,22 @@ class FileSessions:
 
     def _hold(self, identifier: str, blocking: bool) -> Optional[int]:
         """Takes the exclusive lock of a session file and returns its descriptor, which closing releases. It returns
-        None without a file and, without `blocking`, while another holds the lock. A holder may remove the file, so
-        the lock counts only when the path still names the file that was locked."""
+        None without a file and, without `blocking`, while another holds the lock. With `blocking` it tries the lock
+        again after a pause, as the Node store does (HY-104.6)."""
+        pause = _FIRST_TRY
+        while True:
+            held = self._try_hold(identifier)
+            if held != "busy":
+                return held
+            if not blocking:
+                return None
+            time.sleep(pause)
+            pause = min(pause * 2, _LONGEST_TRY)
+
+    def _try_hold(self, identifier: str) -> Optional[int] | Literal["busy"]:
+        """Tries the lock of a session file once and returns its descriptor, None without a file, or `busy` while
+        another holds the lock. A holder may remove the file, so the lock counts only when the path still names the
+        file that was locked; a path that names another file is tried again."""
         path = self._file(identifier)
         while True:
             try:
@@ -66,13 +83,10 @@ class FileSessions:
                 return None
             try:
                 try:
-                    fcntl.flock(
-                        descriptor,
-                        fcntl.LOCK_EX if blocking else fcntl.LOCK_EX | fcntl.LOCK_NB,
-                    )
+                    fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except BlockingIOError:
                     os.close(descriptor)
-                    return None
+                    return "busy"
                 locked = os.fstat(descriptor)
                 try:
                     current = os.stat(path, follow_symlinks=False)
@@ -99,8 +113,8 @@ class FileSessions:
             identifier = file.name.removeprefix(_PREFIX)
             if _IDENTIFIER.fullmatch(identifier) is None or self._live(identifier):
                 continue
-            held = self._hold(identifier, blocking=False)
-            if held is None:
+            held = self._try_hold(identifier)
+            if held is None or held == "busy":
                 continue
             try:
                 if not self._expired(os.fstat(held).st_mtime):

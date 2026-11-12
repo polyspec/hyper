@@ -726,7 +726,7 @@ test('the Node reader reads a name that an object pattern binds as a read of the
   const scope = out.scopes.find((s) => s.name === 'Receivers.sized');
   assert.deepEqual(scope?.assigns, [
     { target: 'kept', value: { kind: 'member', of: { kind: 'own' }, name: 'kept', call: false } },
-    { target: 'renamed', value: { kind: 'member', of: { kind: 'own' }, name: 'other', call: false } },
+    { target: 'following', value: { kind: 'member', of: { kind: 'variable', name: 'item' }, name: 'next', call: false } },
   ]);
 });
 

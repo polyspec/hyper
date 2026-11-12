@@ -6,6 +6,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\Choice;
 use Polyspec\Hyper\ClientRendering;
+use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
@@ -129,10 +130,33 @@ final class ClientSteps
         $case->compare('reported', $reports->reported());
         if ($case->has('reportedHeaders') || $case->has('notes')) {
             $last = $reports->last();
-            $case->compare('reportedHeaders', $last[1]->headers);
-            $case->compare('notes', $last[3]->notes());
+            self::compareLast($case, $last[1], $last[3]);
         }
 
+        self::compareResponse($case, $response);
+        // HY-62: the session holds no token after a request whose expected session is false.
+        $case->compare('session', $store->holds('_hyper_csrf'));
+        $case->compare('actions', $counter->actions);
+        $case->compare('handled', $calls->handled);
+        // `received` is optional: a case without it compares none of its fields.
+        if (!$case->has('received')) {
+            return;
+        }
+        $case->compare('received.parameters', Plain::map($calls->parameters));
+        $case->compare('received.selection', $calls->request?->selection());
+        $case->compare('received.absentHeaders', $calls->headers(array_map(strval(...), array_keys($headers))));
+    }
+
+    /** Compares the headers of the response and the notes of the reply of the last call of the response hook. */
+    private static function compareLast(CaseReader $case, Response $response, Reply $reply): void
+    {
+        $case->compare('reportedHeaders', $response->headers);
+        $case->compare('notes', $reply->notes());
+    }
+
+    /** Compares the status, the headers and the body of the response of a case, and its JSON data. */
+    private static function compareResponse(CaseReader $case, Response $response): void
+    {
         $case->compare('status', $response->status);
         $case->compare('headers', $response->headers);
         $case->compare('allHeaders', $response->headers);
@@ -147,17 +171,6 @@ final class ClientSteps
             $case->compare('json.params', $json->params ?? null);
             $case->compare('json.regions', $json->regions ?? null);
         }
-        // HY-62: the session holds no token after a request whose expected session is false.
-        $case->compare('session', $store->holds('_hyper_csrf'));
-        $case->compare('actions', $counter->actions);
-        $case->compare('handled', $calls->handled);
-        // `received` is optional: a case without it compares none of its fields.
-        if (!$case->has('received')) {
-            return;
-        }
-        $case->compare('received.parameters', Plain::map($calls->parameters));
-        $case->compare('received.selection', $calls->request?->selection());
-        $case->compare('received.absentHeaders', $calls->headers(array_map(strval(...), array_keys($headers))));
     }
 
     /** HY-62.15, HY-62.35: opening the application fails for a client rendering that cannot be used. */

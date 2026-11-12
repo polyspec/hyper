@@ -1,25 +1,16 @@
 // The requests of the cases of contracts/file-sessions.json and contracts/redis-sessions.json (HY-104, HY-115): each
 // step of a case opens the store of one request, applies its calls and closes it.
+import { RecordSession } from '../../src/record-session.js';
 import { parsed } from '../case-rules.js';
 import { textOf } from '../inputs.js';
 
 // A call of a case: a method and the decoded values of its arguments.
 type Call = [string, unknown[]];
 
-// The store of one request, as the session stores of the server give it.
-interface RequestStore {
-  get(key: string): unknown;
-  set(key: string, value: unknown): void;
-  remove(key: string): void;
-  renew(): void;
-  created(): string | null;
-  close(): Promise<void>;
-}
-
 // What a case file gives the requests of its cases.
 interface Host {
   // Opens the store of a request with the value of its session cookie.
-  open(cookie: string | null): Promise<RequestStore>;
+  open(cookie: string | null): Promise<RecordSession>;
   // Returns the name that the case file gives the class of a failure, or null for a class that it does not name.
   failure(error: unknown): string | null;
   // Runs a call that is no method of the store, with the identifiers that the steps created so far, and returns its
@@ -68,7 +59,7 @@ function cookieOf(value: unknown, made: readonly (string | null)[]): string | nu
 }
 
 // Applies one call to the store of a request and returns its entry of `results`, or undefined for a call without one.
-function applied(store: RequestStore, [method, args]: Call, host: Host, made: readonly (string | null)[]): unknown {
+function applied(store: RecordSession, [method, args]: Call, host: Host, made: readonly (string | null)[]): unknown {
   switch (method) {
     case 'get': {
       // The value that the store read, null for no value (HY-104.13, HY-115.4).
@@ -117,7 +108,7 @@ export async function requests(steps: unknown, host: Host): Promise<Outcome> {
       if (!failed) outcome.message = error instanceof Error ? error.message : String(error);
       failed = true;
     };
-    let store: RequestStore | null = null;
+    let store: RecordSession | null = null;
     try {
       store = await host.open(cookie);
     } catch (error) {

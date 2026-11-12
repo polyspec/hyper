@@ -31,9 +31,19 @@ final class Reports
     public function reported(): array
     {
         return array_map(
-            static fn (array $call): array => ["{$call[0]->method} {$call[0]->path()}", $call[1]->status],
+            static fn (array $call): array => self::reportedCall($call[0], $call[1]),
             $this->calls,
         );
+    }
+
+    /**
+     * Returns the pair of the method and the path of a request, joined by a space, and the status of its response.
+     *
+     * @return array{0: string, 1: int}
+     */
+    private static function reportedCall(Request $request, Response $response): array
+    {
+        return ["{$request->method} {$request->path()}", $response->status];
     }
 
     /**

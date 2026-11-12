@@ -4,6 +4,8 @@
 import re
 from collections.abc import Callable
 
+from polyspec.hyper._record_session import RecordSession
+
 from .recorded import decoded
 
 _CREATED = re.compile(r"[0-9a-f]{64}\Z")
@@ -42,7 +44,7 @@ class StoreRequests:
         results: list = []
         failure: list | None = None
         try:
-            store = self._opener(cookie)
+            store: RecordSession = self._opener(cookie)
         except Exception as error:  # noqa: BLE001 - the classes of the case decide what the failure is
             self._record(results, None, self._failed("open", error), None)
             return

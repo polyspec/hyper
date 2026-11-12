@@ -10,7 +10,7 @@ const IDENTIFIER = /^[A-Za-z0-9,-]{22,128}$/;
 // it. A value that the request did not set stays what PHP wrote, so a request that does not change it writes the same
 // bytes back. A store of a request extends this class and gives the record of its session with `stored`.
 /** @internal */
-export class RecordSession implements SessionStore {
+export abstract class RecordSession implements SessionStore {
   // The identifier of the session cookie, or null when the cookie names no session.
   protected readonly cookieId: string | null;
   // The values of the session by name, or null before the request used the session.
@@ -30,6 +30,9 @@ export class RecordSession implements SessionStore {
     this.made = false;
     this.renewed = null;
   }
+
+  // Writes the values that the request changed and releases the session; the store of the request gives it.
+  abstract close(): Promise<void>;
 
   // Returns the identifier that this request created, which the response sets as the session cookie, or null.
   created(): string | null {

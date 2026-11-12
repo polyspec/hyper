@@ -96,7 +96,7 @@ export class Recorded {
     if (reader.has('logged')) reader.compare('logged', this.logged.join('\n'));
     if (reader.has('logCount')) reader.compare('logCount', this.logged.length);
     if (reader.has('reported')) {
-      reader.compare('reported', this.reports.map((report) => [report.request === null ? 'null' : `${report.request.method} ${report.request.path()}`, report.response.status]));
+      reader.compare('reported', this.reports.map((report: Report) => [report.request === null ? 'null' : `${report.request.method} ${report.request.path()}`, report.response.status]));
     }
     if (reader.has('reportedHeaders')) reader.compare('reportedHeaders', this.last().response.headers);
     if (reader.has('notes')) reader.compare('notes', this.last().reply.notes());

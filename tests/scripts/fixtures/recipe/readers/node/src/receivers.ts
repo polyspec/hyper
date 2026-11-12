@@ -29,9 +29,10 @@ export class Receivers {
 
   sized(item: Sized): void {
     item.grow();
-    const { kept, other: renamed } = this;
+    const { kept } = this;
+    const { next: following } = item;
     kept?.grow();
-    renamed.call(this);
+    following?.grow();
   }
 
   listed(widgets: readonly Widget[], others: Array<Widget>): void {

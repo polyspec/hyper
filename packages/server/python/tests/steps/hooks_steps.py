@@ -34,9 +34,14 @@ def creation(case) -> None:
         application = client_steps._app(directory, Counter(), None, {}, False)
         sessions = FileSessions(directory)
         errors = []
-        for entry in (create_server, create_wsgi, create_asgi):
+        entries = {
+            create_server: lambda: create_server(application, sessions, **{hook: _NO_FUNCTION}),
+            create_wsgi: lambda: create_wsgi(application, sessions, **{hook: _NO_FUNCTION}),
+            create_asgi: lambda: create_asgi(application, sessions, **{hook: _NO_FUNCTION}),
+        }
+        for entry, create in entries.items():
             try:
-                created = entry(application, sessions, **{hook: _NO_FUNCTION})
+                created = create()
             except ValueError as failure:
                 if type(failure) is not ValueError:
                     raise

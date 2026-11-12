@@ -9558,6 +9558,25 @@
               }
             },
             {
+              "id": "record-session.close",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Writes the values that the request changed and releases the session; the store of the request gives it (HY-104.7, HY-115).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/record-session.ts::RecordSession.close",
+                  "signature": "abstract close(): Promise<void>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_record_session.py::RecordSession.close",
+                  "signature": "def close(self) -> None"
+                }
+              }
+            },
+            {
               "id": "record-session.stored",
               "kind": "method",
               "visibility": "internal",
@@ -9948,13 +9967,11 @@
                 "node": {
                   "symbol": "packages/server/ts/src/file-sessions.ts::FileSessions.tryHold",
                   "signature": "private tryHold(id: string): number | null | 'busy'"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/file_sessions.py::FileSessions._try_hold",
+                  "signature": "def _try_hold(self, identifier: str) -> Optional[int] | Literal['busy']"
                 }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-104.6"
               }
             },
             {
@@ -15126,7 +15143,10 @@
               "sentence": "HY-116.5",
               "state": "`invalid` is true when the selection refuses the value with the error of an invalid Accept, which the server answers with status 400."
             }
-          }
+          },
+          "members": [
+            "accept.select"
+          ]
         }
       }
     },
@@ -15963,7 +15983,10 @@
               "sentence": "HY-56.4",
               "state": "`names` lists the names of the values of `text` in the order of their first occurrence, or is null when `fields` is null."
             }
-          }
+          },
+          "members": [
+            "named-values.names"
+          ]
         },
         "multipart": {
           "runners": [
@@ -15997,7 +16020,11 @@
               "sentence": "HY-113.3",
               "state": "`files` lists the files of the body in request order as objects with `name`, `filename`, `contentType` and `content`, where `content` is the text of the file and `contentType` is empty text for a part without a content type, or is null when `fields` is null."
             }
-          }
+          },
+          "members": [
+            "files.fromBody",
+            "multipart-reader.buffered"
+          ]
         },
         "streamed": {
           "runners": [
@@ -16089,7 +16116,11 @@
               "sentence": "HY-131.14",
               "state": "`removed` is true when the directory of the body does not exist after `remove()`, or null for a body without a directory."
             }
-          }
+          },
+          "members": [
+            "request-body.directory",
+            "uploaded-file.moveTo"
+          ]
         },
         "uploaded": {
           "runners": [
@@ -16238,7 +16269,8 @@
           },
           "members": [
             "json-codec.decode",
-            "json-codec.encode"
+            "json-codec.encode",
+            "outside-number.literal"
           ]
         },
         "decode": {
@@ -16302,7 +16334,10 @@
               "sentence": "HY-38.19",
               "state": "`expected` is the region data `data` after the kept values `kept`, a list of `[path, value]` pairs, apply by HY-38."
             }
-          }
+          },
+          "members": [
+            "kept.apply"
+          ]
         },
         "select": {
           "runners": [
@@ -16638,6 +16673,7 @@
           "members": [
             "app.bind",
             "request.browser",
+            "request.json",
             "request.params"
           ]
         },
@@ -16945,7 +16981,11 @@
               "sentence": "HY-105.3",
               "state": "`failed` states whether a use of `uses` failed because no factory is bound for its service."
             }
-          }
+          },
+          "members": [
+            "container.bind",
+            "container.call"
+          ]
         }
       }
     },
@@ -16991,7 +17031,10 @@
               "sentence": "HY-46.2",
               "state": "`error` is the message of the error with which making a redirect to `location` fails, or null."
             }
-          }
+          },
+          "members": [
+            "result.redirect"
+          ]
         },
         "page": {
           "runners": [
@@ -17038,7 +17081,11 @@
               "sentence": "HY-58.3",
               "state": "`held` is the member `data` of the page."
             }
-          }
+          },
+          "members": [
+            "result.data",
+            "result.page"
+          ]
         },
         "invalid": {
           "runners": [
@@ -17069,7 +17116,12 @@
               "sentence": "HY-58.5",
               "state": "`redirect` is the location of the invalid result, null because it is the route page."
             }
-          }
+          },
+          "members": [
+            "result.invalid",
+            "result.location",
+            "result.status"
+          ]
         },
         "copies": {
           "runners": [
@@ -17111,7 +17163,11 @@
               "sentence": "HY-25.4",
               "state": "`error` is the message of the error of the data model with which storing a flash value fails, or null."
             }
-          }
+          },
+          "members": [
+            "result.changed",
+            "result.flash"
+          ]
         },
         "stop": {
           "runners": [
@@ -17157,7 +17213,14 @@
               "sentence": "HY-50.1",
               "state": "`location` is the location of the member `result` of a redirect stop."
             }
-          }
+          },
+          "members": [
+            "bad-request.constructor",
+            "forbidden.constructor",
+            "not-found.constructor",
+            "redirect.constructor",
+            "redirect.result"
+          ]
         },
         "types": {
           "runners": [
@@ -17231,7 +17294,11 @@
               "sentence": "HY-52.11",
               "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
             }
-          }
+          },
+          "members": [
+            "reply.cookie",
+            "reply.removeCookie"
+          ]
         },
         "cacheControl": {
           "runners": [
@@ -17268,7 +17335,10 @@
               "sentence": "HY-52.11",
               "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
             }
-          }
+          },
+          "members": [
+            "reply.cacheControl"
+          ]
         },
         "referrerPolicy": {
           "runners": [
@@ -17311,7 +17381,11 @@
               "sentence": "HY-103.8",
               "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
             }
-          }
+          },
+          "members": [
+            "reply.referrerPolicy",
+            "reply.referrerPolicyValue"
+          ]
         },
         "status": {
           "runners": [
@@ -17348,7 +17422,10 @@
               "sentence": "HY-69.6",
               "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
             }
-          }
+          },
+          "members": [
+            "reply.status"
+          ]
         },
         "notes": {
           "runners": [
@@ -17385,7 +17462,10 @@
               "sentence": "HY-60.28",
               "state": "`class` is `type` for a `TypeError`, `value` for an error of the classes of HY-46.2, or null when every call returns."
             }
-          }
+          },
+          "members": [
+            "reply.note"
+          ]
         },
         "flags": {
           "runners": [
@@ -17416,7 +17496,11 @@
               "sentence": "HY-92.2",
               "state": "`embeds` states whether a reply after `calls` makes the HTML document embed its data."
             }
-          }
+          },
+          "members": [
+            "reply.embedData",
+            "reply.renewSession"
+          ]
         }
       }
     },
@@ -17500,7 +17584,12 @@
               "sentence": "HY-106.5",
               "state": "`over` holds, for each number of bytes of `limits` in order, what `fileOver(limit)` returns."
             }
-          }
+          },
+          "members": [
+            "request.file",
+            "request.fileOver",
+            "request.files"
+          ]
         },
         "targets": {
           "runners": [
@@ -17751,6 +17840,7 @@
             "request.header",
             "request.https",
             "request.isRegionRequest",
+            "request.mediaType",
             "request.method",
             "request.path",
             "request.query",
@@ -18022,6 +18112,7 @@
             "file-sessions.collect",
             "file-sessions.constructor",
             "file-sessions.open",
+            "record-session.close",
             "record-session.created",
             "record-session.get",
             "record-session.remove",
@@ -18161,6 +18252,7 @@
             }
           },
           "members": [
+            "record-session.close",
             "record-session.created",
             "record-session.get",
             "record-session.remove",
@@ -18237,8 +18329,7 @@
             }
           },
           "members": [
-            "app.open",
-            "manifest.fromFile"
+            "app.open"
           ]
         },
         "reads": {
@@ -18679,7 +18770,12 @@
               "sentence": "HY-66.3",
               "state": "`failureLogged` true states that one text that the server gave to its log of HY-43.4 during the request is exactly `hyper: ` followed by the failure that the last report of the response hook received."
             }
-          }
+          },
+          "members": [
+            "request.csrfToken",
+            "request.flash",
+            "request.param"
+          ]
         },
         "opens": {
           "runners": [

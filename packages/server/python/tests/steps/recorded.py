@@ -1,8 +1,12 @@
 # What the steps of contracts/client.json and contracts/app.json record of one request and how they compare it: the
 # calls of the session store (HY-120), the reports of the response hook (HY-60) and the log of the server (HY-43.4).
 import json
+from typing import Optional
 
 from polyspec.hyper.array_session import ArraySession
+from polyspec.hyper.reply import Reply
+from polyspec.hyper.request import Request
+from polyspec.hyper.response import Response
 
 
 def decoded(text: object) -> object:
@@ -58,20 +62,24 @@ class Reports:
 
     def compare(self, case) -> None:
         """Compares `reported`, and `reportedHeaders` and `notes` of the last report when the case states one."""
-        case.compare(
-            "reported",
-            [
-                [
-                    "null" if request is None else f"{request.method} {request.path()}",
-                    response.status,
-                ]
-                for request, response, *_ in self.calls
-            ],
-        )
+        case.compare("reported", [_reported(call[0], call[1]) for call in self.calls])
         if case.has("reportedHeaders") or case.has("notes"):
-            _, response, _, reply, _ = self.last()
-            case.compare("reportedHeaders", response.headers)
-            case.compare("notes", [list(pair) for pair in reply.notes()])
+            last = self.last()
+            _compare_last(case, last[1], last[3])
+
+
+def _reported(request: Optional[Request], response: Response) -> list:
+    """The method and the path of the request of a report, joined by a space, and the status of its response."""
+    return [
+        "null" if request is None else f"{request.method} {request.path()}",
+        response.status,
+    ]
+
+
+def _compare_last(case, response: Response, reply: Reply) -> None:
+    """Compares the headers of the response and the notes of the reply of the last report."""
+    case.compare("reportedHeaders", response.headers)
+    case.compare("notes", [list(pair) for pair in reply.notes()])
 
 
 def compare_log(case, logged: str) -> None:

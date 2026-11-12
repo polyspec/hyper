@@ -117,7 +117,7 @@ final class SessionSteps
                 break;
             }
             $results[] = match (true) {
-                $result instanceof Flash => ['values' => self::pairs($result->values), 'changed' => $result->changed],
+                $result instanceof Flash => self::flashPairs($result),
                 is_array($result) => self::pairs($result),
                 default => null,
             };
@@ -184,6 +184,16 @@ final class SessionSteps
         $map = array_map(self::record(...), get_object_vars($value));
 
         return array_is_list($map) ? (object) $map : $map;
+    }
+
+    /**
+     * The values of a flash as pairs, and its changed values.
+     *
+     * @return array{values: list<array{0: string, 1: mixed}>, changed: array<array-key, mixed>}
+     */
+    private static function flashPairs(Flash $flash): array
+    {
+        return ['values' => self::pairs($flash->values), 'changed' => $flash->changed];
     }
 
     /**
