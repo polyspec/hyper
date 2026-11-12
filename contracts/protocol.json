@@ -3100,6 +3100,12 @@
                   "koSource": "f58299ebd2f1c52b21a7ac2337cecb812d7b247abecc322b3f96ad6634b9dd67"
                 },
                 {
+                  "id": "HY-31.9",
+                  "en": "One rule of the Rust core gives the name and the source of the reserved template, so that the build, which writes no copy of it below `program/templates/`, and every server take them from one place.",
+                  "ko": "Rust core의 규칙 하나가 예약 템플릿의 이름과 소스를 주므로, `program/templates/` 아래에 그 사본을 쓰지 않는 build와 모든 서버는 그것을 한 곳에서 받는다.",
+                  "koSource": "718d9aac27f512ce30961f41abc835224e23228663bd62d106eb7b4dda27e794"
+                },
+                {
                   "id": "HY-31.4",
                   "en": "Otherwise the definition `data` is empty and the document has no `#hy-data`, so its source holds only the HTML of the page.",
                   "ko": "그렇지 않으면 정의 `data`는 비어 있고 문서에는 `#hy-data`가 없으므로, 문서의 소스에는 페이지의 HTML만 있다.",

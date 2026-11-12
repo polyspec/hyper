@@ -283,5 +283,13 @@
         "templates"
       ]
     }
+  ],
+  "dataTemplate": [
+    {
+      "id": "the_reserved_template_of_the_embedded_data",
+      "label": "the reserved template of the embedded data has its name and its exact source (HY-31.3)",
+      "name": "hyper/data.tpl",
+      "source": "<script type=\"application/json\" id=\"hy-data\">{= json(response) | raw}</script>"
+    }
   ]
 }

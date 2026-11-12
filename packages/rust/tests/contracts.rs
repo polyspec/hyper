@@ -1856,3 +1856,18 @@ fn the_read_paths_of_the_routes() {
     }
     assert!(ran > 0);
 }
+
+#[test]
+fn the_reserved_template_of_the_embedded_data() {
+    // HY-31.3, HY-31.9
+    use polyspec_hyper::render::data_template;
+    let file = cases("build.json");
+    let mut ran = 0;
+    for case in group(&file, "dataTemplate") {
+        let template = data_template();
+        assert_eq!(template.name, text(case, "name"), "{}", case["id"]);
+        assert_eq!(template.source, text(case, "source"), "{}", case["id"]);
+        ran += 1;
+    }
+    assert!(ran > 0);
+}

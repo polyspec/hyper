@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 566e91c3b67c868a74efbc4556d49fab66c2405d9acf688b63a228b9c9ff656c -->
+<!-- source-sha256: 5e622be9b9c124a9eeb7ee74a74a42709f706fbeffa99f7770584cb1858df72a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 내장 데이터의 예약 템플릿을 준다(H-7, H-8 0단계): HY-31.9는 core의 규칙 하나가 `hyper/data.tpl`의 이름과 소스를 주므로 `program/templates/` 아래에 그 사본을 쓰지 않는 build와 모든 서버가 그것을 한 곳에서 받는다고 밝힌다. `render::data_template`가 그것을 interface contract의 record `data_template`로 돌려준다. `contracts/build.json`의 section `dataTemplate`이 그것을 담고, 명령 도구처럼 `packages/client/data-template.json`을 읽는 build runner와 core는 같은 이름과 소스를 준다.
 
 - Rust core가 읽기 경로를 계산한다(H-7, H-8 0단계): HY-73.30은 core의 규칙 하나가 manifest와 템플릿 소스로 모든 라우트의 읽기 경로를 `reads.json`의 routes 형태로, 그리고 템플릿 하나의 읽기 경로를 계산한다고 밝힌다. `read_paths::route_reads`와 `read_paths::template_reads`가 template 언어의 템플릿 AST로 HY-73.2~HY-73.20을 구현하고, interface contract가 이들을 적는다. `contracts/reads.json`의 section `routes`는 board 예제를 포함한 애플리케이션 셋의 읽기 경로를 담으며, browser runner가 `packages/client/src/reads.ts`의 `routeReads`로 그것을 계산한다. core는 이들에 같은 key 순서로 같은 읽기 경로를, section `cases`의 case 24개에 `templateReads`와 같은 읽기 경로를 주며, core의 pages가 그 값을 읽는다. 명령 도구와 Node 서버는 core를 부를 때까지(H-8) 브라우저 package를 유지한다.
 

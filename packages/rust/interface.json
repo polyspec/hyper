@@ -1267,6 +1267,22 @@
           "core": "polyspec_hyper::read_paths::template_reads"
         },
         {
+          "id": "rules.data_template",
+          "name": [
+            "data",
+            "template"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [],
+          "returns": {
+            "unit": "data_template"
+          },
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::render::data_template"
+        },
+        {
           "id": "rules.valid_context_header",
           "name": [
             "valid",
@@ -1317,6 +1333,34 @@
             "bytes"
           ],
           "type": "bytes",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "data_template",
+      "name": [
+        "data",
+        "template"
+      ],
+      "module": "",
+      "kind": "record",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::render::DataTemplate",
+      "fields": [
+        {
+          "name": [
+            "name"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "source"
+          ],
+          "type": "text",
           "required": true
         }
       ]

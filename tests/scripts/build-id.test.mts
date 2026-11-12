@@ -1,6 +1,7 @@
 // The case runner of the build (HYR-7): the build id of HY-125 with the builds of contracts/context.json (the order of
 // the paths, the stream of the hashed bytes, the digest and the excluded outputs) and the template check of HY-48.3
-// with the templateChecks of contracts/manifest.json. The expected values are read from the contract files and never
+// with the templateChecks of contracts/manifest.json, and the reserved template of HY-31.3 with the dataTemplate of
+// contracts/build.json, which the build takes from the browser package. The expected values are read from the contract files and never
 // computed here.
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -9,6 +10,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { parse, resolvePath } from '@polyspec/template';
 import { buildId, buildStream, sortFiles } from '../../packages/cli/lib/build-id.mjs';
+import dataTemplate from '../../packages/client/data-template.json' with { type: 'json' };
 import { templateProblems } from '../../packages/cli/lib/template-rules.mjs';
 import { CaseReader } from '../../packages/ts/tests/case-reader.ts';
 import { writeResults } from '../../packages/ts/tests/case-run.ts';
@@ -58,8 +60,14 @@ test('cases', () => {
   if (results === undefined) throw new Error('RECIPE_RESULTS is not set: the case runner writes its results to the file that it names');
   for (const reader of CaseReader.cases('build')) {
     try {
-      if (reader.section() === 'manifest.json:templateChecks') reader.compare('problems', problemsOf(reader));
-      else compareBuild(reader);
+      if (reader.section() === 'manifest.json:templateChecks') {
+        reader.compare('problems', problemsOf(reader));
+      } else if (reader.section() === 'build.json:dataTemplate') {
+        reader.compare('name', dataTemplate.name);
+        reader.compare('source', dataTemplate.source);
+      } else {
+        compareBuild(reader);
+      }
     } catch (error) {
       reader.fail(error instanceof Error ? error.message : String(error));
     }

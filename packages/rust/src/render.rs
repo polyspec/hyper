@@ -24,6 +24,24 @@ pub const DATA_TEMPLATE: &str = "hyper/data.tpl";
 pub const DATA_SOURCE: &str =
     "<script type=\"application/json\" id=\"hy-data\">{= json(response) | raw}</script>";
 
+/// The reserved template of the embedded data: its name and its source (HY-31.3, HY-31.9).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DataTemplate {
+    /// The name, `hyper/data.tpl`.
+    pub name: String,
+    /// The source.
+    pub source: String,
+}
+
+/// The reserved template of the embedded data (HY-31.9), which the build and every server take from the core.
+#[must_use]
+pub fn data_template() -> DataTemplate {
+    DataTemplate {
+        name: DATA_TEMPLATE.to_owned(),
+        source: DATA_SOURCE.to_owned(),
+    }
+}
+
 /// The template engine of an application: its templates and its functions.
 pub struct Templates {
     program: AstProgram,

@@ -16771,6 +16771,32 @@
           "members": [
             "renderer.open"
           ]
+        },
+        "dataTemplate": {
+          "runners": [
+            "build"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "name": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-31.3",
+              "state": "`name` is the name of the reserved template of the embedded data."
+            },
+            "source": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-31.9",
+              "state": "`source` is the source of the reserved template of the embedded data."
+            }
+          }
         }
       }
     },
