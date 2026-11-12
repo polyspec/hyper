@@ -11026,7 +11026,8 @@
       "cases": [
         "contracts/json.json",
         "contracts/app.json",
-        "tests/legacy/app-before-s3b.json"
+        "tests/legacy/app-before-s3b.json",
+        "tests/legacy/json-before-s3b.json"
       ],
       "units": [
         {
@@ -16128,11 +16129,8 @@
       "fixtures": {},
       "sections": {
         "encode": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "json-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {
@@ -16166,11 +16164,8 @@
           ]
         },
         "decode": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "json-before-s3b.json",
           "uses": [],
           "fields": {
             "id": {

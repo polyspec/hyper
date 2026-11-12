@@ -1337,6 +1337,70 @@
           ]
         }
       }
+    },
+    "json-before-s3b.json": {
+      "fixtures": {},
+      "sections": {
+        "decode": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "json": {
+              "role": "input"
+            },
+            "result": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-54.8",
+              "state": "`result` is `value` for a text `json` whose value is a value of the data model, `outside` for one whose value is outside it, and `error` for a text that fails to decode."
+            }
+          },
+          "members": [
+            "json-codec.decode",
+            "json-codec.inDataModel"
+          ]
+        },
+        "encode": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "json": {
+              "role": "input"
+            },
+            "expected": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-54.4",
+              "state": "`expected` is the JSON text of the value of `json`."
+            }
+          },
+          "members": [
+            "json-codec.decode",
+            "json-codec.encode",
+            "outside-number.literal"
+          ]
+        }
+      }
     }
   }
 }
