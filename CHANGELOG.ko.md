@@ -1,10 +1,29 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: eba1c643c572c52db9c6454b33eff414a9dce9ff3d2997d1e05eecb5cec9751b -->
+<!-- source-sha256: f2c54d7864c9f054372525e8cc62a9f25a28a7038b51bc164b476411ca75e300 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `config/layout.yml`는 server의 scope와 함수를 읽는 recipe 검사의 PHP와 Python reader(`read-php-functions.php`, `read-php-scopes.php`, `PhpScope.php`, `read_python_scopes.py`)를 앞의 두 reader와 같은 이유로 S9의 예외로 선언한다. 이 reader는 PHP의 reflection과 token, Python의 ast module로 code를 읽으며 TypeScript에는 이것이 없다(H28.16).
+
+- 세 server의 unit은 concern의 group마다 한 디렉터리에 있으며, PHP, Node, Python이 같은 아홉 개를 쓴다: `app`, `host`,
+  `http`, `result`, `form`, `session`, `data`, `page`, `representation`(HYR-4). `contracts/interfaces.json`이 group과 각
+  concern의 group을 선언하고 `make recipe-check`가 이를 검사한다. 애플리케이션은 모든 public 이름을 package의 진입점에서
+  가져온다(HY-106).
+  애플리케이션에서 바뀌는 것:
+  - Python: public 이름은 package `polyspec.hyper`에서 import하며, 이전 릴리스의 module 경로는 더 이상 없다.
+    `from polyspec.hyper.app import App`, `from polyspec.hyper.request import Request`,
+    `from polyspec.hyper.file_sessions import FileSessions`, `from polyspec.hyper.server import create_server`,
+    `from polyspec.hyper.wsgi import create_wsgi`, `from polyspec.hyper.asgi import create_asgi`는
+    `from polyspec.hyper import App, Request, FileSessions, create_server, create_wsgi, create_asgi`가 된다.
+    `ArraySession`, `BadRequest`, `Choice`, `ClientRendering`, `Container`, `Forbidden`, `MediaType`, `NotFound`,
+    `Redirect`, `RedisSessions`, `Reply`, `Representation`, `Response`, `Result`, `SessionLockError`, `SessionStore`,
+    `UploadedFile`도 같다.
+  - PHP: class 이름은 바뀌지 않으며, 모든 class는 namespace `Polyspec\Hyper`에 남는다. `composer install` 또는
+    `composer dump-autoload`가 새 디렉터리의 autoload map을 쓴다.
+  - Node: 바뀌는 것이 없다. `@polyspec/hyper-server`는 같은 진입점에서 같은 이름을 export한다. (H28.15)
 
 - `make recipe-check`는 둘 이상의 server가 가진 모든 member에 대해 같은 일을 하고 같은 결과를 내는지 증명한다(H28.16, HYR-5, HYR-7, HYR-8). `caseFiles`의 각 section은 자기가 결과를 기술하는 member를 적고, 검사는 각 언어의 step과 그 step이 부르는 값의 class를 step이 쓴 대로 읽으며, 어느 section도 적지 않은 공개 member, 적은 member를 부르지 않는 step의 section, 기술된 member가 닿지 않는 내부 member, 한 server가 다른 server와 다른 member에서 닿는 member를 실패시킨다. 이 tree에서 직접 기술된 member 149개, 호출하는 쪽을 통해 기술된 내부 member 125개와 private member 114개를 보고한다. 이를 위해 server가 서로 다르던 곳을 바꿨다. 어느 server도 부르지 않던 내부 `Accept.select`를 세 server에서 제거했고 `accept.json#select`는 `parse`와 `best`로 가중치를 기술한다. `close`는 세 server의 record session의 member다. Python `ArraySession`과 record session은 `SessionStore`를 확장한다. Python `FileSessions`는 `flock`에서 기다리지 않고 Node store처럼 잡힌 lock을 잠시 뒤 다시 시도한다(HY-104.6).
 

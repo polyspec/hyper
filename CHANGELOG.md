@@ -5,6 +5,25 @@
 
 ## Unreleased
 
+- `config/layout.yml` declares the PHP and Python readers of the recipe check that read the scopes and the functions of a server (`read-php-functions.php`, `read-php-scopes.php`, `PhpScope.php`, `read_python_scopes.py`) as exceptions of S9, with the reason of the two earlier readers: they read the code with the reflection and the tokens of PHP and the ast module of Python, which TypeScript does not have (H28.16).
+
+- The units of the three servers lie in one directory for each group of concerns, the same nine in PHP, Node and
+  Python: `app`, `host`, `http`, `result`, `form`, `session`, `data`, `page` and `representation` (HYR-4), and
+  `contracts/interfaces.json` declares the groups and the group of each concern, which `make recipe-check` checks.
+  An application takes every public name from the entry of the package (HY-106).
+  What changes for an application:
+  - Python: a public name is imported from the package `polyspec.hyper`, and the module paths of the earlier
+    releases no longer exist. `from polyspec.hyper.app import App`, `from polyspec.hyper.request import Request`,
+    `from polyspec.hyper.file_sessions import FileSessions`, `from polyspec.hyper.server import create_server`,
+    `from polyspec.hyper.wsgi import create_wsgi` and `from polyspec.hyper.asgi import create_asgi` become
+    `from polyspec.hyper import App, Request, FileSessions, create_server, create_wsgi, create_asgi`. The same holds
+    for `ArraySession`, `BadRequest`, `Choice`, `ClientRendering`, `Container`, `Forbidden`, `MediaType`,
+    `NotFound`, `Redirect`, `RedisSessions`, `Reply`, `Representation`, `Response`, `Result`, `SessionLockError`,
+    `SessionStore` and `UploadedFile`.
+  - PHP: no class name changes; every class stays in the namespace `Polyspec\Hyper`. `composer install` or
+    `composer dump-autoload` writes the autoload map of the new directories.
+  - Node: nothing changes; `@polyspec/hyper-server` exports the same names from the same entry. (H28.15)
+
 - `make recipe-check` proves for every member that two or more servers have that it does the same job with the same result (H28.16, HYR-5, HYR-7, HYR-8): each section of `caseFiles` names the members whose result it states, the check reads the step of each language and the class of each value it calls from what the step writes, and it fails a public member that no section names, a section whose step does not call a member it names, an internal member that no stated member reaches, and a member that one server reaches from other members than another does. On this tree it reports 149 members stated directly and 125 internal and 114 private members stated through their callers. To reach that, the servers changed where they differed: the internal `Accept.select`, which no server called, is removed from the three servers, and `accept.json#select` states the weighting through `parse` and `best`; `close` is a member of the record session of the three servers; the Python `ArraySession` and record session extend `SessionStore`; and the Python `FileSessions` tries a held lock again after a pause, as the Node store does, instead of waiting in `flock` (HY-104.6).
 
 - The PHP server answers a request whose session store fails to open with the plain 500 before the application answers, and only the write hook receives it, as the Node and Python servers do (HY-60.14, HY-60.16, HY-60.17): `NativeSession::start` raises the internal `SessionOpenError` with the message of the failure, which the answer does not handle. Before, the PHP server turned the failure into a handled 500 that reached the response hook. The scenario `session-open-error-is-the-plain-500` of `tests/scripts/upload-servers.test.mts` states it for the three servers (H28.16).
