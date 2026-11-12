@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7134df8cfc3edb63761e9b2cb34b419930fcbd2fea4e301935eac05ea2d5e750 -->
+<!-- source-sha256: 2f11dfe7bda222ffde6af867632ac6e724c898310e5e587dbe21d4e3c4a90396 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core의 lock은 `polyspec-binding-core`를 binding의 게시된 branch 끝에 고정한다. 그 contract check는 Git pin의 commit을 실행 중인 binding의 commit과 비교한다(CK-20). 그 commit의 scaffold는 binding crate를 지금 그대로 쓴다.
 
 - PHP, Node, Python runner는 S-3b 변경이 host 코드가 core를 부를 때(C-7)에만 실행하는 형태로 바꾼 section을 고정 사본 `tests/legacy/<name>-before-s3b.json`, 곧 S-3b case 변경 전의 section에서 읽는다: case 파일 15개의 section 30개, Python case 795개와 Node case 789개. browser runner, build runner, core 시험은 그것을 live로 읽고, `docs/features.md`는 live section과 고정 사본의 section을 적는다. server fixture를 빌드하면 Python runner는 case 1455개 중 1454개, Node runner는 1447개 중 1446개를 통과하며, 이전에는 425개와 439개가 실패했다. 실패하는 case 하나는 mode 0 파일을 읽는 root가 아닌 사용자로 실행해야 한다.
 
