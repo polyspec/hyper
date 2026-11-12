@@ -9,18 +9,18 @@ from __future__ import annotations
 
 import asyncio
 import time
-from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
 from .app import App
 from ._cookies import Cookies
+from ._exchange import Exchange
+from ._file_response import FileResponse
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from ._pipeline import (
     CONTENT_TYPES,
     Around,
     Written,
-    Exchange,
     answer_with,
     declared_length,
     escape,
@@ -32,14 +32,6 @@ from ._pipeline import (
 from ._request_body import RequestBody
 from .request import Request
 from .response import Response
-
-
-@dataclass
-class _FileResponse:
-    """A file of the public directory that the callable sends before `around` (HY-100)."""
-
-    headers: list[tuple[bytes, bytes]]
-    data: bytes
 
 
 def create_asgi(
@@ -68,7 +60,7 @@ def create_asgi(
         try:
             failure: Optional[str] = None
             try:
-                result: Union[Response, _FileResponse] = await _answer(
+                result: Union[Response, FileResponse] = await _answer(
                     app, sessions, around, files, scope, receive, exchange
                 )
             except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
@@ -78,12 +70,15 @@ def create_asgi(
                 # HY-99: a cancellation before the answer ends the request before a response started: a null response.
                 exchange.report(None, False)
                 raise
-            if isinstance(result, _FileResponse):
+            if isinstance(result, FileResponse):
                 await send(
                     {
                         "type": "http.response.start",
                         "status": 200,
-                        "headers": result.headers,
+                        "headers": [
+                            (b"content-type", result.content_type.encode("ascii")),
+                            (b"content-length", str(result.length).encode("ascii")),
+                        ],
                     }
                 )
                 await send({"type": "http.response.body", "body": result.data})
@@ -145,7 +140,7 @@ async def _answer(
     scope: dict,
     receive: Callable,
     exchange: Exchange,
-) -> Union[Response, _FileResponse]:
+) -> Union[Response, FileResponse]:
     """Answers the request of the scope: a file of the public directory, or the application through `around` in a
     worker thread (HY-100). The request as received is kept in the exchange before the body is read (HY-60)."""
     # HY-100.31: the host passes the method in upper case.
@@ -167,16 +162,9 @@ async def _answer(
     if served is not None:
         # HY-100: the files of the public directory are served before `around`; no hook runs.
         data = served.read_bytes()
-        return _FileResponse(
-            [
-                (
-                    b"content-type",
-                    CONTENT_TYPES.get(served.suffix, "application/octet-stream").encode(
-                        "ascii"
-                    ),
-                ),
-                (b"content-length", str(len(data)).encode("ascii")),
-            ],
+        return FileResponse(
+            CONTENT_TYPES.get(served.suffix, "application/octet-stream"),
+            len(data),
             b"" if method == "HEAD" else data,
         )
     # HY-131: a multipart body of an application with that form type is read in chunks into files of the request.

@@ -270,7 +270,7 @@ class WsgiTest(UploadCases, TransportCase):
             (self.app.requests[0].path(), self.app.requests[0].raw_query()),
         )
 
-    def test_a_missing_target_answers_the_plain_500_and_reports_nothing(self) -> None:
+    def test_a_missing_target_answers_the_plain_failure_and_reports_nothing(self) -> None:
         # HY-100: PATH_INFO is never re-encoded into a path; the request has no target, so no request is reported.
         written = []
         application = create_wsgi(
@@ -299,7 +299,7 @@ class WsgiTest(UploadCases, TransportCase):
         self.assertEqual([], self.app.requests)
         self.assertEqual([], written)
 
-    def test_a_failed_body_read_answers_the_plain_500_and_reports_the_request(
+    def test_a_failed_body_read_answers_the_plain_failure_and_reports_the_request(
         self,
     ) -> None:
         # HY-60: a body that cannot be read is an escaped error before `around`; the write hook receives the request
@@ -332,7 +332,7 @@ class WsgiTest(UploadCases, TransportCase):
         self.assertEqual(500, response.status)
         self.assertTrue(ended)
 
-    def test_an_around_error_answers_the_plain_500_and_reports_the_request(
+    def test_an_around_error_answers_the_plain_failure_and_reports_the_request(
         self,
     ) -> None:
         # HY-97, HY-60: an error that `around` raises outside `answer` is an escaped error.
@@ -354,7 +354,7 @@ class WsgiTest(UploadCases, TransportCase):
         self.assertIn("around boom", stderr.getvalue())
         self.assertEqual([("/list", 500, True)], written)
 
-    def test_a_premature_close_of_the_plain_500_reports_a_failed_write(self) -> None:
+    def test_a_premature_close_of_the_plain_failure_reports_a_failed_write(self) -> None:
         # HY-60, HY-99: the server closes the iterable of the 500 before its end; the write failed and is reported once.
         written = []
 
@@ -390,7 +390,7 @@ class WsgiTest(UploadCases, TransportCase):
         body.close()
         self.assertEqual([(200, False, None)], written)
 
-    def test_a_body_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_500(
+    def test_a_body_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_failure(
         self,
     ) -> None:
         # HY-60, HY-99: the body encode error is an escape; the plain 500 goes through start_response, and the write
@@ -398,13 +398,13 @@ class WsgiTest(UploadCases, TransportCase):
         failure = self.escape_with(Response(200, {}, "\ud800"))
         self.assertIn("surrogates", failure)
 
-    def test_a_status_that_cannot_be_written_is_an_escape_answered_with_the_plain_500(
+    def test_a_status_that_cannot_be_written_is_an_escape_answered_with_the_plain_failure(
         self,
     ) -> None:
         # HY-60, HY-99: a status that PEP 3333 cannot write is an escape; the plain 500 goes through start_response.
         self.assertTrue(self.escape_with(Response(1000, {}, "x")))
 
-    def test_a_header_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_500(
+    def test_a_header_that_cannot_be_encoded_is_an_escape_answered_with_the_plain_failure(
         self,
     ) -> None:
         # HY-60, HY-99: a header value that PEP 3333 cannot write as latin-1 is an escape, and no other header reaches

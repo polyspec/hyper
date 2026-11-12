@@ -14,8 +14,12 @@ const PLATFORMS: Partial<Record<NodeJS.Platform, { errno: string; busy: number }
   linux: { errno: '__errno_location', busy: 11 },
 };
 
-// Returns the function that tries the exclusive lock of a file descriptor: true when it holds the lock, false while
-// another holds it. It fails on a platform without flock and on any other error.
+/**
+ * Returns the function that tries the exclusive lock of a file descriptor: true when it holds the lock, false while
+ * another holds it. It fails on a platform without flock and on any other error.
+ *
+ * @internal
+ */
 export function exclusiveLock(): (descriptor: number) => boolean {
   const platform = PLATFORMS[process.platform];
   if (platform === undefined) throw new Error(`hyper: file sessions need flock, which the platform ${process.platform} does not name`);

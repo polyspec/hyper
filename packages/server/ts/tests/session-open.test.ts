@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { App, ArraySession, Request, Result, type Handlers, type SessionStore } from '../src/index.js';
 import type { Value } from '../src/values.js';
 import { Fixture } from './support.js';
-import { requestOf } from '../src/http.js';
+import { requestOf } from '../src/http-host.js';
 
 // A session store that records every call of its interface and keeps the values in memory.
 class CountingStore implements SessionStore {

@@ -2,7 +2,6 @@
 import { closeSync, constants, fstatSync, lstatSync, openSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
 import { isAbsolute, join } from 'node:path';
-import { errorCode } from './error-code.js';
 import { exclusiveLock } from './flock.js';
 import { FileSession } from './file-session.js';
 import { RecordSession } from './record-session.js';
@@ -99,7 +98,7 @@ export class FileSessions {
       try {
         descriptor = openSync(this.file(id), OPEN);
       } catch (error) {
-        if (errorCode(error) === 'ENOENT') return null;
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return null;
         throw error;
       }
       try {

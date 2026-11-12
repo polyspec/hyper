@@ -831,7 +831,7 @@
         "tests/scripts/fixtures/multipart-worker/**",
         "packages/server/php/src/Request.php",
         "packages/server/php/src/App.php",
-        "packages/server/ts/src/http.ts",
+        "packages/server/ts/src/http-host.ts",
         "packages/server/ts/src/request.ts",
         "packages/server/python/src/polyspec/hyper/server.py",
         "packages/server/python/src/polyspec/hyper/_pipeline.py",

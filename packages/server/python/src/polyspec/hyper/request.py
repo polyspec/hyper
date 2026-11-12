@@ -11,10 +11,11 @@ from ._fields import Fields
 from ._files import Files
 from ._multipart import Multipart
 from ._request_body import RequestBody
-from ._media import JSON
 from .uploaded_file import UploadedFile
 from ._flash import Flash
 
+# The media type of the page data (HY-116).
+_JSON = "application/vnd.hyper+json"
 _PRINTABLE = re.compile(r"[\x21-\x7e]*\Z")
 _AUTHORITY = re.compile(r"^([A-Za-z][A-Za-z0-9+.-]*:)?//[^/?#]*")
 _INTEGER = re.compile(r"-?[0-9]{1,15}\Z")
@@ -205,7 +206,7 @@ class Request:
         The selection is read from the request and `Accept` is not read again; a request without a selection fails."""
         if self._media is None:
             raise RuntimeError("the request holds no selected media type (HY-116)")
-        return self._media == JSON
+        return self._media == _JSON
 
     def is_region_request(self) -> bool:
         """Returns True for a region request: a JSON request that carries the HX-Request header (HY-15)."""

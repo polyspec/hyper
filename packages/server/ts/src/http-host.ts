@@ -6,12 +6,11 @@ import { extname, isAbsolute, join } from 'node:path';
 import { TLSSocket } from 'node:tls';
 import type { App } from './app.js';
 import { Cookies } from './cookies.js';
-import { errorCode } from './error-code.js';
 import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
 import { RecordSession } from './record-session.js';
 import { Reply } from './reply.js';
-import { Disconnected } from './page.js';
+import { Disconnected } from './disconnected.js';
 import { Request } from './request.js';
 import { RequestBody } from './request-body.js';
 import { Response } from './response.js';
@@ -51,6 +50,7 @@ const CONTENT_TYPES: Record<string, string> = {
 
 // Returns a server that answers every request with the application. A request whose start line or headers
 // node:http cannot parse, such as a request target with a byte outside ASCII (HY-42), receives a plain 400.
+/** @internal */
 export function createServer<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server {
   const server = createHttpServer(createListener(app, sessions, options));
   server.on('clientError', (error: NodeJS.ErrnoException & { rawPacket?: Buffer }, socket: Socket) => {
@@ -60,7 +60,8 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
       return;
     }
     const [status, reason] = error.code === 'HPE_HEADER_OVERFLOW' ? [431, 'Request Header Fields Too Large'] : [400, 'Bad Request'];
-    const response = app.report(requestLine(error.rawPacket), app.frame(Response.text(status, reason)), started, new Reply());
+    const response = app.frame(Response.text(status, reason));
+    app.report(requestLine(error.rawPacket), response, started, new Reply());
     const headers = Object.entries(response.headers).map(([name, value]) => `${name}: ${String(value)}\r\n`).join('');
     socket.end(`HTTP/1.1 ${status} ${reason}\r\n${headers}Content-Length: ${Buffer.byteLength(reason)}\r\nConnection: close\r\n\r\n${reason}`);
   });
@@ -69,6 +70,7 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
 
 // Returns the request listener that answers every request of node:http with the application and sessions in files
 // (HY-100). It settles after the write hook and the disconnect hook of the request have run (HY-99, HY-67).
+/** @internal */
 export function createListener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener {
   const files = options.files;
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
@@ -117,7 +119,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
         const session = await sessions.open(given.cookie(RecordSession.cookieName(app.https || https)));
         let answer;
         try {
-          answer = await app.respond(given, session, started, closed.signal);
+          answer = await app.respond(given.withSignal(closed.signal), session, started);
         } finally {
           await session.close();
         }
@@ -142,7 +144,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     } catch (error) {
       // An error that escapes the answer of a request is logged with the message of HY-43 and answered with a plain 500
       // that hyper writes; when the response has started or the 500 cannot be written, the connection closes (HY-60).
-      failure = app.fail(error);
+      failure = app.logFailure(error);
       if (outgoing.headersSent || outgoing.destroyed) {
         outgoing.destroy();
         response ??= app.frame(Response.text(500, 'Internal Server Error'));
@@ -151,7 +153,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
         try {
           write(outgoing, response);
         } catch (writeError) {
-          app.fail(writeError);
+          app.logFailure(writeError);
           outgoing.destroy();
         }
       }
@@ -233,7 +235,7 @@ function publicFile(files: string, incoming: IncomingMessage): string | null {
   try {
     return statSync(file).isFile() ? file : null;
   } catch (error) {
-    if (['ENOENT', 'ENOTDIR'].includes(errorCode(error) ?? '')) return null;
+    if (error instanceof Error && 'code' in error && (error.code === 'ENOENT' || error.code === 'ENOTDIR')) return null;
     throw error;
   }
 }

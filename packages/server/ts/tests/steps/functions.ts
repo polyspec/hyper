@@ -6,7 +6,7 @@ import { App, ArraySession, Request, type Handlers } from '../../src/index.js';
 import type { HostFunction } from '@polyspec/template/render';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
-import { requestOf } from '../../src/http.js';
+import { requestOf } from '../../src/http-host.js';
 
 const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
 

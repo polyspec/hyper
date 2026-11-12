@@ -9,6 +9,7 @@ import threading
 import unittest
 from pathlib import Path
 
+from polyspec.hyper.app import App
 from polyspec.hyper.file_sessions import FileSessions
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.request import Request
@@ -20,6 +21,9 @@ class Application:
 
     https = False
     frame_ancestors = "'self'"
+    # The frame policy and the log line of the plain 500, which the pipeline asks the application for (HY-60).
+    _frame = App._frame
+    _log_failure = App._log_failure
     body_limit = 16
     # The form types of the application, which tell a transport whether it reads a multipart body in chunks (HY-131).
     _form_types = ["application/x-www-form-urlencoded"]

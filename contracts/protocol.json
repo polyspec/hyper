@@ -4427,6 +4427,12 @@
                   "en": "The PHP setting `display_errors` must be off before PHP starts the request, because PHP writes startup warnings (for example `max_input_vars`) before the application runs.",
                   "ko": "PHP 설정 `display_errors`는 PHP가 요청을 시작하기 전에 꺼져 있어야 하는데, PHP는 애플리케이션이 실행되기 전에 시작 경고(예: `max_input_vars`)를 쓰기 때문이다.",
                   "koSource": "d0d6a0c57dc31fbea28f6e8c735cd3a759bdd9996c59d78809ca3df7b4158a53"
+                },
+                {
+                  "id": "HY-43.4",
+                  "en": "The log is `error_log` in the PHP server, the standard error in the Python server, and in the Node server the function `log` of `App.open`, which writes to the standard error when the application gives none.",
+                  "ko": "로그는 PHP 서버에서 `error_log`, Python 서버에서 표준 오류이고, Node 서버에서는 `App.open`의 함수 `log`이며 애플리케이션이 주지 않으면 표준 오류에 쓴다.",
+                  "koSource": "8b87afbfce8a9bd7381b17003ff96375fef10dffa583135a67ce7d6c423386e2"
                 }
               ]
             }
@@ -5883,6 +5889,12 @@
                   "en": "A Node server answers its requests on one thread, so the requests of one session in one process wait in a queue of that process before they try the lock of the session, and the store of a request ends its turn when it closes; a Python server answers each request on a thread of its own, which waits on the lock itself.",
                   "ko": "Node server는 한 thread에서 요청에 답하므로, 한 process 안에서 한 session의 요청들은 session의 lock을 시도하기 전에 그 process의 대기열에서 기다리고, 요청의 저장소는 닫힐 때 자기 차례를 끝낸다. Python server는 요청마다 자기 thread에서 답하며 그 thread가 lock 자체를 기다린다.",
                   "koSource": "1e614dffa662e0708ec93d0b48e57d331e021e27e13945301ad032703295203a"
+                },
+                {
+                  "id": "HY-104.18",
+                  "en": "`App::open` of the PHP server takes `sessionSetup`, a function that the server calls just before the native session of a request starts, for the settings of the session module.",
+                  "ko": "PHP 서버의 `App::open`은 `sessionSetup`을 받는다. 서버는 요청의 native 세션이 시작되기 직전에 세션 모듈의 설정을 위해 이 함수를 호출한다.",
+                  "koSource": "2dd6231447619a5bf7ed8f0cb7982bb4786219648ea4f6c03201fb25a2c396c1"
                 }
               ]
             }

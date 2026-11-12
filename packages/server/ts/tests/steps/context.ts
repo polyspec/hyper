@@ -10,7 +10,7 @@ import { App, ArraySession, NotFound, Request, Result, type Handlers, type Reply
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { OrmError, parsed, record } from '../support.js';
-import { requestOf } from '../../src/http.js';
+import { requestOf } from '../../src/http-host.js';
 
 // An action of an application of a case: it renews the session when `renew` is true, and then raises the ORM error of
 // the code `raises`, redirects, or returns a page with its data.

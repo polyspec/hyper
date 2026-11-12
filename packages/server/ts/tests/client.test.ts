@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { Csrf } from '../src/csrf.js';
 import { FileSessions, Request, Result, type Choice, type ClientRendering } from '../src/index.js';
 import { client, Fixture, FIXTURES, port, present, SHELL, TOKEN } from './support.js';
-import { requestOf } from '../src/http.js';
+import { requestOf } from '../src/http-host.js';
 
 // Requires that a request whose selection is `selects` is answered with the plain 500 and logs one error (HY-43).
 async function expectPlain500(selects: ClientRendering['selects']): Promise<void> {

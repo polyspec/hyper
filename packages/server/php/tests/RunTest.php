@@ -162,6 +162,18 @@ final class RunTest extends TestCase
         );
     }
 
+    /**
+     * HY-67, HY-97: a script that ends during the answer, at a failed write to the closed connection, calls the
+     * disconnect hook with the request and the reply of the call of `answer` that was running.
+     */
+    public function testRunCallsTheDisconnectHookWhenTheScriptEndsDuringTheAnswerOfAClosedConnection(): void
+    {
+        self::assertSame(
+            "written null false null\ndisconnect GET / 1 {\"stage\":\"shared\"}\n",
+            self::closedClient(['HYPER_DISCONNECT_DURING' => 'answer']),
+        );
+    }
+
     /** HY-97, HY-67: the disconnect hook is not called when `around` never called `answer`. */
     public function testTheDisconnectHookIsNotCalledWhenAroundNeverCalledAnswer(): void
     {

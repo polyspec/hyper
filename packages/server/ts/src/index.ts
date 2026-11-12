@@ -5,7 +5,7 @@ export { type ContextHandler } from './context.js';
 export { FileSessions, type FileSessionsOptions } from './file-sessions.js';
 export { RedisSessions, type RedisCommand, type RedisSessionsOptions } from './redis-sessions.js';
 export { SessionLockError } from './session-lock-error.js';
-export { type AroundHook, type Listener, type ServerOptions, type WriteHook } from './http.js';
+export { type AroundHook, type Listener, type ServerOptions, type WriteHook } from './http-host.js';
 export { Reply } from './reply.js';
 export { Request, type RequestInit } from './request.js';
 export { UploadedFile } from './uploaded-file.js';

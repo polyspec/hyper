@@ -7,7 +7,7 @@ import { expect } from 'vitest';
 import { Csrf } from '../src/csrf.js';
 import { App, BadRequest, Forbidden, ArraySession, NotFound, Redirect, Request, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
 import type { SessionStore } from '../src/session-store.js';
-import { requestOf } from '../src/http.js';
+import { requestOf } from '../src/http-host.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
 // The template files of the fixtures, which `make hyper-test-node` builds with scripts/build-templates.mts.

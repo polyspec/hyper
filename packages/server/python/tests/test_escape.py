@@ -5,6 +5,7 @@ import io
 import unittest
 
 from .transport import TransportCase, get_once, record_all
+from polyspec.hyper.app import App
 from polyspec.hyper.reply import Reply
 from polyspec.hyper.response import Response
 from polyspec.hyper.server import create_server
@@ -15,6 +16,9 @@ class FailingApplication:
 
     https = False
     frame_ancestors = "'self'"
+    # The frame policy and the log line of the plain 500, which the pipeline asks the application for (HY-60).
+    _frame = App._frame
+    _log_failure = App._log_failure
     body_limit = 1024
     _form_types = ["application/x-www-form-urlencoded"]
     file_limit = 1 << 30
@@ -37,6 +41,9 @@ class AnsweringApplication:
 
     https = False
     frame_ancestors = "'self'"
+    # The frame policy and the log line of the plain 500, which the pipeline asks the application for (HY-60).
+    _frame = App._frame
+    _log_failure = App._log_failure
     body_limit = 1024
     _form_types = ["application/x-www-form-urlencoded"]
     file_limit = 1 << 30
@@ -65,7 +72,7 @@ class EscapeTest(TransportCase):
         with contextlib.redirect_stderr(io.StringIO()):
             return get_once(server, path)
 
-    def test_an_error_that_escapes_the_answer_gets_the_plain_500_and_one_write_report(
+    def test_an_error_that_escapes_the_answer_gets_the_plain_failure_and_one_write_report(
         self,
     ) -> None:
         application = FailingApplication()

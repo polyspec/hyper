@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { App, ArraySession, Request } from '../src/index.js';
-import { requestOf } from '../src/http.js';
+import { requestOf } from '../src/http-host.js';
 
 const BUILD = '691d41cab78295352a2fea59326d4ac7f4e0a0ff68eb39acb3f09eb0d1eb51ac';
 const SCRIPT = fileURLToPath(new URL('../../../../scripts/build-templates.mts', import.meta.url));

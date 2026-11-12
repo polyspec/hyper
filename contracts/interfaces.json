@@ -172,14 +172,879 @@
             },
             "node": {
               "file": "packages/server/ts/src/app.ts",
-              "kind": "interface",
+              "kind": "class",
               "internal": false
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/app.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": false
             }
+          },
+          "members": [
+            {
+              "id": "app.constructor",
+              "kind": "constructor",
+              "visibility": "private",
+              "inputs": [
+                "appParts"
+              ],
+              "output": "app",
+              "errors": [],
+              "state": "Holds the parts of the opened application and creates its page.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::__construct",
+                  "signature": "private function __construct(Polyspec\\Hyper\\Manifest $manifest, ?Closure $shared, array $regionLoaders, array $routeHandlers, string $timezone, string $basePath, bool $https, string $frameAncestors, int $bodyLimit, int $fileLimit, int $valueLimit, int $partLimit, int $responseLimit, array $formTypes, ?Closure $onResponse, ?Polyspec\\Hyper\\ClientRendering $client, ?Closure $onDisconnect, ?Closure $written, ?Closure $around, ?Closure $sessionSetup, string $shell, ?Closure $context, array $functions, string $program)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.constructor",
+                  "signature": "private constructor(parts: AppParts<S>)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App.__init__",
+                  "signature": "def __init__(self, manifest: Manifest, shared: Optional[Callable], region_loaders: dict, route_handlers: dict, timezone: str, base_path: str, https: bool, frame_ancestors: str, body_limit: int, file_limit: int, value_limit: int, part_limit: int, response_limit: int, form_types: list[str], on_response: Optional[Callable], client: Optional[ClientRendering], on_disconnect: Optional[Callable], shell: str, context: Optional[Callable], functions: Optional[dict], program: str)"
+                }
+              }
+            },
+            {
+              "id": "app.open",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "appOptions"
+              ],
+              "output": "app",
+              "errors": [],
+              "state": "Reads and checks the manifest, the build outputs, the handlers and the options, and returns the application (HY-48.2, HY-106.6).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::open",
+                  "signature": "public static function open(string $manifest, string $program, array $handlers, string $timezone, string $basePath, bool $https, string $frameAncestors, int $bodyLimit, array $formTypes, ?int $fileLimit, int $responseLimit, ?int $valueLimit, int $partLimit, ?Closure $onResponse, ?Polyspec\\Hyper\\ClientRendering $clientRendering, ?Closure $onDisconnect, ?Closure $written, ?Closure $around, ?Closure $sessionSetup, ?Closure $context, array $functions): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.open",
+                  "signature": "static async open<S extends object = Record<string, never>>(options: AppOptions<S>): Promise<App<S>>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App.open",
+                  "signature": "def open(manifest: str, program: str, handlers: dict, timezone: str, base_path: str='', https: bool=False, frame_ancestors: str=\"'self'\", body_limit: int=8 * 1024 * 1024, form_types: Optional[list[str]]=None, file_limit: Optional[int]=None, response_limit: int=8 * 1024 * 1024, value_limit: Optional[int]=None, part_limit: int=1000, on_response: Optional[Callable]=None, client_rendering: Optional[ClientRendering]=None, on_disconnect: Optional[Callable]=None, context: Optional[Callable]=None, functions: Optional[dict]=None) -> 'App'"
+                }
+              }
+            },
+            {
+              "id": "app.checkedShell",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "client-rendering",
+                "manifest"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Checks the declaration of the client rendering against the manifest and returns the text of the static shell (HY-62.15, HY-62.35).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::checkedShell",
+                  "signature": "private static function checkedShell(Polyspec\\Hyper\\ClientRendering $client, Polyspec\\Hyper\\Manifest $manifest): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.checkedShell",
+                  "signature": "private static checkedShell(client: ClientRendering, manifest: Manifest): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._checked_shell",
+                  "signature": "def _checked_shell(client: ClientRendering, manifest: Manifest) -> str"
+                }
+              }
+            },
+            {
+              "id": "app.checkHandlers",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "manifest",
+                "handlers"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails for a handler that the manifest does not declare and for a declared action or representation without a handler (HY-118.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::checkHandlers",
+                  "signature": "private static function checkHandlers(Polyspec\\Hyper\\Manifest $manifest, array $handlers): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.checkHandlers",
+                  "signature": "private static checkHandlers<S extends object>(manifest: Manifest & { entries: ReadonlyMap<string, readonly RepresentationEntry[]> }, handlers: Handlers<S>): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._check_handlers",
+                  "signature": "def _check_handlers(manifest: Manifest, handlers: dict) -> None"
+                }
+              }
+            },
+            {
+              "id": "app.bind",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "function() -> value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Binds a service to the factory that creates it once per request (HY-105.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::bind",
+                  "signature": "public function bind(string $class, Closure $factory): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.bind",
+                  "signature": "bind<K extends keyof S>(key: K, factory: () => S[K]): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App.bind",
+                  "signature": "def bind(self, cls: type, factory: Callable) -> None"
+                }
+              }
+            },
+            {
+              "id": "app.handle",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "request",
+                "session-store",
+                "optional<number>"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers a request with the given session store and returns the response (HY-67.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::handle",
+                  "signature": "public function handle(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\SessionStore $store, ?int $started): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.handle",
+                  "signature": "async handle(request: Request, store: SessionStore, started = performance.now()): Promise<Response>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App.handle",
+                  "signature": "def handle(self, request: Request, store: SessionStore, started: Optional[int]=None) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.through",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session-store",
+                "number",
+                "optional<delivery>"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers a request through the request hook, and holds the request and the reply in the delivery before the answer runs (HY-97.2, HY-67.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::through",
+                  "signature": "private function through(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\SessionStore $store, int|float $started, ?Polyspec\\Hyper\\Delivery $delivery): Polyspec\\Hyper\\Response"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              }
+            },
+            {
+              "id": "app.respond",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "request",
+                "session-store",
+                "optional<number>"
+              ],
+              "output": "answer",
+              "errors": [],
+              "state": "Answers a request as handle does and returns the response with the reply of the request (HY-67.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::respond",
+                  "signature": "public function respond(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\SessionStore $store, int|float $started): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.respond",
+                  "signature": "async respond(request: Request, store: SessionStore, started: number): Promise<Answer>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._respond",
+                  "signature": "def _respond(self, request: Request, store: SessionStore, started: Optional[int]=None) -> tuple[Response, Reply]"
+                }
+              }
+            },
+            {
+              "id": "app.respondWith",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session-store",
+                "number",
+                "reply"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers a request with a given reply: the plain 500 of a failure, the response limit, the frame policy and the response hook (HY-43.1, HY-66.1, HY-60.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::respondWith",
+                  "signature": "private function respondWith(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\SessionStore $store, int|float $started, Polyspec\\Hyper\\Reply $reply): Polyspec\\Hyper\\Response"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              }
+            },
+            {
+              "id": "app.disconnected",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "request",
+                "optional<number>",
+                "reply"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Calls the disconnect hook with the request, the elapsed time and the reply (HY-67.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::disconnected",
+                  "signature": "public function disconnected(Polyspec\\Hyper\\Request $request, int|float $started, Polyspec\\Hyper\\Reply $reply): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.disconnected",
+                  "signature": "disconnected(request: Request, started: number, reply: Reply): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._disconnected",
+                  "signature": "def _disconnected(self, request: Request, started: int, reply: Reply) -> None"
+                }
+              }
+            },
+            {
+              "id": "app.report",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<request>",
+                "response",
+                "optional<number>",
+                "reply",
+                "optional<string>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Calls the response hook with the request, the response, the elapsed time, the reply and the failure (HY-60.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::report",
+                  "signature": "public function report(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\Response $response, int|float $started, Polyspec\\Hyper\\Reply $reply, ?string $failure): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.report",
+                  "signature": "report(request: Request | null, response: Response, started: number, reply: Reply, failure: string | null = null): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._report",
+                  "signature": "def _report(self, request: Request, response: Response, started: int, reply: Reply, failure: Optional[str]) -> None"
+                }
+              }
+            },
+            {
+              "id": "app.frame",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "response"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Adds the frame policy to the response and no-store to a failure (HY-45.1, HY-65.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::frame",
+                  "signature": "public function frame(Polyspec\\Hyper\\Response $response): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.frame",
+                  "signature": "frame(response: Response): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._frame",
+                  "signature": "def _frame(self, response: Response) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.logFailure",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Writes the log line of an unhandled error and returns its failure text (HY-43.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::logFailure",
+                  "signature": "public function logFailure(Throwable $error): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.logFailure",
+                  "signature": "logFailure(error: unknown): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._log_failure",
+                  "signature": "def _log_failure(self, error: BaseException) -> str"
+                }
+              }
+            },
+            {
+              "id": "app.escaped",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "delivery",
+                "list<string>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Sends the plain 500 of an escaped error with the kept headers and records it in the delivery (HY-60.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::escaped",
+                  "signature": "private function escaped(string $failure, Polyspec\\Hyper\\Delivery $delivery, array $kept): void"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              }
+            },
+            {
+              "id": "app.dispatch",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session-store",
+                "reply"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Selects the answer of a request: HEAD as GET, the limits, the choice of the client rendering, the route, the selection of the type and the method check (HY-27.5, HY-116.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::dispatch",
+                  "signature": "private function dispatch(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\SessionStore $store, Polyspec\\Hyper\\Reply $reply): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.dispatch",
+                  "signature": "private async dispatch(received: Request, store: SessionStore, reply: Reply): Promise<Response>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._dispatch",
+                  "signature": "def _dispatch(self, request: Request, store: SessionStore, reply: Reply) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.clientChoice",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request"
+              ],
+              "output": "optional<choice>",
+              "errors": [],
+              "state": "Returns the choice of the selection of the client rendering for the request, or null without client rendering (HY-62.9).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::clientChoice",
+                  "signature": "private function clientChoice(Polyspec\\Hyper\\Request $request): ?Polyspec\\Hyper\\Choice"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.clientChoice",
+                  "signature": "private async clientChoice(request: Request): Promise<Choice | null>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._client_choice",
+                  "signature": "def _client_choice(self, request: Request) -> Optional[Choice]"
+                }
+              }
+            },
+            {
+              "id": "app.shellResponse",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers a chosen request outside the data base path with the static shell or its refusal (HY-62.16).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::shellResponse",
+                  "signature": "private function shellResponse(Polyspec\\Hyper\\Request $request): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.shellResponse",
+                  "signature": "private shellResponse(request: Request): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._shell_response",
+                  "signature": "def _shell_response(self, request: Request) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.varyHeader",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the Vary of the html and JSON responses of the application (HY-117.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::varyHeader",
+                  "signature": "private function varyHeader(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.varyHeader",
+                  "signature": "private varyHeader(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._vary_header",
+                  "signature": "def _vary_header(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "app.negotiate",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "list<string>",
+                "list<representation-entry>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Selects the type of the response among the served types and the entries, or returns the 400 or 406 of the selection (HY-116.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::negotiate",
+                  "signature": "private static function negotiate(Polyspec\\Hyper\\Request $request, array $served, array $entries): Polyspec\\Hyper\\Response|array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.negotiate",
+                  "signature": "private static negotiate(request: Request, served: readonly string[], entries: readonly RepresentationEntry[]): [string, RepresentationEntry | null, Map<string, string>] | Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._negotiate",
+                  "signature": "def _negotiate(request: Request, served: tuple[str, ...], entries: Sequence[RepresentationEntry]) -> Union[tuple[str, Optional[RepresentationEntry], dict[str, str]], Response]"
+                }
+              }
+            },
+            {
+              "id": "app.answerRepresentation",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "value",
+                "representation-entry",
+                "map<string>",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Calls the representation handler of the entry and returns its response (HY-121.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::answerRepresentation",
+                  "signature": "private function answerRepresentation(Polyspec\\Hyper\\Request $request, array $handler, Polyspec\\Hyper\\RepresentationEntry $entry, array $values, string $basePath): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.answerRepresentation",
+                  "signature": "private async answerRepresentation(request: Request, handler: RouteHandlers<S>, entry: RepresentationEntry, values: ReadonlyMap<string, string>, basePath: string): Promise<Response>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._answer_representation",
+                  "signature": "def _answer_representation(self, request: Request, handler: dict, entry: RepresentationEntry, values: dict[str, str], base_path: str) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.notAllowed",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Returns the 405 with the Allow of the methods (HY-27.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::notAllowed",
+                  "signature": "private static function notAllowed(string $allow): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.notAllowed",
+                  "signature": "private static notAllowed(allow: string): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._not_allowed",
+                  "signature": "def _not_allowed(allow: str) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.notAcceptable",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "response",
+              "errors": [],
+              "state": "Returns the 406 with Vary: Accept (HY-62.20).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::notAcceptable",
+                  "signature": "private static function notAcceptable(): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.notAcceptable",
+                  "signature": "private static notAcceptable(): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._not_acceptable",
+                  "signature": "def _not_acceptable() -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.routed",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "value",
+                "value",
+                "session",
+                "flash",
+                "reply",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers a request of a route: the action of a POST with its checks, the renewal, the redirect or the page (HY-25.1, HY-72.2, HY-107.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::routed",
+                  "signature": "private function routed(Polyspec\\Hyper\\Request $request, array $route, array $handler, Polyspec\\Hyper\\Session $session, Polyspec\\Hyper\\Flash $flash, Polyspec\\Hyper\\Reply $reply, string $basePath): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.routed",
+                  "signature": "private async routed(request: Request, route: RouteDeclaration, handler: RouteHandlers<S>, session: Session, flash: Flash, reply: Reply, basePath: string): Promise<Response>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._routed",
+                  "signature": "def _routed(self, request: Request, route: dict, handler: dict, session: Session, flash: Flash, reply: Reply, base_path: str) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.ormCode",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the code of an ORM error, or null for another error (HY-107.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::ormCode",
+                  "signature": "private static function ormCode(Throwable $error): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.ormCode",
+                  "signature": "private static ormCode(error: unknown): string | undefined"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._orm_code",
+                  "signature": "def _orm_code(error: Exception) -> str | None"
+                }
+              }
+            },
+            {
+              "id": "app.withoutRenewal",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "reply",
+                "response"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Fails when a loader or the shared handler asked for a renewal of the session (HY-72.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::withoutRenewal",
+                  "signature": "private static function withoutRenewal(Polyspec\\Hyper\\Reply $reply, Polyspec\\Hyper\\Response $response): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.withoutRenewal",
+                  "signature": "private static withoutRenewal(reply: Reply, response: Response): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._without_renewal",
+                  "signature": "def _without_renewal(reply: Reply, response: Response) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.redirectResponse",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "session",
+                "result",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Stores the flash values and the changed topics of a redirect and returns the 303 (HY-25.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::redirectResponse",
+                  "signature": "private function redirectResponse(Polyspec\\Hyper\\Session $session, Polyspec\\Hyper\\Result $result, string $basePath): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.redirectResponse",
+                  "signature": "private redirectResponse(session: Session, result: Result, basePath: string): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._redirect_response",
+                  "signature": "def _redirect_response(self, session: Session, result: Result, base_path: str) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.refusedForm",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session"
+              ],
+              "output": "optional<response>",
+              "errors": [],
+              "state": "Returns the 415 of a body that is no accepted form type or the 403 of a wrong token, or null (HY-59.1, HY-24.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::refusedForm",
+                  "signature": "private function refusedForm(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\Session $session): ?Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.refusedForm",
+                  "signature": "private refusedForm(request: Request, session: Session): Response | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._refused_form",
+                  "signature": "def _refused_form(self, request: Request, session: Session) -> Optional[Response]"
+                }
+              }
+            },
+            {
+              "id": "app.storeKept",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers the keep request: stores the conforming kept values of the server in the session and returns 204 (HY-40.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::storeKept",
+                  "signature": "private function storeKept(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\Session $session): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.storeKept",
+                  "signature": "private storeKept(request: Request, session: Session): Response"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/app.py::App._store_kept",
+                  "signature": "def _store_kept(self, request: Request, session: Session) -> Response"
+                }
+              }
+            },
+            {
+              "id": "app.run",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "optional<number>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Answers the request of the SAPI and registers the shutdown function of the write hook and the disconnect hook (HY-100.30).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/App.php::Polyspec\\Hyper\\App::run",
+                  "signature": "public function run(?int $started): void"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              }
+            },
+            {
+              "id": "app.readJsonFile",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Reads and decodes a JSON file of the build by its absolute path (HY-48.11).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.readJsonFile",
+                  "signature": "private static readJsonFile(path: string): unknown"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-48.11"
+              }
+            },
+            {
+              "id": "app.readJsonText",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Reads the text of a file of the build by its absolute path (HY-48.11).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.readJsonText",
+                  "signature": "private static readJsonText(path: string): string"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-48.11"
+              }
+            },
+            {
+              "id": "app.server",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "value",
+                "serverOptions"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns a node:http server whose request listener is the listener of the application (HY-97.9).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.server",
+                  "signature": "server(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-97.9"
+              }
+            },
+            {
+              "id": "app.listener",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "value",
+                "serverOptions"
+              ],
+              "output": "listener",
+              "errors": [],
+              "state": "Returns the request listener of the application for node:http (HY-100.29).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/app.ts::App.listener",
+                  "signature": "listener(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-100.29"
+              }
+            }
+          ]
+        },
+        {
+          "id": "disconnected",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/disconnected.ts",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "node"
+            ],
+            "sentence": "HY-67.4"
           },
           "members": []
         }
@@ -1503,21 +2368,88 @@
         {
           "id": "server",
           "native": {
-            "node": {
-              "file": "packages/server/ts/src/server.ts",
-              "kind": "functions",
-              "internal": true
-            },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/server.py",
               "kind": "functions",
               "internal": false
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "server.createServer",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "app",
+                "value",
+                "optional<string>",
+                "string",
+                "number",
+                "optional<value>",
+                "optional<value>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Creates the http.server server of the application (HY-100.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/server.py::create_server",
+                  "signature": "def create_server(app: App, sessions: FileSessions | RedisSessions, files: Optional[str]=None, host: str='127.0.0.1', port: int=0, around: Optional[Around]=None, written: Optional[Written]=None) -> ThreadingHTTPServer"
+                }
+              }
+            },
+            {
+              "id": "server.cookieHeader",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<bytes>",
+              "errors": [],
+              "state": "Returns the bytes of the Cookie headers joined with a semicolon, or None (HY-129.6).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/server.py::_cookie_header",
+                  "signature": "def _cookie_header(headers) -> Optional[bytes]"
+                }
+              }
+            },
+            {
+              "id": "server.headers",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Returns the headers of the request with repeated lines joined (HY-56.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/server.py::_headers",
+                  "signature": "def _headers(headers) -> dict[str, str]"
+                }
+              }
+            },
+            {
+              "id": "server.nowNs",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the monotonic clock in nanoseconds.",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/server.py::_now_ns",
+                  "signature": "def _now_ns() -> int"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
-              "node",
               "python"
             ],
             "sentence": "HY-100.1"
@@ -1532,7 +2464,176 @@
               "internal": true
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "pipeline.validate",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>",
+                "optional<value>",
+                "optional<value>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails for a files directory that is not absolute and a hook that is not callable (HY-97.7).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::validate",
+                  "signature": "def validate(files: Optional[str], around: Optional[Around], written: Optional[Written]) -> None"
+                }
+              }
+            },
+            {
+              "id": "pipeline.headerLines",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "response"
+              ],
+              "output": "list<value>",
+              "errors": [],
+              "state": "Returns the header lines of a response, one per cookie (HY-100.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::header_lines",
+                  "signature": "def header_lines(response: Response) -> list[tuple[str, str]]"
+                }
+              }
+            },
+            {
+              "id": "pipeline.publicFile",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "string"
+              ],
+              "output": "optional<value>",
+              "errors": [],
+              "state": "Returns the path of the public file that a GET or HEAD request names, or None (HY-100.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::public_file",
+                  "signature": "def public_file(files: str, method: str, target: str) -> Optional[Path]"
+                }
+              }
+            },
+            {
+              "id": "pipeline.readBody",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "request-body",
+                "number"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Reads the declared bytes of the body into the request body (HY-59.9).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::read_body",
+                  "signature": "def read_body(read: Callable[[int], bytes], body: RequestBody, length: int) -> None"
+                }
+              }
+            },
+            {
+              "id": "pipeline.headRequest",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "map<string>",
+                "map<string>",
+                "boolean",
+                "number"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns the request as received before its body is read (HY-60.2).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::head_request",
+                  "signature": "def head_request(method: str, target: str, headers: dict[str, str], cookies: dict[str, str], https: bool, declared: int) -> Request"
+                }
+              }
+            },
+            {
+              "id": "pipeline.declaredLength",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the Content-Length of a request, or 0 (HY-59.9).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::declared_length",
+                  "signature": "def declared_length(value: Optional[str]) -> int"
+                }
+              }
+            },
+            {
+              "id": "pipeline.escape",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "app",
+                "value"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Logs an escaped error and returns the plain 500 (HY-60.14).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::escape",
+                  "signature": "def escape(app: App, error: BaseException) -> Response"
+                }
+              }
+            },
+            {
+              "id": "pipeline.plainFailure",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "app"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Returns the plain 500 with the frame policy (HY-43.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::plain_failure",
+                  "signature": "def plain_failure(app: App) -> Response"
+                }
+              }
+            },
+            {
+              "id": "pipeline.answerWith",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "app",
+                "value",
+                "optional<value>",
+                "exchange"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers through the request hook with the session opened and closed around the answer, and the cookie of a new session first (HY-97.2, HY-45.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_pipeline.py::answer_with",
+                  "signature": "def answer_with(app: App, sessions: FileSessions | RedisSessions, around: Optional[Callable], exchange: Exchange) -> Response"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "python"
@@ -1549,7 +2650,158 @@
               "internal": false
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "wsgi.createWsgi",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "app",
+                "value",
+                "optional<string>",
+                "optional<value>",
+                "optional<value>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the WSGI callable of the application (HY-100.3).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::create_wsgi",
+                  "signature": "def create_wsgi(app: App, sessions: FileSessions | RedisSessions, files: Optional[str]=None, around: Optional[Around]=None, written: Optional[Written]=None) -> Callable[[dict, Callable], object]"
+                }
+              }
+            },
+            {
+              "id": "wsgi.encode",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "response"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the status line, the header lines and the body bytes of a response (HY-100.3).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_encode",
+                  "signature": "def _encode(response: Response) -> tuple[str, list[tuple[str, str]], bytes]"
+                }
+              }
+            },
+            {
+              "id": "wsgi.escape",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "app",
+                "exchange",
+                "value",
+                "value",
+                "boolean",
+                "value"
+              ],
+              "output": "wsgi-body",
+              "errors": [],
+              "state": "Starts the plain 500 of an escaped error (HY-100.27).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_escape",
+                  "signature": "def _escape(app: App, exchange: Exchange, error: BaseException, start_response: Callable, head: bool, exc_info=None) -> WsgiBody"
+                }
+              }
+            },
+            {
+              "id": "wsgi.answer",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "app",
+                "value",
+                "optional<value>",
+                "optional<string>",
+                "value",
+                "exchange"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Answers the request of an environ: a public file, or the response of the application (HY-100.3).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_answer",
+                  "signature": "def _answer(app: App, sessions: FileSessions | RedisSessions, around: Optional[Callable], files: Optional[str], environ: dict, exchange: Exchange) -> Union[Response, FileResponse]"
+                }
+              }
+            },
+            {
+              "id": "wsgi.cookieHeader",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<bytes>",
+              "errors": [],
+              "state": "Returns the bytes of HTTP_COOKIE, or None (HY-129.6).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_cookie_header",
+                  "signature": "def _cookie_header(environ: dict) -> Optional[bytes]"
+                }
+              }
+            },
+            {
+              "id": "wsgi.requestTarget",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the request target of an environ (HY-42.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_request_target",
+                  "signature": "def _request_target(environ: dict) -> str"
+                }
+              }
+            },
+            {
+              "id": "wsgi.status",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "number"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the status line of a status code.",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_status",
+                  "signature": "def _status(code: int) -> str"
+                }
+              }
+            },
+            {
+              "id": "wsgi.environHeaders",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Returns the request headers of an environ (HY-56.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/wsgi.py::_environ_headers",
+                  "signature": "def _environ_headers(environ: dict) -> dict[str, str]"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "python"
@@ -1566,13 +2818,584 @@
               "internal": false
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "asgi.createAsgi",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "app",
+                "value",
+                "optional<string>",
+                "optional<value>",
+                "optional<value>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the ASGI callable of the application (HY-100.15).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::create_asgi",
+                  "signature": "def create_asgi(app: App, sessions: FileSessions | RedisSessions, files: Optional[str]=None, around: Optional[Around]=None, written: Optional[Written]=None) -> Callable"
+                }
+              }
+            },
+            {
+              "id": "asgi.messages",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "response"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the header pairs and the body bytes of a response (HY-100.18).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_messages",
+                  "signature": "def _messages(response: Response) -> tuple[list[tuple[bytes, bytes]], bytes]"
+                }
+              }
+            },
+            {
+              "id": "asgi.answer",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "app",
+                "value",
+                "optional<value>",
+                "optional<string>",
+                "value",
+                "value",
+                "exchange"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Answers the request of a scope: a public file, or the response of the application (HY-100.16).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_answer",
+                  "signature": "def _answer(app: App, sessions: FileSessions | RedisSessions, around: Optional[Callable], files: Optional[str], scope: dict, receive: Callable, exchange: Exchange) -> Union[Response, FileResponse]"
+                }
+              }
+            },
+            {
+              "id": "asgi.readBody",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "request-body"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Reads the body events up to the limit of the request body (HY-100.16).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_read_body",
+                  "signature": "def _read_body(receive: Callable, body: RequestBody) -> None"
+                }
+              }
+            },
+            {
+              "id": "asgi.rawPath",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the request target of a scope (HY-42.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_raw_path",
+                  "signature": "def _raw_path(scope: dict) -> str"
+                }
+              }
+            },
+            {
+              "id": "asgi.header",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "bytes"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns a header of a scope by its name, or None.",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_header",
+                  "signature": "def _header(scope: dict, name: bytes) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "asgi.cookieHeader",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<bytes>",
+              "errors": [],
+              "state": "Returns the bytes of the cookie headers joined with a semicolon, or None (HY-129.6).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_cookie_header",
+                  "signature": "def _cookie_header(scope: dict) -> Optional[bytes]"
+                }
+              }
+            },
+            {
+              "id": "asgi.scopeHeaders",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Returns the request headers of a scope (HY-56.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/asgi.py::_scope_headers",
+                  "signature": "def _scope_headers(scope: dict) -> dict[str, str]"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "python"
             ],
             "sentence": "HY-100.15"
           }
+        },
+        {
+          "id": "exchange",
+          "native": {
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_exchange.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "python"
+            ],
+            "sentence": "HY-100.1"
+          },
+          "members": [
+            {
+              "id": "exchange.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "optional<value>",
+                "number"
+              ],
+              "output": "exchange",
+              "errors": [],
+              "state": "Holds the write hook and the start of one request.",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_exchange.py::Exchange.__init__",
+                  "signature": "def __init__(self, written: Optional[Callable], started: int)"
+                }
+              }
+            },
+            {
+              "id": "exchange.report",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<response>",
+                "boolean",
+                "optional<string>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Calls the write hook once with the request, the response, whether the write ended, the elapsed time and the failure (HY-99.2).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_exchange.py::Exchange.report",
+                  "signature": "def report(self, response: Optional[Response], ended: bool, failure: Optional[str]=None) -> None"
+                }
+              }
+            },
+            {
+              "id": "exchange.release",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Removes the files of the request body (HY-131.1).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_exchange.py::Exchange.release",
+                  "signature": "def release(self) -> None"
+                }
+              }
+            },
+            {
+              "id": "exchange.disconnect",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "app"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Calls the disconnect hook of the application once (HY-67.8).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_exchange.py::Exchange.disconnect",
+                  "signature": "def disconnect(self, app: App) -> None"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "file-response",
+          "native": {
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_file_response.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "python"
+            ],
+            "sentence": "HY-100.16"
+          },
+          "members": [
+            {
+              "id": "file-response.contentType",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the content type of a public file.",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_file_response.py::FileResponse.content_type",
+                  "signature": "content_type: str"
+                }
+              }
+            },
+            {
+              "id": "file-response.length",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Holds the length of a public file.",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_file_response.py::FileResponse.length",
+                  "signature": "length: int"
+                }
+              }
+            },
+            {
+              "id": "file-response.data",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "bytes",
+              "errors": [],
+              "state": "Holds the bytes of a public file.",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_file_response.py::FileResponse.data",
+                  "signature": "data: bytes"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "wsgi-body",
+          "native": {
+            "python": {
+              "file": "packages/server/python/src/polyspec/hyper/_wsgi_body.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "python"
+            ],
+            "sentence": "HY-100.3"
+          },
+          "members": [
+            {
+              "id": "wsgi-body.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "app",
+                "exchange",
+                "response",
+                "list<bytes>",
+                "optional<string>"
+              ],
+              "output": "wsgi-body",
+              "errors": [],
+              "state": "Holds the chunks of a response body and the exchange that reports its write.",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_wsgi_body.py::WsgiBody.__init__",
+                  "signature": "def __init__(self, app: App, exchange: Exchange, response: Response, chunks: list[bytes], failure: Optional[str])"
+                }
+              }
+            },
+            {
+              "id": "wsgi-body.iter",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "value",
+              "errors": [],
+              "state": "Yields the chunks and reports the ended write after the last (HY-100.6).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_wsgi_body.py::WsgiBody.__iter__",
+                  "signature": "def __iter__(self)"
+                }
+              }
+            },
+            {
+              "id": "wsgi-body.close",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Reports a write that the server closed before its end and calls the disconnect hook (HY-100.6).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_wsgi_body.py::WsgiBody.close",
+                  "signature": "def close(self) -> None"
+                }
+              }
+            },
+            {
+              "id": "wsgi-body.finish",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "boolean"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Reports the write once and releases the request (HY-100.6).",
+              "native": {
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_wsgi_body.py::WsgiBody._finish",
+                  "signature": "def _finish(self, ended: bool) -> None"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "http-host",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/http-host.ts",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "node"
+            ],
+            "sentence": "HY-100.1"
+          },
+          "members": [
+            {
+              "id": "http-host.createServer",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "app",
+                "value",
+                "serverOptions"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Creates the node:http server of the application, which reports the 400 and 431 of a request that node:http cannot parse (HY-60.7).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/http-host.ts::createServer",
+                  "signature": "export function createServer<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
+                }
+              }
+            },
+            {
+              "id": "http-host.createListener",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "app",
+                "value",
+                "serverOptions"
+              ],
+              "output": "listener",
+              "errors": [],
+              "state": "Returns the request listener: public files, the body up to the limit, the request hook, the session cookie first, the write, and the hooks (HY-100.29).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/http-host.ts::createListener",
+                  "signature": "export function createListener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
+                }
+              }
+            },
+            {
+              "id": "http-host.requestLine",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "optional<bytes>"
+              ],
+              "output": "optional<request>",
+              "errors": [],
+              "state": "Returns a request of the method and the target of the request line of a packet, or null (HY-60.7).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/http-host.ts::requestLine",
+                  "signature": "function requestLine(packet: Buffer | undefined): Request | null"
+                }
+              }
+            },
+            {
+              "id": "http-host.withSessionCookie",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "app",
+                "value",
+                "response",
+                "optional<string>",
+                "boolean"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Puts the cookie of a new session first among the cookies of the response (HY-45.1).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/http-host.ts::withSessionCookie",
+                  "signature": "function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, response: Response, created: string | null, https: boolean): Response"
+                }
+              }
+            },
+            {
+              "id": "http-host.requestOf",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "optional<request-body>"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns the request of the parts that node:http gives, with the method in upper case (HY-100.31).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/http-host.ts::requestOf",
+                  "signature": "export function requestOf( parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean }, read: RequestBody | null = null, ): Request"
+                }
+              }
+            },
+            {
+              "id": "http-host.serveFile",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "value",
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Writes a public file with its type and length (HY-100.1).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/http-host.ts::serveFile",
+                  "signature": "function serveFile(outgoing: ServerResponse, incoming: IncomingMessage, file: string): void"
+                }
+              }
+            },
+            {
+              "id": "http-host.publicFile",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "value"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the path of the public file that a GET or HEAD request names, or null (HY-100.1).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/http-host.ts::publicFile",
+                  "signature": "function publicFile(files: string, incoming: IncomingMessage): string | null"
+                }
+              }
+            },
+            {
+              "id": "http-host.readBody",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "request-body",
+                "number"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Reads the body up to the limit and no more (HY-59.9).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/http-host.ts::readBody",
+                  "signature": "function readBody(incoming: IncomingMessage, read: RequestBody, limit: number): Promise<void>"
+                }
+              }
+            },
+            {
+              "id": "http-host.write",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "response"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Writes the status, the headers and the body of a response (HY-100.1).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/http-host.ts::write",
+                  "signature": "function write(outgoing: ServerResponse, response: Response): void"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -2599,6 +4422,50 @@
                   "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.https",
                   "signature": "https: bool"
                 }
+              }
+            },
+            {
+              "id": "request.withSignal",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns a copy of the request that carries the signal of its connection (HY-67.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.withSignal",
+                  "signature": "withSignal(signal: AbortSignal): Request"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-67.3"
+              }
+            },
+            {
+              "id": "request.stopClosed",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Fails with Disconnected when the client of the request closed the connection (HY-67.4).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.stopClosed",
+                  "signature": "stopClosed(): void"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-67.4"
               }
             }
           ]
@@ -8313,7 +10180,7 @@
             "node": {
               "file": "packages/server/ts/src/flock.ts",
               "kind": "functions",
-              "internal": false
+              "internal": true
             }
           },
           "members": [
@@ -8337,7 +10204,7 @@
             {
               "id": "flock.exclusiveLock",
               "kind": "function",
-              "visibility": "public",
+              "visibility": "internal",
               "inputs": [],
               "output": "function(number) -> boolean",
               "errors": [],
@@ -8525,6 +10392,93 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/_data_model.py::DataModel._walk",
                   "signature": "def _walk(value: object) -> None"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "values",
+          "native": {
+            "node": {
+              "file": "packages/server/ts/src/values.ts",
+              "kind": "functions",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "node"
+            ],
+            "sentence": "HY-54.12"
+          },
+          "members": [
+            {
+              "id": "values.toValue",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns a JavaScript value as a value of the data model and fails for another value (HY-54.12).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/values.ts::toValue",
+                  "signature": "export function toValue(input: unknown): Value"
+                }
+              }
+            },
+            {
+              "id": "values.isValue",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a JavaScript value is a value of the data model (HY-54.12).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/values.ts::isValue",
+                  "signature": "function isValue(input: unknown): input is Value"
+                }
+              }
+            },
+            {
+              "id": "values.isMapValue",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a value is a map of values (HY-54.12).",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/values.ts::isMapValue",
+                  "signature": "export function isMapValue(input: unknown): input is MapValue"
+                }
+              }
+            },
+            {
+              "id": "values.replaced",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "map<value>",
+                "map<value>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns a map with the members of the second map over those of the first.",
+              "native": {
+                "node": {
+                  "symbol": "packages/server/ts/src/values.ts::replaced",
+                  "signature": "export function replaced(base: MapValue, other: MapValue): MapValue"
                 }
               }
             }
@@ -10361,21 +12315,259 @@
           "native": {
             "php": {
               "file": "packages/server/php/src/Page.php",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             },
             "node": {
               "file": "packages/server/ts/src/page.ts",
-              "kind": "interface",
+              "kind": "class",
               "internal": true
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/_page.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "page.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "pageParts"
+              ],
+              "output": "page",
+              "errors": [],
+              "state": "Holds the parts of the application that a page reads.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Page.php::Polyspec\\Hyper\\Page::__construct",
+                  "signature": "public function __construct(Polyspec\\Hyper\\Manifest $manifest, ?Closure $shared, array $regionLoaders, Polyspec\\Hyper\\Container $container, Polyspec\\Hyper\\Renderer $renderer, Polyspec\\Hyper\\Reads $reads, string $build, string $timezone, bool $https, ?Closure $context, string $vary)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/page.ts::Page.constructor",
+                  "signature": "constructor(parts: PageParts<S>)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_page.py::Page.__init__",
+                  "signature": "def __init__(self, manifest: Manifest, shared: Optional[Callable], region_loaders: dict, container: Container, renderer: 'Renderer', reads: 'Reads', build: str, timezone: str, https: bool, context: Optional[Callable], vary: str)"
+                }
+              }
+            },
+            {
+              "id": "page.respond",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "request",
+                "value",
+                "value",
+                "session",
+                "flash",
+                "number",
+                "map<value>",
+                "reply",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Runs the context handler, the shared handler and the loaders of the selected regions and returns the document or the JSON of the page (HY-12.1, HY-75.1, HY-128.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Page.php::Polyspec\\Hyper\\Page::respond",
+                  "signature": "public function respond(Polyspec\\Hyper\\Request $request, array $route, array $handler, Polyspec\\Hyper\\Session $session, Polyspec\\Hyper\\Flash $flash, int $status, array $invalid, Polyspec\\Hyper\\Reply $reply, string $basePath): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/page.ts::Page.respond",
+                  "signature": "async respond(request: Request, route: RouteDeclaration, handler: RouteHandlers<S>, session: Session, flash: Flash, status: number, invalid: Data, reply: Reply, basePath: string): Promise<Response>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_page.py::Page.respond",
+                  "signature": "def respond(self, request: Request, route: dict, handler: dict, session: Session, flash: Flash, status: int, invalid: dict, reply: Reply, base_path: str) -> Response"
+                }
+              }
+            },
+            {
+              "id": "page.loaderMap",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "string"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the map that a loader returned and fails for another value (HY-44.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Page.php::Polyspec\\Hyper\\Page::loaderMap",
+                  "signature": "private static function loaderMap(mixed $value, string $source): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/page.ts::Page.loaderMap",
+                  "signature": "private static loaderMap(value: unknown, source: string): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_page.py::Page._loader_map",
+                  "signature": "def _loader_map(value: object, source: str) -> dict"
+                }
+              }
+            },
+            {
+              "id": "page.kept",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session",
+                "map<value>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the conforming kept values of the server and of the cookie, by region and path (HY-38.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Page.php::Polyspec\\Hyper\\Page::kept",
+                  "signature": "private function kept(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\Session $session, array $data): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/page.ts::Page.kept",
+                  "signature": "private kept(request: Request, session: Session, data: Map<string, MapValue>): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_page.py::Page._kept",
+                  "signature": "def _kept(self, request: Request, session: Session, data: dict) -> dict"
+                }
+              }
+            },
+            {
+              "id": "page.document",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "value",
+                "map<value>",
+                "optional<map<value>>",
+                "map<value>",
+                "map<string>",
+                "map<value>",
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Renders the document with the kept values applied, and without them when they fail the rendering (HY-17.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Page.php::Polyspec\\Hyper\\Page::document",
+                  "signature": "private function document(Polyspec\\Hyper\\Request $request, array $route, array $shared, ?array $context, array $data, array $templates, array $kept, bool $embed): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_page.py::Page._document",
+                  "signature": "def _document(self, request: Request, route: dict, shared: dict, context: Optional[dict], data: dict, templates: dict, kept: dict, embed: bool) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-48.1"
+              }
+            },
+            {
+              "id": "page.present",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "map<value>"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Returns the names of the route regions that are present in the data (HY-75.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Page.php::Polyspec\\Hyper\\Page::present",
+                  "signature": "private static function present(array $route, array $data): array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_page.py::Page._present",
+                  "signature": "def _present(route: dict, data: dict) -> list[str]"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-48.1"
+              }
+            },
+            {
+              "id": "page.renderDocument",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "value",
+                "map<value>",
+                "optional<map<value>>",
+                "value",
+                "map<value>",
+                "map<value>",
+                "map<string>",
+                "map<value>",
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Renders the layout with the regions of the route and the embedded data (HY-12.1, HY-31.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Page.php::Polyspec\\Hyper\\Page::renderDocument",
+                  "signature": "private function renderDocument(Polyspec\\Hyper\\Request $request, array $route, array $shared, ?array $context, Polyspec\\Template\\BoundMap $boundShared, array $data, array $applied, array $templates, array $kept, bool $embed): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_page.py::Page._render_document",
+                  "signature": "def _render_document(self, request: Request, route: dict, shared: dict, context: Optional[dict], bound_shared, data: dict, applied: dict, templates: dict, kept: dict, embed: bool) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-48.1"
+              }
+            },
+            {
+              "id": "page.decodedCookie",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the decoded hy-keep cookie, or null for a cookie that is absent or not JSON (HY-42.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Page.php::Polyspec\\Hyper\\Page::decodedCookie",
+                  "signature": "private static function decodedCookie(?string $text): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/page.ts::Page.decodedCookie",
+                  "signature": "private static decodedCookie(text: string | null): DecodedValue"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/_page.py::Page._decoded_cookie",
+                  "signature": "def _decoded_cookie(text: Optional[str]) -> object"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -11400,7 +13592,16 @@
           "bodySize": "optional<number>",
           "media": "optional<string>",
           "read": "optional<request-body>",
-          "json": "value"
+          "json": "value",
+          "signal": {
+            "term": "value",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-67.3"
+            }
+          }
         },
         "optional": [
           "headers",
@@ -11415,7 +13616,8 @@
           "bodySize",
           "media",
           "read",
-          "json"
+          "json",
+          "signal"
         ]
       },
       "only": {
@@ -11427,7 +13629,7 @@
       "native": {
         "node": {
           "symbol": "packages/server/ts/src/request.ts::RequestInit",
-          "declaration": "export interface RequestInit {\n  method: string;\n  path: string;\n  // The header values by their names in any case.\n  headers?: Record<string, string>;\n  // The raw query: the request target after its first `?` up to its first `#`.\n  query?: string;\n  body?: Uint8Array;\n  flash?: ReadonlyMap<string, Value>;\n  csrfToken?: string;\n  params?: Record<string, string>;\n  // The cookie values by name, of the one parse of the Cookie header (HY-129).\n  cookies?: ReadonlyMap<string, string>;\n  https?: boolean;\n  // The value of the choice of the client rendering selection (HY-62).\n  selection?: unknown;\n  // The size of the body that the host received, when it stopped reading a body larger than the limit (HY-59); the\n  // default is the length of the body.\n  bodySize?: number | null;\n  // The media type that the selection of HY-116 chose, or null before the selection.\n  media?: string | null;\n  /**\n   * The body as the host read it, whose directory holds the files of a body read in chunks (HY-131), or null.\n   *\n   * @internal\n   */\n  read?: RequestBody | null;\n  // The decoded JSON body of a representation request (HY-121).\n  json?: Value;\n}"
+          "declaration": "export interface RequestInit {\n  method: string;\n  path: string;\n  // The header values by their names in any case.\n  headers?: Record<string, string>;\n  // The raw query: the request target after its first `?` up to its first `#`.\n  query?: string;\n  body?: Uint8Array;\n  flash?: ReadonlyMap<string, Value>;\n  csrfToken?: string;\n  params?: Record<string, string>;\n  // The cookie values by name, of the one parse of the Cookie header (HY-129).\n  cookies?: ReadonlyMap<string, string>;\n  https?: boolean;\n  // The value of the choice of the client rendering selection (HY-62).\n  selection?: unknown;\n  // The size of the body that the host received, when it stopped reading a body larger than the limit (HY-59); the\n  // default is the length of the body.\n  bodySize?: number | null;\n  // The media type that the selection of HY-116 chose, or null before the selection.\n  media?: string | null;\n  /**\n   * The body as the host read it, whose directory holds the files of a body read in chunks (HY-131), or null.\n   *\n   * @internal\n   */\n  read?: RequestBody | null;\n  // The decoded JSON body of a representation request (HY-121).\n  json?: Value;\n  /**\n   * The signal of the connection of the request, which is aborted when the client closed the connection (HY-67).\n   *\n   * @internal\n   */\n  signal?: AbortSignal;\n}"
         }
       }
     },
@@ -11523,6 +13725,768 @@
         "node": {
           "symbol": "packages/server/ts/src/redis-sessions.ts::RedisSessionsOptions",
           "declaration": "export interface RedisSessionsOptions {\n  // Runs a command on the Redis server that the server processes share.\n  command: RedisCommand;\n  // Seconds after the last request of a session until the session ends; PHP's session.gc_maxlifetime is 1440.\n  lifetime?: number;\n  // The prefix of the keys; the `prefix` of session.save_path of phpredis.\n  prefix?: string;\n  // Seconds until a lock expires, longer than any request; redis.session.lock_expire of phpredis.\n  lockExpire?: number;\n  // How many more times a request tries a lock that another holds; redis.session.lock_retries of phpredis.\n  lockRetries?: number;\n  // Milliseconds between two tries; redis.session.lock_wait_time of phpredis, in microseconds there.\n  lockWait?: number;\n}"
+        }
+      }
+    },
+    {
+      "id": "handlerArgument",
+      "visibility": "public",
+      "unit": "app",
+      "shape": {
+        "fields": {
+          "request": "request",
+          "reply": "reply",
+          "services": "container"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.14"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::HandlerArgument",
+          "declaration": "export interface HandlerArgument<S extends object> {\n  request: Request;\n  reply: Reply;\n  services: Container<S>;\n}"
+        }
+      }
+    },
+    {
+      "id": "loader",
+      "visibility": "public",
+      "unit": "app",
+      "shape": {
+        "function": {
+          "inputs": [
+            "handlerArgument"
+          ],
+          "output": "map<value>"
+        }
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.14"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::Loader",
+          "declaration": "export type Loader<S extends object> = (argument: HandlerArgument<S>) => Data | Promise<Data>;"
+        }
+      }
+    },
+    {
+      "id": "action",
+      "visibility": "public",
+      "unit": "app",
+      "shape": {
+        "function": {
+          "inputs": [
+            "handlerArgument"
+          ],
+          "output": "result"
+        }
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.14"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::Action",
+          "declaration": "export type Action<S extends object> = (argument: HandlerArgument<S>) => Result | Promise<Result>;"
+        }
+      }
+    },
+    {
+      "id": "routeRegionLoader",
+      "visibility": "public",
+      "unit": "app",
+      "shape": {
+        "function": {
+          "inputs": [
+            "handlerArgument"
+          ],
+          "output": "optional<map<value>>"
+        }
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.14"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::RouteRegionLoader",
+          "declaration": "export type RouteRegionLoader<S extends object> = (argument: HandlerArgument<S>) => Data | null | Promise<Data | null>;"
+        }
+      }
+    },
+    {
+      "id": "representationArgument",
+      "visibility": "public",
+      "unit": "app",
+      "shape": {
+        "fields": {
+          "request": "request",
+          "media": "media-type",
+          "services": "container"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.14"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::RepresentationArgument",
+          "declaration": "export interface RepresentationArgument<S extends object> {\n  request: Request;\n  media: MediaType;\n  services: Container<S>;\n}"
+        }
+      }
+    },
+    {
+      "id": "representationHandler",
+      "visibility": "public",
+      "unit": "app",
+      "shape": {
+        "function": {
+          "inputs": [
+            "representationArgument"
+          ],
+          "output": "representation"
+        }
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.14"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::RepresentationHandler",
+          "declaration": "export type RepresentationHandler<S extends object> = (argument: RepresentationArgument<S>) => Representation | Promise<Representation>;"
+        }
+      }
+    },
+    {
+      "id": "routeHandlers",
+      "visibility": "public",
+      "unit": "app",
+      "shape": {
+        "fields": {
+          "load": "loader",
+          "post": "action",
+          "regions": "map<routeRegionLoader>",
+          "representations": "map<representationHandler>"
+        },
+        "optional": [
+          "load",
+          "post",
+          "regions",
+          "representations"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::RouteHandlers",
+          "declaration": "export interface RouteHandlers<S extends object> {\n  load?: Loader<S>;\n  post?: Action<S>;\n  regions?: Record<string, RouteRegionLoader<S>>;\n  // The representation handlers of the route, by the type as the manifest writes it (HY-118).\n  representations?: Record<string, RepresentationHandler<S>>;\n}"
+        }
+      }
+    },
+    {
+      "id": "handlers",
+      "visibility": "public",
+      "unit": "app",
+      "shape": {
+        "fields": {
+          "shared": "loader",
+          "regions": "map<loader>",
+          "routes": "map<routeHandlers>"
+        },
+        "optional": [
+          "shared",
+          "regions",
+          "routes"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::Handlers",
+          "declaration": "export interface Handlers<S extends object> {\n  shared?: Loader<S>;\n  regions?: Record<string, Loader<S>>;\n  routes?: Record<string, RouteHandlers<S>>;\n}"
+        }
+      }
+    },
+    {
+      "id": "appOptions",
+      "visibility": "public",
+      "unit": "app",
+      "shape": {
+        "fields": {
+          "manifest": "string",
+          "build": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-48.11"
+            }
+          },
+          "templates": {
+            "term": "map<string>",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-48.11"
+            }
+          },
+          "program": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.8"
+            }
+          },
+          "handlers": "handlers",
+          "timezone": "string",
+          "basePath": "string",
+          "https": "boolean",
+          "frameAncestors": "string",
+          "bodyLimit": "number",
+          "formTypes": "list<string>",
+          "fileLimit": "optional<number>",
+          "responseLimit": "number",
+          "valueLimit": "optional<number>",
+          "partLimit": "number",
+          "onResponse": "function(optional<request>, response, number, reply, optional<string>) -> none",
+          "clientRendering": "client-rendering",
+          "onDisconnect": "function(request, number, reply) -> none",
+          "written": {
+            "term": "function(optional<request>, optional<response>, boolean, number, optional<string>) -> none",
+            "only": {
+              "languages": [
+                "php"
+              ],
+              "sentence": "HY-99.1"
+            }
+          },
+          "around": {
+            "term": "function(request, function(request) -> response) -> response",
+            "only": {
+              "languages": [
+                "php"
+              ],
+              "sentence": "HY-97.1"
+            }
+          },
+          "sessionSetup": {
+            "term": "function() -> none",
+            "only": {
+              "languages": [
+                "php"
+              ],
+              "sentence": "HY-104.18"
+            }
+          },
+          "log": {
+            "term": "function(string) -> none",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-43.4"
+            }
+          },
+          "context": "contextHandler",
+          "functions": "map<value>"
+        },
+        "optional": [
+          "basePath",
+          "https",
+          "frameAncestors",
+          "bodyLimit",
+          "fileLimit",
+          "valueLimit",
+          "partLimit",
+          "formTypes",
+          "responseLimit",
+          "onResponse",
+          "onDisconnect",
+          "log",
+          "clientRendering",
+          "context",
+          "functions"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::AppOptions",
+          "declaration": "export interface AppOptions<S extends object> {\n  // The absolute path of the manifest (HY-1).\n  manifest: string;\n  // The absolute path of the `build.json` of the asset output, which holds the build id (HY-125, HY-48).\n  build: string;\n  // The template index that the asset build writes, and the absolute directory that its file URLs are relative to\n  // (HR-34). The server renders with these template files, as the browser does.\n  templates: { index: string; root: string };\n  handlers: Handlers<S>;\n  timezone: string;\n  basePath?: string;\n  // Declares that the application is served over HTTPS, for example behind a TLS-terminating proxy (HY-45).\n  https?: boolean;\n  frameAncestors?: string;\n  // The largest request body in bytes; a larger body receives 413. The default is 8 MiB, PHP's post_max_size (HY-59).\n  bodyLimit?: number;\n  // The largest file in bytes of a request body, a file part of it (HY-113): a larger file receives 413 before the\n  // action or the kept value runs. The default is the smaller of 8 MiB and the body limit, so that the body limit refuses first.\n  fileLimit?: number;\n  // The largest bytes that the server holds as one value: a body that is not read in chunks, and the names and the\n  // contents of the text values of a multipart body together; more receives 413. The default is the smaller of 8 MiB\n  // and the body limit (HY-131).\n  valueLimit?: number;\n  // The largest number of parts of a multipart body; more receives 413. The default is 1000 (HY-131).\n  partLimit?: number;\n  // The media types of the request bodies that actions and /_hyper/keep accept: application/x-www-form-urlencoded\n  // and multipart/form-data. The default is application/x-www-form-urlencoded (HY-59).\n  formTypes?: string[];\n  // The largest response body in bytes that the server sends; a larger body gives a plain 500. The default is\n  // 8 MiB (HY-66).\n  responseLimit?: number;\n  // Called once for every response with the request, the response, the elapsed milliseconds, the reply of the\n  // request and the failure of a 500 of HY-43 or HY-66, also for the responses that hyper answers itself (HY-60). The\n  // request is null only for a request whose request line node:http could not read. The reply is the reply of the\n  // loaders and actions of the request, or an empty reply when the server answered before routing. The failure is\n  // the message of the error or the response limit line without its prefix, and null for every other response.\n  onResponse?: (request: Request | null, response: Response, elapsed: number, reply: Reply, failure: string | null) => void;\n  // Called once with the request, the elapsed milliseconds and the reply of a request whose client closed the\n  // connection before the server wrote its response; the server stops the request and writes no response (HY-67).\n  onDisconnect?: (request: Request, elapsed: number, reply: Reply) => void;\n  // Receives the log line of an unhandled error (HY-43); the default writes it to the standard error.\n  log?: (message: string) => void;\n  // The client-rendered pages, which receive the static shell for HTML requests and JSON under the data base path\n  // (HY-62).\n  clientRendering?: ClientRendering;\n  // The context handler (HY-124, HY-106): a function of the selection value that returns a Map, or a promise of one.\n  context?: ContextHandler;\n  // The host functions of the templates (HYC-24, HY-106): a map from names to functions that the template engine registers when\n  // the application opens; a registration that fails fails the open (template FUN-44, RT-5).\n  functions?: Record<string, HostFunction>;\n}"
+        }
+      }
+    },
+    {
+      "id": "answer",
+      "visibility": "internal",
+      "unit": "app",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-67.12"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::Answer",
+          "declaration": "export type Answer = { stopped: false; response: Response; reply: Reply } | { stopped: true; reply: Reply };"
+        }
+      }
+    },
+    {
+      "id": "pageParts",
+      "visibility": "internal",
+      "unit": "page",
+      "shape": {
+        "fields": {
+          "manifest": {
+            "term": "manifest",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "shared": {
+            "term": "optional<loader>",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "regionLoaders": {
+            "term": "map<loader>",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "container": {
+            "term": "container",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-105.4"
+            }
+          },
+          "renderer": {
+            "term": "renderer",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "application": {
+            "term": "value",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-54.3"
+            }
+          },
+          "handlers": {
+            "term": "handlers",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-54.14"
+            }
+          },
+          "services": {
+            "term": "container",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-105.4"
+            }
+          },
+          "reads": "value",
+          "build": "string",
+          "timezone": "string",
+          "https": "boolean",
+          "context": "optional<contextHandler>",
+          "vary": "string"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/page.ts::PageParts",
+          "declaration": "export interface PageParts<S extends object> {\n  application: Application;\n  handlers: Handlers<S>;\n  services: Container<S>;\n  timezone: string;\n  https: boolean;\n  // The read paths of every route, by the route name (HY-73).\n  reads: Record<string, RouteReads>;\n  // The build id of the asset output (HY-125), which every JSON response holds after its params (HY-128).\n  build: string;\n  // The context handler of the application (HY-124), or null for an application without a context.\n  context: ContextHandler | null;\n  // The Vary of the application's html and JSON responses (HY-117).\n  vary: string;\n}"
+        }
+      }
+    },
+    {
+      "id": "data",
+      "visibility": "public",
+      "unit": "values",
+      "shape": {
+        "term": "map<value>"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.12"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/values.ts::Data",
+          "declaration": "export type Data = Record<string, unknown> | Map<string, unknown>;"
+        }
+      }
+    },
+    {
+      "id": "appParts",
+      "visibility": "internal",
+      "unit": "app",
+      "shape": {
+        "fields": {
+          "manifest": {
+            "term": "manifest",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "shared": {
+            "term": "optional<loader>",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "regionLoaders": {
+            "term": "map<loader>",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "routeHandlers": {
+            "term": "map<routeHandlers>",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "application": {
+            "term": "value",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-54.3"
+            }
+          },
+          "handlers": {
+            "term": "handlers",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-54.14"
+            }
+          },
+          "timezone": "string",
+          "basePath": "string",
+          "https": "boolean",
+          "frameAncestors": "string",
+          "bodyLimit": "number",
+          "fileLimit": "number",
+          "valueLimit": "number",
+          "partLimit": "number",
+          "responseLimit": "number",
+          "formTypes": "list<string>",
+          "onResponse": "optional<function(optional<request>, response, number, reply, optional<string>) -> none>",
+          "client": "optional<client-rendering>",
+          "onDisconnect": "optional<function(request, number, reply) -> none>",
+          "log": {
+            "term": "function(string) -> none",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-43.4"
+            }
+          },
+          "written": {
+            "term": "optional<function(optional<request>, optional<response>, boolean, number, optional<string>) -> none>",
+            "only": {
+              "languages": [
+                "php"
+              ],
+              "sentence": "HY-99.1"
+            }
+          },
+          "around": {
+            "term": "optional<function(request, function(request) -> response) -> response>",
+            "only": {
+              "languages": [
+                "php"
+              ],
+              "sentence": "HY-97.1"
+            }
+          },
+          "sessionSetup": {
+            "term": "optional<function() -> none>",
+            "only": {
+              "languages": [
+                "php"
+              ],
+              "sentence": "HY-104.18"
+            }
+          },
+          "shell": "string",
+          "reads": {
+            "term": "value",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-54.3"
+            }
+          },
+          "build": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-48.11"
+            }
+          },
+          "context": "optional<contextHandler>",
+          "entries": {
+            "term": "map<list<representation-entry>>",
+            "only": {
+              "languages": [
+                "node"
+              ],
+              "sentence": "HY-54.3"
+            }
+          },
+          "functions": {
+            "term": "map<value>",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "program": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.8"
+            }
+          }
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/app.ts::AppParts",
+          "declaration": "export interface AppParts<S extends object> {\n  application: Application;\n  handlers: Handlers<S>;\n  timezone: string;\n  basePath: string;\n  https: boolean;\n  frameAncestors: string;\n  bodyLimit: number;\n  fileLimit: number;\n  valueLimit: number;\n  partLimit: number;\n  responseLimit: number;\n  formTypes: readonly string[];\n  onResponse: AppOptions<S>['onResponse'];\n  onDisconnect: AppOptions<S>['onDisconnect'];\n  log: (message: string) => void;\n  client: ClientRendering | null;\n  shell: string;\n  reads: PageParts<S>['reads'];\n  build: string;\n  context: ContextHandler | null;\n  entries: Map<string, RepresentationEntry[]>;\n}"
+        }
+      }
+    },
+    {
+      "id": "serverOptions",
+      "visibility": "public",
+      "unit": "http-host",
+      "shape": {
+        "fields": {
+          "files": "string",
+          "written": "writeHook",
+          "around": "aroundHook"
+        },
+        "optional": [
+          "files",
+          "written",
+          "around"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/http-host.ts::ServerOptions",
+          "declaration": "export interface ServerOptions {\n  // An absolute directory of public files. A GET or HEAD request whose path names a file in it receives the file,\n  // as the PHP built-in server serves its document root; every other request goes to the application.\n  files?: string;\n  // The write hook (HY-99): called once for every request that the application answers, with the request, the response\n  // whose write started or the plain 500 of an escaped error, whether the write ended, the elapsed milliseconds and the\n  // failure of an escaped error.\n  written?: WriteHook;\n  // The request hook (HY-97): called once for every request that the application answers, with the request as the server\n  // built it and the function `answer`, which runs the application for a request; the server writes the response that\n  // the hook returns.\n  around?: AroundHook;\n}"
+        }
+      }
+    },
+    {
+      "id": "aroundHook",
+      "visibility": "public",
+      "unit": "http-host",
+      "shape": {
+        "function": {
+          "inputs": [
+            "request",
+            "function(request) -> response"
+          ],
+          "output": "response"
+        }
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-97.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/http-host.ts::AroundHook",
+          "declaration": "export type AroundHook = (request: Request, answer: (request: Request) => Promise<Response>) => Response | Promise<Response>;"
+        }
+      }
+    },
+    {
+      "id": "writeHook",
+      "visibility": "public",
+      "unit": "http-host",
+      "shape": {
+        "function": {
+          "inputs": [
+            "request",
+            "optional<response>",
+            "boolean",
+            "number",
+            "optional<string>"
+          ],
+          "output": "none"
+        }
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-99.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/http-host.ts::WriteHook",
+          "declaration": "export type WriteHook = (request: Request, response: Response | null, ended: boolean, elapsed: number, failure: string | null) => void;"
+        }
+      }
+    },
+    {
+      "id": "listener",
+      "visibility": "public",
+      "unit": "http-host",
+      "shape": {
+        "function": {
+          "inputs": [
+            "value",
+            "value"
+          ],
+          "output": "none"
+        }
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-100.29"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/http-host.ts::Listener",
+          "declaration": "export type Listener = (incoming: IncomingMessage, outgoing: ServerResponse) => Promise<void>;"
         }
       }
     }

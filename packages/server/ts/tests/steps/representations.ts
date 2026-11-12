@@ -8,7 +8,7 @@ import { App, ArraySession, Representation, Request, type Handlers, type Represe
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { OrmError, parsed, plain, record } from '../support.js';
-import { requestOf } from '../../src/http.js';
+import { requestOf } from '../../src/http-host.js';
 
 const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
 const APPLICATION = 'representations';

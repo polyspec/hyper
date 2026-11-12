@@ -9,7 +9,7 @@ import { decodeTemplate, parseJson } from '@polyspec/template/render';
 import { Csrf } from '../src/csrf.js';
 import { App, Reply as ReplyClass, Request, Result, type Handlers, type Loader, type Reply, type Response } from '../src/index.js';
 import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, parsed, present, record, TEMPLATES, text, type Services } from './support.js';
-import { requestOf } from '../src/http.js';
+import { requestOf } from '../src/http-host.js';
 
 let fixture: Fixture;
 beforeEach(() => {

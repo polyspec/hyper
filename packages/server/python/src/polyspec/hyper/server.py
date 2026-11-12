@@ -16,6 +16,7 @@ from typing import Optional
 
 from .app import App
 from ._cookies import Cookies
+from ._exchange import Exchange
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from ._pipeline import (
@@ -23,7 +24,6 @@ from ._pipeline import (
     Written,
     CLOSED,
     CONTENT_TYPES,
-    Exchange,
     answer_with,
     declared_length,
     escape,

@@ -270,7 +270,7 @@ class AsgiTest(UploadCases, TransportCase):
                 request = self.app.requests[-1]
                 self.assertEqual((path, query), (request.path(), request.raw_query()))
 
-    def test_a_missing_raw_path_answers_the_plain_500_and_reports_nothing(self) -> None:
+    def test_a_missing_raw_path_answers_the_plain_failure_and_reports_nothing(self) -> None:
         # HY-100: the path is never built from the decoded `path`; the request has no target, so it is not reported.
         without = {
             key: value
@@ -302,7 +302,7 @@ class AsgiTest(UploadCases, TransportCase):
                 self.assertEqual([], self.app.requests)
                 self.assertEqual([], written)
 
-    def test_a_failed_body_read_answers_the_plain_500_and_reports_the_request(
+    def test_a_failed_body_read_answers_the_plain_failure_and_reports_the_request(
         self,
     ) -> None:
         # HY-60, HY-100: a body that cannot be received is an escaped error before `around`; the write hook receives
@@ -334,7 +334,7 @@ class AsgiTest(UploadCases, TransportCase):
         self.assertEqual("POST", request.method)
         self.assertEqual((5, 500, True), (request.body_size(), status, ended))
 
-    def test_a_failed_send_of_the_plain_500_reports_it_and_propagates(self) -> None:
+    def test_a_failed_send_of_the_plain_failure_reports_it_and_propagates(self) -> None:
         # HY-60, HY-100: when the send of the plain 500 fails, the write failed; the error propagates to the server.
         written = []
 

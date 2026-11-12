@@ -6,6 +6,7 @@ import type { RequestBody } from './request-body.js';
 import type { Flash } from './flash.js';
 import type { UploadedFile } from './uploaded-file.js';
 import type { Value } from './values.js';
+import { Disconnected } from './disconnected.js';
 
 // The parts of a request as its host gives them, the named parameters of the constructor (HY-106): the path and the raw
 // query of the request target and the header values are text whose characters are bytes, and the body is bytes. The
@@ -39,6 +40,12 @@ export interface RequestInit {
   read?: RequestBody | null;
   // The decoded JSON body of a representation request (HY-121).
   json?: Value;
+  /**
+   * The signal of the connection of the request, which is aborted when the client closed the connection (HY-67).
+   *
+   * @internal
+   */
+  signal?: AbortSignal;
 }
 
 // The media type of the JSON of hyper (HY-15).
@@ -208,6 +215,19 @@ export class Request {
   /** @internal */
   withMedia(type: string): Request {
     return this.copy({ media: type });
+  }
+
+  // Returns a copy that holds the signal of the connection of the request (HY-67).
+  /** @internal */
+  withSignal(signal: AbortSignal): Request {
+    return this.copy({ signal });
+  }
+
+  // Throws Disconnected when the client of the request closed the connection, so that no further loader, action or
+  // rendering runs (HY-67).
+  /** @internal */
+  stopClosed(): void {
+    if (this.init.signal?.aborted === true) throw new Disconnected('hyper: the client closed the connection');
   }
 
   // Returns the value of the choice that the client rendering selection returned for this request, or null for an

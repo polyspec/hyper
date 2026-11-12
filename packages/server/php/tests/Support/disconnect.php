@@ -28,6 +28,12 @@ FrontController::open(
     function (Reply $reply): array {
         $reply->note('stage', 'shared');
         usleep(300_000);
+        // HY-67: with `answer` the loader writes to the closed connection and ends the script during the answer.
+        if (getenv('HYPER_DISCONNECT_DURING') === 'answer') {
+            echo str_repeat('x', 1 << 20);
+            flush();
+            exit();
+        }
 
         return ['title' => str_repeat('x', 1 << 20)];
     },

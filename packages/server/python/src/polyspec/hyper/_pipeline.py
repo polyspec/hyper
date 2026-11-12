@@ -7,17 +7,16 @@ from __future__ import annotations
 
 import re
 import sys
-import time
 import traceback
 from pathlib import Path
 from typing import Callable, Optional
 
+from ._exchange import Exchange
 from ._request_body import RequestBody
 from .app import App
 from ._record_session import RecordSession
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
-from .reply import Reply
 from .request import Request
 from .response import Response
 
@@ -90,50 +89,6 @@ def read_body(read: Callable[[int], bytes], body: RequestBody, length: int) -> N
             reading = body.feed(chunk)
 
 
-class Exchange:
-    """One request of a transport in the pipeline: the request as the transport received it (HY-60), the
-    reply of the last call of `answer` (HY-67) and the write hook, which receives the response of the request
-    once (HY-99). `request` is None while the transport has no target to report."""
-
-    def __init__(self, written: Optional[Callable], started: int):
-        self.request: Optional[Request] = None
-        # The body as the transport reads it, whose directory holds the files of a body read in chunks (HY-131).
-        self.body: Optional[RequestBody] = None
-        self.written = written
-        self.started = started
-        self.answered: list[tuple[Request, Reply]] = []
-        self.reported = False
-
-    def report(
-        self, response: Optional[Response], ended: bool, failure: Optional[str] = None
-    ) -> None:
-        """Calls the write hook once with the response whose write started, the plain 500 of an escaped error, or None
-        when the request ended before a response started (HY-99),
-        whether the write ended, the elapsed milliseconds since the arrival of the request and the failure of an
-        escaped error (HY-99). A request without a request to report is not reported (HY-60)."""
-        if self.reported:
-            return
-        self.reported = True
-        if self.written is not None and self.request is not None:
-            self.written(
-                self.request,
-                response,
-                ended,
-                (time.perf_counter_ns() - self.started) / 1e6,
-                failure,
-            )
-
-    def release(self) -> None:
-        """Removes the directory of the files of the body after the hooks of the request returned (HY-131.14)."""
-        if self.body is not None:
-            self.body.remove()
-
-    def disconnect(self, app: App) -> None:
-        """Calls the disconnect hook with the request and the reply of the last call of `answer` (HY-67)."""
-        if self.answered:
-            app._disconnected(self.answered[0][0], self.started, self.answered[0][1])
-
-
 def head_request(
     method: str,
     target: str,
@@ -164,17 +119,14 @@ def declared_length(value: Optional[str]) -> int:
 def escape(app: App, error: BaseException) -> Response:
     """Logs an error that escapes the answer of a request with its message (HY-43) and returns the plain 500
     that hyper writes (HY-60)."""
-    sys.stderr.write(f"hyper: {type(error).__name__}: {error}\n")
+    app._log_failure(error)
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-    return plain_500(app)
+    return plain_failure(app)
 
 
-def plain_500(app: App) -> Response:
+def plain_failure(app: App) -> Response:
     """Returns hyper's plain 500 (HY-60): the text, `Cache-Control: no-store` (HY-65) and the frame policy (HY-45)."""
-    response = Response.text(500, "Internal Server Error")
-    return response.with_header(
-        "Content-Security-Policy", f"frame-ancestors {app.frame_ancestors}"
-    ).with_header("Cache-Control", "no-store")
+    return app._frame(Response.text(500, "Internal Server Error"))
 
 
 def answer_with(

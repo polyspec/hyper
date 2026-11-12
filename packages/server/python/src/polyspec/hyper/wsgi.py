@@ -8,19 +8,19 @@ from __future__ import annotations
 
 import sys
 import time
-from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Callable, Optional, Union
 
 from .app import App
 from ._cookies import Cookies
+from ._exchange import Exchange
+from ._file_response import FileResponse
 from .file_sessions import FileSessions
 from .redis_sessions import RedisSessions
 from ._pipeline import (
     Around,
     Written,
     CONTENT_TYPES,
-    Exchange,
     answer_with,
     declared_length,
     escape,
@@ -31,16 +31,9 @@ from ._pipeline import (
     validate,
 )
 from ._request_body import RequestBody
+from ._wsgi_body import WsgiBody
 from .request import Request
 from .response import Response
-
-
-@dataclass
-class _FileResponse:
-    """A file of the public directory that the callable serves before `around` (HY-100)."""
-
-    headers: list[tuple[str, str]]
-    data: bytes
 
 
 def create_wsgi(
@@ -66,13 +59,19 @@ def create_wsgi(
         # HY-27.5: a HEAD request receives the headers, with the Content-Length of the body, and no body.
         head = str(environ.get("REQUEST_METHOD", "")).upper() == "HEAD"
         try:
-            result: Union[Response, _FileResponse] = _answer(
+            result: Union[Response, FileResponse] = _answer(
                 app, sessions, around, files, environ, exchange
             )
         except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
             return _escape(app, exchange, error, start_response, head)
-        if isinstance(result, _FileResponse):
-            start_response(_status(200), result.headers)
+        if isinstance(result, FileResponse):
+            start_response(
+                _status(200),
+                [
+                    ("Content-Type", result.content_type),
+                    ("Content-Length", str(result.length)),
+                ],
+            )
             return [result.data]
         try:
             line, headers, encoded = _encode(result)
@@ -82,49 +81,9 @@ def create_wsgi(
             start_response(line, headers)
         except Exception as error:  # noqa: BLE001 - HY-60: a start_response that raises is an escape
             return _escape(app, exchange, error, start_response, head, sys.exc_info())
-        return _Body(app, exchange, result, [] if head else [encoded], None)
+        return WsgiBody(app, exchange, result, [] if head else [encoded], None)
 
     return application
-
-
-class _Body:
-    """The body iterable of a response (HY-99). The write ends when the server consumes the whole
-    iterable, and a server that closes it before its end reports a write that did not end; the
-    disconnect hook then runs when the request was answered by the application (HY-67)."""
-
-    def __init__(
-        self,
-        app: App,
-        exchange: Exchange,
-        response: Response,
-        chunks: list[bytes],
-        failure: Optional[str],
-    ):
-        self.app = app
-        self.exchange = exchange
-        self.response = response
-        self.chunks = chunks
-        self.failure = failure
-        self.done = False
-
-    def __iter__(self):
-        yield from self.chunks
-        self._finish(True)
-
-    def close(self) -> None:
-        self._finish(False)
-
-    def _finish(self, ended: bool) -> None:
-        if self.done:
-            return
-        self.done = True
-        try:
-            self.exchange.report(self.response, ended, self.failure)
-            if not ended:
-                self.exchange.disconnect(self.app)
-        finally:
-            # HY-131.14: the files of the request are removed after its hooks returned.
-            self.exchange.release()
 
 
 def _encode(response: Response) -> tuple[str, list[tuple[str, str]], bytes]:
@@ -148,7 +107,7 @@ def _escape(
     start_response: Callable,
     head: bool,
     exc_info=None,
-) -> _Body:
+) -> WsgiBody:
     """Answers an error that escapes the answer with the plain 500 through `start_response` (HY-60). The write hook
     receives the 500 with the failure when the server consumes its body (HY-99). A `start_response` that raises
     again reports the write as not ended and propagates."""
@@ -163,7 +122,7 @@ def _escape(
         finally:
             exchange.release()
         raise
-    return _Body(app, exchange, response, [] if head else [encoded], failure)
+    return WsgiBody(app, exchange, response, [] if head else [encoded], failure)
 
 
 def _answer(
@@ -173,7 +132,7 @@ def _answer(
     files: Optional[str],
     environ: dict,
     exchange: Exchange,
-) -> Union[Response, _FileResponse]:
+) -> Union[Response, FileResponse]:
     """Answers the request of the environ: a file of the public directory, or the application through `around`.
     The request as received is kept in the exchange before the body is read (HY-60)."""
     # HY-100.31: the host passes the method in upper case.
@@ -195,14 +154,9 @@ def _answer(
     if served is not None:
         # HY-100: the files of the public directory are served before `around`; no hook runs.
         data = served.read_bytes()
-        return _FileResponse(
-            [
-                (
-                    "Content-Type",
-                    CONTENT_TYPES.get(served.suffix, "application/octet-stream"),
-                ),
-                ("Content-Length", str(len(data))),
-            ],
+        return FileResponse(
+            CONTENT_TYPES.get(served.suffix, "application/octet-stream"),
+            len(data),
             b"" if method == "HEAD" else data,
         )
     # HY-131: a multipart body of an application with that form type is read in chunks into files of the request.

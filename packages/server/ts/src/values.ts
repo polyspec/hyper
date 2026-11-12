@@ -4,6 +4,7 @@ import { DataModel } from './data-model.js';
 
 export { NativeObject, SafeString, type MapValue, type Value };
 
+/** @internal */
 export const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
 
 // Data that a loader returns: a plain object or a map with string keys. A plain object keeps the key order of
@@ -13,19 +14,9 @@ export type Data = Record<string, unknown> | Map<string, unknown>;
 // Converts an application value into a value of the data model: null, a boolean, a number or a bigint within
 // ±(2^53 − 1), a string without a lone surrogate, an array, a Map with string keys or a plain object.
 // Any other value fails, and the request fails with HY-43 (HY-44).
+/** @internal */
 export function toValue(input: unknown): Value {
   return DataModel.check(input);
-}
-
-// Converts loader data into a map of the data model.
-export function toMap(input: unknown, label: string): MapValue {
-  return requireMap(toValue(input), label);
-}
-
-// Returns a value of the data model that is a map, such as a copy of a map; another value fails.
-export function requireMap(value: Value, label: string): MapValue {
-  if (!(value instanceof Map)) throw new TypeError(`hyper: ${label} is not a map`);
-  return value;
 }
 
 // Returns true for a value of the data model as the server stores it: null, a boolean, a number, a string, a safe
@@ -38,6 +29,7 @@ function isValue(input: unknown): input is Value {
 }
 
 // Returns true for a Map of string keys to values of the data model.
+/** @internal */
 export function isMapValue(input: unknown): input is MapValue {
   if (!(input instanceof Map)) return false;
   for (const [key, item] of input) {
@@ -48,6 +40,7 @@ export function isMapValue(input: unknown): input is MapValue {
 
 // Returns a map with the entries of a base map, replaced or followed by the entries of another map, as PHP
 // array_replace does.
+/** @internal */
 export function replaced(base: MapValue, other: MapValue): MapValue {
   const result: MapValue = new Map(base);
   for (const [key, item] of other) result.set(key, item);

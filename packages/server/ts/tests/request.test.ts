@@ -1,7 +1,7 @@
 // The cases of packages/server/php/tests/RequestTest.php (HY-42, HY-45).
 import { describe, expect, it } from 'vitest';
 import { Request } from '../src/index.js';
-import { requestOf } from '../src/http.js';
+import { requestOf } from '../src/http-host.js';
 
 const targets: [string, string, string][] = [
   ['colon', '/board/12:30', '/board/12:30'],

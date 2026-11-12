@@ -146,7 +146,8 @@ function checkMember(
   if (native !== undefined && name !== native) add('MEMBER_NAME', `${lang} member ${m.id} is named ${name}, HYR-5 says ${native}`);
   if (hasAcronym(name)) add('NAME_ACRONYM', `${lang} member ${m.id} is named ${name}, which holds two capitals in a row (HYR-4)`);
   // HYR-5 options record: a member that takes a record names its parameters after the record's fields in each language.
-  for (const term of m.inputs) {
+  // The record is the one input of the member, as the arity above reads it.
+  for (const term of m.inputs.length === 1 ? m.inputs : []) {
     const fields = recordNames(spec, term, lang);
     if (fields === undefined || found.parameters.length === 1) continue;
     const params = found.parameters.map((p) => words(p)).sort();

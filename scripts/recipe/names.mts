@@ -46,6 +46,8 @@ export function expectedNative(lang: Lang, member: Pick<Member, 'id' | 'kind' | 
   const camel = member.id.slice(member.id.indexOf('.') + 1);
   // HYR-5 "Symbol": the method that makes a PHP object callable is `__invoke`.
   if (lang === 'php' && camel === 'invoke') return '__invoke';
+  // HYR-5 "Symbol": the method that makes a Python object iterable is `__iter__`.
+  if (lang === 'python' && camel === 'iter') return '__iter__';
   if (lang !== 'python') return camel;
   const snake = camel.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
   // HYR-5: a private member has a leading `_`, and so has an internal member of a public module; in a `_` module the

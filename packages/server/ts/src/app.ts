@@ -3,23 +3,23 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
-import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
+import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration } from '@polyspec/hyper-client';
 import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@polyspec/template/render';
 import type { Choice } from './choice.js';
 import type { ClientRendering } from './client-rendering.js';
+import { Disconnected } from './disconnected.js';
+import { InvalidAccept } from './invalid-accept.js';
 import { Csrf } from './csrf.js';
 import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
-import { createListener, createServer, type Listener, type ServerOptions } from './http.js';
+import { createListener, createServer, type Listener, type ServerOptions } from './http-host.js';
 import { Build } from './build.js';
 import { JsonCodec, type DecodedValue } from './json-codec.js';
 import { JsonDecodeError } from './json-decode-error.js';
 import { WarningsGuard } from './warnings-guard.js';
-import { Disconnected, renderPage, stopClosed, VARY, type PageInput } from './page.js';
+import { Page, type PageParts } from './page.js';
 import { Context, type ContextHandler } from './context.js';
-import { checkClient, checkHandlers, type Client } from './open-checks.js';
 import { Reply } from './reply.js';
-import { negotiate, PAGE_AND_DATA, PAGE_TYPE, refusal } from './negotiate.js';
 import { MediaSelection } from './media-selection.js';
 import { MediaType } from './media-type.js';
 import type { Representation } from './representation.js';
@@ -38,49 +38,6 @@ import { Flash } from './flash.js';
 import { Session } from './session.js';
 import type { SessionStore } from './session-store.js';
 import type { Data, Value } from './values.js';
-
-// Reads a JSON file of an application as strict UTF-8 JSON. A file that cannot be read fails with its system error;
-// a file that is not valid UTF-8 or not valid JSON raises an Error that names it (HY-106).
-function readJsonFile(path: string): unknown {
-  const text = readJsonText(path);
-  try {
-    return JSON.parse(text);
-  } catch (error) {
-    throw new Error(`hyper: ${path} is not valid JSON`, { cause: error });
-  }
-}
-
-// Reads the text of a JSON file of an application as strict UTF-8.
-function readJsonText(path: string): string {
-  try {
-    // ignoreBOM keeps a leading U+FEFF, so that a file that starts with it is not valid JSON, as in PHP and Python.
-    return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(readFileSync(path));
-  } catch (error) {
-    if (!(error instanceof TypeError)) throw error;
-    throw new Error(`hyper: ${path} is not valid UTF-8`, { cause: error });
-  }
-}
-
-// Returns the representations of each route of a checked manifest, by the route name (HY-118). The manifest is decoded
-// with maps for objects, because the parameters of an entry keep the order of the manifest, which a plain object does
-// not keep for a name that is an integer.
-function routeEntries(path: string): Map<string, RepresentationEntry[]> {
-  let decoded: DecodedValue;
-  try {
-    decoded = JsonCodec.decode(readJsonText(path));
-  } catch (error) {
-    if (!(error instanceof JsonDecodeError)) throw error;
-    throw new Error(`hyper: ${path} is not valid JSON`, { cause: error });
-  }
-  const entries = new Map<string, RepresentationEntry[]>();
-  const routes = decoded instanceof Map ? decoded.get('routes') : undefined;
-  for (const route of Array.isArray(routes) ? routes : []) {
-    if (!(route instanceof Map)) continue;
-    const name = route.get('name');
-    if (typeof name === 'string') entries.set(name, RepresentationEntries.declare(name, route.get('representations')));
-  }
-  return entries;
-}
 
 // The one argument of every loader and action: the request, the reply of the request and the services that the
 // application binds by key.
@@ -171,8 +128,46 @@ export interface AppOptions<S extends object> {
   functions?: Record<string, HostFunction>;
 }
 
-// The outcome of a request for its transport: the response, or a stop because its connection closed (HY-67).
+// The parts of an application that `open` checked and read, the one argument of the constructor.
+/** @internal */
+export interface AppParts<S extends object> {
+  application: Application;
+  handlers: Handlers<S>;
+  timezone: string;
+  basePath: string;
+  https: boolean;
+  frameAncestors: string;
+  bodyLimit: number;
+  fileLimit: number;
+  valueLimit: number;
+  partLimit: number;
+  responseLimit: number;
+  formTypes: readonly string[];
+  onResponse: AppOptions<S>['onResponse'];
+  onDisconnect: AppOptions<S>['onDisconnect'];
+  log: (message: string) => void;
+  client: ClientRendering | null;
+  shell: string;
+  reads: PageParts<S>['reads'];
+  build: string;
+  context: ContextHandler | null;
+  entries: Map<string, RepresentationEntry[]>;
+}
+
+/**
+ * The outcome of a request for its transport: the response, or a stop because its connection closed (HY-67).
+ *
+ * @internal
+ */
 export type Answer = { stopped: false; response: Response; reply: Reply } | { stopped: true; reply: Reply };
+
+// The media types of the request bodies that an application may accept (HY-59).
+const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
+// The media types of the page and of the JSON of hyper, in the order of ties (HY-116).
+const PAGE_TYPE = 'text/html';
+const PAGE_AND_DATA = [PAGE_TYPE, HYPER_JSON];
+// The Vary of a response with text/html or the JSON of hyper (HY-117).
+const VARY = 'Accept, HX-Request, HX-Current-URL';
 
 export class App<S extends object = Record<string, never>> {
   /** @internal */
@@ -202,43 +197,21 @@ export class App<S extends object = Record<string, never>> {
   private readonly onResponse: AppOptions<S>['onResponse'];
   private readonly onDisconnect: AppOptions<S>['onDisconnect'];
   private readonly log: (message: string) => void;
-  private readonly reads: Record<string, RouteReads>;
-  private readonly client: Client | null;
-  private readonly build: string;
+  // The client rendering of the application, or null, and the text of its static shell, empty without it (HY-62).
+  private readonly client: ClientRendering | null;
+  private readonly shellText: string;
   private readonly context: ContextHandler | null;
   // The representations of each route, by the route name (HY-118).
   private readonly entries: Map<string, RepresentationEntry[]>;
-  // The Vary of the html and JSON responses, with `Hyper-Context` for an application with a context (HY-117).
-  private readonly vary: string;
+  // The page of the application, which renders the page of every route.
+  private readonly page: Page<S>;
 
-  private constructor(
-    application: Application,
-    handlers: Handlers<S>,
-    timezone: string,
-    basePath: string,
-    https: boolean,
-    frameAncestors: string,
-    bodyLimit: number,
-    fileLimit: number,
-    valueLimit: number,
-    partLimit: number,
-    responseLimit: number,
-    formTypes: readonly string[],
-    onResponse: AppOptions<S>['onResponse'],
-    onDisconnect: AppOptions<S>['onDisconnect'],
-    log: (message: string) => void,
-    client: Client | null,
-    reads: Record<string, RouteReads>,
-    build: string,
-    context: ContextHandler | null,
-    entries: Map<string, RepresentationEntry[]>,
-  ) {
+  private constructor(parts: AppParts<S>) {
+    const { application, handlers, timezone, basePath, https, frameAncestors, bodyLimit, fileLimit, valueLimit, partLimit, responseLimit, formTypes, onResponse, onDisconnect, log, client, shell, reads, build, context, entries } = parts;
     this.entries = entries;
     this.context = context;
-    this.vary = context === null ? VARY : `${VARY}, Hyper-Context`;
-    this.build = build;
     this.client = client;
-    this.reads = reads;
+    this.shellText = shell;
     this.application = application;
     this.handlers = handlers;
     this.timezone = timezone;
@@ -255,6 +228,7 @@ export class App<S extends object = Record<string, never>> {
     this.onDisconnect = onDisconnect;
     this.log = log;
     this.routes = new Map(application.manifest.routes.map((route) => [route.name, route]));
+    this.page = new Page({ application, handlers, services: this.services, timezone, https, reads, build, context, vary: this.varyHeader() });
   }
 
   // Creates an application from its manifest, the template files of the asset build and the handlers that load
@@ -288,16 +262,29 @@ export class App<S extends object = Record<string, never>> {
     if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw new Error(`hyper: the build file ${String(options.build)} is not an absolute path`);
     const build = Build.read(options.build);
     if (options.context !== undefined && typeof options.context !== 'function') throw new Error('hyper: the context must be a function (HY-106)');
-    const manifest = checkManifest(readJsonFile(options.manifest));
-    const index = checkTemplateIndex(readJsonFile(options.templates.index), `the template index ${options.templates.index}`);
-    const fetcher = async (url: string): Promise<Template> => decodeTemplate(readJsonFile(join(options.templates.root, url)));
-    const application = createApplication(manifest, index, fetcher, options.functions);
-    checkHandlers(manifest, options.handlers);
-    const entries = routeEntries(options.manifest);
-    for (const route of manifest.routes) {
-      RepresentationEntries.checkHandlers(route.name, entries.get(route.name) ?? [], options.handlers.routes?.[route.name]?.representations ?? {});
+    const manifest = checkManifest(App.readJsonFile(options.manifest));
+    // HY-118: the representations of each route, by the route name. The manifest is decoded with maps for objects,
+    // because the parameters of an entry keep the order of the manifest, which a plain object does not keep for a name
+    // that is an integer.
+    let decoded: DecodedValue;
+    try {
+      decoded = JsonCodec.decode(App.readJsonText(options.manifest));
+    } catch (error) {
+      if (!(error instanceof JsonDecodeError)) throw error;
+      throw new Error(`hyper: ${options.manifest} is not valid JSON`, { cause: error });
     }
-    const client = options.clientRendering === undefined ? null : checkClient(options.clientRendering, manifest);
+    const entries = new Map<string, RepresentationEntry[]>();
+    const routes = decoded instanceof Map ? decoded.get('routes') : undefined;
+    for (const route of Array.isArray(routes) ? routes : []) {
+      if (!(route instanceof Map)) continue;
+      const name = route.get('name');
+      if (typeof name === 'string') entries.set(name, RepresentationEntries.declare(name, route.get('representations')));
+    }
+    const index = checkTemplateIndex(App.readJsonFile(options.templates.index), `the template index ${options.templates.index}`);
+    const fetcher = async (url: string): Promise<Template> => decodeTemplate(App.readJsonFile(join(options.templates.root, url)));
+    const application = createApplication(manifest, index, fetcher, options.functions);
+    App.checkHandlers({ ...manifest, entries }, options.handlers);
+    const shell = options.clientRendering === undefined ? '' : App.checkedShell(options.clientRendering, manifest);
     // Every entry template of every route and the template of the embedded data are in the index (HY-31, HR-34), and the
     // server renders every page, so it reads every template of the index (HYC-12).
     for (const route of manifest.routes) {
@@ -314,7 +301,100 @@ export class App<S extends object = Record<string, never>> {
       if (template === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
       return template;
     }, resolvePath);
-    return new App(application, options.handlers, options.timezone, basePath, options.https ?? false, options.frameAncestors ?? "'self'", bodyLimit, fileLimit, valueLimit, partLimit, responseLimit, [...formTypes], options.onResponse, options.onDisconnect, options.log ?? ((message) => process.stderr.write(`${message}\n`)), client, reads, build, options.context ?? null, entries);
+    return new App({
+      application,
+      handlers: options.handlers,
+      timezone: options.timezone,
+      basePath,
+      https: options.https ?? false,
+      frameAncestors: options.frameAncestors ?? "'self'",
+      bodyLimit,
+      fileLimit,
+      valueLimit,
+      partLimit,
+      responseLimit,
+      formTypes: [...formTypes],
+      onResponse: options.onResponse,
+      onDisconnect: options.onDisconnect,
+      log: options.log ?? ((message) => process.stderr.write(`${message}\n`)),
+      client: options.clientRendering ?? null,
+      shell,
+      reads,
+      build,
+      context: options.context ?? null,
+      entries,
+    });
+  }
+
+  // Reads a JSON file of an application as strict UTF-8 JSON. A file that cannot be read fails with its system error;
+  // a file that is not valid UTF-8 or not valid JSON raises an Error that names it (HY-106).
+  private static readJsonFile(path: string): unknown {
+    const text = App.readJsonText(path);
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      throw new Error(`hyper: ${path} is not valid JSON`, { cause: error });
+    }
+  }
+
+  // Reads the text of a JSON file of an application as strict UTF-8.
+  private static readJsonText(path: string): string {
+    try {
+      // ignoreBOM keeps a leading U+FEFF, so that a file that starts with it is not valid JSON, as in PHP and Python.
+      return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(readFileSync(path));
+    } catch (error) {
+      if (!(error instanceof TypeError)) throw error;
+      throw new Error(`hyper: ${path} is not valid UTF-8`, { cause: error });
+    }
+  }
+
+  // Returns the text of the static shell after checking the declaration of the client rendering against the manifest
+  // (HY-62).
+  private static checkedShell(client: ClientRendering, manifest: Manifest): string {
+    const base = client.basePath;
+    if (base === '' || !base.startsWith('/') || base.endsWith('/')) throw new Error(`hyper: data base path ${base} must start with / and must not end with /`);
+    for (const route of manifest.routes) {
+      if (route.path === base || route.path.startsWith(`${base}/`)) throw new Error(`hyper: route ${route.name} lies under the data base path ${base}`);
+    }
+    if (!isAbsolute(client.shell)) throw new Error(`hyper: static shell ${client.shell} is not an absolute path`);
+    let bytes: Buffer;
+    try {
+      bytes = readFileSync(client.shell);
+    } catch {
+      throw new Error(`hyper: static shell ${client.shell} does not exist or cannot be read`);
+    }
+    let shell: string;
+    try {
+      shell = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+    } catch {
+      throw new Error(`hyper: static shell ${client.shell} is not valid UTF-8`);
+    }
+    // The data base path is escaped as PHP htmlspecialchars with ENT_QUOTES does.
+    const escaped = base.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (!shell.includes(`<meta name="hyper-api" content="${escaped}">`)) throw new Error(`hyper: static shell ${client.shell} does not declare the data base path ${base}`);
+    return shell;
+  }
+
+  // Checks that the handlers match the manifest (HY-2, HY-30), and that the representation handlers of each route are
+  // those of its entries (HY-118). `manifest` holds the representations of each route by the route name.
+  private static checkHandlers<S extends object>(manifest: Manifest & { entries: ReadonlyMap<string, readonly RepresentationEntry[]> }, handlers: Handlers<S>): void {
+    for (const name of Object.keys(handlers.regions ?? {})) {
+      const region = manifest.regions.find((item) => item.name === name);
+      if (region === undefined || region.page === true) throw new Error(`hyper: region loader ${name} has no non-page region in the manifest`);
+    }
+    for (const [name, handler] of Object.entries(handlers.routes ?? {})) {
+      const route = manifest.routes.find((item) => item.name === name);
+      if (route === undefined) throw new Error(`hyper: route handler ${name} has no route in the manifest`);
+      if ((handler.post !== undefined) !== (route.post === true)) throw new Error(`hyper: route ${name} must have a POST action exactly when the manifest declares post`);
+      const routeRegions = (route.regions ?? []).map((region) => region.name);
+      for (const regionName of Object.keys(handler.regions ?? {})) {
+        if (!routeRegions.includes(regionName)) throw new Error(`hyper: route ${name} has a loader for undeclared region ${regionName}`);
+      }
+    }
+    for (const route of manifest.routes) {
+      if (route.post === true && handlers.routes?.[route.name]?.post === undefined) throw new Error(`hyper: route ${route.name} declares post but has no POST action`);
+      RepresentationEntries.checkHandlers(route.name, manifest.entries.get(route.name) ?? [], handlers.routes?.[route.name]?.representations ?? {});
+    }
   }
 
   // Registers the factory of an application service.
@@ -337,26 +417,26 @@ export class App<S extends object = Record<string, never>> {
   // response is reported with the milliseconds since `started`, a performance.now() value that defaults to now
   // (HY-60).
   async handle(request: Request, store: SessionStore, started = performance.now()): Promise<Response> {
-    const answer = await this.respond(request, store, started, undefined);
+    const answer = await this.respond(request, store, started);
     if (answer.stopped) throw new Error('hyper: a request stopped without the signal of a closed connection');
     return answer.response;
   }
 
-  // Answers one request for the transport of a server, which gives the signal of the connection (HY-67). A request
+  // Answers one request for the transport of a server, whose request holds the signal of the connection (HY-67). A request
   // whose client closed the connection stops and gives no response; the transport then calls `disconnected` after its
   // write hook (HY-99). The loaders and actions of a routed request receive the reply of the answer (HY-52, HY-60).
   /** @internal */
-  async respond(request: Request, store: SessionStore, started: number, signal: AbortSignal | undefined): Promise<Answer> {
+  async respond(request: Request, store: SessionStore, started: number): Promise<Answer> {
     const reply = new Reply();
     let response: Response;
     // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
     let failure: string | null = null;
     try {
       // HY-74: a warning of the runtime fails the request instead of leaving a wrong page with status 200.
-      response = await WarningsGuard.run(() => this.answer(request, store, reply, signal));
+      response = await WarningsGuard.run(() => this.dispatch(request, store, reply));
     } catch (error) {
       if (error instanceof Disconnected) return { stopped: true, reply };
-      failure = this.fail(error);
+      failure = this.logFailure(error);
       response = Response.text(500, 'Internal Server Error');
     }
     const size = Buffer.byteLength(response.body);
@@ -365,7 +445,9 @@ export class App<S extends object = Record<string, never>> {
       this.log(`hyper: ${failure}`);
       response = Response.text(500, 'Internal Server Error');
     }
-    return { stopped: false, response: this.report(request, this.frame(response), started, reply, failure), reply };
+    const framed = this.frame(response);
+    this.report(request, framed, started, reply, failure);
+    return { stopped: false, response: framed, reply };
   }
 
   // Calls onDisconnect with the request, the elapsed milliseconds since `started` and the reply of a stopped request (HY-67).
@@ -375,11 +457,10 @@ export class App<S extends object = Record<string, never>> {
   }
 
   // Calls onResponse with a response, the milliseconds since `started`, the reply of the request and the failure of a
-  // 500 of HY-43 or HY-66, and returns the response (HY-60).
+  // 500 of HY-43 or HY-66 (HY-60).
   /** @internal */
-  report(request: Request | null, response: Response, started: number, reply: Reply, failure: string | null = null): Response {
+  report(request: Request | null, response: Response, started: number, reply: Reply, failure: string | null = null): void {
     this.onResponse?.(request, response, performance.now() - started, reply, failure);
-    return response;
   }
 
   // Adds the frame-ancestors policy of the application to a response (HY-45), and to a failure the header that no
@@ -393,13 +474,13 @@ export class App<S extends object = Record<string, never>> {
   // Writes the log line of an unhandled error (HY-43) and returns its failure for the response hook (HY-60): the
   // message of an Error, or the text of another thrown value.
   /** @internal */
-  fail(error: unknown): string {
+  logFailure(error: unknown): string {
     this.log(`hyper: ${error instanceof Error ? (error.stack ?? `${error.name}: ${error.message}`) : String(error)}`);
     return error instanceof Error ? error.message : String(error);
   }
 
   // Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60).
-  private async answer(received: Request, store: SessionStore, reply: Reply, signal: AbortSignal | undefined): Promise<Response> {
+  private async dispatch(received: Request, store: SessionStore, reply: Reply): Promise<Response> {
     // HY-131.11: a body that passed the value limit, the part limit or the file limit is answered as a body over the
     // body limit.
     if (received.bodySize() > this.bodyLimit || received.exceeded(this.valueLimit, this.partLimit, this.fileLimit, this.formTypes.includes('multipart/form-data'))) {
@@ -407,15 +488,15 @@ export class App<S extends object = Record<string, never>> {
     }
     if (!received.validInput()) return Response.text(400, 'Bad Request');
     // HY-27.4: a HEAD request is answered as the GET request of its target.
-    if (received.method === 'HEAD') return this.answer(received.asGet(), store, reply, signal);
-    const choice = await this.choice(received);
-    stopClosed(signal);
+    if (received.method === 'HEAD') return this.dispatch(received.asGet(), store, reply);
+    const choice = await this.clientChoice(received);
+    received.stopClosed();
     const client = choice?.chosen === true ? this.client : null;
     const request = received.withSelection(choice === null ? null : choice.value);
     const basePath = client?.basePath ?? this.basePath;
     const path = stripBasePath(request.path(), basePath);
-    if (client !== null && path === null) return this.shell(request, client);
-    if (path === '/_hyper/keep') return this.keep(request, new Session(store));
+    if (client !== null && path === null) return this.shellResponse(request);
+    if (path === '/_hyper/keep') return this.storeKept(request, new Session(store));
     const match = path === null ? null : this.application.router.match(path);
     if (match === null || path === null) return Response.text(404, 'Not Found');
     const route = this.routes.get(match.name);
@@ -424,28 +505,28 @@ export class App<S extends object = Record<string, never>> {
     // HY-116: the media type is selected after the routing; the data base path of HY-62 step 2 serves the JSON of hyper
     // and the representations of the route (HY-116.14).
     const entries = this.entries.get(route.name) ?? [];
-    const chosen = negotiate(request, client === null ? PAGE_AND_DATA : [HYPER_JSON], entries, entries);
+    const chosen = App.negotiate(request, client === null ? PAGE_AND_DATA : [HYPER_JSON], entries);
     if (chosen instanceof Response) return chosen;
     // HY-120, HY-121: a representation request opens no session and runs only its handler.
     const [type, entry, values] = chosen;
-    if (entry !== null) return this.representation(request.withRoute(path, match.params), handler, entry, values, basePath);
+    if (entry !== null) return this.answerRepresentation(request.withRoute(path, match.params), handler, entry, values, basePath);
     const selected = request.withMedia(type);
     // HY-116, HY-27: a method other than GET or a declared POST is refused before the session is read (HY-120).
-    if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
+    if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return App.notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
     // HY-62.20: the data base path answers no page, which is refused after the method check (HY-116.12).
-    if (client !== null && type === PAGE_TYPE) return refusal(406, 'Not Acceptable');
+    if (client !== null && type === PAGE_TYPE) return App.notAcceptable();
     // HY-127: a Hyper-Context value that is not 64 lowercase hexadecimal characters is refused before any handler runs.
     const hash = selected.header('Hyper-Context');
     if (this.context !== null && !Context.validHeader(hash)) return Response.text(400, 'Bad Request');
     const session = new Session(store);
     const flash = session.takeFlash();
     const routed = selected.withRoute(path, match.params).withSession(flash, Csrf.masked(session.csrfToken()));
-    const response = await this.routed({ request: routed, route, handler, session, flash, reply, status: 200, invalid: {}, basePath, signal });
+    const response = await this.routed(routed, route, handler, session, flash, reply, basePath);
     return response.withCookies(reply, this.https || request.https);
   }
 
   // Returns the choice of the client rendering selection for the request, or null without client rendering (HY-62).
-  private async choice(request: Request): Promise<Choice | null> {
+  private async clientChoice(request: Request): Promise<Choice | null> {
     if (this.client === null) return null;
     const choice: unknown = await this.client.selects(request);
     if (typeof choice !== 'object' || choice === null || !('chosen' in choice) || typeof choice.chosen !== 'boolean' || !('value' in choice) || choice.value === undefined) {
@@ -456,27 +537,53 @@ export class App<S extends object = Record<string, never>> {
 
   // Answers a client-rendered request outside the data base path: the static shell for a page (HY-62). The path is
   // routed and the method checked before the media type is selected (HY-62 step 3).
-  private shell(request: Request, client: Client): Response {
+  private shellResponse(request: Request): Response {
     const match = this.application.router.match(request.path());
     if (match === null) return Response.text(404, 'Not Found');
-    if (request.method !== 'GET') return notAllowed('GET, HEAD');
+    if (request.method !== 'GET') return App.notAllowed('GET, HEAD');
     // The representations of the route take part in the selection, so that a request that selects one of them is not
     // acceptable here, and they are not listed (HY-116.14).
-    const selected = negotiate(request, [PAGE_TYPE], this.entries.get(match.name) ?? [], []);
-    if (selected instanceof Response) return selected;
-    if (selected[1] !== null || selected[0] !== PAGE_TYPE) return refusal(406, 'Not Acceptable');
-    return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: this.vary }, client.shell);
+    let selected: [string, RepresentationEntry | null, Map<string, string>] | null;
+    try {
+      selected = MediaSelection.select(request.header('Accept'), PAGE_AND_DATA, this.entries.get(match.name) ?? []);
+    } catch (error) {
+      if (!(error instanceof InvalidAccept)) throw error;
+      return Response.text(400, 'Bad Request').withHeader('Vary', 'Accept');
+    }
+    if (selected === null) return Response.text(406, MediaSelection.listing([PAGE_TYPE], [])).withHeader('Vary', 'Accept');
+    if (selected[1] !== null || selected[0] !== PAGE_TYPE) return App.notAcceptable();
+    return new Response(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', Vary: this.varyHeader() }, this.shellText);
+  }
+
+  // Returns the Vary of the html and JSON responses, with `Hyper-Context` for an application with a context (HY-117).
+  private varyHeader(): string {
+    return this.context === null ? VARY : `${VARY}, Hyper-Context`;
+  }
+
+  // Selects the media type of a request among the page, the JSON of hyper and the representations of its route by its
+  // Accept header (HY-116). A refusal is the response of HY-116: 400 for an invalid Accept, and 406 with the types that
+  // the path serves, the page types of `served` and the entries, when no type matches. The caller refuses a selected
+  // page type that the path does not serve after its method check (HY-116.12, HY-62.20).
+  private static negotiate(request: Request, served: readonly string[], entries: readonly RepresentationEntry[]): [string, RepresentationEntry | null, Map<string, string>] | Response {
+    let selected: [string, RepresentationEntry | null, Map<string, string>] | null;
+    try {
+      selected = MediaSelection.select(request.header('Accept'), PAGE_AND_DATA, entries);
+    } catch (error) {
+      if (!(error instanceof InvalidAccept)) throw error;
+      return Response.text(400, 'Bad Request').withHeader('Vary', 'Accept');
+    }
+    return selected ?? Response.text(406, MediaSelection.listing(served, entries)).withHeader('Vary', 'Accept');
   }
 
   // Answers a representation request (HY-121, HY-122): the method check, the body checks, the handler of the entry, and
   // the response of what it returned with its tag.
-  private async representation(request: Request, handler: RouteHandlers<S>, entry: RepresentationEntry, values: ReadonlyMap<string, string>, basePath: string): Promise<Response> {
+  private async answerRepresentation(request: Request, handler: RouteHandlers<S>, entry: RepresentationEntry, values: ReadonlyMap<string, string>, basePath: string): Promise<Response> {
     const vary = ['Accept', ...entry.vary].join(', ');
     const method = request.method;
     if (!entry.methods.includes(method)) {
       // HY-121.6: an entry with GET also answers HEAD, which reaches here as GET (HY-27.4).
       const answered = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'].filter((name) => entry.methods.includes(name === 'HEAD' ? 'GET' : name));
-      return notAllowed(answered.join(', ')).withHeader('Vary', vary);
+      return App.notAllowed(answered.join(', ')).withHeader('Vary', vary);
     }
     let value: Value = null;
     if (method === 'GET' || method === 'DELETE') {
@@ -502,7 +609,7 @@ export class App<S extends object = Record<string, never>> {
       returned = await handle({ request: request.asRepresentation(value), media: new MediaType(values, contentType), services: this.services });
     } catch (error) {
       // HY-107: an error of the ORM is known by its class name and code.
-      const code = ormCode(error);
+      const code = App.ormCode(error);
       if (code === 'NO_ROWS') return Response.text(404, 'Not Found').withHeader('Vary', vary);
       if (code === 'REVISION_CHANGED') return Response.text(412, 'Precondition Failed').withHeader('Vary', vary);
       throw error;
@@ -517,73 +624,94 @@ export class App<S extends object = Record<string, never>> {
     return new Response(304, notModified, '');
   }
 
-  // Answers a routed request with its page, action result or stop result.
-  private async routed(input: PageInput<S>): Promise<Response> {
-    const { request, handler, session, reply } = input;
-    let page = input;
+  // Returns the 405 of a method that a target does not take, with the methods that it takes (HY-27.6).
+  private static notAllowed(allow: string): Response {
+    return Response.text(405, 'Method Not Allowed').withHeader('Allow', allow);
+  }
+
+  // Returns the 406 of a selected type that the path does not serve (HY-116.12, HY-62.20).
+  private static notAcceptable(): Response {
+    return Response.text(406, 'Not Acceptable').withHeader('Vary', 'Accept');
+  }
+
+  // Answers a routed request with its page, action result or stop result. `basePath` is the base path of the request:
+  // the data base path for a client-rendered request (HY-8, HY-62).
+  private async routed(request: Request, route: RouteDeclaration, handler: RouteHandlers<S>, session: Session, flash: Flash, reply: Reply, basePath: string): Promise<Response> {
+    // The request of the page, which holds the new token after the action renewed the session (HY-72).
+    let rendered = request;
     try {
-      if (request.method === 'GET') return withoutRenewal(reply, await this.page(input));
-      if (request.method !== 'POST' || handler.post === undefined) return notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
-      if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
-      if (!Csrf.verify(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
+      if (request.method === 'GET') return App.withoutRenewal(reply, await this.page.respond(request, route, handler, session, flash, 200, {}, reply, basePath));
+      if (request.method !== 'POST' || handler.post === undefined) return App.notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
+      const refused = this.refusedForm(request, session);
+      if (refused !== null) return refused;
       // HY-114: a file over the file limit is refused before the action runs, as HY-59 refuses a large body.
       if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
       // HY-107.4: only a REVISION_CHANGED that the action raises is answered as the 409 page; `result` stays null for it.
       let result: Result | null = null;
       try {
         const returned = await handler.post({ request, reply, services: this.services });
-        stopClosed(input.signal);
-        if (!(returned instanceof Result)) throw new Error(`hyper: POST action of route ${input.route.name} did not return a Result`);
+        request.stopClosed();
+        if (!(returned instanceof Result)) throw new Error(`hyper: POST action of route ${route.name} did not return a Result`);
         result = returned;
       } catch (error) {
-        if (ormCode(error) !== 'REVISION_CHANGED') throw error;
+        if (App.ormCode(error) !== 'REVISION_CHANGED') throw error;
       }
       // HY-72: the action renews the session after it ends, and a page that its request renders carries the new token.
       if (reply.takeRenewal()) {
         session.renew();
-        page = { ...input, request: request.withSession(input.flash, Csrf.masked(session.csrfToken())) };
+        rendered = request.withSession(flash, Csrf.masked(session.csrfToken()));
       }
       if (result !== null) {
-        if (result.isRedirect()) return this.redirect(session, result, input.basePath);
-        return withoutRenewal(reply, await this.page({ ...page, status: result.status, invalid: result.data }));
+        if (result.isRedirect()) return this.redirectResponse(session, result, basePath);
+        return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, result.status, result.data, reply, basePath));
       }
     } catch (error) {
       if (error instanceof NotFound) return Response.text(404, 'Not Found');
-      if (error instanceof Redirect) return this.redirect(session, error.result, input.basePath);
+      if (error instanceof Redirect) return this.redirectResponse(session, error.result, basePath);
       if (error instanceof Forbidden) return Response.text(403, 'Forbidden');
       if (error instanceof BadRequest) return Response.text(400, 'Bad Request');
       // HY-107: an error of the ORM is answered as the stop of its meaning; every other error, also the REVISION_CHANGED
       // of a loader (HY-107.4), escapes (HY-43).
-      if (ormCode(error) === 'NO_ROWS') return Response.text(404, 'Not Found');
+      if (App.ormCode(error) === 'NO_ROWS') return Response.text(404, 'Not Found');
       throw error;
     }
     // HY-107.4, HY-58: the 409 page of the action, whose loaders stop nothing; a loader that renews the session fails
     // it (HY-72.4).
-    return withoutRenewal(reply, await this.page({ ...page, status: 409, invalid: {} }));
+    return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, 409, {}, reply, basePath));
   }
 
-  // The read paths of a route, which create computes for every route of the manifest (HY-73).
-  private readsOf(route: string): RouteReads {
-    const reads = this.reads[route];
-    if (reads === undefined) throw new Error(`hyper: route ${route} has no read paths`);
-    return reads;
+  // The code of an error of the ORM, which hyper knows by the name of its class and by its property `code`, because it does not
+  // depend on the ORM (HY-107), or undefined for every other error.
+  private static ormCode(error: unknown): string | undefined {
+    if (!(error instanceof Error) || error.name !== 'OrmError' || !('code' in error)) return undefined;
+    return typeof error.code === 'string' ? error.code : undefined;
   }
 
-  private page(input: PageInput<S>): Promise<Response> {
-    return renderPage(input, { application: this.application, handlers: this.handlers, services: this.services, timezone: this.timezone, https: this.https, reads: this.readsOf(input.route.name), build: this.build, context: this.context, vary: this.vary });
+  // Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72).
+  private static withoutRenewal(reply: Reply, response: Response): Response {
+    if (reply.takeRenewal()) throw new Error('hyper: a loader or the shared handler called renewSession; only an action renews the session');
+    return response;
   }
 
   // Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50).
-  private redirect(session: Session, result: Result, basePath: string): Response {
+  private redirectResponse(session: Session, result: Result, basePath: string): Response {
     session.putFlash(new Flash(new Map(result.flashValues), [...result.changedTopics]));
     return new Response(303, { Location: basePath + result.location }, '');
   }
 
-  // Stores a kept value of a `server` path in the session (HY-40).
-  private keep(request: Request, session: Session): Response {
-    if (request.method !== 'POST') return notAllowed('POST');
+  // Returns the refusal of a form request: 415 for a media type that the application does not accept (HY-59) and 403
+  // for a token that does not match the session, or null.
+  private refusedForm(request: Request, session: Session): Response | null {
     if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
     if (!Csrf.verify(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
+    return null;
+  }
+
+  // Stores a kept value of a `server` path in the session (HY-40).
+  private storeKept(request: Request, session: Session): Response {
+    if (request.method !== 'POST') return App.notAllowed('POST');
+    const refused = this.refusedForm(request, session);
+    if (refused !== null) return refused;
     if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
     const name = request.formString('region');
     const path = request.formString('path');
@@ -603,24 +731,4 @@ export class App<S extends object = Record<string, never>> {
     session.keep(name, path, value);
     return new Response(204, {}, '');
   }
-}
-
-const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
-
-// The code of an error of the ORM, which hyper knows by the name of its class and by its property `code`, because it does not
-// depend on the ORM (HY-107), or undefined for every other error.
-function ormCode(error: unknown): string | undefined {
-  if (!(error instanceof Error) || error.name !== 'OrmError' || !('code' in error)) return undefined;
-  return typeof error.code === 'string' ? error.code : undefined;
-}
-
-// Returns the 405 of a method that a target does not take, with the methods that it takes (HY-27.6).
-function notAllowed(allow: string): Response {
-  return Response.text(405, 'Method Not Allowed').withHeader('Allow', allow);
-}
-
-// Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72).
-function withoutRenewal(reply: Reply, response: Response): Response {
-  if (reply.takeRenewal()) throw new Error('hyper: a loader or the shared handler called renewSession; only an action renews the session');
-  return response;
 }

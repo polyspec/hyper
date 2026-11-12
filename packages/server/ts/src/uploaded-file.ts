@@ -2,7 +2,6 @@
 // type, which is empty text when the part has none, and its bytes, as the part sent them. The bytes are a value, or a
 // temporary file of the request for a body that the server read in chunks (HY-131).
 import { closeSync, copyFileSync, constants, linkSync, openSync, readFileSync, unlinkSync, writeSync } from 'node:fs';
-import { errorCode } from './error-code.js';
 
 export class UploadedFile {
   private readonly fileName: string;
@@ -88,7 +87,7 @@ export class UploadedFile {
     try {
       return openSync(path, 'wx', 0o600);
     } catch (error) {
-      if (errorCode(error) === 'EEXIST') throw new RangeError('the path exists (HY-131)');
+      if (error instanceof Error && 'code' in error && error.code === 'EEXIST') throw new RangeError('the path exists (HY-131)');
       throw error;
     }
   }
@@ -99,11 +98,11 @@ export class UploadedFile {
     try {
       linkSync(source, path);
     } catch (error) {
-      if (errorCode(error) === 'EEXIST') throw new RangeError('the path exists (HY-131)');
+      if (error instanceof Error && 'code' in error && error.code === 'EEXIST') throw new RangeError('the path exists (HY-131)');
       try {
         copyFileSync(source, path, constants.COPYFILE_EXCL);
       } catch (copyError) {
-        if (errorCode(copyError) === 'EEXIST') throw new RangeError('the path exists (HY-131)');
+        if (copyError instanceof Error && 'code' in copyError && copyError.code === 'EEXIST') throw new RangeError('the path exists (HY-131)');
         throw copyError;
       }
     }

@@ -119,6 +119,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - In Node and Python it is `<Unit>.<member>` for a class member, and `<member>` for a module function.
     - A constructor is `__construct` in PHP, `constructor` in Node and `__init__` in Python.
     - The member `invoke` of a PHP class is its method `__invoke`, which makes its object callable.
+    - The member `iter` of a Python class is its method `__iter__`, which makes its object iterable.
   - **Names.**
     - PHP and Node keep the camelCase name.
     - Python writes it in snake_case.
