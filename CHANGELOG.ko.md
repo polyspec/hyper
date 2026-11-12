@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `contracts/interfaces.json`이 PHP server에만 있는 unit의 member 33개를 선언한다: `NativeSession`, `RedisClusterSessions`, `RedisSentinelSessions`, `Delivery`. PHP class의 member `invoke`는 그 method `__invoke`이며(HYR-5) 검사가 그것을 받아들인다. `make recipe-check`는 spec에 없는 member를 28개 줄어든 227개 보고한다(H28.11).
+
 - `Choice`와 `ClientRendering`이 세 server에서 자기 파일에 있는 생성자를 가진 class이고 `contracts/interfaces.json`이 그 member 7개를 선언한다. Node는 그것을 `app.ts`의 interface로 선언했는데 이제 `choice.ts`와 `client-rendering.ts`에서 class를 export하며, 같은 member를 가진 object도 여전히 받는다. Python module `polyspec.hyper.client`는 `polyspec.hyper.choice`와 `polyspec.hyper.client_rendering`으로 바뀌었고 그 class는 property를 선언하며, package `polyspec.hyper`는 `Choice`, `ClientRendering`, `MediaType`, `Representation`, `UploadedFile`도 export한다. `make recipe-check`는 spec에 없는 member를 19개 줄어든 255개 보고한다(H28.11).
 
 - PHP와 Python server에만 있는 unit(manifest, region, router, reads, renderer, HY-54.3)이 한 형태를 가지고 `contracts/interfaces.json`이 그 member 44개를 선언한다. `_manifest.py`, `_router.py`, `_reads.py`의 module 함수는 PHP처럼 자기 class의 static method이어서 `strip_base_path`는 `Router.strip_base_path`이다. Python의 `Manifest`와 `Region`은 property를 선언하고, `Manifest`는 `_region_name`을 가지며, `Reads`는 map과 list에 대해 `_keep_array` 하나를 가지고, `Renderer`는 method로 bind하고 `_render`를 private으로 두며 아무도 호출하지 않던 `merge`를 잃는다. private member 넷은 다른 member가 가지지 않은 이름을 가진다: `keptKinds`, `namedKeys`, `mergedNode`, `compiledPath`. Python의 rendering test 하나는 UTF-8이 아닌 byte를 나타내려고 header에 짝 없는 surrogate를 주었는데 이제 HY-42.6이 그것을 실패시키므로 그 byte를 준다. `make recipe-check`는 spec에 없는 member를 68개 줄어든 274개 보고한다(H28.11).

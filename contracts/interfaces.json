@@ -1414,7 +1414,83 @@
               "internal": true
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "delivery.response",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<response>",
+              "errors": [],
+              "state": "Holds the response of the request that the PHP SAPI answers, or null before the application answered.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Delivery.php::Polyspec\\Hyper\\Delivery::response",
+                  "signature": "public ?Polyspec\\Hyper\\Response $response"
+                }
+              }
+            },
+            {
+              "id": "delivery.failure",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Holds the failure of a 500 of the request, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Delivery.php::Polyspec\\Hyper\\Delivery::failure",
+                  "signature": "public ?string $failure"
+                }
+              }
+            },
+            {
+              "id": "delivery.request",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<request>",
+              "errors": [],
+              "state": "Holds the request of the last call of the application, which the disconnect hook receives.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Delivery.php::Polyspec\\Hyper\\Delivery::request",
+                  "signature": "public ?Polyspec\\Hyper\\Request $request"
+                }
+              }
+            },
+            {
+              "id": "delivery.reply",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<reply>",
+              "errors": [],
+              "state": "Holds the reply of the last call of the application, which the hooks receive.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Delivery.php::Polyspec\\Hyper\\Delivery::reply",
+                  "signature": "public ?Polyspec\\Hyper\\Reply $reply"
+                }
+              }
+            },
+            {
+              "id": "delivery.complete",
+              "kind": "property",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Holds whether the response was written to its end.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Delivery.php::Polyspec\\Hyper\\Delivery::complete",
+                  "signature": "public bool $complete"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "php"
@@ -6009,7 +6085,173 @@
               "internal": false
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "native-session.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "boolean",
+                "request",
+                "optional<function() -> none>"
+              ],
+              "output": "native-session",
+              "errors": [],
+              "state": "Prepares the PHP session of a request, which starts on its first read or write after the setup ran (HY-45, HY-115).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::__construct",
+                  "signature": "public function __construct(bool $https, Polyspec\\Hyper\\Request $request, ?Closure $setup)"
+                }
+              }
+            },
+            {
+              "id": "native-session.start",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Starts the PHP session with the identifier of the session cookie of the request, and sends the cookie of a new session (HY-45).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::start",
+                  "signature": "private function start(): void"
+                }
+              }
+            },
+            {
+              "id": "native-session.sendCookie",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Sends the session cookie with the identifier of the session.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::sendCookie",
+                  "signature": "private function sendCookie(): void"
+                }
+              }
+            },
+            {
+              "id": "native-session.secure",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the session cookie is sent only over HTTPS.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::secure",
+                  "signature": "private function secure(): bool"
+                }
+              }
+            },
+            {
+              "id": "native-session.name",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the name of the session cookie, with the host prefix over HTTPS (HY-45).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::name",
+                  "signature": "public static function name(bool $https): string"
+                }
+              }
+            },
+            {
+              "id": "native-session.options",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "boolean"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the options with which the PHP session starts, without a cookie of PHP itself (HY-45, HY-129).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::options",
+                  "signature": "public static function options(bool $https): array"
+                }
+              }
+            },
+            {
+              "id": "native-session.get",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the session value of a key, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::get",
+                  "signature": "public function get(string $key): mixed"
+                }
+              }
+            },
+            {
+              "id": "native-session.set",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Stores a session value under a key.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::set",
+                  "signature": "public function set(string $key, mixed $value): void"
+                }
+              }
+            },
+            {
+              "id": "native-session.remove",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Removes the session value of a key.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::remove",
+                  "signature": "public function remove(string $key): void"
+                }
+              }
+            },
+            {
+              "id": "native-session.renew",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Gives the session a new identifier, keeps its values and sends the new cookie (HY-72).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/NativeSession.php::Polyspec\\Hyper\\NativeSession::renew",
+                  "signature": "public function renew(): void"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "php"
@@ -6026,7 +6268,262 @@
               "internal": false
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "redis-cluster-sessions.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "list<string>",
+                "number",
+                "number",
+                "number",
+                "number",
+                "value",
+                "optional<map<value>>"
+              ],
+              "output": "redis-cluster-sessions",
+              "errors": [],
+              "state": "Holds the seed nodes of a Redis Cluster, the expiry, the tries and the wait of the session lock, the timeout, the authentication and the TLS context (HY-115).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::__construct",
+                  "signature": "public function __construct(array $seeds, int $lockExpire, int $lockRetries, int $lockWait, float $timeout, mixed $auth, ?array $context)"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.invoke",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Installs this handler for the session that starts next.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::__invoke",
+                  "signature": "public function __invoke(): void"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.open",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Opens the handler of a session, which connects on its first command.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::open",
+                  "signature": "public function open(string $path, string $name): bool"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.close",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Releases the lock of the session and ends the request of the handler.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::close",
+                  "signature": "public function close(): bool"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.validateId",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the cluster holds a session of the identifier, so that strict mode takes no other identifier.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::validateId",
+                  "signature": "public function validateId(string $id): bool"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.updateTimestamp",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Sets a new expiry on a session whose data did not change.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::updateTimestamp",
+                  "signature": "public function updateTimestamp(string $id, string $data): bool"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.read",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Takes the lock of a session and returns its data, or fails the request when the lock is not free within its tries.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::read",
+                  "signature": "public function read(string $id): string|false"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.write",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Writes the data of a session with its expiry while this request still holds its lock.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::write",
+                  "signature": "public function write(string $id, string $data): bool"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.destroy",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Removes a session and its lock.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::destroy",
+                  "signature": "public function destroy(string $id): bool"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.gc",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "number"
+              ],
+              "output": "number",
+              "errors": [],
+              "state": "Removes nothing, because Redis expires the sessions.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::gc",
+                  "signature": "public function gc(int $max_lifetime): int"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.acquire",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Takes the lock of a session with a token of this request, within the tries and the wait of the lock.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::acquire",
+                  "signature": "private function acquire(string $id): bool"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.release",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Removes the lock of the session when it still holds the token of this request.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::release",
+                  "signature": "private function release(): bool"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.connected",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the connection to the cluster, which is made once.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::connected",
+                  "signature": "private function connected(): RedisCluster"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.key",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the key of a session, whose hash tag is its identifier.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::key",
+                  "signature": "private static function key(string $id): string"
+                }
+              }
+            },
+            {
+              "id": "redis-cluster-sessions.lifetime",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the lifetime of a session in seconds.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisClusterSessions.php::Polyspec\\Hyper\\RedisClusterSessions::lifetime",
+                  "signature": "private static function lifetime(): int"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "php"
@@ -6043,7 +6540,61 @@
               "internal": false
             }
           },
-          "members": [],
+          "members": [
+            {
+              "id": "redis-sentinel-sessions.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "list<map<value>>",
+                "string",
+                "string",
+                "string",
+                "number"
+              ],
+              "output": "redis-sentinel-sessions",
+              "errors": [],
+              "state": "Holds the Sentinels, the name of the service, the parameters of the save path, the scheme and the timeout (HY-115).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisSentinelSessions.php::Polyspec\\Hyper\\RedisSentinelSessions::__construct",
+                  "signature": "public function __construct(array $sentinels, string $service, string $parameters, string $scheme, float $timeout)"
+                }
+              }
+            },
+            {
+              "id": "redis-sentinel-sessions.invoke",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Asks the Sentinels for the primary of the service and sets the save path of the PHP session to it, and fails when none names it.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisSentinelSessions.php::Polyspec\\Hyper\\RedisSentinelSessions::__invoke",
+                  "signature": "public function __invoke(): void"
+                }
+              }
+            },
+            {
+              "id": "redis-sentinel-sessions.asked",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "map<value>"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the address of the primary that one Sentinel names, or null when it does not answer or names none.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/RedisSentinelSessions.php::Polyspec\\Hyper\\RedisSentinelSessions::asked",
+                  "signature": "private function asked(array $sentinel): ?string"
+                }
+              }
+            }
+          ],
           "only": {
             "languages": [
               "php"

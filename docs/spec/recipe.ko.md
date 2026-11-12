@@ -113,6 +113,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     - PHP member의 qualified name은 `Polyspec\Hyper\<Unit>::<member>`다.
     - Node와 Python에서 class member는 `<Unit>.<member>`, module 함수는 `<member>`다.
     - constructor는 PHP에서 `__construct`, Node에서 `constructor`, Python에서 `__init__`이다.
+    - PHP class의 member `invoke`는 그 object를 호출할 수 있게 하는 method `__invoke`이다.
   - **Names.**
     - PHP와 Node는 camelCase 이름을 유지한다.
     - Python은 snake_case로 쓴다.
