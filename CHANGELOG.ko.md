@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 3205f8987539ac63ae5fc0a1b3ceda89edb2b3007f4d79eb0ef9d69ccf49a278 -->
+<!-- source-sha256: 6e0c88745c3eaeafd732e3c01e94ad7c38346e8b212afd98e98bc4b9ee228371 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core의 lock은 `polyspec-binding-core`를 binding branch `v1/rust-core`의 끝, 곧 앞 항목이 고정한 것 다음 commit에 고정하며, 그 commit의 scaffold와 contract check가 그것으로 실행된다(CK-20).
 
 - interface contract는 class `app`을 core의 class가 아니라 host 코드(origin `host`, binding L-3)로 선언한다: `App`은 core가 결코 갖지 않는 그 언어의 객체인 애플리케이션의 handler, service, 함수, hook을 갖고, 애플리케이션의 파일을 읽으며, `PageRequest`의 step을 실행해 각 step이 요구하는 handler를 부른다(C-7). core의 pages와 요청은 class `pages`와 `page_request`다. binding 생성기는 지금 이 contract를 `not generated (G-4): app: a host class unit is not generated yet`로 거부한다.
 

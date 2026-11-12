@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The lock of the Rust core pins `polyspec-binding-core` at the end of the branch `v1/rust-core` of binding, one commit after the one that the previous entry pinned, which the scaffold and the contract check of that commit run with (CK-20).
+
 - The interface contract declares the class `app` as host code (origin `host`, binding L-3), not a class of the core: `App` holds the handlers, the services, the functions and the hooks of the application, which are objects of its language that the core never holds, reads the files of the application and runs the steps of `PageRequest`, calling the handler that each step asks for (C-7), while the pages and the request of the core are the classes `pages` and `page_request`. The binding generator refuses the contract for now with `not generated (G-4): app: a host class unit is not generated yet`.
 
 - The lock of the Rust core pins `polyspec-binding-core` at the end of the published branch of binding, whose contract check compares the commit of a Git pin with the commit of the running binding (CK-20); the scaffold of that commit writes the binding crates as they are.
