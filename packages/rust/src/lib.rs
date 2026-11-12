@@ -6,6 +6,7 @@
 //! Every function is pure: no I/O, no clock, no random source and no state between calls (`wait: none`). The caller
 //! draws the mask of HY-24.2.
 
+pub mod build;
 pub mod client_rendering;
 pub mod context;
 pub mod cookies;

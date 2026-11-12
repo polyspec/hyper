@@ -1678,3 +1678,106 @@ fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), binding_core::
     assert_eq!(input.changed, ["count", "path"]);
     Ok(())
 }
+
+/// The bytes of a hexadecimal text of a case.
+fn hex_bytes(text: &str) -> Vec<u8> {
+    let digits: Vec<u32> = text
+        .chars()
+        .map(|ch| match ch.to_digit(16) {
+            Some(digit) => digit,
+            None => panic!("{text}: not hexadecimal"),
+        })
+        .collect();
+    digits
+        .chunks(2)
+        .map(|pair| match pair {
+            [high, low] => match u8::try_from(high * 16 + low) {
+                Ok(byte) => byte,
+                Err(error) => panic!("{error}"),
+            },
+            _ => panic!("{text}: an odd number of digits"),
+        })
+        .collect()
+}
+
+#[test]
+fn the_build_id_of_the_files_of_a_build() {
+    // HY-125.3, HY-125.15, HY-125.17, HY-125.18
+    use polyspec_hyper::build::{file_text, hashed, id, stream, Output};
+    let file = cases("context.json");
+    let mut ran = 0;
+    for case in group(&file, "builds") {
+        let outputs: Vec<Output> = case["files"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .map(|file| Output {
+                path: text(file, "path").to_owned(),
+                bytes: text(file, "content").as_bytes().to_vec(),
+            })
+            .collect();
+        let sorted = match hashed(&outputs) {
+            Ok(files) => files
+                .iter()
+                .map(|file| Value::from(file.path.clone()))
+                .collect::<Vec<_>>(),
+            Err(error) => panic!("{}: {error}", case["id"]),
+        };
+        assert_eq!(Value::Array(sorted), case["sortedPaths"], "{}", case["id"]);
+        if let Some(expected) = case.get("stream").and_then(Value::as_str) {
+            match stream(&outputs) {
+                Ok(bytes) => assert_eq!(
+                    polyspec_hyper::csrf::to_hex(&bytes),
+                    expected,
+                    "{}",
+                    case["id"]
+                ),
+                Err(error) => panic!("{}: {error}", case["id"]),
+            }
+        }
+        let build = match id(&outputs) {
+            Ok(build) => build,
+            Err(error) => panic!("{}: {error}", case["id"]),
+        };
+        assert_eq!(build, text(case, "build"), "{}", case["id"]);
+        match file_text(&build) {
+            Ok(written) => assert_eq!(
+                written,
+                text(&case["excluded"][0], "content"),
+                "{}",
+                case["id"]
+            ),
+            Err(error) => panic!("{}: {error}", case["id"]),
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+}
+
+#[test]
+fn a_build_file_holds_a_build_id() {
+    // HY-125.18, HY-125.19
+    use polyspec_hyper::build::read;
+    let file = cases("build.json");
+    let mut ran = 0;
+    for case in group(&file, "read") {
+        let bytes = match (
+            case["text"].as_str(),
+            case.get("bytes").and_then(Value::as_str),
+        ) {
+            (Some(text), _) => text.as_bytes().to_vec(),
+            (None, Some(hex)) => hex_bytes(hex),
+            // A missing file is the open of a host, which reads the file.
+            (None, None) => continue,
+        };
+        match read(&bytes) {
+            Ok(build) => assert_eq!(build, text(case, "build"), "{}", case["id"]),
+            Err(error) => {
+                assert!(case.get("raises").is_some(), "{}: {error}", case["id"]);
+                check_raises(case, &error);
+            }
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+}

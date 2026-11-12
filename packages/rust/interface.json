@@ -164,6 +164,10 @@
         "category": "value"
       },
       {
+        "variant": "polyspec_hyper::Error::InvalidBuild",
+        "category": "value"
+      },
+      {
         "variant": "polyspec_hyper::Error::InvalidRepresentation",
         "category": "value"
       },
@@ -1055,6 +1059,108 @@
           "core": "polyspec_hyper::client_rendering::shell_text"
         },
         {
+          "id": "rules.build_id",
+          "name": [
+            "build",
+            "id"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "outputs"
+              ],
+              "type": {
+                "list": {
+                  "unit": "build_output"
+                }
+              },
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::Error::InvalidBuild"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::build::id"
+        },
+        {
+          "id": "rules.check_build_id",
+          "name": [
+            "check",
+            "build",
+            "id"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "text"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "none",
+          "raises": [
+            "polyspec_hyper::Error::InvalidBuild"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::build::check_id"
+        },
+        {
+          "id": "rules.build_file_text",
+          "name": [
+            "build",
+            "file",
+            "text"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "id"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::Error::InvalidBuild"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::build::file_text"
+        },
+        {
+          "id": "rules.read_build",
+          "name": [
+            "read",
+            "build"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "bytes"
+              ],
+              "type": "bytes",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::Error::InvalidBuild"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::build::read"
+        },
+        {
           "id": "rules.valid_context_header",
           "name": [
             "valid",
@@ -1078,6 +1184,34 @@
           "raises": [],
           "wait": "none",
           "core": "polyspec_hyper::context::valid_header"
+        }
+      ]
+    },
+    {
+      "id": "build_output",
+      "name": [
+        "build",
+        "output"
+      ],
+      "module": "",
+      "kind": "record",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::build::Output",
+      "fields": [
+        {
+          "name": [
+            "path"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "bytes"
+          ],
+          "type": "bytes",
+          "required": true
         }
       ]
     },

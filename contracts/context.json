@@ -5,106 +5,142 @@
       "label": "two files are hashed in the byte order of their paths",
       "files": [
         {
-          "path": "manifest.json",
+          "path": "client/manifest.json",
           "content": "{\"hyper\":\"/assets/hyper-a1.js\"}"
         },
         {
-          "path": "assets/hyper-a1.js",
+          "path": "public/assets/hyper-a1.js",
           "content": "export{};\n"
         }
       ],
       "excluded": [
         {
           "path": "build.json",
-          "content": "{\"build\":\"8624cea1f034efe20f118d0b1d805ba1ae979c7ddccb41c3736ce064dfb02550\"}"
+          "content": "{\"build\":\"53fb234754caa3b72e0e731e00670f5f5a37e1e4b90343b8c33505278cdc98bf\"}"
         }
       ],
       "sortedPaths": [
-        "assets/hyper-a1.js",
-        "manifest.json"
+        "client/manifest.json",
+        "public/assets/hyper-a1.js"
       ],
-      "stream": "6173736574732f68797065722d61312e6a7300000000000000000a6578706f72747b7d3b0a6d616e69666573742e6a736f6e00000000000000001f7b226879706572223a222f6173736574732f68797065722d61312e6a73227d",
-      "build": "8624cea1f034efe20f118d0b1d805ba1ae979c7ddccb41c3736ce064dfb02550"
+      "stream": "636c69656e742f6d616e69666573742e6a736f6e00000000000000001f7b226879706572223a222f6173736574732f68797065722d61312e6a73227d7075626c69632f6173736574732f68797065722d61312e6a7300000000000000000a6578706f72747b7d3b0a",
+      "build": "53fb234754caa3b72e0e731e00670f5f5a37e1e4b90343b8c33505278cdc98bf"
     },
     {
       "id": "paths_compare_as_utf8_bytes",
       "label": "paths compare as UTF-8 bytes: an uppercase letter first, U+FF21 before U+1F600, which UTF-16 code units would order the other way, and an empty file",
       "files": [
         {
-          "path": "templates.index.json",
+          "path": "client/templates.index.json",
           "content": "{\"layout.tpl\":\"/assets/t/layout.tpl\"}"
         },
         {
-          "path": "assets/templates/layout.tpl",
+          "path": "public/assets/templates/layout.tpl",
           "content": "<html>{# build}</html>\n"
         },
         {
-          "path": "assets/templates/Ａ.tpl",
+          "path": "public/assets/templates/Ａ.tpl",
           "content": "A"
         },
         {
-          "path": "assets/templates/😀.tpl",
+          "path": "public/assets/templates/😀.tpl",
           "content": "B"
         },
         {
-          "path": "assets/Z.js",
+          "path": "public/assets/Z.js",
           "content": ""
         },
         {
-          "path": "assets/hyper-chunk-c3.js",
+          "path": "public/assets/hyper-chunk-c3.js",
           "content": "export const c=3;\n"
         },
         {
-          "path": "assets/hyper-a1.js",
+          "path": "public/assets/hyper-a1.js",
           "content": "export{};\n"
         },
         {
-          "path": "manifest.json",
+          "path": "client/manifest.json",
           "content": "{\"hyper\":\"/assets/hyper-a1.js\"}"
         }
       ],
       "excluded": [
         {
           "path": "build.json",
-          "content": "{\"build\":\"91bcfcb12b8898f51c79bb3e908aead53e32cb429d4241305b176804579a5571\"}"
+          "content": "{\"build\":\"4b064de60658701cc330d2df5ba7928b9194c115013244e9682e69a39e51f399\"}"
         }
       ],
       "sortedPaths": [
-        "assets/Z.js",
-        "assets/hyper-a1.js",
-        "assets/hyper-chunk-c3.js",
-        "assets/templates/layout.tpl",
-        "assets/templates/Ａ.tpl",
-        "assets/templates/😀.tpl",
-        "manifest.json",
-        "templates.index.json"
+        "client/manifest.json",
+        "client/templates.index.json",
+        "public/assets/Z.js",
+        "public/assets/hyper-a1.js",
+        "public/assets/hyper-chunk-c3.js",
+        "public/assets/templates/layout.tpl",
+        "public/assets/templates/Ａ.tpl",
+        "public/assets/templates/😀.tpl"
       ],
-      "build": "91bcfcb12b8898f51c79bb3e908aead53e32cb429d4241305b176804579a5571"
+      "build": "4b064de60658701cc330d2df5ba7928b9194c115013244e9682e69a39e51f399"
     },
     {
       "id": "a_changed_file_changes_the_build",
       "label": "the files of two_files with another entry URL in manifest.json give another build id",
       "files": [
         {
-          "path": "assets/hyper-a1.js",
+          "path": "public/assets/hyper-a1.js",
           "content": "export{};\n"
         },
         {
-          "path": "manifest.json",
+          "path": "client/manifest.json",
           "content": "{\"hyper\":\"/assets/hyper-a2.js\"}"
         }
       ],
       "excluded": [
         {
           "path": "build.json",
-          "content": "{\"build\":\"910f6ca0b8c94a4637fd034777de92098b45607bb8099570ffc7f4ff1c13a7b7\"}"
+          "content": "{\"build\":\"6e29b1a1f98a68d87e9b55d8b7a27f05fb8e83d72755164caca79b243fa67810\"}"
         }
       ],
       "sortedPaths": [
-        "assets/hyper-a1.js",
-        "manifest.json"
+        "client/manifest.json",
+        "public/assets/hyper-a1.js"
       ],
-      "build": "910f6ca0b8c94a4637fd034777de92098b45607bb8099570ffc7f4ff1c13a7b7"
+      "build": "6e29b1a1f98a68d87e9b55d8b7a27f05fb8e83d72755164caca79b243fa67810"
+    },
+    {
+      "id": "a_server_output_and_a_static_file_are_hashed",
+      "label": "the files of two_files with the read paths of the program and a static file of the shell give another build id",
+      "files": [
+        {
+          "path": "client/manifest.json",
+          "content": "{\"hyper\":\"/assets/hyper-a1.js\"}"
+        },
+        {
+          "path": "public/assets/hyper-a1.js",
+          "content": "export{};\n"
+        },
+        {
+          "path": "program/reads.json",
+          "content": "{\"home\":{\"shared\":true,\"regions\":{}}}"
+        },
+        {
+          "path": "csr/robots.txt",
+          "content": "User-agent: *\n"
+        }
+      ],
+      "excluded": [
+        {
+          "path": "build.json",
+          "content": "{\"build\":\"aa3ac24d8a9f0796d71d3809ccc14c015270c0c1328fb8946bce325648e7ff57\"}"
+        }
+      ],
+      "sortedPaths": [
+        "client/manifest.json",
+        "csr/robots.txt",
+        "program/reads.json",
+        "public/assets/hyper-a1.js"
+      ],
+      "stream": "636c69656e742f6d616e69666573742e6a736f6e00000000000000001f7b226879706572223a222f6173736574732f68797065722d61312e6a73227d6373722f726f626f74732e74787400000000000000000e557365722d6167656e743a202a0a70726f6772616d2f72656164732e6a736f6e0000000000000000257b22686f6d65223a7b22736861726564223a747275652c22726567696f6e73223a7b7d7d7d7075626c69632f6173736574732f68797065722d61312e6a7300000000000000000a6578706f72747b7d3b0a",
+      "build": "aa3ac24d8a9f0796d71d3809ccc14c015270c0c1328fb8946bce325648e7ff57"
     }
   ],
   "contexts": [
@@ -1773,7 +1809,7 @@
       "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a document with HY-43",
       "application": "without_context",
       "shared": {
-        "big": 9223372036854775807
+        "big": 9223372036854776000
       },
       "request": {
         "method": "GET",
@@ -1804,7 +1840,7 @@
       "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a region request with HY-43",
       "application": "without_context",
       "shared": {
-        "big": 9223372036854775807
+        "big": 9223372036854776000
       },
       "request": {
         "method": "GET",

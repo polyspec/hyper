@@ -42,6 +42,9 @@ pub enum Error {
     NotSelected,
     /// A representation entry that the manifest check refuses (HY-118.5 to HY-118.7).
     InvalidApplication(std::borrow::Cow<'static, str>),
+    /// A file that a build writes with a path that HY-125.17 does not allow, a build id of another form, or a
+    /// `build.json` that does not hold one (HY-125.17 to HY-125.19).
+    InvalidBuild(std::borrow::Cow<'static, str>),
     /// A response of a representation handler that HY-122 does not allow (HY-122.2 to HY-122.8).
     InvalidRepresentation(&'static str),
     /// A value outside the data model, with the kind of the template data model (HY-44.9).
@@ -80,6 +83,7 @@ impl Error {
             | Error::InvalidCsrfForm
             | Error::SharedHoldsContext
             | Error::InvalidApplication(_)
+            | Error::InvalidBuild(_)
             | Error::InvalidRepresentation(_)
             | Error::Cookies(_) => Category::Value,
             Error::Negotiate(error) => match error {
@@ -130,6 +134,7 @@ impl Kinds for Error {
             Error::SharedHoldsContext => "shared_holds_context",
             Error::NotSelected => "not_selected",
             Error::InvalidApplication(_) => "invalid_application",
+            Error::InvalidBuild(_) => "invalid_build",
             Error::InvalidRepresentation(_) => "invalid_representation",
             Error::DataModel(error) => error.code.as_str(),
             Error::Template(error) => error.code.as_str(),
@@ -164,6 +169,7 @@ impl Kinds for Error {
             | Error::SharedHoldsContext
             | Error::NotSelected
             | Error::InvalidApplication(_)
+            | Error::InvalidBuild(_)
             | Error::InvalidRepresentation(_)
             | Error::Cookies(_)
             | Error::Internal(_) => None,
@@ -211,7 +217,7 @@ impl fmt::Display for Error {
             }
             Error::SharedHoldsContext => f.write_str("the shared handler returned the key context (HY-124)"),
             Error::NotSelected => f.write_str("the request holds no selected media type (HY-116)"),
-            Error::InvalidApplication(reason) => f.write_str(reason),
+            Error::InvalidApplication(reason) | Error::InvalidBuild(reason) => f.write_str(reason),
             Error::InvalidRepresentation(reason) => write!(f, "{reason} (HY-122)"),
             Error::DataModel(error) => error.fmt(f),
             Error::Template(error) => error.fmt(f),
@@ -250,6 +256,7 @@ impl std::error::Error for Error {
             | Error::SharedHoldsContext
             | Error::NotSelected
             | Error::InvalidApplication(_)
+            | Error::InvalidBuild(_)
             | Error::InvalidRepresentation(_)
             | Error::Internal(_) => None,
         }

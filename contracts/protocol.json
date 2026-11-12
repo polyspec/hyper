@@ -1683,6 +1683,9 @@
           "kind": "rule",
           "id": "HY-125",
           "retired": [
+            1,
+            2,
+            4,
             6,
             13
           ],
@@ -1691,16 +1694,22 @@
               "kind": "paragraph",
               "statements": [
                 {
-                  "en": "The build id is the lowercase hexadecimal SHA-256 digest of the outputs that the browser runs: the client entry, its chunks, `manifest.json` and the template files and the index of the asset build (HYC-16), without the static shell of HY-62, which holds the id.",
-                  "ko": "build id는 브라우저가 실행하는 출력의 소문자 16진수 SHA-256 digest다. 출력은 client entry, 그 chunk, `manifest.json`, 에셋 build(HYC-16)의 템플릿 파일과 index이며, id를 담는 HY-62의 정적 셸은 뺀다.",
-                  "koSource": "95676006442c336b60e164741d2451cc6125c54b5bd83569e07e552008cebb76",
-                  "id": "HY-125.1"
+                  "id": "HY-125.15",
+                  "en": "The build id is the lowercase hexadecimal SHA-256 digest of every file that one build writes and that does not hold the id: the files below `public/assets` of the application that `client/assets.json` lists, the files below `client/` and below `program/` of `--output`, and the bytes of every `--static` file, which the static shell of HY-62 serves.",
+                  "ko": "build id는 한 build가 쓰고 id를 담지 않는 모든 파일의 소문자 16진수 SHA-256 digest다: `client/assets.json`이 적는 애플리케이션 `public/assets` 아래 파일, `--output`의 `client/`와 `program/` 아래 파일, 그리고 HY-62의 정적 셸이 제공하는 모든 `--static` 파일의 바이트.",
+                  "koSource": "62bd975e2927bc8b8069defc57f262d6a60204154a0d79ef0a98e2365977c86f"
                 },
                 {
-                  "en": "The path of an output is, for a file below `public/assets` (the entry, its chunks and the template files), its URL path without the leading slash, such as `assets/hyper-<hash>.js`, and, for `manifest.json` and `templates.index.json`, its name in the directory of `--output`.",
-                  "ko": "출력의 경로는, `public/assets` 아래 파일(entry, 그 chunk, 템플릿 파일)이면 앞의 slash를 뺀 URL 경로(예: `assets/hyper-<hash>.js`)이고, `manifest.json`과 `templates.index.json`이면 `--output` 디렉터리 안의 이름이다.",
-                  "koSource": "3c87b28774925ad31faf9a97420611863da019e1d53fdd6b3d81d7476b54c956",
-                  "id": "HY-125.2"
+                  "id": "HY-125.16",
+                  "en": "It leaves out `client/build.json` and `program/build.json`, the static shell `csr/index.html`, which holds the id, and the copies below `csr/assets`, which hold the bytes of the files below `public/assets`.",
+                  "ko": "`client/build.json`과 `program/build.json`, id를 담는 정적 셸 `csr/index.html`, 그리고 `public/assets` 아래 파일의 바이트를 담는 `csr/assets` 아래 사본은 빼고 계산한다.",
+                  "koSource": "50b07dbd0cad8e9c5db8690e0b1faca453f2dfb71d160c9641ae84463de9e4e8"
+                },
+                {
+                  "id": "HY-125.17",
+                  "en": "The path of a file is its path with the prefix of its place: `public/assets/<name>` for a file below `public/assets`, `client/<path>` and `program/<path>` for a file below those directories of `--output`, and `csr/<path>` for a `--static` file and the other files of the static shell; a path with another prefix, with nothing after its prefix, or with a segment that is empty, `.` or `..`, and a path given twice, fail the build with the kind `invalid_build` and the path.",
+                  "ko": "파일의 경로는 그 자리의 접두사를 붙인 경로다: `public/assets` 아래 파일은 `public/assets/<name>`, `--output`의 `client/`와 `program/` 아래 파일은 `client/<path>`와 `program/<path>`, `--static` 파일과 정적 셸의 다른 파일은 `csr/<path>`다. 다른 접두사를 가진 경로, 접두사 뒤가 비어 있는 경로, 빈 segment나 `.`, `..` segment를 가진 경로, 두 번 주어진 경로는 kind `invalid_build`와 그 경로로 build를 실패시킨다.",
+                  "koSource": "dab2752af0d9e6afd15a058606fa72e7c0e7d26ee0b15ed9c0a767438e2832bd"
                 },
                 {
                   "en": "The build hashes the outputs in the order of their paths, compared as bytes, each path as UTF-8 followed by a NUL byte, the length of its file as 8 bytes big-endian and the bytes of the file.",
@@ -1709,10 +1718,22 @@
                   "id": "HY-125.3"
                 },
                 {
-                  "en": "It writes the id as `{\"build\":\"<build id>\"}` into `build.json` of the asset output, which the hash excludes, and of the program directory (HY-48), and every server reads the id when the application opens; `open` fails with the absolute path of a `build.json` that is missing or that does not hold exactly the key `build` with a build id of 64 lowercase hexadecimal characters.",
-                  "ko": "build는 id를 `{\"build\":\"<build id>\"}`로, hash에서 빠지는 에셋 출력의 `build.json`과 프로그램 디렉터리(HY-48)의 `build.json`에 쓴다. 모든 서버는 애플리케이션을 열 때 id를 읽으며, `build.json`이 없거나 소문자 16진수 64자의 build id를 가진 key `build` 하나만 담지 않으면 `open`이 그 절대 경로와 함께 실패한다.",
-                  "koSource": "01d69937f2305d5f6aa1362a4538185e613232a1c6ddae777c6334c2650ab797",
-                  "id": "HY-125.4"
+                  "id": "HY-125.18",
+                  "en": "It writes the id as `{\"build\":\"<build id>\"}` into `build.json` of `program/` and of `client/`, and every server reads the id when the application opens; `open` fails with the absolute path of a `build.json` that is missing or that does not hold exactly the key `build` with a build id.",
+                  "ko": "build는 id를 `{\"build\":\"<build id>\"}`로 `program/`과 `client/`의 `build.json`에 쓰고, 모든 서버는 애플리케이션을 열 때 id를 읽는다. `open`은 `build.json`이 없거나 build id를 가진 key `build` 하나만 담고 있지 않으면 그 절대 경로로 실패한다.",
+                  "koSource": "a6e034be3abc9a02262ce34ec4e1b936676c438b1b31b96e3fb35404ec260250"
+                },
+                {
+                  "id": "HY-125.19",
+                  "en": "A build id is 64 lowercase hexadecimal characters; one rule of the core checks that form with the kind `invalid_build`, for the open of every server and for the build.",
+                  "ko": "build id는 소문자 16진수 64자다. core의 규칙 하나가 kind `invalid_build`로 그 형식을 검사하며, 모든 서버의 open과 build가 그것을 쓴다.",
+                  "koSource": "07623efb4ac5df770c33be2c299ce08fe3144e7d8fb868db29f2923787a6e531"
+                },
+                {
+                  "id": "HY-125.20",
+                  "en": "So a build id names one build output: a build that changes only a server output gives a new id, an open page reads the page again at its next navigation (HYC-22), and every server of one deployment, also servers of several runtimes that share sessions, reads one build output.",
+                  "ko": "그래서 build id는 build 출력 한 벌을 가리킨다: 서버 산출물만 바꾼 build도 새 id를 가지며, 열린 페이지는 다음 이동에서 페이지를 다시 읽고(HYC-22), 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 한 build 출력을 읽는다.",
+                  "koSource": "1f96ee8fb4bbb65a7c0eff5542ecd023411bfe11bd6edd1f44414b928d721ee7"
                 },
                 {
                   "en": "The server build (HY-48) takes the path of the `build.json` of the asset output with its option `--build` and writes the same file into the program directory; it fails with the path when the file is missing or does not hold a build id of 64 lowercase hexadecimal characters.",
@@ -2269,7 +2290,9 @@
         {
           "kind": "rule",
           "id": "HYC-22",
-          "retired": [],
+          "retired": [
+            6
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -2305,10 +2328,10 @@
                   "id": "HYC-22.5"
                 },
                 {
-                  "en": "A response whose `build` differs from the build of the page makes the browser load the page URL of the response (HYC-1, without the data base path of HY-62) as a new document with `GET` instead of rendering, because the page runs the client code of another build.",
-                  "ko": "`build`가 페이지의 build와 다른 응답이 오면 브라우저는 렌더하지 않고, 응답의 페이지 URL(HYC-1, HY-62의 데이터 기본 경로 제외)을 `GET`으로 새 문서로 불러온다. 페이지가 다른 build의 client 코드를 실행하고 있기 때문이다.",
-                  "koSource": "d9265c1547602a5503ac9906e0bd08fd24ce8c507fd9de088c81763415414aff",
-                  "id": "HYC-22.6"
+                  "id": "HYC-22.9",
+                  "en": "A response whose `build` differs from the build of the page makes the browser load the page URL of the response (HYC-1, without the data base path of HY-62) as a new document with `GET` instead of rendering, because the page holds the outputs of another build (HY-125.20).",
+                  "ko": "`build`가 페이지의 build와 다른 응답이 오면 브라우저는 렌더하지 않고, 응답의 페이지 URL(HYC-1, HY-62의 데이터 기본 경로 제외)을 `GET`으로 새 문서로 불러온다. 페이지가 다른 build의 산출물을 담고 있기 때문이다(HY-125.20).",
+                  "koSource": "56f42cf926ec87243e8531182e3f0455ce7878fee16b4452dd5fd075c3a85b50"
                 },
                 {
                   "en": "When htmx restores a page from history by requesting its HTML (HYC-4), a document whose `hyper-build` differs from the build of the page is loaded as a new document instead of being swapped.",

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 654cca263ae0b7db8d1a3f26410a170667ac6f27010f7bcc0f0614c1bc212e49 -->
+<!-- source-sha256: fc57a69f280b24ff8e6d802c9f8112ced21dd5fedb5968aa85cdae389e3ca8eb -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 build id를 갖는다(H-7, H-8 0단계): HY-125.1, HY-125.2, HY-125.4를 대체하는 HY-125.15~HY-125.20은 다음을 밝힌다. id는 한 build가 id 없이 쓰는 모든 파일, 곧 `client/assets.json`이 적는 `public/assets` 아래 파일, `client/`와 `program/` 아래 파일, 정적 셸의 `--static` 파일을 덮는다. 해시는 `client/build.json`, `program/build.json`, `csr/index.html`, `csr/assets` 아래 사본을 뺀다. 각 경로는 그 자리의 접두사를 가지며, 접두사가 없거나 두 번 주어진 경로는 kind `invalid_build`로 build를 실패시킨다. `program/`과 `client/`의 `build.json`이 id를 담고, 규칙 하나가 build id 형식을 검사한다. 페이지가 다른 build의 산출물을 담고 있으므로 HYC-22.9가 HYC-22.6을 대체한다. core의 `build::id`, `build::check_id`, `build::file_text`, `build::read`가 오류 `InvalidBuild`(kind `invalid_build`)로 이를 구현하고, interface contract는 record `build_output`과 함께 이들을 적는다. `contracts/context.json`의 build case는 자리의 경로를 쓰고 서버 산출물과 static 파일을 담은 case를 더한다. 아직 `packages/cli/lib/build-id.mjs`를 실행하는 build runner와 core는 각 case에서 같은 순서, stream, id를 내며, core는 `contracts/build.json`의 case를 같은 결과로 읽는다. 명령 도구는 core를 부르기 전까지(H-8) 이전 입력을 유지한다.
 
 - HY-125.14는 요소 이름 `hyper-build`가 build id 요소의 이름이며 package 이름과 무관하다고 밝히므로, 이름을 바꾼 package가 그것을 그대로 둔다. `docs/features.md`는 host package의 native module과, 생성된 binding과 빌드된 확장을 기다리는 CK-19 항목 넷을 적는다(H-1a, H-1b).
 

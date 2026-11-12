@@ -15517,7 +15517,7 @@
             "excluded": {
               "role": "input",
               "compare": "exact",
-              "sentence": "HY-125.4",
+              "sentence": "HY-125.18",
               "state": "`excluded` lists the outputs that the hash leaves out, the `build.json` whose content is `{\"build\":\"<build id>\"}` with the build id of `files`."
             },
             "sortedPaths": {
@@ -15536,8 +15536,8 @@
             "build": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-125.1",
-              "state": "`build` is the build id of `files`, whose `content` is the UTF-8 text of each file."
+              "sentence": "HY-125.15",
+              "state": "`build` is the build id of `files`, the files that a build hashes with the paths of HY-125.17, whose `content` is the UTF-8 text of each file."
             }
           }
         },

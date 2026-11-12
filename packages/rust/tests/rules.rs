@@ -640,3 +640,122 @@ fn a_chosen_request_outside_the_data_base_path() -> Result<(), Error> {
     assert!(!refuses_page(true, &Selected::PageData));
     Ok(())
 }
+
+mod build {
+    // HY-125.16, HY-125.17, HY-125.19: the files that the hash leaves out and the paths of the files of a build. The
+    // contract cases of the build id run on the build runner, which computes the hash of the files that it is given;
+    // these rules move to the cases when the command tool calls the core for the build id (H-8).
+    use binding_core::Kinds;
+    use polyspec_hyper::build::{check_id, hashed, id, Output};
+
+    fn output(path: &str, content: &str) -> Output {
+        Output {
+            path: path.to_owned(),
+            bytes: content.as_bytes().to_vec(),
+        }
+    }
+
+    fn paths(outputs: &[Output]) -> Vec<String> {
+        match hashed(outputs) {
+            Ok(files) => files.iter().map(|file| file.path.clone()).collect(),
+            Err(error) => panic!("{error}"),
+        }
+    }
+
+    #[test]
+    fn the_hash_leaves_out_the_files_that_hold_the_id_and_the_copies_of_the_shell() {
+        let hashed_files = [
+            output("public/assets/hyper-a1.js", "export{};\n"),
+            output("client/manifest.json", "{}"),
+            output("program/reads.json", "{}"),
+            output("csr/robots.txt", "User-agent: *\n"),
+        ];
+        let mut all = hashed_files.to_vec();
+        all.extend([
+            output("client/build.json", "{\"build\":\"x\"}"),
+            output("program/build.json", "{\"build\":\"x\"}"),
+            output(
+                "csr/index.html",
+                "<meta name=\"hyper-build\" content=\"x\">",
+            ),
+            output("csr/assets/hyper-a1.js", "export{};\n"),
+        ]);
+        assert_eq!(
+            paths(&all),
+            vec![
+                "client/manifest.json",
+                "csr/robots.txt",
+                "program/reads.json",
+                "public/assets/hyper-a1.js"
+            ]
+        );
+        match (id(&all), id(&hashed_files)) {
+            (Ok(left), Ok(right)) => assert_eq!(left, right),
+            (left, right) => panic!("{left:?} {right:?}"),
+        }
+    }
+
+    #[test]
+    fn a_build_id_covers_a_server_output() {
+        let client = [output("client/manifest.json", "{}")];
+        let mut server = client.to_vec();
+        server.push(output("program/reads.json", "{}"));
+        match (id(&client), id(&server)) {
+            (Ok(left), Ok(right)) => assert_ne!(left, right),
+            (left, right) => panic!("{left:?} {right:?}"),
+        }
+    }
+
+    #[test]
+    fn a_path_outside_the_places_of_a_build_fails() {
+        for path in [
+            "manifest.json",
+            "assets/hyper-a1.js",
+            "public/hyper.js",
+            "client/",
+            "program//reads.json",
+            "client/./manifest.json",
+            "csr/../program/reads.json",
+            "/client/manifest.json",
+        ] {
+            match hashed(&[output(path, "")]) {
+                Err(error) => {
+                    assert_eq!(error.kind(), "invalid_build", "{path}");
+                    assert!(error.to_string().contains(path), "{path}: {error}");
+                }
+                Ok(_) => panic!("{path} passes"),
+            }
+        }
+    }
+
+    #[test]
+    fn a_path_given_twice_fails() {
+        match hashed(&[
+            output("client/build.json", "a"),
+            output("client/build.json", "b"),
+        ]) {
+            Err(error) => {
+                assert_eq!(error.kind(), "invalid_build");
+                assert!(error.to_string().contains("client/build.json"));
+            }
+            Ok(_) => panic!("a path given twice passes"),
+        }
+    }
+
+    #[test]
+    fn a_build_id_is_64_lowercase_hexadecimal_characters() {
+        assert!(check_id(&"0123456789abcdef".repeat(4)).is_ok());
+        for text in [
+            "",
+            &"a".repeat(63),
+            &"a".repeat(65),
+            &"A".repeat(64),
+            &"g".repeat(64),
+        ] {
+            match check_id(text) {
+                Err(error) => assert_eq!(error.kind(), "invalid_build", "{text}"),
+                Ok(()) => panic!("{text} passes"),
+            }
+        }
+    }
+}
