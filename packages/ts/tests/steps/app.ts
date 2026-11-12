@@ -23,7 +23,7 @@ import { call as replyCall } from './reply.js';
 import { callsOf, decoded } from './session-requests.js';
 
 // The applications of the contracts, built once for the three servers by scripts/contract-programs.mts.
-const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
+const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));
 const TOKEN_KEY = '_hyper_csrf';
 const EMBEDDED = '<script type="application/json" id="hy-data">';
 

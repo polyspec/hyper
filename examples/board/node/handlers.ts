@@ -1,5 +1,5 @@
 // Loaders and actions of the regions and routes that app.json declares, as app/handlers.php defines them.
-import { NotFound, Representation, Result, type Handlers, type Request } from '@polyspec/hyper-server';
+import { NotFound, Representation, Result, type Handlers, type Request } from '@polyspec/hyper';
 import type { Post, Posts } from './posts.js';
 
 export interface Services {

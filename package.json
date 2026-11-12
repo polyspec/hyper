@@ -17,8 +17,8 @@
   },
   "workspaces": [
     "packages/client",
-    "packages/build",
-    "packages/server/ts"
+    "packages/cli",
+    "packages/ts"
   ],
   "devDependencies": {
     "@playwright/test": "1.64.1",

@@ -8,7 +8,7 @@ import { mapOf, textMapOf, textOf, textsOf } from '../inputs.js';
 import { requestFrom } from '../support.js';
 import { failureOf } from './recorded.js';
 
-const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
+const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));
 
 const IMPLEMENTATIONS: Record<string, unknown> = {
   suffix: (args: unknown[]) => `${String(args[0])}!`,

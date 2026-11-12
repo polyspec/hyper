@@ -20,7 +20,7 @@ const requests = Number(values.requests);
 if (!Number.isInteger(requests) || requests < 1) throw new Error('--requests must name a positive number');
 
 requireBuilt('hyper-install-redis', 'var/redis/redis-server', 'var/redis/redis.so');
-requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
 requireBuilt('hyper-install-php', 'vendor/autoload.php');
 
 const directory = mkdtempSync(path.join(tmpdir(), 'hyper-bench-sessions-'));

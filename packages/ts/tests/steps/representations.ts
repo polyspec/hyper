@@ -12,7 +12,7 @@ import { mapOf, stringsOf, textOf, textsOf } from '../inputs.js';
 import { list, OrmError, parsedBody, plain, record, requestFrom } from '../support.js';
 import { failureOf, messageStart } from './recorded.js';
 
-const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
+const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));
 const APPLICATION = 'representations';
 
 // What a representation handler received: the method, the media parameters, the request, the decoded JSON body, the

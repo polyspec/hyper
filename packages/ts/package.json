@@ -1,7 +1,7 @@
 {
-  "name": "@polyspec/hyper-server",
+  "name": "@polyspec/hyper",
   "version": "0.0.39",
-  "description": "Node.js HTTP server for the region protocol: routes, loaders, actions, sessions, documents and JSON",
+  "description": "The server library of the region protocol for Node.js; the browser package is @polyspec/hyper-client. Routes, loaders, actions, sessions, documents and JSON",
   "license": "MIT",
   "type": "module",
   "exports": {

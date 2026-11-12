@@ -8,7 +8,7 @@ import type { CaseReader } from '../case-reader.js';
 
 export const steps = {
   read(reader: CaseReader): void {
-    const directory = mkdtempSync(join(tmpdir(), 'hyper-build-'));
+    const directory = mkdtempSync(join(tmpdir(), 'hyper-cli-'));
     const file = join(directory, 'build.json');
     try {
       // A null `text` is a missing file, unless `bytes` gives the bytes of the file as hexadecimal digits.

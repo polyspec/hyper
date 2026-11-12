@@ -28,8 +28,8 @@ const runs = Number(values.runs);
 if (!Number.isInteger(size) || size < 1) throw new Error('--size must name a positive number of bytes');
 if (!Number.isInteger(runs) || runs < 1) throw new Error('--runs must name a positive number');
 
-requireBuilt('packages', 'packages/server/ts/dist/index.js');
-requireBuilt('hyper-install-python', 'packages/server/python/.venv/bin/python');
+requireBuilt('packages', 'packages/ts/dist/index.js');
+requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
 requireBuilt('hyper-install-php', 'vendor/autoload.php');
 
 interface Answer { valid: boolean; files: unknown; form: unknown; held: number; cpu: number; rss: number }
@@ -265,7 +265,7 @@ try {
   const quiet = { ...process.env };
   const node = await startServer({ name: 'node', command: process.execPath, args: ['--no-warnings', path.join(FIXTURE, 'server.mjs')], env: { ...quiet, ...environment('node') }, ready, children });
   await measure('hyper Node (App.server)', overHttp(node.url), files, warm, false);
-  const python = await startServer({ name: 'python', command: path.join(ROOT, 'packages/server/python/.venv/bin/python'), args: [path.join(FIXTURE, 'server.py')], env: { ...quiet, ...environment('python') }, ready, children });
+  const python = await startServer({ name: 'python', command: path.join(ROOT, 'packages/python/.venv/bin/python'), args: [path.join(FIXTURE, 'server.py')], env: { ...quiet, ...environment('python') }, ready, children });
   await measure('hyper Python (http.server)', overHttp(python.url), files, warm, false);
 } finally {
   await stopServers(children);

@@ -37,9 +37,9 @@ export interface Declaration {
   sections: Record<string, Section>;
 }
 
-export const CONTRACTS = new URL('../../../../contracts/', import.meta.url);
+export const CONTRACTS = new URL('../../../contracts/', import.meta.url);
 // The fixed case files of tests/legacy, which a library holds now; the steps read them until S-4 removes the directory.
-const LEGACY = new URL('../../../../tests/legacy/', import.meta.url);
+const LEGACY = new URL('../../../tests/legacy/', import.meta.url);
 
 // The comparison of each response field, which is compared by its name (HYR-11).
 const RESPONSE_KINDS: Record<string, Compare> = {

@@ -165,7 +165,7 @@ export function port(server: Server): number {
 }
 
 // The contract of the client rendering (HY-62) and the declaration that its cases run against.
-const conformance = record(parsedBody(readFileSync(new URL('../../../../contracts/client.json', import.meta.url), 'utf8')));
+const conformance = record(parsedBody(readFileSync(new URL('../../../contracts/client.json', import.meta.url), 'utf8')));
 const BASE_PATH = text(conformance.basePath);
 const CHOSEN_HOST = text(conformance.chosenHost);
 export const SHELL = `${FIXTURES}shell/index.html`;

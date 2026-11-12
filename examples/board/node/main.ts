@@ -6,7 +6,7 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { App, FileSessions, RedisSessions } from '@polyspec/hyper-server';
+import { App, FileSessions, RedisSessions } from '@polyspec/hyper';
 import { handlers, type Services } from './handlers.js';
 import { Posts } from './posts.js';
 

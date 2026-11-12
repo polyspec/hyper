@@ -34,7 +34,7 @@ interface Application {
 }
 
 // The applications of the contracts, built once for the three servers by scripts/contract-programs.mts (HY-124, HYC-24).
-const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
+const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));
 
 
 // Returns a map of an application, and fails for any other value.

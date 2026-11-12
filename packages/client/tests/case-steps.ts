@@ -4,13 +4,13 @@
 // browser package as arguments.
 import { parse } from '@polyspec/template';
 import type { MapValue, Value } from '@polyspec/template/render';
-import type { CaseReader } from '../../server/ts/tests/case-reader.js';
-import type { Step } from '../../server/ts/tests/case-run.js';
-import { listOf, textOf } from '../../server/ts/tests/inputs.js';
-import { placesContext } from '../../server/ts/tests/steps/context-place.js';
-import { comparesParts } from '../../server/ts/tests/steps/parts-cases.js';
-import { readsCases } from '../../server/ts/tests/steps/reads-cases.js';
-import { routerSteps } from '../../server/ts/tests/steps/router-cases.js';
+import type { CaseReader } from '../../ts/tests/case-reader.js';
+import type { Step } from '../../ts/tests/case-run.js';
+import { listOf, textOf } from '../../ts/tests/inputs.js';
+import { placesContext } from '../../ts/tests/steps/context-place.js';
+import { comparesParts } from '../../ts/tests/steps/parts-cases.js';
+import { readsCases } from '../../ts/tests/steps/reads-cases.js';
+import { routerSteps } from '../../ts/tests/steps/router-cases.js';
 import { applyKept, checkManifest, copyValue, createApplication, createEngine, decodeResponse, keepRead, renderDocument, renderParts, Router, stripBasePath, templateReads, withContext } from '../src/index.js';
 import { isValue } from './values.js';
 
