@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 968a0bfb6ce5148c07f9f3fe5c65c83cd5ae904d36b240ef53d6be2661b5c526 -->
+<!-- source-sha256: d822af546e5723cc36f0afc325adf45733cac97c45681da48c43fe858d7adf39 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core의 lock은 bindgen, http-cookies, php-serialize, sessions, template의 branch `v1/rust-core`의 현재 commit을 쓰며 `polyspec-bindgen-core`는 하나다. http-negotiate의 branch가 아직 http-media-type을 경로로 이름하므로 `polyspec-http-negotiate`와 `polyspec-http-media-type`은 경로 의존으로 남는다(C-7).
 
 - recipe check는 다시 server에 없는 것만 찾는다. concern `app`은 HY-132를, concern `build`는 HY-106을 이름하며, `app.json`과 `build.json`의 case가 그 실패를 말한다. 음수 한도를 가진 `request.json`의 case는 field `raises`가 HY-114를 말하므로 더는 HY-114를 요구하지 않는다. Redis store case를 읽는 Node와 Python server의 step은 `tests/legacy/redis-sessions.json`을 읽는다. 이는 sessions 라이브러리가 case를 가져가기 전에 hyper가 가졌던 case 파일의 고정 사본이며, S-4에서 `tests/legacy`와 함께 지운다(C-6).
 

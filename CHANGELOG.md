@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The lock of the Rust core takes the current commits of the branch `v1/rust-core` of bindgen, http-cookies, php-serialize, sessions and template, with one copy of `polyspec-bindgen-core`; `polyspec-http-negotiate` and `polyspec-http-media-type` stay path dependencies, because the branch of http-negotiate still names http-media-type by a path (C-7).
+
 - The recipe check finds again only what the servers lack: the concern `app` names HY-132 and the concern `build` names HY-106, whose failures the cases of `app.json` and `build.json` state; the case of `request.json` with a negative limit no longer requires HY-114, which its field `raises` states; and the steps of the Node and Python servers that read the Redis store cases read `tests/legacy/redis-sessions.json`, a fixed copy of the case file that hyper held before the sessions library took its cases, which S-4 removes with `tests/legacy` (C-6).
 
 - The steps of the three servers that read the form cases read `tests/legacy/fields.json`, a fixed copy of `contracts/fields.json` as hyper held it before http-forms took these cases, with its declaration in `tests/legacy/interfaces.json`, whose sentences name the statements that point to http-forms; the case readers of PHP, Node and Python and the recipe check take the case files of `tests/legacy` with those of `contracts/`, and S-4 removes the directory when the servers call the core (C-3). The field `selected` of the section `select` of `accept.json` names its statement HY-116.19, where the declaration held a case in its place, so that the declaration is valid again.

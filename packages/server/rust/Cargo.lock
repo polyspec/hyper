@@ -504,7 +504,7 @@ checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 [[package]]
 name = "polyspec-bindgen-core"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/bindgen.git?branch=v1%2Frust-core#1507c4e5677190b685057713f28f64d5c8a07795"
+source = "git+https://github.com/polyspec/bindgen.git?branch=v1%2Frust-core#994b0e29c5ea32424ffc59bdd994d598a9b4a750"
 dependencies = [
  "indexmap",
  "tokio-util",
@@ -513,7 +513,7 @@ dependencies = [
 [[package]]
 name = "polyspec-http-cookies"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/http-cookies.git?branch=v1%2Frust-core#d21c34b05cba7cde51d393ed485051fe9b05276a"
+source = "git+https://github.com/polyspec/http-cookies.git?branch=v1%2Frust-core#92bc973331c75de125b565ada5a435cbc6af0071"
 dependencies = [
  "polyspec-bindgen-core",
 ]
@@ -521,11 +521,15 @@ dependencies = [
 [[package]]
 name = "polyspec-http-media-type"
 version = "0.0.1"
+dependencies = [
+ "polyspec-bindgen-core",
+]
 
 [[package]]
 name = "polyspec-http-negotiate"
 version = "0.0.1"
 dependencies = [
+ "polyspec-bindgen-core",
  "polyspec-http-media-type",
 ]
 
@@ -559,7 +563,7 @@ dependencies = [
 [[package]]
 name = "polyspec-php-serialize"
 version = "0.0.6"
-source = "git+https://github.com/polyspec/php-serialize.git?branch=v1%2Frust-core#f10f7c90d4a08557d9a7b9cb61614375e7903ef3"
+source = "git+https://github.com/polyspec/php-serialize.git?branch=v1%2Frust-core#948de5850c20bd4a28956571ae482964f2ebc6bd"
 dependencies = [
  "polyspec-bindgen-core",
  "ryu",
@@ -568,7 +572,7 @@ dependencies = [
 [[package]]
 name = "polyspec-sessions"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/sessions.git?branch=v1%2Frust-core#31a89135e03bd03ad03dd7b1f166e118ff9545b2"
+source = "git+https://github.com/polyspec/sessions.git?branch=v1%2Frust-core#a6b4e66d11e8d197c87c0e59fede718eca8d78a0"
 dependencies = [
  "polyspec-sessions-core",
 ]
@@ -576,7 +580,7 @@ dependencies = [
 [[package]]
 name = "polyspec-sessions-core"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/sessions.git?branch=v1%2Frust-core#31a89135e03bd03ad03dd7b1f166e118ff9545b2"
+source = "git+https://github.com/polyspec/sessions.git?branch=v1%2Frust-core#a6b4e66d11e8d197c87c0e59fede718eca8d78a0"
 dependencies = [
  "getrandom",
  "polyspec-bindgen-core",
@@ -586,7 +590,7 @@ dependencies = [
 [[package]]
 name = "polyspec-template"
 version = "0.0.27"
-source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#65d83107d6a344a143232b3ae80a8cc7d61169fb"
+source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#04753d2837058af9a55c99602805bdde31f34333"
 dependencies = [
  "jsonschema",
  "polyspec-bindgen-core",
