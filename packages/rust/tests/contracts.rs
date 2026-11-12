@@ -1823,8 +1823,13 @@ fn the_read_paths_of_a_template() {
     let mut ran = 0;
     for case in group(&file, "cases") {
         match template_reads(&templates_of(case, "templates"), text(case, "template")) {
-            // The keys of a node are a map: their order is no part of the read paths (HY-73.3).
-            Ok(reads) => assert_eq!(as_json(&reads), case["reads"], "{}", case["id"]),
+            // The order of the keys is that of HY-73.32, which the text of the case holds.
+            Ok(reads) => assert_eq!(
+                as_json(&reads).to_string(),
+                case["reads"].to_string(),
+                "{}",
+                case["id"]
+            ),
             Err(error) => panic!("{}: {error}", case["id"]),
         }
         ran += 1;
@@ -1834,7 +1839,7 @@ fn the_read_paths_of_a_template() {
 
 #[test]
 fn the_read_paths_of_the_routes() {
-    // HY-73.18, HY-73.19, HY-73.23
+    // HY-73.18, HY-73.19, HY-73.23, HY-73.32
     use polyspec_hyper::read_paths::route_reads;
     use polyspec_hyper::steps::route_reads as from_build;
     let file = cases("reads.json");
@@ -1843,8 +1848,13 @@ fn the_read_paths_of_the_routes() {
         let manifest = case["manifest"].to_string();
         match route_reads(manifest.as_bytes(), &templates_of(case, "templates")) {
             Ok(routes) => {
-                // The keys of a node are a map: their order is no part of the read paths (HY-73.3).
-                assert_eq!(as_json(&routes), case["routes"], "{}", case["id"]);
+                // The order of the routes, the regions and the keys is that of HY-73.32, which the text of the case holds.
+                assert_eq!(
+                    as_json(&routes).to_string(),
+                    case["routes"].to_string(),
+                    "{}",
+                    case["id"]
+                );
                 // The pages read the value as the build writes it (HY-73.23).
                 if let Err(error) = from_build(&routes) {
                     panic!("{}: {error}", case["id"]);

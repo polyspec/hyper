@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d676f4bcdd17a5d3b7306db2f3cd824758a18eae3d2fa2e1ffc616db3fb6c13a -->
+<!-- source-sha256: 89826ea14829b3f221bdceb81bb6782086c6209951462183dff82d2e1489f362 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-73.32가 build id가 해시하는(HY-125.15) `reads.json`의 순서를 정한다: 라우트는 manifest 순서로 각각 `shared`, 그다음 `regions`를 가지며, 템플릿이 있는 manifest 영역, page 영역, 라우트 영역이 manifest 순서로 온다. `keys`는 `each`보다 먼저 오고, `keys`의 키는 UTF-8 텍스트의 바이트 순서를 따른다. Rust core는 템플릿이 읽은 순서를 유지하던 것을 바꿔 키를 그 순서로 쓴다. core를 부르기 전까지(H-8) `hyper-build-server`가 유지하는 이전 구현, 곧 `JSON.stringify`를 쓰는 브라우저 package의 `routeReads`와 달라지는 점: 그 키는 템플릿이 읽은 순서를 따르고, ECMAScript가 객체 키를 정렬하듯 정수인 키가 먼저 오므로, 같은 경로를 다른 순서로 읽는 템플릿의 두 build는 다른 바이트를 썼다. `contracts/reads.json`의 `cases`와 `routes` case는 읽기 경로를 그 순서로 담고, core는 그 텍스트를 비교한다.
 
 - HY-73.31이 HY-73.10을 대체하며, 숫자 리터럴을 가진 인덱스가 읽기 경로에 붙이는 키를 정한다: json의 숫자 텍스트다. json은 숫자를 ECMAScript `Number::toString`처럼 쓴다(json의 RQ-030). 예: `1.5`, `1e+21`, `1e-7`, `123456789012345680`. 음수는 리터럴에 붙은 연산자이므로 그 객체를 통째로 읽는다(HY-73.11). Rust core는 그 텍스트를 polyspec의 유일한 실수-텍스트 함수인 polyspec-json의 `number_text`에서 받는다. 이전에는 core가 숫자를 직접 형식화해 `1e21`을 `1000000000000000000000`으로, `1e-7`을 `0.0000001`로 썼다. `contracts/reads.json`의 case 넷이 소수, 두 지수 표기, 음수, 2^53을 넘는 정수를 정하며, 브라우저 package의 `templateReads`는 이들에 core와 같은 읽기 경로를 준다.
 

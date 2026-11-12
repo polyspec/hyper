@@ -16263,7 +16263,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-73.18",
-              "state": "`routes` is the read paths of every route of the manifest `manifest` with the templates `templates`, a map from the template names to their sources: for each route its `shared` node and its `regions`, the node of each region by name."
+              "state": "`routes` is the read paths of every route of the manifest `manifest` with the templates `templates`, a map from the template names to their sources: for each route its `shared` node and its `regions`, the node of each region by name. The case writes them in the order of HY-73.32."
             }
           }
         }

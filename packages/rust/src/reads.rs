@@ -151,8 +151,8 @@ pub fn keep(value: &Value, read: &Read) -> Value {
 }
 
 impl Read {
-    /// The value of a node as the build writes it (HY-73.23): `true` for a path read whole, and otherwise a map with
-    /// `keys`, when a key is read, and `each`, when every entry is read.
+    /// The value of a node as the build writes it (HY-73.23, HY-73.32): `true` for a path read whole, and otherwise a
+    /// map with `keys`, when a key is read, in the byte order of the keys, and then `each`, when every entry is read.
     #[must_use]
     pub fn to_value(&self) -> Value {
         match self {
@@ -160,8 +160,10 @@ impl Read {
             Read::Part { keys, each } => {
                 let mut map = OrderedMap::new();
                 if !keys.is_empty() {
+                    let mut sorted: Vec<&(String, Read)> = keys.iter().collect();
+                    sorted.sort_by(|(left, _), (right, _)| left.as_bytes().cmp(right.as_bytes()));
                     let mut named = OrderedMap::with_capacity(keys.len());
-                    for (key, node) in keys {
+                    for (key, node) in sorted {
                         named.insert(key.clone(), node.to_value());
                     }
                     map.insert("keys".to_owned(), Value::Map(Arc::new(named)));
