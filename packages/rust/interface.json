@@ -483,7 +483,7 @@
       "module": "",
       "kind": "class",
       "visibility": "public",
-      "origin": "generated",
+      "origin": "host",
       "constructible": false,
       "final": true,
       "members": []

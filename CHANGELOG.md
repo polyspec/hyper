@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The interface contract declares the class `app` as host code (origin `host`, binding L-3), not a class of the core: `App` holds the handlers, the services, the functions and the hooks of the application, which are objects of its language that the core never holds, reads the files of the application and runs the steps of `PageRequest`, calling the handler that each step asks for (C-7), while the pages and the request of the core are the classes `pages` and `page_request`. The binding generator refuses the contract for now with `not generated (G-4): app: a host class unit is not generated yet`.
+
 - The lock of the Rust core pins `polyspec-binding-core` at the end of the published branch of binding, whose contract check compares the commit of a Git pin with the commit of the running binding (CK-20); the scaffold of that commit writes the binding crates as they are.
 
 - The PHP, Node and Python runners read the sections whose cases the S-3b changes gave a form that the host code runs only when it calls the core (C-7) from their fixed copies `tests/legacy/<name>-before-s3b.json`, the sections as they were before the S-3b case changes: 30 sections of 15 case files, 795 cases for Python and 789 for Node; the browser runner, the build runner and the tests of the core read them live, and `docs/features.md` lists the live sections and the sections of the fixed copies. With the fixtures of the servers built, the Python runner passes 1454 of 1455 cases and the Node runner 1446 of 1447, where they failed 425 and 439 cases; the one case that fails needs a run by a user other than root, who reads a file of mode 0.
