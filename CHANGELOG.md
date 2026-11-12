@@ -7,6 +7,7 @@
 
 ## 0.0.40
 
+- `config/rebuild.json` classifies the files that H28.13, H28.15 and H28.16 added: the two module scripts of the board example and the parts and the scope readers of the recipe check, so `make rebuild-check` passes; it failed on these nine files in the CI run of the version commit of 0.0.40.
 - `config/release.json` lists `scripts/recipe/typescript/package.json`, the private install of the TypeScript compiler API that the Node reader of the recipe check reads, as not released, so `make release-coverage` passes; it failed on that unclassified manifest (H28.16).
 
 - HY-106.4 states that the PHP `query()`, `form()` and `files()` of a request return a list of pairs of a name and its values, as the code and HY-56 and HY-113 do; before, it said that they exposed `IteratorAggregate` (H28.18).
