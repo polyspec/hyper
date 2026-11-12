@@ -20,6 +20,7 @@ pub mod orm;
 pub mod page;
 pub mod pipeline;
 pub mod reads;
+pub mod render;
 pub mod reply;
 pub mod representation;
 pub mod router;

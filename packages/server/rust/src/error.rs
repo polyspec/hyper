@@ -46,6 +46,8 @@ pub enum Error {
     InvalidRepresentation(&'static str),
     /// A value outside the data model, with the kind of the template data model (HY-44.9).
     DataModel(polyspec_template::BindError),
+    /// A failure of the template language while a template renders, with its kind (HY-43, HY-38.18).
+    Template(polyspec_template::TemplateError),
     /// A broken invariant of a record that php-serialize reports, such as an identity that the record does not hold
     /// (HY-132.6).
     RecordValue(polyspec_php_serialize::Error),
@@ -88,6 +90,7 @@ impl Error {
             },
             Error::NotSelected => Category::Type,
             Error::DataModel(_) => Category::Value,
+            Error::Template(error) => template_category(error.code),
             Error::Sessions(error) => sessions_category(error),
             Error::InvalidSessionToken | Error::InvalidSessionRecord => Category::Store,
             Error::Internal(_) | Error::RecordValue(_) => Category::Internal,
@@ -129,6 +132,7 @@ impl Kinds for Error {
             Error::InvalidApplication(_) => "invalid_application",
             Error::InvalidRepresentation(_) => "invalid_representation",
             Error::DataModel(error) => error.code.as_str(),
+            Error::Template(error) => error.code.as_str(),
             Error::Sessions(error) => error.kind(),
             Error::Negotiate(error) => error.kind(),
             Error::Cookies(error) => error.kind(),
@@ -142,6 +146,7 @@ impl Kinds for Error {
             Error::Sessions(error) => error.status(),
             Error::RecordValue(_) => None,
             Error::DataModel(_) => None,
+            Error::Template(_) => None,
             Error::NotApplicationPath
             | Error::NotRedirectResult
             | Error::PageStatusNotAllowed(_)
@@ -209,6 +214,7 @@ impl fmt::Display for Error {
             Error::InvalidApplication(reason) => write!(f, "{reason} (HY-118)"),
             Error::InvalidRepresentation(reason) => write!(f, "{reason} (HY-122)"),
             Error::DataModel(error) => error.fmt(f),
+            Error::Template(error) => error.fmt(f),
             Error::Sessions(error) => error.fmt(f),
             Error::RecordValue(error) => write!(f, "an invariant of a session record does not hold: {error} (HY-132)"),
             Error::Negotiate(error) => error.fmt(f),
@@ -225,6 +231,7 @@ impl std::error::Error for Error {
             Error::Sessions(error) => Some(error),
             Error::RecordValue(error) => Some(error),
             Error::DataModel(_) => None,
+            Error::Template(error) => Some(error),
             Error::Cookies(error) => Some(error),
             Error::NotApplicationPath
             | Error::NotRedirectResult
@@ -280,5 +287,18 @@ fn sessions_category(error: &polyspec_sessions::Error) -> Category {
         | Sessions::InvalidLockExpire
         | Sessions::InvalidSetting { .. } => Category::Value,
         Sessions::Cancelled | Sessions::Io { .. } | Sessions::Connection { .. } => Category::Io,
+    }
+}
+
+/// The category of a kind of the template language, as its interface contract states it.
+fn template_category(code: polyspec_template::ErrorCode) -> Category {
+    use polyspec_template::ErrorCode;
+    match code {
+        ErrorCode::E_LOAD_FAILED => Category::Io,
+        ErrorCode::E_DATA_UNSUPPORTED_TYPE
+        | ErrorCode::E_RUNTIME_TYPE
+        | ErrorCode::E_RUNTIME_ARITY => Category::Type,
+        ErrorCode::E_INTERNAL => Category::Internal,
+        _ => Category::Value,
     }
 }

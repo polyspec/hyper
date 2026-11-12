@@ -184,6 +184,94 @@
         "library": "http-negotiate"
       },
       {
+        "variant": "polyspec_template::ErrorCode::E_LEX_INVALID_UTF8",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_UNTERMINATED_TAG",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_UNTERMINATED_COMMENT",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_UNTERMINATED_STRING",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_UNEXPECTED_TOKEN",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_NUMBER",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_ESCAPE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_UNEXPECTED_CLOSE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_UNCLOSED_BLOCK",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_ELSE_OUTSIDE_BLOCK",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_DUPLICATE_ELSE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_ELSEIF_AFTER_ELSE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_ELSEIF_NOT_IN_IF",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_RESERVED_NAME",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_PATH",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_BLOCK_TAG",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_WRAPPER",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_DIRECTIVE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_LOAD_NOT_FOUND",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_LOAD_CYCLE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_LOAD_OUTSIDE_ROOT",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_LOAD_FAILED",
+        "library": "template"
+      },
+      {
         "variant": "polyspec_template::ErrorCode::E_DATA_NUMBER_RANGE",
         "library": "template"
       },
@@ -201,6 +289,90 @@
       },
       {
         "variant": "polyspec_template::ErrorCode::E_DATA_DEPTH",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_DATA_INVALID_JSON",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_TYPE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_COMPARE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_DIV_ZERO",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_STRINGIFY",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_UNKNOWN_FUNCTION",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_ARITY",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_HOST_FUNCTION",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_UNKNOWN_LOOP",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_BLOCK_UNDEFINED",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_BLOCK_REDEFINED",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_DEPTH",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_RUNTIME_LIMIT",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_ARGUMENT_DELIMITERS",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_ARGUMENT_FUNCTION_NAME",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_ARGUMENT_SOURCE_RANGE",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_ARGUMENT_INDENT",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_FORMAT_INVARIANT",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_FORMAT_HTML",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_AST_INVALID",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_template::ErrorCode::E_INTERNAL",
         "library": "template"
       },
       {

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 42ef73dd1867e657d2d7816663221ae19ebe6fbd0a4109c3a6f90b18de47b54e -->
+<!-- source-sha256: 540bfce572bbb4ca0f43c2430c244f77af7bcd3c77a00992002c49575a9d6f58 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Rust core가 template 언어의 template 엔진으로 문서를 렌더한다(C-7). `render::Templates`는 host가 애플리케이션을 열 때 읽는 애플리케이션의 template과 예약 template `hyper/data.tpl`(HY-31.3), 그리고 엔진이 렌더 중에 부르며 예외가 그대로 지나가는 애플리케이션의 함수(HYC-24)를 가진다. `render_document`는 layout을 title, embedded data, build 요소, 따로 렌더한 각 manifest region과 함께 렌더하고, page region은 있는 route region과 함께 렌더하며(HY-12, HY-13), 각 root를 한 번 bind한다(HY-13.5). kept 값을 적용하면 렌더되지 않는 region은 loader 데이터로 렌더하고 그 kept 값을 embedded data에서도 잃으며, 그래도 렌더되지 않는 문서는 template 언어의 kind로 실패한다(HY-38.16부터 HY-38.18까지). 렌더 실패는 template 언어의 kind와 category를 가진 오류 `Template`이고, interface 계약은 template 언어의 모든 kind를 넘겨준다. 테스트는 `app.json`의 group `parts` 3개 case와 `app.json` kept case의 문서를 애플리케이션 `a_board`로 실행한다.
 
 - Rust core가 page를 조립한다(C-7). `page::shared_data`는 `title`, `csrf`, shared handler의 값을 주고 반환된 `context`에는 `shared_holds_context`로 실패한다(HY-10.2, HY-124.8). `page::current_path`는 `HX-Current-URL`의 현재 경로를 읽는다(HY-11.4). `page::changed_topics`는 기록된 topic과 `path`를 준다(HY-19.1, HY-11.3). `page::regions`는 문서 요청과 region 요청의 region을 준다(HY-18). `page::kept_values`는 맞는 `server`와 `cookie` kept 값을 region과 경로별로 준다(HY-38.8). `page::json_value`는 `build`와 `context`를 가진 응답의 JSON 값을 HY-17의 순서로 준다(HY-128.1). `page::embeds`와 `page::embedded_data`는 문서가 데이터를 넣는지와 그 데이터를 준다(HY-31.2, HY-31.3). 테스트는 `request.json`의 현재 경로 case 8개와 나머지의 규칙 테스트를 실행하며, interface 계약은 `current_path`를 둔다. template 렌더는 세 server에 남는다.
 

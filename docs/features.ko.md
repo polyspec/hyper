@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 4e5ff0370c30634ba06301935a05ee7f6d005e0078068472cc386834cb8c176a -->
+<!-- source-sha256: ee35745638b80bb8950089e77530ecef96c813d39ae7e52720b58ffd21c5bce3 -->
 # 기능 상태
 
 [English](features.md).
@@ -9,7 +9,7 @@
 | ID | 기능 | 상태 | 근거 |
 |---|---|---|---|
 | protocol | 영역 프로토콜 명세(HY-1 ~ HR-94) | implemented | [프로토콜](spec/protocol.ko.md) |
-| rust-core | server 규칙의 Rust core, `packages/server/rust`의 `polyspec-hyper`(C-7): HY-132의 오류, 406과 `Vary`를 가진 media 선택(HY-116, HY-117, HY-119), representation entry·body·응답 검사(HY-118, HY-121, HY-122), tag(HY-53, HY-122.10), cookie 이름과 session cookie(HY-45, HY-38.10), reply 값(HY-52, HY-69, HY-103), 애플리케이션 경로와 page 상태(HY-46, HY-58), manifest와 그 검사(HY-1, HY-2, HY-37, HY-40.2, HY-118), rest 매개변수와 base path를 가진 route(HY-4부터 HY-8, HY-49), JSON 텍스트(HY-54.18부터 HY-54.21), 읽는 데이터(HY-73.29), token과 `browser()`(HY-24), ORM 응답(HY-107), 요청의 순서(HY-120), region 데이터에 맞는 kept 값과 cookie `hy-keep`(HY-38.2부터 HY-38.13까지, HY-38.19), 공유 데이터 안의 context 자리, 그 JSON 텍스트, hash, member `context`, header `Hyper-Context`(HY-10.3, HY-125.10, HY-125.12, HY-127.2, HY-128.2), 그리고 page 조립: 공유 데이터, 현재 경로, 바뀐 topic, 응답의 region, 응답이 보내는 kept 값, JSON 값, 문서의 embedded data(HY-10.2, HY-11.3, HY-11.4, HY-17, HY-18, HY-19, HY-31.2, HY-31.3, HY-38.8, HY-128.1); 그 interface 계약 `packages/server/rust/interface.json` | 일부; 세 server는 S-4까지 부르지 않는다 | `make core-test`, `make core-lint`, `make core-fmt-check` |
+| rust-core | server 규칙의 Rust core, `packages/server/rust`의 `polyspec-hyper`(C-7): HY-132의 오류, 406과 `Vary`를 가진 media 선택(HY-116, HY-117, HY-119), representation entry·body·응답 검사(HY-118, HY-121, HY-122), tag(HY-53, HY-122.10), cookie 이름과 session cookie(HY-45, HY-38.10), reply 값(HY-52, HY-69, HY-103), 애플리케이션 경로와 page 상태(HY-46, HY-58), manifest와 그 검사(HY-1, HY-2, HY-37, HY-40.2, HY-118), rest 매개변수와 base path를 가진 route(HY-4부터 HY-8, HY-49), JSON 텍스트(HY-54.18부터 HY-54.21), 읽는 데이터(HY-73.29), token과 `browser()`(HY-24), ORM 응답(HY-107), 요청의 순서(HY-120), region 데이터에 맞는 kept 값과 cookie `hy-keep`(HY-38.2부터 HY-38.13까지, HY-38.19), 공유 데이터 안의 context 자리, 그 JSON 텍스트, hash, member `context`, header `Hyper-Context`(HY-10.3, HY-125.10, HY-125.12, HY-127.2, HY-128.2), 그리고 page 조립: 공유 데이터, 현재 경로, 바뀐 topic, 응답의 region, 응답이 보내는 kept 값, JSON 값, 문서의 embedded data(HY-10.2, HY-11.3, HY-11.4, HY-17, HY-18, HY-19, HY-31.2, HY-31.3, HY-38.8, HY-128.1), template 엔진으로 하는 문서 렌더(kept 값을 적용하면 렌더되지 않는 region의 kept 값 처리 포함, HY-12, HY-13, HY-31, HY-38.12부터 HY-38.18까지); 그 interface 계약 `packages/server/rust/interface.json` | 일부; 세 server는 S-4까지 부르지 않는다 | `make core-test`, `make core-lint`, `make core-fmt-check` |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
@@ -99,8 +99,7 @@ Rust core(C-7)는 아직 모든 규칙을 갖지 않는다. 가질 때까지 세
 | 규칙 | core가 아직 갖지 않는 이유 | 기간 |
 |---|---|---|
 | template AST에서 read path를 계산하는 일(HY-73.1부터 HY-73.20) | build가 template AST에서 계산하고 Node server는 browser 패키지로 계산하며(HY-73.23), core는 그것으로 읽는 데이터를 보존한다 | template 언어의 compiler가 그것을 줄 때 |
-| kept 값을 적용하면 렌더되지 않는 region의 kept 값(HY-38.16부터 HY-38.18까지) | region을 따로 렌더해야 하는데 core는 렌더하지 않는다 | core가 template을 렌더할 때 |
-| 문서와 그 region의 렌더(HY-12, HY-13, HY-31.1, HY-31.4부터 HY-31.6까지), client 렌더 선택(HY-62), embedded data를 요청하는 reply(HY-92), context handler 호출(HY-124.2부터 HY-124.4까지), 데이터 모델 검사(HY-44) | template을 렌더하고 애플리케이션의 handler를 부른다 | core가 template을 렌더할 때와 S-4 |
+| client 렌더 선택(HY-62), embedded data를 요청하는 reply(HY-92), context handler 호출(HY-124.2부터 HY-124.4까지), 데이터 모델 검사(HY-44) | 애플리케이션의 handler를 부르며, core가 host에게 부르라고 요청한다 | core의 요청 단계와 S-4 |
 | 요청의 body(HY-56, HY-57, HY-113, HY-114, HY-131)와 요청의 cookie(HY-129.13) | http-forms와 http-cookies 라이브러리가 가지며, 각 server가 binding으로 부른다 | S-4 |
 | hook, host 진입점, runtime(HY-43, HY-60, HY-66, HY-67, HY-74, HY-97, HY-99, HY-100, HY-105) | host 코드(L-3)이며 각 runtime에 남는다 | 없음: host 코드로 남는다 |
 | ORM 오류를 class로 알아보는 일(HY-107.7)과 handler를 부르는 요청 단계(HY-120, HY-121.5, HY-122.9) | core는 kind별 응답과 단계의 순서를 주고, server가 handler를 실행한다 | S-4 |

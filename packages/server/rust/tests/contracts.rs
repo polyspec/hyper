@@ -863,3 +863,183 @@ fn the_current_path_of_a_request() {
     }
     assert!(ran > 0);
 }
+
+/// The engine and the manifest of an application of the fixture `applications` of `app.json`.
+fn application(
+    file: &Value,
+    name: &str,
+) -> (
+    polyspec_hyper::render::Templates,
+    polyspec_hyper::manifest::Manifest,
+) {
+    let fixture = &file["applications"][name];
+    let sources: Vec<(String, String)> = fixture["templates"]
+        .as_object()
+        .into_iter()
+        .flatten()
+        .map(|(template, source)| (template.clone(), text_of(source).to_owned()))
+        .collect();
+    let templates =
+        match polyspec_hyper::render::Templates::new(&sources, std::collections::HashMap::new()) {
+            Ok(templates) => templates,
+            Err(error) => panic!("{name}: {error}"),
+        };
+    match polyspec_hyper::manifest::read(fixture["manifest"].to_string().as_bytes()) {
+        Ok(manifest) => (templates, manifest),
+        Err(error) => panic!("{name}: {error}"),
+    }
+}
+
+#[test]
+fn a_document_holds_its_parts_rendered_alone() {
+    // HY-12.1, HY-13.1, HY-13.2, HY-13.3
+    use polyspec_hyper::render::Document;
+    let file = cases("app.json");
+    let mut ran = 0;
+    for case in group(&file, "parts") {
+        let name = text(case, "application");
+        let (templates, manifest) = application(&file, name);
+        let Some(route) = manifest
+            .routes
+            .iter()
+            .find(|route| route.name == text(case, "route"))
+        else {
+            panic!("{}: no route", case["id"]);
+        };
+        let shared = match data_value(&case["shared"].to_string()) {
+            Ok(polyspec_template::Value::Map(map)) => map,
+            Ok(_) | Err(_) => panic!("{}: the shared data is no map", case["id"]),
+        };
+        let regions: Vec<(String, polyspec_template::Value)> = case["regions"]
+            .as_object()
+            .into_iter()
+            .flatten()
+            .map(|(region, data)| match data_value(&data.to_string()) {
+                Ok(data) => (region.clone(), data),
+                Err(error) => panic!("{}: {error}", case["id"]),
+            })
+            .collect();
+        let kept = polyspec_template::OrderedMap::new();
+        let document = Document {
+            manifest: &manifest,
+            route,
+            shared: &shared,
+            regions: &regions,
+            kept: &kept,
+            env: polyspec_template::Env {
+                timezone: text(&file["applications"][name], "timezone").to_owned(),
+                now: 0.0,
+            },
+            build: text(&file["applications"][name], "build"),
+            embed: None,
+        };
+        let rendered = match templates.render_document(&document) {
+            Ok(rendered) => rendered,
+            Err(error) => panic!("{}: {error}", case["id"]),
+        };
+        let parts = &case["parts"];
+        let mut expected = text(case, "frame").replace("{# title}", text(case, "title"));
+        for region in &manifest.regions {
+            let part = match (region.page, case.get("pageFrame")) {
+                (true, Some(frame)) => {
+                    let mut page = text_of(frame).to_owned();
+                    for route_region in &route.regions {
+                        page = page.replace(
+                            &format!("{{# {}}}", route_region.name),
+                            text(parts, &route_region.name),
+                        );
+                    }
+                    assert_eq!(page, text(parts, &region.name), "{}", case["id"]);
+                    page
+                }
+                _ => text(parts, &region.name).to_owned(),
+            };
+            expected = expected.replace(&format!("{{# {}}}", region.name), &part);
+        }
+        assert_eq!(rendered, expected, "{}", case["id"]);
+        ran += 1;
+    }
+    assert!(ran > 0);
+}
+
+#[test]
+fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
+    // HY-38.16, HY-38.17, HY-38.18, HY-31.2, HY-31.3
+    use polyspec_hyper::page::{json_value, kept_values, Response};
+    use polyspec_hyper::render::Document;
+    let file = cases("app.json");
+    let (templates, manifest) = application(&file, "a_board");
+    let Some(route) = manifest.routes.iter().find(|route| route.name == "list") else {
+        panic!("no route list");
+    };
+    let fixture = &file["applications"]["a_board"];
+    let render = |tags: &str, cookie: &str| {
+        let regions = vec![
+            ("side".to_owned(), data_value(r#"{"count":0,"note":null}"#)),
+            ("content".to_owned(), data_value("{}")),
+            (
+                "rows".to_owned(),
+                data_value(&format!(
+                    r#"{{"items":["a<","b0"],"open":false,"mode":"a","view":"x","filter":{{"a":1}},"tags":{tags}}}"#
+                )),
+            ),
+        ];
+        let regions: Vec<(String, polyspec_template::Value)> = regions
+            .into_iter()
+            .map(|(name, value)| match value {
+                Ok(value) => (name, value),
+                Err(error) => panic!("{error}"),
+            })
+            .collect();
+        let cookie = polyspec_hyper::keep::cookie_values(cookie);
+        let kept = kept_values(&manifest, &regions, &[], &cookie);
+        let shared = match polyspec_hyper::page::shared_data("List", "t", None) {
+            Ok(shared) => shared,
+            Err(error) => panic!("{error}"),
+        };
+        let value = json_value(Response {
+            timezone: "+09:00",
+            route: "list",
+            params: &[],
+            build: text(fixture, "build"),
+            context: None,
+            shared: shared.clone(),
+            regions: regions.clone(),
+            kept: kept.clone(),
+        });
+        templates.render_document(&Document {
+            manifest: &manifest,
+            route,
+            shared: &shared,
+            regions: &regions,
+            kept: &kept,
+            env: polyspec_template::Env {
+                timezone: "+09:00".to_owned(),
+                now: 0.0,
+            },
+            build: text(fixture, "build"),
+            embed: Some(&value),
+        })
+    };
+    match render("[]", r#"{"rows":{"mode":"b","tags":[1]}}"#) {
+        Ok(document) => {
+            assert!(document.contains("<li>a&lt;</li><li>b0</li>"), "{document}");
+            assert!(document.contains(r#""kept":{}"#), "{document}");
+            assert!(document.contains(r#""mode":"a""#), "{document}");
+            assert!(document.contains(r#"<"#), "{document}");
+        }
+        Err(error) => panic!("{error}"),
+    }
+    match render("[]", r#"{"rows":{"mode":"b"}}"#) {
+        Ok(document) => assert!(
+            document.contains(r#""kept":{"rows":{"mode":"b"}}"#),
+            "{document}"
+        ),
+        Err(error) => panic!("{error}"),
+    }
+    match render("[1]", r#"{"rows":{"mode":"b"}}"#) {
+        Err(bindgen_core::Failure::Kind(Error::Template(_))) => {}
+        Err(error) => panic!("{error}"),
+        Ok(document) => panic!("{document}"),
+    }
+}
