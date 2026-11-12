@@ -1502,9 +1502,12 @@
       "id": "request",
       "rules": [
         "HY-15",
-        "HY-42"
+        "HY-42",
+        "HY-113"
       ],
-      "cases": [],
+      "cases": [
+        "contracts/request.json"
+      ],
       "units": [
         {
           "id": "request",
@@ -1516,16 +1519,1011 @@
             },
             "node": {
               "file": "packages/server/ts/src/request.ts",
-              "kind": "interface",
+              "kind": "class",
               "internal": false
             },
             "python": {
               "file": "packages/server/python/src/polyspec/hyper/request.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": false
             }
           },
-          "members": []
+          "members": [
+            {
+              "id": "request.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "requestInit"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Creates a request of the parts that a host gives, reads its query, its form values and its files, and fails in Node and Python for a path, a query or a header with a character above U+00FF (HY-42.6, HY-56, HY-57, HY-113).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::__construct",
+                  "signature": "public function __construct(string $method, string $path, array $headers, string $query, string $body, array $flash, string $csrfToken, array $params, array $cookies, bool $https, mixed $selection, ?int $bodySize, ?string $media, ?Polyspec\\Hyper\\RequestBody $read, mixed $json)"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.constructor",
+                  "signature": "constructor(init: RequestInit)"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.__init__",
+                  "signature": "def __init__(self, method: str, path: str, headers: Optional[dict[str, str]]=None, query: str='', body: bytes=b'', flash: Optional[dict]=None, csrf_token: str='', params: Optional[dict[str, str]]=None, cookies: Optional[dict[str, str]]=None, https: bool=False, selection: object=None, body_size: Optional[int]=None, media: Optional[str]=None, read: Optional[RequestBody]=None, json: object=None)"
+                }
+              }
+            },
+            {
+              "id": "request.exceeded",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "number",
+                "number",
+                "number",
+                "boolean"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::exceeded",
+                  "signature": "public function exceeded(int $valueLimit, int $partLimit, int $fileLimit, bool $streams): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.exceeded",
+                  "signature": "exceeded(valueLimit: number, partLimit: number, fileLimit: number, streams: boolean): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._exceeded",
+                  "signature": "def _exceeded(self, value_limit: int, part_limit: int, file_limit: int, streams: bool) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request.release",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Removes the directory of the files of the body with the files that were not moved (HY-131.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::release",
+                  "signature": "public function release(): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.release",
+                  "signature": "async release(): Promise<void>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._release",
+                  "signature": "def _release(self) -> None"
+                }
+              }
+            },
+            {
+              "id": "request.withSession",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "flash",
+                "string"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns a copy that holds the flash values and the masked token of the session.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::withSession",
+                  "signature": "public function withSession(Polyspec\\Hyper\\Flash $flash, string $csrfToken): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.withSession",
+                  "signature": "withSession(flash: Flash, csrfToken: string): Request"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._with_session",
+                  "signature": "def _with_session(self, flash: Flash, csrf_token: str) -> 'Request'"
+                }
+              }
+            },
+            {
+              "id": "request.withRoute",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "map<string>"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns a copy with the routed path and the route parameters.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::withRoute",
+                  "signature": "public function withRoute(string $path, array $params): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.withRoute",
+                  "signature": "withRoute(path: string, params: Record<string, string>): Request"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._with_route",
+                  "signature": "def _with_route(self, path: str, params: dict[str, str]) -> 'Request'"
+                }
+              }
+            },
+            {
+              "id": "request.withHeader",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns a copy whose header of the name, compared without case, has the value (HY-97).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::withHeader",
+                  "signature": "public function withHeader(string $name, string $value): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.withHeader",
+                  "signature": "withHeader(name: string, value: string): Request"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.with_header",
+                  "signature": "def with_header(self, name: str, value: str) -> 'Request'"
+                }
+              }
+            },
+            {
+              "id": "request.withMedia",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns a copy that holds the media type that the server selected for the request (HY-116).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::withMedia",
+                  "signature": "public function withMedia(string $type): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.withMedia",
+                  "signature": "withMedia(type: string): Request"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._with_media",
+                  "signature": "def _with_media(self, media: str) -> 'Request'"
+                }
+              }
+            },
+            {
+              "id": "request.asRepresentation",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns the request that a representation handler receives: without the Cookie header and the cookies, and with the decoded JSON value of its body (HY-121.2, HY-121.9).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::asRepresentation",
+                  "signature": "public function asRepresentation(mixed $value): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.asRepresentation",
+                  "signature": "asRepresentation(value: Value): Request"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._as_representation",
+                  "signature": "def _as_representation(self, value: object) -> 'Request'"
+                }
+              }
+            },
+            {
+              "id": "request.asGet",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "request",
+              "errors": [],
+              "state": "Returns a copy with the method GET, as which the server answers a HEAD request (HY-27.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::asGet",
+                  "signature": "public function asGet(): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.asGet",
+                  "signature": "asGet(): Request"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._as_get",
+                  "signature": "def _as_get(self) -> 'Request'"
+                }
+              }
+            },
+            {
+              "id": "request.bodyBytes",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the bytes of the body as the host gave them.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::bodyBytes",
+                  "signature": "public function bodyBytes(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.bodyBytes",
+                  "signature": "bodyBytes(): Uint8Array"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._body_bytes",
+                  "signature": "def _body_bytes(self) -> bytes"
+                }
+              }
+            },
+            {
+              "id": "request.json",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the value of the JSON body of a representation request, or null for a request without a body (HY-121.9).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::json",
+                  "signature": "public function json(): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.json",
+                  "signature": "json(): Value"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.json",
+                  "signature": "def json(self) -> object"
+                }
+              }
+            },
+            {
+              "id": "request.withSelection",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns a copy that holds the value of the choice of the client rendering selection (HY-62).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::withSelection",
+                  "signature": "public function withSelection(mixed $value): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.withSelection",
+                  "signature": "withSelection(value: unknown): Request"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._with_selection",
+                  "signature": "def _with_selection(self, value: object) -> 'Request'"
+                }
+              }
+            },
+            {
+              "id": "request.copy",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "map<value>"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns a copy of the request with the given parts replaced.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::copy",
+                  "signature": "private function copy(array $changes): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.copy",
+                  "signature": "private copy(changes: Partial<RequestInit>): Request"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._copy",
+                  "signature": "def _copy(self, **changes) -> 'Request'"
+                }
+              }
+            },
+            {
+              "id": "request.selection",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the value of the choice that the client rendering selection returned for the request, or null (HY-62).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::selection",
+                  "signature": "public function selection(): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.selection",
+                  "signature": "selection(): unknown"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.selection",
+                  "signature": "def selection(self) -> object"
+                }
+              }
+            },
+            {
+              "id": "request.params",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "map<string>",
+              "errors": [],
+              "state": "Returns the route parameters.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::params",
+                  "signature": "public function params(): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.params",
+                  "signature": "params(): Record<string, string>"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.params",
+                  "signature": "def params(self) -> dict[str, str]"
+                }
+              }
+            },
+            {
+              "id": "request.cookie",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns a cookie value, or null (HY-129).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::cookie",
+                  "signature": "public function cookie(string $name): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.cookie",
+                  "signature": "cookie(name: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.cookie",
+                  "signature": "def cookie(self, name: str) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "request.param",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns a route parameter, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::param",
+                  "signature": "public function param(string $name): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.param",
+                  "signature": "param(name: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.param",
+                  "signature": "def param(self, name: str) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "request.validInput",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the path consists of printable ASCII characters and every query and form name and value, every file part and HX-Current-URL are valid UTF-8 (HY-42.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::validInput",
+                  "signature": "public function validInput(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.validInput",
+                  "signature": "validInput(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.valid_input",
+                  "signature": "def valid_input(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request.validUtf8",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the bytes of a header value are valid UTF-8 (HY-42.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::validUtf8",
+                  "signature": "private static function validUtf8(string $value): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.validUtf8",
+                  "signature": "private static validUtf8(text: string): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request._valid_utf8",
+                  "signature": "def _valid_utf8(text: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request.bodySize",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the size of the body in bytes: its length, the size that the host received or the Content-Length header, whichever is largest (HY-59.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::bodySize",
+                  "signature": "public function bodySize(): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.bodySize",
+                  "signature": "bodySize(): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.body_size",
+                  "signature": "def body_size(self) -> int"
+                }
+              }
+            },
+            {
+              "id": "request.mediaType",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the media type of the Content-Type header in lower case, without its parameters (HY-59.7).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::mediaType",
+                  "signature": "public function mediaType(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.mediaType",
+                  "signature": "mediaType(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.media_type",
+                  "signature": "def media_type(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "request.header",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the value of a header, read without case, as text whose characters are bytes, or null.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::header",
+                  "signature": "public function header(string $name): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.header",
+                  "signature": "header(name: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.header",
+                  "signature": "def header(self, name: str) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "request.wantsJson",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the selected media type of the request is application/vnd.hyper+json, and fails for a request without a selection (HY-15, HY-116).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::wantsJson",
+                  "signature": "public function wantsJson(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.wantsJson",
+                  "signature": "wantsJson(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.wants_json",
+                  "signature": "def wants_json(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request.isRegionRequest",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true for a region request: a JSON request with the header HX-Request (HY-15).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::isRegionRequest",
+                  "signature": "public function isRegionRequest(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.isRegionRequest",
+                  "signature": "isRegionRequest(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.is_region_request",
+                  "signature": "def is_region_request(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request.currentPath",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the path of the page that sent the request, read from HX-Current-URL, or null (HY-11).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::currentPath",
+                  "signature": "public function currentPath(): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.currentPath",
+                  "signature": "currentPath(): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.current_path",
+                  "signature": "def current_path(self) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "request.path",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the request path; after routing, the path without the base path (HY-42.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::path",
+                  "signature": "public function path(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.path",
+                  "signature": "path(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.path",
+                  "signature": "def path(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "request.rawQuery",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the raw query of the request target, or the empty string (HY-56).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::rawQuery",
+                  "signature": "public function rawQuery(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.rawQuery",
+                  "signature": "rawQuery(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.raw_query",
+                  "signature": "def raw_query(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "request.query",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "list<list<value>>",
+              "errors": [],
+              "state": "Returns every query value without nesting, as pairs of a name and its values in request order (HY-56.7).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::query",
+                  "signature": "public function query(): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.query",
+                  "signature": "query(): [string, string[]][]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.query",
+                  "signature": "def query(self) -> list[tuple[str, list[str]]]"
+                }
+              }
+            },
+            {
+              "id": "request.queryInt",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "number"
+              ],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the last query value of a name as an integer, or the default when it is absent or no integer.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::queryInt",
+                  "signature": "public function queryInt(string $name, int $default): int"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.queryInt",
+                  "signature": "queryInt(name: string, fallback: number): number"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.query_int",
+                  "signature": "def query_int(self, name: str, default: int) -> int"
+                }
+              }
+            },
+            {
+              "id": "request.form",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "list<list<value>>",
+              "errors": [],
+              "state": "Returns every form value of the body without nesting, as pairs of a name and its values in request order (HY-57).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::form",
+                  "signature": "public function form(): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.form",
+                  "signature": "form(): [string, string[]][]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.form",
+                  "signature": "def form(self) -> list[tuple[str, list[str]]]"
+                }
+              }
+            },
+            {
+              "id": "request.formString",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the last form value of a name, or the empty string for an absent name (HY-57).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::formString",
+                  "signature": "public function formString(string $name): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.formString",
+                  "signature": "formString(name: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.form_string",
+                  "signature": "def form_string(self, name: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "request.files",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "list<list<value>>",
+              "errors": [],
+              "state": "Returns the files of the body as pairs of a name and its files in request order (HY-113.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::files",
+                  "signature": "public function files(): array"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.files",
+                  "signature": "files(): [string, UploadedFile[]][]"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.files",
+                  "signature": "def files(self) -> list[tuple[str, list[UploadedFile]]]"
+                }
+              }
+            },
+            {
+              "id": "request.file",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<uploaded-file>",
+              "errors": [],
+              "state": "Returns the last file of a name, or null when it has none (HY-113.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::file",
+                  "signature": "public function file(string $name): ?Polyspec\\Hyper\\UploadedFile"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.file",
+                  "signature": "file(name: string): UploadedFile | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.file",
+                  "signature": "def file(self, name: str) -> Optional[UploadedFile]"
+                }
+              }
+            },
+            {
+              "id": "request.fileOver",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "number"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when a file of the body is larger than the limit in bytes (HY-114).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::fileOver",
+                  "signature": "public function fileOver(int $limit): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.fileOver",
+                  "signature": "fileOver(limit: number): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.file_over",
+                  "signature": "def file_over(self, limit: int) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request.flash",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns a flash value that the previous action stored, or null (HY-25).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::flash",
+                  "signature": "public function flash(string $name): mixed"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.flash",
+                  "signature": "flash(name: string): Value"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.flash",
+                  "signature": "def flash(self, name: str) -> object"
+                }
+              }
+            },
+            {
+              "id": "request.csrfToken",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the masked token of the session (HY-24).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::csrfToken",
+                  "signature": "public function csrfToken(): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.csrfToken",
+                  "signature": "csrfToken(): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.csrf_token",
+                  "signature": "def csrf_token(self) -> str"
+                }
+              }
+            },
+            {
+              "id": "request.targetPath",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the path of a request target: the target before its first ? or #, after the authority of an absolute-form target (HY-42.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::targetPath",
+                  "signature": "public static function targetPath(string $target): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.targetPath",
+                  "signature": "static targetPath(target: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.target_path",
+                  "signature": "def target_path(target: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "request.targetQuery",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the raw query of a request target: the target after its first ? up to its first # (HY-56).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::targetQuery",
+                  "signature": "public static function targetQuery(string $target): string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.targetQuery",
+                  "signature": "static targetQuery(target: string): string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.target_query",
+                  "signature": "def target_query(target: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "request.fromGlobals",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "number",
+                "boolean",
+                "number",
+                "number",
+                "number"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Creates the request of the PHP SAPI from its server variables and reads its body from php://input in chunks (HY-100, HY-131).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::fromGlobals",
+                  "signature": "public static function fromGlobals(int $limit, bool $stream, int $valueLimit, int $partLimit, int $fileLimit): self"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              }
+            },
+            {
+              "id": "request.method",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Holds the request method in upper case.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::method",
+                  "signature": "public readonly string $method"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.method",
+                  "signature": "readonly method: string"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.method",
+                  "signature": "method: str"
+                }
+              }
+            },
+            {
+              "id": "request.https",
+              "kind": "property",
+              "visibility": "public",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Holds whether the request arrived over HTTPS.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Request.php::Polyspec\\Hyper\\Request::https",
+                  "signature": "public readonly bool $https"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/request.ts::Request.https",
+                  "signature": "readonly https: boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/request.py::Request.https",
+                  "signature": "https: bool"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -6979,6 +7977,57 @@
           "declaration": "export type ContextHandler = (selection: unknown) => Map<string, Value> | Promise<Map<string, Value>>;"
         }
       }
+    },
+    {
+      "id": "requestInit",
+      "visibility": "public",
+      "unit": "request",
+      "shape": {
+        "fields": {
+          "method": "string",
+          "path": "string",
+          "headers": "map<string>",
+          "query": "string",
+          "body": "bytes",
+          "flash": "map<value>",
+          "csrfToken": "string",
+          "params": "map<string>",
+          "cookies": "map<string>",
+          "https": "boolean",
+          "selection": "value",
+          "bodySize": "optional<number>",
+          "media": "optional<string>",
+          "read": "optional<request-body>",
+          "json": "value"
+        },
+        "optional": [
+          "headers",
+          "query",
+          "body",
+          "flash",
+          "csrfToken",
+          "params",
+          "cookies",
+          "https",
+          "selection",
+          "bodySize",
+          "media",
+          "read",
+          "json"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/server/ts/src/request.ts::RequestInit",
+          "declaration": "export interface RequestInit {\n  method: string;\n  path: string;\n  // The header values by their names in any case.\n  headers?: Record<string, string>;\n  // The raw query: the request target after its first `?` up to its first `#`.\n  query?: string;\n  body?: Uint8Array;\n  flash?: ReadonlyMap<string, Value>;\n  csrfToken?: string;\n  params?: Record<string, string>;\n  // The cookie values by name, of the one parse of the Cookie header (HY-129).\n  cookies?: ReadonlyMap<string, string>;\n  https?: boolean;\n  // The value of the choice of the client rendering selection (HY-62).\n  selection?: unknown;\n  // The size of the body that the host received, when it stopped reading a body larger than the limit (HY-59); the\n  // default is the length of the body.\n  bodySize?: number | null;\n  // The media type that the selection of HY-116 chose, or null before the selection.\n  media?: string | null;\n  /**\n   * The body as the host read it, whose directory holds the files of a body read in chunks (HY-131), or null.\n   *\n   * @internal\n   */\n  read?: RequestBody | null;\n  // The decoded JSON body of a representation request (HY-121).\n  json?: Value;\n}"
+        }
+      }
     }
   ],
   "caseFiles": {
@@ -8891,6 +9940,79 @@
               "compare": "exact",
               "sentence": "HY-92.2",
               "state": "`embeds` states whether a reply after `calls` makes the HTML document embed its data."
+            }
+          }
+        }
+      }
+    },
+    "request.json": {
+      "fixtures": {},
+      "sections": {
+        "texts": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "path": {
+              "role": "input"
+            },
+            "query": {
+              "role": "input"
+            },
+            "headers": {
+              "role": "input"
+            }
+          },
+          "outcomes": {
+            "request": {
+              "compare": "raises",
+              "sentence": "HY-42.6"
+            }
+          }
+        },
+        "files": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "type": {
+              "role": "input"
+            },
+            "body": {
+              "role": "input"
+            },
+            "names": {
+              "role": "input"
+            },
+            "last": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-113.2",
+              "state": "`type` and `body` are text whose characters U+0000 to U+00FF are bytes, and `last` holds, for each name of `names` in order, the filename of the file that `file(name)` returns, or null when it returns none."
+            },
+            "pairs": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-113.2",
+              "state": "`pairs` is what `files()` returns, each file given as its filename."
             }
           }
         }

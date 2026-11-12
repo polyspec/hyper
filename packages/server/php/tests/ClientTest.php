@@ -52,7 +52,7 @@ final class ClientTest extends TestCase
                 Reply $reply,
             ) use (&$reports): void {
                 $reports[] = [
-                    $request->path,
+                    $request->path(),
                     $response->status,
                     $response->headers['Content-Security-Policy'] ?? null,
                     array_column($reply->notes(), 1, 0),

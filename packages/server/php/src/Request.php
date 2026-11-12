@@ -29,12 +29,14 @@ final class Request
      * @param array<array-key, mixed> $flash
      * @param array<string, string> $params
      * @param array<array-key, string> $cookies cookie values by name; PHP gives a decimal name as an integer key
+     * @param ?int $bodySize the size of the body that the host received, when it stopped reading a body larger than
+     *     the limit (HY-59); null counts the body itself
      * @param ?RequestBody $read the body as a host read it: a body read in chunks gives its parts (HY-131)
      * @param mixed $json the decoded JSON body of a representation request (HY-121), which the server gives
      */
     public function __construct(
         public readonly string $method,
-        public readonly string $path,
+        private readonly string $path,
         array $headers = [],
         private readonly string $query = '',
         private readonly string $body = '',
@@ -44,6 +46,7 @@ final class Request
         private readonly array $cookies = [],
         public readonly bool $https = false,
         private readonly mixed $selection = null,
+        private readonly ?int $bodySize = null,
         private readonly ?string $media = null,
         private readonly ?RequestBody $read = null,
         private readonly mixed $json = null,
@@ -220,6 +223,7 @@ final class Request
             'cookies' => $this->cookies,
             'https' => $this->https,
             'selection' => $this->selection,
+            'bodySize' => $this->bodySize,
             'media' => $this->media,
             'read' => $this->read,
             'json' => $this->json,
@@ -265,13 +269,13 @@ final class Request
     public function validInput(): bool
     {
         return preg_match('/^[\x21-\x7E]*$/D', $this->path) === 1
-            && self::utf8($this->header('HX-Current-URL') ?? '')
+            && self::validUtf8($this->header('HX-Current-URL') ?? '')
             && $this->queryFields !== null
             && $this->formFields !== null
             && $this->fileParts !== null;
     }
 
-    private static function utf8(string $value): bool
+    private static function validUtf8(string $value): bool
     {
         return preg_match('//u', $value) === 1;
     }
@@ -285,7 +289,7 @@ final class Request
         $declared = $this->header('Content-Length') ?? '';
 
         return max(
-            strlen($this->body),
+            $this->bodySize ?? strlen($this->body),
             $this->read?->size() ?? 0,
             preg_match('/^\d+$/D', $declared) === 1 ? (int) $declared : 0,
         );
@@ -305,9 +309,16 @@ final class Request
         return $this->headers[strtolower($name)] ?? null;
     }
 
-    /** Returns true when the request selected application/vnd.hyper+json, the JSON of hyper (HY-15, HY-116). */
+    /**
+     * Returns true when the selected media type of the request is application/vnd.hyper+json (HY-15, HY-116). The
+     * selection is read from the request and Accept is not read again; a request without a selection fails.
+     */
     public function wantsJson(): bool
     {
+        if ($this->media === null) {
+            throw new \LogicException('the request holds no selected media type (HY-116)');
+        }
+
         return $this->media === 'application/vnd.hyper+json';
     }
 

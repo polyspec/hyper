@@ -6,6 +6,7 @@ import { App, MemorySessionStore, Request, type Handlers } from '../../src/index
 import type { HostFunction } from '@polyspec/template/render';
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
+import { requestOf } from '../../src/http.js';
 
 const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
 
@@ -59,7 +60,7 @@ export const steps = {
     }
     const app = await App.open<Record<string, never>>(options);
     const headers = reader.has('request.headers') ? (reader.input('request.headers') as Map<string, string>) : new Map();
-    const request = Request.from({
+    const request = requestOf({
       method: reader.has('request.method') ? (reader.input('request.method') as string) : 'GET',
       target: reader.has('request.target') ? (reader.input('request.target') as string) : '/',
       headers: Object.fromEntries(headers),

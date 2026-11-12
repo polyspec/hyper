@@ -7,6 +7,7 @@ import { expect } from 'vitest';
 import { Csrf } from '../src/csrf.js';
 import { App, BadRequest, Forbidden, MemorySessionStore, NotFound, Redirect, Request, Result, type AppOptions, type ClientRendering, type Handlers, type Response } from '../src/index.js';
 import type { SessionStore } from '../src/session.js';
+import { requestOf } from '../src/http.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
 // The template files of the fixtures, which `make hyper-test-node` builds with scripts/build-templates.mts.
@@ -168,7 +169,7 @@ export class Fixture {
 
   async handle(init: { method?: string; target: string; headers?: Record<string, string>; body?: string; https?: boolean }, options: Partial<AppOptions<Services>> = {}, session: SessionStore = this.session): Promise<Response> {
     const headers = init.body === undefined ? init.headers : { 'Content-Type': 'application/x-www-form-urlencoded', ...init.headers };
-    const request = Request.from({ method: init.method ?? 'GET', target: init.target, headers, body: init.body === undefined ? undefined : Buffer.from(init.body, 'latin1'), https: init.https });
+    const request = requestOf({ method: init.method ?? 'GET', target: init.target, headers, body: init.body === undefined ? undefined : Buffer.from(init.body, 'latin1'), https: init.https });
     return (await this.app(options)).handle(request, session);
   }
 
@@ -226,6 +227,13 @@ export function plain(value: unknown): unknown {
   if (value instanceof Map) return Object.fromEntries([...value].map(([key, item]) => [key, plain(item)]));
   if (Array.isArray(value)) return value.map(plain);
   return value;
+}
+
+// Returns the bytes of a text whose characters U+0000 to U+00FF are bytes, and fails for another character, which
+// Buffer.from(text, 'latin1') cuts to its low byte.
+export function bytesOf(text: string): Buffer {
+  if (/[\u0100-\uffff]/.test(text)) throw new Error('the text of the case holds a character above U+00FF');
+  return Buffer.from(text, 'latin1');
 }
 
 // The value of a JSON text, which a test narrows with record and text.

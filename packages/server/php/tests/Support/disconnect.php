@@ -37,7 +37,7 @@ FrontController::open(
             sprintf(
                 "disconnect %s %s %d %s\n",
                 $request->method,
-                $request->path,
+                $request->path(),
                 $elapsed >= 300.0 ? 1 : 0,
                 json_encode(array_column($reply->notes(), 1, 0)),
             ),

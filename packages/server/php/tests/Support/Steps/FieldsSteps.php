@@ -10,6 +10,7 @@ use Polyspec\Hyper\Multipart;
 use Polyspec\Hyper\RequestBody;
 use Polyspec\Hyper\UploadedFile;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\Bytes;
 
 /**
  * HY-56, HY-57, HY-113: the cases of contracts/fields.json. A urlencoded text is the UTF-8 encoding of its JSON string,
@@ -217,6 +218,6 @@ final class FieldsSteps
     /** Returns the bytes of text whose characters are bytes. */
     private static function bytes(string $text): string
     {
-        return (string) mb_convert_encoding($text, 'ISO-8859-1', 'UTF-8');
+        return Bytes::of($text);
     }
 }

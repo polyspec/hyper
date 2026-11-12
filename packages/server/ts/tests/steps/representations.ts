@@ -8,6 +8,7 @@ import { App, MemorySessionStore, Representation, Request, type Handlers, type R
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { OrmError, parsed, plain, record } from '../support.js';
+import { requestOf } from '../../src/http.js';
 
 const PROGRAMS = fileURLToPath(new URL('../../../../../var/contract-programs/', import.meta.url));
 const APPLICATION = 'representations';
@@ -137,7 +138,7 @@ export const steps = {
     const headers = Object.fromEntries(reader.input('request.headers') as Map<string, string>);
     const body = reader.has('request.body') ? Buffer.from(reader.input('request.body') as string, 'utf8') : undefined;
     const response = await app.handle(
-      Request.from({ method: reader.input('request.method') as string, target: reader.input('request.target') as string, headers, body }),
+      requestOf({ method: reader.input('request.method') as string, target: reader.input('request.target') as string, headers, body }),
       store,
     );
     const observed = calls.at(-1);

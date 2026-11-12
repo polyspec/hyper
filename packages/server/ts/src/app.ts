@@ -444,7 +444,7 @@ export class App<S extends object = Record<string, never>> {
     // HY-120, HY-121: a representation request opens no session and runs only its handler.
     const [type, entry, values] = chosen;
     if (entry !== null) return this.representation(request.withRoute(path, match.params), handler, entry, values, basePath);
-    const selected = request.withSelectedType(type);
+    const selected = request.withMedia(type);
     // HY-116, HY-27: a method other than GET or a declared POST is refused before the session is read (HY-120).
     if (selected.method !== 'GET' && (selected.method !== 'POST' || handler.post === undefined)) return notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
     // HY-127: a Hyper-Context value that is not 64 lowercase hexadecimal characters is refused before any handler runs.

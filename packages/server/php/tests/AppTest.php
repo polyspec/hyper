@@ -1735,7 +1735,7 @@ final class AppTest extends TestCase
         // HY-97: around receives the request and `answer`, which runs the application for a request or a changed copy.
         $calls = [];
         $around = function (Request $request, \Closure $answer) use (&$calls): Response {
-            $calls[] = $request->method . ' ' . $request->path;
+            $calls[] = $request->method . ' ' . $request->path();
 
             $answered = $answer($request->withHeader('Accept', 'application/vnd.hyper+json'));
             self::assertInstanceOf(Response::class, $answered);

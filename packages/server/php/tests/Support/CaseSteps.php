@@ -18,6 +18,7 @@ use Polyspec\Hyper\Tests\Support\Steps\JsonSteps;
 use Polyspec\Hyper\Tests\Support\Steps\KeptSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ReadsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RepresentationsSteps;
+use Polyspec\Hyper\Tests\Support\Steps\RequestSteps;
 use Polyspec\Hyper\Tests\Support\Steps\RestSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ReplySteps;
 use Polyspec\Hyper\Tests\Support\Steps\ResultSteps;
@@ -52,6 +53,8 @@ final class CaseSteps
             'result.json redirect' => ResultSteps::redirect(...),
             'result.json stop' => ResultSteps::stop(...),
             'reply.json cookies' => ReplySteps::cookies(...),
+            'request.json texts' => RequestSteps::texts(...),
+            'request.json files' => RequestSteps::files(...),
             'reply.json cacheControl' => ReplySteps::cacheControl(...),
             'reply.json referrerPolicy' => ReplySteps::referrerPolicy(...),
             'reply.json status' => ReplySteps::status(...),

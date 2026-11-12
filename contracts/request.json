@@ -1,0 +1,15 @@
+{
+  "texts": [
+    {"id": "a_path_with_a_character_above_u_00ff_fails", "label": "a path with U+0100 fails the request (HY-42.6)", "path": "/\u0100", "query": "", "headers": {}},
+    {"id": "a_query_with_a_character_above_u_00ff_fails", "label": "a raw query with U+D55C fails the request (HY-42.6)", "path": "/", "query": "q=\ud55c", "headers": {}},
+    {"id": "a_header_value_with_a_character_above_u_00ff_fails", "label": "a header value with U+20AC fails the request (HY-42.6)", "path": "/", "query": "", "headers": {"X-Name": "\u20ac"}},
+    {"id": "a_header_name_with_a_character_above_u_00ff_fails", "label": "a header name with U+0100 fails the request (HY-42.6)", "path": "/", "query": "", "headers": {"X-\u0100": "1"}},
+    {"id": "a_content_type_with_a_character_above_u_00ff_fails", "label": "a body type with U+2713 fails the request (HY-42.6)", "path": "/", "query": "", "headers": {"Content-Type": "text/plain; note=\u2713"}}
+  ],
+  "files": [
+    {"id": "the_last_file_of_a_name_and_the_pairs_in_request_order", "label": "file(name) gives the last file of a name, null for a name with only a value or without a part, and files() pairs each name with its files in request order (HY-113.2)", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"f\"; filename=\"a.txt\"\r\n\r\nfirst\r\n--XyZ\r\nContent-Disposition: form-data; name=\"t\"\r\n\r\ntext\r\n--XyZ\r\nContent-Disposition: form-data; name=\"g\"; filename=\"g.txt\"\r\nContent-Type: text/plain\r\n\r\nthird\r\n--XyZ\r\nContent-Disposition: form-data; name=\"f\"; filename=\"b.txt\"\r\n\r\nsecond\r\n--XyZ--\r\n", "names": ["f", "g", "t", "none"], "last": ["b.txt", "g.txt", null, null], "pairs": [["f", ["a.txt", "b.txt"]], ["g", ["g.txt"]]]},
+    {"id": "a_file_with_an_empty_filename_is_the_file_of_its_name", "label": "a file with an empty filename is the file of its name (HY-113.4)", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"f\"; filename=\"\"\r\n\r\n\r\n--XyZ--\r\n", "names": ["f"], "last": [""], "pairs": [["f", [""]]]},
+    {"id": "names_of_digits_keep_the_order_of_their_first_files", "label": "names of digits are names: the pairs keep the order of the first file of each name (HY-113.2)", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"1\"; filename=\"one.txt\"\r\n\r\n1\r\n--XyZ\r\nContent-Disposition: form-data; name=\"0\"; filename=\"zero.txt\"\r\n\r\n0\r\n--XyZ\r\nContent-Disposition: form-data; name=\"1\"; filename=\"uno.txt\"\r\n\r\nu\r\n--XyZ--\r\n", "names": ["0", "1", "2"], "last": ["zero.txt", "uno.txt", null], "pairs": [["1", ["one.txt", "uno.txt"]], ["0", ["zero.txt"]]]},
+    {"id": "a_body_that_is_no_multipart_has_no_files", "label": "a body of another type has no file (HY-113.1)", "type": "application/x-www-form-urlencoded", "body": "f=1", "names": ["f"], "last": [null], "pairs": []}
+  ]
+}

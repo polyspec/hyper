@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { App, MemorySessionStore, Request } from '../src/index.js';
+import { requestOf } from '../src/http.js';
 
 const BUILD = '691d41cab78295352a2fea59326d4ac7f4e0a0ff68eb39acb3f09eb0d1eb51ac';
 const SCRIPT = fileURLToPath(new URL('../../../../scripts/build-templates.mts', import.meta.url));
@@ -37,7 +38,7 @@ describe('the html definition build (HY-125)', () => {
 
     const failures: string[] = [];
     const app = await App.open({ manifest, build, templates: { index: join(output, 'templates.index.json'), root: output }, handlers: {}, timezone: '+09:00', log: () => {}, onResponse: (_request, _response, _elapsed, _reply, failure) => { if (failure !== null) failures.push(failure); } });
-    const response = await app.handle(Request.from({ method: 'GET', target: '/', headers: {} }), new MemorySessionStore());
+    const response = await app.handle(requestOf({ method: 'GET', target: '/', headers: {} }), new MemorySessionStore());
     expect(failures).toEqual([]);
     expect(response.status).toBe(200);
     expect(response.body).toContain(`<head><meta name="hyper-build" content="${BUILD}"></head>`);

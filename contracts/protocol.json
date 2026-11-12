@@ -4379,6 +4379,12 @@
                   "en": "A leading U+FEFF of a decoded query or form name or value (HY-56), of a route parameter (HY-5) and of a cookie value (HY-129) is a character of it, which no server and no browser code removes.",
                   "ko": "디코드한 query나 form 이름이나 값(HY-56), route parameter(HY-5), cookie 값(HY-129) 앞의 U+FEFF는 그 문자이며, 어떤 server와 브라우저 코드도 그것을 지우지 않는다.",
                   "koSource": "f95a97f62cbf6f4e4d5b5024989f306d5db7f012cebc00bc15b89903e7a7376c"
+                },
+                {
+                  "id": "HY-42.6",
+                  "en": "The path, the raw query and the header names and values that a host gives a request are text whose characters U+0000 to U+00FF are its bytes; creating a Node or a Python request with a character above U+00FF in one of them fails with the error class of HY-106.6 of the runtime, `Error` or `ValueError`, where Node cut the character to its low byte and Python failed later with another class, and a PHP string holds bytes.",
+                  "ko": "host가 요청에 주는 path, raw query, header 이름과 값은 문자 U+0000부터 U+00FF까지가 곧 byte인 text이다. 그중 하나에 U+00FF보다 큰 문자가 있는 Node나 Python 요청을 만들면 그 runtime의 HY-106.6 오류 class인 `Error`나 `ValueError`로 실패한다. 이전에 Node는 그 문자를 하위 byte로 잘랐고 Python은 나중에 다른 class로 실패했으며, PHP 문자열은 byte를 가진다.",
+                  "koSource": "82a064d8504265fe5b8f32334a8da7e6dd03ebbd01ea7de7f9c4582c6451db54"
                 }
               ]
             }
@@ -5589,6 +5595,12 @@
                   "en": "A call of a public method with another number of arguments than its parameters is outside the public API: each runtime answers it by its own calling convention, so that PHP and Python fail it with their `TypeError` and its own message, Node and PHP ignore an extra argument and Node gives a missing argument as `undefined`, and the errors and messages that the rules state hold for a call that gives each parameter.",
                   "ko": "parameter와 다른 개수의 인자로 공개 method를 부르는 호출은 공개 API 밖이다: 각 runtime이 자기 호출 규약으로 답하므로 PHP와 Python은 자체 `TypeError`와 자체 메시지로 실패시키고, Node와 PHP는 남는 인자를 무시하며 Node는 빠진 인자를 `undefined`로 주고, 규칙이 정한 오류와 메시지는 각 parameter를 준 호출에 대해 성립한다.",
                   "koSource": "b13cf0adca2867dc29785adeb71dc0891a5307a3d1071f5174bf5de81c53f84c"
+                },
+                {
+                  "id": "HY-106.9",
+                  "en": "A Node function takes its named parameters as one options record, an object whose members are the parameters by their names, because JavaScript has no named arguments: `new Request(init)`, `App.open(options)`, and the options of the session stores and of the host entries of HY-100.",
+                  "ko": "Node 함수는 이름 있는 parameter를 options record 하나로 받는다. 이는 member가 그 이름의 parameter인 object이며, JavaScript에 이름 있는 argument가 없기 때문이다: `new Request(init)`, `App.open(options)`, 그리고 session store와 HY-100 host entry의 option.",
+                  "koSource": "a49aa9d495f89ff2b771668b286af032529f3544285d61086446e39683e464c0"
                 }
               ]
             }

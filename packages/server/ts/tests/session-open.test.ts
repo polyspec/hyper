@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { App, MemorySessionStore, Request, Result, type Handlers, type SessionStore } from '../src/index.js';
 import type { Value } from '../src/values.js';
 import { Fixture } from './support.js';
+import { requestOf } from '../src/http.js';
 
 // A session store that records every call of its interface and keeps the values in memory.
 class CountingStore implements SessionStore {
@@ -40,7 +41,7 @@ describe('the session of a request (HY-120)', () => {
     const store = new CountingStore();
     const app = await new Fixture().app({ bodyLimit: 4 });
     const body = Buffer.from('name=too-long', 'latin1');
-    const response = await app.handle(Request.from({ method: 'POST', target: '/', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }), store);
+    const response = await app.handle(requestOf({ method: 'POST', target: '/', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }), store);
     expect(response.status).toBe(413);
     expect(store.calls).toEqual([]);
     expect(response.headers['Set-Cookie']).toBeUndefined();
@@ -62,7 +63,7 @@ describe('the session of a request (HY-120)', () => {
       context: () => new Map<string, Value>(),
     });
     const store = new CountingStore();
-    const response = await app.handle(Request.from({ method: 'GET', target: '/', headers: { Accept: 'text/html', 'Hyper-Context': 'ABC' } }), store);
+    const response = await app.handle(requestOf({ method: 'GET', target: '/', headers: { Accept: 'text/html', 'Hyper-Context': 'ABC' } }), store);
     expect(response.status).toBe(400);
     expect(store.calls).toEqual([]);
     expect(response.headers['Set-Cookie']).toBeUndefined();
@@ -71,7 +72,7 @@ describe('the session of a request (HY-120)', () => {
   it('opens the session of a page request that selects text/html', async () => {
     const store = new CountingStore();
     const app = await new Fixture().app();
-    const response = await app.handle(Request.from({ method: 'GET', target: '/', headers: { Accept: 'text/html' } }), store);
+    const response = await app.handle(requestOf({ method: 'GET', target: '/', headers: { Accept: 'text/html' } }), store);
     expect(response.status).toBe(200);
     expect(store.calls.length).toBeGreaterThan(0);
   });

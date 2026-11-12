@@ -106,11 +106,11 @@ app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 import { MemorySessionStore, Request } from '@polyspec/hyper-server';
 
 const session = new MemorySessionStore();
-const response = await app.handle(Request.from({ method: 'GET', target: '/board', headers: { Accept: 'application/vnd.hyper+json' } }), session);
+const response = await app.handle(new Request({ method: 'GET', path: '/board', headers: { Accept: 'application/vnd.hyper+json' } }), session);
 // response.status, response.headers, response.body
 ```
 
-`Request.from({ method, target, headers, body, https })`는 `node:http`가 주는 형태의 HTTP 요청 부분을 받는다. target과 header 값은 문자 하나가 바이트 하나인 텍스트이고, body는 바이트다. `SessionStore`는 session 하나의 interface(`get`, `set`, `remove`)이며, `MemorySessionStore`는 test용으로 session 하나를 메모리에 둔다.
+`new Request({ method, path, headers, query, body, cookies, https })`는 HTTP 요청의 부분을 받는다. 요청 target의 path와 raw query, 그리고 header 값은 문자 하나가 바이트 하나인 텍스트이고, body는 바이트다. `SessionStore`는 session 하나의 interface(`get`, `set`, `remove`)이며, `MemorySessionStore`는 test용으로 session 하나를 메모리에 둔다.
 
 ## JSON
 

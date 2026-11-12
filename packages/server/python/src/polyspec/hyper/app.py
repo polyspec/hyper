@@ -424,7 +424,7 @@ class App:
             if request.media_type() != "application/json":
                 return Response.text(415, "Unsupported Media Type").with_header("Vary", vary)
             try:
-                value = JsonCodec.decode(request._body.decode("utf-8"))
+                value = JsonCodec.decode(request._body_bytes().decode("utf-8"))
             except (UnicodeDecodeError, JsonDecodeError):
                 return Response.text(400, "Bad Request").with_header("Vary", vary)
             # HY-121.8: a number outside the data model is no value that a handler reads.

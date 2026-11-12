@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { Csrf } from '../src/csrf.js';
 import { FileSessions, Request, Result, type Choice, type ClientRendering } from '../src/index.js';
 import { client, Fixture, FIXTURES, port, present, SHELL, TOKEN } from './support.js';
+import { requestOf } from '../src/http.js';
 
 // Requires that a request whose selection is `selects` is answered with the plain 500 and logs one error (HY-43).
 async function expectPlain500(selects: ClientRendering['selects']): Promise<void> {
@@ -25,8 +26,8 @@ describe('client rendering (HY-62)', () => {
       frameAncestors: "'self' https://frame.test",
       onResponse: (request, response, _elapsed, reply) => reports.push([present(request).path(), response.status, response.headers['Content-Security-Policy'], reply.notes().length]),
     });
-    await app.handle(Request.from({ method: 'GET', target: '/list', headers: { Host: 'client.test' } }), fixture.session);
-    await app.handle(Request.from({ method: 'GET', target: '/_props/list', headers: { Host: 'client.test' } }), fixture.session);
+    await app.handle(requestOf({ method: 'GET', target: '/list', headers: { Host: 'client.test' } }), fixture.session);
+    await app.handle(requestOf({ method: 'GET', target: '/_props/list', headers: { Host: 'client.test' } }), fixture.session);
     expect(reports).toEqual([
       ['/list', 200, "frame-ancestors 'self' https://frame.test", 0],
       ['/_props/list', 406, "frame-ancestors 'self' https://frame.test", 0],
@@ -106,17 +107,17 @@ describe('client rendering (HY-62)', () => {
         },
       },
     });
-    await app.handle(Request.from({ method: 'GET', target: '/items/7', headers: { Host: 'server.test' } }), fixture.session);
+    await app.handle(requestOf({ method: 'GET', target: '/items/7', headers: { Host: 'server.test' } }), fixture.session);
     expect(selections).toBe(1);
     expect(seen).toEqual([['shared', { host: 'server.test' }], ['side', { host: 'server.test' }], ['item', { host: 'server.test' }]]);
     seen.length = 0;
-    await app.handle(Request.from({ method: 'GET', target: '/_props/items/7', headers: { Host: 'client.test', Accept: 'application/vnd.hyper+json' } }), fixture.session);
+    await app.handle(requestOf({ method: 'GET', target: '/_props/items/7', headers: { Host: 'client.test', Accept: 'application/vnd.hyper+json' } }), fixture.session);
     expect(selections).toBe(2);
     expect(seen).toEqual([['shared', { host: 'client.test' }], ['side', { host: 'client.test' }], ['item', { host: 'client.test' }]]);
     seen.length = 0;
     fixture.session.set('_hyper_csrf', TOKEN);
     const body = Buffer.from(new URLSearchParams({ _csrf: Csrf.masked(TOKEN), name: 'x' }).toString(), 'latin1');
-    const response = await app.handle(Request.from({ method: 'POST', target: '/add', headers: { Host: 'server.test', 'Content-Type': 'application/x-www-form-urlencoded' }, body }), fixture.session);
+    const response = await app.handle(requestOf({ method: 'POST', target: '/add', headers: { Host: 'server.test', 'Content-Type': 'application/x-www-form-urlencoded' }, body }), fixture.session);
     expect(response.status).toBe(303);
     expect(selections).toBe(3);
     expect(seen).toEqual([['add', { host: 'server.test' }]]);
@@ -134,7 +135,7 @@ describe('client rendering (HY-62)', () => {
         add: { post: () => Result.redirect('/') },
       } },
     });
-    await app.handle(Request.from({ method: 'GET', target: '/items/7' }), fixture.session);
+    await app.handle(requestOf({ method: 'GET', target: '/items/7' }), fixture.session);
     expect(seen).toEqual([null]);
   });
 

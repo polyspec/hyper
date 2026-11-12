@@ -5,6 +5,7 @@ import type { Socket } from 'node:net';
 import { extname, isAbsolute, join } from 'node:path';
 import { TLSSocket } from 'node:tls';
 import type { App } from './app.js';
+import { Cookies } from './cookies.js';
 import { errorCode } from './error-code.js';
 import type { FileSessions } from './file-sessions.js';
 import type { RedisSessions } from './redis-sessions.js';
@@ -102,12 +103,12 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
         serveFile(outgoing, incoming, file);
         return;
       }
-      request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, https });
+      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, https });
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
       // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
       read = new RequestBody(incoming.headers['content-type'] ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'), app.valueLimit, app.partLimit, app.fileLimit);
       await readBody(incoming, read, app.bodyLimit);
-      request = Request.from({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body: read.held(), bodySize: read.size(), https }, read);
+      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body: read.held(), bodySize: read.size(), https }, read);
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
       const last: { request?: Request; reply?: Reply } = {};
       // Opens the session of the request by its session cookie, answers with the application, closes the session and
@@ -177,7 +178,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
 function requestLine(packet: Buffer | undefined): Request | null {
   const line = /^([!-~]+) ([^ \r\n]+) HTTP\/[0-9.]+\r?\n/.exec(packet?.toString('latin1') ?? '');
   const [, method, target] = line ?? [];
-  return method === undefined || target === undefined ? null : Request.from({ method, target });
+  return method === undefined || target === undefined ? null : requestOf({ method, target });
 }
 
 // Adds the cookie of a new session first, as PHP does when the session starts (HY-45).
@@ -186,6 +187,34 @@ function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions
   const cookie = sessionCookie(created, app.https || https);
   const cookies = response.headers['Set-Cookie'];
   return new Response(response.status, { ...response.headers, 'Set-Cookie': [cookie, ...(Array.isArray(cookies) ? cookies : [])] }, response.body);
+}
+
+// Returns the request of the parts that node:http gives (HY-100): the method in upper case, the path and the raw query
+// of the request target, each header as one value, and the cookies of the one parse of the Cookie header (HY-129).
+// Several Cookie lines are one header joined with `; `, and other repeated headers join with `, `. `read` is the body
+// as the host read it.
+/** @internal */
+export function requestOf(
+  parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean },
+  read: RequestBody | null = null,
+): Request {
+  const headers: Record<string, string> = {};
+  for (const [name, value] of Object.entries(parts.headers ?? {})) {
+    if (value === undefined) continue;
+    const key = name.toLowerCase();
+    headers[key] = Array.isArray(value) ? value.join(key === 'cookie' ? '; ' : ', ') : value;
+  }
+  return new Request({
+    method: parts.method.toUpperCase(),
+    path: Request.targetPath(parts.target),
+    headers,
+    query: Request.targetQuery(parts.target),
+    ...(parts.body === undefined ? {} : { body: parts.body }),
+    cookies: Cookies.parse(headers.cookie ?? null),
+    https: parts.https ?? false,
+    ...(parts.bodySize === undefined ? {} : { bodySize: parts.bodySize }),
+    read,
+  });
 }
 
 // Serves a file of the public directory (HY-62): no application runs and no hook is called.

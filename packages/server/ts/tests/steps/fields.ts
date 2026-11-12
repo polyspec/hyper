@@ -8,6 +8,7 @@ import { Files } from '../../src/files.js';
 import { Multipart } from '../../src/multipart.js';
 import { RequestBody } from '../../src/request-body.js';
 import type { CaseReader } from '../case-reader.js';
+import { bytesOf } from '../support.js';
 
 function text(reader: CaseReader, name: string): string {
   const value = reader.input(name);
@@ -35,8 +36,8 @@ export const steps = {
   },
   // Reads the form values and the files of the body, or null for each when the body fails with HY-42 (HY-57, HY-113).
   multipart(reader: CaseReader): void {
-    const type = Buffer.from(text(reader, 'type'), 'latin1').toString('latin1');
-    const body = Buffer.from(text(reader, 'body'), 'latin1');
+    const type = bytesOf(text(reader, 'type')).toString('latin1');
+    const body = bytesOf(text(reader, 'body'));
     const whole = [fieldsOf(Fields.fromBody(type, body)), filesOf(Files.fromBody(type, body))];
     // HY-131.6: the body read in two chunks, divided at every position, gives the result of the whole body, and the
     // reader holds between two chunks at most its bound; the first division that differs is the result of the case.
@@ -62,7 +63,7 @@ export const steps = {
   // the move of its first file and the removal of the directory (HY-131).
   async streamed(reader: CaseReader): Promise<void> {
     const type = text(reader, 'type');
-    const body = Buffer.from(text(reader, 'body'), 'latin1');
+    const body = bytesOf(text(reader, 'body'));
     const chunk = reader.input('chunk');
     const limit = reader.input('limit');
     const move = text(reader, 'move');

@@ -17,6 +17,7 @@ import { steps as jsonSteps } from './steps/json.js';
 import { steps as keepSteps } from './steps/keep.js';
 import { steps as readsSteps } from './steps/reads.js';
 import { steps as representationsSteps } from './steps/representations.js';
+import { steps as requestSteps } from './steps/request.js';
 import { steps as restSteps } from './steps/rest.js';
 import { steps as replySteps } from './steps/reply.js';
 import { steps as resultSteps } from './steps/result.js';
@@ -39,6 +40,7 @@ const STEPS: Record<string, Step> = {
   ...prefixed('keep.json', keepSteps),
   ...prefixed('reads.json', readsSteps),
   ...prefixed('representations.json', representationsSteps),
+  ...prefixed('request.json', requestSteps),
   ...prefixed('rest.json', restSteps),
   ...prefixed('reply.json', replySteps),
   ...prefixed('result.json', resultSteps),

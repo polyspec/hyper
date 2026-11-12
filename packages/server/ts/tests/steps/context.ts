@@ -10,6 +10,7 @@ import { App, MemorySessionStore, NotFound, Request, Result, type Handlers, type
 import type { Value } from '../../src/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed, record } from '../support.js';
+import { requestOf } from '../../src/http.js';
 
 // An action of an application of a case: a redirect, or a page with its data.
 interface Action {
@@ -265,7 +266,7 @@ export const steps = {
     if (csrf) {
       // A first response of the same session makes its token (HY-24); the case masks the token that the session holds.
       // Its calls are not the case's calls.
-      await app.handle(Request.from({ method: 'GET', target: '/', headers: { Accept: 'text/html' } }), store);
+      await app.handle(requestOf({ method: 'GET', target: '/', headers: { Accept: 'text/html' } }), store);
       const held = store.get('_hyper_csrf');
       if (typeof held !== 'string') throw new Error('the first response of the session created no token');
       token = Csrf.masked(held);
@@ -277,7 +278,7 @@ export const steps = {
     const headers = Object.fromEntries(textMap(reader, 'request.headers'));
     const requestHeaders = body === undefined ? headers : { 'Content-Type': 'application/x-www-form-urlencoded', ...headers };
     const response = await app.handle(
-      Request.from({
+      requestOf({
         method: stringField(reader, 'request.method'),
         target: stringField(reader, 'request.target'),
         headers: requestHeaders,

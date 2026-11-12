@@ -344,7 +344,7 @@ final class App
         }
         $size = strlen($response->body);
         if ($size > $this->responseLimit) {
-            $failure = "the response to {$request->method} {$request->path} has {$size} bytes, "
+            $failure = "the response to {$request->method} {$request->path()} has {$size} bytes, "
                 . "more than the response limit of {$this->responseLimit} bytes";
             error_log("hyper: {$failure}");
             $response = Response::text(500, 'Internal Server Error');
@@ -417,7 +417,7 @@ final class App
         $client = $choice?->chosen === true ? $this->client : null;
         $request = $request->withSelection($choice?->value);
         $basePath = $client === null ? $this->basePath : $client->basePath;
-        $path = Router::stripBasePath($request->path, $basePath);
+        $path = Router::stripBasePath($request->path(), $basePath);
         if ($client !== null && $path === null) {
             return $this->shellResponse($request);
         }
@@ -493,7 +493,7 @@ final class App
     /** Answers a client-rendered request outside the data base path: the static shell for a page (HY-62). */
     private function shellResponse(Request $request): Response
     {
-        $match = $this->manifest->router->match($request->path);
+        $match = $this->manifest->router->match($request->path());
         if ($match === null) {
             return Response::text(404, 'Not Found');
         }

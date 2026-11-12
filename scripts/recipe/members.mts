@@ -116,7 +116,11 @@ function checkMember(
     return;
   }
   if (found.symbol !== mn.symbol) add('MEMBER_MOVED', `${lang} member ${m.id} is at ${found.symbol}, spec says ${mn.symbol}`);
-  if (found.signature !== mn.signature || found.kind !== m.kind || found.parameters.length !== m.inputs.length) {
+  // HYR-5 options record: a member whose one input is a record takes the record as one parameter, or its fields as
+  // named parameters, so its parameters are one or as many as the fields of the record in the language.
+  const record = m.inputs.length === 1 ? recordNames(spec, m.inputs[0] ?? '', lang) : undefined;
+  const arity = record === undefined ? [m.inputs.length] : [1, record.length];
+  if (found.signature !== mn.signature || found.kind !== m.kind || !arity.includes(found.parameters.length)) {
     add('MEMBER_SIGNATURE', `${lang} member ${m.id} is "${found.signature}", spec says "${mn.signature}"`);
   }
   // HYR-8: `__init__` has no form with `_`, so the spec decides the visibility of a Python constructor; a private one is

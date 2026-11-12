@@ -36,7 +36,7 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_URI'] = $target;
         $_SERVER['REQUEST_METHOD'] = 'GET';
         try {
-            self::assertSame($path, Request::fromGlobals()->path);
+            self::assertSame($path, Request::fromGlobals()->path());
         } finally {
             $_SERVER = $server;
         }

@@ -23,6 +23,9 @@ _INTEGER = re.compile(r"-?[0-9]{1,15}\Z")
 class Request:
     """One HTTP request (HY-15, HY-42, HY-56, HY-57)."""
 
+    method: str
+    https: bool
+
     def __init__(
         self,
         method: str,
@@ -39,10 +42,17 @@ class Request:
         body_size: Optional[int] = None,
         media: Optional[str] = None,
         read: Optional[RequestBody] = None,
+        json: object = None,
     ):
-        self._method = method
-        # The decoded JSON body of a representation request (HY-121), which `_as_representation` sets.
-        self._json: object = None
+        # HY-42.6: the text that a host gives holds bytes, one for each character.
+        for text in (path, query, *(headers or {}).keys(), *(headers or {}).values()):
+            if any(ord(char) > 0xFF for char in text):
+                raise ValueError(
+                    "a path, a query or a header of a request holds a character above U+00FF (HY-42)"
+                )
+        self.method = method
+        # The decoded JSON body of a representation request (HY-121), which `_as_representation` gives.
+        self._json = json
         # The media type that the server selected for the request (HY-116); None until the server selects it.
         self._media = media
         # The size of the body that the server received, when it stopped reading a body larger than the limit
@@ -56,7 +66,7 @@ class Request:
         self._csrf_token = csrf_token
         self._params = params or {}
         self._cookies = cookies or {}
-        self._https = https
+        self.https = https
         self._selection = selection
         # The query values, or None when a name or a value is not UTF-8 (HY-42, HY-56).
         self._query_fields = Fields.parse(query.encode("latin-1"))
@@ -103,16 +113,6 @@ class Request:
         if self._read is not None:
             self._read.remove()
 
-    @property
-    def method(self) -> str:
-        """The method of the request."""
-        return self._method
-
-    @property
-    def https(self) -> bool:
-        """Whether the request arrived over HTTPS."""
-        return self._https
-
     def _with_session(self, flash: Flash, csrf_token: str) -> "Request":
         """Returns a copy that carries the flash values and the CSRF token of the session."""
         return self._copy(flash=flash.values, csrf_token=csrf_token)
@@ -132,9 +132,7 @@ class Request:
 
     def _as_get(self) -> "Request":
         """Returns a copy with the method `GET`, as which the server answers a `HEAD` request (HY-27.4)."""
-        copy = self._copy()
-        copy._method = "GET"
-        return copy
+        return self._copy(method="GET")
 
     def _as_representation(self, value: object) -> "Request":
         """Returns the request that a representation handler receives: without the `Cookie` header and the cookies,
@@ -142,10 +140,7 @@ class Request:
         headers = {
             name: text for name, text in self._headers.items() if name != "cookie"
         }
-        copy = self._copy(headers=headers)
-        copy._cookies = {}
-        copy._json = value
-        return copy
+        return self._copy(headers=headers, cookies={}, json=value)
 
     def json(self) -> object:
         """Returns the value of the JSON body of a representation request, or None for a request without a body
@@ -179,7 +174,7 @@ class Request:
         current = self.header("HX-Current-URL")
         return (
             _PRINTABLE.fullmatch(self._path) is not None
-            and (current is None or _is_utf8(current))
+            and (current is None or Request._valid_utf8(current))
             and self._query_fields is not None
             and self._form_fields is not None
             and self._file_parts is not None
@@ -296,6 +291,9 @@ class Request:
 
     def _copy(self, **changes) -> "Request":
         state = {
+            "method": self.method,
+            "cookies": self._cookies,
+            "json": self._json,
             "path": self._path,
             "headers": self._headers,
             "flash": self._flash,
@@ -307,7 +305,7 @@ class Request:
         }
         state.update(changes)
         return Request(
-            self._method,
+            state["method"],
             state["path"],
             state["headers"],
             self._query,
@@ -315,19 +313,24 @@ class Request:
             state["flash"],
             state["csrf_token"],
             state["params"],
-            self._cookies,
-            self._https,
+            state["cookies"],
+            self.https,
             state["selection"],
             state["body_size"],
             state["media"],
             self._read,
+            state["json"],
         )
 
+    def _body_bytes(self) -> bytes:
+        """Returns the bytes of the body as the host gave them."""
+        return self._body
 
-def _is_utf8(text: str) -> bool:
-    """Returns True when the bytes of a header value are valid UTF-8 (HY-42)."""
-    try:
-        text.encode("latin-1").decode("utf-8")
-        return True
-    except UnicodeDecodeError, UnicodeEncodeError:
-        return False
+    @staticmethod
+    def _valid_utf8(text: str) -> bool:
+        """Returns True when the bytes of a header value are valid UTF-8 (HY-42)."""
+        try:
+            text.encode("latin-1").decode("utf-8")
+            return True
+        except UnicodeDecodeError:
+            return False

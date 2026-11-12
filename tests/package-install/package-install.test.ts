@@ -74,7 +74,9 @@ test('each package publishes its build and declarations without its source', () 
 
 test('the browser package routes a path', () => {
   const router = new Router([{ name: 'item', path: '/items/{id}' }]);
-  assert.deepEqual(router.match(stripBasePath('/api/items/7', '/api') ?? ''), { name: 'item', params: { id: '7' } });
+  const match = router.match(stripBasePath('/api/items/7', '/api') ?? '');
+  // The parameters are an object without a prototype, so that `__proto__` is a parameter name like another.
+  assert.deepEqual({ name: match?.name, params: { ...match?.params } }, { name: 'item', params: { id: '7' } });
 });
 
 test('the server package answers requests and reports the reply of each one', async () => {
@@ -102,10 +104,10 @@ test('the server package answers requests and reports the reply of each one', as
     },
   });
   const store = new MemorySessionStore();
-  const page = await app.handle(Request.from({ method: 'GET', target: '/' }), store);
+  const page = await app.handle(new Request({ method: 'GET', path: '/' }), store);
   assert.equal(page.status, 200);
   assert.equal(page.headers['Content-Type'], 'text/html; charset=utf-8');
   assert.match(page.body, /<title>Home - Site<\/title>/);
-  assert.equal((await app.handle(Request.from({ method: 'GET', target: '/items/private' }), store)).status, 403);
+  assert.equal((await app.handle(new Request({ method: 'GET', path: '/items/private' }), store)).status, 403);
   assert.deepEqual(reports, [[200, {}], [403, { refusal: 'private' }]]);
 });

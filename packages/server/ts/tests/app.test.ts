@@ -9,6 +9,7 @@ import { decodeTemplate, parseJson } from '@polyspec/template/render';
 import { Csrf } from '../src/csrf.js';
 import { App, Reply as ReplyClass, Request, Result, type Handlers, type Loader, type Reply, type Response } from '../src/index.js';
 import { cookie, Fixture, FIXTURES, handlers, json, JSON_REGION, parsed, present, record, TEMPLATES, text, type Services } from './support.js';
+import { requestOf } from '../src/http.js';
 
 let fixture: Fixture;
 beforeEach(() => {
@@ -217,7 +218,7 @@ describe('App', () => {
         const app = await fixture.app({ handlers: variant });
         // A document runs every loader; a region request runs no loader of an unchanged region (HY-18).
         for (const headers of [{}, { Accept: 'application/vnd.hyper+json' }]) {
-          expect((await app.handle(Request.from({ method: 'GET', target: '/', headers }), fixture.session)).status, `${label} ${JSON.stringify(value)}`).toBe(500);
+          expect((await app.handle(requestOf({ method: 'GET', target: '/', headers }), fixture.session)).status, `${label} ${JSON.stringify(value)}`).toBe(500);
         }
       }
     }
@@ -239,7 +240,7 @@ describe('App', () => {
       const shared: Loader<Services> = () => ({ value });
       const app = await fixture.app({ handlers: { ...handlers(), shared } });
       for (const headers of [{}, { Accept: 'application/vnd.hyper+json' }]) {
-        expect((await app.handle(Request.from({ method: 'GET', target: '/', headers }), fixture.session)).status, label).toBe(status);
+        expect((await app.handle(requestOf({ method: 'GET', target: '/', headers }), fixture.session)).status, label).toBe(status);
       }
     }
   });
@@ -411,7 +412,7 @@ describe('App', () => {
 
     const base = handlers();
     const app = await fixture.app({ handlers: { ...base, shared: () => ({ site: 'x', name: 'shared name' }), routes: { ...base.routes, list: { regions: { rows: () => ({ items: ['a'], open: false, mode: 'a', view: 'x', filter: {}, tags: [], unread: 1 }) } } } } });
-    const list = json(await app.handle(Request.from({ method: 'GET', target: '/list', headers: JSON_REGION }), fixture.session));
+    const list = json(await app.handle(requestOf({ method: 'GET', target: '/list', headers: JSON_REGION }), fixture.session));
     // The shared handler value name is read by the page template of another route, not by any template of /list.
     expect(Object.keys(list.shared)).toEqual(['title', 'csrf']);
     expect(Object.keys(record(list.regions.rows))).toEqual(['items', 'open', 'mode', 'view', 'filter', 'tags']);
@@ -419,8 +420,8 @@ describe('App', () => {
 
   it('fails a shared value outside the data model that no template reads (HY-44, HY-73)', async () => {
     const app = await fixture.app({ handlers: { ...handlers(), shared: () => ({ big: 9223372036854775807n }) } });
-    expect((await app.handle(Request.from({ method: 'GET', target: '/' }), fixture.session)).status).toBe(500);
-    expect((await app.handle(Request.from({ method: 'GET', target: '/', headers: JSON_REGION }), fixture.session)).status).toBe(500);
+    expect((await app.handle(requestOf({ method: 'GET', target: '/' }), fixture.session)).status).toBe(500);
+    expect((await app.handle(requestOf({ method: 'GET', target: '/', headers: JSON_REGION }), fixture.session)).status).toBe(500);
   });
 
   it('makes a route region absent when its loader returns null (HY-75)', async () => {
@@ -431,14 +432,14 @@ describe('App', () => {
     };
     const app = await fixture.app({ handlers: { ...base, routes: { ...base.routes, list: { regions: { rows } } } } });
     const keep = cookie('hy-keep', '{"rows":{"mode":"b"}}');
-    const page = json(await app.handle(Request.from({ method: 'GET', target: '/list?rows=0', headers: { Accept: 'application/vnd.hyper+json', ...keep } }), fixture.session));
+    const page = json(await app.handle(requestOf({ method: 'GET', target: '/list?rows=0', headers: { Accept: 'application/vnd.hyper+json', ...keep } }), fixture.session));
     expect(Object.keys(page.regions)).toEqual(['side', 'content']);
     expect(page.kept).toEqual({});
-    const document = (await app.handle(Request.from({ method: 'GET', target: '/list?rows=0', headers: keep }), fixture.session)).body;
+    const document = (await app.handle(requestOf({ method: 'GET', target: '/list?rows=0', headers: keep }), fixture.session)).body;
     expect(document).toContain('<main id="content"><h1>List</h1>\n</main>');
     expect(document).not.toContain('id="rows"');
     expect(document).not.toContain('id="hy-data"');
-    const present = (await app.handle(Request.from({ method: 'GET', target: '/list?rows=1', headers: keep }), fixture.session)).body;
+    const present = (await app.handle(requestOf({ method: 'GET', target: '/list?rows=1', headers: keep }), fixture.session)).body;
     expect(present).toContain('<ul id="rows"><li>a</li></ul>');
     expect(present).toContain('id="hy-data"');
   });
@@ -680,7 +681,7 @@ describe('App', () => {
 
     // The elapsed time counts from the start that the caller gives, such as the time when the server received it.
     reports.length = 0;
-    await (await fixture.app(options)).handle(Request.from({ method: 'GET', target: '/' }), fixture.session, performance.now() - 2000);
+    await (await fixture.app(options)).handle(requestOf({ method: 'GET', target: '/' }), fixture.session, performance.now() - 2000);
     expect(present(reports[0])[4]).toBeGreaterThanOrEqual(2000);
   });
 
@@ -872,7 +873,7 @@ describe('Node handlers', () => {
       seen.push(Object.keys(context).sort(), context.services.get('counter') === fixture.counter);
       return { site: 'x' };
     } } });
-    const response = json(await app.handle((await import('../src/index.js')).Request.from({ method: 'GET', target: '/', headers: JSON_REGION }), fixture.session));
+    const response = json(await app.handle(requestOf({ method: 'GET', target: '/', headers: JSON_REGION }), fixture.session));
     expect(seen).toEqual([['reply', 'request', 'services'], true]);
     // HY-73: no template of the route reads site or csrf.
     expect(response.shared).toEqual({ title: 'Home' });
@@ -884,7 +885,7 @@ describe('Node handlers', () => {
     }
     for (const value of [new Point(), '\uD800', Number.NaN, 1e20, 2 ** 53, () => 1]) {
       const app = await fixture.app({ handlers: { ...handlers(), routes: { ...handlers().routes, home: { load: () => ({ value }) } } } });
-      const request = (await import('../src/index.js')).Request.from({ method: 'GET', target: '/', headers: JSON_REGION });
+      const request = requestOf({ method: 'GET', target: '/', headers: JSON_REGION });
       expect((await app.handle(request, fixture.session)).status, inspect(value)).toBe(500);
     }
   });
@@ -893,7 +894,7 @@ describe('Node handlers', () => {
     const app = await App.open<{ counter: { count: number } }>({ manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, timezone: 'Z', log: () => {}, handlers: {
       routes: { add: { post: () => Result.redirect('/') }, home: { load: ({ services }) => ({ name: services.get('counter').count }) } },
     } });
-    const request = (await import('../src/index.js')).Request.from({ method: 'GET', target: '/' });
+    const request = requestOf({ method: 'GET', target: '/' });
     expect((await app.handle(request, fixture.session)).status).toBe(500);
   });
 
