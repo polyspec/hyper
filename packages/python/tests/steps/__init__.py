@@ -35,8 +35,8 @@ from . import (
 STEPS = {
     ("arguments.json", "counts"): arguments_steps.counts,
     ("arguments.json", "names"): arguments_steps.names,
-    ("app.json", "cases"): app_steps.cases,
-    ("app.json", "opens"): app_steps.opens,
+    ("app-before-s3b.json", "cases"): app_steps.cases,
+    ("app-before-s3b.json", "opens"): app_steps.opens,
     ("app.json", "parts"): app_steps.parts,
     ("accept-before-s3b.json", "parse"): accept_steps.parse,
     ("accept-before-s3b.json", "select"): accept_steps.select,

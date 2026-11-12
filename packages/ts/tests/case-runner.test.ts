@@ -35,7 +35,8 @@ import { steps as sessionSteps } from './steps/session.js';
 const STEPS: Record<string, Step> = {
   ...prefixed('accept.json', acceptSteps, ['parse', 'select']),
   ...prefixed('accept-before-s3b.json', acceptSteps, ['parse', 'select'], true),
-  ...prefixed('app.json', appSteps),
+  ...prefixed('app.json', appSteps, ['cases', 'opens']),
+  ...prefixed('app-before-s3b.json', appSteps, ['cases', 'opens'], true),
   ...prefixed('arguments.json', argumentsSteps),
   ...prefixed('client.json', clientSteps),
   ...prefixed('context.json', contextSteps),

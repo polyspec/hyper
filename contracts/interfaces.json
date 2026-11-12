@@ -177,7 +177,8 @@
         "contracts/request.json",
         "contracts/representations.json",
         "contracts/app.json",
-        "contracts/hooks.json"
+        "contracts/hooks.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -2149,7 +2150,8 @@
       ],
       "cases": [
         "contracts/build.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -2250,7 +2252,8 @@
       "cases": [
         "contracts/context.json",
         "contracts/functions.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -2438,7 +2441,8 @@
         "HY-74"
       ],
       "cases": [
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -3760,7 +3764,8 @@
       ],
       "cases": [
         "contracts/request.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -4866,7 +4871,8 @@
       ],
       "cases": [
         "contracts/reply.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -5613,7 +5619,8 @@
         "contracts/result.json",
         "contracts/session.json",
         "contracts/app.json",
-        "contracts/context.json"
+        "contracts/context.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -6177,7 +6184,8 @@
       "cases": [
         "tests/legacy/fields.json",
         "contracts/request.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -7956,7 +7964,8 @@
       "cases": [
         "contracts/container.json",
         "contracts/representations.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -8408,7 +8417,8 @@
         "contracts/session.json",
         "contracts/file-sessions.json",
         "contracts/app.json",
-        "tests/legacy/file-store-sessions.json"
+        "tests/legacy/file-store-sessions.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -8734,7 +8744,8 @@
         "contracts/csrf.json",
         "contracts/session.json",
         "contracts/app.json",
-        "contracts/representations.json"
+        "contracts/representations.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -10803,7 +10814,8 @@
         "HY-44"
       ],
       "cases": [
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -11003,7 +11015,8 @@
       ],
       "cases": [
         "contracts/json.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -11542,7 +11555,8 @@
         "contracts/keep.json",
         "contracts/session.json",
         "contracts/manifest.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -11753,7 +11767,8 @@
         "contracts/reads.json",
         "contracts/manifest.json",
         "contracts/build.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -12853,7 +12868,8 @@
       ],
       "cases": [
         "contracts/context.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -13126,7 +13142,8 @@
       ],
       "cases": [
         "contracts/request.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -13231,7 +13248,8 @@
       ],
       "cases": [
         "contracts/client.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -13470,7 +13488,8 @@
       "cases": [
         "contracts/representations.json",
         "contracts/manifest.json",
-        "contracts/app.json"
+        "contracts/app.json",
+        "tests/legacy/app-before-s3b.json"
       ],
       "units": [
         {
@@ -18257,11 +18276,8 @@
       },
       "sections": {
         "cases": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "app-before-s3b.json",
           "uses": [
             "applications",
             "valueKinds"
@@ -18618,11 +18634,8 @@
           ]
         },
         "opens": {
-          "runners": [
-            "php",
-            "node",
-            "python"
-          ],
+          "runners": [],
+          "fixedCopy": "app-before-s3b.json",
           "uses": [
             "applications"
           ],

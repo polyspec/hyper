@@ -504,6 +504,431 @@
           ]
         }
       }
+    },
+    "app-before-s3b.json": {
+      "fixtures": {
+        "applications": "input",
+        "valueKinds": "input"
+      },
+      "sections": {
+        "cases": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [
+            "applications",
+            "valueKinds"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "application": {
+              "role": "input"
+            },
+            "handlers": {
+              "role": "input",
+              "optional": true
+            },
+            "options": {
+              "role": "input",
+              "optional": true
+            },
+            "stored": {
+              "role": "input",
+              "optional": true
+            },
+            "before": {
+              "role": "input",
+              "optional": true
+            },
+            "earlier": {
+              "role": "input",
+              "optional": true
+            },
+            "counted": {
+              "role": "input",
+              "optional": true
+            },
+            "request": {
+              "role": "input",
+              "fields": {
+                "method": {
+                  "role": "input"
+                },
+                "target": {
+                  "role": "input"
+                },
+                "headers": {
+                  "role": "input"
+                },
+                "cookies": {
+                  "role": "input",
+                  "optional": true
+                },
+                "form": {
+                  "role": "input",
+                  "optional": true
+                },
+                "csrf": {
+                  "role": "input",
+                  "optional": true
+                },
+                "body": {
+                  "role": "input",
+                  "optional": true
+                },
+                "https": {
+                  "role": "input",
+                  "optional": true
+                },
+                "startedBefore": {
+                  "role": "input",
+                  "optional": true
+                }
+              }
+            },
+            "status": {
+              "role": "response"
+            },
+            "headers": {
+              "role": "response",
+              "optional": true
+            },
+            "allHeaders": {
+              "role": "response",
+              "optional": true
+            },
+            "absentHeaders": {
+              "role": "response",
+              "optional": true
+            },
+            "body": {
+              "role": "response",
+              "optional": true
+            },
+            "bodyContains": {
+              "role": "response",
+              "optional": true
+            },
+            "bodyNotContains": {
+              "role": "response",
+              "optional": true
+            },
+            "unmaskedBody": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.3",
+              "state": "`unmaskedBody` is the body of the response after each masked value of the token that the session holds after the request is replaced by the text `masked`."
+            },
+            "members": {
+              "role": "expected",
+              "optional": true,
+              "compare": "subset",
+              "sentence": "HY-17.1",
+              "state": "`members` holds members of the JSON response object by their names, each equal to the member of the body after each masked value of the session token is replaced by the text `masked`."
+            },
+            "embedded": {
+              "role": "expected",
+              "optional": true,
+              "compare": "subset",
+              "sentence": "HY-31.2",
+              "state": "`embedded` holds members of the JSON value that the element `hy-data` of the document holds, each after each masked value of the session token is replaced by the text `masked`."
+            },
+            "bodyCount": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-125.7",
+              "state": "`bodyCount` lists, for each text of `counted` in its order, how many times the body of the response holds it."
+            },
+            "keys": {
+              "role": "expected",
+              "optional": true,
+              "compare": "keys",
+              "sentence": "HY-128.1",
+              "state": "`keys` lists the keys of the JSON response object in their order."
+            },
+            "sharedKeys": {
+              "role": "expected",
+              "optional": true,
+              "compare": "keys",
+              "sentence": "HY-128.3",
+              "state": "`sharedKeys` lists the keys of the member `shared` of the JSON response in their order."
+            },
+            "regionKeys": {
+              "role": "expected",
+              "optional": true,
+              "compare": "keys",
+              "sentence": "HY-75.7",
+              "state": "`regionKeys` is the names of the regions that the JSON response holds under `regions`, in their order."
+            },
+            "tagOfBody": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-53.1",
+              "state": "`tagOfBody` true states that the `ETag` of the response is `W/\"` followed by the first 32 hexadecimal digits of the SHA-256 digest of its body, with the masked token of the body replaced by the token that the session holds after the request, and `\"`."
+            },
+            "sameAsEarlier": {
+              "role": "expected",
+              "optional": true,
+              "compare": "subset",
+              "sentence": "HY-53.2",
+              "state": "`sameAsEarlier` states, for `tag`, `mask` and `body`, whether the `ETag`, the masked token and the body with its masked values replaced of the response equal those of the response to the request of `before` that `earlier` names."
+            },
+            "firstCalls": {
+              "role": "expected",
+              "optional": true,
+              "compare": "prefix",
+              "sentence": "HY-124.2",
+              "state": "`firstCalls` lists the first calls of the request in the order in which they run, written `action:<route>`, `context`, `shared`, `region:<name>` and `load:<route>`."
+            },
+            "handlerCalls": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-59.3",
+              "state": "`handlerCalls` lists every call of a handler during the request in the order in which the calls start, written as `firstCalls` writes them."
+            },
+            "actions": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.5",
+              "state": "`actions` is the number of calls of the actions of the application during the request."
+            },
+            "observed": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-106.1",
+              "state": "`observed` lists, in their order, the pairs of a handler, written as `firstCalls` writes it, and the value that a step `observe` of that handler read during the request."
+            },
+            "serviceValues": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-105.2",
+              "state": "`serviceValues` holds, for each service that the application binds, the members of the service after the request, or null for a service whose factory was not called."
+            },
+            "reported": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-60.2",
+              "state": "`reported` lists the reports that the response hook received during the request, each a pair of the method and the path of its request joined by a space, and the status of its response."
+            },
+            "reportedHeaders": {
+              "role": "expected",
+              "optional": true,
+              "compare": "subset",
+              "sentence": "HY-60.4",
+              "state": "`reportedHeaders` holds headers of the response that the last report of the response hook received."
+            },
+            "notes": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-60.8",
+              "state": "`notes` are the notes of the reply that the last report of the response hook received, a list of pairs of a name and its value in the order of the first note of each name."
+            },
+            "failure": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-60.11",
+              "state": "`failure` is the failure of the response as the last report of the response hook received it."
+            },
+            "failureReported": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-60.11",
+              "state": "`failureReported` states whether the last report of the response hook received a failure and not null."
+            },
+            "elapsedFromStart": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-60.5",
+              "state": "`elapsedFromStart` true states that the elapsed time of the last report is a number of milliseconds that is not less than the time from the start of the request to the call of `handle` and not more than the time from that start to the return of `handle`, both read by the step on the clock of `handle`, where the start is `request.startedBefore` milliseconds before the call and is given to `handle`, or is the call itself without it."
+            },
+            "storedAfter": {
+              "role": "expected",
+              "optional": true,
+              "compare": "subset",
+              "sentence": "HY-25.2",
+              "state": "`storedAfter` holds values that the session store holds after the request by their keys, each as a JSON value, and null for a key that the store does not hold."
+            },
+            "renewals": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-72.2",
+              "state": "`renewals` is how many times the request renewed the session."
+            },
+            "tokenOfSession": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-72.3",
+              "state": "`tokenOfSession` true states that the masked token of the response body is a masked value of the token that the session holds after the request."
+            },
+            "tokenRenewed": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-72.2",
+              "state": "`tokenRenewed` states whether the token that the session holds after the request differs from the token that it held before the request."
+            },
+            "tokenForm": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.9",
+              "state": "`tokenForm` true states that the session holds 64 lowercase hexadecimal digits as its token after the request."
+            },
+            "tokenInBody": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.6",
+              "state": "`tokenInBody` states whether the body of the response holds the token that the session holds after the request."
+            },
+            "session": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-45.4",
+              "state": "`session` false states a request after which the session holds no session token."
+            },
+            "storeCalls": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-120.3",
+              "state": "`storeCalls` lists every call of the session store that the host passes to the application for the request, in order, each written `get <key>`, `set <key>`, `remove <key>` or `renew`; it is empty for a request that opens no session."
+            },
+            "logged": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-43.2",
+              "state": "`logged` lists texts that the log of the server of HY-43.4 holds after the request, of the lines that the server wrote during the request."
+            },
+            "restored": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-74.4",
+              "state": "`restored` true states that a warning of the runtime that the step raises after the request, outside of a request, is not raised as an error."
+            },
+            "logCount": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-43.5",
+              "state": "`logCount` is the number of texts that the server gave to its log of HY-43.4 during the request."
+            },
+            "browsers": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-24.11",
+              "state": "`browsers` lists, for each value that a step `observe` read during the request, in the order of `observed`, one word: `current` for the SHA-256 digest, as 64 lowercase hexadecimal digits, of the 32 bytes of the token that the session holds after the request, `previous` for that digest of the token that the session held when the request was sent, when that token differs, `none` for null, and `other` for every other value."
+            },
+            "valueReads": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-13.7",
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-54.3"
+              },
+              "state": "`valueReads` is how many times the server enumerated, during the request, the entries of the values of the kind `countingMap` that the handlers of the request returned."
+            },
+            "failureLogged": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-66.3",
+              "state": "`failureLogged` true states that one text that the server gave to its log of HY-43.4 during the request is exactly `hyper: ` followed by the failure that the last report of the response hook received."
+            }
+          },
+          "members": [
+            "request.csrfToken",
+            "request.flash",
+            "request.param"
+          ]
+        },
+        "opens": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [
+            "applications"
+          ],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "application": {
+              "role": "input"
+            },
+            "handlers": {
+              "role": "input",
+              "optional": true
+            },
+            "options": {
+              "role": "input",
+              "optional": true
+            },
+            "files": {
+              "role": "input",
+              "optional": true
+            },
+            "openError": {
+              "role": "expected",
+              "optional": true,
+              "compare": "contains",
+              "sentence": "HY-106.6",
+              "state": "`openError` is a text that the message of the open error contains."
+            }
+          },
+          "outcomes": {
+            "open": {
+              "compare": "raises",
+              "sentence": "HY-106.6"
+            },
+            "messageStart": {
+              "compare": "exact",
+              "sentence": "HY-106.10",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-106.10"
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
