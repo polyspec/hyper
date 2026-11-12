@@ -1244,7 +1244,7 @@
               ],
               "output": "list<value>",
               "errors": [],
-              "state": "Returns the weight in thousandths that the ranges give a declared type, and the parameter values of the range that gives it (HY-119.1, HY-119.3).",
+              "state": "Returns the weight in thousandths that the ranges give a declared type, and the parameter values of the range that gives it (HY-116.19, HY-119.5).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/MediaSelection.php::Polyspec\\Hyper\\MediaSelection::entryWeight",
@@ -2005,7 +2005,7 @@
               "inputs": [],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the selected value of each required parameter by its lower-case name, in declared order (HY-119.3).",
+              "state": "Returns the selected value of each required parameter by its lower-case name, in declared order (HY-119.5).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/MediaType.php::Polyspec\\Hyper\\MediaType::parameters",
@@ -15098,15 +15098,15 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-116.9",
+              "sentence": "HY-116.17",
               "state": "`accept` is the Accept value, or null for a request without it, and `ranges` is the list of its media ranges in order, each with its type and subtype in lower case, its parameters before q as [name, value] pairs with the name in lower case, and its weight in thousandths."
             },
-            "invalid": {
+            "raises": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-116.5",
-              "state": "`invalid` is true when the parse refuses the value with the error of an invalid Accept, which the server answers with status 400."
+              "sentence": "HY-116.18",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           }
         },
@@ -15133,15 +15133,25 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-116.7",
+              "sentence": {
+                "id": "an_invalid_value_selects_nothing",
+                "label": "an invalid value is refused before a type is selected",
+                "accept": "text/html;q=1.5",
+                "raises": {
+                  "kind": "invalid_weight",
+                  "status": 400,
+                  "category": "value",
+                  "message": null
+                }
+              },
               "state": "`selected` is the type of `types` that the Accept value selects by the weight of its most specific matching range, the first of the highest weight, or null when no type has a weight above 0."
             },
-            "invalid": {
+            "raises": {
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-116.5",
-              "state": "`invalid` is true when the selection refuses the value with the error of an invalid Accept, which the server answers with status 400."
+              "sentence": "HY-116.18",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "members": [
@@ -15284,7 +15294,7 @@
                 "parameters": {
                   "role": "expected",
                   "compare": "ordered",
-                  "sentence": "HY-119.3",
+                  "sentence": "HY-119.5",
                   "state": "`parameters` is the parameter values that the representation handler received, in their order."
                 },
                 "selection": {
@@ -16641,7 +16651,7 @@
                 "parameters": {
                   "role": "expected",
                   "compare": "ordered",
-                  "sentence": "HY-119.3",
+                  "sentence": "HY-119.5",
                   "state": "`parameters` is the parameter values that the handler received, in their order."
                 },
                 "body": {
@@ -19086,7 +19096,7 @@
             "read": {
               "role": "expected",
               "compare": "ordered",
-              "sentence": "HY-119.3",
+              "sentence": "HY-119.5",
               "state": "`parameters` is a list of pairs of a name and a value, given to the constructor as a map in that order, with the content type `contentType` when the case states it; `read` is what `parameters()` returns."
             },
             "etag": {

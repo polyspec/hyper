@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1bf04cfa77d2128d07a0429246852ff719496da6b1661e61c195a8290c0a1246 -->
+<!-- source-sha256: bb4970eb3bfd569d8a9a64760c8b26ed4eb3a101a8b7e759b5066bd3c72f5163 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 명세는 `Accept`를 http-negotiate의 `Accept.parse`로 읽고 route의 type 무게를 `Accept.weigh`로 정하며(HY-116.17부터 HY-116.20, HY-119.5), representation의 `Content-Type`을 http-media-type의 `format`으로 쓴다(HY-119.4)(S-3b). 바뀌는 것: `Accept` field 줄은 각각 따로 읽으므로 quoted string이 다음 줄로 이어지지 않는다(NG-5.2). weight 뒤의 모든 것은 accept extension을 포함해 400이며(NG-5.5, RFC 9110 부록 B.3) 이전에는 무시했다. 끝의 `;`은 빈 매개변수이고 더는 400이 아니다(MT-3.2). 두 번 주어진 매개변수는 400이다(NG-3.5). `charset` 값은 대소문자 없이 비교한다(NG-8.4). HY-116.3부터 HY-116.10, HY-119.1, HY-119.2, HY-119.3은 은퇴했다. `contracts/accept.json`은 실패를 kind `invalid_accept`와 `invalid_weight`의 `raises`로 쓰고 case 넷을 바꾸며, `contracts/representations.json`의 case `a_parameter_after_q_is_a_bad_request`가 accept extension의 case를 대신한다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 
 - 명세는 http-forms의 F-12대로 http-media-type의 MT-4로 `Content-Type`을 읽고, contract case가 그것을 따른다(S-3b). media type이 아닌 `Content-Type`(빈 값 포함)은 kind `malformed_content_type`의 400이며, 이전에 HY-59.7은 415로 응답했고 HY-57.10과 HY-113.11은 다른 type의 body로 읽었다(HY-59.12, HY-59.13, HY-57.11). media type 앞의 SP와 HTAB는 urlencoded body에서도 무시하고, `charset` 밖의 매개변수를 가진 urlencoded type은 `unknown_parameter`로 실패한다. boundary가 없거나 빈 `multipart/form-data` type은 `no_boundary`로 실패하고(HY-113.17), 끝이 없는 quoted 값은 body를 실패시키며(HY-113.20), `Content-Disposition`이 없거나 둘이거나 다른 disposition type이거나 이름이 없거나 매개변수가 둘인 part는 body를 실패시킨다(HY-113.19). `fileOver(limit)`은 부호 없는 정수가 아닌 limit에 `invalid_number`로 실패하고(HY-114.10), body의 첫 실패는 byte가 가장 앞인 실패이며(HY-131.23), 숫자가 아닌 `Content-Length`는 400이다(HY-131.24). Node host는 paused mode에서 `request.read()`가 주는 것을 넘긴다(HY-131.25). HY-59.7, HY-59.11, HY-57.4, HY-57.10, HY-113.6, HY-113.11, HY-113.13, HY-113.14, HY-114.9, HY-131.21은 은퇴했다. `contracts/fields.json`의 case 15개는 `raises`를 가진 실패 case로 바뀌고, `contracts/request.json`에 실패 case 4개가 더해지며, `contracts/app.json`은 keep endpoint의 빈 `Content-Type`에 400으로 응답한다. 세 server는 core를 쓸 때(S-4)까지 은퇴한 규칙을 구현한다.
 

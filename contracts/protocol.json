@@ -1166,7 +1166,16 @@
         {
           "kind": "rule",
           "id": "HY-116",
-          "retired": [],
+          "retired": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -1184,52 +1193,28 @@
                   "id": "HY-116.2"
                 },
                 {
-                  "en": "A request without `Accept` is read as `Accept: */*` (RFC 9110, section 12.5.1).",
-                  "ko": "`Accept`가 없는 요청은 `Accept: */*`로 읽는다(RFC 9110, 12.5.1절).",
-                  "koSource": "1af966e6e67182c8683f8e717ac6058bd82efa8279abd91b4d0b3b37adcf421f",
-                  "id": "HY-116.3"
+                  "id": "HY-116.17",
+                  "en": "The server reads the `Accept` field lines of a request, as its host gives them, with `Accept.parse` of http-negotiate (NG-5, NG-6): a request without `Accept` states no preference (NG-5.1), each field line is a list read on its own (NG-5.2), and a field whose lines hold no range is the empty list, which matches no type (NG-5.3).",
+                  "ko": "server는 host가 준 그대로의 요청 `Accept` field 줄을 http-negotiate의 `Accept.parse`로 읽는다(NG-5, NG-6). `Accept`가 없는 요청은 선호를 밝히지 않으며(NG-5.1), 각 field 줄은 따로 읽는 list이고(NG-5.2), 줄에 range가 없는 field는 빈 list로서 어떤 type에도 맞지 않는다(NG-5.3).",
+                  "koSource": "15d89744c7819411b092b841e41eb121b885ab3b30e4d6ca8769964e793b671d"
                 },
                 {
-                  "en": "Several `Accept` field lines are one value joined with `, ` (RFC 9110, section 5.3).",
-                  "ko": "여러 `Accept` field line은 `, `로 이은 하나의 값이다(RFC 9110, 5.3절).",
-                  "koSource": "f7bb67921588f0efa584786f1f1011583b332f05c24ad08e7475490133d1011f",
-                  "id": "HY-116.4"
+                  "id": "HY-116.18",
+                  "en": "A field that NG-5.7 refuses, with kind `invalid_accept` or `invalid_weight`, receives status 400 with the text `Bad Request`: such as a range `*/html`, a parameter given twice (NG-3.5), a quoted string without its end, a weight that is not a qvalue (NG-6.1) and anything after the weight, an accept extension included, which RFC 9110 no longer defines (appendix B.3).",
+                  "ko": "NG-5.7이 kind `invalid_accept`나 `invalid_weight`로 거부하는 field는 상태 400과 텍스트 `Bad Request`를 받는다. 예를 들어 range `*/html`, 두 번 주어진 매개변수(NG-3.5), 끝이 없는 quoted string, qvalue가 아닌 weight(NG-6.1), 그리고 weight 뒤의 모든 것이며, RFC 9110이 더는 정의하지 않는 accept extension도 포함한다(부록 B.3).",
+                  "koSource": "98757727143fd38206df7c3bbe516e3e5fb3ac9ee6c6574a4581089ef3f0b049"
                 },
                 {
-                  "en": "An `Accept` value that does not follow the grammar of RFC 9110, section 12.5.1, or that has a weight that is not a qvalue (section 12.4.2), such as `q=1.5` or `q=x`, receives status 400 with the text `Bad Request`; an empty `Accept` is an empty list, which matches no type.",
-                  "ko": "RFC 9110 12.5.1절의 문법을 따르지 않는 `Accept` 값과, `q=1.5`나 `q=x`처럼 qvalue(12.4.2절)가 아닌 weight를 가진 값은 텍스트 `Bad Request`와 함께 상태 400을 받는다. 빈 `Accept`는 빈 목록이며 어떤 type에도 맞지 않는다.",
-                  "koSource": "eb7060b0cf7a79eb267c30a8183804a9fca218c41c75fa6741022a6af44837cc",
-                  "id": "HY-116.5"
+                  "id": "HY-116.19",
+                  "en": "The server weighs its types with `Accept.weigh` of http-negotiate (NG-7 to NG-10): `text/html` and `application/vnd.hyper+json` are candidates with `matching` `ignore` and `wildcards` true, because they have no parameters, and each declared type of the route (HY-118) is a candidate with `matching` `exact`, `wildcards` false and the served values of its required parameters, so that `type/*`, `*/*` and a range without a served value of every required parameter give it no weight.",
+                  "ko": "server는 http-negotiate의 `Accept.weigh`로 type의 무게를 정한다(NG-7부터 NG-10). `text/html`과 `application/vnd.hyper+json`은 매개변수가 없으므로 `matching` `ignore`와 `wildcards` true인 후보이고, route가 선언한 각 type(HY-118)은 `matching` `exact`, `wildcards` false와 필수 매개변수마다 제공하는 값을 가진 후보이므로, `type/*`, `*/*`, 모든 필수 매개변수의 제공 값을 갖지 않은 range는 그 type에 무게를 주지 않는다.",
+                  "koSource": "149d7435aa85d84cfeef920ecb2e2145923374d9c12197a54775eb42d38ec710"
                 },
                 {
-                  "en": "Types, subtypes, parameter names and `q` compare without regard to case.",
-                  "ko": "type, subtype, 매개변수 이름, `q`는 대소문자를 구분하지 않고 비교한다.",
-                  "koSource": "f3f59eb8cee57e540f3abb39335e04bc10a7b198fe3c029fecd149606ed9b1d0",
-                  "id": "HY-116.6"
-                },
-                {
-                  "en": "The server gives each type the weight of the most specific `Accept` range that matches it (the type with its parameters, then the type, then `type/*`, then `*/*`), and a weight of 0 makes the type not acceptable.",
-                  "ko": "서버는 각 type에, 그 type에 맞는 가장 구체적인 `Accept` range의 weight를 준다. 구체적인 순서는 매개변수를 가진 type, type, `type/*`, `*/*`다. weight 0은 그 type을 받을 수 없게 한다.",
-                  "koSource": "4f1df101e3a6e5158c918e6dc975358685dfc89bce1dc93f1bfcbafa5c7ae36d",
-                  "id": "HY-116.7"
-                },
-                {
-                  "en": "A declared type takes its weight only from the ranges that match it by HY-119, the one of highest weight among them; `type/*`, `*/*` and a range without its required parameters give it no weight.",
-                  "ko": "선언된 type은 HY-119로 자기에게 맞는 range에서만, 그 가운데 weight가 가장 높은 range에서 weight를 얻는다. `type/*`, `*/*`, 필수 매개변수가 없는 range는 그 type에 weight를 주지 않는다.",
-                  "koSource": "a814814df9db44f2989b8318c22169151f5a163581246865f554cb0b27486d39",
-                  "id": "HY-116.8"
-                },
-                {
-                  "en": "`q` is a weight, not a parameter, and what follows it in a range is an accept extension, which hyper does not define and does not read.",
-                  "ko": "`q`는 weight이며 매개변수가 아니다. range에서 `q` 뒤에 오는 것은 accept extension이며, hyper는 그것을 정의하지 않고 읽지 않는다.",
-                  "koSource": "c5265f0ab6f984ef40d6f53605fa615af04e62a009b7cbdf676c328b4ba34627",
-                  "id": "HY-116.9"
-                },
-                {
-                  "en": "`text/html` and `application/vnd.hyper+json` have no parameters, and a range that names one of them matches it whatever its other parameters, at the specificity of the type; among several such ranges the one of highest weight gives the weight.",
-                  "ko": "`text/html`과 `application/vnd.hyper+json`은 매개변수가 없다. 둘 가운데 하나를 지정한 range는 다른 매개변수가 무엇이든 그 type에 맞으며, type의 구체성으로 친다. 그런 range가 여럿이면 weight가 가장 높은 range가 weight를 준다.",
-                  "koSource": "9601c6c8278619db962181f2919c2b12a730bbfcc21415e830aad576be16f6dc",
-                  "id": "HY-116.10"
+                  "id": "HY-116.20",
+                  "en": "A weight of 0 makes a type not acceptable (NG-6.3), and a value of a range equals a served value as NG-8.4 compares them: quoting does not matter and the values of `charset` compare without case.",
+                  "ko": "무게 0인 type은 받아들일 수 없고(NG-6.3), range의 값과 제공 값은 NG-8.4가 비교하는 대로 같다. 따옴표는 상관없고 `charset`의 값은 대소문자 없이 비교한다.",
+                  "koSource": "d4f2c6e411c55cfbfcc68964d2f8f5973e3a355e8e6d01c43c2a6a51bbe60db6"
                 },
                 {
                   "en": "The server takes the type of the highest weight, and among equal weights the first in the order `text/html`, `application/vnd.hyper+json`, then the declared order.",
@@ -1370,33 +1355,25 @@
         {
           "kind": "rule",
           "id": "HY-119",
-          "retired": [],
+          "retired": [
+            1,
+            2,
+            3
+          ],
           "blocks": [
             {
               "kind": "paragraph",
               "statements": [
                 {
-                  "en": "A declared type matches an `Accept` range that names it with a served value for every required parameter and no other parameter before `q`.",
-                  "ko": "선언된 type은, 그 type을 지정하고 모든 필수 매개변수에 제공하는 값을 가지며 `q` 앞에 다른 매개변수가 없는 `Accept` range에 맞는다.",
-                  "koSource": "3cbf7db34989c1f466399ad7c25bc34cfc5d1486fedcdfdeb4b45fd86cc62152",
-                  "id": "HY-119.1"
+                  "id": "HY-119.5",
+                  "en": "The handler of a declared type receives the parameter values of the range that decides its weight (NG-10.3).",
+                  "ko": "선언된 type의 handler는 그 무게를 정한 range의 매개변수 값을 받는다(NG-10.3).",
+                  "koSource": "4dd700e3f9937a3e5679dda36b43414eae5a9d271526961e490313407d9bd63d"
                 },
                 {
-                  "en": "A quoted value equals the same unquoted value (RFC 9110, section 5.6.6).",
-                  "ko": "따옴표로 싼 값은 따옴표 없는 같은 값과 같다(RFC 9110, 5.6.6절).",
-                  "koSource": "063233e64c0ecd960ed84eb431407adcba7e9db77c6725353fe8db84bb2ee1f3",
-                  "id": "HY-119.2"
-                },
-                {
-                  "en": "Among the matching ranges of a type the server takes the one with the highest weight, then the first in `Accept` order, and the handler receives its parameter values.",
-                  "ko": "한 type에 맞는 range 가운데 서버는 weight가 가장 높은 range를, 그다음 `Accept` 순서에서 먼저 오는 range를 고르고, handler는 그 매개변수 값을 받는다.",
-                  "koSource": "7165f6394f01b7845ecc86dc1aca1ca9a83a8cdb72fc989e88bfe42dd2a41f52",
-                  "id": "HY-119.3"
-                },
-                {
-                  "en": "The `Content-Type` of the response is the type followed, for each required parameter in the order of `parameters`, by `; <name>=<value>`, with the name in lowercase and the value unquoted when it is a token and quoted otherwise.",
-                  "ko": "응답의 `Content-Type`은 type 뒤에, `parameters`의 순서로 필수 매개변수마다 `; <name>=<value>`를 붙인 것이다. 이름은 소문자로 쓰고, 값은 token이면 따옴표 없이, 아니면 따옴표로 싸서 쓴다.",
-                  "koSource": "89b7979b4bd87ce51cd49f7874e9a51d55610e2ad8987b20e346a5854c868f42",
+                  "en": "The `Content-Type` of the response is the media type that `format` of http-media-type writes (MT-6) from the type and, for each required parameter in the order of `parameters`, its name and the selected value, so a name is in lower case and a value is quoted only when it is not a token.",
+                  "ko": "응답의 `Content-Type`은 http-media-type의 `format`이 type과, `parameters` 순서의 필수 매개변수마다 그 이름과 선택된 값으로 쓰는 media type이므로(MT-6), 이름은 소문자이고 값은 token이 아닐 때만 따옴표로 감싼다.",
+                  "koSource": "8b76cfca3c77a7713f369566e067365a2e9ddddeac237bef817fea3f6c99d7e8",
                   "id": "HY-119.4"
                 }
               ]
