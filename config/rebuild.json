@@ -170,6 +170,10 @@
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },
+    "scripts/recipe/legacy.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
     "scripts/recipe/members.mts": {
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"

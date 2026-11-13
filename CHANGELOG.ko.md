@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 71f72ec64298c0577b3b2c832f0700043870a82661e801e3f9e7bd2cd3025961 -->
+<!-- source-sha256: 79ff791832256306855487df9ebe2b826824b42f99369b40c48e245234ca376a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `config/rebuild.json`은 `scripts/recipe/legacy.mts`에 class `policy`를 주며, 그 근거는 recipe 검사의 다른 부분과 같다. 이 파일은 `tests/legacy`의 고정 case 파일을 spec의 case 파일로 검사에 주고, 이 비교를 하는 ecosystem 도구는 없다. 전에는 `make rebuild-check`가 `scripts/recipe/legacy.mts: the tool has no class in config/rebuild.json`으로 실패했고, 지금은 통과한다.
 - `config/layout.yml`은 root `tests/`의 디렉터리(`layout-root-tests`)에 `tests/legacy`를 선언한다. 이 디렉터리는 case 파일의 고정 사본을 가진다. PHP, Node, Python runner는 아직 Rust core를 부르지 않는 host 코드를 위해 그 사본을 읽고, recipe 검사는 그 사본을 spec의 case 파일로 읽는다. 그러므로 이 디렉터리는 세 server의 case를 가지며 한 package의 시험을 가지지 않는다. 전에는 `make layout-check`가 `tests/legacy: error: layout-root-tests`로 실패했고, 지금은 통과한다.
 - `Polyspec\Hyper\HyperValueError::status()`는 반환 타입 `null`을 선언한다. 전에는 `?int`를 선언했다. category `value`의 오류는 status가 없으므로(HY-132.2) 이 method는 정수를 돌려주지 않고, `make analyse-php`의 분석은 타입의 쓰이지 않는 `int`를 보고했다(`return.unusedType`). `make analyse-php`는 오류를 보고하지 않는다.
 - PHP runner의 case reader는 case의 field `raises`가 `"message": null`을 적으면 관측한 실패의 message를 뺀다(HY-132.4). Node와 Python reader가 하는 것과 같다. `packages/php/tests/Support/CaseRules.php`의 `statedMessage`는 기대하는 실패를 `is_array`로 검사했는데, reader는 case의 object를 `stdClass`로 가지므로 message를 뺀 적이 없었고, `contracts/context.json`의 case `shared_data_that_holds_a_context_fails`는 생성된 program과 native extension 두 실행에서 `FIELD_DIFFERS raises`로 실패했다. `make hyper-test-php`는 두 실행에서 41개 시험을 통과하고 `make recipe-run-php`는 통과한다.
