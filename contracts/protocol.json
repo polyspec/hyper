@@ -634,6 +634,12 @@
                       "en": "Python: the program directory holds `reads.json`, `build.json` and the directory `templates`; `App.open` fails with a `ValueError` (HY-106) that names the first missing one.",
                       "ko": "Python: 프로그램 디렉터리에는 `reads.json`, `build.json`, 디렉터리 `templates`가 있고, `App.open`은 처음 없는 것을 밝히는 `ValueError`(HY-106)로 실패한다.",
                       "koSource": "2019befcd621f66bb589e7eedb4939ed9295612977f1bc77e0800abce9b75088"
+                    },
+                    {
+                      "id": "HY-48.14",
+                      "en": "Python: until the Python server calls the core, the program directory also holds the file `legacy/hyper/data.tpl` (HY-31.10), which the loader of the server reads beside the directory `templates`, and `App.open` fails in the same way when it is missing.",
+                      "ko": "Python: Python 서버가 core를 부르기 전까지 프로그램 디렉터리에는 파일 `legacy/hyper/data.tpl`(HY-31.10)도 있고, 서버의 loader는 디렉터리 `templates`와 함께 그것을 읽으며, 그것이 없으면 `App.open`은 같은 방식으로 실패한다.",
+                      "koSource": "0bd3d5e201a664c2277a5389836fcfcf90898b2d6f4635f8843da824a7d90635"
                     }
                   ],
                   "blocks": []
@@ -3105,6 +3111,12 @@
                   "en": "One rule of the Rust core gives the name and the source of the reserved template, so that the build, which writes no copy of it below `program/templates/`, and every server take them from one place.",
                   "ko": "Rust core의 규칙 하나가 예약 템플릿의 이름과 소스를 주므로, `program/templates/` 아래에 그 사본을 쓰지 않는 build와 모든 서버는 그것을 한 곳에서 받는다.",
                   "koSource": "718d9aac27f512ce30961f41abc835224e23228663bd62d106eb7b4dda27e794"
+                },
+                {
+                  "id": "HY-31.10",
+                  "en": "While a server does not call the core, the build writes the copy `program/legacy/hyper/data.tpl` of that source, which only such a server reads.",
+                  "ko": "core를 부르지 않는 서버가 있는 동안 build는 그 소스의 사본 `program/legacy/hyper/data.tpl`을 쓰고, 그런 서버만 그것을 읽는다.",
+                  "koSource": "0bcc434476acf7d486c58e86f5504d6fbe9fdadaef856497cc6adcde943e1b19"
                 },
                 {
                   "id": "HY-31.4",

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 20770487d46efa1b3dc3ec1abd4b189509f144a715ca026d3526c76deba4a821 -->
+<!-- source-sha256: a1601840e9b2260d362cd90fceba789411a27f40bc022ef02c3de178ebb8f0ba -->
 # 기능 상태
 
 [English](features.md).
@@ -16,6 +16,7 @@
 | template-rules | Rust core의 HY-48.3 템플릿 검사 `template_rules::problems`. 모든 문제를 HY-48.13 순서로 준다: HC-6, `{# title}`, `{# data}`, `{# build}` 배치, HY-3, HY-30, HY-75의 manifest 영역과 라우트 영역 | partial: core는 `contracts/manifest.json`의 `templateChecks` case에서 `packages/cli/lib/template-rules.mjs`와 같은 문제를 준다. 명령 도구가 core를 부르기 전까지(H-8) `hyper build`, `hyper check`, `make templates-check`는 이전 구현을 부른다 | `make core-test`, `tests/scripts/build-id.test.mts` |
 | read-path-rules | Rust core의 HY-73.2~HY-73.20 읽기 경로: `read_paths::route_reads`는 manifest와 템플릿 소스로 `reads.json`의 routes를, `read_paths::template_reads`는 템플릿 하나의 node를 준다(HY-73.30) | partial: core는 `contracts/reads.json`의 `cases`와 `routes` case에서 `packages/client/src/reads.ts`의 `routeReads`, `templateReads`와 같은 읽기 경로를 준다. 명령 도구와 Node 서버가 core를 부르기 전까지(H-8) `hyper build`와 Node 서버는 브라우저 package로 계산하며, `hyper build`는 `reads.json`의 키를 HY-73.32 순서가 아니라 브라우저 package가 읽은 순서로, 정수인 키를 먼저 쓴다 | `make core-test`, `make hyper-test-js` |
 | data-template-rule | Rust core의 `render::data_template`가 주는 예약 템플릿 `hyper/data.tpl`의 이름과 소스(HY-31.9) | partial: core는 `contracts/build.json`의 case `dataTemplate`에서 `packages/client/data-template.json`이 담은 것과 같은 이름과 소스를 준다. 명령 도구와 서버는 core를 부르기 전까지(H-8) 브라우저 package에서 그것을 받는다 | `make core-test`, `tests/scripts/build-id.test.mts` |
+| legacy-data-template | core를 부르지 않는 서버를 위한 예약 템플릿의 사본 `program/legacy/hyper/data.tpl`. build는 `program/templates/hyper/data.tpl` 대신 그것을 쓰고(HY-31.10), Python 서버는 그것을 필요로 하며 `program/templates/`와 함께 읽는다(HY-48.14) | not implemented: `hyper build`는 `program/templates/hyper/data.tpl`을 쓰고 `program/legacy/`를 쓰지 않으며, Python 서버는 예약 템플릿을 `program/templates/`에서 읽고 `legacy/hyper/data.tpl`이 없어도 실패하지 않는다(H31.4-2) | — |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
