@@ -16841,7 +16841,7 @@
             "build": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-125.5",
+              "sentence": "HY-125.18",
               "state": "`build` is the build id that a `build.json` with the text `text` gives, or null when the file fails; a null `text` is a missing file.",
               "optional": true
             },
@@ -16849,7 +16849,7 @@
               "role": "expected",
               "optional": true,
               "compare": "contains",
-              "sentence": "HY-125.5",
+              "sentence": "HY-125.18",
               "state": "`message` is a text that the message of the failure of the file contains after its path."
             },
             "raises": {

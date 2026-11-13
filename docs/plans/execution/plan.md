@@ -159,3 +159,16 @@ Each server reads a request body as one value and copies the content of each fil
 - Every limit is a number of the specification that an application may declare: the body, a file, the header of a part, the number of parts and the bytes of the text values. A body that passes a limit or that is malformed, such as a body without its closing delimiter, fails the whole request; no part is skipped.
 - Three checks carry the evidence: every case read in two chunks split at every position gives the result of the whole body; a seeded set of generated bodies gives the same result in the three servers; and a test reads the length of the buffer of the reader against its bound.
 - A slow client and the number of connections are the task of the server in front (nginx, php-fpm, the ASGI server, `requestTimeout` of Node), and the operations document names the settings. An upload that must resume, or of several gigabytes, goes to a storage directly and is outside this wave.
+
+## Wave 30 — One command tool `hyper`
+
+Depends on: the names of the packages (HR-98) and the build id of every output in the Rust core (HY-125.15 to HY-125.20). H30.1 writes the rules; H30.2 to H30.6 implement them, each with its tests; H30.7 moves every caller.
+
+The build package had two bins, `hyper-build-assets` and `hyper-build-server`, which a caller ran in that order: the first computed the build id from the browser outputs and the second copied it with `--build`. A change of only a server output therefore kept the build id, a test changed a build output by giving it a fixed id, and `--tailwind` wrote a stylesheet to a fixed path of the application, which a caller rewrote after the build. The wave makes the package one command tool with these decisions:
+
+- The bin is `hyper` with the subcommands `build` and `check`, the form of command tools that hold several verbs. Its interface is the bin, its arguments and its exit code; its text and its modules are not. The documents name a call after an install, because `npx hyper` without an install runs an unrelated public package.
+- The input is one application directory, `app/app.json`, `templates/`, an optional `client/main.ts` and `public/`. An asset of the application is an input of the build (`--asset`, `--tailwind`) under a name of `client/manifest.json`, so no output changes after the build.
+- One run writes every output in staging directories, computes the build id once over all of them, and publishes `public/assets`, `client/` and `program/`, each `build.json` last. The build owns only `client/` and `program/` of `--output`.
+- The build takes no build id. A test that needs a fixed id builds its program and its shell with the two assembly modules that the build uses, which take the id as an argument, so the rules of the assembly exist once.
+- `hyper check` checks the manifest and the template rules and reads no output; `make templates-check` calls it.
+- Until the command tool calls the core (H-8), it calls the rules of the browser package and of its own modules, `program/templates/` holds the reserved template, and Node reads the template index and the build id below `client/`.

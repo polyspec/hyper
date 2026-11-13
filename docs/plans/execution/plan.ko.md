@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 266fa34d4070b4f945c9486f40259a88fb5739f3937170525a8a40957d08f9ec -->
+<!-- source-sha256: 39cea774f773579ff2aee71a53060b5f325d87a508a3912927f15b02a4fd49c0 -->
 # 실행
 
 [English](plan.md).
@@ -160,3 +160,16 @@ H28.15는 각 server의 unit을 concern의 group마다 한 directory에 둔다. 
 - 모든 제한은 application이 선언할 수 있는 명세의 숫자다: body, file 하나, part의 header, part의 수, text 값의 byte. 제한을 넘거나 닫는 delimiter가 없는 body처럼 형식이 틀린 body는 요청 전체를 실패시킨다. part를 건너뛰지 않는다.
 - 세 검사가 증거를 담는다. 모든 case를 모든 위치에서 두 조각으로 나눠 읽어도 body 전체의 결과와 같다. seed로 생성한 body 집합이 세 server에서 같은 결과를 낸다. test가 reader의 buffer 길이를 그 한계와 대조한다.
 - 느린 client와 연결 수는 앞단 server(nginx, php-fpm, ASGI server, Node의 `requestTimeout`)의 일이며 운영 문서가 그 설정을 적는다. 이어받기가 필요하거나 수 gigabyte인 upload는 storage로 직접 가며 이 wave의 밖이다.
+
+## Wave 30 — 명령 도구 하나 `hyper`
+
+의존: package 이름(HR-98)과 Rust core의 모든 출력의 build id(HY-125.15~HY-125.20). H30.1이 규칙을 쓰고, H30.2부터 H30.6까지가 각자의 test와 함께 구현하며, H30.7이 모든 호출자를 옮긴다.
+
+build package는 bin 두 개 `hyper-build-assets`와 `hyper-build-server`를 가졌고 호출자는 그것을 이 순서로 실행했다: 앞의 것이 브라우저 출력으로 build id를 계산하고 뒤의 것이 `--build`로 그것을 복사했다. 그래서 서버 출력만 바뀌면 build id가 그대로였고, test는 고정 id를 주어 build 출력을 바꿨으며, `--tailwind`는 stylesheet를 애플리케이션의 고정 경로에 써서 호출자가 build 뒤에 그것을 고쳐 썼다. 이 wave는 package를 명령 도구 하나로 만들며 다음을 정한다.
+
+- bin은 하위 명령 `build`와 `check`를 가진 `hyper`이다. 여러 동사를 가진 명령 도구의 꼴이다. 그 interface는 bin, 인자, 종료 코드이며 문구와 module은 아니다. 설치 없는 `npx hyper`는 무관한 공개 package를 실행하므로 문서는 설치 뒤의 호출을 적는다.
+- 입력은 애플리케이션 디렉터리 하나, `app/app.json`, `templates/`, 있을 수도 있는 `client/main.ts`, `public/`이다. 애플리케이션의 에셋은 `client/manifest.json`의 이름으로 build의 입력(`--asset`, `--tailwind`)이 되므로 build 뒤에 바뀌는 출력은 없다.
+- 한 번의 실행이 모든 출력을 staging 디렉터리에 쓰고, 그 모두로 build id를 한 번 계산하며, `public/assets`, `client/`, `program/`을 각 `build.json`을 마지막으로 게시한다. build는 `--output`의 `client/`와 `program/`만 소유한다.
+- build는 build id를 받지 않는다. 고정 id가 필요한 test는 build가 쓰는 두 조립 module로 프로그램과 셸을 만들며, 그 module은 id를 인자로 받으므로 조립 규칙은 한 번만 있다.
+- `hyper check`는 매니페스트와 템플릿 규칙을 검사하고 출력은 읽지 않는다. `make templates-check`가 그것을 부른다.
+- 명령 도구가 core를 부를 때까지(H-8) 그것은 browser package와 자기 module의 규칙을 부르고, `program/templates/`는 예약 템플릿을 담으며, Node는 템플릿 색인과 build id를 `client/` 아래에서 읽는다.

@@ -121,9 +121,9 @@
                 },
                 {
                   "id": "HY-2.7",
-                  "en": "A server checks its manifest against these rules when it starts, and the asset build checks the manifest before it writes the client bundle; the browser does not check the manifest of its bundle again.",
-                  "ko": "서버는 시작할 때 매니페스트를 이 규칙으로 검사하고, 에셋 빌드는 클라이언트 번들을 쓰기 전에 매니페스트를 검사하며, 브라우저는 번들의 매니페스트를 다시 검사하지 않는다.",
-                  "koSource": "0f65cec5a969ef11f6e75c81c72664f4a8a314cd1dffd0c2bd49fbcff82080b6"
+                  "en": "A server checks its manifest against these rules when it starts, and `hyper build` checks the manifest before it writes any output (HR-96); the browser does not check the manifest of its bundle again.",
+                  "ko": "서버는 시작할 때 매니페스트를 이 규칙으로 검사하고, `hyper build`는 출력을 쓰기 전에 매니페스트를 검사하며(HR-96), 브라우저는 번들의 매니페스트를 다시 검사하지 않는다.",
+                  "koSource": "7b85be5de70c65d03a866f110079d80860218aaa1328ac0a6e2a9539f003c7fe"
                 },
                 {
                   "id": "HY-2.9",
@@ -564,9 +564,9 @@
                 },
                 {
                   "id": "HY-48.3",
-                  "en": "The build first rejects `hx-*` attributes outside the layout (HC-6 of the [application authoring rules](../operations/composition.md)) and checks the templates with the rules of HY-3 (with the placement `{# build}`, HY-125), HY-30 and HY-75, the same rules as `make templates-check`, and a violation fails the build with every problem before it removes or writes any output, so a server program never serves templates that break them.",
-                  "ko": "빌드는 먼저 레이아웃 밖의 `hx-*` 속성을 거부하고([애플리케이션 작성 규칙](../operations/composition.ko.md)의 HC-6), `make templates-check`와 같은 HY-3(배치 `{# build}` 포함, HY-125), HY-30, HY-75 규칙으로 템플릿을 검사하며, 위반이 있으면 출력을 지우거나 쓰기 전에 모든 문제와 함께 실패하므로 서버 프로그램은 이 규칙을 어기는 템플릿을 제공하지 않는다.",
-                  "koSource": "570040fa329970e0645b600293e9e00a47d6c69dfc4dc6784cec959ce4d7f2f3"
+                  "en": "The build first rejects `hx-*` attributes outside the layout (HC-6 of the [application authoring rules](../operations/composition.md)) and checks the templates with the rules of HY-3 (with the placement `{# build}`, HY-125), HY-30 and HY-75, the same rules as `hyper check` (HR-96), and a violation fails the build with every problem before it removes or writes any output, so a server program never serves templates that break them.",
+                  "ko": "빌드는 먼저 레이아웃 밖의 `hx-*` 속성을 거부하고([애플리케이션 작성 규칙](../operations/composition.ko.md)의 HC-6), `hyper check`(HR-96)와 같은 HY-3(배치 `{# build}` 포함, HY-125), HY-30, HY-75 규칙으로 템플릿을 검사하며, 위반이 있으면 출력을 지우거나 쓰기 전에 모든 문제와 함께 실패하므로 서버 프로그램은 이 규칙을 어기는 템플릿을 제공하지 않는다.",
+                  "koSource": "6c86fcdf57c9e17e027e2e600790fc6c4cd44da496260b3e8ea205148c780366"
                 },
                 {
                   "id": "HY-48.13",
@@ -642,9 +642,9 @@
                   "statements": [
                     {
                       "id": "HY-48.11",
-                      "en": "Node: `App.open` reads the manifest, the template index, the template files and the build id file by absolute paths, the last from its option `build`, the absolute path of the `build.json` of the asset output (HY-125); a missing file fails with the error that names its path.",
-                      "ko": "Node: `App.open`은 매니페스트, 템플릿 index, 템플릿 파일, build id 파일을 절대 경로로 읽으며, 마지막은 에셋 출력의 `build.json`의 절대 경로인 option `build`로 받고(HY-125), 없는 파일은 그 경로를 밝히는 오류로 실패한다.",
-                      "koSource": "4c9d566ef5e4ac68783f1b6f07003eb59e267684bea42f3dce1258d9325452a8"
+                      "en": "Node: `App.open` reads the manifest, the template index, the template files and the build id file by absolute paths, the last from its option `build`, the absolute path of `client/build.json` of the build output (HY-125); a missing file fails with the error that names its path.",
+                      "ko": "Node: `App.open`은 매니페스트, 템플릿 index, 템플릿 파일, build id 파일을 절대 경로로 읽으며, 마지막은 build 출력의 `client/build.json`의 절대 경로인 option `build`로 받고(HY-125), 없는 파일은 그 경로를 밝히는 오류로 실패한다.",
+                      "koSource": "47df76ecfa398b4ade99239b0fae5ebca9ec2d578700ceaa4dac22f52e82458b"
                     }
                   ],
                   "blocks": []
@@ -1692,6 +1692,7 @@
             1,
             2,
             4,
+            5,
             6,
             13
           ],
@@ -1742,10 +1743,10 @@
                   "koSource": "1f96ee8fb4bbb65a7c0eff5542ecd023411bfe11bd6edd1f44414b928d721ee7"
                 },
                 {
-                  "en": "The server build (HY-48) takes the path of the `build.json` of the asset output with its option `--build` and writes the same file into the program directory; it fails with the path when the file is missing or does not hold a build id of 64 lowercase hexadecimal characters.",
-                  "ko": "서버 build(HY-48)는 option `--build`로 에셋 출력의 `build.json` 경로를 받아 같은 파일을 프로그램 디렉터리에 쓴다. 파일이 없거나 64자의 소문자 16진수 build id를 담지 않으면 그 경로와 함께 실패한다.",
-                  "koSource": "6adecf1ddb0f23dd5e69a1e22aea79645f99cff8b94c660016ce99ef15e86d0c",
-                  "id": "HY-125.5"
+                  "id": "HY-125.21",
+                  "en": "The build takes no build id from its caller: one run of `hyper build` computes the id once from the outputs that it writes and has no option that sets the id or names a file that holds it, so no build output is changed after its build.",
+                  "ko": "build는 호출하는 쪽에서 build id를 받지 않는다: `hyper build` 한 번의 실행은 자신이 쓰는 출력으로 id를 한 번만 계산하며, id를 정하거나 id를 담은 파일을 가리키는 option이 없으므로 어떤 build 출력도 build 뒤에 바뀌지 않는다.",
+                  "koSource": "710b847fb5f49b93020ad346a54753b7930984835a3cb0de36eeb888e4b58dd7"
                 },
                 {
                   "en": "A document has the `html` definition `build`, the text `<meta name=\"hyper-build\" content=\"<build id>\">`, which the layout renders with `{# build}` once inside `<head>` (HY-3, HY-12); the build fails for a layout that does not place `{# build}` exactly once, as for `{# title}` and `{# data}` (HY-48); the check counts the placement and does not check that it lies inside `<head>`.",
@@ -2237,9 +2238,9 @@
                 },
                 {
                   "id": "HYC-25.5",
-                  "en": "In a page with `<meta name=\"hyper-api\">` and without `<meta name=\"hyper-entry\">`, such as a shell that the asset build did not write, the browser cannot tell the entry from another module script, so an application that would create a script fails before it creates one, as a script that does not load (HYC-14).",
-                  "ko": "`<meta name=\"hyper-api\">`는 있고 `<meta name=\"hyper-entry\">`는 없는 페이지, 예를 들어 에셋 빌드가 쓰지 않은 셸에서는 브라우저가 진입 파일을 다른 module script와 구별할 수 없으므로, script를 만들어야 하는 적용은 하나도 만들기 전에 실패하며, 이는 불러오지 못한 script와 같다(HYC-14).",
-                  "koSource": "060f8e117142a6820a0d328d223bc1aa9275241d7cfda987dc2083e3d54d577c"
+                  "en": "In a page with `<meta name=\"hyper-api\">` and without `<meta name=\"hyper-entry\">`, such as a shell that `hyper build` did not write, the browser cannot tell the entry from another module script, so an application that would create a script fails before it creates one, as a script that does not load (HYC-14).",
+                  "ko": "`<meta name=\"hyper-api\">`는 있고 `<meta name=\"hyper-entry\">`는 없는 페이지, 예를 들어 `hyper build`가 쓰지 않은 셸에서는 브라우저가 진입 파일을 다른 module script와 구별할 수 없으므로, script를 만들어야 하는 적용은 하나도 만들기 전에 실패하며, 이는 불러오지 못한 script와 같다(HYC-14).",
+                  "koSource": "36e53fb6ad47cac3759353764bfedc2ca9c7f370b0f21fba4d19fea23424e2ae"
                 },
                 {
                   "id": "HYC-25.6",
@@ -2644,9 +2645,9 @@
                     },
                     {
                       "id": "HY-62.25",
-                      "en": "The shell holds the element `hyper-build` of HY-125, which the asset build writes.",
-                      "ko": "셸은 에셋 build가 쓰는 HY-125의 요소 `hyper-build`를 담는다.",
-                      "koSource": "097e60b60a2ca6e54a120f9d9abb33cb997ec40193f7bb091bb28a382b670470"
+                      "en": "The shell holds the element `hyper-build` of HY-125, which `hyper build` writes.",
+                      "ko": "셸은 `hyper build`가 쓰는 HY-125의 요소 `hyper-build`를 담는다.",
+                      "koSource": "54029579e22393fc20dedbb3635758ef87da8ded9756d678e0d46c4fa1ddbdf4"
                     }
                   ],
                   "blocks": []
@@ -2987,9 +2988,9 @@
                 },
                 {
                   "id": "HY-30.3",
-                  "en": "The route template, or a template that it includes or places by path, places each route region with `{# name}`, without block arguments, inside an element whose `id` is the region name; `make templates-check` fails when no template of that graph places a route region.",
-                  "ko": "라우트 템플릿, 또는 라우트 템플릿이 포함하거나 경로로 배치하는 템플릿은 `id`가 영역 이름인 요소 안에 각 라우트 영역을 블록 인자 없이 `{# name}`으로 배치하며, 그 템플릿 graph의 어떤 템플릿도 라우트 영역을 배치하지 않으면 `make templates-check`가 실패한다.",
-                  "koSource": "33c3f5a2c9cbb6dceb16decae7af76f5e9b47f6953ef530c22bc5768661ccb99"
+                  "en": "The route template, or a template that it includes or places by path, places each route region with `{# name}`, without block arguments, inside an element whose `id` is the region name; `hyper check` fails when no template of that graph places a route region.",
+                  "ko": "라우트 템플릿, 또는 라우트 템플릿이 포함하거나 경로로 배치하는 템플릿은 `id`가 영역 이름인 요소 안에 각 라우트 영역을 블록 인자 없이 `{# name}`으로 배치하며, 그 템플릿 graph의 어떤 템플릿도 라우트 영역을 배치하지 않으면 `hyper check`가 실패한다.",
+                  "koSource": "9f4aba43fa9fc6d93ed86760ab2145b414b382ee50ea6af461a2d8b6afe5ea27"
                 },
                 {
                   "id": "HY-30.4",
@@ -4016,7 +4017,9 @@
         {
           "kind": "rule",
           "id": "HYC-16",
-          "retired": [],
+          "retired": [
+            6
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -4053,21 +4056,27 @@
                 },
                 {
                   "id": "HYC-16.5",
-                  "en": "The asset build writes the client entry `public/assets/hyper-<hash>.js` and, for code that the entry imports with `import()` and does not import statically, chunk files `public/assets/hyper-chunk-<hash>.js`; the browser loads a chunk when that code first runs, by an absolute URL below `/assets/`, so the entry that the static shell inlines loads it too, and the browser loads a module once.",
-                  "ko": "에셋 빌드는 클라이언트 진입 파일 `public/assets/hyper-<hash>.js`를 쓰고, 진입 파일이 정적으로 불러오지 않고 `import()`로만 불러오는 코드는 조각 파일 `public/assets/hyper-chunk-<hash>.js`로 쓴다. 브라우저는 그 코드가 처음 실행될 때 `/assets/` 아래의 절대 URL로 조각을 불러온다. 그래서 정적 셸이 인라인한 진입 파일도 조각을 불러오고, 브라우저는 모듈 하나를 한 번만 불러온다.",
-                  "koSource": "1b5834e3ad0681b4d2a8ff0881cb37435c8501749607294029ea61dccfa13d24"
+                  "en": "`hyper build` writes the client entry `public/assets/hyper-<hash>.js` and, for code that the entry imports with `import()` and does not import statically, chunk files `public/assets/hyper-chunk-<hash>.js`; the browser loads a chunk when that code first runs, by an absolute URL below `/assets/`, so the entry that the static shell inlines loads it too, and the browser loads a module once.",
+                  "ko": "`hyper build`는 클라이언트 진입 파일 `public/assets/hyper-<hash>.js`를 쓰고, 진입 파일이 정적으로 불러오지 않고 `import()`로만 불러오는 코드는 조각 파일 `public/assets/hyper-chunk-<hash>.js`로 쓴다. 브라우저는 그 코드가 처음 실행될 때 `/assets/` 아래의 절대 URL로 조각을 불러온다. 그래서 정적 셸이 인라인한 진입 파일도 조각을 불러오고, 브라우저는 모듈 하나를 한 번만 불러온다.",
+                  "koSource": "ae627d5083866bd5c113ac54f59e5688e76f7d09b73b4e1426632344fc1c0bc3"
                 },
                 {
-                  "id": "HYC-16.6",
-                  "en": "The asset build writes no file that the application names: it writes the template files and the index (HR-34), the entry, its chunks, `manifest.json` in the directory of `--output` with the URL of the entry as its only member `hyper`, and the static shell.",
-                  "ko": "에셋 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 템플릿 파일과 색인(HR-34), 진입 파일, 조각 파일, 진입 파일의 URL을 유일한 멤버 `hyper`로 담은 `--output` 디렉터리의 `manifest.json`, 정적 셸을 쓴다.",
-                  "koSource": "091763fc4ff6a1c25794ae0fcc74d7aba764760aa3f6446461deb453277cfc6e"
+                  "id": "HYC-16.12",
+                  "en": "The build gives every file that it writes below `public/assets` a name that holds a hash of its content: the template files and the index (HR-34), the entry, its chunks and the assets of `--asset` and `--tailwind` (HR-77), and it writes `client/manifest.json` into `--output`, whose member `hyper` is the URL of the entry and whose member `<name>` is the URL of the asset of that name, and the static shell.",
+                  "ko": "build는 `public/assets` 아래에 쓰는 모든 파일에 그 내용의 hash를 담은 이름을 준다: 템플릿 파일과 색인(HR-34), 진입 파일, 조각 파일, `--asset`과 `--tailwind`의 에셋(HR-77)이다. 그리고 `--output`에 member `hyper`가 진입 파일의 URL이고 member `<name>`이 그 이름의 에셋의 URL인 `client/manifest.json`과 정적 셸을 쓴다.",
+                  "koSource": "a385526ac94ddaf31bccb4a188100c9186fb1e310b50ab05c3cad5dd6c067d50"
+                },
+                {
+                  "id": "HYC-16.13",
+                  "en": "An asset name matches `[a-z][a-z0-9-]*` and is neither `hyper` nor starts with `hyper-`, because `hyper` is the member of the entry and the entry and its chunks own the names that start with `hyper-`, and the build fails before it writes any output when a name breaks that form or two assets of one build have the same name.",
+                  "ko": "에셋 이름은 `[a-z][a-z0-9-]*`에 맞고 `hyper`가 아니며 `hyper-`로 시작하지 않는다. `hyper`는 진입 파일의 member이고 `hyper-`로 시작하는 이름은 진입 파일과 조각 파일의 것이기 때문이다. 이름이 그 형식을 어기거나 한 build의 두 에셋이 같은 이름을 가지면 build는 출력을 쓰기 전에 실패한다.",
+                  "koSource": "0f04ae429defb5a2b8ff4e399ad710f855722a11da89d3730654a62804620553"
                 },
                 {
                   "id": "HYC-16.7",
-                  "en": "The application places and links its own stylesheets and names with `--static` the files below `public/` that the static deployment holds at the same path, such as the stylesheets that its layouts link; the asset build adds no other file of `public/assets` to the deployment, because `public/assets` keeps the files of earlier builds.",
-                  "ko": "애플리케이션은 자기 스타일시트를 두고 링크하며, 레이아웃이 링크하는 스타일시트처럼 정적 배포물이 같은 경로에 담을 `public/` 아래 파일을 `--static`으로 밝힌다. `public/assets`에는 이전 build의 파일이 남으므로, 에셋 빌드는 `public/assets`의 다른 파일을 배포물에 추가하지 않는다.",
-                  "koSource": "7f30cd05d9020ca7a11cf089b1ee6234688fe157793b975fae18c3a0d8ffd781"
+                  "en": "The application places and links its own stylesheets and names with `--static` the files below `public/` that the static deployment holds at the same path, such as the stylesheets that its layouts link; the build adds no other file of `public/assets` to the deployment than the files that it writes, because `public/assets` keeps the files of earlier builds.",
+                  "ko": "애플리케이션은 자기 스타일시트를 두고 링크하며, 레이아웃이 링크하는 스타일시트처럼 정적 배포물이 같은 경로에 담을 `public/` 아래 파일을 `--static`으로 밝힌다. `public/assets`에는 이전 build의 파일이 남으므로, build는 자신이 쓰는 파일 말고는 `public/assets`의 파일을 배포물에 추가하지 않는다.",
+                  "koSource": "483705be6961b646b55dee07088351876e32573687c5b38f445861a9d6ca143c"
                 },
                 {
                   "id": "HYC-16.8",
@@ -4077,9 +4086,9 @@
                 },
                 {
                   "id": "HYC-16.11",
-                  "en": "The static shell also contains `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`, whose content is the member `hyper` of `manifest.json`, the URL of the entry that it inlines, because an inlined script has no address and a layout that names the entry as a module script must not load it again (HYC-25).",
-                  "ko": "정적 셸은 `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`도 담으며, 그 content는 `manifest.json`의 member `hyper`, 곧 셸이 인라인한 진입 파일의 URL이다. 인라인한 script에는 주소가 없고, 진입 파일을 module script로 적은 레이아웃이 그것을 다시 불러오면 안 되기 때문이다(HYC-25).",
-                  "koSource": "be0815da12df456aba1ba89687cb35157271e3c808d5d4e60d64b92b3de8eb41"
+                  "en": "The static shell also contains `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`, whose content is the member `hyper` of `client/manifest.json`, the URL of the entry that it inlines, because an inlined script has no address and a layout that names the entry as a module script must not load it again (HYC-25).",
+                  "ko": "정적 셸은 `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`도 담으며, 그 content는 `client/manifest.json`의 member `hyper`, 곧 셸이 인라인한 진입 파일의 URL이다. 인라인한 script에는 주소가 없고, 진입 파일을 module script로 적은 레이아웃이 그것을 다시 불러오면 안 되기 때문이다(HYC-25).",
+                  "koSource": "dcd729668fc6a6c7c46baa916218a56067e41abc89e736d992e8939df43d2ea6"
                 },
                 {
                   "id": "HYC-16.9",
@@ -5021,9 +5030,9 @@
                   "statements": [
                     {
                       "id": "HY-54.3",
-                      "en": "It renders a document as the browser renders the document JSON value (HY-12, HY-31, HY-38), with the browser code and the template files of the asset build (HR-34), and embeds its data when the reply asks for it (HY-92).",
-                      "ko": "문서는 브라우저가 문서 JSON 값을 렌더하는 방식대로(HY-12, HY-31, HY-38) asset build의 브라우저 코드와 템플릿 파일(HR-34)로 렌더하며, reply가 요청하면 그 데이터를 내장한다(HY-92).",
-                      "koSource": "f3a3dffd7446244576fc075a180ef1a9f7885dbab460b670e721f7bac3cfcad8"
+                      "en": "It renders a document as the browser renders the document JSON value (HY-12, HY-31, HY-38), with the browser code and the template files of `hyper build` (HR-34), and embeds its data when the reply asks for it (HY-92).",
+                      "ko": "문서는 브라우저가 문서 JSON 값을 렌더하는 방식대로(HY-12, HY-31, HY-38) `hyper build`의 브라우저 코드와 템플릿 파일(HR-34)로 렌더하며, reply가 요청하면 그 데이터를 내장한다(HY-92).",
+                      "koSource": "4e1f6a30b454925a971e263f0b51a470aa0a2c9bcb2255a91a43d846c5ffb423"
                     }
                   ],
                   "blocks": []
