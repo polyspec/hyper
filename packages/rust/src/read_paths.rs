@@ -51,7 +51,8 @@ pub fn route_reads(manifest: &[u8], templates: &Map<String>) -> Result<Value, Er
         named.push((page.clone(), read(&route.template, &mut loader)?));
         let mut server = false;
         for region in &route.regions {
-            let Some(template) = &region.template else {
+            let Some(template) = region.template.as_ref().filter(|_| !crate::fault::broken())
+            else {
                 return Err(Error::Internal("a route region has no template"));
             };
             let mut node = read(template, &mut loader)?;
@@ -481,8 +482,8 @@ fn resolve(from: &str, path: &str) -> Result<String, Error> {
 /// it (RQ-030 of json), the one float-to-text function of polyspec. A template literal is always finite.
 fn number_text(number: f64) -> Result<String, Error> {
     match polyspec_json::number_text(number) {
-        Ok(text) => Ok(text),
-        Err(_) => Err(Error::Internal(
+        Ok(text) if !crate::fault::broken() => Ok(text),
+        Ok(_) | Err(_) => Err(Error::Internal(
             "a number literal of a template is not finite",
         )),
     }

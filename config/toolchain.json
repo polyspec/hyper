@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "comment": "The toolchains of hyper that no other file declares. mise is the release that make install-tools TOOLS=npm installs with the sha256 of each platform; mise.toml declares the tools it installs (the Python of the checks with uv, Composer, and alint of make layout-check) and mise.lock locks them for every platform of the bootstrap (HR-81).",
+  "comment": "The toolchains of hyper that no other file declares. mise is the release that make install-tools TOOLS=npm installs with the sha256 of each platform; mise.toml declares the tools it installs (the Python of the checks with uv, Composer, alint of make layout-check, and the Go and the wasm-bindgen of make test-go and make node-package) and mise.lock locks them for every platform of the bootstrap (HR-81).",
   "mise": {
     "version": "2026.10.8",
     "sha256": {

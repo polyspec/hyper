@@ -119,8 +119,12 @@ fn read_node(record: &PhpValue, node: &Node, depth: usize) -> Result<Value, Erro
             let array = record.array(*id).map_err(Error::RecordValue)?;
             let mut sequence = true;
             for (index, (key, _)) in array.iter().enumerate() {
-                let expected = i64::try_from(index)
-                    .map_err(|_overflow| Error::Internal("an array of more entries than i64"))?;
+                let expected = match i64::try_from(index) {
+                    Ok(expected) if !crate::fault::broken() => expected,
+                    Ok(_) | Err(_) => {
+                        return Err(Error::Internal("an array of more entries than i64"))
+                    }
+                };
                 if *key != Key::Int(expected) {
                     sequence = false;
                     break;
@@ -171,7 +175,7 @@ fn read_node(record: &PhpValue, node: &Node, depth: usize) -> Result<Value, Erro
 
 /// The node of a number of the data model: an integer as a PHP integer and another number as a float (HY-104.14).
 fn number_node(value: f64) -> Result<Node, Error> {
-    if !value.is_finite() {
+    if !value.is_finite() || crate::fault::broken() {
         return Err(Error::Internal(
             "a number of the data model that is not finite",
         ));
@@ -244,8 +248,10 @@ fn write_node(record: &mut PhpValue, value: &Value) -> Result<Node, Error> {
         Value::List(items) => {
             let array = record.new_array();
             for (index, item) in items.iter().enumerate() {
-                let key = i64::try_from(index)
-                    .map_err(|_overflow| Error::Internal("a list of more items than i64"))?;
+                let key = match i64::try_from(index) {
+                    Ok(key) if !crate::fault::broken() => key,
+                    Ok(_) | Err(_) => return Err(Error::Internal("a list of more items than i64")),
+                };
                 let node = write_node(record, item)?;
                 record
                     .set_element(array, Key::Int(key), node)

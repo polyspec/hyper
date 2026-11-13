@@ -37,6 +37,46 @@ url = "https://github.com/asamarts/alint/releases/download/v0.18.2/alint-v0.18.2
 url_api = "https://api.github.com/repos/asamarts/alint/releases/assets/636119395"
 provenance = "github-attestations"
 
+[[tools."github:wasm-bindgen/wasm-bindgen"]]
+version = "0.2.130"
+backend = "github:wasm-bindgen/wasm-bindgen"
+specifiers = ["0.2.130"]
+
+[tools."github:wasm-bindgen/wasm-bindgen"."platforms.linux-arm64"]
+checksum = "sha256:cc8dd8e90aa9111758168d30c63a14b7f0276997d9d60d3e160a1fb5e7d3b919"
+url = "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.130/wasm-bindgen-0.2.130-aarch64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/wasm-bindgen/wasm-bindgen/releases/assets/691140661"
+provenance = "github-attestations"
+
+[tools."github:wasm-bindgen/wasm-bindgen"."platforms.linux-x64"]
+checksum = "sha256:9687f3bb551b9f66f37ed32a40d7913a00f7962db653054e56857bc306c3227f"
+url = "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.130/wasm-bindgen-0.2.130-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/wasm-bindgen/wasm-bindgen/releases/assets/691140647"
+provenance = "github-attestations"
+
+[tools."github:wasm-bindgen/wasm-bindgen"."platforms.macos-arm64"]
+checksum = "sha256:b90ddb9357f584b1af897d58ad77e4cce2b48fc17e2a967bc249a87f72809444"
+url = "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.130/wasm-bindgen-0.2.130-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/wasm-bindgen/wasm-bindgen/releases/assets/691140655"
+provenance = "github-attestations"
+
+[[tools.go]]
+version = "1.27.3"
+backend = "core:go"
+specifiers = ["1.27.3"]
+
+[tools.go."platforms.linux-arm64"]
+checksum = "sha256:a06e99309dbcbdca1a8ccd2282c3ee146e55930886e26b4f1193269587165f49"
+url = "https://dl.google.com/go/go1.27.3.linux-arm64.tar.gz"
+
+[tools.go."platforms.linux-x64"]
+checksum = "sha256:65efbc80fdc1fa2cd2631cad5b481777a68e8725f34e89f50fc6ac714e379b40"
+url = "https://dl.google.com/go/go1.27.3.linux-amd64.tar.gz"
+
+[tools.go."platforms.macos-arm64"]
+checksum = "sha256:dd3908cf20959d798c1e06ebe5b72213f0505ce01373b40ce3110975a6cd99c2"
+url = "https://dl.google.com/go/go1.27.3.darwin-arm64.tar.gz"
+
 [[tools."http:composer"]]
 version = "2.10.3"
 backend = "http:composer"

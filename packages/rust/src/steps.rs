@@ -343,6 +343,7 @@ impl PageRequest {
             .routes
             .iter()
             .position(|route| route.name == input.route)
+            .filter(|_| !crate::fault::broken())
         else {
             return Err(Error::Internal(
                 "the page of a route that the manifest does not hold",
@@ -381,7 +382,12 @@ impl PageRequest {
     }
 
     fn route(&self) -> Result<&Route, Failure<Error>> {
-        match self.manifest().routes.get(self.route) {
+        match self
+            .manifest()
+            .routes
+            .get(self.route)
+            .filter(|_| !crate::fault::broken())
+        {
             Some(route) => Ok(route),
             None => Err(internal(
                 "a page of a route that the manifest does not hold",
@@ -504,7 +510,12 @@ impl PageRequest {
         route_region: Option<usize>,
         input: &Input,
     ) -> Result<Step, Failure<Error>> {
-        let Some(name) = self.selected.get(region).cloned() else {
+        let Some(name) = self
+            .selected
+            .get(region)
+            .filter(|_| !crate::fault::broken())
+            .cloned()
+        else {
             return Err(internal("a loader of a region that the page does not hold"));
         };
         let map = PageRequest::loaded_map(input)?;
@@ -573,14 +584,17 @@ impl PageRequest {
             .iter()
             .find(|(name, _)| *name == route.name)
             .map(|(_, reads)| reads)
+            .filter(|_| !crate::fault::broken())
         else {
             return Err(internal("a route without its read paths (HY-73)"));
         };
-        let Some(shared) = self.shared.take() else {
+        let Some(shared) = self.shared.take().filter(|_| !crate::fault::broken()) else {
             return Err(internal("a page without its shared data"));
         };
         // HY-73.29: the page keeps only the paths that the templates of the route read.
-        let shared = match values::map(&keep(&Value::Map(Arc::new(shared)), &route_reads.shared)) {
+        let shared = match values::map(&keep(&Value::Map(Arc::new(shared)), &route_reads.shared))
+            .filter(|_| !crate::fault::broken())
+        {
             Some(map) => (**map).clone(),
             None => return Err(internal("the shared data is not a map")),
         };
@@ -590,6 +604,7 @@ impl PageRequest {
                 .regions
                 .iter()
                 .find(|(region, _)| *region == name)
+                .filter(|_| !crate::fault::broken())
             else {
                 return Err(internal("a region without its read paths (HY-73)"));
             };

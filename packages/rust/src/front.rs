@@ -168,15 +168,7 @@ pub fn route_request(pages: &Pages, chosen: bool, front: &Front) -> Result<Route
     let Some(found) = manifest.router.find(path) else {
         return Ok(refuse(plain(404, "Not Found")));
     };
-    let Some(route) = manifest
-        .routes
-        .iter()
-        .find(|route| route.name == found.name)
-    else {
-        return Err(Error::Internal(
-            "a route of the router that the manifest does not hold",
-        ));
-    };
+    let route = manifest.routed(&found.name)?;
     // HY-116.14, HY-62.20: the page takes part in the selection under the data base path too, so that a request
     // that prefers it receives the 406 of HY-62.20, and only the listing of that path leaves it out.
     let served = Served {

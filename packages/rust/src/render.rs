@@ -149,7 +149,7 @@ struct Parts {
 }
 
 fn bound(value: &Value) -> Result<BoundMap, RenderFailure> {
-    match values::map(value) {
+    match values::map(value).filter(|_| !crate::fault::broken()) {
         Some(map) => bind(&**map).map_err(from_template),
         None => Err(Failure::Kind(Error::Internal(
             "the data of a region is not a map (HY-13.1)",
@@ -199,7 +199,10 @@ impl Templates {
             .iter()
             .chain(route.regions.iter())
             .find(|region| region.name == name);
-        match region.and_then(|region| region.template.as_deref()) {
+        match region
+            .and_then(|region| region.template.as_deref())
+            .filter(|_| !crate::fault::broken())
+        {
             Some(template) => Ok(template),
             None => Err(Failure::Kind(Error::Internal(
                 "a region of the document has no template",
@@ -215,7 +218,12 @@ impl Templates {
         parts: &Parts,
         name: &str,
     ) -> Result<String, RenderFailure> {
-        let Some((_, _, data)) = parts.regions.iter().find(|(region, _, _)| region == name) else {
+        let Some((_, _, data)) = parts
+            .regions
+            .iter()
+            .find(|(region, _, _)| region == name)
+            .filter(|_| !crate::fault::broken())
+        else {
             return Err(Failure::Kind(Error::Internal(
                 "a region of the document has no data",
             )));

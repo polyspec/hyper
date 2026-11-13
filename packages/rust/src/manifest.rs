@@ -349,10 +349,33 @@ impl Manifest {
     /// # Errors
     /// `internal`, which a checked manifest does not give.
     pub fn page(&self) -> Result<&str, Error> {
-        match self.regions.iter().find(|region| region.page) {
+        match self
+            .regions
+            .iter()
+            .find(|region| region.page)
+            .filter(|_| !crate::fault::broken())
+        {
             Some(region) => Ok(&region.name),
             None => Err(Error::Internal(
                 "a checked manifest without its page region",
+            )),
+        }
+    }
+
+    /// The route that the router of this manifest found by its name (HY-4).
+    ///
+    /// # Errors
+    /// `internal`, which a checked manifest does not give: its router holds only the routes of the manifest.
+    pub fn routed(&self, name: &str) -> Result<&Route, Error> {
+        match self
+            .routes
+            .iter()
+            .find(|route| route.name == name)
+            .filter(|_| !crate::fault::broken())
+        {
+            Some(route) => Ok(route),
+            None => Err(Error::Internal(
+                "a route of the router that the manifest does not hold",
             )),
         }
     }

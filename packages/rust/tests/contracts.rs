@@ -1873,3 +1873,93 @@ fn the_reserved_template_of_the_embedded_data() {
     }
     assert!(ran > 0);
 }
+
+/// A value in the case form of binding (G-5: `{"kind", "value"}`, a map as pairs) as JSON text of the data model.
+fn case_value_json(value: &Value) -> Value {
+    match (text(value, "kind"), value.get("value")) {
+        ("null", None) => Value::Null,
+        ("bool" | "float" | "text", Some(scalar)) => scalar.clone(),
+        ("list", Some(Value::Array(items))) => {
+            Value::Array(items.iter().map(case_value_json).collect())
+        }
+        ("map", Some(Value::Array(pairs))) => Value::Object(
+            pairs
+                .iter()
+                .map(|pair| (text_of(&pair[0]).to_owned(), case_value_json(&pair[1])))
+                .collect(),
+        ),
+        _ => panic!("no case value: {value}"),
+    }
+}
+
+#[test]
+fn the_fault_cases_reach_their_place_without_their_faults() -> Result<(), Error> {
+    // HY-132; binding design G-5, X-1. The group internal of tests/cases/faults.json arms hyper.internal for
+    // front_functions.route_request. This crate has no feature fault-test yet, so this test runs each case without its
+    // faults and checks that its input routes to the page, past the places of hyper.internal that route_request visits.
+    use polyspec_hyper::front::{route_request, Front, Route};
+    use polyspec_hyper::steps::{Map, PageKind, Pages, PagesOptions};
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/faults.json");
+    let file: Value = match fs::read_to_string(&path).map(|text| serde_json::from_str(&text)) {
+        Ok(Ok(value)) => value,
+        Ok(Err(error)) => panic!("{}: {error}", path.display()),
+        Err(error) => panic!("{}: {error}", path.display()),
+    };
+    let mut ran = 0;
+    for case in group(&file, "internal") {
+        assert_eq!(
+            case["faults"][0]["point"], "hyper.internal",
+            "{}",
+            case["id"]
+        );
+        assert_eq!(text(&case["raises"], "kind"), "internal", "{}", case["id"]);
+        let pages = &case["pages"];
+        assert_eq!(text(pages, "new"), "pages.open", "{}", case["id"]);
+        let args = &pages["args"];
+        let mut templates = Map::new();
+        for pair in args["templates"].as_array().into_iter().flatten() {
+            templates.insert(text_of(&pair[0]).to_owned(), text_of(&pair[1]).to_owned());
+        }
+        let options = &args["options"];
+        let forms = options["form_types"].as_array().into_iter().flatten();
+        let pages = Pages::open(
+            &from_hex(text(&args["manifest"], "hex")),
+            &templates,
+            &data_value(&case_value_json(&args["reads"]).to_string())?,
+            &PagesOptions {
+                build: text(options, "build").to_owned(),
+                timezone: text(options, "timezone").to_owned(),
+                context: options["context"] == Value::Bool(true),
+                base_path: text(options, "base_path").to_owned(),
+                data_base_path: options["data_base_path"].as_str().map(str::to_owned),
+                form_types: forms.map(|form| text_of(form).to_owned()).collect(),
+            },
+        )?;
+        let front = &case["front"];
+        let accept = front["accept"].as_array().into_iter().flatten();
+        let request = Front {
+            method: text(front, "method").to_owned(),
+            path: text(front, "path").to_owned(),
+            accept: accept.map(|line| from_hex(text(line, "hex"))).collect(),
+            hx_request: front["hx_request"] == Value::Bool(true),
+            context_header: front["context_header"].as_str().map(latin1),
+            media_type: front["media_type"].as_str().map(str::to_owned),
+            malformed_content_type: front["malformed_content_type"] == Value::Bool(true),
+        };
+        let chosen = case["chosen"] == Value::Bool(true);
+        assert_eq!(
+            route_request(&pages, chosen, &request)?,
+            Route::Page {
+                route: "home".to_owned(),
+                params: Vec::new(),
+                kind: PageKind::Html,
+                action: false,
+            },
+            "{}",
+            case["id"]
+        );
+        ran += 1;
+    }
+    assert!(ran > 0);
+    Ok(())
+}

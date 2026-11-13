@@ -67,8 +67,8 @@ pub fn stream(outputs: &[Output]) -> Result<Vec<u8>, Error> {
         bytes.extend_from_slice(file.path.as_bytes());
         bytes.push(0);
         let length = match u64::try_from(file.bytes.len()) {
-            Ok(length) => length,
-            Err(_) => {
+            Ok(length) if !crate::fault::broken() => length,
+            Ok(_) | Err(_) => {
                 return Err(Error::Internal(
                     "the length of a build file exceeds 64 bits",
                 ))

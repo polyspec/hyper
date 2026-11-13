@@ -1,5 +1,5 @@
 # The tools that mise installs into var/tools/mise: `make toolchain-lock` writes their digests into mise.lock and
-# `make install-tools` installs them with `mise install --locked`. node, go and python are at the pins of kit.
+# `make install-tools` installs them with `mise install --locked`. node and python are at the pins of kit, go and wasm-bindgen at those of binding.
 [tools]
 node = "26.12.0"
 # npm is at the pin of kit (K938); devEngines of package.json names the same version.
@@ -8,6 +8,10 @@ python = "3.14.8"
 uv = "0.12.24"
 ruff = "0.17.3"
 "github:asamarts/alint" = "0.18.2"
+# The release of the go directive of packages/go/go.mod (binding GN-15), with its gofmt, which make test-go runs.
+go = "1.27.3"
+# The wasm-bindgen CLI writes the glue of the WASM crate and is the release of its wasm-bindgen crate (binding GN-18).
+"github:wasm-bindgen/wasm-bindgen" = "0.2.130"
 "pypi:vulture" = "2.16"
 "http:composer" = { version = "2.10.3", url = "https://getcomposer.org/download/{{ version }}/composer.phar", checksum = "sha256:7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6", bin = "composer" }
 # The PIE PHAR builds and installs the template extension from the Composer repository of the template release (H27.45); its

@@ -138,15 +138,7 @@ pub fn shell_answer(
     if method != "GET" && method != "HEAD" {
         return Ok(ShellAnswer::NotAllowed);
     }
-    let Some(route) = manifest
-        .routes
-        .iter()
-        .find(|route| route.name == found.name)
-    else {
-        return Err(Error::Internal(
-            "a route of the router that the manifest does not hold",
-        ));
-    };
+    let route = manifest.routed(&found.name)?;
     let served = Served {
         page: true,
         page_data: true,

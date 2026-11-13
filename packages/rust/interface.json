@@ -485,6 +485,20 @@
       }
     ]
   },
+  "faults": [
+    {
+      "id": "internal",
+      "core": "polyspec_hyper::fault::INTERNAL",
+      "inject": [
+        "broken"
+      ],
+      "fills": [
+        "internal"
+      ],
+      "reason": "HY-132.6",
+      "place": "each check of an invariant of the core that gives Error::Internal: polyspec_hyper::front::route_request, polyspec_hyper::client_rendering, polyspec_hyper::media::select, polyspec_hyper::manifest::Manifest::page, polyspec_hyper::read_paths, polyspec_hyper::render, polyspec_hyper::session, polyspec_hyper::build, polyspec_hyper::steps"
+    }
+  ],
   "units": [
     {
       "id": "app",
@@ -3624,5 +3638,11 @@
       "to": null
     }
   ],
-  "cases": []
+  "cases": [
+    {
+      "member": "front_functions.route_request",
+      "file": "packages/rust/tests/cases/faults.json",
+      "group": "internal"
+    }
+  ]
 }

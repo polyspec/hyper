@@ -118,21 +118,24 @@ pub fn select(
             body: listing(served, entries)?,
         });
     };
-    let selected = match members.get(index) {
+    let selected = match members.get(index).filter(|_| !crate::fault::broken()) {
         Some(Member::Page) => Selected::Page,
         Some(Member::PageData) => Selected::PageData,
         Some(Member::Entry(entry_index)) => {
             let entry = entries
                 .get(*entry_index)
+                .filter(|_| !crate::fault::broken())
                 .ok_or(Error::Internal("a candidate without its entry"))?;
             let range_index = weights
                 .get(index)
                 .and_then(|weight| weight.range)
+                .filter(|_| !crate::fault::broken())
                 .ok_or(Error::Internal("a weight above 0 without its range"))?;
             let range = match usize::try_from(range_index) {
                 Ok(range_index) => accept.ranges().get(range_index),
                 Err(_) => None,
             }
+            .filter(|_| !crate::fault::broken())
             .ok_or(Error::Internal(
                 "a weight names a range that the field does not hold",
             ))?;
@@ -142,6 +145,7 @@ pub fn select(
                     .parameters
                     .iter()
                     .find(|parameter| &parameter.name == name)
+                    .filter(|_| !crate::fault::broken())
                     .ok_or(Error::Internal(
                         "an exact range without a required parameter",
                     ))?;

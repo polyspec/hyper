@@ -375,10 +375,11 @@ test-bindings: lint-bindings test-wasm test-go ## Run the tests of the binding c
 	cargo test --locked $(foreach crate,$(BINDING_CRATES),-p $(crate))
 
 # The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
-# the WASM crate (binding GN-15, GN-18); test-go and node-package compare both releases before they use them.
-GO ?= go
-GOFMT ?= gofmt
-WASM_BINDGEN ?= wasm-bindgen
+# the WASM crate (binding GN-15, GN-18), which mise.toml pins and make install-tools installs into var/tools (HR-81);
+# test-go and node-package compare both releases before they use them.
+GO ?= $(KIT_TOOLS)/mise/shims/go
+GOFMT ?= $(KIT_TOOLS)/mise/shims/gofmt
+WASM_BINDGEN ?= $(KIT_TOOLS)/mise/shims/wasm-bindgen
 # The file name extension of a library that Cargo builds as a cdylib: dylib on macOS, so on Linux.
 CDYLIB := $(if $(filter Darwin,$(shell uname -s)),dylib,so)
 CARGO_TARGET := $(CURDIR)/target

@@ -36,6 +36,22 @@ mod values;
 
 pub use error::Error;
 
+/// The fault injection points of the core (binding design G-5, X-1; HY-132), which the interface contract names in
+/// `faults`. A point does nothing unless the feature `fault-test` is on.
+pub mod fault {
+    /// Each invariant of the core whose failure is the kind `internal` and that no input reaches, treated as broken at
+    /// the place that checks it: the condition that the place reads holds, and the point makes it fail as when it does
+    /// not.
+    #[doc(hidden)]
+    pub const INTERNAL: &str = "hyper.internal";
+
+    /// Whether the point `hyper.internal` breaks the invariant that its caller checks here. Each call is a visit of
+    /// the point.
+    pub(crate) fn broken() -> bool {
+        binding_core::fault::point(INTERNAL).is_some()
+    }
+}
+
 /// Checks a redirect stop (HY-50.3): a stop needs a redirect result.
 ///
 /// # Errors
