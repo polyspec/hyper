@@ -30,6 +30,12 @@ rules:
       # and implements no contract, so the parity declaration lists it as a tool, which cannot lie in the root of the Python
       # implementation.
       - "!tests/python_package"
+      # The fixed copies of case files: sections as they were before a rule moved to the Rust core, and case files that a
+      # library holds now, with their declaration interfaces.json. The PHP, Node and Python runners read them for the host
+      # code that does not call the core yet (make recipe-run-php, make recipe-run-node, make recipe-run-python), and the
+      # recipe check reads them as case files of the spec (scripts/recipe/legacy.mts). They hold cases of three servers
+      # and no test of one package. The directory is removed when the servers call the core.
+      - "!tests/legacy"
 
   # S5: the root files of hyper beyond the list of kit (K145).
   # .npmrc: the npm configuration of the root project; npm reads a project .npmrc only from the root of the project.

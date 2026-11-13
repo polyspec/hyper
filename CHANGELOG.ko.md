@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d555845ab0be05f3f17d305a6372034406d91a9935bde6a34553d5acdf40c37c -->
+<!-- source-sha256: 71f72ec64298c0577b3b2c832f0700043870a82661e801e3f9e7bd2cd3025961 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `config/layout.yml`은 root `tests/`의 디렉터리(`layout-root-tests`)에 `tests/legacy`를 선언한다. 이 디렉터리는 case 파일의 고정 사본을 가진다. PHP, Node, Python runner는 아직 Rust core를 부르지 않는 host 코드를 위해 그 사본을 읽고, recipe 검사는 그 사본을 spec의 case 파일로 읽는다. 그러므로 이 디렉터리는 세 server의 case를 가지며 한 package의 시험을 가지지 않는다. 전에는 `make layout-check`가 `tests/legacy: error: layout-root-tests`로 실패했고, 지금은 통과한다.
 - `Polyspec\Hyper\HyperValueError::status()`는 반환 타입 `null`을 선언한다. 전에는 `?int`를 선언했다. category `value`의 오류는 status가 없으므로(HY-132.2) 이 method는 정수를 돌려주지 않고, `make analyse-php`의 분석은 타입의 쓰이지 않는 `int`를 보고했다(`return.unusedType`). `make analyse-php`는 오류를 보고하지 않는다.
 - PHP runner의 case reader는 case의 field `raises`가 `"message": null`을 적으면 관측한 실패의 message를 뺀다(HY-132.4). Node와 Python reader가 하는 것과 같다. `packages/php/tests/Support/CaseRules.php`의 `statedMessage`는 기대하는 실패를 `is_array`로 검사했는데, reader는 case의 object를 `stdClass`로 가지므로 message를 뺀 적이 없었고, `contracts/context.json`의 case `shared_data_that_holds_a_context_fails`는 생성된 program과 native extension 두 실행에서 `FIELD_DIFFERS raises`로 실패했다. `make hyper-test-php`는 두 실행에서 41개 시험을 통과하고 `make recipe-run-php`는 통과한다.
 - 세 server의 host 코드는 H-1의 package 자리 아래, HYR-4의 group 디렉터리에 있다: `packages/php/src/<Group>/`, `packages/ts/src/<group>/`, `packages/python/src/polyspec/hyper/<group>/`. `contracts/interfaces.json`은 `groups`와 함께 그 경로를 적는다. concern `app`의 unit `hyper-value-error`는 group `app`에 있다(`packages/php/src/App/HyperValueError.php`, `packages/python/src/polyspec/hyper/app/_hyper_value_error.py`). server에 `Accept.select`가 없으므로 `tests/legacy/accept-before-s3b.json`의 section `select`는 그 step이 부르는 member `accept.best`와 `accept.parse`를 적는다. 모든 manifest는 version 0.0.40을 가지고, 두 `composer.json`은 `"min-0-max/json-schema": "^2.6.0-p2"`를 요구하며, lock이 이를 따른다.
