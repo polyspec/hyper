@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: ad4073a862f1c6c5da34e44fb9bcd61e01a994677e0ab9aa59dfd3de1c478741 -->
+<!-- source-sha256: 3ab29d5447d2b2e00b8f5e4ec0b114dcb8660c6d1ed956b7b8c329fb566baa7d -->
 # 기능 상태
 
 [English](features.md).
@@ -17,6 +17,7 @@
 | read-path-rules | Rust core의 HY-73.2~HY-73.20 읽기 경로: `read_paths::route_reads`는 manifest와 템플릿 소스로 `reads.json`의 routes를, `read_paths::template_reads`는 템플릿 하나의 node를 준다(HY-73.30) | partial: core는 `contracts/reads.json`의 `cases`와 `routes` case에서 `packages/client/src/reads.ts`의 `routeReads`, `templateReads`와 같은 읽기 경로를 준다. 명령 도구와 Node 서버가 core를 부르기 전까지(H-8) `hyper build`와 Node 서버는 브라우저 package로 계산하며, `hyper build`는 `reads.json`의 키를 HY-73.32 순서가 아니라 브라우저 package가 읽은 순서로, 정수인 키를 먼저 쓴다 | `make core-test`, `make hyper-test-js` |
 | data-template-rule | Rust core의 `render::data_template`가 주는 예약 템플릿 `hyper/data.tpl`의 이름과 소스(HY-31.9) | partial: core는 `contracts/build.json`의 case `dataTemplate`에서 `packages/client/data-template.json`이 담은 것과 같은 이름과 소스를 준다. 명령 도구와 서버는 core를 부르기 전까지(H-8) 브라우저 package에서 그것을 받는다 | `make core-test`, `tests/scripts/build-id.test.mts` |
 | legacy-data-template | core를 부르지 않는 서버를 위한 예약 템플릿의 사본 `program/legacy/hyper/data.tpl`. build는 `program/templates/hyper/data.tpl` 대신 그것을 쓰고(HY-31.10), Python 서버는 그것을 필요로 하며 `program/templates/`와 함께 읽는다(HY-48.14) | not implemented: `hyper build`는 `program/templates/hyper/data.tpl`을 쓰고 `program/legacy/`를 쓰지 않으며, Python 서버는 예약 템플릿을 `program/templates/`에서 읽고 `legacy/hyper/data.tpl`이 없어도 실패하지 않는다(H31.4-2) | — |
+| node-core-rules | Node 서버 unit의 이름으로 주는 core의 규칙. `packages/ts/src/core/rules.ts`의 `coreRules`가 core의 Node binding module을 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고 core의 Node binding은 build되지 않았다. `tests/scripts/node-core.test.mts`는 binding module의 대역으로 그 호출을 적으며 실행되지 않았다(H31.20, H31.7) | — |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
