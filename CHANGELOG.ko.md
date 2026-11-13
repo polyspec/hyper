@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 70a2b0c301e4ab0694958b9be52b980c6202a731fce826827305534a55c399b1 -->
+<!-- source-sha256: 124d1cb0380e0fff9e41ec9fc8f38d39a1ba18bcaac3dc8b07c6aea97e55a630 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 클래스 단위 `pages`의 매개변수 `pages`는 `packages/rust/interface.json`에서 core가 그것을 빌리는 방식 `core: "&"`를 명시한다. `page_request.new`, `front_functions.route_request`, `front_functions.kept_value`, `opening_functions.open_page`, `opening_functions.answer_keep_request`는 `&Pages`를 받는다. 계약이 빌림을 명시하지 않아 계약 검사가 다섯 매개변수에 CK-67을 보고했으며, 이제 보고하지 않는다.
 - 명세는 core를 부르지 않는 서버가 있는 동안 예약 템플릿이 놓이는 곳을 적는다. build는 그 사본 `program/legacy/hyper/data.tpl`을 쓰고(HY-31.10), Python 서버는 그 파일을 필요로 하며 `program/templates/`와 함께 읽는다(HY-48.14). HR-34가 그 경로를 적는다. build와 Python 서버는 아직 그렇게 하지 않는다: `docs/features.md`는 legacy-data-template 행을 not implemented로 둔다. `make spec-docs-check`와 `make docs-check`가 통과한다.
 - `make bindings-check`가 binding CK-19가 요구하는 host manifest 항목 11개를 보고했다(L-2a). 이제 `packages/ts/package.json`은 `files`에 `native/generated/index.cjs`, `index.mjs`, `index.d.ts`와 `native/wasm/generated/*.mjs`, `*.js`, `*.d.ts`, `*.wasm`을 적고, `packages/php/composer.json`은 `ext-polyspec_hyper`를 require한다. root와 board의 Composer 프로젝트는 `config.platform`에 `ext-polyspec_hyper` 0.0.40을 선언해 Composer가 확장 없이 lock을 resolve하게 한다. 확장이 없는 PHP 8.4.27로 두 프로젝트의 `composer install`이 통과하고, `vendor/composer/platform_check.php`는 PHP 버전만 확인하며, `vendor/autoload.php`가 로드된다. `npm ci`(`make install-packages`)가 통과한다. `optionalDependencies`의 플랫폼 패키지 세 개는 계속 보고된다. 그것을 release에 맡기는 binding commit(binding GN-3c)을 고정하면 요구되지 않는다(H31.3-4).
 - host `packages/ts/package.json`은 npm-native 패키지의 release가 읽는 `napi.binaryName` `hyper`와 `napi.targets` `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `aarch64-apple-darwin`을 적는다. 이것이 없으면 release가 그 패키지를 거부한다. 고정된 binding 3b4bc6b는 이 항목을 읽지 않는다: `make bindings-check`는 변경 전후에 같은 CK-19 finding을 보고한다. `packages/php/native/composer.json`의 `php-ext.download-url-method`는 넣지 않았다. 그 파일은 고정된 binding의 scaffold가 쓰는 것이고, 그 필드를 넣자 `binding check`가 `CK-19 differs`를 보고했기 때문이다(H31.3-3).

@@ -2461,7 +2461,8 @@
               "type": {
                 "unit": "pages"
               },
-              "required": true
+              "required": true,
+              "core": "&"
             },
             {
               "name": [
@@ -2925,7 +2926,8 @@
               "type": {
                 "unit": "pages"
               },
-              "required": true
+              "required": true,
+              "core": "&"
             },
             {
               "name": [
@@ -3033,7 +3035,8 @@
               "type": {
                 "unit": "pages"
               },
-              "required": true
+              "required": true,
+              "core": "&"
             },
             {
               "name": [
@@ -3333,7 +3336,8 @@
               "type": {
                 "unit": "pages"
               },
-              "required": true
+              "required": true,
+              "core": "&"
             },
             {
               "name": [
@@ -3386,7 +3390,8 @@
               "type": {
                 "unit": "pages"
               },
-              "required": true
+              "required": true,
+              "core": "&"
             },
             {
               "name": [
