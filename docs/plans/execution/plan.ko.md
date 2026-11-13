@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 9f35440b1465b87885be3851384892fd7cb84e9d229d162dd9d800605304af26 -->
+<!-- source-sha256: 266fa34d4070b4f945c9486f40259a88fb5739f3937170525a8a40957d08f9ec -->
 # 실행
 
 [English](plan.md).
@@ -145,6 +145,8 @@ recipe(H28.11)는 세 server를 `contracts/interfaces.json`의 concern으로 나
 - concern index는 HY-106을 가지며 unit이 없다. HYR-8이 barrel 파일을 public member와 type에 대해 검사하므로 case는 `none`이다.
 - 어떤 concern도 `error-code.ts`를 가지지 않는다. error의 `code`를 읽는 일을 정하는 규칙이 없으므로 각 사용처가 자기 코드에서 읽으며, 이 파일은 사용처를 옮기는 concern과 함께 제거된다.
 - spec은 unit을 먼저 적고, member는 각 concern을 옮기는 commit에서 적는다. 그래서 마지막 concern을 옮길 때까지 이 branch에서 `make recipe-check`는 실패한다.
+
+H28.15는 각 server의 unit을 concern의 group마다 한 directory에 둔다. 각 server는 한 directory에 파일 약 60개를 가졌고, concern은 `contracts/interfaces.json`에만 있었다. spec은 group 아홉 개와 각 concern의 group을 선언하고, HYR-4의 검사는 자기 group의 directory 밖에 있는 unit 파일을 실패시킨다. Python은 HY-106.18이 말하는 대로 public 이름을 package에서만 import하므로 나중에 group을 바꿔도 public 이름이 바뀌지 않는다. PHP는 같은 이유로 namespace `Polyspec\Hyper`를 유지하고 autoload에 group directory를 나열한다.
 
 ## Wave 29 — stream으로 읽는 multipart body
 

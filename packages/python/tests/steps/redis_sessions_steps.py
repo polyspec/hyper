@@ -1,7 +1,7 @@
 # The steps of contracts/redis-sessions.json (HY-115): the requests of a store of Redis sessions against a Redis server
 # in memory, which records the commands that it receives, and the options that making the store refuses.
-from polyspec.hyper.redis_sessions import RedisSessions
-from polyspec.hyper.session_lock_error import SessionLockError
+from polyspec.hyper.session.redis_sessions import RedisSessions
+from polyspec.hyper.session.session_lock_error import SessionLockError
 
 from .inputs import options_of
 from .store_requests import StoreRequests

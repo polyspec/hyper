@@ -11,8 +11,8 @@
     "require": {
         "php": ">=8.4",
         "ext-pdo_sqlite": "*",
-        "min-0-max/json-schema": "2.6.0-p2",
-        "polyspec/hyper": "0.0.39",
+        "min-0-max/json-schema": "^2.6.0-p2",
+        "polyspec/hyper": "0.0.40",
         "polyspec/template": "0.0.27"
     },
     "require-dev": {

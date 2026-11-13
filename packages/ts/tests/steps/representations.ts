@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { App, ArraySession, Representation, Request, type Handlers, type RepresentationArgument, type RepresentationHandler, type RouteHandlers } from '../../src/index.js';
-import type { Value } from '../../src/values.js';
+import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
 import { mapOf, stringsOf, textOf, textsOf } from '../inputs.js';

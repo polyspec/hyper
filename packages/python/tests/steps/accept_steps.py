@@ -1,6 +1,6 @@
 # The steps of contracts/accept.json (HY-116): the parse of an Accept value and the selection of a media type.
-from polyspec.hyper._accept import Accept
-from polyspec.hyper._invalid_accept import InvalidAccept
+from polyspec.hyper.representation._accept import Accept
+from polyspec.hyper.representation._invalid_accept import InvalidAccept
 
 
 def parse(case) -> None:
@@ -28,7 +28,8 @@ def select(case) -> None:
     value = case.input("accept")
     types = case.input("types")
     try:
-        selected = Accept.select(value, types)
+        # The selection that the servers make: the ranges of the value, then the best of the types (HY-116).
+        selected = Accept.best(Accept.parse(value), types)[0]
     except InvalidAccept:
         case.compare("invalid", True)
         return

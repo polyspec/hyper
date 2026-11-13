@@ -1,5 +1,5 @@
 // The steps of contracts/csrf.json (HY-24): the masked values of a token and their verification.
-import { Csrf } from '../../src/csrf.js';
+import { Csrf } from '../../src/session/csrf.js';
 import type { CaseReader } from '../case-reader.js';
 
 function text(reader: CaseReader, name: string): string {

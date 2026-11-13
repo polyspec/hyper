@@ -23,7 +23,18 @@ export function hasAcronym(name: string): boolean {
   return /[A-Z]{2}/u.test(name);
 }
 
-/** The file name HYR-4 gives a unit: PascalCase for PHP, kebab for Node, snake for Python with `_` when internal. */
+/** HYR-4: the directory of a group below a source root: PHP PascalCase, Node the id, Python snake_case. */
+export function expectedDirectory(lang: Lang, group: string): string {
+  const parts = group.split('-');
+  if (lang === 'php') return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+  if (lang === 'node') return group;
+  return parts.join('_');
+}
+
+/**
+ * The base name HYR-4 gives the file of a unit, in the directory of its group: PascalCase for PHP, kebab for Node,
+ * snake for Python with `_` when internal.
+ */
 export function expectedFile(lang: Lang, id: string, internal: boolean): string {
   const parts = id.split('-');
   if (lang === 'php') return `${parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('')}.php`;

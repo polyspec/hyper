@@ -1,10 +1,10 @@
 // The steps of contracts/session.json (HY-24, HY-25, HY-40, HY-72, HY-104): the token, the flash values and the kept
 // values that a session keeps in its store.
-import { ArraySession } from '../../src/array-session.js';
-import { Flash } from '../../src/flash.js';
-import { Session } from '../../src/session.js';
-import type { SessionStore } from '../../src/session-store.js';
-import { toValue, type Value } from '../../src/values.js';
+import { ArraySession } from '../../src/session/array-session.js';
+import { Flash } from '../../src/session/flash.js';
+import { Session } from '../../src/session/session.js';
+import type { SessionStore } from '../../src/session/session-store.js';
+import { toValue, type Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { textOf } from '../inputs.js';
 import { callsOf, decoded } from './session-requests.js';

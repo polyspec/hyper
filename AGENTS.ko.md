@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: f1194d829016679bd1436ea809f1acafbdc07ddcd0f398b60513fa8781a1ab60 -->
+<!-- source-sha256: aa843286b1fca016144be23a8837100b410e28e6fb0969c01b727125aab20c50 -->
 # 개발
 
 [English](AGENTS.md).
@@ -35,7 +35,7 @@
   Enforced by: `make hyper-test-scripts`, 그 tests/scripts/template-pins.test.mts가 각 template pin과 그 integrity를 검사한다
 - Own: polyspec 버전이 0.0.x인 동안 개발 checkout은 설치된 polyspec package를 kit의 `docs/operations/local-links.md`가 설명하는 대로 그 source에 연결한다. 연결은 commit하지 않는다.
   Enforced by: none, 연결이 commit에서 빠지는지는 review로 판단한다.
-- Own: 개발 checkout은 polyspec provider(kit, template)를 자기 `.links`의 항목과 kit의 `make link`로만 link한다(K869). Composer path repository나 두 번째 manifest는 소스를 link하지 않는다. min-0-max/json-schema는 opis/json-schema의 유지되는 fork이고, 그 FORK.md가 fork를 유지하고 소비하는 방법을 적는다. template decoder는 collect-all-errors 방식으로 검증하는데, upstream opis/json-schema 2.6.0은 거기서 유효한 property도 `additionalProperties: false`가 허용하지 않는다고 보고하고 실패한 group 뒤에 `unevaluatedProperties`를 실행하지 않으며, fork가 둘을 고친다. `composer.json`과 `examples/board/composer.json`은 repository `{"type": "vcs", "url": "https://github.com/min-0-max/json-schema", "no-api": true}`를 선언하고 template release가 요구하는 이름으로 fork의 release `"min-0-max/json-schema": "2.6.0-p2"`를 요구하며, `composer.lock`과 `examples/board/composer.lock`은 그 release를 commit과 dist로 고정한다. 그래서 CI와 release step(release-prepare는 `make hyper-install`을 실행한다)은 고친 decoder를 실행한다. 릴리스되는 manifest `packages/php/composer.json`은 repository를 적지 않으므로, polyspec/hyper의 소비자는 자기 root에 fork를 선언한다. fork를 편집하는 개발 checkout은 fork의 checkout을 가리키는 `.links` 항목과 `make link`로 provider처럼 그것을 link한다.
+- Own: 개발 checkout은 polyspec provider(kit, template)를 자기 `.links`의 항목과 kit의 `make link`로만 link한다(K869). Composer path repository나 두 번째 manifest는 소스를 link하지 않는다. min-0-max/json-schema는 opis/json-schema의 유지되는 fork이고, 그 FORK.md가 fork를 유지하고 소비하는 방법을 적는다. template decoder는 collect-all-errors 방식으로 검증하는데, upstream opis/json-schema 2.6.0은 거기서 유효한 property도 `additionalProperties: false`가 허용하지 않는다고 보고하고 실패한 group 뒤에 `unevaluatedProperties`를 실행하지 않으며, fork가 둘을 고친다. `composer.json`과 `examples/board/composer.json`은 repository `{"type": "vcs", "url": "https://github.com/min-0-max/json-schema", "no-api": true}`를 선언하고 template release가 요구하는 이름으로 fork를 범위 `"min-0-max/json-schema": "^2.6.0-p2"`로 요구하며(`composer validate --strict`가 정확한 제약을 실패시키기 때문이다), `composer.lock`과 `examples/board/composer.lock`은 그 release를 commit과 dist로 고정한다. 그래서 CI와 release step(release-prepare는 `make hyper-install`을 실행한다)은 고친 decoder를 실행한다. 릴리스되는 manifest `packages/php/composer.json`은 repository를 적지 않으므로, polyspec/hyper의 소비자는 자기 root에 fork를 선언한다. fork를 편집하는 개발 checkout은 fork의 checkout을 가리키는 `.links` 항목과 `make link`로 provider처럼 그것을 link한다.
   Enforced by: `make hyper-test-scripts`
 - Own: release가 결과를 바꾸는 모든 도구는 추적 파일에 고정하고 쓰기 전에 확인한다(HR-81): `.php-version`, `package.json`의 `devEngines`, `mise.toml`과 `mise.lock`, 그리고 `config/toolchain.json`. 도구는 결과가 요구하는 만큼 정확히 고정한다. PHP는 minor로, mise의 도구는 정확한 release로, make는 고정하지 않는다. 도구는 기계가 아니라 checkout(`var/tools`)에 설치하며, 다운로드는 고정된 digest가 있을 때만 쓰고, 처음 쓸 때 다른 도구가 도구를 설치하지 않는다. recipe나 script는 checkout의 도구를 절대 경로로 시작한다. make는 shell 문법이 없는 recipe 줄을 자기 `PATH`에서 찾기 때문이다.
   Enforced by: `make hyper-test-scripts`
@@ -131,5 +131,7 @@
   Enforced by: `make docs-check`
 - Refines P25: `[!]`로 우회한 task(`docs/plans/execution/checklist.md`)는 다음 task가 그것을 우회하지 않고는 진행할 수 없을 때만 쓴다. 재시도 조건이 성립하면 task는 승인을 기다리지 않고 재개한다. 감사는 우회한 task만, 그 원인과 재시도 조건과 함께 다루며, 관계없는 전체 test 실행을 되풀이하지 않는다.
   Enforced by: none, 다음 task가 진행할 수 있는지는 판단이다.
+- Own: `[-]`로 철회한 task는 완료다. 그 원인이 재개 조건을 적으면 그 조건이 성립한 뒤 task를 재개하고, 재개 조건을 적지 않았거나 그 조건이 성립하지 않는 task는 그대로 완료다.
+  Enforced by: none, 재개 조건의 성립 여부는 판단이다.
 - Own: 받은 지시는 먼저 분류한다. checklist의 task, 이 파일의 규칙, agent memory의 메모, 또는 답만 필요한 것이다. agent memory에는 요청자와 agent가 세션 사이에 필요로 하는 것만 둔다. 프로젝트가 지켜야 하는 것은 저장소(문서, 주석, commit message)에 둔다. 지시가 긴급하다고 밝히지 않았다면, 우선순위와 함께 task로 기록하고 진행 중인 task를 계속한다. 규칙은 이 파일에 중복 없이 두며, checklist나 changelog에는 두지 않는다.
   Enforced by: none, 지시의 분류는 판단이다.

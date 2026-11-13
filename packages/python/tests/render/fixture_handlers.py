@@ -3,14 +3,14 @@ the same data as `AppTest.php` and `app.test.ts`) and the opening of the applica
 
 from __future__ import annotations
 
-from polyspec.hyper.app import App
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.request import Request
-from polyspec.hyper.bad_request import BadRequest
-from polyspec.hyper.forbidden import Forbidden
-from polyspec.hyper.not_found import NotFound
-from polyspec.hyper.redirect import Redirect
-from polyspec.hyper.result import Result
+from polyspec.hyper.app.app import App
+from polyspec.hyper.http.reply import Reply
+from polyspec.hyper.http.request import Request
+from polyspec.hyper.result.bad_request import BadRequest
+from polyspec.hyper.result.forbidden import Forbidden
+from polyspec.hyper.result.not_found import NotFound
+from polyspec.hyper.result.redirect import Redirect
+from polyspec.hyper.result.result import Result
 
 from .fixture_app import FIXTURES, PROGRAM
 

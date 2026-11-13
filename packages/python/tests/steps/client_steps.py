@@ -11,15 +11,15 @@ from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import urlencode
 
-from polyspec.hyper._csrf import Csrf
-from polyspec.hyper.app import App
-from polyspec.hyper.array_session import ArraySession
-from polyspec.hyper.choice import Choice
-from polyspec.hyper.client_rendering import ClientRendering
-from polyspec.hyper.media_type import MediaType
-from polyspec.hyper.representation import Representation
-from polyspec.hyper.request import Request
-from polyspec.hyper.result import Result
+from polyspec.hyper.session._csrf import Csrf
+from polyspec.hyper.app.app import App
+from polyspec.hyper.session.array_session import ArraySession
+from polyspec.hyper.page.choice import Choice
+from polyspec.hyper.page.client_rendering import ClientRendering
+from polyspec.hyper.representation.media_type import MediaType
+from polyspec.hyper.representation.representation import Representation
+from polyspec.hyper.http.request import Request
+from polyspec.hyper.result.result import Result
 
 from ..render.fixture_app import FIXTURES, PROGRAM
 from .inputs import options_of

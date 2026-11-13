@@ -1,9 +1,9 @@
 # The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58): the results of actions and the stops.
-from polyspec.hyper.bad_request import BadRequest
-from polyspec.hyper.forbidden import Forbidden
-from polyspec.hyper.not_found import NotFound
-from polyspec.hyper.redirect import Redirect
-from polyspec.hyper.result import Result
+from polyspec.hyper.result.bad_request import BadRequest
+from polyspec.hyper.result.forbidden import Forbidden
+from polyspec.hyper.result.not_found import NotFound
+from polyspec.hyper.result.redirect import Redirect
+from polyspec.hyper.result.result import Result
 
 from .recorded import decoded
 

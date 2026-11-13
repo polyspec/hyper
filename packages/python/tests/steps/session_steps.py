@@ -2,10 +2,10 @@
 # values of one session over a new store in memory.
 import re
 
-from polyspec.hyper._flash import Flash
-from polyspec.hyper._session import Session
-from polyspec.hyper.array_session import ArraySession
-from polyspec.hyper.session_store import SessionStore
+from polyspec.hyper.session._flash import Flash
+from polyspec.hyper.session._session import Session
+from polyspec.hyper.session.array_session import ArraySession
+from polyspec.hyper.session.session_store import SessionStore
 
 from .data_model_errors import data_model_message
 from .inputs import calls_of

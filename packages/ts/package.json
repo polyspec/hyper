@@ -1,6 +1,6 @@
 {
   "name": "@polyspec/hyper",
-  "version": "0.0.39",
+  "version": "0.0.40",
   "description": "The server library of the region protocol for Node.js; the browser package is @polyspec/hyper-client. Routes, loaders, actions, sessions, documents and JSON",
   "license": "MIT",
   "type": "module",
@@ -22,7 +22,7 @@
     "node": ">=26.12.0"
   },
   "dependencies": {
-    "@polyspec/hyper-client": "0.0.39",
+    "@polyspec/hyper-client": "0.0.40",
     "@polyspec/php-serialize": "0.0.6",
     "@polyspec/template": "0.0.27"
   }

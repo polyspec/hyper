@@ -2,10 +2,10 @@
 # created, or when the application opens for the disconnect hook.
 import tempfile
 
-from polyspec.hyper.asgi import create_asgi
-from polyspec.hyper.file_sessions import FileSessions
-from polyspec.hyper import create_server
-from polyspec.hyper.wsgi import create_wsgi
+from polyspec.hyper.host.asgi import create_asgi
+from polyspec.hyper.session.file_sessions import FileSessions
+from polyspec.hyper.host.server import create_server
+from polyspec.hyper.host.wsgi import create_wsgi
 
 from . import client_steps
 from .client_steps import Counter

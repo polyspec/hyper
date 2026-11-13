@@ -1,9 +1,9 @@
 // The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58): the results of actions and the stops.
-import { BadRequest } from '../../src/bad-request.js';
-import { Forbidden } from '../../src/forbidden.js';
-import { NotFound } from '../../src/not-found.js';
-import { Redirect } from '../../src/redirect.js';
-import { Result } from '../../src/result.js';
+import { BadRequest } from '../../src/result/bad-request.js';
+import { Forbidden } from '../../src/result/forbidden.js';
+import { NotFound } from '../../src/result/not-found.js';
+import { Redirect } from '../../src/result/redirect.js';
+import { Result } from '../../src/result/result.js';
 import type { CaseReader } from '../case-reader.js';
 import { decoded } from './session-requests.js';
 

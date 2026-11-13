@@ -1,5 +1,5 @@
 // The steps of contracts/reply.json (HY-52, HY-60, HY-69, HY-72, HY-92, HY-103): the reply of a request.
-import { Reply } from '../../src/reply.js';
+import { Reply } from '../../src/http/reply.js';
 import type { CaseReader } from '../case-reader.js';
 import { decoded } from './session-requests.js';
 

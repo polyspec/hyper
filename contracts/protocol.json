@@ -5357,9 +5357,9 @@
                   "statements": [
                     {
                       "id": "HY-100.3",
-                      "en": "Python WSGI: `polyspec.hyper.wsgi.create_wsgi(app, sessions, files=None, around=None, written=None)` of the Python server `polyspec-hyper` takes the arguments of `create_server` (HY-97, HY-99) and returns a WSGI application callable (PEP 3333) that a WSGI server runs.",
-                      "ko": "Python WSGI: Python 서버 `polyspec-hyper`의 `polyspec.hyper.wsgi.create_wsgi(app, sessions, files=None, around=None, written=None)`는 `create_server`의 인자(HY-97, HY-99)를 받고, WSGI 서버가 실행하는 WSGI 애플리케이션 callable(PEP 3333)을 돌려준다.",
-                      "koSource": "9efe0747ae3bedd9993863282e5256f9e97d40b9233900c6f55cdcc0e9662a7a"
+                      "en": "Python WSGI: `create_wsgi(app, sessions, files=None, around=None, written=None)` of the package `polyspec.hyper` of the Python server `polyspec-hyper` takes the arguments of `create_server` (HY-97, HY-99) and returns a WSGI application callable (PEP 3333) that a WSGI server runs.",
+                      "ko": "Python WSGI: Python 서버 `polyspec-hyper`의 package `polyspec.hyper`에 있는 `create_wsgi(app, sessions, files=None, around=None, written=None)`는 `create_server`의 인자(HY-97, HY-99)를 받고, WSGI 서버가 실행하는 WSGI 애플리케이션 callable(PEP 3333)을 돌려준다.",
+                      "koSource": "c865d9f177bcb24c40965020bb3d60e1bbd3254fffba0a9383e8b4074b3bfdd3"
                     },
                     {
                       "id": "HY-100.4",
@@ -5434,9 +5434,9 @@
                   "statements": [
                     {
                       "id": "HY-100.15",
-                      "en": "Python ASGI: `polyspec.hyper.asgi.create_asgi(app, sessions, files=None, around=None, written=None)` of the Python server `polyspec-hyper` takes the arguments of `create_server` (HY-97, HY-99) and returns an ASGI 3 application callable that an ASGI server runs.",
-                      "ko": "Python ASGI: Python 서버 `polyspec-hyper`의 `polyspec.hyper.asgi.create_asgi(app, sessions, files=None, around=None, written=None)`는 `create_server`의 인자(HY-97, HY-99)를 받고, ASGI 서버가 실행하는 ASGI 3 애플리케이션 callable을 돌려준다.",
-                      "koSource": "853d767a524e54c4fbb4d2c97630fdbe57f5f013a007ddb264a687447037d063"
+                      "en": "Python ASGI: `create_asgi(app, sessions, files=None, around=None, written=None)` of the package `polyspec.hyper` of the Python server `polyspec-hyper` takes the arguments of `create_server` (HY-97, HY-99) and returns an ASGI 3 application callable that an ASGI server runs.",
+                      "ko": "Python ASGI: Python 서버 `polyspec-hyper`의 package `polyspec.hyper`에 있는 `create_asgi(app, sessions, files=None, around=None, written=None)`는 `create_server`의 인자(HY-97, HY-99)를 받고, ASGI 서버가 실행하는 ASGI 3 애플리케이션 callable을 돌려준다.",
+                      "koSource": "c50d442591969d82e48011b6ca83bbb1e6ab47bf558f61be5322ddf685e7f65f"
                     },
                     {
                       "id": "HY-100.16",
@@ -6262,9 +6262,9 @@
                 },
                 {
                   "id": "HY-106.4",
-                  "en": "PHP request query, form and file maps expose the native `IteratorAggregate` interface and iterate names and value lists in contract order; their concrete storage classes remain internal.",
-                  "ko": "PHP의 request query, form, file map은 native `IteratorAggregate` interface를 노출하고 이름과 값 목록을 contract 순서로 순회하며, 그 구체적 저장 class는 내부용으로 남는다.",
-                  "koSource": "71478ed6ab3a27cf018bddfdf198990875437eeb940f6c2ab9390f83a7d11b5c"
+                  "en": "PHP `query()`, `form()` and `files()` of a request return a PHP list of pairs of a name and its values in contract order, as HY-56 and HY-113 state; the classes that hold the values remain internal.",
+                  "ko": "PHP 요청의 `query()`, `form()`, `files()`는 HY-56과 HY-113이 말하는 대로 이름과 그 값 목록의 쌍을 contract 순서로 담은 PHP list를 돌려주며, 값을 담는 class는 내부용으로 남는다.",
+                  "koSource": "af5e79064c1f6e58ff21c098fece028c0fa349292f6e4e9bb7462b0c0d3394d4"
                 },
                 {
                   "id": "HY-106.5",

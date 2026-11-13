@@ -1,31 +1,30 @@
-"""The hyper server of the region protocol. The package exports its public API, which is also in the modules app,
-array_session, asgi, bad_request, choice, client_rendering, container, file_sessions, forbidden, media_type, not_found,
-redirect, redis_sessions, reply, representation, request, response, result, server, session_lock_error, session_store,
-uploaded_file and wsgi. Modules that start with an underscore are internal (HY-106, HY-113)."""
+"""The hyper server of the region protocol. The package exports its public API (HY-106); the group packages app,
+data, form, host, http, page, representation, result and session that hold its units are not part of it, and modules
+that start with an underscore are internal (HY-106, HY-113)."""
 
-from .app import App
-from .asgi import create_asgi
-from .choice import Choice
-from .client_rendering import ClientRendering
-from .container import Container
-from .file_sessions import FileSessions
-from .media_type import MediaType
-from .reply import Reply
-from .representation import Representation
-from .request import Request
-from .response import Response
-from .bad_request import BadRequest
-from .forbidden import Forbidden
-from .not_found import NotFound
-from .redirect import Redirect
-from .redis_sessions import RedisSessions
-from .result import Result
-from .array_session import ArraySession
-from .session_lock_error import SessionLockError
-from .server import create_server
-from .session_store import SessionStore
-from .uploaded_file import UploadedFile
-from .wsgi import create_wsgi
+from .app.app import App
+from .host.asgi import create_asgi
+from .page.choice import Choice
+from .page.client_rendering import ClientRendering
+from .app.container import Container
+from .session.file_sessions import FileSessions
+from .representation.media_type import MediaType
+from .http.reply import Reply
+from .representation.representation import Representation
+from .http.request import Request
+from .http.response import Response
+from .result.bad_request import BadRequest
+from .result.forbidden import Forbidden
+from .result.not_found import NotFound
+from .result.redirect import Redirect
+from .session.redis_sessions import RedisSessions
+from .result.result import Result
+from .session.array_session import ArraySession
+from .session.session_lock_error import SessionLockError
+from .host.server import create_server
+from .session.session_store import SessionStore
+from .form.uploaded_file import UploadedFile
+from .host.wsgi import create_wsgi
 
 __all__ = [
     "App",

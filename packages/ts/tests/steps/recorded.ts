@@ -1,7 +1,7 @@
 // What the steps of contracts/client.json and contracts/app.json record of one request: the calls of the session
 // store, the reports of the response hook and the texts of the log, each with one meaning in both files.
 import type { Reply, Request, Response } from '../../src/index.js';
-import type { SessionStore } from '../../src/session-store.js';
+import type { SessionStore } from '../../src/session/session-store.js';
 import type { CaseReader } from '../case-reader.js';
 
 // A session store that records every call that the application makes of the four methods of the store, each as the

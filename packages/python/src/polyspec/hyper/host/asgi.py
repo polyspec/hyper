@@ -1,0 +1,254 @@
+"""An ASGI application callable of the server pipeline (HY-100): an ASGI server runs the callable
+and the pipeline answers every request of the scope type `http` as `create_server` does (HY-97,
+HY-99) — the public files, the body limit (HY-59), the session cookie of a new session first
+(HY-45), the hooks and the plain 500 of an escaped error (HY-60) — and runs the pipeline of a request
+in a worker thread. The library names no server; a deployment runs the callable with the server that
+it chooses."""
+
+from __future__ import annotations
+
+import asyncio
+import time
+from typing import Callable, Optional, Union
+
+from ..app.app import App
+from ..http._cookies import Cookies
+from ._exchange import Exchange
+from ._file_response import FileResponse
+from ..session.file_sessions import FileSessions
+from ..session.redis_sessions import RedisSessions
+from ._pipeline import (
+    Around,
+    Written,
+    answer_with,
+    declared_length,
+    escape,
+    head_request,
+    header_lines,
+    served_file,
+    validate,
+)
+from ..form._request_body import RequestBody
+from ..http.request import Request
+from ..http.response import Response
+
+
+def create_asgi(
+    app: App,
+    sessions: FileSessions | RedisSessions,
+    files: Optional[str] = None,
+    around: Optional[Around] = None,
+    written: Optional[Written] = None,
+) -> Callable:
+    """Returns an ASGI 3 application callable that answers every request with the application, as
+    `create_server` does (HY-100). `files`, `around` and `written` mean what they mean there (HY-97,
+    HY-99): the callable sends one `http.response.start` and one `http.response.body` with the
+    complete body, `written` reports that the write ended when both sends return, and that it failed
+    when a send raises, which an ASGI server does for a connection that the client closed; when the
+    write failed, the callable calls the disconnect hook with the request and the reply of the last
+    call of `answer` (HY-67) and lets the error propagate to the server."""
+    validate(files, around, written)
+
+    async def application(scope: dict, receive: Callable, send: Callable) -> None:
+        if scope["type"] != "http":
+            raise ValueError(
+                f"the callable answers the scope type http, not {scope['type']}"
+            )
+        started = time.perf_counter_ns()
+        exchange = Exchange(written, started)
+        try:
+            failure: Optional[str] = None
+            try:
+                result: Union[Response, FileResponse] = await _answer(
+                    app, sessions, around, files, scope, receive, exchange
+                )
+            except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
+                result = escape(app, error)
+                failure = str(error)
+            except asyncio.CancelledError:
+                # HY-99: a cancellation before the answer ends the request before a response started: a null response.
+                exchange.report(None, False)
+                raise
+            if isinstance(result, FileResponse):
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": [
+                            (b"content-type", result.content_type.encode("ascii")),
+                            (b"content-length", str(result.length).encode("ascii")),
+                        ],
+                    }
+                )
+                await send({"type": "http.response.body", "body": result.data})
+                return
+            try:
+                headers, body = _messages(result)
+            except Exception as error:  # noqa: BLE001 - HY-60: a header or a body that cannot be encoded is an escape
+                result = escape(app, error)
+                failure = str(error)
+                headers, body = _messages(result)
+            try:
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": result.status,
+                        "headers": headers,
+                    }
+                )
+                # HY-27.5: a HEAD request receives the headers, with the Content-Length of the body, and no body.
+                sent = b"" if scope.get("method") == "HEAD" else body
+                await send({"type": "http.response.body", "body": sent})
+            except Exception:
+                # HY-100 and HY-67: a send raised, which an ASGI server does for a connection that the client
+                # closed; the write hook runs before the disconnect hook, and the error propagates.
+                exchange.report(result, False, failure)
+                exchange.disconnect(app)
+                raise
+            except asyncio.CancelledError:
+                # HY-99: a cancellation of the task ends the write; it is not a closed connection, so no disconnect hook runs.
+                exchange.report(result, False, failure)
+                raise
+            exchange.report(result, True, failure)
+        finally:
+            # HY-131.14: the files of the request are removed after its hooks returned.
+            exchange.release()
+
+    return application
+
+
+def _messages(response: Response) -> tuple[list[tuple[bytes, bytes]], bytes]:
+    """Returns the headers and the body of a response as the ASGI messages carry them (HY-100). A 204 or 304 response
+    has no body and no Content-Length."""
+    empty = response.status in (204, 304)
+    body = b"" if empty else response.body.encode("utf-8")
+    headers = [
+        (name.lower().encode("ascii"), item.encode("utf-8"))
+        for name, item in header_lines(response)
+    ]
+    if not empty:
+        headers.append((b"content-length", str(len(body)).encode("ascii")))
+    return headers, body
+
+
+async def _answer(
+    app: App,
+    sessions: FileSessions | RedisSessions,
+    around: Optional[Callable],
+    files: Optional[str],
+    scope: dict,
+    receive: Callable,
+    exchange: Exchange,
+) -> Union[Response, FileResponse]:
+    """Answers the request of the scope: a file of the public directory, or the application through `around` in a
+    worker thread (HY-100). The request as received is kept in the exchange before the body is read (HY-60)."""
+    # HY-100.31: the host passes the method in upper case.
+    method = scope["method"].upper()
+    target = _raw_path(scope)
+    declared = declared_length(_header(scope, b"content-length"))
+    cookies = Cookies.parse(_cookie_header(scope))
+    # The request is HTTPS when the application was opened with https or the ASGI server says so.
+    https = app.https or scope.get("scheme") == "https"
+    exchange.request = head_request(
+        method,
+        target,
+        _scope_headers(scope),
+        cookies,
+        https,
+        declared,
+    )
+    served = served_file(files, method, target)
+    if served is not None:
+        # HY-100: the files of the public directory are served before `around`; no hook runs.
+        return served
+    # HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
+    headers = _scope_headers(scope)
+    exchange.body = RequestBody(
+        next(
+            (
+                value
+                for name, value in headers.items()
+                if name.lower() == "content-type"
+            ),
+            "",
+        ),
+        app.body_limit,
+        "multipart/form-data" in app._form_types,
+        app._value_limit,
+        app._part_limit,
+        app.file_limit,
+    )
+    await _read_body(receive, exchange.body)
+    exchange.request = Request(
+        method,
+        Request.target_path(target),
+        headers,
+        scope.get("query_string", b"").decode("latin-1"),
+        exchange.body.held(),
+        cookies=cookies,
+        https=https,
+        body_size=exchange.body.size(),
+        read=exchange.body,
+    )
+    # HY-100: the pipeline of a request runs in a worker thread, so the event loop answers other requests while a
+    # request responds.
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        None, answer_with, app, sessions, around, exchange
+    )
+
+
+async def _read_body(receive: Callable, body: RequestBody) -> None:
+    """Gives the request body of the receive events to `body`. A body that passes the limit is read to its end and
+    discarded, so that the response can be sent (HY-59). A chunk of a body that is read into files is given in a
+    worker thread, so that the write of a file does not stop the event loop (HY-131.21)."""
+    reading = True
+    while True:
+        event = await receive()
+        if event["type"] != "http.request":
+            break
+        part = event.get("body", b"")
+        if reading and part:
+            reading = (
+                await asyncio.to_thread(body.feed, part)
+                if body.streamed()
+                else body.feed(part)
+            )
+        if not event.get("more_body", False):
+            break
+
+
+def _raw_path(scope: dict) -> str:
+    """Returns the raw request path of the scope, the bytes of `raw_path` decoded as latin-1 (HY-100). The path
+    is never built from `path`, which the server percent-decodes; a scope without `raw_path` has no target, and
+    the request is answered with the plain 500 (HY-60)."""
+    raw = scope.get("raw_path")
+    if raw is None:
+        raise RuntimeError(
+            "the ASGI scope has no raw_path, so the request path is unknown (HY-100)"
+        )
+    return raw.decode("latin-1")
+
+
+def _header(scope: dict, name: bytes) -> Optional[str]:
+    """Returns one header of the scope as text, with the values of its repeats joined as HTTP reads
+    them, or None."""
+    values = [value for key, value in scope.get("headers", []) if key == name]
+    return ", ".join(value.decode("latin-1") for value in values) if values else None
+
+
+def _cookie_header(scope: dict) -> Optional[bytes]:
+    """Returns the `cookie` headers of the scope joined with `; ` (HY-129), or None when it has none."""
+    values = [value for key, value in scope.get("headers", []) if key == b"cookie"]
+    return b"; ".join(values) if values else None
+
+
+def _scope_headers(scope: dict) -> dict[str, str]:
+    """Returns the request headers of the scope in lower case; a repeated header joins its values,
+    as HTTP reads it."""
+    joined: dict[str, list[str]] = {}
+    for key, value in scope.get("headers", []):
+        joined.setdefault(key.decode("latin-1").lower(), []).append(
+            value.decode("latin-1")
+        )
+    return {name: ", ".join(values) for name, values in joined.items()}

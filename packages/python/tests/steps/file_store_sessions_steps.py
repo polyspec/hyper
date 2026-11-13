@@ -3,7 +3,7 @@
 # contracts/file-sessions.json, and the options that the store refuses give the open error.
 import tempfile
 
-from polyspec.hyper.file_sessions import FileSessions
+from polyspec.hyper.session.file_sessions import FileSessions
 
 from . import file_sessions_steps
 

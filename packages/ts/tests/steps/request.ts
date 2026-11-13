@@ -1,6 +1,6 @@
 // The steps of contracts/request.json: the text that a host gives a request (HY-42.6), the files of a request
 // (HY-113.2), the path and the query of a request target (HY-42, HY-56) and the values that a request gives.
-import { Cookies } from '../../src/cookies.js';
+import { Cookies } from '../../src/http/cookies.js';
 import { Request } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
 import { listOf, textOf } from '../inputs.js';

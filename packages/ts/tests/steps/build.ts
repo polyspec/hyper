@@ -2,8 +2,8 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Build } from '../../src/build.js';
-import { InvalidBuild } from '../../src/invalid-build.js';
+import { Build } from '../../src/app/build.js';
+import { InvalidBuild } from '../../src/app/invalid-build.js';
 import type { CaseReader } from '../case-reader.js';
 
 export const steps = {

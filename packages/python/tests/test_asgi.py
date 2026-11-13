@@ -18,8 +18,8 @@ from .transport import (
     record_ended,
     record_status,
 )
-from polyspec.hyper.asgi import create_asgi
-from polyspec.hyper.response import Response
+from polyspec.hyper.host.asgi import create_asgi
+from polyspec.hyper.http.response import Response
 
 
 class Sends:

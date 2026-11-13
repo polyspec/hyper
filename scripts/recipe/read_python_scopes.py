@@ -136,6 +136,17 @@ def bindings(tree: ast.Module) -> dict[str, tuple[int, str, str]]:
     return names
 
 
+def _without_none(node: ast.BinOp) -> ast.expr | None:
+    """The one side of a union `X | None` that is not None, or None for a union of two other types."""
+    parts = [
+        p
+        for p in (node.left, node.right)
+        if not (isinstance(p, ast.Constant) and p.value is None)
+        and not (isinstance(p, ast.Name) and p.id in NONE_NAMES)
+    ]
+    return parts[0] if len(parts) == 1 else None
+
+
 class Scope:
     """The reading of one function or method: its expressions, assignments, loops and parameters."""
 
@@ -183,13 +194,8 @@ class Scope:
             )
             return self.type_of(node.slice) if name == "Optional" else None
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
-            parts = [
-                p
-                for p in (node.left, node.right)
-                if not (isinstance(p, ast.Constant) and p.value is None)
-                and not (isinstance(p, ast.Name) and p.id in NONE_NAMES)
-            ]
-            return self.type_of(parts[0]) if len(parts) == 1 else None
+            only = _without_none(node)
+            return None if only is None else self.type_of(only)
         expr = self.expression(node)
         if expr["kind"] == "class":
             return {"file": expr["file"], "name": expr["name"]}
@@ -206,13 +212,8 @@ class Scope:
             except SyntaxError:
                 return None
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
-            parts = [
-                p
-                for p in (node.left, node.right)
-                if not (isinstance(p, ast.Constant) and p.value is None)
-                and not (isinstance(p, ast.Name) and p.id in NONE_NAMES)
-            ]
-            return self.items_of(parts[0]) if len(parts) == 1 else None
+            only = _without_none(node)
+            return None if only is None else self.items_of(only)
         if not isinstance(node, ast.Subscript):
             return None
         base = node.value

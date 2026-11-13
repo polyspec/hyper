@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: a1e6f2caf1842422f5e69ab090c1715b548a0c12577e5e5180cecbac8b8e76f0 -->
+<!-- source-sha256: 46c8b9065b14328c08d97ee115b7280074e6f2988256bb967bc650768dd38d8b -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -28,12 +28,15 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - `cases`: concern의 동작을 적는 `contracts/` 아래의 case 파일. unit이 없는 concern, 또는 모든 unit이 한 언어를 가리키는
     `only`를 가진 concern만 `none`을 가질 수 있으며, 이때 reason과 HYR-7의 native test를 함께 적는다. 그 밖의 concern이
     `none`이면 check가 실패시킨다. 빈 목록은 `none`처럼 실패한다.
+  - `group`: unit의 파일을 담는 디렉터리를 정하는 HYR-4의 group. unit이 있는 concern은 `groups`의 group 하나를 적고,
+    unit이 없는 concern은 적지 않는다.
   - `units`: concern의 unit들.
 
   `packages/php/src`, `packages/ts/src`, `packages/python/src/polyspec/hyper` 아래의 `git ls-files`
   파일은 모두 정확히 하나의 concern에 속하며, 이름이 적힌 파일은 모두 존재한다. unit의 파일은 정확히 하나의 unit을 가진다
-  (HYR-3). barrel 파일(`index.ts`, `__init__.py`)과 `py.typed`는 `index` concern에 속하며 unit을 가지지 않는다. 이 파일들은
-  HY-106의 public member와 public type을 re-export하는 내용만 가지며, HYR-8은 unit 검사 대신 이 목록을 검사한다.
+  (HYR-3). barrel 파일(`index.ts`와 package의 `__init__.py`), `py.typed`, 그리고 Python의 각 group 디렉터리의
+  `__init__.py`(HYR-4)는 `index` concern에 속하며 unit을 가지지 않는다. barrel 파일은 HY-106의 public member와 public
+  type을 re-export하는 내용만 가지며, HYR-8은 unit 검사 대신 이 목록을 검사한다.
 
 - **HYR-3 One unit per file.** unit은 다음 필드를 가진다.
   - `id`: 단어들;
@@ -50,13 +53,30 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     type이다. check는 unit의 단어와 같은 단어를 가진 type을 실패시킨다. 예: Result와 그 네 개의 stop, Session과 Flash,
     ClientRendering과 Choice, SessionStore와 ArraySession.
 
-- **HYR-4 File names.** unit의 파일은 unit의 단어들을 그 언어의 규칙으로 쓴 이름이다.
-  - PHP: PascalCase, `<Words>.php`, namespace `Polyspec\Hyper`에 속한다.
-  - Node: kebab-case, `<words>.ts`.
-  - Python: snake_case.
-    - `<words>.py`는 HY-106 또는 HY-100이 public으로 만드는 module이다.
+- **HYR-4 Files and directories.** unit의 파일은 unit의 단어들을, 그 concern의 group 디렉터리 안에, 각각 그 언어의
+  규칙으로 쓴 이름이다.
+  - Groups. spec의 `groups`는 group을 열 개 이하로 적으며, 각 group은 kebab-case id이고, 모든 group은 어떤 concern이
+    가리킨다(HYR-2). group은 source의 디렉터리이며 public 이름의 일부가 아니다(HY-106.18).
+    - `app`은 애플리케이션과 그것을 여는 데 쓰는 것을 담는다: build id, container, context handler, warnings guard,
+      public member의 인자 수 세기.
+    - `host`는 애플리케이션을 그 런타임의 서버에 연결하는 진입점을 담는다(HY-100).
+    - `http`는 요청, reply, 응답, 요청의 cookie를 담는다.
+    - `result`는 handler의 result와 그 stop을 담는다.
+    - `form`은 요청 body의 form 값과 파일을 담는다.
+    - `session`은 session, 그 flash와 CSRF token, session store interface, session store를 담는다.
+    - `data`는 data model, JSON codec, kept 값을 담는다.
+    - `page`는 page를 rendering하는 것을 담는다: region과 route를 가진 manifest, server program, region plan, client
+      rendering.
+    - `representation`은 route의 representation과, `Accept` header로 그 하나를 고르는 선택을 담는다.
+  - PHP: PascalCase, `src/<Group>/<Words>.php`, namespace `Polyspec\Hyper`에 속한다.
+    `packages/php/composer.json`의 `autoload.psr-4`는 `Polyspec\Hyper\`를 PHP unit이 있는 group 디렉터리의
+    목록에 연결하고, root `composer.json`도 같은 디렉터리를 연결한다.
+  - Node: kebab-case, `src/<group>/<words>.ts`. barrel은 `src/index.ts`다.
+  - Python: snake_case, package `polyspec/hyper/<group>/` 안에 둔다.
+    - `<words>.py`는 HY-106이 public으로 만드는 unit의 module이다.
     - `_<words>.py`는 internal module이다.
-    - HY-100이 이름을 정하는 module은 그 이름을 유지한다: `server`, `wsgi`, `asgi`.
+    - Python unit이 있는 각 group 디렉터리는 docstring만 있고 다른 문장이 없는 `__init__.py`를 가진다.
+    - barrel은 `polyspec/hyper/__init__.py`다.
   - 단어 경계.
     - 단어 경계는 소문자 또는 숫자 뒤에 대문자가 오는 자리다.
     - 약어는 한 단어이며 단어로 쓴다: PascalCase `Csrf`, camelCase `csrf`, snake_case `csrf`. 따라서 spec의 어떤 이름도
@@ -68,7 +88,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     이름에 `_`를 붙이지 않는다. 각 언어의 case runner와 case reader는 `contracts/interfaces.json`의 `runners`와 `caseReaders` 항목이며,
     HYR-7이 정하는 대로다.
 
-  예를 들어 unit `media selection`은 `MediaSelection.php`, `media-selection.ts`, `_media_selection.py`다.
+  예를 들어 group `representation`의 unit `media selection`은 `src/Representation/MediaSelection.php`,
+  `src/representation/media-selection.ts`, `polyspec/hyper/representation/_media_selection.py`다.
 
 - **HYR-5 Members.**
   - **Scope.** unit의 member는 다음과 같다.
@@ -281,6 +302,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   check는 spec과 source의 정렬된 key를 필드 단위로 정확히 비교한다. 다음의 경우 실패한다.
   - 어떤 unit도 이름 붙이지 않은 파일, 또는 이름 붙었으나 없는 파일;
   - HYR-3 또는 HYR-4에 어긋나는 unit;
+  - 어떤 concern도 가리키지 않는 group, `group`에 어긋나는 concern, 문장을 가진 Python group `__init__.py`(HYR-4);
   - 빠지거나, 추가되거나, 옮겨지거나, 타입이 바뀌거나, 다른 visibility를 가진 member 또는 type;
   - HYR-5에 어긋나는 constant;
   - HYR-6, HYR-11 또는 HYR-2에 어긋나는 `only`, 필드 또는 결과의 `sentence`, 또는 case의 `requirements`;

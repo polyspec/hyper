@@ -1,5 +1,5 @@
 // The steps of contracts/response.json (HY-106.17): a response that an application makes and its copies with a header.
-import { Response } from '../../src/response.js';
+import { Response } from '../../src/http/response.js';
 import type { CaseReader } from '../case-reader.js';
 import { listOf, textOf } from '../inputs.js';
 

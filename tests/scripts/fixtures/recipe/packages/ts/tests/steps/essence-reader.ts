@@ -1,4 +1,4 @@
-import { MediaType } from '../../src/media-type.ts';
+import { MediaType } from '../../src/representation/media-type.ts';
 
 export class EssenceReader {
   read(text: string): string {

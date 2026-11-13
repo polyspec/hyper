@@ -2,7 +2,7 @@
 // since the session stores only values of the data model.
 import { describe, expect, it } from 'vitest';
 import { ArraySession } from '../src/index.js';
-import { Session } from '../src/session.js';
+import { Session } from '../src/session/session.js';
 
 describe('Session', () => {
   it('fails for stored flash values or kept values that are not a map of values', () => {

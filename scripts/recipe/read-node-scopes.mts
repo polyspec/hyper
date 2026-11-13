@@ -237,10 +237,7 @@ class ScopeReader {
     for (const p of params) this.bind(p.name);
     for (const p of params) {
       if (!ts.isIdentifier(p.name)) continue;
-      const type = this.typeOf(p.type);
-      const items = this.itemsOf(p.type);
-      const entry: Parameter = { name: p.name.text, ...(type === undefined ? {} : { type }), ...(items === undefined ? {} : { items }) };
-      this.out.parameters.push(entry);
+      this.out.parameters.push(typed(this, p.name.text, p.type));
     }
   }
 
@@ -305,6 +302,25 @@ class ScopeReader {
 }
 
 /** The classes and the scopes of the files (HYR-5): top-level functions and constants, class members and the properties of `steps`. */
+/** The classes that the heritage clauses of a class or an interface name: the class it extends and those it implements. */
+function heritage(reader: ScopeReader, clauses: readonly ts.HeritageClause[] | undefined): ClassRef[] {
+  const found: ClassRef[] = [];
+  for (const clause of clauses ?? []) {
+    for (const t of clause.types) {
+      const expr = reader.expression(t.expression);
+      if (expr.kind === 'class') found.push({ file: expr.file, name: expr.name });
+    }
+  }
+  return found;
+}
+
+/** A property or a parameter with the class of its written type and the class inside its written list type. */
+function typed(reader: ScopeReader, name: string, type: ts.TypeNode | undefined): Parameter {
+  const ref = reader.typeOf(type);
+  const items = reader.itemsOf(type);
+  return { name, ...(ref === undefined ? {} : { type: ref }), ...(items === undefined ? {} : { items }) };
+}
+
 export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: Scope[] } {
   const classes: SourceClass[] = [];
   const scopes: Scope[] = [];
@@ -343,40 +359,24 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
       if (ts.isInterfaceDeclaration(st)) {
         // An interface is a class of the family of the classes that implement it; its members are the spec's.
         const reader = new ScopeReader(files, file, st.name.text, undefined);
-        const extendsOf: ClassRef[] = [];
-        for (const clause of st.heritageClauses ?? []) {
-          for (const t of clause.types) {
-            const expr = reader.expression(t.expression);
-            if (expr.kind === 'class') extendsOf.push({ file: expr.file, name: expr.name });
-          }
-        }
-        const properties: { name: string; type?: ClassRef }[] = [];
+        const extendsOf = heritage(reader, st.heritageClauses);
+        const properties: Parameter[] = [];
         for (const m of st.members) {
           if (!ts.isPropertySignature(m) || !ts.isIdentifier(m.name)) continue;
-          const type = reader.typeOf(m.type);
-          const items = reader.itemsOf(m.type);
-          properties.push({ name: m.name.text, ...(type === undefined ? {} : { type }), ...(items === undefined ? {} : { items }) });
+          properties.push(typed(reader, m.name.text, m.type));
         }
         classes.push({ file, name: st.name.text, extends: extendsOf, properties });
       }
       if (ts.isClassDeclaration(st) && st.name !== undefined) {
         const cls = st.name.text;
         const reader = new ScopeReader(files, file, cls, undefined);
-        const extendsOf: ClassRef[] = [];
-        for (const clause of st.heritageClauses ?? []) {
-          for (const t of clause.types) {
-            const expr = reader.expression(t.expression);
-            if (expr.kind === 'class') extendsOf.push({ file: expr.file, name: expr.name });
-          }
-        }
-        const properties: { name: string; type?: ClassRef }[] = [];
+        const extendsOf = heritage(reader, st.heritageClauses);
+        const properties: Parameter[] = [];
         const constructor = new ScopeReader(files, file, `${cls}.constructor`, cls);
         let hasConstructor = false;
         for (const m of st.members) {
           if (ts.isPropertyDeclaration(m) && (ts.isIdentifier(m.name) || ts.isPrivateIdentifier(m.name))) {
-            const type = reader.typeOf(m.type);
-            const items = reader.itemsOf(m.type);
-            properties.push({ name: m.name.text, ...(type === undefined ? {} : { type }), ...(items === undefined ? {} : { items }) });
+            properties.push(typed(reader, m.name.text, m.type));
             if (m.initializer !== undefined) {
               constructor.property(m.name.text, m.initializer);
               constructor.read(m.initializer);
@@ -386,9 +386,7 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
             hasConstructor = true;
             for (const p of m.parameters) {
               if (ts.isIdentifier(p.name) && ts.canHaveModifiers(p) && (ts.getModifiers(p) ?? []).length > 0) {
-                const type = reader.typeOf(p.type);
-                const items = reader.itemsOf(p.type);
-                properties.push({ name: p.name.text, ...(type === undefined ? {} : { type }), ...(items === undefined ? {} : { items }) });
+                properties.push(typed(reader, p.name.text, p.type));
               }
             }
             constructor.parameters(m.parameters);

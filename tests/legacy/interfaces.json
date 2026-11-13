@@ -500,7 +500,8 @@
             }
           },
           "members": [
-            "accept.select"
+            "accept.best",
+            "accept.parse"
           ]
         }
       }

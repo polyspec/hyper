@@ -42,6 +42,14 @@
       "kind": "ecosystem",
       "tool": "node:sqlite stores the posts of the board example"
     },
+    "examples/board/public/assets/after-reader.js": {
+      "kind": "policy",
+      "reason": "the second module script of the post page of the board example, which records its run after reader.js (HYC-25); it implements no tool of an ecosystem"
+    },
+    "examples/board/public/assets/reader.js": {
+      "kind": "policy",
+      "reason": "the first module script of the post page of the board example, which records its run so that the browser tests see the order of the module scripts (HYC-25); it implements no tool of an ecosystem"
+    },
     "examples/board/public/index.php": {
       "kind": "ecosystem",
       "tool": "the front controller of the PHP SAPI (the built-in server or php-fpm) calls App::run of polyspec/hyper"
@@ -134,6 +142,10 @@
       "kind": "ecosystem",
       "tool": "node:fs renames, through publish of packages/cli/lib/publish.mjs (HR-82)"
     },
+    "scripts/recipe/PhpScope.php": {
+      "kind": "ecosystem",
+      "tool": "token_get_all of PHP gives the tokens from which this class reads one scope of the PHP server (HYR-5, HYR-8)"
+    },
     "scripts/recipe/barrels.mts": {
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
@@ -162,6 +174,10 @@
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },
+    "scripts/recipe/mutations.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
     "scripts/recipe/names.mts": {
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
@@ -170,9 +186,21 @@
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },
+    "scripts/recipe/read-node-scopes.mts": {
+      "kind": "ecosystem",
+      "tool": "the TypeScript compiler API of the pinned TypeScript 6.0.3 reads the scopes, the calls and the written classes of the receivers of the Node server (HYR-5, HYR-8)"
+    },
     "scripts/recipe/read-node.mts": {
       "kind": "ecosystem",
       "tool": "the TypeScript compiler API of the pinned TypeScript 6.0.3 reads the declarations, modifiers, exports and JSDoc tags (HYR-8)"
+    },
+    "scripts/recipe/read-php-functions.php": {
+      "kind": "ecosystem",
+      "tool": "PHP Reflection and token_get_all read the functions and the methods that a class declares itself in the PHP server (HYR-8)"
+    },
+    "scripts/recipe/read-php-scopes.php": {
+      "kind": "ecosystem",
+      "tool": "token_get_all of PHP reads the scopes, the calls and the written classes of the receivers of the PHP server (HYR-5, HYR-8)"
     },
     "scripts/recipe/read-php.php": {
       "kind": "ecosystem",
@@ -181,6 +209,10 @@
     "scripts/recipe/read_python.py": {
       "kind": "ecosystem",
       "tool": "the ast module of Python reads the definitions, classes, type statements, annotations, assignments and imports (HYR-8)"
+    },
+    "scripts/recipe/read_python_scopes.py": {
+      "kind": "ecosystem",
+      "tool": "the ast module of Python reads the scopes, the calls and the written classes of the receivers of the Python server (HYR-5, HYR-8)"
     },
     "scripts/recipe/readers.mts": {
       "kind": "policy",
@@ -203,6 +235,10 @@
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },
     "scripts/recipe/shapes.mts": {
+      "kind": "policy",
+      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
+    },
+    "scripts/recipe/stated.mts": {
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },

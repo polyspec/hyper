@@ -3,13 +3,14 @@
 # error and a failed session open are scenarios of tests/scripts/upload-servers.test.mts.
 import contextlib
 import io
+import threading
 import unittest
 
 from .transport import TransportCase, get_once, record_all
-from polyspec.hyper.app import App
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.response import Response
-from polyspec.hyper import create_server
+from polyspec.hyper.app.app import App
+from polyspec.hyper.http.reply import Reply
+from polyspec.hyper.http.response import Response
+from polyspec.hyper.host.server import create_server
 
 
 class AnsweringApplication:
@@ -48,12 +49,21 @@ class EscapeTest(TransportCase):
         # answer, the connection closes, and the write hook receives the response that started with ended false.
         application = AnsweringApplication()
         written: list = []
+        record = record_all(written)
+        # The server answers in a daemon thread that it does not join, and the client has the whole response before
+        # that thread reports the failed write; the test waits for the report, not for the thread.
+        reported = threading.Event()
+
+        def report(*arguments) -> None:
+            record(*arguments)
+            reported.set()
+
         server = create_server(
             application,
             self.sessions,
             host="127.0.0.1",
             port=0,
-            written=record_all(written),
+            written=report,
         )
         broken_send = server.RequestHandlerClass.send
 
@@ -68,6 +78,7 @@ class EscapeTest(TransportCase):
         try:
             with contextlib.redirect_stderr(io.StringIO()):
                 self.get(server, "/list")
+                reported.wait()
         finally:
             server.RequestHandlerClass.send = broken_send
         self.assertEqual(

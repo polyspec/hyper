@@ -145,6 +145,8 @@ The recipe (H28.11) divides the three servers into the concerns of `contracts/in
 - No concern holds `error-code.ts`: no rule names the reading of the `code` of an error, so each user reads it in its own code and the file is removed with the concern that moves its users.
 - The spec states the units first and their members with the commit that moves each concern, so `make recipe-check` fails on this branch until the last concern moves.
 
+H28.15 places the units of each server in one directory for each group of concerns. Each server held about 60 files in one directory, and the concerns existed only in `contracts/interfaces.json`. The spec declares nine groups and the group of each concern, and the check of HYR-4 fails a unit file outside the directory of its group. Python imports a public name from the package only, as HY-106.18 states, so that a later regrouping changes no public name; PHP keeps the namespace `Polyspec\Hyper` and lists the group directories in its autoload for the same reason.
+
 ## Wave 29 — The multipart body read as a stream
 
 Depends on: the form values of H28.11 (HY-113.11 to HY-113.16), which state how a part is read. H29.1 writes the rules; H29.2 to H29.5 implement them, each with its cases; H29.6 adds the documents and the example.

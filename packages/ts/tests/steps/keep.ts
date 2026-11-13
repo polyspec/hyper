@@ -1,7 +1,7 @@
 // The steps of contracts/keep.json (HY-38): the data that a case keeps, and the kept values that the server sends.
 import { isDeepStrictEqual } from 'node:util';
-import { Kept } from '../../src/kept.js';
-import type { MapValue, Value } from '../../src/values.js';
+import { Kept } from '../../src/data/kept.js';
+import type { MapValue, Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 
 // The region data of a case, a map of the case file.

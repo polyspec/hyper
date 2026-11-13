@@ -6,11 +6,11 @@ import io
 from urllib.parse import unquote
 
 from .transport import TransportCase, get_once
-from polyspec.hyper.asgi import create_asgi
-from polyspec.hyper.reply import Reply
-from polyspec.hyper.response import Response
-from polyspec.hyper import create_server
-from polyspec.hyper.wsgi import create_wsgi
+from polyspec.hyper.host.asgi import create_asgi
+from polyspec.hyper.http.reply import Reply
+from polyspec.hyper.http.response import Response
+from polyspec.hyper.host.server import create_server
+from polyspec.hyper.host.wsgi import create_wsgi
 
 TARGETS = [
     "/notes/a%20b",

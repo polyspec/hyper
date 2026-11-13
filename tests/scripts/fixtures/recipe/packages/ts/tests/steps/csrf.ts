@@ -1,4 +1,4 @@
-import { Csrf } from '../../src/csrf.ts';
+import { Csrf } from '../../src/session/csrf.ts';
 import type { CaseReader } from '../case-reader.ts';
 
 function masked(token: string): string {

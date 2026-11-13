@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: f35aed2df9ddb820c38c3938d91fc1def06a09cec1b24946fbd87a04e16e7961 -->
+<!-- source-sha256: e6ba27fba6d267d06a8ff71fa63e5dabdcefdd6a662e0f0a48b5debbb31590cf -->
 # 개발
 
 [English](development.md).
@@ -15,7 +15,7 @@
 
 ## 기본 Composer 개발
 
-개발 checkout은 polyspec provider(kit, template)를 자기 `.links`의 항목과 `make link`로만 link한다. min-0-max/json-schema는 opis/json-schema의 유지되는 fork이고, 그 FORK.md가 fork를 유지하고 소비하는 방법을 적는다. `composer.json`과 `examples/board/composer.json`은 그 VCS repository `https://github.com/min-0-max/json-schema`를 선언하고 그 release `2.6.0-p2`를 요구하며, 두 lock은 그 release를 commit과 dist로 고정한다. `packages/php/composer.json`은 repository를 적지 않으므로 polyspec/hyper의 소비자는 자기 root에 fork를 선언한다. fork를 편집하는 checkout은 fork의 checkout을 가리키는 `.links` 항목과 `make link`로 provider처럼 그것을 link한다.
+개발 checkout은 polyspec provider(kit, template)를 자기 `.links`의 항목과 `make link`로만 link한다. min-0-max/json-schema는 opis/json-schema의 유지되는 fork이고, 그 FORK.md가 fork를 유지하고 소비하는 방법을 적는다. `composer.json`과 `examples/board/composer.json`은 그 VCS repository `https://github.com/min-0-max/json-schema`를 선언하고 범위 `^2.6.0-p2`로 요구하며, 두 lock은 release `v2.6.0-p2`를 commit과 dist로 고정한다. `packages/php/composer.json`은 repository를 적지 않으므로 polyspec/hyper의 소비자는 자기 root에 fork를 선언한다. fork를 편집하는 checkout은 fork의 checkout을 가리키는 `.links` 항목과 `make link`로 provider처럼 그것을 link한다.
 
 ## 타깃
 

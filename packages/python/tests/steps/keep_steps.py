@@ -1,7 +1,7 @@
 # The steps of contracts/keep.json (HY-38): the data that a case keeps, and the kept values that the server sends.
 import copy
 
-from polyspec.hyper._kept import Kept
+from polyspec.hyper.data._kept import Kept
 
 
 def _pairs(case) -> list:

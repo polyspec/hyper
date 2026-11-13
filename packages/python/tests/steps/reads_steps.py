@@ -3,8 +3,8 @@
 # application `reads_<id>` that scripts/contract-programs.mts builds from the templates of the case.
 from pathlib import Path
 
-from polyspec.hyper._reads import Reads
-from polyspec.hyper._renderer import Renderer
+from polyspec.hyper.page._reads import Reads
+from polyspec.hyper.page._renderer import Renderer
 
 PROGRAMS = Path(__file__).resolve().parents[4] / "var" / "contract-programs"
 

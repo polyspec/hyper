@@ -1,5 +1,5 @@
 // The steps of contracts/media-type.json (HY-119, HY-122): the parameters of a media type and the tag of a body.
-import { MediaType } from '../../src/media-type.js';
+import { MediaType } from '../../src/representation/media-type.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
 import { listOf, textOf } from '../inputs.js';

@@ -143,13 +143,18 @@ class Language {
 
   /** The written or assigned class of the property `name` of a class: of the nearest class of its family upwards that has it. */
   private property(ref: ClassRef, name: string): ClassRef | undefined {
+    return this.upward(ref, (c) => this.properties.get(`${refKey(c)}::${name}`));
+  }
+
+  /** The first value that `find` gives for a class of the family of a class, from the class upwards, nearest first. */
+  private upward<T>(ref: ClassRef, find: (c: ClassRef) => T | undefined): T | undefined {
     const seen = new Set<string>();
     const queue = [ref];
     while (queue.length > 0) {
       const c = queue.shift();
       if (c === undefined || seen.has(refKey(c))) continue;
       seen.add(refKey(c));
-      const found = this.properties.get(`${refKey(c)}::${name}`);
+      const found = find(c);
       if (found !== undefined) return found;
       queue.push(...(this.parents.get(refKey(c)) ?? []));
     }
@@ -164,19 +169,11 @@ class Language {
   /** The keys of the member `name` of a class: the nearest class of its family upwards that has it, and the classes that extend it. */
   lookup(ref: ClassRef, name: string, down = true, has = (key: string): boolean => this.members.has(key) || this.scopes.has(key)): string[] {
     const found: string[] = [];
-    const seen = new Set<string>();
-    const queue = [ref];
-    while (queue.length > 0) {
-      const c = queue.shift();
-      if (c === undefined || seen.has(refKey(c))) continue;
-      seen.add(refKey(c));
+    const nearest = this.upward(ref, (c) => {
       const key = memberKey(c.file, c.name, name);
-      if (has(key)) {
-        found.push(key);
-        break;
-      }
-      queue.push(...(this.parents.get(refKey(c)) ?? []));
-    }
+      return has(key) ? key : undefined;
+    });
+    if (nearest !== undefined) found.push(nearest);
     if (!down) return found;
     const below = [...(this.children.get(refKey(ref)) ?? [])];
     const done = new Set<string>();
@@ -239,17 +236,7 @@ class Language {
 
   /** The written list class of a property `name` of a class: of the nearest class of its family upwards that has it. */
   private propertyItemsOf(ref: ClassRef, name: string): ClassRef | undefined {
-    const seen = new Set<string>();
-    const queue = [ref];
-    while (queue.length > 0) {
-      const c = queue.shift();
-      if (c === undefined || seen.has(refKey(c))) continue;
-      seen.add(refKey(c));
-      const found = this.propertyItems.get(`${refKey(c)}::${name}`);
-      if (found !== undefined) return found;
-      queue.push(...(this.parents.get(refKey(c)) ?? []));
-    }
-    return undefined;
+    return this.upward(ref, (c) => this.propertyItems.get(`${refKey(c)}::${name}`));
   }
 
   /**

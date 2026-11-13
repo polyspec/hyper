@@ -4,7 +4,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { FileSessions } from '../../src/file-sessions.js';
+import { FileSessions } from '../../src/session/file-sessions.js';
 import type { CaseReader } from '../case-reader.js';
 import { textOf } from '../inputs.js';
 import { sessionFileRequests } from './file-sessions.js';

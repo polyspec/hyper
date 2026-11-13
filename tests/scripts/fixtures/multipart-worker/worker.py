@@ -10,7 +10,7 @@ import resource
 import sys
 import time
 
-from polyspec.hyper._request_body import RequestBody
+from polyspec.hyper.form._request_body import RequestBody
 
 with open(sys.argv[1], encoding="utf-8") as listed:
     cases = json.load(listed)

@@ -75,7 +75,12 @@ rules:
       # The sources of the fixture of the recipe check (HYR-8): PHP, Node and Python files that the reader of each
       # language reads, with the stand-in of the Composer autoloader that the PHP reader requires.
       - "!tests/scripts/fixtures/recipe/**"
-      # The readers of the recipe check (HYR-8): the PHP reader reads the classes with the reflection of PHP and the
-      # Python reader the modules with the ast module of Python, which TypeScript does not have.
+      # The readers of the recipe check (HYR-8): the PHP readers read the classes with the reflection of PHP and the
+      # tokens of token_get_all, and the Python readers the modules with the ast module of Python, which TypeScript
+      # does not have.
       - "!scripts/recipe/read-php.php"
+      - "!scripts/recipe/read-php-functions.php"
+      - "!scripts/recipe/read-php-scopes.php"
+      - "!scripts/recipe/PhpScope.php"
       - "!scripts/recipe/read_python.py"
+      - "!scripts/recipe/read_python_scopes.py"

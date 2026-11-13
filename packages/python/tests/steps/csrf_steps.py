@@ -1,7 +1,7 @@
 # The steps of contracts/csrf.json (HY-24): the masked values of a token and their verification.
 import re
 
-from polyspec.hyper._csrf import Csrf
+from polyspec.hyper.session._csrf import Csrf
 
 
 def mask(case) -> None:
