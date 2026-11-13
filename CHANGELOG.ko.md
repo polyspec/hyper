@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 04860cb063688d3b6a5ea5c87415d78395c33ec2a773e61a7deb652ac72f530a -->
+<!-- source-sha256: 2229706561711d00dcc3c62f1df2b47e1c7d829bb675311eb630b1d86eea4d45 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- lock은 `fault-test`를 켠 자기 자신을 개발 의존성으로 가지는(template T28.20) `polyspec-template` 3d61389b, 그것이 요구하는 `polyspec-json` 02a5d73, `polyspec-binding-core` 3b4bc6b를 고정한다. binding crate는 binding 3b4bc6b의 scaffold가 쓰는 것이다: Go crate는 `fault-test`를 선언하고, 각 `lib.rs`의 attribute는 T-4만 밝힌다.
 - `contracts/interfaces.json`은 PHP의 `HyperValueError::status`에 `public function status(): null`을 적는다. category `value`의 오류는 status가 없으므로(HY-132.2) method가 선언하는 반환 타입이다. PHP 8.4.27의 recipe check는 이전의 `?int`에 `MEMBER_SIGNATURE`를 보고했다. PHP 8.4.27에서 recipe check는 PHP의 다른 signature를 보고하지 않는다. PHP 8.5.10의 다른 지적 76개는 그 reflection에서 나왔고, AGENTS.md의 기준선에서는 증거가 아니다.
 - `make install-binding`은 `Cargo.lock`이 `polyspec-binding-core`에 고정한 commit의 binding cli를 Cargo가 만든 checkout에서 `var/binding/<commit>`으로 clone하고 그 lock의 package를 설치한다. `make bindings`와 `make bindings-check`는 그 cli를 실행하고, 그것이 없으면 설치 target과 함께 실패한다. 전에는 `BINDING`이 checkout의 cli를 밝혀야 했다. 생성기와 binding_core가 한 version이므로(G-6) 계약 검사는 CK-20을 보고하지 않는다. binding 1cf2e2b의 `make bindings`는 어떤 target도 생성하지 않는다: 모든 target에 대해 internal unit, host class unit `app`, host functions unit `host`, `host_options`의 optional field 기본값(U-2), template, session-store, http-negotiation, http-cookie의 error kind(E-1b (a))를 거부하고, Go에 대해서는 error unit과 `fault-test`의 진입점을 거부한다.
 - core는 지점 `hyper.internal`을 macro `binding_core::fault::point!`로 쓴다. 그 macro는 지점을 쓴 crate의 feature `fault-test`로 판정한다. 함수 `point`는 binding_core의 feature로 판정했으므로 `fault-test`를 켠 core 하나가 build의 모든 core에서 그것을 켰다. core는 `fault-test`를 켠 자기 자신을 개발 의존성으로 가지므로 `cargo test`는 flag 없이 그 지점을 장전한다. 이것이 없으면 case `a_broken_invariant_of_the_core_is_internal`은 아무것도 내지 않았다. lock은 macro를 쓰는 `polyspec-binding-core` 1cf2e2b, `polyspec-template` a66b0581, `polyspec-session-store` 53c2c7d, `polyspec-http-negotiation` aa9cd5c, `polyspec-php-serialization` e8cd69f, `polyspec-json` 73d2db9, `polyspec-http-media-type` 894aa2e를 고정한다. session-store 53c2c7d는 record session의 시작에 `session_store.internal`을 두므로 group `session`의 case는 그 지점을 장전하고, 계약 검사는 CK-22를 보고하지 않는다.

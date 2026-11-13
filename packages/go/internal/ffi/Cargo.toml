@@ -13,6 +13,7 @@ crate-type = ["staticlib"]
 
 [features]
 panic-test = []
+fault-test = ["polyspec-hyper/fault-test", "polyspec-http-negotiation/fault-test", "polyspec-session-store/fault-test", "polyspec-template/fault-test"]
 codec-test = []
 
 [dependencies]

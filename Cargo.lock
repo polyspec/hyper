@@ -1064,7 +1064,7 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 [[package]]
 name = "polyspec-binding-core"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/binding.git?branch=v1%2Frust-core#1cf2e2bf4518354498a510955b5d0738e147ec44"
+source = "git+https://github.com/polyspec/binding.git?branch=v1%2Frust-core#3b4bc6bfc45bd1069734d290958a30c6bf2a9f66"
 dependencies = [
  "indexmap",
  "libc",
@@ -1180,7 +1180,7 @@ dependencies = [
 [[package]]
 name = "polyspec-json"
 version = "0.0.25"
-source = "git+https://github.com/polyspec/json.git?branch=v1%2Frust-core#73d2db96507dd1b3efd4e5119c6751176a070279"
+source = "git+https://github.com/polyspec/json.git?branch=v1%2Frust-core#02a5d73bf13aa2eac77622ada5e0e46038153226"
 dependencies = [
  "polyspec-binding-core",
  "ryu-js",
@@ -1231,7 +1231,7 @@ dependencies = [
 [[package]]
 name = "polyspec-template"
 version = "0.0.27"
-source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#a66b0581fc91dfcfd03fa2e1389932f5fcededd3"
+source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#3d61389b99c678a098629c70c78f6d73df3ff1af"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-json",
