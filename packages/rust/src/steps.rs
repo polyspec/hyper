@@ -11,7 +11,9 @@
 use std::sync::Arc;
 
 use binding_core::Failure;
-use polyspec_template::{Env, HostFunction, OrderedMap, Value};
+use polyspec_template::{
+    Env, Environment, FunctionContext, HostError, HostFunction, OrderedMap, Value,
+};
 
 use crate::context::{member, with_context};
 use crate::keep::cookie_values;
@@ -105,6 +107,25 @@ pub struct PagesOptions {
     pub data_base_path: Option<String>,
 }
 
+/// A function of the application in the form of the interface contract (binding GN-6z), which a generated binding
+/// gives `Pages::register`: the arguments and the environment of the call, and a template value or a failure.
+pub type PageFunction =
+    Box<dyn Fn(&[Value], &Environment) -> Result<Value, Failure<Error>> + Send + Sync>;
+
+/// The host function of the template language that calls a function of the contract (HYC-24.2, template FUN-46). A
+/// failure of the data model is the binding failure of the returned value (VAL-19); another kind of hyper, an
+/// exception of language code and the error of Rust host code reach the caller of the render unchanged.
+fn host_function_of(function: PageFunction) -> HostFunction {
+    Box::new(move |args: &[Value], context: &FunctionContext<'_>| {
+        function(args, context.env).map_err(|failure| match failure {
+            Failure::Kind(Error::DataModel(error)) => HostError::Data(error),
+            Failure::Kind(error) => HostError::Callback(Box::new(error)),
+            Failure::Raised(raised) => HostError::Raised(raised),
+            Failure::Callback(error) => HostError::Callback(error),
+        })
+    })
+}
+
 /// The pages of an application, which every page request of the application shares: a handle that owns the
 /// application, so that a page request holds it while the host calls the handlers.
 #[derive(Clone)]
@@ -161,9 +182,11 @@ impl Pages {
     /// # Errors
     /// `invalid_application` for a name that the template language refuses (HYC-24.5), and `internal` once a page
     /// request holds the application.
-    pub fn register(&mut self, name: &str, host_function: HostFunction) -> Result<(), Error> {
+    pub fn register(&mut self, name: &str, host_function: PageFunction) -> Result<(), Error> {
         match Arc::get_mut(&mut self.app) {
-            Some(app) => app.templates.register(name, host_function),
+            Some(app) => app
+                .templates
+                .register(name, host_function_of(host_function)),
             None => Err(Error::Internal(
                 "a function is registered after the first page request",
             )),

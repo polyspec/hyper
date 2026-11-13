@@ -4744,6 +4744,55 @@
       ]
     },
     {
+      "id": "a_post_whose_media_type_is_no_form_type_opens_no_session",
+      "label": "a POST to an action whose media type is no form type receives 415, calls the session store not at all, leaves the session without a token and sets no cookie",
+      "application": "a_board",
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Content-Type": "text/plain"
+        },
+        "body": "_csrf=wrong&name=a"
+      },
+      "status": 415,
+      "absentHeaders": [
+        "Set-Cookie"
+      ],
+      "body": "Unsupported Media Type",
+      "actions": 0,
+      "session": false,
+      "storeCalls": [],
+      "requirements": [
+        "HY-59",
+        "HY-120"
+      ]
+    },
+    {
+      "id": "a_keep_request_whose_media_type_is_no_form_type_opens_no_session",
+      "label": "a POST to the keep endpoint whose media type is no form type receives 415, calls the session store not at all, leaves the session without a token and sets no cookie",
+      "application": "a_board",
+      "request": {
+        "method": "POST",
+        "target": "/_hyper/keep",
+        "headers": {
+          "Content-Type": "text/plain"
+        },
+        "body": "_csrf=wrong&region=rows&path=open&value=true"
+      },
+      "status": 415,
+      "absentHeaders": [
+        "Set-Cookie"
+      ],
+      "body": "Unsupported Media Type",
+      "session": false,
+      "storeCalls": [],
+      "requirements": [
+        "HY-59",
+        "HY-120"
+      ]
+    },
+    {
       "id": "a_multipart_body_is_refused_by_the_default_form_types",
       "label": "a multipart POST with a valid token is answered with 415 by an application with the default form types",
       "application": "a_board",
