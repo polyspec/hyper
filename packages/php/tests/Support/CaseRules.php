@@ -98,7 +98,8 @@ final class CaseRules
      */
     public static function statedMessage(string $name, mixed $expected, mixed $observed): mixed
     {
-        $unstated = is_array($expected) && array_key_exists('message', $expected) && $expected['message'] === null;
+        // The reader holds a case with its objects as `stdClass`, so the expected failure is an object, not an array.
+        $unstated = $expected instanceof \stdClass && property_exists($expected, 'message') && $expected->message === null;
         if ($name !== 'raises' || !$unstated || !is_array($observed)) {
             return $observed;
         }
