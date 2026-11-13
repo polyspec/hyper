@@ -207,195 +207,195 @@
         "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_LEX_INVALID_UTF8",
+        "variant": "polyspec_template::ErrorCode::LexInvalidUtf8",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_UNTERMINATED_TAG",
+        "variant": "polyspec_template::ErrorCode::ParseUnterminatedTag",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_UNTERMINATED_COMMENT",
+        "variant": "polyspec_template::ErrorCode::ParseUnterminatedComment",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_UNTERMINATED_STRING",
+        "variant": "polyspec_template::ErrorCode::ParseUnterminatedString",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_UNEXPECTED_TOKEN",
+        "variant": "polyspec_template::ErrorCode::ParseUnexpectedToken",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_NUMBER",
+        "variant": "polyspec_template::ErrorCode::ParseInvalidNumber",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_ESCAPE",
+        "variant": "polyspec_template::ErrorCode::ParseInvalidEscape",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_UNEXPECTED_CLOSE",
+        "variant": "polyspec_template::ErrorCode::ParseUnexpectedClose",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_UNCLOSED_BLOCK",
+        "variant": "polyspec_template::ErrorCode::ParseUnclosedBlock",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_ELSE_OUTSIDE_BLOCK",
+        "variant": "polyspec_template::ErrorCode::ParseElseOutsideBlock",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_DUPLICATE_ELSE",
+        "variant": "polyspec_template::ErrorCode::ParseDuplicateElse",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_ELSEIF_AFTER_ELSE",
+        "variant": "polyspec_template::ErrorCode::ParseElseifAfterElse",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_ELSEIF_NOT_IN_IF",
+        "variant": "polyspec_template::ErrorCode::ParseElseifNotInIf",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_RESERVED_NAME",
+        "variant": "polyspec_template::ErrorCode::ParseReservedName",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_PATH",
+        "variant": "polyspec_template::ErrorCode::ParseInvalidPath",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_BLOCK_TAG",
+        "variant": "polyspec_template::ErrorCode::ParseInvalidBlockTag",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_WRAPPER",
+        "variant": "polyspec_template::ErrorCode::ParseInvalidWrapper",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_PARSE_INVALID_DIRECTIVE",
+        "variant": "polyspec_template::ErrorCode::ParseInvalidDirective",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_LOAD_NOT_FOUND",
+        "variant": "polyspec_template::ErrorCode::LoadNotFound",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_LOAD_CYCLE",
+        "variant": "polyspec_template::ErrorCode::LoadCycle",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_LOAD_OUTSIDE_ROOT",
+        "variant": "polyspec_template::ErrorCode::LoadOutsideRoot",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_LOAD_FAILED",
+        "variant": "polyspec_template::ErrorCode::LoadFailed",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_DATA_NUMBER_RANGE",
+        "variant": "polyspec_template::ErrorCode::DataNumberRange",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_DATA_NUMBER_NOT_FINITE",
+        "variant": "polyspec_template::ErrorCode::DataNumberNotFinite",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_DATA_INVALID_UTF8",
+        "variant": "polyspec_template::ErrorCode::DataInvalidUtf8",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_DATA_UNSUPPORTED_TYPE",
+        "variant": "polyspec_template::ErrorCode::DataUnsupportedType",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_DATA_DEPTH",
+        "variant": "polyspec_template::ErrorCode::DataDepth",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_DATA_INVALID_JSON",
+        "variant": "polyspec_template::ErrorCode::DataInvalidJson",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_TYPE",
+        "variant": "polyspec_template::ErrorCode::RuntimeType",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_COMPARE",
+        "variant": "polyspec_template::ErrorCode::RuntimeCompare",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_DIV_ZERO",
+        "variant": "polyspec_template::ErrorCode::RuntimeDivZero",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_STRINGIFY",
+        "variant": "polyspec_template::ErrorCode::RuntimeStringify",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_UNKNOWN_FUNCTION",
+        "variant": "polyspec_template::ErrorCode::RuntimeUnknownFunction",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_ARITY",
+        "variant": "polyspec_template::ErrorCode::RuntimeArity",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_HOST_FUNCTION",
+        "variant": "polyspec_template::ErrorCode::RuntimeHostFunction",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_UNKNOWN_LOOP",
+        "variant": "polyspec_template::ErrorCode::RuntimeUnknownLoop",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_BLOCK_UNDEFINED",
+        "variant": "polyspec_template::ErrorCode::RuntimeBlockUndefined",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_BLOCK_REDEFINED",
+        "variant": "polyspec_template::ErrorCode::RuntimeBlockRedefined",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_DEPTH",
+        "variant": "polyspec_template::ErrorCode::RuntimeDepth",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_RUNTIME_LIMIT",
+        "variant": "polyspec_template::ErrorCode::RuntimeLimit",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_ARGUMENT_DELIMITERS",
+        "variant": "polyspec_template::ErrorCode::ArgumentDelimiters",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_ARGUMENT_FUNCTION_NAME",
+        "variant": "polyspec_template::ErrorCode::ArgumentFunctionName",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_ARGUMENT_SOURCE_RANGE",
+        "variant": "polyspec_template::ErrorCode::ArgumentSourceRange",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_ARGUMENT_INDENT",
+        "variant": "polyspec_template::ErrorCode::ArgumentIndent",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_FORMAT_INVARIANT",
+        "variant": "polyspec_template::ErrorCode::FormatInvariant",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_FORMAT_HTML",
+        "variant": "polyspec_template::ErrorCode::FormatHtml",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_AST_INVALID",
+        "variant": "polyspec_template::ErrorCode::AstInvalid",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::E_INTERNAL",
+        "variant": "polyspec_template::ErrorCode::Internal",
         "library": "template"
       },
       {
@@ -3643,6 +3643,11 @@
       "member": "front_functions.route_request",
       "file": "packages/rust/tests/cases/faults.json",
       "group": "internal"
+    },
+    {
+      "member": "rules.template_reads",
+      "file": "packages/rust/tests/cases/faults.json",
+      "group": "template"
     }
   ]
 }

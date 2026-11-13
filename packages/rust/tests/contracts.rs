@@ -1983,3 +1983,50 @@ fn the_fault_cases_raise_their_kind_where_their_points_break() -> Result<(), Err
     assert!(ran > 0);
     Ok(())
 }
+
+#[test]
+fn the_fault_cases_of_the_template_raise_internal_where_the_parser_breaks() -> Result<(), Error> {
+    // HY-132.6, HY-73.2; binding design G-5, X-1. A case of the group template of tests/cases/faults.json that arms
+    // template.internal for rules.template_reads parses a template with an else-if branch and raises internal; the same
+    // call without the arming gives the read paths of both tests, because the parser finds the open block of the branch.
+    // A case without faults raises its kind without any arming.
+    use polyspec_hyper::read_paths::template_reads;
+    use polyspec_hyper::steps::Map;
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/faults.json");
+    let file: Value = match fs::read_to_string(&path).map(|text| serde_json::from_str(&text)) {
+        Ok(Ok(value)) => value,
+        Ok(Err(error)) => panic!("{}: {error}", path.display()),
+        Err(error) => panic!("{}: {error}", path.display()),
+    };
+    let mut ran = 0;
+    for case in group(&file, "template") {
+        let mut templates = Map::new();
+        for pair in case["templates"].as_array().into_iter().flatten() {
+            templates.insert(text_of(&pair[0]).to_owned(), text_of(&pair[1]).to_owned());
+        }
+        let name = text(case, "name");
+        if case.get("faults").is_none() {
+            check(case, &template_reads(&templates, name), |_| ());
+            ran += 1;
+            continue;
+        }
+        match armed(case, "rules.template_reads", || {
+            template_reads(&templates, name)
+        }) {
+            Ok(reads) => panic!("{}: {reads:?}", case["id"]),
+            Err(error) => check_raises(case, &error),
+        }
+        let reads = as_json(&template_reads(&templates, name)?);
+        for test in ["a", "b"] {
+            assert_eq!(
+                reads["keys"][test],
+                Value::Bool(true),
+                "{}: {test} is no read path of {reads}",
+                case["id"]
+            );
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+    Ok(())
+}

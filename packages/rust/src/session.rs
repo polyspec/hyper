@@ -54,13 +54,13 @@ fn kind<T>(result: Result<T, Error>) -> Result<T, SessionFailure> {
 fn number(value: f64) -> Result<Value, Error> {
     if !value.is_finite() {
         return Err(data(
-            ErrorCode::E_DATA_NUMBER_NOT_FINITE,
+            ErrorCode::DataNumberNotFinite,
             "a number of the session record is not finite",
         ));
     }
     if value.abs() > MAX_SAFE {
         return Err(data(
-            ErrorCode::E_DATA_NUMBER_RANGE,
+            ErrorCode::DataNumberRange,
             "a number of the session record is outside the data model",
         ));
     }
@@ -95,7 +95,7 @@ fn read_node(record: &PhpValue, node: &Node, depth: usize) -> Result<Value, Erro
         Node::Int(value) => match integer(*value) {
             Some(number) => Ok(Value::Number(number)),
             None => Err(data(
-                ErrorCode::E_DATA_NUMBER_RANGE,
+                ErrorCode::DataNumberRange,
                 "an integer of the session record is outside the data model",
             )),
         },
@@ -103,7 +103,7 @@ fn read_node(record: &PhpValue, node: &Node, depth: usize) -> Result<Value, Erro
         Node::String(bytes) => match String::from_utf8(bytes.clone()) {
             Ok(text) => Ok(Value::Str(text)),
             Err(_) => Err(data(
-                ErrorCode::E_DATA_INVALID_UTF8,
+                ErrorCode::DataInvalidUtf8,
                 "a string of the session record is not UTF-8 text",
             )),
         },
@@ -112,7 +112,7 @@ fn read_node(record: &PhpValue, node: &Node, depth: usize) -> Result<Value, Erro
             read_node(record, target, depth)
         }
         Node::Array(_) | Node::Object(_) if depth >= MAX_DEPTH => Err(data(
-            ErrorCode::E_DATA_DEPTH,
+            ErrorCode::DataDepth,
             "the session record nests deeper than the data model",
         )),
         Node::Array(id) => {
@@ -145,7 +145,7 @@ fn read_node(record: &PhpValue, node: &Node, depth: usize) -> Result<Value, Erro
                             Ok(text) => text,
                             Err(_) => {
                                 return Err(data(
-                                    ErrorCode::E_DATA_INVALID_UTF8,
+                                    ErrorCode::DataInvalidUtf8,
                                     "a key of the session record is not UTF-8 text",
                                 ))
                             }
@@ -162,7 +162,7 @@ fn read_node(record: &PhpValue, node: &Node, depth: usize) -> Result<Value, Erro
             for (name, child) in object.iter() {
                 let Ok(text) = String::from_utf8(name.to_vec()) else {
                     return Err(data(
-                        ErrorCode::E_DATA_INVALID_UTF8,
+                        ErrorCode::DataInvalidUtf8,
                         "a property of the session record is not UTF-8 text",
                     ));
                 };
@@ -280,7 +280,7 @@ fn write_node(record: &mut PhpValue, value: &Value) -> Result<Node, Error> {
             Ok(Node::Array(array))
         }
         Value::Object(_) => Err(data(
-            ErrorCode::E_DATA_UNSUPPORTED_TYPE,
+            ErrorCode::DataUnsupportedType,
             "a native object is no value of a session",
         )),
     }

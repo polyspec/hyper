@@ -1199,7 +1199,7 @@ dependencies = [
 [[package]]
 name = "polyspec-template"
 version = "0.0.27"
-source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#317470976396a8e00a966a92f616918ef460b7ba"
+source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#e5457f44d768a939eafad520c45d0de1973952ca"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-json",

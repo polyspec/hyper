@@ -1,5 +1,5 @@
 {
-  "comment": "The cases of the interface contract that arm the fault injection points of the core and of http-negotiation, whose error enum the core passes on (binding design G-5, X-1; HY-132.6), in the case form of binding (G-5). The application is the smallest that routes the request GET / to its page; without the faults the request is the page home.",
+  "comment": "The cases of the interface contract that arm the fault injection points of the core, of http-negotiation and of template, whose error enums the core passes on (binding design G-5, X-1; HY-132.6), in the case form of binding (G-5). The group internal arms front_functions.route_request with the smallest application that routes the request GET / to its page; without the faults the request is the page home. The group template arms rules.template_reads with a template whose else-if branch the parser of template adds to its open block; without the faults the template has its read paths. A case of the group template without faults names a template that is missing and raises invalid_application, the other kind of rules.template_reads (HY-73.2).",
   "internal": [
     {
       "id": "a_broken_invariant_of_the_core_is_internal",
@@ -177,6 +177,48 @@
         "status": null,
         "category": "internal",
         "message": null
+      }
+    }
+  ],
+  "template": [
+    {
+      "id": "a_missing_open_block_of_the_template_is_internal",
+      "rule": "HY-132.6",
+      "templates": [
+        [
+          "page.tpl",
+          "{? a}\nx\n{:? b}\ny\n{/}\n"
+        ]
+      ],
+      "name": "page.tpl",
+      "faults": [
+        {
+          "point": "template.internal",
+          "kind": "broken"
+        }
+      ],
+      "raises": {
+        "kind": "internal",
+        "status": null,
+        "category": "internal",
+        "message": null
+      }
+    },
+    {
+      "id": "a_missing_template_is_an_invalid_application",
+      "rule": "HY-73.2",
+      "templates": [
+        [
+          "page.tpl",
+          "<p>{= title}</p>\n"
+        ]
+      ],
+      "name": "lost.tpl",
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": "the template lost.tpl is missing (HY-73.2)"
       }
     }
   ]

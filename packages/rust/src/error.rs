@@ -278,11 +278,11 @@ fn sessions_category(error: &polyspec_session_store::Error) -> Category {
 fn template_category(code: polyspec_template::ErrorCode) -> Category {
     use polyspec_template::ErrorCode;
     match code {
-        ErrorCode::E_LOAD_FAILED => Category::Io,
-        ErrorCode::E_DATA_UNSUPPORTED_TYPE
-        | ErrorCode::E_RUNTIME_TYPE
-        | ErrorCode::E_RUNTIME_ARITY => Category::Type,
-        ErrorCode::E_INTERNAL => Category::Internal,
+        ErrorCode::LoadFailed => Category::Io,
+        ErrorCode::DataUnsupportedType | ErrorCode::RuntimeType | ErrorCode::RuntimeArity => {
+            Category::Type
+        }
+        ErrorCode::Internal => Category::Internal,
         _ => Category::Value,
     }
 }
