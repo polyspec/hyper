@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a5f7984365a3dee7b7fa41a7f2e0173c578e3230920f376aa8139e75065a53ab -->
+<!-- source-sha256: 7ea951addb3cfce1b90127ef0fedabb88623c99516a57521ddbf53850d45596c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/rust/interface.json`의 `errors.kinds`에서 http-negotiation, http-cookie, session-store의 22행은 경로 `<outer>/<inner>`를 적는다. 라이브러리의 오류를 담는 `polyspec_hyper::Error`의 variant `Negotiate`, `Cookies`, `Sessions`와 그 오류의 variant이다. `rules.session_cookie`는 `raises`에 `Cookies`의 경로를 적고, `opening_functions.open_page`와 `opening_functions.answer_keep_request`는 variant `Sessions` 하나 대신 `Sessions`의 13개 경로를 적는다. 각 행이 라이브러리의 variant만 적어 계약 검사가 70행에 CK-10을 보고했으며, 이제 그대로 둔 template의 48행을 보고한다. `Error::Template`과 `Error::DataModel`은 struct `polyspec_template::TemplateError`와 `polyspec_template::BindError`를 담고 그 kind는 field `code`인데, 패턴 `<outer>(<inner> { .. })`은 struct의 field를 가리키지 못하기 때문이다(H31.16).
 - `pages.register`의 둘째 매개변수는 `packages/rust/interface.json`에서 `host_function`이다. 이름 `function`은 JavaScript의 예약어이므로 계약 검사가 target `node`와 `wasm`에 CK-23을 보고했으며, 이제 보고하지 않는다. core의 `Pages::register`의 매개변수는 아직 이름이 `function`이며, 그 이름 변경은 H31.15 행이 가진다.
 - 클래스 단위 `pages`의 매개변수 `pages`는 `packages/rust/interface.json`에서 core가 그것을 빌리는 방식 `core: "&"`를 명시한다. `page_request.new`, `front_functions.route_request`, `front_functions.kept_value`, `opening_functions.open_page`, `opening_functions.answer_keep_request`는 `&Pages`를 받는다. 계약이 빌림을 명시하지 않아 계약 검사가 다섯 매개변수에 CK-67을 보고했으며, 이제 보고하지 않는다.
 - 명세는 core를 부르지 않는 서버가 있는 동안 예약 템플릿이 놓이는 곳을 적는다. build는 그 사본 `program/legacy/hyper/data.tpl`을 쓰고(HY-31.10), Python 서버는 그 파일을 필요로 하며 `program/templates/`와 함께 읽는다(HY-48.14). HR-34가 그 경로를 적는다. build와 Python 서버는 아직 그렇게 하지 않는다: `docs/features.md`는 legacy-data-template 행을 not implemented로 둔다. `make spec-docs-check`와 `make docs-check`가 통과한다.

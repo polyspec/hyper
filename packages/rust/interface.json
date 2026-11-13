@@ -191,19 +191,19 @@
         "category": "internal"
       },
       {
-        "variant": "polyspec_http_negotiation::Error::InvalidAccept",
+        "variant": "polyspec_hyper::Error::Negotiate/polyspec_http_negotiation::Error::InvalidAccept",
         "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_http_negotiation::Error::InvalidWeight",
+        "variant": "polyspec_hyper::Error::Negotiate/polyspec_http_negotiation::Error::InvalidWeight",
         "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_http_negotiation::Error::InvalidCandidate",
+        "variant": "polyspec_hyper::Error::Negotiate/polyspec_http_negotiation::Error::InvalidCandidate",
         "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_http_negotiation::Error::Internal",
+        "variant": "polyspec_hyper::Error::Negotiate/polyspec_http_negotiation::Error::Internal",
         "library": "http-negotiation"
       },
       {
@@ -399,77 +399,77 @@
         "library": "template"
       },
       {
-        "variant": "polyspec_session_store::Error::Record",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Record",
         "library": "session-store",
         "class": "record_error"
       },
       {
-        "variant": "polyspec_session_store::Error::RecordWrite",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordWrite",
         "library": "session-store",
         "class": "record_error"
       },
       {
-        "variant": "polyspec_session_store::Error::Random",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Random",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::RecordNotArray",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordNotArray",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::Cancelled",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Cancelled",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::IdentifierTaken",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::IdentifierTaken",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::Io",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Io",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::LockTimeout",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockTimeout",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::LockLost",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockLost",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::Reply",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Reply",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::Redis",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Redis",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::Connection",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Connection",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_session_store::Error::Internal",
+        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Internal",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_http_cookie::Error::InvalidName",
+        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::InvalidName",
         "library": "http-cookie"
       },
       {
-        "variant": "polyspec_http_cookie::Error::InvalidCookiePath",
+        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::InvalidCookiePath",
         "library": "http-cookie"
       },
       {
-        "variant": "polyspec_http_cookie::Error::TooLarge",
+        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::TooLarge",
         "library": "http-cookie"
       },
       {
-        "variant": "polyspec_http_cookie::Error::PrefixNotMet",
+        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::PrefixNotMet",
         "library": "http-cookie"
       },
       {
-        "variant": "polyspec_http_cookie::Error::SameSiteNoneNotSecure",
+        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::SameSiteNoneNotSecure",
         "library": "http-cookie"
       }
     ],
@@ -826,8 +826,8 @@
           ],
           "returns": "latin1",
           "raises": [
-            "polyspec_http_cookie::Error::InvalidName",
-            "polyspec_http_cookie::Error::TooLarge"
+            "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::InvalidName",
+            "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::TooLarge"
           ],
           "wait": "none",
           "core": "polyspec_hyper::cookies::session_cookie"
@@ -3368,7 +3368,19 @@
             "polyspec_hyper::Error::InvalidSessionRecord",
             "polyspec_hyper::Error::InvalidCsrfForm",
             "polyspec_hyper::Error::DataModel",
-            "polyspec_hyper::Error::Sessions",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Record",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordWrite",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Random",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordNotArray",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Cancelled",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::IdentifierTaken",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Io",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockTimeout",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockLost",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Reply",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Redis",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Connection",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Internal",
             "polyspec_hyper::Error::RecordValue"
           ],
           "wait": "none",
@@ -3422,7 +3434,19 @@
             "polyspec_hyper::Error::InvalidSessionRecord",
             "polyspec_hyper::Error::InvalidCsrfForm",
             "polyspec_hyper::Error::DataModel",
-            "polyspec_hyper::Error::Sessions",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Record",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordWrite",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Random",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordNotArray",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Cancelled",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::IdentifierTaken",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Io",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockTimeout",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockLost",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Reply",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Redis",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Connection",
+            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Internal",
             "polyspec_hyper::Error::RecordValue"
           ],
           "wait": "none",
