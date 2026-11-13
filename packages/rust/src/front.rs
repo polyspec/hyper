@@ -259,9 +259,10 @@ pub fn route_request(pages: &Pages, chosen: bool, front: &Front) -> Result<Route
     })
 }
 
-/// The headers of a page response (HY-15.3, HY-52, HY-53, HY-65, HY-117.1): its `Content-Type`, its `Cache-Control`,
-/// which the reply states for a page with status 200 and is `no-store` otherwise, its `Vary` and, for a JSON response
-/// with status 200, its weak tag.
+/// The headers of a page response (HY-15.3, HY-52, HY-53, HY-65, HY-103.5, HY-117.1): its `Content-Type`, its
+/// `Cache-Control`, which the reply states for a page with status 200 and is `no-store` otherwise, its `Vary`, the
+/// `Referrer-Policy` that the reply states, whatever the status, and, for a JSON response with status 200, its weak
+/// tag.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PageHeaders {
     /// The status, 304 for a `GET` whose `If-None-Match` equals the tag (HY-53.4).
@@ -293,9 +294,12 @@ pub struct PageResponse {
     pub cache_control: Option<String>,
     /// The `If-None-Match` of the request, or `None` (HY-53.4).
     pub if_none_match: Option<String>,
+    /// The `Referrer-Policy` that the reply states, or `None` (HY-103.5, HY-103.6).
+    pub referrer_policy: Option<String>,
 }
 
-/// The headers of a page response (HY-15.3, HY-52, HY-53, HY-65, HY-117.1).
+/// The headers of a page response (HY-15.3, HY-52, HY-53, HY-65, HY-103.5, HY-117.1). The 304 of HY-53.4 keeps the
+/// `Referrer-Policy` of the reply (HY-103.5).
 #[must_use]
 pub fn page_headers(response: &PageResponse) -> PageHeaders {
     let content_type = if response.json {
@@ -315,6 +319,9 @@ pub fn page_headers(response: &PageResponse) -> PageHeaders {
             crate::media::page_vary(response.context).to_owned(),
         ),
     ];
+    if let Some(referrer_policy) = &response.referrer_policy {
+        headers.push(("Referrer-Policy".to_owned(), referrer_policy.clone()));
+    }
     if !(response.json && response.status == 200) {
         return PageHeaders {
             status: response.status,
@@ -356,8 +363,9 @@ pub fn frame_headers(status: u16, frame_ancestors: &str) -> Vec<(String, String)
 }
 
 /// The value that a request to the kept endpoint stores (HY-40.1): a region that declares the path as `server`, a JSON
-/// text of at most 4,096 bytes, and a value of the data model; `None` answers 400. The host checks the token of the
-/// form before (HY-24, 403) and the file limit (HY-114, 413).
+/// text of at most 4,096 bytes, and a value of the data model; `None` answers 400. The file limit (HY-114.7, 413)
+/// answers while the host reads the body, before the route and the session (HY-120.2), and the token of the form
+/// (HY-24, 403) is checked before this value.
 #[must_use]
 pub fn kept_value(
     pages: &Pages,

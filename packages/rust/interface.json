@@ -1240,8 +1240,7 @@
           },
           "raises": [
             "polyspec_hyper::ErrorCode::InvalidApplication",
-            "polyspec_hyper::ErrorCode::Template",
-            "polyspec_hyper::ErrorCode::DataModel"
+            "polyspec_hyper::ErrorCode::Template"
           ],
           "wait": "none",
           "core": "polyspec_hyper::template_rules::problems"
@@ -1275,8 +1274,7 @@
           "returns": "template_value",
           "raises": [
             "polyspec_hyper::ErrorCode::InvalidApplication",
-            "polyspec_hyper::ErrorCode::Template",
-            "polyspec_hyper::ErrorCode::DataModel"
+            "polyspec_hyper::ErrorCode::Template"
           ],
           "wait": "none",
           "core": "polyspec_hyper::read_paths::route_reads"
@@ -2532,7 +2530,6 @@
           "raises": [
             "polyspec_hyper::ErrorCode::Internal",
             "polyspec_hyper::ErrorCode::SharedHoldsContext",
-            "polyspec_hyper::ErrorCode::DataModel",
             "polyspec_hyper::ErrorCode::Template"
           ],
           "wait": "none",
@@ -2879,6 +2876,19 @@
             "literal": null
           },
           "reason": "HY-53.4"
+        },
+        {
+          "name": [
+            "referrer",
+            "policy"
+          ],
+          "type": {
+            "optional": "text"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-103.6"
         }
       ]
     },
@@ -3391,7 +3401,7 @@
             "polyspec_hyper::ErrorCode::InvalidSessionToken",
             "polyspec_hyper::ErrorCode::InvalidSessionRecord",
             "polyspec_hyper::ErrorCode::InvalidCsrfForm",
-            "polyspec_hyper::ErrorCode::DataModel",
+            "polyspec_hyper::ErrorCode::Template",
             "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Record",
             "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordWrite",
             "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Random",
@@ -3457,7 +3467,7 @@
             "polyspec_hyper::ErrorCode::InvalidSessionToken",
             "polyspec_hyper::ErrorCode::InvalidSessionRecord",
             "polyspec_hyper::ErrorCode::InvalidCsrfForm",
-            "polyspec_hyper::ErrorCode::DataModel",
+            "polyspec_hyper::ErrorCode::Template",
             "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Record",
             "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordWrite",
             "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Random",

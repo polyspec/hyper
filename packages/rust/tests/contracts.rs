@@ -1510,6 +1510,7 @@ fn the_headers_of_a_page_and_the_kept_endpoint() {
             token: "token".to_owned(),
             method: method.to_owned(),
             if_none_match: if_none_match.map(str::to_owned),
+            referrer_policy: None,
         };
     let ok = page_headers(&response(200, true, "GET", None));
     assert_eq!(ok.status, 200);

@@ -161,9 +161,10 @@ pub struct KeepRequest {
 
 /// Answers a request to the kept endpoint after its route (HY-40.1, HY-59.8): 403 when the form token does not match
 /// the token of the session, which the session sets when it holds none, 400 for a value that the region does not keep
-/// by `server` or that is no value of the data model, and 204 after the value is stored. The host checks the file limit
-/// (HY-114, 413) after the token. The kept endpoint reads only the token and takes no flash data, which belongs to the
-/// next page request (HY-120.7).
+/// by `server` or that is no value of the data model, and 204 after the value is stored. The file limit (HY-114.7,
+/// 413) answers while the host reads the body, so a request that reaches this function passed it, and no check of a
+/// limit follows the token (HY-120.2). The kept endpoint reads only the token and takes no flash data, which belongs
+/// to the next page request (HY-120.7).
 ///
 /// # Errors
 /// `invalid_session_token`, `invalid_session_record`, the error of the data model and a failure of the store.
