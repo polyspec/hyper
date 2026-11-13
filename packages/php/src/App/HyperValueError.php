@@ -24,7 +24,7 @@ final class HyperValueError extends \InvalidArgumentException
     }
 
     /** The HTTP status of the failure, which an error of the category `value` does not have (HY-132.1). */
-    public function status(): ?int
+    public function status(): null
     {
         return null;
     }

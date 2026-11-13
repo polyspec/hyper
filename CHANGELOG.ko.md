@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d965637c0a40c78ce896d6ced93201a883c335723a04d63ef76e351a1e339dd9 -->
+<!-- source-sha256: d555845ab0be05f3f17d305a6372034406d91a9935bde6a34553d5acdf40c37c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `Polyspec\Hyper\HyperValueError::status()`는 반환 타입 `null`을 선언한다. 전에는 `?int`를 선언했다. category `value`의 오류는 status가 없으므로(HY-132.2) 이 method는 정수를 돌려주지 않고, `make analyse-php`의 분석은 타입의 쓰이지 않는 `int`를 보고했다(`return.unusedType`). `make analyse-php`는 오류를 보고하지 않는다.
 - PHP runner의 case reader는 case의 field `raises`가 `"message": null`을 적으면 관측한 실패의 message를 뺀다(HY-132.4). Node와 Python reader가 하는 것과 같다. `packages/php/tests/Support/CaseRules.php`의 `statedMessage`는 기대하는 실패를 `is_array`로 검사했는데, reader는 case의 object를 `stdClass`로 가지므로 message를 뺀 적이 없었고, `contracts/context.json`의 case `shared_data_that_holds_a_context_fails`는 생성된 program과 native extension 두 실행에서 `FIELD_DIFFERS raises`로 실패했다. `make hyper-test-php`는 두 실행에서 41개 시험을 통과하고 `make recipe-run-php`는 통과한다.
 - 세 server의 host 코드는 H-1의 package 자리 아래, HYR-4의 group 디렉터리에 있다: `packages/php/src/<Group>/`, `packages/ts/src/<group>/`, `packages/python/src/polyspec/hyper/<group>/`. `contracts/interfaces.json`은 `groups`와 함께 그 경로를 적는다. concern `app`의 unit `hyper-value-error`는 group `app`에 있다(`packages/php/src/App/HyperValueError.php`, `packages/python/src/polyspec/hyper/app/_hyper_value_error.py`). server에 `Accept.select`가 없으므로 `tests/legacy/accept-before-s3b.json`의 section `select`는 그 step이 부르는 member `accept.best`와 `accept.parse`를 적는다. 모든 manifest는 version 0.0.40을 가지고, 두 `composer.json`은 `"min-0-max/json-schema": "^2.6.0-p2"`를 요구하며, lock이 이를 따른다.
 - 애플리케이션의 open 오류(kind `invalid_application`) statement는 HY-106.18이 아니라 HY-106.21이고, HY-106.18은 애플리케이션이 모든 public 이름을 package 진입점(namespace `Polyspec\Hyper`, package `@polyspec/hyper`, package `polyspec.hyper`)에서 가져온다는 statement다. statement는 뜻이 그대로일 때만 id를 유지하므로 HY-106.18은 release 0.0.40이 준 뜻을 유지한다. `contracts/protocol.json`, `contracts/manifest.json`의 case label, `contracts/interfaces.json`, `packages/rust/interface.json`, Rust core의 주석은 open 오류에 HY-106.21을 인용한다(G-3).
