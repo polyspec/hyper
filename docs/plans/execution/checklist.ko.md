@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 5d0ca7d21bf1946cb872f48a35a499669fe5399e1127fa4cec520beaa4d21856 -->
+<!-- source-sha256: c9d27f54699a4fa3275892072d5c7e337235818aad7fa1dfe7b3bdedc199f244 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -455,3 +455,6 @@
 | H31.11 | 각 서버는 요청의 본문과 쿠키를 http-form과 http-cookie의 binding으로 읽고, 자체 reader는 제거한다. `docs/features.md`의 표에서 끝이 S-4인 행은 표에서 빠진다. 기다리는 것: 두 라이브러리의 PHP, Python, Node binding release | packages/ts, packages/python, packages/php, docs/features.md | `make hyper-test-node`, `make hyper-test-python`, `make hyper-test-php` | [ ] |
 | H31.12 | Go binding과 WASM binding의 생성된 시험이 통과한다. 의존: H31.6 | Makefile, packages/go, packages/ts/native/wasm | `make test-go`, `make test-wasm` | [ ] |
 | H31.13 | 서버를 실행하는 CI group은 각자의 job에서 자기 언어의 binding을 빌드하고, release는 세 플랫폼의 addon 패키지, wheel, 그리고 `php-ext.download-url-method`가 적는 PHP 확장 archive를 빌드한다. 의존: H31.7, H31.8, H31.9 | .github/workflows, config/release.json, Makefile, tests/scripts | `make hyper-test-scripts TESTS=tests/scripts/ci-workflow.test.mts`, `make ci-passed` | [ ] |
+| H31.14 | 타입이 클래스 단위 `pages`인 매개변수 `pages`는 각각 core가 그것을 빌리는 방식 `core: "&"`를 명시한다(binding CK-67, GN-6h). `page_request.new`, `front_functions.route_request`, `front_functions.kept_value`, `opening_functions.open_page`, `opening_functions.answer_keep_request`이며, core는 각각을 `&Pages`로 받는다. 원인: 계약이 빌림을 명시하지 않아 계약 검사가 다섯 매개변수에 CK-67을 보고했다 | packages/rust/interface.json | `make bindings-check` | [~] |
+| H31.15 | `pages.register`의 둘째 매개변수는 계약과 core의 `Pages::register`에서 `host_function`이다. 원인: 이름 `function`은 JavaScript의 예약어이므로 계약 검사가 target `node`와 `wasm`에 CK-23을 보고했다 | packages/rust/interface.json, packages/rust/src/steps.rs | `make bindings-check`, `make core-test`, `make core-lint` | [~] |
+| H31.16 | `library`가 있는 `errors.kinds`의 각 행은 경로 `<outer>/<inner>`, 곧 라이브러리의 오류를 담는 `polyspec_hyper::Error`의 variant와 그 오류의 variant를 적고(binding CK-10, GN-7c), member는 `raises`에 같은 경로를 적는다. http-negotiation은 `Negotiate`, http-cookie는 `Cookies`, session-store는 `Sessions`이며 22행이다. template의 48행은 그대로 둔다. `Error::Template`은 struct `polyspec_template::TemplateError`를, `Error::DataModel`은 struct `polyspec_template::BindError`를 담고 그 kind는 field `code`이므로, GN-7c의 패턴 `<outer>(<inner> { .. })`이 그것을 가리키지 못하기 때문이다. 이 행은 그 48행이 생성된 crate가 컴파일되는 형태를 가질 때 끝난다. 원인: 각 행이 라이브러리의 variant만 적어 계약 검사가 70행에 CK-10을 보고했다 | packages/rust/interface.json, packages/rust/src/error.rs | `make bindings-check`, `make core-test`, `make core-lint` | [~] |
