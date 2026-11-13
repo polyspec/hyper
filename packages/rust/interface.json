@@ -1941,6 +1941,7 @@
             },
             {
               "name": [
+                "host",
                 "function"
               ],
               "type": {

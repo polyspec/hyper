@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 124d1cb0380e0fff9e41ec9fc8f38d39a1ba18bcaac3dc8b07c6aea97e55a630 -->
+<!-- source-sha256: a5f7984365a3dee7b7fa41a7f2e0173c578e3230920f376aa8139e75065a53ab -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `pages.register`의 둘째 매개변수는 `packages/rust/interface.json`에서 `host_function`이다. 이름 `function`은 JavaScript의 예약어이므로 계약 검사가 target `node`와 `wasm`에 CK-23을 보고했으며, 이제 보고하지 않는다. core의 `Pages::register`의 매개변수는 아직 이름이 `function`이며, 그 이름 변경은 H31.15 행이 가진다.
 - 클래스 단위 `pages`의 매개변수 `pages`는 `packages/rust/interface.json`에서 core가 그것을 빌리는 방식 `core: "&"`를 명시한다. `page_request.new`, `front_functions.route_request`, `front_functions.kept_value`, `opening_functions.open_page`, `opening_functions.answer_keep_request`는 `&Pages`를 받는다. 계약이 빌림을 명시하지 않아 계약 검사가 다섯 매개변수에 CK-67을 보고했으며, 이제 보고하지 않는다.
 - 명세는 core를 부르지 않는 서버가 있는 동안 예약 템플릿이 놓이는 곳을 적는다. build는 그 사본 `program/legacy/hyper/data.tpl`을 쓰고(HY-31.10), Python 서버는 그 파일을 필요로 하며 `program/templates/`와 함께 읽는다(HY-48.14). HR-34가 그 경로를 적는다. build와 Python 서버는 아직 그렇게 하지 않는다: `docs/features.md`는 legacy-data-template 행을 not implemented로 둔다. `make spec-docs-check`와 `make docs-check`가 통과한다.
 - `make bindings-check`가 binding CK-19가 요구하는 host manifest 항목 11개를 보고했다(L-2a). 이제 `packages/ts/package.json`은 `files`에 `native/generated/index.cjs`, `index.mjs`, `index.d.ts`와 `native/wasm/generated/*.mjs`, `*.js`, `*.d.ts`, `*.wasm`을 적고, `packages/php/composer.json`은 `ext-polyspec_hyper`를 require한다. root와 board의 Composer 프로젝트는 `config.platform`에 `ext-polyspec_hyper` 0.0.40을 선언해 Composer가 확장 없이 lock을 resolve하게 한다. 확장이 없는 PHP 8.4.27로 두 프로젝트의 `composer install`이 통과하고, `vendor/composer/platform_check.php`는 PHP 버전만 확인하며, `vendor/autoload.php`가 로드된다. `npm ci`(`make install-packages`)가 통과한다. `optionalDependencies`의 플랫폼 패키지 세 개는 계속 보고된다. 그것을 release에 맡기는 binding commit(binding GN-3c)을 고정하면 요구되지 않는다(H31.3-4).
