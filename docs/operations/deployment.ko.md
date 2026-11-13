@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: ff3157fd05b53102097b3c4364ec4d7dbc6420dfb9a1694e1ec047ff5ee47d80 -->
+<!-- source-sha256: 3e0e812a35bef78a45e60e0942e66e246b0c6b8393fbc893579adcf7637754df -->
 # 배포
 
 [English](deployment.md).
@@ -48,7 +48,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 ## 두 형태를 한 서버로
 
-어느 구현의 서버 하나가 한 매니페스트의 서버 렌더 페이지와 클라이언트 렌더 페이지를 같은 handler로 응답할 수 있다(HY-62). 애플리케이션은 열 때 클라이언트 렌더를 선언한다. PHP에서는 `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))`, Node에서는 `App.open`의 `clientRendering` 옵션 `{ shell, basePath, selects }`, Python에서는 `client_rendering=ClientRendering(shell='/srv/app/build/csr/index.html', base_path='/_props', selects=...)`다. 선택은 예를 들어 `Host` header로 클라이언트 렌더 요청을 고르고, host에 저장된 service 같은 그 값은 PHP의 `$request->selection()`과 Node·Python의 `request.selection()`으로 요청의 모든 loader와 action에 전달되므로 handler가 그 값을 다시 읽지 않는다. 셸이 데이터 기본 경로를 선언하도록 `@polyspec/hyper-cli`의 `hyper-build-assets --api /_props`로 셸을 build한다. 그렇지 않으면 애플리케이션 열기가 실패한다.
+어느 구현의 서버 하나가 한 매니페스트의 서버 렌더 페이지와 클라이언트 렌더 페이지를 같은 handler로 응답할 수 있다(HY-62). 애플리케이션은 열 때 클라이언트 렌더를 선언한다. PHP에서는 `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))`, Node에서는 `App.open`의 `clientRendering` 옵션 `{ shell, basePath, selects }`, Python에서는 `client_rendering=ClientRendering(shell='/srv/app/build/csr/index.html', base_path='/_props', selects=...)`다. 선택은 예를 들어 `Host` header로 클라이언트 렌더 요청을 고르고, 그 host의 저장된 service 같은 그 값은 PHP의 `$request->selection()`과 Node·Python의 `request.selection()`으로 요청의 모든 loader와 action에 전달되므로 handler가 그 값을 다시 읽지 않는다. 셸이 데이터 기본 경로를 선언하도록 `@polyspec/hyper-cli`의 `hyper-build-assets --api /_props`로 셸을 build한다. 그렇지 않으면 애플리케이션 열기가 실패한다.
 
 | 선택이 고른 페이지의 요청 | 응답 |
 |---|---|
@@ -83,7 +83,7 @@ server는 `multipart/form-data` body를 조각으로 요청의 file에 읽으며
 - **앞단 server.** hyper는 시간 제한을 두지 않는다(HY-131.19). application 앞단의 server가 느린 client와 요청의 크기를 application이 읽기 전에 묶는다. nginx의 `client_max_body_size`, `client_body_timeout`, 연결 제한, PHP-FPM의 `request_terminate_timeout`, Node HTTP server의 `requestTimeout`과 `headersTimeout`, WSGI나 ASGI server의 timeout이 그것이다. 앞단 server의 크기 제한은 application의 body 제한 이상으로 둔다. 그렇지 않으면 application보다 그 server가 먼저 답한다. nginx는 요청 body를 넘기기 전에 자신의 임시 파일에 쓴다(`fastcgi_request_buffering`과 `proxy_request_buffering`, 기본값 on). 이는 upload를 한 번 더 쓰는 것이다. 그 directive를 끄면 nginx는 body를 도착하는 대로 넘기고, 그때 느린 client는 upload 시간 동안 application의 worker 하나를 붙잡는다.
 - **PHP 설정.** `enable_post_data_reading=Off`에서 PHP는 body를 스스로 읽지 않으므로, 자체 reader의 `upload_max_filesize`, `max_file_uploads`, `max_input_vars`, `max_multipart_body_parts`, `upload_tmp_dir`은 아무것도 묶지 않고 `$_POST`, `$_FILES`, `is_uploaded_file()`, `move_uploaded_file()`은 아무것도 담지 않는다. 위의 네 제한과 `UploadedFile`의 `moveTo()`가 그 자리를 맡는다. `post_max_size`는 여전히 적용된다. PHP는 `php://input`이 준 것을 `sys_temp_dir`의 자체 임시 file에 두므로, 요청은 끝날 때까지 그 disk에서 body의 약 두 배를 쓴다.
 - **임시 directory.** multipart body를 가진 요청마다 system의 임시 directory(PHP의 `sys_temp_dir`, 그것이 설정되지 않았으면 `TMPDIR`, Node와 Python의 `TMPDIR`; `upload_tmp_dir`은 이것을 바꾸지 않는다) 아래에 directory `hyper-…`가 생기며 server의 user만 읽는다. server는 요청의 response hook, write hook, disconnect hook이 반환한 뒤에 그것을 지우고, 요청이 실패했을 때도 그렇다. application이 `moveTo()`로 옮긴 file은 지우지 않는다. `moveTo()`는 file의 이름을 바꾸거나 다른 file system으로는 복사하므로, 임시 directory와 같은 file system의 대상은 복사 비용이 없다. 답하는 중에 강제 종료된 server는 그 요청의 directory를 남긴다. server를 시작할 때 임시 directory의 `hyper-*` directory를 지운다.
-- **요청이 쓰는 것.** `make bench-uploads`가 이것을 측정하며 [벤치마크](benchmark.ko.md#upload)가 방법과 한 번의 실행 수치를 담는다. 1 GiB body는 PHP-FPM worker에서 13 MiB, Python `http.server` server에서 36 MiB, Node server에서 152 MiB를 썼고 98 MiB body는 그보다 많아야 2.5 MiB 더 썼다. PHP 자체의 reader는 6 MiB를 썼고 hyper의 PHP server보다 processor 시간을 덜 썼다. PHP script는 거기에 도달할 수 없다. PHP가 script가 읽기 전에 body를 자신의 임시 file에 쓰기 때문이다.
+- **요청이 쓰는 것.** `make bench-uploads`가 이것을 측정하며 [벤치마크](benchmark.ko.md#upload)가 방법과 한 번의 실행 수치를 담는다. 1 GiB body는 PHP-FPM worker에서 13 MiB, Python `http.server` server에서 36 MiB, Node server에서 152 MiB를 썼고 98 MiB body는 많아야 2.5 MiB를 더 썼다. PHP 자체의 reader는 6 MiB를 썼고 hyper의 PHP server보다 processor 시간을 덜 썼다. PHP script는 거기에 도달할 수 없다. PHP가 script가 읽기 전에 body를 자신의 임시 file에 쓰기 때문이다.
 
 ## 로컬 재현
 
@@ -230,4 +230,4 @@ redis.Redis(
 )
 ```
 
-Sentinel을 쓰면 각 Sentinel도 같은 보안을 요구하므로, client는 Sentinel과 primary 양쪽에 이를 지정한다. PHP 서버는 각 항목에 `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`를 주고, `RedisSentinelSessions`의 이름 다음 인자로 primary의 매개변수와 scheme `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`를 준다. Node 서버는 `{ socket: { tls: true, ca }, username, password }`를 `sentinelClientOptions`와 `nodeClientOptions`에 준다. Python 서버는 `ssl=True, ssl_ca_certs=..., username=..., password=...`를 `Sentinel`과 `sentinel_kwargs`에 준다. Redis 서버 하나의 용량은 [benchmark](benchmark.ko.md)에 있다.
+Sentinel을 쓰면 각 Sentinel도 같은 보안을 요구하므로, 모든 client는 Sentinel과 primary 양쪽에 이를 지정한다. PHP 서버는 각 항목에 `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`를 주고, `RedisSentinelSessions`의 이름 다음 인자로 primary의 매개변수와 scheme `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`를 준다. Node 서버는 `{ socket: { tls: true, ca }, username, password }`를 `sentinelClientOptions`와 `nodeClientOptions`에 준다. Python 서버는 `ssl=True, ssl_ca_certs=..., username=..., password=...`를 `Sentinel`과 `sentinel_kwargs`에 준다. Redis 서버 하나의 용량은 [benchmark](benchmark.ko.md)에 있다.

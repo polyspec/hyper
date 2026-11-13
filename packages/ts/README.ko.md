@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-node-readme -->
-<!-- source-sha256: 71564459e5979610decd1c4f9815991d8905d06a120ef1c67b27635ca0a5fff8 -->
+<!-- source-sha256: 990788e141872a14c5898a0768877f20b2737acd4227de7a443c73cf31d9b2b9 -->
 # @polyspec/hyper
 
 [English](README.md).
@@ -52,13 +52,13 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 |---|---|
 | `manifest` | `app.json`의 절대 경로(HY-1). |
 | `templates` | `index`: asset build가 쓰는 템플릿 index의 절대 경로. `root`: index의 파일 URL이 기준으로 삼는 절대 디렉터리(HR-34). |
-| `handlers` | `shared`, `regions`(페이지가 아닌 영역), `routes`(`load`, `post`, 라우트 영역의 `regions`). 라우트는 manifest가 `"post": true`를 선언할 때만 `post`를 가진다. |
+| `handlers` | `shared`, `regions`(페이지가 아닌 영역), `routes`(`load`, `post`, 라우트 영역의 `regions`). 라우트는 manifest가 `"post": true`를 선언할 때, 그리고 그때에만 `post`를 가진다. |
 | `timezone` | 렌더 환경의 time zone(HY-14). |
 | `basePath` | `/api` 같은 base path(HY-8). 기본값은 없음이다. |
 | `https` | TLS를 끝내는 프록시 뒤처럼 HTTPS를 선언한다. 이때 cookie는 `Secure`다(HY-45). |
 | `frameAncestors` | `frame-ancestors`의 source. 기본값은 `'self'`다(HY-45). |
 | `bodyLimit` | 가장 큰 요청 body의 바이트 수. 더 큰 body는 413을 받는다. 기본값은 8 MiB다(HY-59). |
-| `responseLimit` | 가장 큰 응답 body의 바이트 수. 더 큰 body는 보내지 않고, 요청은 텍스트 500을 받는다. 기본값은 8 MiB다(HY-66). |
+| `responseLimit` | 가장 큰 응답 body의 바이트 수. 더 큰 body는 보내지 않고, 요청은 평문 500을 받는다. 기본값은 8 MiB다(HY-66). |
 | `formTypes` | action과 `/_hyper/keep`이 받는 요청 body의 media type. `application/x-www-form-urlencoded`와 `multipart/form-data`이며, 다른 type은 415를 받는다. 기본값은 `['application/x-www-form-urlencoded']`다(HY-59). |
 | `onResponse` | hyper가 스스로 응답하는 것을 포함해 모든 응답마다 요청, 응답, 경과 밀리초, 요청의 reply로 한 번 호출한다. 요청은 `node:http`가 request line을 읽지 못한 경우에만 null이고, 서버가 라우팅 전에 응답했으면 reply는 비어 있다(HY-60). |
 | `onDisconnect` | 서버가 응답을 쓰기 전에 client가 연결을 닫은 요청의 요청, 경과 밀리초, reply로 한 번 호출한다. 서버는 그 요청의 다른 loader, action, 렌더를 실행하지 않고 응답을 쓰지 않는다(HY-67). |
@@ -96,7 +96,7 @@ app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 
 `app.server(sessions, options)`는 `node:http` 서버를 반환한다. 서버는 요청 body를 애플리케이션의 `bodyLimit`까지만 읽는다(HY-59). `options.files`는 절대 디렉터리이며, PHP 내장 서버가 document root를 제공하듯 그 안의 파일을 지정한 `GET`과 `HEAD` 요청에 그 파일을 준다. ASCII 밖의 바이트가 있는 요청 대상처럼 `node:http`가 해석하지 못하는 요청은 평문 400을 받는다(HY-42).
 
-`app.listener(sessions, options)`는 `app.server`가 설치하는 request listener를 반환한다(HY-100). 그 promise는 요청의 쓰기 hook과 연결 끊김 hook이 실행된 뒤 settle된다. `options.written`은 쓰기 hook이다(HY-99). 애플리케이션이 답한 요청마다 응답이 닫힌 뒤 한 번 호출되며, 요청, 쓰기를 시작한 응답 또는 탈출 오류의 평범한 500, 쓰기가 끝났는지, 경과 밀리초와 탈출 오류의 failure를 받는다.
+`app.listener(sessions, options)`는 `app.server`가 설치하는 request listener를 반환한다(HY-100). 그 promise는 요청의 쓰기 hook과 연결 끊김 hook이 실행된 뒤 settle된다. `options.written`은 쓰기 hook이다(HY-99). 애플리케이션이 답한 요청마다 응답이 닫힌 뒤 한 번 호출되며, 요청, 쓰기를 시작한 응답 또는 탈출 오류의 평문 500, 쓰기가 끝났는지, 경과 밀리초와 탈출 오류의 failure를 받는다.
 
 `FileSessions({ directory, lifetime })`는 각 session을 기존 절대 디렉터리의 파일 `sess_<id>`에 PHP files handler의 형식으로 저장하므로, 그 디렉터리를 공유하는 PHP, Node, Python 서버와 그 process들은 그 session들을 공유한다(HY-104). session cookie는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고(HY-45), `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 파일이 있는 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 디렉터리의 모든 process에서 차례로 실행한다(HY-45, HY-104). session 파일의 `flock`은 Node의 experimental module인 `node:ffi`로 잡으며, 이 module은 경고를 한 번 출력하고, `--permission`으로 시작한 process에는 `--allow-ffi`가 필요하다. `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다. `RedisSessions({ command, lifetime, prefix, lockExpire, lockRetries, lockWait })`는 각 session을 phpredis의 프로토콜로 Redis 서버에 저장하므로, 그 Redis 서버를 공유하는 PHP, Node, Python 서버는 그 session들을 공유한다(HY-115). `command`는 애플리케이션 client의 명령 하나를 실행하고 bulk string을 byte로 돌려준다.
 

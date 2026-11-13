@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1799bffa9d64d36ca01aa9bf801ad8e50d9eaa5862758e91aead301a79d0f8b1 -->
+<!-- source-sha256: b92503030aba5798cb737e2fd05fdf38077df1c7f173ecb9e0e8ae31dd5ee3b9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 한국어 문서 여섯은 영어 문서가 말하는 것을 말하고, 현재 영어 본문의 `source-sha256`을 가진다: `README.ko.md`, `docs/features.ko.md`, `docs/operations/deployment.ko.md`, `docs/operations/repository-rules.ko.md`, `packages/cli/README.ko.md`, `packages/ts/README.ko.md`. 한국어 본문은 다음 자리에서 달랐다. HR-78은 library의 게시를 조건으로 만들었고, HR-80, HR-84와 기능 표의 두 행은 native 보고서와 native 설정을 기본 보고서와 기본 설정으로 적었고, HR-95는 commit이 아니라 tag를 릴리스라고 했고, HR-79는 symbolic link의 대상을 뺐고, HR-89는 step의 시점을 시간으로 적었다. 행 `rust-core`는 kept 값으로 렌더하지 않는 region에 원인을 붙였고, 행 `checked-results`, `shared-runtime-runner`, `template-delivery`, `write-hook`, `language-parity-ci`는 각각 절 하나를 다르게 말했다. 배포 문서는 저장된 service를 host 안에 두었고, Sentinel의 client에서 `모든`을 뺐고, 98 MiB body의 메모리에 방향을 더했다. Node package의 README는 `exactly when`을 `때만`으로, 평문 500을 다른 두 이름으로 적었고, 명령 도구의 README는 `--build` 파일이 asset 출력의 build id를 담는다고 말하지 않았으며, root README는 문장 셋을 목록으로 두었다.
 - Redis session의 시험 파일은 그 시험이 끝나면 끝난다. `tests/scripts/session-redis-server.mts`의 `until`은 검사를 100 ms마다 끝없이 반복하고, timeout으로 실패한 시험의 검사는 파일이 server를 멈춘 뒤에도 계속되어, `tests/scripts/session-redis-cluster.test.mts`의 process가 끝나지 않았고 `make hyper-test-scripts`는 그것을 기다렸다. 두 검사 사이의 대기는 더는 process를 붙잡지 않는다. package `polyspec.hyper`가 없는 Python 환경에서 이 파일은 200초 뒤에 8개 시험 통과, 13개 실패로 끝난다. 전에는 끝나지 않았다.
 - 이 절의 항목 다섯은 package의 현재 자리를 적는다: `packages/rust`, `packages/python`, `packages/ts`, `packages/php/native`, `packages/<lang>/native/`, `packages/rust/interface.json`, 그리고 native module `polyspec.hyper._binding._native`. 전에는 `packages/server` 아래의 자리와 module `polyspec.hyper.server._native`를 적었다. 이름의 변경을 기록하는 항목 다섯은 그 항목이 적는 이전 이름을 유지한다.
 - `packages/ts/tests/case-rules.ts`의 `CONTRACTS`는 그 module의 상수이며 export가 아니다. 다른 파일이 그것을 읽지 않고, `make lint-ts`의 knip이 쓰이지 않는 export로 보고했다. `make lint-ts`는 8개 단계를 통과한다.

@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-cli-readme -->
-<!-- source-sha256: ec0921371ad3c4059cd3dcc60da817145db94129de55ef47a11a5823142fe506 -->
+<!-- source-sha256: 22bc7bd5360b0ebe05805ce4139e12e3b3d392a6443a12065c129b8f5bf94409 -->
 # @polyspec/hyper-cli
 
 [English](README.md).
@@ -10,7 +10,7 @@ Node.js 26.12.0 이상이 필요하다. 패키지는 JavaScript 모듈을 build 
 
 ## 서버 프로그램
 
-`hyper-build-server`는 애플리케이션의 템플릿을 템플릿 규칙으로 검사하고 서버 프로그램을 `--output`에 쓴다. 예약 템플릿 `hyper/data.tpl`을 포함한 템플릿, 디렉터리 `php`에 PSR-4 파일로 쓴 namespace `--php-namespace`의 생성된 PHP 프로그램, `program.json`, read path `reads.json`, `--build` 파일의 사본인 `build.json`(build id, HY-125)이다(HY-48, HY-73). 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 namespace를 그 디렉터리에 연결하며, PHP 서버는 이를 통해 프로그램을 불러온다.
+`hyper-build-server`는 애플리케이션의 템플릿을 템플릿 규칙으로 검사하고 서버 프로그램을 `--output`에 쓴다. 예약 템플릿 `hyper/data.tpl`을 포함한 템플릿, 디렉터리 `php`에 PSR-4 파일로 쓴 namespace `--php-namespace`의 생성된 PHP 프로그램, `program.json`, read path `reads.json`, 그리고 asset 출력의 build id를 담은 `--build` 파일의 사본인 `build.json`이다(HY-48, HY-73, HY-125). 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 namespace를 그 디렉터리에 연결하며, PHP 서버는 이를 통해 프로그램을 불러온다.
 
 ```sh
 npx hyper-build-server --manifest app/app.json --templates templates --output build/server --php-namespace 'App\Program' --build build/assets/build.json
