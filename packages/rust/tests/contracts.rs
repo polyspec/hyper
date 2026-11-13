@@ -2085,7 +2085,7 @@ fn case_pages(case: &Value) -> Result<polyspec_hyper::steps::Pages, Error> {
 #[test]
 fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
     // HY-132.6, HY-24.14, HY-104.23; binding design G-5, X-1. The case of the group session of tests/cases/faults.json
-    // that arms session_store.session_waits for opening_functions.open_page opens a page with a file session that found
+    // that arms session_store.internal for opening_functions.open_page opens a page with a file session that found
     // no record, whose first get starts the record session, and raises internal; the same call without the arming
     // opens the page with a new token, because the start of the session leaves it started. Its other cases raise the
     // kinds that their stored values or their mask give.

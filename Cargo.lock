@@ -1064,7 +1064,7 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 [[package]]
 name = "polyspec-binding-core"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/binding.git?branch=v1%2Frust-core#1bf0025fe38dece8ba53a234ec21bb3be94bc18d"
+source = "git+https://github.com/polyspec/binding.git?branch=v1%2Frust-core#1cf2e2bf4518354498a510955b5d0738e147ec44"
 dependencies = [
  "indexmap",
  "libc",
@@ -1084,7 +1084,7 @@ dependencies = [
 [[package]]
 name = "polyspec-http-media-type"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/http-media-type.git?branch=v1%2Frust-core#4f3ba30c9beb62e064d9fe2a045c4b442d9e0cd4"
+source = "git+https://github.com/polyspec/http-media-type.git?branch=v1%2Frust-core#894aa2e5781081be9e32a23bcd5598d9986a35bd"
 dependencies = [
  "polyspec-binding-core",
 ]
@@ -1092,7 +1092,7 @@ dependencies = [
 [[package]]
 name = "polyspec-http-negotiation"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/http-negotiation.git?branch=v1%2Frust-core#82d1345887321d7b4c7bc7fea0234776dd155397"
+source = "git+https://github.com/polyspec/http-negotiation.git?branch=v1%2Frust-core#aa9cd5c31f2ac4c457dc6100f31c39c046a7401c"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-http-media-type",
@@ -1106,6 +1106,7 @@ dependencies = [
  "polyspec-http-cookie",
  "polyspec-http-media-type",
  "polyspec-http-negotiation",
+ "polyspec-hyper",
  "polyspec-json",
  "polyspec-php-serialization",
  "polyspec-session-store",
@@ -1179,7 +1180,7 @@ dependencies = [
 [[package]]
 name = "polyspec-json"
 version = "0.0.25"
-source = "git+https://github.com/polyspec/json.git?branch=v1%2Frust-core#e8ab5e710e9ac7660e5e52dc7ae3d178ca2ba679"
+source = "git+https://github.com/polyspec/json.git?branch=v1%2Frust-core#73d2db96507dd1b3efd4e5119c6751176a070279"
 dependencies = [
  "polyspec-binding-core",
  "ryu-js",
@@ -1190,7 +1191,7 @@ dependencies = [
 [[package]]
 name = "polyspec-php-serialization"
 version = "0.0.6"
-source = "git+https://github.com/polyspec/php-serialization.git?branch=v1%2Frust-core#55e54e313b4c433bc83ce9b8b7bee73cca867761"
+source = "git+https://github.com/polyspec/php-serialization.git?branch=v1%2Frust-core#e8cd69fb6be74d160b772cc078968a04605220f7"
 dependencies = [
  "polyspec-binding-core",
  "ryu",
@@ -1199,7 +1200,7 @@ dependencies = [
 [[package]]
 name = "polyspec-session-store"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#ce680ac92d6064d5da1da126044e72360de0ab85"
+source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#53c2c7d4f6e57db78d0ba5bc9052195df40c4062"
 dependencies = [
  "polyspec-php-serialization",
  "polyspec-session-store-core",
@@ -1209,7 +1210,7 @@ dependencies = [
 [[package]]
 name = "polyspec-session-store-core"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#ce680ac92d6064d5da1da126044e72360de0ab85"
+source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#53c2c7d4f6e57db78d0ba5bc9052195df40c4062"
 dependencies = [
  "getrandom 0.3.4",
  "polyspec-binding-core",
@@ -1219,7 +1220,7 @@ dependencies = [
 [[package]]
 name = "polyspec-session-store-file"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#ce680ac92d6064d5da1da126044e72360de0ab85"
+source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#53c2c7d4f6e57db78d0ba5bc9052195df40c4062"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-php-serialization",
@@ -1230,7 +1231,7 @@ dependencies = [
 [[package]]
 name = "polyspec-template"
 version = "0.0.27"
-source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#e5457f44d768a939eafad520c45d0de1973952ca"
+source = "git+https://github.com/polyspec/template.git?branch=v1%2Frust-core#a66b0581fc91dfcfd03fa2e1389932f5fcededd3"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-json",

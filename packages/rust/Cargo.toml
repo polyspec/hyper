@@ -41,6 +41,9 @@ polyspec-php-serialization = { git = "https://github.com/polyspec/php-serializat
 sha2 = "0.10"
 
 [dev-dependencies]
+# The tests arm the fault injection points of the core itself, which the macro point! of binding_core turns on only by the
+# feature of this crate, so the crate is its own development dependency with that feature and cargo test needs no flag.
+polyspec-hyper = { path = ".", features = ["fault-test"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 # tests/contracts.rs arms the fault injection points of the cases that name them, those of hyper, of
 # http-negotiation, of session-store and of template, as a generated binding test does (binding design G-5).
