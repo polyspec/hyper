@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7ea951addb3cfce1b90127ef0fedabb88623c99516a57521ddbf53850d45596c -->
+<!-- source-sha256: bed61f92adeadccfe3d831406a2f727cbaab291247a670790484ce24021be671 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- core의 `Pages::register`(`packages/rust/src/steps.rs`)의 둘째 매개변수 이름은 `packages/rust/interface.json`의 `pages.register` 매개변수 이름인 `host_function`이다. 전에는 `function`이었다. `make core-test`는 62개가 통과하고, `make core-lint`와 `make core-fmt-check`가 통과한다.
 - `packages/rust/interface.json`의 `errors.kinds`에서 http-negotiation, http-cookie, session-store의 22행은 경로 `<outer>/<inner>`를 적는다. 라이브러리의 오류를 담는 `polyspec_hyper::Error`의 variant `Negotiate`, `Cookies`, `Sessions`와 그 오류의 variant이다. `rules.session_cookie`는 `raises`에 `Cookies`의 경로를 적고, `opening_functions.open_page`와 `opening_functions.answer_keep_request`는 variant `Sessions` 하나 대신 `Sessions`의 13개 경로를 적는다. 각 행이 라이브러리의 variant만 적어 계약 검사가 70행에 CK-10을 보고했으며, 이제 그대로 둔 template의 48행을 보고한다. `Error::Template`과 `Error::DataModel`은 struct `polyspec_template::TemplateError`와 `polyspec_template::BindError`를 담고 그 kind는 field `code`인데, 패턴 `<outer>(<inner> { .. })`은 struct의 field를 가리키지 못하기 때문이다(H31.16).
 - `pages.register`의 둘째 매개변수는 `packages/rust/interface.json`에서 `host_function`이다. 이름 `function`은 JavaScript의 예약어이므로 계약 검사가 target `node`와 `wasm`에 CK-23을 보고했으며, 이제 보고하지 않는다. core의 `Pages::register`의 매개변수는 아직 이름이 `function`이며, 그 이름 변경은 H31.15 행이 가진다.
 - 클래스 단위 `pages`의 매개변수 `pages`는 `packages/rust/interface.json`에서 core가 그것을 빌리는 방식 `core: "&"`를 명시한다. `page_request.new`, `front_functions.route_request`, `front_functions.kept_value`, `opening_functions.open_page`, `opening_functions.answer_keep_request`는 `&Pages`를 받는다. 계약이 빌림을 명시하지 않아 계약 검사가 다섯 매개변수에 CK-67을 보고했으며, 이제 보고하지 않는다.

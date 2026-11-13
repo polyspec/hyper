@@ -161,9 +161,9 @@ impl Pages {
     /// # Errors
     /// `invalid_application` for a name that the template language refuses (HYC-24.5), and `internal` once a page
     /// request holds the application.
-    pub fn register(&mut self, name: &str, function: HostFunction) -> Result<(), Error> {
+    pub fn register(&mut self, name: &str, host_function: HostFunction) -> Result<(), Error> {
         match Arc::get_mut(&mut self.app) {
-            Some(app) => app.templates.register(name, function),
+            Some(app) => app.templates.register(name, host_function),
             None => Err(Error::Internal(
                 "a function is registered after the first page request",
             )),
