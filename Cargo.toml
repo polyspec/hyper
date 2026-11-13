@@ -1,6 +1,8 @@
-# One workspace: the core crate and the binding crates of the three hosts, which the binding scaffold writes into
-# packages/<lang>/native/ (binding design L-2, L-2a). One Cargo.lock at the root pins every dependency of all of
-# them, the commit of polyspec-binding-core included.
+# One workspace: the core crate and the binding crates, which the binding scaffold writes into packages/<lang>/native/
+# of the three hosts and into packages/go/internal/ffi (binding design L-2, L-2a). One Cargo.lock at the root pins every
+# dependency of all of them, the commit of polyspec-binding-core included. The WASM crate is not in the tree: the scaffold
+# writes it to packages/ts/native/wasm with the core at ../../rust, a directory that does not exist, and a member whose
+# path dependency is missing stops Cargo from reading the workspace.
 [workspace]
 resolver = "2"
 members = [
@@ -8,6 +10,7 @@ members = [
   "packages/python/native",
   "packages/ts/native",
   "packages/php/native",
+  "packages/go/internal/ffi",
 ]
 
 # Every warning fails, no unsafe code, no unwrap or expect, no discarded result, and every allow attribute names its

@@ -5,18 +5,21 @@ version = "0.0.0"
 edition = "2021"
 rust-version = "1.99.0"
 publish = false
+build = "build.rs"
 
 [lib]
 name = "polyspec_hyper"
 path = "src/lib.rs"
 crate-type = ["cdylib"]
+test = false
+doctest = false
 
 [features]
 panic-test = []
 
 [dependencies]
 polyspec-hyper = { path = "../../rust" }
-polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core", features = ["construct"] }
+polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core", features = ["construct", "lock"] }
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", branch = "v1/rust-core", default-features = false }
 polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core" }
 ext-php-rs = "=0.16.4"

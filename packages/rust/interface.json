@@ -8,7 +8,9 @@
   "targets": [
     "php",
     "python",
-    "node"
+    "node",
+    "go",
+    "wasm"
   ],
   "packages": {
     "php": {
@@ -32,6 +34,9 @@
         }
       },
       "host": true
+    },
+    "go": {
+      "module": "github.com/polyspec/hyper/packages/go"
     }
   },
   "naming": {
@@ -48,32 +53,38 @@
       "value": {
         "php": "Polyspec\\Hyper\\HyperValueError",
         "python": "HyperValueError",
-        "node": "HyperValueError"
+        "node": "HyperValueError",
+        "wasm": "HyperValueError"
       },
       "type": {
         "php": "Polyspec\\Hyper\\HyperTypeError",
         "python": "HyperTypeError",
-        "node": "HyperTypeError"
+        "node": "HyperTypeError",
+        "wasm": "HyperTypeError"
       },
       "io": {
         "php": "Polyspec\\Hyper\\HyperIoError",
         "python": "HyperIoError",
-        "node": "HyperIoError"
+        "node": "HyperIoError",
+        "wasm": "HyperIoError"
       },
       "store": {
         "php": "Polyspec\\Hyper\\HyperStoreError",
         "python": "HyperStoreError",
-        "node": "HyperStoreError"
+        "node": "HyperStoreError",
+        "wasm": "HyperStoreError"
       },
       "busy": {
         "php": "Polyspec\\Hyper\\HyperBusyError",
         "python": "HyperBusyError",
-        "node": "HyperBusyError"
+        "node": "HyperBusyError",
+        "wasm": "HyperBusyError"
       },
       "internal": {
         "php": "Polyspec\\Hyper\\HyperInternalError",
         "python": "HyperInternalError",
-        "node": "HyperInternalError"
+        "node": "HyperInternalError",
+        "wasm": "HyperInternalError"
       }
     },
     "fixed": [
@@ -1267,8 +1278,9 @@
           "core": "polyspec_hyper::read_paths::template_reads"
         },
         {
-          "id": "rules.data_template",
+          "id": "rules.reserved_data_template",
           "name": [
+            "reserved",
             "data",
             "template"
           ],
@@ -2928,8 +2940,9 @@
           "core": "polyspec_hyper::front::route_request"
         },
         {
-          "id": "front_functions.page_headers",
+          "id": "front_functions.compute_page_headers",
           "name": [
+            "compute",
             "page",
             "headers"
           ],
@@ -3343,8 +3356,9 @@
           "core": "polyspec_hyper::opening::open_page"
         },
         {
-          "id": "opening_functions.keep_request",
+          "id": "opening_functions.answer_keep_request",
           "name": [
+            "answer",
             "keep",
             "request"
           ],

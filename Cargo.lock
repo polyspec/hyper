@@ -1058,9 +1058,10 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 [[package]]
 name = "polyspec-binding-core"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/binding.git?branch=v1%2Frust-core#c369ddfce88f3c9d75b297b9b03311b7539fa546"
+source = "git+https://github.com/polyspec/binding.git?branch=v1%2Frust-core#f63a65502941006eb76d466f19f65ca022a0341f"
 dependencies = [
  "indexmap",
+ "tokio",
  "tokio-util",
 ]
 
@@ -1103,6 +1104,14 @@ dependencies = [
  "polyspec-template",
  "serde_json",
  "sha2 0.10.9",
+]
+
+[[package]]
+name = "polyspec-hyper-go"
+version = "0.0.0"
+dependencies = [
+ "polyspec-binding-core",
+ "polyspec-hyper",
 ]
 
 [[package]]

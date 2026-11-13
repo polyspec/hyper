@@ -348,6 +348,82 @@ core-lint: ## Run clippy on the Rust core and its tests with every warning an er
 	cd $(CORE) && cargo clippy --locked --all-targets -- -D warnings
 core-fmt-check: ## Check the format of the Rust core
 	cd $(CORE) && cargo fmt --check
+
+# The bindings of the Rust core for the five targets of packages/rust/interface.json (binding design L-1, L-2, L-2a).
+# BINDING is the cli of a binding checkout (packages/ts/src/cli.ts), which bindings and bindings-check run; both fail
+# without it. bindings writes the generated folders, which Git ignores (native/generated/ of packages/php,
+# packages/python and packages/ts, packages/ts/native/wasm/generated, packages/go/internal/ffi/generated), and the
+# tracked Go files zz_generated_*.go of packages/go (binding GN-3). bindings-check runs the contract check, which also
+# compares the tracked binding packages with what binding scaffold writes (binding L-2, CK-19).
+.PHONY: bindings bindings-check lint-bindings test-bindings node-package test-wasm test-go
+BINDING ?=
+bindings: ## Write the generated sources of every binding with the binding cli of BINDING (binding L-1)
+	@test -n "$(BINDING)" || { echo "bindings: set BINDING to the cli of binding"; exit 1; }
+	$(NODE) $(BINDING) generate --root $(CURDIR)
+bindings-check: ## Check the interface contract and the tracked binding packages with the binding cli of BINDING (binding CK-19)
+	@test -n "$(BINDING)" || { echo "bindings-check: set BINDING to the cli of binding"; exit 1; }
+	$(NODE) $(BINDING) check $(CURDIR)/packages/rust/interface.json
+
+# The binding crates of the workspace. The WASM crate is not in the tree (Cargo.toml): its lint and its build name the
+# manifest of the place that binding scaffold gives it, and fail while it is missing.
+BINDING_CRATES := polyspec-hyper-php-ext polyspec-hyper-python polyspec-hyper-node polyspec-hyper-go
+WASM_MANIFEST := packages/ts/native/wasm/Cargo.toml
+lint-bindings: bindings ## Run clippy on the binding crates with every warning an error, after make bindings
+	cargo clippy --locked $(foreach crate,$(BINDING_CRATES),-p $(crate)) --all-targets --features panic-test -- -D warnings
+	cargo clippy --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test -- -D warnings
+test-bindings: lint-bindings test-wasm test-go ## Run the tests of the binding crates and the generated tests of WASM and Go
+	cargo test --locked $(foreach crate,$(BINDING_CRATES),-p $(crate))
+
+# The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
+# the WASM crate (binding GN-15, GN-18); test-go and node-package compare both releases before they use them.
+GO ?= go
+GOFMT ?= gofmt
+WASM_BINDGEN ?= wasm-bindgen
+# The file name extension of a library that Cargo builds as a cdylib: dylib on macOS, so on Linux.
+CDYLIB := $(if $(filter Darwin,$(shell uname -s)),dylib,so)
+CARGO_TARGET := $(CURDIR)/target
+BINDINGS_VAR := $(CURDIR)/var/bindings
+WASM_BINDGEN_RELEASE := $(if $(wildcard $(WASM_MANIFEST)),$(shell sed -n 's/^wasm-bindgen = "=\(.*\)"$$/\1/p' $(WASM_MANIFEST)))
+NODE_PLATFORM := $(shell uname -s | tr A-Z a-z)-$(subst x86_64,x64,$(subst aarch64,arm64,$(shell uname -m)))$(if $(filter Linux,$(shell uname -s)),-gnu)
+NODE_ADDON := hyper.$(NODE_PLATFORM).node
+NODE_VERSION := $(shell sed -n 's/^  "version": "\(.*\)",$$/\1/p' $(NODE_PACKAGE)/package.json)
+
+# The npm package and the package of the addon of this platform, packed and installed into var/bindings/node. The
+# package holds the WASM module and its glue, which wasm-bindgen writes into packages/ts/native/wasm/generated before
+# the package is packed (binding GN-18, P-5); the addon is the package of this platform that the package names in
+# optionalDependencies (binding T-2), installed from its tarball without the packages of the other platforms.
+node-package: bindings packages ## Build the WASM module and the Node addon, then pack and install the npm package into var/bindings/node
+	test "$$($(WASM_BINDGEN) --version)" = "wasm-bindgen $(WASM_BINDGEN_RELEASE)"
+	cargo build --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test
+	$(WASM_BINDGEN) --target web --out-dir $(NODE_PACKAGE)/native/wasm/generated --out-name hyper_wasm \
+		$(CARGO_TARGET)/wasm32-unknown-unknown/debug/polyspec_hyper_wasm.wasm
+	cargo build --locked -p polyspec-hyper-node --features panic-test
+	mkdir -p $(BINDINGS_VAR)/node $(BINDINGS_VAR)/node-platform
+	cp $(CARGO_TARGET)/debug/libpolyspec_hyper_node.$(CDYLIB) $(BINDINGS_VAR)/node-platform/$(NODE_ADDON)
+	$(NODE) -e 'require("fs").writeFileSync("$(BINDINGS_VAR)/node-platform/package.json", JSON.stringify({ name: "@polyspec/hyper-$(NODE_PLATFORM)", version: "$(NODE_VERSION)", os: [process.platform], cpu: [process.arch], main: "$(NODE_ADDON)", files: ["$(NODE_ADDON)"] }, null, 2) + "\n")'
+	cd $(BINDINGS_VAR)/node-platform && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node
+	cd $(NODE_PACKAGE) && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node
+	echo '{ "private": true }' > $(BINDINGS_VAR)/node/package.json
+	cd $(BINDINGS_VAR)/node && $(NPM) install --no-audit --no-fund --omit=optional ./polyspec-hyper-$(NODE_VERSION).tgz ./polyspec-hyper-$(NODE_PLATFORM)-$(NODE_VERSION).tgz
+
+# The generated tests of the WASM binding through the subpath ./wasm of the installed package (binding P-5);
+# --expose-gc serves the generated tests that collect instances (binding GN-18a).
+test-wasm: node-package ## Run the generated tests of the WASM binding on node --test against the installed package
+	cp $(NODE_PACKAGE)/native/wasm/generated/tests/generated.test.mjs $(BINDINGS_VAR)/node/generated.wasm.test.mjs
+	cd $(BINDINGS_VAR)/node && $(NODE) --expose-gc --test generated.wasm.test.mjs
+
+# The static library with the test features (binding GN-13b), which Go links through CGO_LDFLAGS; gofmt and go vet,
+# then the generated tests on go test. GOTOOLCHAIN=local: a go of another release than the go directive fails instead
+# of fetching that release.
+GO_RELEASE := $(shell sed -n 's/^go \(.*\)$$/\1/p' packages/go/go.mod)
+GO_ENV := GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET)/debug GOFLAGS=-tags=polyspec_panic_test,polyspec_codec_test
+test-go: bindings ## Build the static library of the Go binding, run gofmt and go vet, then the generated tests on go test
+	test "$$($(GO_ENV) $(GO) env GOVERSION)" = "go$(GO_RELEASE)"
+	cargo build --locked -p polyspec-hyper-go --features panic-test,codec-test
+	test -z "$$(cd packages/go && $(GOFMT) -l .)"
+	cd packages/go && $(GO_ENV) $(GO) vet ./...
+	cd packages/go && $(GO_ENV) $(GO) test -count=1 -v ./...
+
 .PHONY: spec-docs spec-docs-check
 spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/protocol.json (H2)
 	$(NODE) scripts/spec-docs.mts write
