@@ -4,7 +4,7 @@
 // a failure, because performance is measured and reported (AGENTS): a line `WARNING <name> ...`, and on GitHub Actions
 // an annotation `::warning::`, which the CI summary lists (make ci-summary of @polyspec/kit). A missing input fails.
 //
-// Usage: node scripts/check-bundle-size.mts --app examples/board --output examples/board/build --limits config/bundle-size.json
+// Usage: node scripts/check-bundle-size.mts --app examples/board --output examples/board/build/client --limits config/bundle-size.json
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';

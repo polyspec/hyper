@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: e6ba27fba6d267d06a8ff71fa63e5dabdcefdd6a662e0f0a48b5debbb31590cf -->
+<!-- source-sha256: 2700741daf53b7305762783396aa8a62a45703d60524e03c8898db7fa47b6025 -->
 # 개발
 
 [English](development.md).
@@ -30,21 +30,20 @@
 | `make ext` | `make hyper-install`의 `make template-ext`가 template release의 Composer repository(`packages.json`)에서 PIE로 build한 네이티브 template 확장 `build/ext/polyspec_template.so`가 없으면 실패한다. offline으로 실행하며 아무것도 build하지 않는다(HY-48, H27.45) |
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) 테스트는 `NPM_BIN`으로 고정된 npm을 받으며 `tests/package-install/var/`에는 ignore된 기본 링크 상태를 저장한다. |
-| `make server` | 설치된 소스 패키지로 게시판 서버 프로그램을 `examples/board/build/server`에 빌드한다. 의존성을 설치하거나 링크를 다시 연결하지 않는다(아래 참조) |
-| `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 빌드한다 |
+| `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 그 `build.json`의 고정 build id로 빌드한다([빌드](#빌드) 참조) |
 | `make node-fixtures` | `scripts/build-templates.mts`와 설치한 template package로 Node 서버 test에 쓸 PHP test fixture의 템플릿 파일을 빌드한다(HR-70) |
 | `make node-server` | board Node 서버를 타입 검사하고 `examples/board/build/node/server.mjs`로 bundle한다(아래 참조) |
-| `make assets` | 게시판 클라이언트 번들과 CSR 셸을 빌드한다(아래 참조) |
+| `make board` | 설치된 소스 패키지로, 의존성을 설치하거나 링크를 다시 연결하지 않고 `hyper build` 한 번으로 board를 빌드한다: `public/assets`, CSR 셸을 담은 `examples/board/build/client`, 생성된 PHP 프로그램을 담은 `examples/board/build/program`([빌드](#빌드) 참조) |
 | `make test-js` | 라우터 적합성 사례를 포함한 브라우저 코드 테스트와 타입 검사를 실행한다 |
 | `make hyper-test-node` | Node 서버 test를 실행한다. 같은 fixture로 PHP 서버 test의 사례, `contracts/json.json`의 JSON 사례, session, HTTP 서버, 타입 검사를 실행한다 |
 | `make test-php` | 라우터 적합성 사례를 포함한 서버 패키지 테스트를 generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
 | `make lint` | PHP 형식을 검사한다 |
 | `make analyse-php` | `packages/php/phpstan-max.neon`으로 `packages/php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 cache를 `build/phpstan`에 쓴다. 메모리 제한은 `--memory-limit=256M`이다. 먼저 `make ext`를 실행한다 |
-| `make templates-check` | 레이아웃 템플릿만 `hx-` 속성을 가지는지(HC-6), 레이아웃이 `{# title}`과 `{# data}`를 한 번씩 배치하는지, 레이아웃과 각 라우트 템플릿의 모든 영역이 블록 인자 없이 `id`가 영역 이름인 요소 바로 안에 한 번씩 배치되는지(HY-3, HY-30) 검사한다 |
+| `make templates-check` | board에 `hyper check`를 실행한다: 매니페스트(HY-2), 레이아웃 템플릿만 `hx-` 속성을 가지는지(HC-6), 레이아웃이 `{# title}`과 `{# data}`를 한 번씩 배치하는지, 레이아웃과 각 라우트 템플릿의 모든 영역이 블록 인자 없이 `id`가 영역 이름인 요소 바로 안에 한 번씩 배치되는지(HY-3, HY-30) 검사한다 |
 | `make typecheck` | `node_modules`의 tsc와 root `tsconfig.json`(strict, `erasableSyntaxOnly`)으로 `scripts/`, `tests/`, `benchmarks/`의 TypeScript type을 검사한다. Node는 이 `.mts` 파일을 type stripping으로 실행하며 검사하지 않는다(S9). `scripts/check-parity.mts`가 `@polyspec/hyper-client`의 build가 쓰는 type을 import하므로 먼저 `make packages`를 실행한다 |
 | `make lint-ts` | kit의 oxlint(`.oxlintrc.json`, type-aware)로 TypeScript를 검사하고, knip(`knip.json`)으로 쓰이지 않는 파일, 의존성, export를 검사한다. `make check`와 CI 항목 `gates`의 target이다(H23.13) |
 | `make hyper-test-scripts` | 검사 스크립트의 테스트를 실행한다. 예: 잘못된 픽스처 애플리케이션으로 영역 배치 검사를 시험한다 |
-| `make virtiofs-check` | 출력이 virtiofs bind mount에 있는 Apple `container`에서 server build와 출력 복사를 실행한다(HR-68). Darwin에서만 `make check`의 target이며(`DARWIN_TARGETS`), `container`가 없으면 실패한다. Darwin에서만 실행하는 이유는, 시험하는 virtiofs bind mount가 Apple `container`에만 있고 CI의 Linux target 중 이 증상을 검사하는 것이 없기 때문이다. 원인은 모든 platform에서 `tests/scripts/output-files.test.mts`가 시험한다 |
+| `make virtiofs-check` | 출력이 virtiofs bind mount에 있는 Apple `container`에서 `hyper build`의 프로그램 조립과 출력 복사를 실행한다(HR-68). Darwin에서만 `make check`의 target이며(`DARWIN_TARGETS`), `container`가 없으면 실패한다. Darwin에서만 실행하는 이유는, 시험하는 virtiofs bind mount가 Apple `container`에만 있고 CI의 Linux target 중 이 증상을 검사하는 것이 없기 때문이다. 원인은 모든 platform에서 `tests/scripts/output-files.test.mts`가 시험한다 |
 | `make parity` | PHP 문서와, 문서 JSON과 영역 JSON의 브라우저 렌더 결과를 비교한다. generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
 | `make server-parity` | parity 단계를 PHP 서버와 board Node 서버에 실행해 모든 응답의 상태, header, body를 비교하고, `make parity`의 브라우저 비교도 수행한다(HR-55) |
 | `make bundle-size` | SSR 스크립트, CSR 셸, static 배포의 chunk 파일 합계, 가장 큰 템플릿의 크기를 `config/bundle-size.json`의 gzip 상한과 함께 출력한다. 상한을 넘는 크기는 `WARNING` 줄을, GitHub에서는 annotation `::warning::`과 CI 요약의 warning도 내고, target은 통과한다 |
@@ -148,7 +147,7 @@ Composer에서는 두 release의 Composer repository, 곧 각 release가 archive
 }
 ```
 
-T.T.T는 그 릴리스의 `packages/client/package.json`이 요구하는 `@polyspec/template`의 버전이다. 애플리케이션을 빌드하는 consumer는 `@polyspec/hyper-cli`를 설치하고 그 bin을 `node_modules/.bin`에서 실행한다(HR-96, 아래 서버 빌드와 에셋 빌드).
+T.T.T는 그 릴리스의 `packages/client/package.json`이 요구하는 `@polyspec/template`의 버전이다. 애플리케이션을 빌드하는 consumer는 `@polyspec/hyper-cli`를 devDependency로 설치하고 `hyper build`를 `package.json` script나 `npm exec --package=@polyspec/hyper-cli -- hyper build`로 실행한다(HR-96, [빌드](#빌드)). 설치 없는 `npx hyper`는 npm의 무관한 공개 package `hyper`를 실행한다.
 
 ## CI
 
@@ -196,15 +195,22 @@ workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실�
 
 `make e2e`도 같은 방식으로 `scripts/run-e2e.mts`를 실행한다. 이 script는 board 예제를 두 rendering 방식(API origin, edge, SSR origin)으로 실행 디렉터리의 빈 database 위에 띄우고, `tests/e2e/origins.ts`가 요구하는 `HYPER_E2E_SSR`과 `HYPER_E2E_CSR`에 주소를 담아 `--` 뒤의 명령을 실행한다. `make e2e`는 공유 test runner의 Playwright 실행을 넘기며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다(H27.26). `make e2e CASES=stylesheet`는 제목이 맞는 사례를 실행하고, 선택 없는 실행은 CI에서만 한다. Playwright는 서버를 직접 띄우지 않는다. `make bench-browser`도 같은 방식으로 서버와 데이터베이스를 띄운다.
 
-## 서버 빌드
+## 빌드
 
-build 패키지 `@polyspec/hyper-cli`의 bin `hyper-build-server --manifest <app.json> --templates <directory> --output <directory> --php-namespace <namespace> --build <build.json>`는 서버 프로그램을 만든다(HY-48, HR-96). `make server`는 checkout에서 `node packages/cli/bin/hyper-build-server.mjs`로 실행한다.
+명령 도구 `@polyspec/hyper-cli`의 `hyper build`(HR-96)는 애플리케이션 디렉터리 하나를 한 번의 실행으로 build한다. `make board`는 그것을 checkout에서 board의 `--static` 파일 넷과 함께 `node packages/cli/bin/hyper.mjs build --app examples/board --output examples/board/build --api /api --php-namespace 'Polyspec\Hyper\Examples\Board\Program'`로 실행한다. build는 무엇이든 쓰기 전에 모든 option, 매니페스트, 템플릿 규칙을 검사하고, 명령 도구가 요구하는 template package를 읽는다(HR-70). HR-34의 출력을 쓴다.
 
-1. `templates/`: 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`. 네이티브 확장이 이 파일을 읽는다.
-2. `php/`: 같은 템플릿을 `@polyspec/hyper-cli`가 요구하는 compiler package `@polyspec/template-compiler`로(HR-70), 주어진 PHP 네임스페이스(게시판은 `Polyspec\Hyper\Examples\Board\Program`)에 클래스마다 파일 하나인 PSR-4 파일로 컴파일한 generated PHP 프로그램. `program.json`은 그 네임스페이스를 기록하며, 렌더러가 이 파일을 읽는다. `build.json`은 `--build` 파일의 사본으로, asset 출력의 build id이다(HY-125). 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 이 디렉터리에 연결한다. `examples/board/composer.json`은 `Polyspec\Hyper\Examples\Board\Program\`을 `build/server/php/`에, root `composer.json`은 테스트 fixture의 네임스페이스를 `packages/php/tests/build/server/php/`에 연결하며, 렌더러는 클래스 `GeneratedProgram`을 Composer의 autoload로 불러온다. 서버가 각 영역을 단독으로 렌더하므로, 모든 템플릿은 대상으로 렌더되고 모든 정의는 HTML이다.
-3. `reads.json`: `@polyspec/hyper-client`의 `routeReads`로 계산한 모든 라우트의 read path(HY-73).
+1. `public/assets/` 아래, 이름에 내용의 해시가 들어간 파일. 더하기만 하고 지우지 않는다: `templates/`에 `templates/` 아래 템플릿마다 AST 파일 하나와 예약 템플릿 `hyper/data.tpl`의 파일 하나, 클라이언트 진입 파일 `hyper-<hash>.js`와 진입 파일이 `import()`로만 불러오는 코드마다 조각 파일 `hyper-chunk-<hash>.js` 하나(HYC-16), 그리고 `--asset <name>=<path>`와 `--tailwind <source>=<name>`의 각 에셋(HR-77). 진입 파일에는 htmx, hyper 브라우저 코드, template 렌더 런타임, `app/app.json`, 템플릿 색인이 들어 있고 템플릿은 없다.
+2. `<output>/client/manifest.json`: 레이아웃 코드가 읽는, `hyper`로 진입 파일의 URL과 이름마다 각 에셋의 URL(HYC-16.12). `<output>/client/assets.json`: 쓰이는 어떤 build도 적지 않은 파일을 지우기 위한, 이 build가 쓴 모든 경로 `public/assets/...`(HR-34). Node 서버가 읽는 `<output>/client/templates.index.json`과 `<output>/client/build.json`(HY-48.11).
+3. `client/main.ts`가 있고 `--api`가 주어지면 `<output>/client/csr/`: CSR 배포물. `index.html`은 `<meta name="hyper-api">`, `<meta name="hyper-build">`, 진입 파일의 URL을 담은 `<meta name="hyper-entry">`, 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HYC-15, HYC-16). `assets/`는 이 build의 파일 사본과 `--static`이 밝히는 `public/` 아래 파일을 그 경로에 담는다. 애플리케이션은 렌더한 레이아웃이 link하는 스타일시트를 밝히며, `make board`는 board 예제의 `public/assets/app.css`, `public/assets/reader.css`와 module script `public/assets/reader.js`, `public/assets/after-reader.js`를 밝힌다. 진입 파일에 `</script`가 들어 있으면 build는 실패하고, 인라인한 진입 파일의 해시를 담은 Content Security Policy를 출력한다.
+4. `<output>/program/`: 네이티브 확장과 Python 서버가 읽는, 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`을 담은 `templates/`. `@polyspec/hyper-client`의 `routeReads`로 계산한 모든 라우트의 read path인 `reads.json`(HY-73). `build.json`. 그리고 `--php-namespace`가 있으면, compiler package `@polyspec/template-compiler`로(HR-70) 그 namespace에 class마다 파일 하나인 PSR-4 파일로 compile한 생성된 PHP 프로그램 `php/`와 namespace를 기록하는 `program.json`. 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 namespace를 이 디렉터리에 대응시키며, `examples/board/composer.json`은 `Polyspec\Hyper\Examples\Board\Program\`을 `build/program/php/`에 대응시키고, renderer는 Composer의 autoload로 class `GeneratedProgram`을 불러온다. 서버는 각 영역을 따로 렌더하므로 모든 템플릿은 target으로 렌더하고 모든 정의는 HTML이다.
 
-PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `php/`의 generated 프로그램으로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부만으로 엔진을 바꿀 수 있다.
+Tailwind CSS는 `@polyspec/hyper-cli`의 의존성이므로, npm 12.2.0으로 기본값 `allow-remote=none`에서 lock을 쓰는 애플리케이션은 [Tag 릴리스](#tag-릴리스)의 npm 결함을 만난다. npm 릴리스가 수정을 담을 때까지 npm은 `@tailwindcss/oxide-wasm32-wasi`의 tarball을 `EALLOWREMOTE`로 거부한다([npm/cli#9818](https://github.com/npm/cli/pull/9818)).
+
+build id는 HY-125.15~HY-125.17의 파일로 한 번 계산하고 두 `build.json`과 셸에 쓴다. build는 build id를 받지 않는다(HY-125.21). 출력은 실행의 staging 디렉터리에서 만들고 `public/assets`, `client/`, `program/` 순서로 각 `build.json`을 마지막에 게시한다(HR-82). `--output` 아래에서 build는 `client/`와 `program/`만 소유한다. 출력은 커밋하지 않는다.
+
+고정 build id가 필요한 test fixture는 같은 조립으로 만든다: `make server-fixtures`는 `scripts/fixture-program.mts`를 실행하고, 그것은 `packages/php/tests/fixtures/build.json`의 id로 `packages/cli/lib/program.mjs`의 `writeProgram`과 `writeBuildFile`을 불러 root `composer.json`이 test fixture의 namespace에 대응시키는 `packages/php/tests/build/server`에 프로그램을 쓴다. `make contract-programs`도 같은 방법으로 계약 애플리케이션을 만든다.
+
+PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `php/`의 생성된 프로그램으로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부로 바꿀 수 있다.
 
 ## Node 서버
 
@@ -215,27 +221,7 @@ make node-server
 BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/sessions BOARD_PORT=8084 node examples/board/build/node/server.mjs
 ```
 
-`BOARD_PORT=0`이면 system이 port를 배정하고, 서버는 listen하는 port를 담아 `board on http://127.0.0.1:<port>`를 출력한다. `BOARD_SESSIONS`는 절대 경로의 session 디렉터리이고, `BOARD_BASE_PATH`, `BOARD_HTTPS`, `BOARD_FRAME_ANCESTORS`는 PHP에서와 같은 뜻이다. 두 서버의 `BOARD_TIME`은 새 게시글의 생성 시각을 Unix 초로 고정하므로, `make server-parity`는 같은 게시글을 비교한다. Node 서버는 `make assets`의 템플릿 파일로 렌더한다(HY-54).
-
-## 에셋 빌드
-
-`@polyspec/hyper-cli`의 bin `hyper-build-assets --app <디렉터리> --api <기본 경로> --output <디렉터리>`는 build 패키지가 요구하는 template package `@polyspec/template`으로 다음을 쓴다(HR-70, HR-96). `make assets`는 checkout에서 `node packages/cli/bin/hyper-build-assets.mjs`로 실행한다. `public/assets/` 아래에는 이름에 내용의 해시가 들어간 파일을 더하기만 하고 지우지 않으며, 해시가 없는 출력은 `--output`의 디렉터리에 둔다(HR-34). `make assets`는 `examples/board/build`를 넘긴다.
-
-1. `public/assets/templates/<name>.<hash>.json`: `templates/` 아래 템플릿마다 AST 파일 하나, 그리고 예약 템플릿 `hyper/data.tpl`의 파일 하나(HR-34).
-2. `<output>/templates.index.json`: 각 템플릿 이름과 그 파일 URL(HR-34). 클라이언트는 이를 `@polyspec/hyper-client/templates-index`로 import한다.
-3. `public/assets/hyper-<hash>.js`, `public/assets/hyper-chunk-<hash>.js`, `<output>/manifest.json`(HYC-16).
-   - 클라이언트 진입 파일. htmx, hyper 브라우저 코드, template 렌더 런타임, `app/app.json`, 색인이 들어 있고 템플릿은 없다.
-   - 진입 파일이 `import()`로만 불러오는 코드마다 조각 파일 하나. 브라우저는 그 코드가 처음 실행될 때 조각을 불러온다.
-   - 진입 파일의 URL을 `hyper`로 담은 매니페스트. 서버가 레이아웃에 넘긴다.
-   - 빌드는 애플리케이션이 이름을 정하는 파일을 쓰지 않는다. 애플리케이션은 자기 스타일시트를 직접 두고 링크한다.
-4. `--tailwind <source>=<output>`이 있으면 output stylesheet. source를 Tailwind CSS의 theme과, `templates/`와 `client/` 아래 file이 쓰는 utility class로 compile하고, source의 rule은 layer `components`에 두며 layer `base`의 rule은 두지 않는다(HR-77). Tailwind CSS는 `@polyspec/hyper-cli`의 의존성이므로, npm 12.2.0으로 기본값 `allow-remote=none`에서 lock을 쓰는 애플리케이션은 Tag 릴리스 절의 npm 결함을 만난다. npm 릴리스가 수정을 담을 때까지 npm은 `@tailwindcss/oxide-wasm32-wasi`의 tarball을 `EALLOWREMOTE`로 거부한다([npm/cli#9818](https://github.com/npm/cli/pull/9818)).
-5. `<output>/csr/`: CSR 배포물.
-   - `index.html`은 `<meta name="hyper-api">`, 진입 파일의 URL을 담은 `<meta name="hyper-entry">`, 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HYC-15, HYC-16).
-   - `assets/templates/`는 이 build의 템플릿 파일을 담는다.
-   - `assets/`는 이 build의 조각 파일을 담는다. 배포물은 `--static`이 밝히는 `public/` 아래 파일을 같은 경로에 담는다. 애플리케이션은 렌더한 layout이 link하는 스타일시트를 밝히며, `make assets`는 board 예제의 `public/assets/app.css`, `public/assets/reader.css`, module script `public/assets/reader.js`와 `public/assets/after-reader.js`를 밝힌다. 배포물은 파일 단위로, `index.html`을 마지막으로 publish한다(HR-82).
-   - 진입 파일에 `</script`가 들어 있으면 빌드는 실패한다. 빌드는 인라인한 진입 파일의 해시를 담은 Content Security Policy를 출력한다.
-
-빌드는 이전 결과를 교체하므로, 반복해서 빌드해도 결과마다 파일이 하나만 남는다. 빌드 결과는 커밋하지 않는다.
+`BOARD_PORT=0`이면 system이 port를 배정하고, 서버는 listen하는 port를 담아 `board on http://127.0.0.1:<port>`를 출력한다. `BOARD_SESSIONS`는 절대 경로의 session 디렉터리이고, `BOARD_BASE_PATH`, `BOARD_HTTPS`, `BOARD_FRAME_ANCESTORS`는 PHP에서와 같은 뜻이다. 두 서버의 `BOARD_TIME`은 새 게시글의 생성 시각을 Unix 초로 고정하므로, `make server-parity`는 같은 게시글을 비교한다. Node 서버는 `make board`의 템플릿 파일로 렌더한다(HY-54).
 
 ## PHP, Node.js, 브라우저가 같게 동작한다는 증거
 
@@ -255,7 +241,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 | 출력 | 원본 바이트 | gzip 바이트 | brotli 바이트 | gzip 상한 |
 |---|---:|---:|---:|---:|
 | SSR 스크립트 `hyper-<hash>.js` | 108,828 | 35,488 | 31,568 | 35,900 |
-| CSR 셸 `build/csr/index.html` | 109,067 | 35,623 | 31,649 | 36,000 |
+| CSR 셸 `build/client/csr/index.html` | 109,067 | 35,623 | 31,649 | 36,000 |
 | chunk `hyper-chunk-<hash>.js`(template decoder), 각각 따로 압축 | 86,654 | 7,610 | 5,894 | 7,700 |
 | 가장 큰 템플릿 파일(`board/rows.tpl`) | 5,583 | 1,337 | 1,084 | 4,096 |
 | 템플릿 파일 11개 합계 | | 5,898 | | |

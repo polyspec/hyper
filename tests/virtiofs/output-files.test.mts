@@ -57,26 +57,27 @@ function files(directory: string, prefix = ''): string[] {
   }).sort();
 }
 
-test('the server build writes the templates on a virtiofs bind mount', { timeout: 120000 }, (t) => {
+test('the program of hyper build writes the templates on a virtiofs bind mount', { timeout: 120000 }, (t) => {
   const templates = join(root, 'examples', 'board', 'templates');
-  const result = run(t, [
-    join(root, 'packages', 'cli', 'bin', 'hyper-build-server.mjs'),
-    '--manifest', join(root, 'examples', 'board', 'app', 'app.json'),
-    '--templates', templates,
-    '--output', '/output/server',
-    '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
-    '--build', join(root, 'packages', 'php', 'tests', 'fixtures', 'build.json'),
-  ]);
+  const manifest = join(root, 'examples', 'board', 'app', 'app.json');
+  // The assembly of the program of hyper build (packages/cli/lib/program.mjs), into the bind mount.
+  const script = [
+    `import { readFileSync } from 'node:fs';`,
+    `import { writeBuildFile, writeProgram } from ${JSON.stringify(join(root, 'packages', 'cli', 'lib', 'program.mjs'))};`,
+    `writeProgram({ manifest: JSON.parse(readFileSync(${JSON.stringify(manifest)}, 'utf8')), templates: ${JSON.stringify(templates)}, directory: '/output/program', phpNamespace: 'Polyspec\\\\Hyper\\\\Examples\\\\Board\\\\Program' });`,
+    `writeBuildFile('/output/program', '${'1'.repeat(64)}');`,
+  ].join('\n');
+  const result = run(t, ['--input-type=module', '--eval', script]);
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
   const { output } = result;
-  const copied = join(output, 'server', 'templates');
+  const copied = join(output, 'program', 'templates');
   for (const name of files(templates)) {
     assert.deepEqual(readFileSync(join(copied, name)), readFileSync(join(templates, name)), name);
     assert.equal(statSync(join(copied, name)).mode & 0o777, 0o644, name);
   }
   assert.ok(files(copied).includes('hyper/data.tpl'));
   // HY-73: the read paths of every route, computed without a bundler in the container.
-  const readsFile = join(output, 'server', 'reads.json');
+  const readsFile = join(output, 'program', 'reads.json');
   const reads = jsonObject(parseJsonObject(readFileSync(readsFile, 'utf8'), readsFile).routes, `${readsFile} routes`);
   const manifestFile = join(root, 'examples', 'board', 'app', 'app.json');
   const routes = jsonObjects(parseJsonObject(readFileSync(manifestFile, 'utf8'), manifestFile).routes, `${manifestFile} routes`);

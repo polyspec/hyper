@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-node-readme -->
-<!-- source-sha256: 990788e141872a14c5898a0768877f20b2737acd4227de7a443c73cf31d9b2b9 -->
+<!-- source-sha256: 36fe7d9cdec0f2560efa6d8eacd4d3bd35fac0634cc028d60f3c636bad515ced -->
 # @polyspec/hyper
 
 [English](README.md).
@@ -19,7 +19,8 @@ interface Services {
 
 const app = await App.open<Services>({
   manifest: '/srv/board/app/app.json',
-  templates: { index: '/srv/board/build/templates.index.json', root: '/srv/board/public' },
+  build: '/srv/board/build/client/build.json',
+  templates: { index: '/srv/board/build/client/templates.index.json', root: '/srv/board/public' },
   handlers: {
     shared: () => ({ site: 'Board' }),
     regions: { left: ({ request, services }) => ({ path: request.path(), count: services.get('posts').count() }) },

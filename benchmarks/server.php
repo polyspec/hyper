@@ -40,12 +40,12 @@ for ($index = 1; $index <= 30; $index++) {
 
 $application = App::open(
     manifest: "{$app}/app/app.json",
-    program: "{$app}/build/server",
+    program: "{$app}/build/program",
     handlers: require "{$app}/app/handlers.php",
     timezone: '+09:00',
 );
 $application->bind(Posts::class, fn (): Posts => $posts);
-$application->bind(Assets::class, fn (): Assets => Assets::fromManifest("{$app}/build/manifest.json"));
+$application->bind(Assets::class, fn (): Assets => Assets::fromManifest("{$app}/build/client/manifest.json"));
 $session = new ArraySession();
 $application->handle(new Request('GET', '/board'), $session);
 $token = (string) $session->get('_hyper_csrf');
@@ -121,9 +121,9 @@ foreach ($requests as $label => [$expected, $request]) {
     );
 }
 
-$renderer = Renderer::open("{$app}/build/server", '+09:00');
+$renderer = Renderer::open("{$app}/build/program", '+09:00');
 // The build id of the program, which every JSON value holds (HY-128).
-$build = Build::read("{$app}/build/server/build.json");
+$build = Build::read("{$app}/build/program/build.json");
 $shared = ['title' => '게시판', 'csrf' => $token];
 echo "\n## Scaling with rows (board/rows.tpl)\n\n";
 echo "| Rows | render ms | Bind::value ms | json_encode ms | HTML bytes | JSON bytes |\n";

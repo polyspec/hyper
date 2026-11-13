@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d669993d1f53c3ec2becda0f4b2a04f8132b745089dc01559480767ba8843b38 -->
+<!-- source-sha256: d949c3191545733af6bca96a9ed8eb6d9fc22624f6eb4704237f1a25a8380a6b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `@polyspec/hyper-cli`는 bin `hyper-build-server`와 bin `hyper-build-assets`를 선언하지 않으며, 모든 호출자는 `hyper build`나 `hyper check`를 실행한다. `make board`는 `hyper build --app examples/board --output examples/board/build --api /api --php-namespace ...`와 네 `--static` 파일로 board를 한 번에 빌드하며, 이전에는 `make server`와 `make assets`가 두 bin을 실행했다. 서버, benchmark, parity·bundle-size·session 검사는 `build/server/`, `build/csr/`, 파일 `build/manifest.json`, `build/templates.index.json`, `build/build.json` 대신 `examples/board/build/client/`와 `examples/board/build/program/`을 읽는다. `tests/scripts/package-source.test.mts`는 설치된 package의 `hyper build`를 다른 작업 디렉터리에서 실행한다. 개발 문서와 배포 문서는 하나의 빌드와 배포가 출력을 공개하는 순서를 설명한다.
 - `make templates-check`는 `hyper check --app examples/board`를 실행하며, 그것은 매니페스트(HY-2)와 템플릿 규칙(HY-48.3)을 검사하고 출력을 읽지도 파일을 쓰지도 않는다. 템플릿 규칙만 검사하던 script `scripts/check-templates.mts`는 없앤다. `tests/scripts/check-templates.test.mts`가 `hyper check`를 실행한다.
 - PHP test fixture의 서버 프로그램과 계약 애플리케이션의 프로그램은 명령 도구의 조립, `packages/cli/lib/program.mjs`의 `writeProgram`과 `writeBuildFile`이 fixture나 계약의 고정 build id를 인자로 받아 쓴다(HY-125.21). `make server-fixtures`는 `scripts/fixture-program.mts --id-file packages/php/tests/fixtures/build.json`을 실행하고, `scripts/contract-programs.mts`는 템플릿 규칙(HY-48.3) 뒤에 조립을 부른다. 전에는 둘 다 서버 build를 `--build`로 실행했다. test의 셸은 `packages/cli/lib/shell.mjs`의 `shellText`로 id를 받는다. 프로그램은 `graph/`와 `types.json`을 담지 않는다. `tests/scripts/fixture-program.test.mts`가 script를 검사한다.
 - `hyper build`의 한 번의 실행은 HR-34의 출력을 쓴다: `public/assets` 아래 파일, `manifest.json`, `assets.json`(이 build의 모든 경로 `public/assets/...`를 바이트 순서로), `templates.index.json`, `build.json`, 셸 `csr/`를 담은 `client/`, 그리고 `templates/`, `reads.json`, `build.json`과 `--php-namespace`가 있으면 `program.json`, `php/`를 담은 `program/`이다. build id는 HY-125.15~HY-125.17의 파일로 한 번 계산하므로 서버 출력만 바꾼 build도 새 id를 가지며, 그것을 두 `build.json`과 셸에 쓰고, `public/assets`, `client/`, `program/` 순서로 각 `build.json`을 마지막에 게시한다. build는 `--output`의 `client/`와 `program/`만 소유하고, PHP compile의 중간 파일 `graph/`와 `types.json`은 임시 디렉터리에 둔다. build가 core에서 받을 때까지 `program/templates/`는 `hyper/data.tpl`을 담는다. `tests/scripts/build.test.mts`가 출력을 검사한다.

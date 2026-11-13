@@ -39,11 +39,11 @@ def _services() -> Services:
     if fixed != "" and re.fullmatch(r"[0-9]{1,15}", fixed) is None:
         raise RuntimeError("BOARD_TIME must be Unix seconds")
     now = (lambda: int(fixed)) if fixed != "" else (lambda: int(time.time()))
-    manifest = BOARD / "build" / "manifest.json"
+    manifest = BOARD / "build" / "client" / "manifest.json"
     urls = json.loads(manifest.read_text(encoding="utf-8"))
     if not isinstance(urls.get("hyper"), str):
         raise RuntimeError(
-            f"the asset manifest {manifest} has no hyper URL; run make assets"
+            f"the asset manifest {manifest} has no hyper URL; run make board"
         )
     return Services(Posts(database, now), urls["hyper"])
 
@@ -93,8 +93,8 @@ def session_store() -> FileSessions | RedisSessions:
 
 application = App.open(
     manifest=str(BOARD / "app" / "app.json"),
-    # `make server` builds the program, whose templates directory and reads.json the Python server reads (HY-48).
-    program=str(BOARD / "build" / "server"),
+    # `make board` builds the program, whose templates directory and reads.json the Python server reads (HY-48).
+    program=str(BOARD / "build" / "program"),
     handlers=handlers(_services()),
     timezone="+09:00",
     # The form of a new post is multipart, because it holds a file (HY-59.6, HY-131).

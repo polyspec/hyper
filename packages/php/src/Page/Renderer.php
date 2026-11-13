@@ -28,7 +28,7 @@ final class Renderer
     }
 
     /**
-     * Opens the program that `hyper-build-server` of `@polyspec/hyper-cli` wrote to a directory.
+     * Opens the program that `hyper build` of `@polyspec/hyper-cli` wrote to a directory.
      *
      * @param array<string, callable(): mixed> $functions the host functions of the application (HYC-24)
      */
@@ -46,7 +46,7 @@ final class Renderer
             if (!$exists($path)) {
                 throw new \InvalidArgumentException(
                     "{$path} of the server program {$program} is missing; "
-                    . 'hyper-build-server of @polyspec/hyper-cli builds it',
+                    . 'hyper build of @polyspec/hyper-cli builds it',
                 );
             }
         }

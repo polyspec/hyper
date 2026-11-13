@@ -7,6 +7,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
+// The relative paths below an application, in byte order.
+const listing = (app: string) => readdirSync(app, { recursive: true, encoding: 'utf8' }).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 const check = (app: string) => spawnSync(process.execPath, [resolve('packages/cli/bin/hyper.mjs'), 'check', '--app', app], { encoding: 'utf8' });
 
 test('reports every region placement that breaks HY-3 and HY-30', () => {
@@ -40,11 +42,11 @@ test('checks the manifest (HY-2) and writes no file', (t) => {
   const app = mkdtempSync(join(tmpdir(), 'hyper-check-manifest-'));
   t.after(() => rmSync(app, { recursive: true, force: true }));
   cpSync('tests/scripts/fixtures/invalid-manifest', app, { recursive: true });
-  const before = readdirSync(app, { recursive: true }).sort();
+  const before = listing(app);
   const result = check(app);
   assert.equal(result.status, 1, result.stdout);
   assert.match(result.stderr, /page region/);
-  assert.deepEqual(readdirSync(app, { recursive: true }).sort(), before);
+  assert.deepEqual(listing(app), before);
 });
 
 test('accepts the board example', () => {

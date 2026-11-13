@@ -20,9 +20,9 @@ function application(t: TestContext): string {
   const app = mkdtempSync(path.join(tmpdir(), 'hyper-board-servers-'));
   t.after(() => rmSync(app, { recursive: true, force: true }));
   mkdirSync(path.join(app, 'public'));
-  mkdirSync(path.join(app, 'build', 'csr'), { recursive: true });
+  mkdirSync(path.join(app, 'build', 'client', 'csr'), { recursive: true });
   writeFileSync(path.join(app, 'public', 'index.php'), '<?php echo "ok";\n');
-  writeFileSync(path.join(app, 'build', 'csr', 'index.html'), '<!doctype html>\n');
+  writeFileSync(path.join(app, 'build', 'client', 'csr', 'index.html'), '<!doctype html>\n');
   writeFileSync(path.join(app, 'compare.html'), '<!doctype html>\n');
   return app;
 }

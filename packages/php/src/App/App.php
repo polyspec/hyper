@@ -89,7 +89,7 @@ final class App
     }
 
     /**
-     * Creates an application from its manifest, the server program that `hyper-build-server` of
+     * Creates an application from its manifest, the server program that `hyper build` of
      * `@polyspec/hyper-cli` built from its templates (HY-48) and the handlers that load data and run actions.
      *
      * The body limit is the largest request body in bytes, and the form types are the media types of the request

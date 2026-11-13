@@ -68,19 +68,11 @@
     },
     "examples/board/src/Board/Assets.php": {
       "kind": "policy",
-      "reason": "reads the manifest.json that hyper-build-assets writes (HR-34) for the layout of the board example; no ecosystem tool names the assets of this build"
+      "reason": "reads client/manifest.json that hyper build writes (HR-34, HYC-16.12) for the layout of the board example; no ecosystem tool names the assets of this build"
     },
     "examples/board/src/Board/Posts.php": {
       "kind": "ecosystem",
       "tool": "PDO with the SQLite driver stores the posts of the board example"
-    },
-    "packages/cli/bin/hyper-build-assets.mjs": {
-      "kind": "ecosystem",
-      "tool": "esbuild bundles the client, @tailwindcss/node and @tailwindcss/oxide build the stylesheet, and @polyspec/template parses the templates"
-    },
-    "packages/cli/bin/hyper-build-server.mjs": {
-      "kind": "ecosystem",
-      "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
     },
     "packages/cli/bin/hyper.mjs": {
       "kind": "ecosystem",
@@ -140,7 +132,7 @@
     },
     "scripts/contract-programs.mts": {
       "kind": "policy",
-      "reason": "it writes the applications of the contract files with the server build of this repository (hyper-build-server); no ecosystem tool writes them"
+      "reason": "it writes the applications of the contract files with the program assembly of the command tool (packages/cli/lib/program.mjs); no ecosystem tool writes them"
     },
     "scripts/fixture-program.mts": {
       "kind": "policy",

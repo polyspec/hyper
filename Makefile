@@ -107,7 +107,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
-.PHONY: bench-sessions bench-uploads help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-php-install ext packages package-check server server-fixtures contract-programs node-server node-fixtures assets hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
+.PHONY: bench-sessions bench-uploads help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-php-install ext packages package-check board server-fixtures contract-programs node-server node-fixtures hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
 
 help: ## List the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -212,9 +212,6 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	$(TSC) -p tests/package-install/tsconfig.json
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- --test-concurrency=1 package-install.test.ts
 
-server: packages assets ## Build the board server program from installed dependencies: its templates and generated PHP program (HY-48, HY-125)
-	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-server.mjs --manifest $(BOARD)/app/app.json --templates $(BOARD)/templates --output $(BOARD)/build/server --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --build $(abspath $(BOARD)/build/build.json)
-
 server-fixtures: packages contract-programs ## Build the server program of the PHP test fixtures with the fixed build id of their build.json (HY-48, HY-125.21)
 	$(NODE) scripts/fixture-program.mts --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --id-file $(FIXTURES)/build.json
 
@@ -223,7 +220,7 @@ contract-programs: packages ## Build the applications of contracts/context.json,
 
 # A Node server bundle keeps the packages of node_modules external, and Node loads them from there: a CommonJS package that
 # requires Node modules cannot run inside an ESM bundle.
-node-server: assets ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
+node-server: board ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --packages=external --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
@@ -233,8 +230,8 @@ node-fixtures: packages contract-programs ## Build the template files of the PHP
 # Shared gates read the declarations and runtime fixtures built by this checkout.
 lint-ts: packages
 
-assets: packages ## Build the board client bundle (SSR) and the single-file static shell (CSR)
-	$(NODE) $(BUILD_PACKAGE)/bin/hyper-build-assets.mjs --app $(BOARD) --api /api --output $(BOARD)/build --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
+board: packages ## Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program with the generated PHP program (HR-34, HY-48, HY-125)
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs build --app $(BOARD) --output $(BOARD)/build --api /api --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
 
 hyper-test-js: ## Run the browser code tests, including the browser case runner (HYR-7), and the type check
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
@@ -290,7 +287,7 @@ toolchain-policy-test: ## Verify the declared toolchain and offline recipe polic
 
 # The tests are the files of tests/scripts itself: a file below tests/scripts/fixtures that is named as a test is the
 # input of a test and is not run.
-hyper-test-scripts: packages assets server node-server ## Run the tests of the check scripts, the build case runner included (HYR-7), or only the files of TESTS
+hyper-test-scripts: packages board node-server ## Run the tests of the check scripts, the build case runner included (HYR-7), or only the files of TESTS
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),$(wildcard tests/scripts/*.test.mts))
 
@@ -431,40 +428,40 @@ spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/prot
 spec-docs-check: ## Check contracts/protocol.json and the protocol documents against their generation (H2)
 	$(NODE) scripts/spec-docs.mts check
 
-parity: assets server ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
+parity: board ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
 	@failed=; \
 	$(call check,parity with the generated program,node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json) \
 	$(call check,parity with the native extension,node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --extension $(EXT)) \
 	$(checks_result)
 
-server-parity: node-server server ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HR-55)
+server-parity: node-server board ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HR-55)
 	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
 
-server-parity-python: assets server ## Compare the Python server responses with the PHP responses, with the browser comparison of parity (HR-55)
+server-parity-python: board ## Compare the Python server responses with the PHP responses, with the browser comparison of parity (HR-55)
 	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python
 
-bundle-size: assets ## Print the sizes of the SSR script, the CSR shell, the chunks and the largest template with their gzip limits; a size above its limit is a warning, never a failure
-	$(NODE) scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build --limits config/bundle-size.json$(if $(filter true,$(GITHUB_ACTIONS)), --annotations)
+bundle-size: board ## Print the sizes of the SSR script, the CSR shell, the chunks and the largest template with their gzip limits; a size above its limit is a warning, never a failure
+	$(NODE) scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build/client --limits config/bundle-size.json$(if $(filter true,$(GITHUB_ACTIONS)), --annotations)
 
-e2e: assets server ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run; CASES=<pattern> runs the cases whose title matches
+e2e: board ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run; CASES=<pattern> runs the cases whose title matches
 	$(NODE) scripts/run-e2e.mts -- $(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
 
 virtiofs-check: ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HR-68); a target of the full suite on Darwin
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/virtiofs/
 
-serve-demo: assets server ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
+serve-demo: board ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
 	$(NODE) scripts/serve-demo.mts --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)
 
 serve-demo-unlock: ## Remove the lock of a demo whose process has ended
 	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) clear $(SERVE_DEMO_LOCK)
 
-bench-server: assets server ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
+bench-server: board ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
 	@failed=; \
 	$(call check,the benchmark with the generated program,php benchmarks/server.php --app $(BOARD) --iterations 300) \
 	$(call check,the benchmark with the native extension,php -d extension=$(abspath $(EXT)) benchmarks/server.php --app $(BOARD) --iterations 300) \
 	$(checks_result)
 
-bench-browser: assets server ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
+bench-browser: board ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	$(NODE) benchmarks/browser.mts --runs 15
 
 bench-sessions: packages ## Measure the requests per second of the three servers on one Redis server
@@ -473,7 +470,7 @@ bench-sessions: packages ## Measure the requests per second of the three servers
 bench-uploads: packages ## Measure the time, the processor time and the memory of an upload in the three servers and in the reader of PHP itself
 	$(NODE) benchmarks/uploads.mts --size 1073741824 --runs 3
 
-bench-server-smoke: assets server ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
+bench-server-smoke: board ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
 	php benchmarks/server.php --app $(BOARD) --iterations 1 > /dev/null
 
 bench: bench-server bench-browser bench-uploads ## Run the measurements; results are reports, not pass or fail checks

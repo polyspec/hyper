@@ -1,5 +1,5 @@
 """Renders documents and single regions with the template package `polyspec-template` (HY-12, HY-13, HY-30, HY-31,
-HY-48). The server program that `hyper-build-server` of `@polyspec/hyper-cli` built holds the templates and the
+HY-48). The server program that `hyper build` of `@polyspec/hyper-cli` built holds the templates and the
 read paths; the Python server reads its `templates` directory and its `reads.json` and needs neither the directory
 `php` nor `program.json`, which the generated PHP program of the same templates uses. The caller binds each root of a
 document once with `bind`, and every render merges the bound roots, so the renders of a document check no value
@@ -29,7 +29,7 @@ class Renderer:
     def open(
         program: str, timezone: str, functions: Optional[dict] = None
     ) -> "Renderer":
-        """Opens the server program that `hyper-build-server` of `@polyspec/hyper-cli` wrote to a directory; a
+        """Opens the server program that `hyper build` of `@polyspec/hyper-cli` wrote to a directory; a
         missing build fails here and names the missing file (HY-48). `functions` are the host functions of the
         application, which the engine registers as template RT-5 states: a name that is a built-in function or a value
         that is not a function fails the open with the error of the engine."""
@@ -40,7 +40,7 @@ class Renderer:
             if not (path.is_dir() if is_directory else path.is_file()):
                 raise ValueError(
                     f"{path} of the server program {program} is missing; "
-                    "hyper-build-server of @polyspec/hyper-cli builds it"
+                    "hyper build of @polyspec/hyper-cli builds it"
                 )
         return Renderer(
             Engine(

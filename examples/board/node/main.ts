@@ -76,10 +76,10 @@ const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
 
 const app = await App.open<Services>({
   manifest: join(board, 'app', 'app.json'),
-  // `make assets` writes the build id of the asset output, which App.open reads (HY-125).
-  build: join(board, 'build', 'build.json'),
-  // `make assets` builds the template files that the browser loads; the server renders with the same files.
-  templates: { index: join(board, 'build', 'templates.index.json'), root: join(board, 'public') },
+  // `make board` writes the build id into build/client/build.json, which App.open reads (HY-48.11, HY-125).
+  build: join(board, 'build', 'client', 'build.json'),
+  // `make board` builds the template files that the browser loads; the server renders with the same files.
+  templates: { index: join(board, 'build', 'client', 'templates.index.json'), root: join(board, 'public') },
   handlers,
   timezone: '+09:00',
   // The form of a new post is multipart, because it holds a file (HY-59.6, HY-131).
@@ -96,8 +96,8 @@ const time = process.env.BOARD_TIME ?? '';
 if (time !== '' && !/^[0-9]{1,15}$/.test(time)) throw new Error('BOARD_TIME must be Unix seconds');
 app.bind('posts', () => new Posts(database, time === '' ? () => Math.floor(Date.now() / 1000) : () => Number(time)));
 app.bind('assets', () => {
-  const urls: unknown = JSON.parse(readFileSync(join(board, 'build', 'manifest.json'), 'utf8'));
-  if (typeof urls !== 'object' || urls === null || !('hyper' in urls) || typeof urls.hyper !== 'string') throw new Error('the asset manifest has no hyper URL; run make assets');
+  const urls: unknown = JSON.parse(readFileSync(join(board, 'build', 'client', 'manifest.json'), 'utf8'));
+  if (typeof urls !== 'object' || urls === null || !('hyper' in urls) || typeof urls.hyper !== 'string') throw new Error('the asset manifest has no hyper URL; run make board');
   return { hyper: urls.hyper };
 });
 // The session cookie has the name that the PHP board uses, PHP's default session name.

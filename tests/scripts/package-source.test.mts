@@ -1,13 +1,14 @@
-// Tests that the build package @polyspec/hyper-cli holds everything that its bins run (HR-96): its modules import
+// Tests that the command tool @polyspec/hyper-cli holds everything that its bin runs (HR-96): its modules import
 // only their own published files, built-in modules of Node and the packages that its manifest requires, so the
-// package that a consumer installs runs as the repository runs it; and the builds run from any working directory.
+// package that a consumer installs runs as the repository runs it; and hyper build runs from any working directory.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve, sep } from 'node:path';
 import { test } from 'node:test';
 import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
+import { copyTracked } from '../../scripts/tracked-files.mts';
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
@@ -26,7 +27,7 @@ function specifiers(source: string): string[] {
   return found;
 }
 
-test('the modules of the build package import only its published files, Node and its dependencies', () => {
+test('the modules of the command tool import only its published files, Node and its dependencies', () => {
   const manifestFile = join(build, 'package.json');
   const manifest = parseJsonObject(readFileSync(manifestFile, 'utf8'), manifestFile);
   const dependencies = Object.keys(jsonObject(manifest.dependencies, `${manifestFile} dependencies`));
@@ -50,28 +51,28 @@ test('the modules of the build package import only its published files, Node and
   }
 });
 
-test('builds the templates and the server program from another working directory', () => {
+test('hyper build builds the browser outputs and the server program from another working directory', (t) => {
   requireBuilt('packages', 'node_modules/@polyspec/hyper-client/dist/index.js', 'node_modules/@polyspec/hyper-client/data-template.json');
-  const output = mkdtempSync(join(tmpdir(), 'hyper-scripts-'));
-  try {
-    const board = join(repository, 'examples', 'board');
-    const templates = spawnSync(process.execPath, [join(repository, 'scripts', 'build-templates.mts'), '--templates', join(board, 'templates'), '--output', join(output, 'templates')], { cwd: output, encoding: 'utf8' });
-    assert.equal(templates.status, 0, templates.stderr);
-    const server = spawnSync(process.execPath, [
-      join(build, 'bin', 'hyper-build-server.mjs'), '--manifest', join(board, 'app', 'app.json'), '--templates', join(board, 'templates'),
-      '--output', join(output, 'server'), '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
-      '--build', join(repository, 'packages', 'php', 'tests', 'fixtures', 'build.json'),
-    ], { cwd: output, encoding: 'utf8' });
-    assert.equal(server.status, 0, server.stderr);
-    // HY-48: the generated program is the PSR-4 files of the namespace in the directory php, which the autoload of
-    // Composer loads, and program.json names the namespace.
-    const php = readdirSync(join(output, 'server', 'php')).sort();
-    assert.ok(php.includes('GeneratedProgram.php') && php.includes('GeneratedTemplates.php'), `server/php holds ${php.join(', ')}`);
-    assert.ok(php.every((file) => file.endsWith('.php')), `server/php holds ${php.join(', ')}`);
-    assert.ok(!existsSync(join(output, 'server', 'program.php')), 'the build writes program.php');
-    const declaration = parseJsonObject(readFileSync(join(output, 'server', 'program.json'), 'utf8'), 'server/program.json');
-    assert.equal(declaration.namespace, 'Polyspec\\Hyper\\Examples\\Board\\Program');
-  } finally {
-    rmSync(output, { recursive: true, force: true });
-  }
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-scripts-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const app = join(directory, 'app');
+  copyTracked({ repository, path: 'tests/scripts/fixtures/chunks', target: app, base: 'tests/scripts/fixtures/chunks' });
+  const cwd = join(directory, 'elsewhere');
+  mkdirSync(cwd);
+  const result = spawnSync(process.execPath, [
+    join(build, 'bin', 'hyper.mjs'), 'build', '--app', app, '--output', join(app, 'out'), '--api', '/api',
+    '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
+  ], { cwd, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  // HY-48: the generated program is the PSR-4 files of the namespace in the directory php, which the autoload of
+  // Composer loads, and program.json names the namespace.
+  const program = join(app, 'out', 'program');
+  const php = readdirSync(join(program, 'php')).sort();
+  assert.ok(php.includes('GeneratedProgram.php') && php.includes('GeneratedTemplates.php'), `program/php holds ${php.join(', ')}`);
+  assert.ok(php.every((file) => file.endsWith('.php')), `program/php holds ${php.join(', ')}`);
+  assert.ok(!existsSync(join(program, 'program.php')), 'the build writes program.php');
+  const declaration = parseJsonObject(readFileSync(join(program, 'program.json'), 'utf8'), 'program/program.json');
+  assert.equal(declaration.namespace, 'Polyspec\\Hyper\\Examples\\Board\\Program');
+  assert.ok(existsSync(join(app, 'out', 'client', 'csr', 'index.html')));
+  assert.deepEqual(readdirSync(cwd), []);
 });

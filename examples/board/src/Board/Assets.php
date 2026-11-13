@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Examples\Board;
 
-/** Reads the URL of the client entry that the asset build writes to its manifest (HYC-16). */
+/** Reads the URL of the client entry that hyper build writes to client/manifest.json (HYC-16.12). */
 final class Assets
 {
     /** @param array{hyper: string} $urls */
@@ -16,7 +16,7 @@ final class Assets
     public static function fromManifest(string $file): self
     {
         if (!is_file($file)) {
-            throw new \RuntimeException("asset manifest {$file} does not exist; run make assets");
+            throw new \RuntimeException("asset manifest {$file} does not exist; run make board");
         }
         $urls = json_decode((string) file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
         if (!is_array($urls) || !is_string($urls['hyper'] ?? null)) {

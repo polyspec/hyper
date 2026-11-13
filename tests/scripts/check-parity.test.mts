@@ -39,9 +39,9 @@ const refused = (error: unknown): boolean => error instanceof Error && error.cau
 function fixture(t: TestContext, steps: Step[]): string {
   const app = mkdtempSync(join(tmpdir(), 'hyper-parity-app-'));
   t.after(() => rmSync(app, { recursive: true, force: true }));
-  for (const directory of ['app', 'build', 'public']) mkdirSync(join(app, directory));
+  for (const directory of ['app', join('build', 'client'), 'public']) mkdirSync(join(app, directory), { recursive: true });
   writeFileSync(join(app, 'app', 'app.json'), JSON.stringify(MANIFEST));
-  writeFileSync(join(app, 'build', 'templates.index.json'), '{}');
+  writeFileSync(join(app, 'build', 'client', 'templates.index.json'), '{}');
   writeFileSync(join(app, 'public', 'index.php'), INDEX);
   writeFileSync(join(app, 'requests.json'), JSON.stringify({ steps }));
   return app;

@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 3e0e812a35bef78a45e60e0942e66e246b0c6b8393fbc893579adcf7637754df -->
+<!-- source-sha256: 4cf38722d04efb048991a38cc7d034d9892462e5f2d75cc9fe45d31e106c82ec -->
 # 배포
 
 [English](deployment.md).
@@ -26,11 +26,24 @@
 
 PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request, HX-Current-URL`이 붙는다.
 
-`make server`가 만든 `build/server`를 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. 가장 빠르게 렌더하려면 서버의 PHP 버전에 맞춰 `make ext`로 네이티브 템플릿 확장을 빌드하고, `php.ini`의 `extension` 설정으로 불러온다. 확장이 없으면 PHP는 `build/server/php/`의 generated 프로그램으로 렌더하며, 애플리케이션은 Composer의 autoload가 그것을 불러오도록 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 그 디렉터리에 연결한다(HY-48).
+`make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. 가장 빠르게 렌더하려면 서버의 PHP 버전에 맞춰 `make ext`로 네이티브 템플릿 확장을 빌드하고, `php.ini`의 `extension` 설정으로 불러온다. 확장이 없으면 PHP는 `build/program/php/`의 generated 프로그램으로 렌더하며, 애플리케이션은 Composer의 autoload가 그것을 불러오도록 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 그 디렉터리에 연결한다(HY-48).
+
+build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). `public/assets`는 아직 열린 페이지가 불러오는 이전 build의 파일을 담으므로, 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다(HR-34).
+
+### 애플리케이션이 바꾸는 경로
+
+`hyper build`는 이전 릴리스의 에셋 build와 서버 build의 두 bin을 대신한다(HR-96). 그것을 쓰던 애플리케이션은 다음을 바꾼다.
+
+- 호출: 전과 같은 `--api`, `--static`, `--php-namespace`를 가진 `hyper build --app <디렉터리> --output <디렉터리>` 한 번의 실행. option `--build`는 없고, 매니페스트와 템플릿은 `--app`의 `app/app.json`과 `templates/`에서 읽는다.
+- 프로그램 디렉터리: 서버 build의 `--output` 디렉터리 대신 `<output>/program`, 그리고 `composer.json`의 생성된 프로그램 PSR-4 경로 `<output>/program/php/`.
+- 레이아웃의 매니페스트: `<output>/manifest.json` 대신 `<output>/client/manifest.json`. `hyper` 말고도 이름마다 각 에셋의 URL을 담는다.
+- Node 서버: `App.open`의 option `build`는 `<output>/client/build.json`을, `templates.index`는 `<output>/client/templates.index.json`을 가리킨다.
+- 정적 셸: `<output>/csr/` 대신 `<output>/client/csr/`.
+- `--tailwind <source>=<output>`의 stylesheet나 애플리케이션이 build 뒤에 `public/assets` 아래에 쓰던 파일: `--tailwind <source>=<name>`이나 `--asset <name>=<path>`로 바꾸고, 레이아웃은 `client/manifest.json`의 `<name>` URL을 link한다. build 뒤에 바뀌는 출력은 없다(HR-77).
 
 ## 정적 셸
 
-`make assets`는 `examples/board/build/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HYC-16), 템플릿마다 파일 하나를 담은 `assets/templates/`, 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`(HYC-15), 그리고 페이지의 head가 적고 브라우저가 그 페이지를 보이기 전에 만드는 module script `assets/reader.js`와 `assets/after-reader.js`다(HYC-25). `make assets`는 `--static`으로 `public/assets/`의 이 넷을 밝힌다.
+`make board`는 `examples/board/build/client/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HYC-16), 템플릿마다 파일 하나를 담은 `assets/templates/`, 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`(HYC-15), 그리고 페이지의 head가 적고 브라우저가 그 페이지를 보이기 전에 만드는 module script `assets/reader.js`와 `assets/after-reader.js`다(HYC-25). `make board`는 `--static`으로 `public/assets/`의 이 넷을 밝힌다.
 
 1. S3 버킷에 다음과 같이 올린다.
    - `index.html`: `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`
@@ -42,13 +55,13 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
    - `/api/*`: 위 표와 같이 PHP로 보낸다.
    - `/assets/*`: S3로 보낸다.
    - 그 밖의 모든 경로: 뷰어 요청 단계의 CloudFront Function으로 `/index.html`로 보낸다.
-4. 인라인한 진입 파일을 해시로, 조각 파일과 link한 스타일시트를 `'self'`로 허용하는 Content Security Policy를 보낸다. 그 정책은 `make assets`가 출력한다. 조각 파일 `assets/hyper-chunk-*.js`는 이름에 해시가 있으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: public, max-age=31536000, immutable`로 올린다.
+4. 인라인한 진입 파일을 해시로, 조각 파일과 link한 스타일시트를 `'self'`로 허용하는 Content Security Policy를 보낸다. 그 정책은 `make board`가 출력한다. 조각 파일 `assets/hyper-chunk-*.js`는 이름에 해시가 있으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: public, max-age=31536000, immutable`로 올린다.
 
 모든 페이지 경로가 같은 빈 셸을 반환한다. 그래서 JavaScript를 실행하지 않는 검색 크롤러와 링크 미리보기 봇은 내용도 제목도 보지 못한다. 이 형태는 그런 노출이 필요 없는 화면에만 쓴다.
 
 ## 두 형태를 한 서버로
 
-어느 구현의 서버 하나가 한 매니페스트의 서버 렌더 페이지와 클라이언트 렌더 페이지를 같은 handler로 응답할 수 있다(HY-62). 애플리케이션은 열 때 클라이언트 렌더를 선언한다. PHP에서는 `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))`, Node에서는 `App.open`의 `clientRendering` 옵션 `{ shell, basePath, selects }`, Python에서는 `client_rendering=ClientRendering(shell='/srv/app/build/csr/index.html', base_path='/_props', selects=...)`다. 선택은 예를 들어 `Host` header로 클라이언트 렌더 요청을 고르고, 그 host의 저장된 service 같은 그 값은 PHP의 `$request->selection()`과 Node·Python의 `request.selection()`으로 요청의 모든 loader와 action에 전달되므로 handler가 그 값을 다시 읽지 않는다. 셸이 데이터 기본 경로를 선언하도록 `@polyspec/hyper-cli`의 `hyper-build-assets --api /_props`로 셸을 build한다. 그렇지 않으면 애플리케이션 열기가 실패한다.
+어느 구현의 서버 하나가 한 매니페스트의 서버 렌더 페이지와 클라이언트 렌더 페이지를 같은 handler로 응답할 수 있다(HY-62). 애플리케이션은 열 때 클라이언트 렌더를 선언한다. PHP에서는 `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/client/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))`, Node에서는 `App.open`의 `clientRendering` 옵션 `{ shell, basePath, selects }`, Python에서는 `client_rendering=ClientRendering(shell='/srv/app/build/client/csr/index.html', base_path='/_props', selects=...)`다. 선택은 예를 들어 `Host` header로 클라이언트 렌더 요청을 고르고, 그 host의 저장된 service 같은 그 값은 PHP의 `$request->selection()`과 Node·Python의 `request.selection()`으로 요청의 모든 loader와 action에 전달되므로 handler가 그 값을 다시 읽지 않는다. 셸이 데이터 기본 경로를 선언하도록 `@polyspec/hyper-cli`의 `hyper build --api /_props`로 셸을 build한다. 그렇지 않으면 애플리케이션 열기가 실패한다.
 
 | 선택이 고른 페이지의 요청 | 응답 |
 |---|---|
@@ -93,7 +106,7 @@ server는 `multipart/form-data` body를 조각으로 요청의 file에 읽으며
 |---|---|
 | `http://127.0.0.1:8080/board` | 서버 형태: 루트의 PHP |
 | `http://127.0.0.1:8082/api/board` | `BOARD_BASE_PATH=/api`로 실행한 PHP |
-| `http://127.0.0.1:8081/board` | 정적 셸: `scripts/serve-edge.mts`가 `build/csr/`의 파일을 반환하고, 그 밖의 모든 경로에는 셸을 반환하며, `/api/*`를 포트 8082로 전달한다 |
+| `http://127.0.0.1:8081/board` | 정적 셸: `scripts/serve-edge.mts`가 `build/client/csr/`의 파일을 반환하고, 그 밖의 모든 경로에는 셸을 반환하며, `/api/*`를 포트 8082로 전달한다 |
 | `http://127.0.0.1:8081/compare?ssr=http://127.0.0.1:8080` | 비교 페이지: 두 형태를 두 프레임에 띄우고 두 body의 비교 결과를 표시한다. 개발 도구이며 배포에 포함하지 않는다. |
 
 ## 서버들이 공유하는 session

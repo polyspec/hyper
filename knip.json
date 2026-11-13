@@ -1,13 +1,13 @@
 // The knip configuration of hyper, which make lint-ts runs from the root (knip reads this file by its own discovery).
 // The entries are the files that a tool starts by its path, which no import reaches:
 //   - the tests, the scripts and the benchmarks, which node, vitest and make start;
-//   - examples/board/client/main.ts, the browser script of the board example, which make assets bundles with
-//     hyper-build-assets --app examples/board;
+//   - examples/board/client/main.ts, the browser script of the board example, which make board bundles with
+//     hyper build --app examples/board;
 //   - examples/board/public/assets/reader.js and after-reader.js, the module scripts that the layout of the board example
 //     names on the post page;
 //   - examples/board/node/main.ts, the board Node server, which make node-server bundles with esbuild;
 //   - tests/e2e/playwright.config.ts, the Playwright configuration that scripts/run-e2e.mts passes to playwright test --config;
-//   - tests/scripts/fixtures/chunks/client/main.ts, the fixture app of the chunk tests of hyper-build-assets;
+//   - tests/scripts/fixtures/chunks/client/main.ts, the fixture app of the tests of hyper build;
 //   - tests/scripts/fixtures/session-worker/worker.mjs, one Node server process of tests/scripts/session-shared.test.mts.
 //   - tests/scripts/fixtures/multipart-worker/worker.mjs, one Node server process of
 //     tests/scripts/multipart-compare.test.mts;
@@ -19,7 +19,7 @@
 // The ignored dependencies are packages that no import of their workspace reaches:
 //   - @polyspec/php-serialize, which the root names by the tarball URL of its release, which npm installs only from the root
 //     with allow-remote=root (H21.4); packages/ts requires it by its version;
-//   - tailwindcss of packages/cli: bin/hyper-build-assets.mjs compiles the stylesheet of an app with @tailwindcss/node from
+//   - tailwindcss of packages/cli: lib/build.mjs compiles the stylesheet of an app with @tailwindcss/node from
 //     the CSS text '@import "tailwindcss/theme.css"', which Tailwind CSS resolves from this package.
 {
   "node": {

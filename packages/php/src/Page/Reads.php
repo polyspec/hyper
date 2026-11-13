@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The read paths of the routes, which `hyper-build-server` of `@polyspec/hyper-cli` writes to `reads.json`, and the
+ * The read paths of the routes, which `hyper build` of `@polyspec/hyper-cli` writes to `reads.json`, and the
  * data that they keep (HY-73). A read node is `true` when the value at its path is read whole, and otherwise names the
  * keys read below it and, under `each`, what is read of every entry of a map or element of a list.
  *

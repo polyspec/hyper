@@ -1,4 +1,4 @@
-"""The read paths of the routes, which `hyper-build-server` of `@polyspec/hyper-cli` writes to `reads.json`, and
+"""The read paths of the routes, which `hyper build` of `@polyspec/hyper-cli` writes to `reads.json`, and
 the data that they keep (HY-73). A read node is True when the value at its path is read whole, and otherwise names
 the keys read below it and, under ``each``, what is read of every entry of a map or element of a list."""
 
@@ -26,7 +26,7 @@ class Reads:
         except FileNotFoundError:
             raise ValueError(
                 f"{file} of the server program {program} is missing; "
-                "hyper-build-server of @polyspec/hyper-cli builds it"
+                "hyper build of @polyspec/hyper-cli builds it"
             ) from None
         except ValueError as error:
             raise ValueError(f"{file} is not valid JSON or UTF-8: {error}") from None

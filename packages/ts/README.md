@@ -18,7 +18,8 @@ interface Services {
 
 const app = await App.open<Services>({
   manifest: '/srv/board/app/app.json',
-  templates: { index: '/srv/board/build/templates.index.json', root: '/srv/board/public' },
+  build: '/srv/board/build/client/build.json',
+  templates: { index: '/srv/board/build/client/templates.index.json', root: '/srv/board/public' },
   handlers: {
     shared: () => ({ site: 'Board' }),
     regions: { left: ({ request, services }) => ({ path: request.path(), count: services.get('posts').count() }) },

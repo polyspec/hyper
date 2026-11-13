@@ -29,7 +29,7 @@ Result.redirect("/board/7")  # the outcome of an action that succeeded (HY-25)
   page status and the data embedding of a response (HY-52, HY-69, HY-92), and `NotFound`, `Forbidden`, `BadRequest`
   and `Redirect` the stops of loaders and actions (HY-27, HY-50, HY-51, HY-58).
 
-- `App.open` creates an application from its manifest, the server program that `hyper-build-server` of
+- `App.open` creates an application from its manifest, the server program that `hyper build` of
   `@polyspec/hyper-cli` built (the `templates` directory and `reads.json` of it; the Python server needs neither
   the directory `php` nor `program.json`, which the generated PHP program uses) and the handlers that load data and run
   actions; `App.handle` answers one request (HY-8, HY-15 to HY-19, HY-24 to HY-27, HY-40, HY-50 to HY-62,
@@ -48,7 +48,7 @@ from polyspec.hyper import App, ArraySession
 
 app = App.open(
     manifest="app/app.json",
-    program="build/server",
+    program="build/program",
     handlers=handlers(),
     timezone="+09:00",
 )

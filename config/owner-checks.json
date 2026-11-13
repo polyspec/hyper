@@ -211,7 +211,7 @@
         "tests/scripts/fixtures/{chunks,invalid-manifest}/**"
       ],
       "tests": [
-        "tests/scripts/build-assets.test.mts"
+        "tests/scripts/build.test.mts"
       ]
     },
     {
@@ -353,7 +353,6 @@
     },
     {
       "paths": [
-        "packages/cli/bin/hyper-build-assets.mjs",
         "packages/cli/lib/template-files.mjs",
         "scripts/build-templates.mts"
       ],
@@ -362,14 +361,13 @@
         "typecheck"
       ],
       "tests": [
-        "tests/scripts/build-assets.test.mts",
+        "tests/scripts/build.test.mts",
         "tests/scripts/template-dir.test.mts",
         "tests/scripts/package-source.test.mts"
       ]
     },
     {
       "paths": [
-        "packages/cli/bin/hyper-build-server.mjs",
         "packages/cli/lib/template-rules.mjs"
       ],
       "targets": [
@@ -425,7 +423,7 @@
       "tests": [
         "tests/scripts/publish.test.mts",
         "tests/scripts/output-files.test.mts",
-        "tests/scripts/build-assets.test.mts"
+        "tests/scripts/build.test.mts"
       ]
     },
     {
@@ -504,7 +502,7 @@
       "tests": [
         "tests/scripts/publish.test.mts",
         "tests/scripts/template-pins.test.mts",
-        "tests/scripts/build-assets.test.mts"
+        "tests/scripts/build.test.mts"
       ]
     },
     {

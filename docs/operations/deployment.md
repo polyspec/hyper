@@ -21,22 +21,35 @@ The server tells the two kinds of requests apart by their headers (HY-15). A dir
 
 PHP runs without a base path. Responses carry `Vary: Accept, HX-Request, HX-Current-URL`.
 
-Deploy `build/server`, which `make server` writes, next to the PHP code; the application opens it with `App::open(program: ...)`. For the fastest rendering, build the native template extension with `make ext` for the PHP version of the server and load it with the `extension` setting of `php.ini`. Without the extension, PHP renders with the generated program in `build/server/php/`, whose namespace the application maps to that directory in `autoload.psr-4` of its `composer.json`, so that the autoload of Composer loads it (HY-48).
+Deploy `build/program`, which `make board` writes with `hyper build`, next to the PHP code; the application opens it with `App::open(program: ...)`. For the fastest rendering, build the native template extension with `make ext` for the PHP version of the server and load it with the `extension` setting of `php.ini`. Without the extension, PHP renders with the generated program in `build/program/php/`, whose namespace the application maps to that directory in `autoload.psr-4` of its `composer.json`, so that the autoload of Composer loads it (HY-48).
+
+One build is deployed as one set: upload the new files of `public/assets` first, then replace `client/` and `program/` on every server, because a page of the new build names files of `public/assets` that must exist before a server sends it. Every server of one deployment reads the outputs of the same build, also servers of several runtimes that share sessions (HY-125.20). `public/assets` keeps the files of earlier builds, which a page that is still open loads; remove a file only when no `client/assets.json` of a build in use lists it (HR-34).
+
+### Paths that an application changes
+
+`hyper build` replaces the two bins of the asset build and the server build of earlier releases (HR-96). An application that used them changes:
+
+- the call: one run of `hyper build --app <directory> --output <directory>` with `--api`, `--static` and `--php-namespace` as before; the option `--build` does not exist, and the manifest and the templates are read from `app/app.json` and `templates/` of `--app`;
+- the program directory: `<output>/program` in place of the directory of `--output` of the server build, and the PSR-4 path of the generated program `<output>/program/php/` in `composer.json`;
+- the manifest of the layout: `<output>/client/manifest.json` in place of `<output>/manifest.json`; it holds the URL of each asset by its name besides `hyper`;
+- the Node server: the option `build` of `App.open` names `<output>/client/build.json` and `templates.index` names `<output>/client/templates.index.json`;
+- the static shell: `<output>/client/csr/` in place of `<output>/csr/`;
+- a stylesheet of `--tailwind <source>=<output>` or a file that the application wrote below `public/assets` after the build: `--tailwind <source>=<name>` or `--asset <name>=<path>`, and the layout links the URL of `<name>` of `client/manifest.json`; no output is changed after the build (HR-77).
 
 ## Static shell
 
-`make assets` writes `examples/board/build/csr/`: `index.html` with the client entry inlined and no stylesheet (HYC-16), `assets/templates/` with one file per template, the stylesheets `assets/app.css` and `assets/reader.css`, which the rendered layout links and the browser applies before it shows a page (HYC-15), and the module scripts `assets/reader.js` and `assets/after-reader.js`, which the head of a page names and the browser creates before it shows that page (HYC-25); `make assets` names the four with `--static` from `public/assets/`.
+`make board` writes `examples/board/build/client/csr/`: `index.html` with the client entry inlined and no stylesheet (HYC-16), `assets/templates/` with one file per template, the stylesheets `assets/app.css` and `assets/reader.css`, which the rendered layout links and the browser applies before it shows a page (HYC-15), and the module scripts `assets/reader.js` and `assets/after-reader.js`, which the head of a page names and the browser creates before it shows that page (HYC-25); `make board` names the four with `--static` from `public/assets/`.
 
 1. Upload `index.html` to an S3 bucket with `Content-Type: text/html; charset=utf-8` and `Cache-Control: no-cache`, `assets/templates/*` with `Content-Type: application/json` and `Cache-Control: public, max-age=31536000, immutable`, `assets/*.css` with `Content-Type: text/css; charset=utf-8` and `Cache-Control: no-cache`, and `assets/reader.js` and `assets/after-reader.js` with `Content-Type: text/javascript; charset=utf-8` and `Cache-Control: no-cache`, because their names carry no hash.
 2. Run PHP with the environment variable `BOARD_BASE_PATH=/api` (HY-8).
 3. Route `/api/*` to PHP as in the table above, `/assets/*` to S3, and every other path to `/index.html` with a CloudFront Function on viewer request.
-4. Send a Content Security Policy that allows the inline entry by hash and the chunk files and linked stylesheets by `'self'`; `make assets` prints the policy. Upload chunk files `assets/hyper-chunk-*.js` with `Content-Type: text/javascript; charset=utf-8` and `Cache-Control: public, max-age=31536000, immutable`, because their names carry a hash.
+4. Send a Content Security Policy that allows the inline entry by hash and the chunk files and linked stylesheets by `'self'`; `make board` prints the policy. Upload chunk files `assets/hyper-chunk-*.js` with `Content-Type: text/javascript; charset=utf-8` and `Cache-Control: public, max-age=31536000, immutable`, because their names carry a hash.
 
 Every page path returns the same empty shell, so search crawlers that do not run JavaScript and link preview bots see no content and no title. Use this form only for screens that do not need them.
 
 ## One server for both forms
 
-One server of either implementation can answer the server-rendered pages and the client-rendered pages of one manifest with the same handlers (HY-62). The application declares client rendering when it opens: `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))` in PHP, the `clientRendering` option `{ shell, basePath, selects }` of `App.open` in Node, and `client_rendering=ClientRendering(shell='/srv/app/build/csr/index.html', base_path='/_props', selects=...)` in Python. The selection chooses the client-rendered requests, for example by the `Host` header, and its value, such as the stored service of the host, reaches every loader and action of the request through `$request->selection()` in PHP, `request.selection()` in Node and Python, so that the handlers do not read it again. Build the shell with `hyper-build-assets --api /_props` of `@polyspec/hyper-cli`, so that it declares the data base path; the application fails to open otherwise.
+One server of either implementation can answer the server-rendered pages and the client-rendered pages of one manifest with the same handlers (HY-62). The application declares client rendering when it opens: `App::open(clientRendering: new ClientRendering(shell: '/srv/app/build/client/csr/index.html', basePath: '/_props', selects: fn (Request $request): Choice => new Choice(chosen: ..., value: ...)))` in PHP, the `clientRendering` option `{ shell, basePath, selects }` of `App.open` in Node, and `client_rendering=ClientRendering(shell='/srv/app/build/client/csr/index.html', base_path='/_props', selects=...)` in Python. The selection chooses the client-rendered requests, for example by the `Host` header, and its value, such as the stored service of the host, reaches every loader and action of the request through `$request->selection()` in PHP, `request.selection()` in Node and Python, so that the handlers do not read it again. Build the shell with `hyper build --api /_props` of `@polyspec/hyper-cli`, so that it declares the data base path; the application fails to open otherwise.
 
 | Request of a chosen page | Response |
 |---|---|
@@ -81,7 +94,7 @@ A server reads a `multipart/form-data` body in chunks into files of the request 
 |---|---|
 | `http://127.0.0.1:8080/board` | Server form: PHP at the root |
 | `http://127.0.0.1:8082/api/board` | PHP with `BOARD_BASE_PATH=/api` |
-| `http://127.0.0.1:8081/board` | Static shell: `scripts/serve-edge.mts` returns files of `build/csr/`, the shell for every other path, and forwards `/api/*` to port 8082 |
+| `http://127.0.0.1:8081/board` | Static shell: `scripts/serve-edge.mts` returns files of `build/client/csr/`, the shell for every other path, and forwards `/api/*` to port 8082 |
 | `http://127.0.0.1:8081/compare?ssr=http://127.0.0.1:8080` | The comparison page: both forms in two frames and the result of comparing their bodies. It is a development tool and is not part of a deployment. |
 
 ## Sessions shared by the servers

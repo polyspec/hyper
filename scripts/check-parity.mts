@@ -88,7 +88,7 @@ const checks = steps.filter((step) => step.action === 'status' || step.action ==
 if (checks === 0) throw new Error(`${requests} holds no status or compare step; expected at least 1, actual 0 of ${steps.length} steps`);
 
 const browser = await loadBrowserCode();
-const indexFile = join(app, 'build', 'templates.index.json');
+const indexFile = join(app, 'build', 'client', 'templates.index.json');
 const index = browser.checkTemplateIndex(JSON.parse(readFileSync(indexFile, 'utf8')), indexFile);
 const manifest: unknown = JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8'));
 const application = browser.createApplication(

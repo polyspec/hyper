@@ -32,7 +32,7 @@ const state = redisRun(
   'hyper-session-failure-',
   async () => {
     requireBuilt('node-server', 'examples/board/build/node/server.mjs');
-    requireBuilt('server', 'examples/board/build/server');
+    requireBuilt('board', 'examples/board/build/program');
     redis = await connected();
   },
   () => redis.quit(),

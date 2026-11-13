@@ -135,7 +135,7 @@ export function startEdge({ name, app, port, api, children }: StartOptions & { a
     command: process.execPath,
     args: [
       'scripts/serve-edge.mts',
-      '--root', join(app, 'build', 'csr'),
+      '--root', join(app, 'build', 'client', 'csr'),
       '--compare', join(app, 'compare.html'),
       '--port', String(port),
       '--api-prefix', '/api',

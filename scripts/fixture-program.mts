@@ -22,7 +22,8 @@ const id = jsonString(parseJsonObject(readFileSync(idFile, 'utf8'), idFile).buil
 const directory = staging(output);
 rmSync(directory, { recursive: true, force: true });
 try {
-  const count = writeProgram({ manifest: JSON.parse(readFileSync(manifest, 'utf8')), templates, directory, phpNamespace });
+  const parsed: unknown = JSON.parse(readFileSync(manifest, 'utf8'));
+  const count = writeProgram({ manifest: parsed, templates, directory, phpNamespace });
   writeBuildFile(directory, id);
   publish(directory, output, { last: PROGRAM_LAST });
   console.log(`program ${output}: ${count} templates, build ${id}`);

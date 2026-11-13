@@ -16,7 +16,7 @@ export function requireServers(): void {
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   requireBuilt('node-server', 'examples/board/build/node/server.mjs');
-  requireBuilt('server', 'examples/board/build/server');
+  requireBuilt('board', 'examples/board/build/program');
 }
 
 // One server of the board and its address.

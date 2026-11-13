@@ -11,8 +11,7 @@ import { requireBuilt } from './requires.mts';
 
 /** A copy of the board with what the benchmark reads, removed after the test. */
 function boardCopy(t: TestContext): string {
-  requireBuilt('assets', 'examples/board/build/manifest.json');
-  requireBuilt('server', 'examples/board/build/server/program.json');
+  requireBuilt('board', 'examples/board/build/client/manifest.json', 'examples/board/build/program/program.json');
   requireBuilt('hyper-install', 'examples/board/vendor/autoload.php');
   const app = mkdtempSync(join(tmpdir(), 'hyper-benchmark-'));
   t.after(() => rmSync(app, { recursive: true, force: true }));
@@ -37,12 +36,12 @@ test('the server benchmark reports its program without PHP warnings and removes 
 
 test('the server benchmark fails, and removes its database, when a request answers another status', (t) => {
   const app = boardCopy(t);
-  rmSync(join(app, 'build/manifest.json'));
+  rmSync(join(app, 'build/client/manifest.json'));
   const result = spawnSync('php', ['benchmarks/server.php', '--app', app, '--iterations', '1'], { encoding: 'utf8' });
   assert.equal(result.status, 1, result.stdout);
   assert.equal(existsSync(join(app, 'var/bench-server.db')), false);
 });
 
-test('make bench-server builds the assets that the board reads', () => {
-  assert.ok(dryRun('bench-server').some((line) => line.includes('hyper-build-assets')));
+test('make bench-server builds the board with hyper build, whose outputs the benchmark reads', () => {
+  assert.ok(dryRun('bench-server').some((line) => line.includes('packages/cli/bin/hyper.mjs build')));
 });

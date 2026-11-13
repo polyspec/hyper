@@ -49,8 +49,8 @@ $frameAncestors = getenv('BOARD_FRAME_ANCESTORS');
 
 $app = App::open(
     manifest: __DIR__ . '/../app/app.json',
-    // `make server` builds the program; PHP renders with the native extension when it has loaded it (HY-48).
-    program: __DIR__ . '/../build/server',
+    // `make board` builds the program with hyper build; PHP renders with the native extension when it has loaded it (HY-48).
+    program: __DIR__ . '/../build/program',
     handlers: require __DIR__ . '/../app/handlers.php',
     timezone: '+09:00',
     // The form of a new post is multipart, because it holds a file (HY-59.6, HY-131).
@@ -63,5 +63,5 @@ $app = App::open(
     context: static fn (mixed $selection): array => ['site' => ['name' => '게시판 예제']],
 );
 $app->bind(Posts::class, fn (): Posts => new Posts($database, $now));
-$app->bind(Assets::class, fn (): Assets => Assets::fromManifest(__DIR__ . '/../build/manifest.json'));
+$app->bind(Assets::class, fn (): Assets => Assets::fromManifest(__DIR__ . '/../build/client/manifest.json'));
 $app->run();

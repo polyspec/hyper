@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: 975991cc8d655601a2eb550152181fd075d578c3bbfc8ceb4e1f461dba45b9ed -->
+<!-- source-sha256: e1aa9a2d8a39cdb5ab8d8e7feca9c53233028c508fd15100acab20b77fc24802 -->
 # hyper
 
 [English](README.md).
@@ -55,7 +55,7 @@ make serve-demo
 - [영역 프로토콜](docs/spec/protocol.ko.md): 매니페스트, 라우팅, 렌더, 요청과 응답 계약을 정의한다.
 - [화면 구성](docs/operations/composition.ko.md): 화면의 각 부분이 사용하는 장치(HTML과 CSS, 블록, 영역)를 정의한다.
 - [기능 상태](docs/features.ko.md): 구현과 검증 상태를 기록한다.
-- [개발](docs/operations/development.ko.md): 검사와 에셋 빌드를 설명한다.
+- [개발](docs/operations/development.ko.md): 검사와 빌드를 설명한다.
 - [배포](docs/operations/deployment.ko.md): S3와 CloudFront를 포함한 SSR과 CSR 배포를 설명한다.
 - [성능 측정](docs/operations/benchmark.ko.md): 성능 측정과 그 결과를 설명한다.
 - [의존성](docs/operations/dependencies.ko.md): 고정한 버전을 기록한다.
