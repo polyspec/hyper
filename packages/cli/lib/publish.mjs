@@ -22,6 +22,9 @@ export const staging = (target) => `${path.resolve(target)}.next-${process.pid}`
 /**
  * Moves every file of `staged` into `target` with one rename each, the files named in `last` after the others,
  * removes the files and empty directories of `target` that `staged` does not have, and removes `staged`.
+ * @param {string} staged
+ * @param {string} target
+ * @param {{ last?: string[] }} [options]
  */
 export function publish(staged, target, { last = [] } = {}) {
   mkdirSync(target, { recursive: true });

@@ -38,7 +38,11 @@ export function writeFileAtomic(file, content) {
   renameSync(next, file);
 }
 
-/** The paths of the files below `dir`, each with `dir` as its prefix, directory by directory. */
+/**
+ * The paths of the files below `dir`, each with `dir` as its prefix, directory by directory.
+ * @param {string} dir
+ * @returns {string[]}
+ */
 export function listFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);

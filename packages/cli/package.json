@@ -1,12 +1,11 @@
 {
   "name": "@polyspec/hyper-cli",
   "version": "0.0.40",
-  "description": "The command tool of the region protocol: the build of the server program and the browser assets of an application",
+  "description": "The command tool hyper of the region protocol: hyper build writes the server program and the browser assets of an application, hyper check checks its manifest and templates",
   "license": "MIT",
   "type": "module",
   "bin": {
-    "hyper-build-assets": "bin/hyper-build-assets.mjs",
-    "hyper-build-server": "bin/hyper-build-server.mjs"
+    "hyper": "bin/hyper.mjs"
   },
   "exports": {
     "./package.json": "./package.json"

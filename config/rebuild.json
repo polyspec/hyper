@@ -82,6 +82,30 @@
       "kind": "ecosystem",
       "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
     },
+    "packages/cli/bin/hyper.mjs": {
+      "kind": "ecosystem",
+      "tool": "parseArgs of node:util reads the arguments of the subcommands build and check, and the exit code reports the result (HR-96)"
+    },
+    "packages/cli/lib/build.mjs": {
+      "kind": "ecosystem",
+      "tool": "esbuild bundles the client, @tailwindcss/node and @tailwindcss/oxide build the stylesheets, and node:crypto hashes the outputs for the build id"
+    },
+    "packages/cli/lib/check.mjs": {
+      "kind": "policy",
+      "reason": "the manifest check of @polyspec/hyper-client and the template rules of hyper (HY-2, HY-48.3); no ecosystem tool states the rules of this protocol"
+    },
+    "packages/cli/lib/options.mjs": {
+      "kind": "ecosystem",
+      "tool": "parseArgs of node:util reads the options, and node:path checks that each input path lies inside the application"
+    },
+    "packages/cli/lib/program.mjs": {
+      "kind": "ecosystem",
+      "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
+    },
+    "packages/cli/lib/shell.mjs": {
+      "kind": "policy",
+      "reason": "the static shell of client rendering with the meta elements of HY-62, HY-125 and HYC-16; no ecosystem tool writes the shell of this protocol"
+    },
     "packages/cli/lib/output-files.mjs": {
       "kind": "ecosystem",
       "tool": "node:fs writes and copies the files, and sets the modes 0644 and 0755 that HR-68 requires whatever the umask"
@@ -121,6 +145,10 @@
     "scripts/contract-programs.mts": {
       "kind": "policy",
       "reason": "it writes the applications of the contract files with the server build of this repository (hyper-build-server); no ecosystem tool writes them"
+    },
+    "scripts/fixture-program.mts": {
+      "kind": "policy",
+      "reason": "it writes the program of a test fixture with its fixed build id through the assembly of the command tool (HY-125.21); no ecosystem tool writes it"
     },
     "scripts/install-redis.mts": {
       "kind": "ecosystem",

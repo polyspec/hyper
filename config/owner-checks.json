@@ -385,6 +385,42 @@
     },
     {
       "paths": [
+        "packages/cli/bin/hyper.mjs",
+        "packages/cli/lib/build.mjs",
+        "packages/cli/lib/check.mjs",
+        "packages/cli/lib/options.mjs"
+      ],
+      "targets": [
+        "templates-check",
+        "bundle-size",
+        "typecheck"
+      ],
+      "tests": [
+        "tests/scripts/cli.test.mts",
+        "tests/scripts/build-inputs.test.mts",
+        "tests/scripts/build.test.mts",
+        "tests/scripts/check-templates.test.mts",
+        "tests/scripts/package-source.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "packages/cli/lib/program.mjs",
+        "packages/cli/lib/shell.mjs",
+        "scripts/fixture-program.mts"
+      ],
+      "targets": [
+        "hyper-test-php",
+        "typecheck"
+      ],
+      "tests": [
+        "tests/scripts/build.test.mts",
+        "tests/scripts/fixture-program.test.mts",
+        "tests/scripts/package-source.test.mts"
+      ]
+    },
+    {
+      "paths": [
         "packages/cli/lib/output-files.mjs"
       ],
       "tests": [
