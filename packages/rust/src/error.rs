@@ -64,40 +64,74 @@ pub enum Error {
     Internal(&'static str),
 }
 
+/// An error as its questions read it: a failure of hyper itself, with the kind and the category that HY-132.1 gives it,
+/// or the error of a library that hyper passes on (HY-132.3).
+enum Part<'a> {
+    Own(&'static str, Category),
+    DataModel(&'a polyspec_template::BindError),
+    Template(&'a polyspec_template::TemplateError),
+    RecordValue(&'a polyspec_php_serialization::Error),
+    Sessions(&'a polyspec_session_store::Error),
+    Negotiate(&'a polyspec_http_negotiation::Error),
+    Cookies(&'a polyspec_http_cookie::Error),
+}
+
 impl Error {
+    /// The kind and the category of a failure of hyper itself, or the error of the library that it passes on.
+    fn part(&self) -> Part<'_> {
+        match self {
+            Error::NotApplicationPath => Part::Own("not_application_path", Category::Value),
+            Error::NotRedirectResult => Part::Own("not_redirect_result", Category::Value),
+            Error::PageStatusNotAllowed(_) => Part::Own("page_status_not_allowed", Category::Value),
+            Error::ReplyStatusNotAllowed(_) => {
+                Part::Own("reply_status_not_allowed", Category::Value)
+            }
+            Error::CookieNameNotAllowed(_) => Part::Own("cookie_name_not_allowed", Category::Value),
+            Error::CookieValueNotAllowed(_) => {
+                Part::Own("cookie_value_not_allowed", Category::Value)
+            }
+            Error::NegativeMaxAge(_) => Part::Own("negative_max_age", Category::Value),
+            Error::IntegerRange => Part::Own("integer_range", Category::Value),
+            Error::CacheControlNotAllowed => {
+                Part::Own("cache_control_not_allowed", Category::Value)
+            }
+            Error::CacheControlShared(_) => Part::Own("cache_control_shared", Category::Value),
+            Error::ReferrerPolicyNotAllowed(_) => {
+                Part::Own("referrer_policy_not_allowed", Category::Value)
+            }
+            Error::InvalidCsrfForm => Part::Own("invalid_csrf_form", Category::Value),
+            Error::InvalidSessionToken => Part::Own("invalid_session_token", Category::Store),
+            Error::InvalidSessionRecord => Part::Own("invalid_session_record", Category::Store),
+            Error::SharedHoldsContext => Part::Own("shared_holds_context", Category::Value),
+            Error::NotSelected => Part::Own("not_selected", Category::Type),
+            Error::InvalidApplication(_) => Part::Own("invalid_application", Category::Value),
+            Error::InvalidBuild(_) => Part::Own("invalid_build", Category::Value),
+            Error::InvalidRepresentation(_) => Part::Own("invalid_representation", Category::Value),
+            Error::Internal(_) => Part::Own("internal", Category::Internal),
+            Error::DataModel(error) => Part::DataModel(error),
+            Error::Template(error) => Part::Template(error),
+            Error::RecordValue(error) => Part::RecordValue(error),
+            Error::Sessions(error) => Part::Sessions(error),
+            Error::Negotiate(error) => Part::Negotiate(error),
+            Error::Cookies(error) => Part::Cookies(error),
+        }
+    }
+
     /// The category of the failure (HY-132.1), which selects the class of each runtime (HY-132.2).
     #[must_use]
     pub fn category(&self) -> Category {
-        match self {
-            Error::NotApplicationPath
-            | Error::NotRedirectResult
-            | Error::PageStatusNotAllowed(_)
-            | Error::ReplyStatusNotAllowed(_)
-            | Error::CookieNameNotAllowed(_)
-            | Error::CookieValueNotAllowed(_)
-            | Error::NegativeMaxAge(_)
-            | Error::IntegerRange
-            | Error::CacheControlNotAllowed
-            | Error::CacheControlShared(_)
-            | Error::ReferrerPolicyNotAllowed(_)
-            | Error::InvalidCsrfForm
-            | Error::SharedHoldsContext
-            | Error::InvalidApplication(_)
-            | Error::InvalidBuild(_)
-            | Error::InvalidRepresentation(_)
-            | Error::Cookies(_) => Category::Value,
-            Error::Negotiate(error) => match error {
+        match self.part() {
+            Part::Own(_, category) => category,
+            Part::Negotiate(error) => match error {
                 polyspec_http_negotiation::Error::Internal => Category::Internal,
                 polyspec_http_negotiation::Error::InvalidAccept
                 | polyspec_http_negotiation::Error::InvalidWeight
                 | polyspec_http_negotiation::Error::InvalidCandidate => Category::Value,
             },
-            Error::NotSelected => Category::Type,
-            Error::DataModel(_) => Category::Value,
-            Error::Template(error) => template_category(error.code),
-            Error::Sessions(error) => sessions_category(error),
-            Error::InvalidSessionToken | Error::InvalidSessionRecord => Category::Store,
-            Error::Internal(_) | Error::RecordValue(_) => Category::Internal,
+            Part::DataModel(_) | Part::Cookies(_) => Category::Value,
+            Part::Template(error) => template_category(error.code),
+            Part::Sessions(error) => sessions_category(error),
+            Part::RecordValue(_) => Category::Internal,
         }
     }
 }
@@ -116,63 +150,26 @@ impl Error {
 
 impl Kinds for Error {
     fn kind(&self) -> &'static str {
-        match self {
-            Error::NotApplicationPath => "not_application_path",
-            Error::NotRedirectResult => "not_redirect_result",
-            Error::PageStatusNotAllowed(_) => "page_status_not_allowed",
-            Error::ReplyStatusNotAllowed(_) => "reply_status_not_allowed",
-            Error::CookieNameNotAllowed(_) => "cookie_name_not_allowed",
-            Error::CookieValueNotAllowed(_) => "cookie_value_not_allowed",
-            Error::NegativeMaxAge(_) => "negative_max_age",
-            Error::IntegerRange => "integer_range",
-            Error::CacheControlNotAllowed => "cache_control_not_allowed",
-            Error::CacheControlShared(_) => "cache_control_shared",
-            Error::ReferrerPolicyNotAllowed(_) => "referrer_policy_not_allowed",
-            Error::InvalidCsrfForm => "invalid_csrf_form",
-            Error::InvalidSessionToken => "invalid_session_token",
-            Error::InvalidSessionRecord => "invalid_session_record",
-            Error::SharedHoldsContext => "shared_holds_context",
-            Error::NotSelected => "not_selected",
-            Error::InvalidApplication(_) => "invalid_application",
-            Error::InvalidBuild(_) => "invalid_build",
-            Error::InvalidRepresentation(_) => "invalid_representation",
-            Error::DataModel(error) => error.code.as_str(),
-            Error::Template(error) => error.code.as_str(),
-            Error::Sessions(error) => error.kind(),
-            Error::Negotiate(error) => error.kind(),
-            Error::Cookies(error) => error.kind(),
-            Error::Internal(_) | Error::RecordValue(_) => "internal",
+        match self.part() {
+            Part::Own(kind, _) => kind,
+            Part::DataModel(error) => error.code.as_str(),
+            Part::Template(error) => error.code.as_str(),
+            Part::Sessions(error) => error.kind(),
+            Part::Negotiate(error) => error.kind(),
+            Part::Cookies(error) => error.kind(),
+            Part::RecordValue(_) => "internal",
         }
     }
 
     fn status(&self) -> Option<u16> {
-        match self {
-            Error::Negotiate(error) => error.status(),
-            Error::Sessions(error) => error.status(),
-            Error::RecordValue(_) => None,
-            Error::DataModel(_) => None,
-            Error::Template(_) => None,
-            Error::NotApplicationPath
-            | Error::NotRedirectResult
-            | Error::PageStatusNotAllowed(_)
-            | Error::ReplyStatusNotAllowed(_)
-            | Error::CookieNameNotAllowed(_)
-            | Error::CookieValueNotAllowed(_)
-            | Error::NegativeMaxAge(_)
-            | Error::IntegerRange
-            | Error::CacheControlNotAllowed
-            | Error::CacheControlShared(_)
-            | Error::ReferrerPolicyNotAllowed(_)
-            | Error::InvalidCsrfForm
-            | Error::InvalidSessionToken
-            | Error::InvalidSessionRecord
-            | Error::SharedHoldsContext
-            | Error::NotSelected
-            | Error::InvalidApplication(_)
-            | Error::InvalidBuild(_)
-            | Error::InvalidRepresentation(_)
-            | Error::Cookies(_)
-            | Error::Internal(_) => None,
+        match self.part() {
+            Part::Negotiate(error) => error.status(),
+            Part::Sessions(error) => error.status(),
+            Part::Own(..)
+            | Part::RecordValue(_)
+            | Part::DataModel(_)
+            | Part::Template(_)
+            | Part::Cookies(_) => None,
         }
     }
 
@@ -232,33 +229,13 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Error::Negotiate(error) => Some(error),
-            Error::Sessions(error) => Some(error),
-            Error::RecordValue(error) => Some(error),
-            Error::DataModel(_) => None,
-            Error::Template(error) => Some(error),
-            Error::Cookies(error) => Some(error),
-            Error::NotApplicationPath
-            | Error::NotRedirectResult
-            | Error::PageStatusNotAllowed(_)
-            | Error::ReplyStatusNotAllowed(_)
-            | Error::CookieNameNotAllowed(_)
-            | Error::CookieValueNotAllowed(_)
-            | Error::NegativeMaxAge(_)
-            | Error::IntegerRange
-            | Error::CacheControlNotAllowed
-            | Error::CacheControlShared(_)
-            | Error::ReferrerPolicyNotAllowed(_)
-            | Error::InvalidCsrfForm
-            | Error::InvalidSessionToken
-            | Error::InvalidSessionRecord
-            | Error::SharedHoldsContext
-            | Error::NotSelected
-            | Error::InvalidApplication(_)
-            | Error::InvalidBuild(_)
-            | Error::InvalidRepresentation(_)
-            | Error::Internal(_) => None,
+        match self.part() {
+            Part::Negotiate(error) => Some(error),
+            Part::Sessions(error) => Some(error),
+            Part::RecordValue(error) => Some(error),
+            Part::Template(error) => Some(error),
+            Part::Cookies(error) => Some(error),
+            Part::Own(..) | Part::DataModel(_) => None,
         }
     }
 }

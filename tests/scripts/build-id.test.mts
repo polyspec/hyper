@@ -14,20 +14,13 @@ import dataTemplate from '../../packages/client/data-template.json' with { type:
 import { templateProblems } from '../../packages/cli/lib/template-rules.mjs';
 import { CaseReader } from '../../packages/ts/tests/case-reader.ts';
 import { writeResults } from '../../packages/ts/tests/case-run.ts';
-import { mapsOf, textMapOf, textOf } from '../../packages/ts/tests/inputs.ts';
+import { mapsOf, plain, textMapOf, textOf } from '../../packages/ts/tests/inputs.ts';
 
 type BuildFile = { path: string; bytes: Buffer };
 
 // The files of a case as the build passes them: the path and the bytes of the UTF-8 content of the case.
 function filesOf(value: unknown): BuildFile[] {
   return mapsOf(value, 'files').map((file) => ({ path: textOf(file.get('path'), 'path'), bytes: Buffer.from(textOf(file.get('content'), 'content'), 'utf8') }));
-}
-
-// Converts the Maps of a parsed case value into plain objects, the shape that the manifest file holds.
-function plain(value: unknown): unknown {
-  if (value instanceof Map) return Object.fromEntries([...value].map(([key, item]) => [key, plain(item)]));
-  if (Array.isArray(value)) return value.map(plain);
-  return value;
 }
 
 // The problems of the template check for the templates of a case, which the check reads from a directory.

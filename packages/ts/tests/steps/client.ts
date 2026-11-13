@@ -7,8 +7,8 @@ import { join } from 'node:path';
 import { Csrf } from '../../src/session/csrf.js';
 import { App, ArraySession, Choice, ClientRendering, Representation, Result, type AppOptions, type Handlers, type Loader, type RepresentationArgument, type RepresentationHandler, Request, type RouteHandlers } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
-import { FIXTURES, list, listAndItem, parsedBody, plain, record, requestFrom, TEMPLATES, TOKEN, type Counter, type Services } from '../support.js';
-import { mapOf, textOf, textsOf } from '../inputs.js';
+import { FIXTURES, list, listAndItem, parsedBody, record, requestFrom, TEMPLATES, TOKEN, type Counter, type Services } from '../support.js';
+import { mapOf, plain, textOf, textsOf } from '../inputs.js';
 import { comparesOpen, failureOf, Recorded, RecordingStore } from './recorded.js';
 
 // What the representation handlers of a case received: the number of their calls, and the media parameters and the

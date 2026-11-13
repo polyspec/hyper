@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { App } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
-import { plain } from '../support.js';
+import { plain } from '../inputs.js';
 
 // Returns the bytes of the manifest file of a case: the JSON text of `manifest`, the UTF-8 bytes of `text`, or the
 // bytes of the hexadecimal digits of `bytes`.

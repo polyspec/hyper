@@ -40,3 +40,10 @@ export function textMapOf(value: unknown, what: string): Map<string, string> {
 export function mapsOf(value: unknown, what: string): Map<string, unknown>[] {
   return listOf(value, what).map((item) => mapOf(item, `an item of ${what}`));
 }
+
+// Converts the Maps of a parsed contract value into plain objects, the shape the manifest file holds.
+export function plain(value: unknown): unknown {
+  if (value instanceof Map) return Object.fromEntries([...value].map(([key, item]) => [key, plain(item)]));
+  if (Array.isArray(value)) return value.map(plain);
+  return value;
+}

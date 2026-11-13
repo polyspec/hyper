@@ -4,8 +4,8 @@ use polyspec_template::Value;
 
 use crate::json::{read as read_json, JsonError};
 use crate::representation::{entries, entry, Entry};
-use crate::router::Router;
-use crate::Error;
+use crate::router::{is_identifier, Router};
+use crate::{values, Error};
 
 /// The storage of a kept value (HY-37.4).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -84,16 +84,7 @@ fn invalid(reason: &'static str) -> Error {
 }
 
 fn member<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
-    match value {
-        Value::Map(map) => map.get(key),
-        Value::Null
-        | Value::Bool(_)
-        | Value::Number(_)
-        | Value::Str(_)
-        | Value::Safe(_)
-        | Value::List(_)
-        | Value::Object(_) => None,
-    }
+    values::map(value)?.get(key)
 }
 
 fn text(value: Option<&Value>) -> Option<&str> {
@@ -118,19 +109,6 @@ fn is_region_name(name: &str) -> bool {
                 && rest
                     .iter()
                     .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'-'))
-        }
-        None => false,
-    }
-}
-
-/// Whether a name matches `[A-Za-z_][A-Za-z0-9_]*`, the form of a topic and of a map key of a kept path (HY-37.3).
-fn is_identifier(name: &str) -> bool {
-    match name.as_bytes().split_first() {
-        Some((first, rest)) => {
-            (first.is_ascii_alphabetic() || *first == b'_')
-                && rest
-                    .iter()
-                    .all(|byte| byte.is_ascii_alphanumeric() || *byte == b'_')
         }
         None => false,
     }
@@ -191,20 +169,7 @@ fn keep(value: &Value) -> Result<Vec<(String, KeepKind)>, Error> {
 
 /// The texts of a list of text (HY-118.7).
 fn texts(value: Option<&Value>, reason: &'static str) -> Result<Vec<String>, Error> {
-    let mut found = Vec::new();
-    for item in list(value, reason)? {
-        match item {
-            Value::Str(text) => found.push(text.clone()),
-            Value::Null
-            | Value::Bool(_)
-            | Value::Number(_)
-            | Value::Safe(_)
-            | Value::List(_)
-            | Value::Map(_)
-            | Value::Object(_) => return Err(invalid(reason)),
-        }
-    }
-    Ok(found)
+    values::texts(list(value, reason)?).ok_or_else(|| invalid(reason))
 }
 
 /// The representations of a route (HY-118.2, HY-118.5 to HY-118.7).

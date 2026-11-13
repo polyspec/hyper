@@ -36,8 +36,9 @@ fn is_literal(segment: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'~' | b'-'))
 }
 
-/// Whether a parameter name matches `[A-Za-z_][A-Za-z0-9_]*` (HY-4.3).
-fn is_name(name: &str) -> bool {
+/// Whether a name matches `[A-Za-z_][A-Za-z0-9_]*`, the form of a parameter name (HY-4.3) and of a topic and a map key
+/// of a kept path (HY-37.3).
+pub(crate) fn is_identifier(name: &str) -> bool {
     match name.as_bytes().split_first() {
         Some((first, rest)) => {
             (first.is_ascii_alphabetic() || *first == b'_')
@@ -70,13 +71,13 @@ pub fn route(name: &str, path: &str) -> Result<Route, Error> {
                 .and_then(|inner| inner.strip_suffix('}'))
             {
                 if let Some(rest_name) = inner.strip_suffix('*') {
-                    if index != last || !is_name(rest_name) {
+                    if index != last || !is_identifier(rest_name) {
                         return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
                             "a rest parameter is a named last segment (HY-49)",
                         )));
                     }
                     Segment::Rest(rest_name.to_owned())
-                } else if is_name(inner) {
+                } else if is_identifier(inner) {
                     Segment::Parameter(inner.to_owned())
                 } else {
                     return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(

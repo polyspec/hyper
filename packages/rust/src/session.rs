@@ -11,7 +11,7 @@ use polyspec_session_store::Store;
 use polyspec_template::{BindError, ErrorCode, OrderedMap, Value};
 
 use crate::csrf::stored_token;
-use crate::Error;
+use crate::{values, Error};
 
 /// The key of the token (HY-104.22).
 pub const TOKEN_KEY: &str = "_hyper_csrf";
@@ -410,22 +410,10 @@ pub fn take_flash(store: &mut dyn Store) -> Result<(OrderedMap, Vec<String>), Se
     };
     let changed = match flash.get("changed") {
         None => Vec::new(),
-        Some(Value::List(topics)) => {
-            let mut changed = Vec::with_capacity(topics.len());
-            for topic in topics.iter() {
-                match topic {
-                    Value::Str(topic) => changed.push(topic.clone()),
-                    Value::Null
-                    | Value::Bool(_)
-                    | Value::Number(_)
-                    | Value::Safe(_)
-                    | Value::List(_)
-                    | Value::Map(_)
-                    | Value::Object(_) => return Err(Failure::Kind(Error::InvalidSessionRecord)),
-                }
-            }
-            changed
-        }
+        Some(Value::List(topics)) => match values::texts(topics) {
+            Some(changed) => changed,
+            None => return Err(Failure::Kind(Error::InvalidSessionRecord)),
+        },
         Some(_) => return Err(Failure::Kind(Error::InvalidSessionRecord)),
     };
     from_store(store.remove(FLASH_KEY))?;

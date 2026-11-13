@@ -8,8 +8,8 @@ import { App, ArraySession, Representation, Request, type Handlers, type Represe
 import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
-import { mapOf, stringsOf, textOf, textsOf } from '../inputs.js';
-import { list, OrmError, parsedBody, plain, record, requestFrom } from '../support.js';
+import { mapOf, plain, stringsOf, textOf, textsOf } from '../inputs.js';
+import { list, OrmError, parsedBody, record, requestFrom } from '../support.js';
 import { failureOf, messageStart } from './recorded.js';
 
 const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));

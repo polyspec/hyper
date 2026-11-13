@@ -61,6 +61,16 @@ fn check_raises(case: &Value, error: &Error) {
     }
 }
 
+/// Compares a result with its case: `ok` compares the value of a case that states no failure, and a failure is compared
+/// with `raises`. A value where the case states a failure, and a failure where it states none, fail.
+fn check<T: std::fmt::Debug>(case: &Value, result: &Result<T, Error>, ok: impl FnOnce(&T)) {
+    match (result, case.get("raises")) {
+        (Ok(value), None) => ok(value),
+        (Err(error), Some(_)) => check_raises(case, error),
+        _ => panic!("{}: {result:?}", case["id"]),
+    }
+}
+
 /// Whether a case runs in PHP and Python, whose binding gives the core every i64 (B-2); a case only of Node states
 /// what the binding of Node refuses before the core runs.
 fn runs_in_php(case: &Value) -> bool {
@@ -88,36 +98,28 @@ fn csrf_mask_verify_and_browser() {
     let mut ran = 0;
     for case in group(&file, "mask") {
         let result = csrf::mask(text(case, "token"), text(case, "mask"));
-        match (&result, case.get("raises")) {
-            (Ok(value), None) => assert_eq!(value, text(case, "value"), "{}", case["id"]),
-            (Err(error), Some(_)) => check_raises(case, error),
-            _ => panic!("{}: {result:?}", case["id"]),
-        }
+        check(case, &result, |value| {
+            assert_eq!(value, text(case, "value"), "{}", case["id"])
+        });
         ran += 1;
     }
     for case in group(&file, "verify") {
         let result = csrf::verify(text(case, "token"), text(case, "value"));
-        match (&result, case.get("raises")) {
-            (Ok(valid), None) => {
-                assert_eq!(Some(*valid), case["valid"].as_bool(), "{}", case["id"])
-            }
-            (Err(error), Some(_)) => check_raises(case, error),
-            _ => panic!("{}: {result:?}", case["id"]),
-        }
+        check(case, &result, |valid| {
+            assert_eq!(Some(*valid), case["valid"].as_bool(), "{}", case["id"])
+        });
         ran += 1;
     }
     for case in group(&file, "browser") {
         let result = csrf::browser(text(case, "value"));
-        match (&result, case.get("raises")) {
-            (Ok(browser), None) => assert_eq!(
+        check(case, &result, |browser| {
+            assert_eq!(
                 browser.as_deref(),
                 case["browser"].as_str(),
                 "{}",
                 case["id"]
-            ),
-            (Err(error), Some(_)) => check_raises(case, error),
-            _ => panic!("{}: {result:?}", case["id"]),
-        }
+            )
+        });
         ran += 1;
     }
     assert!(ran > 0);
@@ -133,29 +135,23 @@ fn redirect_locations_and_page_statuses() {
             continue;
         }
         let result = location::redirect_location(text(case, "location"));
-        match (&result, case.get("raises")) {
-            (Ok(location), None) => {
-                assert_eq!(Some(*location), case["redirect"].as_str(), "{}", case["id"])
-            }
-            (Err(error), Some(_)) => check_raises(case, error),
-            _ => panic!("{}: {result:?}", case["id"]),
-        }
+        check(case, &result, |location| {
+            assert_eq!(Some(*location), case["redirect"].as_str(), "{}", case["id"])
+        });
     }
     for case in group(&file, "page") {
         let Some(status) = case["status"].as_i64() else {
             continue;
         };
         let result = location::page_status(status);
-        match (&result, case.get("raises")) {
-            (Ok(status), None) => assert_eq!(
+        check(case, &result, |status| {
+            assert_eq!(
                 Some(u64::from(*status)),
                 case["result"].as_u64(),
                 "{}",
                 case["id"]
-            ),
-            (Err(error), Some(_)) => check_raises(case, error),
-            _ => panic!("{}: {result:?}", case["id"]),
-        }
+            )
+        });
     }
 }
 
@@ -319,8 +315,8 @@ fn accept_selects_the_page_or_the_page_data() {
             None => Vec::new(),
         };
         let result = select(&lines, served, &[]);
-        match (&result, case.get("raises")) {
-            (Ok(Selection::Selected(selected)), None) => {
+        check(case, &result, |selection| match selection {
+            Selection::Selected(selected) => {
                 let name = match selected {
                     Selected::Page => "text/html",
                     Selected::PageData => "application/vnd.hyper+json",
@@ -330,12 +326,10 @@ fn accept_selects_the_page_or_the_page_data() {
                 };
                 assert_eq!(Some(name), case["selected"].as_str(), "{}", case["id"]);
             }
-            (Ok(Selection::NotAcceptable { .. }), None) => {
+            Selection::NotAcceptable { .. } => {
                 assert!(case["selected"].is_null(), "{}", case["id"])
             }
-            (Err(error), Some(_)) => check_raises(case, error),
-            _ => panic!("{}: {result:?}", case["id"]),
-        }
+        });
         ran += 1;
     }
     assert!(ran > 0);
@@ -451,11 +445,9 @@ fn manifest_checks() {
             from_hex(text(case, "bytes"))
         };
         let result = polyspec_hyper::manifest::read(&bytes);
-        match (&result, case.get("raises")) {
-            (Ok(_), None) => assert_eq!(case["read"].as_bool(), Some(true), "{}", case["id"]),
-            (Err(error), Some(_)) => check_raises(case, error),
-            (other, _) => panic!("{}: {other:?}", case["id"]),
-        }
+        check(case, &result, |_| {
+            assert_eq!(case["read"].as_bool(), Some(true), "{}", case["id"])
+        });
         ran += 1;
     }
     assert!(ran > 0);

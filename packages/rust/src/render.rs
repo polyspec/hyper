@@ -15,7 +15,7 @@ use polyspec_template::{
 
 use crate::keep::apply;
 use crate::manifest::{Manifest, Route};
-use crate::Error;
+use crate::{values, Error};
 
 /// The reserved template of the embedded data (HY-31.3).
 pub const DATA_TEMPLATE: &str = "hyper/data.tpl";
@@ -149,15 +149,9 @@ struct Parts {
 }
 
 fn bound(value: &Value) -> Result<BoundMap, RenderFailure> {
-    match value {
-        Value::Map(map) => bind(&**map).map_err(from_template),
-        Value::Null
-        | Value::Bool(_)
-        | Value::Number(_)
-        | Value::Str(_)
-        | Value::Safe(_)
-        | Value::List(_)
-        | Value::Object(_) => Err(Failure::Kind(Error::Internal(
+    match values::map(value) {
+        Some(map) => bind(&**map).map_err(from_template),
+        None => Err(Failure::Kind(Error::Internal(
             "the data of a region is not a map (HY-13.1)",
         ))),
     }

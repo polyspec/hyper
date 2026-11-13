@@ -67,36 +67,30 @@ fn index(segment: &str) -> Option<usize> {
     })
 }
 
+/// The value that takes the place of `current`: at the end of the path the kept value when it conforms, else `current`
+/// with the rest of the path replaced; `None` when nothing changes (HY-38.7).
+fn replaced(current: &Value, rest: &[&str], kept: &Value) -> Option<Value> {
+    if rest.is_empty() {
+        conforms(kept, current).then(|| kept.clone())
+    } else {
+        replace(current, rest, kept)
+    }
+}
+
 /// The container with the value at the path replaced by the kept value when the path exists and the value conforms,
 /// or `None` when nothing changes (HY-38.7, HY-38.19). A map takes a name and a list an index.
 fn replace(container: &Value, segments: &[&str], kept: &Value) -> Option<Value> {
     let (first, rest) = segments.split_first()?;
     match container {
         Value::Map(map) => {
-            let current = map.get(first)?;
-            let replaced = if rest.is_empty() {
-                if !conforms(kept, current) {
-                    return None;
-                }
-                kept.clone()
-            } else {
-                replace(current, rest, kept)?
-            };
+            let replaced = replaced(map.get(first)?, rest, kept)?;
             let mut copy = (**map).clone();
             copy.insert((*first).to_owned(), replaced);
             Some(Value::Map(Arc::new(copy)))
         }
         Value::List(items) => {
             let at = index(first)?;
-            let current = items.get(at)?;
-            let replaced = if rest.is_empty() {
-                if !conforms(kept, current) {
-                    return None;
-                }
-                kept.clone()
-            } else {
-                replace(current, rest, kept)?
-            };
+            let replaced = replaced(items.get(at)?, rest, kept)?;
             let mut copy = (**items).clone();
             *copy.get_mut(at)? = replaced;
             Some(Value::List(Arc::new(copy)))

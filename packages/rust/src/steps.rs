@@ -19,7 +19,7 @@ use crate::manifest::{Manifest, Route};
 use crate::page::{json_value, kept_values, regions, shared_data, Response};
 use crate::reads::{keep, Read};
 use crate::render::{Document, Templates};
-use crate::Error;
+use crate::{values, Error};
 
 /// A map of the boundary of the bindings (binding T-2).
 pub type Map<T> = binding_core::OrderedMap<T>;
@@ -580,15 +580,9 @@ impl PageRequest {
             return Err(internal("a page without its shared data"));
         };
         // HY-73.29: the page keeps only the paths that the templates of the route read.
-        let shared = match keep(&Value::Map(Arc::new(shared)), &route_reads.shared) {
-            Value::Map(map) => (*map).clone(),
-            Value::Null
-            | Value::Bool(_)
-            | Value::Number(_)
-            | Value::Str(_)
-            | Value::Safe(_)
-            | Value::List(_)
-            | Value::Object(_) => return Err(internal("the shared data is not a map")),
+        let shared = match values::map(&keep(&Value::Map(Arc::new(shared)), &route_reads.shared)) {
+            Some(map) => (**map).clone(),
+            None => return Err(internal("the shared data is not a map")),
         };
         let mut data = Vec::with_capacity(self.data.len());
         for (name, value) in std::mem::take(&mut self.data) {
