@@ -25,12 +25,12 @@ pub struct Front {
     pub accept: Vec<Vec<u8>>,
     /// Whether the request has `HX-Request: true` (HY-15.1).
     pub hx_request: bool,
+    /// Whether `Content-Type` is no media type, the empty value included (HY-59.12).
+    pub malformed_content_type: bool,
     /// The value of `Hyper-Context`, or `None` (HY-127).
     pub context_header: Option<Vec<u8>>,
     /// The media type of the body as F-12 of http-form reads it, or `None` without `Content-Type` (HY-59.12).
     pub media_type: Option<String>,
-    /// Whether `Content-Type` is no media type, the empty value included (HY-59.12).
-    pub malformed_content_type: bool,
 }
 
 /// The declarations of the application that the route of a request reads (HY-8, HY-62.2, HY-59.1).
@@ -51,10 +51,10 @@ pub struct Plain {
     pub status: u16,
     /// The text of the body.
     pub body: Vec<u8>,
-    /// The `Allow` of a 405 (HY-27.6), or `None`.
-    pub allow: Option<String>,
     /// Whether the answer has `Vary: Accept` (HY-117.3).
     pub vary_accept: bool,
+    /// The `Allow` of a 405 (HY-27.6), or `None`.
+    pub allow: Option<String>,
 }
 
 fn plain(status: u16, body: &str) -> Plain {
@@ -77,7 +77,8 @@ pub enum Route {
     Keep,
     /// A representation of a route (HY-118, HY-121), and no session (HY-120.4).
     Representation {
-        route: String,
+        /// The name of the route.
+        name: String,
         params: Vec<(String, String)>,
         /// The position of the entry among the representations of the route.
         entry: usize,
@@ -86,7 +87,8 @@ pub enum Route {
     },
     /// A page (HY-15): the host opens the session, checks the token of a `POST` (HY-24) and runs the page.
     Page {
-        route: String,
+        /// The name of the route.
+        name: String,
         params: Vec<(String, String)>,
         kind: PageKind,
         action: bool,
@@ -209,7 +211,7 @@ pub fn route_request(pages: &Pages, chosen: bool, front: &Front) -> Result<Route
     };
     if let Selected::Representation { entry, values } = selected {
         return Ok(Route::Representation {
-            route: route.name.clone(),
+            name: route.name.clone(),
             params: found.params,
             entry,
             values,
@@ -250,7 +252,7 @@ pub fn route_request(pages: &Pages, chosen: bool, front: &Front) -> Result<Route
         (_, false) => PageKind::DocumentJson,
     };
     Ok(Route::Page {
-        route: route.name.clone(),
+        name: route.name.clone(),
         params: found.params,
         kind,
         action,
@@ -279,8 +281,6 @@ pub struct PageResponse {
     pub json: bool,
     /// The body.
     pub body: String,
-    /// The `Cache-Control` that the reply states, or `None` (HY-52).
-    pub cache_control: Option<String>,
     /// Whether the application declares a context (HY-117.1).
     pub context: bool,
     /// The masked token of the response (HY-53.1).
@@ -289,6 +289,8 @@ pub struct PageResponse {
     pub token: String,
     /// The method of the request (HY-53.4).
     pub method: String,
+    /// The `Cache-Control` that the reply states, or `None` (HY-52).
+    pub cache_control: Option<String>,
     /// The `If-None-Match` of the request, or `None` (HY-53.4).
     pub if_none_match: Option<String>,
 }

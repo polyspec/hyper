@@ -27,6 +27,10 @@ pub struct Opening {
     /// with the current path (HY-11.3).
     pub path: String,
     pub base_path: String,
+    /// The mask of the token of this response, 64 lowercase hexadecimal digits that the host draws (HY-24.2, HY-24.3).
+    pub mask: String,
+    /// The current time of the render, in seconds since the Unix epoch.
+    pub now: f64,
     /// The value of `HX-Current-URL`, or `None` (HY-11.4).
     pub current_url: Option<Vec<u8>>,
     /// The value of the cookie `hy-keep`, or `None` (HY-38.10).
@@ -35,10 +39,6 @@ pub struct Opening {
     pub held_hash: Option<String>,
     /// The last value of the form field `_csrf` of a `POST`, or `None` (HY-24.4).
     pub form_csrf: Option<String>,
-    /// The mask of the token of this response, 64 lowercase hexadecimal digits that the host draws (HY-24.2, HY-24.3).
-    pub mask: String,
-    /// The current time of the render, in seconds since the Unix epoch.
-    pub now: f64,
 }
 
 /// The session of a page.
@@ -153,10 +153,10 @@ pub fn open_page(
 /// A request to the kept endpoint (HY-40.1): the form fields `_csrf`, `region`, `path` and `value`.
 #[derive(Debug, Clone)]
 pub struct KeepRequest {
-    pub form_csrf: Option<String>,
     pub region: String,
     pub path: String,
     pub value: String,
+    pub form_csrf: Option<String>,
 }
 
 /// Answers a request to the kept endpoint after its route (HY-40.1, HY-59.8): 403 when the form token does not match

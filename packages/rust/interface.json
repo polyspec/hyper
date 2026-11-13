@@ -1861,6 +1861,16 @@
         },
         {
           "name": [
+            "form",
+            "types"
+          ],
+          "type": {
+            "list": "text"
+          },
+          "required": true
+        },
+        {
+          "name": [
             "data",
             "base",
             "path"
@@ -1872,16 +1882,6 @@
             "literal": null
           },
           "reason": "HY-62.14"
-        },
-        {
-          "name": [
-            "form",
-            "types"
-          ],
-          "type": {
-            "list": "text"
-          },
-          "required": true
         }
       ]
     },
@@ -2106,6 +2106,13 @@
         },
         {
           "name": [
+            "now"
+          ],
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": [
             "keep",
             "cookie"
           ],
@@ -2129,13 +2136,6 @@
             "literal": null
           },
           "reason": "HY-127.1"
-        },
-        {
-          "name": [
-            "now"
-          ],
-          "type": "float",
-          "required": true
         }
       ]
     },
@@ -2587,6 +2587,15 @@
         },
         {
           "name": [
+            "malformed",
+            "content",
+            "type"
+          ],
+          "type": "bool",
+          "required": true
+        },
+        {
+          "name": [
             "context",
             "header"
           ],
@@ -2610,15 +2619,6 @@
             "literal": null
           },
           "reason": "HY-59.12"
-        },
-        {
-          "name": [
-            "malformed",
-            "content",
-            "type"
-          ],
-          "type": "bool",
-          "required": true
         }
       ]
     },
@@ -2649,6 +2649,14 @@
         },
         {
           "name": [
+            "vary",
+            "accept"
+          ],
+          "type": "bool",
+          "required": true
+        },
+        {
+          "name": [
             "allow"
           ],
           "type": {
@@ -2658,14 +2666,6 @@
             "literal": null
           },
           "reason": "HY-27.6"
-        },
-        {
-          "name": [
-            "vary",
-            "accept"
-          ],
-          "type": "bool",
-          "required": true
         }
       ]
     },
@@ -2710,7 +2710,7 @@
           "fields": [
             {
               "name": [
-                "route"
+                "name"
               ],
               "type": "text",
               "required": true
@@ -2752,7 +2752,7 @@
           "fields": [
             {
               "name": [
-                "route"
+                "name"
               ],
               "type": "text",
               "required": true
@@ -2826,19 +2826,6 @@
         },
         {
           "name": [
-            "cache",
-            "control"
-          ],
-          "type": {
-            "optional": "text"
-          },
-          "default": {
-            "literal": null
-          },
-          "reason": "HY-52"
-        },
-        {
-          "name": [
             "context"
           ],
           "type": "bool",
@@ -2865,6 +2852,19 @@
           ],
           "type": "text",
           "required": true
+        },
+        {
+          "name": [
+            "cache",
+            "control"
+          ],
+          "type": {
+            "optional": "text"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-52"
         },
         {
           "name": [
@@ -3160,6 +3160,20 @@
         },
         {
           "name": [
+            "mask"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "now"
+          ],
+          "type": "float",
+          "required": true
+        },
+        {
+          "name": [
             "current",
             "url"
           ],
@@ -3209,20 +3223,6 @@
             "literal": null
           },
           "reason": "HY-24.5"
-        },
-        {
-          "name": [
-            "mask"
-          ],
-          "type": "text",
-          "required": true
-        },
-        {
-          "name": [
-            "now"
-          ],
-          "type": "float",
-          "required": true
         }
       ]
     },
@@ -3300,19 +3300,6 @@
       "fields": [
         {
           "name": [
-            "form",
-            "csrf"
-          ],
-          "type": {
-            "optional": "text"
-          },
-          "default": {
-            "literal": null
-          },
-          "reason": "HY-24.5"
-        },
-        {
-          "name": [
             "region"
           ],
           "type": "text",
@@ -3331,6 +3318,19 @@
           ],
           "type": "text",
           "required": true
+        },
+        {
+          "name": [
+            "form",
+            "csrf"
+          ],
+          "type": {
+            "optional": "text"
+          },
+          "default": {
+            "literal": null
+          },
+          "reason": "HY-24.5"
         }
       ]
     },

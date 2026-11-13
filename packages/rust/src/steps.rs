@@ -99,10 +99,10 @@ pub struct PagesOptions {
     pub context: bool,
     /// The base path (HY-8).
     pub base_path: String,
-    /// The data base path of client rendering, or `None` without the declaration (HY-62.2).
-    pub data_base_path: Option<String>,
     /// The form types (HY-59.1).
     pub form_types: Vec<String>,
+    /// The data base path of client rendering, or `None` without the declaration (HY-62.2).
+    pub data_base_path: Option<String>,
 }
 
 /// The pages of an application, which every page request of the application shares: a handle that owns the
@@ -199,12 +199,12 @@ pub struct PageInput {
     pub changed: Vec<String>,
     /// The kept server values of the session, by region and path (HY-40).
     pub stored: Map<Map<Value>>,
+    /// The current time of the render, in seconds since the Unix epoch, which the host reads.
+    pub now: f64,
     /// The value of the cookie `hy-keep` of the request (HY-38.10), or `None`.
     pub keep_cookie: Option<String>,
     /// The value of `Hyper-Context`, which HY-127.2 checked, or `None`.
     pub held_hash: Option<String>,
-    /// The current time of the render, in seconds since the Unix epoch, which the host reads.
-    pub now: f64,
 }
 
 /// The handler that a step asks the host to call.

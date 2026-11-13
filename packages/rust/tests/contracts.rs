@@ -1374,7 +1374,7 @@ fn the_route_of_a_request_before_its_page() -> Result<(), Error> {
         malformed_content_type: false,
     };
     let page = |route: &str, kind: PageKind, action: bool| Route::Page {
-        route: route.to_owned(),
+        name: route.to_owned(),
         params: Vec::new(),
         kind,
         action,
@@ -1944,7 +1944,7 @@ fn the_fault_cases_raise_their_kind_where_their_points_break() -> Result<(), Err
         assert_eq!(
             route_request(&pages, chosen, &request)?,
             Route::Page {
-                route: "home".to_owned(),
+                name: "home".to_owned(),
                 params: Vec::new(),
                 kind: PageKind::Html,
                 action: false,
