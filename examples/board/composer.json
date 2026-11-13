@@ -26,7 +26,8 @@
     },
     "config": {
         "platform": {
-            "php": "8.4.1"
+            "php": "8.4.1",
+            "ext-polyspec_hyper": "0.0.40"
         },
         "sort-packages": true
     }

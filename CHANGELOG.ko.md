@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 47478358bf631b5728736a3eddab4a5c763b526dfc4fc9b7e8f9050c5853c4ca -->
+<!-- source-sha256: f8c1e3ae195b50e39d99c959b8a570895007054f726685288168936ef3648e53 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make bindings-check`가 binding CK-19가 요구하는 host manifest 항목 11개를 보고했다(L-2a). 이제 `packages/ts/package.json`은 `files`에 `native/generated/index.cjs`, `index.mjs`, `index.d.ts`와 `native/wasm/generated/*.mjs`, `*.js`, `*.d.ts`, `*.wasm`을 적고, `packages/php/composer.json`은 `ext-polyspec_hyper`를 require한다. root와 board의 Composer 프로젝트는 `config.platform`에 `ext-polyspec_hyper` 0.0.40을 선언해 Composer가 확장 없이 lock을 resolve하게 한다. 확장이 없는 PHP 8.4.27로 두 프로젝트의 `composer install`이 통과하고, `vendor/composer/platform_check.php`는 PHP 버전만 확인하며, `vendor/autoload.php`가 로드된다. `npm ci`(`make install-packages`)가 통과한다. `optionalDependencies`의 플랫폼 패키지 세 개는 계속 보고된다. 그것을 release에 맡기는 binding commit(binding GN-3c)을 고정하면 요구되지 않는다(H31.3-4).
 - host `packages/ts/package.json`은 npm-native 패키지의 release가 읽는 `napi.binaryName` `hyper`와 `napi.targets` `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `aarch64-apple-darwin`을 적는다. 이것이 없으면 release가 그 패키지를 거부한다. 고정된 binding 3b4bc6b는 이 항목을 읽지 않는다: `make bindings-check`는 변경 전후에 같은 CK-19 finding을 보고한다. `packages/php/native/composer.json`의 `php-ext.download-url-method`는 넣지 않았다. 그 파일은 고정된 binding의 scaffold가 쓰는 것이고, 그 필드를 넣자 `binding check`가 `CK-19 differs`를 보고했기 때문이다(H31.3-3).
 - lock은 `fault-test`를 켠 자기 자신을 개발 의존성으로 가지는(template T28.20) `polyspec-template` 3d61389b, 그것이 요구하는 `polyspec-json` 02a5d73, `polyspec-binding-core` 3b4bc6b를 고정한다. binding crate는 binding 3b4bc6b의 scaffold가 쓰는 것이다: Go crate는 `fault-test`를 선언하고, 각 `lib.rs`의 attribute는 T-4만 밝힌다.
 - `contracts/interfaces.json`은 PHP의 `HyperValueError::status`에 `public function status(): null`을 적는다. category `value`의 오류는 status가 없으므로(HY-132.2) method가 선언하는 반환 타입이다. PHP 8.4.27의 recipe check는 이전의 `?int`에 `MEMBER_SIGNATURE`를 보고했다. PHP 8.4.27에서 recipe check는 PHP의 다른 signature를 보고하지 않는다. PHP 8.5.10의 다른 지적 76개는 그 reflection에서 나왔고, AGENTS.md의 기준선에서는 증거가 아니다.

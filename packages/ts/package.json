@@ -12,7 +12,14 @@
   },
   "files": [
     "dist",
-    "native/generated/*.node"
+    "native/generated/*.node",
+    "native/generated/index.cjs",
+    "native/generated/index.mjs",
+    "native/generated/index.d.ts",
+    "native/wasm/generated/*.mjs",
+    "native/wasm/generated/*.js",
+    "native/wasm/generated/*.d.ts",
+    "native/wasm/generated/*.wasm"
   ],
   "sideEffects": false,
   "scripts": {

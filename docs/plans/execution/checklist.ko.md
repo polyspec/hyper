@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: fae4397062dd6dfbab7e2429f351e797951189bc7dc5d7f8a91139672716b53a -->
+<!-- source-sha256: 856e7e2b96fff9465c28330825c4f0135a4554a106eeffa08b2f16f6b6885d78 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -440,4 +440,5 @@
 | H31.3-1 | `make install-binding`이 `Cargo.lock`의 commit의 binding cli를 그 lock의 package와 함께 `var/binding/<commit>`에 clone하고, `make bindings`와 `make bindings-check`가 그것을 실행한다. 원인: 둘 다 `BINDING`이 checkout의 cli를 밝혀야 했고, 그 commit은 lock의 것이 아니었다(CK-20) | Makefile, scripts/install-binding.mts, AGENTS.md와 그 한국어 쌍, docs/operations/repository-rules.md와 그 한국어 쌍 | `make install-binding`, `make bindings-check` | [ ] |
 | H31.3-2 | PHP 8.4.27의 recipe check는 PHP의 `MEMBER_SIGNATURE`를 보고하지 않는다: `contracts/interfaces.json`이 `HyperValueError`의 `public function status(): null`을 적는다. 원인: G-9가 반환 타입을 좁히고 계약은 `?int`로 두었으며, PHP 8.5.10의 지적은 그 reflection에서 나왔다 | contracts/interfaces.json | `make recipe-check` | [ ] |
 | H31.3-3 | host `packages/ts/package.json`은 `"type": "module"` 옆에 npm-native 패키지의 release가 읽는 `napi.binaryName` `hyper`와 `napi.targets` `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `aarch64-apple-darwin`을 적는다(binding GN-3b, GN-3c). 고정된 binding 3b4bc6b는 이 항목을 읽지 않으므로, CK-19가 이 항목을 읽는 binding을 고정했을 때 그 항목이 하나도 보고되지 않으면 끝이다. `packages/php/native/composer.json`의 `php-ext.download-url-method`는 그 binding의 scaffold와 함께 들어온다 | packages/ts/package.json | `make bindings-check` | [ ] |
+| H31.3-4 | `make bindings-check`가 host manifest에서 보고하는 것은 `optionalDependencies`의 플랫폼 패키지뿐이고, 그것은 release에 맡기는 binding commit(binding GN-3c)을 고정하면 요구되지 않는다. `packages/ts/package.json`은 `files`에 생성된 진입점과 그 선언, WASM 모듈과 glue와 선언을 적고, `packages/php/composer.json`은 `ext-polyspec_hyper`를 require한다. root와 board의 Composer 프로젝트는 그것을 `config.platform`에 선언하므로, Composer는 확장 없이 resolve하고 설치하며 `vendor/composer/platform_check.php`는 PHP 버전만 확인한다. 원인: host manifest에 binding CK-19(L-2a)의 이 항목들이 없었다 | packages/ts/package.json, packages/php/composer.json, composer.json, composer.lock, examples/board/composer.json, examples/board/composer.lock | `make bindings-check` | [ ] |
 | H31.4 | `hyper build`와 `hyper check`는 Node binding으로 core의 규칙을 부르고, build는 `hyper/data.tpl`을 core에서 받으며, 이전 TypeScript 규칙은 `legacy/`로 옮겨 그 시험을 같은 기대값으로 binding에 대해 돌린다(H-8 1단계) | packages/cli, tests/scripts | `make hyper-test-scripts TESTS="tests/scripts/build.test.mts tests/scripts/check-templates.test.mts"` | [ ] |
