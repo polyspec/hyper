@@ -871,7 +871,7 @@
     },
     {
       "id": "truncated_json_is_rejected",
-      "label": "a manifest file that holds truncated JSON fails the open with the open error (HY-106.18)",
+      "label": "a manifest file that holds truncated JSON fails the open with the open error (HY-106.21)",
       "text": "{\"layout\":",
       "raises": {
         "kind": "invalid_application",
@@ -882,7 +882,7 @@
     },
     {
       "id": "a_file_that_is_not_utf8_is_rejected",
-      "label": "a manifest file with the byte ff in a string is not valid UTF-8 (HY-106.18)",
+      "label": "a manifest file with the byte ff in a string is not valid UTF-8 (HY-106.21)",
       "bytes": "7b226c61796f7574223a22ff227d",
       "raises": {
         "kind": "invalid_application",

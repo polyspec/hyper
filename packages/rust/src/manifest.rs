@@ -362,7 +362,7 @@ pub fn check(manifest: &Value) -> Result<Manifest, Error> {
 /// Reads and checks a manifest file (HY-2.7, HY-2.9): its bytes are JSON text of the data model (HY-54.20).
 ///
 /// # Errors
-/// `invalid_application` for a file that is not such a text and for a manifest that the check refuses (HY-106.18).
+/// `invalid_application` for a file that is not such a text and for a manifest that the check refuses (HY-106.21).
 pub fn read(bytes: &[u8]) -> Result<Manifest, Error> {
     let value = match read_json(bytes) {
         Ok(value) => value,

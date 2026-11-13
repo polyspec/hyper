@@ -239,7 +239,7 @@
               ],
               "output": "app",
               "errors": [],
-              "state": "Reads and checks the manifest, the build outputs, the handlers and the options, and returns the application (HY-48.2, HY-106.18).",
+              "state": "Reads and checks the manifest, the build outputs, the handlers and the options, and returns the application (HY-48.2, HY-106.21).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App.php::Polyspec\\Hyper\\App::open",
@@ -15569,7 +15569,7 @@
           "outcomes": {
             "open": {
               "compare": "raises",
-              "sentence": "HY-106.18"
+              "sentence": "HY-106.21"
             }
           },
           "members": [
@@ -16457,7 +16457,7 @@
           "outcomes": {
             "open": {
               "compare": "raises",
-              "sentence": "HY-106.18"
+              "sentence": "HY-106.21"
             },
             "messageStart": {
               "compare": "exact",
@@ -16844,7 +16844,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-106.18",
+              "sentence": "HY-106.21",
               "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           }
@@ -18627,14 +18627,14 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-106.18",
+              "sentence": "HY-106.21",
               "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "outcomes": {
             "open": {
               "compare": "raises",
-              "sentence": "HY-106.18"
+              "sentence": "HY-106.21"
             },
             "messageStart": {
               "compare": "exact",

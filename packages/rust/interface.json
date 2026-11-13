@@ -3456,8 +3456,8 @@
     },
     {
       "id": "open-error",
-      "rule": "HY-106.18",
-      "reason": "HY-106.18, B-4: the open error is HyperValueError of kind invalid_application, and the build file kind invalid_build, so a caller tells the failures apart by the kind",
+      "rule": "HY-106.21",
+      "reason": "HY-106.21, B-4: the open error is HyperValueError of kind invalid_application, and the build file kind invalid_build, so a caller tells the failures apart by the kind",
       "symbol": "App::open, App.open",
       "from": {
         "php": "throws \\InvalidArgumentException, Polyspec\\Hyper\\InvalidBuild",

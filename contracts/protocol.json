@@ -127,9 +127,9 @@
                 },
                 {
                   "id": "HY-2.9",
-                  "en": "The manifest file is JSON text as HY-54.20 reads it, so a text that json refuses, such as one with more than 256 nested containers, and a value outside the data model, such as one with a lone surrogate escape or deeper than 64 levels, fail the open with kind `invalid_application` (HY-106.18).",
-                  "ko": "manifest 파일은 HY-54.20이 읽는 JSON 텍스트이므로, 중첩 container가 256개를 넘는 텍스트처럼 json이 거부하는 텍스트와, 짝 없는 surrogate escape를 가지거나 64단계보다 깊은 값처럼 데이터 모델 밖의 값은 kind `invalid_application`으로 open을 실패시킨다(HY-106.18).",
-                  "koSource": "f0437a258545248acc8a7b7258826f85b231f092f4f79885ca902a52c7bc7022"
+                  "en": "The manifest file is JSON text as HY-54.20 reads it, so a text that json refuses, such as one with more than 256 nested containers, and a value outside the data model, such as one with a lone surrogate escape or deeper than 64 levels, fail the open with kind `invalid_application` (HY-106.21).",
+                  "ko": "manifest 파일은 HY-54.20이 읽는 JSON 텍스트이므로, 중첩 container가 256개를 넘는 텍스트처럼 json이 거부하는 텍스트와, 짝 없는 surrogate escape를 가지거나 64단계보다 깊은 값처럼 데이터 모델 밖의 값은 kind `invalid_application`으로 open을 실패시킨다(HY-106.21).",
+                  "koSource": "abde9623947a594e1769b6a9564f58aa7de41836e4f9fe8a7f31355bd21bdff4"
                 }
               ]
             }
@@ -2670,9 +2670,9 @@
                 },
                 {
                   "id": "HY-62.39",
-                  "en": "The open fails with kind `invalid_application` (HY-106.18) when the path of the shell file is not absolute, when the file does not exist or cannot be read, and when its bytes are not valid UTF-8.",
-                  "ko": "shell 파일의 경로가 절대 경로가 아니거나, 파일이 없거나 읽을 수 없거나, 그 byte가 올바른 UTF-8이 아니면 열기는 kind `invalid_application`(HY-106.18)으로 실패한다.",
-                  "koSource": "2a1ec3388bffc1460323482f611a33a3e8e2c810ccd5c42e5a68f4d2105f0b36"
+                  "en": "The open fails with kind `invalid_application` (HY-106.21) when the path of the shell file is not absolute, when the file does not exist or cannot be read, and when its bytes are not valid UTF-8.",
+                  "ko": "shell 파일의 경로가 절대 경로가 아니거나, 파일이 없거나 읽을 수 없거나, 그 byte가 올바른 UTF-8이 아니면 열기는 kind `invalid_application`(HY-106.21)으로 실패한다.",
+                  "koSource": "5b5e13b456cefa677bda4632cf227a3667e10a8b717314c630f1b9eb8767532b"
                 },
                 {
                   "id": "HY-62.36",
@@ -5634,8 +5634,8 @@
                     "ko": "`value`"
                   },
                   {
-                    "en": "HY-106.18",
-                    "ko": "HY-106.18"
+                    "en": "HY-106.21",
+                    "ko": "HY-106.21"
                   }
                 ],
                 [
@@ -5652,8 +5652,8 @@
                     "ko": "`value`"
                   },
                   {
-                    "en": "HY-106.18",
-                    "ko": "HY-106.18"
+                    "en": "HY-106.21",
+                    "ko": "HY-106.21"
                   }
                 ],
                 [
@@ -6273,7 +6273,7 @@
                   "koSource": "e76be182161af359de5055338fb31917975c93c6ac39cbe22673f26196f0dc7e"
                 },
                 {
-                  "id": "HY-106.18",
+                  "id": "HY-106.21",
                   "en": "An application that fails to open raises an error of kind `invalid_application` (HY-132), also when a file that it reads is not valid JSON or not valid UTF-8, and only the build file (HY-125.5), when it is missing, not readable, not valid UTF-8 or JSON, or does not hold a build id, raises kind `invalid_build`.",
                   "ko": "열리지 않는 애플리케이션은 kind `invalid_application`의 오류를 던지며(HY-132), 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아닐 때에도 그렇다. build 파일(HY-125.5)만, 없거나 읽을 수 없거나 유효한 UTF-8이나 JSON이 아니거나 build id를 담지 않을 때 kind `invalid_build`를 던진다.",
                   "koSource": "055d55868b73f4bf3d8d52cbf73705a5325d4270618658b10624631631e87a2a"
@@ -6349,6 +6349,12 @@
                   "en": "A host entry of HY-100 is a function of the host code of its server that takes the application as its first argument, `listener(app, sessions, options)` and `server(app, sessions, options)` in Node, `run($app, ...)` in PHP and `create_server(app, ...)`, `create_wsgi(app, ...)` and `create_asgi(app, ...)` in Python, and no member of `App`, because the host code is written by hand in each runtime and `App` is generated from the interface contract.",
                   "ko": "HY-100의 host 진입점은 애플리케이션을 첫 인자로 받는 그 server의 host 코드 함수이며(Node `listener(app, sessions, options)`와 `server(app, sessions, options)`, PHP `run($app, ...)`, Python `create_server(app, ...)`, `create_wsgi(app, ...)`, `create_asgi(app, ...)`), `App`의 member가 아니다. host 코드는 runtime마다 손으로 쓰고 `App`은 interface 계약에서 생성하기 때문이다.",
                   "koSource": "8935e00202f745c48430a44e97142d2f4cebf2a8907896bd0341e4c95fa975e0"
+                },
+                {
+                  "id": "HY-106.18",
+                  "en": "An application takes every public name from the entry of the package: the namespace `Polyspec\\Hyper` in PHP, the package `@polyspec/hyper` in Node and the package `polyspec.hyper` in Python; the directory, the file and the module that hold a name are not part of the public API.",
+                  "ko": "애플리케이션은 모든 public 이름을 package의 진입점에서 가져온다: PHP는 namespace `Polyspec\\Hyper`, Node는 package `@polyspec/hyper`, Python은 package `polyspec.hyper`이며, 이름을 담은 디렉터리, 파일, module은 public API에 속하지 않는다.",
+                  "koSource": "694a843d4d99f3bacb5e36fe2e87b6d124c41033b93a701123c2beb8dd62f18a"
                 }
               ]
             }

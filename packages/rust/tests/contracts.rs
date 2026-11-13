@@ -439,7 +439,7 @@ fn from_hex(text: &str) -> Vec<u8> {
 
 #[test]
 fn manifest_checks() {
-    // HY-2, HY-2.9, HY-37, HY-40.2, HY-106.18
+    // HY-2, HY-2.9, HY-37, HY-40.2, HY-106.21
     let file = cases("manifest.json");
     let mut ran = 0;
     for case in group(&file, "checks") {
