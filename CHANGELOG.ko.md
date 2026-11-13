@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a49bc37396c1de345821f100ef89cb392c1c23b9a7c2983a41d066cf02407579 -->
+<!-- source-sha256: 052482c44f6b50f898f82f0f39d5fa3d52bab660d9c361ae9d6f808dc42bc243 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP test fixture의 서버 프로그램과 계약 애플리케이션의 프로그램은 명령 도구의 조립, `packages/cli/lib/program.mjs`의 `writeProgram`과 `writeBuildFile`이 fixture나 계약의 고정 build id를 인자로 받아 쓴다(HY-125.21). `make server-fixtures`는 `scripts/fixture-program.mts --id-file packages/php/tests/fixtures/build.json`을 실행하고, `scripts/contract-programs.mts`는 템플릿 규칙(HY-48.3) 뒤에 조립을 부른다. 전에는 둘 다 서버 build를 `--build`로 실행했다. test의 셸은 `packages/cli/lib/shell.mjs`의 `shellText`로 id를 받는다. 프로그램은 `graph/`와 `types.json`을 담지 않는다. `tests/scripts/fixture-program.test.mts`가 script를 검사한다.
 - `hyper build`의 한 번의 실행은 HR-34의 출력을 쓴다: `public/assets` 아래 파일, `manifest.json`, `assets.json`(이 build의 모든 경로 `public/assets/...`를 바이트 순서로), `templates.index.json`, `build.json`, 셸 `csr/`를 담은 `client/`, 그리고 `templates/`, `reads.json`, `build.json`과 `--php-namespace`가 있으면 `program.json`, `php/`를 담은 `program/`이다. build id는 HY-125.15~HY-125.17의 파일로 한 번 계산하므로 서버 출력만 바꾼 build도 새 id를 가지며, 그것을 두 `build.json`과 셸에 쓰고, `public/assets`, `client/`, `program/` 순서로 각 `build.json`을 마지막에 게시한다. build는 `--output`의 `client/`와 `program/`만 소유하고, PHP compile의 중간 파일 `graph/`와 `types.json`은 임시 디렉터리에 둔다. build가 core에서 받을 때까지 `program/templates/`는 `hyper/data.tpl`을 담는다. `tests/scripts/build.test.mts`가 출력을 검사한다.
 - `hyper build`는 애플리케이션 디렉터리 하나 `--app`(`app/app.json`, `templates/`, 있을 수도 있는 `client/main.ts`, `public/`)을 읽고, 출력을 쓰기 전에 모든 option, 매니페스트(HY-2), 템플릿 규칙(HY-48.3)을 검사한다. HYC-16.13을 어기거나 두 에셋이 함께 쓰는 에셋 이름, 애플리케이션 밖이거나 파일이 없는 입력 경로, `client/main.ts` 없는 `--api`, 셸 없는 `--static`은 1로 실패하고 아무것도 쓰지 않는다. `--asset <name>=<path>`는 애플리케이션의 파일을 바꾸지 않고 `public/assets/<name>.<hash>.<extension>`으로, `--tailwind <source>=<name>`은 compile한 stylesheet를 `public/assets/<name>.<hash>.css`로 쓰며, 각 URL은 `client/manifest.json`의 member `<name>`이다. 전에는 `--tailwind <source>=<output>`이 애플리케이션 안의 고정 경로를 썼다(HR-77). `tests/scripts/build-inputs.test.mts`가 입력을 검사한다.
 - `@polyspec/hyper-cli`는 하위 명령 `hyper build`와 `hyper check`를 가진 bin 하나 `hyper`를 가진다(HR-96). `packages/cli/bin/hyper.mjs`와 그 module `lib/options.mjs`, `lib/check.mjs`, `lib/build.mjs`, `lib/program.mjs`, `lib/shell.mjs`이다. 성공은 0, 없거나 알 수 없는 하위 명령, 알 수 없는 option, option 없는 인자, 빠진 필수 option은 2, 실패는 1로 끝나며, 실패의 메시지는 stderr에 `hyper: `로 시작한다. `tests/scripts/cli.test.mts`가 bin과 종료 코드를 검사하며, package는 다른 bin을 선언하지 않는다.

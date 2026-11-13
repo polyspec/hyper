@@ -4,24 +4,26 @@
 // the tests of the three servers. The application names of all contracts are distinct. For each application it writes
 // into <output>/<application>/:
 //   manifest.json, templates/ and build.json   the inputs that the case states
-//   program/                                   the server program of hyper-build-server, which PHP and Python open
+//   program/                                   the server program of packages/cli/lib/program.mjs with the build id of
+//                                              the application (HY-125.21), which PHP and Python open
 //   node/templates.index.json, node/templates/ the template files that the Node server opens (HR-34)
 //
 // The application of a case of reads.json is named reads_<id>: its templates are the templates of the case, with the
-// layout and the title that hyper-build-server requires, so that its program renders the template of the case.
+// layout and the title that the template rules require, so that its program renders the template of the case.
 //
 // Usage: contract-programs.mts --contract <contracts/context.json> --contract <contracts/functions.json> --reads
 // <contracts/reads.json> --output <var/contract-programs>. Every path is absolute.
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { isAbsolute, join } from 'node:path';
 import { parseArgs } from 'node:util';
+import { parse, resolvePath } from '@polyspec/template';
 import { writeFileAtomic } from '../packages/cli/lib/output-files.mjs';
 import { publish, staging } from '../packages/cli/lib/publish.mjs';
 import { writeTemplateFiles } from '../packages/cli/lib/template-files.mjs';
 import { buildId } from '../packages/cli/lib/build-id.mjs';
+import { writeBuildFile, writeProgram } from '../packages/cli/lib/program.mjs';
+import { templateProblems } from '../packages/cli/lib/template-rules.mjs';
 
 const { values } = parseArgs({ options: { contract: { type: 'string', multiple: true }, reads: { type: 'string' }, output: { type: 'string' } } });
 if (!values.contract || values.contract.length === 0) throw new Error('--contract is required');
@@ -55,8 +57,6 @@ function member(path: string, name: string): unknown {
   return parsed[name];
 }
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const buildTool = join(root, 'packages/cli/bin/hyper-build-server.mjs');
 const applications = new Map<string, { path: string; application: Application }>();
 for (const path of values.contract) {
   const listed = member(path, 'applications');
@@ -100,17 +100,20 @@ for (const [key, { application }] of applications) {
     }
     const manifest = join(directory, 'manifest.json');
     writeFileSync(manifest, JSON.stringify(application.manifest));
-    const build = join(directory, 'build.json');
-    writeFileSync(build, JSON.stringify({ build: application.build }));
+    writeFileSync(join(directory, 'build.json'), JSON.stringify({ build: application.build }));
     const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key}\\program\\php`;
-    const run = spawnSync(
-      process.execPath,
-      [buildTool, '--manifest', manifest, '--templates', templates, '--output', join(directory, 'program'),
-        '--php-namespace', namespace, '--build', build],
-      { encoding: 'utf8' },
-    );
-    if (run.status !== 0) {
-      failures.push(`building the application ${key} failed with status ${run.status}: ${run.stdout}${run.stderr}`);
+    // HY-48.3: the template rules of hyper build pass before the program is written.
+    const { problems } = templateProblems({ manifest: application.manifest, templatesDir: templates, parse, resolvePath });
+    if (problems.length > 0) {
+      failures.push(`the templates of the application ${key} break the template rules:\n${problems.join('\n')}`);
+      continue;
+    }
+    try {
+      const program = join(directory, 'program');
+      writeProgram({ manifest: application.manifest, templates, directory: program, phpNamespace: namespace });
+      writeBuildFile(program, application.build);
+    } catch (error) {
+      failures.push(`building the application ${key} failed: ${error instanceof Error ? error.message : String(error)}`);
       continue;
     }
     const node = join(directory, 'node');
