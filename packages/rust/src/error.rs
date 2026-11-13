@@ -64,6 +64,64 @@ pub enum Error {
     Internal(&'static str),
 }
 
+/// The code of an error (HY-132.1), which the interface contract lists as its kinds: a failure of hyper itself is one
+/// variant, and a failure of a library that hyper passes on is the variant of that library with the code of the library
+/// (HY-132.3). `Error::DataModel` and `Error::Template` both hold a code of the template language, so both are
+/// `Template`.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ErrorCode<'a> {
+    /// A redirect location that is not an application path (HY-46.3).
+    NotApplicationPath,
+    /// A redirect stop of a result that is not a redirect (HY-50.3).
+    NotRedirectResult,
+    /// A page status other than 200, 409 and 422 (HY-58.6).
+    PageStatusNotAllowed,
+    /// A page status of a reply other than 403 (HY-69.9).
+    ReplyStatusNotAllowed,
+    /// A cookie name of a reply outside HY-52.2 (HY-52.16).
+    CookieNameNotAllowed,
+    /// A cookie value of a reply outside HY-52.2 (HY-52.16).
+    CookieValueNotAllowed,
+    /// A negative `Max-Age` of a reply cookie (HY-52.16).
+    NegativeMaxAge,
+    /// An integer outside ±(2^53 − 1) (HY-52.18, HY-69.9).
+    IntegerRange,
+    /// A `Cache-Control` with a character that is not allowed (HY-52.16).
+    CacheControlNotAllowed,
+    /// A `Cache-Control` that lets a shared cache store a page (HY-52.6).
+    CacheControlShared,
+    /// A `Referrer-Policy` that is not a token of its specification (HY-103.9).
+    ReferrerPolicyNotAllowed,
+    /// A token or a mask of another form (HY-24.14).
+    InvalidCsrfForm,
+    /// A stored token of another form (HY-24.14).
+    InvalidSessionToken,
+    /// A stored flash value or kept value of another form (HY-104.23).
+    InvalidSessionRecord,
+    /// Shared data that already holds the member `context` (HY-124.8).
+    SharedHoldsContext,
+    /// A question that only a request with a selected media type answers (HY-116.21).
+    NotSelected,
+    /// A representation entry that the manifest check refuses (HY-118.5 to HY-118.7).
+    InvalidApplication,
+    /// A build that HY-125.17 to HY-125.19 refuse.
+    InvalidBuild,
+    /// A response of a representation handler that HY-122 does not allow.
+    InvalidRepresentation,
+    /// A broken invariant of the core (HY-132.6).
+    Internal,
+    /// A broken invariant of a record that php-serialize reports (HY-132.6).
+    RecordValue,
+    /// A code of the template language, of its data model (HY-44.9) or of a render (HY-43, HY-38.18).
+    Template(polyspec_template::ErrorCode),
+    /// A failure of the session-store library (HY-104.25).
+    Sessions(&'a polyspec_session_store::Error),
+    /// A failure of http-negotiation (HY-116.18).
+    Negotiate(polyspec_http_negotiation::Error),
+    /// A failure of http-cookie (HY-45.8, HY-52.13).
+    Cookies(polyspec_http_cookie::Error),
+}
+
 /// An error as its questions read it: a failure of hyper itself, with the kind and the category that HY-132.1 gives it,
 /// or the error of a library that hyper passes on (HY-132.3).
 enum Part<'a> {
@@ -114,6 +172,39 @@ impl Error {
             Error::Sessions(error) => Part::Sessions(error),
             Error::Negotiate(error) => Part::Negotiate(error),
             Error::Cookies(error) => Part::Cookies(error),
+        }
+    }
+
+    /// The code of the failure (HY-132.1, HY-132.3), which the bindings read to tell its kind apart.
+    #[must_use]
+    pub fn code(&self) -> ErrorCode<'_> {
+        match self {
+            Error::NotApplicationPath => ErrorCode::NotApplicationPath,
+            Error::NotRedirectResult => ErrorCode::NotRedirectResult,
+            Error::PageStatusNotAllowed(_) => ErrorCode::PageStatusNotAllowed,
+            Error::ReplyStatusNotAllowed(_) => ErrorCode::ReplyStatusNotAllowed,
+            Error::CookieNameNotAllowed(_) => ErrorCode::CookieNameNotAllowed,
+            Error::CookieValueNotAllowed(_) => ErrorCode::CookieValueNotAllowed,
+            Error::NegativeMaxAge(_) => ErrorCode::NegativeMaxAge,
+            Error::IntegerRange => ErrorCode::IntegerRange,
+            Error::CacheControlNotAllowed => ErrorCode::CacheControlNotAllowed,
+            Error::CacheControlShared(_) => ErrorCode::CacheControlShared,
+            Error::ReferrerPolicyNotAllowed(_) => ErrorCode::ReferrerPolicyNotAllowed,
+            Error::InvalidCsrfForm => ErrorCode::InvalidCsrfForm,
+            Error::InvalidSessionToken => ErrorCode::InvalidSessionToken,
+            Error::InvalidSessionRecord => ErrorCode::InvalidSessionRecord,
+            Error::SharedHoldsContext => ErrorCode::SharedHoldsContext,
+            Error::NotSelected => ErrorCode::NotSelected,
+            Error::InvalidApplication(_) => ErrorCode::InvalidApplication,
+            Error::InvalidBuild(_) => ErrorCode::InvalidBuild,
+            Error::InvalidRepresentation(_) => ErrorCode::InvalidRepresentation,
+            Error::Internal(_) => ErrorCode::Internal,
+            Error::RecordValue(_) => ErrorCode::RecordValue,
+            Error::DataModel(error) => ErrorCode::Template(error.code),
+            Error::Template(error) => ErrorCode::Template(error.code),
+            Error::Sessions(error) => ErrorCode::Sessions(error),
+            Error::Negotiate(error) => ErrorCode::Negotiate(*error),
+            Error::Cookies(error) => ErrorCode::Cookies(*error),
         }
     }
 

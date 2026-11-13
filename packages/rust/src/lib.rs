@@ -34,7 +34,7 @@ pub mod steps;
 pub mod template_rules;
 mod values;
 
-pub use error::Error;
+pub use error::{Error, ErrorCode};
 
 /// The fault injection points of the core (binding design G-5, X-1; HY-132), which the interface contract names in
 /// `faults`. A point does nothing unless the feature `fault-test` of this crate is on: the macro `point!` of binding_core

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: bed61f92adeadccfe3d831406a2f727cbaab291247a670790484ce24021be671 -->
+<!-- source-sha256: 1ab59b29aa9b2f6217d3b52349ba137ce0a7d5e650e4ca7ac4ba270c2a0cbec5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- core 오류는 code `polyspec_hyper::ErrorCode`를 가지며, `Error::code`가 그것을 주고 `packages/rust/interface.json`의 `errors.code`가 그것을 적는다(`{error: polyspec_hyper::Error, path: polyspec_hyper::Error::code}`). hyper 자신의 실패는 code의 variant 하나이며 모두 21개이고, hyper가 그대로 전달하는 라이브러리의 실패는 그 라이브러리의 code를 담은 그 라이브러리의 variant다. code를 field에 담는 struct를 가진 `Error::DataModel`과 `Error::Template`은 둘 다 `Template(polyspec_template::ErrorCode)`이고, 나머지는 `Sessions`, `Negotiate`, `Cookies`다. `errors.kinds`의 모든 row와 `raises`의 모든 경로는 code의 variant를 적는다. hyper의 row 21개는 `polyspec_hyper::ErrorCode::<kind>`이고, 라이브러리의 row는 `polyspec_hyper::ErrorCode::<outer>/<inner>`다. 표는 code가 담는 각 enum의 모든 variant에 row를 가지며 모두 96개다. template의 code는 `LoadNotLoaded`를 포함해 49개이고, session-store의 실패는 `InvalidDirectory`, `InvalidLifetime`, `InvalidLockExpire`, `InvalidSetting`을 포함해 17개이며, 전에는 48개와 13개였다. 모든 실패의 kind, 상태, category, message는 바뀌지 않는다. `packages/rust/tests/error_code.rs`는 네 enum의 모든 variant를 wildcard 없는 match로 만들고, 그 code와 row를 요구한다. 라이브러리를 path 의존성으로 둔 tree 사본에서 계약 검사는 CK-10을 보고하지 않는다. 전에는 template의 row 48개를 보고했다.
 - core의 `Pages::register`(`packages/rust/src/steps.rs`)의 둘째 매개변수 이름은 `packages/rust/interface.json`의 `pages.register` 매개변수 이름인 `host_function`이다. 전에는 `function`이었다. `make core-test`는 62개가 통과하고, `make core-lint`와 `make core-fmt-check`가 통과한다.
 - `packages/rust/interface.json`의 `errors.kinds`에서 http-negotiation, http-cookie, session-store의 22행은 경로 `<outer>/<inner>`를 적는다. 라이브러리의 오류를 담는 `polyspec_hyper::Error`의 variant `Negotiate`, `Cookies`, `Sessions`와 그 오류의 variant이다. `rules.session_cookie`는 `raises`에 `Cookies`의 경로를 적고, `opening_functions.open_page`와 `opening_functions.answer_keep_request`는 variant `Sessions` 하나 대신 `Sessions`의 13개 경로를 적는다. 각 행이 라이브러리의 variant만 적어 계약 검사가 70행에 CK-10을 보고했으며, 이제 그대로 둔 template의 48행을 보고한다. `Error::Template`과 `Error::DataModel`은 struct `polyspec_template::TemplateError`와 `polyspec_template::BindError`를 담고 그 kind는 field `code`인데, 패턴 `<outer>(<inner> { .. })`은 struct의 field를 가리키지 못하기 때문이다(H31.16).
 - `pages.register`의 둘째 매개변수는 `packages/rust/interface.json`에서 `host_function`이다. 이름 `function`은 JavaScript의 예약어이므로 계약 검사가 target `node`와 `wasm`에 CK-23을 보고했으며, 이제 보고하지 않는다. core의 `Pages::register`의 매개변수는 아직 이름이 `function`이며, 그 이름 변경은 H31.15 행이 가진다.

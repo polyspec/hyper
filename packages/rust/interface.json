@@ -107,372 +107,396 @@
     ],
     "kinds": [
       {
-        "variant": "polyspec_hyper::Error::NotApplicationPath",
+        "variant": "polyspec_hyper::ErrorCode::NotApplicationPath",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::NotRedirectResult",
+        "variant": "polyspec_hyper::ErrorCode::NotRedirectResult",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::PageStatusNotAllowed",
+        "variant": "polyspec_hyper::ErrorCode::PageStatusNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::ReplyStatusNotAllowed",
+        "variant": "polyspec_hyper::ErrorCode::ReplyStatusNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::CookieNameNotAllowed",
+        "variant": "polyspec_hyper::ErrorCode::CookieNameNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::CookieValueNotAllowed",
+        "variant": "polyspec_hyper::ErrorCode::CookieValueNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::NegativeMaxAge",
+        "variant": "polyspec_hyper::ErrorCode::NegativeMaxAge",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::IntegerRange",
+        "variant": "polyspec_hyper::ErrorCode::IntegerRange",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::CacheControlNotAllowed",
+        "variant": "polyspec_hyper::ErrorCode::CacheControlNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::CacheControlShared",
+        "variant": "polyspec_hyper::ErrorCode::CacheControlShared",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::ReferrerPolicyNotAllowed",
+        "variant": "polyspec_hyper::ErrorCode::ReferrerPolicyNotAllowed",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::InvalidCsrfForm",
+        "variant": "polyspec_hyper::ErrorCode::InvalidCsrfForm",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::InvalidSessionToken",
+        "variant": "polyspec_hyper::ErrorCode::InvalidSessionToken",
         "category": "store"
       },
       {
-        "variant": "polyspec_hyper::Error::InvalidSessionRecord",
+        "variant": "polyspec_hyper::ErrorCode::InvalidSessionRecord",
         "category": "store"
       },
       {
-        "variant": "polyspec_hyper::Error::SharedHoldsContext",
+        "variant": "polyspec_hyper::ErrorCode::SharedHoldsContext",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::NotSelected",
+        "variant": "polyspec_hyper::ErrorCode::NotSelected",
         "category": "type"
       },
       {
-        "variant": "polyspec_hyper::Error::InvalidApplication",
+        "variant": "polyspec_hyper::ErrorCode::InvalidApplication",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::InvalidBuild",
+        "variant": "polyspec_hyper::ErrorCode::InvalidBuild",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::InvalidRepresentation",
+        "variant": "polyspec_hyper::ErrorCode::InvalidRepresentation",
         "category": "value"
       },
       {
-        "variant": "polyspec_hyper::Error::Internal",
+        "variant": "polyspec_hyper::ErrorCode::Internal",
         "category": "internal"
       },
       {
-        "variant": "polyspec_hyper::Error::RecordValue",
+        "variant": "polyspec_hyper::ErrorCode::RecordValue",
         "category": "internal"
       },
       {
-        "variant": "polyspec_hyper::Error::Negotiate/polyspec_http_negotiation::Error::InvalidAccept",
+        "variant": "polyspec_hyper::ErrorCode::Negotiate/polyspec_http_negotiation::Error::InvalidAccept",
         "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_hyper::Error::Negotiate/polyspec_http_negotiation::Error::InvalidWeight",
+        "variant": "polyspec_hyper::ErrorCode::Negotiate/polyspec_http_negotiation::Error::InvalidWeight",
         "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_hyper::Error::Negotiate/polyspec_http_negotiation::Error::InvalidCandidate",
+        "variant": "polyspec_hyper::ErrorCode::Negotiate/polyspec_http_negotiation::Error::InvalidCandidate",
         "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_hyper::Error::Negotiate/polyspec_http_negotiation::Error::Internal",
+        "variant": "polyspec_hyper::ErrorCode::Negotiate/polyspec_http_negotiation::Error::Internal",
         "library": "http-negotiation"
       },
       {
-        "variant": "polyspec_template::ErrorCode::LexInvalidUtf8",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LexInvalidUtf8",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseUnterminatedTag",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnterminatedTag",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseUnterminatedComment",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnterminatedComment",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseUnterminatedString",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnterminatedString",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseUnexpectedToken",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnexpectedToken",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseInvalidNumber",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidNumber",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseInvalidEscape",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidEscape",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseUnexpectedClose",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnexpectedClose",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseUnclosedBlock",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnclosedBlock",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseElseOutsideBlock",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseElseOutsideBlock",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseDuplicateElse",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseDuplicateElse",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseElseifAfterElse",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseElseifAfterElse",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseElseifNotInIf",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseElseifNotInIf",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseReservedName",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseReservedName",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseInvalidPath",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidPath",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseInvalidBlockTag",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidBlockTag",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseInvalidWrapper",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidWrapper",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ParseInvalidDirective",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidDirective",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::LoadNotFound",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadNotFound",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::LoadCycle",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadCycle",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::LoadOutsideRoot",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadOutsideRoot",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::LoadFailed",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadFailed",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::DataNumberRange",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadNotLoaded",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::DataNumberNotFinite",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberRange",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::DataInvalidUtf8",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberNotFinite",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::DataUnsupportedType",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataInvalidUtf8",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::DataDepth",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataUnsupportedType",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::DataInvalidJson",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataDepth",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeType",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataInvalidJson",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeCompare",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeType",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeDivZero",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeCompare",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeStringify",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeDivZero",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeUnknownFunction",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeStringify",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeArity",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeUnknownFunction",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeHostFunction",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeArity",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeUnknownLoop",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeHostFunction",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeBlockUndefined",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeUnknownLoop",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeBlockRedefined",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeBlockUndefined",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeDepth",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeBlockRedefined",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::RuntimeLimit",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeDepth",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ArgumentDelimiters",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeLimit",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ArgumentFunctionName",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ArgumentDelimiters",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ArgumentSourceRange",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ArgumentFunctionName",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::ArgumentIndent",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ArgumentSourceRange",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::FormatInvariant",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ArgumentIndent",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::FormatHtml",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::FormatInvariant",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::AstInvalid",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::FormatHtml",
         "library": "template"
       },
       {
-        "variant": "polyspec_template::ErrorCode::Internal",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::AstInvalid",
         "library": "template"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Record",
+        "variant": "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::Internal",
+        "library": "template"
+      },
+      {
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Random",
+        "library": "session-store"
+      },
+      {
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Record",
         "library": "session-store",
         "class": "record_error"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordWrite",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordNotArray",
+        "library": "session-store"
+      },
+      {
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordWrite",
         "library": "session-store",
         "class": "record_error"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Random",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::InvalidDirectory",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordNotArray",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::InvalidLifetime",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Cancelled",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Cancelled",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::IdentifierTaken",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::IdentifierTaken",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Io",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Io",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockTimeout",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::InvalidLockExpire",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockLost",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::InvalidSetting",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Reply",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::LockTimeout",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Redis",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::LockLost",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Connection",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Reply",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Internal",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Redis",
         "library": "session-store"
       },
       {
-        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::InvalidName",
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Connection",
+        "library": "session-store"
+      },
+      {
+        "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Internal",
+        "library": "session-store"
+      },
+      {
+        "variant": "polyspec_hyper::ErrorCode::Cookies/polyspec_http_cookie::Error::InvalidName",
         "library": "http-cookie"
       },
       {
-        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::InvalidCookiePath",
+        "variant": "polyspec_hyper::ErrorCode::Cookies/polyspec_http_cookie::Error::InvalidCookiePath",
         "library": "http-cookie"
       },
       {
-        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::TooLarge",
+        "variant": "polyspec_hyper::ErrorCode::Cookies/polyspec_http_cookie::Error::TooLarge",
         "library": "http-cookie"
       },
       {
-        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::PrefixNotMet",
+        "variant": "polyspec_hyper::ErrorCode::Cookies/polyspec_http_cookie::Error::PrefixNotMet",
         "library": "http-cookie"
       },
       {
-        "variant": "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::SameSiteNoneNotSecure",
+        "variant": "polyspec_hyper::ErrorCode::Cookies/polyspec_http_cookie::Error::SameSiteNoneNotSecure",
         "library": "http-cookie"
       }
     ],
+    "code": {
+      "error": "polyspec_hyper::Error",
+      "path": "polyspec_hyper::Error::code"
+    },
     "binding": [],
     "wrapped": [
       {
@@ -549,7 +573,7 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::InvalidCsrfForm"
+            "polyspec_hyper::ErrorCode::InvalidCsrfForm"
           ],
           "wait": "none",
           "core": "polyspec_hyper::csrf::mask"
@@ -580,7 +604,7 @@
           ],
           "returns": "bool",
           "raises": [
-            "polyspec_hyper::Error::InvalidCsrfForm"
+            "polyspec_hyper::ErrorCode::InvalidCsrfForm"
           ],
           "wait": "none",
           "core": "polyspec_hyper::csrf::verify"
@@ -606,7 +630,7 @@
           },
           "optional_reason": "HY-24.12",
           "raises": [
-            "polyspec_hyper::Error::InvalidCsrfForm"
+            "polyspec_hyper::ErrorCode::InvalidCsrfForm"
           ],
           "wait": "none",
           "core": "polyspec_hyper::csrf::browser"
@@ -630,7 +654,7 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::InvalidSessionToken"
+            "polyspec_hyper::ErrorCode::InvalidSessionToken"
           ],
           "wait": "none",
           "core": "polyspec_hyper::csrf::stored_token"
@@ -677,7 +701,7 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::NotApplicationPath"
+            "polyspec_hyper::ErrorCode::NotApplicationPath"
           ],
           "wait": "none",
           "core": "polyspec_hyper::location::redirect_location"
@@ -701,8 +725,8 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::CacheControlNotAllowed",
-            "polyspec_hyper::Error::CacheControlShared"
+            "polyspec_hyper::ErrorCode::CacheControlNotAllowed",
+            "polyspec_hyper::ErrorCode::CacheControlShared"
           ],
           "wait": "none",
           "core": "polyspec_hyper::reply::cache_control"
@@ -751,7 +775,7 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::ReferrerPolicyNotAllowed"
+            "polyspec_hyper::ErrorCode::ReferrerPolicyNotAllowed"
           ],
           "wait": "none",
           "core": "polyspec_hyper::reply::referrer_policy"
@@ -826,8 +850,8 @@
           ],
           "returns": "latin1",
           "raises": [
-            "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::InvalidName",
-            "polyspec_hyper::Error::Cookies/polyspec_http_cookie::Error::TooLarge"
+            "polyspec_hyper::ErrorCode::Cookies/polyspec_http_cookie::Error::InvalidName",
+            "polyspec_hyper::ErrorCode::Cookies/polyspec_http_cookie::Error::TooLarge"
           ],
           "wait": "none",
           "core": "polyspec_hyper::cookies::session_cookie"
@@ -918,7 +942,7 @@
           ],
           "returns": "uint",
           "raises": [
-            "polyspec_hyper::Error::PageStatusNotAllowed"
+            "polyspec_hyper::ErrorCode::PageStatusNotAllowed"
           ],
           "wait": "none",
           "core": "polyspec_hyper::location::page_status"
@@ -942,8 +966,8 @@
           ],
           "returns": "uint",
           "raises": [
-            "polyspec_hyper::Error::IntegerRange",
-            "polyspec_hyper::Error::ReplyStatusNotAllowed"
+            "polyspec_hyper::ErrorCode::IntegerRange",
+            "polyspec_hyper::ErrorCode::ReplyStatusNotAllowed"
           ],
           "wait": "none",
           "core": "polyspec_hyper::reply::status"
@@ -1047,7 +1071,7 @@
           ],
           "returns": "none",
           "raises": [
-            "polyspec_hyper::Error::InvalidApplication"
+            "polyspec_hyper::ErrorCode::InvalidApplication"
           ],
           "wait": "none",
           "core": "polyspec_hyper::client_rendering::check_shell_path"
@@ -1078,7 +1102,7 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::InvalidApplication"
+            "polyspec_hyper::ErrorCode::InvalidApplication"
           ],
           "wait": "none",
           "core": "polyspec_hyper::client_rendering::shell_text"
@@ -1106,7 +1130,7 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::InvalidBuild"
+            "polyspec_hyper::ErrorCode::InvalidBuild"
           ],
           "wait": "none",
           "core": "polyspec_hyper::build::id"
@@ -1131,7 +1155,7 @@
           ],
           "returns": "none",
           "raises": [
-            "polyspec_hyper::Error::InvalidBuild"
+            "polyspec_hyper::ErrorCode::InvalidBuild"
           ],
           "wait": "none",
           "core": "polyspec_hyper::build::check_id"
@@ -1156,7 +1180,7 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::InvalidBuild"
+            "polyspec_hyper::ErrorCode::InvalidBuild"
           ],
           "wait": "none",
           "core": "polyspec_hyper::build::file_text"
@@ -1180,7 +1204,7 @@
           ],
           "returns": "text",
           "raises": [
-            "polyspec_hyper::Error::InvalidBuild"
+            "polyspec_hyper::ErrorCode::InvalidBuild"
           ],
           "wait": "none",
           "core": "polyspec_hyper::build::read"
@@ -1215,9 +1239,9 @@
             "list": "text"
           },
           "raises": [
-            "polyspec_hyper::Error::InvalidApplication",
-            "polyspec_hyper::Error::Template",
-            "polyspec_hyper::Error::DataModel"
+            "polyspec_hyper::ErrorCode::InvalidApplication",
+            "polyspec_hyper::ErrorCode::Template",
+            "polyspec_hyper::ErrorCode::DataModel"
           ],
           "wait": "none",
           "core": "polyspec_hyper::template_rules::problems"
@@ -1250,9 +1274,9 @@
           ],
           "returns": "template_value",
           "raises": [
-            "polyspec_hyper::Error::InvalidApplication",
-            "polyspec_hyper::Error::Template",
-            "polyspec_hyper::Error::DataModel"
+            "polyspec_hyper::ErrorCode::InvalidApplication",
+            "polyspec_hyper::ErrorCode::Template",
+            "polyspec_hyper::ErrorCode::DataModel"
           ],
           "wait": "none",
           "core": "polyspec_hyper::read_paths::route_reads"
@@ -1285,8 +1309,8 @@
           ],
           "returns": "template_value",
           "raises": [
-            "polyspec_hyper::Error::InvalidApplication",
-            "polyspec_hyper::Error::Template"
+            "polyspec_hyper::ErrorCode::InvalidApplication",
+            "polyspec_hyper::ErrorCode::Template"
           ],
           "wait": "none",
           "core": "polyspec_hyper::read_paths::template_reads"
@@ -1917,7 +1941,7 @@
           ],
           "returns": "self",
           "raises": [
-            "polyspec_hyper::Error::InvalidApplication"
+            "polyspec_hyper::ErrorCode::InvalidApplication"
           ],
           "wait": "none",
           "core": {
@@ -1964,8 +1988,8 @@
           ],
           "returns": "none",
           "raises": [
-            "polyspec_hyper::Error::InvalidApplication",
-            "polyspec_hyper::Error::Internal"
+            "polyspec_hyper::ErrorCode::InvalidApplication",
+            "polyspec_hyper::ErrorCode::Internal"
           ],
           "wait": "none",
           "core": {
@@ -2477,7 +2501,7 @@
           ],
           "returns": "self",
           "raises": [
-            "polyspec_hyper::Error::Internal"
+            "polyspec_hyper::ErrorCode::Internal"
           ],
           "wait": "none",
           "core": {
@@ -2506,10 +2530,10 @@
             "unit": "step"
           },
           "raises": [
-            "polyspec_hyper::Error::Internal",
-            "polyspec_hyper::Error::SharedHoldsContext",
-            "polyspec_hyper::Error::DataModel",
-            "polyspec_hyper::Error::Template"
+            "polyspec_hyper::ErrorCode::Internal",
+            "polyspec_hyper::ErrorCode::SharedHoldsContext",
+            "polyspec_hyper::ErrorCode::DataModel",
+            "polyspec_hyper::ErrorCode::Template"
           ],
           "wait": "none",
           "core": {
@@ -2951,7 +2975,7 @@
             "unit": "route"
           },
           "raises": [
-            "polyspec_hyper::Error::Internal"
+            "polyspec_hyper::ErrorCode::Internal"
           ],
           "wait": "none",
           "core": "polyspec_hyper::front::route_request"
@@ -3364,24 +3388,24 @@
             "unit": "opened"
           },
           "raises": [
-            "polyspec_hyper::Error::InvalidSessionToken",
-            "polyspec_hyper::Error::InvalidSessionRecord",
-            "polyspec_hyper::Error::InvalidCsrfForm",
-            "polyspec_hyper::Error::DataModel",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Record",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordWrite",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Random",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordNotArray",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Cancelled",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::IdentifierTaken",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Io",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockTimeout",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockLost",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Reply",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Redis",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Connection",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Internal",
-            "polyspec_hyper::Error::RecordValue"
+            "polyspec_hyper::ErrorCode::InvalidSessionToken",
+            "polyspec_hyper::ErrorCode::InvalidSessionRecord",
+            "polyspec_hyper::ErrorCode::InvalidCsrfForm",
+            "polyspec_hyper::ErrorCode::DataModel",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Record",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordWrite",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Random",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordNotArray",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Cancelled",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::IdentifierTaken",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Io",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::LockTimeout",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::LockLost",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Reply",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Redis",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Connection",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Internal",
+            "polyspec_hyper::ErrorCode::RecordValue"
           ],
           "wait": "none",
           "core": "polyspec_hyper::opening::open_page"
@@ -3430,24 +3454,24 @@
             "unit": "plain"
           },
           "raises": [
-            "polyspec_hyper::Error::InvalidSessionToken",
-            "polyspec_hyper::Error::InvalidSessionRecord",
-            "polyspec_hyper::Error::InvalidCsrfForm",
-            "polyspec_hyper::Error::DataModel",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Record",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordWrite",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Random",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::RecordNotArray",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Cancelled",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::IdentifierTaken",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Io",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockTimeout",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::LockLost",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Reply",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Redis",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Connection",
-            "polyspec_hyper::Error::Sessions/polyspec_session_store::Error::Internal",
-            "polyspec_hyper::Error::RecordValue"
+            "polyspec_hyper::ErrorCode::InvalidSessionToken",
+            "polyspec_hyper::ErrorCode::InvalidSessionRecord",
+            "polyspec_hyper::ErrorCode::InvalidCsrfForm",
+            "polyspec_hyper::ErrorCode::DataModel",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Record",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordWrite",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Random",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordNotArray",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Cancelled",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::IdentifierTaken",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Io",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::LockTimeout",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::LockLost",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Reply",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Redis",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Connection",
+            "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Internal",
+            "polyspec_hyper::ErrorCode::RecordValue"
           ],
           "wait": "none",
           "core": "polyspec_hyper::opening::keep_request"
