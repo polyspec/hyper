@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6d6ef60443de017adaa89ea64f6235a50ca39a0d7996c5eea2d4a7427403a4a2 -->
+<!-- source-sha256: 1799bffa9d64d36ca01aa9bf801ad8e50d9eaa5862758e91aead301a79d0f8b1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Redis session의 시험 파일은 그 시험이 끝나면 끝난다. `tests/scripts/session-redis-server.mts`의 `until`은 검사를 100 ms마다 끝없이 반복하고, timeout으로 실패한 시험의 검사는 파일이 server를 멈춘 뒤에도 계속되어, `tests/scripts/session-redis-cluster.test.mts`의 process가 끝나지 않았고 `make hyper-test-scripts`는 그것을 기다렸다. 두 검사 사이의 대기는 더는 process를 붙잡지 않는다. package `polyspec.hyper`가 없는 Python 환경에서 이 파일은 200초 뒤에 8개 시험 통과, 13개 실패로 끝난다. 전에는 끝나지 않았다.
 - 이 절의 항목 다섯은 package의 현재 자리를 적는다: `packages/rust`, `packages/python`, `packages/ts`, `packages/php/native`, `packages/<lang>/native/`, `packages/rust/interface.json`, 그리고 native module `polyspec.hyper._binding._native`. 전에는 `packages/server` 아래의 자리와 module `polyspec.hyper.server._native`를 적었다. 이름의 변경을 기록하는 항목 다섯은 그 항목이 적는 이전 이름을 유지한다.
 - `packages/ts/tests/case-rules.ts`의 `CONTRACTS`는 그 module의 상수이며 export가 아니다. 다른 파일이 그것을 읽지 않고, `make lint-ts`의 knip이 쓰이지 않는 export로 보고했다. `make lint-ts`는 8개 단계를 통과한다.
 - 6줄 이상의 코드 조각이 두 번 있는 곳이 없다. 전에는 `make duplication-check`가 clone 12건을 보고했다. Rust core에서는 `packages/rust/src/error.rs`의 `Error::part`가 hyper 자신의 실패마다 kind와 category를, 또는 hyper가 전달하는 library의 오류를 한 번 주고, `category`, `kind`, `status`, `source`가 그것을 읽는다. 전에는 이들이 각각 variant를 나열했다. module `values`는 값의 map과 list의 text들을 `manifest`, `render`, `steps`, `session`에 준다. `manifest`와 `router`는 `is_identifier`를 함께 쓴다. `keep::replace`와 `reads::Read`의 두 생성 함수는 각각 공통 단계를 함께 쓴다. 시험 `packages/rust/tests/contracts.rs`는 결과와 case의 `raises`를 함수 `check` 하나로 비교한다. Node 시험 트리의 함수 `plain`은 `packages/ts/tests/inputs.ts`에 있고, `tests/scripts/build-id.test.mts`는 자기 사본 대신 그것을 읽는다. 바뀌는 규칙은 없다. `make core-test`는 53개 시험을 통과하고, `make core-lint`와 `make core-fmt-check`는 통과하며, `make hyper-test-node`는 18개 시험을 통과하고 `make recipe-run-node`는 통과한다.
