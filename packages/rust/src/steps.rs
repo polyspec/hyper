@@ -115,7 +115,8 @@ pub type PageFunction =
 /// The host function of the template language that calls a function of the contract (HYC-24.2, template FUN-46). A
 /// failure of the data model is the binding failure of the returned value (VAL-19); another kind of hyper, an
 /// exception of language code and the error of Rust host code reach the caller of the render unchanged.
-fn host_function_of(function: PageFunction) -> HostFunction {
+#[must_use]
+pub fn host_function(function: PageFunction) -> HostFunction {
     Box::new(move |args: &[Value], context: &FunctionContext<'_>| {
         function(args, context.env).map_err(|failure| match failure {
             Failure::Kind(Error::DataModel(error)) => HostError::Data(error),
@@ -140,6 +141,8 @@ impl Pages {
     ///
     /// # Errors
     /// `invalid_application` for a manifest, a template name or read paths that the application cannot open with.
+    /// It gives no code of the template language: `Templates::new` gives `AstProgram::new` no delimiter option and no
+    /// function, the two inputs for which that constructor fails, and no template is parsed before a render reaches it.
     pub fn open(
         manifest: &[u8],
         templates: &Map<String>,
@@ -186,7 +189,7 @@ impl Pages {
         match Arc::get_mut(&mut self.app) {
             Some(app) => app
                 .templates
-                .register(name, host_function_of(host_function)),
+                .register(name, self::host_function(host_function)),
             None => Err(Error::Internal(
                 "a function is registered after the first page request",
             )),
@@ -424,6 +427,15 @@ impl PageRequest {
     /// The failure of a value of the data model, of a check of hyper (`shared_holds_context`, HY-124.8) or of a render
     /// with its kind, the exception of a function of a template unchanged, and `internal` for a result of another
     /// call than the last step asked for.
+    ///
+    /// A render gives the codes of the template language that its path reaches. `AstProgram::load_template` reads a
+    /// template from the loader and parses it with `parse_template` when the render first reaches it, the entry
+    /// template or an included one, so a render gives the codes of the lexer and of the parser. The loader is a
+    /// `MapLoader`, whose `load` never fails and whose `set` gives every source a version, so of the codes of a load
+    /// a render gives `load_not_found`, `load_cycle` (`enter` of the render context) and `load_outside_root` (`resolve_path`)
+    /// and neither `load_failed` nor `load_not_loaded`. A value is bound and written, never read from a JSON text, so
+    /// it gives the codes of the data model but `data_invalid_json`. The evaluation gives the codes of the runtime, and
+    /// a poisoned cache of the engine `internal`.
     pub fn next(&mut self, input: &Input) -> Result<Step, Failure<Error>> {
         let state = std::mem::replace(&mut self.state, State::Done);
         match (state, input) {
