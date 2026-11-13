@@ -1064,7 +1064,7 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 [[package]]
 name = "polyspec-binding-core"
 version = "0.0.1"
-source = "git+https://github.com/polyspec/binding.git?branch=v1%2Frust-core#6fb42b3ac01a3cc297733bdef241a31d8945269e"
+source = "git+https://github.com/polyspec/binding.git?branch=v1%2Frust-core#562023b35e21bd18ec2325bdbf09a8a9decc5b38"
 dependencies = [
  "indexmap",
  "libc",
@@ -1191,7 +1191,7 @@ dependencies = [
 [[package]]
 name = "polyspec-php-serialization"
 version = "0.0.6"
-source = "git+https://github.com/polyspec/php-serialization.git?branch=v1%2Frust-core#e8cd69fb6be74d160b772cc078968a04605220f7"
+source = "git+https://github.com/polyspec/php-serialization.git?branch=v1%2Frust-core#51854a189584ccd241615988720f7e1de6e91197"
 dependencies = [
  "polyspec-binding-core",
  "ryu",
@@ -1200,7 +1200,7 @@ dependencies = [
 [[package]]
 name = "polyspec-session-store"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#53c2c7d4f6e57db78d0ba5bc9052195df40c4062"
+source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#47476c2f363f48f187d98ef9d571d0b7b2472382"
 dependencies = [
  "polyspec-php-serialization",
  "polyspec-session-store-core",
@@ -1210,7 +1210,7 @@ dependencies = [
 [[package]]
 name = "polyspec-session-store-core"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#53c2c7d4f6e57db78d0ba5bc9052195df40c4062"
+source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#47476c2f363f48f187d98ef9d571d0b7b2472382"
 dependencies = [
  "getrandom 0.3.4",
  "polyspec-binding-core",
@@ -1220,7 +1220,7 @@ dependencies = [
 [[package]]
 name = "polyspec-session-store-file"
 version = "0.0.0"
-source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#53c2c7d4f6e57db78d0ba5bc9052195df40c4062"
+source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#47476c2f363f48f187d98ef9d571d0b7b2472382"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-php-serialization",
