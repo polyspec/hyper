@@ -8,19 +8,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { parseJsonObject } from '../../scripts/json.mts';
-import { copyTracked } from '../../scripts/tracked-files.mts';
+import { fixture } from './build-fixture.mts';
 
 const bin = resolve('packages/cli/bin/hyper.mjs');
 const hyper = (...args: string[]) => spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' });
-
-// Copies the tracked files of a fixture application, so a file that an earlier run left in the fixture cannot decide
-// the result (HR-85).
-function fixture(name: string, t: { after: (fn: () => void) => void }): string {
-  const app = mkdtempSync(join(tmpdir(), `hyper-cli-${name}-`));
-  t.after(() => rmSync(app, { recursive: true, force: true }));
-  copyTracked({ repository: resolve('.'), path: `tests/scripts/fixtures/${name}`, target: app, base: `tests/scripts/fixtures/${name}` });
-  return app;
-}
 
 test('the package has the one bin hyper (HR-96)', () => {
   const manifest = parseJsonObject(readFileSync('packages/cli/package.json', 'utf8'), 'packages/cli/package.json');

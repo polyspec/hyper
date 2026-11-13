@@ -1919,37 +1919,11 @@ fn the_fault_cases_raise_their_kind_where_their_points_break() -> Result<(), Err
     // front_functions.route_request and raises internal; the same call without the arming routes to the page home,
     // because a point that no case armed breaks nothing.
     use polyspec_hyper::front::{route_request, Front, Route};
-    use polyspec_hyper::steps::{Map, PageKind, Pages, PagesOptions};
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/faults.json");
-    let file: Value = match fs::read_to_string(&path).map(|text| serde_json::from_str(&text)) {
-        Ok(Ok(value)) => value,
-        Ok(Err(error)) => panic!("{}: {error}", path.display()),
-        Err(error) => panic!("{}: {error}", path.display()),
-    };
+    use polyspec_hyper::steps::PageKind;
+    let file = fault_cases();
     let mut ran = 0;
     for case in group(&file, "internal") {
-        let pages = &case["pages"];
-        assert_eq!(text(pages, "new"), "pages.open", "{}", case["id"]);
-        let args = &pages["args"];
-        let mut templates = Map::new();
-        for pair in args["templates"].as_array().into_iter().flatten() {
-            templates.insert(text_of(&pair[0]).to_owned(), text_of(&pair[1]).to_owned());
-        }
-        let options = &args["options"];
-        let forms = options["form_types"].as_array().into_iter().flatten();
-        let pages = Pages::open(
-            &from_hex(text(&args["manifest"], "hex")),
-            &templates,
-            &data_value(&case_value_json(&args["reads"]).to_string())?,
-            &PagesOptions {
-                build: text(options, "build").to_owned(),
-                timezone: text(options, "timezone").to_owned(),
-                context: options["context"] == Value::Bool(true),
-                base_path: text(options, "base_path").to_owned(),
-                data_base_path: options["data_base_path"].as_str().map(str::to_owned),
-                form_types: forms.map(|form| text_of(form).to_owned()).collect(),
-            },
-        )?;
+        let pages = case_pages(case)?;
         let front = &case["front"];
         let accept = front["accept"].as_array().into_iter().flatten();
         let request = Front {
@@ -1992,12 +1966,7 @@ fn the_fault_cases_of_the_template_raise_internal_where_the_parser_breaks() -> R
     // A case without faults raises its kind without any arming.
     use polyspec_hyper::read_paths::template_reads;
     use polyspec_hyper::steps::Map;
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/faults.json");
-    let file: Value = match fs::read_to_string(&path).map(|text| serde_json::from_str(&text)) {
-        Ok(Ok(value)) => value,
-        Ok(Err(error)) => panic!("{}: {error}", path.display()),
-        Err(error) => panic!("{}: {error}", path.display()),
-    };
+    let file = fault_cases();
     let mut ran = 0;
     for case in group(&file, "template") {
         let mut templates = Map::new();
@@ -2024,6 +1993,147 @@ fn the_fault_cases_of_the_template_raise_internal_where_the_parser_breaks() -> R
                 "{}: {test} is no read path of {reads}",
                 case["id"]
             );
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+    Ok(())
+}
+
+/// The store of a case of opening_functions.open_page, given as an instance value (binding GN-13f): a memory store with
+/// the values that its calls of `memory_store.set` give as PHP serialization, or the session of a file store that
+/// `file_sessions.open` opens without a cookie.
+fn case_store(case: &Value) -> Box<dyn polyspec_session_store::Store> {
+    use polyspec_session_store::{FileSessions, MemoryStore, Store};
+    let store = &case["store"];
+    match text(store, "new") {
+        "memory_store.new" => {
+            let mut memory = MemoryStore::new();
+            for call in store["then"].as_array().into_iter().flatten() {
+                assert_eq!(text(call, "call"), "memory_store.set", "{}", case["id"]);
+                let args = &call["args"];
+                let value =
+                    match polyspec_php_serialization::unserialize(text(args, "value").as_bytes()) {
+                        Ok(value) => value,
+                        Err(error) => panic!("{}: {error}", case["id"]),
+                    };
+                if let Err(error) = memory.set(text(args, "key"), &value) {
+                    panic!("{}: {error}", case["id"]);
+                }
+            }
+            Box::new(memory)
+        }
+        "file_sessions.open" => {
+            let receiver = &store["receiver"];
+            assert_eq!(text(receiver, "new"), "file_sessions.new", "{}", case["id"]);
+            assert_eq!(store["args"]["cookie"], Value::Null, "{}", case["id"]);
+            let args = &receiver["args"];
+            let sessions = match FileSessions::new(
+                binding_core::Io::for_generated_call(),
+                std::path::Path::new(text(args, "directory")),
+                args["lifetime"].as_u64(),
+            ) {
+                Ok(sessions) => sessions,
+                Err(error) => panic!("{}: {error}", case["id"]),
+            };
+            match sessions.open(binding_core::ProcessWait::for_generated_call(), None, None) {
+                Ok(session) => Box::new(session),
+                Err(error) => panic!("{}: {error}", case["id"]),
+            }
+        }
+        other => panic!("{}: no store of {other}", case["id"]),
+    }
+}
+
+/// The cases of tests/cases/faults.json.
+fn fault_cases() -> Value {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/faults.json");
+    match fs::read_to_string(&path).map(|text| serde_json::from_str(&text)) {
+        Ok(Ok(value)) => value,
+        Ok(Err(error)) => panic!("{}: {error}", path.display()),
+        Err(error) => panic!("{}: {error}", path.display()),
+    }
+}
+
+/// The pages of a case that gives them as `{"new": "pages.open", "args": ...}`.
+fn case_pages(case: &Value) -> Result<polyspec_hyper::steps::Pages, Error> {
+    use polyspec_hyper::steps::{Map, Pages, PagesOptions};
+    let pages = &case["pages"];
+    assert_eq!(text(pages, "new"), "pages.open", "{}", case["id"]);
+    let args = &pages["args"];
+    let mut templates = Map::new();
+    for pair in args["templates"].as_array().into_iter().flatten() {
+        templates.insert(text_of(&pair[0]).to_owned(), text_of(&pair[1]).to_owned());
+    }
+    let options = &args["options"];
+    let forms = options["form_types"].as_array().into_iter().flatten();
+    Pages::open(
+        &from_hex(text(&args["manifest"], "hex")),
+        &templates,
+        &data_value(&case_value_json(&args["reads"]).to_string())?,
+        &PagesOptions {
+            build: text(options, "build").to_owned(),
+            timezone: text(options, "timezone").to_owned(),
+            context: options["context"] == Value::Bool(true),
+            base_path: text(options, "base_path").to_owned(),
+            data_base_path: options["data_base_path"].as_str().map(str::to_owned),
+            form_types: forms.map(|form| text_of(form).to_owned()).collect(),
+        },
+    )
+}
+
+#[test]
+fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
+    // HY-132.6, HY-24.14, HY-104.23; binding design G-5, X-1. The case of the group session of tests/cases/faults.json
+    // that arms session_store.session_waits for opening_functions.open_page opens a page with a file session that found
+    // no record, whose first get starts the record session, and raises internal; the same call without the arming
+    // opens the page with a new token, because the start of the session leaves it started. Its other cases raise the
+    // kinds that their stored values or their mask give.
+    use binding_core::Failure;
+    use polyspec_hyper::opening::{open_page, Opened, Opening};
+    use polyspec_hyper::steps::PageKind;
+    let file = fault_cases();
+    let mut ran = 0;
+    for case in group(&file, "session") {
+        let pages = case_pages(case)?;
+        let given = &case["opening"];
+        assert_eq!(text(given, "kind"), "html", "{}", case["id"]);
+        let opening = Opening {
+            route: text(given, "route").to_owned(),
+            params: Vec::new(),
+            kind: PageKind::Html,
+            action: given["action"] == Value::Bool(true),
+            path: text(given, "path").to_owned(),
+            base_path: text(given, "base_path").to_owned(),
+            current_url: given["current_url"].as_str().map(latin1),
+            keep_cookie: given["keep_cookie"].as_str().map(str::to_owned),
+            held_hash: given["held_hash"].as_str().map(str::to_owned),
+            form_csrf: given["form_csrf"].as_str().map(str::to_owned),
+            mask: text(given, "mask").to_owned(),
+            now: match given["now"].as_f64() {
+                Some(now) => now,
+                None => panic!("{}: now is no number", case["id"]),
+            },
+        };
+        let raised = |result: Result<Opened, Failure<Error>>| match result {
+            Ok(opened) => panic!("{}: {opened:?}", case["id"]),
+            Err(Failure::Kind(error)) => check_raises(case, &error),
+            Err(other) => panic!("{}: {other:?}", case["id"]),
+        };
+        if case.get("faults").is_none() {
+            let mut store = case_store(case);
+            raised(open_page(&pages, store.as_mut(), &opening));
+            ran += 1;
+            continue;
+        }
+        let mut store = case_store(case);
+        raised(armed(case, "opening_functions.open_page", || {
+            open_page(&pages, store.as_mut(), &opening)
+        }));
+        let mut store = case_store(case);
+        match open_page(&pages, store.as_mut(), &opening) {
+            Ok(Opened::Page { token, .. }) => assert_eq!(token.len(), 64, "{}", case["id"]),
+            other => panic!("{}: {other:?}", case["id"]),
         }
         ran += 1;
     }

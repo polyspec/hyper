@@ -172,3 +172,9 @@ The build package had two bins, `hyper-build-assets` and `hyper-build-server`, w
 - The build takes no build id. A test that needs a fixed id builds its program and its shell with the two assembly modules that the build uses, which take the id as an argument, so the rules of the assembly exist once.
 - `hyper check` checks the manifest and the template rules and reads no output; `make templates-check` calls it.
 - Until the command tool calls the core (H-8), it calls the rules of the browser package and of its own modules, `program/templates/` holds the reserved template, and Node reads the template index and the build id below `client/`.
+
+## Wave 31 — The binding packages of the core
+
+Depends on: the interface contract of the Rust core (`packages/rust/interface.json`) and the binding release that the lock pins. H31.1 makes the binding crates of the scaffold the members of the workspace and arms the points of session-store; H31.2 moves to the point macro of binding; H31.3 generates the bindings, which the Python package and the PHP extension need; H31.4 makes the command tool call the rules of the core (H-8 step 1).
+
+The end-to-end check of binding stopped every target because the root workspace did not hold the WASM crate, and the generator writes no source while the contract check reports a finding. The binding crates are what binding scaffold writes, and the lock pins the commit of binding whose generator writes them.

@@ -305,6 +305,19 @@
     },
     {
       "paths": [
+        "tests/scripts/build-fixture.mts"
+      ],
+      "tests": [
+        "tests/scripts/build.test.mts",
+        "tests/scripts/build-inputs.test.mts",
+        "tests/scripts/cli.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "tests/scripts/requires.mts"
       ],
       "tests": [

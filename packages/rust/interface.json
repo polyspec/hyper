@@ -3648,6 +3648,11 @@
       "member": "rules.template_reads",
       "file": "packages/rust/tests/cases/faults.json",
       "group": "template"
+    },
+    {
+      "member": "opening_functions.open_page",
+      "file": "packages/rust/tests/cases/faults.json",
+      "group": "session"
     }
   ]
 }

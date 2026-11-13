@@ -3,27 +3,16 @@
 // computes the build id once over the files of HY-125.15 to HY-125.17, which client/build.json, program/build.json and
 // the static shell hold.
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, relative, resolve } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { test } from 'node:test';
 import { buildId } from '../../packages/cli/lib/build-id.mjs';
 import { listFiles } from '../../packages/cli/lib/output-files.mjs';
 import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
-import { copyTracked } from '../../scripts/tracked-files.mts';
-
-const bin = resolve('packages/cli/bin/hyper.mjs');
-
-function fixture(name: string, t: { after: (fn: () => void) => void }): string {
-  const app = mkdtempSync(join(tmpdir(), `hyper-build-${name}-`));
-  t.after(() => rmSync(app, { recursive: true, force: true }));
-  copyTracked({ repository: resolve('.'), path: `tests/scripts/fixtures/${name}`, target: app, base: `tests/scripts/fixtures/${name}` });
-  return app;
-}
+import { fixture, runBuild } from './build-fixture.mts';
 
 function build(app: string, ...options: string[]) {
-  const result = spawnSync(process.execPath, [bin, 'build', '--app', app, '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
+  const result = runBuild(app, ...options);
   assert.equal(result.status, 0, result.stderr);
   return result;
 }

@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 39cea774f773579ff2aee71a53060b5f325d87a508a3912927f15b02a4fd49c0 -->
+<!-- source-sha256: 23594dc558b59105465b1b3319c06923238c553d97ff0972f5037ce56844b797 -->
 # 실행
 
 [English](plan.md).
@@ -173,3 +173,9 @@ build package는 bin 두 개 `hyper-build-assets`와 `hyper-build-server`를 가
 - build는 build id를 받지 않는다. 고정 id가 필요한 test는 build가 쓰는 두 조립 module로 프로그램과 셸을 만들며, 그 module은 id를 인자로 받으므로 조립 규칙은 한 번만 있다.
 - `hyper check`는 매니페스트와 템플릿 규칙을 검사하고 출력은 읽지 않는다. `make templates-check`가 그것을 부른다.
 - 명령 도구가 core를 부를 때까지(H-8) 그것은 browser package와 자기 module의 규칙을 부르고, `program/templates/`는 예약 템플릿을 담으며, Node는 템플릿 색인과 build id를 `client/` 아래에서 읽는다.
+
+## Wave 31 — core의 binding package
+
+의존: Rust core의 interface 계약(`packages/rust/interface.json`)과 lock이 고정하는 binding release. H31.1은 scaffold의 binding crate를 workspace member로 두고 session-store의 지점을 장전한다. H31.2는 binding의 지점 macro로 옮긴다. H31.3은 Python package와 PHP extension에 필요한 binding을 생성한다. H31.4는 명령 도구가 core의 규칙을 부르게 한다(H-8 1단계).
+
+root workspace가 WASM crate를 갖지 않아 binding의 end-to-end 검사가 모든 target을 멈췄고, 생성기는 계약 검사가 finding을 보고하는 동안 소스를 쓰지 않는다. binding crate는 binding scaffold가 쓰는 것이며, lock은 그것을 쓰는 생성기의 binding commit을 고정한다.

@@ -2,24 +2,13 @@
 // manifest (HY-2) and the template rules (HY-48.3) are checked before the build writes any output, an asset keeps its
 // bytes below a name with a hash of its content, and an application without client/main.ts builds its program.
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { test } from 'node:test';
 import { jsonArray, jsonString, parseJsonObject } from '../../scripts/json.mts';
-import { copyTracked } from '../../scripts/tracked-files.mts';
+import { fixture, runBuild } from './build-fixture.mts';
 
-const bin = resolve('packages/cli/bin/hyper.mjs');
-
-function fixture(name: string, t: { after: (fn: () => void) => void }): string {
-  const app = mkdtempSync(join(tmpdir(), `hyper-inputs-${name}-`));
-  t.after(() => rmSync(app, { recursive: true, force: true }));
-  copyTracked({ repository: resolve('.'), path: `tests/scripts/fixtures/${name}`, target: app, base: `tests/scripts/fixtures/${name}` });
-  return app;
-}
-
-const build = (app: string, ...options: string[]) => spawnSync(process.execPath, [bin, 'build', '--app', app, '--output', join(app, 'out'), ...options], { encoding: 'utf8' });
+const build = runBuild;
 
 /** Expects the build to fail with 1, a message that matches `message`, and no output: no public/ and no out/. */
 function refuses(app: string, options: string[], message: RegExp): void {
