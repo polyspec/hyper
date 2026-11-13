@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c1df8b0fc809f0b99bd1e5fd3b9fbc5015f0cc27c6ae539566541457368a4a24 -->
+<!-- source-sha256: 3b9f256b6f4bc3e814c82461e5863e2ced81468e3bc67d8f3cd0f660d7f45259 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/ts/tests/case-rules.ts`의 `CONTRACTS`는 그 module의 상수이며 export가 아니다. 다른 파일이 그것을 읽지 않고, `make lint-ts`의 knip이 쓰이지 않는 export로 보고했다. `make lint-ts`는 8개 단계를 통과한다.
 - 6줄 이상의 코드 조각이 두 번 있는 곳이 없다. 전에는 `make duplication-check`가 clone 12건을 보고했다. Rust core에서는 `packages/rust/src/error.rs`의 `Error::part`가 hyper 자신의 실패마다 kind와 category를, 또는 hyper가 전달하는 library의 오류를 한 번 주고, `category`, `kind`, `status`, `source`가 그것을 읽는다. 전에는 이들이 각각 variant를 나열했다. module `values`는 값의 map과 list의 text들을 `manifest`, `render`, `steps`, `session`에 준다. `manifest`와 `router`는 `is_identifier`를 함께 쓴다. `keep::replace`와 `reads::Read`의 두 생성 함수는 각각 공통 단계를 함께 쓴다. 시험 `packages/rust/tests/contracts.rs`는 결과와 case의 `raises`를 함수 `check` 하나로 비교한다. Node 시험 트리의 함수 `plain`은 `packages/ts/tests/inputs.ts`에 있고, `tests/scripts/build-id.test.mts`는 자기 사본 대신 그것을 읽는다. 바뀌는 규칙은 없다. `make core-test`는 53개 시험을 통과하고, `make core-lint`와 `make core-fmt-check`는 통과하며, `make hyper-test-node`는 18개 시험을 통과하고 `make recipe-run-node`는 통과한다.
 - `config/rebuild.json`은 `scripts/recipe/legacy.mts`에 class `policy`를 주며, 그 근거는 recipe 검사의 다른 부분과 같다. 이 파일은 `tests/legacy`의 고정 case 파일을 spec의 case 파일로 검사에 주고, 이 비교를 하는 ecosystem 도구는 없다. 전에는 `make rebuild-check`가 `scripts/recipe/legacy.mts: the tool has no class in config/rebuild.json`으로 실패했고, 지금은 통과한다.
 - `config/layout.yml`은 root `tests/`의 디렉터리(`layout-root-tests`)에 `tests/legacy`를 선언한다. 이 디렉터리는 case 파일의 고정 사본을 가진다. PHP, Node, Python runner는 아직 Rust core를 부르지 않는 host 코드를 위해 그 사본을 읽고, recipe 검사는 그 사본을 spec의 case 파일로 읽는다. 그러므로 이 디렉터리는 세 server의 case를 가지며 한 package의 시험을 가지지 않는다. 전에는 `make layout-check`가 `tests/legacy: error: layout-root-tests`로 실패했고, 지금은 통과한다.

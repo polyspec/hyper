@@ -37,7 +37,7 @@ export interface Declaration {
   sections: Record<string, Section>;
 }
 
-export const CONTRACTS = new URL('../../../contracts/', import.meta.url);
+const CONTRACTS = new URL('../../../contracts/', import.meta.url);
 // The fixed case files of tests/legacy, which a library holds now; the steps read them until S-4 removes the directory.
 const LEGACY = new URL('../../../tests/legacy/', import.meta.url);
 
