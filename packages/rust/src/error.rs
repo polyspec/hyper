@@ -219,7 +219,8 @@ impl Error {
                 | polyspec_http_negotiation::Error::InvalidWeight
                 | polyspec_http_negotiation::Error::InvalidCandidate => Category::Value,
             },
-            Part::DataModel(_) | Part::Cookies(_) => Category::Value,
+            Part::DataModel(error) => template_category(error.code),
+            Part::Cookies(error) => cookies_category(*error),
             Part::Template(error) => template_category(error.code),
             Part::Sessions(error) => sessions_category(error),
             Part::RecordValue(_) => Category::Internal,
@@ -343,13 +344,24 @@ impl From<polyspec_http_cookie::Error> for Error {
     }
 }
 
+/// The category of a failure of the http-cookie library, as its interface contract gives it (E-1b). The match has no
+/// wildcard, so a variant that the library adds does not compile until its category is stated.
+fn cookies_category(error: polyspec_http_cookie::Error) -> Category {
+    use polyspec_http_cookie::Error as Cookies;
+    match error {
+        Cookies::InvalidName
+        | Cookies::InvalidCookiePath
+        | Cookies::TooLarge
+        | Cookies::PrefixNotMet
+        | Cookies::SameSiteNoneNotSecure => Category::Value,
+    }
+}
+
 /// The category of a failure of the session-store library, as its interface contract gives it (E-1b).
 fn sessions_category(error: &polyspec_session_store::Error) -> Category {
     use polyspec_session_store::Error as Sessions;
     match error {
-        Sessions::Random { .. } | Sessions::IdentifierTaken { .. } | Sessions::Internal { .. } => {
-            Category::Internal
-        }
+        Sessions::Internal { .. } => Category::Internal,
         Sessions::Record { .. }
         | Sessions::RecordNotArray { .. }
         | Sessions::RecordWrite { .. }
@@ -361,11 +373,17 @@ fn sessions_category(error: &polyspec_session_store::Error) -> Category {
         | Sessions::InvalidLifetime
         | Sessions::InvalidLockExpire
         | Sessions::InvalidSetting { .. } => Category::Value,
-        Sessions::Cancelled | Sessions::Io { .. } | Sessions::Connection { .. } => Category::Io,
+        Sessions::Random { .. }
+        | Sessions::IdentifierTaken { .. }
+        | Sessions::Cancelled
+        | Sessions::Io { .. }
+        | Sessions::Connection { .. } => Category::Io,
     }
 }
 
-/// The category of a kind of the template language, as its interface contract states it.
+/// The category of a kind of the template language, as its interface contract gives it (E-1b), for a failure of a
+/// render and for a failure of the data model. The match has no wildcard, so a code that the language adds does not
+/// compile until its category is stated.
 fn template_category(code: polyspec_template::ErrorCode) -> Category {
     use polyspec_template::ErrorCode;
     match code {
@@ -373,7 +391,49 @@ fn template_category(code: polyspec_template::ErrorCode) -> Category {
         ErrorCode::DataUnsupportedType | ErrorCode::RuntimeType | ErrorCode::RuntimeArity => {
             Category::Type
         }
-        ErrorCode::Internal => Category::Internal,
-        _ => Category::Value,
+        ErrorCode::FormatInvariant | ErrorCode::Internal => Category::Internal,
+        ErrorCode::LexInvalidUtf8
+        | ErrorCode::ParseUnterminatedTag
+        | ErrorCode::ParseUnterminatedComment
+        | ErrorCode::ParseUnterminatedString
+        | ErrorCode::ParseUnexpectedToken
+        | ErrorCode::ParseInvalidNumber
+        | ErrorCode::ParseInvalidEscape
+        | ErrorCode::ParseUnexpectedClose
+        | ErrorCode::ParseUnclosedBlock
+        | ErrorCode::ParseElseOutsideBlock
+        | ErrorCode::ParseDuplicateElse
+        | ErrorCode::ParseElseifAfterElse
+        | ErrorCode::ParseElseifNotInIf
+        | ErrorCode::ParseReservedName
+        | ErrorCode::ParseInvalidPath
+        | ErrorCode::ParseInvalidBlockTag
+        | ErrorCode::ParseInvalidWrapper
+        | ErrorCode::ParseInvalidDirective
+        | ErrorCode::LoadNotFound
+        | ErrorCode::LoadCycle
+        | ErrorCode::LoadOutsideRoot
+        | ErrorCode::LoadNotLoaded
+        | ErrorCode::DataNumberRange
+        | ErrorCode::DataNumberNotFinite
+        | ErrorCode::DataInvalidUtf8
+        | ErrorCode::DataDepth
+        | ErrorCode::DataInvalidJson
+        | ErrorCode::RuntimeCompare
+        | ErrorCode::RuntimeDivZero
+        | ErrorCode::RuntimeStringify
+        | ErrorCode::RuntimeUnknownFunction
+        | ErrorCode::RuntimeHostFunction
+        | ErrorCode::RuntimeUnknownLoop
+        | ErrorCode::RuntimeBlockUndefined
+        | ErrorCode::RuntimeBlockRedefined
+        | ErrorCode::RuntimeDepth
+        | ErrorCode::RuntimeLimit
+        | ErrorCode::ArgumentDelimiters
+        | ErrorCode::ArgumentFunctionName
+        | ErrorCode::ArgumentSourceRange
+        | ErrorCode::ArgumentIndent
+        | ErrorCode::FormatHtml
+        | ErrorCode::AstInvalid => Category::Value,
     }
 }
