@@ -1892,11 +1892,32 @@ fn case_value_json(value: &Value) -> Value {
     }
 }
 
+/// Calls a member under the faults that a case arms, as a generated binding test does (binding design G-5): it arms the
+/// list for the member, the call takes the arming as the entry point of the member does, and a fault that did not fire
+/// fails the case.
+fn armed<T>(case: &Value, member: &str, call: impl FnOnce() -> T) -> T {
+    let id = match binding_core::fault::arm(member, &case["faults"].to_string()) {
+        Ok(id) => id,
+        Err(error) => panic!("{}: {error}", case["id"]),
+    };
+    let outcome = binding_core::fault::take(member).run(call);
+    match binding_core::fault::left(id) {
+        Ok(left) => assert!(
+            left.is_empty(),
+            "{}: the faults of {} did not fire",
+            case["id"],
+            left.join(", ")
+        ),
+        Err(error) => panic!("{}: {error}", case["id"]),
+    }
+    outcome
+}
+
 #[test]
-fn the_fault_cases_reach_their_place_without_their_faults() -> Result<(), Error> {
-    // HY-132; binding design G-5, X-1. The group internal of tests/cases/faults.json arms hyper.internal for
-    // front_functions.route_request. This crate has no feature fault-test yet, so this test runs each case without its
-    // faults and checks that its input routes to the page, past the places of hyper.internal that route_request visits.
+fn the_fault_cases_raise_their_kind_where_their_points_break() -> Result<(), Error> {
+    // HY-132.6; binding design G-5, X-1. Each case of the group internal of tests/cases/faults.json arms a point for
+    // front_functions.route_request and raises internal; the same call without the arming routes to the page home,
+    // because a point that no case armed breaks nothing.
     use polyspec_hyper::front::{route_request, Front, Route};
     use polyspec_hyper::steps::{Map, PageKind, Pages, PagesOptions};
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/faults.json");
@@ -1907,12 +1928,6 @@ fn the_fault_cases_reach_their_place_without_their_faults() -> Result<(), Error>
     };
     let mut ran = 0;
     for case in group(&file, "internal") {
-        assert_eq!(
-            case["faults"][0]["point"], "hyper.internal",
-            "{}",
-            case["id"]
-        );
-        assert_eq!(text(&case["raises"], "kind"), "internal", "{}", case["id"]);
         let pages = &case["pages"];
         assert_eq!(text(pages, "new"), "pages.open", "{}", case["id"]);
         let args = &pages["args"];
@@ -1947,6 +1962,11 @@ fn the_fault_cases_reach_their_place_without_their_faults() -> Result<(), Error>
             malformed_content_type: front["malformed_content_type"] == Value::Bool(true),
         };
         let chosen = case["chosen"] == Value::Bool(true);
+        let member = "front_functions.route_request";
+        match armed(case, member, || route_request(&pages, chosen, &request)) {
+            Ok(route) => panic!("{}: {route:?}", case["id"]),
+            Err(error) => check_raises(case, &error),
+        }
         assert_eq!(
             route_request(&pages, chosen, &request)?,
             Route::Page {

@@ -194,7 +194,12 @@ pub fn route_request(pages: &Pages, chosen: bool, front: &Front) -> Result<Route
                 vary_accept: true,
             }));
         }
-        Err(Error::Negotiate(_)) => {
+        // HY-116.18: only a field that NG-5.7 refuses is a 400; another failure of http-negotiation, such as its
+        // internal kind (HY-132.6), reaches the caller.
+        Err(Error::Negotiate(
+            polyspec_http_negotiation::Error::InvalidAccept
+            | polyspec_http_negotiation::Error::InvalidWeight,
+        )) => {
             return Ok(refuse(Plain {
                 vary_accept: true,
                 ..plain(400, "Bad Request")

@@ -16,6 +16,7 @@ doctest = false
 
 [features]
 panic-test = []
+fault-test = ["polyspec-hyper/fault-test"]
 
 [dependencies]
 polyspec-hyper = { path = "../../rust" }

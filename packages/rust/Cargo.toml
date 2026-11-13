@@ -14,6 +14,11 @@ include = ["/src/**/*.rs", "/interface.json"]
 name = "polyspec_hyper"
 path = "src/lib.rs"
 
+[features]
+# G-5, X-1: compiles the arming of the fault injection points of `fault`; a generated binding crate turns it on for its
+# tests only, and a release build never does (binding design 3.6).
+fault-test = ["polyspec-binding-core/fault-test"]
+
 [dependencies]
 # The kind interface of every error (plan F-2, binding design E-1).
 polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core" }
@@ -37,6 +42,10 @@ sha2 = "0.10"
 
 [dev-dependencies]
 serde_json = { version = "1", features = ["preserve_order"] }
+# tests/contracts.rs arms the fault injection points of the cases that name them, those of hyper and of
+# http-negotiation, as a generated binding test does (binding design G-5).
+polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core", features = ["fault-test"] }
+polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", branch = "v1/rust-core", features = ["fault-test"] }
 
 [lints]
 workspace = true

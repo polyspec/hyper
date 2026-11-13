@@ -1,5 +1,5 @@
 {
-  "comment": "The cases of the interface contract that arm the fault injection points of the core (binding design G-5, X-1; HY-132), in the case form of binding (G-5). The application is the smallest that routes the request GET / to its page; without the faults the request is the page home.",
+  "comment": "The cases of the interface contract that arm the fault injection points of the core and of http-negotiation, whose error enum the core passes on (binding design G-5, X-1; HY-132.6), in the case form of binding (G-5). The application is the smallest that routes the request GET / to its page; without the faults the request is the page home.",
   "internal": [
     {
       "id": "a_broken_invariant_of_the_core_is_internal",
@@ -80,6 +80,95 @@
       "faults": [
         {
           "point": "hyper.internal",
+          "kind": "broken"
+        }
+      ],
+      "raises": {
+        "kind": "internal",
+        "status": null,
+        "category": "internal",
+        "message": null
+      }
+    },
+    {
+      "id": "a_broken_index_of_the_weights_is_internal",
+      "rule": "HY-132.6",
+      "pages": {
+        "new": "pages.open",
+        "args": {
+          "manifest": {
+            "hex": "7b226c61796f7574223a226c61796f75742e74706c222c227469746c65223a227469746c652e74706c222c22726567696f6e73223a5b7b226e616d65223a22636f6e74656e74222c2270616765223a747275657d5d2c22726f75746573223a5b7b226e616d65223a22686f6d65222c2270617468223a222f222c227469746c65223a22486f6d65222c2274656d706c617465223a22706167652e74706c227d5d7d"
+          },
+          "templates": [
+            [
+              "layout.tpl",
+              "<title>{# title}</title>{# build}\n<main id=\"content\">{# content}</main>\n{# data}\n"
+            ],
+            [
+              "title.tpl",
+              "{= title} - Site"
+            ],
+            [
+              "page.tpl",
+              "<p>{= title}</p>\n"
+            ]
+          ],
+          "reads": {
+            "kind": "map",
+            "value": [
+              [
+                "home",
+                {
+                  "kind": "map",
+                  "value": [
+                    [
+                      "shared",
+                      {
+                        "kind": "bool",
+                        "value": true
+                      }
+                    ],
+                    [
+                      "regions",
+                      {
+                        "kind": "map",
+                        "value": []
+                      }
+                    ]
+                  ]
+                }
+              ]
+            ]
+          },
+          "options": {
+            "build": "1111111111111111111111111111111111111111111111111111111111111111",
+            "timezone": "+09:00",
+            "context": false,
+            "base_path": "",
+            "data_base_path": null,
+            "form_types": [
+              "application/x-www-form-urlencoded"
+            ]
+          }
+        }
+      },
+      "chosen": false,
+      "front": {
+        "method": "GET",
+        "path": "/",
+        "accept": [
+          {
+            "hex": "746578742f68746d6c"
+          }
+        ],
+        "hx_request": false,
+        "context_header": null,
+        "media_type": null,
+        "malformed_content_type": false
+      },
+      "faults": [
+        {
+          "point": "http_negotiation.internal",
           "kind": "broken"
         }
       ],
