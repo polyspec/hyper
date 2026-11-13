@@ -1273,7 +1273,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/HyperValueError.php::Polyspec\\Hyper\\HyperValueError::status",
-                  "signature": "public function status(): ?int"
+                  "signature": "public function status(): null"
                 }
               }
             }
