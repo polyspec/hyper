@@ -305,6 +305,15 @@
     },
     {
       "paths": [
+        "scripts/install-binding.mts"
+      ],
+      "targets": [
+        "typecheck",
+        "bindings-check"
+      ]
+    },
+    {
+      "paths": [
         "tests/scripts/build-fixture.mts"
       ],
       "tests": [

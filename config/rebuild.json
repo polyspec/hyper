@@ -138,6 +138,10 @@
       "kind": "policy",
       "reason": "it writes the program of a test fixture with its fixed build id through the assembly of the command tool (HY-125.21); no ecosystem tool writes it"
     },
+    "scripts/install-binding.mts": {
+      "kind": "ecosystem",
+      "tool": "git clone of the checkout that Cargo made of the commit of Cargo.lock, and npm ci of the lock of the binding cli; binding is in no package registry before its release (binding design L-2)"
+    },
     "scripts/install-redis.mts": {
       "kind": "ecosystem",
       "tool": "the make of the Redis release archive, checked by its sha256, and PIE build the Redis server and phpredis"

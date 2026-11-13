@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: d7c2b62235849e55c3424fda51f3ccfab51c1384af2e2ecf2bbf85236067281a -->
+<!-- source-sha256: 6d137c663296178d503bda0aa718bf87787e2fe2bde2eda25a0bbea000652d9d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -436,4 +436,5 @@
 | H31.1 | binding 1bf0025의 scaffold가 쓴 binding crate, root workspace의 member인 WASM crate `polyspec-hyper-wasm`(GN-4), session-store ce680ac의 lock, `opening_functions.open_page`를 위한 `packages/rust/tests/cases/faults.json`의 group `session`: file session에 장전한 `session_store.session_waits`는 `internal`을 내고, 장전하지 않으면 page가 열리며, 입력 case 셋은 `invalid_session_token`, `invalid_session_record`, `invalid_csrf_form`을 낸다. 원인: binding의 end-to-end 검사가 모든 target을 GN-4로 멈췄고, session-store의 지점을 장전하는 case가 없었다 | Cargo.toml, Cargo.lock, packages/*/native, packages/go/internal/ffi, packages/rust | `make core-test`, `make core-lint` | [o] |
 | H31.2 | core는 binding 49a4e97 이후의 macro `binding_core::fault::point!`로 지점을 쓰고, lock은 binding 1cf2e2b와 그 macro를 쓰는 commit의 모든 의존성을 고정하며, core는 `fault-test`를 켠 자기 자신을 개발 의존성으로 가지고, group `session`은 `session_store.internal`을 장전한다. 원인: binding 642e70f부터 지점은 그것을 쓴 crate의 feature로만 켜지므로, core의 feature 없는 시험은 core의 지점을 장전하지 않았다 | packages/rust, Cargo.lock | `make core-test`, `make core-lint` | [ ] |
 | H31.3 | `make bindings`가 생성 소스를 쓰고, `make hyper-install-python`이 native module과 함께 Python package를 설치하며, PHP 8.4.27이 extension을 load한다. 원인: maturin이 `packages/python/native/generated/lib.rs`를 찾지 못해 venv에 package `polyspec`이 없었다 | Makefile, packages/python, packages/php | `make hyper-install-python`, `make recipe-check` | [ ] |
+| H31.3-1 | `make install-binding`이 `Cargo.lock`의 commit의 binding cli를 그 lock의 package와 함께 `var/binding/<commit>`에 clone하고, `make bindings`와 `make bindings-check`가 그것을 실행한다. 원인: 둘 다 `BINDING`이 checkout의 cli를 밝혀야 했고, 그 commit은 lock의 것이 아니었다(CK-20) | Makefile, scripts/install-binding.mts, AGENTS.md와 그 한국어 쌍, docs/operations/repository-rules.md와 그 한국어 쌍 | `make install-binding`, `make bindings-check` | [ ] |
 | H31.4 | `hyper build`와 `hyper check`는 Node binding으로 core의 규칙을 부르고, build는 `hyper/data.tpl`을 core에서 받으며, 이전 TypeScript 규칙은 `legacy/`로 옮겨 그 시험을 같은 기대값으로 binding에 대해 돌린다(H-8 1단계) | packages/cli, tests/scripts | `make hyper-test-scripts TESTS="tests/scripts/build.test.mts tests/scripts/check-templates.test.mts"` | [ ] |

@@ -347,18 +347,23 @@ core-fmt-check: ## Check the format of the Rust core
 	cd $(CORE) && cargo fmt --check
 
 # The bindings of the Rust core for the five targets of packages/rust/interface.json (binding design L-1, L-2, L-2a).
-# BINDING is the cli of a binding checkout (packages/ts/src/cli.ts), which bindings and bindings-check run; both fail
-# without it. bindings writes the generated folders, which Git ignores (native/generated/ of packages/php,
+# BINDING is the cli of binding at the commit that Cargo.lock pins for polyspec-binding-core, which make install-binding
+# clones into var/binding/<commit> (scripts/install-binding.mts), so the generator and binding_core are one version
+# (G-6, CK-20); bindings and bindings-check fail with that install target while it is missing. bindings writes the generated folders, which Git ignores (native/generated/ of packages/php,
 # packages/python and packages/ts, packages/ts/native/wasm/generated, packages/go/internal/ffi/generated), and the
 # tracked Go files zz_generated_*.go of packages/go (binding GN-3). bindings-check runs the contract check, which also
 # compares the tracked binding packages with what binding scaffold writes (binding L-2, CK-19).
 .PHONY: bindings bindings-check lint-bindings test-bindings node-package test-wasm test-go
-BINDING ?=
-bindings: ## Write the generated sources of every binding with the binding cli of BINDING (binding L-1)
-	@test -n "$(BINDING)" || { echo "bindings: set BINDING to the cli of binding"; exit 1; }
+BINDING_COMMIT := $(shell sed -n '/^name = "polyspec-binding-core"$$/{n;n;s/^source = ".*\#\([0-9a-f]\{40\}\)"$$/\1/p;}' $(CURDIR)/Cargo.lock)
+BINDING := $(CURDIR)/var/binding/$(BINDING_COMMIT)/packages/ts/src/cli.ts
+.PHONY: install-binding
+install-binding: ## Clone the binding cli of the commit that Cargo.lock pins into var/binding and install its locked packages; ONLINE
+	$(ONLINE) $(NODE) scripts/install-binding.mts --cargo cargo --npm $(NPM) --output $(CURDIR)/var/binding
+bindings: ## Write the generated sources of every binding with the binding cli of the commit of Cargo.lock (binding L-1)
+	@test -f $(BINDING) || { echo "bindings: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
 	$(NODE) $(BINDING) generate --root $(CURDIR)
-bindings-check: ## Check the interface contract and the tracked binding packages with the binding cli of BINDING (binding CK-19)
-	@test -n "$(BINDING)" || { echo "bindings-check: set BINDING to the cli of binding"; exit 1; }
+bindings-check: ## Check the interface contract and the tracked binding packages with the binding cli of the commit of Cargo.lock (binding CK-19)
+	@test -f $(BINDING) || { echo "bindings-check: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
 	$(NODE) $(BINDING) check $(CURDIR)/packages/rust/interface.json
 
 # The binding crates of the workspace. The WASM crate is not in the tree (Cargo.toml): its lint and its build name the

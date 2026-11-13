@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 41bf4f5ad41139ae0fc4119f2792022f2f295ec31cd018bbfef465fc3976b637 -->
+<!-- source-sha256: e90364d471de2acf81aa57b7f25894f5aa29d99ad1aa539d8012f92810687eed -->
 # 개발
 
 [English](AGENTS.md).
@@ -42,7 +42,7 @@
 - Own: PHP 개발, test와 release 검증은 PHP 8.4.27을 기준으로 한다. Windows는 8.4.27-1 package rebuild를 쓰며 runtime version은 8.4.27이다. `.php-version`은 native tool 탐색을 위해 8.4 minor를 선택한다. 검증 결과에는 실제 runtime version을 기록하며 이전 patch의 결과를 이 기준에서의 검증으로 취급하지 않는다.
   Enforced by: none, 검증 근거를 검토할 때 기준과 기록된 runtime을 확인한다.
 
-- Own: 어떤 결과도 live service나 시간에 의존하지 않는다(HR-89). 결과가 시간에 따라 달라지는 registry 조회, 예컨대 latest 조회, version 범위의 해석, outdated package나 새 release의 조회를 하는 검사는 없으며, 다른 live service를 조회하는 검사도 없다. lock이 정확한 version과 integrity로 고정한 package의 다운로드는 설치이므로 허용한다. `npm ci`와 `composer install`이 그렇게 한다. 설치는 audit 없이 lock을 따른다. Test는 사건을 사건이나 주입된 clock으로 정렬하며, 경쟁하는 timer로 정렬하지 않는다. 실행의 server는 시스템이 배정하고 알리는 port에서 듣는다. 모든 recipe는 npm과 Composer를 오프라인으로 실행한다(Makefile의 `npm_config_offline`과 `COMPOSER_DISABLE_NETWORK`). 기본 소스 helper를 포함한 명시적 설치 target, `make bootstrap`, `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-php`, `make hyper-install-browser`, `make hyper-install-virtiofs`만 `$(ONLINE)`으로 다운로드하며, 빠진 다운로드는 그것을 만드는 설치 target과 함께 실패하고, 도구에게 온라인으로 다시 시도하라는 안내로 실패하지 않는다. server 시작처럼 오래 걸리는 작업은 시간 제한 없이 기다리며 진행을 출력한다.
+- Own: 어떤 결과도 live service나 시간에 의존하지 않는다(HR-89). 결과가 시간에 따라 달라지는 registry 조회, 예컨대 latest 조회, version 범위의 해석, outdated package나 새 release의 조회를 하는 검사는 없으며, 다른 live service를 조회하는 검사도 없다. lock이 정확한 version과 integrity로 고정한 package의 다운로드는 설치이므로 허용한다. `npm ci`와 `composer install`이 그렇게 한다. 설치는 audit 없이 lock을 따른다. Test는 사건을 사건이나 주입된 clock으로 정렬하며, 경쟁하는 timer로 정렬하지 않는다. 실행의 server는 시스템이 배정하고 알리는 port에서 듣는다. 모든 recipe는 npm과 Composer를 오프라인으로 실행한다(Makefile의 `npm_config_offline`과 `COMPOSER_DISABLE_NETWORK`). 기본 소스 helper를 포함한 명시적 설치 target, `make bootstrap`, `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-php`, `make hyper-install-browser`, `make hyper-install-virtiofs`, `make install-binding`만 `$(ONLINE)`으로 다운로드하며, 빠진 다운로드는 그것을 만드는 설치 target과 함께 실패하고, 도구에게 온라인으로 다시 시도하라는 안내로 실패하지 않는다. server 시작처럼 오래 걸리는 작업은 시간 제한 없이 기다리며 진행을 출력한다.
   Enforced by: `make hyper-test-scripts`
 - Own: 성능은 측정하고 보고하며 검사를 실패시키지 않는다. 크기나 시간이 한도를 넘으면 값과 한도를 적은 `WARNING` 줄을 출력하고, GitHub에서는 `::warning::` annotation과 CI 요약의 경고를 남기며, 검사는 통과한다(`make bundle-size`, `make bench`). 측정 script는 사용법 오류나 빠진 입력에서만 실패한다.
   Enforced by: `make hyper-test-scripts`
