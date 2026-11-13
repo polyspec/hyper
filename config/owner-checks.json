@@ -370,8 +370,7 @@
     {
       "paths": [
         "packages/cli/bin/hyper-build-server.mjs",
-        "packages/cli/lib/template-rules.mjs",
-        "scripts/check-templates.mts"
+        "packages/cli/lib/template-rules.mjs"
       ],
       "targets": [
         "templates-check",

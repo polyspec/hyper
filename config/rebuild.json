@@ -138,10 +138,6 @@
       "kind": "policy",
       "reason": "proves that the browser code and the PHP, Node and Python servers render the same bytes for the requests of one file (HY-12, HY-13, HR-55); no ecosystem tool compares the renderings of this protocol; esbuild bundles the browser code and @polyspec/template renders"
     },
-    "scripts/check-templates.mts": {
-      "kind": "policy",
-      "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) in packages/cli/lib/template-rules.mjs; @polyspec/template parses the templates"
-    },
     "scripts/contract-programs.mts": {
       "kind": "policy",
       "reason": "it writes the applications of the contract files with the server build of this repository (hyper-build-server); no ecosystem tool writes them"

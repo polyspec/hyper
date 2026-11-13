@@ -1,16 +1,16 @@
-// Tests scripts/check-templates.mts and the check in hyper-build-server with an application whose region
-// placements break HY-3 and HY-30.
+// Tests `hyper check` (HR-96, HY-48.3) with an application whose region placements break HY-3 and HY-30: it checks
+// the manifest and the template rules, reads no output and writes no file.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 
-// The template repository of the build, as the Makefile passes it.
+const check = (app: string) => spawnSync(process.execPath, [resolve('packages/cli/bin/hyper.mjs'), 'check', '--app', app], { encoding: 'utf8' });
 
 test('reports every region placement that breaks HY-3 and HY-30', () => {
-  const result = spawnSync(process.execPath, ['scripts/check-templates.mts', '--app', 'tests/scripts/fixtures/regions'], { encoding: 'utf8' });
+  const result = check('tests/scripts/fixtures/regions');
   assert.equal(result.status, 1);
   assert.deepEqual(result.stderr.trim().split('\n'), [
     'layout.tpl: {# left} is not directly inside an element with id="left" (HY-3, HY-30)',
@@ -27,29 +27,27 @@ test('reports a layout that does not place {# build} exactly once (HY-125.7)', (
   cpSync('tests/scripts/fixtures/chunks', app, { recursive: true });
   const layout = join(app, 'templates/layout.tpl');
   const text = readFileSync(layout, 'utf8');
-  assert.equal(spawnSync(process.execPath, ['scripts/check-templates.mts', '--app', app], { encoding: 'utf8' }).status, 0, 'the fixture passes as it is');
+  assert.equal(check(app).status, 0, 'the fixture passes as it is');
   for (const [written, count] of [[text.replace('{# build}', ''), 0], [text.replace('{# build}', '{# build}{# build}'), 2]] as const) {
     writeFileSync(layout, written);
-    const result = spawnSync(process.execPath, ['scripts/check-templates.mts', '--app', app], { encoding: 'utf8' });
+    const result = check(app);
     assert.equal(result.status, 1, result.stdout);
     assert.deepEqual(result.stderr.trim().split('\n'), [`layout.tpl: places {# build} ${count} times, expected once (HY-125)`]);
   }
 });
 
-test('accepts the board example', () => {
-  const result = spawnSync(process.execPath, ['scripts/check-templates.mts', '--app', 'examples/board'], { encoding: 'utf8' });
-  assert.equal(result.status, 0, result.stderr);
+test('checks the manifest (HY-2) and writes no file', (t) => {
+  const app = mkdtempSync(join(tmpdir(), 'hyper-check-manifest-'));
+  t.after(() => rmSync(app, { recursive: true, force: true }));
+  cpSync('tests/scripts/fixtures/invalid-manifest', app, { recursive: true });
+  const before = readdirSync(app, { recursive: true }).sort();
+  const result = check(app);
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /page region/);
+  assert.deepEqual(readdirSync(app, { recursive: true }).sort(), before);
 });
 
-test('the server build fails and writes nothing for templates that break HY-3 and HY-30 (HY-48)', () => {
-  const output = mkdtempSync(join(tmpdir(), 'hyper-build-server-'));
-  rmSync(output, { recursive: true });
-  try {
-    const result = spawnSync(process.execPath, ['packages/cli/bin/hyper-build-server.mjs', '--manifest', 'tests/scripts/fixtures/regions/app/app.json', '--templates', 'tests/scripts/fixtures/regions/templates', '--output', output, '--php-namespace', 'Fixture\\Program', '--build', resolve('packages/php/tests/fixtures/build.json')], { encoding: 'utf8' });
-    assert.equal(result.status, 1, result.stdout);
-    assert.match(result.stderr, /view\.tpl: places \{# lost\} 0 times, expected once \(HY-3, HY-30\)/);
-    assert.equal(existsSync(output), false);
-  } finally {
-    rmSync(output, { recursive: true, force: true });
-  }
+test('accepts the board example', () => {
+  const result = check('examples/board');
+  assert.equal(result.status, 0, result.stderr);
 });

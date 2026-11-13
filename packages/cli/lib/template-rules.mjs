@@ -2,16 +2,16 @@
 // attributes; HY-3, the layout places {# title}, {# data} and every manifest region exactly once; HY-3 and HY-30,
 // every region is placed once, directly inside an element whose id is the region name, without block arguments:
 // a manifest region in the layout, and a route region in the route template or in a template that the route
-// template includes or places by path (HY-75). `make templates-check` and the server build use it, so a
-// server program never serves templates that break these rules.
+// template includes or places by path (HY-75). `hyper check` and `hyper build` use it (HY-48.3), so a server
+// program never serves templates that break these rules.
 
 import { readFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { listFiles } from './output-files.mjs';
 
 // Returns the problems of the templates below `templatesDir` for the manifest, and the number of templates. The
-// parser and the path resolution of the template package are passed in, because the server build loads them from
-// the template repository that it compiles with.
+// parser and the path resolution of the template package are passed in by the caller, which imports the template
+// package of the command tool (HR-70).
 export function templateProblems({ manifest, templatesDir, parse, resolvePath }) {
   const { layout } = manifest;
   const problems = [];
