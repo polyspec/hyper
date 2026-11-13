@@ -178,3 +178,14 @@ The build package had two bins, `hyper-build-assets` and `hyper-build-server`, w
 Depends on: the interface contract of the Rust core (`packages/rust/interface.json`) and the binding release that the lock pins. H31.1 makes the binding crates of the scaffold the members of the workspace and arms the points of session-store; H31.2 moves to the point macro of binding; H31.3 generates the bindings, which the Python package and the PHP extension need; H31.4 makes the command tool call the rules of the core (H-8 step 1).
 
 The end-to-end check of binding stopped every target because the root workspace did not hold the WASM crate, and the generator writes no source while the contract check reports a finding. The binding crates are what binding scaffold writes, and the lock pins the commit of binding whose generator writes them.
+
+The servers that do not call the core run the cases of `tests/legacy/`, and the core runs the cases of `contracts/`. Where the two differ, the protocol decides, and a server takes the decided behavior when it calls the core (H31.7 to H31.9), because the three servers share one legacy case file and so change together:
+
+- A session that holds another value in the place of the token fails the request with `invalid_session_token` (HY-24.14). The servers replace the value with a new token.
+- The field value of the session cookie is `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax` (HY-45.8). The Node and Python servers write `path=/; secure`.
+- The form type of a `POST` is checked before the session opens (HY-120.2, HY-120.3). The servers open the session first.
+- A `Content-Type` that is no media type receives 400 (HY-59.12). The servers answer 415.
+- The file limit answers 413 while the body is read, before the route, the session and the token (HY-114.7, HY-120.2, HY-131.18). The servers check a file again after the token, and two comments of the core stated that order (H31.19).
+- A page or JSON answer, and its 304, has the `Referrer-Policy` of the reply (HY-103.5). The headers of a page of the core lacked it (H31.19).
+- A JSON text with more than 256 nested containers is refused (HY-54.20). The Python and PHP servers read deeper texts.
+- A path of a build output without the prefix of its place fails the build with `invalid_build` (HY-125.17). The build id of the command tool checks no path, until it takes the build id from the core (H31.4-3).

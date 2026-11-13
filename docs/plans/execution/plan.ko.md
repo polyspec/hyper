@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 23594dc558b59105465b1b3319c06923238c553d97ff0972f5037ce56844b797 -->
+<!-- source-sha256: 3c8aaa63d4ee09057a0e0b71b7353ab5546d2dfc34ef0c015340826e39e659f1 -->
 # 실행
 
 [English](plan.md).
@@ -179,3 +179,14 @@ build package는 bin 두 개 `hyper-build-assets`와 `hyper-build-server`를 가
 의존: Rust core의 interface 계약(`packages/rust/interface.json`)과 lock이 고정하는 binding release. H31.1은 scaffold의 binding crate를 workspace member로 두고 session-store의 지점을 장전한다. H31.2는 binding의 지점 macro로 옮긴다. H31.3은 Python package와 PHP extension에 필요한 binding을 생성한다. H31.4는 명령 도구가 core의 규칙을 부르게 한다(H-8 1단계).
 
 root workspace가 WASM crate를 갖지 않아 binding의 end-to-end 검사가 모든 target을 멈췄고, 생성기는 계약 검사가 finding을 보고하는 동안 소스를 쓰지 않는다. binding crate는 binding scaffold가 쓰는 것이며, lock은 그것을 쓰는 생성기의 binding commit을 고정한다.
+
+core를 부르지 않는 서버는 `tests/legacy/`의 case를 실행하고, core는 `contracts/`의 case를 실행한다. 둘이 다른 곳은 프로토콜이 정하며, 서버는 core를 부를 때(H31.7~H31.9) 정해진 동작을 갖는다. 세 서버가 legacy case 파일 하나를 함께 쓰므로 함께 바뀌기 때문이다.
+
+- token 자리에 다른 값을 가진 session은 요청을 `invalid_session_token`으로 실패시킨다(HY-24.14). 서버는 그 값을 새 token으로 바꾼다.
+- session cookie의 field 값은 `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`다(HY-45.8). Node와 Python 서버는 `path=/; secure`를 쓴다.
+- `POST`의 form type은 session을 열기 전에 검사한다(HY-120.2, HY-120.3). 서버는 session을 먼저 연다.
+- media type이 아닌 `Content-Type`은 400을 받는다(HY-59.12). 서버는 415로 답한다.
+- file limit은 body를 읽는 동안, route와 session과 token 전에 413으로 답한다(HY-114.7, HY-120.2, HY-131.18). 서버는 token 뒤에 file을 다시 검사하고, core의 주석 두 곳이 그 순서를 적었다(H31.19).
+- page 응답과 JSON 응답, 그 304는 reply의 `Referrer-Policy`를 가진다(HY-103.5). core가 주는 page의 header에는 그것이 없었다(H31.19).
+- 중첩된 container가 256개를 넘는 JSON text는 거부된다(HY-54.20). Python과 PHP 서버는 더 깊은 text를 읽는다.
+- 자기 자리의 prefix가 없는 build 출력 경로는 build를 `invalid_build`로 실패시킨다(HY-125.17). command tool의 build id는 core에서 build id를 받을 때까지(H31.4-3) 경로를 검사하지 않는다.
