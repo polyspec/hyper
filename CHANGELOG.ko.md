@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2229706561711d00dcc3c62f1df2b47e1c7d829bb675311eb630b1d86eea4d45 -->
+<!-- source-sha256: 47478358bf631b5728736a3eddab4a5c763b526dfc4fc9b7e8f9050c5853c4ca -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- host `packages/ts/package.json`은 npm-native 패키지의 release가 읽는 `napi.binaryName` `hyper`와 `napi.targets` `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `aarch64-apple-darwin`을 적는다. 이것이 없으면 release가 그 패키지를 거부한다. 고정된 binding 3b4bc6b는 이 항목을 읽지 않는다: `make bindings-check`는 변경 전후에 같은 CK-19 finding을 보고한다. `packages/php/native/composer.json`의 `php-ext.download-url-method`는 넣지 않았다. 그 파일은 고정된 binding의 scaffold가 쓰는 것이고, 그 필드를 넣자 `binding check`가 `CK-19 differs`를 보고했기 때문이다(H31.3-3).
 - lock은 `fault-test`를 켠 자기 자신을 개발 의존성으로 가지는(template T28.20) `polyspec-template` 3d61389b, 그것이 요구하는 `polyspec-json` 02a5d73, `polyspec-binding-core` 3b4bc6b를 고정한다. binding crate는 binding 3b4bc6b의 scaffold가 쓰는 것이다: Go crate는 `fault-test`를 선언하고, 각 `lib.rs`의 attribute는 T-4만 밝힌다.
 - `contracts/interfaces.json`은 PHP의 `HyperValueError::status`에 `public function status(): null`을 적는다. category `value`의 오류는 status가 없으므로(HY-132.2) method가 선언하는 반환 타입이다. PHP 8.4.27의 recipe check는 이전의 `?int`에 `MEMBER_SIGNATURE`를 보고했다. PHP 8.4.27에서 recipe check는 PHP의 다른 signature를 보고하지 않는다. PHP 8.5.10의 다른 지적 76개는 그 reflection에서 나왔고, AGENTS.md의 기준선에서는 증거가 아니다.
 - `make install-binding`은 `Cargo.lock`이 `polyspec-binding-core`에 고정한 commit의 binding cli를 Cargo가 만든 checkout에서 `var/binding/<commit>`으로 clone하고 그 lock의 package를 설치한다. `make bindings`와 `make bindings-check`는 그 cli를 실행하고, 그것이 없으면 설치 target과 함께 실패한다. 전에는 `BINDING`이 checkout의 cli를 밝혀야 했다. 생성기와 binding_core가 한 version이므로(G-6) 계약 검사는 CK-20을 보고하지 않는다. binding 1cf2e2b의 `make bindings`는 어떤 target도 생성하지 않는다: 모든 target에 대해 internal unit, host class unit `app`, host functions unit `host`, `host_options`의 optional field 기본값(U-2), template, session-store, http-negotiation, http-cookie의 error kind(E-1b (a))를 거부하고, Go에 대해서는 error unit과 `fault-test`의 진입점을 거부한다.

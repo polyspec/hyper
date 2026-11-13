@@ -25,5 +25,13 @@
     "@polyspec/hyper-client": "0.0.40",
     "@polyspec/php-serialize": "0.0.6",
     "@polyspec/template": "0.0.27"
+  },
+  "napi": {
+    "binaryName": "hyper",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-apple-darwin"
+    ]
   }
 }
