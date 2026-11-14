@@ -2095,6 +2095,12 @@
                   "id": "HYC-8.2"
                 },
                 {
+                  "id": "HYC-8.4",
+                  "en": "When the document request of the latest render of a location (HYC-3.2, HYC-23) receives status 200 with the header `HX-Redirect` (HY-132), the browser replaces the location of the page with the URL of the header (`location.replace`) and renders nothing, so that the history holds no entry for the URL that sent the browser away, as a 303 of an HTML request leaves none, and Back from the outside page neither renders that URL again nor is sent away again.",
+                  "ko": "가장 최근의 location 렌더(HYC-3.2, HYC-23)의 document request가 header `HX-Redirect`(HY-132)와 함께 status 200을 받으면 browser는 page의 location을 그 header의 URL로 바꾸고(`location.replace`) 아무것도 렌더하지 않으므로, HTML request의 303이 남기지 않듯 history에는 browser를 밖으로 보낸 URL의 항목이 남지 않고, outside page에서 뒤로 가도 그 URL을 다시 렌더하지 않으며 다시 밖으로 보내지지도 않는다.",
+                  "koSource": "157d287ccda21816b8ac6ea6d8c359874745400249ad31446c26ed55945bdcba"
+                },
+                {
                   "en": "A current path that matches no route renders the body text `Not Found`.",
                   "ko": "어떤 라우트와도 일치하지 않는 현재 경로는 body 텍스트로 `Not Found`를 렌더한다.",
                   "koSource": "e1ffeb3ab74e1925f7e9342fc00f9fddbd6c7d567e93056b8cb0986eebabe953",
@@ -2983,6 +2989,96 @@
         },
         {
           "kind": "rule",
+          "id": "HY-132",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                {
+                  "id": "HY-132.1",
+                  "en": "An action may return, and a loader or an action may stop the request with (HY-50), an outside redirect, the result that `outside(location)` makes, whose status is 303 as that of every redirect (HY-25.2): PHP `Result::outside`, Node `Result.outside` and Python `Result.outside`.",
+                  "ko": "action은 outside redirect를 반환할 수 있고 loader나 action은 그것으로 요청을 멈출 수 있다(HY-50): outside redirect는 `outside(location)`이 만드는 결과로 모든 redirect처럼 status가 303이며(HY-25.2), PHP `Result::outside`, Node `Result.outside`, Python `Result.outside`다.",
+                  "koSource": "7db35381b47db64ae05315743d792d7568bc70786305427da23c35b38d21fa73"
+                },
+                {
+                  "id": "HY-132.2",
+                  "en": "An outside location is ASCII text of the form `<scheme>://<host>[:<port>][<rest>]`: `<scheme>` is `http` or `https` in any ASCII case, `<host>` is one or more labels of one or more ASCII letters, digits and `-` joined by `.`, `<port>` is 1 to 5 digits without a leading zero of a value from 1 to 65535, `<rest>` is empty or starts with `/`, `?` or `#`, and the text holds no space, no control character (C0 or DEL), no `\\` and no character outside ASCII.",
+                  "ko": "outside location은 `<scheme>://<host>[:<port>][<rest>]` 형식의 ASCII text다: `<scheme>`은 ASCII 대소문자를 가리지 않는 `http` 또는 `https`, `<host>`는 ASCII 문자, 숫자, `-` 하나 이상으로 된 label 하나 이상을 `.`로 이은 것, `<port>`는 앞자리 0이 없는 1에서 5자리 숫자로 값이 1에서 65535, `<rest>`는 비어 있거나 `/`, `?`, `#`로 시작하며, text에는 공백, control 문자(C0 또는 DEL), `\\`, ASCII 밖의 문자가 없다.",
+                  "koSource": "6eb847015a069cca15cbbca5fd95e444112b862e765fde58aca77974eb90f7ab"
+                },
+                {
+                  "id": "HY-132.3",
+                  "en": "The servers read a location by this grammar and by no URL parser of their runtimes, because those parsers differ in a host that is not ASCII, in `\\` and in an empty port; so `https:outside.example`, `https:///outside.example`, `https://a@outside.example`, `https://outside.example\\@b.example`, `https://outside..example/`, `https://outside.example./` and `https://outside.example:/` are refused by every server alike, and an outside system on a host that is not ASCII is named by its ASCII form `xn--…`.",
+                  "ko": "runtime의 URL parser들은 ASCII가 아닌 host, `\\`, 빈 port에서 서로 다르므로 server는 location을 이 문법으로 읽고 runtime의 URL parser로 읽지 않으며, 그래서 `https:outside.example`, `https:///outside.example`, `https://a@outside.example`, `https://outside.example\\@b.example`, `https://outside..example/`, `https://outside.example./`, `https://outside.example:/`는 모든 server에서 똑같이 거부되고, ASCII가 아닌 host의 outside system은 ASCII 형식 `xn--…`으로 적는다.",
+                  "koSource": "ceba31a296921c4462fd0a997c35b78daec0c7aac0a0d192a142b32d586a9b89"
+                },
+                {
+                  "id": "HY-132.4",
+                  "en": "Only `http` and `https` with a host make an outside location, because the browser code and htmx load the location of `HX-Redirect` by assigning it to the location of the page, which runs a `javascript:` URL as a script of the page, and the URL parser of the browser reads a host and user information out of a text without `//`, such as `https:trusted.example@outside.example`.",
+                  "ko": "host가 있는 `http`와 `https`만 outside location인데, browser code와 htmx는 `HX-Redirect`의 location을 page의 location에 대입해 load하며 이것은 `javascript:` URL을 page의 script로 실행하고, browser의 URL parser는 `https:trusted.example@outside.example`처럼 `//`가 없는 text에서 host와 user information을 읽어 내기 때문이다.",
+                  "koSource": "c29ffc78433cde914ae7d3546dcffdfaa65e929cc5e48d13f959a3e7c2fb03bb"
+                },
+                {
+                  "id": "HY-132.5",
+                  "en": "Making an outside redirect of a text that is no outside location fails with the error `an outside location is not an http or https URL with a host (HY-132)`, of the classes of HY-46.2.",
+                  "ko": "outside location이 아닌 text로 outside redirect를 만들면 HY-46.2의 class로 오류 `an outside location is not an http or https URL with a host (HY-132)`를 내며 실패한다.",
+                  "koSource": "6fe3520f0c8823a59a7f33cf9ea50bc81cc3ed5c1620241eeac50669272cae8f"
+                },
+                {
+                  "id": "HY-132.6",
+                  "en": "The server responds to an outside redirect with status 200, the header `HX-Redirect` with the location and no body when the request has `HX-Request: true` or is a document request (HY-15), and with status 303 and `Location` with the location otherwise.",
+                  "ko": "server는 요청에 `HX-Request: true`가 있거나 요청이 document request(HY-15)이면 outside redirect에 status 200, location을 담은 header `HX-Redirect`, body 없음으로 응답하고, 그 밖에는 status 303과 location을 담은 `Location`으로 응답한다.",
+                  "koSource": "8b50ae8130f5aff4ed7bb28a84a339a80d3d3d1da7793af839d68785b241dd3f"
+                },
+                {
+                  "id": "HY-132.7",
+                  "en": "Those requests receive no 3xx, because the browser follows a 3xx response of a fetch before htmx or the browser code reads it, and htmx fetches with the mode `same-origin`, under which a redirect to another origin is a network error, also for the history restoration of htmx, an HTML request with `HX-Request: true`.",
+                  "ko": "browser는 fetch의 3xx 응답을 htmx나 browser code가 읽기 전에 따라가고, htmx는 mode `same-origin`으로 fetch하며 그 mode에서 다른 origin으로의 redirect는 network error이고 이는 `HX-Request: true`가 있는 HTML request인 htmx의 history restoration에서도 같으므로, 이 요청들은 3xx를 받지 않는다.",
+                  "koSource": "ada99d50be4002ad82cf14f632b2e7e68f8f19e3323f5ec3a19e449664e766dd"
+                },
+                {
+                  "id": "HY-132.8",
+                  "en": "Both responses have `Cache-Control: no-store` and the `Vary` of HY-117.1, because the location may hold a value of the request and the two responses differ by `HX-Request` and `Accept`, and neither has `Content-Type` (HY-52.8) or `ETag` (HY-53).",
+                  "ko": "location은 요청의 값을 담을 수 있고 두 응답은 `HX-Request`와 `Accept`로 달라지므로 두 응답 모두 `Cache-Control: no-store`와 HY-117.1의 `Vary`를 가지며, 어느 쪽도 `Content-Type`(HY-52.8)이나 `ETag`(HY-53)를 갖지 않는다.",
+                  "koSource": "c60cebd8c87acd678f866821231588903e537772d9e55eb870f4b2e816254455"
+                },
+                {
+                  "id": "HY-132.9",
+                  "en": "The location takes neither the base path (HY-8.3) nor the data base path (HY-62), because it names no path of the application.",
+                  "ko": "location은 application의 경로를 가리키지 않으므로 base path(HY-8.3)도 data base path(HY-62)도 붙지 않는다.",
+                  "koSource": "0cfc7453db2cb08ac4de33c975b971816477cc38e356690473b8dd7879658603"
+                },
+                {
+                  "id": "HY-132.10",
+                  "en": "An outside redirect stores no flash value and no changed topic, and `flash` and `changed` of an outside redirect fail with the error `an outside redirect holds no flash value or changed topic (HY-132)`, of the classes of HY-46.2, before they check their arguments (HY-25.6).",
+                  "ko": "outside redirect는 flash 값도 바뀐 topic도 저장하지 않으며, outside redirect의 `flash`와 `changed`는 인자를 검사하기 전에(HY-25.6) HY-46.2의 class로 오류 `an outside redirect holds no flash value or changed topic (HY-132)`를 내며 실패한다.",
+                  "koSource": "04a0bb2d713f78ad12bad5724756783ae1c39b729a7ac228b3bd9eb3fa6207eb"
+                },
+                {
+                  "id": "HY-132.11",
+                  "en": "The redirect stop of HY-50 takes an outside redirect, and its message is `redirect to` followed by a space and the location, as HY-50.3 states.",
+                  "ko": "HY-50의 redirect stop은 outside redirect를 받으며, 그 message는 HY-50.3이 정하듯 `redirect to` 뒤에 공백과 location이 오는 문자열이다.",
+                  "koSource": "6b5be1928f879ce6d3155dda7bb4c2e5211cade1fb9f6c2145bb948df68c002d"
+                },
+                {
+                  "id": "HY-132.12",
+                  "en": "An outside redirect is a redirect for HY-52.9, HY-103.7 and HY-124.4: its response holds the cookies of the reply and of a renewed session and no `Referrer-Policy` of the reply, and a request whose action returns it or stops with it causes no call of the context handler.",
+                  "ko": "outside redirect는 HY-52.9, HY-103.7, HY-124.4에서 redirect다: 그 응답은 reply와 갱신된 session의 cookie를 담고 reply의 `Referrer-Policy`는 갖지 않으며, action이 그것을 반환하거나 그것으로 멈춘 요청에서는 context handler가 호출되지 않는다.",
+                  "koSource": "07fd206b11ed4338a5066696928b1ef2428fd7903ab9664b149f0d176779ceaf"
+                },
+                {
+                  "id": "HY-132.13",
+                  "en": "`origin(text)` of the result, PHP `Result::origin`, Node `Result.origin` and Python `Result.origin`, returns the origin of an outside location as `<scheme>://<host>:<port>`, with the scheme and the host in lower case and the port of the location or the default port of its scheme, 80 for `http` and 443 for `https`, and null, `None` in Python, for a text that is no outside location, so that an application compares origins without a URL parser of its own.",
+                  "ko": "결과의 `origin(text)`, 즉 PHP `Result::origin`, Node `Result.origin`, Python `Result.origin`은 outside location의 origin을 `<scheme>://<host>:<port>`로 반환하는데 scheme과 host는 소문자이고 port는 location의 port 또는 scheme의 기본 port(`http`는 80, `https`는 443)이며, outside location이 아닌 text에는 null(Python에서는 `None`)을 반환하므로 application은 자기 URL parser 없이 origin을 비교한다.",
+                  "koSource": "760bbf24edaa910f22414606d82592144684c776834372008a95abcd1da3c192"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "rule",
           "id": "HY-26",
           "retired": [],
           "blocks": [
@@ -3537,6 +3633,12 @@
                   "koSource": "636e6bde217075c50fb2b681305ac64050aead62a660a15d7beec99a7258a8b9"
                 },
                 {
+                  "id": "HYC-4.8",
+                  "en": "When htmx restores a page from history by requesting its HTML (HYC-4.2) and receives status 200 with the header `HX-Redirect` (HY-132), the extension replaces the location of the page with the URL of the header (`location.replace`) and cancels htmx for the response, so that htmx neither swaps nor loads the URL, for the reason of HYC-8.4, because the restored URL is the URL of the current history entry.",
+                  "ko": "htmx가 page의 HTML을 요청해 history에서 page를 복원할 때(HYC-4.2) header `HX-Redirect`(HY-132)와 함께 status 200을 받으면, 복원된 URL이 현재 history 항목의 URL이므로 extension은 HYC-8.4의 이유로 page의 location을 그 header의 URL로 바꾸고(`location.replace`) 그 응답에 대해 htmx를 취소하여, htmx는 swap하지도 그 URL을 load하지도 않는다.",
+                  "koSource": "ddc35531f36f0e34e308099e2c7af02e8024e0d499a2054389d6ad7c214f183c"
+                },
+                {
                   "id": "HYC-4.3",
                   "en": "A document without `#hy-data` leaves no held data, and the browser obtains the data with HYC-7 when it first needs it.",
                   "ko": "`#hy-data`가 없는 문서는 보관 데이터를 남기지 않으며, 브라우저는 데이터가 처음 필요할 때 HYC-7으로 데이터를 얻는다.",
@@ -3625,6 +3727,12 @@
                   "en": "Another response, a network failure or a response that cannot be decoded leaves no held data, marks the region of the call, or the body when the page opens, with the status of the response or `0` (HYC-14), and fails the call; the next call that needs the data sends the request again.",
                   "ko": "다른 응답, network 실패, decode할 수 없는 응답은 보관 데이터를 남기지 않고, 호출의 영역(페이지가 열릴 때는 body)을 응답의 상태나 `0`으로 표시하며(HYC-14) 호출을 실패시키고, 데이터가 필요한 다음 호출은 요청을 다시 보낸다.",
                   "koSource": "c366972f81ac0402daa192e1980228b580326df1bcee1883f581603aedb3c0e2"
+                },
+                {
+                  "id": "HYC-7.10",
+                  "en": "A response with status 200 and the header `HX-Redirect` (HY-132), when no response replaced the held data while the request was pending (HYC-7.7), is no failure of HYC-7.8: the browser replaces the location of the page with the URL of the header (`location.replace`) for the reason of HYC-8.4, because the URL of the request is the URL of the current history entry, holds no data, sets no `hy-error` and fails the call, whose page it leaves.",
+                  "ko": "요청이 대기하는 동안 held data를 바꾼 응답이 없을 때(HYC-7.7) header `HX-Redirect`(HY-132)와 status 200을 가진 응답은 HYC-7.8의 실패가 아니다: 요청의 URL이 현재 history 항목의 URL이므로 browser는 HYC-8.4의 이유로 page의 location을 그 header의 URL로 바꾸고(`location.replace`), data를 hold하지 않고, `hy-error`를 설정하지 않으며, 떠나는 page의 호출을 실패시킨다.",
+                  "koSource": "16b7c44f1661de4f7c6a353a70e15b31910024466a23cdf02e238c03d98c9b92"
                 },
                 {
                   "id": "HYC-7.9",
@@ -4940,6 +5048,12 @@
                   "en": "A cancelled request is not a failure; a request that htmx aborts because its timeout (`hx-timeout`, or `htmx.config.defaultTimeout`) passed is a network failure.",
                   "ko": "취소된 요청은 실패가 아니다; 제한 시간(`hx-timeout`이나 `htmx.config.defaultTimeout`)이 지나 htmx가 중단시킨 요청은 네트워크 실패다.",
                   "koSource": "8b391eb02c591ce9302623170bb058486647f191e377522325bea1d487a311a0"
+                },
+                {
+                  "id": "HYC-14.6",
+                  "en": "A response of the latest region request (HYC-23) with status 200 and the header `HX-Redirect` (HY-132) is no failure of HYC-14.1: the extension sets no `hy-error` and lets htmx load the URL of the header by an assignment, so that Back from the outside page returns to the page of the link or the form, because htmx adds the history entry of a region request only in its swap, and the response of a superseded region request sends the browser nowhere (HYC-23.3).",
+                  "ko": "가장 최근 region request(HYC-23)의 응답이 header `HX-Redirect`(HY-132)와 status 200을 가지면 HYC-14.1의 실패가 아니다: extension은 `hy-error`를 설정하지 않고 htmx가 그 header의 URL을 대입으로 load하게 하는데, htmx는 region request의 history 항목을 swap에서만 추가하므로 outside page에서 뒤로 가면 link나 form의 page로 돌아오며, 대체된 region request의 응답은 browser를 어디로도 보내지 않는다(HYC-23.3).",
+                  "koSource": "5d1ad4ec0b02d1a76f4177349c376a7559e308c7837171c5fc81201920b7ee33"
                 },
                 {
                   "id": "HYC-14.4",

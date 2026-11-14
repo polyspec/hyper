@@ -695,12 +695,12 @@ export class App<S extends object = Record<string, never>> {
         rendered = request.withSession(flash, Csrf.masked(session.csrfToken()));
       }
       if (result !== null) {
-        if (result.isRedirect()) return this.redirectResponse(session, result, basePath);
+        if (result.isRedirect()) return this.redirectResponse(rendered, session, result, basePath);
         return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, result.status, result.data, reply, basePath));
       }
     } catch (error) {
       if (error instanceof NotFound) return Response.text(404, 'Not Found');
-      if (error instanceof Redirect) return this.redirectResponse(session, error.result, basePath);
+      if (error instanceof Redirect) return this.redirectResponse(rendered, session, error.result, basePath);
       if (error instanceof Forbidden) return Response.text(403, 'Forbidden');
       if (error instanceof BadRequest) return Response.text(400, 'Bad Request');
       // HY-107: an error of the ORM is answered as the stop of its meaning; every other error, also the REVISION_CHANGED
@@ -726,8 +726,17 @@ export class App<S extends object = Record<string, never>> {
     return response;
   }
 
-  // Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50).
-  private redirectResponse(session: Session, result: Result, basePath: string): Response {
+  // Stores the flash values and changed topics of a redirect result and responds with 303 (HY-25, HY-50); an outside
+  // redirect stores nothing, takes no base path and responds to a request with `HX-Request: true` and to a document
+  // request with 200 and `HX-Redirect`, and to every other request with 303 (HY-132).
+  private redirectResponse(request: Request, session: Session, result: Result, basePath: string): Response {
+    if (result.isOutside()) {
+      const headers = { 'Cache-Control': 'no-store', Vary: this.varyHeader() };
+      const location = String(result.location);
+      return request.wantsJson() || request.header('HX-Request') === 'true'
+        ? new Response(200, { 'HX-Redirect': location, ...headers }, '')
+        : new Response(303, { Location: location, ...headers }, '');
+    }
     session.putFlash(new Flash(new Map(result.flashValues), [...result.changedTopics]));
     return new Response(303, { Location: basePath + result.location }, '');
   }

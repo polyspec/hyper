@@ -18,7 +18,7 @@ from . import reply_steps
 from .representations_steps import OrmError
 
 _STEPS = ("calls", "observe", "add", "warn")
-_RESULTS = ("return", "stop", "throw", "redirect", "page")
+_RESULTS = ("return", "stop", "throw", "redirect", "outside", "page")
 _STOPS = {"NotFound": NotFound, "Forbidden": Forbidden, "BadRequest": BadRequest}
 
 
@@ -225,7 +225,7 @@ class _Run:
                     f"the case throws the unknown class {thrown['class']}"
                 )
             raise RuntimeError(thrown["message"])
-        if "redirect" in step:
+        if "redirect" in step or "outside" in step:
             return _redirect(step)
         return Result.page(step["page"], self._value(step.get("data", {})))
 
@@ -278,8 +278,13 @@ class _Run:
 
 
 def _redirect(step: dict) -> Result:
-    """The redirect result of a step, with its flash values and its changed topics in their order."""
-    result = Result.redirect(step["redirect"])
+    """The redirect result of a step, or its outside redirect (HY-132), with its flash values and its changed topics in
+    their order."""
+    result = (
+        Result.outside(step["outside"])
+        if "outside" in step
+        else Result.redirect(step["redirect"])
+    )
     for name, text in step.get("flashes", []):
         result = result.flash(name, decoded(text))
     for topic in step.get("topics", []):

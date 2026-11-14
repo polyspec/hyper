@@ -875,25 +875,26 @@
               "kind": "method",
               "visibility": "private",
               "inputs": [
+                "request",
                 "session",
                 "result",
                 "string"
               ],
               "output": "response",
               "errors": [],
-              "state": "Stores the flash values and the changed topics of a redirect and returns the 303 (HY-25.3).",
+              "state": "Stores the flash values and the changed topics of a redirect and returns the 303 (HY-25.3), or returns the response of an outside redirect, which stores nothing (HY-132.6).",
               "native": {
                 "php": {
                   "symbol": "packages/server/php/src/App/App.php::Polyspec\\Hyper\\App::redirectResponse",
-                  "signature": "private function redirectResponse(Polyspec\\Hyper\\Session $session, Polyspec\\Hyper\\Result $result, string $basePath): Polyspec\\Hyper\\Response"
+                  "signature": "private function redirectResponse(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\Session $session, Polyspec\\Hyper\\Result $result, string $basePath): Polyspec\\Hyper\\Response"
                 },
                 "node": {
                   "symbol": "packages/server/ts/src/app/app.ts::App.redirectResponse",
-                  "signature": "private redirectResponse(session: Session, result: Result, basePath: string): Response"
+                  "signature": "private redirectResponse(request: Request, session: Session, result: Result, basePath: string): Response"
                 },
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/app/app.py::App._redirect_response",
-                  "signature": "def _redirect_response(self, session: Session, result: Result, base_path: str) -> Response"
+                  "signature": "def _redirect_response(self, request: Request, session: Session, result: Result, base_path: str) -> Response"
                 }
               }
             },
@@ -5526,7 +5527,8 @@
         "HY-46",
         "HY-50",
         "HY-51",
-        "HY-58"
+        "HY-58",
+        "HY-132"
       ],
       "cases": [
         "contracts/result.json",
@@ -5661,6 +5663,56 @@
               }
             },
             {
+              "id": "result.outside",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "result",
+              "errors": [],
+              "state": "Returns an outside redirect with status 303 to an outside location, and fails for another text (HY-132).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result/Result.php::Polyspec\\Hyper\\Result::outside",
+                  "signature": "public static function outside(string $location): self"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result/result.ts::Result.outside",
+                  "signature": "static outside(location: string): Result"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result/result.py::Result.outside",
+                  "signature": "def outside(location: str) -> Result"
+                }
+              }
+            },
+            {
+              "id": "result.origin",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the origin of an outside location with its scheme and host in lower case and its port, or null for another text (HY-132).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result/Result.php::Polyspec\\Hyper\\Result::origin",
+                  "signature": "public static function origin(string $text): ?string"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result/result.ts::Result.origin",
+                  "signature": "static origin(text: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result/result.py::Result.origin",
+                  "signature": "def origin(text: str) -> str | None"
+                }
+              }
+            },
+            {
               "id": "result.flash",
               "kind": "method",
               "visibility": "public",
@@ -5731,6 +5783,52 @@
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/result/result.py::Result._is_redirect",
                   "signature": "def _is_redirect(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "result.isOutside",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true for an outside redirect.",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result/Result.php::Polyspec\\Hyper\\Result::isOutside",
+                  "signature": "public function isOutside(): bool"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result/result.ts::Result.isOutside",
+                  "signature": "isOutside(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result/result.py::Result._is_outside",
+                  "signature": "def _is_outside(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "result.refuseOutside",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Fails for an outside redirect, which stores no flash value and no changed topic (HY-132).",
+              "native": {
+                "php": {
+                  "symbol": "packages/server/php/src/Result/Result.php::Polyspec\\Hyper\\Result::refuseOutside",
+                  "signature": "private function refuseOutside(): void"
+                },
+                "node": {
+                  "symbol": "packages/server/ts/src/result/result.ts::Result.refuseOutside",
+                  "signature": "private refuseOutside(): void"
+                },
+                "python": {
+                  "symbol": "packages/server/python/src/polyspec/hyper/result/result.py::Result._refuse_outside",
+                  "signature": "def _refuse_outside(self) -> None"
                 }
               }
             },
@@ -13156,7 +13254,8 @@
         "HY-119",
         "HY-120",
         "HY-121",
-        "HY-122"
+        "HY-122",
+        "HY-132"
       ],
       "cases": [
         "contracts/client.json",
@@ -17217,6 +17316,10 @@
               "role": "input",
               "optional": true
             },
+            "outside": {
+              "role": "input",
+              "optional": true
+            },
             "page": {
               "role": "input",
               "optional": true
@@ -17225,7 +17328,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-27.3",
-              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect` or the page with the status `page`, and `message` is null when making it fails."
+              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect`, the outside redirect to `outside` or the page with the status `page`, and `message` is null when making it fails."
             },
             "error": {
               "role": "expected",
@@ -17276,6 +17379,106 @@
               "state": "`error` is the message of the `TypeError` of the method `call` of a redirect, `flash` with the value null under the name or `changed` with the topic, for the JSON text `argument` as a handler gives it, or null when the method takes it."
             }
           }
+        },
+        "outside": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "location": {
+              "role": "input"
+            },
+            "outside": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-132.2",
+              "state": "`outside` is the location of the outside redirect to `location`, or null when making it fails."
+            },
+            "status": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-132.1",
+              "state": "`status` is the status of the outside redirect, 303, or null when making it fails."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-132.5",
+              "state": "`error` is the message of the error with which making an outside redirect to `location` fails, or null."
+            }
+          },
+          "members": [
+            "result.outside"
+          ]
+        },
+        "origin": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "text": {
+              "role": "input"
+            },
+            "origin": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-132.13",
+              "state": "`origin` is the origin of `text` with its scheme and host in lower case and its port, or null when `text` is no outside location."
+            }
+          },
+          "members": [
+            "result.origin"
+          ]
+        },
+        "outsideStores": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "call": {
+              "role": "input"
+            },
+            "argument": {
+              "role": "input"
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-132.10",
+              "state": "`error` is the message of the error of the method `call` of an outside redirect, `flash` with the value null under the name or `changed` with the topic, for the JSON text `argument` as a handler gives it."
+            }
+          },
+          "members": [
+            "result.flash",
+            "result.changed"
+          ]
         }
       }
     },

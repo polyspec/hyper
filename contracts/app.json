@@ -9340,6 +9340,340 @@
         "HY-44",
         "HY-54"
       ]
+    },
+    {
+      "id": "an_outside_redirect_of_an_action_gives_a_region_request_200_with_hx_redirect",
+      "label": "an action that returns an outside redirect gives a region request status 200, HX-Redirect with the location, no-store, the Vary of HY-117.1 and no body",
+      "application": "b_board",
+      "handlers": {
+        "routes": {
+          "add": {
+            "post": [
+              {
+                "outside": "https://outside.example/back?state=a1"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "HX-Request": "true"
+        },
+        "form": {
+          "name": "a"
+        },
+        "csrf": true
+      },
+      "status": 200,
+      "headers": {
+        "HX-Redirect": "https://outside.example/back?state=a1",
+        "Cache-Control": "no-store",
+        "Vary": "Accept, HX-Request, HX-Current-URL"
+      },
+      "absentHeaders": [
+        "Content-Type",
+        "ETag",
+        "Location"
+      ],
+      "body": "",
+      "requirements": [
+        "HY-132"
+      ]
+    },
+    {
+      "id": "an_outside_redirect_of_an_action_gives_a_document_request_200_with_hx_redirect",
+      "label": "an action that returns an outside redirect gives a document request status 200 and HX-Redirect with the location",
+      "application": "b_board",
+      "handlers": {
+        "routes": {
+          "add": {
+            "post": [
+              {
+                "outside": "https://outside.example/back?state=a1"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {
+          "name": "a"
+        },
+        "csrf": true
+      },
+      "status": 200,
+      "headers": {
+        "HX-Redirect": "https://outside.example/back?state=a1",
+        "Cache-Control": "no-store",
+        "Vary": "Accept, HX-Request, HX-Current-URL"
+      },
+      "absentHeaders": [
+        "Content-Type",
+        "ETag",
+        "Location"
+      ],
+      "body": "",
+      "requirements": [
+        "HY-132"
+      ]
+    },
+    {
+      "id": "an_outside_redirect_of_an_action_gives_an_html_request_303_with_the_location",
+      "label": "an action that returns an outside redirect gives an HTML request without HX-Request status 303, Location with the location, no-store and the Vary of HY-117.1",
+      "application": "b_board",
+      "handlers": {
+        "routes": {
+          "add": {
+            "post": [
+              {
+                "outside": "https://outside.example/back?state=a1"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Accept": "text/html",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {
+          "name": "a"
+        },
+        "csrf": true
+      },
+      "status": 303,
+      "headers": {
+        "Location": "https://outside.example/back?state=a1",
+        "Cache-Control": "no-store",
+        "Vary": "Accept, HX-Request, HX-Current-URL"
+      },
+      "absentHeaders": [
+        "Content-Type",
+        "ETag",
+        "HX-Redirect"
+      ],
+      "body": "",
+      "requirements": [
+        "HY-132"
+      ]
+    },
+    {
+      "id": "an_outside_redirect_stop_of_a_loader_gives_an_html_request_with_hx_request_200_with_hx_redirect",
+      "label": "a loader that stops with an outside redirect gives an HTML request with HX-Request, as htmx restores a page from history, status 200 and HX-Redirect",
+      "application": "b_board",
+      "handlers": {
+        "routes": {
+          "item": {
+            "load": [
+              {
+                "stop": "Redirect",
+                "outside": "https://outside.example/back?state=a1"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/items/away",
+        "headers": {
+          "Accept": "text/html",
+          "HX-Request": "true",
+          "HX-History-Restore-Request": "true"
+        }
+      },
+      "status": 200,
+      "headers": {
+        "HX-Redirect": "https://outside.example/back?state=a1",
+        "Cache-Control": "no-store",
+        "Vary": "Accept, HX-Request, HX-Current-URL"
+      },
+      "absentHeaders": [
+        "Content-Type",
+        "ETag",
+        "Location"
+      ],
+      "body": "",
+      "requirements": [
+        "HY-132"
+      ]
+    },
+    {
+      "id": "an_outside_redirect_stop_of_a_loader_gives_an_html_request_303_with_the_location",
+      "label": "a loader that stops with an outside redirect gives an HTML request without HX-Request status 303 and Location with the location",
+      "application": "b_board",
+      "handlers": {
+        "routes": {
+          "item": {
+            "load": [
+              {
+                "stop": "Redirect",
+                "outside": "https://outside.example/back?state=a1"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/items/away",
+        "headers": {}
+      },
+      "status": 303,
+      "headers": {
+        "Location": "https://outside.example/back?state=a1",
+        "Cache-Control": "no-store",
+        "Vary": "Accept, HX-Request, HX-Current-URL"
+      },
+      "absentHeaders": [
+        "Content-Type",
+        "ETag",
+        "HX-Redirect"
+      ],
+      "body": "",
+      "requirements": [
+        "HY-132"
+      ]
+    },
+    {
+      "id": "an_outside_redirect_takes_no_base_path_in_hx_redirect",
+      "label": "the outside redirect of an action under the base path /api gives a document request HX-Redirect without the base path",
+      "application": "b_board",
+      "options": {
+        "basePath": "/api"
+      },
+      "handlers": {
+        "routes": {
+          "add": {
+            "post": [
+              {
+                "outside": "https://outside.example/back?state=a1"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "target": "/api/add",
+        "headers": {
+          "Accept": "application/vnd.hyper+json",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {
+          "name": "a"
+        },
+        "csrf": true
+      },
+      "status": 200,
+      "headers": {
+        "HX-Redirect": "https://outside.example/back?state=a1"
+      },
+      "requirements": [
+        "HY-8",
+        "HY-132"
+      ]
+    },
+    {
+      "id": "an_outside_redirect_takes_no_base_path_in_location",
+      "label": "the outside redirect stop of a loader under the base path /api gives an HTML request Location without the base path",
+      "application": "b_board",
+      "options": {
+        "basePath": "/api"
+      },
+      "handlers": {
+        "routes": {
+          "item": {
+            "load": [
+              {
+                "stop": "Redirect",
+                "outside": "https://outside.example/back?state=a1"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/api/items/away",
+        "headers": {}
+      },
+      "status": 303,
+      "headers": {
+        "Location": "https://outside.example/back?state=a1"
+      },
+      "requirements": [
+        "HY-8",
+        "HY-132"
+      ]
+    },
+    {
+      "id": "an_outside_redirect_holds_the_cookies_of_the_reply_and_no_referrer_policy",
+      "label": "a loader that adds a cookie and sets a referrer policy and then stops with an outside redirect gives the cookie and no Referrer-Policy",
+      "application": "b_board",
+      "handlers": {
+        "routes": {
+          "item": {
+            "load": [
+              {
+                "calls": [
+                  [
+                    "cookie",
+                    [
+                      "\"seen\"",
+                      "\"1\""
+                    ]
+                  ],
+                  [
+                    "referrerPolicy",
+                    [
+                      "\"no-referrer\""
+                    ]
+                  ]
+                ]
+              },
+              {
+                "stop": "Redirect",
+                "outside": "https://outside.example/back?state=a1"
+              }
+            ]
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/items/away",
+        "headers": {}
+      },
+      "status": 303,
+      "headers": {
+        "Location": "https://outside.example/back?state=a1",
+        "Set-Cookie": [
+          "seen=1; Path=/; HttpOnly; SameSite=Lax"
+        ]
+      },
+      "absentHeaders": [
+        "Referrer-Policy"
+      ],
+      "requirements": [
+        "HY-52",
+        "HY-103",
+        "HY-132"
+      ]
     }
   ],
   "opens": [

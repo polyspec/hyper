@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9dbed8d2b744740f98e123b23c0ce653741cf87100343b357010cdb3e568ad0f -->
+<!-- source-sha256: cad879e98869eb592232555f3547545b845d1fe5b236f5cd4cc615c842df99e5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- action은 다른 origin의 `http`나 `https` location으로의 outside redirect를 결과로 돌려줄 수 있고, loader나 action은 그것으로 요청을 멈출 수 있다: PHP `Result::outside($location)`, Node와 Python `Result.outside(location)`. server는 그것에 303과 `Location`으로, `HX-Request: true`인 요청과 document request에는 200과 `HX-Redirect`로 응답하며, 두 응답 모두 `Cache-Control: no-store`와 HY-117.1의 `Vary`를 가지고 base path를 붙이지 않으며, flash value와 changed topic을 저장하지 않는다. outside redirect의 `flash`와 `changed`는 실패한다. `Result::origin`과 `Result.origin`은 outside location의 origin을, 다른 text에는 null을 돌려준다. 브라우저 코드는 region 응답의 location을 htmx가 불러오게 하고(HYC-14.6), location의 렌더, document request, server-side rendering의 history 복원에서는 페이지의 location을 바꾸어(HYC-8.4, HYC-7.10, HYC-4.8), outside 페이지에서 뒤로 가기가 브라우저를 내보낸 URL에 닿지 않게 한다. `@polyspec/hyper-client`의 `DocumentAdapter`는 member `replace(url)`을 가지며, `document`로 넘기는 adapter가 그것을 구현한다. board 예제는 loader가 outside redirect로 멈추는 route `/away`를 가진다(HY-132, H32.1).
 
 - 여러 field line으로 오는 요청 field는 모든 server에서 그 줄들의 값을 순서대로 `, `로 이은 값 하나다(HY-42.7~HY-42.12). Node 서버는 `node:http`의 `headersDistinct`를 읽으므로, `Content-Type` 줄이 둘인 요청은 form type이 아닌 이어진 media type을 주고 action은 그것에 415로 응답한다. 전에는 Node 서버가 `content-type`, `user-agent`와 `node:http`가 값 하나로 읽는 다른 이름의 첫 줄만 남기고 나머지를 버렸다. Python `create_server`는 이어진 `Content-Length`와 `Transfer-Encoding`으로 body를 읽고, 두 줄을 이은 값처럼 10진수 숫자가 아닌 `Content-Length`와 두 `Transfer-Encoding` 줄에 400으로 응답한다. 전에는 각각의 첫 줄로 body를 읽었다(H28.11-10).
 

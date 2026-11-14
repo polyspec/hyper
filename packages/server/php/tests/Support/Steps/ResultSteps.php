@@ -14,7 +14,7 @@ use Polyspec\Hyper\Tests\Support\CaseInput;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Plain;
 
-/** HY-25, HY-27, HY-46, HY-50, HY-58: the cases of contracts/result.json, the results of actions and the stops. */
+/** HY-25, HY-27, HY-46, HY-50, HY-58, HY-132: the cases of contracts/result.json, the results of actions and the stops. */
 final class ResultSteps
 {
     /** Makes a redirect to the location, or records the message of the error with which it fails (HY-46). */
@@ -31,6 +31,51 @@ final class ResultSteps
         }
         $case->compare('redirect', $result?->location);
         $case->compare('status', $result?->status);
+        $case->compare('error', $error);
+    }
+
+    /** Makes an outside redirect to the location, or records the message of the error with which it fails (HY-132). */
+    public static function outside(CaseReader $case): void
+    {
+        $result = null;
+        $error = null;
+        try {
+            $result = Result::outside(CaseInput::text($case, 'location'));
+        } catch (\InvalidArgumentException $failure) {
+            $error = $failure->getMessage();
+        }
+        $case->compare('outside', $result?->location);
+        $case->compare('status', $result?->status);
+        $case->compare('error', $error);
+    }
+
+    /** Records the origin of the text, or null for a text that is no outside location (HY-132). */
+    public static function origin(CaseReader $case): void
+    {
+        $case->compare('origin', Result::origin(CaseInput::text($case, 'text')));
+    }
+
+    /**
+     * Calls `flash` or `changed` of an outside redirect with the decoded argument, and records the message of the error
+     * with which it fails (HY-132).
+     */
+    public static function outsideStores(CaseReader $case): void
+    {
+        $call = CaseInput::text($case, 'call');
+        $argument = Json::value(CaseInput::text($case, 'argument'));
+        $result = Result::outside('https://outside.example/');
+        $error = null;
+        try {
+            if ($call === 'flash') {
+                $result->flash($argument, null);
+            } elseif ($call === 'changed') {
+                $result->changed($argument);
+            } else {
+                throw new \UnexpectedValueException("the call {$call} of the case is unknown");
+            }
+        } catch (\InvalidArgumentException $failure) {
+            $error = $failure->getMessage();
+        }
         $case->compare('error', $error);
     }
 
@@ -143,11 +188,11 @@ final class ResultSteps
                 'NotFound' => new NotFound(),
                 'Forbidden' => new Forbidden(),
                 'BadRequest' => new BadRequest(),
-                'Redirect' => new Redirect(
-                    $case->has('redirect')
-                        ? Result::redirect(CaseInput::text($case, 'redirect'))
-                        : Result::page(CaseInput::integer($case, 'page'), []),
-                ),
+                'Redirect' => new Redirect(match (true) {
+                    $case->has('redirect') => Result::redirect(CaseInput::text($case, 'redirect')),
+                    $case->has('outside') => Result::outside(CaseInput::text($case, 'outside')),
+                    default => Result::page(CaseInput::integer($case, 'page'), []),
+                }),
                 default => throw new \UnexpectedValueException("the stop {$kind} of the case is unknown"),
             };
         } catch (\InvalidArgumentException $failure) {

@@ -284,6 +284,63 @@ test('a failed region request keeps the page and marks the region (HYC-14)', asy
   }
 });
 
+// HY-132: the route /away of the board stops its request with an outside redirect to this location, which no server of
+// the run serves: each test fulfills it with a page of its own.
+const OUTSIDE = 'https://outside.example/landing';
+
+async function serveOutside(page: Page): Promise<void> {
+  await page.route(OUTSIDE, (route) => route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: '<!doctype html><title>outside</title><h1>outside</h1>' }));
+}
+
+test('a region request that receives an outside redirect loads the outside location, and Back returns to the page (HY-132, HYC-14.6)', async ({ page }) => {
+  await serveOutside(page);
+  const errors = collectErrors(page);
+  for (const origin of [ssr, csr]) {
+    await page.goto(`${origin}/board`);
+    await page.waitForLoadState('networkidle');
+    // The call does not wait for the request, whose page the browser leaves.
+    await page.evaluate(() => { void window.htmx.ajax('GET', '/away', { target: '#content' }); });
+    await expect(page).toHaveURL(OUTSIDE);
+    await page.goBack();
+    await expect(page).toHaveURL(`${origin}/board`);
+    await expect(page.locator('#content h1')).toHaveText('게시판');
+  }
+  expect(errors).toEqual([]);
+});
+
+test('SSR: a history restoration that receives an outside redirect replaces the restored entry (HY-132, HYC-4.8)', async ({ page }) => {
+  await serveOutside(page);
+  const errors = collectErrors(page);
+  await page.goto(`${ssr}/board`);
+  await page.waitForLoadState('networkidle');
+  // Two history entries of htmx after the list: Back to /away restores it by requesting its HTML.
+  await page.evaluate(() => {
+    history.pushState({ htmx: true }, '', '/away');
+    history.pushState({ htmx: true }, '', '/board');
+  });
+  await page.goBack({ waitUntil: 'commit' });
+  await expect(page).toHaveURL(OUTSIDE);
+  // The outside page replaced the entry of /away, so Back reaches the list without a request of /away.
+  await page.goBack();
+  await expect(page).toHaveURL(`${ssr}/board`);
+  await expect(page.locator('#content h1')).toHaveText('게시판');
+  expect(errors).toEqual([]);
+});
+
+test('CSR: a render of a location that receives an outside redirect replaces the location, and Back returns to the page before it (HY-132, HYC-8.4)', async ({ page }) => {
+  await serveOutside(page);
+  const errors = collectErrors(page);
+  await page.goto(`${csr}/board`);
+  await expect(page.locator('#content h1')).toHaveText('게시판');
+  // The shell of /away renders its location, whose document request receives the outside redirect.
+  await page.goto(`${csr}/away`, { waitUntil: 'commit' });
+  await expect(page).toHaveURL(OUTSIDE);
+  await page.goBack();
+  await expect(page).toHaveURL(`${csr}/board`);
+  await expect(page.locator('#content h1')).toHaveText('게시판');
+  expect(errors).toEqual([]);
+});
+
 // Returns the paths of the stylesheet links of the head in order.
 function stylesheets(page: Page): Promise<string[]> {
   return page.evaluate(() => Array.from(document.head.querySelectorAll<HTMLLinkElement>('link[rel~="stylesheet"]'), (link) => new URL(link.href).pathname));

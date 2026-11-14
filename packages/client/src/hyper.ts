@@ -1,7 +1,7 @@
 import { BindError, bindValue, parseJson, type HostFunction, type MapValue, type Value } from '@polyspec/template/render';
 import { createEngine } from './engine.js';
 import { applyRegionKept, copyValue, decodeResponse, presentRouteRegions, renderDocument, renderLayout, renderRegionOf, requireMap, toHtml, withContext, type Application, type DecodedResponse } from './response.js';
-import { documentHeaders, ObtainError, requestDocument, type Fetch } from './obtain.js';
+import { documentHeaders, ObtainError, OutsideRedirect, outsideLocation, requestDocument, type Fetch } from './obtain.js';
 import { applyHead, HeadError } from './head.js';
 import { PageScripts } from './scripts.js';
 import { PageStylesheets } from './stylesheets.js';
@@ -74,6 +74,8 @@ export interface DocumentAdapter {
   build(): string | null;
   // Loads the URL as a new document with GET (HYC-22).
   assign(url: string): void;
+  // Replaces the location of the page with the URL, which keeps no history entry of the current URL (HY-132, HYC-8.4).
+  replace(url: string): void;
 }
 
 // The data of the last rendered response (HYC-4): the loader data and the region data that rendered.
@@ -239,7 +241,8 @@ export class Hyper<E extends RegionElement = Element> {
     try {
       await this.obtain();
     } catch (error) {
-      if (this.held === null) this.page.fail(error instanceof ObtainError ? error.status : '0');
+      // HYC-7.10: an outside redirect leaves the page, which no mark fails.
+      if (this.held === null && !(error instanceof OutsideRedirect)) this.page.fail(error instanceof ObtainError ? error.status : '0');
     }
   }
 
@@ -271,7 +274,8 @@ export class Hyper<E extends RegionElement = Element> {
     try {
       await this.obtain();
     } catch (error) {
-      markError(this.element(region), error instanceof ObtainError ? error.status : '0');
+      // HYC-7.10: an outside redirect leaves the page and marks no region.
+      if (!(error instanceof OutsideRedirect)) markError(this.element(region), error instanceof ObtainError ? error.status : '0');
       throw error;
     }
     return this.requireHeld();
@@ -291,8 +295,14 @@ export class Hyper<E extends RegionElement = Element> {
     const holds = this.holds;
     const page = new URL(this.currentUrl());
     const url = this.options.basePath + page.pathname + page.search;
-    const { value, url: answered } = await requestDocument(this.request, url, this.contextHash);
+    const obtained = await requestDocument(this.request, url, this.contextHash);
     if (this.holds !== holds) return;
+    // HYC-7.10: the URL of the request is the URL of the current history entry, which the outside location replaces.
+    if ('outside' in obtained) {
+      this.page.replace(obtained.outside);
+      throw new OutsideRedirect(url, obtained.outside);
+    }
+    const { value, url: answered } = obtained;
     const root = requireMap(value, 'response');
     // A response of another build is not rendered: the browser loads its page URL as a new document (HYC-22).
     if (this.buildOf(root) !== this.build) {
@@ -459,6 +469,13 @@ export class Hyper<E extends RegionElement = Element> {
       ]);
       const text = await response.text();
       if (generation !== this.location) return;
+      // HYC-8.4: the outside redirect of the latest render replaces the location of the page, so that the history holds no
+      // entry of the URL that sent the browser away.
+      const outside = outsideLocation(response.status, response.headers);
+      if (outside !== null) {
+        this.page.replace(outside);
+        return;
+      }
       if (!isHyperJson(response.headers.get('content-type'))) {
         this.page.text(text);
         return;
@@ -561,9 +578,19 @@ export class Hyper<E extends RegionElement = Element> {
         };
       },
       htmx_after_request: (_elt, { ctx }) => {
-        if (ctx.hyperRegion === undefined || ctx.text === undefined) return;
+        const outside = ctx.response === undefined ? null : outsideLocation(ctx.response.status, ctx.response.headers);
+        if (ctx.hyperRegion === undefined) {
+          // HYC-4.8: the outside redirect of a history restoration in server-side rendering replaces the location of the
+          // page, because the restored URL is the URL of the current history entry; htmx neither swaps nor loads it.
+          if (outside === null || basePath !== '' || ctx.request.headers['HX-History-Restore-Request'] !== 'true') return;
+          this.page.replace(outside);
+          return false;
+        }
+        if (ctx.text === undefined) return;
         // A response that arrived before the abort of its superseded request does not swap over the newer navigation.
         if (ctx.hyperLocation !== undefined && ctx.hyperLocation !== this.location) return false;
+        // HYC-14.6: the outside redirect of the latest region request is no failure; htmx loads its URL (HY-132).
+        if (outside !== null) return;
         if (!isHyperJson(ctx.response?.headers.get('content-type') ?? null)) {
           markError(ctx.target, String(ctx.response?.status ?? 0));
           return false;
@@ -907,6 +934,7 @@ function browserDocument(htmx: { process(element: Element): void }): DocumentAda
     elements: (id) => document.querySelectorAll(`[id="${CSS.escape(id)}"]`).length,
     build: () => document.querySelector('meta[name="hyper-build"]')?.getAttribute('content') ?? null,
     assign: (url) => window.location.assign(url),
+    replace: (url) => window.location.replace(url),
   };
 }
 

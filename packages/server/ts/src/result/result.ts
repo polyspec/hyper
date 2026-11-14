@@ -1,7 +1,11 @@
-// The outcome of an action: a redirect (HY-25, HY-46) or a page with a status (HY-26, HY-58), with the flash values and
-// the changed topics that it stores for the next request.
+// The outcome of an action: a redirect (HY-25, HY-46), an outside redirect (HY-132) or a page with a status (HY-26,
+// HY-58), with the flash values and the changed topics that it stores for the next request.
 import { toValue, type Data, type Value } from '../data/values.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
+
+// An outside location (HY-132.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
+// holds every visible ASCII character except the backslash.
+const OUTSIDE = /^([Hh][Tt][Tt][Pp][Ss]?):\/\/([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*)(?::([1-9][0-9]{0,4}))?(?:[/?#][\x21-\x5B\x5D-\x7E]*)?$/;
 
 export class Result {
   readonly location: string | null;
@@ -29,6 +33,25 @@ export class Result {
     return new Result(location, 303, {}, new Map(), []);
   }
 
+  // Returns an outside redirect to an outside location (HY-132).
+  static outside(location: string): Result {
+    ArgumentCountError.between(arguments.length, 1, 1);
+    if (Result.origin(location) === null) throw new RangeError('an outside location is not an http or https URL with a host (HY-132)');
+    return new Result(location, 303, {}, new Map(), []);
+  }
+
+  // Returns the origin of an outside location, its scheme and its host in lower case and its port or the default port of
+  // its scheme, or null for a text that is no outside location (HY-132).
+  static origin(text: string): string | null {
+    ArgumentCountError.between(arguments.length, 1, 1);
+    const parts = OUTSIDE.exec(text);
+    if (parts === null) return null;
+    const scheme = (parts[1] ?? '').toLowerCase();
+    const port = parts[3] === undefined ? (scheme === 'https' ? 443 : 80) : Number(parts[3]);
+    if (port > 65535) return null;
+    return `${scheme}://${(parts[2] ?? '').toLowerCase()}:${port}`;
+  }
+
   // Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58).
   static page(status: number, data: Data): Result {
     ArgumentCountError.between(arguments.length, 2, 2);
@@ -46,6 +69,7 @@ export class Result {
   // data model fails (HY-44).
   flash(name: string, value: unknown): Result {
     ArgumentCountError.between(arguments.length, 2, 2);
+    this.refuseOutside();
     // HY-25.6: a caller in JavaScript may pass a name that is not a string.
     if (typeof name !== 'string') throw new TypeError('a flash name is not a string (HY-25)');
     return new Result(this.location, this.status, this.data, new Map(this.flashValues).set(name, toValue(value)), this.changedTopics);
@@ -53,6 +77,7 @@ export class Result {
 
   // Returns a copy that records changed topics for the next request; a topic that it records already keeps its place.
   changed(...topics: string[]): Result {
+    this.refuseOutside();
     // HY-25.6: a caller in JavaScript may pass a topic that is not a string.
     if (!topics.every((topic) => typeof topic === 'string')) throw new TypeError('a changed topic is not a string (HY-25)');
     return new Result(this.location, this.status, this.data, this.flashValues, [...new Set([...this.changedTopics, ...topics])]);
@@ -62,6 +87,17 @@ export class Result {
   /** @internal */
   isRedirect(): boolean {
     return this.location !== null;
+  }
+
+  // Returns true for an outside redirect, whose location is no application path (HY-132).
+  /** @internal */
+  isOutside(): boolean {
+    return this.location !== null && !this.location.startsWith('/');
+  }
+
+  // Fails for an outside redirect, which stores no flash value and no changed topic (HY-132).
+  private refuseOutside(): void {
+    if (this.isOutside()) throw new RangeError('an outside redirect holds no flash value or changed topic (HY-132)');
   }
 
   // Returns true when the path of a location has a `.` or `..` segment, also with a percent-encoded dot.

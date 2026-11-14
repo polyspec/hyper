@@ -305,6 +305,9 @@ final class ContextRun
             if (array_key_exists('redirect', $spec)) {
                 return Result::redirect(self::string($spec['redirect'], "the redirect of {$route}"));
             }
+            if (array_key_exists('outside', $spec)) {
+                return Result::outside(self::string($spec['outside'], "the outside redirect of {$route}"));
+            }
             $page = $spec['page'] ?? null;
             if (!is_int($page)) {
                 throw new \UnexpectedValueException("the action of {$route} has no redirect and no integer page");

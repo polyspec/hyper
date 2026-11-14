@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 113920911b2127ce162ba5b4dd707b78100b514ff31611c8e63f4ea9b26d1807 -->
+<!-- source-sha256: f0f03f7c6a88d6f08a219b695f79c9505223988bbf050bf676ce137968705999 -->
 # 기능 상태
 
 [English](features.md).
@@ -14,6 +14,7 @@
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
 | rest-routes | 라우트 경로 끝의 나머지 매개변수 `{name*}`(HY-49) | implemented | `make test-php`, `make test-js` |
 | stop-results | loader와 action의 redirect, 금지 결과(HY-50, HY-51) | implemented | `make test-php`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/result.json`의 case |
+| outside-redirect | action의 결과, loader나 action의 멈춤으로 주는 다른 origin의 `http`나 `https` location으로의 outside redirect: 303과 `Location`, 또는 `HX-Request: true`인 요청과 document request에는 200과 `HX-Redirect`, 그리고 location의 `origin`. 브라우저 코드는 region 응답의 location을 불러오고, location의 렌더, document request, server-side rendering의 history 복원에서는 페이지의 location을 바꾼다(HY-132, HYC-4.8, HYC-7.10, HYC-8.4, HYC-14.6) | 진행 중: 세 server와 브라우저 코드가 unit test를 통과한다. board 예제의 route `/away`에 대한 `make e2e`와 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`이 실행하는 `contracts/result.json`, `contracts/app.json`, `contracts/client.json`, `contracts/context.json`, `contracts/arguments.json`의 case, `make hyper-test-js`, `make e2e` |
 | page-statuses | loader와 action의 잘못된 요청 멈춤, 200, 409, 422로 페이지를 렌더하는 action 결과(HY-58) | implemented | `make test-php`, `make hyper-test-node`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/result.json`의 case |
 | page-forbidden | loader나 action은 reply로 그 요청의 페이지에 상태 403을 준다. 요청이 볼 수 없는 데이터 대신 다른 데이터를 보이는 페이지를 위한 것이다(HY-69) | implemented | `make test-php`, `make hyper-test-node`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/reply.json`의 case |
 | body-checks | 애플리케이션의 body 한도와 받는 폼 type, 413, 415, CSRF 403 순서의 검사(HY-59) | implemented | `make test-php`, `make hyper-test-node`, `make server-parity` |

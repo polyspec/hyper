@@ -1,4 +1,4 @@
-// The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58): the results of actions and the stops.
+// The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58, HY-132): the results of actions and the stops.
 import { BadRequest } from '../../src/result/bad-request.js';
 import { Forbidden } from '../../src/result/forbidden.js';
 import { NotFound } from '../../src/result/not-found.js';
@@ -55,6 +55,35 @@ export const steps = {
     const outcome = failureOf(() => Result.redirect(location), RangeError);
     reader.compare('redirect', outcome.result?.location ?? null);
     reader.compare('status', outcome.result?.status ?? null);
+    reader.compare('error', outcome.error);
+  },
+  // Makes an outside redirect to the location, or records the message of the error with which it fails (HY-132).
+  outside(reader: CaseReader): void {
+    const location = text(reader, 'location');
+    const outcome = failureOf(() => Result.outside(location), RangeError);
+    reader.compare('outside', outcome.result?.location ?? null);
+    reader.compare('status', outcome.result?.status ?? null);
+    reader.compare('error', outcome.error);
+  },
+  // Records the origin of the text, or null for a text that is no outside location (HY-132).
+  origin(reader: CaseReader): void {
+    reader.compare('origin', Result.origin(text(reader, 'text')));
+  },
+  // Calls `flash` or `changed` of an outside redirect with the decoded argument as a JavaScript caller may, and records
+  // the message of the error with which it fails (HY-132).
+  outsideStores(reader: CaseReader): void {
+    const call = text(reader, 'call');
+    if (call !== 'flash' && call !== 'changed') throw new Error(`the call ${call} of the case is unknown`);
+    const argument = decoded(text(reader, 'argument'));
+    const result = Result.outside('https://outside.example/');
+    const outcome = failureOf(() => {
+      if (call === 'flash') {
+        // @ts-expect-error -- a JavaScript caller passes a name that is not a string
+        return result.flash(argument, null);
+      }
+      // @ts-expect-error -- a JavaScript caller passes a topic that is not a string
+      return result.changed(argument);
+    }, RangeError);
     reader.compare('error', outcome.error);
   },
   // Makes the page with the status and the data, or records the message of the error with which it fails (HY-58).
@@ -131,7 +160,9 @@ export const steps = {
       if (kind === 'Forbidden') return new Forbidden();
       if (kind === 'BadRequest') return new BadRequest();
       if (kind !== 'Redirect') throw new Error(`the stop ${kind} of the case is unknown`);
-      return new Redirect(reader.has('redirect') ? Result.redirect(text(reader, 'redirect')) : Result.page(integer(reader, 'page'), new Map()));
+      if (reader.has('redirect')) return new Redirect(Result.redirect(text(reader, 'redirect')));
+      if (reader.has('outside')) return new Redirect(Result.outside(text(reader, 'outside')));
+      return new Redirect(Result.page(integer(reader, 'page'), new Map()));
     }, RangeError);
     reader.compare('message', outcome.result?.message ?? null);
     reader.compare('error', outcome.error);

@@ -679,7 +679,7 @@ class App:
                     flash, Csrf.masked(session.csrf_token())
                 )
             if result._is_redirect():
-                return self._redirect_response(session, result, base_path)
+                return self._redirect_response(request, session, result, base_path)
             # HY-72.4: a loader that renews the session fails, also while the 409 page renders.
             return App._without_renewal(
                 reply,
@@ -698,7 +698,7 @@ class App:
         except NotFound:
             return Response.text(404, "Not Found")
         except Redirect as redirect:
-            return self._redirect_response(session, redirect.result, base_path)
+            return self._redirect_response(request, session, redirect.result, base_path)
         except Forbidden:
             return Response.text(403, "Forbidden")
         except BadRequest:
@@ -730,9 +730,17 @@ class App:
         return response
 
     def _redirect_response(
-        self, session: Session, result: Result, base_path: str
+        self, request: Request, session: Session, result: Result, base_path: str
     ) -> Response:
-        """Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50)."""
+        """Stores the flash values and changed topics of a redirect result and responds with 303 (HY-25, HY-50); an
+        outside redirect stores nothing, takes no base path and responds to a request with `HX-Request: true` and to a
+        document request with 200 and `HX-Redirect`, and to every other request with 303 (HY-132)."""
+        if result._is_outside():
+            headers = {"Cache-Control": "no-store", "Vary": self._vary_header()}
+            location = str(result.location)
+            if request.wants_json() or request.header("HX-Request") == "true":
+                return Response(200, {"HX-Redirect": location, **headers}, "")
+            return Response(303, {"Location": location, **headers}, "")
         session.put_flash(Flash(result._flash_values, result._changed_topics))
         return Response(303, {"Location": base_path + result.location}, "")
 

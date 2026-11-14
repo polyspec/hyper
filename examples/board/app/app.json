@@ -7,6 +7,7 @@
   ],
   "routes": [
     { "name": "home", "path": "/", "title": "홈", "template": "home.tpl" },
+    { "name": "away", "path": "/away", "title": "바깥 주소", "template": "home.tpl" },
     {
       "name": "board.list", "path": "/board", "title": "게시판", "template": "board/list.tpl",
       "regions": [

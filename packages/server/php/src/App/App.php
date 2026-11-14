@@ -811,7 +811,7 @@ final class App
                 $request = $request->withSession($flash, Csrf::masked($session->csrfToken()));
             }
             if ($result->isRedirect()) {
-                return $this->redirectResponse($session, $result, $basePath);
+                return $this->redirectResponse($request, $session, $result, $basePath);
             }
 
             return self::withoutRenewal(
@@ -831,7 +831,7 @@ final class App
         } catch (NotFound) {
             return Response::text(404, 'Not Found');
         } catch (Redirect $redirect) {
-            return $this->redirectResponse($session, $redirect->result, $basePath);
+            return $this->redirectResponse($request, $session, $redirect->result, $basePath);
         } catch (Forbidden) {
             return Response::text(403, 'Forbidden');
         } catch (BadRequest) {
@@ -873,9 +873,20 @@ final class App
         return $response;
     }
 
-    /** Stores the flash values and changed topics of a redirect result and answers 303 (HY-25, HY-50). */
-    private function redirectResponse(Session $session, Result $result, string $basePath): Response
+    /**
+     * Stores the flash values and changed topics of a redirect result and responds with 303 (HY-25, HY-50); an outside
+     * redirect stores nothing, takes no base path and responds to a request with `HX-Request: true` and to a document
+     * request with 200 and `HX-Redirect`, and to every other request with 303 (HY-132).
+     */
+    private function redirectResponse(Request $request, Session $session, Result $result, string $basePath): Response
     {
+        if ($result->isOutside()) {
+            $headers = ['Cache-Control' => 'no-store', 'Vary' => $this->varyHeader()];
+
+            return $request->wantsJson() || $request->header('HX-Request') === 'true'
+                ? new Response(200, ['HX-Redirect' => (string) $result->location, ...$headers], '')
+                : new Response(303, ['Location' => (string) $result->location, ...$headers], '');
+        }
         $session->putFlash(new Flash($result->flashValues, $result->changedTopics));
 
         return new Response(303, ['Location' => $basePath . $result->location], '');

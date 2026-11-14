@@ -297,6 +297,13 @@
             "post": true
           },
           {
+            "name": "away",
+            "path": "/away",
+            "title": "Away",
+            "template": "home.tpl",
+            "post": true
+          },
+          {
             "name": "missing",
             "path": "/missing",
             "title": "Missing",
@@ -326,7 +333,8 @@
         "leave": {},
         "missing": {
           "stop": "NotFound"
-        }
+        },
+        "away": {}
       },
       "embedData": [
         "list"
@@ -338,6 +346,9 @@
         },
         "leave": {
           "redirect": "/list"
+        },
+        "away": {
+          "outside": "https://outside.example/back"
         }
       }
     },
@@ -1834,6 +1845,32 @@
         "HY-45",
         "HY-65",
         "HY-117"
+      ]
+    },
+    {
+      "id": "an_action_that_returns_an_outside_redirect_causes_no_context_call",
+      "label": "an action that returns an outside redirect causes no call of the context handler (HY-132)",
+      "application": "with_context",
+      "request": {
+        "method": "POST",
+        "target": "/away",
+        "headers": {
+          "Accept": "text/html",
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        "form": {},
+        "csrf": true
+      },
+      "status": 303,
+      "headers": {
+        "Location": "https://outside.example/back"
+      },
+      "contextCalls": 0,
+      "firstCalls": [
+        "action:away"
+      ],
+      "requirements": [
+        "HY-132"
       ]
     }
   ]

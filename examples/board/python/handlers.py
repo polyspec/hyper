@@ -3,8 +3,17 @@
 from __future__ import annotations
 
 import re
+from typing import NoReturn
 
-from polyspec.hyper import MediaType, NotFound, Reply, Representation, Request, Result
+from polyspec.hyper import (
+    MediaType,
+    NotFound,
+    Redirect,
+    Reply,
+    Representation,
+    Request,
+    Result,
+)
 
 from posts import Posts
 
@@ -54,6 +63,11 @@ def handlers(services: Services) -> dict:
             "assets": {"hyper": services.hyper},
             "reader": request.param("id") is not None,
         }
+
+    def away() -> NoReturn:
+        # HY-132: the route sends the browser to a location of another origin, as a sign-in at an outside system
+        # does.
+        raise Redirect(Result.outside("https://outside.example/landing"))
 
     def left(request: Request) -> dict:
         return {"path": request.path(), "count": services.posts.count()}
@@ -133,6 +147,7 @@ def handlers(services: Services) -> dict:
         "shared": shared,
         "regions": {"left": left},
         "routes": {
+            "away": {"load": away},
             "board.list": {
                 "load": list_load,
                 "regions": {"notice": notice, "rows": rows},

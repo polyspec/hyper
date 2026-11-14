@@ -146,9 +146,10 @@ function evaluated(value: unknown, argument: Argument): unknown {
   return new Map([...map].map(([key, item]) => [key, evaluated(item, argument)]));
 }
 
-// Returns the redirect result of a step: its path, its flash values and its changed topics in their order.
+// Returns the redirect result of a step, or its outside redirect (HY-132): its location, its flash values and its changed
+// topics in their order.
 function redirectOf(step: Map<string, unknown>, argument: Argument): Result {
-  let result = Result.redirect(textOf(step.get('redirect'), 'the path of a redirect'));
+  let result = step.has('outside') ? Result.outside(textOf(step.get('outside'), 'the location of an outside redirect')) : Result.redirect(textOf(step.get('redirect'), 'the path of a redirect'));
   for (const pair of step.has('flashes') ? listOf(step.get('flashes'), 'the flashes of a redirect') : []) {
     const [name, text] = listOf(pair, 'a flash of a redirect');
     result = result.flash(textOf(name, 'the name of a flash'), evaluated(decoded(text), argument));
@@ -158,7 +159,7 @@ function redirectOf(step: Map<string, unknown>, argument: Argument): Result {
 }
 
 // The words of the steps that end a handler with its result.
-const RESULTS = ['return', 'stop', 'throw', 'redirect', 'page'];
+const RESULTS = ['return', 'stop', 'throw', 'redirect', 'outside', 'page'];
 
 // Returns the steps of a handler of a case, and fails for a handler whose last step is no result.
 function stepsOf(value: unknown, name: string): Map<string, unknown>[] {
@@ -196,7 +197,7 @@ function performed(name: string, steps: Map<string, unknown>[], run: Run, argume
       if (thrown.get('class') === 'OrmError') throw new OrmError(textOf(thrown.get('code'), 'the code of a throw'));
       if (thrown.get('class') === 'Error') throw new Error(textOf(thrown.get('message'), 'the message of a throw'));
       throw new Error(`the case throws the unknown class ${String(thrown.get('class'))}`);
-    } else if (step.has('redirect')) {
+    } else if (step.has('redirect') || step.has('outside')) {
       return redirectOf(step, argument);
     } else if (step.has('page')) {
       // @ts-expect-error -- a case gives the status and the data as decoded JSON values, which the result checks
