@@ -9,8 +9,8 @@ use std::sync::Arc;
 
 use binding_core::Failure;
 use polyspec_template::{
-    bind, merge, AstProgram, BoundMap, DefineInput, EngineOptions, Env, HostFunction, MapLoader,
-    OrderedMap, RenderError, RenderOptions, RenderTarget, TemplateError, Value,
+    bind, merge, AstProgram, BoundMap, DefineInput, Definitions, EngineOptions, Env, HostFunction,
+    MapLoader, OrderedMap, RenderError, RenderOptions, RenderTarget, TemplateError, Value,
 };
 
 use crate::keep::apply;
@@ -84,12 +84,17 @@ impl Templates {
             loader.set(name, source);
         }
         loader.set(DATA_TEMPLATE, DATA_SOURCE);
-        let program = AstProgram::new(EngineOptions {
+        let mut program = AstProgram::new(EngineOptions {
             loader: Some(Box::new(loader)),
-            functions,
             ..EngineOptions::default()
         })
         .map_err(Error::Template)?;
+        // The functions of the options of AstProgram::new are functions of the interface contract of template, which a
+        // generated binding gives; a function of the application is a host function of the engine, which register
+        // adds as the options add theirs (template RT-5, FUN-43).
+        for (name, function) in functions {
+            program.register(&name, function).map_err(Error::Template)?;
+        }
         Ok(Templates { program })
     }
 
@@ -108,11 +113,11 @@ impl Templates {
         &self,
         template: &str,
         root: &BoundMap,
-        define: HashMap<String, DefineInput>,
+        define: Definitions,
         env: &Env,
     ) -> Result<String, RenderFailure> {
         let options = RenderOptions {
-            define,
+            define: Some(define),
             env: Some(env.clone()),
         };
         self.program
@@ -228,7 +233,7 @@ impl Templates {
                 "a region of the document has no data",
             )));
         };
-        let mut define = HashMap::new();
+        let mut define = Definitions::new();
         if document.manifest.page().map_err(Failure::Kind)? == name {
             for region in present_route_regions(document.route, parts) {
                 let html = self.render_region(document, parts, &region)?;
@@ -279,7 +284,7 @@ impl Templates {
         let mut root = OrderedMap::with_capacity(1);
         root.insert("response".to_owned(), Value::Map(Arc::new(data)));
         let root = bind(&root).map_err(from_template)?;
-        self.render(DATA_TEMPLATE, &root, HashMap::new(), &document.env)
+        self.render(DATA_TEMPLATE, &root, Definitions::new(), &document.env)
     }
 
     /// Renders the layout of a document (HY-12.1): the shared data as root data and the `html` definitions `title`,
@@ -294,11 +299,11 @@ impl Templates {
             html: Some(text),
             ..DefineInput::default()
         };
-        let mut define = HashMap::new();
+        let mut define = Definitions::new();
         let title = self.render(
             &document.manifest.title,
             &parts.shared,
-            HashMap::new(),
+            Definitions::new(),
             &document.env,
         )?;
         define.insert("title".to_owned(), html(title));

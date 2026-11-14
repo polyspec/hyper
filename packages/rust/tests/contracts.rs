@@ -2026,10 +2026,15 @@ fn case_store(case: &Value) -> Box<dyn polyspec_session_store::Store> {
         }
         "file_sessions.open" => {
             let receiver = &store["receiver"];
-            assert_eq!(text(receiver, "new"), "file_sessions.new", "{}", case["id"]);
+            assert_eq!(
+                text(receiver, "new"),
+                "file_sessions.in_directory",
+                "{}",
+                case["id"]
+            );
             assert_eq!(store["args"]["cookie"], Value::Null, "{}", case["id"]);
             let args = &receiver["args"];
-            let sessions = match FileSessions::new(
+            let sessions = match FileSessions::in_directory(
                 binding_core::Io::for_generated_call(),
                 std::path::Path::new(text(args, "directory")),
                 args["lifetime"].as_u64(),

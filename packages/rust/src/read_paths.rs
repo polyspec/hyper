@@ -323,11 +323,11 @@ impl Reads<'_, '_> {
             Expr::Index { object, index, .. } => {
                 let key = match index.as_ref() {
                     Expr::Literal {
-                        value: LiteralValue::String(text),
+                        value: LiteralValue::String { value: text },
                         ..
                     } => Some(text.clone()),
                     Expr::Literal {
-                        value: LiteralValue::Number(number),
+                        value: LiteralValue::Number { value: number },
                         ..
                     } => match number_text(*number) {
                         Ok(text) => Some(text),
@@ -414,7 +414,7 @@ impl Reads<'_, '_> {
             Expr::Map { entries, .. } => {
                 for entry in entries {
                     match entry {
-                        MapEntry::Spread(expr) => {
+                        MapEntry::Spread { expr } => {
                             let paths = self.expr(expr, scope);
                             self.whole(&paths);
                         }

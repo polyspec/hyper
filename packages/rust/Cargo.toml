@@ -5,6 +5,7 @@ edition = "2021"
 rust-version = "1.99.0"
 description = "The Rust core of the hyper server library, with the rules that every runtime shares: media selection, representations, tags, cookies, the reply, the CSRF token and the order of a request"
 repository = "https://github.com/polyspec/hyper.git"
+license = "MIT"
 publish = false
 # The package holds the interface contract of the bindings beside the source, so that a repository that depends on
 # this crate reads the contract from the package that Cargo resolved (binding design I-1, T-3).

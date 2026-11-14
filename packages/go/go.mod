@@ -2,3 +2,5 @@
 module github.com/polyspec/hyper/packages/go
 
 go 1.27.3
+
+require github.com/polyspec/template/packages/go v0.0.0

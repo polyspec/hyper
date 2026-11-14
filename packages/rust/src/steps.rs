@@ -115,7 +115,6 @@ pub type PageFunction =
 /// The host function of the template language that calls a function of the contract (HYC-24.2, template FUN-46). A
 /// failure of the data model is the binding failure of the returned value (VAL-19); another kind of hyper, an
 /// exception of language code and the error of Rust host code reach the caller of the render unchanged.
-#[must_use]
 pub fn host_function(function: PageFunction) -> HostFunction {
     Box::new(move |args: &[Value], context: &FunctionContext<'_>| {
         function(args, context.env).map_err(|failure| match failure {

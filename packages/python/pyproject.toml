@@ -9,6 +9,7 @@ name = "polyspec-hyper"
 version = "0.0.40"
 description = "The server library of the polyspec region protocol for Python; the browser package is @polyspec/hyper-client. Manifest, routing, documents, JSON responses, actions and sessions"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
     # The wheel asset of the template release v0.0.27 with the sha256 of that asset (H21.4, H23.5). uv.lock locks it with

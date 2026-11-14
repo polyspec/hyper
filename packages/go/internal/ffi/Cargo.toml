@@ -4,6 +4,7 @@ name = "polyspec-hyper-go"
 version = "0.0.0"
 edition = "2021"
 rust-version = "1.99.0"
+license = "MIT"
 publish = false
 
 [lib]
@@ -15,11 +16,13 @@ crate-type = ["staticlib"]
 panic-test = []
 fault-test = ["polyspec-hyper/fault-test", "polyspec-http-negotiation/fault-test", "polyspec-session-store/fault-test", "polyspec-template/fault-test"]
 codec-test = []
+thrown-count-test = []
 
 [dependencies]
 polyspec-hyper = { path = "../../../rust" }
 polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core", features = ["construct", "lock"] }
 polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", branch = "v1/rust-core" }
+polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", branch = "v1/rust-core" }
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", branch = "v1/rust-core", default-features = false }
 polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core" }
 

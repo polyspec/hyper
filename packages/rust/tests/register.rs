@@ -13,15 +13,14 @@ type Given = Box<dyn Fn(&[Value], &Environment) -> Result<Value, Failure<Error>>
 #[test]
 fn register_takes_the_function_in_the_form_of_the_contract() {
     // HYC-24.2: the member that the contract names `pages.register` takes that form by value.
-    let member: fn(&mut Pages, &str, Given) -> Result<(), Error> = Pages::register;
-    let _ = member;
+    let _: fn(&mut Pages, &str, Given) -> Result<(), Error> = Pages::register;
 }
 
 mod failures {
     //! What the template language receives from a function of the application that fails (HYC-24.2, template
     //! FUN-46): `steps::host_function` gives the engine the host function that calls a function of the contract.
 
-    use binding_core::{Failure, Handle, Raised};
+    use binding_core::{Failure, Native, NativeObject, Raised};
     use polyspec_hyper::steps::{host_function, PageFunction};
     use polyspec_hyper::Error;
     use polyspec_template::{BindError, Env, ErrorCode, FunctionContext, HostError, Value};
@@ -81,9 +80,15 @@ mod failures {
         }
     }
 
+    /// What a binding keeps for an exception of language code.
+    #[derive(Debug)]
+    struct Thrown;
+
+    impl NativeObject for Thrown {}
+
     #[test]
     fn an_exception_of_language_code_reaches_the_caller_of_the_render_as_it_was_raised() {
-        let raised = Raised::from_generated(Handle::new(7));
+        let raised = Raised::from_generated(Native::new(Thrown));
         let given = raised.clone();
         let result = called(Box::new(move |_, _| Err(Failure::Raised(given.clone()))));
         match result {
