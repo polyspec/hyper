@@ -64,6 +64,8 @@ final class BuildSteps
         'reads.json' => false,
         'build.json' => false,
         'templates' => true,
+        // The copy of the reserved template for the Python server (HY-48.14), which the PHP open does not read.
+        'legacy/hyper/data.tpl' => false,
     ];
 
     /** Opens a program directory that holds every output but those of `missing`, and records the error of the open. */
@@ -85,7 +87,15 @@ final class BuildSteps
                     continue;
                 }
                 $created[] = $name;
-                $isDirectory ? mkdir("{$program}/{$name}") : file_put_contents("{$program}/{$name}", '');
+                if ($isDirectory) {
+                    mkdir("{$program}/{$name}");
+                } else {
+                    $parent = dirname("{$program}/{$name}");
+                    if (!is_dir($parent)) {
+                        mkdir($parent, 0o700, true);
+                    }
+                    file_put_contents("{$program}/{$name}", '');
+                }
             }
             $failure = null;
             try {
@@ -98,6 +108,9 @@ final class BuildSteps
         } finally {
             foreach ($created as $name) {
                 self::OUTPUTS[$name] ? rmdir("{$program}/{$name}") : unlink("{$program}/{$name}");
+                for ($parent = dirname($name); $parent !== '.'; $parent = dirname($parent)) {
+                    rmdir("{$program}/{$parent}");
+                }
             }
             rmdir($program);
             rmdir($directory);

@@ -24,7 +24,7 @@ test('writes the program of the fixture with the build id of its build file (HY-
   const result = program(output, join(fixtures, 'build.json'));
   assert.equal(result.status, 0, result.stderr);
   assert.equal(readFileSync(join(output, 'build.json'), 'utf8'), readFileSync(join(fixtures, 'build.json'), 'utf8'));
-  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'php', 'program.json', 'reads.json', 'templates']);
+  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'legacy', 'php', 'program.json', 'reads.json', 'templates']);
   assert.ok(existsSync(join(output, 'php', 'GeneratedProgram.php')));
 });
 

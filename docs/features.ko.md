@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 236307a79941807a21de3ef4d933ead528b4d1d2e97e5110b16265075f3abee5 -->
+<!-- source-sha256: 64193f78bb014f683475ca4e9c3b08b0da9117f75dfd04342122ccf23c865e8b -->
 # 기능 상태
 
 [English](features.md).
@@ -16,7 +16,7 @@
 | template-rules | Rust core의 HY-48.3 템플릿 검사 `template_rules::problems`. 모든 문제를 HY-48.13 순서로 준다: HC-6, `{# title}`, `{# data}`, `{# build}` 배치, HY-3, HY-30, HY-75의 manifest 영역과 라우트 영역 | partial: core는 `contracts/manifest.json`의 `templateChecks` case에서 `packages/cli/lib/template-rules.mjs`와 같은 문제를 준다. 명령 도구가 core를 부르기 전까지(H-8) `hyper build`, `hyper check`, `make templates-check`는 이전 구현을 부른다 | `make core-test`, `tests/scripts/build-id.test.mts` |
 | read-path-rules | Rust core의 HY-73.2~HY-73.20 읽기 경로: `read_paths::route_reads`는 manifest와 템플릿 소스로 `reads.json`의 routes를, `read_paths::template_reads`는 템플릿 하나의 node를 준다(HY-73.30) | partial: core는 `contracts/reads.json`의 `cases`와 `routes` case에서 `packages/client/src/reads.ts`의 `routeReads`, `templateReads`와 같은 읽기 경로를 준다. 명령 도구와 Node 서버가 core를 부르기 전까지(H-8) `hyper build`와 Node 서버는 브라우저 package로 계산하며, `hyper build`는 `reads.json`의 키를 HY-73.32 순서가 아니라 브라우저 package가 읽은 순서로, 정수인 키를 먼저 쓴다 | `make core-test`, `make hyper-test-js` |
 | data-template-rule | Rust core의 `render::data_template`가 주는 예약 템플릿 `hyper/data.tpl`의 이름과 소스(HY-31.9) | partial: core는 `contracts/build.json`의 case `dataTemplate`에서 `packages/client/data-template.json`이 담은 것과 같은 이름과 소스를 준다. 명령 도구와 서버는 core를 부르기 전까지(H-8) 브라우저 package에서 그것을 받는다 | `make core-test`, `tests/scripts/build-id.test.mts` |
-| legacy-data-template | core를 부르지 않는 서버를 위한 예약 템플릿의 사본 `program/legacy/hyper/data.tpl`. build는 `program/templates/hyper/data.tpl` 대신 그것을 쓰고(HY-31.10), Python 서버는 그것을 필요로 하며 `program/templates/`와 함께 읽는다(HY-48.14) | not implemented: `hyper build`는 `program/templates/hyper/data.tpl`을 쓰고 `program/legacy/`를 쓰지 않으며, Python 서버는 예약 템플릿을 `program/templates/`에서 읽고 `legacy/hyper/data.tpl`이 없어도 실패하지 않는다(H31.4-2) | — |
+| legacy-data-template | core를 부르지 않는 서버를 위한 예약 템플릿의 사본 `program/legacy/hyper/data.tpl`. build는 `program/templates/hyper/data.tpl` 대신 그것을 쓰고(HY-31.10), Python 서버는 그것을 필요로 하며 `program/templates/`와 함께 읽는다(HY-48.14) | partial: `hyper build`와 Python 서버가 그렇게 한다(H31.4-2). build 시험과 Python 시험은 아직 그 위에서 돌지 않았다 | — |
 | node-core-rules | Node 서버 unit의 이름으로 주는 core의 규칙. `packages/ts/src/core/rules.ts`의 `coreRules`가 core의 Node binding module을 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고 core의 Node binding은 build되지 않았다. `tests/scripts/node-core.test.mts`는 binding module의 대역으로 그 호출을 적으며 시험 40개가 통과한다(H31.20, H31.7) | — |
 | python-core-rules | Python 서버 unit의 이름으로 주는 core의 규칙. `polyspec/hyper/app/_core_rules.py`의 `CoreRules`가 core의 Python binding module을 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고, record를 받는 member의 unit이 없으며, `tests/test_core_rules.py`는 실행되지 않았다(H31.24, H31.8) | — |
 | php-core-rules | PHP 서버 unit의 이름으로 주는 core의 규칙. `Polyspec\Hyper\CoreRules`가 core의 binding 함수들의 namespace를 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고, record를 받는 member의 unit이 없으며, `tests/CoreRulesTest.php`는 실행되지 않았다(H31.25, H31.9) | — |

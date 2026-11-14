@@ -1,7 +1,7 @@
 """Renders documents and single regions with the template package `polyspec-template` (HY-12, HY-13, HY-30, HY-31,
 HY-48). The server program that `hyper build` of `@polyspec/hyper-cli` built holds the templates and the
-read paths; the Python server reads its `templates` directory and its `reads.json` and needs neither the directory
-`php` nor `program.json`, which the generated PHP program of the same templates uses. The caller binds each root of a
+read paths; the Python server reads its `templates` directory, the copy `legacy/hyper/data.tpl` of the reserved
+template (HY-31.10, HY-48.14) and its `reads.json` and needs neither the directory `php` nor `program.json`, which the generated PHP program of the same templates uses. The caller binds each root of a
 document once with `bind`, and every render merges the bound roots, so the renders of a document check no value
 again (VAL-22)."""
 
@@ -36,7 +36,13 @@ class Renderer:
         templates = Path(program) / "templates"
         reads = Path(program) / "reads.json"
         build = Path(program) / "build.json"
-        for path, is_directory in ((reads, False), (build, False), (templates, True)):
+        legacy = Path(program) / "legacy"
+        for path, is_directory in (
+            (reads, False),
+            (build, False),
+            (templates, True),
+            (legacy / DATA_NAME, False),
+        ):
             if not (path.is_dir() if is_directory else path.is_file()):
                 raise ValueError(
                     f"{path} of the server program {program} is missing; "
@@ -45,7 +51,12 @@ class Renderer:
         return Renderer(
             Engine(
                 AstProgram(
-                    EngineOptions(loader=FsLoader(str(templates)), functions=functions)
+                    EngineOptions(
+                        loader=_ProgramLoader(
+                            FsLoader(str(templates)), FsLoader(str(legacy))
+                        ),
+                        functions=functions,
+                    )
                 )
             ),
             timezone,
@@ -106,3 +117,15 @@ class Renderer:
         if define != {}:
             options.define = define
         return self._program.render(template, assign, options)
+
+
+class _ProgramLoader:
+    """Reads the reserved template from the copy below `legacy/` and every other template from `templates/` of the
+    program (HY-31.10, HY-48.14)."""
+
+    def __init__(self, templates: FsLoader, legacy: FsLoader):
+        self._templates = templates
+        self._legacy = legacy
+
+    def load(self, name: str):
+        return (self._legacy if name == DATA_NAME else self._templates).load(name)

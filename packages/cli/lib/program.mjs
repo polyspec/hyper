@@ -1,7 +1,9 @@
 // Assembles the server program of an application (HY-48, HY-73) in a directory, the `program/` of `hyper build`
 // (HR-34), and writes its build id. `hyper build` passes the id that it computed from its outputs (HY-125.21); a test
 // that needs a fixed id builds its program with the same functions and that id, so the rules of the assembly exist once.
-//   templates/    every template and, until the build takes it from the core, the reserved template hyper/data.tpl
+//   templates/    every template of the application; never the reserved template, which the core refuses (HY-31.3)
+//   legacy/hyper/data.tpl  the copy of the reserved template that only a server that does not call the core reads
+//                 (HY-31.10, HY-48.14)
 //   reads.json    the read paths of every route, by which the server keeps data (HY-73)
 //   php/          with a PHP namespace: the generated PHP program of the same templates, compiled with the compiler
 //                 package @polyspec/template-compiler into that namespace as PSR-4 files, one class per file
@@ -33,10 +35,13 @@ export const PROGRAM_LAST = ['reads.json', 'program.json', join('php', 'Generate
 export function writeProgram({ manifest, templates, directory, phpNamespace }) {
   const programTemplates = join(directory, 'templates');
   copyDirectory(templates, programTemplates);
-  mkdirSync(dirname(join(programTemplates, dataTemplate.name)), { recursive: true });
-  writeFileSync(join(programTemplates, dataTemplate.name), dataTemplate.source);
+  const legacy = join(directory, 'legacy');
+  writeTemplate(legacy, dataTemplate.name, dataTemplate.source);
+  // Every template that the program renders, the reserved one included, in the byte order of the names.
+  const sources = new Map(listTemplates(programTemplates).map((name) => [name, readFileSync(join(programTemplates, name))]));
+  sources.set(dataTemplate.name, dataTemplate.source);
   const parsed = new Map();
-  for (const name of listTemplates(programTemplates)) parsed.set(name, parse(readFileSync(join(programTemplates, name)), name));
+  for (const name of [...sources.keys()].sort(compareNames)) parsed.set(name, parse(sources.get(name), name));
   if (phpNamespace !== undefined) writePhp({ manifest, parsed, templates: programTemplates, directory, phpNamespace });
   writeFileSync(join(directory, 'reads.json'), `${JSON.stringify({ routes: routeReads(manifest, (name) => parsed.get(name), resolvePath) })}\n`);
   return parsed.size;
@@ -52,15 +57,20 @@ export function writeBuildFile(directory, id) {
 // and the route region templates, render with merge(shared, data) as root data and take no template inputs (HY-12,
 // HY-13, HY-30, HY-31); every other template keeps the inputs that deriveTypeManifest derives from its block arguments
 // (HY-73.16).
+// The compilation reads one root, the templates of the application with the reserved template, which the generated
+// program renders (HY-31.10).
 function writePhp({ manifest, parsed, templates, directory, phpNamespace }) {
   const work = mkdtempSync(join(tmpdir(), 'hyper-program-'));
   try {
+    const root = join(work, 'templates');
+    copyDirectory(templates, root);
+    writeTemplate(root, dataTemplate.name, dataTemplate.source);
     const typesPath = join(work, 'types.json');
     const types = deriveTypeManifest(parsed, {});
     const targets = new Set([manifest.layout, manifest.title, dataTemplate.name, ...manifest.regions.map((region) => region.template), ...manifest.routes.flatMap((route) => [route.template, ...(route.regions ?? []).map((region) => region.template)])].filter((name) => name !== undefined));
     writeFileSync(typesPath, JSON.stringify({ ...types, entry: manifest.layout, templates: Object.fromEntries([...parsed.keys()].map((name) => [name, targets.has(name) ? {} : (types.templates[name] ?? {})])) }));
     const graph = join(work, 'graph');
-    compileAst({ root: templates, output: graph, entry: manifest.layout, refresh: 'true', typeManifest: typesPath });
+    compileAst({ root, output: graph, entry: manifest.layout, refresh: 'true', typeManifest: typesPath });
     const php = join(directory, 'php');
     mkdirSync(php);
     for (const [file, source] of Object.entries(compileFiles(join(graph, 'manifest.json'), typesPath, 'php', { phpNamespace }))) {
@@ -72,6 +82,11 @@ function writePhp({ manifest, parsed, templates, directory, phpNamespace }) {
   }
 }
 
+function writeTemplate(root, name, source) {
+  mkdirSync(dirname(join(root, name)), { recursive: true });
+  writeFileSync(join(root, name), source);
+}
+
 function listTemplates(root, prefix = '') {
   const names = [];
   for (const entry of readdirSync(join(root, prefix), { withFileTypes: true })) {
@@ -79,5 +94,9 @@ function listTemplates(root, prefix = '') {
     if (entry.isDirectory()) names.push(...listTemplates(root, name));
     else if (entry.name.endsWith('.tpl')) names.push(name);
   }
-  return names.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  return names.sort(compareNames);
+}
+
+function compareNames(a, b) {
+  return a < b ? -1 : a > b ? 1 : 0;
 }

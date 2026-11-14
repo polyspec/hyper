@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { test } from 'node:test';
+import dataTemplate from '../../packages/client/data-template.json' with { type: 'json' };
 import { buildId } from '../../packages/cli/lib/build-id.mjs';
 import { listFiles } from '../../packages/cli/lib/output-files.mjs';
 import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
@@ -47,11 +48,14 @@ test('writes the outputs of HR-34 below public/assets, client/ and program/ and 
   assert.equal(readFileSync(join(output, 'app.json'), 'utf8'), '{"own":true}');
   assert.deepEqual(readdirSync(join(output, 'client')).sort(), ['assets.json', 'build.json', 'csr', 'manifest.json', 'templates.index.json']);
   // The intermediate files of the PHP compilation, graph/ and types.json, are not in the program.
-  assert.deepEqual(readdirSync(join(output, 'program')).sort(), ['build.json', 'php', 'program.json', 'reads.json', 'templates']);
+  assert.deepEqual(readdirSync(join(output, 'program')).sort(), ['build.json', 'legacy', 'php', 'program.json', 'reads.json', 'templates']);
   assert.deepEqual(readJson(join(output, 'program', 'program.json')), { namespace: 'Fixture\\Program' });
   assert.ok(existsSync(join(output, 'program', 'php', 'GeneratedProgram.php')));
-  // Until the build takes it from the core, program/templates holds the reserved template (H30.4).
-  assert.ok(existsSync(join(output, 'program', 'templates', 'hyper', 'data.tpl')));
+  // The reserved template is not below program/templates, which the core reads and where it refuses an application
+  // template of that name (HY-31.3); its copy for a server that does not call the core is program/legacy (HY-31.10).
+  assert.equal(existsSync(join(output, 'program', 'templates', 'hyper', 'data.tpl')), false);
+  assert.equal(readFileSync(join(output, 'program', 'legacy', 'hyper', 'data.tpl'), 'utf8'), dataTemplate.source);
+  assert.deepEqual(listFiles(join(output, 'program', 'legacy')).map((file) => relative(join(output, 'program', 'legacy'), file)), [join('hyper', 'data.tpl')]);
   // assets.json lists every file that this build wrote below public/assets, in byte order.
   const assets = jsonArray(readJson(join(output, 'client', 'assets.json')).files, 'files').map((path) => jsonString(path, 'path'));
   const written = listFiles(join(app, 'public', 'assets')).map((file) => relative(app, file)).sort();
@@ -62,7 +66,7 @@ test('writes the outputs of HR-34 below public/assets, client/ and program/ and 
 test('without --php-namespace the program holds no PHP program (HY-48.6)', (t) => {
   const app = fixture('chunks', t);
   build(app);
-  assert.deepEqual(readdirSync(join(app, 'out', 'program')).sort(), ['build.json', 'reads.json', 'templates']);
+  assert.deepEqual(readdirSync(join(app, 'out', 'program')).sort(), ['build.json', 'legacy', 'reads.json', 'templates']);
 });
 
 test('writes the entry, a chunk for code that the entry imports with import(), the manifest and the shell (HYC-16)', (t) => {

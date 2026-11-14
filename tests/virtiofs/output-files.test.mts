@@ -75,7 +75,9 @@ test('the program of hyper build writes the templates on a virtiofs bind mount',
     assert.deepEqual(readFileSync(join(copied, name)), readFileSync(join(templates, name)), name);
     assert.equal(statSync(join(copied, name)).mode & 0o777, 0o644, name);
   }
-  assert.ok(files(copied).includes('hyper/data.tpl'));
+  // The reserved template is the copy below program/legacy, not a template of program/templates (HY-31.10).
+  assert.ok(!files(copied).includes('hyper/data.tpl'));
+  assert.ok(files(join(output, 'program', 'legacy')).includes('hyper/data.tpl'));
   // HY-73: the read paths of every route, computed without a bundler in the container.
   const readsFile = join(output, 'program', 'reads.json');
   const reads = jsonObject(parseJsonObject(readFileSync(readsFile, 'utf8'), readsFile).routes, `${readsFile} routes`);

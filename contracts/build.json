@@ -235,6 +235,20 @@
       "message": "{program}/templates"
     },
     {
+      "id": "a_python_program_without_the_copy_of_the_reserved_template_fails_the_open_with_its_path",
+      "label": "a program directory without `legacy/hyper/data.tpl` fails the open of the Python server with its absolute path, which the server reads while it does not call the core (HY-48.14, HY-31.10)",
+      "missing": [
+        "legacy/hyper/data.tpl"
+      ],
+      "message": "{program}/legacy/hyper/data.tpl",
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-48.14"
+      }
+    },
+    {
       "id": "a_program_without_php_fails_the_open_with_its_path",
       "label": "a program directory without `php` fails the open with the absolute path of `php` (HY-48.2)",
       "missing": [
@@ -280,7 +294,8 @@
         "program.json",
         "reads.json",
         "build.json",
-        "templates"
+        "templates",
+        "legacy/hyper/data.tpl"
       ]
     }
   ],
