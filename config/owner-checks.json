@@ -89,6 +89,16 @@
     },
     {
       "paths": [
+        "legacy/**"
+      ],
+      "targets": [
+        "layout-check",
+        "lint-python",
+        "duplication-check"
+      ]
+    },
+    {
+      "paths": [
         "tests/legacy/**"
       ],
       "targets": [

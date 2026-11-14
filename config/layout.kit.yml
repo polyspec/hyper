@@ -104,12 +104,16 @@ rules:
   # S5: the root folders of every monorepo, and the dot folders of Git, GitHub, kit and Claude Code. .mise holds .mise/locks/,
   # the uv lock sidecars that make toolchain-lock writes and mise.lock names: lock data that is tracked with mise.lock (K192).
   # .claude holds the local Claude Code settings of a checkout, which hyper tracks none of.
+  # legacy holds the earlier implementation of a unit whose rule moved to the Rust core, at the path that the unit had
+  # below the root (legacy/packages/python/... for packages/python/...). It is kept until the conditions of V-6 of the
+  # polyspec plan hold, so that the earlier rules stay readable beside the calls of the core, and a separate change that
+  # cites those conditions removes it.
   - id: layout-root-folders
     kind: dir_absent
     level: error
     root_only: true
-    paths: ["*", "!packages", "!contracts", "!docs", "!scripts", "!tests", "!examples", "!benchmarks", "!config", "!.github", "!.kit", "!.mise", "!.claude"]
-    message: "S5: the root holds only packages/, contracts/, docs/, scripts/, tests/, examples/, benchmarks/ and config/"
+    paths: ["*", "!packages", "!contracts", "!docs", "!scripts", "!tests", "!examples", "!benchmarks", "!config", "!legacy", "!.github", "!.kit", "!.mise", "!.claude"]
+    message: "S5: the root holds only packages/, contracts/, docs/, scripts/, tests/, examples/, benchmarks/, config/ and legacy/"
 
   # K245: docs/ holds the spec, the operations, the plans, the rebuild records (S1), the examples (K1046) and features.md, and the files of a VitePress
   # site where the repository builds one: its .vitepress/ and public/ folders and its index and 404 pages.
