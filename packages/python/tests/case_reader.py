@@ -83,17 +83,30 @@ class CaseReader:
         observed = rules.stated_message(name, expected, observed)
         if name.split(".")[-1] in rules.HEADER_FIELDS:
             expected, observed = rules.folded(expected), rules.folded(observed)
-        if not CaseReader._matches(rules.kind(node, name), expected, observed):
+        kind = rules.kind(node, name)
+        if kind == "raises":
+            try:
+                expected = rules.expected_failure(self._spec, expected)
+            except ValueError as error:
+                self.fail(str(error))
+                return
+        if not CaseReader._matches(kind, expected, observed):
             self._differs.append(name)
 
     def outcome(self, name: str, observed: Any) -> None:
-        """Compares an outcome: `raises` takes the error that the step caught, or None; any other takes the pair."""
+        """Compares an outcome: `raises` takes the error that the step caught, or None, and checks its exact class
+        (HY-132.7); any other takes the pair."""
         node = self._spec.get("outcomes", {})[name]
         if not rules.visible(node):
             return
         self._compared.add(name)
         if node["compare"] == "raises":
-            ok = CaseReader._matches("raises", True, observed)
+            try:
+                expected = rules.expected_failure(self._spec, True)
+            except ValueError as error:
+                self.fail(str(error))
+                return
+            ok = CaseReader._matches("raises", expected, observed)
         else:
             ok = CaseReader._matches(node["compare"], observed[0], observed[1])
         if not ok:
@@ -166,7 +179,13 @@ class CaseReader:
         if kind == "keys":
             return list(observed) == list(expected)
         if kind == "raises":
-            return type(observed) is ValueError if expected else observed is None
+            # HY-132.7: `expected` is what case_rules.expected_failure gives, None or the exact class and the kind.
+            if expected is None:
+                return observed is None
+            cls, stated = expected
+            return type(observed) is cls and (
+                stated is None or getattr(observed, "kind", None) == stated
+            )
         raise ValueError(f"unknown comparison {kind}")
 
     @staticmethod

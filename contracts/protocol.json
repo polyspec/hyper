@@ -5617,6 +5617,12 @@
                   "en": "A broken invariant of the core is kind `internal`, a panic of the core included, and a request that meets it fails with HY-43.",
                   "ko": "core의 불변식이 깨지면 core의 panic을 포함해 kind `internal`이며, 그것을 만난 요청은 HY-43으로 실패한다.",
                   "koSource": "1c959fcc8f2da78af627fbf0e451375beb7672b6586aec262c24a2965452b900"
+                },
+                {
+                  "id": "HY-132.7",
+                  "en": "A case that expects a failure names its category, and a runner checks that the error is exactly the class of that category that the member under test raises: the class of HY-132.2 for a member whose unit calls the core, and the base class of the category for a member whose unit does not call the core yet; it also checks the kind where the case states one.",
+                  "ko": "실패를 기대하는 case는 그 category를 적고, runner는 오류가 시험하는 member가 내는 그 category의 class와 정확히 같은지 검사한다. unit이 core를 부르는 member에는 HY-132.2의 class이고, unit이 아직 core를 부르지 않는 member에는 그 category의 기반 class이다. case가 kind를 적으면 runner는 kind도 검사한다.",
+                  "koSource": "1fa7bced73d7e03af9ec9cf36b49f7a49d5f8ed228660f5a07e643d9e4e64734"
                 }
               ]
             },

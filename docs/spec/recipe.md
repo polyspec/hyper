@@ -376,8 +376,9 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - `excludes`: no text of the expected list is part of the observed text;
   - `prefix`: the expected list equals the first items of the observed list;
   - `keys`: the expected list equals the keys of the observed map in their order;
-  - `raises`: when the expected value is true, the step fails with the open error of HY-106, and when it is false, the step
-    does not fail.
+  - `raises`: when the expected value is true, the step fails with an error of the category `value`, the category of the
+    open error of HY-106, whose class is the class of HY-132.7; when it is a text, the step fails in the same way and the
+    kind of the error is that text; and when it is false, the step does not fail.
   - Response fields have no `compare` and are compared by name: `status` and `body` `exact`, `headers` `subset`,
     `allHeaders` `exact`, `absentHeaders` `absent`, `bodyContains` `contains` and `bodyNotContains` `excludes`. Header
     names are compared as HY-130 states.
@@ -388,7 +389,11 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - Every runner that `caseFiles` names compares every case by these comparisons and by no other. A case that compares
     nothing for its runner fails with `CASE_EMPTY`; fields and outcomes whose `only` leaves that runner out do not count.
   - `raises` on a step: the runner catches every error of the step and gives it, or null, to the reader, which checks that
-    its class is exactly the open error of HY-106.
+    its class is exactly the class of HY-132.7 for the members of the section, and its kind where the case states one. The
+    runner of each language takes that class from its list of the members whose unit calls the core: a section whose
+    `members` are all in the list expects the class of the category of HY-132.2, a section that names none of them, or no
+    member, expects the base class of the category, and a section that names some of them fails with `CASE_ERROR`,
+    because one case cannot expect two classes.
   - Each case carries `requirements`, the rules that its response fields check. `requirements` is not a field: the reader
     skips it, and the check reads it. A case's effective rules are its `requirements` plus the rules of the sentences of
     its stated fields and of its section's outcomes. The check fails a requirement that repeats another requirement or the

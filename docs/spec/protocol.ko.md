@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 6eda063d04afaf5bbd08d142e16708541c537e0379ea7690a4ac5fcf045abb9c -->
+<!-- source-sha256: 85df03b12e50229c43ef07aa49ac01c24a4223c259b03b7a072d3f3370bc5121 -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -337,7 +337,7 @@
 
 ## 오류
 
-- **HY-132** <a id="HY-132.1"></a> hyper가 내는 모든 실패는 바뀌지 않는 kind, HTTP 상태나 없음, category를 가진 오류이며, 호출자는 실패를 class나 message가 아니라 kind로 구별한다. <a id="HY-132.2"></a> 각 runtime에서 오류는 그 category의 class `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`이며, 그 category의 기반 class(PHP `InvalidArgumentException`, `TypeError`, `RuntimeException`, Python `ValueError`, `TypeError`, `OSError`, `RuntimeError`, Node `RangeError`, `TypeError`, `Error`)를 상속하고, kind와 상태를 PHP `kind()`와 `status()`, Python과 Node의 속성 `kind`와 `status`로 준다. <a id="HY-132.3"></a> hyper의 kind는 아래 표의 것이며, http-form, http-negotiation, http-media-type, http-cookie, json, template 데이터 모델, session-store 라이브러리, binding처럼 hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind, 상태, category를 가지고 hyper의 그 category class로 호출자에게 간다. <a id="HY-132.4"></a> 규칙이 정한 message는 모든 runtime에서 runtime의 접두어 없이 오류의 message이며, 규칙이 정하지 않은 message를 비교하는 case는 없다. <a id="HY-132.5"></a> kind가 없는 실패는 runtime이 자기 class로 내는 HY-106.8과 HY-106.16의 인자 오류뿐이며, handler, hook, session 저장소처럼 애플리케이션 코드가 던진 예외는 던진 그대로 호출자에게 가고 hyper의 오류가 아니다. <a id="HY-132.6"></a> core의 불변식이 깨지면 core의 panic을 포함해 kind `internal`이며, 그것을 만난 요청은 HY-43으로 실패한다.
+- **HY-132** <a id="HY-132.1"></a> hyper가 내는 모든 실패는 바뀌지 않는 kind, HTTP 상태나 없음, category를 가진 오류이며, 호출자는 실패를 class나 message가 아니라 kind로 구별한다. <a id="HY-132.2"></a> 각 runtime에서 오류는 그 category의 class `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`이며, 그 category의 기반 class(PHP `InvalidArgumentException`, `TypeError`, `RuntimeException`, Python `ValueError`, `TypeError`, `OSError`, `RuntimeError`, Node `RangeError`, `TypeError`, `Error`)를 상속하고, kind와 상태를 PHP `kind()`와 `status()`, Python과 Node의 속성 `kind`와 `status`로 준다. <a id="HY-132.3"></a> hyper의 kind는 아래 표의 것이며, http-form, http-negotiation, http-media-type, http-cookie, json, template 데이터 모델, session-store 라이브러리, binding처럼 hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind, 상태, category를 가지고 hyper의 그 category class로 호출자에게 간다. <a id="HY-132.4"></a> 규칙이 정한 message는 모든 runtime에서 runtime의 접두어 없이 오류의 message이며, 규칙이 정하지 않은 message를 비교하는 case는 없다. <a id="HY-132.5"></a> kind가 없는 실패는 runtime이 자기 class로 내는 HY-106.8과 HY-106.16의 인자 오류뿐이며, handler, hook, session 저장소처럼 애플리케이션 코드가 던진 예외는 던진 그대로 호출자에게 가고 hyper의 오류가 아니다. <a id="HY-132.6"></a> core의 불변식이 깨지면 core의 panic을 포함해 kind `internal`이며, 그것을 만난 요청은 HY-43으로 실패한다. <a id="HY-132.7"></a> 실패를 기대하는 case는 그 category를 적고, runner는 오류가 시험하는 member가 내는 그 category의 class와 정확히 같은지 검사한다. unit이 core를 부르는 member에는 HY-132.2의 class이고, unit이 아직 core를 부르지 않는 member에는 그 category의 기반 class이다. case가 kind를 적으면 runner는 kind도 검사한다.
 
   | Kind | 상태 | Category | 규칙 |
   | --- | --- | --- | --- |

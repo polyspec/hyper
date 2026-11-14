@@ -25,6 +25,44 @@ RESPONSE_KINDS = {
 }
 # The response fields whose names are header names, which compare without regard to ASCII case (HY-130).
 HEADER_FIELDS = frozenset({"headers", "allHeaders", "absentHeaders"})
+# The members of contracts/interfaces.json whose Python unit calls the core (HY-132.7): an error that one of them raises
+# is of the class of its category of HY-132.2, which the binding generates, and an error of any other member is of the
+# base class of its category. A unit that starts to call the core adds its members here in the same change.
+CORE_MEMBERS = frozenset(
+    {
+        "csrf.browserOf",
+        "csrf.masked",
+        "media-type.etag",
+        "record-session.cookieName",
+        "reply.cacheControl",
+        "reply.referrerPolicy",
+        "reply.status",
+        "request.currentPath",
+        "result.invalid",
+        "result.page",
+        "result.redirect",
+    }
+)
+# The category of the failure that the comparison `raises` expects: that of the open error of HY-106 (HYR-11).
+RAISES_CATEGORY = "value"
+# The base class of each category of HY-132.2 in Python.
+BASE_CLASSES: dict[str, type[BaseException]] = {
+    "value": ValueError,
+    "type": TypeError,
+    "io": OSError,
+    "store": RuntimeError,
+    "busy": RuntimeError,
+    "internal": RuntimeError,
+}
+# The class of each category of HY-132.2 by its name in the generated module of the binding.
+CORE_CLASS_NAMES = {
+    "value": "HyperValueError",
+    "type": "HyperTypeError",
+    "io": "HyperIoError",
+    "store": "HyperStoreError",
+    "busy": "HyperBusyError",
+    "internal": "HyperInternalError",
+}
 
 
 def contract(name: str) -> Any:
@@ -127,6 +165,34 @@ def stated_message(name: str, expected: Any, observed: Any) -> Any:
     if not isinstance(observed, dict):
         return observed
     return {**observed, "message": None}
+
+
+def core_class(category: str) -> type[BaseException]:
+    """The class of a category of HY-132.2 that the binding generates. The module is read here, at the first comparison
+    of a section of core members, because the package of the binding imports the native module."""
+    from polyspec.hyper._binding import _errors
+
+    return getattr(_errors, CORE_CLASS_NAMES[category])
+
+
+def expected_failure(section: dict, expected: Any) -> tuple[type[BaseException], str | None] | None:
+    """What the comparison `raises` expects of a case (HYR-11, HY-132.7): None for no failure, or the exact class of the
+    category `value` for the members of the section and the kind that the case states, or None for no kind. The class is
+    the generated one when every member of the section calls the core, and the base class when none does or the section
+    names no member; a section that names both fails, because one case cannot expect two classes."""
+    if expected is False:
+        return None
+    members = section.get("members", [])
+    core = [member for member in members if member in CORE_MEMBERS]
+    if core and len(core) != len(members):
+        others = [member for member in members if member not in CORE_MEMBERS]
+        raise ValueError(
+            f"the section names members that call the core ({', '.join(core)}) and members that do not "
+            f"({', '.join(others)}) (HY-132.7)"
+        )
+    category = RAISES_CATEGORY
+    cls = core_class(category) if core else BASE_CLASSES[category]
+    return cls, expected if isinstance(expected, str) else None
 
 
 def folded(value: Any) -> Any:

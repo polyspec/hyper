@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 46c8b9065b14328c08d97ee115b7280074e6f2988256bb967bc650768dd38d8b -->
+<!-- source-sha256: 8e396390d22b83feb99e93b96ee74cfd3cb204bed069df2f1fbe84c2b2a6079f -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -342,7 +342,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - `excludes`: expected list의 어떤 텍스트도 관찰된 텍스트의 일부가 아니다;
   - `prefix`: expected list가 관찰된 list의 첫 item들과 같다;
   - `keys`: expected list가 관찰된 map의 key를 그 순서대로 나열한 list와 같다;
-  - `raises`: expected 값이 true이면 단계는 HY-106의 open error로 실패하고, false이면 단계는 실패하지 않는다.
+  - `raises`: expected 값이 true이면 단계는 HY-106의 open error의 category인 `value` category의 오류로 실패하고, 그 오류의
+    class는 HY-132.7의 class다. 값이 텍스트이면 단계는 같은 방식으로 실패하고 오류의 kind는 그 텍스트다. false이면 단계는
+    실패하지 않는다.
   - response 필드는 `compare`를 가지지 않으며 이름으로 비교된다: `status`와 `body`는 `exact`, `headers`는 `subset`, `allHeaders`는
     `exact`, `absentHeaders`는 `absent`, `bodyContains`는 `contains`, `bodyNotContains`는 `excludes`. header 이름은 HY-130이
     정하는 대로 비교된다.
@@ -351,8 +353,11 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - case가 명시하지 않은 필드는 비교되지 않는다.
   - `caseFiles`가 가리키는 모든 runner는 모든 case를 이 비교들로만 비교한다. 자기 runner에 대해 아무것도 비교하지 않는 case는
     `CASE_EMPTY`로 실패하며, `only`가 그 runner를 빼는 필드와 결과는 세지 않는다.
-  - 단계의 `raises`: runner는 단계의 모든 error를 잡아 그것 또는 null을 reader에 넘기고, reader는 그 class가 HY-106의 open
-    error와 정확히 같은지 확인한다.
+  - 단계의 `raises`: runner는 단계의 모든 error를 잡아 그것 또는 null을 reader에 넘기고, reader는 그 class가 section의
+    member에 대한 HY-132.7의 class와 정확히 같은지, case가 kind를 적으면 그 kind인지 확인한다. 각 언어의 runner는 그 class를
+    unit이 core를 부르는 member의 목록에서 정한다. `members`가 모두 그 목록에 있는 section은 HY-132.2의 category class를
+    기대하고, 그 목록의 member를 하나도 적지 않거나 member가 없는 section은 category의 기반 class를 기대하며, 그 일부만 적은
+    section은 `CASE_ERROR`로 실패한다. 하나의 case가 두 class를 기대할 수 없기 때문이다.
   - 각 case는 `requirements`를 가진다. 이는 response 필드가 확인하는 규칙의 목록이다. `requirements`는 필드가 아니다: reader는
     그것을 건너뛰고, check는 그것을 읽는다. case의 유효 규칙은 `requirements`와, 명시된 필드의 `sentence` 및 section의 결과의
     `sentence`에 있는 규칙이다. check는 다른 requirement를 반복하거나 명시된 필드의 `sentence` 규칙을 반복하는 requirement,
