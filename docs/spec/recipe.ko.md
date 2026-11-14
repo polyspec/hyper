@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 57e595dc623eff3a29fdf9522a5b8fc016d2886afc64351e3d6c8b159652e462 -->
+<!-- source-sha256: 5e296c5b021ec30bdd4c191a99d87fb23f2bfc16806b6b48fb06caab9380e5fe -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -136,6 +136,18 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     - constructor는 PHP에서 `__construct`, Node에서 `constructor`, Python에서 `__init__`이다.
     - PHP class의 member `invoke`는 그 object를 호출할 수 있게 하는 method `__invoke`이다.
     - Python class의 member `iter`는 그 object를 순회할 수 있게 하는 method `__iter__`이다.
+  - **Signature.** signature는 그 언어의 reader가 쓰는 member의 머리이며, package가 받아들이는 그 언어의 모든 release에서
+    한 형식이다. tool의 출력을 읽는 check는 그 release에 따라 바뀌지 않는 형식을 읽기 때문이다(HR-83). PHP signature는
+    Reflection에서 쓴다:
+    - method는 modifier 이름, `function`, 이름, `<type> <&><...>$<name>`으로 쓴 parameter, `: <type>`으로 쓴 return
+      type이다. property는 modifier 이름, type, `$<name>`이다.
+    - property의 set visibility인 `private(set)` 또는 `protected(set)`은 property가 스스로 가진 것과 다를 때만 visibility
+      뒤에 온다. `public readonly` property가 스스로 가진 것은 `protected(set)`이다.
+    - type은 member를 선언한 class를 `self`로, 그 class의 parent class를 `parent`로 쓰며, source가 class 이름을 쓴 곳에서도
+      그렇다.
+
+    그래서 set visibility를 쓰지 않는 PHP 8.4와, `public readonly` property가 스스로 가진 set visibility를 쓰고 `self`와
+    `parent` 자리에 class 이름을 쓰는 PHP 8.5가 같은 signature를 준다.
   - **Names.**
     - PHP와 Node는 camelCase 이름을 유지한다.
     - Python은 snake_case로 쓴다.

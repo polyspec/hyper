@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cad879e98869eb592232555f3547545b845d1fe5b236f5cd4cc615c842df99e5 -->
+<!-- source-sha256: ddc179fa5e68681dfe8c400f4db9998584e3cf6ff244f1c0e581046bb4e35bcf -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- recipe는 PHP signature의 형식을 적고(HYR-8), `make recipe-check`의 PHP reader는 그것을 PHP 8.4와 PHP 8.5에서 같게 쓴다: property의 set visibility는 `public readonly` property가 스스로 가진 `protected(set)`과 다를 때만 쓰고, member를 선언한 class와 그 parent class는 `self`와 `parent`로 쓴다. 이전에는 reader가 `Reflection::getModifierNames`와 `ReflectionType`의 문자열로 signature를 써서, PHP 8.4에서 통과하는 tree에서 PHP 8.5의 check가 `MEMBER_SIGNATURE` finding 76개로 실패했다(H28.11-11).
 
 - action은 다른 origin의 `http`나 `https` location으로의 outside redirect를 결과로 돌려줄 수 있고, loader나 action은 그것으로 요청을 멈출 수 있다: PHP `Result::outside($location)`, Node와 Python `Result.outside(location)`. server는 그것에 303과 `Location`으로, `HX-Request: true`인 요청과 document request에는 200과 `HX-Redirect`로 응답하며, 두 응답 모두 `Cache-Control: no-store`와 HY-117.1의 `Vary`를 가지고 base path를 붙이지 않으며, flash value와 changed topic을 저장하지 않는다. outside redirect의 `flash`와 `changed`는 실패한다. `Result::origin`과 `Result.origin`은 outside location의 origin을, 다른 text에는 null을 돌려준다. 브라우저 코드는 region 응답의 location을 htmx가 불러오게 하고(HYC-14.6), location의 렌더, document request, server-side rendering의 history 복원에서는 페이지의 location을 바꾸어(HYC-8.4, HYC-7.10, HYC-4.8), outside 페이지에서 뒤로 가기가 브라우저를 내보낸 URL에 닿지 않게 한다. `@polyspec/hyper-client`의 `DocumentAdapter`는 member `replace(url)`을 가지며, `document`로 넘기는 adapter가 그것을 구현한다. board 예제는 loader가 outside redirect로 멈추는 route `/away`를 가진다(HY-132, H32.1).
 
