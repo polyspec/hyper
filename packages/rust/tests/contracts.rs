@@ -1696,7 +1696,7 @@ fn hex_bytes(text: &str) -> Vec<u8> {
 #[test]
 fn the_build_id_of_the_files_of_a_build() {
     // HY-125.3, HY-125.15, HY-125.17, HY-125.18
-    use polyspec_hyper::build::{file_text, hashed, id, stream, Output};
+    use polyspec_hyper::build::{file_text, hashed_paths, id, stream, Output};
     let file = cases("context.json");
     let mut ran = 0;
     for case in group(&file, "builds") {
@@ -1709,11 +1709,8 @@ fn the_build_id_of_the_files_of_a_build() {
                 bytes: text(file, "content").as_bytes().to_vec(),
             })
             .collect();
-        let sorted = match hashed(&outputs) {
-            Ok(files) => files
-                .iter()
-                .map(|file| Value::from(file.path.clone()))
-                .collect::<Vec<_>>(),
+        let sorted = match hashed_paths(&outputs) {
+            Ok(paths) => paths.into_iter().map(Value::from).collect::<Vec<_>>(),
             Err(error) => panic!("{}: {error}", case["id"]),
         };
         assert_eq!(Value::Array(sorted), case["sortedPaths"], "{}", case["id"]);

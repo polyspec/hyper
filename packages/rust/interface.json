@@ -1136,6 +1136,65 @@
           "core": "polyspec_hyper::build::id"
         },
         {
+          "id": "rules.hashed_paths",
+          "name": [
+            "hashed",
+            "paths"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "outputs"
+              ],
+              "type": {
+                "list": {
+                  "unit": "build_output"
+                }
+              },
+              "required": true
+            }
+          ],
+          "returns": {
+            "list": "text"
+          },
+          "raises": [
+            "polyspec_hyper::ErrorCode::InvalidBuild"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::build::hashed_paths"
+        },
+        {
+          "id": "rules.build_stream",
+          "name": [
+            "build",
+            "stream"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "outputs"
+              ],
+              "type": {
+                "list": {
+                  "unit": "build_output"
+                }
+              },
+              "required": true
+            }
+          ],
+          "returns": "bytes",
+          "raises": [
+            "polyspec_hyper::ErrorCode::InvalidBuild",
+            "polyspec_hyper::ErrorCode::Internal"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::build::stream"
+        },
+        {
           "id": "rules.check_build_id",
           "name": [
             "check",

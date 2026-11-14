@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The core contract gives `rules.hashed_paths` and `rules.build_stream` (`build::hashed_paths`, `build::stream`), and `tests/scripts/build-id.test.mts` takes the order of the hashed paths and the stream from them; `legacy/packages/cli/lib/build-id.mjs`, which gave the two before, is removed (H31.4-6). Not run: the core and the addon are not built at this change.
 - `legacy/packages/cli/lib/template-rules.mjs` is removed: since the command tool takes the template check from the core, no code and no test uses it (H31.4-3).
 - The command tool takes the build id, the text of `build.json`, the check of the manifest and of the templates, the read paths and the reserved template from the Rust core through `@polyspec/hyper/native` (H31.4-3, H31.4-4, HR-96), and so do `scripts/contract-programs.mts` and `scripts/fixture-program.mts`; `packages/cli/lib/build-id.mjs` and `template-rules.mjs` move to `legacy/packages/cli/lib/`, `@polyspec/hyper-cli` requires `@polyspec/hyper` in place of `@polyspec/hyper-client`, and every target that runs the command tool needs `make node-addon`. The build id of an application of `contracts/reads.json` hashes its templates below `program/templates/`, the place that HY-125.17 requires. Not run: no addon of this contract is built.
 - `@polyspec/hyper` exports the subpath `./native`, the Node binding of the Rust core (`native/generated/index.d.ts`, `native/generated/index.mjs`), from which the command tool imports the rules of the core (H31.4-5, HR-61, HR-96).

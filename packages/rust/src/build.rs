@@ -56,6 +56,18 @@ pub fn hashed(outputs: &[Output]) -> Result<Vec<&Output>, Error> {
     Ok(files)
 }
 
+/// The paths of the files of `outputs` that the build id hashes, in the order in which it hashes them (HY-125.3), the
+/// member `rules.hashed_paths` of the interface contract.
+///
+/// # Errors
+/// The errors of [`hashed`].
+pub fn hashed_paths(outputs: &[Output]) -> Result<Vec<String>, Error> {
+    Ok(hashed(outputs)?
+        .into_iter()
+        .map(|file| file.path.clone())
+        .collect())
+}
+
 /// The bytes that the build id hashes: for each hashed file in path order, its UTF-8 path, a NUL byte, its length as
 /// 8 bytes big-endian and its bytes (HY-125.3).
 ///

@@ -1,14 +1,18 @@
 // The case runner of the build (HYR-7): the build id of HY-125 with the builds of contracts/context.json (the order of
 // the paths, the stream of the hashed bytes, the digest and the excluded outputs) and the template check of HY-48.3
 // with the templateChecks of contracts/manifest.json, and the reserved template of HY-31.3 with the dataTemplate of
-// contracts/build.json. The digest, the excluded output, the template check and the reserved template are the rules of
-// the Rust core that the command tool calls through the Node binding (HR-61, HR-96). The binding gives no member for the
-// order of the paths and the stream, so the earlier TypeScript rules below legacy/ give those two until it does. The
-// expected values are read from the contract files and never computed here.
+// contracts/build.json. Each is a rule of the Rust core that the runner calls through the Node binding (HR-61, HR-96),
+// as the command tool does. The expected values are read from the contract files and never computed here.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildFileText, buildId, reservedDataTemplate, templateProblems } from '@polyspec/hyper/native';
-import { buildStream, sortFiles } from '../../legacy/packages/cli/lib/build-id.mjs';
+import {
+  buildFileText,
+  buildId,
+  buildStream,
+  hashedPaths,
+  reservedDataTemplate,
+  templateProblems,
+} from '@polyspec/hyper/native';
 import { CaseReader } from '../../packages/ts/tests/case-reader.ts';
 import { writeResults } from '../../packages/ts/tests/case-run.ts';
 import { mapsOf, plain, textMapOf, textOf } from '../../packages/ts/tests/inputs.ts';
@@ -29,8 +33,8 @@ function problemsOf(reader: CaseReader): unknown {
 // The build id of the files of a case.
 function compareBuild(reader: CaseReader): void {
   const files = filesOf(reader.input('files'));
-  reader.compare('sortedPaths', sortFiles(files).map((file) => file.path));
-  if (reader.has('stream')) reader.compare('stream', buildStream(files).toString('hex'));
+  reader.compare('sortedPaths', [...hashedPaths(files)]);
+  if (reader.has('stream')) reader.compare('stream', Buffer.from(buildStream(files)).toString('hex'));
   reader.compare('build', buildId(files));
   reader.compare('excluded', [{ path: 'build.json', content: buildFileText(buildId(files)) }]);
 }

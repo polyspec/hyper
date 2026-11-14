@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2ff6413ab084882f31e06ed2f1318da3f76860b7f51f6b2090f77480e6216752 -->
+<!-- source-sha256: 11af1998bdf63b5eded829bed45f100099f65a9bc6aa1bf366067cb60cd68a03 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- core 계약은 `rules.hashed_paths`와 `rules.build_stream`(`build::hashed_paths`, `build::stream`)을 주고, `tests/scripts/build-id.test.mts`는 해시하는 경로의 순서와 stream을 그것에서 받는다. 이전에 둘을 주던 `legacy/packages/cli/lib/build-id.mjs`는 삭제된다(H31.4-6). 실행하지 않음: 이 변경에서 core와 addon을 build하지 않았다.
 - `legacy/packages/cli/lib/template-rules.mjs`를 지운다. 명령 도구가 템플릿 검사를 core에서 받은 뒤로 어떤 코드와 시험도 그것을 쓰지 않는다(H31.4-3).
 - 명령 도구는 build id, `build.json`의 text, 매니페스트와 템플릿의 검사, read path, 예약 템플릿을 `@polyspec/hyper/native`로 Rust core에서 받는다(H31.4-3, H31.4-4, HR-96). `scripts/contract-programs.mts`와 `scripts/fixture-program.mts`도 그렇다. `packages/cli/lib/build-id.mjs`와 `template-rules.mjs`는 `legacy/packages/cli/lib/`로 옮기고, `@polyspec/hyper-cli`는 `@polyspec/hyper-client` 대신 `@polyspec/hyper`를 요구하며, 명령 도구를 실행하는 모든 target은 `make node-addon`을 필요로 한다. `contracts/reads.json`의 애플리케이션의 build id는 HY-125.17이 요구하는 자리인 `program/templates/` 아래의 템플릿을 해시한다. 실행하지 않음: 이 계약의 addon은 빌드되지 않았다.
 - `@polyspec/hyper`는 Rust core의 Node 바인딩인 subpath `./native`(`native/generated/index.d.ts`, `native/generated/index.mjs`)를 export하며, 명령 도구는 core의 규칙을 그것에서 import한다(H31.4-5, HR-61, HR-96).
