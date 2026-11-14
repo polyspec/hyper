@@ -8,6 +8,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./native": {
+      "types": "./native/generated/index.d.ts",
+      "default": "./native/generated/index.mjs"
     }
   },
   "files": [

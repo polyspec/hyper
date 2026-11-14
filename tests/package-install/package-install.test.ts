@@ -21,7 +21,11 @@ const EXPORTS: Record<string, unknown> = {
     './templates-index': { types: './templates-index.d.ts' },
     './data-template.json': './data-template.json',
   },
-  '@polyspec/hyper': { '.': { types: './dist/index.d.ts', default: './dist/index.js' } },
+  // The Node binding of the core, which the command tool imports (HR-61).
+  '@polyspec/hyper': {
+    '.': { types: './dist/index.d.ts', default: './dist/index.js' },
+    './native': { types: './native/generated/index.d.ts', default: './native/generated/index.mjs' },
+  },
 };
 
 // JSON.parse returns any: the test takes each JSON value as unknown and narrows the parts that it reads.
