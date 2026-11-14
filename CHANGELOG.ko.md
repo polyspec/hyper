@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 34fccaf904231a54b9bc3817b94f60a0443f97f17d1065ca15375f3d1a9e1a3d -->
+<!-- source-sha256: f8882263b4da3fa666068354f9930f5014cc84e53a76bfc2f2232d691101929d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Python 서버의 unit 15개는 Rust core를 부르고 자기 규칙을 적지 않는다(H31.8-1, HY-132.2): `Csrf.mask`, `Csrf.verify`, `Csrf.browser_of`, `Context.hash`, `Context.valid_header`, `RecordSession.cookie_name`, `RepresentationResponse.etag`, `Request.current_path`, `Reply.cache_control`, `Reply.referrer_policy`, `Reply.status`, `Result.redirect`, `Result.page`, `App._vary_header`, `Page.respond`의 tag. `polyspec/hyper/app/_core.py`의 `core()`는 `polyspec.hyper._binding._root` 위의 `CoreRules`를 주고, 그 module을 첫 호출에서 import하므로 package를 import할 때 native module을 읽지 않는다. native module이 없는 package는 첫 규칙에서 실패하고, 어떤 unit도 Python 규칙으로 돌아가지 않는다. 이 규칙들의 실패는 binding이 내는 오류로, 그 category의 class와 kind를 가지며 message는 core의 것이다. `Result.page`는 core 전에 status의 type을 더 검사하지 않는다. `packages/python/tests/case_rules.py`의 `CORE_MEMBERS`가 이 unit의 member를 적는다. 이전 규칙은 지운다. 어떤 코드와 시험도 그것을 쓰지 않고, S5의 layout은 root 폴더 `legacy/`를 두지 않는다. `ruff format`은 `ruff format --check`가 보고한 `packages/python/tests/case_rules.py`, `tests/test_case_raises.py`, `polyspec/hyper/app/_core_rules.py`, `tests/test_core_rules.py`를 그 형식으로 쓴다. `make lint-python`의 `ruff check`, `ruff format --check`, vulture와 `make layout-check`는 통과한다. 실행하지 않음: native module이 build되지 않아 `make hyper-install-python`과 `make hyper-test-python`은 실행하지 않았다.
 - Python case reader의 비교 `raises`는 HY-132.7의 정확한 class를 검사한다(H31.8-1, HYR-11). 실패를 기대하는 case의 오류는 section의 모든 member가 `packages/python/tests/case_rules.py`의 `CORE_MEMBERS`, 곧 Python unit이 core를 부르는 member의 목록에 있으면 binding의 `HyperValueError`이고, 하나도 없거나 section이 member를 적지 않으면 `ValueError`이다. 둘을 함께 적은 section은 `CASE_ERROR`로 실패하고, 텍스트인 expected 값은 오류의 kind이며 reader가 그것을 비교한다. reader는 모든 section에서 `type(observed) is ValueError`를 비교했다. HY-132.7과 HYR-11이 이 규칙을 적는다. `packages/python/tests/test_case_raises.py`가 이 비교를 적는다. `CaseRaisesTest`의 시험 7개 중 3개가 이전 reader에서 실패하고, 기계의 Python 3.15.0과 core class의 대역으로 7개 모두 통과한다. package의 venv는 native module이 필요하기 때문이다. 실행하지 않음: binding의 생성된 module을 읽는 `CoreClassTest`와 `make hyper-test-python`.
 - core 계약은 `rules.hashed_paths`와 `rules.build_stream`(`build::hashed_paths`, `build::stream`)을 주고, `tests/scripts/build-id.test.mts`는 해시하는 경로의 순서와 stream을 그것에서 받는다. 이전에 둘을 주던 `legacy/packages/cli/lib/build-id.mjs`는 삭제된다(H31.4-6). 실행하지 않음: 이 변경에서 core와 addon을 build하지 않았다.
 - `legacy/packages/cli/lib/template-rules.mjs`를 지운다. 명령 도구가 템플릿 검사를 core에서 받은 뒤로 어떤 코드와 시험도 그것을 쓰지 않는다(H31.4-3).

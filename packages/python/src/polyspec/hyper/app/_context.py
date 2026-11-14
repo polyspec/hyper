@@ -4,10 +4,9 @@ the place of the context in the shared data of a document (HY-10)."""
 
 from __future__ import annotations
 
-import hashlib
-import re
 from typing import Callable, Optional
 
+from ._core import core
 from ..data._data_model import DataModel
 from ._hyper_value_error import HyperValueError
 from ..data._json_codec import JsonCodec
@@ -32,9 +31,8 @@ class Context:
     @staticmethod
     def hash(build: str, text: str) -> str:
         """Returns the context hash: the lowercase hexadecimal SHA-256 digest of `{"build":"<build id>","context":`,
-        the JSON text of the context and `}` (HY-125)."""
-        signed = '{"build":"' + build + '","context":' + text + "}"
-        return hashlib.sha256(signed.encode("utf-8")).hexdigest()
+        the JSON text of the context and `}` (HY-125.12). The core decides it."""
+        return core().Context.hash(build, text)
 
     @staticmethod
     def member(build: str, map: dict, held: Optional[str]) -> dict:
@@ -46,8 +44,8 @@ class Context:
     @staticmethod
     def valid_header(value: Optional[str]) -> bool:
         """Returns True for a request without `Hyper-Context` or with a context hash, 64 lowercase hexadecimal
-        (HY-127)."""
-        return value is None or re.fullmatch(r"[0-9a-f]{64}", value) is not None
+        (HY-127.2). The core decides it."""
+        return core().Context.valid_header(value)
 
     @staticmethod
     def with_context(shared: dict, map: dict) -> dict:

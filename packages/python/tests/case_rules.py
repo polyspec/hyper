@@ -175,7 +175,9 @@ def core_class(category: str) -> type[BaseException]:
     return getattr(_errors, CORE_CLASS_NAMES[category])
 
 
-def expected_failure(section: dict, expected: Any) -> tuple[type[BaseException], str | None] | None:
+def expected_failure(
+    section: dict, expected: Any
+) -> tuple[type[BaseException], str | None] | None:
     """What the comparison `raises` expects of a case (HYR-11, HY-132.7): None for no failure, or the exact class of the
     category `value` for the members of the section and the kind that the case states, or None for no kind. The class is
     the generated one when every member of the section calls the core, and the base class when none does or the section

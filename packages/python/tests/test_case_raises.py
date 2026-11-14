@@ -36,7 +36,9 @@ def outcome_line(members: list[str], observed: object) -> str:
         "outcomes": {"open": {"compare": "raises", "sentence": "HY-106.21"}},
         "members": members,
     }
-    reader = CaseReader("file.json", "section", {"id": "c", "label": "l"}, {}, spec, None)
+    reader = CaseReader(
+        "file.json", "section", {"id": "c", "label": "l"}, {}, spec, None
+    )
     reader.outcome("open", observed)
     return reader.line()
 
@@ -49,7 +51,12 @@ def field_line(members: list[str], expected: object, observed: object) -> str:
         "fields": {
             "id": {"role": "id"},
             "label": {"role": "label"},
-            "openFails": {"role": "expected", "compare": "raises", "sentence": "HY-106.21", "optional": True},
+            "openFails": {
+                "role": "expected",
+                "compare": "raises",
+                "sentence": "HY-106.21",
+                "optional": True,
+            },
         },
         "members": members,
     }
@@ -63,23 +70,38 @@ def field_line(members: list[str], expected: object, observed: object) -> str:
 class CaseRaisesTest(unittest.TestCase):
     def test_a_section_of_core_members_expects_the_generated_class(self):
         self.assertEqual(
-            outcome_line(CORE, StandInValueError("refused", "invalid_application")), "CASE file.json c PASS"
+            outcome_line(CORE, StandInValueError("refused", "invalid_application")),
+            "CASE file.json c PASS",
         )
-        self.assertEqual(outcome_line(CORE, ValueError("refused")), "CASE file.json c FAIL FIELD_DIFFERS open")
+        self.assertEqual(
+            outcome_line(CORE, ValueError("refused")),
+            "CASE file.json c FAIL FIELD_DIFFERS open",
+        )
 
-    def test_a_section_of_members_that_do_not_call_the_core_expects_the_base_class(self):
-        self.assertEqual(outcome_line(LEGACY, ValueError("refused")), "CASE file.json c PASS")
+    def test_a_section_of_members_that_do_not_call_the_core_expects_the_base_class(
+        self,
+    ):
+        self.assertEqual(
+            outcome_line(LEGACY, ValueError("refused")), "CASE file.json c PASS"
+        )
         self.assertEqual(
             outcome_line(LEGACY, StandInValueError("refused", "invalid_application")),
             "CASE file.json c FAIL FIELD_DIFFERS open",
         )
 
     def test_a_section_without_members_expects_the_base_class(self):
-        self.assertEqual(outcome_line([], ValueError("refused")), "CASE file.json c PASS")
+        self.assertEqual(
+            outcome_line([], ValueError("refused")), "CASE file.json c PASS"
+        )
 
     def test_a_class_of_another_category_fails(self):
-        self.assertEqual(outcome_line(LEGACY, TypeError("refused")), "CASE file.json c FAIL FIELD_DIFFERS open")
-        self.assertEqual(outcome_line(LEGACY, None), "CASE file.json c FAIL FIELD_DIFFERS open")
+        self.assertEqual(
+            outcome_line(LEGACY, TypeError("refused")),
+            "CASE file.json c FAIL FIELD_DIFFERS open",
+        )
+        self.assertEqual(
+            outcome_line(LEGACY, None), "CASE file.json c FAIL FIELD_DIFFERS open"
+        )
 
     def test_a_section_of_both_kinds_of_members_fails_with_case_error(self):
         line = outcome_line([CORE[0], LEGACY[0]], ValueError("refused"))
@@ -89,21 +111,27 @@ class CaseRaisesTest(unittest.TestCase):
 
     def test_a_stated_kind_is_compared(self):
         error = StandInValueError("refused", "invalid_application")
-        self.assertEqual(field_line(CORE, "invalid_application", error), "CASE file.json c PASS")
         self.assertEqual(
-            field_line(CORE, "invalid_build", error), "CASE file.json c FAIL FIELD_DIFFERS openFails"
+            field_line(CORE, "invalid_application", error), "CASE file.json c PASS"
+        )
+        self.assertEqual(
+            field_line(CORE, "invalid_build", error),
+            "CASE file.json c FAIL FIELD_DIFFERS openFails",
         )
         self.assertEqual(field_line(CORE, True, error), "CASE file.json c PASS")
 
     def test_false_expects_no_failure(self):
         self.assertEqual(field_line(CORE, False, None), "CASE file.json c PASS")
         self.assertEqual(
-            field_line(CORE, False, ValueError("refused")), "CASE file.json c FAIL FIELD_DIFFERS openFails"
+            field_line(CORE, False, ValueError("refused")),
+            "CASE file.json c FAIL FIELD_DIFFERS openFails",
         )
 
 
 class CoreClassTest(unittest.TestCase):
-    def test_the_class_of_each_category_is_the_generated_one_and_extends_its_base_class(self):
+    def test_the_class_of_each_category_is_the_generated_one_and_extends_its_base_class(
+        self,
+    ):
         from polyspec.hyper._binding import _errors
 
         for category, name in case_rules.CORE_CLASS_NAMES.items():

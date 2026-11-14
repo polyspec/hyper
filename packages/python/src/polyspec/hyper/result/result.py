@@ -3,12 +3,8 @@ and the changed topics that it stores for the next request."""
 
 from __future__ import annotations
 
-import re
-
+from ..app._core import core
 from ..data._data_model import DataModel
-
-# A lone surrogate is not UTF-8 text, so that a location holds none (HY-46).
-_PATH = re.compile(r"/(?![/\\])[^\x00-\x20\x7f-\x9f\\\ud800-\udfff]*\Z", re.DOTALL)
 
 
 class Result:
@@ -36,17 +32,14 @@ class Result:
 
     @staticmethod
     def redirect(location: str) -> Result:
-        """Returns a redirect to a path of this application (HY-46)."""
-        if _PATH.fullmatch(location) is None or Result._has_dot_segment(location):
-            raise ValueError("a redirect location is not an application path (HY-46)")
-        return Result(location, 303, {}, {}, [])
+        """Returns a redirect to a path of this application (HY-46). The core decides the location."""
+        return Result(core().Result.redirect(location), 303, {}, {}, [])
 
     @staticmethod
     def page(status: int, data: dict) -> Result:
-        """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58)."""
-        if type(status) is not int or status not in (200, 409, 422):
-            raise ValueError(f"a page status {status} is not 200, 409 or 422 (HY-58)")
-        return Result(None, status, data, {}, [])
+        """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58). The core
+        decides the status."""
+        return Result(None, core().Result.page(status), data, {}, [])
 
     @staticmethod
     def invalid(data: dict) -> Result:
@@ -83,12 +76,3 @@ class Result:
     def _is_redirect(self) -> bool:
         """Returns True for a redirect."""
         return self.location is not None
-
-    @staticmethod
-    def _has_dot_segment(location: str) -> bool:
-        """Returns True when the path of a location has a `.` or `..` segment, also with a percent-encoded dot."""
-        path = re.split(r"[?#]", location, maxsplit=1)[0]
-        return any(
-            re.sub("%2e", ".", segment, flags=re.IGNORECASE) in (".", "..")
-            for segment in path.split("/")
-        )

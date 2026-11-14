@@ -7,6 +7,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
+from ..app._core import core
 from ..session._csrf import Csrf
 from ..form._fields import Fields
 from ..form._files import Files
@@ -18,7 +19,6 @@ from ..session._flash import Flash
 # The media type of the page data (HY-116).
 _JSON = "application/vnd.hyper+json"
 _PRINTABLE = re.compile(r"[\x21-\x7e]*\Z")
-_AUTHORITY = re.compile(r"^([A-Za-z][A-Za-z0-9+.-]*:)?//[^/?#]*")
 _INTEGER = re.compile(r"-?[0-9]{1,15}\Z")
 
 
@@ -215,13 +215,8 @@ class Request:
 
     def current_path(self) -> Optional[str]:
         """Returns the path of the page that sent the request, with its bytes read as UTF-8, or None for a request
-        without the header, a URL without a path and bytes that are not UTF-8 (HY-11.4)."""
-        header = self.header("HX-Current-URL")
-        if header is None or not Request._valid_utf8(header):
-            return None
-        rest = _AUTHORITY.sub("", header.encode("latin-1").decode("utf-8"))
-        path = re.split(r"[?#]", rest, maxsplit=1)[0]
-        return path or None
+        without the header, a URL without a path and bytes that are not UTF-8 (HY-11.4). The core decides it."""
+        return core().Request.current_path(self.header("HX-Current-URL"))
 
     def path(self) -> str:
         """Returns the request path; after routing, the path without the base path."""

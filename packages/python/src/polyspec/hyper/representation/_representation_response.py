@@ -3,9 +3,9 @@ the JSON text of HY-54 and its strong tag."""
 
 from __future__ import annotations
 
-import hashlib
 import re
 
+from ..app._core import core
 from ..data._json_codec import JsonCodec
 from .representation import Representation
 from ..http.response import Response
@@ -78,9 +78,8 @@ class RepresentationResponse:
     @staticmethod
     def etag(content_type: str, body: str) -> str:
         """Returns the strong tag of a body of a type: the first 32 hexadecimal digits of the SHA-256 digest of the
-        `Content-Type`, a line feed and the body, in quotes (HY-122.10)."""
-        digest = hashlib.sha256(f"{content_type}\n{body}".encode("utf-8")).hexdigest()
-        return f'"{digest[:32]}"'
+        `Content-Type`, a line feed and the body, in quotes (HY-122.10). The core decides it."""
+        return core().RepresentationResponse.etag(content_type, body)
 
     @staticmethod
     def _cache_policy(status: int, given: object, authorized: bool) -> str:

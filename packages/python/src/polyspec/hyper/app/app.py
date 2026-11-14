@@ -16,6 +16,7 @@ from .container import Container
 from ._build import Build
 from ..representation._representation_entries import RepresentationEntries
 from ._context import Context
+from ._core import core
 from ..session._csrf import Csrf
 from ..data._json_codec import JsonCodec
 from ..data._json_decode_error import JsonDecodeError
@@ -512,10 +513,8 @@ class App:
         )
 
     def _vary_header(self) -> str:
-        """Returns the `Vary` of a response that `Accept` and the context decide (HY-117)."""
-        if self._context_handler is None:
-            return "Accept, HX-Request, HX-Current-URL"
-        return "Accept, HX-Request, HX-Current-URL, Hyper-Context"
+        """Returns the `Vary` of a response that `Accept` and the context decide (HY-117.1). The core decides it."""
+        return core().App.vary_header(self._context_handler is not None)
 
     @staticmethod
     def _negotiate(

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: e8668e1dfe54aa838bfd7a6a6a4354b0ae6da4e70d0bfe0f5af4fe20a4c5ba47 -->
+<!-- source-sha256: 76e31edeec30d4478290a3f79524cbffa310995bf8a24d4cdc56db1964d097a3 -->
 # 기능 상태
 
 [English](features.md).
@@ -18,7 +18,7 @@
 | data-template-rule | Rust core의 `render::data_template`가 주는 예약 템플릿 `hyper/data.tpl`의 이름과 소스(HY-31.9) | partial: core는 `contracts/build.json`의 case `dataTemplate`에서 `packages/client/data-template.json`이 담은 것과 같은 이름과 소스를 준다. 명령 도구는 그것을 `@polyspec/hyper/native`로 core에서 받고(H31.4-3), 서버는 core를 부르기 전까지(H-8) 브라우저 package에서 받는다 | `make core-test`, `tests/scripts/build-id.test.mts` |
 | legacy-data-template | core를 부르지 않는 서버를 위한 예약 템플릿의 사본 `program/legacy/hyper/data.tpl`. build는 `program/templates/hyper/data.tpl` 대신 그것을 쓰고(HY-31.10), Python 서버는 그것을 필요로 하며 `program/templates/`와 함께 읽는다(HY-48.14) | partial: `hyper build`와 Python 서버가 그렇게 한다(H31.4-2). build 시험과 Python 시험은 아직 그 위에서 돌지 않았다 | — |
 | node-core-rules | Node 서버 unit의 이름으로 주는 core의 규칙. `packages/ts/src/core/rules.ts`의 `coreRules`가 core의 Node binding module을 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고 core의 Node binding은 build되지 않았다. `tests/scripts/node-core.test.mts`는 binding module의 대역으로 그 호출을 적으며 시험 40개가 통과한다(H31.20, H31.7) | — |
-| python-core-rules | Python 서버 unit의 이름으로 주는 core의 규칙. `polyspec/hyper/app/_core_rules.py`의 `CoreRules`가 core의 Python binding module을 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고, record를 받는 member의 unit이 없으며, `tests/test_core_rules.py`는 실행되지 않았다(H31.24, H31.8) | — |
+| python-core-rules | Python 서버 unit의 이름으로 주는 core의 규칙. `polyspec/hyper/app/_core_rules.py`의 `CoreRules`가 core의 Python binding module을 받는다(HY-132.2) | partial: 서버의 unit 15개가 `polyspec/hyper/app/_core.py`의 `core()`로 이것을 부르고 자기 규칙을 적지 않으며, Python case reader의 비교 `raises`는 그 member에 생성된 class를 기대한다(H31.8-1, HY-132.7). record를 받는 member의 unit이 없고, native module이 build되지 않아 `tests/test_core_rules.py`와 서버의 어떤 시험도 native module로 실행되지 않았다(H31.24, H31.8) | — |
 | php-core-rules | PHP 서버 unit의 이름으로 주는 core의 규칙. `Polyspec\Hyper\CoreRules`가 core의 binding 함수들의 namespace를 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고, record를 받는 member의 unit이 없으며, `tests/CoreRulesTest.php`는 실행되지 않았다(H31.25, H31.9) | — |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
