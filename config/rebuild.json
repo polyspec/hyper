@@ -110,7 +110,7 @@
       "kind": "ecosystem",
       "tool": "node:crypto hashes the template files and @polyspec/template parses them"
     },
-    "packages/cli/lib/template-rules.mjs": {
+    "legacy/packages/cli/lib/template-rules.mjs": {
       "kind": "policy",
       "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) over the AST that @polyspec/template parses; no ecosystem tool states the rules of this protocol"
     },

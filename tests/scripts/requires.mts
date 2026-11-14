@@ -8,6 +8,16 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
+/**
+ * Fails unless the checkout holds the Node binding of the core, which every Node server of the checkout reads through
+ * packages/ts/src/core/binding.ts: the generated entry and the addon of this platform beside it, which `make node-addon`
+ * writes. A test that starts a Node server calls it beside its other requirements.
+ */
+export function requireNodeAddon(): void {
+  const platform = `${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}`;
+  requireBuilt('node-addon', 'packages/ts/native/generated/index.cjs', `packages/ts/native/generated/hyper.${platform}.node`);
+}
+
 /** Fails unless every path of `paths`, relative to the checkout, exists; names the make target that writes them. */
 export function requireBuilt(target: string, ...paths: string[]): void {
   const missing = paths.filter((file) => !existsSync(path.resolve(ROOT, file)));

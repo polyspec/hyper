@@ -7,6 +7,10 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { jsonArray, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { fixture, runBuild } from './build-fixture.mts';
+import { requireNodeAddon } from './requires.mts';
+
+// The command tool takes its rules from the Node binding of the core (HR-96).
+requireNodeAddon();
 
 const build = runBuild;
 

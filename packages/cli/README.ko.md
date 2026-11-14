@@ -1,10 +1,10 @@
 <!-- doc-id: hyper-cli-readme -->
-<!-- source-sha256: 0264014a2053e349deab5dc0b0677767ac3c31c9794f7f1d71f62ca222cb3ac0 -->
+<!-- source-sha256: 32f8ce2123c4ec605ef8dca4466857dddc855d20ba2d90017da7dffe2b96925b -->
 # @polyspec/hyper-cli
 
 [English](README.md).
 
-영역 프로토콜의 명령 도구 `hyper`이며(HR-96), 하위 명령 `hyper build`와 `hyper check`를 가진다. 패키지는 브라우저 패키지 `@polyspec/hyper-client`와 템플릿 패키지 `@polyspec/template`, `@polyspec/template-compiler`를 자신이 요구하는 정확한 버전으로 읽는다(HR-70).
+영역 프로토콜의 명령 도구 `hyper`이며(HR-96), 하위 명령 `hyper build`와 `hyper check`를 가진다. 패키지는 Rust core의 규칙을 서버 패키지 `@polyspec/hyper`의 Node 바인딩(그 subpath `./native`, HR-61)에서 받고, 템플릿 패키지 `@polyspec/template`, `@polyspec/template-compiler`를 자신이 요구하는 정확한 버전으로 읽는다(HR-70).
 
 Node.js 26.12.0 이상. 패키지는 build 단계 없이 JavaScript module을 그대로 배포한다. hyper는 GitHub Release archive로만 릴리스되므로, 애플리케이션은 release의 `polyspec-hyper-cli-X.Y.Z.tgz`를 devDependency로 설치하고 bin을 `package.json` script나 `npm exec --package=@polyspec/hyper-cli -- hyper build`로 실행한다. 설치 없는 `npx hyper`와 `npm exec hyper`는 npm의 무관한 공개 package `hyper`를 실행하므로 쓰지 않는다.
 

@@ -7,6 +7,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { shellText } from '../../packages/cli/lib/shell.mjs';
+import { requireNodeAddon } from './requires.mts';
+
+// The command tool takes its rules from the Node binding of the core (HR-96).
+requireNodeAddon();
 
 const fixtures = resolve('packages/php/tests/fixtures');
 
@@ -36,7 +40,7 @@ test('a build file without a build id of 64 lowercase hexadecimal characters fai
   const output = join(directory, 'program');
   const result = program(output, idFile);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /the build id ABC is not 64 lowercase hexadecimal characters/);
+  assert.match(result.stderr, /a build id is not 64 lowercase hexadecimal characters \(HY-125\.19\)/);
   assert.equal(existsSync(output), false);
 });
 

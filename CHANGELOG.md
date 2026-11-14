@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The command tool takes the build id, the text of `build.json`, the check of the manifest and of the templates, the read paths and the reserved template from the Rust core through `@polyspec/hyper/native` (H31.4-3, H31.4-4, HR-96), and so do `scripts/contract-programs.mts` and `scripts/fixture-program.mts`; `packages/cli/lib/build-id.mjs` and `template-rules.mjs` move to `legacy/packages/cli/lib/`, `@polyspec/hyper-cli` requires `@polyspec/hyper` in place of `@polyspec/hyper-client`, and every target that runs the command tool needs `make node-addon`. The build id of an application of `contracts/reads.json` hashes its templates below `program/templates/`, the place that HY-125.17 requires. Not run: no addon of this contract is built.
 - `@polyspec/hyper` exports the subpath `./native`, the Node binding of the Rust core (`native/generated/index.d.ts`, `native/generated/index.mjs`), from which the command tool imports the rules of the core (H31.4-5, HR-61, HR-96).
 - `coreRules` of `packages/ts/src/core/rules.ts` takes any object and checks it for every member of the binding before it uses it as the binding, so neither the module of the server nor the stand-in of `tests/scripts/node-core.test.mts` is asserted to be one; the types that no other file imports are not exported (H31.20): oxlint and knip of `make lint-ts` refused both.
 - Git ignores `packages/python/src/polyspec/hyper/_binding/`, the Python package that `make bindings` writes into the source root of the host (H31.3, binding L-2a): it was left untracked and not ignored.

@@ -6,11 +6,13 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { test } from 'node:test';
-import dataTemplate from '../../packages/client/data-template.json' with { type: 'json' };
-import { buildId } from '../../packages/cli/lib/build-id.mjs';
+import { buildId, reservedDataTemplate } from '@polyspec/hyper/native';
 import { listFiles } from '../../packages/cli/lib/output-files.mjs';
 import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { fixture, runBuild } from './build-fixture.mts';
+import { requireNodeAddon } from './requires.mts';
+
+requireNodeAddon();
 
 function build(app: string, ...options: string[]) {
   const result = runBuild(app, ...options);
@@ -54,7 +56,7 @@ test('writes the outputs of HR-34 below public/assets, client/ and program/ and 
   // The reserved template is not below program/templates, which the core reads and where it refuses an application
   // template of that name (HY-31.3); its copy for a server that does not call the core is program/legacy (HY-31.10).
   assert.equal(existsSync(join(output, 'program', 'templates', 'hyper', 'data.tpl')), false);
-  assert.equal(readFileSync(join(output, 'program', 'legacy', 'hyper', 'data.tpl'), 'utf8'), dataTemplate.source);
+  assert.equal(readFileSync(join(output, 'program', 'legacy', 'hyper', 'data.tpl'), 'utf8'), reservedDataTemplate().source);
   assert.deepEqual(listFiles(join(output, 'program', 'legacy')).map((file) => relative(join(output, 'program', 'legacy'), file)), [join('hyper', 'data.tpl')]);
   // assets.json lists every file that this build wrote below public/assets, in byte order.
   const assets = jsonArray(readJson(join(output, 'client', 'assets.json')).files, 'files').map((path) => jsonString(path, 'path'));

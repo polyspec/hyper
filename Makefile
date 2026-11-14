@@ -215,7 +215,7 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 server-fixtures: packages contract-programs ## Build the server program of the PHP test fixtures with the fixed build id of their build.json (HY-48, HY-125.21)
 	$(NODE) scripts/fixture-program.mts --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --id-file $(FIXTURES)/build.json
 
-contract-programs: packages ## Build the applications of contracts/context.json, contracts/functions.json, contracts/representations.json and contracts/app.json and one application per case of contracts/reads.json for the tests of the three servers (HY-73, HY-118, HY-124, HYC-24)
+contract-programs: packages node-addon ## Build the applications of contracts/context.json, contracts/functions.json, contracts/representations.json and contracts/app.json and one application per case of contracts/reads.json for the tests of the three servers (HY-73, HY-118, HY-124, HYC-24)
 	$(NODE) scripts/contract-programs.mts --contract $(abspath contracts/context.json) --contract $(abspath contracts/functions.json) --contract $(abspath contracts/representations.json) --contract $(abspath contracts/app.json) --reads $(abspath contracts/reads.json) --output $(abspath var/contract-programs)
 
 # A Node server bundle keeps the packages of node_modules external, and Node loads them from there: a CommonJS package that
@@ -224,13 +224,13 @@ node-server: board ## Build the board Node server into examples/board/build/node
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --packages=external --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
-node-fixtures: packages contract-programs ## Build the template files of the PHP test fixtures for the Node server tests
+node-fixtures: packages node-addon contract-programs ## Build the template files of the PHP test fixtures for the Node server tests
 	$(NODE) scripts/build-templates.mts --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
 
 # Shared gates read the declarations and runtime fixtures built by this checkout.
 lint-ts: packages
 
-board: packages ## Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program with the generated PHP program (HR-34, HY-48, HY-125)
+board: packages node-addon ## Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program with the generated PHP program (HR-34, HY-48, HY-125)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs build --app $(BOARD) --output $(BOARD)/build --api /api --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
 
 hyper-test-js: ## Run the browser code tests, including the browser case runner (HYR-7), and the type check
@@ -271,7 +271,7 @@ hyper-lint: ## Check PHP formatting
 analyse-php: ext ## Run PHPStan at level max on the source and the tests of the server package
 	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
-templates-check: ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
+templates-check: node-addon ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs check --app $(BOARD)
 
 # The TypeScript of scripts/, tests/ and benchmarks/ (tsconfig.json), which Node runs by type stripping and so never checks
@@ -353,7 +353,7 @@ core-fmt-check: ## Check the format of the Rust core
 # packages/python and packages/ts, packages/python/src/polyspec/hyper/_binding, packages/ts/native/wasm/generated, packages/go/internal/ffi/generated), and the
 # tracked Go files zz_generated_*.go of packages/go (binding GN-3). bindings-check runs the contract check, which also
 # compares the tracked binding packages with what binding scaffold writes (binding L-2, CK-19).
-.PHONY: bindings bindings-check lint-bindings test-bindings node-package test-wasm test-go
+.PHONY: bindings bindings-check lint-bindings test-bindings node-addon node-package test-wasm test-go
 BINDING_COMMIT := $(shell sed -n '/^name = "polyspec-binding-core"$$/{n;n;s/^source = ".*\#\([0-9a-f]\{40\}\)"$$/\1/p;}' $(CURDIR)/Cargo.lock)
 BINDING := $(CURDIR)/var/binding/$(BINDING_COMMIT)/packages/ts/src/cli.ts
 .PHONY: install-binding
@@ -408,6 +408,14 @@ node-package: bindings packages ## Build the WASM module and the Node addon, the
 	cd $(NODE_PACKAGE) && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node
 	echo '{ "private": true }' > $(BINDINGS_VAR)/node/package.json
 	cd $(BINDINGS_VAR)/node && $(NPM) install --no-audit --no-fund --omit=optional ./polyspec-hyper-$(NODE_VERSION).tgz ./polyspec-hyper-$(NODE_PLATFORM)-$(NODE_VERSION).tgz
+
+# The Node addon of the core for the servers of the checkout. The generated entry packages/ts/native/generated/index.cjs
+# reads the addon of the platform from its npm package or from the file beside the entry (binding T-2), and
+# packages/ts/src/core/binding.ts reads that entry, so every Node server of the checkout, from src or from dist, reads
+# this one file. The copy is published with one rename (HR-82).
+node-addon: bindings ## Build the Node addon of the core and put it beside the generated entry of packages/ts/native/generated, where the Node servers of the checkout read it
+	cargo build --locked -p polyspec-hyper-node
+	cp $(CARGO_TARGET)/debug/libpolyspec_hyper_node.$(CDYLIB) $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ && mv $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ $(NODE_PACKAGE)/native/generated/$(NODE_ADDON)
 
 # The generated tests of the WASM binding through the subpath ./wasm of the installed package (binding P-5);
 # --expose-gc serves the generated tests that collect instances (binding GN-18a).

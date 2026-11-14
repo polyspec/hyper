@@ -18,6 +18,8 @@
 // program/ are published file by file, each build.json last, so a server or a page of an earlier build never finds a
 // file missing (HR-82). Below --output the build owns client/ and program/ only.
 //
+// The build id is the rule of the Rust core, through the Node binding of `@polyspec/hyper` (HR-61, HR-96).
+//
 // The template ASTs and the template render runtime of the bundle come from the template package `@polyspec/template`
 // that this package depends on, whatever template package the application installed (HR-70).
 
@@ -27,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 import { compile } from '@tailwindcss/node';
 import { Scanner } from '@tailwindcss/oxide';
 import { build as bundle } from 'esbuild';
-import { buildId } from './build-id.mjs';
+import { buildId } from '@polyspec/hyper/native';
 import { checkApplication } from './check.mjs';
 import { copyFile, listFiles, writeFileAtomic } from './output-files.mjs';
 import { PROGRAM_LAST, writeBuildFile, writeProgram } from './program.mjs';

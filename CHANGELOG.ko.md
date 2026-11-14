@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9b9e7ece16fcfc24d57d6b9dfecb13fb687ba87e4d5ab2256550903823c2f920 -->
+<!-- source-sha256: cc2fa9bc2e11579623ed6a4f940773847536466addc24723071fb592a759f884 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 명령 도구는 build id, `build.json`의 text, 매니페스트와 템플릿의 검사, read path, 예약 템플릿을 `@polyspec/hyper/native`로 Rust core에서 받는다(H31.4-3, H31.4-4, HR-96). `scripts/contract-programs.mts`와 `scripts/fixture-program.mts`도 그렇다. `packages/cli/lib/build-id.mjs`와 `template-rules.mjs`는 `legacy/packages/cli/lib/`로 옮기고, `@polyspec/hyper-cli`는 `@polyspec/hyper-client` 대신 `@polyspec/hyper`를 요구하며, 명령 도구를 실행하는 모든 target은 `make node-addon`을 필요로 한다. `contracts/reads.json`의 애플리케이션의 build id는 HY-125.17이 요구하는 자리인 `program/templates/` 아래의 템플릿을 해시한다. 실행하지 않음: 이 계약의 addon은 빌드되지 않았다.
 - `@polyspec/hyper`는 Rust core의 Node 바인딩인 subpath `./native`(`native/generated/index.d.ts`, `native/generated/index.mjs`)를 export하며, 명령 도구는 core의 규칙을 그것에서 import한다(H31.4-5, HR-61, HR-96).
 - `packages/ts/src/core/rules.ts`의 `coreRules`는 아무 object나 받아 binding으로 쓰기 전에 binding의 모든 member가 있는지 검사한다. 그래서 서버의 module도 `tests/scripts/node-core.test.mts`의 대역도 binding이라고 단언하지 않는다. 다른 파일이 import하지 않는 type은 export하지 않는다(H31.20). `make lint-ts`의 oxlint와 knip이 둘을 거부했다.
 - Git은 `make bindings`가 host의 source root에 쓰는 Python 패키지 `packages/python/src/polyspec/hyper/_binding/`을 무시한다(H31.3, binding L-2a). 전에는 추적되지도 무시되지도 않았다.

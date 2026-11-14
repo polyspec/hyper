@@ -6,6 +6,10 @@ import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync }
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
+import { requireNodeAddon } from './requires.mts';
+
+// The command tool takes its rules from the Node binding of the core (HR-96).
+requireNodeAddon();
 
 // The relative paths below an application, in byte order.
 const listing = (app: string) => readdirSync(app, { recursive: true, encoding: 'utf8' }).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));

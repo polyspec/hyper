@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual, promisify } from 'node:util';
 
 import { startPhp, startServer, stopServers } from '../../scripts/board-servers.mts';
-import { requireBuilt } from './requires.mts';
+import { requireBuilt, requireNodeAddon } from './requires.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FIXTURE = path.join(ROOT, 'tests/scripts/fixtures/upload-server');
@@ -55,6 +55,8 @@ function send(url: string, method: string, headers: Record<string, string>, body
 // are, its children, which the end of the test stops before it removes the directory, and the environment of a server
 // with directories of its own.
 async function started(t: TestContext): Promise<{ directory: string; children: ChildProcess[]; environment: (server: string) => Record<string, string> }> {
+  // scripts/contract-programs.mts takes the rules of the core from the Node binding (HR-96).
+  requireNodeAddon();
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-upload-servers-'));
   const children: ChildProcess[] = [];
   t.after(async () => {

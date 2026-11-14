@@ -18,7 +18,7 @@
     "node": ">=26.12.0"
   },
   "dependencies": {
-    "@polyspec/hyper-client": "0.0.40",
+    "@polyspec/hyper": "0.0.40",
     "@polyspec/template": "0.0.27",
     "@polyspec/template-compiler": "0.0.27",
     "@tailwindcss/node": "4.3.3",

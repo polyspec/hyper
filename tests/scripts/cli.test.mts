@@ -9,6 +9,10 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { parseJsonObject } from '../../scripts/json.mts';
 import { fixture } from './build-fixture.mts';
+import { requireNodeAddon } from './requires.mts';
+
+// The command tool takes its rules from the Node binding of the core (HR-96).
+requireNodeAddon();
 
 const bin = resolve('packages/cli/bin/hyper.mjs');
 const hyper = (...args: string[]) => spawnSync(process.execPath, [bin, ...args], { encoding: 'utf8' });

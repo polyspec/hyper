@@ -390,7 +390,7 @@
     },
     {
       "paths": [
-        "packages/cli/lib/template-rules.mjs"
+        "legacy/packages/cli/lib/template-rules.mjs"
       ],
       "targets": [
         "templates-check",

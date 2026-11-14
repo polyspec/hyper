@@ -9,7 +9,7 @@ import { join, relative, resolve, sep } from 'node:path';
 import { test } from 'node:test';
 import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { copyTracked } from '../../scripts/tracked-files.mts';
-import { requireBuilt } from './requires.mts';
+import { requireNodeAddon } from './requires.mts';
 
 const repository = resolve('.');
 const build = join(repository, 'packages', 'cli');
@@ -52,7 +52,7 @@ test('the modules of the command tool import only its published files, Node and 
 });
 
 test('hyper build builds the browser outputs and the server program from another working directory', (t) => {
-  requireBuilt('packages', 'node_modules/@polyspec/hyper-client/dist/index.js', 'node_modules/@polyspec/hyper-client/data-template.json');
+  requireNodeAddon();
   const directory = mkdtempSync(join(tmpdir(), 'hyper-scripts-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const app = join(directory, 'app');

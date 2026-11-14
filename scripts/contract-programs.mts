@@ -17,13 +17,12 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { parse, resolvePath } from '@polyspec/template';
+import { buildId, templateProblems } from '@polyspec/hyper/native';
 import { writeFileAtomic } from '../packages/cli/lib/output-files.mjs';
 import { publish, staging } from '../packages/cli/lib/publish.mjs';
 import { writeTemplateFiles } from '../packages/cli/lib/template-files.mjs';
-import { buildId } from '../packages/cli/lib/build-id.mjs';
+import { readTemplates } from '../packages/cli/lib/check.mjs';
 import { writeBuildFile, writeProgram } from '../packages/cli/lib/program.mjs';
-import { templateProblems } from '../packages/cli/lib/template-rules.mjs';
 
 const { values } = parseArgs({ options: { contract: { type: 'string', multiple: true }, reads: { type: 'string' }, output: { type: 'string' } } });
 if (!values.contract || values.contract.length === 0) throw new Error('--contract is required');
@@ -102,8 +101,8 @@ for (const [key, { application }] of applications) {
     writeFileSync(manifest, JSON.stringify(application.manifest));
     writeFileSync(join(directory, 'build.json'), JSON.stringify({ build: application.build }));
     const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key}\\program\\php`;
-    // HY-48.3: the template rules of hyper build pass before the program is written.
-    const { problems } = templateProblems({ manifest: application.manifest, templatesDir: templates, parse, resolvePath });
+    // HY-48.3: the template rules of hyper build, the rules of the core, pass before the program is written.
+    const problems = templateProblems(Buffer.from(JSON.stringify(application.manifest), 'utf8'), readTemplates(templates));
     if (problems.length > 0) {
       failures.push(`the templates of the application ${key} break the template rules:\n${problems.join('\n')}`);
       continue;
@@ -136,7 +135,8 @@ function readsApplication(entry: ReadsCase): Application {
   }
   templates['layout.tpl'] = '<head><title>{# title}</title>{# build}</head>\n<main id="content">{# content}</main>\n{# data}\n';
   templates['title.tpl'] = '{= title}';
-  const build = buildId(Object.entries(templates).map(([path, source]) => ({ path, bytes: Buffer.from(source) })));
+  // The templates lie below program/templates of the application, the place whose prefix a path of HY-125.17 names.
+  const build = buildId(Object.entries(templates).map(([path, source]) => ({ path: `program/templates/${path}`, bytes: Buffer.from(source) })));
   return {
     manifest: { layout: 'layout.tpl', title: 'title.tpl', regions: [{ name: 'content', page: true }], routes: [{ name: 'reads', path: '/', title: 'Reads', template: entry.template }] },
     templates,
