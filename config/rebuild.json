@@ -110,10 +110,6 @@
       "kind": "ecosystem",
       "tool": "node:crypto hashes the template files and @polyspec/template parses them"
     },
-    "legacy/packages/cli/lib/template-rules.mjs": {
-      "kind": "policy",
-      "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) over the AST that @polyspec/template parses; no ecosystem tool states the rules of this protocol"
-    },
     "scripts/board-servers.mts": {
       "kind": "ecosystem",
       "tool": "node:child_process starts the servers of a run and node:fs and node:os give each run its temporary directory (HR-87, HR-89)"
