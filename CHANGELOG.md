@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- A request field that arrives in several field lines is one value, the values of its lines joined with `, ` in their order, in every server (HY-42.7 to HY-42.12). The Node server reads `headersDistinct` of `node:http`, so a request with two `Content-Type` lines gives the joined media type, which is no form type, and an action answers it with 415; before, the Node server kept the first line of `content-type`, `user-agent` and the other names that `node:http` reads as one value and discarded the others. The Python `create_server` reads the body by the joined `Content-Length` and `Transfer-Encoding` and answers a `Content-Length` that is not decimal digits, such as two lines joined, and two `Transfer-Encoding` lines with 400; before, it read the body by the first line of each (H28.11-10).
+
 - The URLs of the php-serialize release assets in `package.json`, the npm locks, `pyproject.toml` and `uv.lock` name the repository `polyspec/php-serialization`, the new name of `polyspec/php-serialize`; the assets and their integrity are the same (H28.20).
 
 ## 0.0.40

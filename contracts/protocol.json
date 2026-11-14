@@ -4613,6 +4613,42 @@
                   "en": "The path, the raw query and the header names and values that a host gives a request are text whose characters U+0000 to U+00FF are its bytes; creating a Node or a Python request with a character above U+00FF in one of them fails with the error class of HY-106.6 of the runtime, `Error` or `ValueError`, where Node cut the character to its low byte and Python failed later with another class, and a PHP string holds bytes.",
                   "ko": "host가 요청에 주는 path, raw query, header 이름과 값은 문자 U+0000부터 U+00FF까지가 곧 byte인 text이다. 그중 하나에 U+00FF보다 큰 문자가 있는 Node나 Python 요청을 만들면 그 runtime의 HY-106.6 오류 class인 `Error`나 `ValueError`로 실패한다. 이전에 Node는 그 문자를 하위 byte로 잘랐고 Python은 나중에 다른 class로 실패했으며, PHP 문자열은 byte를 가진다.",
                   "koSource": "82a064d8504265fe5b8f32334a8da7e6dd03ebbd01ea7de7f9c4582c6451db54"
+                },
+                {
+                  "id": "HY-42.7",
+                  "en": "A request field that arrives in several field lines is one header whose value is the values of its lines in their order joined with `, ` (RFC 9110, section 5.3), and for `Cookie` joined with `; ` (HY-129.4), so no line is kept alone and none is dropped: `header(name)` and every read of the server, the media type of the body (HY-59.11), its declared length (HY-59.5) and its transfer coding included, read that one value in every server.",
+                  "ko": "여러 field line으로 오는 요청 field는 header 하나이며, 그 값은 그 줄들의 값을 순서대로 `, `로 이은 것이고(RFC 9110, 5.3절) `Cookie`는 `; `로 이은 것이다(HY-129.4). 그래서 어떤 줄도 홀로 남거나 버려지지 않는다: `header(name)`과, body의 media type(HY-59.11), 선언된 길이(HY-59.5), transfer coding을 포함한 서버의 모든 읽기는 모든 서버에서 그 값 하나를 읽는다.",
+                  "koSource": "9a071c9d57be2eb4315dc7dec6b7fda6400ff0d752d93fb8188b8bc0b3147c5d"
+                },
+                {
+                  "id": "HY-42.8",
+                  "en": "A host that receives the lines apart joins them: the Node server reads `headersDistinct` of `node:http`, because its `headers` keeps only the first line of `content-type`, `content-length`, `authorization`, `host`, `user-agent` and the other names that `node:http` reads as one value, the Python `create_server` reads every line of the message, and the Python ASGI callable every header of the scope.",
+                  "ko": "줄을 따로 받는 host는 그것을 잇는다: Node 서버는 `node:http`의 `headersDistinct`를 읽는데, 그 `headers`는 `content-type`, `content-length`, `authorization`, `host`, `user-agent`와 `node:http`가 값 하나로 읽는 다른 이름의 첫 줄만 남기기 때문이다. Python `create_server`는 message의 모든 줄을, Python ASGI callable은 scope의 모든 header를 읽는다.",
+                  "koSource": "642fd6e006bf41991797912e32d8e692c0109b66407787134e827a599812e6c7"
+                },
+                {
+                  "id": "HY-42.9",
+                  "en": "A host that receives a field joined takes it as given (HY-129.5): PHP takes the `HTTP_` keys, `CONTENT_TYPE` and `CONTENT_LENGTH` of `$_SERVER` from its SAPI, and the Python WSGI callable the same keys of the environ from its WSGI server.",
+                  "ko": "이어진 field를 받는 host는 받은 그대로 쓴다(HY-129.5): PHP는 SAPI가 주는 `$_SERVER`의 `HTTP_` key, `CONTENT_TYPE`, `CONTENT_LENGTH`를 쓰고, Python WSGI callable은 WSGI server가 주는 environ의 같은 key를 쓴다.",
+                  "koSource": "20abba705ab163fe691c8df5edb408d4bd9216ade821be7d555b0c303dbe01bc"
+                },
+                {
+                  "id": "HY-42.10",
+                  "en": "The server before such a host decides that value: the PHP built-in server joins the lines with `, `, nginx 1.23.0 and later joins them for php-fpm with `, ` and the `Cookie` lines with `; `, and gunicorn 26.2.0 joins them with `,` but writes only the last `Content-Type` line into `CONTENT_TYPE`, so under gunicorn the earlier `Content-Type` lines reach no part of the callable.",
+                  "ko": "그런 host 앞의 server가 그 값을 정한다: PHP built-in server는 줄들을 `, `로 잇고, nginx 1.23.0 이상은 php-fpm을 위해 `, `로, `Cookie` 줄은 `; `로 이으며, gunicorn 26.2.0은 `,`로 잇지만 `CONTENT_TYPE`에는 마지막 `Content-Type` 줄만 쓴다. 그래서 gunicorn 아래에서는 앞의 `Content-Type` 줄이 callable의 어느 부분에도 닿지 않는다.",
+                  "koSource": "41453e6709684d78d0d912a86a5ce2d197eba071e3899229f8da3b4c9ce20547"
+                },
+                {
+                  "id": "HY-42.11",
+                  "en": "So a field that holds one value fails in several lines as its joined value fails, such as two `Content-Type` lines, whose joined media type is no form type (HY-59.7), and two `Hyper-Context` lines, whose joined value is not 64 hexadecimal characters (HY-127.2).",
+                  "ko": "그래서 값 하나를 가지는 field는 여러 줄로 오면 이어진 값이 실패하듯 실패한다. 예를 들어 두 `Content-Type` 줄은 이어진 media type이 form type이 아니고(HY-59.7), 두 `Hyper-Context` 줄은 이어진 값이 64개의 16진수 문자가 아니다(HY-127.2).",
+                  "koSource": "cc9df1323d42a859697c36f3fa5db59160f222968ef8063b699b2f11124d817a"
+                },
+                {
+                  "id": "HY-42.12",
+                  "en": "The `http.server` server of `create_server` reads the body by that one value: it answers a request without `Transfer-Encoding` whose `Content-Length` is not decimal digits, which two lines joined are not, and a request whose `Transfer-Encoding` is not `chunked` alone, with the 400 of `http.server` and closes the connection (RFC 9112, section 6.3), and `node:http` refuses such a request itself with the 400 of HY-60.7.",
+                  "ko": "`create_server`의 `http.server` 서버는 그 값 하나로 body를 읽는다: `Transfer-Encoding` 없이 `Content-Length`가 10진수 숫자가 아닌 요청(두 줄을 이은 값은 숫자가 아니다)과 `Transfer-Encoding`이 `chunked` 하나가 아닌 요청에는 `http.server`의 400으로 응답하고 연결을 닫으며(RFC 9112, 6.3절), `node:http`는 그런 요청을 스스로 HY-60.7의 400으로 거절한다.",
+                  "koSource": "603ccd91aacbc606a9cd7907346f8cb21b03d0a7b7873eda0261e0378fbbe750"
                 }
               ]
             }

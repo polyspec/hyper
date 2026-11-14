@@ -93,14 +93,16 @@ def create_server(
             self.headers_started = False
             try:
                 # The request as received so far: an unread body is empty and its size is the declared one (HY-60).
+                # HY-42.7: every read takes the lines of a name joined as one value.
+                headers = _headers(self.headers)
                 cookies = Cookies.parse(_cookie_header(self.headers))
                 exchange.request = head_request(
                     self.command,
                     self.path,
-                    _headers(self.headers),
+                    headers,
                     cookies,
                     application.https,
-                    declared_length(self.headers.get("Content-Length")),
+                    declared_length(headers.get("content-length")),
                 )
                 file = (
                     None
@@ -112,22 +114,28 @@ def create_server(
                     return
                 # HY-131: a multipart body of an application with that form type is read in chunks into files of the
                 # request.
-                declared = declared_length(self.headers.get("Content-Length"))
+                declared = declared_length(headers.get("content-length"))
                 exchange.body = RequestBody(
-                    self.headers.get("Content-Type") or "",
+                    headers.get("content-type") or "",
                     application.body_limit,
                     "multipart/form-data" in application._form_types,
                     application._value_limit,
                     application._part_limit,
                     application.file_limit,
                 )
-                # HY-59.10: a body that the request sends in chunks is decoded, and one in another form or with another
-                # transfer coding is answered as http.server answers a request that it cannot read.
-                coding = self.headers.get("Transfer-Encoding")
-                if coding is None:
+                # HY-59.10, HY-42.12: a body that the request sends in chunks is decoded, and one in another form, with
+                # another transfer coding or with a Content-Length that is not decimal digits, such as two lines joined,
+                # is answered as http.server answers a request that it cannot read.
+                coding = headers.get("transfer-encoding")
+                length = headers.get("content-length")
+                if coding is None and (
+                    length is None or (length.isascii() and length.isdigit())
+                ):
                     read_body(self.rfile.read, exchange.body, declared)
-                elif coding.strip().lower() != "chunked" or not read_chunks(
-                    self.rfile, exchange.body
+                elif (
+                    coding is None
+                    or coding.strip().lower() != "chunked"
+                    or not read_chunks(self.rfile, exchange.body)
                 ):
                     self.close_connection = True
                     self.send_error(400)
@@ -135,7 +143,7 @@ def create_server(
                 exchange.request = Request(
                     self.command,
                     Request.target_path(self.path),
-                    _headers(self.headers),
+                    headers,
                     Request.target_query(self.path),
                     exchange.body.held(),
                     cookies=cookies,

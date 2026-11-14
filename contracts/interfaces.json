@@ -2554,13 +2554,18 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the headers of the request with repeated lines joined (HY-56.1).",
+              "state": "Returns the headers of the request with the lines of a name joined with `, ` (HY-42.7).",
               "native": {
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/host/server.py::_headers",
                   "signature": "def _headers(headers) -> dict[str, str]"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_reads_the_lines_of_a_name_as_one_value: Only the Python server has the `http.server` server of `create_server` (HY-100.1); two `Content-Type` and two `User-Agent` lines reach the application joined with `, `, the media type of the body included (HY-42.7, HY-42.8).",
+                "packages/server/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_refuses_two_content_length_lines: Only the `http.server` server of `create_server` reads the body by `Content-Length` itself; two lines joined are no decimal digits, so it answers 400 and no request reaches the application (HY-42.12).",
+                "packages/server/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_refuses_two_transfer_encoding_lines: Only the `http.server` server of `create_server` reads a chunked body itself; two `Transfer-Encoding` lines joined are no `chunked` alone, so it answers 400 and no request reaches the application (HY-42.12)."
+              ]
             },
             {
               "id": "server.nowNs",
@@ -3004,13 +3009,16 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the request headers of an environ (HY-56.1).",
+              "state": "Returns the request headers of an environ as the WSGI server gives them (HY-42.9).",
               "native": {
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/host/wsgi.py::_environ_headers",
                   "signature": "def _environ_headers(environ: dict) -> dict[str, str]"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_header_lines.py::HeaderLinesTest.test_the_wsgi_callable_takes_the_value_that_its_server_joined: Only the Python server has a WSGI callable (HY-100.3); `CONTENT_TYPE` and `HTTP_USER_AGENT` that the WSGI server joined reach the application as given (HY-42.9)."
+              ]
             }
           ],
           "only": {
@@ -3196,13 +3204,16 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the request headers of a scope (HY-56.1).",
+              "state": "Returns the request headers of a scope with the headers of a name joined with `, ` (HY-42.7).",
               "native": {
                 "python": {
                   "symbol": "packages/server/python/src/polyspec/hyper/host/asgi.py::_scope_headers",
                   "signature": "def _scope_headers(scope: dict) -> dict[str, str]"
                 }
-              }
+              },
+              "tests": [
+                "packages/server/python/tests/test_header_lines.py::HeaderLinesTest.test_the_asgi_callable_reads_the_lines_of_a_name_as_one_value: Only the Python server has an ASGI callable (HY-100.15); two `content-type` and two `user-agent` headers of the scope reach the application joined with `, `, the media type of the body included (HY-42.7, HY-42.8)."
+              ]
             }
           ],
           "only": {
@@ -3646,6 +3657,9 @@
           "tests": [
             "packages/server/ts/tests/http.test.ts::App.server > answers a request target with a byte outside ASCII with a plain 400 (HY-42): Only the Node server answers and reports the 400 of a request that node:http cannot parse, with a request of the request line or with no request and with an empty reply (HY-60.7, HY-60.8); the test sends raw packets to the server of http-host.createServer.",
             "packages/server/ts/tests/http.test.ts::App.server > answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65): Only the Node server answers headers larger than node:http accepts with a 431 that carries Cache-Control: no-store (HY-60.7, HY-65.1).",
+            "packages/server/ts/tests/http.test.ts::the field lines of a request > reads the lines of a name as one value joined with `, `, the media type of the body included (HY-42.7, HY-42.8): Only the Node host is the listener of node:http (HY-100.1), whose `headers` keeps the first line of `content-type` and `user-agent`; the test sends two lines of each and asserts the joined values that `around` reads.",
+            "packages/server/ts/tests/http.test.ts::the field lines of a request > answers an action with two Content-Type lines with 415, because their joined media type is no form type (HY-42.11, HY-59.7): Only the Node host is the listener of node:http (HY-100.1); the test sends two `Content-Type` lines to an action through it.",
+            "packages/server/ts/tests/http.test.ts::the field lines of a request > leaves a request with two Content-Length lines to the 400 of node:http (HY-42.12, HY-60.7): Only the Node server has node:http, which refuses two `Content-Length` lines itself; the test asserts the plain 400 of HY-60.7.",
             "packages/server/ts/tests/client.test.ts::client rendering (HY-62) > serves the shell over node:http without a session (HY-45, HY-62): Only the Node host is the listener of node:http (HY-100.1); a request for the shell through it leaves the session directory empty."
           ]
         }
@@ -4658,7 +4672,8 @@
                 "packages/server/php/tests/RequestTest.php::RequestTest::testTheMethodOfTheSapiIsReadInUpperCase: Only PHP reads the request from the variables of the SAPI; the test sets REQUEST_METHOD to a lower case method and asserts that Request::fromGlobals holds it in upper case (HY-100.31).",
                 "packages/server/php/tests/RequestTest.php::RequestTest::testFromGlobalsTakesTheTargetFromTheRequestUri: Only the PHP server builds a request from the values of the SAPI; the target is REQUEST_URI (HY-42.1).",
                 "packages/server/php/tests/RequestTest.php::RequestTest::testFromGlobalsReadsTheQueryFromTheRequestUriAndNotFromGet: Only the PHP server has $_GET beside the request target; the query is read from REQUEST_URI (HY-56.1).",
-                "packages/server/php/tests/RequestTest.php::RequestTest::testFromGlobalsReadsNoFormValueFromPost: Only the PHP server has $_POST beside the body; no form value is read from it (HY-59.9)."
+                "packages/server/php/tests/RequestTest.php::RequestTest::testFromGlobalsReadsNoFormValueFromPost: Only the PHP server has $_POST beside the body; no form value is read from it (HY-59.9).",
+                "packages/server/php/tests/RequestTest.php::RequestTest::testFromGlobalsTakesTheLinesThatTheSapiJoinedAsGiven: Only the PHP server receives the request from the variables of its SAPI, which joins the lines of a field; `CONTENT_TYPE` and `HTTP_USER_AGENT` that the SAPI joined are the headers and the media type of the request as given (HY-42.9, HY-42.10)."
               ]
             },
             {

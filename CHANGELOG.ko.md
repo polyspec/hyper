@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8eba50890d65dd7947484b91c76ef6fa10d268efb62151d98bc4258bb50b4644 -->
+<!-- source-sha256: 9dbed8d2b744740f98e123b23c0ce653741cf87100343b357010cdb3e568ad0f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 여러 field line으로 오는 요청 field는 모든 server에서 그 줄들의 값을 순서대로 `, `로 이은 값 하나다(HY-42.7~HY-42.12). Node 서버는 `node:http`의 `headersDistinct`를 읽으므로, `Content-Type` 줄이 둘인 요청은 form type이 아닌 이어진 media type을 주고 action은 그것에 415로 응답한다. 전에는 Node 서버가 `content-type`, `user-agent`와 `node:http`가 값 하나로 읽는 다른 이름의 첫 줄만 남기고 나머지를 버렸다. Python `create_server`는 이어진 `Content-Length`와 `Transfer-Encoding`으로 body를 읽고, 두 줄을 이은 값처럼 10진수 숫자가 아닌 `Content-Length`와 두 `Transfer-Encoding` 줄에 400으로 응답한다. 전에는 각각의 첫 줄로 body를 읽었다(H28.11-10).
 
 - `package.json`, npm lock, `pyproject.toml`, `uv.lock`의 php-serialize release asset URL은 `polyspec/php-serialize`의 새 이름인 저장소 `polyspec/php-serialization`을 가리킨다. asset과 그 integrity는 같다(H28.20).
 
