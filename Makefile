@@ -350,7 +350,7 @@ core-fmt-check: ## Check the format of the Rust core
 # BINDING is the cli of binding at the commit that Cargo.lock pins for polyspec-binding-core, which make install-binding
 # clones into var/binding/<commit> (scripts/install-binding.mts), so the generator and binding_core are one version
 # (G-6, CK-20); bindings and bindings-check fail with that install target while it is missing. bindings writes the generated folders, which Git ignores (native/generated/ of packages/php,
-# packages/python and packages/ts, packages/ts/native/wasm/generated, packages/go/internal/ffi/generated), and the
+# packages/python and packages/ts, packages/python/src/polyspec/hyper/_binding, packages/ts/native/wasm/generated, packages/go/internal/ffi/generated), and the
 # tracked Go files zz_generated_*.go of packages/go (binding GN-3). bindings-check runs the contract check, which also
 # compares the tracked binding packages with what binding scaffold writes (binding L-2, CK-19).
 .PHONY: bindings bindings-check lint-bindings test-bindings node-package test-wasm test-go

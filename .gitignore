@@ -30,6 +30,8 @@ __pycache__/
 target/
 # The files that the binding generator writes into the native module of each host package (binding L-2a)
 packages/*/native/generated/
+# The Python package of the binding, which the generator writes whole into the source root of the host (binding L-2a)
+/packages/python/src/polyspec/hyper/_binding/
 # The generated folders of the WASM crate and of the C ABI crate of the Go binding (binding L-1); the Go files
 # zz_generated_*.go of packages/go are tracked (binding GN-3)
 /packages/ts/native/wasm/generated/
