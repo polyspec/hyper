@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 678e1a685510a94c736570d3c06fc4579390b0256517de1d340417bedea01186 -->
+<!-- source-sha256: 15c36af5efb05ebc45fdf9790da57ec4e9679f5b30fef38b96979ff66028803e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make install-binding`은 `Cargo.lock`의 commit인 binding 369fcec을 설치하고, 그것으로 `make bindings-check`는 발견 없이 0으로 끝난다. 따라서 host manifest, `pages`의 borrow, PHP 확장 manifest는 그 계약 검사가 요구하는 것을 가진다(H31.3-1, H31.3-3, H31.3-4, H31.14).
 - `hyper build`는 예약 템플릿 `hyper/data.tpl`을 `program/templates/`가 아니라 `program/legacy/`에 쓰고, Python 서버는 그것을 거기서 읽으며 없으면 open이 실패하고, PHP compile은 그것을 생성된 프로그램의 입력으로 받는다(H31.4-2, HY-31.10, HY-48.14). `contracts/build.json`은 사본이 없는 case를 가진다.
 - `Cargo.lock`은 polyspec-template e8b734f, polyspec-json 5442945, polyspec-session-store 42c5461, polyspec-binding-core 369fcec을 고정하고, 바인딩 패키지는 그 binding의 scaffold가 쓰는 것과 같다(H31.26, binding L-2, CK-19, CK-20, CK-71). lock은 template 3d7acdf, json 53596cf, session-store 47476c2, binding 562023b를 고정하고 있었고, 코어는 binding 369fcec을 쓰는 template으로 컴파일되지 않았다. 코어는 새 형태를 따른다. `RenderOptions`의 template 정의는 순서 있는 map인 `polyspec_template::Definitions`의 `Some`이다. `EngineOptions`의 함수는 template 인터페이스 계약의 함수이므로, 애플리케이션의 함수는 `AstProgram::new` 뒤에 `AstProgram::register`로 더한다. `LiteralValue::String`, `LiteralValue::Number`, `MapEntry::Spread`는 struct variant이다. 파일 저장소의 test는 session-store의 member `file_sessions.in_directory`인 `FileSessions::in_directory`로 저장소를 만들고, `tests/cases/faults.json`이 그 member를 적는다. test는 언어 코드의 예외를 자기 `NativeObject`의 `Native`로 만든다. 코어와 Python 패키지는 모든 바인딩 패키지가 가지는 license `MIT`를 적는다. `host_function`은 box에 담긴 함수가 이미 `#[must_use]`이므로 그것을 달지 않고, `pages.register`의 test는 member를 타입과 함께 `_`에 묶는다. clippy가 둘을 거부했다. 검증: 계약 검사는 cli의 binding commit에 대한 CK-20만 보고하고, `make core-test`는 75개 중 75개가 통과하며, `make core-lint`와 `make core-fmt-check`는 아무것도 보고하지 않는다. tree의 복사본에서 `binding generate --root`는 php, python, node를 쓰고 go와 wasm을 거부한다. `opening_functions.open_page.store`와 `opening_functions.answer_keep_request.store`는 session-store의 callback unit `store`를 받고(GN-6s, go와 wasm), `pages.register.host_function`은 결과가 value alias를 담는 function type이며(GN-6z, go), `session-store.store`는 value alias도 record도 아닌 다른 저장소의 unit이다(go).
 - `packages/rust/interface.json`의 `page_request.next`는 `raises`에 template code의 행 39개를 적는다. 전에는 42개를 적었다(H31.21). core의 map loader가 주지 않는 `LoadFailed`와 `LoadNotLoaded`, render가 JSON text를 읽지 않으므로 `DataInvalidJson`을 적지 않는다. `PageRequest::next`의 주석은 그 code를 주는 함수를 적고, `Pages::open`의 주석은 그것이 code를 주지 않는 이유를 적는다. 계약의 함수를 감싸는 core의 `steps::host_function`은 public이며, `packages/rust/tests/register.rs`는 값을 돌려주거나 실패하는 함수에서 template 언어가 받는 것의 시험 다섯 개를 가진다(H31.22). 실행하지 않음: 이 변경에서 core와 그 시험을 compile하지 않았다.
