@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f04d5d3c162feec7cbba48a5e293a73f93afcd2dccd5ba2650b076c30be226a5 -->
+<!-- source-sha256: 19da3db68086740e367b13a3c62efa18b4c4abcf355c80d585d52d0a15dd7cd5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/ts/src/core/rules.ts`의 `coreRules`는 아무 object나 받아 binding으로 쓰기 전에 binding의 모든 member가 있는지 검사한다. 그래서 서버의 module도 `tests/scripts/node-core.test.mts`의 대역도 binding이라고 단언하지 않는다. 다른 파일이 import하지 않는 type은 export하지 않는다(H31.20). `make lint-ts`의 oxlint와 knip이 둘을 거부했다.
 - Git은 `make bindings`가 host의 source root에 쓰는 Python 패키지 `packages/python/src/polyspec/hyper/_binding/`을 무시한다(H31.3, binding L-2a). 전에는 추적되지도 무시되지도 않았다.
 - `make install-binding`은 `Cargo.lock`의 commit인 binding 369fcec을 설치하고, 그것으로 `make bindings-check`는 발견 없이 0으로 끝난다. 따라서 host manifest, `pages`의 borrow, PHP 확장 manifest는 그 계약 검사가 요구하는 것을 가진다(H31.3-1, H31.3-3, H31.3-4, H31.14).
 - `hyper build`는 예약 템플릿 `hyper/data.tpl`을 `program/templates/`가 아니라 `program/legacy/`에 쓰고, Python 서버는 그것을 거기서 읽으며 없으면 open이 실패하고, PHP compile은 그것을 생성된 프로그램의 입력으로 받는다(H31.4-2, HY-31.10, HY-48.14). `contracts/build.json`은 사본이 없는 case를 가진다.

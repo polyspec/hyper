@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- `coreRules` of `packages/ts/src/core/rules.ts` takes any object and checks it for every member of the binding before it uses it as the binding, so neither the module of the server nor the stand-in of `tests/scripts/node-core.test.mts` is asserted to be one; the types that no other file imports are not exported (H31.20): oxlint and knip of `make lint-ts` refused both.
 - Git ignores `packages/python/src/polyspec/hyper/_binding/`, the Python package that `make bindings` writes into the source root of the host (H31.3, binding L-2a): it was left untracked and not ignored.
 - `make install-binding` installs binding 369fcec, the commit of `Cargo.lock`, and `make bindings-check` with it reports no finding and exits with 0, so the host manifests, the borrows of `pages` and the PHP extension manifest hold what its contract check requires (H31.3-1, H31.3-3, H31.3-4, H31.14).
 - `hyper build` writes the reserved template `hyper/data.tpl` to `program/legacy/` and no longer to `program/templates/`, the Python server reads it from there and fails the open without it, and the PHP compilation takes it as an input of the generated program (H31.4-2, HY-31.10, HY-48.14); `contracts/build.json` holds the case of the missing copy.

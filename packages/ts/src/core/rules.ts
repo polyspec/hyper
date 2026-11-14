@@ -10,27 +10,27 @@
 // `kind` and `status` (HY-132.1, HY-132.2). No function here catches or replaces one.
 
 // A value of the template data model as the binding passes it (HY-44).
-export type CoreValue = unknown;
+type CoreValue = unknown;
 
 // The instance of the class `Pages` of the binding, the opened application.
-export type CorePages = object;
+type CorePages = object;
 
 // The store of a session of the session-store binding (HY-97).
-export type CoreStore = object;
+type CoreStore = object;
 
-export type PageKind = 'html' | 'document_json' | 'region_json';
+type PageKind = 'html' | 'document_json' | 'region_json';
 
-export interface BuildOutput {
+interface BuildOutput {
   readonly path: string;
   readonly bytes: Uint8Array;
 }
 
-export interface DataTemplate {
+interface DataTemplate {
   readonly name: string;
   readonly source: string;
 }
 
-export interface PagesOptions {
+interface PagesOptions {
   readonly build: string;
   readonly timezone: string;
   readonly context: boolean;
@@ -52,15 +52,15 @@ export interface PageInput {
   readonly heldHash?: string | null;
 }
 
-export type Call =
+type Call =
   | { readonly call: 'action' | 'context' | 'shared' | 'route_loader' | 'reply' }
   | { readonly call: 'route_region_loader' | 'region_loader'; readonly region: string };
 
-export type ActionOutcome =
+type ActionOutcome =
   | { readonly outcome: 'page'; readonly status: number; readonly data: ReadonlyMap<string, CoreValue> }
   | { readonly outcome: 'revision_changed' | 'no_page' };
 
-export type PageStepInput =
+type PageStepInput =
   | { readonly input: 'start' | 'absent' | 'no_handler' }
   | { readonly input: 'action'; readonly outcome: ActionOutcome }
   | { readonly input: 'context'; readonly context: ReadonlyMap<string, CoreValue> }
@@ -68,14 +68,14 @@ export type PageStepInput =
   | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, CoreValue> }
   | { readonly input: 'reply'; readonly embeds: boolean; readonly status?: number | null };
 
-export type Answer =
+type Answer =
   | { readonly answer: 'document'; readonly status: number; readonly html: string }
   | { readonly answer: 'json'; readonly status: number; readonly text: string }
   | { readonly answer: 'no_page' };
 
-export type Step = { readonly step: 'call'; readonly call: Call } | { readonly step: 'answer'; readonly answer: Answer };
+type Step = { readonly step: 'call'; readonly call: Call } | { readonly step: 'answer'; readonly answer: Answer };
 
-export interface Front {
+interface Front {
   readonly method: string;
   readonly path: string;
   readonly accept: Iterable<string>;
@@ -92,13 +92,13 @@ export interface Plain {
   readonly allow?: string | null;
 }
 
-export type Route =
+type Route =
   | { readonly route: 'plain'; readonly answer: Plain }
   | { readonly route: 'shell' | 'keep' }
   | { readonly route: 'representation'; readonly name: string; readonly params: readonly (readonly [string, string])[]; readonly entry: number; readonly values: readonly string[] }
   | { readonly route: 'page'; readonly name: string; readonly params: readonly (readonly [string, string])[]; readonly kind: PageKind; readonly action: boolean };
 
-export interface PageResponse {
+interface PageResponse {
   readonly status: number;
   readonly json: boolean;
   readonly body: string;
@@ -111,13 +111,13 @@ export interface PageResponse {
   readonly referrerPolicy?: string | null;
 }
 
-export interface PageHeaders {
+interface PageHeaders {
   readonly status: number;
   readonly headers: Iterable<readonly [string, string]>;
   readonly body: boolean;
 }
 
-export interface Opening {
+interface Opening {
   readonly route: string;
   readonly params: Iterable<readonly [string, string]>;
   readonly kind: PageKind;
@@ -132,11 +132,11 @@ export interface Opening {
   readonly formCsrf?: string | null;
 }
 
-export type Opened =
+type Opened =
   | { readonly opened: 'refused'; readonly answer: Plain }
   | { readonly opened: 'page'; readonly input: PageInput; readonly flash: ReadonlyMap<string, CoreValue>; readonly token: string };
 
-export interface KeepRequest {
+interface KeepRequest {
   readonly region: string;
   readonly path: string;
   readonly value: string;
@@ -144,13 +144,13 @@ export interface KeepRequest {
 }
 
 // A host function of the templates as the binding calls it (HYC-24).
-export type CoreHostFunction = (args: readonly CoreValue[], environment: unknown) => CoreValue;
+type CoreHostFunction = (args: readonly CoreValue[], environment: unknown) => CoreValue;
 
-export interface CorePageRequest {
+interface CorePageRequest {
   next(input: PageStepInput): Step;
 }
 
-export interface CorePagesInstance {
+interface CorePagesInstance {
   register(name: string, hostFunction: CoreHostFunction): void;
 }
 
@@ -191,7 +191,7 @@ export interface CoreBinding {
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
   computePageHeaders(response: PageResponse): PageHeaders;
   frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];
-  keptValue(pages: CorePages, region: string, path: string, text: string): CoreValue | null;
+  keptValue(pages: CorePages, region: string, path: string, text: string): CoreValue;
   openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;
   answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;
   Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions) => CorePagesInstance;
@@ -208,14 +208,14 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
 ];
 
 // A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
-export interface PlainResponse {
+interface PlainResponse {
   readonly status: number;
   readonly headers: Record<string, string>;
   readonly body: string;
 }
 
 // The headers of a page response as the server holds them, a record in the order of the core.
-export interface PageHeaderParts {
+interface PageHeaderParts {
   readonly status: number;
   readonly headers: Record<string, string>;
   readonly body: boolean;
@@ -298,7 +298,7 @@ export interface CoreRules {
     storeKept(pages: CorePages, store: CoreStore, request: KeepRequest): PlainResponse;
     // Partial. The value check of App.storeKept: front_functions.kept_value (HY-40.1), for a caller that stores the
     // value itself.
-    keptValue(pages: CorePages, region: string, path: string, text: string): CoreValue | null;
+    keptValue(pages: CorePages, region: string, path: string, text: string): CoreValue;
   };
   readonly Page: {
     // The tag of a JSON response of Page.respond: rules.page_tag (HY-53.1).
@@ -376,10 +376,10 @@ function plainResponse(answer: Plain): PlainResponse {
 
 // Returns the rules of the core under the names of the units of the server. A module that lacks a member of the
 // binding fails here with its name, before a request calls it.
-export function coreRules(core: CoreBinding): CoreRules {
-  const record: Record<string, unknown> = core as unknown as Record<string, unknown>;
-  const missing = MEMBERS.filter((name) => typeof record[name] !== 'function');
-  if (missing.length > 0) throw new Error(`hyper: the binding of the core has no member ${missing.join(', ')}`);
+export function coreRules(module: object): CoreRules {
+  const missing = MEMBERS.filter((name) => !isMember(module, name));
+  if (!isBinding(module)) throw new Error(`hyper: the binding of the core has no member ${missing.join(', ')}`);
+  const core = module;
   return {
     Csrf: {
       mask: (token, mask) => core.csrfMask(token, mask),
@@ -460,4 +460,13 @@ export function coreRules(core: CoreBinding): CoreRules {
       },
     },
   };
+}
+
+function isMember(module: object, name: keyof CoreBinding): boolean {
+  return typeof Reflect.get(module, name) === 'function';
+}
+
+// A module is the binding when it has every member of `CoreBinding` as a function.
+function isBinding(module: object): module is CoreBinding {
+  return MEMBERS.every((name) => isMember(module, name));
 }
