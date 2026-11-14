@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 11af1998bdf63b5eded829bed45f100099f65a9bc6aa1bf366067cb60cd68a03 -->
+<!-- source-sha256: 86f98a90f69471f6fcef20ffe82cd79d4775b5972793d150c708ccbb6cdbf861 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `Cargo.lock`은 polyspec-binding-core fa5954b를 고정하고, 바인딩 패키지는 그 scaffold가 쓰는 것과 같다. 모든 바인딩 crate는 polyspec-http-cookie에 의존하고, Go 모듈은 php-serialization과 session-store의 Go 모듈을 요구한다. Git은 생성된 Go 파일과 `packages/go/internal/ffi/lib/`를 무시한다(H31.27, binding B2.220, B2.232, GN-3c). binding 369fcec에서는 crate에 polyspec-http-cookie가 없어 maturin이 E0433으로 실패했고 `make bindings`가 go와 wasm을 거부했다. 이제 `make bindings`는 모든 target을 쓴다. `make bindings-check`는 `packages/ts/package.json`에 `@polyspec/php-serialization`과 `@polyspec/session-store`가 없다고 여전히 보고하며(CK-19, GN-3f), 이는 그 라이브러리의 Node release를 기다린다.
 - core 계약은 `rules.hashed_paths`와 `rules.build_stream`(`build::hashed_paths`, `build::stream`)을 주고, `tests/scripts/build-id.test.mts`는 해시하는 경로의 순서와 stream을 그것에서 받는다. 이전에 둘을 주던 `legacy/packages/cli/lib/build-id.mjs`는 삭제된다(H31.4-6). 실행하지 않음: 이 변경에서 core와 addon을 build하지 않았다.
 - `legacy/packages/cli/lib/template-rules.mjs`를 지운다. 명령 도구가 템플릿 검사를 core에서 받은 뒤로 어떤 코드와 시험도 그것을 쓰지 않는다(H31.4-3).
 - 명령 도구는 build id, `build.json`의 text, 매니페스트와 템플릿의 검사, read path, 예약 템플릿을 `@polyspec/hyper/native`로 Rust core에서 받는다(H31.4-3, H31.4-4, HR-96). `scripts/contract-programs.mts`와 `scripts/fixture-program.mts`도 그렇다. `packages/cli/lib/build-id.mjs`와 `template-rules.mjs`는 `legacy/packages/cli/lib/`로 옮기고, `@polyspec/hyper-cli`는 `@polyspec/hyper-client` 대신 `@polyspec/hyper`를 요구하며, 명령 도구를 실행하는 모든 target은 `make node-addon`을 필요로 한다. `contracts/reads.json`의 애플리케이션의 build id는 HY-125.17이 요구하는 자리인 `program/templates/` 아래의 템플릿을 해시한다. 실행하지 않음: 이 계약의 addon은 빌드되지 않았다.
