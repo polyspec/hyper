@@ -159,3 +159,15 @@ Each server reads a request body as one value and copies the content of each fil
 - Every limit is a number of the specification that an application may declare: the body, a file, the header of a part, the number of parts and the bytes of the text values. A body that passes a limit or that is malformed, such as a body without its closing delimiter, fails the whole request; no part is skipped.
 - Three checks carry the evidence: every case read in two chunks split at every position gives the result of the whole body; a seeded set of generated bodies gives the same result in the three servers; and a test reads the length of the buffer of the reader against its bound.
 - A slow client and the number of connections are the task of the server in front (nginx, php-fpm, the ASGI server, `requestTimeout` of Node), and the operations document names the settings. An upload that must resume, or of several gigabytes, goes to a storage directly and is outside this wave.
+
+## Wave 32 — The outside redirect
+
+Depends on: none. H32.1 writes HY-132 and the changes of HYC-4, HYC-7, HYC-8 and HYC-14, implements them in the three servers and the browser code with their cases, and adds them to the board example and the browser tests. H32.2 states the order of a region request and a pending history restoration of server-side rendering. The rows of wave 31 take HY-132 when their branches are rebased onto main.
+
+A redirect names a path of its application (HY-46), so an application cannot send the browser to another origin, such as the page of another system where a person signs in, from a loader or an action; it can only render a page with a link that the person presses. The wave adds the outside redirect with these decisions:
+
+- The rule states one ASCII grammar of an outside location, which every server checks with its own code: the URL parsers of the runtimes differ for a host that is not ASCII, a `\` and an empty port, so a parser of a runtime would make the servers accept different texts.
+- `origin(text)` gives the origin of an outside location, so that an application compares it with the origins that it admits without parsing the location again.
+- A request with `HX-Request: true` and a document request receive status 200 with `HX-Redirect` and no body, and every other request receives 303 with `Location`: htmx and the browser code send their requests with `fetch`, where a 303 to another origin fails as a network error or on CORS before they read it, while the browser follows the 303 of a navigation of its document.
+- The browser replaces the location of the page for `HX-Redirect` of the document request, the render of a location and the history restoration of htmx, because the URL of each is the URL of the current history entry, and an entry kept for it would send Back to the other origin again; htmx assigns the URL of a region request, whose history entry it adds only in its swap.
+- The outside redirect holds no flash value and no changed topic, takes no base path and no data base path, and has `Cache-Control: no-store` and the `Vary` of HY-117.1, because its response differs by `HX-Request` and `Accept`.

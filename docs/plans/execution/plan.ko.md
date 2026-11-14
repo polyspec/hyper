@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 266fa34d4070b4f945c9486f40259a88fb5739f3937170525a8a40957d08f9ec -->
+<!-- source-sha256: 4e14e577f32a0be29faba9c1cb94254eb62e33fdcaa5745ac736975a96500b86 -->
 # 실행
 
 [English](plan.md).
@@ -160,3 +160,15 @@ H28.15는 각 server의 unit을 concern의 group마다 한 directory에 둔다. 
 - 모든 제한은 application이 선언할 수 있는 명세의 숫자다: body, file 하나, part의 header, part의 수, text 값의 byte. 제한을 넘거나 닫는 delimiter가 없는 body처럼 형식이 틀린 body는 요청 전체를 실패시킨다. part를 건너뛰지 않는다.
 - 세 검사가 증거를 담는다. 모든 case를 모든 위치에서 두 조각으로 나눠 읽어도 body 전체의 결과와 같다. seed로 생성한 body 집합이 세 server에서 같은 결과를 낸다. test가 reader의 buffer 길이를 그 한계와 대조한다.
 - 느린 client와 연결 수는 앞단 server(nginx, php-fpm, ASGI server, Node의 `requestTimeout`)의 일이며 운영 문서가 그 설정을 적는다. 이어받기가 필요하거나 수 gigabyte인 upload는 storage로 직접 가며 이 wave의 밖이다.
+
+## Wave 32 — 외부 리다이렉트
+
+의존: 없음. H32.1이 HY-132와 HYC-4, HYC-7, HYC-8, HYC-14의 변경을 쓰고, 세 server와 browser code에 그것을 case와 함께 구현하며, board 예제와 browser test에 더한다. H32.2는 region 요청과 대기 중인 server-side rendering의 history 복원의 순서를 정한다. wave 31의 행들은 그 branch가 main 위로 rebase될 때 HY-132를 받는다.
+
+리다이렉트는 자기 애플리케이션의 경로를 지정하므로(HY-46), 애플리케이션은 loader나 action에서 browser를 다른 origin, 예를 들어 사람이 sign in하는 다른 system의 page로 보낼 수 없고, 사람이 누르는 link가 있는 page를 렌더할 수만 있다. 이 wave는 다음 결정으로 외부 리다이렉트를 더한다:
+
+- 규칙은 외부 location의 ASCII 문법 하나를 적고, 모든 server가 자기 코드로 그것을 검사한다. runtime의 URL parser는 ASCII가 아닌 host, `\`, 빈 port에서 서로 다르므로, runtime의 parser를 쓰면 server들이 서로 다른 텍스트를 받는다.
+- `origin(text)`는 외부 location의 origin을 준다. 그래서 애플리케이션은 location을 다시 parse하지 않고 그것을 자기가 허용하는 origin과 비교한다.
+- `HX-Request: true`가 있는 요청과 문서 요청은 상태 200과 `HX-Redirect`를 받고 body를 받지 않으며, 다른 모든 요청은 `Location`이 있는 303을 받는다. htmx와 browser code는 `fetch`로 요청을 보내고, 거기서 다른 origin으로의 303은 그들이 읽기 전에 network 오류나 CORS로 실패하지만, browser는 자기 문서의 navigation의 303은 따르기 때문이다.
+- browser는 문서 요청, location의 render, htmx의 history 복원의 `HX-Redirect`에 대해 page의 location을 바꾼다(replace). 각각의 URL이 현재 history 항목의 URL이고, 그 항목을 남기면 뒤로 가기가 browser를 다시 다른 origin으로 보내기 때문이다. htmx는 region 요청의 URL을 대입한다(assign). htmx는 그 history 항목을 swap에서만 더한다.
+- 외부 리다이렉트는 flash 값과 바뀐 topic을 가지지 않고, base path와 data base path를 받지 않으며, `Cache-Control: no-store`와 HY-117.1의 `Vary`를 가진다. 그 응답이 `HX-Request`와 `Accept`에 따라 다르기 때문이다.
