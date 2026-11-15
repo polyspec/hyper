@@ -192,4 +192,4 @@ The servers that do not call the core run the cases of `tests/legacy/`, and the 
 
 ## Wave 33 — One recipe per CI job
 
-Depends on: none. H33.1 moves the content of each CI job into the recipe `ci-<job>` of the Makefile, so the job and a local run make the same call. The release workflow keeps its steps, because each of them reads what the step before it wrote.
+Depends on: none. H33.1 moves the content of each CI job into the recipe `ci-<job>` of the Makefile, so the job and a local run make the same call; the release job runs `make ci-release`. H33.2 removes the commit hashes from the tracked records.

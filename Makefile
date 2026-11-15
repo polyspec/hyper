@@ -695,6 +695,8 @@ lint-python: ## Lint the Python: ruff and vulture on each package; offline
 # each setup step (CI_STEPS: success, failure or skipped), so a failed setup is named in the report. ci-targets runs
 # without GITHUB_STEP_SUMMARY, so the job summary holds the summary once. The status of the run is that of the setup and
 # the targets, and a failed write of the summary fails it too, since the job owes its report (HR-91).
+# CI_MAKE starts each step, so a dry run (make -n ci-<job>) prints the commands of the job and runs none.
+CI_MAKE = $(MAKE) --no-print-directory
 ci_step_args = $(if $(filter install-tools,$(2)), TOOLS="$(CI_TOOLS_$(1))")$(if $(filter install-symbols,$(2)), EXTRACTORS="$(CI_SYMBOLS_$(1))")
 ci_run = steps=; status=0; \
 	$(foreach step,$(CI_SETUP_$(1)),if test $$status -ne 0; then outcome=skipped; elif $(MAKE) --no-print-directory $(step)$(call ci_step_args,$(1),$(step)); then outcome=success; else outcome=failure; status=1; fi; steps="$$steps$${steps:+,}\"$(step)\":{\"outcome\":\"$$outcome\"}";) \
@@ -727,6 +729,22 @@ ci-passed: ## Fail unless every job of RESULTS, the JSON of toJSON(needs), has t
 # hyper-install does; release-tools installs the tools of the release and release-tools-path puts them on the PATH of the
 # later steps; release-assets builds the packages and their archives into var/release/assets; release-publish creates the
 # draft GitHub Release and release-undraft makes it public.
+# The job of .github/workflows/release.yml runs make ci-release (HR-90): each step in this order, a make of its own, so the
+# steps after release-checkout read the Makefile and the packages of the tagged commit, and the first failure stops the run,
+# since each step reads what the step before wrote. release-tag writes TAG and VERSION into var/release/tag.env, the
+# GITHUB_ENV of this run, which the recipe reads; when it tagged no version, the run ends with nothing to release. AUTO=1
+# follows a workflow_run event (GITHUB_EVENT_NAME), and a dispatch or a local run `make ci-release RUN=<id>` releases the
+# commit of RUN. The tools of var/tools are on the PATH of this Makefile, so the recipe needs no release-tools-path.
+RELEASE_ENV := var/release/tag.env
+RELEASE_STEPS := release-checkout bootstrap install-tools install-packages release-archive-tool release-prepare release-tools release-assets release-publish release-undraft
+.PHONY: ci-release
+ci-release: ## Run the job of release.yml: tag the commit of the CI run RUN, then check out, build and publish its release; ONLINE
+	@mkdir -p $(dir $(RELEASE_ENV)) && : > $(RELEASE_ENV) && \
+	GITHUB_ENV=$(CURDIR)/$(RELEASE_ENV) $(CI_MAKE) release-tag$(if $(filter workflow_run,$(GITHUB_EVENT_NAME)), AUTO=1) && \
+	set -a && . ./$(RELEASE_ENV) && set +a && \
+	if test -z "$$TAG"; then echo "ci-release: release-tag tagged no version, so nothing is released"; exit 0; fi && \
+	$(foreach step,$(RELEASE_STEPS),$(CI_MAKE) $(step)$(if $(filter install-tools,$(step)), TOOLS=npm) &&) true
+
 .PHONY: release-tag release-checkout release-archive-tool release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
 release-tag: ## Tag the commit of the successful CI run RUN of ci.yml on main with vX.Y.Z of the change log; AUTO=1 releases only a version commit; reads the run with gh
 	@test -n "$$RUN" || { echo "release-tag: RUN is required, for example make release-tag RUN=123"; exit 1; }

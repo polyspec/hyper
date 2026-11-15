@@ -122,9 +122,9 @@ test('every step that runs a command runs one make, right after the bootstrap of
   assert.deepEqual(found, []);
 });
 
-// The workflows that CI runs, whose jobs hold one call of a recipe each (HR-90); the release workflow keeps its steps,
-// each of which reads what the step before it wrote, so it is not one of them.
-const CI_WORKFLOWS = ['ci.yml', 'bench.yml'];
+// The workflows of this repository, whose jobs hold one call of a recipe each (HR-90): the release among them, whose recipe
+// runs its steps in order.
+const CI_WORKFLOWS = ['ci.yml', 'bench.yml', 'release.yml'];
 // The judgement job of ci.yml, which reads the results of the other jobs and so exists only in CI: its run step may pass
 // the JSON of `needs`, the one expression besides a matrix value.
 const JUDGEMENT: Record<string, string> = { [CI_PASSED]: "RESULTS='${{ toJSON(needs) }}'" };
@@ -169,7 +169,7 @@ function jobShapeProblems(name: string, text: string): string[] {
 
 test('H33.1 every job of a CI workflow has exactly one run step, make ci-<job> with make variables (HR-90)', () => {
   assert.deepEqual(workflows().filter((workflow) => CI_WORKFLOWS.includes(workflow.name)).flatMap((workflow) => jobShapeProblems(workflow.name, workflow.text)), []);
-  assert.deepEqual(workflows().map((workflow) => workflow.name).filter((name) => !CI_WORKFLOWS.includes(name)), ['release.yml'], 'a workflow is neither a CI workflow nor the release');
+  assert.deepEqual(workflows().map((workflow) => workflow.name).filter((name) => !CI_WORKFLOWS.includes(name)), [], 'a workflow is not checked for the shape of its jobs');
   // Each broken shape is found.
   const job = (steps: string) => `jobs:\n  check:\n    runs-on: x\n    steps:\n      - uses: actions/checkout@c\n${steps}`;
   const upload = '      - uses: actions/upload-artifact@c\n        if: ${{ !cancelled() }}\n';
@@ -297,6 +297,17 @@ test('H33.1 make ci-check NAME=<group> and make ci-bench run the setup, the targ
   const groups = makeWords(makefile, 'CI_GROUPS');
   assert.deepEqual([...groups.flatMap((group) => ciRunProblems('ci-check', group, makefile)), ...ciRunProblems('ci-bench', 'bench', makefile)], []);
   assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'bench'), ['bench', 'bench-sessions']);
+  // make ci-release tags first, with AUTO=1 for a workflow_run, reads TAG, then runs every later step in order, each after
+  // the one before it passed.
+  const release = dryRun('ci-release', { variables: ['GITHUB_EVENT_NAME=workflow_run'] }).join('\n');
+  let from = release.indexOf(' release-tag AUTO=1 ');
+  assert.ok(from >= 0, release);
+  for (const step of [' . ./var/release/tag.env ', 'test -z "$TAG"', ...makeWords(makefile, 'RELEASE_STEPS').map((step) => ` ${step}${step === 'install-tools' ? ' TOOLS=npm' : ''} &&`)]) {
+    const at = release.indexOf(step, from);
+    assert.ok(at > from, `make -n ci-release does not run "${step.trim()}" after the steps before it: ${release}`);
+    from = at;
+  }
+  assert.ok(!dryRun('ci-release').join('\n').includes('AUTO=1'), 'a dispatch or a local run releases with AUTO');
   // A NAME that names no group fails before any step runs, naming the groups.
   const unknown = spawnSync('make', ['--no-print-directory', '-n', 'ci-check', 'NAME=nope'], { cwd: ROOT, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))) });
   assert.notEqual(unknown.status, 0, unknown.stdout);

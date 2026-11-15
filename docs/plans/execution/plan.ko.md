@@ -193,4 +193,4 @@ core를 부르지 않는 서버는 `tests/legacy/`의 case를 실행하고, core
 
 ## Wave 33 — CI job마다 recipe 하나
 
-의존: 없음. H33.1은 각 CI job의 내용을 Makefile의 recipe `ci-<job>`으로 옮겨 job과 local 실행이 같은 호출을 하게 한다. release workflow는 자기 step을 유지한다. 각 step이 앞 step이 쓴 것을 읽기 때문이다.
+의존: 없음. H33.1은 각 CI job의 내용을 Makefile의 recipe `ci-<job>`으로 옮겨 job과 local 실행이 같은 호출을 하게 한다. release job은 `make ci-release`를 실행한다. H33.2는 추적 기록에서 commit hash를 없앤다.
