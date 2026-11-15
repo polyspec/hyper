@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ddc179fa5e68681dfe8c400f4db9998584e3cf6ff244f1c0e581046bb4e35bcf -->
+<!-- source-sha256: 5795eaf42482985f1b8909e4dcd15b7e550b930fb0be1d6348651920193306d6 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- WSGI callable의 body iterable은 자기 `close()`에서 write hook `written`을, 그리고 쓰기가 실패했으면 이어서 disconnect hook을 호출하므로, `close()`가 돌아오면 요청의 두 hook이 모두 실행된 것이다(HY-100.34). 두 번째 `close()`는 어떤 hook도 호출하지 않으며(HY-100.35), plain 500의 `start_response`도 예외를 던지면 callable은 오류가 전파되기 전에 `written`을 호출한다(HY-100.36). 이전에는 iterable이 WSGI 서버가 iteration의 끝을 가져갈 때 `close()`보다 먼저 `written`을 호출했고, WSGI 요청의 두 hook이 모두 실행된 뒤의 시점을 정하는 규칙이 없었다. 검증: `make hyper-test-python`이 `test_close_runs_the_write_hook_of_a_write_that_ended`를 실행하며, 이 test는 변경 전에는 `written`이 iteration의 끝보다 먼저 와서 실패했고 변경 후에는 통과한다(H34.1).
 
 - recipe는 PHP signature의 형식을 적고(HYR-8), `make recipe-check`의 PHP reader는 그것을 PHP 8.4와 PHP 8.5에서 같게 쓴다: property의 set visibility는 `public readonly` property가 스스로 가진 `protected(set)`과 다를 때만 쓰고, member를 선언한 class와 그 parent class는 `self`와 `parent`로 쓴다. 이전에는 reader가 `Reflection::getModifierNames`와 `ReflectionType`의 문자열로 signature를 써서, PHP 8.4에서 통과하는 tree에서 PHP 8.5의 check가 `MEMBER_SIGNATURE` finding 76개로 실패했다(H28.11-11).
 

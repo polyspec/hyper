@@ -5601,6 +5601,24 @@
                       "koSource": "48d1d5abb037d7caf792c10ab322f212bccc5cf301b52c1a10c020dcf24ff935"
                     },
                     {
+                      "id": "HY-100.34",
+                      "en": "The body iterable that the callable returns calls `written` and then, when the write failed, the disconnect hook in its `close()`, which PEP 3333 requires a WSGI server to call when the request ends, also after the server consumed the whole iterable, so both hooks of the request have run when `close()` returns.",
+                      "ko": "callable이 돌려주는 body iterable은 자기 `close()`에서 `written`을, 그리고 쓰기가 실패했으면 이어서 disconnect hook을 호출하며, PEP 3333은 WSGI 서버가 iterable 전체를 소비한 뒤에도 요청이 끝나면 `close()`를 호출하도록 요구하므로, `close()`가 돌아오면 요청의 두 hook이 모두 실행된 것이다.",
+                      "koSource": "b5f36da28af35ef3ddbcbc591d437a1b478ab33ea6f11e92eb2293a930b38a41"
+                    },
+                    {
+                      "id": "HY-100.35",
+                      "en": "A second call of `close()` calls no hook.",
+                      "ko": "`close()`의 두 번째 호출은 어떤 hook도 호출하지 않는다.",
+                      "koSource": "396651d6926c506ba5bfd4c353cc64f3d64bc040d07941ea8a9d4c0ba417f647"
+                    },
+                    {
+                      "id": "HY-100.36",
+                      "en": "When the `start_response` of the plain 500 raises too (HY-100.9), the callable returns no iterable: it calls `written` with `ended` false before the error propagates to the WSGI server.",
+                      "ko": "plain 500의 `start_response`도 예외를 던지면(HY-100.9) callable은 iterable을 돌려주지 않는다: 오류가 WSGI 서버로 전파되기 전에 `ended`가 false인 `written`을 호출한다.",
+                      "koSource": "1b2d5c638580c3d7bcfe23ace8640474869fd43224fa6d00882686f7dd90f94d"
+                    },
+                    {
                       "id": "HY-100.7",
                       "en": "The hook is not called for the files of the public directory.",
                       "ko": "public 디렉터리의 파일에는 hook을 호출하지 않는다.",

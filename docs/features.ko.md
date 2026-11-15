@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: f0f03f7c6a88d6f08a219b695f79c9505223988bbf050bf676ce137968705999 -->
+<!-- source-sha256: af1bfa5e354077891bcf391522b9766ff747c728d78d29d56d0eb71deb4033cc -->
 # 기능 상태
 
 [English](features.md).
@@ -40,7 +40,7 @@
 | hyper-server-php | PHP 서버: 라우트, 액션, CSRF, flash, 바뀐 주제, 기본 경로, 문서와 JSON | implemented | `make test-php` |
 | hyper-server-node | server protocol의 Node.js 구현 `@polyspec/hyper-server`, 파일 session(HY-104), PHP 구현과 같은 바이트의 JSON, board 예제 서버(HY-54) | implemented | `make hyper-test-node`, `make node-server` |
 | python-request-hook | Python 서버 `create_server`의 요청 hook `around`. 요청과 `answer`를 받고, `Request.with_header`로 요청을 바꾸거나 응답을 바꾸며, session과 애플리케이션의 hook 없이 혼자 응답할 수 있다 (HY-97) | implemented | `make test-python`, `make hyper-test-python-render` |
-| hyper-server-python | server protocol의 Python 구현 `polyspec-hyper-server`. template Python package로 렌더하고 file session(HY-104)과 `http.server` 서버, WSGI application callable(H19.1), ASGI application callable(H19.2), board 예제 서버를 둔다 (H15.3) | implemented | `make test-python`, `make hyper-test-python-render`, `make server-parity-python` |
+| hyper-server-python | server protocol의 Python 구현 `polyspec-hyper-server`. template Python package로 렌더하고 file session(HY-104)과 `http.server` 서버, body iterable이 자기 `close()`에서 write hook과 disconnect hook을 실행하는 WSGI application callable(H19.1, H34.1), ASGI application callable(H19.2), board 예제 서버를 둔다 (H15.3) | implemented | `make test-python`, `make hyper-test-python-render`, `make server-parity-python` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HYC-10 ~ HYC-11, HYC-5, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-40) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |

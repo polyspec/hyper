@@ -47,7 +47,8 @@ def create_wsgi(
     mean there (HY-97, HY-99): `written` reports that the write ended when the WSGI server consumed
     the whole body iterable, and that it failed when the server closed the iterable before its end,
     which PEP 3333 defines as premature termination; when the write failed, the disconnect hook runs
-    with the request and the reply of the last call of `answer` (HY-67). An error before
+    with the request and the reply of the last call of `answer` (HY-67). The body iterable runs both
+    hooks in its `close()`, so they have run when `close()` returns (HY-100.34). An error before
     `start_response`, a `start_response` that raises, and a status, header or body that cannot be
     encoded are escaped errors: the plain 500 goes through `start_response` (HY-60, HY-99)."""
     validate(files, around, written)
@@ -108,8 +109,8 @@ def _escape(
     exc_info=None,
 ) -> WsgiBody:
     """Answers an error that escapes the answer with the plain 500 through `start_response` (HY-60). The write hook
-    receives the 500 with the failure when the server consumes its body (HY-99). A `start_response` that raises
-    again reports the write as not ended and propagates."""
+    receives the 500 with the failure when the server closes its body (HY-99, HY-100.34). A `start_response` that
+    raises again reports the write as not ended and propagates (HY-100.36)."""
     response = escape(app, error)
     failure = str(error)
     line, headers, encoded = _encode(response)
