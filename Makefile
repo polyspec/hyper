@@ -736,8 +736,13 @@ ci-passed: ## Fail unless every job of RESULTS, the JSON of toJSON(needs), has t
 # follows a workflow_run event (GITHUB_EVENT_NAME), and a dispatch or a local run `make ci-release RUN=<id>` releases the
 # commit of RUN. The tools of var/tools are on the PATH of this Makefile, so the recipe needs no release-tools-path.
 RELEASE_ENV := var/release/tag.env
-RELEASE_STEPS := release-checkout bootstrap install-tools install-packages release-archive-tool release-prepare release-tools release-assets release-publish release-undraft
-.PHONY: ci-release
+RELEASE_STEPS := release-checkout release-php-check bootstrap install-tools install-packages release-archive-tool release-prepare release-tools release-assets release-publish release-undraft
+.PHONY: ci-release release-php-check
+# setup-php sets up the PHP of the .php-version of the checkout before the tag is checked out, and a dispatch checks out main,
+# so the release requires the PHP on PATH to be the minor release of the .php-version of the tag before it builds anything.
+release-php-check: ## Fail unless the PHP on PATH is the minor release that .php-version of the checkout names, naming both
+	@want="$$(tr -d '[:space:]' < .php-version)"; have="$$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;')"; \
+	test "$$have" = "$$want" || { echo "release-php-check: the PHP on PATH is $$have, and .php-version of $${TAG:-the checkout} names $$want; set up PHP $$want"; exit 1; }
 ci-release: ## Run the job of release.yml: tag the commit of the CI run RUN, then check out, build and publish its release; ONLINE
 	@mkdir -p $(dir $(RELEASE_ENV)) && : > $(RELEASE_ENV) && \
 	GITHUB_ENV=$(CURDIR)/$(RELEASE_ENV) $(CI_MAKE) release-tag$(if $(filter workflow_run,$(GITHUB_EVENT_NAME)), AUTO=1) && \
