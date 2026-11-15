@@ -171,3 +171,7 @@ A redirect names a path of its application (HY-46), so an application cannot sen
 - A request with `HX-Request: true` and a document request receive status 200 with `HX-Redirect` and no body, and every other request receives 303 with `Location`: htmx and the browser code send their requests with `fetch`, where a 303 to another origin fails as a network error or on CORS before they read it, while the browser follows the 303 of a navigation of its document.
 - The browser replaces the location of the page for `HX-Redirect` of the document request, the render of a location and the history restoration of htmx, because the URL of each is the URL of the current history entry, and an entry kept for it would send Back to the other origin again; htmx assigns the URL of a region request, whose history entry it adds only in its swap.
 - The outside redirect holds no flash value and no changed topic, takes no base path and no data base path, and has `Cache-Control: no-store` and the `Vary` of HY-117.1, because its response differs by `HX-Request` and `Accept`.
+
+## Wave 34 — The end of a WSGI request
+
+Depends on: none. H34.1 states that the body iterable of the WSGI callable runs the write hook and the disconnect hook in its `close()`, which PEP 3333 requires a WSGI server to call once for every response, so that a host knows that both hooks of a request have run when `close()` returns, as the promise of the Node listener (HY-100.29) and the shutdown function of PHP (HY-100.30) state for their servers.

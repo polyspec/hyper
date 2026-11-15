@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 4e14e577f32a0be29faba9c1cb94254eb62e33fdcaa5745ac736975a96500b86 -->
+<!-- source-sha256: 47caba81190c2d543a0d81d66f55726488f2cb8add7f9327912ca66bd814bc3a -->
 # 실행
 
 [English](plan.md).
@@ -172,3 +172,7 @@ H28.15는 각 server의 unit을 concern의 group마다 한 directory에 둔다. 
 - `HX-Request: true`가 있는 요청과 문서 요청은 상태 200과 `HX-Redirect`를 받고 body를 받지 않으며, 다른 모든 요청은 `Location`이 있는 303을 받는다. htmx와 browser code는 `fetch`로 요청을 보내고, 거기서 다른 origin으로의 303은 그들이 읽기 전에 network 오류나 CORS로 실패하지만, browser는 자기 문서의 navigation의 303은 따르기 때문이다.
 - browser는 문서 요청, location의 render, htmx의 history 복원의 `HX-Redirect`에 대해 page의 location을 바꾼다(replace). 각각의 URL이 현재 history 항목의 URL이고, 그 항목을 남기면 뒤로 가기가 browser를 다시 다른 origin으로 보내기 때문이다. htmx는 region 요청의 URL을 대입한다(assign). htmx는 그 history 항목을 swap에서만 더한다.
 - 외부 리다이렉트는 flash 값과 바뀐 topic을 가지지 않고, base path와 data base path를 받지 않으며, `Cache-Control: no-store`와 HY-117.1의 `Vary`를 가진다. 그 응답이 `HX-Request`와 `Accept`에 따라 다르기 때문이다.
+
+## Wave 34 — WSGI 요청의 끝
+
+의존: 없음. H34.1은 WSGI callable의 body iterable이 write hook과 disconnect hook을 자기 `close()`에서 실행한다고 정한다. PEP 3333은 WSGI server가 모든 응답에 대해 `close()`를 한 번 호출하도록 요구하므로, Node listener의 promise(HY-100.29)와 PHP의 shutdown function(HY-100.30)이 자기 server에서 정하듯이, host는 `close()`가 돌아오면 요청의 두 hook이 모두 실행되었음을 안다.
