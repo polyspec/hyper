@@ -486,10 +486,37 @@ bench: bench-server bench-browser bench-uploads ## Run the measurements; results
 GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
 CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
 
-# The CI groups of the full suite (HR-91) are the entries of the matrix of .github/workflows/ci.yml: each entry runs its
-# `targets` with `make ci-targets`, so the entries together run every target of CHECK_TARGETS once
-# (tests/scripts/ci-workflow.test.mts). An entry gathers the targets that need the same setup: docs Node.js, PHP and Python for the case runners of
-# recipe-check, php and node PHP, the template build and the install, board also Chromium, python only the Python of its pins.
+# The CI groups of the full suite (HR-91): the matrix of the job check of .github/workflows/ci.yml names CI_GROUPS, and
+# each entry runs `make ci-check NAME=<group>` (HR-90). A group declares the tools that install-tools installs (CI_TOOLS),
+# its setup steps in their order (CI_SETUP), the symbol extractors of install-symbols (CI_SYMBOLS) and the targets that
+# ci-targets runs (CI_TARGETS); the targets of the groups together are every target of CHECK_TARGETS once
+# (tests/scripts/ci-workflow.test.mts). A group gathers the targets that need the same setup: docs Node.js, PHP, Python
+# and Redis for the case runners of recipe-check and the session tests, php PHP and the template build, node Node.js
+# alone, board also Python and Chromium, python only the Python of its pins. The group bench is the job of bench.yml,
+# whose targets are reports and belong to no check (make ci-bench).
+CI_GROUPS := gates docs php node board python
+CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan
+CI_SETUP_gates := install-tools install-symbols hyper-install-php hyper-install-python
+CI_SYMBOLS_gates := php
+CI_TARGETS_gates := $(GATE_TARGETS)
+CI_TOOLS_docs := node php composer pie python uv
+CI_SETUP_docs := install-tools hyper-install-php hyper-install-python hyper-install-redis
+CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check recipe-check
+CI_TOOLS_php := node php composer pie
+CI_SETUP_php := install-tools hyper-install-php
+CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php
+CI_TOOLS_node := node
+CI_SETUP_node := install-tools
+CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check
+CI_TOOLS_board := node php composer pie python uv
+CI_SETUP_board := install-tools hyper-install-php hyper-install-python hyper-install-browser
+CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
+CI_TOOLS_python := node python uv
+CI_SETUP_python := install-tools hyper-install-python
+CI_TARGETS_python := hyper-test-python hyper-test-python-render
+CI_TOOLS_bench := node php composer pie python uv
+CI_SETUP_bench := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser
+CI_TARGETS_bench := bench bench-sessions
 
 # The targets of the full suite that exist on one platform only. Apple `container`, whose bind mounts are virtiofs,
 # exists on Darwin, so `make virtiofs-check` belongs to the full suite there and nowhere else; on Darwin a missing
@@ -659,7 +686,30 @@ lint-php: ## Lint the PHP: phpcs and PHPStan on each Composer package; offline
 lint-python: ## Lint the Python: ruff and vulture on each package; offline
 	$(NODE) $(KIT)/lint-python.$(KIT_EXT)
 
-# ---- CI reports (HR-91, HR-95) ---------------------------------------------------------------------------------------
+# ---- CI jobs and reports (HR-90, HR-91, HR-95) -----------------------------------------------------------------------
+# Each job of ci.yml and bench.yml runs one recipe, `make ci-check NAME=<group>` or `make ci-bench`, and a local run makes the
+# same call. `$(call ci_run,<group>)` runs the setup steps of the group in their order, each a make of its own so it reads
+# what the step before installed, and stops at the first failed step: a later step and the targets do not run, because
+# they read what the failed step did not install. Then `make ci-targets` runs every target of the group to its end and
+# writes the report var/ci/<group>, and `make ci-summary` always writes summary.md and the job summary with the outcome of
+# each setup step (CI_STEPS: success, failure or skipped), so a failed setup is named in the report. ci-targets runs
+# without GITHUB_STEP_SUMMARY, so the job summary holds the summary once. The status of the run is that of the setup and
+# the targets, and a failed write of the summary fails it too, since the job owes its report (HR-91).
+ci_step_args = $(if $(filter install-tools,$(2)), TOOLS="$(CI_TOOLS_$(1))")$(if $(filter install-symbols,$(2)), EXTRACTORS="$(CI_SYMBOLS_$(1))")
+ci_run = steps=; status=0; \
+	$(foreach step,$(CI_SETUP_$(1)),if test $$status -ne 0; then outcome=skipped; elif $(MAKE) --no-print-directory $(step)$(call ci_step_args,$(1),$(step)); then outcome=success; else outcome=failure; status=1; fi; steps="$$steps$${steps:+,}\"$(step)\":{\"outcome\":\"$$outcome\"}";) \
+	test $$status -ne 0 || env -u GITHUB_STEP_SUMMARY $(MAKE) --no-print-directory ci-targets TARGETS="$(CI_TARGETS_$(1))" CI_REPORT=var/ci/$(1) || status=1; \
+	CI_STEPS="{$$steps}" $(MAKE) --no-print-directory ci-summary CI_REPORT=var/ci/$(1) || status=1; \
+	exit $$status
+
+.PHONY: ci-check ci-bench
+ci-check: ## Run the CI group NAME as its job of ci.yml does: its setup, its targets to their ends and its report var/ci/NAME; ONLINE
+	$(if $(filter $(NAME),$(CI_GROUPS)),,$(error NAME=$(NAME) names no CI group of CI_GROUPS: $(CI_GROUPS)))
+	$(call ci_run,$(NAME))
+
+ci-bench: ## Run the job of bench.yml: the setup of the group bench, make bench and make bench-sessions, and the report var/ci/bench; ONLINE
+	$(call ci_run,bench)
+
 .PHONY: ci-targets ci-summary ci-passed
 CI_REPORT ?= var/report/ci-targets
 ci-targets: ## Run TARGETS past failures and write CI_REPORT (logs, record.json, summary.md)

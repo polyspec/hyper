@@ -1,22 +1,23 @@
-# The full suite on GitHub (HR-91): the push of main and every manual run (workflow_dispatch) run one job per entry of
-# the matrix, and each entry runs its `targets` with `make ci-targets`. The targets of the entries together are the
-# targets of CHECK_TARGETS of the Makefile, each once (tests/scripts/ci-workflow.test.mts). A failure never stops the run: the matrix does not cancel the other
-# entries (fail-fast: false), every step after the first runs after a failed step (`if: ${{ !cancelled() }}`), and
-# `make ci-targets` runs every target to its end. Each matrix job writes the job summary and uploads its report
-# var/ci/<name>/: the record with the status, the time and the first failure lines of each target, the full log of each
-# target and the summary. The entry gates runs GATE_TARGETS of the Makefile, the checkers of kit on this checkout. The last
-# job, ci-passed, passes only when every other job of this workflow passed; a release takes the id of such a run and tags its
-# commit (HR-94, HR-95). In the jobs of this file every step that runs a command runs one make target, the jobs run on
-# ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HR-90).
+# The full suite on GitHub (HR-91): the push of main and every manual run (workflow_dispatch) run one job per CI group, the
+# entries of the matrix, which name CI_GROUPS of the Makefile. Each job has one run step, `make ci-check NAME=<group>`, the
+# call that a local run makes too (HR-90): the recipe runs the setup of the group in its order and stops at its first
+# failure, runs every target of the group to its end with `make ci-targets` and always writes the report var/ci/<name>/ and
+# the job summary with `make ci-summary`: the record with the status, the time and the first failure lines of each target,
+# the full log of each target, the outcome of each setup step and the summary. The targets of the groups are together the
+# targets of CHECK_TARGETS of the Makefile, each once (tests/scripts/ci-workflow.test.mts), and the group gates runs
+# GATE_TARGETS, the checkers of kit on this checkout. A failure never stops the run: the matrix does not cancel the other
+# entries (fail-fast: false), and the report is uploaded after a failed step (`if: ${{ !cancelled() }}`). The last job,
+# ci-passed, passes only when every other job of this workflow passed; a release takes the id of such a run and tags its
+# commit (HR-94, HR-95). Every other step of a job is a uses: step that provisions the runner or carries the report, the
+# jobs run on ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HR-90).
 #
 # Each job checks hyper out at the workspace root with its history, which the document and owner checks read, and runs the
 # bootstrap right after the checkout (uses: ./.github/actions/bootstrap), which sets up the Node.js of mise.toml and installs
-# the locked kit package, the npm of devEngines and the packages; each matrix entry then declares its own selected tools and native
-# package environments, installed at the versions and hashes that this checkout declares. No job checks out another
-# repository: every template asset comes from the template release that the manifests and their locks pin by integrity.
-# PHP setup and Composer projects run only for entries that execute PHP. Python packages are installed from uv.lock
-# only where Python code is executed. Build prerequisites remain owned by each checking target and run in that job.
-# No check job waits for another job or downloads its installed dependencies or build artifacts.
+# the locked kit package, the npm of devEngines and the packages. A group whose tools hold PHP sets up the PHP of
+# .php-version (matrix.php); its tools and its native package environments are those that the group declares in the
+# Makefile, installed at the versions and hashes that this checkout declares. No job checks out another repository: every
+# template asset comes from the template release that the manifests and their locks pin by integrity. No check job waits
+# for another job or downloads its installed dependencies or build artifacts.
 name: ci
 
 on:
@@ -36,92 +37,39 @@ jobs:
       matrix:
         include:
           - name: gates
-            tools: node php composer pie python uv ruff vulture alint phpcs phpstan
             php: true
-            symbols: php
-            composer: true
-            python: true
-            targets: layout-check docs-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
           - name: docs
-            tools: node php composer pie python uv
             php: true
-            composer: true
-            python: true
-            redis: true
-            targets: typecheck hyper-test-scripts spec-docs-check recipe-check
           - name: php
-            tools: node php composer pie
             php: true
-            composer: true
-            targets: bench-server-smoke hyper-lint analyse-php hyper-test-php
           - name: node
-            tools: node
-            targets: templates-check hyper-test-js hyper-test-node package-check
           - name: board
-            tools: node php composer pie python uv
             php: true
-            composer: true
-            python: true
-            browser: true
-            targets: parity server-parity server-parity-python bundle-size e2e
           - name: python
-            tools: node python uv
-            python: true
-            targets: hyper-test-python hyper-test-python-render
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        id: checkout
         with:
           fetch-depth: 0
       - uses: ./.github/actions/bootstrap
-        id: bootstrap
-        if: ${{ !cancelled() }}
       - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
-        id: php
-        if: ${{ !cancelled() && matrix.php }}
+        if: ${{ matrix.php }}
         with:
           php-version-file: .php-version
           extensions: pdo_sqlite
           tools: none
           coverage: none
-      - id: tools
-        if: ${{ !cancelled() }}
-        run: make install-tools TOOLS="${{ matrix.tools }}"
-      - id: symbols
-        if: ${{ !cancelled() && matrix.symbols }}
-        run: make install-symbols EXTRACTORS="${{ matrix.symbols }}"
-      - id: install
-        if: ${{ !cancelled() && matrix.composer }}
-        run: make hyper-install-php
-      - id: python
-        if: ${{ !cancelled() && matrix.python }}
-        run: make hyper-install-python
-      - id: redis
-        if: ${{ !cancelled() && matrix.redis }}
-        run: make hyper-install-redis
-      - id: browser
-        if: ${{ !cancelled() && matrix.browser }}
-        run: make hyper-install-browser
-      - id: check
-        if: ${{ !cancelled() }}
-        run: make ci-targets TARGETS="${{ matrix.targets }}" CI_REPORT=var/ci/${{ matrix.name }}
-      - id: summary
-        if: ${{ !cancelled() }}
-        env:
-          CI_STEPS: ${{ toJSON(steps) }}
-        run: make ci-summary CI_REPORT=var/ci/${{ matrix.name }}
+      - run: make ci-check NAME=${{ matrix.name }}
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        id: report
         if: ${{ !cancelled() }}
         with:
           name: ci-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: var/ci/${{ matrix.name }}/
           if-no-files-found: error
   # The job that fails the run when any other job did not pass, so a release, which takes a successful run by its id,
-  # holds every job (HR-95). It runs after every other job, also after a
-  # failed, skipped or cancelled one (if: always()), and make ci-passed fails unless every job of needs has the result
-  # success, so a new job of this workflow is required once it is listed in needs. Each step needs the step before it, and the
-  # bootstrap installs the kit package whose ci-passed utility make ci-passed runs.
+  # holds every job (HR-95). It judges the results of the other jobs, so it exists only in CI, and its run step passes them
+  # as the JSON of needs. It runs after every other job, also after a failed, skipped or cancelled one (if: always()), and
+  # make ci-passed fails unless every job of needs has the result success, so a new job of this workflow is required once it
+  # is listed in needs. The bootstrap installs the kit package whose ci-passed utility make ci-passed runs.
   ci-passed:
     if: ${{ always() }}
     needs: [check]

@@ -189,3 +189,7 @@ The servers that do not call the core run the cases of `tests/legacy/`, and the 
 - A page or JSON answer, and its 304, has the `Referrer-Policy` of the reply (HY-103.5). The headers of a page of the core lacked it (H31.19).
 - A JSON text with more than 256 nested containers is refused (HY-54.20). The Python and PHP servers read deeper texts.
 - A path of a build output without the prefix of its place fails the build with `invalid_build` (HY-125.17). The build id of the command tool checks no path, until it takes the build id from the core (H31.4-3).
+
+## Wave 33 — One recipe per CI job
+
+Depends on: none. H33.1 moves the content of each CI job into the recipe `ci-<job>` of the Makefile, so the job and a local run make the same call. The release workflow keeps its steps, because each of them reads what the step before it wrote.

@@ -190,3 +190,7 @@ core를 부르지 않는 서버는 `tests/legacy/`의 case를 실행하고, core
 - page 응답과 JSON 응답, 그 304는 reply의 `Referrer-Policy`를 가진다(HY-103.5). core가 주는 page의 header에는 그것이 없었다(H31.19).
 - 중첩된 container가 256개를 넘는 JSON text는 거부된다(HY-54.20). Python과 PHP 서버는 더 깊은 text를 읽는다.
 - 자기 자리의 prefix가 없는 build 출력 경로는 build를 `invalid_build`로 실패시킨다(HY-125.17). command tool의 build id는 core에서 build id를 받을 때까지(H31.4-3) 경로를 검사하지 않는다.
+
+## Wave 33 — CI job마다 recipe 하나
+
+의존: 없음. H33.1은 각 CI job의 내용을 Makefile의 recipe `ci-<job>`으로 옮겨 job과 local 실행이 같은 호출을 하게 한다. release workflow는 자기 step을 유지한다. 각 step이 앞 step이 쓴 것을 읽기 때문이다.

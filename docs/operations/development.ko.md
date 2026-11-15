@@ -54,6 +54,8 @@
 | `make docs-check` | `config/documents.json`의 문서를 검사한다: 문서 쌍, marker `doc-id`와 `source-sha256`, 링크, 코드 블록, changelog, checklist |
 | `make hooks` | changelog와 checklist의 merge driver를 선언한다([Hooks](#hooks) 참조) |
 | `make hooks-check` | `make hooks`의 merge driver가 선언되지 않았으면 실패한다 |
+| `make ci-check` | CI group `NAME`을 `ci.yml`의 job처럼 실행한다. setup, 끝까지 실행하는 target, 보고서 `var/ci/<name>`이다([CI](#ci) 참고) |
+| `make ci-bench` | `bench.yml`의 job을 실행한다. group `bench`의 setup, `make bench`, `make bench-sessions`, 보고서 `var/ci/bench`이다([CI](#ci) 참고) |
 | `make ci-targets` | make target `TARGETS`를 끝까지 실행하고 보고서 `CI_REPORT`를 쓴다([CI](#ci) 참고) |
 | `make ci-summary` | 보고서 `CI_REPORT`의 요약과 job summary를 쓴다([CI](#ci) 참고) |
 | `make ci-passed` | `RESULTS`, 곧 `needs`의 JSON의 모든 job의 결과가 `success`가 아니면 실패한다([CI](#ci) 참고) |
@@ -151,12 +153,9 @@ T.T.T는 그 릴리스의 `packages/client/package.json`이 요구하는 `@polys
 
 ## CI
 
-모든 검사 group은 `make install-tools` 전에 PHP를 준비한다. 다른 runtime만 검사하는 group에서도 도구 탐색이 `.php-version`을 읽기 때문이다. Package 설치 후에는 `make hooks`가 checkout별 Git merge driver attribute와 hook 설정을 검증 전에 만든다.
+workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 전체 suite를 실행한다(HR-91, [main 공개](#main-공개) 참고). 그 job `check`는 CI group마다 matrix 항목 하나를 `fail-fast: false`로 가진다. 항목은 Makefile의 `CI_GROUPS`를 적고, 각 항목은 run step 하나 `make ci-check NAME=<group>`을 가진다(HR-90). Makefile이 각 group을 선언한다. 설치할 도구(`CI_TOOLS_<group>`), 순서대로의 setup step(`CI_SETUP_<group>`), 실행할 target(`CI_TARGETS_<group>`)이다.
 
-
-workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`workflow_dispatch`)에 대해 전체 suite를 실행한다(HR-91, [main 공개](#main-공개) 참고). 그 job `check`는 CI group마다 matrix 항목 하나를 `fail-fast: false`로 가지며, 각 항목은 자기가 실행하는 target을 밝힌다.
-
-| 항목 | Bootstrap 이후 선택 도구 | 잠긴 package 환경 | 검사 |
+| Group | Bootstrap 이후 선택 도구 | 잠긴 package 환경 | 검사 |
 |---|---|---|---|
 | `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer, Python uv lock | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, 중복, suppression, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
 | `docs` | Node/npm, PHP/Composer, PIE, Python/uv | Root와 board Composer lock | 타입 검사와 script 검사 |
@@ -165,23 +164,25 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `board` | Node/npm, PHP/Composer, PIE, Python/uv | Root npm, root와 board Composer, Python uv lock | Browser parity, Node/Python server 비교, bundle 크기와 E2E |
 | `python` | Node/npm, Python/uv | Root npm과 Python uv lock | Python unit과 rendering |
 
-각 group은 `make install-tools TOOLS="${{ matrix.tools }}"`를 호출한다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. 고정된 Kit 설치기는 이 selector를 지원한다. `make hyper-install-php`가 네이티브 template 확장을 build하는 `docs`, `php`, `board` group은 `pie`를 선택한다. npm은 별도 bootstrap을 사용하고 `gates` group은 `make lint-php`가 php-parser를 읽는 PHP symbol extractor를 `make install-symbols EXTRACTORS="php"`로 명시적으로 설치한다. kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)는 그 target이 실행하는 `gates` group만 설치하고, `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
+group의 local 실행은 그 job의 호출과 같은 `make ci-check NAME=<group>`이다. bootstrap action처럼 `make bootstrap`, `make install-tools TOOLS=npm`, `make install-packages`를 실행한 checkout에서 실행한다. 어떤 group도 가리키지 않는 `NAME`은 어떤 step보다 먼저 실패하고 group들을 적는다.
 
-`make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
+recipe `ci-check`는 group의 setup step을 순서대로 각각 별도의 make로 실행하고 첫 실패에서 멈춘다. 뒤의 step과 target이 그 step이 설치하는 것을 읽기 때문이다. 첫 step은 `make install-tools TOOLS="<group의 CI_TOOLS>"`이다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. `make hyper-install-php`가 네이티브 template 확장을 build하는 `docs`, `php`, `board` group은 `pie`를 선택한다. npm은 별도 bootstrap을 사용하고 `gates` group은 `make lint-php`가 php-parser를 읽는 PHP symbol extractor를 `make install-symbols EXTRACTORS="php"`(`CI_SYMBOLS_gates`)로 설치한다. kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)는 그 target이 실행하는 `gates` group만 설치하고, `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
+
+`make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). `make hyper-install-redis`는 `docs`를 위해 session test의 Redis server를 build하고, `make hyper-install-browser`는 `board`를 위해 Chromium을 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
 
 Build 선행 조건은 각 job의 검사가 소유한다. 언어 job은 다른 언어 job을 기다리거나 설치 환경 또는 build 산출물을 다운로드하지 않는다. 설치는 online이고 build와 검사는 offline 환경을 유지한다.
 
 각 구현의 자기 test가 `contracts/`의 공유 vector를 실행하며, 언어 간 test 이름을 맞추는 gate는 없다(H27.91). Browser가 필요한 server 간 비교는 세 구현과 Chromium을 직접 설치하는 `board`가 소유한다. Python 렌더링 검사는 Python job이 소유한다. Matrix 집계는 `ci-passed`에 모든 group 결과를 요구한다.
 
-각 명령 step은 make target 하나를 실행하고(HR-90), 이전 단계가 실패해도 보고서를 모두 수집한다. 각 job은 hyper를 workspace root에 checkout하고 checkout 바로 다음에 hyper의 bootstrap action(`./.github/actions/bootstrap`)을 실행하며, 그 action은 `mise.toml`의 Node를 사용한다. matrix가 나머지 고정 도구를 선택하며 PHP, Composer, Python과 Chromium을 조건에 따라 준비한다. 어떤 job도 다른 저장소를 checkout하지 않으며, 고정 release asset이 template package와 확장 소스를 준다. `make ci-targets TARGETS="<targets>" CI_REPORT=var/ci/<name>`은 항목의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓴다. `make ci-summary CI_REPORT=var/ci/<name>`은 job summary를 쓴다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
+job의 나머지 step은 `uses:` step이다. hyper를 history와 함께 workspace root에 checkout하고, checkout 바로 다음에 `mise.toml`의 Node를 사용하는 hyper의 bootstrap action(`./.github/actions/bootstrap`)을 실행하며, 도구에 PHP가 있는 group(항목의 `php: true`)은 setup-php로 `.php-version`의 PHP를 준비하고, 앞 step이 실패해도 보고서를 upload한다(`if: ${{ !cancelled() }}`). 어떤 job도 다른 저장소를 checkout하지 않으며, 고정 release asset이 template package와 확장 소스를 준다. setup 뒤에 `make ci-targets TARGETS="<group의 CI_TARGETS>" CI_REPORT=var/ci/<name>`이 group의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓰며, 이어 `make ci-summary CI_REPORT=var/ci/<name>`이 항상 각 setup step의 결과(`success`, `failure`, `skipped`)와 함께 요약과 job summary를 쓴다. `make ci-check`의 상태는 setup과 target의 상태이며, 요약을 쓰지 못하면 실패한다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 
 - `summary.md`: tree, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
 - `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;
 - `targets/<target>.log`: 각 target의 명령, 전체 출력, make가 끝난 방식.
 
-마지막 job `ci-passed`는 다른 모든 job 뒤에 실행되고 `make ci-passed RESULTS='<needs의 JSON>'`을 실행한다. 이 target은 필요한 모든 job의 결과를 출력하고 하나라도 `success`가 아니면 실패한다. `ci.yml`에 추가한 job은 `needs`에 나열한다. `tests/scripts/ci-workflow.test.mts`는 `ci-passed`가 없거나, 마지막 job이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need하지 않거나, 다른 runner에서 실행하거나, 다른 step을 실행하면 실패한다.
+마지막 job `ci-passed`는 다른 모든 job 뒤에 실행되고 `make ci-passed RESULTS='<needs의 JSON>'`을 실행한다. 이 target은 필요한 모든 job의 결과를 출력하고 하나라도 `success`가 아니면 실패한다. 다른 job의 결과를 판정하므로 CI에만 있다. `ci.yml`에 추가한 job은 `needs`에 나열한다. `tests/scripts/ci-workflow.test.mts`는 `ci-passed`가 없거나, 마지막 job이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need하지 않거나, 다른 runner에서 실행하거나, 다른 step을 실행하면 실패하고, `ci.yml`이나 `bench.yml`의 job이 make 변수를 받는 `make ci-<job>` 하나 말고 다른 run step을 가지면 실패한다.
 
-workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실행한다. job 하나가 `make ci-targets TARGETS="bench bench-sessions"`를 실행하고 report를 upload한다. 그 결과는 어떤 검사도 통과시키거나 실패시키지 않으며, `ci-passed`와 release는 이를 읽지 않는다([성능 측정](benchmark.ko.md) 참고).
+workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실행한다. 그 job 하나는 `make ci-bench`를 실행하고, 이 recipe는 Makefile의 group `bench`의 setup, 이어 `make ci-targets`로 `var/ci/bench`에 `make bench`와 `make bench-sessions`, 그리고 요약을 실행한다. job은 보고서를 upload한다. local 실행도 같은 `make ci-bench`이다. 그 결과는 어떤 검사도 통과시키거나 실패시키지 않으며, `ci-passed`와 release는 이를 읽지 않는다([성능 측정](benchmark.ko.md) 참고).
 
 ## Test 실행
 

@@ -1,24 +1,25 @@
-// Tests the rules of the GitHub workflows (HR-86, HR-90, HR-91): every job runs on the declared runner ubuntu-26.04-arm,
-// every action is pinned by its commit, no step or job has a time limit, every step after the first of a job runs after a
-// failed step (`if: ${{ !cancelled() }}`), except in the jobs whose every step needs the earlier one (STOPPING), and
-// every step that runs a command runs one make target, so the exported settings and the checks of the Makefile, such
-// as the offline settings and the toolchain check, apply to it. The entries of the matrix of ci.yml run the targets of
-// CHECK_TARGETS, each once; the entry gates runs GATE_TARGETS, the checkers of kit, and no job calls another workflow. The
-// last job of ci.yml is ci-passed, which a release requires of the run whose id it takes (HR-95): it runs after every other job (`if: ${{ always() }}`), needs every other job of the workflow, runs on their runner and runs
-// `make ci-passed` with the JSON of `needs`.
+// Tests the rules of the GitHub workflows (HR-90, HR-91, HR-95): every job runs on the declared runner ubuntu-26.04-arm,
+// every action is pinned by its commit, no step or job has a time limit, and every step that runs a command runs one make
+// target, so the exported settings and the checks of the Makefile, such as the offline settings and the toolchain check,
+// apply to it. Every job of a workflow that CI runs (ci.yml, bench.yml) has exactly one run step, `make ci-<job>` with
+// make variables, and its other steps are uses: steps, so a local run `make ci-<job> NAME=<value>` is the call of CI
+// (H33.1). The matrix of ci.yml names the CI groups of the Makefile, whose targets are the targets of CHECK_TARGETS, each
+// once; the group gates runs GATE_TARGETS, the checkers of kit, and no job calls another workflow. The last job of ci.yml
+// is ci-passed, which a release requires of the run whose id it takes (HR-95): it runs after every other job
+// (`if: ${{ always() }}`), needs every other job of the workflow, runs on their runner and runs `make ci-passed` with the
+// JSON of `needs`.
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { dryRun } from './make-dry-run.mts';
 
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const WORKFLOWS = path.join(ROOT, '.github/workflows');
 const RUNNER = 'ubuntu-26.04-arm';
-// The jobs whose every step needs the one before it, so a failed step stops the job: ci-passed reports the results of
-// the other jobs of ci.yml, and each step of release reads what the step before it checked or built.
-const STOPPING: Record<string, string[]> = { 'ci.yml': ['ci-passed'], 'release.yml': ['release'] };
 const CI_PASSED = 'ci-passed';
 const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}' FAIL_SKIPPED=1";
 // The bootstrap of hyper: the action of .github/actions/bootstrap, which sets up the Node.js of mise.toml and installs the lock,
@@ -106,20 +107,87 @@ test('every job runs on the declared runner without a time limit, and every acti
   assert.deepEqual(found, []);
 });
 
-test('every step that runs a command runs make, and every step after the first runs after a failed step (HR-86)', () => {
+test('every step that runs a command runs one make, right after the bootstrap of the checkout (HR-90)', () => {
   const found: string[] = [];
   for (const workflow of workflows()) {
     for (const job of jobs(workflow.text).filter((job) => !calls(job))) {
       assert.ok(job.steps.length > 0, `${workflow.name} ${job.name} has no step`);
       // The bootstrap action of kit runs right after the checkout of the job.
       if (!(job.steps[0]?.uses ?? '').startsWith('actions/checkout@') || job.steps[1]?.uses !== BOOTSTRAP_ACTION) found.push(`${workflow.name} ${job.name}: the second step is not uses: ${BOOTSTRAP_ACTION} after the checkout`);
-      job.steps.forEach((step, index) => {
+      for (const step of job.steps) {
         if (step.run !== undefined && !/^make [^|&;<>`$\n]*(\$\{\{ [^}]+ \}\}[^|&;<>`$\n]*)*$/.test(step.run)) found.push(`${workflow.name} ${job.name}: the step "${step.run}" runs a command other than one make`);
-        if (index > 0 && !(STOPPING[workflow.name] ?? []).includes(job.name) && !(step.if ?? '').includes('!cancelled()')) found.push(`${workflow.name} ${job.name}: step ${index + 1} runs only while every earlier step passed`);
-      });
+      }
     }
   }
   assert.deepEqual(found, []);
+});
+
+// The workflows that CI runs, whose jobs hold one call of a recipe each (HR-90); the release workflow keeps its steps,
+// each of which reads what the step before it wrote, so it is not one of them.
+const CI_WORKFLOWS = ['ci.yml', 'bench.yml'];
+// The judgement job of ci.yml, which reads the results of the other jobs and so exists only in CI: its run step may pass
+// the JSON of `needs`, the one expression besides a matrix value.
+const JUDGEMENT: Record<string, string> = { [CI_PASSED]: "RESULTS='${{ toJSON(needs) }}'" };
+
+/**
+ * Each broken rule of the shape of the jobs of a CI workflow (HR-90): a job has exactly one `run:` step, `make ci-<job>`
+ * (the job ci-passed runs `make ci-passed`), whose arguments are make variables `NAME=value`, a value being a word or a
+ * matrix value `${{ matrix.<key> }}`; the run step has no `if:`, no `env:` and no other key that carries an expression;
+ * every other step is a `uses:` step, and a step after the run step carries its result, so it runs after a failed step
+ * (`if: ${{ !cancelled() }}`).
+ */
+function jobShapeProblems(name: string, text: string): string[] {
+  const found: string[] = [];
+  for (const job of jobs(text).filter((job) => !calls(job))) {
+    const at = `${name} ${job.name}`;
+    const runs = job.steps.filter((step) => step.run !== undefined);
+    if (runs.length !== 1) {
+      found.push(`${at}: ${runs.length} run steps, not exactly one make ci-${job.name}`);
+      continue;
+    }
+    const run = item(runs, 0, `the run steps of ${at}`);
+    const target = job.name.startsWith('ci-') ? job.name : `ci-${job.name}`;
+    // The words of the run line, an expression or a quoted value being part of its word.
+    const [command, called, ...words] = (run.run ?? '').match(/(?:\$\{\{ [^}]* \}\}|'[^']*'|[^\s'])+/g) ?? [];
+    const judgement = JUDGEMENT[job.name];
+    const argument = (word: string) => /^[A-Z][A-Z0-9_]*=(?:[\w./-]+|\$\{\{ matrix\.[\w-]+ \}\})$/.test(word) || word === judgement;
+    if (command !== 'make' || called !== target) found.push(`${at}: the run step is "${run.run}", not make ${target}`);
+    const bad = words.filter((word) => !argument(word));
+    if (bad.length) found.push(`${at}: the run step passes ${bad.join(' ')}, not make variables of a word or a matrix value`);
+    if (run.if !== undefined) found.push(`${at}: the run step has if: ${run.if}; the recipe ${target} holds the conditions`);
+    const keys = run.text.split('\n').map((line) => /^ {8}([\w-]+):/.exec(line)?.[1]).filter((key) => key !== undefined && !['run', 'id', 'name'].includes(key));
+    if (keys.length) found.push(`${at}: the run step has ${keys.join(', ')}; it passes its values as make variables`);
+    const index = job.steps.indexOf(run);
+    job.steps.forEach((step, position) => {
+      if (step === run) return;
+      if (step.uses === undefined) found.push(`${at}: step ${position + 1} is no uses: step`);
+      else if (position > index && step.if !== '${{ !cancelled() }}') found.push(`${at}: step ${position + 1} carries the result of the run step and has if: ${step.if}, not \${{ !cancelled() }}`);
+    });
+  }
+  return found;
+}
+
+test('H33.1 every job of a CI workflow has exactly one run step, make ci-<job> with make variables (HR-90)', () => {
+  assert.deepEqual(workflows().filter((workflow) => CI_WORKFLOWS.includes(workflow.name)).flatMap((workflow) => jobShapeProblems(workflow.name, workflow.text)), []);
+  assert.deepEqual(workflows().map((workflow) => workflow.name).filter((name) => !CI_WORKFLOWS.includes(name)), ['release.yml'], 'a workflow is neither a CI workflow nor the release');
+  // Each broken shape is found.
+  const job = (steps: string) => `jobs:\n  check:\n    runs-on: x\n    steps:\n      - uses: actions/checkout@c\n${steps}`;
+  const upload = '      - uses: actions/upload-artifact@c\n        if: ${{ !cancelled() }}\n';
+  const broken: Record<string, [string, string]> = {
+    'two run steps': [job('      - run: make install-tools\n      - run: make ci-check NAME=gates\n'), '2 run steps'],
+    'another target': [job('      - run: make ci-targets TARGETS=gates\n'), 'the run step is'],
+    'a quoted list': [job('      - run: make ci-check TOOLS="${{ matrix.tools }}"\n'), 'the run step passes'],
+    'an expression': [job('      - run: make ci-check NAME=${{ github.run_id }}\n'), 'the run step passes'],
+    'a condition': [job('      - run: make ci-check NAME=gates\n        if: ${{ !cancelled() }}\n'), 'the run step has if'],
+    'an env': [job('      - run: make ci-check NAME=gates\n        env:\n          STEPS: ${{ toJSON(steps) }}\n'), 'the run step has env'],
+    'a needs JSON in a check job': [job("      - run: make ci-check RESULTS='${{ toJSON(needs) }}'\n"), 'the run step passes'],
+    'a report that stops': [job('      - run: make ci-check NAME=gates\n      - uses: actions/upload-artifact@c\n'), 'step 3 carries the result'],
+  };
+  for (const [label, [text, message]] of Object.entries(broken)) {
+    const problems = jobShapeProblems('ci.yml', text);
+    assert.ok(problems.some((problem) => problem.startsWith(`ci.yml check: ${message}`)), `${label}: ${problems.join('; ')}`);
+  }
+  assert.deepEqual(jobShapeProblems('ci.yml', job(`      - run: make ci-check NAME=\${{ matrix.name }}\n${upload}`)), []);
 });
 
 /**
@@ -146,9 +214,9 @@ test('no workflow starts on a tag push (HR-95)', () => {
 
 /**
  * The entries of the matrix of ci.yml, read from the block layout: an entry is an item `- name: <name>` at indent 10 and its
- * keys are at indent 12. Returns the targets, browser flag and remaining declared keys.
+ * keys are at indent 12. Returns the name and the other keys of each entry.
  */
-interface MatrixEntry { name: string; targets: string[]; browser: boolean; keys: Record<string, string> }
+interface MatrixEntry { name: string; keys: Record<string, string> }
 
 function matrixEntries(text: string): MatrixEntry[] {
   const entries: { name: string; keys: Record<string, string> }[] = [];
@@ -159,7 +227,7 @@ function matrixEntries(text: string): MatrixEntry[] {
     const last = entries.at(-1);
     if (key && last) last.keys[group(key, 1)] = group(key, 2).replace(/^'(.*)'$/, '$1');
   }
-  return entries.map(entry => ({ name: entry.name, keys: entry.keys, targets: (entry.keys['targets'] ?? '').split(' ').filter(Boolean), browser: entry.keys['browser'] === 'true' }));
+  return entries;
 }
 
 // The words of the simple variable `name` of the Makefile, with each $(<variable>) of its value replaced by the words of
@@ -178,18 +246,61 @@ function checkTargets(): string[] {
   return makeWords(readFileSync(path.join(ROOT, 'Makefile'), 'utf8'), 'CHECK_TARGETS');
 }
 
-test('the matrix entries of ci.yml run every target of the full suite once (HR-91)', () => {
+// The words of the CI group variable `name` of the group `group`, such as CI_TARGETS_gates.
+const groupWords = (makefile: string, name: string, group: string) => makeWords(makefile, `${name}_${group}`);
+
+test('H33.1 the matrix of ci.yml names the CI groups of the Makefile, whose targets are every target of the full suite once (HR-91)', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const groups = makeWords(makefile, 'CI_GROUPS');
   const entries = matrixEntries(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
-  assert.ok(entries.length > 1, JSON.stringify(entries));
-  assert.equal(new Set(entries.map(entry => entry.name)).size, entries.length, 'a matrix name repeats; the reports of two entries would share one artifact');
-  const groups = new Map<string, MatrixEntry[]>();
+  assert.ok(groups.length > 1, groups.join(' '));
+  assert.equal(new Set(groups).size, groups.length, 'a CI group repeats; the reports of two entries would share one artifact');
+  assert.deepEqual(entries.map((entry) => entry.name), groups, 'the matrix entries of ci.yml are not the CI_GROUPS of the Makefile, in their order');
+  // An entry holds its name and, for the setup-php step, whether its tools hold PHP; the Makefile holds the rest.
   for (const entry of entries) {
-    const key = entry.targets.join(' ');
-    groups.set(key, [...(groups.get(key) ?? []), entry]);
+    assert.deepEqual(Object.keys(entry.keys).filter((key) => key !== 'php'), [], `the entry ${entry.name} declares keys that belong to the Makefile`);
+    assert.equal(entry.keys['php'] === 'true', groupWords(makefile, 'CI_TOOLS', entry.name).includes('php'), `the entry ${entry.name} sets up PHP, or does not, against CI_TOOLS_${entry.name}`);
   }
-  for (const [key, same] of groups) assert.equal(same.length, 1, `${key} runs in ${same.map(entry => entry.name).join(', ')}`);
-  const all = [...groups.keys()].flatMap(key => key.split(' '));
-  assert.deepEqual([...all].sort(), [...checkTargets()].sort(), 'the targets of the matrix entries are not the targets of CHECK_TARGETS, each once');
+  const all = groups.flatMap((group) => groupWords(makefile, 'CI_TARGETS', group));
+  assert.equal(new Set(all).size, all.length, `a target runs in two CI groups: ${all.join(' ')}`);
+  assert.deepEqual([...all].sort(), [...checkTargets()].sort(), 'the targets of the CI groups are not the targets of CHECK_TARGETS, each once');
+  assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'gates'), makeWords(makefile, 'GATE_TARGETS'), 'the group gates does not run GATE_TARGETS');
+});
+
+/**
+ * The order of the call that a job makes (HR-90, HR-91), read from the dry run of the recipe: each setup step of the group
+ * with its make variables, then `make ci-targets` with the targets of the group and its report var/ci/<group>, then
+ * `make ci-summary` of that report with the outcome of each setup step. Returns the broken rules.
+ */
+function ciRunProblems(goal: string, group: string, makefile: string): string[] {
+  const lines = dryRun(goal, { variables: goal === 'ci-check' ? [`NAME=${group}`] : [] }).join('\n');
+  const tools = groupWords(makefile, 'CI_TOOLS', group).join(' ');
+  const symbols = groupWords(makefile, 'CI_SYMBOLS', group).join(' ');
+  const argumentsOf: Record<string, string> = { 'install-tools': ` TOOLS="${tools}"`, 'install-symbols': ` EXTRACTORS="${symbols}"` };
+  const expected = [
+    ...groupWords(makefile, 'CI_SETUP', group).map((step) => ` ${step}${argumentsOf[step] ?? ''};`),
+    ` ci-targets TARGETS="${groupWords(makefile, 'CI_TARGETS', group).join(' ')}" CI_REPORT=var/ci/${group} `,
+    ` ci-summary CI_REPORT=var/ci/${group} `,
+  ];
+  const found: string[] = [];
+  let from = 0;
+  for (const part of expected) {
+    const at = lines.indexOf(part, from);
+    if (at < 0) found.push(`make -n ${goal}${goal === 'ci-check' ? ` NAME=${group}` : ''} does not run "${part.trim()}" after the parts before it: ${lines}`);
+    else from = at + part.length;
+  }
+  return found;
+}
+
+test('H33.1 make ci-check NAME=<group> and make ci-bench run the setup, the targets and the report of the group in order (HR-90)', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const groups = makeWords(makefile, 'CI_GROUPS');
+  assert.deepEqual([...groups.flatMap((group) => ciRunProblems('ci-check', group, makefile)), ...ciRunProblems('ci-bench', 'bench', makefile)], []);
+  assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'bench'), ['bench', 'bench-sessions']);
+  // A NAME that names no group fails before any step runs, naming the groups.
+  const unknown = spawnSync('make', ['--no-print-directory', '-n', 'ci-check', 'NAME=nope'], { cwd: ROOT, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))) });
+  assert.notEqual(unknown.status, 0, unknown.stdout);
+  assert.match(unknown.stderr, new RegExp(`NAME=nope names no CI group of CI_GROUPS: ${groups.join(' ')}`));
 });
 
 /** Each broken rule of the job ci-passed of a workflow text. */
@@ -271,7 +382,7 @@ test('H27.83 the Makefile includes no file of kit, and every make target of a wo
   const defined = new Set([...makefile.matchAll(/^([a-z][\w-]*(?: [a-z][\w-]*)*):(?!=)/gm)].flatMap((match) => (match[1] ?? '').split(' ')));
   const action = readFileSync(path.join(ROOT, '.github/actions/bootstrap/action.yml'), 'utf8');
   const called = [...workflows().map((workflow) => workflow.text), action].flatMap((text) => [...text.matchAll(/^\s*run: make ([a-z][\w-]*)/gm)].map((match) => match[1] ?? ''));
-  assert.ok(called.includes('ci-targets') && called.includes('release-tag') && called.includes('bootstrap'), called.join(' '));
+  assert.ok(called.includes('ci-check') && called.includes('ci-bench') && called.includes('release-tag') && called.includes('bootstrap'), called.join(' '));
   assert.deepEqual([...new Set(called)].filter((target) => !defined.has(target)), [], 'a workflow runs a target that the Makefile does not define');
   for (const workflow of workflows()) assert.deepEqual(jobs(workflow.text).filter(calls).map((job) => job.name), [], `${workflow.name} calls another workflow`);
 });
