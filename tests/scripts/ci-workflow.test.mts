@@ -275,7 +275,8 @@ test('H33.1 the matrix of ci.yml names the CI groups of the Makefile, whose targ
 function ciRunProblems(goal: string, group: string, makefile: string): string[] {
   const lines = dryRun(goal, { variables: goal === 'ci-check' ? [`NAME=${group}`] : [] }).join('\n');
   const tools = groupWords(makefile, 'CI_TOOLS', group).join(' ');
-  const symbols = groupWords(makefile, 'CI_SYMBOLS', group).join(' ');
+  // A group without install-symbols declares no CI_SYMBOLS.
+  const symbols = new RegExp(`^CI_SYMBOLS_${group} := `, 'm').test(makefile) ? groupWords(makefile, 'CI_SYMBOLS', group).join(' ') : '';
   const argumentsOf: Record<string, string> = { 'install-tools': ` TOOLS="${tools}"`, 'install-symbols': ` EXTRACTORS="${symbols}"` };
   const expected = [
     ...groupWords(makefile, 'CI_SETUP', group).map((step) => ` ${step}${argumentsOf[step] ?? ''};`),
@@ -392,8 +393,8 @@ test('H27.83 the Makefile includes no file of kit, and every make target of a wo
   assert.deepEqual(makefile.split('\n').filter((line) => /^-?include\b/.test(line)), [], 'the Makefile includes a file');
   const defined = new Set([...makefile.matchAll(/^([a-z][\w-]*(?: [a-z][\w-]*)*):(?!=)/gm)].flatMap((match) => (match[1] ?? '').split(' ')));
   const action = readFileSync(path.join(ROOT, '.github/actions/bootstrap/action.yml'), 'utf8');
-  const called = [...workflows().map((workflow) => workflow.text), action].flatMap((text) => [...text.matchAll(/^\s*run: make ([a-z][\w-]*)/gm)].map((match) => match[1] ?? ''));
-  assert.ok(called.includes('ci-check') && called.includes('ci-bench') && called.includes('release-tag') && called.includes('bootstrap'), called.join(' '));
+  const called = [...workflows().map((workflow) => workflow.text), action].flatMap((text) => [...text.matchAll(/^\s*(?:- )?run: make ([a-z][\w-]*)/gm)].map((match) => match[1] ?? ''));
+  assert.ok(called.includes('ci-check') && called.includes('ci-bench') && called.includes('ci-release') && called.includes('bootstrap'), called.join(' '));
   assert.deepEqual([...new Set(called)].filter((target) => !defined.has(target)), [], 'a workflow runs a target that the Makefile does not define');
   for (const workflow of workflows()) assert.deepEqual(jobs(workflow.text).filter(calls).map((job) => job.name), [], `${workflow.name} calls another workflow`);
 });
