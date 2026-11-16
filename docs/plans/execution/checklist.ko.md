@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 1e60c4aff417468633add230e700bdc80e52e5ac0ddabf786003592d6586c2cc -->
+<!-- source-sha256: c35765e89959dfe17d3dead36cb2b98c746dafd84f837aa3db72e3ca05e108b2 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -517,8 +517,13 @@
 | H35.19-1 | `tests/scripts/session-shared-redis.test.mts`는 더 이상 요청을 `setTimeout(200)`과 경쟁시키지 않는다. 시험은 그 결과를 정하는 사건을 기다린다. | tests/scripts/session-shared-redis.test.mts | `make hyper-test-scripts` | [ ] |
 | H35.19-2 | holder가 끝난 뒤 `until()`에서 기다리는 session 시험의 step은 test runner의 60초 제한이 아니라 그 holder나 server의 실패로 끝난다. | tests/scripts/session-redis-server.mts, tests/scripts/session-redis-cluster.test.mts | `make hyper-test-scripts` | [ ] |
 | H35.20 | template 0.0.28을 pin한 tree에서 `make lint-ts`, `make lint-python`, `make typecheck`가 통과하고, 각 case runner는 hyper의 오류만 `raises`로 보고한다. | knip.json, packages/ts, packages/client, packages/php/tests, packages/python/tests, contracts | `make lint-ts` | [ ] |
-| H35.20-1 | knip은 Makefile이 `node_modules/@polyspec/binding/dist/cli.js`를 경로로 시작한다는 것을 알고, 그래서 `@polyspec/binding`을 쓰이지 않는다고 보고하지 않는다. | knip.json | `make lint-ts` | [o] |
-| H35.20-2 | PHP, Node, Python case runner의 `failureOf`는 hyper와 binding의 오류 class만 잡는다. 다른 오류는 step의 오류로 case를 실패시킨다. | packages/php/tests/Support/CaseRules.php, packages/ts/tests/case-rules.ts, packages/python/tests/case_rules.py와 그 시험 | `make typecheck` | [o] |
-| H35.20-3 | packages/ts, packages/client와 그 시험은 template 0.0.28의 TypeScript API(`Template`, `parseJson`)를 쓴다. | packages/ts, packages/client | `make lint-ts` | [o] |
-| H35.20-4 | vulture는 packages/python/tests/test_core_rules.py에서 죽은 code를 찾지 않는다. | packages/python/tests/test_core_rules.py | `make lint-python` | [o] |
+| H35.20-1 | knip은 Makefile이 `node_modules/@polyspec/binding/dist/cli.js`를 경로로 시작한다는 것을 알고, 그래서 `@polyspec/binding`을 쓰이지 않는다고 보고하지 않는다. | knip.json | `make lint-ts` | [v] |
+| H35.20-2 | PHP, Node, Python case runner의 `failureOf`는 hyper와 binding의 오류 class만 잡는다. 다른 오류는 step의 오류로 case를 실패시킨다. | packages/php/tests/Support/CaseRules.php, packages/ts/tests/case-rules.ts, packages/python/tests/case_rules.py와 그 시험 | `make typecheck` | [v] |
+| H35.20-3 | packages/ts, packages/client와 그 시험은 template 0.0.28의 TypeScript API(`Template`, `parseJson`)를 쓴다. | packages/ts, packages/client | `make lint-ts` | [v] |
+| H35.20-4 | vulture는 packages/python/tests/test_core_rules.py에서 죽은 code를 찾지 않는다. | packages/python/tests/test_core_rules.py | `make lint-python` | [v] |
 | H35.20-5 | contracts/json.json의 encode와 decode section의 case와 interfaces.json이 그것에 이름 붙인 member는 같은 결과를 말한다. | contracts/json.json, contracts/interfaces.json | `make core-test` | [ ] |
+| H35.20-5-1 | `packages/rust/interface.json`의 rules unit은 Rust core의 `json::read`와 `json::write`를 HY-54.20, HY-54.21의 오류로 부르는 `rules.json_read`와 `rules.json_write`를 선언한다. | packages/rust/interface.json, packages/rust/src | `make core-test` | [ ] |
+| H35.20-5-2 | 세 서버의 binding이 `rules.json_read`와 `rules.json_write`를 갖고 생성된다. | generated bindings (ignored) | `make bindings` | [ ] |
+| H35.20-5-3 | PHP, Node, Python 서버의 `JsonCodec.decode`와 `inDataModel` 호출은 모두 core 규칙을 불러, data model 밖의 값은 그 data model 오류로, 형식이 틀린 JSON은 `malformed_json`으로 실패한다. | packages/php/src, packages/ts/src, packages/python/src | `make recipe-check` | [ ] |
+| H35.20-5-4 | `contracts/interfaces.json`의 member `json-codec.decode`, `json-codec.inDataModel`, `json-codec.encode`와 세 runner의 json step은 HY-54.20, HY-54.21의 실패를 적고, 결과 `outside`를 적지 않는다. | contracts/interfaces.json, packages/*/tests | `make recipe-check` | [ ] |
+| H35.21 | phpcs가 PHP 소스에서 통과한다. `src/App/Build.php:16`, `src/App/CoreRules.php:51`과 `:269`, `src/Page/Page.php:203`이 `phpcs.xml.dist`의 줄 길이를 지킨다. | packages/php/src | `make lint-php` | [ ] |
