@@ -13,11 +13,13 @@ members = [
 ]
 
 # Every warning fails, no unsafe code, no unwrap or expect, no discarded result, and every allow attribute names its
-# rule; clippy.toml disallows the methods that turn an Err or a None into a value (plan R-1). The binding crates carry
-# the same lints themselves, with unsafe_code deny instead of forbid.
+# rule; clippy.toml disallows the methods that turn an Err or a None into a value (plan R-1). The binding crates take
+# these lints too (`[lints] workspace = true`, which binding scaffold writes). A binding crate allows unsafe code with
+# its reason (binding B-4), which a forbid of the workspace would refuse, so the workspace denies it and the core
+# forbids it in its lib.rs.
 [workspace.lints.rust]
 warnings = "deny"
-unsafe_code = "forbid"
+unsafe_code = "deny"
 unused_must_use = "deny"
 
 [workspace.lints.clippy]

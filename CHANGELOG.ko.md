@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a47082a2c98d53af18d28b9169ed5a6348b758e20e58008786dafce3ba32dee0 -->
+<!-- source-sha256: 18a54cf18c4066c6a01ec969afd13b6be685128099bf9b192d96563cc4cfa789 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Cargo workspace는 workspace의 forbid 대신 `unsafe_code`를 deny하고, `packages/rust/src/lib.rs`가 그것을 forbid한다. binding crate는 workspace의 lint를 받고 이유와 함께 unsafe code를 허용하는데(binding B-4), forbid는 그것을 거부한다. 그래서 `make lint-bindings`와 `make test-go`가 E0453과 생성 소스의 unsafe code 오류 약 150개로 실패했다(H35.7).
 - `packages/rust/interface.json`에서 `pages.register`의 parameter `host_function`은 `keeps: true`를, `page_request.next`의 core는 `failure: true`를 적는다(binding GN-6aa, GN-6h). core는 등록할 때 함수를 보관하고 `next`에서 부르므로 `register`는 `Error`를, `next`는 `Failure<Error>`를 돌려준다. generator가 함수를 받는 member에 failure를 주었으므로 Python binding crate가 E0308로 실패했다(H35.7). 이 형식의 검사에는 CK-90이 function의 `keeps`를 받는 binding release가 필요하다.
 - core의 `client_rendering::shell_text`는 shell의 bytes를 빌려 받는다(`&[u8]`). binding이 type bytes의 parameter를 그렇게 넘기기 때문이다(binding T-1). binding 0.0.15에서 Python binding crate가 E0308로 build에 실패했다(H35.7).
 - Git은 kit의 `make link`가 로컬 provider의 Go module을 연결하려고 쓰는 `packages/go/go.work`와 `go.work.sum`을 무시한다. `make link`는 Git이 무시하지 않는 파일을 쓰기를 거부했다(H35.7).
