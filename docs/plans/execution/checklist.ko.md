@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 4941c2417f59ea9ee58819cd8f938a37b54d4337f959a05c53892c994645162e -->
+<!-- source-sha256: 39d73125a7ffb38608f8e679e76e5a42462c38c6065f108496635c0c33f3ab1d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -522,7 +522,7 @@
 | H35.20-3 | packages/ts, packages/client와 그 시험은 template 0.0.28의 TypeScript API(`Template`, `parseJson`)를 쓴다. | packages/ts, packages/client | `make lint-ts` | [v] |
 | H35.20-4 | vulture는 packages/python/tests/test_core_rules.py에서 죽은 code를 찾지 않는다. | packages/python/tests/test_core_rules.py | `make lint-python` | [v] |
 | H35.20-5 | contracts/json.json의 encode와 decode section의 case와 interfaces.json이 그것에 이름 붙인 member는 같은 결과를 말한다. | contracts/json.json, contracts/interfaces.json | `make core-test` | [ ] |
-| H35.20-5-1 | `packages/rust/interface.json`의 rules unit은 Rust core의 `json::read`와 `json::write`를 HY-54.20, HY-54.21의 오류로 부르는 `rules.json_read`와 `rules.json_write`를 선언한다. | packages/rust/interface.json, packages/rust/src | `make core-test` | [ ] |
+| H35.20-5-1 | `packages/rust/interface.json`의 rules unit은 Rust core의 `json::read`와 `json::write`를 HY-54.20, HY-54.21의 오류로 부르는 `rules.json_read`와 `rules.json_write`를 선언한다. | packages/rust/interface.json, packages/rust/src | `make core-test` | [v] |
 | H35.20-5-2 | 세 서버의 binding이 `rules.json_read`와 `rules.json_write`를 갖고 생성된다. | generated bindings (ignored) | `make bindings` | [ ] |
 | H35.20-5-3 | PHP, Node, Python 서버의 `JsonCodec.decode`와 `inDataModel` 호출은 모두 core 규칙을 불러, data model 밖의 값은 그 data model 오류로, 형식이 틀린 JSON은 `malformed_json`으로 실패한다. | packages/php/src, packages/ts/src, packages/python/src | `make recipe-check` | [ ] |
 | H35.20-5-4 | `contracts/interfaces.json`의 member `json-codec.decode`, `json-codec.inDataModel`, `json-codec.encode`와 세 runner의 json step은 HY-54.20, HY-54.21의 실패를 적고, 결과 `outside`를 적지 않는다. | contracts/interfaces.json, packages/*/tests | `make recipe-check` | [ ] |
