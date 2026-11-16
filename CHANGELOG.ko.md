@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 890693182457c93326faa5832e986c4a9904e697f63f9de2fdd05f6706357c8b -->
+<!-- source-sha256: 5f471053056304499c8f8c684761ca321c55592a61aad1e05c1782867af124b1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make node-package`는 `packages/ts`의 의존을 root install에서 pack해 묶은 package와 함께 설치한다. 묶은 package의 offline 설치는 어느 registry에도 없는 `@polyspec/hyper-client`를 찾았고, `make test-wasm`이 `ENOTCACHED`로 실패했다(H35.7).
 - `make install-binding`은 Cargo.lock의 binding이 로컬 경로일 때(`BINDING_COMMIT`이 `local`) 아무것도 clone하지 않고, 실행이 `BINDING`으로 주는 cli를 알린다. 그것은 `cargo metadata names no polyspec-binding-core at the commit local of Cargo.lock`으로 실패했으므로 `make hyper-install`이 멈췄다(H35.7).
 - Cargo workspace는 workspace의 forbid 대신 `unsafe_code`를 deny하고, `packages/rust/src/lib.rs`가 그것을 forbid한다. binding crate는 workspace의 lint를 받고 이유와 함께 unsafe code를 허용하는데(binding B-4), forbid는 그것을 거부한다. 그래서 `make lint-bindings`와 `make test-go`가 E0453과 생성 소스의 unsafe code 오류 약 150개로 실패했다(H35.7).
 - `packages/rust/interface.json`에서 `pages.register`의 parameter `host_function`은 `keeps: true`를, `page_request.next`의 core는 `failure: true`를 적는다(binding GN-6aa, GN-6h). core는 등록할 때 함수를 보관하고 `next`에서 부르므로 `register`는 `Error`를, `next`는 `Failure<Error>`를 돌려준다. generator가 함수를 받는 member에 failure를 주었으므로 Python binding crate가 E0308로 실패했다(H35.7). 이 형식의 검사에는 CK-90이 function의 `keeps`를 받는 binding release가 필요하다.
