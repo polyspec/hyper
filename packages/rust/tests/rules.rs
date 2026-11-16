@@ -789,3 +789,59 @@ fn an_integer_outside_the_data_model_is_out_of_range() {
         Err(Error::ReplyStatusNotAllowed(_))
     ));
 }
+
+// HY-25.2, HY-40.3, HY-104.23: the checks of a stored flash and of stored kept values, which a server reads its own
+// stored values with, give the stored values back and fail every other form with invalid_session_record.
+#[test]
+fn stored_flash_and_kept_values_of_another_form_fail() {
+    use polyspec_hyper::session::{flash_of, kept_of};
+    for json in [
+        "1",
+        r#"{"values":1,"changed":[]}"#,
+        r#"{"values":null,"changed":[]}"#,
+        r#"{"values":{},"changed":"t"}"#,
+        r#"{"values":{},"changed":null}"#,
+        r#"{"values":{},"changed":[1]}"#,
+    ] {
+        assert!(
+            matches!(flash_of(data(json)), Err(Error::InvalidSessionRecord)),
+            "{json}"
+        );
+    }
+    for json in ["1", r#"{"rows":1}"#, r#"{"rows":null}"#] {
+        assert!(
+            matches!(kept_of(data(json)), Err(Error::InvalidSessionRecord)),
+            "{json}"
+        );
+    }
+    match flash_of(data(r#"{"values":{"a":1}}"#)) {
+        Ok((values, changed)) => {
+            assert_eq!(written(&values), r#"{"a":1}"#);
+            assert!(changed.is_empty());
+        }
+        Err(error) => panic!("{error:?}"),
+    }
+    match flash_of(data(r#"{"changed":["t"]}"#)) {
+        Ok((values, changed)) => {
+            assert!(values.is_empty());
+            assert_eq!(changed, vec!["t".to_owned()]);
+        }
+        Err(error) => panic!("{error:?}"),
+    }
+    match kept_of(data(r#"{"rows":{"sort":"title"},"notice":[]}"#)) {
+        Ok(kept) => {
+            let regions: Vec<(String, String)> = kept
+                .iter()
+                .map(|(region, paths)| (region.clone(), written(paths)))
+                .collect();
+            assert_eq!(
+                regions,
+                vec![
+                    ("rows".to_owned(), r#"{"sort":"title"}"#.to_owned()),
+                    ("notice".to_owned(), "{}".to_owned())
+                ]
+            );
+        }
+        Err(error) => panic!("{error:?}"),
+    }
+}

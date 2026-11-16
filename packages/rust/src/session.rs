@@ -409,35 +409,53 @@ pub fn take_flash(store: &mut dyn Store) -> Result<(OrderedMap, Vec<String>), Se
     let Some(stored) = get(store, FLASH_KEY)? else {
         return Ok((OrderedMap::new(), Vec::new()));
     };
-    let flash = kind(as_map(stored))?;
+    let flash = kind(flash_of(stored))?;
+    from_store(store.remove(FLASH_KEY))?;
+    Ok(flash)
+}
+
+/// The flash values and the changed topics of a stored flash, the value under `_hyper_flash` (HY-25.2, HY-104.22): a
+/// map whose member `values` is a map and whose member `changed` is a list of strings; a missing member is empty, and
+/// a stored flash of another form, a member that is null included, fails (HY-104.23). A server whose store holds its
+/// own values reads them with this check, so the rule and its kind are the core's.
+///
+/// # Errors
+/// `invalid_session_record`.
+pub fn flash_of(stored: Value) -> Result<(OrderedMap, Vec<String>), Error> {
+    let flash = as_map(stored)?;
     let values = match flash.get("values") {
         None => OrderedMap::new(),
-        Some(values) => kind(as_map(values.clone()))?,
+        Some(values) => as_map(values.clone())?,
     };
     let changed = match flash.get("changed") {
         None => Vec::new(),
-        Some(Value::List(topics)) => match values::texts(topics) {
-            Some(changed) => changed,
-            None => return Err(Failure::Kind(Error::InvalidSessionRecord)),
-        },
-        Some(_) => return Err(Failure::Kind(Error::InvalidSessionRecord)),
+        Some(Value::List(topics)) => values::texts(topics).ok_or(Error::InvalidSessionRecord)?,
+        Some(_) => return Err(Error::InvalidSessionRecord),
     };
-    from_store(store.remove(FLASH_KEY))?;
     Ok((values, changed))
 }
 
-/// Every stored kept value, by region, each region a map from a path to its value (HY-104.22); every region of another
-/// form fails (HY-104.23).
-fn stored_kept(store: &mut dyn Store) -> Result<Vec<(String, OrderedMap)>, SessionFailure> {
-    let Some(stored) = get(store, KEEP_KEY)? else {
-        return Ok(Vec::new());
-    };
-    let regions = kind(as_map(stored))?;
+/// Every kept value of stored kept values, the value under `_hyper_keep`, by region, each region a map from a path to
+/// its value (HY-104.22); stored kept values of another form fail, those of every region (HY-104.23). A server whose
+/// store holds its own values reads them with this check, so the rule and its kind are the core's.
+///
+/// # Errors
+/// `invalid_session_record`.
+pub fn kept_of(stored: Value) -> Result<Vec<(String, OrderedMap)>, Error> {
+    let regions = as_map(stored)?;
     let mut kept = Vec::with_capacity(regions.len());
     for (region, paths) in regions.iter() {
-        kept.push((region.clone(), kind(as_map(paths.clone()))?));
+        kept.push((region.clone(), as_map(paths.clone())?));
     }
     Ok(kept)
+}
+
+/// Every stored kept value, by region (HY-104.22, HY-104.23).
+fn stored_kept(store: &mut dyn Store) -> Result<Vec<(String, OrderedMap)>, SessionFailure> {
+    match get(store, KEEP_KEY)? {
+        Some(stored) => Ok(kind(kept_of(stored))?),
+        None => Ok(Vec::new()),
+    }
 }
 
 /// The kept server values of a region (HY-40.3): an empty map for a region that stored none.
