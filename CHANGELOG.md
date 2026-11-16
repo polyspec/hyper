@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- A path, a query or a header name or value with a character above U+00FF fails the creation of a Node or Python request with the class of the binding of the category `value`, the kind `invalid_text` and the message `<subject> holds a character above U+00FF` of the binding, with no prefix `hyper:` (HY-42.7); the Node server threw an `Error` and the Python server a `ValueError` without a kind (H35.27-3).
 - The three servers read and write every JSON text of the protocol with `rules.json_read` and `rules.json_write` of the core, so a malformed text, a number outside the data model and the bytes of a number or of U+2028 follow the core (HY-17, HY-54); the PHP server reads a decoded value as a list when it is an array with sequence keys and as a map when it is a `stdClass` or an array with other keys, the form of the binding (GN-13v), and the servers' own JSON readers and writers are removed (H35.20-5-3).
 - The cookie of the kept values is read with `rules.kept_cookie` of the core, which drops only a value outside the data model (HY-38.2), and the server copies of that reader are removed (H35.20-5-5).
 - A stored flash and stored kept values of a server store are checked by `rules.flash_of` and `rules.kept_of` of the core, which fail a value of another form with kind `invalid_session_record` of category `store` (HY-104.36), and the server checks with their own messages are removed (H35.6).

@@ -9,6 +9,7 @@ import type { UploadedFile } from '../form/uploaded-file.js';
 import type { Value } from '../data/values.js';
 import { Disconnected } from '../app/disconnected.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
+import { rules } from '../app/core-rules.js';
 
 // The parts of a request as its host gives them, the named parameters of the constructor (HY-106): the path and the raw
 // query of the request target and the header values are text whose characters are bytes, and the body is bytes. The
@@ -88,9 +89,11 @@ export class Request {
   constructor(init: RequestInit) {
     ArgumentCountError.between(arguments.length, 1, 1);
     ArgumentCountError.members(init, REQUEST_REQUIRED, REQUEST_OPTIONAL);
-    // HY-42.6: the text that a host gives holds bytes, one for each character.
-    for (const text of [init.path, init.query ?? '', ...Object.entries(init.headers ?? {}).flat()]) {
-      if (/[\u0100-\uffff]/.test(text)) throw new Error('hyper: a path, a query or a header of a request holds a character above U+00FF (HY-42)');
+    // HY-42.6, HY-42.7: the text that a host gives holds bytes, one for each character, and a character above U+00FF
+    // fails with the kind invalid_text of the binding, in the message of the binding for its subject.
+    const texts: [string, string][] = [['path', init.path], ['query', init.query ?? ''], ...Object.entries(init.headers ?? {}).flatMap(([name, value]): [string, string][] => [['header', name], ['header', value]])];
+    for (const [subject, text] of texts) {
+      if (/[\u0100-\uffff]/.test(text)) throw rules().valueError(`${subject} holds a character above U+00FF`, 'invalid_text');
     }
     this.init = init;
     this.method = init.method;

@@ -46,11 +46,15 @@ class Request:
         read: Optional[RequestBody] = None,
         json: object = None,
     ):
-        # HY-42.6: the text that a host gives holds bytes, one for each character.
-        for text in (path, query, *(headers or {}).keys(), *(headers or {}).values()):
+        # HY-42.6, HY-42.7: the text that a host gives holds bytes, one for each character, and a character above
+        # U+00FF fails with the kind invalid_text of the binding, in the message of the binding for its subject.
+        texts = [("path", path), ("query", query)]
+        for name, value in (headers or {}).items():
+            texts += [("header", name), ("header", value)]
+        for subject, text in texts:
             if any(ord(char) > 0xFF for char in text):
-                raise ValueError(
-                    "a path, a query or a header of a request holds a character above U+00FF (HY-42)"
+                raise core_rules().value_error(
+                    f"{subject} holds a character above U+00FF", "invalid_text"
                 )
         self.method = method
         # The decoded JSON body of a representation request (HY-121), which `_as_representation` gives.

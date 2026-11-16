@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f4b8b687dca847ab0bbc67fc2067141c6eb75e1fd09f0f35ab2652b04fe1820f -->
+<!-- source-sha256: d64a5e54447ca0b8f1a76357c37ac48b37cd2d16e91e8d7d5f2601f1b29f62cc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- path, query, header 이름이나 값에 U+00FF보다 큰 문자가 있으면 Node와 Python 요청의 생성은 category `value`인 binding의 class, kind `invalid_text`, binding의 message `<subject> holds a character above U+00FF`로, 접두어 `hyper:` 없이 실패한다(HY-42.7). Node 서버는 `Error`를, Python 서버는 kind 없는 `ValueError`를 던졌다(H35.27-3).
 - 세 서버는 protocol의 모든 JSON 글을 core의 `rules.json_read`와 `rules.json_write`로 읽고 쓰므로, 잘못된 글, 데이터 모델 밖의 수, 수와 U+2028의 바이트가 core를 따른다(HY-17, HY-54). PHP 서버는 decode된 값을 순서 키 배열이면 목록으로, `stdClass`나 다른 키의 배열이면 맵으로 읽으며, 이는 binding의 형태다(GN-13v). 서버 자신의 JSON reader와 writer는 지운다(H35.20-5-3).
 - kept 값의 cookie는 데이터 모델 밖의 값만 버리는 core의 `rules.kept_cookie`로 읽으며(HY-38.2), 서버의 그 reader 사본은 지운다(H35.20-5-5).
 - 서버 store의 저장된 flash와 kept 값은 core의 `rules.flash_of`와 `rules.kept_of`가 검사하며, 다른 형태의 값은 category `store`의 kind `invalid_session_record`로 실패한다(HY-104.36). 자기 message를 가진 서버 검사는 지운다(H35.6).
