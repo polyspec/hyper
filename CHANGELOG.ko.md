@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 356511e7fb842217eb5eb46b957d192ebb067fd962501746ba2f7731379f8faf -->
+<!-- source-sha256: 237d73edf5ca2f4301bbf229f4d4972c14e392f46705b28851e21284eb65fa28 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- HY-132.7은 binding 없이 실행되는 브라우저 코드(packages/client)의 실패의 오류를 정한다: member `kind`와 `status`를 가진 그 실패 category의 자기 class이며, 따라서 open 때 `checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`의 실패는 kind `invalid_application`의 `HyperValueError`이다(HY-106.21). HY-132.8은 Node 서버가 open 때 그런 실패를 같은 category의 binding class로, 같은 kind, 상태, message를 가지고 낸다고 정한다. 어떤 statement도 class나 kind를 정하지 않았고, 브라우저 코드는 kind 없는 `Error`를 던진다. checklist는 구현을 H35.29-5-1과 H35.29-5-2로 등록한다(H35.29-5).
 - case의 `raises` 결과는 docs/spec/recipe.md가 이제 정하는 대로 그 결과의 statement가 정하는 kind의 오류를 기대하며, open 실패만 kind `invalid_application`을 기대한다(HY-106.21). `case-rules.ts`의 `outcomeError`, `case_rules.py`의 `outcome_error`, PHP runner의 `CaseRules::outcomeError`는 오류를 `raisesOf`로 읽고, `request.json`의 `request`에 대해 kind `invalid_text`(HY-42.7)를, HY-97.7이 kind를 정하지 않는 `hooks.json`의 `creation`에 대해 hyper의 오류만을 기대한다(H35.29-6). reader는 모든 `raises` 결과에 open error를 기대했으므로 그 두 결과는 통과할 수 없었다(H35.29-4).
 - checklist가 H35.29-5와 H35.29-6을 등록한다. H35.29-5는 contracts/protocol.json의 어떤 statement도 정하지 않는 browser에서 open 때 client 실패의 class와 kind를 정하는 statement이고, H35.29-6은 statement와 contracts/hooks.json의 case가 정하지 않는 HY-97.7 실패의 kind이다(H35.29-5, H35.29-6).
 - Node 서버는 open 때 `@polyspec/hyper-client` 검사(`checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`)의 오류를 더 이상 kind `invalid_application`으로 바꾸지 않는다. client가 kind 없는 `Error`를 던지는 것은 서버가 가린 client의 결함이므로 `App.clientCheck`를 지운다. 이 검사에 닿는 Node open case는 H35.29-5가 client의 오류를 정하고 고칠 때까지 실패한다(H35.29-4).
