@@ -2919,6 +2919,12 @@
                   "en": "A flash name and a changed topic are strings: another value fails with kind `invalid_argument_type` of the binding in the three servers.",
                   "ko": "flash 이름과 바뀐 topic은 문자열이다. 다른 값은 세 server에서 binding의 kind `invalid_argument_type`로 실패한다.",
                   "koSource": "aa601a21267b86732344f7ab818d15507188787966376d663256df7048963404"
+                },
+                {
+                  "id": "HY-25.8",
+                  "en": "A flash name or a changed topic that is a string is taken without failure in the three servers.",
+                  "ko": "문자열인 flash 이름이나 바뀐 topic은 세 server에서 실패 없이 받아들여진다.",
+                  "koSource": "46b9a880c15b78b748c34013b3566c7ecc5956eaf168b6e7c359706f7d382250"
                 }
               ]
             }
