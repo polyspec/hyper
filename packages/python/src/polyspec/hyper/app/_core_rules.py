@@ -52,6 +52,7 @@ _MEMBERS = (
     "flash_of",
     "kept_of",
     "kept_cookie",
+    "accept_ranges",
 )
 
 
@@ -115,6 +116,12 @@ class CoreRules:
         its readable values by path; a cookie that is no JSON object, a region that holds no object and a value
         outside the data model give no value (HY-38.2, HY-38.11, HY-42)."""
         return self._core.kept_cookie(text)
+
+    def accept_parse(self, value: Optional[str]) -> list[Any]:
+        """Accept.parse: rules.accept_ranges gives the ranges of an `Accept` value in field order, the range `*/*` of
+        the full weight for a request without `Accept`, and fails with `invalid_accept` or `invalid_weight` of
+        http-negotiation (HY-116.17, HY-116.18)."""
+        return self._core.accept_ranges([] if value is None else [value])
 
     def session_cookie_name(self, secure: bool) -> str:
         """RecordSession.cookie_name: rules.session_name (HY-45.1)."""

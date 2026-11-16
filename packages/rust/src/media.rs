@@ -43,6 +43,39 @@ pub enum Selection {
     NotAcceptable { body: Vec<u8> },
 }
 
+/// A media range of `Accept` as the servers read it (HY-116.17): type and subtype in lowercase, `*` for a wildcard,
+/// the parameters before the weight in order with their names in lowercase, and the weight in thousandths.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AcceptRange {
+    pub r#type: String,
+    pub subtype: String,
+    pub parameters: Vec<(String, Vec<u8>)>,
+    pub weight: u64,
+}
+
+/// The ranges of the field lines of `Accept` in field order, read by http-negotiation (HY-116.17, HY-116.18, NG-5);
+/// no line is the absent field, the range `*/*` of the full weight.
+///
+/// # Errors
+/// The `invalid_accept` and `invalid_weight` of http-negotiation (HY-116.18).
+pub fn accept_ranges(accept_lines: &[Vec<u8>]) -> Result<Vec<AcceptRange>, Error> {
+    let accept = Accept::parse(accept_lines)?;
+    Ok(accept
+        .ranges()
+        .iter()
+        .map(|range| AcceptRange {
+            r#type: range.r#type.clone(),
+            subtype: range.subtype.clone(),
+            parameters: range
+                .parameters
+                .iter()
+                .map(|parameter| (parameter.name.clone(), parameter.value.clone()))
+                .collect(),
+            weight: range.weight,
+        })
+        .collect())
+}
+
 /// What a candidate stands for.
 enum Member {
     Page,

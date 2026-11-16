@@ -281,6 +281,18 @@ class CoreRulesTest(unittest.TestCase):
         self.assertEqual(list(headers.items()), pairs)
         self.assertEqual(calls, [("frame_headers", (403, "'self'"))])
 
+    def test_the_accept_parse_gives_the_core_one_field_line_or_none_for_a_missing_field(
+        self,
+    ):
+        # HY-116.17: a request without Accept has no field line.
+        core, calls = stand_in({"accept_ranges": []})
+        rules = CoreRules(core)
+        self.assertEqual(rules.accept_parse("text/html"), [])
+        self.assertEqual(rules.accept_parse(None), [])
+        self.assertEqual(
+            calls, [("accept_ranges", (["text/html"],)), ("accept_ranges", ([],))]
+        )
+
     def test_a_failure_of_the_binding_reaches_the_caller_as_the_binding_raised_it(self):
         # HY-132.1, HY-132.2; HY-24.14 for a session that holds another value in the place of the token.
         failure = ValueError("the session holds a token of another form")

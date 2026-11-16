@@ -18,13 +18,13 @@ final class MediaSelection
      * Returns the type of the highest weight among the page types and the entries, with its entry and the values of
      * its required parameters for a representation, or null when no type has a weight above 0. Among equal weights
      * the first wins: the page types in their order, then the entries in declared order (HY-116.11). Throws
-     * InvalidAccept as `Accept::parse` does.
+     * the error of the core that `Accept::parse` throws.
      *
      * @param list<string> $pages
      * @param list<RepresentationEntry> $entries
      * @return ?array{0: string, 1: ?RepresentationEntry, 2: array<array-key, string>}
      *
-     * @throws InvalidAccept
+     * @throws HyperValueError of the kind `invalid_accept` or `invalid_weight` (HY-116.18)
      */
     public static function select(?string $accept, array $pages, array $entries): ?array
     {

@@ -645,7 +645,11 @@ final class App
                 [self::PAGE_TYPE, self::DATA_TYPE],
                 $this->manifest->routes[$match['name']]['representations'],
             );
-        } catch (InvalidAccept) {
+        } catch (HyperValueError $error) {
+            if (!Accept::isInvalid($error)) {
+                throw $error;
+            }
+
             return Response::text(400, 'Bad Request')->withHeader('Vary', 'Accept');
         }
         if ($selected === null) {
@@ -690,7 +694,11 @@ final class App
                 [self::PAGE_TYPE, self::DATA_TYPE],
                 $entries,
             );
-        } catch (InvalidAccept) {
+        } catch (HyperValueError $error) {
+            if (!Accept::isInvalid($error)) {
+                throw $error;
+            }
+
             return Response::text(400, 'Bad Request')->withHeader('Vary', 'Accept');
         }
 

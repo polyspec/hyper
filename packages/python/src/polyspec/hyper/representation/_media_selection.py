@@ -26,8 +26,8 @@ class MediaSelection:
     ) -> Optional[tuple[str, Optional[RepresentationEntry], dict[str, str]]]:
         """Returns the type of the highest weight among the page types and the entries, with its entry and the values of
         its required parameters for a representation, or None when no type has a weight above 0. Among equal weights the
-        first wins: the page types in their order, then the entries in declared order (HY-116.11). Raises InvalidAccept
-        as `Accept.parse` does."""
+        first wins: the page types in their order, then the entries in declared order (HY-116.11). Raises the error of
+        the core that `Accept.parse` raises."""
         ranges = Accept.parse(accept)
         page, best = Accept.best(ranges, pages)
         selected: Optional[

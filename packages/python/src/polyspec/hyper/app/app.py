@@ -9,7 +9,7 @@ from pathlib import Path
 from collections.abc import Sequence
 from typing import Callable, Optional, Union
 
-from ..representation._invalid_accept import InvalidAccept
+from ..representation._accept import Accept
 from ..page.choice import Choice
 from ..page.client_rendering import ClientRendering
 from .container import Container
@@ -523,7 +523,9 @@ class App:
             chosen = MediaSelection.select(
                 request.header("Accept"), _PAGE_TYPES, entries
             )
-        except InvalidAccept:
+        except ValueError as error:
+            if not Accept.is_invalid(error):
+                raise
             return Response.text(400, "Bad Request").with_header("Vary", "Accept")
         if chosen is None:
             return Response.text(
@@ -559,7 +561,9 @@ class App:
             selected = MediaSelection.select(
                 request.header("Accept"), _PAGE_TYPES, entries
             )
-        except InvalidAccept:
+        except ValueError as error:
+            if not Accept.is_invalid(error):
+                raise
             return Response.text(400, "Bad Request").with_header("Vary", "Accept")
         if selected is None:
             return Response.text(

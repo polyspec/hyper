@@ -150,6 +150,16 @@ final class CoreRulesTest extends TestCase
         self::assertSame([['keptValue', [$pages, 'rows', 'open', 'true']]], Calls::$calls);
     }
 
+    public function testTheAcceptParseGivesTheCoreOneFieldLineOrNoneForAMissingField(): void
+    {
+        // HY-116.17: a request without Accept has no field line.
+        Calls::$results = ['acceptRanges' => []];
+        $rules = new CoreRules(self::STAND_IN);
+        self::assertSame([], $rules->acceptParse('text/html'));
+        self::assertSame([], $rules->acceptParse(null));
+        self::assertSame([['acceptRanges', [['text/html']]], ['acceptRanges', [[]]]], Calls::$calls);
+    }
+
     public function testTheFrameHeadersAreAMapInTheOrderOfTheCore(): void
     {
         // HY-45.5, HY-65.1

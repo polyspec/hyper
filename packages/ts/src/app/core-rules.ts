@@ -31,6 +31,15 @@ interface BuildOutput {
   readonly bytes: Uint8Array;
 }
 
+// A media range of Accept as rules.accept_ranges gives it (HY-116.17): the parameters before the weight as [name,
+// value] pairs, and the weight in thousandths.
+interface AcceptRange {
+  readonly type: string;
+  readonly subtype: string;
+  readonly parameters: readonly (readonly [string, string])[];
+  readonly weight: number;
+}
+
 interface DataTemplate {
   readonly name: string;
   readonly source: string;
@@ -202,6 +211,7 @@ export interface CoreBinding {
   flashOf(stored: unknown): JsonValue;
   keptOf(stored: unknown): JsonValue;
   keptCookie(text: string): JsonValue;
+  acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
   computePageHeaders(response: PageResponse): PageHeaders;
   frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];
@@ -226,7 +236,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
 
 // A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
@@ -277,6 +287,10 @@ export interface CoreRules {
   // readable values by path; a cookie that is no JSON object, a region that holds no object and a value outside the
   // data model give no value (HY-38.2, HY-38.11, HY-42).
   pageKeptCookie(text: string): JsonValue;
+  // acceptParse: rules.accept_ranges gives the ranges of an Accept value in field order, the range `*/*` of the full
+  // weight for a request without Accept, and fails with `invalid_accept` or `invalid_weight` of http-negotiation
+  // (HY-116.17, HY-116.18).
+  acceptParse(value: string | null): readonly AcceptRange[];
   // sessionCookieName: rules.session_name (HY-45.1).
   sessionCookieName(secure: boolean): string;
   // Partial. sessionCookieHeader: rules.session_cookie gives the field value (HY-45.8). The server still
@@ -419,6 +433,7 @@ export function coreRules(module: object): CoreRules {
     sessionFlashOf: (stored) => core.flashOf(stored),
     sessionKeptOf: (stored) => core.keptOf(stored),
     pageKeptCookie: (text) => core.keptCookie(text),
+    acceptParse: (value) => core.acceptRanges(value === null ? [] : [value]),
     sessionCookieName: (secure) => core.sessionName(secure),
     sessionCookieHeader: (id, secure) => core.sessionCookie(id, secure),
     representationEtag: (contentType, body) => core.representationTag(contentType, encoder.encode(body)),

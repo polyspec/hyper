@@ -29,7 +29,7 @@ final class CoreRules
         'keepsOutOfSharedCaches', 'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag',
         'representationTag', 'pageStatus', 'replyStatus', 'pageVary', 'contextHash', 'currentPath', 'checkShellPath',
         'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader', 'jsonRead',
-        'jsonWrite', 'flashOf', 'keptOf', 'keptCookie',
+        'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges',
     ];
 
     /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
@@ -180,6 +180,21 @@ final class CoreRules
     public function pageKeptCookie(string $text): mixed
     {
         return $this->call('keptCookie', $text);
+    }
+
+    /**
+     * Accept::parse: rules.accept_ranges gives the ranges of an Accept value in field order, the range `*`/`*` of the
+     * full weight for a request without Accept, and fails with `invalid_accept` or `invalid_weight` of
+     * http-negotiation (HY-116.17, HY-116.18).
+     *
+     * @return list<AcceptRange>
+     */
+    public function acceptParse(?string $value): array
+    {
+        /** @var list<AcceptRange> $result The return type that the extension declares (T-1a). */
+        $result = $this->call('acceptRanges', $value === null ? [] : [$value]);
+
+        return $result;
     }
 
     /** The name of the session cookie (HY-45.1), which NativeSession gives the session options: rules.session_name. */

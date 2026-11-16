@@ -10,8 +10,8 @@ const TOKEN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
 export class MediaSelection {
   // Returns the type of the highest weight among the page types and the entries, with its entry and the values of its
   // required parameters for a representation, or null when no type has a weight above 0. Among equal weights the first
-  // wins: the page types in their order, then the entries in declared order (HY-116.11). Throws InvalidAccept as
-  // `Accept.parse` does.
+  // wins: the page types in their order, then the entries in declared order (HY-116.11). Throws the error of the
+  // core that `Accept.parse` throws.
   static select(accept: string | null, pages: readonly string[], entries: readonly RepresentationEntry[]): [string, RepresentationEntry | null, Map<string, string>] | null {
     const ranges = Accept.parse(accept);
     const [page, weight] = Accept.best(ranges, pages);

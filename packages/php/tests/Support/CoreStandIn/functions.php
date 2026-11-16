@@ -183,3 +183,8 @@ function keptCookie(mixed ...$arguments): mixed
 {
     return Calls::record('keptCookie', array_values($arguments));
 }
+
+function acceptRanges(mixed ...$arguments): mixed
+{
+    return Calls::record('acceptRanges', array_values($arguments));
+}

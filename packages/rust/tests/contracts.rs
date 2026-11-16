@@ -6,7 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use binding_core::Kinds;
-use polyspec_hyper::media::{select, Selected, Selection, Served};
+use polyspec_hyper::media::{accept_ranges, select, Selected, Selection, Served};
 use polyspec_hyper::{csrf, etag, location, reply, Error};
 use serde_json::Value;
 
@@ -314,6 +314,53 @@ fn reply_cache_control_referrer_policy_and_status() {
     }
 }
 
+/// The field lines of the `accept` of a case: one line, each character U+0000 to U+00FF one byte, or none for null.
+fn accept_lines(case: &Value) -> Vec<Vec<u8>> {
+    match case["accept"].as_str() {
+        Some(accept) => vec![accept
+            .chars()
+            .map(|c| match u8::try_from(u32::from(c)) {
+                Ok(byte) => byte,
+                Err(error) => panic!("{}: {error}", case["id"]),
+            })
+            .collect()],
+        None => Vec::new(),
+    }
+}
+
+#[test]
+fn accept_ranges_read_the_field() {
+    // HY-116.17, HY-116.18: the ranges that the servers read through rules.accept_ranges.
+    let file = cases("accept.json");
+    let mut ran = 0;
+    for case in group(&file, "parse") {
+        let result = accept_ranges(&accept_lines(case));
+        check(case, &result, |ranges| {
+            let plain: Vec<Value> = ranges
+                .iter()
+                .map(|range| {
+                    serde_json::json!({
+                        "type": range.r#type,
+                        "subtype": range.subtype,
+                        "parameters": range
+                            .parameters
+                            .iter()
+                            .map(|(name, value)| {
+                                let value: String = value.iter().map(|&byte| char::from(byte)).collect();
+                                serde_json::json!([name, value])
+                            })
+                            .collect::<Vec<Value>>(),
+                        "weight": range.weight,
+                    })
+                })
+                .collect();
+            assert_eq!(Value::Array(plain), case["ranges"], "{}", case["id"]);
+        });
+        ran += 1;
+    }
+    assert!(ran > 0);
+}
+
 #[test]
 fn accept_selects_the_page_or_the_page_data() {
     // HY-116.11, HY-116.17 to HY-116.20
@@ -324,18 +371,7 @@ fn accept_selects_the_page_or_the_page_data() {
     };
     let mut ran = 0;
     for case in group(&file, "select") {
-        let lines: Vec<Vec<u8>> = match case["accept"].as_str() {
-            // A case holds each byte of a field as the character U+0000 to U+00FF of the same number.
-            Some(accept) => vec![accept
-                .chars()
-                .map(|c| match u8::try_from(u32::from(c)) {
-                    Ok(byte) => byte,
-                    Err(error) => panic!("{}: {error}", case["id"]),
-                })
-                .collect()],
-            None => Vec::new(),
-        };
-        let result = select(&lines, served, &[]);
+        let result = select(&accept_lines(case), served, &[]);
         check(case, &result, |selection| match selection {
             Selection::Selected(selected) => {
                 let name = match selected {

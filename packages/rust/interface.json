@@ -1643,6 +1643,87 @@
           "raises": [],
           "wait": "none",
           "core": "polyspec_hyper::keep::cookie_record"
+        },
+        {
+          "id": "rules.accept_ranges",
+          "name": [
+            "accept",
+            "ranges"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "accept",
+                "lines"
+              ],
+              "type": {
+                "list": "latin1"
+              },
+              "required": true
+            }
+          ],
+          "returns": {
+            "list": {
+              "unit": "accept_range"
+            }
+          },
+          "raises": [
+            "polyspec_hyper::ErrorCode::Negotiate/polyspec_http_negotiation::Error::InvalidAccept",
+            "polyspec_hyper::ErrorCode::Negotiate/polyspec_http_negotiation::Error::InvalidWeight"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::media::accept_ranges"
+        }
+      ]
+    },
+    {
+      "id": "accept_range",
+      "name": [
+        "accept",
+        "range"
+      ],
+      "module": "",
+      "kind": "record",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::media::AcceptRange",
+      "fields": [
+        {
+          "name": [
+            "type"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "subtype"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "parameters"
+          ],
+          "type": {
+            "list": {
+              "tuple": [
+                "text",
+                "latin1"
+              ]
+            }
+          },
+          "required": true
+        },
+        {
+          "name": [
+            "weight"
+          ],
+          "type": "uint",
+          "required": true
         }
       ]
     },

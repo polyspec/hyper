@@ -8,7 +8,7 @@ import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@
 import { Choice } from '../page/choice.js';
 import type { ClientRendering } from '../page/client-rendering.js';
 import { Disconnected } from './disconnected.js';
-import { InvalidAccept } from '../representation/invalid-accept.js';
+import { Accept } from '../representation/accept.js';
 import { Csrf } from '../session/csrf.js';
 import type { FileSessions } from '../session/file-sessions.js';
 import type { RedisSessions } from '../session/redis-sessions.js';
@@ -610,7 +610,7 @@ export class App<S extends object = Record<string, never>> {
     try {
       selected = MediaSelection.select(request.header('Accept'), PAGE_AND_DATA, this.entries.get(match.name) ?? []);
     } catch (error) {
-      if (!(error instanceof InvalidAccept)) throw error;
+      if (!Accept.isInvalid(error)) throw error;
       return Response.text(400, 'Bad Request').withHeader('Vary', 'Accept');
     }
     if (selected === null) return Response.text(406, MediaSelection.listing([PAGE_TYPE], [])).withHeader('Vary', 'Accept');
@@ -632,7 +632,7 @@ export class App<S extends object = Record<string, never>> {
     try {
       selected = MediaSelection.select(request.header('Accept'), PAGE_AND_DATA, entries);
     } catch (error) {
-      if (!(error instanceof InvalidAccept)) throw error;
+      if (!Accept.isInvalid(error)) throw error;
       return Response.text(400, 'Bad Request').withHeader('Vary', 'Accept');
     }
     return selected ?? Response.text(406, MediaSelection.listing(served, entries)).withHeader('Vary', 'Accept');
