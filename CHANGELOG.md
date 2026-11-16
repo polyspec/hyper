@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The message of a missing input of a script test says to run its install target before `make hyper-test-scripts`; it said that `make hyper-test-scripts` runs that target first, which no check target does (H35.17).
 - Every Cargo.toml requires json, http-media-type, http-cookie and http-negotiation by their tags v0.0.32, v0.0.6, v0.0.6 and v0.0.3, because their branch `v1/rust-core`, which the manifests named, no longer exists, so that no resolution of the crates could pass; with `.links` the graph has one binding-core and the bindings generate, while a tree without links holds binding-core v0.0.10 and v0.0.13 and compiles only after the providers release with one binding pin (H35.14-3-1).
 - A session test whose holder process ends before it holds the lock fails at once with the status and the output of that process, because `holding` of `tests/scripts/session-redis-server.mts` waited for any first output and never for the end of the process; PHP prints a fatal error on its standard output, so a failed PHP holder counted as holding. The hooks after the Redis session test files stop every holder that still runs, so a test that fails while a holder waits for its line no longer keeps the test file running without an end (HR-84, HR-87, H35.18).
 - The repository uses kit 0.0.116 (kit K1266 to K1273), pinned by the URL of its release asset and the integrity of its lock (H35.16).

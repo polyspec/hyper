@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: f7a1aa7cade92626a00c374d49c59502b7157e2390c8ae73e0bf2d08c2d065fc -->
+<!-- source-sha256: 04435349d05aa9e078ffbf420559ce02057afe062fd8ab5f4c99f4bd8552d526 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -511,6 +511,7 @@
 | H35.14-3-1 | branch `v1/rust-core`가 더 이상 없는 provider 넷(json, http-media-type, http-cookie, http-negotiation)을 모든 Cargo.toml에서 최신 tag(v0.0.32, v0.0.6, v0.0.6, v0.0.3)로 요구하고, `Cargo.lock`이 그것을 pin한다. `.links`가 있는 tree는 binding-core 하나로 해석하고, 연결 없는 tree는 H35.14-3의 retry 뒤에야 compile된다. | Cargo.toml, Cargo.lock | `make docs-check` | [ ] |
 | H35.15 | 세 서버는 core의 `Pages`를 만들고 각 요청을 `routeRequest`로 route한다(HY-132.2). plain route는 session 없이 답하며(HY-120.3), 손 routing과 손 media type 검사는 같은 커밋에서 지운다. 이것이 H35.12-1과 H35.12-2를 낸다. | packages/php/src, packages/ts/src, packages/python/src, contracts/interfaces.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-node` | [ ] |
 | H35.16 | kit 0.0.116(kit K1266~K1273)을 채택한다. `package.json`이 그 release asset을, `package-lock.json`이 그 integrity를 적는다. | package.json, package-lock.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
+| H35.17 | script 시험의 빠진 입력은 그것을 쓰는 target을 이름하고, install target을 돌리지 않는 `make hyper-test-scripts` 전에 그것을 돌리라고 말한다(HR-85, HR-89). | tests/scripts/requires.mts, tests/scripts/requires.test.mts, config/owner-checks.json | `make hyper-test-scripts` | [ ] |
 | H35.18 | 실패하는 test는 그 실패로 실행을 끝내고 process와 임시 directory를 남기지 않는다(HR-84, HR-87). worker가 실패한 session test는 시작한 process를 모두 멈추고 그 directory를 지운다. | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.19 | script 시험의 모든 기다림은 timer나 test runner의 시간 제한이 아니라 사건으로 끝난다(HR-89, HR-84). | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.19-1 | `tests/scripts/session-shared-redis.test.mts`는 더 이상 요청을 `setTimeout(200)`과 경쟁시키지 않는다. 시험은 그 결과를 정하는 사건을 기다린다. | tests/scripts/session-shared-redis.test.mts | `make hyper-test-scripts` | [ ] |

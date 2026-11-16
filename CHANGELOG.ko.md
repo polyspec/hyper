@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 20b70c8a741e1f48fab1e5400ec1be1f9888c4c88d501ac301921588584b0fca -->
+<!-- source-sha256: a6e8510ba33b450a3f0951577d665f1a36636ed56b4d7d1e4fdf8d5adddae841 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- script 시험의 빠진 입력 메시지는 `make hyper-test-scripts` 전에 그 install target을 돌리라고 말한다. 전에는 `make hyper-test-scripts`가 그 target을 먼저 돌린다고 했는데, 그렇게 하는 check target은 없다(H35.17).
 - 모든 Cargo.toml이 json, http-media-type, http-cookie, http-negotiation을 tag v0.0.32, v0.0.6, v0.0.6, v0.0.3으로 요구한다. manifest가 이름하던 그들의 branch `v1/rust-core`가 더 이상 없어서, 어떤 crate 해석도 통과할 수 없었기 때문이다. `.links`가 있으면 graph에 binding-core가 하나이고 binding이 생성되며, 연결 없는 tree는 binding-core v0.0.10과 v0.0.13을 가지므로 provider가 binding pin 하나로 release된 뒤에야 compile된다(H35.14-3-1).
 - lock을 잡기 전에 끝나는 holder process가 있는 session test는 그 process의 상태와 출력으로 곧바로 실패한다. `tests/scripts/session-redis-server.mts`의 `holding`이 아무 첫 출력이나 기다리고 process의 끝은 기다리지 않았기 때문이다. PHP는 fatal error를 표준 출력에 쓰므로 실패한 PHP holder도 lock을 잡은 것으로 셌다. Redis session test 파일의 after hook은 아직 실행 중인 holder를 모두 멈추므로, holder가 그 줄을 기다리는 동안 실패한 test가 더는 test 파일을 끝없이 실행 상태로 두지 않는다(HR-84, HR-87, H35.18).
 - 저장소는 kit 0.0.116(kit K1266~K1273)을 쓰며, release asset의 URL과 lock의 integrity로 pin한다(H35.16).
