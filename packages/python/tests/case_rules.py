@@ -165,7 +165,9 @@ def outcome_error(sentence: str | None, observed: BaseException | None) -> bool:
     if observed is None:
         return False
     raises = raises_of(observed)
-    return sentence == "HY-97.7" or (raises["category"] == "value" and raises["kind"] == "invalid_text")
+    return sentence == "HY-97.7" or (
+        raises["category"] == "value" and raises["kind"] == "invalid_text"
+    )
 
 
 def stated_message(name: str, expected: Any, observed: Any) -> Any:

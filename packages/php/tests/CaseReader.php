@@ -165,7 +165,8 @@ final class CaseReader
 
     /**
      * Compares an outcome of the section (HYR-11): `raises` takes the error that the step caught, or null, and expects
-     * the error of the statement that the outcome cites (`CaseRules::outcomeError`); `exact` compares the observed value with the expected one that the step gives.
+     * the error of the statement that the outcome cites (`CaseRules::outcomeError`); `exact` compares the observed
+     * value with the expected one that the step gives.
      */
     public function outcome(string $name, mixed $observed, mixed $expected = true): void
     {
