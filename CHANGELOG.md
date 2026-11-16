@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- `Reply::cacheControl`, `Reply::referrerPolicy`, `Reply::status` and `Result::page` of the PHP server check their value through `CoreRules::shared()` (HY-52.6, HY-103.2, HY-69.10, HY-58); the PHP code keeps only the checks of the argument type, which the core does not see, and no copy of the rules or of the tokens of the Referrer-Policy specification (H35.9-2).
 - The PHP server takes the context hash and the check of `Hyper-Context` (HY-125.12, HY-127.2), the tag of a representation (HY-122.10) and of a JSON page response (HY-53.1), the names of the session cookie and of the kept cookie (HY-45.1, HYC-13.6), the `Vary` of a page response (HY-117.1) and the frame headers of every response (HY-45.5, HY-65.1) from `CoreRules::shared()`; `Context`, `RepresentationResponse`, `NativeSession`, `Page` and `App` hold no hand code of these rules (H35.9-2).
 - The PHP server masks and verifies the session token and gives `browser()` through `CoreRules::shared()`, the one `CoreRules` over the extension `polyspec_hyper`, in place of the hand code of `Csrf` (HY-24, HY-132.2): a server without the extension stops at the first use with a `RuntimeException` that names the extension. The members of `CoreRules` that the server calls return the type of their rule (H35.9-2).
 - `contracts/interfaces.json` lists the unit `core-rules` of the three servers with its 26 members and their tests, and the members of `wsgi-body` as H34.1 left them: `close()` reports the write and `_finish` is gone; the Node declarations of `core-rules.ts` carry `@internal` (H35.7).

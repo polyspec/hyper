@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 42738233608345dba93914d372cb050803b638796f1c98691dbb39ae30685648 -->
+<!-- source-sha256: f9a08bf3ad8cca73ea2aa5052c6438b2dbe34d5a7706a9cdb1d221210e0cc00f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 서버의 `Reply::cacheControl`, `Reply::referrerPolicy`, `Reply::status`, `Result::page`는 값을 `CoreRules::shared()`로 검사한다(HY-52.6, HY-103.2, HY-69.10, HY-58). PHP 코드는 core가 보지 않는 인자 type 검사만 남기고, 규칙이나 Referrer-Policy 명세 token의 사본을 갖지 않는다(H35.9-2).
 - PHP 서버는 context hash와 `Hyper-Context` 검사(HY-125.12, HY-127.2), representation의 tag(HY-122.10)와 JSON page 응답의 tag(HY-53.1), session cookie와 kept cookie의 이름(HY-45.1, HYC-13.6), page 응답의 `Vary`(HY-117.1), 모든 응답의 frame header(HY-45.5, HY-65.1)를 `CoreRules::shared()`에서 받는다. `Context`, `RepresentationResponse`, `NativeSession`, `Page`, `App`은 이 규칙의 손 코드를 갖지 않는다(H35.9-2).
 - PHP 서버는 session token의 mask와 검증, `browser()`를 `Csrf`의 손 코드 대신 `CoreRules::shared()`로 한다. 이것은 extension `polyspec_hyper` 위의 `CoreRules` 하나다(HY-24, HY-132.2). extension이 없는 서버는 처음 쓸 때 extension의 이름을 담은 `RuntimeException`으로 멈춘다. 서버가 부르는 `CoreRules`의 member는 그 규칙의 type을 돌려준다(H35.9-2).
 - `contracts/interfaces.json`은 세 서버의 unit `core-rules`를 member 26개와 그 시험과 함께 적고, `wsgi-body`의 member를 H34.1이 남긴 대로 적는다. `close()`가 쓰기를 보고하고 `_finish`는 없다. `core-rules.ts`의 Node 선언은 `@internal`을 단다(H35.7).
