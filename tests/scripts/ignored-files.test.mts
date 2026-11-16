@@ -39,6 +39,8 @@ const OUTPUTS = [
   'packages/python/.venv/bin/python',
   'packages/python/src/polyspec/hyper/_binding/__init__.py',
   'packages/go/zz_generated_hyper.go',
+  'packages/go/go.work',
+  'packages/go/go.work.sum',
   'packages/go/errors/zz_generated_errors.go',
   'packages/go/internal/ffi/lib/linux_arm64/zz_generated_lib.go',
   'packages/python/src/polyspec_hyper.egg-info/PKG-INFO',

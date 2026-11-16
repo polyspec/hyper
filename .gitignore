@@ -36,6 +36,9 @@ packages/*/native/generated/
 # The Go files zz_generated_*.go that make bindings writes into packages/go, which a release adds in the commit of its
 # Go tag (binding GN-15g).
 /packages/go/**/zz_generated_*.go
+# The Go workspace that make link of kit writes to link the Go modules of local providers; local state, never committed.
+/packages/go/go.work
+/packages/go/go.work.sum
 # The Python package that the binding generator writes beside the host package of Python (binding L-2a)
 /packages/python/src/polyspec/hyper/_binding/
 dist/
