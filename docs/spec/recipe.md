@@ -383,8 +383,9 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - `excludes`: no text of the expected list is part of the observed text;
   - `prefix`: the expected list equals the first items of the observed list;
   - `keys`: the expected list equals the keys of the observed map in their order;
-  - `raises`: when the expected value is true, the step fails with the open error of HY-106, and when it is false, the step
-    does not fail.
+  - `raises`: when the expected value is true, the step fails with the open error, and when it is false, the step does
+    not fail. The open error is the hyper class of the category `value` with the kind `invalid_application`, which an
+    application that does not open fails with (HY-106.21).
   - Response fields have no `compare` and are compared by name: `status` and `body` `exact`, `headers` `subset`,
     `allHeaders` `exact`, `absentHeaders` `absent`, `bodyContains` `contains` and `bodyNotContains` `excludes`. Header
     names are compared as HY-130 states.
@@ -395,7 +396,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - Every runner that `caseFiles` names compares every case by these comparisons and by no other. A case that compares
     nothing for its runner fails with `CASE_EMPTY`; fields and outcomes whose `only` leaves that runner out do not count.
   - `raises` on a step: the runner catches every error of the step and gives it, or null, to the reader, which checks that
-    its class is exactly the open error of HY-106.
+    its category is `value` and its kind is `invalid_application` through `raisesOf` (HY-106.21).
   - Each case carries `requirements`, the rules that its response fields check. `requirements` is not a field: the reader
     skips it, and the check reads it. A case's effective rules are its `requirements` plus the rules of the sentences of
     its stated fields and of its section's outcomes. The check fails a requirement that repeats another requirement or the

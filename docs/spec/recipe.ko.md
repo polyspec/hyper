@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 475e3bac578d5ca7b5d820d197ecd6f96712ca629bafd9dbf25cd65ab7a94905 -->
+<!-- source-sha256: 400a97b8cc787cd0c6932f5a190db5c7d80ff291c1d22f0cccb46a05ece6b26d -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -349,7 +349,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - `excludes`: expected list의 어떤 텍스트도 관찰된 텍스트의 일부가 아니다;
   - `prefix`: expected list가 관찰된 list의 첫 item들과 같다;
   - `keys`: expected list가 관찰된 map의 key를 그 순서대로 나열한 list와 같다;
-  - `raises`: expected 값이 true이면 단계는 HY-106의 open error로 실패하고, false이면 단계는 실패하지 않는다.
+  - `raises`: expected 값이 true이면 단계는 open error로 실패하고, false이면 단계는 실패하지 않는다. open error는 kind
+    `invalid_application`을 가진 category `value`의 hyper class이며, 열리지 않는 application은 이것으로 실패한다(HY-106.21).
   - response 필드는 `compare`를 가지지 않으며 이름으로 비교된다: `status`와 `body`는 `exact`, `headers`는 `subset`, `allHeaders`는
     `exact`, `absentHeaders`는 `absent`, `bodyContains`는 `contains`, `bodyNotContains`는 `excludes`. header 이름은 HY-130이
     정하는 대로 비교된다.
@@ -358,8 +359,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - case가 명시하지 않은 필드는 비교되지 않는다.
   - `caseFiles`가 가리키는 모든 runner는 모든 case를 이 비교들로만 비교한다. 자기 runner에 대해 아무것도 비교하지 않는 case는
     `CASE_EMPTY`로 실패하며, `only`가 그 runner를 빼는 필드와 결과는 세지 않는다.
-  - 단계의 `raises`: runner는 단계의 모든 error를 잡아 그것 또는 null을 reader에 넘기고, reader는 그 class가 HY-106의 open
-    error와 정확히 같은지 확인한다.
+  - 단계의 `raises`: runner는 단계의 모든 error를 잡아 그것 또는 null을 reader에 넘기고, reader는 `raisesOf`로 그 category가
+    `value`이고 kind가 `invalid_application`인지 확인한다(HY-106.21).
   - 각 case는 `requirements`를 가진다. 이는 response 필드가 확인하는 규칙의 목록이다. `requirements`는 필드가 아니다: reader는
     그것을 건너뛰고, check는 그것을 읽는다. case의 유효 규칙은 `requirements`와, 명시된 필드의 `sentence` 및 section의 결과의
     `sentence`에 있는 규칙이다. check는 다른 requirement를 반복하거나 명시된 필드의 `sentence` 규칙을 반복하는 requirement,
