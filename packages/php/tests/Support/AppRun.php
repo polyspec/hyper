@@ -33,7 +33,7 @@ final class AppRun
         'formTypes',
     ];
     private const STEPS = ['calls', 'observe', 'add', 'warn'];
-    private const RESULTS = ['return', 'stop', 'throw', 'redirect', 'page'];
+    private const RESULTS = ['return', 'stop', 'throw', 'redirect', 'outside', 'page'];
 
     /** @var list<string> the calls of the handlers in the order in which they start */
     public array $calls = [];
@@ -323,7 +323,7 @@ final class AppRun
                     'Error' => new \RuntimeException(Json::string($thrown['message'] ?? null)),
                     default => new \UnexpectedValueException("the handler {$name} throws an unknown class"),
                 };
-            } elseif (array_key_exists('redirect', $step)) {
+            } elseif (array_key_exists('redirect', $step) || array_key_exists('outside', $step)) {
                 return self::redirect($step);
             } elseif (array_key_exists('page', $step)) {
                 $status = $step['page'];
@@ -342,13 +342,16 @@ final class AppRun
     }
 
     /**
-     * Returns the redirect result of a step, with its flash values and its changed topics in their order.
+     * Returns the redirect result of a step, or its outside redirect (HY-133), with its flash values and its changed
+     * topics in their order.
      *
      * @param array<array-key, mixed> $step
      */
     private static function redirect(array $step): Result
     {
-        $result = Result::redirect(Json::string($step['redirect'] ?? null));
+        $result = array_key_exists('outside', $step)
+            ? Result::outside(Json::string($step['outside']))
+            : Result::redirect(Json::string($step['redirect'] ?? null));
         foreach (Json::list($step['flashes'] ?? []) as $flash) {
             $flash = Json::strings($flash);
             $result = $result->flash($flash[0], Json::value($flash[1]));

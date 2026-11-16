@@ -13,11 +13,13 @@ import type { CaseReader } from '../case-reader.js';
 import { OrmError, parsedBody, record, requestFrom } from '../support.js';
 
 // An action of an application of a case: it renews the session when `renew` is true, and then raises the ORM error of
-// the code `raises`, redirects, or returns a page with its data.
+// the code `raises`, redirects, redirects to an outside location when `outside` is true (HY-133), or returns a page with
+// its data.
 interface Action {
   renew: boolean;
   raises: string | null;
   redirect: string | null;
+  outside: boolean;
   page: number;
   data: Map<string, unknown>;
 }
@@ -83,16 +85,20 @@ function applicationOf(value: unknown, name: string): Application {
       const action = mapIn(item, `the action of ${route}`);
       const renew = action.has('renew') && action.get('renew') === true;
       if (action.has('throw')) {
-        actions.set(route, { renew, raises: raisedCode(action.get('throw'), `the action of ${route}`), redirect: null, page: 0, data: new Map() });
+        actions.set(route, { renew, raises: raisedCode(action.get('throw'), `the action of ${route}`), redirect: null, outside: false, page: 0, data: new Map() });
         continue;
       }
       if (action.has('redirect')) {
-        actions.set(route, { renew, raises: null, redirect: stringIn(action.get('redirect'), `the redirect of ${route}`), page: 0, data: new Map() });
+        actions.set(route, { renew, raises: null, redirect: stringIn(action.get('redirect'), `the redirect of ${route}`), outside: false, page: 0, data: new Map() });
+        continue;
+      }
+      if (action.has('outside')) {
+        actions.set(route, { renew, raises: null, redirect: stringIn(action.get('outside'), `the outside redirect of ${route}`), outside: true, page: 0, data: new Map() });
         continue;
       }
       const page = action.get('page');
       if (typeof page !== 'number' || !Number.isInteger(page)) throw new Error(`the action of ${route} has no throw, no redirect and no integer page`);
-      actions.set(route, { renew, raises: null, redirect: null, page, data: hostMap(action.get('data'), `the data of the action of ${route}`) });
+      actions.set(route, { renew, raises: null, redirect: null, outside: false, page, data: hostMap(action.get('data'), `the data of the action of ${route}`) });
     }
   }
   return {
@@ -158,7 +164,8 @@ function handlersOf(application: Application, shared: Map<string, unknown> | nul
         calls.push(`action:${route.name}`);
         if (action.renew) reply.renewSession();
         if (action.raises !== null) throw new OrmError(action.raises);
-        return action.redirect === null ? Result.page(action.page, action.data) : Result.redirect(action.redirect);
+        if (action.redirect === null) return Result.page(action.page, action.data);
+        return action.outside ? Result.outside(action.redirect) : Result.redirect(action.redirect);
       };
     }
     routes[route.name] = handler;

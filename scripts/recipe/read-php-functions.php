@@ -205,13 +205,14 @@ function visibility(ReflectionMethod|ReflectionProperty|ReflectionClassConstant 
 
 function methodSignature(ReflectionMethod $method): string
 {
+    $class = $method->getDeclaringClass();
     $params = [];
     foreach ($method->getParameters() as $p) {
-        $type = $p->getType() === null ? '' : $p->getType() . ' ';
+        $type = $p->getType() === null ? '' : typeText($p->getType(), $class) . ' ';
         $prefix = ($p->isPassedByReference() ? '&' : '') . ($p->isVariadic() ? '...' : '');
         $params[] = $type . $prefix . '$' . $p->getName();
     }
-    $return = $method->getReturnType() === null ? '' : ': ' . $method->getReturnType();
+    $return = $method->getReturnType() === null ? '' : ': ' . typeText($method->getReturnType(), $class);
 
     $modifiers = [...Reflection::getModifierNames($method->getModifiers()), 'function'];
 
@@ -220,11 +221,60 @@ function methodSignature(ReflectionMethod $method): string
 
 function propertySignature(ReflectionProperty $property): string
 {
-    $type = $property->getType() === null ? '' : $property->getType() . ' ';
+    $type = $property->getType() === null ? '' : typeText($property->getType(), $property->getDeclaringClass()) . ' ';
 
-    $modifiers = implode(' ', Reflection::getModifierNames($property->getModifiers()));
+    return implode(' ', propertyModifiers($property)) . ' ' . $type . '$' . $property->getName();
+}
 
-    return $modifiers . ' ' . $type . '$' . $property->getName();
+/**
+ * The modifiers of a property in the form of HYR-8, alike on every PHP release: the names of Reflection without a set
+ * visibility, which PHP 8.4 never writes and PHP 8.5 always writes, and then the set visibility after the visibility
+ * where it differs from the one that the property has by itself, which is `protected(set)` for a `public readonly`
+ * property.
+ *
+ * @return list<string>
+ */
+function propertyModifiers(ReflectionProperty $property): array
+{
+    $setBits = ReflectionProperty::IS_PRIVATE_SET | ReflectionProperty::IS_PROTECTED_SET;
+    $names = Reflection::getModifierNames($property->getModifiers() & ~$setBits);
+    $set = match (true) {
+        $property->isPrivateSet() => 'private(set)',
+        $property->isProtectedSet() && !$property->isReadOnly() => 'protected(set)',
+        default => null,
+    };
+    if ($set === null) {
+        return $names;
+    }
+    $visibilities = ['public', 'protected', 'private'];
+    $at = array_key_first(array_filter($names, static fn(string $n): bool => in_array($n, $visibilities, true)));
+    if ($at === null) {
+        $name = $property->getDeclaringClass()->getName() . '::$' . $property->getName();
+        fail("$name has no visibility among " . implode(' ', $names));
+    }
+    array_splice($names, $at + 1, 0, [$set]);
+
+    return $names;
+}
+
+/**
+ * The text of a type in the form of HYR-8, alike on every PHP release: `self` for the class that declares the member
+ * and `parent` for its parent class, whose names PHP 8.5 writes in place of the keywords that PHP 8.4 keeps, also where
+ * the source names the class.
+ */
+function typeText(ReflectionType $type, ReflectionClass $class): string
+{
+    $parent = $class->getParentClass();
+
+    return (string) preg_replace_callback(
+        '/[A-Za-z_\\\\][A-Za-z0-9_\\\\]*/',
+        static fn(array $m): string => match (true) {
+            strcasecmp(ltrim($m[0], '\\'), $class->getName()) === 0 => 'self',
+            $parent !== false && strcasecmp(ltrim($m[0], '\\'), $parent->getName()) === 0 => 'parent',
+            default => $m[0],
+        },
+        (string) $type,
+    );
 }
 
 function fail(string $message): never

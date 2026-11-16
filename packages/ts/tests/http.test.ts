@@ -131,6 +131,40 @@ describe('App.server', () => {
   });
 });
 
+// The field lines of a request (HY-42.8, HY-42.9, HY-42.12, HY-42.13): node:http gives the lines of a name apart in
+// headersDistinct, and the server reads them as one value joined with `, `.
+describe('the field lines of a request', () => {
+  const lines = 'Content-Type: application/x-www-form-urlencoded\r\nContent-Type: text/plain\r\nUser-Agent: a\r\nUser-Agent: b\r\n';
+  const post = Buffer.from(`POST /add HTTP/1.1\r\nHost: x\r\n${lines}Content-Length: 3\r\nConnection: close\r\n\r\na=1`);
+
+  it('reads the lines of a name as one value joined with `, `, the media type of the body included (HY-42.8, HY-42.9)', async () => {
+    const seen: unknown[] = [];
+    const app = await new Fixture().app();
+    const listener = app.listener(new FileSessions({ directory }), {
+      around: (request) => {
+        seen.push(request.header('Content-Type'), request.mediaType(), request.header('User-Agent'), request.form());
+        return Promise.resolve(Response.text(200, 'seen'));
+      },
+    });
+    server = createHttpServer(listener);
+    await listen(server);
+    expect((await raw(post)).startsWith('HTTP/1.1 200 ')).toBe(true);
+    expect(seen).toEqual(['application/x-www-form-urlencoded, text/plain', 'application/x-www-form-urlencoded, text/plain', 'a, b', []]);
+  });
+
+  it('answers an action with two Content-Type lines with 415, because their joined media type is no form type (HY-42.12, HY-59.7)', async () => {
+    await start();
+    expect((await raw(post)).startsWith('HTTP/1.1 415 Unsupported Media Type\r\n')).toBe(true);
+  });
+
+  it('leaves a request with two Content-Length lines to the 400 of node:http (HY-42.13, HY-60.7)', async () => {
+    await start();
+    const response = await raw(Buffer.from('POST /add HTTP/1.1\r\nHost: x\r\nContent-Length: 3\r\nContent-Length: 3\r\nConnection: close\r\n\r\na=1'));
+    expect(response.startsWith('HTTP/1.1 400 Bad Request\r\n')).toBe(true);
+    expect(response.endsWith('\r\n\r\nBad Request')).toBe(true);
+  });
+});
+
 // The write hook of the Node server (HY-99) and the listener that App.listener returns (HY-100).
 describe('the write hook and App.listener', () => {
   it('App.listener returns the request listener of the application (HY-100)', async () => {

@@ -1,5 +1,5 @@
 // Loaders and actions of the regions and routes that app.json declares, as app/handlers.php defines them.
-import { NotFound, Representation, Result, type Handlers, type Request } from '@polyspec/hyper';
+import { NotFound, Redirect, Representation, Result, type Handlers, type Request } from '@polyspec/hyper';
 import type { Post, Posts } from './posts.js';
 
 export interface Services {
@@ -47,6 +47,13 @@ export const handlers: Handlers<Services> = {
   },
 
   routes: {
+    // HY-133: the route sends the browser to a location of another origin, as a sign-in at an outside system does.
+    away: {
+      load: () => {
+        throw new Redirect(Result.outside('https://outside.example/landing'));
+      },
+    },
+
     'board.list': {
       load: ({ request, services }) => {
         const [page, pages] = currentPage(request, services.get('posts'));

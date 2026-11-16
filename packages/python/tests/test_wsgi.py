@@ -45,14 +45,25 @@ class Input:
         return part
 
 
+def consume(body) -> bytes:
+    """Consumes the whole body iterable and then calls its `close()` when it has one, as PEP 3333 requires a WSGI
+    server to do."""
+    try:
+        return b"".join(body)
+    finally:
+        close = getattr(body, "close", None)
+        if close is not None:
+            close()
+
+
 def call(application, values: dict) -> tuple[str, list[tuple[str, str]], bytes]:
-    """Runs the callable as a WSGI server does: it consumes the whole body iterable."""
+    """Runs the callable as a WSGI server does: it consumes the whole body iterable and closes it."""
     head: list = []
 
     def start(status, headers, exc_info=None):
         head[:] = [status, headers]
 
-    body = b"".join(application(values, start))
+    body = consume(application(values, start))
     return head[0], head[1], body
 
 
@@ -447,17 +458,18 @@ class WsgiTest(UploadCases, TransportCase):
             written=record_failure(written),
         )
         with contextlib.redirect_stderr(io.StringIO()):
-            body = b"".join(application(environ(RAW_URI="/"), start))
+            body = consume(application(environ(RAW_URI="/"), start))
         self.assertEqual(b"Internal Server Error", body)
         self.assertEqual(2, len(calls))
         self.assertEqual("500 Internal Server Error", calls[1][0])
         self.assertIsNotNone(calls[1][1])
         self.assertEqual([(500, True, "the server refuses the headers")], written)
 
-    def test_an_empty_response_reports_its_write_at_the_end_of_the_iterable(
+    def test_an_empty_response_reports_its_write_when_the_consumed_iterable_is_closed(
         self,
     ) -> None:
-        # HY-99: a 204 response has an empty body; its write ends when the server consumes the iterable, not at return.
+        # HY-99, HY-100.34: a 204 response has an empty body; its write is reported when the server closes the
+        # iterable that it consumed, not at return and not at the end of the iteration.
         class NoContent(Application):
             def _respond(self, request, session, started):
                 return Response(204, {}, ""), Reply()
@@ -473,7 +485,87 @@ class WsgiTest(UploadCases, TransportCase):
         )
         self.assertEqual([], written)
         self.assertEqual([b""], list(body))
+        self.assertEqual([], written)
+        body.close()
         self.assertEqual([(204, True, None)], written)
+
+    def test_a_start_response_that_raises_again_reports_the_write_before_the_error_propagates(
+        self,
+    ) -> None:
+        # HY-100.36: the callable returns no iterable, so it calls the write hook before the error of the second
+        # `start_response` propagates.
+        written = []
+
+        def start(status, headers, exc_info=None):
+            raise ValueError("the server refuses the headers")
+
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            written=record_failure(written),
+        )
+        with contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(ValueError):
+                application(environ(RAW_URI="/"), start)
+        self.assertEqual([(500, False, "the server refuses the headers")], written)
+
+    def close_events(self, consume_all: bool) -> list[str]:
+        """Runs the callable as a WSGI server does that consumes the whole body iterable or stops after its first
+        item, then calls `close()` twice, and returns the events in their order: the end of the iteration, the write
+        hook with `ended`, the disconnect hook and each return of `close()`."""
+        events: list[str] = []
+
+        class Recording(Application):
+            def _disconnected(self, request, started, reply) -> None:
+                events.append("disconnect hook")
+
+        application = create_wsgi(
+            Recording(),
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: events.append(
+                f"written ended={ended}"
+            ),
+        )
+        body = application(environ(), lambda status, headers, exc_info=None: None)
+        if consume_all:
+            for _ in body:
+                pass
+            events.append("iteration ended")
+        else:
+            next(iter(body))
+        body.close()
+        events.append("close returned")
+        body.close()
+        events.append("close returned")
+        return events
+
+    def test_close_runs_the_write_hook_of_a_write_that_ended(self) -> None:
+        # HY-100.34, HY-100.35: the iterable reports the write in its `close()`, after the server consumed it, so the
+        # hook has run when `close()` returns; a second `close()` calls no hook.
+        self.assertEqual(
+            [
+                "iteration ended",
+                "written ended=True",
+                "close returned",
+                "close returned",
+            ],
+            self.close_events(True),
+        )
+
+    def test_close_runs_the_write_hook_and_the_disconnect_hook_of_a_write_that_failed(
+        self,
+    ) -> None:
+        # HY-100.34, HY-100.35: a `close()` before the end calls the write hook and then the disconnect hook, and
+        # returns after both; a second `close()` calls no hook.
+        self.assertEqual(
+            [
+                "written ended=False",
+                "disconnect hook",
+                "close returned",
+                "close returned",
+            ],
+            self.close_events(False),
+        )
 
 
 class BaseExceptionTest(unittest.TestCase):

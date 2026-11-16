@@ -87,6 +87,8 @@ final class ArgumentsSteps
         'result.redirect' => [Result::class, 'redirect'],
         'result.page' => [Result::class, 'page'],
         'result.invalid' => [Result::class, 'invalid'],
+        'result.outside' => [Result::class, 'outside'],
+        'result.origin' => [Result::class, 'origin'],
         'result.flash' => [Result::class, 'flash'],
         'result.changed' => [Result::class, 'changed'],
         'redirect.constructor' => [Redirect::class, '__construct'],
@@ -240,6 +242,8 @@ final class ArgumentsSteps
             'result.redirect',
             'result.page',
             'result.invalid',
+            'result.outside',
+            'result.origin',
         ];
         if ($name === 'constructor' || in_array($member, $static, true)) {
             return null;
@@ -350,6 +354,8 @@ final class ArgumentsSteps
             'result.redirect' => ['/a'],
             'result.page' => [200, []],
             'result.invalid' => [[]],
+            'result.outside' => ['https://outside.example/'],
+            'result.origin' => ['https://outside.example/'],
             'result.changed' => ['a', 'b'],
             'redirect.constructor' => [Result::redirect('/a')],
             'uploaded-file.constructor' => ['f', 'a.txt', 'text/plain', 'x'],
@@ -504,6 +510,8 @@ final class ArgumentsSteps
             'result.redirect' => Untyped::call(Result::redirect(...))(...$arguments),
             'result.page' => Untyped::call(Result::page(...))(...$arguments),
             'result.invalid' => Untyped::call(Result::invalid(...))(...$arguments),
+            'result.outside' => Untyped::call(Result::outside(...))(...$arguments),
+            'result.origin' => Untyped::call(Result::origin(...))(...$arguments),
             'redirect.constructor' => new (Untyped::name(Redirect::class))(...$arguments),
             'not-found.constructor' => new (Untyped::name(NotFound::class))(...$arguments),
             'forbidden.constructor' => new (Untyped::name(Forbidden::class))(...$arguments),

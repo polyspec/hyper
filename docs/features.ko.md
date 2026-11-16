@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 8082f4835666a0064fe1c85ca3fd1efca309ec5d04e49ad87fd77acc7c60c92d -->
+<!-- source-sha256: bef1151ed592b97e2633a02b70d895de9a131934f56b02efdf13e8c80654d114 -->
 # 기능 상태
 
 [English](features.md).
@@ -25,9 +25,11 @@
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
 | rest-routes | 라우트 경로 끝의 나머지 매개변수 `{name*}`(HY-49) | implemented | `make test-php`, `make test-js` |
 | stop-results | loader와 action의 redirect, 금지 결과(HY-50, HY-51) | implemented | `make test-php`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/result.json`의 case |
+| outside-redirect | action의 결과, loader나 action의 멈춤으로 주는 다른 origin의 `http`나 `https` location으로의 outside redirect: 303과 `Location`, 또는 `HX-Request: true`인 요청과 document request에는 200과 `HX-Redirect`, 그리고 location의 `origin`. 브라우저 코드는 region 응답의 location을 불러오고, location의 렌더, document request, server-side rendering의 history 복원에서는 페이지의 location을 바꾼다(HY-133, HYC-4.8, HYC-7.10, HYC-8.4, HYC-14.6) | 진행 중: 세 server와 브라우저 코드가 unit test를 통과한다. board 예제의 route `/away`에 대한 `make e2e`와 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`이 실행하는 `contracts/result.json`, `contracts/app.json`, `contracts/client.json`, `contracts/context.json`, `contracts/arguments.json`의 case, `make hyper-test-js`, `make e2e` |
 | page-statuses | loader와 action의 잘못된 요청 멈춤, 200, 409, 422로 페이지를 렌더하는 action 결과(HY-58) | implemented | `make test-php`, `make hyper-test-node`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/result.json`의 case |
 | page-forbidden | loader나 action은 reply로 그 요청의 페이지에 상태 403을 준다. 요청이 볼 수 없는 데이터 대신 다른 데이터를 보이는 페이지를 위한 것이다(HY-69) | implemented | `make test-php`, `make hyper-test-node`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/reply.json`의 case |
 | body-checks | 애플리케이션의 body 한도와 받는 폼 type, 413, 415, CSRF 403 순서의 검사(HY-59) | implemented | `make test-php`, `make hyper-test-node`, `make server-parity` |
+| field-lines | 여러 field line으로 오는 요청 field는 모든 server에서 `, `로 이은 값 하나이며, body의 media type과 선언된 길이를 포함한 server의 모든 읽기가 그 값을 쓰고, `http.server` 서버는 그 값으로 읽을 수 없는 body에 400으로 응답한다(HY-42.8~HY-42.13) | 진행 중: 세 server가 자기 test를 통과한다. 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python` |
 | failure-cache | 상태가 400 이상인 모든 응답의 `Cache-Control: no-store`(HY-65) | implemented | `make test-php`, `make hyper-test-node` |
 | response-limit | 애플리케이션의 응답 한도. 더 큰 body는 보내지 않고 요청은 텍스트 500을 받는다(HY-66) | implemented | `make test-php`, `make hyper-test-node` |
 | disconnect-hook | client가 연결을 닫은 요청의 연결 끊김 hook. Node 서버는 요청을 멈추고, PHP는 첫 실패한 쓰기에서 script를 끝내며, Python 서버는 응답의 첫 실패한 쓰기를 알린다(HY-67) | implemented | `make test-php`, `make hyper-test-node`, `make hyper-test-python-render` |
@@ -49,7 +51,7 @@
 | hyper-php | PHP 서버: 라우트, 액션, CSRF, flash, 바뀐 주제, 기본 경로, 문서와 JSON | implemented | `make test-php` |
 | hyper-node | server protocol의 Node.js 구현 `@polyspec/hyper`, 파일 session(HY-104), PHP 구현과 같은 바이트의 JSON, board 예제 서버(HY-54) | implemented | `make hyper-test-node`, `make node-server` |
 | python-request-hook | Python 서버 `create_server`의 요청 hook `around`. 요청과 `answer`를 받고, `Request.with_header`로 요청을 바꾸거나 응답을 바꾸며, session과 애플리케이션의 hook 없이 혼자 응답할 수 있다 (HY-97) | implemented | `make test-python`, `make hyper-test-python-render` |
-| hyper-python | server protocol의 Python 구현 `polyspec-hyper`. template Python package로 렌더하고 file session(HY-104)과 `http.server` 서버, WSGI application callable(H19.1), ASGI application callable(H19.2), board 예제 서버를 둔다 (H15.3) | implemented | `make test-python`, `make hyper-test-python-render`, `make server-parity-python` |
+| hyper-python | server protocol의 Python 구현 `polyspec-hyper`. template Python package로 렌더하고 file session(HY-104)과 `http.server` 서버, body iterable이 자기 `close()`에서 write hook과 disconnect hook을 실행하는 WSGI application callable(H19.1, H34.1), ASGI application callable(H19.2), board 예제 서버를 둔다 (H15.3) | implemented | `make test-python`, `make hyper-test-python-render`, `make server-parity-python` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HYC-10 ~ HYC-11, HYC-5, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-40) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |

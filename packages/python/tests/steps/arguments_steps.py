@@ -421,6 +421,16 @@ _ROWS: dict[str, _Row] = {
         lambda receiver, arguments, named: Result.invalid(*arguments, **named),
         lambda directory: [{}],
     ),
+    "result.outside": _Row(
+        Result.outside,
+        lambda receiver, arguments, named: Result.outside(*arguments, **named),
+        lambda directory: ["https://outside.example/"],
+    ),
+    "result.origin": _Row(
+        Result.origin,
+        lambda receiver, arguments, named: Result.origin(*arguments, **named),
+        lambda directory: ["https://outside.example/"],
+    ),
     "result.flash": _Row(
         Result.flash,
         lambda receiver, arguments, named: receiver.flash(*arguments, **named),

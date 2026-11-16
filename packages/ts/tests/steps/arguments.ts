@@ -369,6 +369,16 @@ const MEMBERS: Record<string, Member> = {
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
     call: (_receiver, args) => Result.invalid(...args),
   },
+  'result.outside': {
+    required: Result.outside.length,
+    // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
+    call: (_receiver, args) => Result.outside(...args),
+  },
+  'result.origin': {
+    required: Result.origin.length,
+    // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
+    call: (_receiver, args) => Result.origin(...args),
+  },
   'app.open': {
     required: App.open.length,
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
@@ -544,6 +554,9 @@ function argumentsOf(member: string, directory: string): unknown[] {
       return [200, {}];
     case 'result.invalid':
       return [{}];
+    case 'result.outside':
+    case 'result.origin':
+      return ['https://outside.example/'];
     case 'result.changed':
       return ['a', 'b'];
     case 'redirect.constructor':

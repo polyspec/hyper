@@ -2328,6 +2328,10 @@
               "role": "input",
               "optional": true
             },
+            "outside": {
+              "role": "input",
+              "optional": true
+            },
             "page": {
               "role": "input",
               "optional": true
@@ -2336,7 +2340,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-27.3",
-              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect` or the page with the status `page`, and `message` is null when making it fails."
+              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect`, the outside redirect to `outside` or the page with the status `page`, and `message` is null when making it fails."
             },
             "error": {
               "role": "expected",
@@ -2387,6 +2391,106 @@
               "state": "`error` is the message of the `TypeError` of the method `call` of a redirect, `flash` with the value null under the name or `changed` with the topic, for the JSON text `argument` as a handler gives it, or null when the method takes it."
             }
           }
+        },
+        "origin": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "text": {
+              "role": "input"
+            },
+            "origin": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-133.13",
+              "state": "`origin` is the origin of `text` with its scheme and host in lower case and its port, or null when `text` is no outside location."
+            }
+          },
+          "members": [
+            "result.origin"
+          ]
+        },
+        "outside": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "location": {
+              "role": "input"
+            },
+            "outside": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-133.2",
+              "state": "`outside` is the location of the outside redirect to `location`, or null when making it fails."
+            },
+            "status": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-133.1",
+              "state": "`status` is the status of the outside redirect, 303, or null when making it fails."
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-133.5",
+              "state": "`error` is the message of the error with which making an outside redirect to `location` fails, or null."
+            }
+          },
+          "members": [
+            "result.outside"
+          ]
+        },
+        "outsideStores": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "call": {
+              "role": "input"
+            },
+            "argument": {
+              "role": "input"
+            },
+            "error": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-133.10",
+              "state": "`error` is the message of the error of the method `call` of an outside redirect, `flash` with the value null under the name or `changed` with the topic, for the JSON text `argument` as a handler gives it."
+            }
+          },
+          "members": [
+            "result.flash",
+            "result.changed"
+          ]
         }
       }
     },

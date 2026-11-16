@@ -1267,6 +1267,48 @@
       "refused": true
     },
     {
+      "id": "result_outside_without_its_last_required_argument_is_refused",
+      "label": "`result.outside` without its last required argument fails with the count error (HY-106.8)",
+      "member": "result.outside",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "result_outside_with_every_argument_runs",
+      "label": "`result.outside` with every argument runs (HY-106.8)",
+      "member": "result.outside",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "result_outside_with_one_more_argument_is_refused",
+      "label": "`result.outside` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "result.outside",
+      "call": "extra",
+      "refused": true
+    },
+    {
+      "id": "result_origin_without_its_last_required_argument_is_refused",
+      "label": "`result.origin` without its last required argument fails with the count error (HY-106.8)",
+      "member": "result.origin",
+      "call": "missing",
+      "refused": true
+    },
+    {
+      "id": "result_origin_with_every_argument_runs",
+      "label": "`result.origin` with every argument runs (HY-106.8)",
+      "member": "result.origin",
+      "call": "all",
+      "refused": false
+    },
+    {
+      "id": "result_origin_with_one_more_argument_is_refused",
+      "label": "`result.origin` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "result.origin",
+      "call": "extra",
+      "refused": true
+    },
+    {
       "id": "result_flash_without_its_last_required_argument_is_refused",
       "label": "`result.flash` without its last required argument fails with the count error (HY-106.8)",
       "member": "result.flash",

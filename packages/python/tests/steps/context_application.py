@@ -115,6 +115,10 @@ def open_application(
                 if not isinstance(spec["redirect"], str):
                     raise ValueError(f"the redirect of {route} is not a string")
                 return Result.redirect(spec["redirect"])
+            if "outside" in spec:
+                if not isinstance(spec["outside"], str):
+                    raise ValueError(f"the outside redirect of {route} is not a string")
+                return Result.outside(spec["outside"])
             # type() and not isinstance(): a bool is an int of Python, but not an integer of JSON.
             if type(spec.get("page")) is not int or not isinstance(
                 spec.get("data"), dict

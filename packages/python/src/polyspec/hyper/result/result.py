@@ -1,5 +1,5 @@
-"""The outcome of an action: a redirect (HY-25, HY-46) or a page with a status (HY-26, HY-58), with the flash values
-and the changed topics that it stores for the next request."""
+"""The outcome of an action: a redirect (HY-25, HY-46), an outside redirect (HY-133) or a page with a status (HY-26,
+HY-58), with the flash values and the changed topics that it stores for the next request."""
 
 from __future__ import annotations
 
@@ -9,6 +9,13 @@ from ..data._data_model import DataModel
 
 # A lone surrogate is not UTF-8 text, so that a location holds none (HY-46).
 _PATH = re.compile(r"/(?![/\\])[^\x00-\x20\x7f-\x9f\\\ud800-\udfff]*\Z", re.DOTALL)
+
+# An outside location (HY-133.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
+# holds every visible ASCII character except the backslash.
+_OUTSIDE = re.compile(
+    r"([Hh][Tt][Tt][Pp][Ss]?)://([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*)(?::([1-9][0-9]{0,4}))?"
+    r"(?:[/?#][\x21-\x5b\x5d-\x7e]*)?\Z"
+)
 
 
 class Result:
@@ -42,6 +49,32 @@ class Result:
         return Result(location, 303, {}, {}, [])
 
     @staticmethod
+    def outside(location: str) -> Result:
+        """Returns an outside redirect to an outside location (HY-133)."""
+        if Result.origin(location) is None:
+            raise ValueError(
+                "an outside location is not an http or https URL with a host (HY-133)"
+            )
+        return Result(location, 303, {}, {}, [])
+
+    @staticmethod
+    def origin(text: str) -> str | None:
+        """Returns the origin of an outside location, its scheme and its host in lower case and its port or the default
+        port of its scheme, or None for a text that is no outside location (HY-133)."""
+        parts = _OUTSIDE.fullmatch(text)
+        if parts is None:
+            return None
+        scheme = parts.group(1).lower()
+        port = (
+            (443 if scheme == "https" else 80)
+            if parts.group(3) is None
+            else int(parts.group(3))
+        )
+        if port > 65535:
+            return None
+        return f"{scheme}://{parts.group(2).lower()}:{port}"
+
+    @staticmethod
     def page(status: int, data: dict) -> Result:
         """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58)."""
         if type(status) is not int or status not in (200, 409, 422):
@@ -56,6 +89,7 @@ class Result:
     def flash(self, name: str, value: object) -> Result:
         """Returns a copy that stores a flash value, a value of the data model, for the next request; a value outside
         the data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.6)."""
+        self._refuse_outside()
         if not isinstance(name, str):
             raise TypeError("a flash name is not a string (HY-25)")
         DataModel.check(value)
@@ -70,6 +104,7 @@ class Result:
     def changed(self, *topics: str) -> Result:
         """Returns a copy that records changed topics for the next request; a topic that it records already keeps its
         place; a topic that is not a string fails with TypeError (HY-25.6)."""
+        self._refuse_outside()
         if not all(isinstance(topic, str) for topic in topics):
             raise TypeError("a changed topic is not a string (HY-25)")
         return Result(
@@ -83,6 +118,17 @@ class Result:
     def _is_redirect(self) -> bool:
         """Returns True for a redirect."""
         return self.location is not None
+
+    def _is_outside(self) -> bool:
+        """Returns True for an outside redirect, whose location is no application path (HY-133)."""
+        return self.location is not None and not self.location.startswith("/")
+
+    def _refuse_outside(self) -> None:
+        """Fails for an outside redirect, which stores no flash value and no changed topic (HY-133)."""
+        if self._is_outside():
+            raise ValueError(
+                "an outside redirect holds no flash value or changed topic (HY-133)"
+            )
 
     @staticmethod
     def _has_dot_segment(location: str) -> bool:

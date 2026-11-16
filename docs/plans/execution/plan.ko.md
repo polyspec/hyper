@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 839818c50014bb1567485fbe17efec6a3518fdc51a02148705fe66cb7fb9935d -->
+<!-- source-sha256: 9fd1ac27661c2fdeffbd40e8c46f7db0f76edca349406269102e3861a002623a -->
 # 실행
 
 [English](plan.md).
@@ -191,6 +191,22 @@ core를 부르지 않는 서버는 `tests/legacy/`의 case를 실행하고, core
 - 중첩된 container가 256개를 넘는 JSON text는 거부된다(HY-54.20). Python과 PHP 서버는 더 깊은 text를 읽는다.
 - 자기 자리의 prefix가 없는 build 출력 경로는 build를 `invalid_build`로 실패시킨다(HY-125.17). command tool의 build id는 core에서 build id를 받을 때까지(H31.4-3) 경로를 검사하지 않는다.
 
+## Wave 32 — 외부 리다이렉트
+
+의존: 없음. H32.1이 HY-133와 HYC-4, HYC-7, HYC-8, HYC-14의 변경을 쓰고, 세 server와 browser code에 그것을 case와 함께 구현하며, board 예제와 browser test에 더한다. H32.2는 region 요청과 대기 중인 server-side rendering의 history 복원의 순서를 정한다. wave 31의 행들은 그 branch가 main 위로 rebase될 때 HY-133를 받는다.
+
+리다이렉트는 자기 애플리케이션의 경로를 지정하므로(HY-46), 애플리케이션은 loader나 action에서 browser를 다른 origin, 예를 들어 사람이 sign in하는 다른 system의 page로 보낼 수 없고, 사람이 누르는 link가 있는 page를 렌더할 수만 있다. 이 wave는 다음 결정으로 외부 리다이렉트를 더한다:
+
+- 규칙은 외부 location의 ASCII 문법 하나를 적고, 모든 server가 자기 코드로 그것을 검사한다. runtime의 URL parser는 ASCII가 아닌 host, `\`, 빈 port에서 서로 다르므로, runtime의 parser를 쓰면 server들이 서로 다른 텍스트를 받는다.
+- `origin(text)`는 외부 location의 origin을 준다. 그래서 애플리케이션은 location을 다시 parse하지 않고 그것을 자기가 허용하는 origin과 비교한다.
+- `HX-Request: true`가 있는 요청과 문서 요청은 상태 200과 `HX-Redirect`를 받고 body를 받지 않으며, 다른 모든 요청은 `Location`이 있는 303을 받는다. htmx와 browser code는 `fetch`로 요청을 보내고, 거기서 다른 origin으로의 303은 그들이 읽기 전에 network 오류나 CORS로 실패하지만, browser는 자기 문서의 navigation의 303은 따르기 때문이다.
+- browser는 문서 요청, location의 render, htmx의 history 복원의 `HX-Redirect`에 대해 page의 location을 바꾼다(replace). 각각의 URL이 현재 history 항목의 URL이고, 그 항목을 남기면 뒤로 가기가 browser를 다시 다른 origin으로 보내기 때문이다. htmx는 region 요청의 URL을 대입한다(assign). htmx는 그 history 항목을 swap에서만 더한다.
+- 외부 리다이렉트는 flash 값과 바뀐 topic을 가지지 않고, base path와 data base path를 받지 않으며, `Cache-Control: no-store`와 HY-117.1의 `Vary`를 가진다. 그 응답이 `HX-Request`와 `Accept`에 따라 다르기 때문이다.
+
 ## Wave 33 — CI job마다 recipe 하나
 
 의존: 없음. H33.1은 각 CI job의 내용을 Makefile의 recipe `ci-<job>`으로 옮겨 job과 local 실행이 같은 호출을 하게 한다. release job은 `make ci-release`를 실행한다. H33.2는 추적 기록에서 commit hash를 없앤다.
+
+## Wave 34 — WSGI 요청의 끝
+
+의존: 없음. H34.1은 WSGI callable의 body iterable이 write hook과 disconnect hook을 자기 `close()`에서 실행한다고 정한다. PEP 3333은 WSGI server가 모든 응답에 대해 `close()`를 한 번 호출하도록 요구하므로, Node listener의 promise(HY-100.29)와 PHP의 shutdown function(HY-100.30)이 자기 server에서 정하듯이, host는 `close()`가 돌아오면 요청의 두 hook이 모두 실행되었음을 안다.

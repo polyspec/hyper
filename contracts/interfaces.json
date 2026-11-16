@@ -881,25 +881,26 @@
               "kind": "method",
               "visibility": "private",
               "inputs": [
+                "request",
                 "session",
                 "result",
                 "string"
               ],
               "output": "response",
               "errors": [],
-              "state": "Stores the flash values and the changed topics of a redirect and returns the 303 (HY-25.3).",
+              "state": "Stores the flash values and the changed topics of a redirect and returns the 303 (HY-25.3), or returns the response of an outside redirect, which stores nothing (HY-133.6).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::redirectResponse",
-                  "signature": "private function redirectResponse(Polyspec\\Hyper\\Session $session, Polyspec\\Hyper\\Result $result, string $basePath): Polyspec\\Hyper\\Response"
+                  "signature": "private function redirectResponse(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\Session $session, Polyspec\\Hyper\\Result $result, string $basePath): Polyspec\\Hyper\\Response"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.redirectResponse",
-                  "signature": "private redirectResponse(session: Session, result: Result, basePath: string): Response"
+                  "signature": "private redirectResponse(request: Request, session: Session, result: Result, basePath: string): Response"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._redirect_response",
-                  "signature": "def _redirect_response(self, session: Session, result: Result, base_path: str) -> Response"
+                  "signature": "def _redirect_response(self, request: Request, session: Session, result: Result, base_path: str) -> Response"
                 }
               }
             },
@@ -2658,13 +2659,18 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the headers of the request with repeated lines joined (HY-56.1).",
+              "state": "Returns the headers of the request with the lines of a name joined with `, ` (HY-42.8).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/server.py::_headers",
                   "signature": "def _headers(headers) -> dict[str, str]"
                 }
-              }
+              },
+              "tests": [
+                "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_reads_the_lines_of_a_name_as_one_value: Only the Python server has the `http.server` server of `create_server` (HY-100.1); two `Content-Type` and two `User-Agent` lines reach the application joined with `, `, the media type of the body included (HY-42.8, HY-42.9).",
+                "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_refuses_two_content_length_lines: Only the `http.server` server of `create_server` reads the body by `Content-Length` itself; two lines joined are no decimal digits, so it answers 400 and no request reaches the application (HY-42.13).",
+                "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_refuses_two_transfer_encoding_lines: Only the `http.server` server of `create_server` reads a chunked body itself; two `Transfer-Encoding` lines joined are no `chunked` alone, so it answers 400 and no request reaches the application (HY-42.13)."
+              ]
             },
             {
               "id": "server.nowNs",
@@ -3108,13 +3114,16 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the request headers of an environ (HY-56.1).",
+              "state": "Returns the request headers of an environ as the WSGI server gives them (HY-42.10).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/wsgi.py::_environ_headers",
                   "signature": "def _environ_headers(environ: dict) -> dict[str, str]"
                 }
-              }
+              },
+              "tests": [
+                "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_the_wsgi_callable_takes_the_value_that_its_server_joined: Only the Python server has a WSGI callable (HY-100.3); `CONTENT_TYPE` and `HTTP_USER_AGENT` that the WSGI server joined reach the application as given (HY-42.10)."
+              ]
             }
           ],
           "only": {
@@ -3300,13 +3309,16 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the request headers of a scope (HY-56.1).",
+              "state": "Returns the request headers of a scope with the headers of a name joined with `, ` (HY-42.8).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/asgi.py::_scope_headers",
                   "signature": "def _scope_headers(scope: dict) -> dict[str, str]"
                 }
-              }
+              },
+              "tests": [
+                "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_the_asgi_callable_reads_the_lines_of_a_name_as_one_value: Only the Python server has an ASGI callable (HY-100.15); two `content-type` and two `user-agent` headers of the scope reach the application joined with `, `, the media type of the body included (HY-42.8, HY-42.9)."
+              ]
             }
           ],
           "only": {
@@ -3750,6 +3762,9 @@
           "tests": [
             "packages/ts/tests/http.test.ts::App.server > answers a request target with a byte outside ASCII with a plain 400 (HY-42): Only the Node server answers and reports the 400 of a request that node:http cannot parse, with a request of the request line or with no request and with an empty reply (HY-60.7, HY-60.8); the test sends raw packets to the server of http-host.createServer.",
             "packages/ts/tests/http.test.ts::App.server > answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65): Only the Node server answers headers larger than node:http accepts with a 431 that carries Cache-Control: no-store (HY-60.7, HY-65.1).",
+            "packages/ts/tests/http.test.ts::the field lines of a request > reads the lines of a name as one value joined with `, `, the media type of the body included (HY-42.7, HY-42.8): Only the Node host is the listener of node:http (HY-100.1), whose `headers` keeps the first line of `content-type` and `user-agent`; the test sends two lines of each and asserts the joined values that `around` reads.",
+            "packages/ts/tests/http.test.ts::the field lines of a request > answers an action with two Content-Type lines with 415, because their joined media type is no form type (HY-42.11, HY-59.7): Only the Node host is the listener of node:http (HY-100.1); the test sends two `Content-Type` lines to an action through it.",
+            "packages/ts/tests/http.test.ts::the field lines of a request > leaves a request with two Content-Length lines to the 400 of node:http (HY-42.12, HY-60.7): Only the Node server has node:http, which refuses two `Content-Length` lines itself; the test asserts the plain 400 of HY-60.7.",
             "packages/ts/tests/client.test.ts::client rendering (HY-62) > serves the shell over node:http without a session (HY-45, HY-62): Only the Node host is the listener of node:http (HY-100.1); a request for the shell through it leaves the session directory empty."
           ]
         }
@@ -4764,7 +4779,8 @@
                 "packages/php/tests/RequestTest.php::RequestTest::testTheMethodOfTheSapiIsReadInUpperCase: Only PHP reads the request from the variables of the SAPI; the test sets REQUEST_METHOD to a lower case method and asserts that Request::fromGlobals holds it in upper case (HY-100.31).",
                 "packages/php/tests/RequestTest.php::RequestTest::testFromGlobalsTakesTheTargetFromTheRequestUri: Only the PHP server builds a request from the values of the SAPI; the target is REQUEST_URI (HY-42.1).",
                 "packages/php/tests/RequestTest.php::RequestTest::testFromGlobalsReadsTheQueryFromTheRequestUriAndNotFromGet: Only the PHP server has $_GET beside the request target; the query is read from REQUEST_URI (HY-56.1).",
-                "packages/php/tests/RequestTest.php::RequestTest::testFromGlobalsReadsNoFormValueFromPost: Only the PHP server has $_POST beside the body; no form value is read from it (HY-59.9)."
+                "packages/php/tests/RequestTest.php::RequestTest::testFromGlobalsReadsNoFormValueFromPost: Only the PHP server has $_POST beside the body; no form value is read from it (HY-59.9).",
+                "packages/php/tests/RequestTest.php::RequestTest::testFromGlobalsTakesTheLinesThatTheSapiJoinedAsGiven: Only the PHP server receives the request from the variables of its SAPI, which joins the lines of a field; `CONTENT_TYPE` and `HTTP_USER_AGENT` that the SAPI joined are the headers and the media type of the request as given (HY-42.9, HY-42.10)."
               ]
             },
             {
@@ -5619,7 +5635,8 @@
         "HY-46",
         "HY-50",
         "HY-51",
-        "HY-58"
+        "HY-58",
+        "HY-133"
       ],
       "cases": [
         "contracts/result.json",
@@ -5758,6 +5775,56 @@
               }
             },
             {
+              "id": "result.outside",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "result",
+              "errors": [],
+              "state": "Returns an outside redirect with status 303 to an outside location, and fails for another text (HY-133).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::outside",
+                  "signature": "public static function outside(string $location): self"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/result/result.ts::Result.outside",
+                  "signature": "static outside(location: string): Result"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result.outside",
+                  "signature": "def outside(location: str) -> Result"
+                }
+              }
+            },
+            {
+              "id": "result.origin",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the origin of an outside location with its scheme and host in lower case and its port, or null for another text (HY-133).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::origin",
+                  "signature": "public static function origin(string $text): ?string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/result/result.ts::Result.origin",
+                  "signature": "static origin(text: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result.origin",
+                  "signature": "def origin(text: str) -> str | None"
+                }
+              }
+            },
+            {
               "id": "result.flash",
               "kind": "method",
               "visibility": "public",
@@ -5828,6 +5895,52 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result._is_redirect",
                   "signature": "def _is_redirect(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "result.isOutside",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true for an outside redirect.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::isOutside",
+                  "signature": "public function isOutside(): bool"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/result/result.ts::Result.isOutside",
+                  "signature": "isOutside(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result._is_outside",
+                  "signature": "def _is_outside(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "result.refuseOutside",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Fails for an outside redirect, which stores no flash value and no changed topic (HY-133).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::refuseOutside",
+                  "signature": "private function refuseOutside(): void"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/result/result.ts::Result.refuseOutside",
+                  "signature": "private refuseOutside(): void"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result._refuse_outside",
+                  "signature": "def _refuse_outside(self) -> None"
                 }
               }
             },
@@ -13286,7 +13399,8 @@
         "HY-119",
         "HY-120",
         "HY-121",
-        "HY-122"
+        "HY-122",
+        "HY-133"
       ],
       "cases": [
         "contracts/client.json",
@@ -17162,6 +17276,10 @@
               "role": "input",
               "optional": true
             },
+            "outside": {
+              "role": "input",
+              "optional": true
+            },
             "page": {
               "role": "input",
               "optional": true
@@ -17170,7 +17288,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-27.3",
-              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect` or the page with the status `page`, and `message` is null when making it fails.",
+              "state": "`message` is the message of the stop `kind`; a redirect stop takes the redirect to `redirect`, the outside redirect to `outside` or the page with the status `page`, and `message` is null when making it fails.",
               "optional": true
             },
             "location": {
@@ -17221,6 +17339,101 @@
               "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           }
+        },
+        "outside": {
+          "runners": [],
+          "fixedCopy": "result-before-s3b.json",
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "location": {
+              "role": "input"
+            },
+            "outside": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-133.2",
+              "state": "`outside` is the location of the outside redirect to `location`.",
+              "optional": true
+            },
+            "status": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-133.1",
+              "state": "`status` is the status of the outside redirect, 303.",
+              "optional": true
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-133.5",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
+            }
+          },
+          "members": [
+            "result.outside"
+          ]
+        },
+        "origin": {
+          "runners": [],
+          "fixedCopy": "result-before-s3b.json",
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "text": {
+              "role": "input"
+            },
+            "origin": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-133.13",
+              "state": "`origin` is the origin of `text` with its scheme and host in lower case and its port, or null when `text` is no outside location."
+            }
+          },
+          "members": [
+            "result.origin"
+          ]
+        },
+        "outsideStores": {
+          "runners": [],
+          "fixedCopy": "result-before-s3b.json",
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "call": {
+              "role": "input"
+            },
+            "argument": {
+              "role": "input"
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-133.10",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
+            }
+          },
+          "members": [
+            "result.flash",
+            "result.changed"
+          ]
         }
       }
     },

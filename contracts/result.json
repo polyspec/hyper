@@ -495,6 +495,14 @@
         "category": "value",
         "message": "a redirect stop needs a redirect result (HY-50)"
       }
+    },
+    {
+      "id": "a_redirect_stop_of_an_outside_redirect_has_the_message_redirect_to_its_location",
+      "label": "a redirect stop of an outside redirect has the message redirect to its location",
+      "kind": "Redirect",
+      "outside": "https://outside.example/back",
+      "message": "redirect to https://outside.example/back",
+      "location": "https://outside.example/back"
     }
   ],
   "types": [
@@ -557,6 +565,426 @@
       "label": "a changed topic that is a string is taken",
       "call": "changed",
       "argument": "\"5\""
+    }
+  ],
+  "outside": [
+    {
+      "id": "an_https_url_with_a_path_a_query_and_a_fragment_is_an_outside_location",
+      "label": "an https url with a path a query and a fragment is an outside location",
+      "location": "https://outside.example/back?state=a1#top",
+      "outside": "https://outside.example/back?state=a1#top",
+      "status": 303
+    },
+    {
+      "id": "a_scheme_and_a_host_in_upper_case_are_an_outside_location",
+      "label": "a scheme and a host in upper case are an outside location",
+      "location": "HTTP://Outside.Example:8080/",
+      "outside": "HTTP://Outside.Example:8080/",
+      "status": 303
+    },
+    {
+      "id": "a_host_of_digits_with_the_highest_port_and_no_rest_is_an_outside_location",
+      "label": "a host of digits with the highest port and no rest is an outside location",
+      "location": "http://127.0.0.1:65535",
+      "outside": "http://127.0.0.1:65535",
+      "status": 303
+    },
+    {
+      "id": "a_rest_that_starts_with_a_query_is_an_outside_location",
+      "label": "a rest that starts with a query is an outside location",
+      "location": "https://outside.example?x=1",
+      "outside": "https://outside.example?x=1",
+      "status": 303
+    },
+    {
+      "id": "a_rest_that_starts_with_a_fragment_is_an_outside_location",
+      "label": "a rest that starts with a fragment is an outside location",
+      "location": "https://outside.example#x",
+      "outside": "https://outside.example#x",
+      "status": 303
+    },
+    {
+      "id": "labels_with_hyphens_and_digits_are_an_outside_location",
+      "label": "labels with hyphens and digits are an outside location",
+      "location": "https://sign-in.outside-1.example/a@b",
+      "outside": "https://sign-in.outside-1.example/a@b",
+      "status": 303
+    },
+    {
+      "id": "a_url_without_two_slashes_is_refused",
+      "label": "a url without two slashes is refused",
+      "location": "https:outside.example",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_url_with_an_empty_host_is_refused",
+      "label": "a url with an empty host is refused",
+      "location": "https:///outside.example",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_url_with_user_information_is_refused",
+      "label": "a url with user information is refused",
+      "location": "https://a@outside.example",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_url_with_a_backslash_is_refused",
+      "label": "a url with a backslash is refused",
+      "location": "https://outside.example\\@b.example",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_host_that_is_not_ascii_is_refused",
+      "label": "a host that is not ascii is refused",
+      "location": "https://outsíde.example/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_host_with_an_empty_label_is_refused",
+      "label": "a host with an empty label is refused",
+      "location": "https://outside..example/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_host_with_an_empty_last_label_is_refused",
+      "label": "a host with an empty last label is refused",
+      "location": "https://outside.example./",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "an_empty_port_is_refused",
+      "label": "an empty port is refused",
+      "location": "https://outside.example:/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "the_port_0_is_refused",
+      "label": "the port 0 is refused",
+      "location": "https://outside.example:0/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_port_above_65535_is_refused",
+      "label": "a port above 65535 is refused",
+      "location": "https://outside.example:65536/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_port_with_a_leading_zero_is_refused",
+      "label": "a port with a leading zero is refused",
+      "location": "https://outside.example:080/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_port_of_six_digits_is_refused",
+      "label": "a port of six digits is refused",
+      "location": "https://outside.example:100000/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_port_followed_by_a_letter_is_refused",
+      "label": "a port followed by a letter is refused",
+      "location": "https://outside.example:8443x/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "another_scheme_is_refused",
+      "label": "another scheme is refused",
+      "location": "ftp://outside.example/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_javascript_url_is_refused",
+      "label": "a javascript url is refused",
+      "location": "javascript:alert(1)",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "an_application_path_is_refused",
+      "label": "an application path is refused",
+      "location": "/board",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_url_without_a_scheme_is_refused",
+      "label": "a url without a scheme is refused",
+      "location": "//outside.example/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_space_is_refused",
+      "label": "a space is refused",
+      "location": "https://outside.example/a b",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_control_character_is_refused",
+      "label": "a control character is refused",
+      "location": "https://outside.example/\u0007",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "the_character_del_is_refused",
+      "label": "the character del is refused",
+      "location": "https://outside.example/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_line_feed_at_the_end_is_refused",
+      "label": "a line feed at the end is refused",
+      "location": "https://outside.example/\n",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "an_empty_text_is_refused",
+      "label": "an empty text is refused",
+      "location": "",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "a_scheme_without_a_host_is_refused",
+      "label": "a scheme without a host is refused",
+      "location": "https://",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    },
+    {
+      "id": "an_ipv6_literal_is_refused",
+      "label": "an ipv6 literal is refused",
+      "location": "https://[::1]/",
+      "raises": {
+        "kind": "not_outside_location",
+        "status": null,
+        "category": "value",
+        "message": "an outside location is not an http or https URL with a host (HY-133)"
+      }
+    }
+  ],
+  "origin": [
+    {
+      "id": "the_origin_of_an_https_location_has_its_host_in_lower_case_and_the_port_443",
+      "label": "the origin of an https location has its host in lower case and the port 443",
+      "text": "https://Outside.Example/back",
+      "origin": "https://outside.example:443"
+    },
+    {
+      "id": "the_origin_of_an_http_location_has_the_scheme_in_lower_case_and_the_port_80",
+      "label": "the origin of an http location has the scheme in lower case and the port 80",
+      "text": "HTTP://outside.example",
+      "origin": "http://outside.example:80"
+    },
+    {
+      "id": "the_origin_of_a_location_with_a_port_has_that_port",
+      "label": "the origin of a location with a port has that port",
+      "text": "https://outside.example:8443/a",
+      "origin": "https://outside.example:8443"
+    },
+    {
+      "id": "the_origin_of_an_http_location_with_the_port_443_keeps_it",
+      "label": "the origin of an http location with the port 443 keeps it",
+      "text": "http://outside.example:443/",
+      "origin": "http://outside.example:443"
+    },
+    {
+      "id": "the_origin_of_a_location_with_a_query_and_labels_with_hyphens",
+      "label": "the origin of a location with a query and labels with hyphens",
+      "text": "hTTpS://SIGN-IN.outside.example?x",
+      "origin": "https://sign-in.outside.example:443"
+    },
+    {
+      "id": "a_location_with_a_port_above_65535_has_no_origin",
+      "label": "a location with a port above 65535 has no origin",
+      "text": "https://outside.example:65536/",
+      "origin": null
+    },
+    {
+      "id": "an_application_path_has_no_origin",
+      "label": "an application path has no origin",
+      "text": "/board",
+      "origin": null
+    },
+    {
+      "id": "a_location_with_user_information_has_no_origin",
+      "label": "a location with user information has no origin",
+      "text": "https://a@outside.example/",
+      "origin": null
+    },
+    {
+      "id": "a_location_with_a_host_that_is_not_ascii_has_no_origin",
+      "label": "a location with a host that is not ascii has no origin",
+      "text": "https://outsíde.example/",
+      "origin": null
+    },
+    {
+      "id": "an_empty_text_has_no_origin",
+      "label": "an empty text has no origin",
+      "text": "",
+      "origin": null
+    }
+  ],
+  "outsideStores": [
+    {
+      "id": "a_flash_value_of_an_outside_redirect_is_refused",
+      "label": "a flash value of an outside redirect is refused",
+      "call": "flash",
+      "argument": "\"note\"",
+      "raises": {
+        "kind": "outside_redirect_stores",
+        "status": null,
+        "category": "value",
+        "message": "an outside redirect holds no flash value or changed topic (HY-133)"
+      }
+    },
+    {
+      "id": "a_flash_name_that_is_not_a_string_of_an_outside_redirect_is_refused_as_an_outside_redirect",
+      "label": "a flash name that is not a string of an outside redirect is refused for the outside redirect first",
+      "call": "flash",
+      "argument": "5",
+      "raises": {
+        "kind": "outside_redirect_stores",
+        "status": null,
+        "category": "value",
+        "message": "an outside redirect holds no flash value or changed topic (HY-133)"
+      }
+    },
+    {
+      "id": "a_changed_topic_of_an_outside_redirect_is_refused",
+      "label": "a changed topic of an outside redirect is refused",
+      "call": "changed",
+      "argument": "\"count\"",
+      "raises": {
+        "kind": "outside_redirect_stores",
+        "status": null,
+        "category": "value",
+        "message": "an outside redirect holds no flash value or changed topic (HY-133)"
+      }
+    },
+    {
+      "id": "a_changed_topic_that_is_not_a_string_of_an_outside_redirect_is_refused_as_an_outside_redirect",
+      "label": "a changed topic that is not a string of an outside redirect is refused for the outside redirect first",
+      "call": "changed",
+      "argument": "5",
+      "raises": {
+        "kind": "outside_redirect_stores",
+        "status": null,
+        "category": "value",
+        "message": "an outside redirect holds no flash value or changed topic (HY-133)"
+      }
     }
   ]
 }

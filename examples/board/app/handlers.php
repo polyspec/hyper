@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Polyspec\Hyper\Examples\Board\Assets;
 use Polyspec\Hyper\Examples\Board\Posts;
 use Polyspec\Hyper\NotFound;
+use Polyspec\Hyper\Redirect;
 use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Representation;
 use Polyspec\Hyper\Request;
@@ -57,6 +58,11 @@ return [
     ],
 
     'routes' => [
+        // HY-133: the route sends the browser to a location of another origin, as a sign-in at an outside system does.
+        'away' => [
+            'load' => static fn (): never => throw new Redirect(Result::outside('https://outside.example/landing')),
+        ],
+
         'board.list' => [
             'load' => function (Request $request, Posts $posts) use ($currentPage): array {
                 [$page, $pages] = $currentPage($request, $posts);

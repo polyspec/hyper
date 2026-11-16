@@ -190,6 +190,22 @@ The servers that do not call the core run the cases of `tests/legacy/`, and the 
 - A JSON text with more than 256 nested containers is refused (HY-54.20). The Python and PHP servers read deeper texts.
 - A path of a build output without the prefix of its place fails the build with `invalid_build` (HY-125.17). The build id of the command tool checks no path, until it takes the build id from the core (H31.4-3).
 
+## Wave 32 — The outside redirect
+
+Depends on: none. H32.1 writes HY-133 and the changes of HYC-4, HYC-7, HYC-8 and HYC-14, implements them in the three servers and the browser code with their cases, and adds them to the board example and the browser tests. H32.2 states the order of a region request and a pending history restoration of server-side rendering. The rows of wave 31 take HY-133 when their branches are rebased onto main.
+
+A redirect names a path of its application (HY-46), so an application cannot send the browser to another origin, such as the page of another system where a person signs in, from a loader or an action; it can only render a page with a link that the person presses. The wave adds the outside redirect with these decisions:
+
+- The rule states one ASCII grammar of an outside location, which every server checks with its own code: the URL parsers of the runtimes differ for a host that is not ASCII, a `\` and an empty port, so a parser of a runtime would make the servers accept different texts.
+- `origin(text)` gives the origin of an outside location, so that an application compares it with the origins that it admits without parsing the location again.
+- A request with `HX-Request: true` and a document request receive status 200 with `HX-Redirect` and no body, and every other request receives 303 with `Location`: htmx and the browser code send their requests with `fetch`, where a 303 to another origin fails as a network error or on CORS before they read it, while the browser follows the 303 of a navigation of its document.
+- The browser replaces the location of the page for `HX-Redirect` of the document request, the render of a location and the history restoration of htmx, because the URL of each is the URL of the current history entry, and an entry kept for it would send Back to the other origin again; htmx assigns the URL of a region request, whose history entry it adds only in its swap.
+- The outside redirect holds no flash value and no changed topic, takes no base path and no data base path, and has `Cache-Control: no-store` and the `Vary` of HY-117.1, because its response differs by `HX-Request` and `Accept`.
+
 ## Wave 33 — One recipe per CI job
 
 Depends on: none. H33.1 moves the content of each CI job into the recipe `ci-<job>` of the Makefile, so the job and a local run make the same call; the release job runs `make ci-release`. H33.2 removes the commit hashes from the tracked records.
+
+## Wave 34 — The end of a WSGI request
+
+Depends on: none. H34.1 states that the body iterable of the WSGI callable runs the write hook and the disconnect hook in its `close()`, which PEP 3333 requires a WSGI server to call once for every response, so that a host knows that both hooks of a request have run when `close()` returns, as the promise of the Node listener (HY-100.29) and the shutdown function of PHP (HY-100.30) state for their servers.

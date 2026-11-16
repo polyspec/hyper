@@ -93,4 +93,25 @@ final class RequestTest extends TestCase
             $_POST = $post;
         }
     }
+
+    /**
+     * HY-42.10, HY-42.11: `fromGlobals` takes a field whose lines the SAPI joined as given, as the PHP built-in server
+     * and nginx write two `Content-Type` and two `User-Agent` lines, and the media type of the body is that value.
+     */
+    public function testFromGlobalsTakesTheLinesThatTheSapiJoinedAsGiven(): void
+    {
+        $server = $_SERVER;
+        $_SERVER['REQUEST_URI'] = '/add';
+        $_SERVER['REQUEST_METHOD'] = 'POST';
+        $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded, text/plain';
+        $_SERVER['HTTP_USER_AGENT'] = 'a, b';
+        try {
+            $request = Request::fromGlobals();
+        } finally {
+            $_SERVER = $server;
+        }
+        self::assertSame('application/x-www-form-urlencoded, text/plain', $request->header('Content-Type'));
+        self::assertSame('application/x-www-form-urlencoded, text/plain', $request->mediaType());
+        self::assertSame('a, b', $request->header('User-Agent'));
+    }
 }

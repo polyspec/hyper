@@ -107,12 +107,14 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
         serveFile(outgoing, incoming, file);
         return;
       }
-      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, https });
+      // HY-42.9: every line of a name, which `headers` of node:http keeps only the first of for the names that it reads
+      // as one value; `requestOf` joins them (HY-42.8).
+      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, https });
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
       // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
-      read = new RequestBody(incoming.headers['content-type'] ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'), app.valueLimit, app.partLimit, app.fileLimit);
+      read = new RequestBody(request.header('Content-Type') ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'), app.valueLimit, app.partLimit, app.fileLimit);
       await readBody(incoming, read, app.bodyLimit);
-      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headers, body: read.held(), bodySize: read.size(), https }, read);
+      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, body: read.held(), bodySize: read.size(), https }, read);
       holder = request;
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
       const last: { request?: Request; reply?: Reply } = {};
@@ -198,8 +200,8 @@ function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions
 
 // Returns the request of the parts that node:http gives (HY-100): the method in upper case, the path and the raw query
 // of the request target, each header as one value, and the cookies of the one parse of the Cookie header (HY-129).
-// Several Cookie lines are one header joined with `; `, and other repeated headers join with `, `. `read` is the body
-// as the host read it.
+// Several Cookie lines are one header joined with `; `, and the lines of another name join with `, ` (HY-42.8). `read`
+// is the body as the host read it.
 /** @internal */
 export function requestOf(
   parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean },

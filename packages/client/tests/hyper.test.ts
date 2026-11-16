@@ -70,6 +70,11 @@ class FakeDocument {
   assign(url: string): void {
     this.assigned.push(url);
   }
+  // the URLs that replace the location of the page, which keeps no history entry of the current URL (HY-133)
+  readonly replaced: string[] = [];
+  replace(url: string): void {
+    this.replaced.push(url);
+  }
 }
 
 // A region element stub that records its hy-error attribute.
@@ -1178,5 +1183,128 @@ describe('obtaining the data of a page without embedded data (HYC-7)', () => {
     await hyper.open();
     expect(page.mounted).toHaveLength(1);
     expect(page.mounted[0]).toContain('id="rows"');
+  });
+});
+
+// The outside location of the cases of HY-133.
+const OUTSIDE = 'https://outside.example/back?state=a1';
+
+// The response of an outside redirect to a request with HX-Request: true or a document request: status 200, the header
+// HX-Redirect and no body (HY-133).
+function outsideResponse(): Response {
+  return new Response(null, { status: 200, headers: { 'HX-Redirect': OUTSIDE } });
+}
+
+describe('outside redirects (HY-133)', () => {
+  it('replaces the location for HX-Redirect of the latest render of a location and renders nothing (HYC-8.4)', async () => {
+    const page = new FakeDocument();
+    const hyper = clientRendering(page, async () => outsideResponse());
+    await hyper.renderLocation('/list');
+    expect(page.replaced).toEqual([OUTSIDE]);
+    expect(page.assigned).toEqual([]);
+    expect(page.mounted).toEqual([]);
+  });
+
+  it('sends the browser nowhere for HX-Redirect of a render of a location that a later render superseded (HYC-8.4, HYC-3.2)', async () => {
+    const page = new FakeDocument();
+    let release: () => void = () => undefined;
+    const answers = [
+      () => new Promise<Response>((resolve) => { release = () => resolve(outsideResponse()); }),
+      async () => jsonResponse('http://localhost/api/list', listJson.replace('"regions":{', '"regions":{"side":{"count":1},')),
+    ];
+    const hyper = clientRendering(page, () => defined(answers.shift(), 'the answer of a render')());
+    const first = hyper.renderLocation('/items/7');
+    await hyper.renderLocation('/list');
+    release();
+    await first;
+    expect(page.replaced).toEqual([]);
+    expect(page.mounted).toHaveLength(1);
+  });
+
+  it('replaces the location for HX-Redirect of the document request of a call, sets no hy-error and fails the call (HYC-7.10)', async () => {
+    const { hyper, page, elements, swaps } = obtaining({ answer: async () => outsideResponse() });
+    await expect(hyper.set('rows', 'flag', true)).rejects.toThrow(`sends the browser to ${OUTSIDE}`);
+    expect(page.replaced).toEqual([OUTSIDE]);
+    expect(elements.get('rows')?.attributes.has('hy-error') ?? false).toBe(false);
+    expect(swaps).toEqual([]);
+  });
+
+  it('drops HX-Redirect of a document request when a region response replaced the held data while it was pending (HYC-7.7)', async () => {
+    let release: () => void = () => undefined;
+    const { hyper, page } = obtaining({ answer: () => new Promise((resolve) => { release = () => resolve(outsideResponse()); }) });
+    const setting = hyper.set('rows', 'flag', true);
+    await new Promise((done) => setTimeout(done, 0));
+    await request(hyper, '/list', 'http://localhost/list', listJson);
+    release();
+    await setting;
+    expect(page.replaced).toEqual([]);
+    expect(mapOf(await hyper.data('rows')).get('flag')).toBe(true);
+  });
+
+  it('replaces the location for HX-Redirect when the page opens and needs the data, and marks no body (HYC-7.10, HYC-4)', async () => {
+    const { hyper, page } = obtaining({ storage: new FakeStorage({ 'sessionStorage:rows:tab': '"b"' }), answer: async () => outsideResponse() });
+    await hyper.open();
+    expect(page.replaced).toEqual([OUTSIDE]);
+    expect(page.mounted).toEqual([]);
+  });
+
+  it('lets htmx load HX-Redirect of the latest region request and marks no region (HYC-14.6)', () => {
+    const page = new FakeDocument();
+    const { hyper } = setup('', [], new FakeStorage(), page);
+    const extension = hyper.extension();
+    const target = regionElement('content');
+    const ctx = context('/items/7', target);
+    extension.htmx_config_request(null, { ctx });
+    extension.htmx_before_request(null, { ctx });
+    ctx.response = { raw: { url: 'http://localhost/items/7' }, status: 200, headers: new Headers({ 'HX-Redirect': OUTSIDE }) };
+    ctx.text = '';
+    expect(extension.htmx_after_request(null, { ctx })).not.toBe(false);
+    expect(target.attributes.has('hy-error')).toBe(false);
+    expect(page.replaced).toEqual([]);
+  });
+
+  it('cancels htmx for HX-Redirect of a superseded region request, so the browser goes nowhere (HYC-14.6, HYC-23.3)', () => {
+    const page = new FakeDocument();
+    const { hyper } = setup('', [], new FakeStorage(), page);
+    const extension = hyper.extension();
+    const target = regionElement('content');
+    const older = context('/items/1', target);
+    extension.htmx_config_request(null, { ctx: older });
+    extension.htmx_before_request(null, { ctx: older });
+    const newer = context('/items/2', target);
+    extension.htmx_config_request(null, { ctx: newer });
+    extension.htmx_before_request(null, { ctx: newer });
+    older.response = { raw: { url: 'http://localhost/items/1' }, status: 200, headers: new Headers({ 'HX-Redirect': OUTSIDE }) };
+    older.text = '';
+    expect(extension.htmx_after_request(null, { ctx: older })).toBe(false);
+    expect(target.attributes.has('hy-error')).toBe(false);
+    expect(page.replaced).toEqual([]);
+  });
+
+  it('replaces the location for HX-Redirect of a history restoration in server-side rendering and cancels htmx (HYC-4.8)', () => {
+    const page = new FakeDocument();
+    const { hyper } = setup('', [], new FakeStorage(), page);
+    const extension = hyper.extension();
+    const ctx = context('/items/7', { id: '' });
+    ctx.request.headers['HX-History-Restore-Request'] = 'true';
+    extension.htmx_config_request(null, { ctx });
+    extension.htmx_before_request(null, { ctx });
+    ctx.response = { raw: { url: 'http://localhost/items/7' }, status: 200, headers: new Headers({ 'HX-Redirect': OUTSIDE }) };
+    ctx.text = '';
+    expect(extension.htmx_after_request(null, { ctx })).toBe(false);
+    expect(page.replaced).toEqual([OUTSIDE]);
+  });
+
+  it('leaves HX-Redirect of an HTML request that is neither a region request nor a restoration to htmx', () => {
+    const page = new FakeDocument();
+    const { hyper } = setup('', [], new FakeStorage(), page);
+    const extension = hyper.extension();
+    const ctx = context('/items/7', { id: 'side' });
+    extension.htmx_config_request(null, { ctx });
+    extension.htmx_before_request(null, { ctx });
+    ctx.response = { raw: { url: 'http://localhost/items/7' }, status: 200, headers: new Headers({ 'HX-Redirect': OUTSIDE }) };
+    ctx.text = '';
+    expect(extension.htmx_after_request(null, { ctx })).not.toBe(false);
+    expect(page.replaced).toEqual([]);
   });
 });

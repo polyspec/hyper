@@ -141,6 +141,19 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - A constructor is `__construct` in PHP, `constructor` in Node and `__init__` in Python.
     - The member `invoke` of a PHP class is its method `__invoke`, which makes its object callable.
     - The member `iter` of a Python class is its method `__iter__`, which makes its object iterable.
+  - **Signature.** The signature is the head of the member as the reader of its language writes it, in one form on
+    every release of the language that the package accepts, because a check that reads the output of a tool reads a
+    form that does not change with its release (HR-83). A PHP signature is written from Reflection:
+    - a method is its modifier names, `function`, its name, its parameters as `<type> <&><...>$<name>` and its return
+      type as `: <type>`; a property is its modifier names, its type and `$<name>`;
+    - the set visibility of a property, `private(set)` or `protected(set)`, follows its visibility only where it
+      differs from the one that the property has by itself, which is `protected(set)` for a `public readonly`
+      property;
+    - a type writes `self` for the class that declares the member and `parent` for the parent class of that class,
+      also where the source names the class.
+
+    So PHP 8.4, which writes no set visibility, and PHP 8.5, which writes the set visibility that a `public readonly`
+    property has by itself and the names of the classes in place of `self` and `parent`, give one signature.
   - **Names.**
     - PHP and Node keep the camelCase name.
     - Python writes it in snake_case.

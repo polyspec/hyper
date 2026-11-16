@@ -1,4 +1,4 @@
-# The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58): the results of actions and the stops.
+# The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58, HY-133): the results of actions and the stops.
 from polyspec.hyper.result.bad_request import BadRequest
 from polyspec.hyper.result.forbidden import Forbidden
 from polyspec.hyper.result.not_found import NotFound
@@ -22,6 +22,43 @@ def redirect(case) -> None:
         error = str(failure)
     case.compare("redirect", None if result is None else result.location)
     case.compare("status", None if result is None else result.status)
+    case.compare("error", error)
+
+
+def outside(case) -> None:
+    """Makes an outside redirect to the location, or records the message of the error with which it fails (HY-133)."""
+    result = None
+    error = None
+    try:
+        result = Result.outside(_text(case, "location"))
+    except ValueError as failure:
+        error = str(failure)
+    case.compare("outside", None if result is None else result.location)
+    case.compare("status", None if result is None else result.status)
+    case.compare("error", error)
+
+
+def origin(case) -> None:
+    """Records the origin of the text, or None for a text that is no outside location (HY-133)."""
+    case.compare("origin", Result.origin(_text(case, "text")))
+
+
+def outside_stores(case) -> None:
+    """Calls `flash` or `changed` of an outside redirect with the decoded argument, and records the message of the
+    error with which it fails (HY-133)."""
+    call = _text(case, "call")
+    if call not in ("flash", "changed"):
+        raise ValueError(f"the call {call} of the case is unknown")
+    argument = decoded(_text(case, "argument"))
+    result = Result.outside("https://outside.example/")
+    error = None
+    try:
+        if call == "flash":
+            result.flash(argument, None)
+        else:
+            result.changed(argument)
+    except ValueError as failure:
+        error = str(failure)
     case.compare("error", error)
 
 
@@ -116,11 +153,12 @@ def stop(case) -> None:
         stopped = BadRequest()
     elif kind == "Redirect":
         try:
-            stopped = Redirect(
-                Result.redirect(_text(case, "redirect"))
-                if case.has("redirect")
-                else Result.page(_integer(case, "page"), {})
-            )
+            if case.has("redirect"):
+                stopped = Redirect(Result.redirect(_text(case, "redirect")))
+            elif case.has("outside"):
+                stopped = Redirect(Result.outside(_text(case, "outside")))
+            else:
+                stopped = Redirect(Result.page(_integer(case, "page"), {}))
         except ValueError as failure:
             error = str(failure)
     else:

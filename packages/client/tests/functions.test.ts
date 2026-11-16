@@ -72,6 +72,7 @@ class FunctionDocument implements DocumentAdapter {
     return 1;
   }
   assign(): void {}
+  replace(): void {}
 }
 
 // The htmx operations of the test, which no case uses.

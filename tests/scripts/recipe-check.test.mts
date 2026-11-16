@@ -343,6 +343,19 @@ test('the PHP reader lists a trait member under the trait, not under the class t
   for (const name of ['label', 'describe']) assert.ok(!names.includes(name), `Gadget lists the trait member ${name}: ${names.join(', ')}`);
 });
 
+test('the PHP reader writes a signature in the form of HYR-8 on every PHP release: set visibility, self and parent', () => {
+  const members = readFixture('php', path.join(fixture, 'readers', 'php')).members.filter((m) => m.unit === 'Shaped');
+  const signatures = Object.fromEntries(members.map((m) => [m.name, m.signature]));
+  assert.deepEqual(signatures, {
+    __construct: 'public function __construct(string $name, string $code, string $label)',
+    make: 'public static function make(self $other, ?self $copy): ?self',
+    base: 'public function base(): parent',
+    name: 'public readonly string $name',
+    code: 'final public private(set) readonly string $code',
+    label: 'public protected(set) string $label',
+  });
+});
+
 test('the PHP reader reads @internal as a tag of a docblock line, not as a word in a comment', () => {
   const out = readFixture('php', path.join(fixture, 'readers', 'php'));
   assert.equal(out.units.find((u) => u.name === 'Tagged')?.internal, false, 'Tagged is internal by a word in its docblock');

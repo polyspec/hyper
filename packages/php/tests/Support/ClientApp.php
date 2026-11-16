@@ -83,6 +83,10 @@ final class ClientApp
                 if ($request->formString('name') === 'taken') {
                     return Result::page(409, ['name' => 'taken', 'error' => 'conflict']);
                 }
+                // HY-133: the name away sends the browser to an outside location.
+                if ($request->formString('name') === 'away') {
+                    return Result::outside('https://outside.example/back');
+                }
                 $counter->count++;
 
                 return Result::redirect('/');
