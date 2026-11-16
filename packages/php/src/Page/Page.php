@@ -403,10 +403,15 @@ final class Page
 
     /**
      * Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or null
-     * for a cookie that is absent (HY-42).
+     * for a cookie that is absent (HY-42). A cookie whose bytes are not UTF-8 is no JSON text, so the core reads it as
+     * the empty text, which gives no value, and the request is answered.
      */
     private static function decodedCookie(?string $text): mixed
     {
-        return $text === null ? null : CoreRules::shared()->pageKeptCookie($text);
+        if ($text === null) {
+            return null;
+        }
+
+        return CoreRules::shared()->pageKeptCookie(preg_match('//u', $text) === 1 ? $text : '');
     }
 }

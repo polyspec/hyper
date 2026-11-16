@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The PHP server reads a cookie `hy-keep` whose bytes are not UTF-8 as a cookie that gives no kept value, and answers the request (HY-42); it passed the bytes to `rules.kept_cookie`, whose text parameter refused them, and answered 500 (H35.12).
+
 - The opening of the session of a page request removes the flash data also when the session holds none, before it reads the token (HY-120.6), in the three servers; they removed it only when it was stored. The Node and PHP servers check a stored token with `rules.stored_token` of the core, so a stored text that is not 64 lowercase hexadecimal digits fails the request with kind `invalid_session_token` (HY-24.14); they replaced it with a new token (H35.12).
 
 - The PHP server digests the content type of a representation tag as the bytes of its header field, one byte for each character up to U+00FF, and a content type with a character above U+00FF fails with the kind `invalid_text` (HY-122.14); it digested the UTF-8 bytes of the content type, so `text/é` gave another tag and `text/Ā` gave a tag (H35.27-1).

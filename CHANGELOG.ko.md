@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 3592631d72c0ff92c47d98ed0b2f4d9fab470ffa5913c6acdba905b7473312e3 -->
+<!-- source-sha256: c93fb32f02a498ae9dd777560d94f937bb55a30807272fdce9ac09e365b00d62 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- PHP 서버는 바이트가 UTF-8이 아닌 cookie `hy-keep`을 kept 값을 주지 않는 cookie로 읽고 요청에 응답한다(HY-42). 서버는 그 바이트를 `rules.kept_cookie`에 넘겼고, text parameter가 그것을 거부해 500으로 응답했다(H35.12).
 
 - 세 서버에서 page 요청의 session을 열 때 session에 flash 데이터가 없어도 token을 읽기 전에 flash 데이터를 제거한다(HY-120.6). 서버는 저장되어 있을 때만 제거했다. Node와 PHP 서버는 저장된 token을 core의 `rules.stored_token`으로 검사하므로, 소문자 16진수 64자리가 아닌 저장된 text는 kind `invalid_session_token`으로 요청을 실패시킨다(HY-24.14). 서버는 그것을 새 token으로 바꿨다(H35.12).
 
