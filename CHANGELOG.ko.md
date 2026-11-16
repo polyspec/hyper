@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f6d349458de94a54dfa996d784b152adb332d782ca0dfa363744b7c4b7831728 -->
+<!-- source-sha256: a3c5f0546395ae3b6fc95758a8cbe18c2c03e57a4a3ae4174135e21d8e30b4a3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- core의 `client_rendering::shell_text`는 shell의 bytes를 빌려 받는다(`&[u8]`). binding이 type bytes의 parameter를 그렇게 넘기기 때문이다(binding T-1). binding 0.0.15에서 Python binding crate가 E0308로 build에 실패했다(H35.7).
 - Git은 kit의 `make link`가 로컬 provider의 Go module을 연결하려고 쓰는 `packages/go/go.work`와 `go.work.sum`을 무시한다. `make link`는 Git이 무시하지 않는 파일을 쓰기를 거부했다(H35.7).
 - browser code는 server-side rendering의 history 복원 요청에 `HX-Request: true`를 설정한다(HYC-4.9). htmx 4.0.0은 그 요청의 option을 바꾸어 자기 header 없이 보냈으므로, 서버는 `/away`의 outside redirect에 303으로 응답했고 fetch가 그것을 따라가 page는 `https://outside.example/landing` 대신 `/away`에 남았다(H35.7).
 - PHP의 `CoreRules`는 binding의 함수를 호출하기 전에 그것이 호출 가능한지 확인한다. PHPStan이 그것을 실패시켰다. 시험의 중복된 조각은 각각 하나다. `packages/rust/tests/support`의 `interface.json` reader, node-core unit의 반복, PHP result step의 store 호출, client 시험의 시작된 region 요청이다. Git은 `make bindings`가 `packages/go`에 쓰는 `zz_generated_*.go` 파일을 무시한다. release가 Go tag의 commit에 그것을 더하며(binding GN-15g), `make duplication-check`가 그것을 읽었다(H35.7).

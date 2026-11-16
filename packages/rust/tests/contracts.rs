@@ -1348,7 +1348,7 @@ fn a_declaration_of_client_rendering_is_checked_when_the_application_opens() {
         let path = "/srv/shell/index.html";
         let result = match text(case, "shellFile") {
             "relative" => check_shell_path("shell/index.html"),
-            "not-utf8" => shell_text(path, vec![0xff]).map(|_| ()),
+            "not-utf8" => shell_text(path, &[0xff]).map(|_| ()),
             "other-base" => check_declaration(
                 &manifest,
                 base,

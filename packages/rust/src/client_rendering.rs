@@ -37,9 +37,9 @@ pub fn unreadable_shell(path: &str) -> Error {
 ///
 /// # Errors
 /// `invalid_application` for bytes that are not UTF-8, naming the shell with its path (HY-62.37).
-pub fn shell_text(path: &str, bytes: Vec<u8>) -> Result<String, Error> {
-    match String::from_utf8(bytes) {
-        Ok(text) => Ok(text),
+pub fn shell_text(path: &str, bytes: &[u8]) -> Result<String, Error> {
+    match std::str::from_utf8(bytes) {
+        Ok(text) => Ok(text.to_owned()),
         Err(_not_utf8) => Err(invalid(format!("static shell {path} is not valid UTF-8"))),
     }
 }

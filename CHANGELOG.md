@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- `client_rendering::shell_text` of the core borrows the bytes of the shell (`&[u8]`), as a binding passes a parameter of the type bytes (binding T-1); the Python binding crate failed to build with E0308 under binding 0.0.15 (H35.7).
 - Git ignores `packages/go/go.work` and `go.work.sum`, which `make link` of kit writes to link the Go modules of local providers; `make link` refused to write a file that Git does not ignore (H35.7).
 - The browser code sets `HX-Request: true` on the request of a history restoration in server-side rendering (HYC-4.9): htmx 4.0.0 replaced the options of that request and sent it without its own headers, so the server answered the outside redirect of `/away` with 303, the fetch followed it, and the page stayed at `/away` in place of `https://outside.example/landing` (H35.7).
 - `CoreRules` of PHP checks that the function of the binding is callable before it calls it, which PHPStan failed; the duplicated pieces of the tests are one each: the reader of `interface.json` in `packages/rust/tests/support`, the loop of the node-core units, the store call of the PHP result steps and the started region request of the client tests; Git ignores the files `zz_generated_*.go` that `make bindings` writes into `packages/go`, which a release adds in the commit of its Go tag (binding GN-15g), and which `make duplication-check` read (H35.7).
