@@ -40,6 +40,7 @@ fn text() -> String {
 fn name(code: ErrorCode<'_>) -> &'static str {
     match code {
         ErrorCode::NotApplicationPath => "NotApplicationPath",
+        ErrorCode::NotOutsideLocation => "NotOutsideLocation",
         ErrorCode::NotRedirectResult => "NotRedirectResult",
         ErrorCode::PageStatusNotAllowed => "PageStatusNotAllowed",
         ErrorCode::ReplyStatusNotAllowed => "ReplyStatusNotAllowed",
@@ -297,6 +298,7 @@ fn the_contract_names_the_projection_to_the_code() -> Result<(), String> {
 fn a_failure_of_hyper_projects_to_its_own_code_which_the_contract_lists() -> Result<(), String> {
     let failures = [
         (Error::NotApplicationPath, ErrorCode::NotApplicationPath),
+        (Error::NotOutsideLocation, ErrorCode::NotOutsideLocation),
         (Error::NotRedirectResult, ErrorCode::NotRedirectResult),
         (
             Error::PageStatusNotAllowed(500),

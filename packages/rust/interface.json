@@ -115,6 +115,10 @@
         "category": "value"
       },
       {
+        "variant": "polyspec_hyper::ErrorCode::NotOutsideLocation",
+        "category": "value"
+      },
+      {
         "variant": "polyspec_hyper::ErrorCode::PageStatusNotAllowed",
         "category": "value"
       },
@@ -705,6 +709,54 @@
           ],
           "wait": "none",
           "core": "polyspec_hyper::location::redirect_location"
+        },
+        {
+          "id": "rules.outside_location",
+          "name": [
+            "outside",
+            "location"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "location"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::ErrorCode::NotOutsideLocation"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::location::outside_location"
+        },
+        {
+          "id": "rules.origin",
+          "name": [
+            "origin"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "text"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": {
+            "optional": "text"
+          },
+          "optional_reason": "HY-133.13",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::location::origin"
         },
         {
           "id": "rules.cache_control",

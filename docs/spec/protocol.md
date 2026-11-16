@@ -346,6 +346,8 @@ An application sends with every JSON response values that change only with its c
   | `invalid_build` | none | `value` | HY-106.21 |
   | `not_application_path` | none | `value` | HY-46.3 |
   | `not_redirect_result` | none | `value` | HY-50.3 |
+  | `not_outside_location` | none | `value` | HY-133.5 |
+  | `outside_redirect_stores` | none | `value` | HY-133.10 |
   | `page_status_not_allowed` | none | `value` | HY-58.6 |
   | `reply_status_not_allowed` | none | `value` | HY-69.9 |
   | `cookie_name_not_allowed` | none | `value` | HY-52.16 |

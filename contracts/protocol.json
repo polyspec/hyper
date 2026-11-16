@@ -5883,6 +5883,42 @@
                 ],
                 [
                   {
+                    "en": "`not_outside_location`",
+                    "ko": "`not_outside_location`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-133.5",
+                    "ko": "HY-133.5"
+                  }
+                ],
+                [
+                  {
+                    "en": "`outside_redirect_stores`",
+                    "ko": "`outside_redirect_stores`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-133.10",
+                    "ko": "HY-133.10"
+                  }
+                ],
+                [
+                  {
                     "en": "`page_status_not_allowed`",
                     "ko": "`page_status_not_allowed`"
                   },

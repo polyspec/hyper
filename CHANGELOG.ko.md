@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 26b9514907082bf8ed5f48ba4eccc6bd49df8c005108f335a055ad7d2eed75b1 -->
+<!-- source-sha256: e015109d545726463b4872ea638dcaa6d31227eae1d4998425dca0d4e3bd1ab7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Rust core는 HY-133의 외부 location을 정한다. `location::outside_location`은 location을 HY-133.2의 문법으로 검사하고 `not_outside_location`으로 실패하며(HY-133.5), `location::origin`은 그 origin을 주거나 없음을 준다(HY-133.13). `packages/rust/interface.json`은 둘을 `rules.outside_location`과 `rules.origin`으로, 그 `errors.kinds`는 variant `NotOutsideLocation`을 지정한다. protocol의 kind 표는 행 `not_outside_location`과 `outside_redirect_stores`(HY-133.10)를 가지며, 그 kind는 `contracts/result.json`이 적는다. `packages/rust/tests/contracts.rs`는 `outside`의 case 30개와 `origin`의 case 10개를 core에 대해 실행하며, 이 변경 전의 tree에서는 compile되지 않는다. `make core-test`는 76개 통과를 주고, `make core-lint`와 `make core-fmt-check`는 통과한다.
 - `make lint-ts`가 통과한다. `packages/ts/src/core/rules.ts`의 `coreRules`는 binding의 module을 `object`로 받아, 모든 member가 함수이면 type guard로 `CoreBinding`으로 좁힌다. 전에는 module을 cast했다. `tests/scripts/node-core.test.mts`는 stand-in을 cast 없이 넘긴다(oxlint `no-unsafe-type-assertion`, `unbound-method`). `keptValue`는 `CoreValue | null` 대신 null을 담는 `CoreValue`를 돌려준다(`no-redundant-type-constituents`). 다른 module이 import하지 않는 그 module의 type 24개는 export하지 않는다(knip). 전에는 oxlint가 오류 6개를, knip이 사용하지 않는 exported type 24개를 보고했다. `node --test tests/scripts/node-core.test.mts`는 40개 통과를 준다.
 - Makefile은 binding의 release recipe인 `packages/release.mk`를 `BINDING_RUN`과 `BINDING_DEP` 뒤에서 `-include`로 include한다(HR-99, binding GN-19h). `make release-recipes`가 `binding release-recipes`로 그것을 쓰고, release는 `release-assets` 전에 `install-binding`과 `release-recipes`를 실행하며, Git은 그 파일을 무시한다. binding 0.0.13의 `binding check`는 include가 없는 Makefile에 대해 CK-94를 보고했다. Makefile이 kit의 파일을 include하지 않는다는 AGENTS.md의 규칙은 이 include를 밝히고, `tests/scripts/ci-workflow.test.mts`는 그것만 허용한다. `tests/scripts/release-recipes.test.mts`는 5개 통과를 주고, 이 변경 전의 tree에서는 5개 중 4개가 실패한다.
 - Makefile과 `scripts/install-binding.mts`는 `polyspec-hyper`가 `Cargo.lock`에서 지정하는 `polyspec-binding-core`의 binding cli를 쓰며, 그 commit은 `scripts/binding-commit.mts`가 준다(G-6, CK-20). 둘은 lock의 첫 번째 `polyspec-binding-core`를 골랐으므로, 다른 source에 있는 다른 library의 `polyspec-binding-core`도 가진 lock은 그 library의 binding cli를, 또는 두 commit을 경로 하나로 주었다. `tests/scripts/binding-commit.test.mts`는 4개 통과를 주고, 이 변경 전의 tree에서는 실패한다.

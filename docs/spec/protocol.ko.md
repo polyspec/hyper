@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 031e737752a20599db6434faf1c8b73cbb96c40da206cbeddd5668c09524a8f1 -->
+<!-- source-sha256: 57cc90d88405040c94bf9f712b5ab45c439e5e9a054612233df731c309840a36 -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -347,6 +347,8 @@
   | `invalid_build` | 없음 | `value` | HY-106.21 |
   | `not_application_path` | 없음 | `value` | HY-46.3 |
   | `not_redirect_result` | 없음 | `value` | HY-50.3 |
+  | `not_outside_location` | 없음 | `value` | HY-133.5 |
+  | `outside_redirect_stores` | 없음 | `value` | HY-133.10 |
   | `page_status_not_allowed` | 없음 | `value` | HY-58.6 |
   | `reply_status_not_allowed` | 없음 | `value` | HY-69.9 |
   | `cookie_name_not_allowed` | 없음 | `value` | HY-52.16 |

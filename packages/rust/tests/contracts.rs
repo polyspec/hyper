@@ -155,6 +155,26 @@ fn redirect_locations_and_page_statuses() {
     }
 }
 
+#[test]
+fn outside_locations_and_their_origins() {
+    // HY-133.2 to HY-133.5, HY-133.13
+    let file = cases("result.json");
+    let mut ran = 0;
+    for case in group(&file, "outside") {
+        let result = location::outside_location(text(case, "location"));
+        check(case, &result, |location| {
+            assert_eq!(Some(*location), case["outside"].as_str(), "{}", case["id"])
+        });
+        ran += 1;
+    }
+    for case in group(&file, "origin") {
+        let origin = location::origin(text(case, "text"));
+        assert_eq!(origin.as_deref(), case["origin"].as_str(), "{}", case["id"]);
+        ran += 1;
+    }
+    assert!(ran > 0);
+}
+
 /// The argument of a call, a JSON text, as the core receives it after the binding: `None` for an argument that the
 /// binding decides (a value of another type, a float).
 enum Argument {
