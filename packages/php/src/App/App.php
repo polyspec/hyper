@@ -553,7 +553,7 @@ final class App
             return $this->shellResponse($request);
         }
         if ($path === '/_hyper/keep') {
-            return $this->storeKept($request, new Session($store));
+            return $this->storeKept($request, $store);
         }
         $match = $path === null ? null : $this->manifest->router->match($path);
         if ($match === null) {
@@ -593,6 +593,11 @@ final class App
         // HY-127: the Hyper-Context header is checked before the session, the token check and every handler.
         if ($this->context !== null && !Context::validHeader($request->header('Hyper-Context'))) {
             return Response::text(400, 'Bad Request');
+        }
+        // HY-59.12, HY-120.3: the media type of a POST is checked before the session, its flash and its token.
+        $refusedMedia = $request->method === 'POST' ? $this->refusedMedia($request) : null;
+        if ($refusedMedia !== null) {
+            return $refusedMedia;
         }
         $session = new Session($store);
         $flash = $session->takeFlash();
@@ -925,12 +930,22 @@ final class App
         return new Response(303, ['Location' => $basePath . $result->location], '');
     }
 
-    /** The response that refuses a form request of an unsupported media type or with a wrong CSRF token, or null. */
-    private function refusedForm(Request $request, Session $session): ?Response
+    /**
+     * The response that refuses a form request whose media type the application does not accept, 415 (HY-59.12), or
+     * null. It reads no session (HY-120.3).
+     */
+    private function refusedMedia(Request $request): ?Response
     {
         if (!in_array($request->mediaType(), $this->formTypes, true)) {
             return Response::text(415, 'Unsupported Media Type');
         }
+
+        return null;
+    }
+
+    /** The response that refuses a form request with a wrong CSRF token, 403, or null. */
+    private function refusedForm(Request $request, Session $session): ?Response
+    {
         if (!Csrf::verify($session->csrfToken(), $request->formString('_csrf'))) {
             return Response::text(403, 'Forbidden');
         }
@@ -938,12 +953,20 @@ final class App
         return null;
     }
 
-    /** Stores a kept value of a `server` path in the session (HY-40). */
-    private function storeKept(Request $request, Session $session): Response
+    /**
+     * Stores a kept value of a `server` path in the session (HY-40); the method and the media type are checked before
+     * the session opens (HY-120.3).
+     */
+    private function storeKept(Request $request, SessionStore $store): Response
     {
         if ($request->method !== 'POST') {
             return self::notAllowed('POST');
         }
+        $refusedMedia = $this->refusedMedia($request);
+        if ($refusedMedia !== null) {
+            return $refusedMedia;
+        }
+        $session = new Session($store);
         $refused = $this->refusedForm($request, $session);
         if ($refused !== null) {
             return $refused;

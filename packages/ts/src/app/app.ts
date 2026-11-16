@@ -555,7 +555,7 @@ export class App<S extends object = Record<string, never>> {
     const basePath = client?.basePath ?? this.basePath;
     const path = stripBasePath(request.path(), basePath);
     if (client !== null && path === null) return this.shellResponse(request);
-    if (path === '/_hyper/keep') return this.storeKept(request, new Session(store));
+    if (path === '/_hyper/keep') return this.storeKept(request, store);
     const match = path === null ? null : this.application.router.match(path);
     if (match === null || path === null) return Response.text(404, 'Not Found');
     const route = this.routes.get(match.name);
@@ -577,6 +577,9 @@ export class App<S extends object = Record<string, never>> {
     // HY-127: a Hyper-Context value that is not 64 lowercase hexadecimal characters is refused before any handler runs.
     const hash = selected.header('Hyper-Context');
     if (this.context !== null && !Context.validHeader(hash)) return Response.text(400, 'Bad Request');
+    // HY-59.12, HY-120.3: the media type of a POST is checked before the session, its flash and its token.
+    const refusedMedia = selected.method === 'POST' ? this.refusedMedia(selected) : null;
+    if (refusedMedia !== null) return refusedMedia;
     const session = new Session(store);
     const flash = session.takeFlash();
     const routed = selected.withRoute(path, match.params).withSession(flash, Csrf.masked(session.csrfToken()));
@@ -766,17 +769,26 @@ export class App<S extends object = Record<string, never>> {
     return new Response(303, { Location: basePath + result.location }, '');
   }
 
-  // Returns the refusal of a form request: 415 for a media type that the application does not accept (HY-59) and 403
-  // for a token that does not match the session, or null.
-  private refusedForm(request: Request, session: Session): Response | null {
+  // Returns the refusal of a form request whose media type the application does not accept, 415 (HY-59.12), or null.
+  // It reads no session (HY-120.3).
+  private refusedMedia(request: Request): Response | null {
     if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
+    return null;
+  }
+
+  // Returns the refusal of a form request whose token does not match the session, 403, or null.
+  private refusedForm(request: Request, session: Session): Response | null {
     if (!Csrf.verify(session.csrfToken(), request.formString('_csrf'))) return Response.text(403, 'Forbidden');
     return null;
   }
 
-  // Stores a kept value of a `server` path in the session (HY-40).
-  private storeKept(request: Request, session: Session): Response {
+  // Stores a kept value of a `server` path in the session (HY-40); the method and the media type are checked before
+  // the session opens (HY-120.3).
+  private storeKept(request: Request, store: SessionStore): Response {
     if (request.method !== 'POST') return App.notAllowed('POST');
+    const refusedMedia = this.refusedMedia(request);
+    if (refusedMedia !== null) return refusedMedia;
+    const session = new Session(store);
     const refused = this.refusedForm(request, session);
     if (refused !== null) return refused;
     if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');

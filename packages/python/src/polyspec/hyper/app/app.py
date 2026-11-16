@@ -435,7 +435,7 @@ class App:
         if client is not None and path is None:
             return self._shell_response(request)
         if path == "/_hyper/keep":
-            return self._store_kept(request, Session(store))
+            return self._store_kept(request, store)
         match = None if path is None else self.manifest.router.match(path)
         if match is None:
             return Response.text(404, "Not Found")
@@ -478,6 +478,11 @@ class App:
             request.header("Hyper-Context")
         ):
             return Response.text(400, "Bad Request")
+        # HY-59.12, HY-120.3: the media type of a POST is checked before the session, its flash and its token.
+        if request.method == "POST":
+            refused_media = self._refused_media(request)
+            if refused_media is not None:
+                return refused_media
         request = request._with_media(chosen)
         session = Session(store)
         flash = session.take_flash()
@@ -767,19 +772,28 @@ class App:
         session.put_flash(Flash(result._flash_values, result._changed_topics))
         return Response(303, {"Location": base_path + result.location}, "")
 
-    def _refused_form(self, request: Request, session: Session) -> Optional[Response]:
-        """Returns the response that refuses a form request of an unsupported media type or with a wrong CSRF token,
-        or None."""
+    def _refused_media(self, request: Request) -> Optional[Response]:
+        """Returns the response that refuses a form request whose media type the application does not accept, 415
+        (HY-59.12), or None. It reads no session (HY-120.3)."""
         if request.media_type() not in self._form_types:
             return Response.text(415, "Unsupported Media Type")
+        return None
+
+    def _refused_form(self, request: Request, session: Session) -> Optional[Response]:
+        """Returns the response that refuses a form request with a wrong CSRF token, 403, or None."""
         if not Csrf.verify(session.csrf_token(), request.form_string("_csrf")):
             return Response.text(403, "Forbidden")
         return None
 
-    def _store_kept(self, request: Request, session: Session) -> Response:
-        """Stores a kept value of a `server` path in the session (HY-40)."""
+    def _store_kept(self, request: Request, store: SessionStore) -> Response:
+        """Stores a kept value of a `server` path in the session (HY-40); the method and the media type are checked
+        before the session opens (HY-120.3)."""
         if request.method != "POST":
             return App._not_allowed("POST")
+        refused_media = self._refused_media(request)
+        if refused_media is not None:
+            return refused_media
+        session = Session(store)
         refused = self._refused_form(request, session)
         if refused is not None:
             return refused
