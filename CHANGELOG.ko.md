@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c9ec015fbee40df64a975d4503ff1ff4173ebf4aeca135e09304e12cb4c53d63 -->
+<!-- source-sha256: a17fe15ca7eca1a1a94fd5cb9b3fc627f4bd786004f37573b3e81be3b223c9c2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Makefile의 모든 cargo 명령은 kit link script의 `cargo <dir> <args>`, 곧 `$(CARGO)`를 거쳐 실행한다. 이 명령은 개발 checkout에서 polyspec crate를 `.links`의 provider로 patch하고, 그 밖에는 cargo를 주어진 대로 실행한다. 전에는 recipe가 cargo를 직접 시작했으므로, link된 checkout도 `Cargo.lock`의 git source crate를 빌드했다. `make core-test`, `make core-lint`, `make core-fmt-check`는 root에서 `-p polyspec-hyper`로 실행한다. `tests/scripts/cargo-through-kit.test.mts`는 cargo를 직접 시작하는 recipe 줄을 실패시킨다(H35.14-1).
 - HY-122.14는 tag가 content type을 header field의 바이트로, U+00FF까지의 글자마다 한 바이트로 digest하고, U+00FF 위의 content type은 `invalid_text`로 실패한다고 정한다. `contracts/media-type.json`이 `text/é`와 `text/Ā`에 대해 둘을 정한다. 이 section은 고정 사본을 지울 때까지(H35.9) runner가 없으므로, 아직 어느 runner도 그 Red를 보이지 않는다(H35.10-4).
 - HY-11.5가 HY-11.4를 대신한다. current path는 `HX-Current-URL` 값을 RFC 3986의 일반 문법으로 나누며, scheme이 아닌 첫 segment가 colon으로 끝날 때와 경로가 `/`로 시작하지 않을 때는 없다. `contracts/request.json`이 `mailto:a/b`, `1a://x/p`, `://x`, `http:///x`, `http://h:99999/x`에 대해 이를 정하며, core는 `mailto:a/b`를 current path로 냈다(H35.10-7).
 - `contracts/interfaces.json`은 세 서버의 unit `core-rules`를 member 26개와 그 시험과 함께 적고, `wsgi-body`의 member를 H34.1이 남긴 대로 적는다. `close()`가 쓰기를 보고하고 `_finish`는 없다. `core-rules.ts`의 Node 선언은 `@internal`을 단다(H35.7).

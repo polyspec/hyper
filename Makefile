@@ -342,12 +342,15 @@ recipe-candidates: ## Write the candidate of contracts/interfaces.json under var
 # The Rust core of the server rules (C-7) at packages/rust, built with the toolchain of its rust-toolchain.toml
 # and the lints of its Cargo.toml and clippy.toml (plan R-1).
 CORE := packages/rust
+# Every cargo command runs through `cargo <dir> <args>` of the link script of kit, which in a development checkout patches
+# the polyspec crates to the providers that .links names and otherwise runs cargo as given, so no .cargo file is needed (H35.14-1).
+CARGO := $(NODE) $(KIT)/link.$(KIT_EXT) cargo $(CURDIR)
 core-test: ## Run the tests of the Rust core, which run the cases of contracts/ that it decides (HY-132)
-	cd $(CORE) && cargo test --locked
+	$(CARGO) test --locked -p polyspec-hyper
 core-lint: ## Run clippy on the Rust core and its tests with every warning an error (plan R-1)
-	cd $(CORE) && cargo clippy --locked --all-targets -- -D warnings
+	$(CARGO) clippy --locked -p polyspec-hyper --all-targets -- -D warnings
 core-fmt-check: ## Check the format of the Rust core
-	cd $(CORE) && cargo fmt --check
+	$(CARGO) fmt --check -p polyspec-hyper
 
 # The bindings of the Rust core for the five targets of packages/rust/interface.json (binding design L-1, L-2, L-2a).
 # BINDING is the cli of binding at the commit that Cargo.lock pins for the polyspec-binding-core of polyspec-hyper
@@ -391,10 +394,10 @@ release-recipes: ## Write packages/release.mk, the release recipes of the bindin
 BINDING_CRATES := polyspec-hyper-php-ext polyspec-hyper-python polyspec-hyper-node polyspec-hyper-go
 WASM_MANIFEST := packages/ts/native/wasm/Cargo.toml
 lint-bindings: bindings ## Run clippy on the binding crates with every warning an error, after make bindings
-	cargo clippy --locked $(foreach crate,$(BINDING_CRATES),-p $(crate)) --all-targets --features panic-test -- -D warnings
-	cargo clippy --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test -- -D warnings
+	$(CARGO) clippy --locked $(foreach crate,$(BINDING_CRATES),-p $(crate)) --all-targets --features panic-test -- -D warnings
+	$(CARGO) clippy --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test -- -D warnings
 test-bindings: lint-bindings test-wasm test-go ## Run the tests of the binding crates and the generated tests of WASM and Go
-	cargo test --locked $(foreach crate,$(BINDING_CRATES),-p $(crate))
+	$(CARGO) test --locked $(foreach crate,$(BINDING_CRATES),-p $(crate))
 
 # The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
 # the WASM crate (binding GN-15, GN-18), which mise.toml pins and make install-tools installs into var/tools (HR-81);
@@ -420,12 +423,12 @@ NODE_VERSION := $(shell sed -n 's/^  "version": "\(.*\)",$$/\1/p' $(NODE_PACKAGE
 # copied there and published with one rename (HR-82).
 .PHONY: node-addon
 node-addon: bindings ## Build the Node addon of this platform and put it beside the generated entry of the Node package
-	cargo build --locked -p polyspec-hyper-node --features panic-test
+	$(CARGO) build --locked -p polyspec-hyper-node --features panic-test
 	cp $(CARGO_TARGET)/debug/libpolyspec_hyper_node.$(CDYLIB) $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ && mv -f $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ $(NODE_PACKAGE)/native/generated/$(NODE_ADDON)
 
 node-package: bindings packages node-addon ## Build the WASM module and the Node addon, then pack and install the npm package into var/bindings/node
 	test "$$($(WASM_BINDGEN) --version)" = "wasm-bindgen $(WASM_BINDGEN_RELEASE)"
-	cargo build --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test
+	$(CARGO) build --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test
 	$(WASM_BINDGEN) --target web --out-dir $(NODE_PACKAGE)/native/wasm/generated --out-name hyper_wasm \
 		$(CARGO_TARGET)/wasm32-unknown-unknown/debug/polyspec_hyper_wasm.wasm
 	mkdir -p $(BINDINGS_VAR)/node $(BINDINGS_VAR)/node-platform
@@ -454,7 +457,7 @@ GO_RELEASE := $(shell sed -n 's/^go \(.*\)$$/\1/p' packages/go/go.mod)
 GO_ENV := GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET)/debug GOFLAGS=-tags=polyspec_panic_test,polyspec_codec_test
 test-go: bindings ## Build the static library of the Go binding, run gofmt and go vet, then the generated tests on go test
 	test "$$($(GO_ENV) $(GO) env GOVERSION)" = "go$(GO_RELEASE)"
-	cargo build --locked -p polyspec-hyper-go --features panic-test,codec-test
+	$(CARGO) build --locked -p polyspec-hyper-go --features panic-test,codec-test
 	test -z "$$(cd packages/go && $(GOFMT) -l .)"
 	cd packages/go && $(GO_ENV) $(GO) vet ./...
 	cd packages/go && $(GO_ENV) $(GO) test -count=1 -v ./...

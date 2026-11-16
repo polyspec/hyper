@@ -12,7 +12,7 @@ const LOCAL = ['BINDING_COMMIT=local', 'BINDING=/lane/cli.js'];
 
 test('node-addon puts the addon beside the generated entry of the Node package (H35.9-1)', () => {
   const lines = dryRun('node-addon', { variables: LOCAL }).join('\n');
-  assert.match(lines, /cargo build --locked -p polyspec-hyper-node/u, lines);
+  assert.match(lines, /cargo \S+ build --locked -p polyspec-hyper-node/u, lines);
   assert.match(lines, /mv -f \S+ packages\/ts\/native\/generated\/hyper\.[a-z0-9-]+\.node$/mu, lines);
 });
 
