@@ -13,7 +13,7 @@ import { LANGS, type ClassRef, type Expr, type Lang, type Member, type Scope, ty
 export type Counts = { direct: number; internal: number; private: number };
 
 const CONSTRUCTOR: Record<Lang, string> = { php: '__construct', node: 'constructor', python: '__init__' };
-const CODEC_UNITS = ['json-codec', 'outside-number'];
+const CODEC_UNITS = ['json-codec'];
 
 type Value = { kind: 'class'; ref: ClassRef } | { kind: 'module'; file: string } | undefined;
 

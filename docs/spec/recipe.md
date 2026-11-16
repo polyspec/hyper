@@ -264,8 +264,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - A step prepares no input and writes no observed value with the code under test: it reads a JSON text of a case
       with the reader of its test tree (PHP `Support\Json`, Node `parsed` of `case-rules.ts`, Python `decoded` of
       `steps/recorded.py`), and only a section that names a member of the JSON codec in `members` calls the codec. The
-      check fails a step that reaches a member of the unit `json-codec` or `outside-number` that its section does not
-      name.
+      check fails a step that reaches a member of the unit `json-codec` that its section does not name.
   - **Reading a case.** A runner reads each case only through the case reader of its language, one unit of the test
     tree with the same members in every language: the public members `cases`, `section`, `id`, `has`, `input`,
     `compare`, `outcome`, `fail` and `line`, and the private members `declaration`, `matches` and `equal`. `compare`

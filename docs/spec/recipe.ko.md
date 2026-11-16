@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 505fa7a5680732e5a7df0589403b3bcdc17dd0f69e53f94ff2c666b21354f5cb -->
+<!-- source-sha256: 587b3fcca001c2082debe9619fb18698db9f8a70f170d13f2d59770cc09a53fa -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -246,7 +246,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     - step은 검사 대상 코드로 입력을 준비하지 않고 관찰한 값을 쓰지도 않는다: case의 JSON 텍스트는 자기 test tree의
       reader로 읽으며(PHP `Support\Json`, Node `case-rules.ts`의 `parsed`, Python `steps/recorded.py`의 `decoded`),
       `members`에 JSON codec의 member를 적은 section만 codec을 호출한다. check는 자기 section이 적지 않은 unit
-      `json-codec` 또는 `outside-number`의 member에 닿는 step을 실패시킨다.
+      `json-codec`의 member에 닿는 step을 실패시킨다.
   - **Reading a case.** runner는 각 case를 그 언어의 case reader를 통해서만 읽는다. case reader는 모든 언어에서 같은
     member를 가진 test tree의 unit 하나다: public member `cases`, `section`, `id`, `has`, `input`, `compare`, `outcome`,
     `fail`, `line`과 private member `declaration`, `matches`, `equal`. `compare`는 필드를, `outcome`은 단계의 결과를

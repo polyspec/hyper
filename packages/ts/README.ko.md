@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-node-readme -->
-<!-- source-sha256: 36fe7d9cdec0f2560efa6d8eacd4d3bd35fac0634cc028d60f3c636bad515ced -->
+<!-- source-sha256: b4a5f37ba84ad5a2f39fc8bfa88c7fefabbb297c70fb1e7e469a744c33e003ae -->
 # @polyspec/hyper
 
 [English](README.md).
@@ -115,4 +115,4 @@ const response = await app.handle(new Request({ method: 'GET', path: '/board', h
 
 ## JSON
 
-`encodeJson(value)`는 `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`를 준 PHP `json_encode`의 바이트를 쓰고, `decodeJson(text)`는 PHP `json_decode`처럼 읽으며 데이터 모델 밖의 수는 `OutsideNumber`로 둔다(HY-54). 둘 다 PHP 서버처럼 `contracts/json.json`을 통과한다.
+패키지는 JSON 함수를 내보내지 않는다. 서버는 `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`를 준 PHP `json_encode`의 바이트로 JSON 텍스트를 쓰고, core의 `rules.json_read`로 JSON 텍스트를 읽는다. `rules.json_read`는 map을 문서 순서로 둔 데이터 모델의 값을 주며, json이 거부하는 텍스트는 kind `malformed_json`으로, 데이터 모델 밖의 값은 데이터 모델의 kind로 실패시킨다(HY-54). 둘 다 PHP 서버처럼 `contracts/json.json`을 통과한다.
