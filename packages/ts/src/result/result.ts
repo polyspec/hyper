@@ -53,8 +53,8 @@ export class Result {
   // Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58).
   static page(status: number, data: Data): Result {
     ArgumentCountError.between(arguments.length, 2, 2);
-    if (![200, 409, 422].includes(status)) throw new RangeError(`a page status ${status} is not 200, 409 or 422 (HY-58)`);
-    return new Result(null, status, data, new Map(), []);
+    // The core checks the status (HY-58.6) and fails with the kind `page_status_not_allowed` (HY-132.2).
+    return new Result(null, rules().resultPage(status), data, new Map(), []);
   }
 
   // Returns invalid input with the data that the page renders: the page with status 422 (HY-26).

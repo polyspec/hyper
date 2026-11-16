@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 942971821e1df58daefdea6ba75795f5be27e65582d9fc21c5d3f939854492c1 -->
+<!-- source-sha256: 00ce41b5402b6421ca71c9dc194937d50fc3c677ba00759369d5ad1a9d9a1d68 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Node 서버의 `Result.page`는 core의 `rules.page_status`로 status를 검사하므로, 200, 409, 422가 아닌 status는 category `value`의 kind `page_status_not_allowed`로 실패한다(HY-58.6). PHP 서버의 `Result::redirect`는 core의 `rules.redirect_location`으로 location을 검사하므로, UTF-8이 아닌 location은 kind `invalid_text`로 실패한다(HY-46.1). Node 서버는 kind가 없는 `RangeError`를 던졌고 PHP 서버는 자체 pattern으로 location을 검사했다(H35.10-8).
 
 - `keep`, `flash` 또는 representation body의 ±(2^53 − 1) 밖의 숫자 같은 데이터 모델 밖의 값은 세 서버에서 그 category의 binding class와 template 데이터 모델의 kind로 실패한다. 예를 들어 `data_number_range`는 category `value`, `data_unsupported_type`은 category `type`이다(HY-44.8, HY-132.3). 서버는 kind가 없는 `RangeError`, `InvalidArgumentException` 또는 `ValueError`를 던졌다(H35.20-5-6).
 

@@ -33,21 +33,15 @@ final class Result
     ) {
     }
 
-    /** Returns a redirect to a path of this application (HY-46). */
+    /**
+     * Returns a redirect to a path of this application (HY-46); the core checks the location and refuses a text that
+     * is not UTF-8 with `invalid_text` (HY-46.1, HY-132.2).
+     */
     public static function redirect(string $location): self
     {
         ArgumentCount::most(\func_num_args(), 1);
-        if (
-            preg_match('#^/(?![/\\\\])[^\x{00}-\x{20}\x{7F}-\x{9F}\\\\]*$#Du', $location) !== 1
-            || self::hasDotSegment($location)
-        ) {
-            throw new HyperValueError(
-                'a redirect location is not an application path (HY-46)',
-                'not_application_path',
-            );
-        }
 
-        return new self($location, 303, [], [], []);
+        return new self(CoreRules::shared()->resultRedirect($location), 303, [], [], []);
     }
 
     /** Returns an outside redirect to an outside location (HY-133). */
@@ -178,18 +172,5 @@ final class Result
                 'outside_redirect_stores',
             );
         }
-    }
-
-    /** Returns true when the path of a location has a `.` or `..` segment, also with a percent-encoded dot. */
-    private static function hasDotSegment(string $location): bool
-    {
-        $path = substr($location, 0, strcspn($location, '?#'));
-        foreach (explode('/', $path) as $segment) {
-            if (in_array(str_ireplace('%2e', '.', $segment), ['.', '..'], true)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
