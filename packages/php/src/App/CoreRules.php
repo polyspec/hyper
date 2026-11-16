@@ -29,6 +29,7 @@ final class CoreRules
         'keepsOutOfSharedCaches', 'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag',
         'representationTag', 'pageStatus', 'replyStatus', 'pageVary', 'contextHash', 'currentPath', 'checkShellPath',
         'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader', 'jsonRead',
+        'flashOf', 'keptOf',
     ];
 
     /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
@@ -137,6 +138,25 @@ final class CoreRules
     public function jsonCodecDecode(string $text): mixed
     {
         return $this->call('jsonRead', $text);
+    }
+
+    /**
+     * Session::takeFlash: rules.flash_of checks the stored flash and gives the map `{values, changed}` with `stdClass`
+     * maps, and fails with `invalid_session_record` for a stored flash of another form (HY-25.2, HY-104.23).
+     */
+    public function sessionFlashOf(mixed $stored): mixed
+    {
+        return $this->call('flashOf', $stored);
+    }
+
+    /**
+     * Session::kept and Session::keep: rules.kept_of checks the stored kept values and gives them as a `stdClass` map
+     * from each region to the map of its values by path, and fails with `invalid_session_record` for stored kept
+     * values of another form, those of every region (HY-104.22, HY-104.23).
+     */
+    public function sessionKeptOf(mixed $stored): mixed
+    {
+        return $this->call('keptOf', $stored);
     }
 
     /** The name of the session cookie (HY-45.1), which NativeSession gives the session options: rules.session_name. */

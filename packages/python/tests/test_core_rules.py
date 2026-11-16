@@ -85,6 +85,20 @@ EXACT = [
         {"a": "é"},
     ),
     (
+        "Session.take_flash (HY-25.2)",
+        "flash_of",
+        lambda rules: rules.session_flash_of({"values": {}}),
+        ({"values": {}},),
+        {"values": {}, "changed": []},
+    ),
+    (
+        "Session.kept (HY-104.22)",
+        "kept_of",
+        lambda rules: rules.session_kept_of({"r": {}}),
+        ({"r": {}},),
+        {"r": {}},
+    ),
+    (
         "RecordSession.cookie_name (HY-45.1)",
         "session_name",
         lambda rules: rules.session_cookie_name(True),
@@ -239,8 +253,8 @@ class CoreRulesTest(unittest.TestCase):
                 self.assertEqual(call(CoreRules(core)), result)
                 self.assertEqual(calls, [(name, args)])
 
-    def test_there_are_fifteen_exact_units(self):
-        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 15)
+    def test_there_are_eighteen_exact_units(self):
+        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 18)
 
     def test_the_frame_headers_are_a_record_in_the_order_of_the_core(self):
         # HY-45.5, HY-65.1

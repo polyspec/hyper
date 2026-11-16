@@ -1,6 +1,7 @@
 // Session values of one browser session: the CSRF token, the flash values and the kept values (HY-24, HY-25,
 // HY-40).
 import { randomBytes } from 'node:crypto';
+import { rules } from '../app/core-rules.js';
 import { Flash } from './flash.js';
 import type { SessionStore } from './session-store.js';
 import { isMapValue, toValue, type MapValue, type Value } from '../data/values.js';
@@ -33,19 +34,17 @@ export class Session {
     this.store.set(TOKEN, randomBytes(32).toString('hex'));
   }
 
-  // Returns the stored flash data and removes it from the session. Stored flash data of another form than the session
-  // writes fails (HY-104.23); a flash map without `values` or without `changed` has none.
+  // Returns the stored flash data and removes it from the session. rules.flash_of of the core checks the stored flash
+  // first: one of another form fails with invalid_session_record (HY-25.2, HY-104.23), and a flash map without
+  // `values` or without `changed` has none.
   takeFlash(): Flash {
-    const flash = this.store.get(FLASH);
+    const stored = this.store.get(FLASH);
+    if (stored === undefined || stored === null) return new Flash(new Map<string, Value>(), []);
+    const flash = Session.coreMap(rules().sessionFlashOf(stored));
     this.store.remove(FLASH);
-    if (flash === undefined || flash === null) return new Flash(new Map<string, Value>(), []);
-    if (!(flash instanceof Map)) throw new Error('hyper: the session holds flash data that is not a map');
-    const values = flash.has('values') ? Session.storedMap(flash.get('values')) : new Map<string, Value>();
-    const changed: unknown = flash.has('changed') ? flash.get('changed') : [];
-    if (!Array.isArray(changed) || !changed.every((topic): topic is string => typeof topic === 'string')) {
-      throw new Error('hyper: the session holds changed topics that are not a list of strings');
-    }
-    return new Flash(values, [...changed]);
+    const changed = flash.get('changed');
+    const topics = Array.isArray(changed) ? changed.filter((topic): topic is string => typeof topic === 'string') : [];
+    return new Flash(Session.coreMap(flash.get('values') ?? new Map()), topics);
   }
 
   // Stores flash data for the next request.
@@ -53,37 +52,31 @@ export class Session {
     this.store.set(FLASH, new Map<string, unknown>([['values', new Map(flash.values)], ['changed', [...flash.changed]]]));
   }
 
-  // Stores a kept value of a region (HY-38, HY-40). Stored kept values of another form than the session writes fail,
-  // those of every region (HY-104.23).
+  // Stores a kept value of a region (HY-38, HY-40). rules.kept_of of the core checks the stored kept values, those of
+  // every region (HY-104.23).
   keep(region: string, path: string, value: Value): void {
-    const stored = this.store.get(KEEP);
-    const kept = new Map<string, MapValue>();
-    if (stored !== undefined && stored !== null) {
-      if (!(stored instanceof Map)) throw new Error('hyper: the session holds kept values that are not a map of regions');
-      for (const [name, values] of stored) {
-        if (typeof name !== 'string') throw new Error('hyper: the session holds kept values under a region name that is not a string');
-        kept.set(name, Session.storedMap(values));
-      }
-    }
-    kept.set(region, new Map(kept.get(region) ?? []).set(path, toValue(value)));
+    const kept = this.storedKept();
+    kept.set(region, new Map(Session.coreMap(kept.get(region) ?? new Map())).set(path, toValue(value)));
     this.store.set(KEEP, kept);
   }
 
-  // Returns the kept values of a region in storing order, an empty map for a region that stored none (HY-40.3). Stored
-  // kept values of another form than the session writes fail (HY-104.23).
+  // Returns the kept values of a region in storing order, an empty map for a region that stored none (HY-40.3).
+  // rules.kept_of of the core checks the stored kept values (HY-104.23).
   kept(region: string): MapValue {
-    const stored = this.store.get(KEEP);
-    if (stored === undefined || stored === null) return new Map<string, Value>();
-    if (!(stored instanceof Map)) throw new Error('hyper: the session holds kept values that are not a map of regions');
-    return stored.has(region) ? Session.storedMap(stored.get(region)) : new Map<string, Value>();
+    return Session.coreMap(this.storedKept().get(region) ?? new Map());
   }
 
-  // Returns the map of a stored value, which the session stored with toValue; another value fails, since the session
-  // holds only those. PHP keeps a map as an array, and an array with the keys 0 to n-1 reads as a list, so a list here
-  // is that map.
-  private static storedMap(value: unknown): MapValue {
-    const map = Array.isArray(value) ? new Map(value.map((item: unknown, index) => [String(index), item])) : value;
-    if (!isMapValue(map)) throw new Error('hyper: the session holds flash or kept values that are not a map of values');
-    return map;
+  // The stored kept values by region, which rules.kept_of of the core checks and which fail with
+  // invalid_session_record for kept values of another form (HY-104.22, HY-104.23).
+  private storedKept(): MapValue {
+    const stored = this.store.get(KEEP);
+    if (stored === undefined || stored === null) return new Map<string, Value>();
+    return new Map(Session.coreMap(rules().sessionKeptOf(stored)));
+  }
+
+  // Returns a map that the core gave as a map of the data model.
+  private static coreMap(value: unknown): MapValue {
+    const map = toValue(value);
+    return isMapValue(map) ? map : new Map<string, Value>();
   }
 }

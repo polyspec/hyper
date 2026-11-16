@@ -48,6 +48,8 @@ _MEMBERS = (
     "kept_value",
     "valid_context_header",
     "json_read",
+    "flash_of",
+    "kept_of",
 )
 
 
@@ -88,6 +90,18 @@ class CoreRules:
         dictionaries in document order, and fails with `malformed_json` or the kind of the data model (HY-54.20,
         HY-54.21). A lone surrogate of the text stays in its bytes, so that the core judges it."""
         return self._core.json_read(text.encode("utf-8", "surrogatepass"))
+
+    def session_flash_of(self, stored: object) -> object:
+        """Session.take_flash: rules.flash_of checks a stored flash and gives the map of its ``values`` and its
+        ``changed`` topics, and fails with ``invalid_session_record`` for a stored flash of another form (HY-25.2,
+        HY-104.23)."""
+        return self._core.flash_of(stored)
+
+    def session_kept_of(self, stored: object) -> object:
+        """Session.kept and Session.keep: rules.kept_of checks stored kept values and gives the map of each region to
+        the map of its values by path, and fails with ``invalid_session_record`` for kept values of another form,
+        those of every region (HY-104.22, HY-104.23)."""
+        return self._core.kept_of(stored)
 
     def session_cookie_name(self, secure: bool) -> str:
         """RecordSession.cookie_name: rules.session_name (HY-45.1)."""

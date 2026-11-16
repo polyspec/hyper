@@ -450,6 +450,36 @@ pub fn kept_of(stored: Value) -> Result<Vec<(String, OrderedMap)>, Error> {
     Ok(kept)
 }
 
+/// [`flash_of`] as one value, the member `rules.flash_of` of the interface contract (HY-25.2, HY-104.22, HY-104.23):
+/// the map `{"values": <map>, "changed": <list of strings>}`.
+///
+/// # Errors
+/// `invalid_session_record`.
+pub fn flash_record(stored: &Value) -> Result<Value, Error> {
+    let (values, changed) = flash_of(stored.clone())?;
+    let mut flash = OrderedMap::with_capacity(2);
+    flash.insert("values".to_owned(), Value::Map(Arc::new(values)));
+    flash.insert(
+        "changed".to_owned(),
+        Value::List(Arc::new(changed.into_iter().map(Value::Str).collect())),
+    );
+    Ok(Value::Map(Arc::new(flash)))
+}
+
+/// [`kept_of`] as one value, the member `rules.kept_of` of the interface contract (HY-104.22, HY-104.23): a map from
+/// each region to the map of its kept values by path.
+///
+/// # Errors
+/// `invalid_session_record`.
+pub fn kept_record(stored: &Value) -> Result<Value, Error> {
+    let kept = kept_of(stored.clone())?;
+    let mut regions = OrderedMap::with_capacity(kept.len());
+    for (region, paths) in kept {
+        regions.insert(region, Value::Map(Arc::new(paths)));
+    }
+    Ok(Value::Map(Arc::new(regions)))
+}
+
 /// Every stored kept value, by region (HY-104.22, HY-104.23).
 fn stored_kept(store: &mut dyn Store) -> Result<Vec<(String, OrderedMap)>, SessionFailure> {
     match get(store, KEEP_KEY)? {

@@ -37,60 +37,53 @@ class Session:
         self._store.set(_TOKEN_KEY, secrets.token_bytes(32).hex())
 
     def take_flash(self) -> Flash:
-        """Returns the stored flash data and removes it from the session; stored flash data of another form than the
-        session writes fails (HY-104.23)."""
-        flash = self._store.get(_FLASH_KEY)
-        self._store.remove(_FLASH_KEY)
-        if flash is None:
+        """Returns the stored flash data and removes it from the session. rules.flash_of of the core checks the stored
+        flash first and fails with ``invalid_session_record`` for one of another form (HY-25.2, HY-104.23)."""
+        stored = self._store.get(_FLASH_KEY)
+        if stored is None:
             return Flash({}, [])
-        if not isinstance(flash, dict):
-            raise ValueError("the session holds flash data that is not a map")
-        values = Session._stored_map(flash.get("values", {}))
+        flash = Session._core_map(core_rules().session_flash_of(stored))
+        self._store.remove(_FLASH_KEY)
         changed = flash.get("changed", [])
-        if not isinstance(changed, list):
-            raise ValueError(
-                "the session holds changed topics that are not a list of topics"
-            )
-        for topic in changed:
-            if not isinstance(topic, str):
-                raise ValueError(
-                    "the session holds a changed topic that is not a string"
-                )
-        return Flash(values, list(changed))
+        topics = (
+            [topic for topic in changed if isinstance(topic, str)]
+            if isinstance(changed, list)
+            else []
+        )
+        return Flash(Session._core_map(flash.get("values", {})), topics)
 
     def put_flash(self, flash: Flash) -> None:
         """Stores flash data for the next request."""
         self._store.set(_FLASH_KEY, {"values": flash.values, "changed": flash.changed})
 
     def keep(self, region: str, path: str, value: object) -> None:
-        """Stores a kept value of a region (HY-38, HY-40); stored kept values of another form than the session
-        writes fail, of every region (HY-104.23). A value outside the data model fails first (HY-40.4)."""
+        """Stores a kept value of a region (HY-38, HY-40); rules.kept_of of the core checks the stored kept values,
+        of every region (HY-104.23). A value outside the data model fails first (HY-40.4)."""
         value = DataModel.check(value)
-        stored = self._store.get(_KEEP_KEY)
         kept = {
-            name: Session._stored_map(values)
-            for name, values in (
-                {} if stored is None else Session._stored_map(stored)
-            ).items()
+            name: Session._core_map(values)
+            for name, values in self._stored_kept().items()
         }
         kept.setdefault(region, {})[path] = value
         self._store.set(_KEEP_KEY, kept)
 
     def kept(self, region: str) -> dict:
         """Returns the kept values of a region by path in storing order, an empty map for a region that stored none
-        (HY-40.3); stored kept values of another form than the session writes fail (HY-104.23)."""
+        (HY-40.3); rules.kept_of of the core checks the stored kept values (HY-104.23)."""
+        regions = self._stored_kept()
+        return Session._core_map(regions[region]) if region in regions else {}
+
+    def _stored_kept(self) -> dict:
+        """The stored kept values by region, which rules.kept_of of the core checks and which fail with
+        ``invalid_session_record`` for kept values of another form (HY-104.22, HY-104.23)."""
         stored = self._store.get(_KEEP_KEY)
-        regions = {} if stored is None else Session._stored_map(stored)
-        return Session._stored_map(regions[region]) if region in regions else {}
+        return (
+            {}
+            if stored is None
+            else Session._core_map(core_rules().session_kept_of(stored))
+        )
 
     @staticmethod
-    def _stored_map(value: object) -> dict:
-        """Returns a copy of the map of a stored value: PHP keeps a map as an array, and an array with the keys 0 to
-        n-1 reads as a list, so a list here is that map. A value that is neither fails (HY-104.13, HY-104.23)."""
-        if isinstance(value, list):
-            return {str(index): item for index, item in enumerate(value)}
-        if not isinstance(value, dict):
-            raise ValueError(
-                "the session holds flash or kept values that are not a map of values"
-            )
-        return dict(value)
+    def _core_map(value: object) -> dict:
+        """Returns a copy of a map that the core gave."""
+        return dict(value) if isinstance(value, dict) else {}

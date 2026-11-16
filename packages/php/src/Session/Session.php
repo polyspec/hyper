@@ -38,33 +38,22 @@ final class Session
         $this->store->set(self::TOKEN, bin2hex(random_bytes(32)));
     }
 
-    /** Returns the stored flash data and removes it from the session. */
+    /**
+     * Returns the stored flash data and removes it from the session. rules.flash_of of the core checks the stored
+     * flash first and fails with `invalid_session_record` for one of another form (HY-25.2, HY-104.23).
+     */
     public function takeFlash(): Flash
     {
-        $flash = self::storedMap($this->store->get(self::FLASH));
-        $this->store->remove(self::FLASH);
-        if ($flash === null) {
+        $stored = $this->store->get(self::FLASH);
+        if ($stored === null) {
             return new Flash([], []);
         }
-        if (!is_array($flash)) {
-            throw new \UnexpectedValueException('the session holds flash data that is not a map');
-        }
+        $flash = self::entries(CoreRules::shared()->sessionFlashOf($stored));
+        $this->store->remove(self::FLASH);
+        /** @var list<string> $changed rules.flash_of gives a list of strings (HY-104.22). */
+        $changed = $flash['changed'] ?? [];
 
-        // HY-104.23: only a member that the map does not hold is absent; a member that is null has another form.
-        $values = array_key_exists('values', $flash) ? self::storedMap($flash['values']) : [];
-        $changed = array_key_exists('changed', $flash) ? $flash['changed'] : [];
-        if (!is_array($values) || !is_array($changed) || !array_is_list($changed)) {
-            throw new \UnexpectedValueException('the session holds flash data that is not values and a list of topics');
-        }
-        $topics = [];
-        foreach ($changed as $topic) {
-            if (!is_string($topic)) {
-                throw new \UnexpectedValueException('the session holds a changed topic that is not a string');
-            }
-            $topics[] = $topic;
-        }
-
-        return new Flash($values, $topics);
+        return new Flash(self::entries($flash['values'] ?? []), $changed);
     }
 
     /** Stores a kept value of a region (HY-38, HY-40). */
@@ -72,23 +61,9 @@ final class Session
     {
         // HY-40.4: a kept value is a value of the data model, checked before anything is stored.
         DataModel::check($value);
-        $kept = self::storedMap($this->store->get(self::KEEP)) ?? [];
-        if (!is_array($kept)) {
-            throw new \UnexpectedValueException('the session holds kept values that are not a map');
-        }
         // HY-104.23: the kept values of every region are a map, also those of another region than this one.
-        $regionKept = [];
-        foreach ($kept as $name => $values) {
-            $values = self::storedMap($values);
-            if (!is_array($values)) {
-                throw new \UnexpectedValueException(
-                    "the session holds kept values of the region {$name} that are not a map",
-                );
-            }
-            if ((string) $name === $region) {
-                $regionKept = $values;
-            }
-        }
+        $kept = $this->storedKept();
+        $regionKept = array_key_exists($region, $kept) ? self::entries($kept[$region]) : [];
         $regionKept[$path] = $value;
         $kept[$region] = $regionKept;
         $this->store->set(self::KEEP, $kept);
@@ -101,24 +76,36 @@ final class Session
      */
     public function kept(string $region): array
     {
-        $kept = self::storedMap($this->store->get(self::KEEP)) ?? [];
-        if (!is_array($kept)) {
-            throw new \UnexpectedValueException('the session holds kept values that are not a map');
-        }
-        $regionKept = array_key_exists($region, $kept) ? self::storedMap($kept[$region]) : [];
-        if (!is_array($regionKept)) {
-            throw new \UnexpectedValueException(
-                "the session holds kept values of the region {$region} that are not a map",
-            );
-        }
+        $kept = $this->storedKept();
 
-        return $regionKept;
+        return array_key_exists($region, $kept) ? self::entries($kept[$region]) : [];
     }
 
-    /** Returns the entries of a stored map: the Node and Python servers write a map that an array would read as a list as a `stdClass` (HY-104). */
-    private static function storedMap(mixed $value): mixed
+    /**
+     * The stored kept values by region, which rules.kept_of of the core checks, those of every region, and which
+     * fails with `invalid_session_record` for kept values of another form (HY-104.22, HY-104.23).
+     *
+     * @return array<array-key, mixed>
+     */
+    private function storedKept(): array
     {
-        return $value instanceof \stdClass ? get_object_vars($value) : $value;
+        $stored = $this->store->get(self::KEEP);
+
+        return $stored === null ? [] : self::entries(CoreRules::shared()->sessionKeptOf($stored));
+    }
+
+    /**
+     * Returns the entries of a map that the core gives, a `stdClass` or an empty array.
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function entries(mixed $value): array
+    {
+        if ($value instanceof \stdClass) {
+            return get_object_vars($value);
+        }
+
+        return is_array($value) ? $value : [];
     }
 
     /** Stores flash data for the next request. */

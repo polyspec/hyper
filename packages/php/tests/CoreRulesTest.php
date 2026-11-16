@@ -44,6 +44,8 @@ final class CoreRulesTest extends TestCase
             'Context::hash (HY-125.12)' => ['contextHash', ['build', '{}'], 'contextHash', 'hash'],
             'Context::validHeader (HY-127.2)' => ['contextValidHeader', [null], 'validContextHeader', true],
             'JsonCodec::decode (HY-54.20)' => ['jsonCodecDecode', ['[1]'], 'jsonRead', [1]],
+            'Session::takeFlash (HY-25.2)' => ['sessionFlashOf', [['values' => []]], 'flashOf', ['changed' => []]],
+            'Session::kept (HY-104.22)' => ['sessionKeptOf', [['r' => []]], 'keptOf', ['r' => []]],
             'the session cookie name (HY-45.1)' => ['sessionCookieName', [true], 'sessionName', '__Host-hy-session'],
             'RepresentationResponse::etag (HY-122.10)' => [
                 'representationEtag',
@@ -132,9 +134,9 @@ final class CoreRulesTest extends TestCase
         self::assertSame([[$function, $arguments]], Calls::$calls);
     }
 
-    public function testThereAreFifteenExactUnits(): void
+    public function testThereAreEighteenExactUnits(): void
     {
-        self::assertCount(15, self::exactUnits());
+        self::assertCount(18, self::exactUnits());
     }
 
     public function testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields(): void

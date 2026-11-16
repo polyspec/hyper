@@ -163,3 +163,13 @@ function jsonRead(mixed ...$arguments): mixed
 {
     return Calls::record('jsonRead', array_values($arguments));
 }
+
+function flashOf(mixed ...$arguments): mixed
+{
+    return Calls::record('flashOf', array_values($arguments));
+}
+
+function keptOf(mixed ...$arguments): mixed
+{
+    return Calls::record('keptOf', array_values($arguments));
+}

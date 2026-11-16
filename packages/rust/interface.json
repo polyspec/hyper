@@ -1573,6 +1573,54 @@
           ],
           "wait": "none",
           "core": "polyspec_hyper::json::json_write"
+        },
+        {
+          "id": "rules.flash_of",
+          "name": [
+            "flash",
+            "of"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "stored"
+              ],
+              "type": "template_value",
+              "required": true
+            }
+          ],
+          "returns": "template_value",
+          "raises": [
+            "polyspec_hyper::ErrorCode::InvalidSessionRecord"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::session::flash_record"
+        },
+        {
+          "id": "rules.kept_of",
+          "name": [
+            "kept",
+            "of"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "stored"
+              ],
+              "type": "template_value",
+              "required": true
+            }
+          ],
+          "returns": "template_value",
+          "raises": [
+            "polyspec_hyper::ErrorCode::InvalidSessionRecord"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::session::kept_record"
         }
       ]
     },
