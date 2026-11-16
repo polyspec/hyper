@@ -53,41 +53,11 @@ export function handlers(): Handlers<Services> {
 
 // A fixture application with one session and one counter, as the PHP AppTest sets them up.
 /**
- * An error of category value of the orm binding, which a case names by its class and its kind (HY-107.7); hyper has no
- * orm package among its test dependencies, so the test gives the class its name, its base and its kind.
+ * Fails the case whose handler throws an error class of the orm package (HY-107.7) when the case is set up: hyper does
+ * not depend on the orm package, so the runner has no such class to throw and the case is not run.
  */
-export class OrmValueError extends RangeError {
-  public readonly kind: string;
-  public readonly status: number | null = null;
-
-  public constructor(kind: string) {
-    super(`${kind}: a failure of the ORM`);
-    this.name = 'OrmValueError';
-    this.kind = kind;
-  }
-}
-
-/** An error of category store of the orm binding, which a case names by its class and its kind (HY-107.7). */
-export class OrmStoreError extends Error {
-  public readonly kind: string;
-  public readonly status: number | null = null;
-
-  public constructor(kind: string) {
-    super(`${kind}: a failure of the ORM`);
-    this.name = 'OrmStoreError';
-    this.kind = kind;
-  }
-}
-
-/** Returns the error of the orm binding that a case throws by its class and its kind, and fails for another class. */
-export function ormError(thrown: unknown, what: string): OrmValueError | OrmStoreError {
-  if (!(thrown instanceof Map)) throw new Error(`the throw of ${what} is not a map`);
-  const kind: unknown = thrown.get('kind');
-  if (typeof kind !== 'string') throw new Error(`${what} throws an error of the ORM without a kind`);
-  const name: unknown = thrown.get('class');
-  if (name === 'OrmValueError') return new OrmValueError(kind);
-  if (name === 'OrmStoreError') return new OrmStoreError(kind);
-  throw new Error(`${what} throws the unknown class ${String(name)}`);
+export function ormThrown(what: string): never {
+  throw new Error(`${what} throws an error of the orm package: the orm package is not a dependency of hyper yet (HY-107.7)`);
 }
 
 export class Fixture {

@@ -5,6 +5,7 @@ import io
 import json
 import tempfile
 from pathlib import Path
+from typing import NoReturn
 
 from polyspec.hyper.session._session import _TOKEN_KEY
 from polyspec.hyper.app.app import App
@@ -20,41 +21,13 @@ from .container_steps import SERVICES
 from .recorded import decoded
 
 
-class OrmValueError(ValueError):
-    """An error of category value of the orm binding, which a case names by its class and its kind (HY-107.7); hyper
-    has no orm package among its test dependencies, so the test gives the class its name, base and `kind`."""
-
-    def __init__(self, kind: str):
-        super().__init__(f"{kind}: a failure of the ORM")
-        self.kind = kind
-        self.status = None
-
-
-class OrmStoreError(RuntimeError):
-    """An error of category store of the orm binding, which a case names by its class and its kind (HY-107.7)."""
-
-    def __init__(self, kind: str):
-        super().__init__(f"{kind}: a failure of the ORM")
-        self.kind = kind
-        self.status = None
-
-
-_ORM_CLASSES: dict[str, type[OrmValueError] | type[OrmStoreError]] = {
-    "OrmValueError": OrmValueError,
-    "OrmStoreError": OrmStoreError,
-}
-
-
-def orm_error(thrown: object, what: str) -> Exception:
-    """Returns the error of the orm binding that a case throws by its class and its kind, and fails for another
-    class."""
-    if (
-        not isinstance(thrown, dict)
-        or thrown.get("class") not in _ORM_CLASSES
-        or not isinstance(thrown.get("kind"), str)
-    ):
-        raise ValueError(f"{what} throws a value other than an error of the ORM with a kind")
-    return _ORM_CLASSES[thrown["class"]](thrown["kind"])
+def orm_thrown(what: str) -> NoReturn:
+    """Fails the case whose handler throws an error class of the orm package (HY-107.7) when the case is set up:
+    hyper does not depend on the orm package, so the runner has no such class to throw and the case is not run."""
+    raise LookupError(
+        f"{what} throws an error of the orm package: "
+        "the orm package is not a dependency of hyper yet (HY-107.7)"
+    )
 
 
 def manifest_rejections(case: CaseReader) -> None:
@@ -232,6 +205,8 @@ def _factory(name: str, created: dict):
 def _handler(spec: dict | None, calls: list):
     """Returns the representation handler of the case; with `service` it takes the service of that name between the
     media type and the request, each parameter named by its class (HY-105.4)."""
+    if spec is not None and "throw" in spec:
+        orm_thrown("the representation handler")
 
     def answer(request: Request, media: MediaType, received: dict) -> Representation:
         calls.append({**_observed(request, media), **received})
@@ -239,8 +214,6 @@ def _handler(spec: dict | None, calls: list):
             raise AssertionError(
                 "a case without a handler calls a representation handler"
             )
-        if "throw" in spec:
-            raise orm_error(spec["throw"], "the representation handler")
         return Representation(spec["status"], spec.get("body"), spec.get("headers"))
 
     if spec is None or "service" not in spec:

@@ -27,6 +27,17 @@ final class CaseRules
         'bodyNotContains' => 'excludes',
     ];
 
+    /**
+     * Fails the case whose handler throws an error class of the orm package (HY-107.7) when the case is set up: hyper
+     * does not depend on the orm package, so the runner has no such class to throw and the case is not run.
+     */
+    public static function ormThrown(string $what): never
+    {
+        throw new \UnexpectedValueException(
+            "{$what} throws an error of the orm package: the orm package is not a dependency of hyper yet (HY-107.7)",
+        );
+    }
+
     /** @return array<string, array<array-key, mixed>> the `caseFiles` of contracts/interfaces.json and of tests/legacy/interfaces.json */
     public static function caseFiles(): array
     {

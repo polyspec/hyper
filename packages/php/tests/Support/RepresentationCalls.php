@@ -9,7 +9,7 @@ use Polyspec\Hyper\Representation;
 use Polyspec\Hyper\Request;
 
 /**
- * The representation handlers of a case (HY-118): each records its call and what it received, and answers or throws
+ * The representation handlers of a case (HY-118): each records its call and what it received, and answers
  * what the case states. `manifest` writes the manifest that declares the entries of a case.
  */
 final class RepresentationCalls
@@ -27,12 +27,16 @@ final class RepresentationCalls
     public ?object $service = null;
 
     /**
-     * Returns a handler that answers the response of a case, which has `status`, `body` and `headers`, or throws the
-     * error of its `throw`; without a response the handler fails, because the case states no call. A response with
-     * `service` gives a handler that takes the service of that name between the media type and the request (HY-105.4).
+     * Returns a handler that answers the response of a case, which has `status`, `body` and `headers`; a response with
+     * `throw` fails the case (HY-107.7); without a response the handler fails, because the case states no call. A
+     * response with `service` gives a handler that takes the service of that name between the media type and the
+     * request (HY-105.4).
      */
     public function handler(mixed $response): \Closure
     {
+        if (is_array($response) && isset($response['throw'])) {
+            CaseRules::ormThrown('the representation handler');
+        }
         return match (is_array($response) ? $response['service'] ?? null : null) {
             null => fn (Request $request, MediaType $media): Representation => $this->answer(
                 $request,
@@ -56,7 +60,7 @@ final class RepresentationCalls
         };
     }
 
-    /** Records a call of a handler with what it received, and answers or throws what the response of the case states. */
+    /** Records a call of a handler with what it received, and answers what the response of the case states. */
     private function answer(Request $request, MediaType $media, ?object $service, mixed $response): Representation
     {
         $this->handled++;
@@ -65,9 +69,6 @@ final class RepresentationCalls
         $this->parameters = $media->parameters();
         if (!is_array($response)) {
             throw new \LogicException('a case without a handler calls a representation handler');
-        }
-        if (isset($response['throw'])) {
-            throw OrmStoreError::thrown($response['throw'], 'the representation handler');
         }
         $status = $response['status'] ?? null;
         if (!is_int($status)) {

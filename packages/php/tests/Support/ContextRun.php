@@ -261,12 +261,7 @@ final class ContextRun
             };
         }
         if (array_key_exists('throw', $spec)) {
-            $thrown = $spec['throw'];
-            $what = "the loader {$name}";
-
-            return static function () use ($thrown, $what): array {
-                throw OrmStoreError::thrown($thrown, $what);
-            };
+            CaseRules::ormThrown("the loader {$name}");
         }
         if (($spec['renew'] ?? null) === true) {
             // HY-72.4: the loader calls renewSession of its reply and returns an empty map.
@@ -291,6 +286,9 @@ final class ContextRun
     /** @param array<array-key, mixed> $spec */
     private function action(string $route, array $spec): \Closure
     {
+        if (array_key_exists('throw', $spec)) {
+            CaseRules::ormThrown("the action of {$route}");
+        }
         return function (Reply $reply) use ($route, $spec): Result {
             $this->calls[] = "action:{$route}";
             if (array_key_exists('renew', $spec)) {
@@ -299,9 +297,6 @@ final class ContextRun
                 }
                 // HY-72.1: the action calls renewSession of its reply first.
                 $reply->renewSession();
-            }
-            if (array_key_exists('throw', $spec)) {
-                throw OrmStoreError::thrown($spec['throw'], "the action of {$route}");
             }
             if (array_key_exists('redirect', $spec)) {
                 return Result::redirect(self::string($spec['redirect'], "the redirect of {$route}"));

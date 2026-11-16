@@ -10,14 +10,12 @@ import { decoded } from './session-requests.js';
 import { App, ArraySession, NotFound, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
-import { ormError, parsedBody, record, requestFrom } from '../support.js';
+import { ormThrown, parsedBody, record, requestFrom } from '../support.js';
 
-// An action of an application of a case: it renews the session when `renew` is true, and then raises the error of the
-// orm binding that `raises` names by its class and its kind, redirects, redirects to an outside location when `outside`
-// is true (HY-133), or returns a page with its data.
+// An action of an application of a case: it renews the session when `renew` is true, and then redirects, redirects to
+// an outside location when `outside` is true (HY-133), or returns a page with its data.
 interface Action {
   renew: boolean;
-  raises: Map<string, unknown> | null;
   redirect: string | null;
   outside: boolean;
   page: number;
@@ -79,26 +77,24 @@ function applicationOf(value: unknown, name: string): Application {
     });
   })();
   const loaders = new Map([...mapIn(application.get('loaders'), 'the loaders')].map(([loader, data]): [string, Map<string, unknown>] => [loader, hostMap(data, `the loader ${loader}`)]));
+  for (const [loader, spec] of loaders) if (spec.has('throw')) ormThrown(`the loader ${loader}`);
   const actions = new Map<string, Action>();
   if (application.has('actions')) {
     for (const [route, item] of mapIn(application.get('actions'), 'the actions')) {
       const action = mapIn(item, `the action of ${route}`);
       const renew = action.has('renew') && action.get('renew') === true;
-      if (action.has('throw')) {
-        actions.set(route, { renew, raises: raisedError(action.get('throw'), `the action of ${route}`), redirect: null, outside: false, page: 0, data: new Map() });
-        continue;
-      }
+      if (action.has('throw')) ormThrown(`the action of ${route}`);
       if (action.has('redirect')) {
-        actions.set(route, { renew, raises: null, redirect: stringIn(action.get('redirect'), `the redirect of ${route}`), outside: false, page: 0, data: new Map() });
+        actions.set(route, { renew, redirect: stringIn(action.get('redirect'), `the redirect of ${route}`), outside: false, page: 0, data: new Map() });
         continue;
       }
       if (action.has('outside')) {
-        actions.set(route, { renew, raises: null, redirect: stringIn(action.get('outside'), `the outside redirect of ${route}`), outside: true, page: 0, data: new Map() });
+        actions.set(route, { renew, redirect: stringIn(action.get('outside'), `the outside redirect of ${route}`), outside: true, page: 0, data: new Map() });
         continue;
       }
       const page = action.get('page');
       if (typeof page !== 'number' || !Number.isInteger(page)) throw new Error(`the action of ${route} has no throw, no redirect and no integer page`);
-      actions.set(route, { renew, raises: null, redirect: null, outside: false, page, data: hostMap(action.get('data'), `the data of the action of ${route}`) });
+      actions.set(route, { renew, redirect: null, outside: false, page, data: hostMap(action.get('data'), `the data of the action of ${route}`) });
     }
   }
   return {
@@ -111,29 +107,19 @@ function applicationOf(value: unknown, name: string): Application {
   };
 }
 
-// Returns the `throw` of a loader or an action, which names an error of the orm binding by its class and its kind
-// (HY-107.7), and fails for any other value.
-function raisedError(value: unknown, what: string): Map<string, unknown> {
-  const thrown = mapIn(value, `the throw of ${what}`);
-  ormError(thrown, what);
-  return thrown;
-}
-
 // Returns what a loader of a case returns: it calls renewSession of its reply and returns an empty map for
-// `renew: true` (HY-72.4), raises the ORM error of its `throw` (HY-107), and returns its stated data otherwise.
-function loaded(spec: Map<string, unknown>, name: string, reply: Reply): Map<string, unknown> {
+// `renew: true` (HY-72.4), and returns its stated data otherwise.
+function loaded(spec: Map<string, unknown>, reply: Reply): Map<string, unknown> {
   if (spec.get('renew') === true) {
     reply.renewSession();
     return new Map();
   }
-  if (spec.has('throw')) throw ormError(raisedError(spec.get('throw'), `the loader ${name}`), `the loader ${name}`);
   return new Map(spec);
 }
 
 // Returns the handlers of an application for one case: each declared loader returns its stated data, renews the session
-// or raises its ORM error, stops with NotFound when its data holds `stop: NotFound` and embeds its data when the
-// application lists it; each declared action renews the session when it states so and then raises its ORM error or
-// returns its stated page or redirect; the shared handler returns the shared data of the case. Only a declared loader
+// stops with NotFound when its data holds `stop: NotFound` and embeds its data when the application lists it; each
+// declared action renews the session when it states so and then returns its stated page or redirect; the shared handler returns the shared data of the case. Only a declared loader
 // or action is registered, as in PHP and Python, so a route region without a loader has none (HY-75.7), and every call
 // is recorded in order (HY-124).
 function handlersOf(application: Application, shared: Map<string, unknown> | null, calls: string[]): Handlers<Record<string, never>> {
@@ -149,13 +135,13 @@ function handlersOf(application: Application, shared: Map<string, unknown> | nul
           if (spec.get('stop') !== 'NotFound') throw new Error(`loader ${route.name} stops with a value other than NotFound`);
           throw new NotFound();
         }
-        return loaded(spec, route.name, reply);
+        return loaded(spec, reply);
       };
     }
     const regions: NonNullable<RouteHandlers<Record<string, never>>['regions']> = {};
     for (const region of route.regions) {
       const regionSpec = application.loaders.get(region);
-      if (regionSpec !== undefined) regions[region] = ({ reply }) => loaded(regionSpec, region, reply);
+      if (regionSpec !== undefined) regions[region] = ({ reply }) => loaded(regionSpec, reply);
     }
     if (Object.keys(regions).length > 0) handler.regions = regions;
     const action = application.actions.get(route.name);
@@ -163,7 +149,6 @@ function handlersOf(application: Application, shared: Map<string, unknown> | nul
       handler.post = ({ reply }) => {
         calls.push(`action:${route.name}`);
         if (action.renew) reply.renewSession();
-        if (action.raises !== null) throw ormError(action.raises, `the action of ${route.name}`);
         if (action.redirect === null) return Result.page(action.page, action.data);
         return action.outside ? Result.outside(action.redirect) : Result.redirect(action.redirect);
       };

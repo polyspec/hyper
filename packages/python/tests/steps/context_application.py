@@ -10,7 +10,7 @@ from polyspec.hyper.result.not_found import NotFound
 from polyspec.hyper.result.result import Result
 
 from .recorded import decoded
-from .representations_steps import orm_error
+from .representations_steps import orm_thrown
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -27,11 +27,6 @@ def program_of(name: str) -> tuple[Path, Path]:
     return root / "manifest.json", root / "program"
 
 
-def _thrown(handler: str, thrown: object) -> Exception:
-    """Returns the error of the ORM that a handler of the contract raises (HY-107.7), and fails for another class."""
-    return orm_error(thrown, f"handler {handler}")
-
-
 def open_application(
     application: dict,
     shared: dict | None,
@@ -43,8 +38,8 @@ def open_application(
     failures: list | None = None,
 ) -> App:
     """Opens the application with the handlers of its contract: a loader stops with NotFound when it says so, renews
-    the session of its reply for `renew` and raises the ORM error of `throw` (HY-107.2); an action renews the session
-    of its reply first for `renew`, and then raises the ORM error of `throw` or returns the page with its status or
+    the session of its reply for `renew`; an action renews the session of its reply first for `renew`, and then
+    returns the page with its status or
     the redirect; the handlers record their calls in order. A route region without an entry in `loaders` has no loader. The shared handler
     returns the shared data of the case, and an application without shared data has no shared handler. The context
     handler returns the decoded JSON text `context`, or the context of the application, as it is, also a value that
@@ -65,6 +60,9 @@ def open_application(
     actions = application.get("actions", {})
     if not isinstance(actions, dict):
         raise ValueError("the actions are not a map")
+    for name, spec in [*loaders.items(), *actions.items()]:
+        if isinstance(spec, dict) and "throw" in spec:
+            orm_thrown(f"handler {name}")
 
     def loader(route: str, data: dict):
         def load(request: Request, reply: Reply) -> dict:
@@ -76,8 +74,6 @@ def open_application(
                         f"loader {route} stops with a value other than NotFound"
                     )
                 raise NotFound()
-            if "throw" in data:
-                raise _thrown(route, data["throw"])
             if "renew" in data:
                 if data["renew"] is not True:
                     raise ValueError(f"the renew of loader {route} is not true")
@@ -94,8 +90,6 @@ def open_application(
                 if spec["renew"] is not True:
                     raise ValueError(f"the renew of action {route} is not true")
                 reply.renew_session()
-            if "throw" in spec:
-                raise _thrown(route, spec["throw"])
             if "redirect" in spec:
                 if not isinstance(spec["redirect"], str):
                     raise ValueError(f"the redirect of {route} is not a string")
