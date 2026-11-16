@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- `scripts/binding-commit.mts` gives `local` for a `polyspec-binding-core` of a local path, which a patch of a run against local providers makes, in place of failing in every make that reads the Makefile; that run names the binding cli with `BINDING` (H35.7).
 - Pint skips `packages/php/native/generated` and ruff skips `packages/python/src/polyspec/hyper/_binding` and `packages/python/native/generated`, which the binding generator writes; `_core_rules.py` and `test_core_rules.py` take the format of ruff; the root `composer.json` loads the stand-in functions of `CoreRulesTest` through `autoload-dev.files` in place of a `require_once` in the test, and the PHP lines of the tests, of the support classes and of the board front controller stay within 120 characters, which `make hyper-lint`, `make lint-python` and `make lint-php` failed (H35.7).
 - The application `with_context` of `tests/legacy/context-before-s3b.json` holds the route, the loader and the action `away`, which the case of an outside redirect that the merge of H32.1 copied there calls; the PHP server failed to open the application, so its 21 cases failed with `route away declares post but has no POST action` (H35.7).
 - `config/rebuild.json` classes `scripts/binding-cases.mts` and `scripts/binding-commit.mts` as policy, which `make rebuild-check` failed (H35.7).

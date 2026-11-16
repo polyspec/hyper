@@ -33,8 +33,11 @@ export function bindingCommit(text: string): string {
   const candidates = all.filter((s) => s.name === 'polyspec-binding-core' && (version === undefined || s.version === version));
   const [core, ...others] = candidates;
   if (core === undefined || others.length > 0) throw new Error(`Cargo.lock holds ${candidates.length} packages for ${line}`);
-  const commit = /#([0-9a-f]{40})$/u.exec(core.source ?? '')?.[1];
-  if (commit === undefined) throw new Error(`polyspec-binding-core ${core.version} has no pinned commit: ${core.source ?? 'no source'}`);
+  // A package of a local path has no source in the lock: a patch of a run against local providers makes it, and that run
+  // names the binding cli itself (BINDING of the Makefile).
+  if (core.source === undefined) return 'local';
+  const commit = /#([0-9a-f]{40})$/u.exec(core.source)?.[1];
+  if (commit === undefined) throw new Error(`polyspec-binding-core ${core.version} has no pinned commit: ${core.source}`);
   return commit;
 }
 

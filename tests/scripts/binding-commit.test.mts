@@ -1,6 +1,6 @@
 // Tests scripts/binding-commit.mts (G-6, CK-20): it gives the commit of the polyspec-binding-core that polyspec-hyper
 // depends on in Cargo.lock, also when the lock holds a second polyspec-binding-core that another library requires, and
-// fails when polyspec-hyper names none or the lock has no Git commit for it.
+// gives local for one of a local path, and fails when polyspec-hyper names none or the lock has no Git commit for it.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { bindingCommit } from '../../scripts/binding-commit.mts';
@@ -48,4 +48,9 @@ test('fails when polyspec-hyper names no polyspec-binding-core', () => {
 test('fails when the named polyspec-binding-core has no Git commit', () => {
   const text = lock(binding('0.0.13', 'registry+https://github.com/rust-lang/crates.io-index'), hyper('polyspec-binding-core'));
   assert.throws(() => bindingCommit(text), /polyspec-binding-core 0.0.13 has no pinned commit/);
+});
+
+test('gives local for a polyspec-binding-core of a local path, which a patch of a linked run makes (H35.7)', () => {
+  const local = `[[package]]\nname = "polyspec-binding-core"\nversion = "0.0.13"\ndependencies = [\n "serde",\n]\n`;
+  assert.equal(bindingCommit(lock(local, hyper('polyspec-binding-core'))), 'local');
 });
