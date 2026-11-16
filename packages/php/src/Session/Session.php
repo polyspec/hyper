@@ -48,12 +48,12 @@ final class Session
         if ($stored === null) {
             return new Flash([], []);
         }
-        $flash = self::entries(CoreRules::shared()->sessionFlashOf($stored));
+        $flash = self::coreMap(CoreRules::shared()->sessionFlashOf($stored));
         $this->store->remove(self::FLASH);
         /** @var list<string> $changed rules.flash_of gives a list of strings (HY-104.22). */
         $changed = $flash['changed'] ?? [];
 
-        return new Flash(self::entries($flash['values'] ?? []), $changed);
+        return new Flash(self::coreMap($flash['values'] ?? []), $changed);
     }
 
     /** Stores a kept value of a region (HY-38, HY-40). */
@@ -63,7 +63,7 @@ final class Session
         DataModel::check($value);
         // HY-104.23: the kept values of every region are a map, also those of another region than this one.
         $kept = $this->storedKept();
-        $regionKept = array_key_exists($region, $kept) ? self::entries($kept[$region]) : [];
+        $regionKept = array_key_exists($region, $kept) ? self::coreMap($kept[$region]) : [];
         $regionKept[$path] = $value;
         $kept[$region] = $regionKept;
         $this->store->set(self::KEEP, $kept);
@@ -78,7 +78,7 @@ final class Session
     {
         $kept = $this->storedKept();
 
-        return array_key_exists($region, $kept) ? self::entries($kept[$region]) : [];
+        return array_key_exists($region, $kept) ? self::coreMap($kept[$region]) : [];
     }
 
     /**
@@ -91,7 +91,7 @@ final class Session
     {
         $stored = $this->store->get(self::KEEP);
 
-        return $stored === null ? [] : self::entries(CoreRules::shared()->sessionKeptOf($stored));
+        return $stored === null ? [] : self::coreMap(CoreRules::shared()->sessionKeptOf($stored));
     }
 
     /**
@@ -99,7 +99,7 @@ final class Session
      *
      * @return array<array-key, mixed>
      */
-    private static function entries(mixed $value): array
+    private static function coreMap(mixed $value): array
     {
         if ($value instanceof \stdClass) {
             return get_object_vars($value);

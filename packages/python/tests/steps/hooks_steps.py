@@ -7,6 +7,7 @@ from polyspec.hyper.session.file_sessions import FileSessions
 from polyspec.hyper.host.server import create_server
 from polyspec.hyper.host.wsgi import create_wsgi
 
+from ..case_rules import raises_of
 from . import client_steps
 from .client_steps import Counter
 
@@ -28,6 +29,7 @@ def creation(case) -> None:
                 error = failure
             case.outcome("creation", error)
             case.compare("message", "" if error is None else str(error))
+            case.compare("raises", None if error is None else raises_of(error))
             return
         if hook not in ("around", "written"):
             raise LookupError(f"the hook {hook} of the case is unknown")
@@ -49,8 +51,7 @@ def creation(case) -> None:
             try:
                 created = create()
             except ValueError as failure:
-                if type(failure) is not ValueError:
-                    raise
+                # HY-97.13: the field `raises` of the case judges the class and the kind of the error.
                 errors.append(failure)
             else:
                 if entry is create_server:
@@ -60,3 +61,4 @@ def creation(case) -> None:
         raise LookupError("the messages of the entries differ")
     case.outcome("creation", errors[0])
     case.compare("message", str(errors[0]))
+    case.compare("raises", raises_of(errors[0]))

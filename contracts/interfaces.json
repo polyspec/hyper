@@ -1458,6 +1458,106 @@
               }
             },
             {
+              "id": "core-rules.jsonCodecDecode",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "JsonCodec.decode: rules.json_read reads a JSON text to a value of the data model with maps in document order, and fails with malformed_json or the kind of the data model (HY-54.20, HY-54.21).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::jsonCodecDecode",
+                  "signature": "public function jsonCodecDecode(string $text): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.jsonCodecDecode",
+                  "signature": "jsonCodecDecode(text: string): JsonValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.json_codec_decode",
+                  "signature": "def json_codec_decode(self, text: str) -> object"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sessionFlashOf",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Session.takeFlash: rules.flash_of checks a stored flash and gives the map of its values and its changed topics, and fails with invalid_session_record for a stored flash of another form (HY-25.2, HY-104.23).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionFlashOf",
+                  "signature": "public function sessionFlashOf(mixed $stored): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionFlashOf",
+                  "signature": "sessionFlashOf(stored: unknown): JsonValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_flash_of",
+                  "signature": "def session_flash_of(self, stored: object) -> object"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sessionKeptOf",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "map<map<value>>",
+              "errors": [],
+              "state": "Session.kept and Session.keep: rules.kept_of checks stored kept values and gives the map of each region to the map of its values by path, and fails with invalid_session_record for kept values of another form, those of every region (HY-104.22, HY-104.23).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionKeptOf",
+                  "signature": "public function sessionKeptOf(mixed $stored): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionKeptOf",
+                  "signature": "sessionKeptOf(stored: unknown): JsonValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_kept_of",
+                  "signature": "def session_kept_of(self, stored: object) -> object"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageKeptCookie",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "map<map<value>>",
+              "errors": [],
+              "state": "Page.kept: rules.kept_cookie reads the cookie of the kept values to a map from each region to the map of its readable values by path; a cookie that is no JSON object, a region that holds no object and a value outside the data model give no value (HY-38.2, HY-38.11, HY-42).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::pageKeptCookie",
+                  "signature": "public function pageKeptCookie(string $text): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageKeptCookie",
+                  "signature": "pageKeptCookie(text: string): JsonValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.page_kept_cookie",
+                  "signature": "def page_kept_cookie(self, text: str) -> object"
+                }
+              }
+            },
+            {
               "id": "core-rules.sessionCookieName",
               "kind": "method",
               "visibility": "internal",
@@ -9399,27 +9499,50 @@
               }
             },
             {
-              "id": "session.storedMap",
+              "id": "session.storedKept",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "map<map<value>>",
+              "errors": [],
+              "state": "Returns the stored kept values by region, which rules.kept_of of the core checks, and fails with invalid_session_record for kept values of another form (HY-104.22, HY-104.23).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/Session.php::Polyspec\\Hyper\\Session::storedKept",
+                  "signature": "private function storedKept(): array"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/session/session.ts::Session.storedKept",
+                  "signature": "private storedKept(): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/session/_session.py::Session._stored_kept",
+                  "signature": "def _stored_kept(self) -> dict"
+                }
+              }
+            },
+            {
+              "id": "session.coreMap",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
                 "value"
               ],
-              "output": "value",
+              "output": "map<value>",
               "errors": [],
-              "state": "Returns the map of a stored value, where a list is the map of its indexes.",
+              "state": "Returns a map that the core gave as a map of the server.",
               "native": {
                 "php": {
-                  "symbol": "packages/php/src/Session/Session.php::Polyspec\\Hyper\\Session::storedMap",
-                  "signature": "private static function storedMap(mixed $value): mixed"
+                  "symbol": "packages/php/src/Session/Session.php::Polyspec\\Hyper\\Session::coreMap",
+                  "signature": "private static function coreMap(mixed $value): array"
                 },
                 "node": {
-                  "symbol": "packages/ts/src/session/session.ts::Session.storedMap",
-                  "signature": "private static storedMap(value: unknown): MapValue"
+                  "symbol": "packages/ts/src/session/session.ts::Session.coreMap",
+                  "signature": "private static coreMap(value: unknown): MapValue"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_session.py::Session._stored_map",
-                  "signature": "def _stored_map(value: object) -> dict"
+                  "symbol": "packages/python/src/polyspec/hyper/session/_session.py::Session._core_map",
+                  "signature": "def _core_map(value: object) -> dict"
                 }
               }
             },
@@ -11934,7 +12057,7 @@
                 },
                 "node": {
                   "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.decode",
-                  "signature": "static decode(text: string): DecodedValue"
+                  "signature": "static decode(text: string): Value"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec.decode",
@@ -11963,34 +12086,6 @@
                   "php"
                 ],
                 "sentence": "HY-17.1"
-              }
-            },
-            {
-              "id": "json-codec.constructor",
-              "kind": "constructor",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "json-codec",
-              "errors": [],
-              "state": "Starts a reader of a JSON text at its first character.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.constructor",
-                  "signature": "private constructor(text: string)"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec.__init__",
-                  "signature": "def __init__(self, text: str) -> None"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.20"
               }
             },
             {
@@ -12076,265 +12171,8 @@
                 ],
                 "sentence": "HY-54.18"
               }
-            },
-            {
-              "id": "json-codec.combineSurrogates",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "string",
-              "errors": [
-                "json-decode-error"
-              ],
-              "state": "Joins an escaped surrogate pair into one character and fails for a lone surrogate.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.combineSurrogates",
-                  "signature": "private static combineSurrogates(text: string): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._combine_surrogates",
-                  "signature": "def _combine_surrogates(text: str) -> str"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.20"
-              }
-            },
-            {
-              "id": "json-codec.failAt",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "none",
-              "errors": [
-                "json-decode-error"
-              ],
-              "state": "Fails the decoding at the current position.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.failAt",
-                  "signature": "private failAt(message: string): never"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._fail_at",
-                  "signature": "def _fail_at(self, message: str) -> NoReturn"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.20"
-              }
-            },
-            {
-              "id": "json-codec.skipWhitespace",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [],
-              "output": "none",
-              "errors": [],
-              "state": "Skips the JSON white space.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.skipWhitespace",
-                  "signature": "private skipWhitespace(): void"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._skip_whitespace",
-                  "signature": "def _skip_whitespace(self) -> None"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.20"
-              }
-            },
-            {
-              "id": "json-codec.parseString",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [],
-              "output": "string",
-              "errors": [
-                "json-decode-error"
-              ],
-              "state": "Reads a string from its opening quote.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.parseString",
-                  "signature": "private parseString(): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._parse_string",
-                  "signature": "def _parse_string(self) -> str"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.20"
-              }
-            },
-            {
-              "id": "json-codec.parseNumber",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [],
-              "output": "value",
-              "errors": [
-                "json-decode-error"
-              ],
-              "state": "Reads a number, an integer for an integer literal and a float otherwise.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.parseNumber",
-                  "signature": "private parseNumber(): number | OutsideNumber"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._parse_number",
-                  "signature": "def _parse_number(self) -> object"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.20"
-              }
-            },
-            {
-              "id": "json-codec.parseValue",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "number"
-              ],
-              "output": "value",
-              "errors": [
-                "json-decode-error"
-              ],
-              "state": "Reads a value at a nesting depth.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.parseValue",
-                  "signature": "private parseValue(depth: number): DecodedValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._parse_value",
-                  "signature": "def _parse_value(self, depth: int) -> object"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.20"
-              }
             }
           ]
-        },
-        {
-          "id": "json-decode-error",
-          "native": {
-            "php": {
-              "file": "packages/php/src/Data/JsonDecodeError.php",
-              "kind": "class",
-              "internal": true
-            },
-            "node": {
-              "file": "packages/ts/src/data/json-decode-error.ts",
-              "kind": "class",
-              "internal": true
-            },
-            "python": {
-              "file": "packages/python/src/polyspec/hyper/data/_json_decode_error.py",
-              "kind": "class",
-              "internal": true
-            }
-          },
-          "members": []
-        },
-        {
-          "id": "outside-number",
-          "native": {
-            "node": {
-              "file": "packages/ts/src/data/outside-number.ts",
-              "kind": "class",
-              "internal": true
-            },
-            "python": {
-              "file": "packages/python/src/polyspec/hyper/data/_outside_number.py",
-              "kind": "class",
-              "internal": true
-            }
-          },
-          "members": [
-            {
-              "id": "outside-number.literal",
-              "kind": "property",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "string",
-              "errors": [],
-              "state": "Holds the literal of the number as the JSON text writes it.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/outside-number.ts::OutsideNumber.literal",
-                  "signature": "readonly literal: string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_outside_number.py::OutsideNumber.literal",
-                  "signature": "literal: str"
-                }
-              }
-            },
-            {
-              "id": "outside-number.constructor",
-              "kind": "constructor",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "outside-number",
-              "errors": [],
-              "state": "Holds the literal of a number outside the data model.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/outside-number.ts::OutsideNumber.constructor",
-                  "signature": "constructor(literal: string)"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_outside_number.py::OutsideNumber.__init__",
-                  "signature": "def __init__(self, literal: str) -> None"
-                }
-              }
-            }
-          ],
-          "only": {
-            "languages": [
-              "node",
-              "python"
-            ],
-            "sentence": "HY-54.20"
-          }
         }
       ]
     },
@@ -12391,7 +12229,7 @@
                 },
                 "node": {
                   "symbol": "packages/ts/src/data/kept.ts::Kept.apply",
-                  "signature": "static apply(data: MapValue, kept: readonly (readonly [string, Value | DecodedValue])[]): MapValue"
+                  "signature": "static apply(data: MapValue, kept: readonly (readonly [string, Value])[]): MapValue"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/data/_kept.py::Kept.apply",
@@ -12417,7 +12255,7 @@
                 },
                 "node": {
                   "symbol": "packages/ts/src/data/kept.ts::Kept.select",
-                  "signature": "static select(data: MapValue, kept: readonly (readonly [string, Value | DecodedValue])[]): MapValue"
+                  "signature": "static select(data: MapValue, kept: readonly (readonly [string, Value])[]): MapValue"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/data/_kept.py::Kept.select",
@@ -13907,7 +13745,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Returns the decoded hy-keep cookie, or null for a cookie that is absent or not JSON (HY-42.1).",
+              "state": "Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or null for a cookie that is absent (HY-38.11, HY-42.1).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::decodedCookie",
@@ -13915,7 +13753,7 @@
                 },
                 "node": {
                   "symbol": "packages/ts/src/page/page.ts::Page.decodedCookie",
-                  "signature": "private static decodedCookie(text: string | null): DecodedValue"
+                  "signature": "private static decodedCookie(text: string | null): Value"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._decoded_cookie",
@@ -15022,26 +14860,6 @@
     }
   ],
   "types": [
-    {
-      "id": "decodedValue",
-      "visibility": "internal",
-      "unit": "json-codec",
-      "shape": {
-        "term": "value"
-      },
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-54.20"
-      },
-      "native": {
-        "node": {
-          "symbol": "packages/ts/src/data/json-codec.ts::DecodedValue",
-          "declaration": "export type DecodedValue = null | boolean | number | string | OutsideNumber | DecodedValue[] | Map<string, DecodedValue>;"
-        }
-      }
-    },
     {
       "id": "contextHandler",
       "visibility": "public",

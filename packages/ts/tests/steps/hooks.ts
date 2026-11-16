@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { App, FileSessions, type AppOptions, type ServerOptions } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
+import { raisesOf } from '../case-rules.js';
 import { FIXTURES, TEMPLATES, type Services } from '../support.js';
 import { fixtureHandlers } from './client.js';
 import { messageStart } from './recorded.js';
@@ -14,13 +15,13 @@ function fixture(): AppOptions<Services> {
   return { manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: fixtureHandlers(), timezone: '+09:00', log: () => {} };
 }
 
-// Returns the error of a call that fails with exactly the open error (HY-106.6), and fails the case for a call that
-// returns or that raises an error of another class.
+// Returns the error of a call that fails, which the field `raises` of the case judges (HY-97.13), and fails the case for
+// a call that returns or that throws a value that is no Error.
 function creationError(entry: string, create: () => unknown): Error {
   try {
     create();
   } catch (error) {
-    if (!(error instanceof Error) || error.constructor !== Error) throw error;
+    if (!(error instanceof Error)) throw error;
     return error;
   }
   throw new Error(`${entry} was created with a hook that is no function`);
@@ -40,6 +41,7 @@ export const steps = {
       reader.outcome('creation', failure);
       messageStart(reader, failure);
       reader.compare('message', failure instanceof Error ? failure.message : '');
+      reader.compare('raises', failure === null ? null : raisesOf(failure));
       return;
     }
     if (hook !== 'around' && hook !== 'written') throw new Error(`the hook ${String(hook)} of the case is unknown`);
@@ -62,6 +64,9 @@ export const steps = {
       reader.outcome('creation', first);
       messageStart(reader, first);
       reader.compare('message', first.message);
+      // HY-97.13: the kind and the category of the error of a hook that is no function, which an error of another
+      // class than hyper's fails.
+      reader.compare('raises', raisesOf(first));
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
