@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: fc3bb1d6ca7e4b5f23b4b111ae7767431bfa78da505b2de857bfecbc1051f1fb -->
+<!-- source-sha256: 8a812ae7601a497e3e7f60ebaeacec5c3f18ad1da796698980ccea096cbe1abf -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -487,13 +487,13 @@
 | H35.9-1 | Node 서버: `make hyper-install`은 Node package의 native addon(`hyper.<platform>.node`)을 빌드해 설치하고 `make hyper-test-node`가 그것을 load하며, 그다음 Node unit이 `CoreRules`를 부른다. | Makefile, packages/ts/src, tests/scripts | `make hyper-test-node` | [ ] |
 | H35.9-2 | PHP 서버: unit은 확장 `polyspec_hyper`의 `CoreRules`를 부르고, 확장이 없으면 이름 붙은 오류로 실패한다. | packages/php/src, packages/php/tests | `make hyper-test-php` | [ ] |
 | H35.9-3 | Python 서버: unit은 `polyspec.hyper._binding`의 `CoreRules`를 부르고, import되지 않는 binding은 이름 붙은 오류로 실패한다. | packages/python/src, packages/python/tests | `make hyper-test-python` | [ ] |
-| H35.10 | 서버가 손 코드 대신 부르는 Rust core의 규칙은 계약인 legacy case의 결과를 낸다(H35.9). 각 항목은 core가 달랐던 입력을 이름으로 대고, 그 legacy case나 새 case가 Red다. | packages/rust, contracts, CHANGELOG.md와 한국어 짝 | `make core-test` | [ ] |
-| H35.10-1 | `csrf_verify`는 짝 없는 surrogate를 가진 값에 ValueError 대신 서버의 손 규칙처럼 false로 답한다(HY-24.4). | packages/rust | `make core-test` | [ ] |
-| H35.10-2 | `valid_context_header`는 U+00FF 위의 글자를 가진 값에 ValueError 대신 false로 답한다(HY-127.2). | packages/rust | `make core-test` | [ ] |
-| H35.10-3 | `session_cookie`는 속성과 id를 서버가 지금 쓰는 대로 쓴다. `path=/; secure`이고 id는 encode하지 않는다(HY-45.8). | packages/rust | `make core-test` | [ ] |
-| H35.10-4 | `representation_tag`는 content type의 UTF-8 bytes를 digest하고, U+00FF 위의 content type도 오류가 아니다(HY-122.10). | packages/rust | `make core-test` | [ ] |
-| H35.10-5 | `reply_status`는 403.0처럼 서버가 지금 받는 status 값을 받는다(HY-69). | packages/rust | `make core-test` | [ ] |
-| H35.10-6 | `redirect_location`과 `is_application_path`는 짝 없는 surrogate를 가진 location에 `tests/legacy/result-before-s3b.json`의 메시지로 답한다(HY-46). | packages/rust | `make core-test` | [ ] |
-| H35.10-7 | `check_shell_path`와 `shell_text`는 `tests/legacy/client-before-s3b.json`이 요구하는 대로 각 binding이 그 언어의 일반 value error로 내는 오류로 실패한다. binding이 그렇게 할 수 없으면 binding에 보고한다(HY-62). | packages/rust | `make core-test` | [ ] |
-| H35.10-8 | `stored_token`은 다른 형태의 저장 값에 RuntimeError 대신 서버가 새 token을 만들도록 답한다(HY-24.1, HY-24.14). | packages/rust | `make core-test` | [ ] |
-| H35.10-9 | `read_build`는 파일의 path를 이름으로 대는 `tests/legacy/build-before-s3b.json`의 메시지로 실패한다(HY-125.18). | packages/rust | `make core-test` | [ ] |
+| H35.10 | 서버와 Rust core가 달랐고 `contracts/`의 live case가 답을 정하지 않은 입력마다, 먼저 live case를 쓰고(그것이 Red다) 그다음 core와 세 서버가 그 case의 답을 낸다(H35.9). | contracts, packages/rust, packages/php/src, packages/ts/src, packages/python/src, CHANGELOG.md와 한국어 짝 | `make recipe-check` | [ ] |
+| H35.10-1 | live case가 짝 없는 surrogate를 가진 값에 대한 `csrf.verify`의 답을 정하고, core와 세 서버가 그 답을 낸다(HY-24.4). | contracts, packages/rust | `make recipe-check` | [ ] |
+| H35.10-2 | live case가 U+00FF 위의 글자를 가진 값에 대한 context header 검사의 답을 정한다(HY-127.2). | contracts, packages/rust | `make recipe-check` | [ ] |
+| H35.10-3 | live case가 token 문자 밖의 id를 session cookie가 어떻게 쓰는지 정한다(HY-45.8). | contracts, packages/rust | `make recipe-check` | [ ] |
+| H35.10-4 | live case가 content type이 ASCII가 아닌 representation의 tag를 정하거나, 그런 content type이 tag에 닿지 않음을 정한다(HY-122.10, HY-118). | contracts, packages/rust | `make recipe-check` | [ ] |
+| H35.10-5 | Node 숫자 403.0에 대한 `reply.status`는 core와 Node binding을 거쳐 `contracts/reply.json`대로 403을 낸다(HY-69). | contracts, packages/rust | `make recipe-check` | [ ] |
+| H35.10-6 | live case가 `C:\x` 같은 shell path가 절대 경로인지 정한다(HY-62). | contracts, packages/rust | `make recipe-check` | [ ] |
+| H35.10-7 | live case가 http가 아닌 scheme, 빈 host, 범위 밖 port를 가진 `HX-Current-URL` 값, 예를 들어 `mailto:a/b`, `1a://x/p`, `://x`, `http:///x`, `http://h:99999/x`의 current path를 정한다(HY-11.4). | contracts, packages/rust | `make recipe-check` | [ ] |
+| H35.10-8 | live case가 200.5처럼 정수가 아닌 status에 대한 `Result.page`의 답을 정한다(HY-58). | contracts, packages/rust | `make recipe-check` | [ ] |
+| H35.10-9 | live case가 masked token이 빈 JSON page의 tag를 정한다(HY-53.1). | contracts, packages/rust | `make recipe-check` | [ ] |
