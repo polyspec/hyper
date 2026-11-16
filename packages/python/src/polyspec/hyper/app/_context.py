@@ -4,7 +4,6 @@ the place of the context in the shared data of a document (HY-10)."""
 
 from __future__ import annotations
 
-import re
 from typing import Callable, Optional
 
 from ._core_rules import core_rules
@@ -45,8 +44,8 @@ class Context:
     @staticmethod
     def valid_header(value: Optional[str]) -> bool:
         """Returns True for a request without `Hyper-Context` or with a context hash, 64 lowercase hexadecimal
-        (HY-127)."""
-        return value is None or re.fullmatch(r"[0-9a-f]{64}", value) is not None
+        (HY-127); the core checks it (HY-132.2)."""
+        return core_rules().context_valid_header(value)
 
     @staticmethod
     def with_context(shared: dict, map: dict) -> dict:

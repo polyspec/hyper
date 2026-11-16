@@ -234,21 +234,20 @@ class App:
         for name, route in manifest.routes.items():
             if route["path"] == base or route["path"].startswith(base + "/"):
                 raise ValueError(f"route {name} lies under the data base path {base}")
+        # HY-132.2: the core checks the path before the file is read and gives the text of its bytes.
+        core_rules().app_check_shell_path(client.shell)
         shell_path = Path(client.shell)
-        if not client.shell.startswith("/") or not shell_path.is_file():
+        if not shell_path.is_file():
             raise ValueError(
                 f"static shell {client.shell} is not a readable file at an absolute path"
             )
         try:
-            shell = shell_path.read_text(encoding="utf-8")
+            data = shell_path.read_bytes()
         except OSError:
             raise ValueError(
                 f"static shell {client.shell} is not a readable file at an absolute path"
             ) from None
-        except UnicodeDecodeError as error:
-            raise ValueError(
-                f"static shell {client.shell} is not valid UTF-8: {error}"
-            ) from None
+        shell = core_rules().app_shell_text(client.shell, data)
         # The base path is escaped as PHP `htmlspecialchars` with `ENT_QUOTES` escapes it.
         escaped = (
             base.replace("&", "&amp;")

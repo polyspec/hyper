@@ -113,15 +113,9 @@ class Reply:
 
     def status(self, status: int) -> "Reply":
         """Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in
-        place of the data that the request may not see; another status fails (HY-69)."""
-        code = Reply._integer(status)
-        if code is None:
-            raise TypeError(
-                "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)"
-            )
-        if code != 403:
-            raise ValueError(f"page status {code} of a reply is not 403 (HY-69)")
-        self.__status = code
+        place of the data that the request may not see; another status fails (HY-69). The core checks the status
+        (HY-132.2)."""
+        self.__status = core_rules().reply_status(status)
         return self
 
     def _status_value(self) -> int | None:

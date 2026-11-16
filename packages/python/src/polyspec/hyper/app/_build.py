@@ -8,8 +8,6 @@ from pathlib import Path
 
 from ._core_rules import core_rules
 from ._invalid_build import InvalidBuild
-from ..data._json_codec import JsonCodec
-from ..data._json_decode_error import JsonDecodeError
 
 
 class Build:
@@ -22,30 +20,10 @@ class Build:
             data = Path(file).read_bytes()
         except OSError as error:
             raise InvalidBuild(f"{file} is missing or not readable (HY-125)") from error
+        # HY-132.2: the core reads the build id of the bytes and fails with invalid_build; the note of the failure
+        # names the path of the file (HY-125.5).
         try:
-            # Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON (HY-106.7); the JSON text is decoded by
-            # the decoder of the server, with its one nesting limit (HY-54).
-            value = JsonCodec.decode(data.decode("utf-8"))
-        except (UnicodeDecodeError, JsonDecodeError) as error:
-            raise InvalidBuild(f"{file} is not valid JSON (HY-125)") from error
-        build = (
-            value.get("build")
-            if isinstance(value, dict) and list(value) == ["build"]
-            else None
-        )
-        if not isinstance(build, str):
-            raise Build._invalid_id(file)
-        # HY-132.2: the core checks the form of the build id; the failure names the path of the file (HY-125.5).
-        try:
-            core_rules().build_check_id(build)
+            return core_rules().build_read(data)
         except ValueError as error:
-            raise Build._invalid_id(file) from error
-        return build
-
-    @staticmethod
-    def _invalid_id(file: str) -> InvalidBuild:
-        """Returns the failure of a file that does not hold a build id, which names the path of the file."""
-        return InvalidBuild(
-            f"{file} does not hold exactly the key build with a build id of 64 lowercase"
-            " hexadecimal characters (HY-125)"
-        )
+            error.add_note(f"hyper: the build file is {file}")
+            raise
