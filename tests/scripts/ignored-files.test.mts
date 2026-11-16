@@ -37,6 +37,7 @@ const OUTPUTS = [
   'tests/e2e/test-results/.last-run.json',
   'tests/scripts/build/virtiofs/file/layout.tpl',
   'packages/python/.venv/bin/python',
+  'packages/python/src/polyspec/hyper/_binding/__init__.py',
   'packages/python/src/polyspec_hyper.egg-info/PKG-INFO',
   'playwright-report/index.html',
   'packages/php/.phpunit.result.cache',

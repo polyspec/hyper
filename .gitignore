@@ -34,6 +34,8 @@ packages/*/native/generated/
 # zz_generated_*.go of packages/go are tracked (binding GN-3)
 /packages/ts/native/wasm/generated/
 /packages/go/internal/ffi/generated/
+# The Python package that the binding generator writes beside the host package of Python (binding L-2a)
+/packages/python/src/polyspec/hyper/_binding/
 dist/
 dist.next/
 dist.old/
