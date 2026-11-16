@@ -258,6 +258,19 @@ export class App<S extends object = Record<string, never>> {
     return error;
   }
 
+  // HYC-24.2, HYC-24.5: a registration of the host functions that the template engine refuses, a built-in name (template
+  // FUN-44) or an entry that is no function (template RT-5), fails the open with kind `invalid_application` and the
+  // message of the template engine (HY-106.21); an error of the browser code keeps its kind (HY-132.8).
+  private static registered<T>(create: () => T): T {
+    try {
+      return create();
+    } catch (error) {
+      if (error instanceof ClientValueError || error instanceof ClientTypeError) throw App.bindingError(error);
+      if (error instanceof Error) throw rules().valueError(error.message, 'invalid_application');
+      throw error;
+    }
+  }
+
   private static async opened<S extends object>(options: AppOptions<S>): Promise<App<S>> {
     const basePath = options.basePath ?? '';
     if (basePath !== '' && (!basePath.startsWith('/') || basePath.endsWith('/'))) {
@@ -306,7 +319,7 @@ export class App<S extends object = Record<string, never>> {
     }
     const index = App.templateIndex(options.templates.index);
     const fetcher = async (url: string): Promise<Template> => decodeTemplate(App.readJsonFile(join(options.templates.root, url)));
-    const application = createApplication(manifest, index, fetcher, options.functions);
+    const application = App.registered(() => createApplication(manifest, index, fetcher, options.functions));
     App.checkHandlers({ ...manifest, entries }, options.handlers);
     const shell = options.clientRendering === undefined ? '' : App.checkedShell(options.clientRendering, manifest);
     App.routeTemplates(index, manifest);

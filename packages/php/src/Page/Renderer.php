@@ -85,8 +85,21 @@ final class Renderer
             );
         }
         // HYC-24, RT-5: the host functions of the application are registered by the engine, which fails the open of a
-        // name that is built in or an entry that is not a function.
-        $generated = new $class(new RuntimeEnvironment(hostFunctions: $functions));
+        // name that is built in or an entry that is not a function, with kind `invalid_application` and the message of
+        // the engine (HYC-24.2, HYC-24.5, HY-106.21).
+        // The class of the binding takes no previous error, so the message of the engine is its message.
+        $refused = null;
+        $generated = null;
+        try {
+            $generated = new $class(new RuntimeEnvironment(hostFunctions: $functions));
+        } catch (HyperValueError $error) {
+            throw $error;
+        } catch (\InvalidArgumentException $error) {
+            $refused = $error->getMessage();
+        }
+        if ($refused !== null) {
+            throw new HyperValueError($refused, 'invalid_application');
+        }
         if (!$generated instanceof Program) {
             throw new HyperValueError(
                 "{$class} of the server program {$program} is not a template program",

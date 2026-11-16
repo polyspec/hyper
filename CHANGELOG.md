@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- A host function that the template engine refuses at the open, a built-in name (template FUN-44) or an entry that is not a function (template RT-5), fails the open of the three servers with kind `invalid_application` of category `value` and the message of the engine (HYC-24.2, HYC-24.5, HY-106.21); the servers raised the error of the engine, which has no kind of hyper (H35.27-4).
+
 - `Result.page` of the Node server checks the status with `rules.page_status` of the core, so a status other than 200, 409 or 422 fails with kind `page_status_not_allowed` of category `value` (HY-58.6), and `Result::redirect` of the PHP server checks the location with `rules.redirect_location` of the core, so a location that is not UTF-8 fails with kind `invalid_text` (HY-46.1); the Node server raised a `RangeError` without a kind and the PHP server checked the location with its own pattern (H35.10-8).
 
 - A value outside the data model, such as a number outside ±(2^53 − 1) of `keep`, of `flash` or of the body of a representation, fails in the three servers with the class of the binding of its category and the kind of the template data model, such as `data_number_range` of category `value` and `data_unsupported_type` of category `type` (HY-44.8, HY-132.3); the servers raised a `RangeError`, an `InvalidArgumentException` or a `ValueError` without a kind (H35.20-5-6).

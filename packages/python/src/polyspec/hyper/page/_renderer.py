@@ -35,7 +35,7 @@ class Renderer:
         """Opens the server program that `hyper build` of `@polyspec/hyper-cli` wrote to a directory; a
         missing build fails here and names the missing file (HY-48). `functions` are the host functions of the
         application, which the engine registers as template RT-5 states: a name that is a built-in function or a value
-        that is not a function fails the open with the error of the engine."""
+        that is not a function fails the open with kind `invalid_application` and the message of the engine."""
         templates = Path(program) / "templates"
         reads = Path(program) / "reads.json"
         build = Path(program) / "build.json"
@@ -48,10 +48,13 @@ class Renderer:
                     "hyper build of @polyspec/hyper-cli builds it",
                     "invalid_build" if path == build else "invalid_application",
                 )
-        return Renderer(
-            Engine(loader=FsLoader(str(templates)), functions=functions or {}),
-            timezone,
-        )
+        try:
+            engine = Engine(loader=FsLoader(str(templates)), functions=functions or {})
+        except (ValueError, TypeError) as error:
+            # HYC-24.2, HYC-24.5, HY-106.21: a registration that the engine refuses fails the open with kind
+            # `invalid_application` and the message of the engine.
+            raise core_rules().value_error(str(error), "invalid_application") from error
+        return Renderer(engine, timezone)
 
     def bind(self, value: dict):
         """Binds a root of the data of a document once, with the bound map of the template package (VAL-22)."""

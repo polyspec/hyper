@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 00ce41b5402b6421ca71c9dc194937d50fc3c677ba00759369d5ad1a9d9a1d68 -->
+<!-- source-sha256: 8fdf16a7e4ba12b76af593934a50edbf28bac10cbdff34cf889366ca20044c0d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- open에서 template engine이 거부하는 host function, 즉 built-in 이름(template FUN-44)이나 함수가 아닌 항목(template RT-5)은 세 서버의 open을 category `value`의 kind `invalid_application`과 engine의 message로 실패시킨다(HYC-24.2, HYC-24.5, HY-106.21). 서버는 hyper의 kind가 없는 engine의 오류를 던졌다(H35.27-4).
 
 - Node 서버의 `Result.page`는 core의 `rules.page_status`로 status를 검사하므로, 200, 409, 422가 아닌 status는 category `value`의 kind `page_status_not_allowed`로 실패한다(HY-58.6). PHP 서버의 `Result::redirect`는 core의 `rules.redirect_location`으로 location을 검사하므로, UTF-8이 아닌 location은 kind `invalid_text`로 실패한다(HY-46.1). Node 서버는 kind가 없는 `RangeError`를 던졌고 PHP 서버는 자체 pattern으로 location을 검사했다(H35.10-8).
 
