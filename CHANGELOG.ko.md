@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 21e0c83c522f4f68d36875eb9172fdc39c7ef059011fb5f2e3ba2eb743289ce4 -->
+<!-- source-sha256: c76310d6cb2dbdd589d1d7543f4f4993d02a0e84bf6f040602675820cdc92d05 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
@@ -9,7 +9,7 @@
 - PHP 서버의 `Build::read`는 `build.json` 파일을 읽어 그 byte를 `CoreRules::shared()`에 준다. core가 build id를 읽고 그 형식을 검사한다(HY-125.18, HY-125.19). kind `invalid_build`인 core의 실패는 core의 message 앞에 파일 경로를 붙인 `InvalidBuild`가 된다(HY-125.5). build id의 PHP decoding과 pattern은 없어졌다(H35.9-2).
 - PHP 서버의 `Reply::cacheControl`, `Reply::referrerPolicy`, `Reply::status`, `Result::page`는 값을 `CoreRules::shared()`로 검사한다(HY-52.6, HY-103.2, HY-69.10, HY-58). PHP 코드는 core가 보지 않는 인자 type 검사만 남기고, 규칙이나 Referrer-Policy 명세 token의 사본을 갖지 않는다(H35.9-2).
 - PHP 서버는 context hash와 `Hyper-Context` 검사(HY-125.12, HY-127.2), representation의 tag(HY-122.10)와 JSON page 응답의 tag(HY-53.1), session cookie와 kept cookie의 이름(HY-45.1, HYC-13.6), page 응답의 `Vary`(HY-117.1), 모든 응답의 frame header(HY-45.5, HY-65.1)를 `CoreRules::shared()`에서 받는다. `Context`, `RepresentationResponse`, `NativeSession`, `Page`, `App`은 이 규칙의 손 코드를 갖지 않는다(H35.9-2).
-- PHP 서버는 session token의 mask와 검증, `browser()`를 `Csrf`의 손 코드 대신 `CoreRules::shared()`로 한다. 이것은 extension `polyspec_hyper` 위의 `CoreRules` 하나다(HY-24, HY-132.2). extension이 없는 서버는 처음 쓸 때 extension의 이름을 담은 `RuntimeException`으로 멈춘다. 서버가 부르는 `CoreRules`의 member는 그 규칙의 type을 돌려준다(H35.9-2).
+- PHP 서버는 session token의 mask와 검증, `browser()`를 `Csrf`의 손 코드 대신 `CoreRules::shared()`로 한다. 이것은 extension `polyspec_hyper` 위의 `CoreRules` 하나다(HY-24, HY-132.2). extension이 없는 서버는 처음 쓸 때 extension의 이름을 담은 `RuntimeException`으로 멈춘다. `CoreRules`의 각 member는 extension의 stub이 그 함수에 선언하는 type을 돌려주며, engine이 그 type을 강제하므로 `CoreRules`는 binding의 결과를 검사하지 않는다(H35.9-2).
 - `contracts/interfaces.json`은 세 서버의 unit `core-rules`를 member 26개와 그 시험과 함께 적고, `wsgi-body`의 member를 H34.1이 남긴 대로 적는다. `close()`가 쓰기를 보고하고 `_finish`는 없다. `core-rules.ts`의 Node 선언은 `@internal`을 단다(H35.7).
 - package data 시험은 설치된 `polyspec-hyper`의 파일을 읽는다. 이 package는 `make hyper-install-python`이 maturin으로 wheel을 빌드해 non-editable로 설치한 것이며, wheel에 `polyspec/hyper/py.typed`가 없으면 시험이 실패한다. 전에는 `pyproject.toml`의 `tool.setuptools`를 읽었는데, maturin이 package를 빌드한 뒤로 그 설정은 없으므로 표지를 가진 package에서도 실패했다(H35.7).
 - Node와 Python 서버의 `CoreRules`는 규칙마다 member 하나를 갖는 unit 하나이며, member는 unit과 규칙의 이름을 따른다(`csrfMask`, `csrf_mask`). PHP 서버와 같은 모양이다. 전에는 member의 이름공간이 `contracts/interfaces.json`의 unit이 아니었고, Python module은 파일 하나에 class 열넷을 담아 HYR-4를 어겼다(H35.7).

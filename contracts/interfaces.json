@@ -1501,7 +1501,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionCookieHeader",
-                  "signature": "public function sessionCookieHeader(string $id, bool $secure): mixed"
+                  "signature": "public function sessionCookieHeader(string $id, bool $secure): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionCookieHeader",
@@ -1552,7 +1552,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestCurrentPath",
-                  "signature": "public function requestCurrentPath(?string $header): mixed"
+                  "signature": "public function requestCurrentPath(?string $header): ?string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.requestCurrentPath",
@@ -1652,7 +1652,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyKeepsOutOfSharedCaches",
-                  "signature": "public function replyKeepsOutOfSharedCaches(string $value): mixed"
+                  "signature": "public function replyKeepsOutOfSharedCaches(string $value): bool"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyKeepsOutOfSharedCaches",
@@ -1677,7 +1677,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::resultRedirect",
-                  "signature": "public function resultRedirect(string $location): mixed"
+                  "signature": "public function resultRedirect(string $location): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.resultRedirect",
@@ -1727,7 +1727,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::resultIsApplicationPath",
-                  "signature": "public function resultIsApplicationPath(string $location): mixed"
+                  "signature": "public function resultIsApplicationPath(string $location): bool"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.resultIsApplicationPath",
@@ -1833,7 +1833,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appShellText",
-                  "signature": "public function appShellText(string $path, string $bytes): mixed"
+                  "signature": "public function appShellText(string $path, string $bytes): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appShellText",
@@ -1916,7 +1916,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionStoredToken",
-                  "signature": "public function sessionStoredToken(string $stored): mixed"
+                  "signature": "public function sessionStoredToken(string $stored): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionStoredToken",
