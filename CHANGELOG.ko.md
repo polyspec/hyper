@@ -1,11 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5d3be90d86adaddd53a9b692c8de97a306776aedcff38bc2c6ec98c3778fbd5b -->
+<!-- source-sha256: 9f25276fdcf57052bfa360913fbfb9d74f7dac5a3c479ddfce7005dc8b36c46b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- core의 계약 시험은 media type case의 content type을, binding이 latin1 text를 넘기듯 글자마다 한 바이트로 넘긴다. HY-122.14의 case `the_tag_digests_a_character_of_the_content_type_as_one_byte`는 거기서 UTF-8 바이트의 tag로 실패했다(H35.10-4).
+- core의 규칙 `rules.reply_cookie`는 reply가 더하는 cookie의 `Set-Cookie` field를 HY-52.16 순서로 검사한 뒤 쓴다(HY-52.13). 그래서 세 서버는 속성을 옛 순서로 쓰는 대신 규칙 하나를 부른다(H35.12-3). 계약 시험의 cookie case가 그것을 부른다. 커밋 0d85bc5d는 이 규칙 없이 그 시험 변경만 담아, 혼자서는 compile되지 않는다.
 - binding 생성기는 `package.json`의 devDependency `@polyspec/binding`이다. v0.0.13 release asset의 URL로 선언하고 `package-lock.json`의 integrity로 pin한다(HR-70). recipe는 설치된 `dist/cli.js`를 실행하며, `make install-binding`, `scripts/install-binding.mts`, `scripts/binding-commit.mts`는 지운다. v0.0.13 생성기는 inline function type에 둔 `pages.register`의 `keeps`를 거부한다(CK-90). 그래서 그것을 받아들이는 binding release를 선언할 때까지 `make bindings`는 실패하며, 개발 checkout은 `.links`로 binding checkout을 연결한다(H35.14-2).
 - Makefile의 모든 cargo 명령은 kit link script의 `cargo <dir> <args>`, 곧 `$(CARGO)`를 거쳐 실행한다. 이 명령은 개발 checkout에서 polyspec crate를 `.links`의 provider로 patch하고, 그 밖에는 cargo를 주어진 대로 실행한다. 전에는 recipe가 cargo를 직접 시작했으므로, link된 checkout도 `Cargo.lock`의 git source crate를 빌드했다. `make core-test`, `make core-lint`, `make core-fmt-check`는 root에서 `-p polyspec-hyper`로 실행한다. `tests/scripts/cargo-through-kit.test.mts`는 cargo를 직접 시작하는 recipe 줄을 실패시킨다(H35.14-1).
 - HY-122.14는 tag가 content type을 header field의 바이트로, U+00FF까지의 글자마다 한 바이트로 digest하고, U+00FF 위의 content type은 `invalid_text`로 실패한다고 정한다. `contracts/media-type.json`이 `text/é`와 `text/Ā`에 대해 둘을 정한다. 이 section은 고정 사본을 지울 때까지(H35.9) runner가 없으므로, 아직 어느 runner도 그 Red를 보이지 않는다(H35.10-4).

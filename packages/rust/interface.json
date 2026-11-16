@@ -909,6 +909,57 @@
           "core": "polyspec_hyper::cookies::session_cookie"
         },
         {
+          "id": "rules.reply_cookie",
+          "name": [
+            "reply",
+            "cookie"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "name"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "value"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "max",
+                "age"
+              ],
+              "type": {
+                "optional": "int"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "https"
+              ],
+              "type": "bool",
+              "required": true
+            }
+          ],
+          "returns": "latin1",
+          "raises": [
+            "polyspec_hyper::ErrorCode::CookieNameNotAllowed",
+            "polyspec_hyper::ErrorCode::CookieValueNotAllowed",
+            "polyspec_hyper::ErrorCode::IntegerRange",
+            "polyspec_hyper::ErrorCode::NegativeMaxAge"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::reply::reply_cookie"
+        },
+        {
           "id": "rules.page_tag",
           "name": [
             "page",

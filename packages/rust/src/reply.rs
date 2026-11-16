@@ -121,6 +121,20 @@ pub fn set_cookie_field(cookie: &ReplyCookie, https: bool) -> Result<Vec<u8>, Er
     Ok(set_cookie(&cookie.name, &cookie.value, &attributes)?)
 }
 
+/// The `Set-Cookie` field value of a cookie that a reply adds (HY-52.13), checked in the order of HY-52.16 and written
+/// by [`set_cookie_field`]: the one rule that the three servers call (HY-132.2).
+///
+/// # Errors
+/// The errors of [`cookie`].
+pub fn reply_cookie(
+    name: &str,
+    value: &str,
+    max_age: Option<i64>,
+    https: bool,
+) -> Result<Vec<u8>, Error> {
+    set_cookie_field(&cookie(name, value, max_age)?, https)
+}
+
 /// Checks a `Cache-Control` value that a reply sets for a page (HY-52.6, HY-52.16) and that a representation handler
 /// sets for a request with `Authorization` (HY-122.6): characters U+0020 to U+007E only, and a directive `private` or
 /// `no-store` and neither `public` nor `s-maxage`, the names compared without case (RFC 9111, section 5.2).
