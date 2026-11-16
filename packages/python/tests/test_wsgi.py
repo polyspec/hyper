@@ -153,7 +153,7 @@ class WsgiTest(UploadCases, TransportCase):
                 cookies = [value for name, value in headers if name == "Set-Cookie"]
                 self.assertEqual(1, len(cookies))
                 self.assertEqual(https, cookies[0].startswith("__Host-hy-session="))
-                self.assertEqual(https, "; secure" in cookies[0])
+                self.assertEqual(https, "; Secure" in cookies[0])
                 self.assertEqual(not https, cookies[0].startswith("hy-session="))
 
     def test_the_method_reaches_the_application_in_upper_case(self) -> None:

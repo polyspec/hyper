@@ -84,8 +84,8 @@ class RecordSession(SessionStore):
 
     @staticmethod
     def cookie_header(id: str, secure: bool) -> str:
-        """Returns the Set-Cookie value of a new session, with the attributes of the PHP session cookie (HY-45)."""
-        return f"{RecordSession.cookie_name(secure)}={id}; path=/{'; secure' if secure else ''}; HttpOnly; SameSite=Lax"
+        """Returns the Set-Cookie value of a new session (HY-45.8); the core writes it (HY-132.2)."""
+        return core_rules().session_cookie_header(id, secure)
 
     def _start(self) -> dict:
         """Returns the values of the session, which the first use of the request reads or starts."""

@@ -1,12 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a1446c99a6a6211af5b7c43dbba6ad7402ecefe5cd56a694a955aa5922117156 -->
+<!-- source-sha256: 23ec31fb0fba5491d682b23e2db2a41588670591e5e7164cb9ac27382b98c66b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
-- Python 서버는 core의 규칙에 `CoreRules` 하나로 닿는다. `app/_core_rules.py`의 `core_rules()`가 첫 호출에서 `polyspec.hyper._binding._root`로 그것을 만든다. binding이 import되지 않으면 module 이름을 담은 `CoreBindingError`로 실패하고, 서버의 어떤 규칙도 그 자리에서 답하지 않는다. `Csrf.mask`, `Csrf.browser_of`, `Context.hash`, `RecordSession.cookie_name`, `Request.current_path`, `App`의 `Vary`와 frame header, `Page`의 JSON page 응답 tag와 kept 값 cookie 이름은 core를 부르고, `Result.redirect`(외톨이 surrogate를 담은 location을 `contracts/result.json`대로 `invalid_text`로 거부한다), `Reply.cache_control`, `Reply.referrer_policy`, `Result.page`, `Build.read`의 build id 검사도 그렇다. 그 자기 코드는 지웠다. `packages/python/tests/test_core_rules.py`의 `SharedCoreRulesTest`는 `core_rules()`가 한 instance를 돌려주는지, import되지 않는 binding이 module 이름을 담은 `CoreBindingError`로 실패하는지를 `Csrf.mask`에서도 검사한다(H35.9-3).
+- Python 서버는 core의 규칙에 `CoreRules` 하나로 닿는다. `app/_core_rules.py`의 `core_rules()`가 첫 호출에서 `polyspec.hyper._binding._root`로 그것을 만든다. binding이 import되지 않으면 module 이름을 담은 `CoreBindingError`로 실패하고, 서버의 어떤 규칙도 그 자리에서 답하지 않는다. `Csrf.mask`, `Csrf.browser_of`, `Context.hash`, `RecordSession.cookie_name`, `Request.current_path`, `App`의 `Vary`와 frame header, `Page`의 JSON page 응답 tag와 kept 값 cookie 이름은 core를 부르고, `RecordSession.cookie_header`(`contracts/file-sessions.json`대로 `; Path=/; Secure;`를 쓰며, `test_asgi.py`와 `test_wsgi.py`의 단언도 그 파일을 따른다), `Result.redirect`(외톨이 surrogate를 담은 location을 `contracts/result.json`대로 `invalid_text`로 거부한다), `Reply.cache_control`, `Reply.referrer_policy`, `Result.page`, `Build.read`의 build id 검사도 그렇다. 그 자기 코드는 지웠다. `packages/python/tests/test_core_rules.py`의 `SharedCoreRulesTest`는 `core_rules()`가 한 instance를 돌려주는지, import되지 않는 binding이 module 이름을 담은 `CoreBindingError`로 실패하는지를 `Csrf.mask`에서도 검사한다(H35.9-3).
 - `contracts/interfaces.json`은 세 서버의 unit `core-rules`를 member 26개와 그 시험과 함께 적고, `wsgi-body`의 member를 H34.1이 남긴 대로 적는다. `close()`가 쓰기를 보고하고 `_finish`는 없다. `core-rules.ts`의 Node 선언은 `@internal`을 단다(H35.7).
 - package data 시험은 설치된 `polyspec-hyper`의 파일을 읽는다. 이 package는 `make hyper-install-python`이 maturin으로 wheel을 빌드해 non-editable로 설치한 것이며, wheel에 `polyspec/hyper/py.typed`가 없으면 시험이 실패한다. 전에는 `pyproject.toml`의 `tool.setuptools`를 읽었는데, maturin이 package를 빌드한 뒤로 그 설정은 없으므로 표지를 가진 package에서도 실패했다(H35.7).
 - Node와 Python 서버의 `CoreRules`는 규칙마다 member 하나를 갖는 unit 하나이며, member는 unit과 규칙의 이름을 따른다(`csrfMask`, `csrf_mask`). PHP 서버와 같은 모양이다. 전에는 member의 이름공간이 `contracts/interfaces.json`의 unit이 아니었고, Python module은 파일 하나에 class 열넷을 담아 HYR-4를 어겼다(H35.7).

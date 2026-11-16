@@ -160,7 +160,7 @@ class AsgiTest(UploadCases, TransportCase):
                 ]
                 self.assertEqual(1, len(cookies))
                 self.assertEqual(https, cookies[0].startswith(b"__Host-hy-session="))
-                self.assertEqual(https, b"; secure" in cookies[0])
+                self.assertEqual(https, b"; Secure" in cookies[0])
                 self.assertEqual(not https, cookies[0].startswith(b"hy-session="))
 
     def test_the_method_reaches_the_application_in_upper_case(self) -> None:
