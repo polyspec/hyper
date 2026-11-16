@@ -369,12 +369,10 @@ fn representation_tags() {
         // The binding passes the latin1 content type as one byte for each character (HY-122.14); a content type above
         // U+00FF fails in the binding before the core (`invalid_text`), so its case has no tag here. A media type made without a content
         // type tags with the empty type (HY-122.11).
-        let content_type: Vec<u8> = case["contentType"]
-            .as_str()
-            .unwrap_or("")
-            .chars()
-            .map(|character| u8::try_from(u32::from(character)).expect("a latin1 content type"))
-            .collect();
+        let content_type = match case["contentType"].as_str() {
+            Some(content_type) => latin1(content_type),
+            None => Vec::new(),
+        };
         let computed = etag::representation_tag(&content_type, body);
         assert_eq!(computed, tag, "{}", case["id"]);
         ran += 1;

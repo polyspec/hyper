@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 39d73125a7ffb38608f8e679e76e5a42462c38c6065f108496635c0c33f3ab1d -->
+<!-- source-sha256: fee9d69b6451cf18ac6285890b4c159e4e1f2a208fef94320de8e788648d5021 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -528,3 +528,4 @@
 | H35.20-5-4 | `contracts/interfaces.json`의 member `json-codec.decode`, `json-codec.inDataModel`, `json-codec.encode`와 세 runner의 json step은 HY-54.20, HY-54.21의 실패를 적고, 결과 `outside`를 적지 않는다. | contracts/interfaces.json, packages/*/tests | `make recipe-check` | [ ] |
 | H35.21 | phpcs가 PHP 소스에서 통과한다. `src/App/Build.php:16`, `src/App/CoreRules.php:51`과 `:269`, `src/Page/Page.php:203`이 `phpcs.xml.dist`의 줄 길이를 지킨다. | packages/php/src | `make lint-php` | [ ] |
 | H35.22 | 루트 `package.json`은 template 0.0.28이 요구하는 `@polyspec/json`을 v0.0.32 release asset의 URL로, 그 platform package를 `optionalDependencies`로 요구하고 `package-lock.json`이 그것을 pin한다. 그래서 client 시험이 template을 읽고, `make link`에는 연결할 json 설치가 있다. | package.json, package-lock.json | `make hyper-test-js` | [ ] |
+| H35.23 | `make core-lint`가 `packages/rust/tests/contracts.rs`에서 통과한다. representation tag 시험은 lint 설정이 금하는 `unwrap_or`와 `expect` 대신 helper `latin1`로 content type을 바꾼다. | packages/rust/tests/contracts.rs | `make core-lint` | [ ] |
