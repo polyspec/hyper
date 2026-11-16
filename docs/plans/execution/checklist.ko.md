@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 2c03abd6c356eb12f48e079c64b9465569cb9385fcb758a0ea4813ad83a63bf3 -->
+<!-- source-sha256: fc3bb1d6ca7e4b5f23b4b111ae7767431bfa78da505b2de857bfecbc1051f1fb -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -487,3 +487,13 @@
 | H35.9-1 | Node 서버: `make hyper-install`은 Node package의 native addon(`hyper.<platform>.node`)을 빌드해 설치하고 `make hyper-test-node`가 그것을 load하며, 그다음 Node unit이 `CoreRules`를 부른다. | Makefile, packages/ts/src, tests/scripts | `make hyper-test-node` | [ ] |
 | H35.9-2 | PHP 서버: unit은 확장 `polyspec_hyper`의 `CoreRules`를 부르고, 확장이 없으면 이름 붙은 오류로 실패한다. | packages/php/src, packages/php/tests | `make hyper-test-php` | [ ] |
 | H35.9-3 | Python 서버: unit은 `polyspec.hyper._binding`의 `CoreRules`를 부르고, import되지 않는 binding은 이름 붙은 오류로 실패한다. | packages/python/src, packages/python/tests | `make hyper-test-python` | [ ] |
+| H35.10 | 서버가 손 코드 대신 부르는 Rust core의 규칙은 계약인 legacy case의 결과를 낸다(H35.9). 각 항목은 core가 달랐던 입력을 이름으로 대고, 그 legacy case나 새 case가 Red다. | packages/rust, contracts, CHANGELOG.md와 한국어 짝 | `make core-test` | [ ] |
+| H35.10-1 | `csrf_verify`는 짝 없는 surrogate를 가진 값에 ValueError 대신 서버의 손 규칙처럼 false로 답한다(HY-24.4). | packages/rust | `make core-test` | [ ] |
+| H35.10-2 | `valid_context_header`는 U+00FF 위의 글자를 가진 값에 ValueError 대신 false로 답한다(HY-127.2). | packages/rust | `make core-test` | [ ] |
+| H35.10-3 | `session_cookie`는 속성과 id를 서버가 지금 쓰는 대로 쓴다. `path=/; secure`이고 id는 encode하지 않는다(HY-45.8). | packages/rust | `make core-test` | [ ] |
+| H35.10-4 | `representation_tag`는 content type의 UTF-8 bytes를 digest하고, U+00FF 위의 content type도 오류가 아니다(HY-122.10). | packages/rust | `make core-test` | [ ] |
+| H35.10-5 | `reply_status`는 403.0처럼 서버가 지금 받는 status 값을 받는다(HY-69). | packages/rust | `make core-test` | [ ] |
+| H35.10-6 | `redirect_location`과 `is_application_path`는 짝 없는 surrogate를 가진 location에 `tests/legacy/result-before-s3b.json`의 메시지로 답한다(HY-46). | packages/rust | `make core-test` | [ ] |
+| H35.10-7 | `check_shell_path`와 `shell_text`는 `tests/legacy/client-before-s3b.json`이 요구하는 대로 각 binding이 그 언어의 일반 value error로 내는 오류로 실패한다. binding이 그렇게 할 수 없으면 binding에 보고한다(HY-62). | packages/rust | `make core-test` | [ ] |
+| H35.10-8 | `stored_token`은 다른 형태의 저장 값에 RuntimeError 대신 서버가 새 token을 만들도록 답한다(HY-24.1, HY-24.14). | packages/rust | `make core-test` | [ ] |
+| H35.10-9 | `read_build`는 파일의 path를 이름으로 대는 `tests/legacy/build-before-s3b.json`의 메시지로 실패한다(HY-125.18). | packages/rust | `make core-test` | [ ] |
