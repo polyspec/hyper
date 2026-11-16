@@ -242,7 +242,7 @@ contract-programs: packages ## Build the applications of contracts/context.json,
 
 # A Node server bundle keeps the packages of node_modules external, and Node loads them from there: a CommonJS package that
 # requires Node modules cannot run inside an ESM bundle.
-node-server: board ## Build the board Node server into examples/board/build/node/server.mjs (HY-54)
+node-server: board node-addon ## Build the board Node server into examples/board/build/node/server.mjs, which loads the Node addon of this platform (HY-54)
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --packages=external --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 

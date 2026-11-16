@@ -19,7 +19,7 @@ function templateExport(specifier) {
 // { url: <urlPrefix>/<file> }, and files: the bytes of each AST file as { name: <file>, bytes }, whose name holds a
 // hash of its content, the files that the build id hashes (HY-125).
 export async function templateFiles({ templates, urlPrefix }) {
-  const { parse } = await import('@polyspec/template');
+  const { encodeTemplate, parse } = await import('@polyspec/template');
   const sources = { [dataTemplate.name]: dataTemplate.source };
   for (const file of listFiles(templates).filter((name) => name.endsWith('.tpl')).sort()) {
     sources[relative(templates, file).split(sep).join('/')] = readFileSync(file, 'utf8');
@@ -27,7 +27,8 @@ export async function templateFiles({ templates, urlPrefix }) {
   const index = {};
   const files = [];
   for (const [name, source] of Object.entries(sources)) {
-    const text = JSON.stringify(parse(source, name));
+    // The native parse gives its own record of the AST; the renderer reads the canonical JSON of encodeTemplate.
+    const text = encodeTemplate(parse(source, name));
     const file = `${name.replace(/\.tpl$/, '').replaceAll('/', '-')}.${sha256(text).slice(0, 12)}.json`;
     files.push({ name: file, bytes: Buffer.from(text, 'utf8') });
     index[name] = { url: `${urlPrefix}/${file}` };
