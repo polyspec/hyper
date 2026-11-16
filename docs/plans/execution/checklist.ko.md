@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 130de51f935a92301414dbbe4b79b3cf33c8a888535cdc0dc50567206b8de1ce -->
+<!-- source-sha256: 5f67af7690b8ab5b2723e7e59c3eb8bf028746070ebe11e4448b25024c1336d8 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -559,3 +559,4 @@
 | H35.29-5-2 | Node 서버는 open 때 브라우저 코드 검사의 실패를 같은 category의 binding class로, 같은 kind, 상태, message를 가지고 낸다(HY-132.8). 따라서 이 검사에 닿는 Node open case는 kind `invalid_application`의 binding `HyperValueError`로 통과한다. | packages/ts | `make hyper-test-node` | [ ] |
 | H35.29-6 | 질문: 서버를 만들 때 호출할 수 없는 `around` 값이라는 HY-97.7의 실패는 어떤 kind를 가지는가? 근거: HY-97.7(contracts/protocol.json:5341)은 "A value of `around` that is not callable fails when the server is created."라고 적고 kind는 적지 않는다. contracts/hooks.json의 section `creation`의 outcome `creation`은 `raises`를 비교하고 HY-97.7을 인용하며(contracts/interfaces.json:19697), 그 case `a_request_hook_that_is_not_callable_fails_the_creation`(HY-97.7)과 `a_write_hook_that_is_not_callable_fails_the_creation`(HY-99.14)은 `raises` 필드도 kind도 적지 않고 message `the request hook is not callable (HY-97)`과 `the write hook is not callable (HY-99)`만 적는다. | contracts/protocol.json, contracts/hooks.json | `make spec-docs-check` | [ ] |
 | H35.30 | core는 HY-132 kind 표의 kind `outside_redirect_stores`(category `value`, HY-133.10)를 가진다: `Error::OutsideRedirectStores`와 그 `ErrorCode`, packages/rust/interface.json의 `errors.kinds` 행, 그리고 contracts/result.json의 case가 이를 적는 곳에서 세 서버가 이를 던진다. | packages/rust, packages/php, packages/ts, packages/python | `make core-test` | [v] |
+| H35.31 | PHP 서버는 Node(H35.26)와 Python(H35.28) 서버처럼, legacy PHP package(`Polyspec\Template\Program`, `PreparedRender`, `PreparedExecution`, `BoundMap`, `InternalBoundary`, `TemplateError`, `Render\*`, `Value\*`) 대신 `make link`가 이제 `vendor/polyspec/template`으로 연결하는 template 0.0.28의 PHP 확장 API로 렌더링한다. `make hyper-test-php`는 `polyspec_hyper` 곁에 template 확장을 load하고, `composer.json`은 template 0.0.28이 release되면 그 tag로 template을 요구한다. | packages/php/src, packages/php/tests, Makefile, composer.json, composer.lock | `make hyper-test-php` | [ ] |
