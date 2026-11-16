@@ -179,7 +179,7 @@ Depends on: the interface contract of the Rust core (`packages/rust/interface.js
 
 The end-to-end check of binding stopped every target because the root workspace did not hold the WASM crate, and the generator writes no source while the contract check reports a finding. The binding crates are what binding scaffold writes, and the lock pins the commit of binding whose generator writes them.
 
-The servers that do not call the core run the cases of `tests/legacy/`, and the core runs the cases of `contracts/`. Where the two differ, the protocol decides, and a server takes the decided behavior when it calls the core (H31.7 to H31.9), because the three servers share one legacy case file and so change together:
+The servers that do not call the core and the core both run the cases of `contracts/`, and the servers still answer some of them otherwise. Where the two differ, the protocol decides, and a server takes the decided behavior when it calls the core (H31.7 to H31.9):
 
 - A session that holds another value in the place of the token fails the request with `invalid_session_token` (HY-24.14). The servers replace the value with a new token.
 - The field value of the session cookie is `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax` (HY-45.8). The Node and Python servers write `path=/; secure`.

@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 78806036e352eb12ee87f46b285057f87d1e35ca5e0e43591122c74776479587 -->
+<!-- source-sha256: ab1e40eb70a7385aab79b24c5e2450578e345f50efb195c6689773a9e2470710 -->
 # 실행
 
 [English](plan.md).
@@ -180,7 +180,7 @@ build package는 bin 두 개 `hyper-build-assets`와 `hyper-build-server`를 가
 
 root workspace가 WASM crate를 갖지 않아 binding의 end-to-end 검사가 모든 target을 멈췄고, 생성기는 계약 검사가 finding을 보고하는 동안 소스를 쓰지 않는다. binding crate는 binding scaffold가 쓰는 것이며, lock은 그것을 쓰는 생성기의 binding commit을 고정한다.
 
-core를 부르지 않는 서버는 `tests/legacy/`의 case를 실행하고, core는 `contracts/`의 case를 실행한다. 둘이 다른 곳은 프로토콜이 정하며, 서버는 core를 부를 때(H31.7~H31.9) 정해진 동작을 갖는다. 세 서버가 legacy case 파일 하나를 함께 쓰므로 함께 바뀌기 때문이다.
+core를 부르지 않는 서버와 core는 모두 `contracts/`의 case를 실행하며, 서버는 그 일부에 아직 다르게 답한다. 둘이 다른 곳은 프로토콜이 정하며, 서버는 core를 부를 때(H31.7~H31.9) 정해진 동작을 갖는다.
 
 - token 자리에 다른 값을 가진 session은 요청을 `invalid_session_token`으로 실패시킨다(HY-24.14). 서버는 그 값을 새 token으로 바꾼다.
 - session cookie의 field 값은 `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`다(HY-45.8). Node와 Python 서버는 `path=/; secure`를 쓴다.

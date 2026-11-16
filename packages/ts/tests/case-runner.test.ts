@@ -31,65 +31,42 @@ import { steps as responseSteps } from './steps/response.js';
 import { steps as routesSteps } from './steps/routes.js';
 import { steps as sessionSteps } from './steps/session.js';
 
-// The steps of this server, by case file and section (`file:section`). A section without a step fails its cases. A file
-// `<name>-before-s3b.json` is a fixed copy (prefixed below); docs/features.md lists its sections.
+// The steps of this server, by case file and section (`file:section`). A section without a step fails its cases.
 const STEPS: Record<string, Step> = {
-  ...prefixed('accept.json', acceptSteps, ['parse', 'select']),
-  ...prefixed('accept-before-s3b.json', acceptSteps, ['parse', 'select'], true),
-  ...prefixed('app.json', appSteps, ['cases', 'opens']),
-  ...prefixed('app-before-s3b.json', appSteps, ['cases', 'opens'], true),
+  ...prefixed('accept.json', acceptSteps),
+  ...prefixed('app.json', appSteps),
   ...prefixed('arguments.json', argumentsSteps),
-  ...prefixed('client.json', clientSteps, ['openRejections']),
-  ...prefixed('client-before-s3b.json', clientSteps, ['openRejections'], true),
-  ...prefixed('context.json', contextSteps, ['cases']),
-  ...prefixed('context-before-s3b.json', contextSteps, ['cases'], true),
+  ...prefixed('client.json', clientSteps),
+  ...prefixed('context.json', contextSteps),
   ...prefixed('cookies.json', cookiesSteps),
-  ...prefixed('build.json', buildSteps, ['read']),
-  ...prefixed('build-before-s3b.json', buildSteps, ['read'], true),
+  ...prefixed('build.json', buildSteps),
   ...prefixed('container.json', containerSteps),
-  ...prefixed('csrf.json', csrfSteps, ['browser', 'mask', 'verify']),
-  ...prefixed('csrf-before-s3b.json', csrfSteps, ['browser', 'mask', 'verify'], true),
+  ...prefixed('csrf.json', csrfSteps),
   ...prefixed('fields.json', fieldsSteps),
-  ...prefixed('file-sessions.json', fileSessionsSteps, ['cookie']),
-  ...prefixed('file-sessions-before-s3b.json', fileSessionsSteps, ['cookie'], true),
+  ...prefixed('file-sessions.json', fileSessionsSteps),
   // The fixed copy of the store cases that the sessions library holds (tests/legacy), until S-4 removes it.
   ...prefixed('file-store-sessions.json', fileStoreSessionsSteps),
   ...prefixed('functions.json', functionsSteps),
   ...prefixed('hooks.json', hooksSteps),
-  ...prefixed('json.json', jsonSteps, ['decode', 'encode']),
-  ...prefixed('json-before-s3b.json', jsonSteps, ['decode', 'encode'], true),
+  ...prefixed('json.json', jsonSteps),
   ...prefixed('keep.json', keepSteps),
-  ...prefixed('manifest.json', manifestSteps, ['checks']),
-  ...prefixed('manifest-before-s3b.json', manifestSteps, ['checks'], true),
-  ...prefixed('media-type.json', mediaTypeSteps, ['values']),
-  ...prefixed('media-type-before-s3b.json', mediaTypeSteps, ['values'], true),
+  ...prefixed('manifest.json', manifestSteps),
+  ...prefixed('media-type.json', mediaTypeSteps),
   ...prefixed('reads.json', readsSteps),
   ...prefixed('redis-sessions.json', redisSessionsSteps),
-  ...prefixed('representations.json', representationsSteps, ['cases']),
-  ...prefixed('representations-before-s3b.json', representationsSteps, ['cases'], true),
-  ...prefixed('request.json', requestSteps, ['files', 'values']),
-  ...prefixed('request-before-s3b.json', requestSteps, ['files', 'values'], true),
+  ...prefixed('representations.json', representationsSteps),
+  ...prefixed('request.json', requestSteps),
   ...prefixed('rest.json', restSteps),
-  ...prefixed('reply.json', replySteps, ['cacheControl', 'cookies', 'notes', 'referrerPolicy', 'status']),
-  ...prefixed('reply-before-s3b.json', replySteps, ['cacheControl', 'cookies', 'notes', 'referrerPolicy', 'status'], true),
+  ...prefixed('reply.json', replySteps),
   ...prefixed('response.json', responseSteps),
-  ...prefixed('result.json', resultSteps, ['copies', 'origin', 'outside', 'outsideStores', 'page', 'redirect', 'stop', 'types']),
-  ...prefixed('result-before-s3b.json', resultSteps, ['copies', 'origin', 'outside', 'outsideStores', 'page', 'redirect', 'stop', 'types'], true),
+  ...prefixed('result.json', resultSteps),
   ...prefixed('routes.json', routesSteps),
-  ...prefixed('session.json', sessionSteps, ['flash', 'kept']),
-  ...prefixed('session-before-s3b.json', sessionSteps, ['flash', 'kept'], true),
+  ...prefixed('session.json', sessionSteps),
 };
 
-// The steps of a case file by `file:section`. A file `<name>-before-s3b.json` is the fixed copy in tests/legacy of the
-// sections of `<name>.json` that the host code runs in their form from before the S-3b case changes, until the commit
-// that moves their rules to the core (C-7) makes them live again: `frozen` lists those sections, which the steps of the
-// live file leave out and the steps of the fixed copy, with `only`, keep alone.
-function prefixed(file: string, steps: Record<string, Step>, frozen: string[] = [], only = false): Record<string, Step> {
-  return Object.fromEntries(
-    Object.entries(steps)
-      .filter(([section]) => frozen.includes(section) === only)
-      .map(([section, step]) => [`${file}:${section}`, step]),
-  );
+// The steps of a case file by `file:section`.
+function prefixed(file: string, steps: Record<string, Step>): Record<string, Step> {
+  return Object.fromEntries(Object.entries(steps).map(([section, step]) => [`${file}:${section}`, step]));
 }
 
 it('cases', () => runCases('node', STEPS), 1_200_000);

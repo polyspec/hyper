@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 5c3b6455b17632451952136ad1ff72263696c8df2551efc2ebccd7e7d9153d9a -->
+<!-- source-sha256: cc736b3417b315c6385b4b68813c9db681820fb509ca26de92a417b56bba9ff0 -->
 # 기능 상태
 
 [English](features.md).
@@ -103,38 +103,6 @@
 | ci-environment-ownership | 각 CI group은 Kit으로 고정 도구를 선택하고 native lock graph를 설치하며 다른 언어 job의 산출물 없이 build 입력을 소유한다. 공통 정책 group은 sibling template source를 선언하지 않는다 | configured; native selector owner checks | `tests/scripts/ci-workflow.test.mts`, `tests/scripts/toolchain.test.mts` |
 | shared-runtime-runner | 모든 Python 검사 target은 native Kit runner와 virtual environment 선택을 사용하며, 앱 unittest harness는 남아 있지 않다 | configured | `make hyper-runner-owner-check`, `make hyper-test-python-render` |
 | native-browser-runner | 앱 server의 준비와 정리 소유권을 유지하면서 browser E2E 실행에 provider 소유 Playwright adapter를 사용해야 한다 | pending provider support; release held | [Kit issue 13](https://github.com/polyspec/kit/issues/13) |
-
-## host runner의 case section
-
-S-3b 변경은 일부 section의 case를 세 server의 host 코드가 core를 부를 때(C-7)에만 실행하는 형태로 바꿨다. 그때까지 PHP, Node, Python runner는 그 section을 고정 사본 `tests/legacy/<name>-before-s3b.json`, 곧 S-3b case 변경 전의 section에서 읽고, 다른 section은 모두 `contracts/`에서 읽는다(HYR-7). browser runner, build runner, Rust core의 시험은 모든 section을 live로 읽는다. section의 규칙을 core로 옮기는 commit이 그 section을 다시 live로 만들고 사본에서 지운다.
-
-| case 파일 | host runner의 live section | 고정 사본에서 읽는 section |
-|---|---|---|
-| `accept.json` | — | `parse`, `select` |
-| `app.json` | `parts` | `cases`, `opens` |
-| `arguments.json` | `counts`, `names` | — |
-| `build.json` | `outputs` | `read` |
-| `client.json` | `cases`, `declaration` | `openRejections` |
-| `container.json` | `services` | — |
-| `context.json` | `contexts`, `withContext` | `cases` |
-| `cookies.json` | `parse` | — |
-| `csrf.json` | `masked` | `mask`, `verify`, `browser` |
-| `file-sessions.json` | `requests` | `cookie` |
-| `functions.json` | `cases` | — |
-| `hooks.json` | `creation` | — |
-| `json.json` | — | `encode`, `decode` |
-| `keep.json` | `cases`, `select` | — |
-| `manifest.json` | `reads` | `checks` |
-| `media-type.json` | — | `values` |
-| `reads.json` | `cases` | — |
-| `reply.json` | `flags` | `cookies`, `cacheControl`, `referrerPolicy`, `status`, `notes` |
-| `representations.json` | `manifestRejections`, `openRejections`, `values` | `cases` |
-| `request.json` | `texts`, `targets` | `files`, `values` |
-| `response.json` | `values` | — |
-| `rest.json` | `cases`, `invalidPaths` | — |
-| `result.json` | `invalid` | `redirect`, `page`, `copies`, `stop`, `types` |
-| `routes.json` | `cases`, `baseCases`, `invalidPaths` | — |
-| `session.json` | `token`, `store` | `flash`, `kept` |
 
 ## 세 server에 남는 규칙
 
