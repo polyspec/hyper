@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 9fd1ac27661c2fdeffbd40e8c46f7db0f76edca349406269102e3861a002623a -->
+<!-- source-sha256: 6ac99daaae70a937126f1c23c1c7170ee14c927a87a03f21f0878dfa4bb9d22a -->
 # 실행
 
 [English](plan.md).
@@ -210,3 +210,7 @@ core를 부르지 않는 서버는 `tests/legacy/`의 case를 실행하고, core
 ## Wave 34 — WSGI 요청의 끝
 
 의존: 없음. H34.1은 WSGI callable의 body iterable이 write hook과 disconnect hook을 자기 `close()`에서 실행한다고 정한다. PEP 3333은 WSGI server가 모든 응답에 대해 `close()`를 한 번 호출하도록 요구하므로, Node listener의 promise(HY-100.29)와 PHP의 shutdown function(HY-100.30)이 자기 server에서 정하듯이, host는 `close()`가 돌아오면 요청의 두 hook이 모두 실행되었음을 안다.
+
+## Wave 35 — 설치와 검사의 core와 바인딩
+
+Depends on: none. 새 checkout은 core를 부르지 않는 서버만 설치하고 검사한다. `make hyper-install`은 `make bindings`가 소스를 쓰기 전에 바인딩의 Python 패키지를 설치하고(H35.1), 어떤 CI group도 core나 바인딩의 target을 실행하지 않으며(H35.2), Git은 `make bindings`가 쓰는 Python 패키지를 무시하지 않는다(H35.3).

@@ -209,3 +209,7 @@ Depends on: none. H33.1 moves the content of each CI job into the recipe `ci-<jo
 ## Wave 34 — The end of a WSGI request
 
 Depends on: none. H34.1 states that the body iterable of the WSGI callable runs the write hook and the disconnect hook in its `close()`, which PEP 3333 requires a WSGI server to call once for every response, so that a host knows that both hooks of a request have run when `close()` returns, as the promise of the Node listener (HY-100.29) and the shutdown function of PHP (HY-100.30) state for their servers.
+
+## Wave 35 — The core and the bindings in the install and the checks
+
+Depends on: none. A fresh checkout installs and checks only the servers that do not call the core: `make hyper-install` installs the Python package of the bindings before `make bindings` writes its sources (H35.1), no CI group runs a target of the core or the bindings (H35.2), and Git does not ignore the Python package that `make bindings` writes (H35.3).
