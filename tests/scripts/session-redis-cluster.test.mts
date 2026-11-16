@@ -12,7 +12,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 import { stopServers } from '../../scripts/board-servers.mts';
 import { requireServers, shareAcross, startBoards } from './session-board.mts';
-import { ask, certificates, EXTENSION, freePort, holding, startRedis, stopRedis, until, type Secure } from './session-redis-server.mts';
+import { ask, certificates, EXTENSION, freePort, holders, holding, startRedis, stopRedis, until, type Secure } from './session-redis-server.mts';
 import { IDENTIFIER, NAMES, run as runWorker, type Server } from './session-workers.mts';
 
 const KEY = `PHPREDIS_SESSION:${IDENTIFIER}`;
@@ -133,7 +133,7 @@ before(async () => {
 });
 
 after(async () => {
-  await stopServers(processes);
+  await stopServers([...holders, ...processes]);
   rmSync(directory, { recursive: true, force: true });
 });
 

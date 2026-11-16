@@ -11,6 +11,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 import { createClient } from 'redis';
 
+import { stopServers } from '../../scripts/board-servers.mts';
 import { requireBuilt } from './requires.mts';
 import { COMMANDS, IDENTIFIER, ROOT, type Server } from './session-workers.mts';
 
@@ -109,16 +110,43 @@ export function redisRun(prefix: string, started: () => Promise<void>, ending: (
   });
   after(async () => {
     await ending();
+    await stopServers(holders);
     if (run.server !== null) await stopRedis(run.server, 'SIGKILL');
     rmSync(run.directory, { recursive: true, force: true });
   });
   return run;
 }
 
-// Starts a request of a server that has written a value, and resolves when it holds the lock and waits for a line.
+// The holders that `holding` started: the hooks after a test file stop each that still runs, so that a test that fails while
+// a holder waits for its line leaves no process (HR-87).
+export const holders: ChildProcessWithoutNullStreams[] = [];
+
+// Starts a request of a server that has written a value, and resolves when it holds the lock and waits for a line: when it
+// printed `held` (Python and Node) or `holding` (PHP). A holder that ends before it printed that line rejects with its status
+// and its output (HR-84), because PHP prints a fatal error on its standard output.
 export async function holding(name: Server, directory: string, env: Record<string, string>, command_ = 'stale'): Promise<ChildProcessWithoutNullStreams> {
   const { command, prefix } = COMMANDS[name];
   const holder = spawn(command, [...(name === 'php' ? [EXTENSION] : []), ...prefix, directory, IDENTIFIER, command_], { cwd: ROOT, env: { ...process.env, ...env } });
-  await once(holder.stdout, 'data');
+  holders.push(holder);
+  let output = '';
+  const collect = (chunk: Buffer) => {
+    output += chunk.toString();
+  };
+  holder.stderr.on('data', collect);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      holder.stdout.on('data', (chunk: Buffer) => {
+        collect(chunk);
+        if (/^(?:held|holding)$/m.test(output)) resolve();
+      });
+      holder.once('error', reject);
+      holder.once('close', (code, signal) => reject(new Error(`the ${name} holder (${command_}) ended with ${String(code ?? signal)} before it held the lock:\n${output}`)));
+    });
+  } finally {
+    holder.stdout.removeAllListeners('data');
+    holder.stderr.off('data', collect);
+    holder.removeAllListeners('close');
+    holder.removeAllListeners('error');
+  }
   return holder;
 }

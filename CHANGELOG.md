@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- A session test whose holder process ends before it holds the lock fails at once with the status and the output of that process, because `holding` of `tests/scripts/session-redis-server.mts` waited for any first output and never for the end of the process; PHP prints a fatal error on its standard output, so a failed PHP holder counted as holding. The hooks after the Redis session test files stop every holder that still runs, so a test that fails while a holder waits for its line no longer keeps the test file running without an end (HR-84, HR-87, H35.18).
 - The repository uses kit 0.0.116 (kit K1266 to K1273), pinned by the URL of its release asset and the integrity of its lock (H35.16).
 - The PHP, Node and Python runners read every section of `contracts/` live, including the 33 sections that they read from the copies `tests/legacy/<name>-before-s3b.json`; the 18 copies, their entries in `tests/legacy/interfaces.json`, the field `fixedCopy` of a case section and its handling in the recipe check are removed. The live cases that the servers do not answer yet are those of H35.12, H35.15 and H35.10. `tests/legacy` keeps `fields.json`, `file-store-sessions.json` and `redis-sessions.json` (H35.9).
 - The contract test of the core passes the content type of a media type case as one byte for each character, as the binding passes a latin1 text, and the case `the_tag_digests_a_character_of_the_content_type_as_one_byte` of HY-122.14 failed there with the tag of the UTF-8 bytes (H35.10-4).

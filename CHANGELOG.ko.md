@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- lock을 잡기 전에 끝나는 holder process가 있는 session test는 그 process의 상태와 출력으로 곧바로 실패한다. `tests/scripts/session-redis-server.mts`의 `holding`이 아무 첫 출력이나 기다리고 process의 끝은 기다리지 않았기 때문이다. PHP는 fatal error를 표준 출력에 쓰므로 실패한 PHP holder도 lock을 잡은 것으로 셌다. Redis session test 파일의 after hook은 아직 실행 중인 holder를 모두 멈추므로, holder가 그 줄을 기다리는 동안 실패한 test가 더는 test 파일을 끝없이 실행 상태로 두지 않는다(HR-84, HR-87, H35.18).
 - 저장소는 kit 0.0.116(kit K1266~K1273)을 쓰며, release asset의 URL과 lock의 integrity로 pin한다(H35.16).
 - PHP, Node, Python runner는 `contracts/`의 모든 section을 live로 읽으며, 사본 `tests/legacy/<name>-before-s3b.json`에서 읽던 section 33개도 그렇다. 사본 18개, `tests/legacy/interfaces.json`의 그 항목, case section의 field `fixedCopy`와 recipe check의 그 처리는 지운다. 서버가 아직 답하지 않는 live case는 H35.12, H35.15, H35.10의 case다. `tests/legacy`에는 `fields.json`, `file-store-sessions.json`, `redis-sessions.json`이 남는다(H35.9).
 - core의 계약 시험은 media type case의 content type을, binding이 latin1 text를 넘기듯 글자마다 한 바이트로 넘긴다. HY-122.14의 case `the_tag_digests_a_character_of_the_content_type_as_one_byte`는 거기서 UTF-8 바이트의 tag로 실패했다(H35.10-4).
