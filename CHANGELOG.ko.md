@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 267964d1678018f2f413ffbad6da4393b9f3eea1fca616f627661dfd46947a2b -->
+<!-- source-sha256: 1fbb825fcbf4a7e992ab55efccf297f23ccd5911efbddfff35a4900f5d389a10 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/python/tests/test_core_rules.py`의 `test_the_shared_rules_are_one_instance`는 binding의 대역 package에 더 이상 `__path__`를 두지 않는다. `core_rules`는 `_root`를 package의 attribute로 읽기 때문에 어떤 import도 그것을 읽지 않는다. vulture가 그 attribute를 쓰이지 않는다고 보고해 `make lint-python`이 실패했다(H35.20-4).
 - packages/client와 packages/ts의 시험은 template 0.0.28의 TypeScript API를 쓴다. `parseJson`, `Value`, `Template`은 `@polyspec/template/render`에서 오고, `packages/ts/tests/parse-template.ts`의 `parseTemplate`은 native `parse`의 결과를 `encodeTemplate`이 쓴 canonical JSON으로 decode해 renderer에게 source의 AST를 준다. template 0.0.28의 package root는 native binding이며, 그 `parse`는 renderer가 읽는 field `type`이 없는 record를 돌려주고 `parseJson`을 export하지 않기 때문에 두 package의 `tsc`가 실패했다(H35.20-3).
 - PHP, Node, Python runner의 case step은 class 중 하나가 `Hyper<Category>Error`라는 이름인 hyper의 오류만 `raises`로 보고한다(HY-132.2). `CaseRules::raisesOf`, `case-rules.ts`의 `raisesOf`, `case_rules.py`의 `raises_of`는 다른 오류를 다시 던져 그 오류가 step의 오류로 case를 실패시키게 한다. 전에는 PHP의 모든 `InvalidArgumentException`, `TypeError`, `RuntimeException`, Node의 모든 오류, Python의 모든 `ValueError`, `TypeError`, `OSError`, `RuntimeError`를 category 없는 실패로 보고했기 때문에, 잘못된 case 입력 같은 step 자신의 오류가 `raises`의 차이로 읽혔다(H35.20-2).
 - knip은 더 이상 `@polyspec/binding`을 쓰이지 않는 devDependency로 보고하지 않는다. `knip.json`은 그것을 `ignoreDependencies`에 적고, Makefile이 그 `dist/cli.js`를 경로로 시작하며 knip은 Makefile을 읽지 않는다는 이유를 적는다(H35.20-1).

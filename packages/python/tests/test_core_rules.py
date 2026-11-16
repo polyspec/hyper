@@ -287,7 +287,6 @@ class SharedCoreRulesTest(unittest.TestCase):
     def test_the_shared_rules_are_one_instance(self):
         binding, _ = stand_in({})
         package = types.ModuleType("polyspec.hyper._binding")
-        package.__path__ = []
         package._root = binding
         with unittest.mock.patch.dict(
             sys.modules,
