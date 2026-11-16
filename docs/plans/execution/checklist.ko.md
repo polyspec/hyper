@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 64772a45c0cc215c4917e062b71bdefdcccf81c1f4f3fce91a3599fe35fff8f6 -->
+<!-- source-sha256: 9be40cc3698c81083846336a91c6f7820bf5933bad0626e795478d0cfb086e0b -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -547,3 +547,4 @@
 | H35.29-2 | 질문: context loader의 실패는 case가 적는 `OrmError`인가, hyper class인가? 근거: contracts/context.json의 case 13개(loader `gone`과 `unloadable`)가 "the loader … raises a class other than OrmError"로 실패한다. HY-132.2(contracts/protocol.json:5775)는 hyper의 오류가 그 category의 class라고 정하고, HY-132.5(:5793)는 애플리케이션 코드가 던진 예외는 던진 그대로 호출자에게 간다고 정한다. | contracts/protocol.json, contracts/context.json | `make spec-docs-check` | [ ] |
 | H35.29-3 | 질문: Accept message의 접두어 `hyper:`는 HY-132.4를 어기는가? 근거: HY-132.4(contracts/protocol.json:5787)는 "규칙이 정한 message는 모든 runtime에서 runtime의 접두어 없이 오류의 message"라고 정한다. PHP 서버는 contracts/accept.json의 case 17개를 `hyper: the Accept value "text/html;q=x" is invalid at 13: the weight x is not a qvalue (HY-116)`, `hyper: the Accept value "text/html;q" is invalid at 11: expected = (HY-116)` 같은 message로 실패하며, 그 case들은 kind `invalid_weight`와 `invalid_accept`를 적는다. | contracts/protocol.json | `make spec-docs-check` | [ ] |
 | H35.29-4 | case의 open 오류는 kind `invalid_application`을 가진 그 category의 hyper class다(HY-106.21). docs/spec/recipe.md가 이를 정하고, PHP, Node, Python runner의 `CaseRules::openError`가 `raisesOf`로 이를 검사하며, 세 서버의 모든 open 경로가 이를 던진다. | docs/spec/recipe.md, packages/php, packages/ts, packages/python | `make hyper-test-php` | [ ] |
+| H35.30 | core는 HY-132 kind 표의 kind `outside_redirect_stores`(category `value`, HY-133.10)를 가진다: `Error::OutsideRedirectStores`와 그 `ErrorCode`, packages/rust/interface.json의 `errors.kinds` 행, 그리고 contracts/result.json의 case가 이를 적는 곳에서 세 서버가 이를 던진다. | packages/rust, packages/php, packages/ts, packages/python | `make core-test` | [ ] |
