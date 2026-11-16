@@ -212,4 +212,4 @@ Depends on: none. H34.1 states that the body iterable of the WSGI callable runs 
 
 ## Wave 35 — The core and the bindings in the install and the checks
 
-Depends on: none. A fresh checkout installs and checks only the servers that do not call the core: `make hyper-install` installs the Python package of the bindings before `make bindings` writes its sources (H35.1), no CI group runs a target of the core or the bindings (H35.2), and Git does not ignore the Python package that `make bindings` writes (H35.3).
+Depends on: none. A fresh checkout installs and checks only the servers that do not call the core: `make hyper-install` installs the Python package of the bindings before `make bindings` writes its sources (H35.1), no CI group runs a target of the core or the bindings (H35.2), and Git does not ignore the Python package that `make bindings` writes (H35.3), and the binding of `Cargo.lock` does not generate Go and WASM for the callback unit of session-store and a function result (H35.4).
