@@ -1297,6 +1297,16 @@ describe('outside redirects (HY-133)', () => {
     expect(page.replaced).toEqual([OUTSIDE]);
   });
 
+  it('sets HX-Request on a history restoration in server-side rendering, which htmx 4.0.0 sends without it (HYC-4.9)', () => {
+    const { hyper } = setup('', [], new FakeStorage(), new FakeDocument());
+    const extension = hyper.extension();
+    const ctx = context('/items/7', { id: '' });
+    ctx.request.headers = { 'HX-History-Restore-Request': 'true' };
+    extension.htmx_config_request(null, { ctx });
+    extension.htmx_before_request(null, { ctx });
+    expect(ctx.request.headers['HX-Request']).toBe('true');
+  });
+
   it('leaves HX-Redirect of an HTML request that is neither a region request nor a restoration to htmx', () => {
     const page = new FakeDocument();
     const { extension, ctx } = startedRequest(page, { id: 'side' });

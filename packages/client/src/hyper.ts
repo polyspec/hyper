@@ -530,6 +530,8 @@ export class Hyper<E extends RegionElement = Element> {
           // The HTML document of a history restoration in server-side rendering brings its stylesheet links and its module
           // scripts (HYC-15, HYC-25).
           if (basePath === '' && ctx.request.headers['HX-History-Restore-Request'] === 'true') {
+            // HYC-4.9: htmx 4.0.0 sends the restoration without its own headers, so an outside redirect would be a 303.
+            ctx.request.headers['HX-Request'] = 'true';
             ctx.fetch = async (url, init) => {
               const response = await fetch(url, init);
               if ((response.headers.get('content-type') ?? '').startsWith('text/html')) ctx.hyperStylesheets = await this.page.head(await response.clone().text());
