@@ -759,3 +759,15 @@ mod build {
         }
     }
 }
+
+#[test]
+fn a_joined_hyper_context_is_no_context_hash() {
+    // HY-42.14, HY-127.2: a host joins the lines of a name with `, `, so two lines of `Hyper-Context` give a value that
+    // is no context hash, whatever each line holds.
+    let hash = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    assert!(polyspec_hyper::context::valid_header(Some(hash.as_bytes())));
+    let joined = format!("{hash}, {hash}");
+    assert!(!polyspec_hyper::context::valid_header(Some(
+        joined.as_bytes()
+    )));
+}

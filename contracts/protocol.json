@@ -4644,7 +4644,8 @@
           "kind": "rule",
           "id": "HY-42",
           "retired": [
-            6
+            6,
+            12
           ],
           "blocks": [
             {
@@ -4711,10 +4712,10 @@
                   "koSource": "41453e6709684d78d0d912a86a5ce2d197eba071e3899229f8da3b4c9ce20547"
                 },
                 {
-                  "id": "HY-42.12",
-                  "en": "So a field that holds one value fails in several lines as its joined value fails, such as two `Content-Type` lines, whose joined media type is no form type (HY-59.7), and two `Hyper-Context` lines, whose joined value is not 64 hexadecimal characters (HY-127.2).",
-                  "ko": "그래서 값 하나를 가지는 field는 여러 줄로 오면 이어진 값이 실패하듯 실패한다. 예를 들어 두 `Content-Type` 줄은 이어진 media type이 form type이 아니고(HY-59.7), 두 `Hyper-Context` 줄은 이어진 값이 64개의 16진수 문자가 아니다(HY-127.2).",
-                  "koSource": "cc9df1323d42a859697c36f3fa5db59160f222968ef8063b699b2f11124d817a"
+                  "id": "HY-42.14",
+                  "en": "So a field that holds one value fails in several lines as its joined value fails, such as two `Content-Type` lines, whose joined value is no media type and receives status 400 (HY-59.12), and two `Hyper-Context` lines, whose joined value is not 64 lowercase hexadecimal characters (HY-127.2).",
+                  "ko": "그래서 값 하나를 가지는 field는 여러 줄로 오면 이어진 값이 실패하듯 실패한다. 예를 들어 두 `Content-Type` 줄은 이어진 값이 media type이 아니므로 상태 400을 받고(HY-59.12), 두 `Hyper-Context` 줄은 이어진 값이 소문자 16진수 문자 64개가 아니다(HY-127.2).",
+                  "koSource": "4481524c9e1cf8f5a6381a67ec16d863c442df15a831bebf8dd4ca3f6cb2536c"
                 },
                 {
                   "id": "HY-42.13",

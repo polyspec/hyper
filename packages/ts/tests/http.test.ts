@@ -131,7 +131,7 @@ describe('App.server', () => {
   });
 });
 
-// The field lines of a request (HY-42.8, HY-42.9, HY-42.12, HY-42.13): node:http gives the lines of a name apart in
+// The field lines of a request (HY-42.8, HY-42.9, HY-42.13, HY-42.14): node:http gives the lines of a name apart in
 // headersDistinct, and the server reads them as one value joined with `, `.
 describe('the field lines of a request', () => {
   const lines = 'Content-Type: application/x-www-form-urlencoded\r\nContent-Type: text/plain\r\nUser-Agent: a\r\nUser-Agent: b\r\n';
@@ -152,7 +152,7 @@ describe('the field lines of a request', () => {
     expect(seen).toEqual(['application/x-www-form-urlencoded, text/plain', 'application/x-www-form-urlencoded, text/plain', 'a, b', []]);
   });
 
-  it('answers an action with two Content-Type lines with 415, because their joined media type is no form type (HY-42.12, HY-59.7)', async () => {
+  it('answers an action with two Content-Type lines with 415, as the servers that do not call the core answer a value that is no media type, where the protocol answers 400 (HY-42.14, HY-59.12)', async () => {
     await start();
     expect((await raw(post)).startsWith('HTTP/1.1 415 Unsupported Media Type\r\n')).toBe(true);
   });
