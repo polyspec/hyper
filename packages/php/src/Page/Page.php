@@ -200,7 +200,8 @@ final class Page
     private function kept(Request $request, Session $session, array $data): array
     {
         // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
-        $cookie = self::decodedCookie($request->cookie(CoreRules::shared()->keptCookieName($this->https || $request->https)));
+        $cookieName = CoreRules::shared()->keptCookieName($this->https || $request->https);
+        $cookie = self::decodedCookie($request->cookie($cookieName));
         $kept = [];
         foreach ($data as $name => $regionData) {
             $region = $this->manifest->region($name);

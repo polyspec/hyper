@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 37da49e322f242d1437b017d04e1223398d2e87c5dabf08a72a3c7f6741f339c -->
+<!-- source-sha256: e1e64beb231a1f3767cdeeadeb17a1c8981954ce09b49057598746e22f648c61 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 소스가 `phpcs.xml.dist`의 줄 길이를 지킨다. 주석 둘, 메시지 하나, cookie 조회 하나가 120자보다 길어서 `make lint-php`가 phpcs에서 실패했다(H35.21).
 - core의 representation tag 시험이 helper `latin1`로 content type을 바꾼다. 전에는 lint 설정이 금하는 `unwrap_or`와 `expect`를 불러, H35.10-4 뒤로 `make core-lint`가 실패했다(H35.23).
 - `packages/rust/interface.json`의 rules unit은 UTF-8 byte를 template 값으로 읽는 `rules.json_read`와 template 값을 텍스트로 쓰는 `rules.json_write`를 선언한다. 그 core 함수 `json::json_read`와 `json::json_write`는 `json::read`와 `json::write`를 부르고 hyper의 오류를 준다. json이 거부하는 텍스트는 새 kind `malformed_json`(`Error::MalformedJson`, category value)으로 실패하며 그 원인은 json의 거부이고, 데이터 모델 밖의 값은 template 데이터 모델의 kind로 실패한다(HY-54.20, HY-54.21). `json_text_is_written_and_read`는 `contracts/json.json`의 case를 contract가 적은 core 경로의 이 함수들로 실행한다(H35.20-5-1).
 - 루트 manifest가 `@polyspec/json` v0.0.32와 그 platform package 셋을 release asset URL로 요구하고, lock이 그것을 pin한다. template 0.0.28이 json을 요구하는데, 다른 polyspec 저장소의 의존은 루트가 release URL로 설치한다. 그래서 그 선언이 없으면 client 시험이 `Cannot find module '@polyspec/json'`로 실패했고, `make link`에는 연결할 json 설치가 없었다(H35.22).

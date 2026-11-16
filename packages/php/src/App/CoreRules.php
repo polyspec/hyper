@@ -48,8 +48,8 @@ final class CoreRules
         if (self::$shared === null) {
             if (!extension_loaded(self::EXTENSION)) {
                 throw new \RuntimeException(
-                    'hyper: the PHP extension ' . self::EXTENSION . ' is not loaded; the server calls the rules of the core '
-                    . 'through it (HY-132.2)',
+                    'hyper: the PHP extension ' . self::EXTENSION . ' is not loaded; the server calls the rules of '
+                    . 'the core through it (HY-132.2)',
                 );
             }
             self::$shared = new self(__NAMESPACE__);
@@ -266,7 +266,8 @@ final class CoreRules
      */
     public function appFrameHeaders(int $status, string $frameAncestors): array
     {
-        // The extension declares `array` (T-1a) and its contract a list of pairs of texts (front_functions.frame_headers).
+        // The extension declares `array` (T-1a) and its contract a list of pairs of texts
+        // (front_functions.frame_headers).
         /** @var list<array{string, string}> $pairs */
         $pairs = $this->call('frameHeaders', $status, $frameAncestors);
         $headers = [];
