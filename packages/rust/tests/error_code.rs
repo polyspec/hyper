@@ -56,6 +56,7 @@ fn name(code: ErrorCode<'_>) -> &'static str {
         ErrorCode::InvalidApplication => "InvalidApplication",
         ErrorCode::InvalidBuild => "InvalidBuild",
         ErrorCode::InvalidRepresentation => "InvalidRepresentation",
+        ErrorCode::MalformedJson => "MalformedJson",
         ErrorCode::Internal => "Internal",
         ErrorCode::RecordValue => "RecordValue",
         ErrorCode::Template(_) => "Template",
@@ -346,6 +347,10 @@ fn a_failure_of_hyper_projects_to_its_own_code_which_the_contract_lists() -> Res
         (
             Error::InvalidRepresentation("a reason"),
             ErrorCode::InvalidRepresentation,
+        ),
+        (
+            Error::MalformedJson(polyspec_json::Error::ExpectedValue { offset: 0 }),
+            ErrorCode::MalformedJson,
         ),
         (Error::Internal("an invariant"), ErrorCode::Internal),
         (

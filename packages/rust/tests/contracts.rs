@@ -536,13 +536,38 @@ fn manifest_checks() {
 
 #[test]
 fn json_text_is_written_and_read() {
-    // HY-54.18 to HY-54.21, HY-44.9
-    use polyspec_hyper::json::{read, write, JsonError};
-    let file = cases("json.json");
-    let kind = |error: &JsonError| match error {
-        JsonError::Malformed(_) => "malformed_json".to_owned(),
-        JsonError::DataModel(error) => error.code.as_str().to_owned(),
+    // HY-54.18 to HY-54.21, HY-44.9: the cases run through the members `rules.json_read` and `rules.json_write`
+    // of the interface contract, by the core paths that it names.
+    use polyspec_hyper::json::{json_read as read, json_write as write};
+    let interface: Value = match fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("interface.json"),
+    ) {
+        Ok(text) => match serde_json::from_str(&text) {
+            Ok(value) => value,
+            Err(error) => panic!("interface.json: {error}"),
+        },
+        Err(error) => panic!("interface.json: {error}"),
     };
+    let core = |id: &str| {
+        interface["units"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .flat_map(|unit| unit["members"].as_array().into_iter().flatten())
+            .find(|member| member["id"].as_str() == Some(id))
+            .and_then(|member| member["core"].as_str())
+            .map(str::to_owned)
+    };
+    assert_eq!(
+        core("rules.json_read").as_deref(),
+        Some("polyspec_hyper::json::json_read")
+    );
+    assert_eq!(
+        core("rules.json_write").as_deref(),
+        Some("polyspec_hyper::json::json_write")
+    );
+    let file = cases("json.json");
+    let kind = |error: &Error| error.kind().to_owned();
     for section in ["encode", "decode"] {
         for case in group(&file, section) {
             let result = read(text(case, "json").as_bytes());

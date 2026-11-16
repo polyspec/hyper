@@ -187,6 +187,10 @@
         "category": "value"
       },
       {
+        "variant": "polyspec_hyper::ErrorCode::MalformedJson",
+        "category": "value"
+      },
+      {
         "variant": "polyspec_hyper::ErrorCode::Internal",
         "category": "internal"
       },
@@ -1513,6 +1517,58 @@
           "raises": [],
           "wait": "none",
           "core": "polyspec_hyper::context::valid_header"
+        },
+        {
+          "id": "rules.json_read",
+          "name": [
+            "json",
+            "read"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "text"
+              ],
+              "type": "bytes",
+              "required": true
+            }
+          ],
+          "returns": "template_value",
+          "raises": [
+            "polyspec_hyper::ErrorCode::MalformedJson",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberRange",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberNotFinite",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataInvalidUtf8",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataDepth"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::json::json_read"
+        },
+        {
+          "id": "rules.json_write",
+          "name": [
+            "json",
+            "write"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "value"
+              ],
+              "type": "template_value",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataUnsupportedType"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::json::json_write"
         }
       ]
     },

@@ -4,6 +4,8 @@
 use polyspec_json::{parse, stringify, ParseOptions, StringifyOptions};
 use polyspec_template::{bind_json, to_json_value, BindError, Value};
 
+use crate::Error;
+
 /// A failure of reading or writing a JSON text of hyper.
 #[derive(Debug, Clone)]
 pub enum JsonError {
@@ -30,4 +32,23 @@ pub fn read(text: &[u8]) -> Result<Value, JsonError> {
 pub fn write(value: &Value) -> Result<String, BindError> {
     let json = to_json_value(value)?;
     Ok(stringify(&json, &StringifyOptions::default()))
+}
+
+/// [`read`] with the error of hyper, the member `rules.json_read` of the interface contract (HY-54.20, HY-54.21).
+///
+/// # Errors
+/// `Error::MalformedJson` for a text that json refuses and `Error::DataModel` for a value outside the data model.
+pub fn json_read(text: &[u8]) -> Result<Value, Error> {
+    read(text).map_err(|error| match error {
+        JsonError::Malformed(error) => Error::MalformedJson(error),
+        JsonError::DataModel(error) => Error::DataModel(error),
+    })
+}
+
+/// [`write`] with the error of hyper, the member `rules.json_write` of the interface contract (HY-54.18, HY-54.19).
+///
+/// # Errors
+/// `Error::DataModel` for a value that has no JSON form (VAL-19).
+pub fn json_write(value: &Value) -> Result<String, Error> {
+    write(value).map_err(Error::DataModel)
 }

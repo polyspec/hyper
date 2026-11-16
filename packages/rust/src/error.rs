@@ -49,6 +49,8 @@ pub enum Error {
     InvalidBuild(std::borrow::Cow<'static, str>),
     /// A response of a representation handler that HY-122 does not allow (HY-122.2 to HY-122.8).
     InvalidRepresentation(&'static str),
+    /// A JSON text that json refuses (HY-54.21), with that rejection as its source.
+    MalformedJson(polyspec_json::Error),
     /// A value outside the data model, with the kind of the template data model (HY-44.9).
     DataModel(polyspec_template::BindError),
     /// A failure of the template language while a template renders, with its kind (HY-43, HY-38.18).
@@ -112,6 +114,8 @@ pub enum ErrorCode<'a> {
     InvalidBuild,
     /// A response of a representation handler that HY-122 does not allow.
     InvalidRepresentation,
+    /// A JSON text that json refuses (HY-54.21).
+    MalformedJson,
     /// A broken invariant of the core (HY-132.6).
     Internal,
     /// A broken invariant of a record that php-serialize reports (HY-132.6).
@@ -170,6 +174,7 @@ impl Error {
             Error::InvalidApplication(_) => Part::Own("invalid_application", Category::Value),
             Error::InvalidBuild(_) => Part::Own("invalid_build", Category::Value),
             Error::InvalidRepresentation(_) => Part::Own("invalid_representation", Category::Value),
+            Error::MalformedJson(_) => Part::Own("malformed_json", Category::Value),
             Error::Internal(_) => Part::Own("internal", Category::Internal),
             Error::DataModel(error) => Part::DataModel(error),
             Error::Template(error) => Part::Template(error),
@@ -204,6 +209,7 @@ impl Error {
             Error::InvalidApplication(_) => ErrorCode::InvalidApplication,
             Error::InvalidBuild(_) => ErrorCode::InvalidBuild,
             Error::InvalidRepresentation(_) => ErrorCode::InvalidRepresentation,
+            Error::MalformedJson(_) => ErrorCode::MalformedJson,
             Error::Internal(_) => ErrorCode::Internal,
             Error::RecordValue(_) => ErrorCode::RecordValue,
             Error::DataModel(error) => ErrorCode::Template(error.code),
@@ -315,6 +321,7 @@ impl fmt::Display for Error {
             Error::NotSelected => f.write_str("the request holds no selected media type (HY-116)"),
             Error::InvalidApplication(reason) | Error::InvalidBuild(reason) => f.write_str(reason),
             Error::InvalidRepresentation(reason) => write!(f, "{reason} (HY-122)"),
+            Error::MalformedJson(error) => write!(f, "a JSON text is malformed: {error} (HY-54)"),
             Error::DataModel(error) => error.fmt(f),
             Error::Template(error) => error.fmt(f),
             Error::Sessions(error) => error.fmt(f),
@@ -328,6 +335,9 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        if let Error::MalformedJson(error) = self {
+            return Some(error);
+        }
         match self.part() {
             Part::Negotiate(error) => Some(error),
             Part::Sessions(error) => Some(error),
