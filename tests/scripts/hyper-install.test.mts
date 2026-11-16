@@ -19,3 +19,9 @@ test('hyper-install writes the sources of the bindings before it installs the PH
   assert.ok(at('bindings') < at('hyper-install-php'), `bindings runs before hyper-install-php: ${steps.join(' ')}`);
   assert.ok(at('bindings') < at('hyper-install-python'), `bindings runs before hyper-install-python: ${steps.join(' ')}`);
 });
+
+test('install-binding clones nothing when the binding of Cargo.lock is a local path (H35.7)', () => {
+  const lines = dryRun('install-binding', { variables: ['BINDING_COMMIT=local', 'BINDING=/lane/cli.js'] }).join('\n');
+  assert.doesNotMatch(lines, /install-binding\.mts/u, lines);
+  assert.match(lines, /\/lane\/cli\.js/u, lines);
+});

@@ -365,7 +365,7 @@ BINDING := $(CURDIR)/var/binding/$(BINDING_COMMIT)/packages/ts/src/cli.ts
 binding-cases: ## Write var/binding-cases, the cases of contracts/ in the form of the binding (HR-100)
 	$(NODE) scripts/binding-cases.mts --config $(CURDIR)/config/binding-cases.json --contracts $(CURDIR)/contracts --output $(CURDIR)/var/binding-cases > /dev/null
 install-binding: ## Clone the binding cli of the commit that Cargo.lock pins into var/binding and install its locked packages; ONLINE
-	$(ONLINE) $(NODE) scripts/install-binding.mts --cargo cargo --npm $(NPM) --output $(CURDIR)/var/binding
+	$(if $(filter local,$(BINDING_COMMIT)),@echo "install-binding: the binding of Cargo.lock is a local path; the run names its cli $(BINDING)",$(ONLINE) $(NODE) scripts/install-binding.mts --cargo cargo --npm $(NPM) --output $(CURDIR)/var/binding)
 bindings: binding-cases ## Write the generated sources of every binding with the binding cli of the commit of Cargo.lock (binding L-1)
 	@test -f $(BINDING) || { echo "bindings: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
 	$(NODE) $(BINDING) generate --root $(CURDIR)

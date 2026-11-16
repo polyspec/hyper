@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- `make install-binding` clones nothing when the binding of Cargo.lock is a local path (`BINDING_COMMIT` is `local`) and names the cli that the run gives with `BINDING`; it failed with `cargo metadata names no polyspec-binding-core at the commit local of Cargo.lock`, so `make hyper-install` stopped (H35.7).
 - The workspace of Cargo denies `unsafe_code` and `packages/rust/src/lib.rs` forbids it, in place of a forbid of the workspace: the binding crates take the lints of the workspace and allow unsafe code with its reason (binding B-4), which a forbid refuses, so `make lint-bindings` and `make test-go` failed with E0453 and with about 150 errors of unsafe code in the generated sources (H35.7).
 - The parameter `host_function` of `pages.register` in `packages/rust/interface.json` states `keeps: true` and the core of `page_request.next` states `failure: true` (binding GN-6aa, GN-6h): the core keeps the function at registration and calls it in `next`, so `register` returns `Error` and `next` returns `Failure<Error>`; the Python binding crate failed with E0308, because the generator gave the failure to the member that takes the function (H35.7). The check of this form needs a binding release whose CK-90 takes `keeps` on a function.
 - `client_rendering::shell_text` of the core borrows the bytes of the shell (`&[u8]`), as a binding passes a parameter of the type bytes (binding T-1); the Python binding crate failed to build with E0308 under binding 0.0.15 (H35.7).
