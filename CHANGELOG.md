@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The checklist registers H35.29-5, the statement of the class and the kind of a failure of the client at open in the browser, which no statement of contracts/protocol.json states, and H35.29-6, the kind of the failure of HY-97.7, which the statement and the cases of contracts/hooks.json do not state (H35.29-5, H35.29-6).
 - The Node server no longer converts the errors of the checks of `@polyspec/hyper-client` at open (`checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`) into the kind `invalid_application`: `App.clientCheck` is removed, because the client throws an `Error` without a kind, which is a defect of the client that the server hid. The Node open cases that reach these checks fail until H35.29-5 states and fixes the error of the client (H35.29-4).
 - The core has the kind `outside_redirect_stores` of the kind table of HY-132, of the category `value` (HY-133.10): `Error::OutsideRedirectStores` with its `ErrorCode` and the row of `errors.kinds` of `packages/rust/interface.json`, which the generated bindings now hold. `flash` and `changed` of an outside redirect in the PHP, Node and Python servers throw the class `HyperValueError` of the binding with that kind; they threw `\InvalidArgumentException`, `RangeError` and `ValueError`, and the binding could not construct the kind, so the four cases of `outsideStores` of contracts/result.json failed. `tests/error_code.rs` lists the kind among the codes that the contract names (H35.30).
 

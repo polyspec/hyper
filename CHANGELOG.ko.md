@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 34aaa3a15354682d478fc7e0cba0903bc55f6c55028e12ad9f3f913728cac9ae -->
+<!-- source-sha256: 630f28339d3ba5aca5a52419e8ba77a60f5d3426e5e96756393e69d54981e36d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- checklist가 H35.29-5와 H35.29-6을 등록한다. H35.29-5는 contracts/protocol.json의 어떤 statement도 정하지 않는 browser에서 open 때 client 실패의 class와 kind를 정하는 statement이고, H35.29-6은 statement와 contracts/hooks.json의 case가 정하지 않는 HY-97.7 실패의 kind이다(H35.29-5, H35.29-6).
 - Node 서버는 open 때 `@polyspec/hyper-client` 검사(`checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`)의 오류를 더 이상 kind `invalid_application`으로 바꾸지 않는다. client가 kind 없는 `Error`를 던지는 것은 서버가 가린 client의 결함이므로 `App.clientCheck`를 지운다. 이 검사에 닿는 Node open case는 H35.29-5가 client의 오류를 정하고 고칠 때까지 실패한다(H35.29-4).
 - core는 HY-132 kind 표의 category `value`인 kind `outside_redirect_stores`를 가진다(HY-133.10): `Error::OutsideRedirectStores`와 그 `ErrorCode`, `packages/rust/interface.json`의 `errors.kinds` 행이며, 생성된 binding이 이제 이를 가진다. PHP, Node, Python 서버에서 outside redirect의 `flash`와 `changed`는 그 kind로 binding의 class `HyperValueError`를 던진다. 이들은 `\InvalidArgumentException`, `RangeError`, `ValueError`를 던졌고 binding은 그 kind를 만들 수 없었으므로 contracts/result.json의 `outsideStores` case 4개가 실패했다. `tests/error_code.rs`는 계약이 이름 붙인 code 사이에 그 kind를 둔다(H35.30).
 
