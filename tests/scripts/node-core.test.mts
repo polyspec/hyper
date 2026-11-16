@@ -10,7 +10,7 @@ type Call = [string, unknown[]];
 
 // A stand-in of the binding module: every function member records its call and returns `results[name]`, or throws it
 // when it is an Error; the classes record their construction and the calls of their methods.
-function standIn(results: Record<string, unknown>): { core: CoreBinding; calls: Call[] } {
+function standIn(results: Record<string, unknown>): { core: Record<string, unknown>; calls: Call[] } {
   const calls: Call[] = [];
   const member = (name: string) => (...args: unknown[]): unknown => {
     calls.push([name, args]);
@@ -46,7 +46,7 @@ function standIn(results: Record<string, unknown>): { core: CoreBinding; calls: 
   }
   const module: Record<string, unknown> = { Pages, PageRequest };
   for (const name of names) module[name] = member(name);
-  return { core: module as unknown as CoreBinding, calls };
+  return { core: module, calls };
 }
 
 function rulesOf(results: Record<string, unknown>): { rules: CoreRules; calls: Call[] } {
@@ -105,7 +105,7 @@ test('a failure of the binding reaches the caller as the binding raised it (HY-1
 test('a module without a member of the binding fails with the name of the member', () => {
   const { core } = standIn({});
   const { csrfMask: _mask, Pages: _pages, ...rest } = core;
-  assert.throws(() => coreRules(rest as CoreBinding), { message: 'hyper: the binding of the core has no member csrfMask, Pages' });
+  assert.throws(() => coreRules(rest), { message: 'hyper: the binding of the core has no member csrfMask, Pages' });
 });
 
 function plain(status: number, body: string, more: Partial<Plain> = {}): Plain {
