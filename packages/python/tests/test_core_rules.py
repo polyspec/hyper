@@ -78,6 +78,13 @@ EXACT = [
         True,
     ),
     (
+        "JsonCodec.decode (HY-54.20)",
+        "json_read",
+        lambda rules: rules.json_codec_decode('{"a":"é"}'),
+        ('{"a":"é"}'.encode("utf-8"),),
+        {"a": "é"},
+    ),
+    (
         "RecordSession.cookie_name (HY-45.1)",
         "session_name",
         lambda rules: rules.session_cookie_name(True),

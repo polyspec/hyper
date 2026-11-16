@@ -406,13 +406,6 @@ final class Page
     /** Returns the decoded hy-keep cookie, or null for a cookie that is absent or not JSON (HY-42). */
     private static function decodedCookie(?string $text): mixed
     {
-        if ($text === null) {
-            return null;
-        }
-        try {
-            return JsonCodec::decode($text);
-        } catch (JsonDecodeError) {
-            return null;
-        }
+        return $text === null ? null : JsonCodec::keptCookie($text);
     }
 }

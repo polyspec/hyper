@@ -6,7 +6,6 @@ import { decodeResponse, keepRead, keptPaths, renderDocument, type Application, 
 import type { Handlers, RouteHandlers } from '../app/app.js';
 import { Context, type ContextHandler } from '../app/context.js';
 import { JsonCodec, type DecodedValue } from '../data/json-codec.js';
-import { JsonDecodeError } from '../data/json-decode-error.js';
 import { Kept } from '../data/kept.js';
 import { RegionPlanner } from './region-planner.js';
 import type { Reply } from '../http/reply.js';
@@ -168,12 +167,6 @@ export class Page<S extends object> {
 
   // Returns the decoded hy-keep cookie, or null for a cookie that is absent or not JSON (HY-42).
   private static decodedCookie(text: string | null): DecodedValue {
-    if (text === null) return null;
-    try {
-      return JsonCodec.decode(text);
-    } catch (error) {
-      if (error instanceof JsonDecodeError) return null;
-      throw error;
-    }
+    return text === null ? null : JsonCodec.keptCookie(text);
   }
 }

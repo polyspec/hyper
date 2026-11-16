@@ -28,7 +28,7 @@ final class CoreRules
         'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl',
         'keepsOutOfSharedCaches', 'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag',
         'representationTag', 'pageStatus', 'replyStatus', 'pageVary', 'contextHash', 'currentPath', 'checkShellPath',
-        'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader',
+        'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader', 'jsonRead',
     ];
 
     /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
@@ -128,6 +128,15 @@ final class CoreRules
         $result = $this->call('validContextHeader', $value);
 
         return $result;
+    }
+
+    /**
+     * JsonCodec::decode: rules.json_read reads a JSON text to a value of the data model with `stdClass` maps in
+     * document order, and fails with `malformed_json` or the kind of the data model (HY-54.20, HY-54.21).
+     */
+    public function jsonCodecDecode(string $text): mixed
+    {
+        return $this->call('jsonRead', $text);
     }
 
     /** The name of the session cookie (HY-45.1), which NativeSession gives the session options: rules.session_name. */

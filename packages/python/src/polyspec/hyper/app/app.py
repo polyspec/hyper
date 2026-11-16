@@ -19,7 +19,6 @@ from ._context import Context
 from ._core_rules import core_rules
 from ..session._csrf import Csrf
 from ..data._json_codec import JsonCodec
-from ..data._json_decode_error import JsonDecodeError
 from ..representation._media_selection import MediaSelection
 from ..representation._representation_entry import RepresentationEntry
 from ..representation._representation_response import RepresentationResponse
@@ -592,12 +591,11 @@ class App:
                 return Response.text(415, "Unsupported Media Type").with_header(
                     "Vary", vary
                 )
+            # HY-121.8: bytes that are not UTF-8, a text that json refuses and a value outside the data model are no
+            # value that a handler reads; the core raises the last two as its value error.
             try:
                 value = JsonCodec.decode(request._body_bytes().decode("utf-8"))
-            except UnicodeDecodeError, JsonDecodeError:
-                return Response.text(400, "Bad Request").with_header("Vary", vary)
-            # HY-121.8: a number outside the data model is no value that a handler reads.
-            if not JsonCodec.in_data_model(value):
+            except ValueError:
                 return Response.text(400, "Bad Request").with_header("Vary", vary)
         content_type = MediaSelection.content_type(entry, values)
         given = request._as_representation(value)
@@ -797,9 +795,7 @@ class App:
             return Response.text(400, "Bad Request")
         try:
             decoded = JsonCodec.decode(text)
-        except JsonDecodeError:
-            return Response.text(400, "Bad Request")
-        if not JsonCodec.in_data_model(decoded):
+        except ValueError:
             return Response.text(400, "Bad Request")
         session.keep(name, path, decoded)
         return Response(204, {}, "")

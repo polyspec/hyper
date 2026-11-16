@@ -1,7 +1,7 @@
 // The JSON text of the servers (HY-17, HY-54): the JSON response value, its text with the bytes of PHP json_encode with
-// JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, and the decoding of kept values as PHP json_decode reads them. An
-// instance reads one JSON text from its start to its end.
-import { DataModel } from './data-model.js';
+// JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, the reading of a JSON text with rules.json_read of the core, and the
+// reading of the cookie of the kept values. An instance reads one cookie text from its start to its end.
+import { rules } from '../app/core-rules.js';
 import { JsonDecodeError } from './json-decode-error.js';
 import { OutsideNumber } from './outside-number.js';
 import { MAX_SAFE_INTEGER, NativeObject, SafeString, type MapValue, type Value } from './values.js';
@@ -54,21 +54,27 @@ export class JsonCodec {
     throw new TypeError('hyper: the value is not a value of the data model');
   }
 
-  // Decodes JSON text as PHP json_decode($text, false) does, with maps for objects in document order. A number outside
-  // ±(2^53 − 1) or one that is not finite is an OutsideNumber. Invalid text, a lone surrogate escape, a key that starts
-  // with U+0000 or nesting deeper than 511 containers fails with JsonDecodeError.
-  static decode(text: string): DecodedValue {
-    const reader = new JsonCodec(text);
-    const result = reader.parseValue(0);
-    reader.skipWhitespace();
-    if (reader.index < text.length) reader.failAt('unexpected character after the value');
-    return result;
+  // Reads a JSON text to a value of the data model with maps in document order: rules.json_read of the core
+  // (HY-54.20). A text that json refuses fails with the kind malformed_json, and a value outside the data model with
+  // the kind of the data model, as the core raises them (HY-54.21).
+  static decode(text: string): Value {
+    return rules().jsonCodecDecode(text);
   }
 
-  // Returns true when a decoded value is a value of the data model (HY-44, HY-54): a number outside ±(2^53 − 1) or one
-  // that is not finite, which decodes as an OutsideNumber, and nesting deeper than the data model allows, are not.
-  static inDataModel(value: Value | DecodedValue): value is Value {
-    return DataModel.contains(value);
+  // Returns the value of the cookie of the kept values, or null for a text that is no JSON text (HY-38.11). A number
+  // outside ±(2^53 − 1) or one that is not finite is an OutsideNumber, so that Kept ignores that value alone and keeps
+  // the others (HY-38.2).
+  static keptCookie(text: string): DecodedValue {
+    const reader = new JsonCodec(text);
+    try {
+      const result = reader.parseValue(0);
+      reader.skipWhitespace();
+      if (reader.index < text.length) reader.failAt('unexpected character after the value');
+      return result;
+    } catch (error) {
+      if (error instanceof JsonDecodeError) return null;
+      throw error;
+    }
   }
 
   // Writes an integer within ±(2^53 − 1) in decimal and another number with the shortest digits that read back as the

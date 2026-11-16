@@ -158,3 +158,8 @@ function validContextHeader(mixed ...$arguments): mixed
 {
     return Calls::record('validContextHeader', array_values($arguments));
 }
+
+function jsonRead(mixed ...$arguments): mixed
+{
+    return Calls::record('jsonRead', array_values($arguments));
+}

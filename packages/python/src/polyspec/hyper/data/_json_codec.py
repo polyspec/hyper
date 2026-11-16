@@ -1,6 +1,7 @@
 """The JSON text of the servers (HY-17, HY-54): the JSON response value, its text with the bytes of PHP
-``json_encode`` with ``JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES``, and the decoding of kept values as PHP
-``json_decode`` reads them. An instance reads one JSON text from its start to its end."""
+``json_encode`` with ``JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES``, the reading of a JSON text with
+rules.json_read of the core, and the reading of the cookie of the kept values. An instance reads one cookie text from
+its start to its end."""
 
 from __future__ import annotations
 
@@ -9,7 +10,7 @@ import re
 from decimal import Decimal
 from typing import NoReturn, Optional
 
-from ._data_model import DataModel
+from ..app._core_rules import core_rules
 from ._json_decode_error import JsonDecodeError
 from ._outside_number import OutsideNumber
 
@@ -101,23 +102,25 @@ class JsonCodec:
 
     @staticmethod
     def decode(text: str) -> object:
-        """Decodes JSON text as PHP ``json_decode`` reads it, with dictionaries for objects in document order. An
-        integer literal is an integer and other literals are floats; a number outside ±(2^53 − 1) or one that is not
-        finite is an OutsideNumber. Invalid text, a lone surrogate escape, a key that starts with U+0000 or nesting
-        deeper than 511 containers fails with JsonDecodeError."""
-        reader = JsonCodec(text)
-        result = reader._parse_value(0)
-        reader._skip_whitespace()
-        if reader._index < len(text):
-            reader._fail_at("unexpected character after the value")
-        return result
+        """Reads a JSON text to a value of the data model with dictionaries in document order: rules.json_read of the
+        core (HY-54.20). A text that json refuses fails with the kind ``malformed_json``, and a value outside the data
+        model with the kind of the data model, as the core raises them (HY-54.21)."""
+        return core_rules().json_codec_decode(text)
 
     @staticmethod
-    def in_data_model(value: object) -> bool:
-        """Returns True when a decoded value is a value of the data model (HY-44, HY-54): a number outside
-        ±(2^53 − 1) or one that is not finite, which decodes as an OutsideNumber, and nesting deeper than the data
-        model allows, are not."""
-        return DataModel.contains(value)
+    def kept_cookie(text: str) -> object:
+        """Returns the value of the cookie of the kept values, or None for a text that is no JSON text (HY-38.11). A
+        number outside ±(2^53 − 1) or one that is not finite is an OutsideNumber, so that Kept ignores that value alone
+        and keeps the others (HY-38.2)."""
+        reader = JsonCodec(text)
+        try:
+            result = reader._parse_value(0)
+            reader._skip_whitespace()
+            if reader._index < len(text):
+                reader._fail_at("unexpected character after the value")
+        except JsonDecodeError:
+            return None
+        return result
 
     @staticmethod
     def _encode_number(value: int | float) -> str:

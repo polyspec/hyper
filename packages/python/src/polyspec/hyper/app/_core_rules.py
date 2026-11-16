@@ -47,6 +47,7 @@ _MEMBERS = (
     "frame_headers",
     "kept_value",
     "valid_context_header",
+    "json_read",
 )
 
 
@@ -81,6 +82,12 @@ class CoreRules:
     def context_valid_header(self, value: Optional[str]) -> bool:
         """Context.valid_header: rules.valid_context_header (HY-127.2)."""
         return self._core.valid_context_header(value)
+
+    def json_codec_decode(self, text: str) -> object:
+        """JsonCodec.decode: rules.json_read of the UTF-8 bytes of the text gives a value of the data model with
+        dictionaries in document order, and fails with `malformed_json` or the kind of the data model (HY-54.20,
+        HY-54.21). A lone surrogate of the text stays in its bytes, so that the core judges it."""
+        return self._core.json_read(text.encode("utf-8", "surrogatepass"))
 
     def session_cookie_name(self, secure: bool) -> str:
         """RecordSession.cookie_name: rules.session_name (HY-45.1)."""

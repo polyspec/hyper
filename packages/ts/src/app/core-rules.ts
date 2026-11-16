@@ -15,6 +15,9 @@ import { createRequire } from 'node:module';
 // A value of the template data model as the binding passes it (HY-44).
 type CoreValue = unknown;
 
+// A value of the data model that rules.json_read gives: maps for the objects of the text, in document order (HY-54.20).
+type JsonValue = null | boolean | number | string | JsonValue[] | Map<string, JsonValue>;
+
 // The instance of the class `Pages` of the binding, the opened application.
 type CorePages = object;
 
@@ -194,6 +197,7 @@ export interface CoreBinding {
   templateReads(templates: ReadonlyMap<string, string>, name: string): CoreValue;
   reservedDataTemplate(): DataTemplate;
   validContextHeader(value: string | null): boolean;
+  jsonRead(text: Uint8Array): JsonValue;
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
   computePageHeaders(response: PageResponse): PageHeaders;
   frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];
@@ -218,7 +222,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-  'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'jsonRead', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
 
 // A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
@@ -252,6 +256,9 @@ export interface CoreRules {
   contextHash(build: string, text: string): string;
   // contextValidHeader: rules.valid_context_header (HY-127.2).
   contextValidHeader(value: string | null): boolean;
+  // jsonCodecDecode: rules.json_read of the UTF-8 bytes of the text gives a value of the data model with maps in
+  // document order, and fails with `malformed_json` or the kind of the data model (HY-54.20, HY-54.21).
+  jsonCodecDecode(text: string): JsonValue;
   // sessionCookieName: rules.session_name (HY-45.1).
   sessionCookieName(secure: boolean): string;
   // Partial. sessionCookieHeader: rules.session_cookie gives the field value (HY-45.8). The server still
@@ -389,6 +396,7 @@ export function coreRules(module: object): CoreRules {
     csrfBrowserOf: (masked) => core.browser(masked),
     contextHash: (build, text) => core.contextHash(build, text),
     contextValidHeader: (value) => core.validContextHeader(value),
+    jsonCodecDecode: (text) => core.jsonRead(encoder.encode(text)),
     sessionCookieName: (secure) => core.sessionName(secure),
     sessionCookieHeader: (id, secure) => core.sessionCookie(id, secure),
     representationEtag: (contentType, body) => core.representationTag(contentType, encoder.encode(body)),

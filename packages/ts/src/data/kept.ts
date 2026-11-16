@@ -1,7 +1,8 @@
 // Kept values (HY-37, HY-38). Values outside the template data model are ignored; the cases of contracts/keep.json hold
 // the rules.
-import { JsonCodec, type DecodedValue } from './json-codec.js';
-import { SafeString, type MapValue, type Value } from './values.js';
+import { DataModel } from './data-model.js';
+import type { DecodedValue } from './json-codec.js';
+import { SafeString, toValue, type MapValue, type Value } from './values.js';
 
 /** @internal */
 export class Kept {
@@ -9,8 +10,8 @@ export class Kept {
   static apply(data: MapValue, kept: readonly (readonly [string, Value | DecodedValue])[]): MapValue {
     let result = data;
     for (const [path, value] of kept) {
-      if (!JsonCodec.inDataModel(value)) continue;
-      const [replaced] = Kept.replaceAt(result, path.split('.'), value);
+      if (!DataModel.contains(value)) continue;
+      const [replaced] = Kept.replaceAt(result, path.split('.'), toValue(value));
       if (replaced instanceof Map) result = replaced;
     }
     return result;
@@ -21,9 +22,10 @@ export class Kept {
     const selected: MapValue = new Map();
     let result = data;
     for (const [path, value] of kept) {
-      if (!JsonCodec.inDataModel(value)) continue;
-      const [replaced, applied] = Kept.replaceAt(result, path.split('.'), value);
-      if (applied) selected.set(path, value);
+      if (!DataModel.contains(value)) continue;
+      const checked = toValue(value);
+      const [replaced, applied] = Kept.replaceAt(result, path.split('.'), checked);
+      if (applied) selected.set(path, checked);
       if (replaced instanceof Map) result = replaced;
     }
     return selected;

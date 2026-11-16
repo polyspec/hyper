@@ -14,8 +14,7 @@ import type { FileSessions } from '../session/file-sessions.js';
 import type { RedisSessions } from '../session/redis-sessions.js';
 import { createListener, createServer, type Listener, type ServerOptions } from '../host/http-host.js';
 import { Build } from './build.js';
-import { JsonCodec, type DecodedValue } from '../data/json-codec.js';
-import { JsonDecodeError } from '../data/json-decode-error.js';
+import { JsonCodec } from '../data/json-codec.js';
 import { WarningsGuard } from './warnings-guard.js';
 import { Page, type PageParts } from '../page/page.js';
 import { Context, type ContextHandler } from './context.js';
@@ -290,11 +289,12 @@ export class App<S extends object = Record<string, never>> {
     // HY-118: the representations of each route, by the route name. The manifest is decoded with maps for objects,
     // because the parameters of an entry keep the order of the manifest, which a plain object does not keep for a name
     // that is an integer.
-    let decoded: DecodedValue;
+    let decoded: Value;
     try {
       decoded = JsonCodec.decode(App.readJsonText(options.manifest));
     } catch (error) {
-      if (!(error instanceof JsonDecodeError)) throw error;
+      // The core raises a text that json refuses and a value outside the data model as its value error (HY-54.21).
+      if (!(error instanceof RangeError)) throw error;
       throw rules().valueError(`${options.manifest} is not valid JSON`, 'invalid_application');
     }
     const entries = new Map<string, RepresentationEntry[]>();
@@ -650,16 +650,14 @@ export class App<S extends object = Record<string, never>> {
       if (request.bodySize() !== 0) return Response.text(400, 'Bad Request').withHeader('Vary', vary);
     } else {
       if (request.mediaType() !== 'application/json') return Response.text(415, 'Unsupported Media Type').withHeader('Vary', vary);
-      let decoded: DecodedValue;
+      // HY-121.8: bytes that are not UTF-8, a text that json refuses and a value outside the data model are no value
+      // that a handler reads.
       try {
-        decoded = JsonCodec.decode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(request.bodyBytes()));
+        value = JsonCodec.decode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(request.bodyBytes()));
       } catch (error) {
-        if (!(error instanceof JsonDecodeError) && !(error instanceof TypeError)) throw error;
+        if (!(error instanceof RangeError) && !(error instanceof TypeError)) throw error;
         return Response.text(400, 'Bad Request').withHeader('Vary', vary);
       }
-      // HY-121.8: a number outside the data model is no value that a handler reads.
-      if (!JsonCodec.inDataModel(decoded)) return Response.text(400, 'Bad Request').withHeader('Vary', vary);
-      value = decoded;
     }
     const contentType = MediaSelection.contentType(entry, values);
     const handle = handler.representations?.[entry.type];
@@ -793,10 +791,9 @@ export class App<S extends object = Record<string, never>> {
     try {
       value = JsonCodec.decode(text);
     } catch (error) {
-      if (error instanceof JsonDecodeError) return Response.text(400, 'Bad Request');
+      if (error instanceof RangeError) return Response.text(400, 'Bad Request');
       throw error;
     }
-    if (!JsonCodec.inDataModel(value)) return Response.text(400, 'Bad Request');
     session.keep(name, path, value);
     return new Response(204, {}, '');
   }

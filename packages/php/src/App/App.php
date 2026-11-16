@@ -731,13 +731,10 @@ final class App
             if ($request->mediaType() !== 'application/json') {
                 return Response::text(415, 'Unsupported Media Type')->withHeader('Vary', $vary);
             }
+            // HY-121.8: a text that json refuses and a value outside the data model are no value that a handler reads.
             try {
                 $value = JsonCodec::decode($request->bodyBytes());
-            } catch (JsonDecodeError) {
-                return Response::text(400, 'Bad Request')->withHeader('Vary', $vary);
-            }
-            // HY-121.8: a number outside the data model is no value that a handler reads.
-            if (!JsonCodec::inDataModel($value)) {
+            } catch (HyperValueError) {
                 return Response::text(400, 'Bad Request')->withHeader('Vary', $vary);
             }
         }
@@ -966,10 +963,7 @@ final class App
         }
         try {
             $value = JsonCodec::decode($text);
-        } catch (JsonDecodeError) {
-            return Response::text(400, 'Bad Request');
-        }
-        if (!JsonCodec::inDataModel($value)) {
+        } catch (HyperValueError) {
             return Response::text(400, 'Bad Request');
         }
         $session->keep($name, $path, $value);

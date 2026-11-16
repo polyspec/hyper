@@ -43,6 +43,7 @@ final class CoreRulesTest extends TestCase
             'Csrf::browserOf (HY-24.10)' => ['csrfBrowserOf', ['masked'], 'browser', 'digest'],
             'Context::hash (HY-125.12)' => ['contextHash', ['build', '{}'], 'contextHash', 'hash'],
             'Context::validHeader (HY-127.2)' => ['contextValidHeader', [null], 'validContextHeader', true],
+            'JsonCodec::decode (HY-54.20)' => ['jsonCodecDecode', ['[1]'], 'jsonRead', [1]],
             'the session cookie name (HY-45.1)' => ['sessionCookieName', [true], 'sessionName', '__Host-hy-session'],
             'RepresentationResponse::etag (HY-122.10)' => [
                 'representationEtag',

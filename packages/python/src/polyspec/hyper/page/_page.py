@@ -10,7 +10,6 @@ from ..app._core_rules import core_rules
 from ..data._data_model import DataModel
 from ..session._flash import Flash
 from ..data._json_codec import JsonCodec
-from ..data._json_decode_error import JsonDecodeError
 from ..data._kept import Kept
 from ._manifest import Manifest
 from ._region_planner import RegionPlanner
@@ -250,12 +249,7 @@ class Page:
     @staticmethod
     def _decoded_cookie(text: Optional[str]) -> object:
         """Returns the decoded hy-keep cookie, or None without a cookie and for a cookie that is not JSON (HY-42)."""
-        if text is None:
-            return None
-        try:
-            return JsonCodec.decode(text)
-        except JsonDecodeError:
-            return None
+        return None if text is None else JsonCodec.kept_cookie(text)
 
     def _document(
         self,

@@ -2,8 +2,8 @@
 // lowercase hexadecimal SHA-256 digest of the outputs of the browser; no server derives or defaults it (HY-48).
 import { readFileSync } from 'node:fs';
 import { rules } from './core-rules.js';
-import { JsonCodec, type DecodedValue } from '../data/json-codec.js';
-import { JsonDecodeError } from '../data/json-decode-error.js';
+import { JsonCodec } from '../data/json-codec.js';
+import type { Value } from '../data/values.js';
 
 /** @internal */
 export class Build {
@@ -24,12 +24,12 @@ export class Build {
       if (!(error instanceof TypeError)) throw error;
       throw rules().valueError(`${file} is not valid JSON (HY-125)`, 'invalid_build');
     }
-    let value: DecodedValue;
+    let value: Value;
     try {
       // The JSON text is decoded by the decoder of the server, with its one nesting limit (HY-54).
       value = JsonCodec.decode(text);
     } catch (error) {
-      if (!(error instanceof JsonDecodeError)) throw error;
+      if (!(error instanceof RangeError)) throw error;
       throw rules().valueError(`${file} is not valid JSON (HY-125)`, 'invalid_build');
     }
     const build = value instanceof Map && value.size === 1 ? value.get('build') : undefined;

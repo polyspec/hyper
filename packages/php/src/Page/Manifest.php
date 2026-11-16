@@ -49,7 +49,7 @@ final class Manifest
             // array, which the representations of a route need (HY-118.7).
             $objects = JsonCodec::decode($text);
             $decoded = true;
-        } catch (\JsonException | JsonDecodeError) {
+        } catch (\JsonException | HyperValueError) {
             $decoded = false;
         }
         // The class of the binding takes no previous error, so the error is thrown outside the catch (HY-106.21).
