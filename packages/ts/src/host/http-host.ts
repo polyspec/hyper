@@ -5,6 +5,7 @@ import type { Socket } from 'node:net';
 import { extname, isAbsolute, join } from 'node:path';
 import { TLSSocket } from 'node:tls';
 import type { App } from '../app/app.js';
+import { rules } from '../app/core-rules.js';
 import { Cookies } from '../http/cookies.js';
 import type { FileSessions } from '../session/file-sessions.js';
 import type { RedisSessions } from '../session/redis-sessions.js';
@@ -75,9 +76,9 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
   const files = options.files;
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
   const written = options.written;
-  if (written !== undefined && typeof written !== 'function') throw new Error('hyper: the write hook is not callable (HY-99)');
+  if (written !== undefined && typeof written !== 'function') throw rules().valueError('the write hook is not callable (HY-99)', 'invalid_application');
   const around = options.around;
-  if (around !== undefined && typeof around !== 'function') throw new Error('hyper: the request hook is not callable (HY-97)');
+  if (around !== undefined && typeof around !== 'function') throw rules().valueError('the request hook is not callable (HY-97)', 'invalid_application');
   return async (incoming, outgoing) => {
     const started = performance.now();
     // The connection closed before the response was written (HY-67).
