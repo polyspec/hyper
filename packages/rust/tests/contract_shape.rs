@@ -4,14 +4,9 @@
 //! the record takes its fields as parameters in their order, and a parameter that the caller may leave out is
 //! followed by such parameters only (binding U-2).
 
-use std::path::PathBuf;
+mod support;
 
-fn contract() -> Result<serde_json::Value, String> {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("interface.json");
-    let text =
-        std::fs::read_to_string(&path).map_err(|error| format!("{}: {error}", path.display()))?;
-    serde_json::from_str(&text).map_err(|error| format!("{}: {error}", path.display()))
-}
+use support::contract;
 
 /// The units of the contract of the kind `kind`.
 fn units<'a>(contract: &'a serde_json::Value, kind: &str) -> Vec<&'a serde_json::Value> {

@@ -66,13 +66,7 @@ final class ResultSteps
         $result = Result::outside('https://outside.example/');
         $error = null;
         try {
-            if ($call === 'flash') {
-                $result->flash($argument, null);
-            } elseif ($call === 'changed') {
-                $result->changed($argument);
-            } else {
-                throw new \UnexpectedValueException("the call {$call} of the case is unknown");
-            }
+            self::store($result, $call, $argument);
         } catch (\InvalidArgumentException $failure) {
             $error = $failure->getMessage();
         }
@@ -158,13 +152,7 @@ final class ResultSteps
         $result = Result::redirect('/');
         $error = null;
         try {
-            if ($call === 'flash') {
-                $result->flash($argument, null);
-            } elseif ($call === 'changed') {
-                $result->changed($argument);
-            } else {
-                throw new \UnexpectedValueException("the call {$call} of the case is unknown");
-            }
+            self::store($result, $call, $argument);
         } catch (\TypeError $failure) {
             $error = $failure->getMessage();
         }
@@ -231,5 +219,17 @@ final class ResultSteps
         }
 
         return $map;
+    }
+
+    /** Calls the store of a case, flash or changed, with its argument on the result. */
+    private static function store(Result $result, string $call, mixed $argument): void
+    {
+        if ($call === 'flash') {
+            $result->flash($argument, null);
+        } elseif ($call === 'changed') {
+            $result->changed($argument);
+        } else {
+            throw new \UnexpectedValueException("the call {$call} of the case is unknown");
+        }
     }
 }

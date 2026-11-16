@@ -30,10 +30,12 @@ __pycache__/
 target/
 # The files that the binding generator writes into the native module of each host package (binding L-2a)
 packages/*/native/generated/
-# The generated folders of the WASM crate and of the C ABI crate of the Go binding (binding L-1); the Go files
-# zz_generated_*.go of packages/go are tracked (binding GN-3)
+# The generated folders of the WASM crate and of the C ABI crate of the Go binding (binding L-1)
 /packages/ts/native/wasm/generated/
 /packages/go/internal/ffi/generated/
+# The Go files zz_generated_*.go that make bindings writes into packages/go, which a release adds in the commit of its
+# Go tag (binding GN-15g).
+/packages/go/**/zz_generated_*.go
 # The Python package that the binding generator writes beside the host package of Python (binding L-2a)
 /packages/python/src/polyspec/hyper/_binding/
 dist/

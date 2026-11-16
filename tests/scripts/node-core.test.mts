@@ -79,14 +79,6 @@ const EXACT: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[
   ['the tag of Page.respond (HY-53.1)', 'pageTag', (rules) => rules.Page.tag('{}', 'masked', TOKEN), ['{}', 'masked', TOKEN], 'W/"0"'],
 ];
 
-for (const [label, name, call, args, result] of EXACT) {
-  test(`${label} calls ${name} of the binding with its arguments and returns its result`, () => {
-    const { rules, calls } = rulesOf({ [name]: result });
-    assert.deepEqual(call(rules), result);
-    assert.deepEqual(calls, [[name, args]]);
-  });
-}
-
 test('RepresentationResponse.etag gives representation_tag the content type and the UTF-8 bytes of the body (HY-122.10)', () => {
   const { rules, calls } = rulesOf({ representationTag: '"tag"' });
   assert.equal(rules.RepresentationResponse.etag('application/json', '{"a":"é"}'), '"tag"');
@@ -212,7 +204,7 @@ const PARTIAL: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknow
   ['Templates.reserved (HY-31.3)', 'reservedDataTemplate', (rules) => rules.Templates.reserved(), [], { name: 'hyper/data.tpl', source: '' }],
 ];
 
-for (const [label, name, call, args, result] of PARTIAL) {
+for (const [label, name, call, args, result] of [...EXACT, ...PARTIAL]) {
   test(`${label} calls ${name} of the binding with its arguments and returns its result`, () => {
     const { rules, calls } = rulesOf({ [name]: result });
     assert.deepEqual(call(rules), result);

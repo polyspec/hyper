@@ -155,6 +155,16 @@ const absentJson = '{"env":{"timezone":"Z"},"route":"list","params":{},"build":"
 
 afterEach(() => vi.unstubAllGlobals());
 
+
+// A hyper of the page whose extension has configured and started a region request for /items/7 into the target.
+function startedRequest(page: FakeDocument, target: Parameters<typeof context>[1]) {
+  const { hyper } = setup('', [], new FakeStorage(), page);
+  const extension = hyper.extension();
+  const ctx = context('/items/7', target);
+  extension.htmx_config_request(null, { ctx });
+  extension.htmx_before_request(null, { ctx });
+  return { extension, ctx };
+}
 describe('superseded region requests', () => {
   it('does not swap the response of a region request that a later region request superseded (HYC-3)', async () => {
     const { hyper } = setup('', []);
@@ -941,12 +951,8 @@ describe('stylesheet links (HYC-15)', () => {
   it('fails a region request and marks the region when a link of its layout fails to load', async () => {
     const page = new FakeDocument();
     page.load = async () => { throw new StylesheetError('http://localhost/a.css'); };
-    const { hyper } = setup('', [], new FakeStorage(), page);
-    const extension = hyper.extension();
     const target = regionElement('content');
-    const ctx = context('/items/7', target);
-    extension.htmx_config_request(null, { ctx });
-    extension.htmx_before_request(null, { ctx });
+    const { extension, ctx } = startedRequest(page, target);
     vi.stubGlobal('fetch', async () => jsonResponse('http://localhost/items/7', itemJson));
     const error = await defined(ctx.fetch, 'the fetch of the request context')(ctx.request.action, {}).catch((failure: unknown) => failure);
     expect(error).toBeInstanceOf(StylesheetError);
@@ -1250,12 +1256,8 @@ describe('outside redirects (HY-133)', () => {
 
   it('lets htmx load HX-Redirect of the latest region request and marks no region (HYC-14.6)', () => {
     const page = new FakeDocument();
-    const { hyper } = setup('', [], new FakeStorage(), page);
-    const extension = hyper.extension();
     const target = regionElement('content');
-    const ctx = context('/items/7', target);
-    extension.htmx_config_request(null, { ctx });
-    extension.htmx_before_request(null, { ctx });
+    const { extension, ctx } = startedRequest(page, target);
     ctx.response = { raw: { url: 'http://localhost/items/7' }, status: 200, headers: new Headers({ 'HX-Redirect': OUTSIDE }) };
     ctx.text = '';
     expect(extension.htmx_after_request(null, { ctx })).not.toBe(false);
@@ -1297,11 +1299,7 @@ describe('outside redirects (HY-133)', () => {
 
   it('leaves HX-Redirect of an HTML request that is neither a region request nor a restoration to htmx', () => {
     const page = new FakeDocument();
-    const { hyper } = setup('', [], new FakeStorage(), page);
-    const extension = hyper.extension();
-    const ctx = context('/items/7', { id: 'side' });
-    extension.htmx_config_request(null, { ctx });
-    extension.htmx_before_request(null, { ctx });
+    const { extension, ctx } = startedRequest(page, { id: 'side' });
     ctx.response = { raw: { url: 'http://localhost/items/7' }, status: 200, headers: new Headers({ 'HX-Redirect': OUTSIDE }) };
     ctx.text = '';
     expect(extension.htmx_after_request(null, { ctx })).not.toBe(false);

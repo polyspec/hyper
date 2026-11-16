@@ -52,7 +52,12 @@ final class CoreRules
     /** Calls a function of the binding with the arguments. */
     private function call(string $name, mixed ...$arguments): mixed
     {
-        return ($this->namespace . '\\' . $name)(...$arguments);
+        $function = $this->namespace . '\\' . $name;
+        if (!is_callable($function)) {
+            throw new \LogicException("hyper: the binding of the core has no function {$function}");
+        }
+
+        return $function(...$arguments);
     }
 
     /** Csrf::mask: rules.csrf_mask (HY-24.2, HY-24.14). */

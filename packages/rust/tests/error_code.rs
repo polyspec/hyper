@@ -5,21 +5,18 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
+
+mod support;
+
 use std::process::Command;
 use std::sync::OnceLock;
+use support::contract;
 
 use polyspec_http_cookie::Error as Cookie;
 use polyspec_http_negotiation::Error as Negotiation;
 use polyspec_hyper::{Error, ErrorCode};
 use polyspec_session_store::Error as Sessions;
 use polyspec_template::ErrorCode as Template;
-
-fn contract() -> Result<serde_json::Value, String> {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("interface.json");
-    let text =
-        std::fs::read_to_string(&path).map_err(|error| format!("{}: {error}", path.display()))?;
-    serde_json::from_str(&text).map_err(|error| format!("{}: {error}", path.display()))
-}
 
 /// The variants of the rows of `errors.kinds` with `library`, or of the rows without one.
 fn rows(contract: &serde_json::Value, library: Option<&str>) -> BTreeSet<String> {
