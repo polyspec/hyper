@@ -1477,6 +1477,12 @@
                   "en": "`etag(body)` fails with the error of the data model (HY-44) for a body that is not a value of the data model.",
                   "ko": "`etag(body)`는 데이터 모델의 값이 아닌 body에 대해 데이터 모델(HY-44)의 오류로 실패한다.",
                   "koSource": "51bae374549459d0f92b25c262686f8b48a1e0824d2080c422c67aa68d9b88a9"
+                },
+                {
+                  "id": "HY-122.14",
+                  "en": "The tag digests the content type as the bytes of its header field, one byte for each character up to U+00FF (HY-42.7), and `etag(body)` of a media type whose content type holds a character above U+00FF fails with the kind `invalid_text`.",
+                  "ko": "tag는 content type을 header field의 바이트로, U+00FF까지의 글자마다 한 바이트로 digest하며(HY-42.7), content type에 U+00FF 위의 글자가 있는 media type의 `etag(body)`는 kind `invalid_text`로 실패한다.",
+                  "koSource": "5159a97fddb1486d15d5ad9140263a8a370a1414fb52b3023e48e5f5f5fec5f8"
                 }
               ]
             }

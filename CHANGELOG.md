@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- HY-122.14 states that the tag digests the content type as the bytes of its header field, one byte for each character up to U+00FF, and that a content type above U+00FF fails with `invalid_text`; `contracts/media-type.json` states both for `text/é` and `text/Ā`. The section has no runner until its fixed copy is removed (H35.9), so no runner shows its Red yet (H35.10-4).
 - HY-11.5 replaces HY-11.4: the current path splits the value of `HX-Current-URL` by the generic syntax of RFC 3986, and is absent for a first segment that ends with a colon and is no scheme and for a path that does not start with `/`; `contracts/request.json` states it for `mailto:a/b`, `1a://x/p`, `://x`, `http:///x` and `http://h:99999/x`, and the core gave `mailto:a/b` as a current path (H35.10-7).
 - `contracts/interfaces.json` lists the unit `core-rules` of the three servers with its 26 members and their tests, and the members of `wsgi-body` as H34.1 left them: `close()` reports the write and `_finish` is gone; the Node declarations of `core-rules.ts` carry `@internal` (H35.7).
 - The package data test reads the files of the installed `polyspec-hyper`, which `make hyper-install-python` builds as a wheel with maturin and installs non-editable, and fails when the wheel lacks `polyspec/hyper/py.typed`: it read `tool.setuptools` of `pyproject.toml`, which the package no longer has since maturin builds it, and failed on a package that carries the marker (H35.7).

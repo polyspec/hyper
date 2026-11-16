@@ -66,6 +66,28 @@
         "category": "value",
         "message": null
       }
+    },
+    {
+      "id": "the_tag_digests_a_character_of_the_content_type_as_one_byte",
+      "label": "etag(body) of the content type text/\u00e9 digests the byte e9 for the character U+00E9, the byte of the header field (HY-122.14)",
+      "parameters": [],
+      "contentType": "text/\u00e9",
+      "body": "\"x\"",
+      "read": {},
+      "etag": "\"f181d16a069379bb0a424e23b97854bd\""
+    },
+    {
+      "id": "the_tag_of_a_content_type_with_a_character_above_u_00ff_fails",
+      "label": "etag(body) of the content type text/\u0100 fails, since no header field holds U+0100 (HY-122.14)",
+      "parameters": [],
+      "contentType": "text/\u0100",
+      "body": "\"x\"",
+      "raises": {
+        "kind": "invalid_text",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     }
   ]
 }
