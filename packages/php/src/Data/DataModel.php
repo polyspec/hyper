@@ -18,24 +18,50 @@ use Polyspec\Template\Value\SafeString;
  */
 final class DataModel
 {
-    /** The message of each kind of failure of the binding (HY-44.8); the binding of a value raises no other code. */
-    private const MESSAGES = [
-        'E_DATA_NUMBER_RANGE' => 'a number outside ±(2^53 − 1) is not a value of the data model (HY-44)',
-        'E_DATA_NUMBER_NOT_FINITE' => 'a number that is not finite is not a value of the data model (HY-44)',
-        'E_DATA_INVALID_UTF8' => 'a string that is not UTF-8 text is not a value of the data model (HY-44)',
-        'E_DATA_DEPTH' => 'lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)',
-        'E_DATA_UNSUPPORTED_TYPE' => 'a value or a map key of another type is not a value of the data model (HY-44)',
+    /**
+     * The kind of each failure of the binding (HY-44.8), the kind of the template data model, and its message; the
+     * binding of a value raises no other code.
+     */
+    private const FAILURES = [
+        'E_DATA_NUMBER_RANGE' => [
+            'data_number_range',
+            'a number outside ±(2^53 − 1) is not a value of the data model (HY-44)',
+        ],
+        'E_DATA_NUMBER_NOT_FINITE' => [
+            'data_number_not_finite',
+            'a number that is not finite is not a value of the data model (HY-44)',
+        ],
+        'E_DATA_INVALID_UTF8' => [
+            'data_invalid_utf8',
+            'a string that is not UTF-8 text is not a value of the data model (HY-44)',
+        ],
+        'E_DATA_DEPTH' => [
+            'data_depth',
+            'lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)',
+        ],
+        'E_DATA_UNSUPPORTED_TYPE' => [
+            'data_unsupported_type',
+            'a value or a map key of another type is not a value of the data model (HY-44)',
+        ],
     ];
 
     /** Binds the value, fails when it is not a value of the data model, and returns the bound value. */
     public static function check(mixed $value): mixed
     {
+        $code = null;
+        $bound = null;
         try {
             $bound = Bind::value($value);
         } catch (BindError $error) {
-            // HY-44.8: a failure of the binding is the error of its kind, with the error of the binding as previous.
-            $message = self::MESSAGES[$error->errorCode] ?? throw $error;
-            throw new \InvalidArgumentException($message, 0, $error);
+            // HY-44.8: a failure of the binding is the error of its kind; another code is no failure of the data model.
+            if (!isset(self::FAILURES[$error->errorCode])) {
+                throw $error;
+            }
+            $code = $error->errorCode;
+        }
+        // The class of the binding takes no previous error, so the error of its kind is raised after the catch.
+        if ($code !== null) {
+            throw self::failure($code);
         }
         self::walk($bound);
 
@@ -49,14 +75,27 @@ final class DataModel
             self::check($value);
 
             return true;
-        } catch (\InvalidArgumentException $error) {
-            // HY-44.8: only a message of the data model is a value outside it; another failure is not swallowed.
-            if (!in_array($error->getMessage(), self::MESSAGES, true)) {
+        } catch (HyperValueError | HyperTypeError $error) {
+            // HY-44.8: only a kind of the data model is a value outside it; another failure is not swallowed.
+            if (!in_array($error->kind(), array_column(self::FAILURES, 0), true)) {
                 throw $error;
             }
 
             return false;
         }
+    }
+
+    /**
+     * The error of a failure of the data model: of the category type for `data_unsupported_type` and of the category
+     * value for every other kind, as the template data model gives them (HY-132.3).
+     */
+    private static function failure(string $code): HyperValueError|HyperTypeError
+    {
+        [$kind, $message] = self::FAILURES[$code];
+
+        return $kind === 'data_unsupported_type'
+            ? new HyperTypeError($message, $kind)
+            : new HyperValueError($message, $kind);
     }
 
     /** Fails when a bound value holds an application object, which is not a value of the data model. */
@@ -71,7 +110,7 @@ final class DataModel
                 self::walk($item);
             }
         } elseif (is_object($value) && !$value instanceof SafeString) {
-            throw new \InvalidArgumentException(self::MESSAGES['E_DATA_UNSUPPORTED_TYPE']);
+            throw self::failure('E_DATA_UNSUPPORTED_TYPE');
         }
     }
 }

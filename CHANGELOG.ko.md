@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c93fb32f02a498ae9dd777560d94f937bb55a30807272fdce9ac09e365b00d62 -->
+<!-- source-sha256: 942971821e1df58daefdea6ba75795f5be27e65582d9fc21c5d3f939854492c1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `keep`, `flash` 또는 representation body의 ±(2^53 − 1) 밖의 숫자 같은 데이터 모델 밖의 값은 세 서버에서 그 category의 binding class와 template 데이터 모델의 kind로 실패한다. 예를 들어 `data_number_range`는 category `value`, `data_unsupported_type`은 category `type`이다(HY-44.8, HY-132.3). 서버는 kind가 없는 `RangeError`, `InvalidArgumentException` 또는 `ValueError`를 던졌다(H35.20-5-6).
 
 - PHP 서버는 바이트가 UTF-8이 아닌 cookie `hy-keep`을 kept 값을 주지 않는 cookie로 읽고 요청에 응답한다(HY-42). 서버는 그 바이트를 `rules.kept_cookie`에 넘겼고, text parameter가 그것을 거부해 500으로 응답했다(H35.12).
 

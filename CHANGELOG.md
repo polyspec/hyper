@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- A value outside the data model, such as a number outside ±(2^53 − 1) of `keep`, of `flash` or of the body of a representation, fails in the three servers with the class of the binding of its category and the kind of the template data model, such as `data_number_range` of category `value` and `data_unsupported_type` of category `type` (HY-44.8, HY-132.3); the servers raised a `RangeError`, an `InvalidArgumentException` or a `ValueError` without a kind (H35.20-5-6).
+
 - The PHP server reads a cookie `hy-keep` whose bytes are not UTF-8 as a cookie that gives no kept value, and answers the request (HY-42); it passed the bytes to `rules.kept_cookie`, whose text parameter refused them, and answered 500 (H35.12).
 
 - The opening of the session of a page request removes the flash data also when the session holds none, before it reads the token (HY-120.6), in the three servers; they removed it only when it was stored. The Node and PHP servers check a stored token with `rules.stored_token` of the core, so a stored text that is not 64 lowercase hexadecimal digits fails the request with kind `invalid_session_token` (HY-24.14); they replaced it with a new token (H35.12).
