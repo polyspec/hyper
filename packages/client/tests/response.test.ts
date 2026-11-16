@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseJson, type Value } from '@polyspec/template';
+import { parseJson, type Value } from '@polyspec/template/render';
 import { decodeResponse, renderDocument, renderParts, toHtml } from '../src/index.js';
 import { loadedApplication } from './application.js';
 import { mapOf } from './values.js';

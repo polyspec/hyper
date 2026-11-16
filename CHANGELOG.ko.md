@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 38a7e154626a8d30debe759df181a76427bf7b2cc478a67ef82b0bfd7e40a833 -->
+<!-- source-sha256: 267964d1678018f2f413ffbad6da4393b9f3eea1fca616f627661dfd46947a2b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- packages/client와 packages/ts의 시험은 template 0.0.28의 TypeScript API를 쓴다. `parseJson`, `Value`, `Template`은 `@polyspec/template/render`에서 오고, `packages/ts/tests/parse-template.ts`의 `parseTemplate`은 native `parse`의 결과를 `encodeTemplate`이 쓴 canonical JSON으로 decode해 renderer에게 source의 AST를 준다. template 0.0.28의 package root는 native binding이며, 그 `parse`는 renderer가 읽는 field `type`이 없는 record를 돌려주고 `parseJson`을 export하지 않기 때문에 두 package의 `tsc`가 실패했다(H35.20-3).
 - PHP, Node, Python runner의 case step은 class 중 하나가 `Hyper<Category>Error`라는 이름인 hyper의 오류만 `raises`로 보고한다(HY-132.2). `CaseRules::raisesOf`, `case-rules.ts`의 `raisesOf`, `case_rules.py`의 `raises_of`는 다른 오류를 다시 던져 그 오류가 step의 오류로 case를 실패시키게 한다. 전에는 PHP의 모든 `InvalidArgumentException`, `TypeError`, `RuntimeException`, Node의 모든 오류, Python의 모든 `ValueError`, `TypeError`, `OSError`, `RuntimeError`를 category 없는 실패로 보고했기 때문에, 잘못된 case 입력 같은 step 자신의 오류가 `raises`의 차이로 읽혔다(H35.20-2).
 - knip은 더 이상 `@polyspec/binding`을 쓰이지 않는 devDependency로 보고하지 않는다. `knip.json`은 그것을 `ignoreDependencies`에 적고, Makefile이 그 `dist/cli.js`를 경로로 시작하며 knip은 Makefile을 읽지 않는다는 이유를 적는다(H35.20-1).
 - script 시험의 빠진 입력 메시지는 `make hyper-test-scripts` 전에 그 install target을 돌리라고 말한다. 전에는 `make hyper-test-scripts`가 그 target을 먼저 돌린다고 했는데, 그렇게 하는 check target은 없다(H35.17).

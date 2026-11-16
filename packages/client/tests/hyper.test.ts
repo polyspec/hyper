@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { applyKept, decodeResponse, Hyper, parseAssignments, renderDocument, ScriptError, StylesheetError, valueToJson, type Fetch, type HtmxApi, type KeepStorage, type RegionElement, type RequestContext } from '../src/index.js';
-import { parseJson } from '@polyspec/template';
-import { NativeObject, SafeString } from '@polyspec/template/render';
+import { NativeObject, parseJson, SafeString } from '@polyspec/template/render';
 import { defined, listOf, mapOf } from './values.js';
 import { jsonResponse, sources, testApplication, testApplicationFailing } from './application.js';
 

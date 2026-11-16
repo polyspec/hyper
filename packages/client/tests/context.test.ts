@@ -1,4 +1,5 @@
-import { parse, type Template } from '@polyspec/template';
+import type { Template } from '@polyspec/template/render';
+import { parseTemplate } from '../../ts/tests/parse-template.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createApplication, Hyper, type Application, type DocumentAdapter, type HtmxApi, type KeepStorage, type RegionElement, type RequestContext, type TemplateIndex } from '../src/index.js';
 import { defined, isStringRecord } from './values.js';
@@ -73,7 +74,7 @@ function element(id: string): RegionElement & { attributes: Map<string, string> 
 function contextApplication(layout?: string): Application {
   const all: Record<string, string> = { ...sources, 'context.tpl': '{= context.name}', ...(layout === undefined ? {} : { 'layout.tpl': layout }) };
   const routes = [...manifest.routes, { name: 'context', path: '/context', title: 'Context', template: 'context.tpl' }];
-  const parsed: Record<string, Template> = Object.fromEntries(Object.entries(all).map(([name, source]) => [name, parse(source, name)]));
+  const parsed: Record<string, Template> = Object.fromEntries(Object.entries(all).map(([name, source]) => [name, parseTemplate(source, name)]));
   const index: TemplateIndex = Object.fromEntries(Object.keys(all).map((name) => [name, { url: `/t/${name}` }]));
   return createApplication({ ...manifest, routes }, index, async (url) => defined(parsed[url.slice('/t/'.length)], `the template of ${url}`));
 }

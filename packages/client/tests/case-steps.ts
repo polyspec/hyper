@@ -2,11 +2,11 @@
 // and rest.json. Each step calls the browser package. It reads its cases through the case reader of the server test tree,
 // and the steps that the Node runner has too come from the shared steps of that tree, which take the functions of the
 // browser package as arguments.
-import { parse } from '@polyspec/template';
-import { resolvePath, type MapValue, type Value } from '@polyspec/template/render';
+import { resolvePath, type MapValue, type Template, type Value } from '@polyspec/template/render';
 import type { CaseReader } from '../../ts/tests/case-reader.js';
 import type { Step } from '../../ts/tests/case-run.js';
 import { listOf, textMapOf, textOf } from '../../ts/tests/inputs.js';
+import { parseTemplate } from '../../ts/tests/parse-template.js';
 import { placesContext } from '../../ts/tests/steps/context-place.js';
 import { comparesParts } from '../../ts/tests/steps/parts-cases.js';
 import { readsCases } from '../../ts/tests/steps/reads-cases.js';
@@ -65,7 +65,7 @@ async function partsCases(reader: CaseReader): Promise<void> {
   const sources = inputMap(application.get('templates'), 'templates');
   const names = [...sources.keys()];
   const manifest = checkManifest(plain(inputMap(application.get('manifest'), 'manifest')));
-  const app = createApplication(manifest, Object.fromEntries(names.map((template) => [template, { url: template }])), async (url) => parse(textOf(sources.get(url), `the template ${url}`), url));
+  const app = createApplication(manifest, Object.fromEntries(names.map((template) => [template, { url: template }])), async (url) => parseTemplate(textOf(sources.get(url), `the template ${url}`), url));
   await app.templates.ensure(names);
 
   const routeName = textOf(reader.input('route'), 'route');
@@ -91,8 +91,8 @@ async function partsCases(reader: CaseReader): Promise<void> {
 // The routes step of contracts/reads.json (HY-73.18, HY-73.19): the read paths of the shared data and of every region of
 // each route of the manifest, which the build writes to reads.json.
 function routeReadsCases(reader: CaseReader): void {
-  const templates = new Map([...textMapOf(reader.input('templates'), 'templates')].map(([name, source]) => [name, parse(source, name)] as const));
-  const load = (name: string): ReturnType<typeof parse> => {
+  const templates = new Map([...textMapOf(reader.input('templates'), 'templates')].map(([name, source]) => [name, parseTemplate(source, name)] as const));
+  const load = (name: string): Template => {
     const found = templates.get(name);
     if (found === undefined) throw new Error(`the template ${name} is missing`);
     return found;

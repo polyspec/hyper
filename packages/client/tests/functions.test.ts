@@ -1,7 +1,8 @@
 // The cases of contracts/functions.json (HYC-24, HY-43, HY-106): the host functions of an application are registered
 // when the application opens, through createApplication, and through HyperOptions.functions of the browser code, where a
 // failed registration fails the start.
-import { parse, parseJson, type Template } from '@polyspec/template';
+import { parseJson, type Template } from '@polyspec/template/render';
+import { parseTemplate } from '../../ts/tests/parse-template.js';
 import { describe, expect, it } from 'vitest';
 import fixture from '../../../contracts/functions.json';
 import { checkManifest, createApplication, decodeResponse, Hyper, renderDocument, type Application, type DocumentAdapter, type HtmxApi, type RegionElement, type TemplateIndex } from '../src/index.js';
@@ -50,7 +51,7 @@ if (cases.length !== all.length) throw new Error('functions.json holds a case th
 const spec = fixture.applications.with_functions;
 const manifest = checkManifest(spec.manifest);
 const sources: Record<string, string> = spec.templates;
-const parsed: Record<string, Template> = Object.fromEntries(Object.entries(sources).map(([name, source]) => [name, parse(source, name)]));
+const parsed: Record<string, Template> = Object.fromEntries(Object.entries(sources).map(([name, source]) => [name, parseTemplate(source, name)]));
 const index: TemplateIndex = Object.fromEntries(Object.keys(sources).map((name) => [name, { url: `/t/${name}` }]));
 const fetcher = async (url: string): Promise<Template> => defined(parsed[url.slice('/t/'.length)], `the template of ${url}`);
 

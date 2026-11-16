@@ -1,10 +1,10 @@
 // The cases step of contracts/reads.json (HY-73): the read paths of the templates, the kept data, which renders as the
 // full data does, and the template rendered alone with its data (HY-13.1). The Node step gives the functions of the
 // built browser package, and the browser step those of its source.
-import { parse } from '@polyspec/template';
-import { MapLoader, NativeObject, resolvePath, SafeString, type Value } from '@polyspec/template/render';
+import { MapLoader, NativeObject, resolvePath, SafeString, type Template, type Value } from '@polyspec/template/render';
 import type { CaseReader } from '../case-reader.ts';
 import { textMapOf, textOf } from '../inputs.ts';
+import { parseTemplate } from '../parse-template.ts';
 
 // Returns true for a value of the template data model.
 function isValue(value: unknown): value is Value {
@@ -17,13 +17,13 @@ function isValue(value: unknown): value is Value {
 export function readsCases<Reads>(
   reader: CaseReader,
   api: {
-    templateReads: (load: (name: string) => ReturnType<typeof parse>, resolve: typeof resolvePath, template: string) => Reads;
+    templateReads: (load: (name: string) => Template, resolve: typeof resolvePath, template: string) => Reads;
     keepRead: (data: Value, reads: Reads) => Value;
     createEngine: (loader: MapLoader) => { render(template: string, data: Value): string };
   },
 ): void {
   const sources = textMapOf(reader.input('templates'), 'templates');
-  const templates = new Map([...sources].map(([name, source]) => [name, parse(source, name)] as const));
+  const templates = new Map([...sources].map(([name, source]) => [name, parseTemplate(source, name)] as const));
   const template = textOf(reader.input('template'), 'template');
   const reads = api.templateReads(
     (name) => {

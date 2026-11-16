@@ -1,4 +1,5 @@
-import { parse, type Template } from '@polyspec/template';
+import type { Template } from '@polyspec/template/render';
+import { parseTemplate } from '../../ts/tests/parse-template.js';
 import dataTemplate from '../data-template.json';
 import { defined } from './values.js';
 import { createApplication, DATA_TEMPLATE_NAME, type Application, type Manifest, type TemplateIndex } from '../src/index.js';
@@ -46,7 +47,7 @@ export const sources: Record<string, string> = {
 
 // Creates an application whose template fetcher records the requested URLs.
 export function testApplication(fetched: string[] = []): Application {
-  const parsed: Record<string, Template> = Object.fromEntries(Object.entries(sources).map(([name, source]) => [name, parse(source, name)]));
+  const parsed: Record<string, Template> = Object.fromEntries(Object.entries(sources).map(([name, source]) => [name, parseTemplate(source, name)]));
   const index: TemplateIndex = Object.fromEntries(Object.keys(sources).map((name) => [name, { url: `/t/${name}` }]));
   return createApplication(manifest, index, async (url) => {
     fetched.push(url);
