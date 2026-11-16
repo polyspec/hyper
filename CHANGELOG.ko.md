@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0bd5d48cc10b57b9e87a433ceef7357ff886eef3512b5ecb8c912c175b483551 -->
+<!-- source-sha256: 2370e85e62b338f0d2ad1e837a2a423e6e5132ac64a823ccc6a30bdf7fbe8421 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- PHP 서버는 representation tag의 content type을 header field의 바이트로, U+00FF까지의 글자마다 한 바이트로 digest하며, U+00FF 위의 글자가 있는 content type은 kind `invalid_text`로 실패한다(HY-122.14). 서버는 content type의 UTF-8 바이트를 digest했으므로 `text/é`는 다른 tag를, `text/Ā`는 tag를 주었다(H35.27-1).
 
 - PHP나 Python reply의 `cookie`의 Max-Age와 `status`의 status가 `60.0`, `403.0`, `-0.0` 같은 float이면 kind `invalid_number`로 실패한다. float는 interface contract의 정수가 아니기 때문이다(HY-52.19). 두 서버는 소수부가 없는 float를 정수로 받았다(H35.27-1).
 

@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The PHP server digests the content type of a representation tag as the bytes of its header field, one byte for each character up to U+00FF, and a content type with a character above U+00FF fails with the kind `invalid_text` (HY-122.14); it digested the UTF-8 bytes of the content type, so `text/é` gave another tag and `text/Ā` gave a tag (H35.27-1).
+
 - A Max-Age of `cookie` and the status of `status` of a PHP or Python reply that is a float, such as `60.0`, `403.0` or `-0.0`, fail with the kind `invalid_number`, because a float is no integer of the interface contract (HY-52.19); the two servers took a float without a fraction as an integer (H35.27-1).
 
 - The Node and PHP servers read the current path of a request with `rules.current_path` of the core (HY-11.5), so `mailto:a/b`, `1a://x/p` and `://x` give no current path and `http:///x` and `http://h:99999/x` give `/x`; the Node server read a path that does not start with a slash and the PHP server read the path of `parse_url`, which fails for an empty authority and a port above 65535 (H35.10-7).

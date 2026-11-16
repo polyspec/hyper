@@ -85,7 +85,33 @@ final class RepresentationResponse
      */
     public static function etag(string $contentType, string $body): string
     {
-        return CoreRules::shared()->representationEtag($contentType, $body);
+        return CoreRules::shared()->representationEtag(self::headerBytes($contentType), $body);
+    }
+
+    /**
+     * Returns the bytes of the header field of a UTF-8 text, one byte for each character up to U+00FF; a character
+     * above U+00FF or a text that is not UTF-8 fails with invalid_text (HY-122.14, HY-42.7).
+     */
+    private static function headerBytes(string $text): string
+    {
+        if (preg_match_all('/./su', $text, $matches) === false) {
+            throw new HyperValueError('a content type is not UTF-8 text (HY-122.14)', 'invalid_text');
+        }
+        $bytes = '';
+        foreach ($matches[0] as $character) {
+            if (\strlen($character) === 1) {
+                $bytes .= $character;
+            } elseif (\strlen($character) === 2 && \ord($character[0]) <= 0xC3) {
+                $bytes .= \chr(((\ord($character[0]) & 0x1F) << 6) | (\ord($character[1]) & 0x3F));
+            } else {
+                throw new HyperValueError(
+                    'a content type holds a character above U+00FF (HY-122.14)',
+                    'invalid_text',
+                );
+            }
+        }
+
+        return $bytes;
     }
 
     /**
