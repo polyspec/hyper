@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5d13dd0334e099195070fa90f16d68b2bfcb4397ac468d0efa379a5de28e3b6d -->
+<!-- source-sha256: 70d65666b531cf041d252535d36930342560baf5acd3c7d1aa6968da72f06f78 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/ts/native`, `packages/ts/native/wasm`, `packages/python/native`, `packages/php/native`, `packages/go/internal/ffi`의 binding crate는 `polyspec-http-cookie`에 의존하고, `packages/go/go.mod`는 session-store와 php-serialization의 Go module을 요구한다. 연결한 binding의 scaffold가 그렇게 쓴다. `make bindings-check`는 각 파일을 CK-19로 보고했고, binding crate는 `polyspec_http_cookie`에 대한 E0433으로 실패했다(H35.7). CK-19가 함께 지목하는 `@polyspec/session-store`와 `@polyspec/php-serialization`에는 `packages/ts/package.json`이 아직 의존하지 않는다. 두 package 모두 lock이 고정할 수 있는 release가 없기 때문이다.
 - `scripts/binding-commit.mts`는 Makefile을 읽는 모든 make에서 실패하는 대신, 로컬 provider에 대한 실행의 patch가 만드는 로컬 경로의 `polyspec-binding-core`에 `local`을 준다. 그 실행은 `BINDING`으로 binding cli를 지정한다(H35.7).
 - Pint는 `packages/php/native/generated`를, ruff는 `packages/python/src/polyspec/hyper/_binding`과 `packages/python/native/generated`를 검사하지 않는다. binding 생성기가 그것을 쓰기 때문이다. `_core_rules.py`와 `test_core_rules.py`는 ruff의 format을 따른다. root `composer.json`은 시험 안의 `require_once` 대신 `autoload-dev.files`로 `CoreRulesTest`의 stand-in 함수를 읽으며, 시험, support class, board front controller의 PHP 줄은 120자 안에 있다. `make hyper-lint`, `make lint-python`, `make lint-php`가 그것을 실패시켰다(H35.7).
 - `tests/legacy/context-before-s3b.json`의 application `with_context`는 H32.1의 merge가 그곳에 복사한 outside redirect case가 호출하는 route, loader, action `away`를 가진다. PHP 서버는 그 application을 열지 못했으므로 그 case 21개가 `route away declares post but has no POST action`으로 실패했다(H35.7).

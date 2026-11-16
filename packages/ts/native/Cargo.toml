@@ -25,6 +25,7 @@ napi-build = "=2.6.0"
 [dependencies]
 polyspec-hyper = { path = "../../rust" }
 polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core", features = ["construct", "lock"] }
+polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", branch = "v1/rust-core" }
 polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", branch = "v1/rust-core" }
 polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", branch = "v1/rust-core" }
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", branch = "v1/rust-core", default-features = false }
