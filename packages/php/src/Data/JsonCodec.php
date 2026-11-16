@@ -71,7 +71,8 @@ final class JsonCodec
      * Reads a JSON text to a value of the data model in document order: rules.json_read of the core (HY-54.20). A
      * list is an array with sequence keys, a map a `stdClass` or an array whose keys are not a sequence, and a
      * number a float; isList and mapEntries read them. A text that json refuses
-     * fails with the kind `malformed_json`, and a value outside the data model with the kind of the data model, as the core raises them (HY-54.21).
+     * fails with the kind `malformed_json`, and a value outside the data model with the kind
+     * of the data model, as the core raises them (HY-54.21).
      *
      * @throws HyperValueError
      */
