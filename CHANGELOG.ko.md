@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 33e03ab4c99826f020c63689441ca0bd9b4c18d894f6483d4e43ca22baf9c7e5 -->
+<!-- source-sha256: 38a7e154626a8d30debe759df181a76427bf7b2cc478a67ef82b0bfd7e40a833 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP, Node, Python runner의 case step은 class 중 하나가 `Hyper<Category>Error`라는 이름인 hyper의 오류만 `raises`로 보고한다(HY-132.2). `CaseRules::raisesOf`, `case-rules.ts`의 `raisesOf`, `case_rules.py`의 `raises_of`는 다른 오류를 다시 던져 그 오류가 step의 오류로 case를 실패시키게 한다. 전에는 PHP의 모든 `InvalidArgumentException`, `TypeError`, `RuntimeException`, Node의 모든 오류, Python의 모든 `ValueError`, `TypeError`, `OSError`, `RuntimeError`를 category 없는 실패로 보고했기 때문에, 잘못된 case 입력 같은 step 자신의 오류가 `raises`의 차이로 읽혔다(H35.20-2).
 - knip은 더 이상 `@polyspec/binding`을 쓰이지 않는 devDependency로 보고하지 않는다. `knip.json`은 그것을 `ignoreDependencies`에 적고, Makefile이 그 `dist/cli.js`를 경로로 시작하며 knip은 Makefile을 읽지 않는다는 이유를 적는다(H35.20-1).
 - script 시험의 빠진 입력 메시지는 `make hyper-test-scripts` 전에 그 install target을 돌리라고 말한다. 전에는 `make hyper-test-scripts`가 그 target을 먼저 돌린다고 했는데, 그렇게 하는 check target은 없다(H35.17).
 - PHP, Node, Python runner의 case step은 살아 있는 section의 field를 읽고, 지운 사본의 field는 읽지 않는다. 실패를 말하는 각 step은 `raises`, 곧 자기 호출이 낸 실패의 kind, 상태, category, message를 비교한다. `CaseRules::raisesOf`와 `CaseRules::failureOf`, `case-rules.ts`의 `raisesOf`와 `failureOf`, `case_rules.py`의 `raises_of`와 `FAILURES`가 그것을 한 방식으로 주며, category는 오류의 첫 class `Hyper<Category>Error`가 이름한다(HY-132.2). manifest check는 `read`를 비교한다. step은 어떤 살아 있는 section도 선언하지 않는 `error`, `class`, `failure`, `openError`, `invalid`, `rejected`를 비교했기 때문에, 실패가 있는 모든 case가 선언되지 않은 field에서 실패했다(H35.9-4). 대상 section은 csrf mask, verify, browser; build read; result redirect, page, copies, stop, types, outside, outsideStores; session flash, kept; reply cookies, cacheControl, referrerPolicy, status, notes; client openRejections; app opens; accept parse, select; media-type values; manifest checks; json encode, decode; request files, values이다. case 실행에는 native binding이 필요하며, 이 변경은 그것을 실행하지 않는다.

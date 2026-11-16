@@ -179,14 +179,15 @@ export function statedMessage(name: string, expected: unknown, observed: unknown
 export interface Raises {
   kind: unknown;
   status: unknown;
-  category: string | null;
+  category: string;
   message: string;
 }
 
 /**
  * The failure of HY-132 that an error gives: its kind, its status, the category that the first class
- * `Hyper<Category>Error` of its classes names (HY-132.2), or null, and its message. A thrown value that is no Error is
- * thrown again, since no call of hyper throws one.
+ * `Hyper<Category>Error` of its classes names (HY-132.2), and its message. A thrown value that is no Error, or
+ * an Error without such a class, is no error of hyper but an error of the step, which is thrown again so that it fails
+ * the case.
  */
 export function raisesOf(error: unknown): Raises {
   if (!(error instanceof Error)) throw error;
@@ -196,11 +197,12 @@ export function raisesOf(error: unknown): Raises {
     const match = typeof name === 'string' ? /^Hyper([A-Z][a-z]+)Error$/u.exec(name) : null;
     if (match !== null) category = (match[1] ?? '').toLowerCase();
   }
+  if (category === null) throw error;
   const { kind, status } = error as Error & { kind?: unknown; status?: unknown };
   return { kind: kind ?? null, status: status ?? null, category, message: error.message };
 }
 
-/** The result of a call, or null and the failure with which it fails. */
+/** The result of a call, or null and the failure of hyper with which it fails; any other error is thrown again. */
 export function failureOf<T>(call: () => T): { result: T | null; raises: Raises | null } {
   try {
     return { result: call(), raises: null };

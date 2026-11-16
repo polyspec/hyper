@@ -116,14 +116,16 @@ def compared_names(section: dict, case: dict) -> list[str]:
     ]
 
 
-# The base classes of the categories of HY-132.2, which a step catches around the call of a case.
+# The base classes of the categories of HY-132.2, which a step catches around the call of a case; raises_of raises an
+# error of these classes that is no error of hyper again.
 FAILURES = (ValueError, TypeError, OSError, RuntimeError)
 _CATEGORY_CLASS = re.compile(r"Hyper([A-Z][a-z]+)Error")
 
 
 def raises_of(error: BaseException) -> dict:
     """The failure of HY-132 that an error gives, as a field `raises` states it: its kind, its status, the category
-    that the first class `Hyper<Category>Error` of its classes names (HY-132.2), or None, and its message."""
+    that the first class `Hyper<Category>Error` of its classes names (HY-132.2), and its message. An error without such a
+    class is no error of hyper but an error of the step, which is raised again so that it fails the case."""
     category = next(
         (
             match.group(1).lower()
@@ -134,6 +136,8 @@ def raises_of(error: BaseException) -> dict:
         ),
         None,
     )
+    if category is None:
+        raise error
     return {
         "kind": getattr(error, "kind", None),
         "status": getattr(error, "status", None),

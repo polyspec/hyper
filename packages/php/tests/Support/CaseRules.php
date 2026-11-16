@@ -97,9 +97,10 @@ final class CaseRules
 
     /**
      * The failure of HY-132 that an error gives, as a field `raises` states it: its kind, its status, the category that
-     * the first class `Hyper<Category>Error` of its classes names (HY-132.2), or null, and its message.
+     * the first class `Hyper<Category>Error` of its classes names (HY-132.2), and its message. An error without such a
+     * class is no error of hyper but an error of the step, which is thrown again so that it fails the case.
      *
-     * @return array{kind: mixed, status: mixed, category: ?string, message: string}
+     * @return array{kind: mixed, status: mixed, category: string, message: string}
      */
     public static function raisesOf(\Throwable $error): array
     {
@@ -109,6 +110,9 @@ final class CaseRules
                 $category = strtolower($match[1]);
                 break;
             }
+        }
+        if ($category === null) {
+            throw $error;
         }
 
         return [
@@ -120,12 +124,12 @@ final class CaseRules
     }
 
     /**
-     * The result of a call, or null and the failure with which it fails: an error of a base class of the categories of
-     * HY-132.2.
+     * The result of a call, or null and the failure with which it fails: an error of hyper (HY-132.2); an error of a
+     * base class of its categories that is no error of hyper is thrown again.
      *
      * @template T
      * @param callable(): T $call
-     * @return array{result: T|null, raises: array{kind: mixed, status: mixed, category: ?string, message: string}|null}
+     * @return array{result: T|null, raises: array{kind: mixed, status: mixed, category: string, message: string}|null}
      */
     public static function failureOf(callable $call): array
     {
