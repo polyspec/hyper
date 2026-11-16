@@ -2,13 +2,13 @@
 # constructor received and the tag of a body of the type.
 from polyspec.hyper.representation.media_type import MediaType
 
-from .data_model_errors import data_model_message
+from ..case_rules import FAILURES, raises_of
 from .recorded import decoded
 
 
 def values(case) -> None:
     """Makes the media type with the parameters in the order of their pairs, and with the content type when the case
-    states it; compares the parameters and the tag of the value of the body, or the error of the data model."""
+    states it; compares the parameters and the tag of the value of the body, or the failure of the tag."""
     parameters = {name: value for name, value in case.input("parameters")}
     if case.has("contentType"):
         media = MediaType(parameters, case.input("contentType"))
@@ -18,15 +18,11 @@ def values(case) -> None:
     if not case.has("body"):
         return
     value = decoded(case.input("body"))
-    if not case.has("failure"):
-        case.compare("etag", media.etag(value))
-        return
+    tag = None
+    raises = None
     try:
         tag = media.etag(value)
-    except ValueError as error:
-        message = data_model_message(error)
-        if message is None:
-            raise
-        case.compare("failure", message)
-        return
-    raise LookupError(f"etag(value) returned {tag} for a body outside the data model")
+    except FAILURES as failure:
+        raises = raises_of(failure)
+    case.compare("etag", tag)
+    case.compare("raises", raises)

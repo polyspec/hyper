@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -113,6 +114,32 @@ def compared_names(section: dict, case: dict) -> list[str]:
     return names + [
         name for name, node in section.get("outcomes", {}).items() if visible(node)
     ]
+
+
+# The base classes of the categories of HY-132.2, which a step catches around the call of a case.
+FAILURES = (ValueError, TypeError, OSError, RuntimeError)
+_CATEGORY_CLASS = re.compile(r"Hyper([A-Z][a-z]+)Error")
+
+
+def raises_of(error: BaseException) -> dict:
+    """The failure of HY-132 that an error gives, as a field `raises` states it: its kind, its status, the category
+    that the first class `Hyper<Category>Error` of its classes names (HY-132.2), or None, and its message."""
+    category = next(
+        (
+            match.group(1).lower()
+            for match in (
+                _CATEGORY_CLASS.fullmatch(cls.__name__) for cls in type(error).__mro__
+            )
+            if match is not None
+        ),
+        None,
+    )
+    return {
+        "kind": getattr(error, "kind", None),
+        "status": getattr(error, "status", None),
+        "category": category,
+        "message": str(error),
+    }
 
 
 def stated_message(name: str, expected: Any, observed: Any) -> Any:

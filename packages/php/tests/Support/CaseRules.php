@@ -96,6 +96,47 @@ final class CaseRules
     }
 
     /**
+     * The failure of HY-132 that an error gives, as a field `raises` states it: its kind, its status, the category that
+     * the first class `Hyper<Category>Error` of its classes names (HY-132.2), or null, and its message.
+     *
+     * @return array{kind: mixed, status: mixed, category: ?string, message: string}
+     */
+    public static function raisesOf(\Throwable $error): array
+    {
+        $category = null;
+        foreach ([$error::class, ...array_values(class_parents($error))] as $class) {
+            if (preg_match('/(?:^|\\\\)Hyper([A-Z][a-z]+)Error$/D', $class, $match) === 1) {
+                $category = strtolower($match[1]);
+                break;
+            }
+        }
+
+        return [
+            'kind' => method_exists($error, 'kind') ? $error->kind() : null,
+            'status' => method_exists($error, 'status') ? $error->status() : null,
+            'category' => $category,
+            'message' => $error->getMessage(),
+        ];
+    }
+
+    /**
+     * The result of a call, or null and the failure with which it fails: an error of a base class of the categories of
+     * HY-132.2.
+     *
+     * @template T
+     * @param callable(): T $call
+     * @return array{result: T|null, raises: array{kind: mixed, status: mixed, category: ?string, message: string}|null}
+     */
+    public static function failureOf(callable $call): array
+    {
+        try {
+            return ['result' => $call(), 'raises' => null];
+        } catch (\InvalidArgumentException | \TypeError | \RuntimeException $error) {
+            return ['result' => null, 'raises' => self::raisesOf($error)];
+        }
+    }
+
+    /**
      * The observed failure of a field `raises` without its message when the case states none: a case compares only a
      * message that a rule states (HY-132.4). Any other field as observed.
      */

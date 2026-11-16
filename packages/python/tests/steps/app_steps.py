@@ -21,6 +21,7 @@ from polyspec.hyper.session.array_session import ArraySession
 from polyspec.hyper.http.request import Request
 from polyspec.hyper.http.response import Response
 
+from ..case_rules import raises_of
 from ..render.render_functions import program_of
 from .app_handlers import SERVICES, Calls, handlers_of
 from .recorded import RecordingStore, Reports, compare_log, decoded
@@ -210,7 +211,7 @@ def opens(case) -> None:
         except Exception as failure:  # noqa: BLE001 - the reader checks the class of the error
             error = failure
     case.outcome("open", error)
-    case.compare("openError", "" if error is None else str(error))
+    case.compare("raises", None if error is None else raises_of(error))
 
 
 def parts(case) -> None:

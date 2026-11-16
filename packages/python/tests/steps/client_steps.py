@@ -21,6 +21,7 @@ from polyspec.hyper.representation.representation import Representation
 from polyspec.hyper.http.request import Request
 from polyspec.hyper.result.result import Result
 
+from ..case_rules import raises_of
 from ..render.fixture_app import FIXTURES, PROGRAM
 from .inputs import options_of
 from .recorded import RecordingStore, Reports, compare_log
@@ -187,7 +188,7 @@ def open_rejections(case) -> None:
         if shell_file == "unreadable":
             file.chmod(0o600)
     case.outcome("open", error)
-    case.compare("openError", "" if error is None else str(error))
+    case.compare("raises", None if error is None else raises_of(error))
 
 
 def declaration(case) -> None:

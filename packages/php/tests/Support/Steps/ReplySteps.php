@@ -6,6 +6,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
 
 /** HY-52, HY-60, HY-69, HY-72, HY-92, HY-103: the cases of contracts/reply.json, the reply of a request. */
@@ -53,46 +54,38 @@ final class ReplySteps
         $case->compare('embeds', $reply->embedsData());
     }
 
-    /**
-     * Makes a reply and applies the calls of the case in order until one fails, and compares the message and the
-     * class of the failure: `type` for a TypeError and `value` for the InvalidArgumentException of HY-46.2.
-     */
+    /** Makes a reply and applies the calls of the case in order until one fails, and compares the failure. */
     private static function applied(CaseReader $case, bool $compareFailure): Reply
     {
-        $calls = $case->input('calls');
-        if (!is_array($calls) || !array_is_list($calls)) {
+        $entries = $case->input('calls');
+        if (!is_array($entries) || !array_is_list($entries)) {
             throw new \UnexpectedValueException('the calls of the case are not a list');
         }
-        $reply = new Reply();
-        $error = null;
-        $kind = null;
-        try {
-            foreach ($calls as $entry) {
-                if (!is_array($entry) || count($entry) !== 2 || !is_string($entry[0]) || !is_array($entry[1])) {
-                    throw new \UnexpectedValueException('a call of the case is not a method and a list of JSON texts');
-                }
-                $arguments = [];
-                foreach ($entry[1] as $text) {
-                    if (!is_string($text)) {
-                        throw new \UnexpectedValueException('an argument of the case is not a JSON text');
-                    }
-                    // The JSON text gives the value as a handler gives it (HY-44).
-                    $arguments[] = Json::value($text);
-                }
-                self::call($reply, $entry[0], $arguments);
+        $calls = [];
+        foreach ($entries as $entry) {
+            if (!is_array($entry) || count($entry) !== 2 || !is_string($entry[0]) || !is_array($entry[1])) {
+                throw new \UnexpectedValueException('a call of the case is not a method and a list of JSON texts');
             }
-        } catch (\TypeError $failure) {
-            $kind = 'type';
-            $error = $failure->getMessage();
-        } catch (\InvalidArgumentException $failure) {
-            $kind = 'value';
-            $error = $failure->getMessage();
+            $arguments = [];
+            foreach ($entry[1] as $text) {
+                if (!is_string($text)) {
+                    throw new \UnexpectedValueException('an argument of the case is not a JSON text');
+                }
+                // The JSON text gives the value as a handler gives it (HY-44).
+                $arguments[] = Json::value($text);
+            }
+            $calls[] = [$entry[0], $arguments];
         }
+        $reply = new Reply();
+        $raises = CaseRules::failureOf(static function () use ($reply, $calls): void {
+            foreach ($calls as [$method, $arguments]) {
+                self::call($reply, $method, $arguments);
+            }
+        })['raises'];
         if ($compareFailure) {
-            $case->compare('error', $error);
-            $case->compare('class', $kind);
-        } elseif ($error !== null) {
-            throw new \UnexpectedValueException("a call of the case fails: {$error}");
+            $case->compare('raises', $raises);
+        } elseif ($raises !== null) {
+            throw new \UnexpectedValueException("a call of the case fails: {$raises['message']}");
         }
 
         return $reply;

@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { App } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
+import { raisesOf } from '../case-rules.js';
 import { plain } from '../inputs.js';
 
 // Returns the bytes of the manifest file of a case: the JSON text of `manifest`, the UTF-8 bytes of `text`, or the
@@ -40,7 +41,8 @@ export const steps = {
       if (failure === undefined) throw new Error('the open read a template index that does not exist');
       // The missing template index is read after the manifest, so its system error tells that the manifest was read.
       const read = failure instanceof Error && 'code' in failure && failure.code === 'ENOENT' && failure.message.includes(index);
-      reader.compare('rejected', read ? null : failure);
+      reader.compare('read', read ? true : null);
+      reader.compare('raises', read ? null : raisesOf(failure));
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

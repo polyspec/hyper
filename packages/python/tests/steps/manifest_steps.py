@@ -8,9 +8,11 @@ from pathlib import Path
 from polyspec.hyper.page._manifest import Manifest
 from polyspec.hyper.app.app import App
 
+from ..case_rules import FAILURES, raises_of
+
 
 def checks(case) -> None:
-    """Writes the manifest file of the case and records the error of its read, or None."""
+    """Writes the manifest file of the case and records whether the manifest check reads it, or the failure of its read."""
     with tempfile.TemporaryDirectory(prefix="hyper-manifest-") as directory:
         file = Path(directory) / "manifest.json"
         stated = [name for name in ("manifest", "text", "bytes") if case.has(name)]
@@ -37,15 +39,14 @@ def checks(case) -> None:
         program = str(Path(directory) / "absent")
         try:
             App.open(manifest=str(file), program=program, handlers={}, timezone="Z")
-        except Exception as failure:  # noqa: BLE001 - the reader checks the class of the error
-            error = failure
+        except FAILURES as failure:
+            raises = raises_of(failure)
         else:
             raise LookupError("the application opened without its server program")
     missing = f"of the server program {program} is missing"
-    case.compare(
-        "rejected",
-        None if type(error) is ValueError and missing in str(error) else error,
-    )
+    read = missing in raises["message"]
+    case.compare("read", True if read else None)
+    case.compare("raises", None if read else raises)
 
 
 def reads(case) -> None:

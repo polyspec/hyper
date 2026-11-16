@@ -13,6 +13,7 @@ use Polyspec\Hyper\Session;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\AppRun;
 use Polyspec\Hyper\Tests\Support\Bytes;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\CountingStore;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Plain;
@@ -227,7 +228,7 @@ final class AppSteps
             }
         }
         $case->outcome('open', $failure);
-        $case->compare('openError', $failure?->getMessage() ?? '');
+        $case->compare('raises', $failure === null ? null : CaseRules::raisesOf($failure));
     }
 
     /**

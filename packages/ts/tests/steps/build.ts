@@ -3,8 +3,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Build } from '../../src/app/build.js';
-import { InvalidBuild } from '../../src/app/invalid-build.js';
 import type { CaseReader } from '../case-reader.js';
+import { failureOf } from '../case-rules.js';
 
 export const steps = {
   read(reader: CaseReader): void {
@@ -20,19 +20,10 @@ export const steps = {
         if (typeof bytes !== 'string' || !/^(?:[0-9a-f]{2})*$/u.test(bytes)) throw new Error('the case field bytes is not hexadecimal digits');
         writeFileSync(file, Buffer.from(bytes, 'hex'));
       }
-      let build: string | null = null;
-      let error: string | null = null;
-      let message: string | null = null;
-      try {
-        build = Build.read(file);
-      } catch (failure) {
-        if (!(failure instanceof InvalidBuild)) throw failure;
-        error = failure.message.includes(file) ? 'invalid-build' : failure.message;
-        message = failure.message;
-      }
-      reader.compare('build', build);
-      reader.compare('error', error);
-      reader.compare('message', message);
+      const outcome = failureOf(() => Build.read(file));
+      reader.compare('build', outcome.result);
+      reader.compare('raises', outcome.raises);
+      reader.compare('message', outcome.raises?.message ?? null);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

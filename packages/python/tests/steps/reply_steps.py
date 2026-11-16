@@ -1,6 +1,7 @@
 # The steps of contracts/reply.json (HY-52, HY-60, HY-69, HY-72, HY-92, HY-103): the reply of a request.
 from polyspec.hyper.http.reply import Reply
 
+from ..case_rules import FAILURES, raises_of
 from .inputs import calls_of
 from .recorded import decoded
 
@@ -59,26 +60,21 @@ def flags(case) -> None:
 
 
 def _applied(case, compare_failure: bool) -> Reply:
-    """Makes a reply and applies the calls of the case in order until one fails, and compares the message and the
-    class of the failure: `type` for a TypeError and `value` for the ValueError of HY-46.2."""
-    calls = calls_of(case)
+    """Makes a reply and applies the calls of the case in order until one fails, and compares the failure."""
+    # The JSON text gives the value as a handler gives it (HY-44); a caller passes the decoded arguments, of any type
+    # (HY-52.11).
+    calls = [
+        (entry[0], [decoded(text) for text in entry[1]]) for entry in calls_of(case)
+    ]
     reply = Reply()
-    error = None
-    kind = None
+    raises = None
     try:
-        for entry in calls:
-            # The JSON text gives the value as a handler gives it (HY-44); a caller passes the decoded arguments, of
-            # any type (HY-52.11).
-            call(reply, entry[0], [decoded(text) for text in entry[1]])
-    except TypeError as failure:
-        kind = "type"
-        error = str(failure)
-    except ValueError as failure:
-        kind = "value"
-        error = str(failure)
+        for method, arguments in calls:
+            call(reply, method, arguments)
+    except FAILURES as failure:
+        raises = raises_of(failure)
     if compare_failure:
-        case.compare("error", error)
-        case.compare("class", kind)
-    elif error is not None:
-        raise LookupError(f"a call of the case fails: {error}")
+        case.compare("raises", raises)
+    elif raises is not None:
+        raise LookupError(f"a call of the case fails: {raises}")
     return reply

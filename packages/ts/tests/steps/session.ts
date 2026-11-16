@@ -6,6 +6,7 @@ import { Session } from '../../src/session/session.js';
 import type { SessionStore } from '../../src/session/session-store.js';
 import { toValue, type Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
+import { failureOf, type Raises } from '../case-rules.js';
 import { textOf } from '../inputs.js';
 import { callsOf, decoded } from './session-requests.js';
 
@@ -49,8 +50,8 @@ function applied(session: Session, [method, args]: [string, unknown[]]): unknown
   }
 }
 
-// Puts the stored values of a case into a store, applies its calls until one fails with the stored-value error, an
-// error of exactly the class Error, and compares the results of the calls that returned and the failure.
+// Puts the stored values of a case into a store, applies its calls until one fails, and compares the results of the
+// calls that returned and the failure.
 function stored(reader: CaseReader): void {
   const store = new ArraySession();
   const session = new Session(store);
@@ -61,25 +62,17 @@ function stored(reader: CaseReader): void {
     store.set(textOf(pair[0], 'a stored key of the case'), decoded(pair[1]));
   }
   const results: unknown[] = [];
-  let error: string | null = null;
-  let failed: string | null = null;
+  let raises: Raises | null = null;
   for (const call of callsOf(reader.input('calls'))) {
-    try {
-      results.push(applied(session, call));
-    } catch (failure) {
-      // HY-40.4: keep of a value outside the data model fails with the error of the data model, a RangeError.
-      if (call[0] === 'keep' && failure instanceof RangeError && reader.has('failure')) {
-        failed = failure.message;
-        break;
-      }
-      if (!(failure instanceof Error) || failure.constructor !== Error) throw failure;
-      error = 'stored';
+    const outcome = failureOf(() => applied(session, call));
+    if (outcome.raises !== null) {
+      raises = outcome.raises;
       break;
     }
+    results.push(outcome.result);
   }
   reader.compare('results', results);
-  reader.compare('error', error);
-  if (failed !== null) reader.compare('failure', failed);
+  reader.compare('raises', raises);
 }
 
 // Applies one call to the session store and returns its entry of `results`: the value of `get`, null for the others.

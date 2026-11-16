@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\Build;
-use Polyspec\Hyper\InvalidBuild;
 use Polyspec\Hyper\Renderer;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
 
 /**
@@ -37,18 +37,10 @@ final class BuildSteps
                 }
                 file_put_contents($file, $data);
             }
-            $message = null;
-            try {
-                $build = Build::read($file);
-                $error = null;
-            } catch (InvalidBuild $failure) {
-                $build = null;
-                $error = str_contains($failure->getMessage(), $file) ? 'invalid-build' : $failure->getMessage();
-                $message = $failure->getMessage();
-            }
-            $case->compare('build', $build);
-            $case->compare('error', $error);
-            $case->compare('message', $message);
+            $outcome = CaseRules::failureOf(static fn (): string => Build::read($file));
+            $case->compare('build', $outcome['result']);
+            $case->compare('raises', $outcome['raises']);
+            $case->compare('message', $outcome['raises']['message'] ?? null);
         } finally {
             if (is_file($file)) {
                 unlink($file);

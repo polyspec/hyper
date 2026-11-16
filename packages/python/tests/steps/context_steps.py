@@ -10,6 +10,7 @@ from polyspec.hyper.session._csrf import Csrf
 from polyspec.hyper.http.request import Request
 from polyspec.hyper.session.array_session import ArraySession
 
+from ..case_rules import FAILURES, raises_of
 from .context_application import open_application, program_of
 from .recorded import decoded
 
@@ -30,24 +31,6 @@ def contexts(case) -> None:
         case.compare("reorderedHash", Context.hash(build, Context.text(context)))
 
 
-def _raises_of(error: Exception) -> dict:
-    """The failure of HY-132 that an error gives: its kind, its status, the category of its class (HY-132.2) and its
-    message."""
-    category = (
-        "value"
-        if isinstance(error, ValueError)
-        else "type"
-        if isinstance(error, TypeError)
-        else None
-    )
-    return {
-        "kind": getattr(error, "kind", None),
-        "status": getattr(error, "status", None),
-        "category": category,
-        "message": str(error),
-    }
-
-
 def with_context(case) -> None:
     shared = {name: name for name in _string_list(case, "shared")}
     keys = None
@@ -57,8 +40,8 @@ def with_context(case) -> None:
         placed = Context.with_context(shared, {"name": "Board"})
         keys = list(placed)
         context = placed["context"]
-    except (ValueError, TypeError) as error:
-        raises = _raises_of(error)
+    except FAILURES as error:
+        raises = raises_of(error)
     case.compare("keys", keys)
     case.compare("context", context)
     case.compare("raises", raises)

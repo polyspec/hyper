@@ -175,6 +175,40 @@ export function statedMessage(name: string, expected: unknown, observed: unknown
   return Object.fromEntries((entriesOf(observed) ?? []).map(([key, item]): [string, unknown] => [key, key === 'message' ? null : item]));
 }
 
+/** A failure of HY-132 as a field `raises` states it. */
+export interface Raises {
+  kind: unknown;
+  status: unknown;
+  category: string | null;
+  message: string;
+}
+
+/**
+ * The failure of HY-132 that an error gives: its kind, its status, the category that the first class
+ * `Hyper<Category>Error` of its classes names (HY-132.2), or null, and its message. A thrown value that is no Error is
+ * thrown again, since no call of hyper throws one.
+ */
+export function raisesOf(error: unknown): Raises {
+  if (!(error instanceof Error)) throw error;
+  let category: string | null = null;
+  for (let type: unknown = Object.getPrototypeOf(error); category === null && typeof type === 'object' && type !== null; type = Object.getPrototypeOf(type)) {
+    const name: unknown = (type as { constructor?: { name?: unknown } }).constructor?.name;
+    const match = typeof name === 'string' ? /^Hyper([A-Z][a-z]+)Error$/u.exec(name) : null;
+    if (match !== null) category = (match[1] ?? '').toLowerCase();
+  }
+  const { kind, status } = error as Error & { kind?: unknown; status?: unknown };
+  return { kind: kind ?? null, status: status ?? null, category, message: error.message };
+}
+
+/** The result of a call, or null and the failure with which it fails. */
+export function failureOf<T>(call: () => T): { result: T | null; raises: Raises | null } {
+  try {
+    return { result: call(), raises: null };
+  } catch (error) {
+    return { result: null, raises: raisesOf(error) };
+  }
+}
+
 /** The names of a header map, or of a list of header names, in ASCII lower case, for a header field; other values as given. */
 export function folded(name: string, value: unknown): unknown {
   if (!HEADER_FIELDS.has(name)) return value;

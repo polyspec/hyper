@@ -11,6 +11,7 @@ use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\ClientApp;
 use Polyspec\Hyper\Tests\Support\Counter;
 use Polyspec\Hyper\Tests\Support\CountingStore;
@@ -215,7 +216,7 @@ final class ClientSteps
             rmdir($directory);
         }
         $case->outcome('open', $failure);
-        $case->compare('openError', $failure?->getMessage() ?? '');
+        $case->compare('raises', $failure === null ? null : CaseRules::raisesOf($failure));
     }
 
     /** HY-62: a choice and a client rendering hold what they were made with; no application opens. */

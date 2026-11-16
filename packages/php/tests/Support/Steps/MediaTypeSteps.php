@@ -7,6 +7,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 use Polyspec\Hyper\MediaType;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\CaseInput;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Plain;
 
@@ -29,18 +30,9 @@ final class MediaTypeSteps
             return;
         }
         $body = Json::value(CaseInput::text($case, 'body'));
-        if (!$case->has('failure')) {
-            $case->compare('etag', $media->etag($body));
-
-            return;
-        }
-        // HY-122.13: a body outside the data model fails with the error of the data model; a tag fails the case.
-        $failure = null;
-        try {
-            $media->etag($body);
-        } catch (\InvalidArgumentException $error) {
-            $failure = $error->getMessage();
-        }
-        $case->compare('failure', $failure);
+        // HY-122.13: a body outside the data model fails with the error of the data model.
+        $outcome = CaseRules::failureOf(static fn (): string => $media->etag($body));
+        $case->compare('etag', $outcome['result']);
+        $case->compare('raises', $outcome['raises']);
     }
 }

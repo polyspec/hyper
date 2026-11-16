@@ -3,33 +3,35 @@ import re
 
 from polyspec.hyper.session._csrf import Csrf
 
+from ..case_rules import FAILURES, raises_of
+
 
 def mask(case) -> None:
-    """Masks the token with the mask, or records the message of the error with which it fails (HY-24.9)."""
+    """Masks the token with the mask, or records the failure with which it fails (HY-24.9)."""
     token = _string_field(case, "token")
     mask_text = _string_field(case, "mask")
     value = None
-    error = None
+    raises = None
     try:
         value = Csrf.mask(token, mask_text)
-    except ValueError as failure:
-        error = str(failure)
+    except FAILURES as failure:
+        raises = raises_of(failure)
     case.compare("value", value)
-    case.compare("error", error)
+    case.compare("raises", raises)
 
 
 def verify(case) -> None:
-    """Verifies the value against the token, or records the message of the error with which it fails (HY-24.9)."""
+    """Verifies the value against the token, or records the failure with which it fails (HY-24.9)."""
     token = _string_field(case, "token")
     value = _string_field(case, "value")
     valid = None
-    error = None
+    raises = None
     try:
         valid = Csrf.verify(token, value)
-    except ValueError as failure:
-        error = str(failure)
+    except FAILURES as failure:
+        raises = raises_of(failure)
     case.compare("valid", valid)
-    case.compare("error", error)
+    case.compare("raises", raises)
 
 
 def masked(case) -> None:
@@ -42,16 +44,16 @@ def masked(case) -> None:
 
 
 def browser(case) -> None:
-    """Gives the digest of the masked value, or records the message of the error with which it fails (HY-24.13)."""
+    """Gives the digest of the masked value, or records the failure with which it fails (HY-24.13)."""
     value = _string_field(case, "value")
     result = None
-    error = None
+    raises = None
     try:
         result = Csrf.browser_of(value)
-    except ValueError as failure:
-        error = str(failure)
+    except FAILURES as failure:
+        raises = raises_of(failure)
     case.compare("browser", result)
-    case.compare("error", error)
+    case.compare("raises", raises)
 
 
 def _string_field(case, name: str) -> str:

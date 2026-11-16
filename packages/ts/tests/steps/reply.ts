@@ -1,6 +1,7 @@
 // The steps of contracts/reply.json (HY-52, HY-60, HY-69, HY-72, HY-92, HY-103): the reply of a request.
 import { Reply } from '../../src/http/reply.js';
 import type { CaseReader } from '../case-reader.js';
+import { failureOf } from '../case-rules.js';
 import { decoded } from './session-requests.js';
 
 // Calls a method of the reply with the arguments as a JavaScript caller may give them, of any type (HY-52.11).
@@ -41,32 +42,23 @@ export function call(reply: Reply, method: string, args: unknown[]): void {
   }
 }
 
-// Makes a reply and applies the calls of the case in order until one fails, and compares the message and the class of
-// the failure: `type` for a TypeError and `value` for the RangeError of HY-46.2.
+// Makes a reply and applies the calls of the case in order until one fails, and compares the failure.
 function applied(reader: CaseReader, compareFailure: boolean): Reply {
-  const calls = reader.input('calls');
-  if (!Array.isArray(calls)) throw new Error('the calls of the case are not a list');
+  const entries = reader.input('calls');
+  if (!Array.isArray(entries)) throw new Error('the calls of the case are not a list');
+  const calls = entries.map((entry: unknown): [string, unknown[]] => {
+    if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== 'string' || !Array.isArray(entry[1])) throw new Error('a call of the case is not a method and a list of JSON texts');
+    // The JSON text gives the value as a handler gives it: an integer outside ±(2^53 − 1) is a bigint (HY-44).
+    return [entry[0], entry[1].map((text: unknown) => decoded(text))];
+  });
   const reply = new Reply();
-  let error: string | null = null;
-  let kind: string | null = null;
-  try {
-    for (const entry of calls) {
-      if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== 'string' || !Array.isArray(entry[1])) throw new Error('a call of the case is not a method and a list of JSON texts');
-      // The JSON text gives the value as a handler gives it: an integer outside ±(2^53 − 1) is a bigint (HY-44).
-      const args = entry[1].map((text: unknown) => decoded(text));
-      call(reply, entry[0], args);
-    }
-  } catch (failure) {
-    if (failure instanceof TypeError) kind = 'type';
-    else if (failure instanceof RangeError) kind = 'value';
-    else throw failure;
-    error = failure.message;
-  }
+  const outcome = failureOf(() => {
+    for (const [method, args] of calls) call(reply, method, args);
+  });
   if (compareFailure) {
-    reader.compare('error', error);
-    reader.compare('class', kind);
-  } else if (error !== null) {
-    throw new Error(`a call of the case fails: ${error}`);
+    reader.compare('raises', outcome.raises);
+  } else if (outcome.raises !== null) {
+    throw new Error(`a call of the case fails: ${outcome.raises.message}`);
   }
   return reply;
 }

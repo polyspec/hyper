@@ -9,6 +9,7 @@ use Polyspec\Hyper\Flash;
 use Polyspec\Hyper\Session;
 use Polyspec\Hyper\SessionStore;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
 
 /**
@@ -45,12 +46,12 @@ final class SessionSteps
 
     public static function flash(CaseReader $case): void
     {
-        self::stored($case, false);
+        self::stored($case);
     }
 
     public static function kept(CaseReader $case): void
     {
-        self::stored($case, $case->has('failure'));
+        self::stored($case);
     }
 
     /** Applies the calls to one ArraySession through the session store interface (HY-72, HY-104). */
@@ -81,11 +82,10 @@ final class SessionSteps
     }
 
     /**
-     * Applies the calls over the stored values of the case until one fails with the error of a stored value of another
-     * form (HY-104.23), and compares the result of each call that returned and whether a call failed so. When the case
-     * expects a failure, a call that fails with the error of the data model also stops, and its message is compared.
+     * Applies the calls over the stored values of the case until one fails, and compares the result of each call that
+     * returned and the failure (HY-40.4, HY-104.23).
      */
-    private static function stored(CaseReader $case, bool $fails): void
+    private static function stored(CaseReader $case): void
     {
         $store = new ArraySession();
         if ($case->has('stored')) {
@@ -97,25 +97,14 @@ final class SessionSteps
         }
         $session = new Session($store);
         $results = [];
-        $error = null;
-        $failed = null;
+        $raises = null;
         foreach (self::calls($case) as [$method, $arguments]) {
-            try {
-                $result = self::call($session, $method, $arguments);
-            } catch (\UnexpectedValueException $failure) {
-                if ($failure::class !== \UnexpectedValueException::class) {
-                    throw $failure;
-                }
-                $error = 'stored';
-                break;
-            } catch (\InvalidArgumentException $failure) {
-                // HY-40.4: a kept value outside the data model fails with the error of the data model.
-                if ($failure::class !== \InvalidArgumentException::class || !$fails) {
-                    throw $failure;
-                }
-                $failed = $failure->getMessage();
+            $outcome = CaseRules::failureOf(static fn (): mixed => self::call($session, $method, $arguments));
+            if ($outcome['raises'] !== null) {
+                $raises = $outcome['raises'];
                 break;
             }
+            $result = $outcome['result'];
             $results[] = match (true) {
                 $result instanceof Flash => self::flashPairs($result),
                 is_array($result) => self::pairs($result),
@@ -123,10 +112,7 @@ final class SessionSteps
             };
         }
         $case->compare('results', $results);
-        $case->compare('error', $error);
-        if ($fails) {
-            $case->compare('failure', $failed);
-        }
+        $case->compare('raises', $raises);
     }
 
     /**

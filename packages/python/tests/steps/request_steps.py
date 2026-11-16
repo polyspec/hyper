@@ -3,6 +3,8 @@
 from polyspec.hyper.http._cookies import Cookies
 from polyspec.hyper.http.request import Request
 
+from ..case_rules import FAILURES, raises_of
+
 _NO_MEDIA = "the request holds no selected media type"
 
 
@@ -37,9 +39,16 @@ def files(case) -> None:
         ],
     )
     if case.has("limits"):
-        case.compare(
-            "over", [request.file_over(limit) for limit in case.input("limits")]
-        )
+        over = []
+        raises = None
+        try:
+            for limit in case.input("limits"):
+                over.append(request.file_over(limit))
+        except FAILURES as failure:
+            over = None
+            raises = raises_of(failure)
+        case.compare("over", over)
+        case.compare("raises", raises)
 
 
 def targets(case) -> None:
@@ -78,7 +87,16 @@ def values(case) -> None:
     request = original
     for name, value in case.input("with") if case.has("with") else []:
         request = request.with_header(name, value)
+    raises = None
+    try:
+        _members(case, request, original)
+    except FAILURES as failure:
+        raises = raises_of(failure)
+    case.compare("raises", raises)
 
+
+def _members(case, request: Request, original: Request) -> None:
+    """Compares the members of the request that the case states; a member that fails ends the comparison."""
     case.compare("method", request.method)
     case.compare("path", request.path())
     case.compare("rawQuery", request.raw_query())

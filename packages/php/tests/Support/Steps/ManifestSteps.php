@@ -8,13 +8,14 @@ use Polyspec\Hyper\App;
 use Polyspec\Hyper\Manifest;
 use Polyspec\Hyper\Region;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Plain;
 
 /** HY-2, HY-37: the cases of contracts/manifest.json, the manifest file that the manifest check reads or rejects. */
 final class ManifestSteps
 {
-    /** Records the error with which the open of an application refuses the manifest file of the case, or null. */
+    /** Records whether the open of an application reads the manifest file of the case, or the failure of its read. */
     public static function checks(CaseReader $case): void
     {
         $stated = array_values(array_filter(['manifest', 'text', 'bytes'], $case->has(...)));
@@ -37,21 +38,20 @@ final class ManifestSteps
         $file = "{$directory}/manifest.json";
         // The program does not exist: an open that fails only for it has read the manifest (HY-2.7).
         $program = "{$directory}/absent";
-        $failure = null;
         try {
             file_put_contents($file, $bytes);
-            App::open(manifest: $file, program: $program, handlers: [], timezone: 'Z');
-
-            throw new \LogicException('the application opened without a program');
-        } catch (\InvalidArgumentException $error) {
-            $failure = str_starts_with($error->getMessage(), "{$program}/php of the server program") ? null : $error;
+            $raises = CaseRules::failureOf(
+                static fn () => App::open(manifest: $file, program: $program, handlers: [], timezone: 'Z'),
+            )['raises'] ?? throw new \LogicException('the application opened without a program');
         } finally {
             if (is_file($file)) {
                 unlink($file);
             }
             rmdir($directory);
         }
-        $case->compare('rejected', $failure);
+        $read = str_starts_with($raises['message'], "{$program}/php of the server program");
+        $case->compare('read', $read ? true : null);
+        $case->compare('raises', $read ? null : $raises);
     }
 
     /** Records the regions, the page region, the routes and the kept paths of a region of the manifest of the case. */

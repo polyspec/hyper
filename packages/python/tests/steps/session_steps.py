@@ -7,7 +7,7 @@ from polyspec.hyper.session._session import Session
 from polyspec.hyper.session.array_session import ArraySession
 from polyspec.hyper.session.session_store import SessionStore
 
-from .data_model_errors import data_model_message
+from ..case_rules import FAILURES, raises_of
 from .inputs import calls_of
 from .recorded import decoded
 
@@ -51,26 +51,15 @@ def _storedcalls_of(case) -> None:
         store.set(key, decoded(text))
     session = Session(store)
     results = []
-    error = None
+    raises = None
     for method, texts in calls_of(case):
         try:
             results.append(_written(_call(session, method, texts)))
-        except ValueError as failure:
-            # The stored-value error is exactly ValueError; a subclass is an error of the step.
-            if type(failure) is not ValueError:
-                raise
-            # The error of the data model is also exactly ValueError; its message tells it from the stored-value
-            # error (HY-40.4), and only a case that states `failure` expects it.
-            message = data_model_message(failure)
-            if message is not None:
-                if not case.has("failure"):
-                    raise
-                case.compare("failure", message)
-                break
-            error = "stored"
+        except FAILURES as failure:
+            raises = raises_of(failure)
             break
     case.compare("results", results)
-    case.compare("error", error)
+    case.compare("raises", raises)
 
 
 def store(case) -> None:

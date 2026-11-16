@@ -11,42 +11,33 @@ use Polyspec\Hyper\Redirect;
 use Polyspec\Hyper\Result;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\CaseInput;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Plain;
 
 /** HY-25, HY-27, HY-46, HY-50, HY-58, HY-133: the cases of contracts/result.json, the results of actions and the stops. */
 final class ResultSteps
 {
-    /** Makes a redirect to the location, or records the message of the error with which it fails (HY-46). */
+    /** Makes a redirect to the location, or records the failure with which it fails (HY-46). */
     public static function redirect(CaseReader $case): void
     {
-        $result = null;
-        $error = null;
-        try {
-            // `notUtf8` appends the byte FF, which is not UTF-8 text.
-            $notUtf8 = $case->has('notUtf8') && $case->input('notUtf8') === true;
-            $result = Result::redirect(CaseInput::text($case, 'location') . ($notUtf8 ? "\xFF" : ''));
-        } catch (\InvalidArgumentException $failure) {
-            $error = $failure->getMessage();
-        }
-        $case->compare('redirect', $result?->location);
-        $case->compare('status', $result?->status);
-        $case->compare('error', $error);
+        // `notUtf8` appends the byte FF, which is not UTF-8 text.
+        $notUtf8 = $case->has('notUtf8') && $case->input('notUtf8') === true;
+        $location = CaseInput::text($case, 'location') . ($notUtf8 ? "\xFF" : '');
+        $outcome = CaseRules::failureOf(static fn (): Result => Result::redirect($location));
+        $case->compare('redirect', $outcome['result']?->location);
+        $case->compare('status', $outcome['result']?->status);
+        $case->compare('raises', $outcome['raises']);
     }
 
-    /** Makes an outside redirect to the location, or records the message of the error with which it fails (HY-133). */
+    /** Makes an outside redirect to the location, or records the failure with which it fails (HY-133). */
     public static function outside(CaseReader $case): void
     {
-        $result = null;
-        $error = null;
-        try {
-            $result = Result::outside(CaseInput::text($case, 'location'));
-        } catch (\InvalidArgumentException $failure) {
-            $error = $failure->getMessage();
-        }
-        $case->compare('outside', $result?->location);
-        $case->compare('status', $result?->status);
-        $case->compare('error', $error);
+        $location = CaseInput::text($case, 'location');
+        $outcome = CaseRules::failureOf(static fn (): Result => Result::outside($location));
+        $case->compare('outside', $outcome['result']?->location);
+        $case->compare('status', $outcome['result']?->status);
+        $case->compare('raises', $outcome['raises']);
     }
 
     /** Records the origin of the text, or null for a text that is no outside location (HY-133). */
@@ -56,36 +47,24 @@ final class ResultSteps
     }
 
     /**
-     * Calls `flash` or `changed` of an outside redirect with the decoded argument, and records the message of the error
-     * with which it fails (HY-133).
+     * Calls `flash` or `changed` of an outside redirect with the decoded argument, and records the failure with which
+     * it fails (HY-133).
      */
     public static function outsideStores(CaseReader $case): void
     {
-        $call = CaseInput::text($case, 'call');
-        $argument = Json::value(CaseInput::text($case, 'argument'));
-        $result = Result::outside('https://outside.example/');
-        $error = null;
-        try {
-            self::store($result, $call, $argument);
-        } catch (\InvalidArgumentException $failure) {
-            $error = $failure->getMessage();
-        }
-        $case->compare('error', $error);
+        $case->compare('raises', self::stored($case, Result::outside('https://outside.example/')));
     }
 
-    /** Makes the page with the status and the data, or records the message of the error with which it fails (HY-58). */
+    /** Makes the page with the status and the data, or records the failure with which it fails (HY-58). */
     public static function page(CaseReader $case): void
     {
-        $result = null;
-        $error = null;
-        try {
-            $result = Result::page(CaseInput::integer($case, 'status'), self::data($case, 'data'));
-        } catch (\InvalidArgumentException $failure) {
-            $error = $failure->getMessage();
-        }
+        $status = CaseInput::integer($case, 'status');
+        $data = self::data($case, 'data');
+        $outcome = CaseRules::failureOf(static fn (): Result => Result::page($status, $data));
+        $result = $outcome['result'];
         $case->compare('result', $result?->status);
         $case->compare('redirect', $result?->location);
-        $case->compare('error', $error);
+        $case->compare('raises', $outcome['raises']);
         if ($case->has('held') && $result !== null) {
             $case->compare('held', Plain::map($result->data));
         }
@@ -123,74 +102,78 @@ final class ResultSteps
             }
             $topics[] = $names;
         }
-        $result = Result::redirect('/');
-        $error = null;
-        try {
+        $outcome = CaseRules::failureOf(static function () use ($flashes, $topics): Result {
+            $result = Result::redirect('/');
             foreach ($flashes as [$name, $value]) {
                 $result = $result->flash($name, $value);
             }
             foreach ($topics as $names) {
                 $result = $result->changed(...$names);
             }
-        } catch (\InvalidArgumentException $failure) {
-            $result = null;
-            $error = $failure->getMessage();
-        }
+
+            return $result;
+        });
+        $result = $outcome['result'];
         $case->compare('flashValues', $result === null ? null : Plain::map($result->flashValues));
         $case->compare('changedTopics', $result?->changedTopics);
-        $case->compare('error', $error);
+        $case->compare('raises', $outcome['raises']);
     }
 
-    /**
-     * Calls `flash` or `changed` with the decoded argument, and records the message of its TypeError, or null
-     * (HY-25.6).
-     */
+    /** Calls `flash` or `changed` with the decoded argument, and records the failure with which it fails (HY-25.6). */
     public static function types(CaseReader $case): void
     {
-        $call = CaseInput::text($case, 'call');
-        $argument = Json::value(CaseInput::text($case, 'argument'));
-        $result = Result::redirect('/');
-        $error = null;
-        try {
-            self::store($result, $call, $argument);
-        } catch (\TypeError $failure) {
-            $error = $failure->getMessage();
-        }
-        $case->compare('error', $error);
+        $case->compare('raises', self::stored($case, Result::redirect('/')));
     }
 
-    /** Makes the stop of the kind, or records the message of the error with which it fails (HY-27, HY-50). */
     /** Compares the location of the result of a redirect stop. */
     private static function compareLocation(CaseReader $case, Redirect $redirect): void
     {
         $case->compare('location', $redirect->result->location);
     }
 
+    /** Makes the stop of the kind, or records the failure with which it fails (HY-27, HY-50). */
     public static function stop(CaseReader $case): void
     {
-        $stop = null;
-        $error = null;
         $kind = CaseInput::text($case, 'kind');
-        try {
-            $stop = match ($kind) {
-                'NotFound' => new NotFound(),
-                'Forbidden' => new Forbidden(),
-                'BadRequest' => new BadRequest(),
-                'Redirect' => new Redirect(match (true) {
-                    $case->has('redirect') => Result::redirect(CaseInput::text($case, 'redirect')),
-                    $case->has('outside') => Result::outside(CaseInput::text($case, 'outside')),
-                    default => Result::page(CaseInput::integer($case, 'page'), []),
-                }),
-                default => throw new \UnexpectedValueException("the stop {$kind} of the case is unknown"),
-            };
-        } catch (\InvalidArgumentException $failure) {
-            $error = $failure->getMessage();
+        if (!in_array($kind, ['NotFound', 'Forbidden', 'BadRequest', 'Redirect'], true)) {
+            throw new \UnexpectedValueException("the stop {$kind} of the case is unknown");
         }
+        $redirect = $case->has('redirect') ? CaseInput::text($case, 'redirect') : null;
+        $outside = $case->has('outside') ? CaseInput::text($case, 'outside') : null;
+        $page = $kind === 'Redirect' && $redirect === null && $outside === null ? CaseInput::integer($case, 'page') : 0;
+        $outcome = CaseRules::failureOf(static fn (): \Throwable => match ($kind) {
+            'NotFound' => new NotFound(),
+            'Forbidden' => new Forbidden(),
+            'BadRequest' => new BadRequest(),
+            default => new Redirect(match (true) {
+                $redirect !== null => Result::redirect($redirect),
+                $outside !== null => Result::outside($outside),
+                default => Result::page($page, []),
+            }),
+        });
+        $stop = $outcome['result'];
         $case->compare('message', $stop?->getMessage());
-        $case->compare('error', $error);
+        $case->compare('raises', $outcome['raises']);
         if ($case->has('location') && $stop instanceof Redirect) {
             self::compareLocation($case, $stop);
         }
+    }
+
+    /**
+     * Calls the store of the case, `flash` or `changed`, with the decoded argument on the result, and returns the
+     * failure with which it fails, or null.
+     *
+     * @return array{kind: mixed, status: mixed, category: ?string, message: string}|null
+     */
+    private static function stored(CaseReader $case, Result $result): ?array
+    {
+        $call = CaseInput::text($case, 'call');
+        if ($call !== 'flash' && $call !== 'changed') {
+            throw new \UnexpectedValueException("the call {$call} of the case is unknown");
+        }
+        $argument = Json::value(CaseInput::text($case, 'argument'));
+
+        return CaseRules::failureOf(static fn () => self::store($result, $call, $argument))['raises'];
     }
 
     /** @return list<mixed> */

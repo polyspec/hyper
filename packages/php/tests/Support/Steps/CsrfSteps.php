@@ -6,36 +6,29 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 
 /** HY-24: the cases of contracts/csrf.json, the masked values of a token and their verification. */
 final class CsrfSteps
 {
-    /** Masks the token with the mask, or records the message of the error with which it fails (HY-24.9). */
+    /** Masks the token with the mask, or records the failure with which it fails (HY-24.9). */
     public static function mask(CaseReader $case): void
     {
-        $value = null;
-        $error = null;
-        try {
-            $value = Csrf::mask(self::text($case, 'token'), self::text($case, 'mask'));
-        } catch (\InvalidArgumentException $failure) {
-            $error = $failure->getMessage();
-        }
-        $case->compare('value', $value);
-        $case->compare('error', $error);
+        $token = self::text($case, 'token');
+        $mask = self::text($case, 'mask');
+        $outcome = CaseRules::failureOf(static fn (): string => Csrf::mask($token, $mask));
+        $case->compare('value', $outcome['result']);
+        $case->compare('raises', $outcome['raises']);
     }
 
-    /** Verifies the value against the token, or records the message of the error with which it fails (HY-24.9). */
+    /** Verifies the value against the token, or records the failure with which it fails (HY-24.9). */
     public static function verify(CaseReader $case): void
     {
-        $valid = null;
-        $error = null;
-        try {
-            $valid = Csrf::verify(self::text($case, 'token'), self::text($case, 'value'));
-        } catch (\InvalidArgumentException $failure) {
-            $error = $failure->getMessage();
-        }
-        $case->compare('valid', $valid);
-        $case->compare('error', $error);
+        $token = self::text($case, 'token');
+        $value = self::text($case, 'value');
+        $outcome = CaseRules::failureOf(static fn (): bool => Csrf::verify($token, $value));
+        $case->compare('valid', $outcome['result']);
+        $case->compare('raises', $outcome['raises']);
     }
 
     public static function masked(CaseReader $case): void
@@ -48,18 +41,13 @@ final class CsrfSteps
         $case->compare('valid', Csrf::verify($token, $first) && Csrf::verify($token, $second));
     }
 
-    /** Gives the digest of the masked value, or records the message of the error with which it fails (HY-24.13). */
+    /** Gives the digest of the masked value, or records the failure with which it fails (HY-24.13). */
     public static function browser(CaseReader $case): void
     {
-        $browser = null;
-        $error = null;
-        try {
-            $browser = Csrf::browserOf(self::text($case, 'value'));
-        } catch (\InvalidArgumentException $failure) {
-            $error = $failure->getMessage();
-        }
-        $case->compare('browser', $browser);
-        $case->compare('error', $error);
+        $value = self::text($case, 'value');
+        $outcome = CaseRules::failureOf(static fn (): ?string => Csrf::browserOf($value));
+        $case->compare('browser', $outcome['result']);
+        $case->compare('raises', $outcome['raises']);
     }
 
     private static function text(CaseReader $case, string $name): string

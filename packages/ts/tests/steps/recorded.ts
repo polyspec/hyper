@@ -3,6 +3,7 @@
 import type { Reply, Request, Response } from '../../src/index.js';
 import type { SessionStore } from '../../src/session/session-store.js';
 import type { CaseReader } from '../case-reader.js';
+import { raisesOf } from '../case-rules.js';
 
 // A session store that records every call that the application makes of the four methods of the store, each as the
 // method name and its key, and keeps the values in the store it wraps.
@@ -49,11 +50,11 @@ export function failureOf(open: Promise<unknown>): Promise<unknown> {
   );
 }
 
-// Gives the reader the failure of an open: the outcome `open`, the start of its message and the field `openError`.
+// Gives the reader the failure of an open: the outcome `open`, the start of its message and the field `raises`.
 export function comparesOpen(reader: CaseReader, failure: unknown): void {
   reader.outcome('open', failure);
   messageStart(reader, failure);
-  reader.compare('openError', failure instanceof Error ? failure.message : '');
+  reader.compare('raises', failure === null ? null : raisesOf(failure));
 }
 
 // A call of the response hook: what it received (HY-60).

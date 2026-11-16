@@ -3,6 +3,7 @@
 import { Cookies } from '../../src/http/cookies.js';
 import { Request } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
+import { failureOf } from '../case-rules.js';
 import { listOf, textOf } from '../inputs.js';
 import { bytesOf } from '../support.js';
 
@@ -94,30 +95,8 @@ export const steps = {
         read = read.withHeader(name, value);
       }
     }
-    reader.compare('method', read.method);
-    reader.compare('path', read.path());
-    reader.compare('rawQuery', read.rawQuery());
-    reader.compare('query', read.query());
-    if (reader.has('queryInt')) {
-      reader.compare('queryInt', pairsIn(reader, 'integers').map(([name, fallback]) => {
-        if (typeof fallback !== 'number') throw new Error('a default of the case field integers is not a number');
-        return read.queryInt(name, fallback);
-      }));
-    }
-    reader.compare('form', read.form());
-    if (reader.has('formString')) reader.compare('formString', namesIn(reader, 'formNames').map((name) => read.formString(name)));
-    if (reader.has('cookie')) reader.compare('cookie', namesIn(reader, 'cookieNames').map((name) => read.cookie(name)));
-    const headerNames = reader.has('header') || reader.has('original.header') ? namesIn(reader, 'headerNames') : [];
-    if (reader.has('header')) reader.compare('header', headerNames.map((name) => read.header(name)));
-    reader.compare('https', read.https);
-    reader.compare('selection', read.selection());
-    reader.compare('valid', read.validInput());
-    reader.compare('bodySize', read.bodySize());
-    reader.compare('currentPath', read.currentPath());
-    reader.compare('mediaType', read.mediaType());
-    if (reader.has('wantsJson')) reader.compare('wantsJson', kindOf(() => read.wantsJson()));
-    if (reader.has('isRegionRequest')) reader.compare('isRegionRequest', kindOf(() => read.isRegionRequest()));
-    if (reader.has('original.header')) reader.compare('original.header', headerNames.map((name) => original.header(name)));
+    // A member that fails ends the comparison, and the failure is compared with `raises`.
+    reader.compare('raises', failureOf(() => members(reader, read, original)).raises);
   },
   // Creates a request of the texts of the case and records the error of its creation, or null.
   texts(reader: CaseReader): void {
@@ -144,7 +123,37 @@ export const steps = {
         if (typeof limit !== 'number' || !Number.isInteger(limit)) throw new Error('a limit of the case is not an integer');
         return limit;
       });
-      reader.compare('over', limits.map((limit) => request.fileOver(limit)));
+      const outcome = failureOf(() => limits.map((limit) => request.fileOver(limit)));
+      reader.compare('over', outcome.result);
+      reader.compare('raises', outcome.raises);
     }
   },
 };
+
+// Compares the stated members of the copy of the request and the headers of the original.
+function members(reader: CaseReader, read: Request, original: Request): void {
+  reader.compare('method', read.method);
+  reader.compare('path', read.path());
+  reader.compare('rawQuery', read.rawQuery());
+  reader.compare('query', read.query());
+  if (reader.has('queryInt')) {
+    reader.compare('queryInt', pairsIn(reader, 'integers').map(([name, fallback]) => {
+      if (typeof fallback !== 'number') throw new Error('a default of the case field integers is not a number');
+      return read.queryInt(name, fallback);
+    }));
+  }
+  reader.compare('form', read.form());
+  if (reader.has('formString')) reader.compare('formString', namesIn(reader, 'formNames').map((name) => read.formString(name)));
+  if (reader.has('cookie')) reader.compare('cookie', namesIn(reader, 'cookieNames').map((name) => read.cookie(name)));
+  const headerNames = reader.has('header') || reader.has('original.header') ? namesIn(reader, 'headerNames') : [];
+  if (reader.has('header')) reader.compare('header', headerNames.map((name) => read.header(name)));
+  reader.compare('https', read.https);
+  reader.compare('selection', read.selection());
+  reader.compare('valid', read.validInput());
+  reader.compare('bodySize', read.bodySize());
+  reader.compare('currentPath', read.currentPath());
+  reader.compare('mediaType', read.mediaType());
+  if (reader.has('wantsJson')) reader.compare('wantsJson', kindOf(() => read.wantsJson()));
+  if (reader.has('isRegionRequest')) reader.compare('isRegionRequest', kindOf(() => read.isRegionRequest()));
+  if (reader.has('original.header')) reader.compare('original.header', headerNames.map((name) => original.header(name)));
+}

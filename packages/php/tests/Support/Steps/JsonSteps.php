@@ -5,25 +5,28 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\JsonCodec;
-use Polyspec\Hyper\JsonDecodeError;
 use Polyspec\Hyper\Tests\CaseReader;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 
 /** HY-17, HY-54: the cases of contracts/json.json, the JSON text of a decoded value and the decoding of a text. */
 final class JsonSteps
 {
     public static function encode(CaseReader $case): void
     {
-        $case->compare('expected', JsonCodec::encode(JsonCodec::decode(self::text($case))));
+        $json = self::text($case);
+        $outcome = CaseRules::failureOf(static fn (): string => JsonCodec::encode(JsonCodec::decode($json)));
+        $case->compare('expected', $outcome['result']);
+        $case->compare('raises', $outcome['raises']);
     }
 
     public static function decode(CaseReader $case): void
     {
-        try {
-            $result = JsonCodec::inDataModel(JsonCodec::decode(self::text($case))) ? 'value' : 'outside';
-        } catch (JsonDecodeError) {
-            $result = 'error';
-        }
-        $case->compare('result', $result);
+        $json = self::text($case);
+        $outcome = CaseRules::failureOf(
+            static fn (): string => JsonCodec::inDataModel(JsonCodec::decode($json)) ? 'value' : 'outside',
+        );
+        $case->compare('result', $outcome['result']);
+        $case->compare('raises', $outcome['raises']);
     }
 
     private static function text(CaseReader $case): string

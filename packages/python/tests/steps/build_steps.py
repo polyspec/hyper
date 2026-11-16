@@ -5,8 +5,9 @@ import tempfile
 from pathlib import Path
 
 from polyspec.hyper.app._build import Build
-from polyspec.hyper.app._invalid_build import InvalidBuild
 from polyspec.hyper.page._renderer import Renderer
+
+from ..case_rules import FAILURES, raises_of
 
 # The outputs of a server program in the order in which the step creates them, and whether each is a directory.
 _OUTPUTS = {
@@ -36,15 +37,15 @@ def read(case) -> None:
                 raise TypeError("the case field bytes is not hexadecimal digits")
             Path(file).write_bytes(bytes.fromhex(data))
         build = None
-        error = None
+        raises = None
         message = None
         try:
             build = Build.read(file)
-        except InvalidBuild as failure:
-            error = "invalid-build" if file in str(failure) else str(failure)
+        except FAILURES as failure:
+            raises = raises_of(failure)
             message = str(failure)
         case.compare("build", build)
-        case.compare("error", error)
+        case.compare("raises", raises)
         case.compare("message", message)
 
 

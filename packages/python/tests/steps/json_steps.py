@@ -1,7 +1,8 @@
 # The steps of contracts/json.json (HY-17, HY-54): the JSON text of a decoded value, and the decoding of a text.
 from polyspec.hyper.data._json_codec import JsonCodec
-from polyspec.hyper.data._json_decode_error import JsonDecodeError
 from polyspec.hyper.data._outside_number import OutsideNumber
+
+from ..case_rules import FAILURES, raises_of
 
 
 def _finite(value):
@@ -19,18 +20,26 @@ def _outside(value: OutsideNumber) -> float:
 
 
 def encode(case) -> None:
-    case.compare(
-        "expected", JsonCodec.encode(_finite(JsonCodec.decode(case.input("json"))))
-    )
+    text = case.input("json")
+    expected = None
+    raises = None
+    try:
+        expected = JsonCodec.encode(_finite(JsonCodec.decode(text)))
+    except FAILURES as failure:
+        raises = raises_of(failure)
+    case.compare("expected", expected)
+    case.compare("raises", raises)
 
 
 def decode(case) -> None:
+    text = case.input("json")
+    result = None
+    raises = None
     try:
         result = (
-            "value"
-            if JsonCodec.in_data_model(JsonCodec.decode(case.input("json")))
-            else "outside"
+            "value" if JsonCodec.in_data_model(JsonCodec.decode(text)) else "outside"
         )
-    except JsonDecodeError:
-        result = "error"
+    except FAILURES as failure:
+        raises = raises_of(failure)
     case.compare("result", result)
+    case.compare("raises", raises)

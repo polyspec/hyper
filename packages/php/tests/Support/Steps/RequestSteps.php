@@ -8,6 +8,7 @@ use Polyspec\Hyper\Cookies;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Bytes;
+use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\UploadedFile;
 
@@ -58,10 +59,13 @@ final class RequestSteps
             $request->files(),
         ));
         if ($case->has('limits')) {
-            $case->compare('over', array_map(
-                static fn (mixed $limit): bool => $request->fileOver(Json::integer($limit, 'a limit of the case')),
+            $limits = array_map(
+                static fn (mixed $limit): int => Json::integer($limit, 'a limit of the case'),
                 Json::list($case->input('limits')),
-            ));
+            );
+            $outcome = CaseRules::failureOf(static fn (): array => array_map($request->fileOver(...), $limits));
+            $case->compare('over', $outcome['result']);
+            $case->compare('raises', $outcome['raises']);
         }
     }
 
@@ -120,7 +124,14 @@ final class RequestSteps
                 $request = $request->withHeader($name, $value);
             }
         }
+        // A member that fails ends the comparison, and the failure is compared with `raises`.
+        $outcome = CaseRules::failureOf(static fn () => self::members($case, $request, $original));
+        $case->compare('raises', $outcome['raises']);
+    }
 
+    /** Compares the members of the copy of the request that the case states and the headers of the original. */
+    private static function members(CaseReader $case, Request $request, Request $original): void
+    {
         $case->compare('method', $request->method);
         $case->compare('path', $request->path());
         $case->compare('rawQuery', $request->rawQuery());
