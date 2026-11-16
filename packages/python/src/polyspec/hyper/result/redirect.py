@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..app._core_rules import core_rules
 from .result import Result
 
 
@@ -13,6 +14,8 @@ class Redirect(Exception):
     def __init__(self, result: Result):
         """Fails for a result that is not a redirect."""
         if not result._is_redirect():
-            raise ValueError("a redirect stop needs a redirect result (HY-50)")
+            raise core_rules().value_error(
+                "a redirect stop needs a redirect result (HY-50)", "not_redirect_result"
+            )
         super().__init__(f"redirect to {result.location}")
         self.result = result

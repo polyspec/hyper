@@ -169,6 +169,18 @@ class CoreRules:
         cookie from the request (HY-129)."""
         return self._core.keep_name(secure)
 
+    def value_error(self, message: str, kind: str) -> ValueError:
+        """The error of hyper of the category value with its kind (HY-132.2), of the class of the binding."""
+        from .._binding._errors import HyperValueError
+
+        return HyperValueError(message, kind)
+
+    def type_error(self, message: str, kind: str) -> TypeError:
+        """The error of hyper of the category type with its kind (HY-132.2), of the class of the binding."""
+        from .._binding._errors import HyperTypeError
+
+        return HyperTypeError(message, kind)
+
     def build_read(self, data: bytes) -> str:
         """Partial. Build.read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18,
         HY-125.19). The server still reads the file and names the absolute path of the file in a failure

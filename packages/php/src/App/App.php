@@ -162,10 +162,16 @@ final class App
             );
         }
         if ($partLimit < 1) {
-            throw new \InvalidArgumentException("part limit {$partLimit} is not a positive number (HY-131)");
+            throw new HyperValueError(
+                "part limit {$partLimit} is not a positive number (HY-131)",
+                'invalid_application',
+            );
         }
         if ($responseLimit < 1) {
-            throw new \InvalidArgumentException("response limit {$responseLimit} is not a positive number of bytes");
+            throw new HyperValueError(
+                "response limit {$responseLimit} is not a positive number of bytes",
+                'invalid_application',
+            );
         }
         if (
             $formTypes === []
@@ -218,28 +224,36 @@ final class App
     {
         $base = $client->basePath;
         if ($base === '' || !str_starts_with($base, '/') || str_ends_with($base, '/')) {
-            throw new \InvalidArgumentException("data base path {$base} must start with / and must not end with /");
+            throw new HyperValueError(
+                "data base path {$base} must start with / and must not end with /",
+                'invalid_application',
+            );
         }
         foreach ($manifest->routes as $name => $route) {
             if ($route['path'] === $base || str_starts_with($route['path'], "{$base}/")) {
-                throw new \InvalidArgumentException("route {$name} lies under the data base path {$base}");
+                throw new HyperValueError(
+                    "route {$name} lies under the data base path {$base}",
+                    'invalid_application',
+                );
             }
         }
         if (!str_starts_with($client->shell, '/') || !is_file($client->shell) || !is_readable($client->shell)) {
-            throw new \InvalidArgumentException(
+            throw new HyperValueError(
                 "static shell {$client->shell} is not a readable file at an absolute path",
+                'invalid_application',
             );
         }
         $shell = file_get_contents($client->shell);
         if ($shell === false) {
-            throw new \InvalidArgumentException("static shell {$client->shell} cannot be read");
+            throw new HyperValueError("static shell {$client->shell} cannot be read", 'invalid_application');
         }
         if (preg_match('//u', $shell) !== 1) {
-            throw new \InvalidArgumentException("static shell {$client->shell} is not valid UTF-8");
+            throw new HyperValueError("static shell {$client->shell} is not valid UTF-8", 'invalid_application');
         }
         if (!str_contains($shell, '<meta name="hyper-api" content="' . htmlspecialchars($base, ENT_QUOTES) . '">')) {
-            throw new \InvalidArgumentException(
+            throw new HyperValueError(
                 "static shell {$client->shell} does not declare the data base path {$base}",
+                'invalid_application',
             );
         }
 
@@ -261,17 +275,24 @@ final class App
                 array_filter($manifest->regions, fn (Region $region): bool => $region->name === $name),
             )[0] ?? null;
             if ($region === null || $region->page) {
-                throw new \InvalidArgumentException("region loader {$name} has no non-page region in the manifest");
+                throw new HyperValueError(
+                    "region loader {$name} has no non-page region in the manifest",
+                    'invalid_application',
+                );
             }
         }
         $routeHandlers = $handlers['routes'] ?? [];
         foreach ($routeHandlers as $name => $handler) {
             if (!isset($manifest->routes[$name])) {
-                throw new \InvalidArgumentException("route handler {$name} has no route in the manifest");
+                throw new HyperValueError(
+                    "route handler {$name} has no route in the manifest",
+                    'invalid_application',
+                );
             }
             if (isset($handler['post']) !== $manifest->routes[$name]['post']) {
-                throw new \InvalidArgumentException(
+                throw new HyperValueError(
                     "route {$name} must have a POST action exactly when the manifest declares post",
+                    'invalid_application',
                 );
             }
             $routeRegions = array_map(
@@ -280,15 +301,19 @@ final class App
             );
             foreach (array_keys($handler['regions'] ?? []) as $regionName) {
                 if (!in_array($regionName, $routeRegions, true)) {
-                    throw new \InvalidArgumentException(
+                    throw new HyperValueError(
                         "route {$name} has a loader for undeclared region {$regionName}",
+                        'invalid_application',
                     );
                 }
             }
         }
         foreach ($manifest->routes as $name => $route) {
             if ($route['post'] && !isset($routeHandlers[$name]['post'])) {
-                throw new \InvalidArgumentException("route {$name} declares post but has no POST action");
+                throw new HyperValueError(
+                    "route {$name} declares post but has no POST action",
+                    'invalid_application',
+                );
             }
             RepresentationEntries::checkHandlers(
                 $name,

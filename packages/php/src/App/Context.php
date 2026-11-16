@@ -83,8 +83,8 @@ final class Context
     {
         if (array_key_exists('context', $shared)) {
             throw new HyperValueError(
-                'shared_holds_context',
                 'the shared data already holds the member context (HY-128)',
+                'shared_holds_context',
             );
         }
         $anchor = array_key_exists('csrf', $shared) ? 'csrf' : 'title';

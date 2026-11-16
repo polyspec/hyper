@@ -8,7 +8,6 @@ from typing import Callable, Optional
 
 from ._core_rules import core_rules
 from ..data._data_model import DataModel
-from ._hyper_value_error import HyperValueError
 from ..data._json_codec import JsonCodec
 
 
@@ -54,9 +53,9 @@ class Context:
         member `context` fails with the kind `shared_holds_context` (HY-124.8, HY-132), because the context has one
         place and one source (HY-124, HY-128)."""
         if "context" in shared:
-            raise HyperValueError(
-                "shared_holds_context",
+            raise core_rules().value_error(
                 "the shared data already holds the member context (HY-128)",
+                "shared_holds_context",
             )
         anchor = "csrf" if "csrf" in shared else "title"
         placed: dict = {}

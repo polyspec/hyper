@@ -12,7 +12,7 @@ final class Redirect extends \RuntimeException
     {
         ArgumentCount::most(\func_num_args(), 1);
         if (!$result->isRedirect()) {
-            throw new \InvalidArgumentException('a redirect stop needs a redirect result (HY-50)');
+            throw new HyperValueError('a redirect stop needs a redirect result (HY-50)', 'not_redirect_result');
         }
         parent::__construct("redirect to {$result->location}");
     }

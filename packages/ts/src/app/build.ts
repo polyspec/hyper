@@ -1,7 +1,7 @@
 // The build id of the application, which `build.json` holds as `{"build":"<id>"}` (HY-125). The build id is the
 // lowercase hexadecimal SHA-256 digest of the outputs of the browser; no server derives or defaults it (HY-48).
 import { readFileSync } from 'node:fs';
-import { InvalidBuild } from './invalid-build.js';
+import { rules } from './core-rules.js';
 import { JsonCodec, type DecodedValue } from '../data/json-codec.js';
 import { JsonDecodeError } from '../data/json-decode-error.js';
 
@@ -13,8 +13,8 @@ export class Build {
     let bytes: Buffer;
     try {
       bytes = readFileSync(file);
-    } catch (error) {
-      throw new InvalidBuild(`${file} is missing or not readable (HY-125)`, { cause: error });
+    } catch {
+      throw rules().valueError(`${file} is missing or not readable (HY-125)`, 'invalid_build');
     }
     let text: string;
     try {
@@ -22,7 +22,7 @@ export class Build {
       text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
     } catch (error) {
       if (!(error instanceof TypeError)) throw error;
-      throw new InvalidBuild(`${file} is not valid JSON (HY-125)`, { cause: error });
+      throw rules().valueError(`${file} is not valid JSON (HY-125)`, 'invalid_build');
     }
     let value: DecodedValue;
     try {
@@ -30,11 +30,11 @@ export class Build {
       value = JsonCodec.decode(text);
     } catch (error) {
       if (!(error instanceof JsonDecodeError)) throw error;
-      throw new InvalidBuild(`${file} is not valid JSON (HY-125)`, { cause: error });
+      throw rules().valueError(`${file} is not valid JSON (HY-125)`, 'invalid_build');
     }
     const build = value instanceof Map && value.size === 1 ? value.get('build') : undefined;
     if (typeof build !== 'string' || !/^[0-9a-f]{64}$/u.test(build)) {
-      throw new InvalidBuild(`${file} does not hold exactly the key build with a build id of 64 lowercase hexadecimal characters (HY-125)`);
+      throw rules().valueError(`${file} does not hold exactly the key build with a build id of 64 lowercase hexadecimal characters (HY-125)`, 'invalid_build');
     }
     return build;
   }

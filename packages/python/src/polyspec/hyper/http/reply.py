@@ -32,7 +32,9 @@ class Reply:
         """Records a value of the request for the response hook; a later note of the same name replaces the value
         and keeps its position. The notes are not part of the response (HY-60)."""
         if not isinstance(name, str):
-            raise TypeError("a note name is not a string (HY-60)")
+            raise core_rules().type_error(
+                "a note name is not a string (HY-60)", "invalid_argument_type"
+            )
         self.__notes[name] = value
         return self
 
@@ -44,20 +46,32 @@ class Reply:
         """Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails.
         The types are checked before the values, in the order of the parameters."""
         if not isinstance(name, str):
-            raise TypeError("a cookie name is not a string (HY-52)")
+            raise core_rules().type_error(
+                "a cookie name is not a string (HY-52)", "invalid_argument_type"
+            )
         if not isinstance(value, str):
-            raise TypeError("a cookie value is not a string (HY-52)")
+            raise core_rules().type_error(
+                "a cookie value is not a string (HY-52)", "invalid_argument_type"
+            )
         age = None if max_age is None else Reply._integer(max_age)
         if max_age is not None and age is None:
-            raise TypeError("a Max-Age is not an integer within ±(2^53 − 1) (HY-52)")
+            raise core_rules().value_error(
+                "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
+                "invalid_number",
+            )
         if _COOKIE_NAME.fullmatch(name) is None or name.startswith("hy-"):
-            raise ValueError(f"cookie name {name} is not allowed (HY-52)")
+            raise core_rules().value_error(
+                f"cookie name {name} is not allowed (HY-52)", "cookie_name_not_allowed"
+            )
         if _COOKIE_VALUE.fullmatch(value) is None:
-            raise ValueError(
-                f"cookie value of {name} has a character that is not allowed (HY-52)"
+            raise core_rules().value_error(
+                f"cookie value of {name} has a character that is not allowed (HY-52)",
+                "cookie_value_not_allowed",
             )
         if age is not None and age < 0:
-            raise ValueError(f"cookie {name} has a negative Max-Age (HY-52)")
+            raise core_rules().value_error(
+                f"cookie {name} has a negative Max-Age (HY-52)", "negative_max_age"
+            )
         self.__cookies.append((name, value, age))
         return self
 
@@ -72,7 +86,9 @@ class Reply:
         visitor, so the value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor
         `s-maxage` (HY-52); the core checks the value (HY-132.2)."""
         if not isinstance(value, str):
-            raise TypeError("a Cache-Control is not a string (HY-52)")
+            raise core_rules().type_error(
+                "a Cache-Control is not a string (HY-52)", "invalid_argument_type"
+            )
         self.__cache_control = core_rules().reply_cache_control(value)
         return self
 
@@ -95,7 +111,9 @@ class Reply:
         """Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is
         not a token of the Referrer-Policy specification fails (HY-103); the core checks the value (HY-132.2)."""
         if not isinstance(value, str):
-            raise TypeError("a Referrer-Policy is not a string (HY-103)")
+            raise core_rules().type_error(
+                "a Referrer-Policy is not a string (HY-103)", "invalid_argument_type"
+            )
         self.__referrer_policy = core_rules().reply_referrer_policy(value)
         return self
 

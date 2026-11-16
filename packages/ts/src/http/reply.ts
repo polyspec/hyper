@@ -18,7 +18,7 @@ export class Reply {
   note(name: string, value: unknown): this {
     ArgumentCountError.between(arguments.length, 2, 2);
     // HY-60.28: a JavaScript caller may pass a name that is not a string.
-    if (typeof name !== 'string') throw new TypeError('a note name is not a string (HY-60)');
+    if (typeof name !== 'string') throw rules().typeError('a note name is not a string (HY-60)', 'invalid_argument_type');
     this.noted.set(name, value);
     return this;
   }
@@ -33,13 +33,13 @@ export class Reply {
   // checked before the values, in the order of the parameters.
   cookie(name: string, value: string, maxAge: number | null = null): this {
     ArgumentCountError.between(arguments.length, 2, 3);
-    if (typeof name !== 'string') throw new TypeError('a cookie name is not a string (HY-52)');
-    if (typeof value !== 'string') throw new TypeError('a cookie value is not a string (HY-52)');
+    if (typeof name !== 'string') throw rules().typeError('a cookie name is not a string (HY-52)', 'invalid_argument_type');
+    if (typeof value !== 'string') throw rules().typeError('a cookie value is not a string (HY-52)', 'invalid_argument_type');
     const age = maxAge === null ? null : Reply.integer(maxAge);
-    if (maxAge !== null && age === null) throw new TypeError('a Max-Age is not an integer within ±(2^53 − 1) (HY-52)');
-    if (!/^[a-z][a-z0-9_-]*$/.test(name) || name.startsWith('hy-')) throw new RangeError(`cookie name ${name} is not allowed (HY-52)`);
-    if (!/^[A-Za-z0-9._~-]+$/.test(value)) throw new RangeError(`cookie value of ${name} has a character that is not allowed (HY-52)`);
-    if (age !== null && age < 0) throw new RangeError(`cookie ${name} has a negative Max-Age (HY-52)`);
+    if (maxAge !== null && age === null) throw rules().valueError('a Max-Age is not an integer within ±(2^53 − 1) (HY-52)', 'invalid_number');
+    if (!/^[a-z][a-z0-9_-]*$/.test(name) || name.startsWith('hy-')) throw rules().valueError(`cookie name ${name} is not allowed (HY-52)`, 'cookie_name_not_allowed');
+    if (!/^[A-Za-z0-9._~-]+$/.test(value)) throw rules().valueError(`cookie value of ${name} has a character that is not allowed (HY-52)`, 'cookie_value_not_allowed');
+    if (age !== null && age < 0) throw rules().valueError(`cookie ${name} has a negative Max-Age (HY-52)`, 'negative_max_age');
     this.cookies.push([name, value, age]);
     return this;
   }
@@ -56,7 +56,7 @@ export class Reply {
   // value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor `s-maxage` (HY-52).
   cacheControl(value: string): this {
     ArgumentCountError.between(arguments.length, 1, 1);
-    if (typeof value !== 'string') throw new TypeError('a Cache-Control is not a string (HY-52)');
+    if (typeof value !== 'string') throw rules().typeError('a Cache-Control is not a string (HY-52)', 'invalid_argument_type');
     this.cacheControlText = rules().replyCacheControl(value);
     return this;
   }
@@ -85,7 +85,7 @@ export class Reply {
   // token of the Referrer-Policy specification fails (HY-103).
   referrerPolicy(value: string): this {
     ArgumentCountError.between(arguments.length, 1, 1);
-    if (typeof value !== 'string') throw new TypeError('a Referrer-Policy is not a string (HY-103)');
+    if (typeof value !== 'string') throw rules().typeError('a Referrer-Policy is not a string (HY-103)', 'invalid_argument_type');
     this.referrerPolicyText = rules().replyReferrerPolicy(value);
     return this;
   }
@@ -105,7 +105,7 @@ export class Reply {
   status(status: number): this {
     ArgumentCountError.between(arguments.length, 1, 1);
     const code = Reply.integer(status);
-    if (code === null) throw new TypeError('a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)');
+    if (code === null) throw rules().valueError('a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)', 'invalid_number');
     this.pageStatus = rules().replyStatus(code);
     return this;
   }

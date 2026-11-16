@@ -34,7 +34,7 @@ export class Result {
   // Returns an outside redirect to an outside location (HY-133).
   static outside(location: string): Result {
     ArgumentCountError.between(arguments.length, 1, 1);
-    if (Result.origin(location) === null) throw new RangeError('an outside location is not an http or https URL with a host (HY-133)');
+    if (Result.origin(location) === null) throw rules().valueError('an outside location is not an http or https URL with a host (HY-133)', 'not_outside_location');
     return new Result(location, 303, {}, new Map(), []);
   }
 
@@ -69,7 +69,7 @@ export class Result {
     ArgumentCountError.between(arguments.length, 2, 2);
     this.refuseOutside();
     // HY-25.6: a caller in JavaScript may pass a name that is not a string.
-    if (typeof name !== 'string') throw new TypeError('a flash name is not a string (HY-25)');
+    if (typeof name !== 'string') throw rules().typeError('a flash name is not a string (HY-25)', 'invalid_argument_type');
     return new Result(this.location, this.status, this.data, new Map(this.flashValues).set(name, toValue(value)), this.changedTopics);
   }
 
@@ -77,7 +77,7 @@ export class Result {
   changed(...topics: string[]): Result {
     this.refuseOutside();
     // HY-25.6: a caller in JavaScript may pass a topic that is not a string.
-    if (!topics.every((topic) => typeof topic === 'string')) throw new TypeError('a changed topic is not a string (HY-25)');
+    if (!topics.every((topic) => typeof topic === 'string')) throw rules().typeError('a changed topic is not a string (HY-25)', 'invalid_argument_type');
     return new Result(this.location, this.status, this.data, this.flashValues, [...new Set([...this.changedTopics, ...topics])]);
   }
 

@@ -48,8 +48,9 @@ class Result:
     def outside(location: str) -> Result:
         """Returns an outside redirect to an outside location (HY-133)."""
         if Result.origin(location) is None:
-            raise ValueError(
-                "an outside location is not an http or https URL with a host (HY-133)"
+            raise core_rules().value_error(
+                "an outside location is not an http or https URL with a host (HY-133)",
+                "not_outside_location",
             )
         return Result(location, 303, {}, {}, [])
 
@@ -86,7 +87,9 @@ class Result:
         the data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.6)."""
         self._refuse_outside()
         if not isinstance(name, str):
-            raise TypeError("a flash name is not a string (HY-25)")
+            raise core_rules().type_error(
+                "a flash name is not a string (HY-25)", "invalid_argument_type"
+            )
         DataModel.check(value)
         return Result(
             self.location,
@@ -101,7 +104,9 @@ class Result:
         place; a topic that is not a string fails with TypeError (HY-25.6)."""
         self._refuse_outside()
         if not all(isinstance(topic, str) for topic in topics):
-            raise TypeError("a changed topic is not a string (HY-25)")
+            raise core_rules().type_error(
+                "a changed topic is not a string (HY-25)", "invalid_argument_type"
+            )
         return Result(
             self.location,
             self.status,

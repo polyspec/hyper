@@ -41,7 +41,10 @@ final class Result
             preg_match('#^/(?![/\\\\])[^\x{00}-\x{20}\x{7F}-\x{9F}\\\\]*$#Du', $location) !== 1
             || self::hasDotSegment($location)
         ) {
-            throw new \InvalidArgumentException('a redirect location is not an application path (HY-46)');
+            throw new HyperValueError(
+                'a redirect location is not an application path (HY-46)',
+                'not_application_path',
+            );
         }
 
         return new self($location, 303, [], [], []);
@@ -52,7 +55,10 @@ final class Result
     {
         ArgumentCount::most(\func_num_args(), 1);
         if (self::origin($location) === null) {
-            throw new \InvalidArgumentException('an outside location is not an http or https URL with a host (HY-133)');
+            throw new HyperValueError(
+                'an outside location is not an http or https URL with a host (HY-133)',
+                'not_outside_location',
+            );
         }
 
         return new self($location, 303, [], [], []);
@@ -109,7 +115,7 @@ final class Result
         $this->refuseOutside();
         // HY-25.6: a declared type would convert an integer name for a caller without strict types.
         if (!is_string($name)) {
-            throw new \TypeError('a flash name is not a string (HY-25)');
+            throw new HyperTypeError('a flash name is not a string (HY-25)', 'invalid_argument_type');
         }
         // An assignment keeps every name and the place of a name stored again (HY-25.5); a spread would number the
         // names that PHP keeps as integer keys again.
@@ -131,7 +137,7 @@ final class Result
         // HY-25.6: a declared type would convert an integer topic for a caller without strict types.
         foreach ($topics as $topic) {
             if (!is_string($topic)) {
-                throw new \TypeError('a changed topic is not a string (HY-25)');
+                throw new HyperTypeError('a changed topic is not a string (HY-25)', 'invalid_argument_type');
             }
         }
         return new self(

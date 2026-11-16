@@ -202,6 +202,14 @@ export interface CoreBinding {
   answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;
   Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions) => CorePagesInstance;
   PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;
+  HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;
+  HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;
+}
+
+// An error of hyper: its kind and its status, which a caller tells failures apart by (HY-132.1, HY-132.2).
+interface HyperError extends Error {
+  readonly kind: string;
+  readonly status: number | null;
 }
 
 // The names of the members of `CoreBinding`, which `coreRules` requires of the module that it receives.
@@ -210,7 +218,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-  'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest',
+  'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
 
 // A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
@@ -229,6 +237,10 @@ interface PageHeaderParts {
 
 /** @internal */
 export interface CoreRules {
+  // The error of hyper of the category value and of the category type with its kind (HY-132.2), of the classes of
+  // the binding.
+  valueError(message: string, kind: string): HyperError & RangeError;
+  typeError(message: string, kind: string): HyperError & TypeError;
   // Exact units.
   // csrfMask: rules.csrf_mask (HY-24.2, HY-24.14).
   csrfMask(token: string, mask: string): string;
@@ -370,6 +382,8 @@ export function coreRules(module: object): CoreRules {
   if (!isBinding(module, missing)) throw new Error(`hyper: the binding of the core has no member ${missing.join(', ')}`);
   const core = module;
   return {
+    valueError: (message, kind) => new core.HyperValueError(message, kind, null),
+    typeError: (message, kind) => new core.HyperTypeError(message, kind, null),
     csrfMask: (token, mask) => core.csrfMask(token, mask),
     csrfVerify: (token, value) => core.csrfVerify(token, value),
     csrfBrowserOf: (masked) => core.browser(masked),

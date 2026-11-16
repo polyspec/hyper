@@ -35,7 +35,7 @@ final class Reply
         ArgumentCount::most(\func_num_args(), 2);
         // HY-60.28: a declared type would convert an integer name for a caller without strict types.
         if (!is_string($name)) {
-            throw new \TypeError('a note name is not a string (HY-60)');
+            throw new HyperTypeError('a note name is not a string (HY-60)', 'invalid_argument_type');
         }
         $this->notes[$name] = $value;
 
@@ -68,23 +68,26 @@ final class Reply
     {
         ArgumentCount::most(\func_num_args(), 3);
         if (!is_string($name)) {
-            throw new \TypeError('a cookie name is not a string (HY-52)');
+            throw new HyperTypeError('a cookie name is not a string (HY-52)', 'invalid_argument_type');
         }
         if (!is_string($value)) {
-            throw new \TypeError('a cookie value is not a string (HY-52)');
+            throw new HyperTypeError('a cookie value is not a string (HY-52)', 'invalid_argument_type');
         }
         $age = $maxAge === null ? null : self::integer($maxAge);
         if ($maxAge !== null && $age === null) {
-            throw new \TypeError('a Max-Age is not an integer within ±(2^53 − 1) (HY-52)');
+            throw new HyperValueError('a Max-Age is not an integer within ±(2^53 − 1) (HY-52)', 'invalid_number');
         }
         if (preg_match('/^[a-z][a-z0-9_-]*$/D', $name) !== 1 || str_starts_with($name, 'hy-')) {
-            throw new \InvalidArgumentException("cookie name {$name} is not allowed (HY-52)");
+            throw new HyperValueError("cookie name {$name} is not allowed (HY-52)", 'cookie_name_not_allowed');
         }
         if (preg_match('/^[A-Za-z0-9._~-]+$/D', $value) !== 1) {
-            throw new \InvalidArgumentException("cookie value of {$name} has a character that is not allowed (HY-52)");
+            throw new HyperValueError(
+                "cookie value of {$name} has a character that is not allowed (HY-52)",
+                'cookie_value_not_allowed',
+            );
         }
         if ($age !== null && $age < 0) {
-            throw new \InvalidArgumentException("cookie {$name} has a negative Max-Age (HY-52)");
+            throw new HyperValueError("cookie {$name} has a negative Max-Age (HY-52)", 'negative_max_age');
         }
         $this->cookies[] = [$name, $value, $age];
 
@@ -112,7 +115,7 @@ final class Reply
     {
         ArgumentCount::most(\func_num_args(), 1);
         if (!is_string($value)) {
-            throw new \TypeError('a Cache-Control is not a string (HY-52)');
+            throw new HyperTypeError('a Cache-Control is not a string (HY-52)', 'invalid_argument_type');
         }
         $this->cacheControl = CoreRules::shared()->replyCacheControl($value);
 
@@ -155,7 +158,7 @@ final class Reply
     {
         ArgumentCount::most(\func_num_args(), 1);
         if (!is_string($value)) {
-            throw new \TypeError('a Referrer-Policy is not a string (HY-103)');
+            throw new HyperTypeError('a Referrer-Policy is not a string (HY-103)', 'invalid_argument_type');
         }
         $this->referrerPolicy = CoreRules::shared()->replyReferrerPolicy($value);
 
@@ -187,7 +190,10 @@ final class Reply
         ArgumentCount::most(\func_num_args(), 1);
         $code = self::integer($status);
         if ($code === null) {
-            throw new \TypeError('a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)');
+            throw new HyperValueError(
+                'a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)',
+                'invalid_number',
+            );
         }
         $this->status = CoreRules::shared()->replyStatus($code);
 

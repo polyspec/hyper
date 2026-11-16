@@ -17,13 +17,13 @@ final class Build
      * holds exactly the key `build` with a build id of 64 lowercase hexadecimal characters; a failure names the path
      * of the file (HY-125.5, HY-125.18).
      *
-     * @throws InvalidBuild
+     * @throws HyperValueError of the kind `invalid_build` (HY-132.2)
      */
     public static function read(string $file): string
     {
         $text = is_file($file) ? file_get_contents($file) : false;
         if ($text === false) {
-            throw new InvalidBuild("{$file} is missing or not readable (HY-125)");
+            throw new HyperValueError("{$file} is missing or not readable (HY-125)", 'invalid_build');
         }
         try {
             // Bytes that are not UTF-8, a leading U+FEFF and another form fail in the core (HY-106.7, HY-125.18).
@@ -32,8 +32,10 @@ final class Build
             if ($error->kind() !== 'invalid_build') {
                 throw $error;
             }
-
-            throw new InvalidBuild("{$file}: {$error->getMessage()}", previous: $error);
+            $reason = $error->getMessage();
         }
+        // The error of the core names no file; the error of the server names it (HY-125.18). The class of the
+        // binding takes no previous error, so the reason of the core is its message.
+        throw new HyperValueError("{$file}: {$reason}", 'invalid_build');
     }
 }

@@ -163,12 +163,14 @@ class App:
                 f"value limit {value_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-131)"
             )
         if type(part_limit) is not int or part_limit < 1:
-            raise ValueError(
-                f"part limit {part_limit} is not a positive number (HY-131)"
+            raise core_rules().value_error(
+                f"part limit {part_limit} is not a positive number (HY-131)",
+                "invalid_application",
             )
         if type(response_limit) is not int or response_limit < 1:
-            raise ValueError(
-                f"response limit {response_limit} is not a positive number of bytes"
+            raise core_rules().value_error(
+                f"response limit {response_limit} is not a positive number of bytes",
+                "invalid_application",
             )
         types = list(
             ["application/x-www-form-urlencoded"] if form_types is None else form_types
@@ -228,24 +230,30 @@ class App:
         (HY-62)."""
         base = client.base_path
         if base == "" or not base.startswith("/") or base.endswith("/"):
-            raise ValueError(
-                f"data base path {base} must start with / and must not end with /"
+            raise core_rules().value_error(
+                f"data base path {base} must start with / and must not end with /",
+                "invalid_application",
             )
         for name, route in manifest.routes.items():
             if route["path"] == base or route["path"].startswith(base + "/"):
-                raise ValueError(f"route {name} lies under the data base path {base}")
+                raise core_rules().value_error(
+                    f"route {name} lies under the data base path {base}",
+                    "invalid_application",
+                )
         # HY-132.2: the core checks the path before the file is read and gives the text of its bytes.
         core_rules().app_check_shell_path(client.shell)
         shell_path = Path(client.shell)
         if not shell_path.is_file():
-            raise ValueError(
-                f"static shell {client.shell} is not a readable file at an absolute path"
+            raise core_rules().value_error(
+                f"static shell {client.shell} is not a readable file at an absolute path",
+                "invalid_application",
             )
         try:
             data = shell_path.read_bytes()
         except OSError:
-            raise ValueError(
-                f"static shell {client.shell} is not a readable file at an absolute path"
+            raise core_rules().value_error(
+                f"static shell {client.shell} is not a readable file at an absolute path",
+                "invalid_application",
             ) from None
         shell = core_rules().app_shell_text(client.shell, data)
         # The base path is escaped as PHP `htmlspecialchars` with `ENT_QUOTES` escapes it.
@@ -257,8 +265,9 @@ class App:
             .replace(">", "&gt;")
         )
         if f'<meta name="hyper-api" content="{escaped}">' not in shell:
-            raise ValueError(
-                f"static shell {client.shell} does not declare the data base path {base}"
+            raise core_rules().value_error(
+                f"static shell {client.shell} does not declare the data base path {base}",
+                "invalid_application",
             )
         return shell
 
@@ -273,26 +282,35 @@ class App:
                 (entry for entry in manifest.regions if entry.name == name), None
             )
             if region is None or region.page:
-                raise ValueError(
-                    f"region loader {name} has no non-page region in the manifest"
+                raise core_rules().value_error(
+                    f"region loader {name} has no non-page region in the manifest",
+                    "invalid_application",
                 )
         route_handlers = handlers.get("routes", {})
         for name, handler in route_handlers.items():
             if name not in manifest.routes:
-                raise ValueError(f"route handler {name} has no route in the manifest")
+                raise core_rules().value_error(
+                    f"route handler {name} has no route in the manifest",
+                    "invalid_application",
+                )
             if ("post" in handler) != manifest.routes[name]["post"]:
-                raise ValueError(
-                    f"route {name} must have a POST action exactly when the manifest declares post"
+                raise core_rules().value_error(
+                    f"route {name} must have a POST action exactly when the manifest declares post",
+                    "invalid_application",
                 )
             route_regions = [region.name for region in manifest.routes[name]["regions"]]
             for region_name in handler.get("regions", {}):
                 if region_name not in route_regions:
-                    raise ValueError(
-                        f"route {name} has a loader for undeclared region {region_name}"
+                    raise core_rules().value_error(
+                        f"route {name} has a loader for undeclared region {region_name}",
+                        "invalid_application",
                     )
         for name, route in manifest.routes.items():
             if route["post"] and "post" not in route_handlers.get(name, {}):
-                raise ValueError(f"route {name} declares post but has no POST action")
+                raise core_rules().value_error(
+                    f"route {name} declares post but has no POST action",
+                    "invalid_application",
+                )
             RepresentationEntries.check_handlers(
                 name,
                 route["representations"],

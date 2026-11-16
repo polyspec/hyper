@@ -258,9 +258,9 @@ export class App<S extends object = Record<string, never>> {
       throw new Error(`hyper: value limit ${valueLimit} is not a positive number of bytes no larger than the body limit ${bodyLimit} (HY-131)`);
     }
     const partLimit = options.partLimit ?? 1000;
-    if (!Number.isSafeInteger(partLimit) || partLimit < 1) throw new Error(`hyper: part limit ${partLimit} is not a positive number (HY-131)`);
+    if (!Number.isSafeInteger(partLimit) || partLimit < 1) throw rules().valueError(`part limit ${partLimit} is not a positive number (HY-131)`, 'invalid_application');
     const responseLimit = options.responseLimit ?? 8 * 1024 * 1024;
-    if (!Number.isSafeInteger(responseLimit) || responseLimit < 1) throw new Error(`hyper: response limit ${responseLimit} is not a positive number of bytes`);
+    if (!Number.isSafeInteger(responseLimit) || responseLimit < 1) throw rules().valueError(`response limit ${responseLimit} is not a positive number of bytes`, 'invalid_application');
     const formTypes = options.formTypes ?? ['application/x-www-form-urlencoded'];
     if (formTypes.length === 0 || new Set(formTypes).size !== formTypes.length || formTypes.some((type) => !FORM_TYPES.includes(type))) {
       throw new Error('hyper: form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data');
@@ -378,26 +378,26 @@ export class App<S extends object = Record<string, never>> {
   // (HY-62).
   private static checkedShell(client: ClientRendering, manifest: Manifest): string {
     const base = client.basePath;
-    if (base === '' || !base.startsWith('/') || base.endsWith('/')) throw new Error(`hyper: data base path ${base} must start with / and must not end with /`);
+    if (base === '' || !base.startsWith('/') || base.endsWith('/')) throw rules().valueError(`data base path ${base} must start with / and must not end with /`, 'invalid_application');
     for (const route of manifest.routes) {
-      if (route.path === base || route.path.startsWith(`${base}/`)) throw new Error(`hyper: route ${route.name} lies under the data base path ${base}`);
+      if (route.path === base || route.path.startsWith(`${base}/`)) throw rules().valueError(`route ${route.name} lies under the data base path ${base}`, 'invalid_application');
     }
-    if (!isAbsolute(client.shell)) throw new Error(`hyper: static shell ${client.shell} is not an absolute path`);
+    if (!isAbsolute(client.shell)) throw rules().valueError(`static shell ${client.shell} is not an absolute path`, 'invalid_application');
     let bytes: Buffer;
     try {
       bytes = readFileSync(client.shell);
     } catch {
-      throw new Error(`hyper: static shell ${client.shell} does not exist or cannot be read`);
+      throw rules().valueError(`static shell ${client.shell} does not exist or cannot be read`, 'invalid_application');
     }
     let shell: string;
     try {
       shell = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
     } catch {
-      throw new Error(`hyper: static shell ${client.shell} is not valid UTF-8`);
+      throw rules().valueError(`static shell ${client.shell} is not valid UTF-8`, 'invalid_application');
     }
     // The data base path is escaped as PHP htmlspecialchars with ENT_QUOTES does.
     const escaped = base.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    if (!shell.includes(`<meta name="hyper-api" content="${escaped}">`)) throw new Error(`hyper: static shell ${client.shell} does not declare the data base path ${base}`);
+    if (!shell.includes(`<meta name="hyper-api" content="${escaped}">`)) throw rules().valueError(`static shell ${client.shell} does not declare the data base path ${base}`, 'invalid_application');
     return shell;
   }
 
@@ -406,19 +406,19 @@ export class App<S extends object = Record<string, never>> {
   private static checkHandlers<S extends object>(manifest: Manifest & { entries: ReadonlyMap<string, readonly RepresentationEntry[]> }, handlers: Handlers<S>): void {
     for (const name of Object.keys(handlers.regions ?? {})) {
       const region = manifest.regions.find((item) => item.name === name);
-      if (region === undefined || region.page === true) throw new Error(`hyper: region loader ${name} has no non-page region in the manifest`);
+      if (region === undefined || region.page === true) throw rules().valueError(`region loader ${name} has no non-page region in the manifest`, 'invalid_application');
     }
     for (const [name, handler] of Object.entries(handlers.routes ?? {})) {
       const route = manifest.routes.find((item) => item.name === name);
-      if (route === undefined) throw new Error(`hyper: route handler ${name} has no route in the manifest`);
-      if ((handler.post !== undefined) !== (route.post === true)) throw new Error(`hyper: route ${name} must have a POST action exactly when the manifest declares post`);
+      if (route === undefined) throw rules().valueError(`route handler ${name} has no route in the manifest`, 'invalid_application');
+      if ((handler.post !== undefined) !== (route.post === true)) throw rules().valueError(`route ${name} must have a POST action exactly when the manifest declares post`, 'invalid_application');
       const routeRegions = (route.regions ?? []).map((region) => region.name);
       for (const regionName of Object.keys(handler.regions ?? {})) {
-        if (!routeRegions.includes(regionName)) throw new Error(`hyper: route ${name} has a loader for undeclared region ${regionName}`);
+        if (!routeRegions.includes(regionName)) throw rules().valueError(`route ${name} has a loader for undeclared region ${regionName}`, 'invalid_application');
       }
     }
     for (const route of manifest.routes) {
-      if (route.post === true && handlers.routes?.[route.name]?.post === undefined) throw new Error(`hyper: route ${route.name} declares post but has no POST action`);
+      if (route.post === true && handlers.routes?.[route.name]?.post === undefined) throw rules().valueError(`route ${route.name} declares post but has no POST action`, 'invalid_application');
       RepresentationEntries.checkHandlers(route.name, manifest.entries.get(route.name) ?? [], handlers.routes?.[route.name]?.representations ?? {});
     }
   }

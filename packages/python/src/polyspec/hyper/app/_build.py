@@ -7,7 +7,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from ._core_rules import core_rules
-from ._invalid_build import InvalidBuild
 
 
 class Build:
@@ -19,7 +18,9 @@ class Build:
         try:
             data = Path(file).read_bytes()
         except OSError as error:
-            failure = InvalidBuild(f"{file} is missing or not readable (HY-125)")
+            failure = core_rules().value_error(
+                f"{file} is missing or not readable (HY-125)", "invalid_build"
+            )
             failure.add_note(f"hyper: the build file is {file}")
             raise failure from error
         # HY-132.2: the core reads the build id of the bytes and fails with invalid_build; the note of the failure
