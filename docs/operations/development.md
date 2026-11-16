@@ -162,7 +162,7 @@ The workflow `.github/workflows/ci.yml` runs the full suite for the push of `mai
 | `node` | Node/npm | Root npm lock | Template, browser-unit, Node-server and npm consumer checks |
 | `board` | Node/npm, PHP/Composer, PIE, Python/uv | Root npm, root and board Composer, Python uv locks | Browser parity, Node/Python server comparisons, bundle sizes and E2E |
 | `python` | Node/npm, Python/uv | Root npm and Python uv locks | Python unit and rendering checks |
-| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock and the binding cli of `Cargo.lock` (`make install-binding`) | Rust core tests, clippy and format; the contract check; clippy, tests and the generated tests of WASM and Go of the bindings (H35.2). `test-wasm` fails there while kit selects no wasm-bindgen |
+| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock and the binding cli of `Cargo.lock` (`make install-binding`) | Rust core tests, clippy and format; the contract check; clippy, tests and the generated tests of WASM and Go of the bindings (H35.2). The group does not install the wasm-bindgen CLI, which `install-tools` of kit does not select; it names it once `install-tools` selects it |
 
 A local run of a group is the call of its job, `make ci-check NAME=<group>`, on a checkout that ran `make bootstrap`, `make install-tools TOOLS=npm` and `make install-packages`, as the bootstrap action does. A `NAME` that names no group fails before any step runs and names the groups.
 

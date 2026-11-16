@@ -1,12 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9dec7be67b74c0fe15f7650d603e228aaadd92c144d1d2d61d1f80c7918019de -->
+<!-- source-sha256: 2abb4ff4d22fc2f35cf428c3bc70cf0b240d60ce85a86a055b66e0b874cbf988 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
-- `.github/workflows/ci.yml`의 CI group `core`와 `CHECK_TARGETS`는 `install-tools`와 `install-binding` 뒤에 `core-test`, `core-lint`, `core-fmt-check`, `bindings-check`, 그리고 `lint-bindings`, `test-wasm`, `test-go`를 실행하는 `test-bindings`를 실행한다. 어떤 job도 Rust core와 바인딩을 검사하지 않았기 때문이다(H35.2). `tests/scripts/ci-workflow.test.mts`가 그 group을 검사한다. kit의 `install-tools`에는 `mise.toml`이 고정한 wasm-bindgen CLI의 selector가 없으므로 group은 그것을 설치하지 않으며, kit이 그것을 선택할 때까지 `test-wasm`은 그 group에서 실패한다.
+- `.github/workflows/ci.yml`의 CI group `core`와 `CHECK_TARGETS`는 `install-tools`와 `install-binding` 뒤에 `core-test`, `core-lint`, `core-fmt-check`, `bindings-check`, 그리고 `lint-bindings`, `test-wasm`, `test-go`를 실행하는 `test-bindings`를 실행한다. 어떤 job도 Rust core와 바인딩을 검사하지 않았기 때문이다(H35.2). `tests/scripts/ci-workflow.test.mts`가 그 group을 검사한다. kit의 `install-tools`에는 `mise.toml`이 고정한 wasm-bindgen CLI의 selector가 없으므로 group은 그것을 설치하지 않는다. `install-tools`가 그것을 선택하게 되면 group이 그것을 지정한다.
 - `make hyper-install`은 `hyper-install-php`와 `hyper-install-python` 전에 `install-binding`과 `bindings`를 실행한다. 그래서 새 checkout은 Python 패키지의 native module을 `packages/python/native/generated`에서 빌드하며, 그것이 없으면 `hyper-install-python`은 실패했다(H35.1). `tests/scripts/hyper-install.test.mts`는 dry run으로 그 순서를 검사한다. `Cargo.lock`의 binding이 Go와 WASM을 거부하는 동안(H35.4) `bindings`는 PHP, Python, Node를 쓴 뒤 exit status 1로 끝나며, `hyper-install`도 그렇다.
 - Git은 `make bindings`가 쓰는 Python 패키지 `packages/python/src/polyspec/hyper/_binding/`을 무시한다. `make layout-check`는 그것을 Git이 무시하지 않는 생성 디렉터리로 실패시켰다(H35.3). `tests/scripts/ignored-files.test.mts`는 그것을 출력 가운데 하나로 지정한다.
 - HY-52.18과 HY-69.9는 은퇴하고, HY-52.19와 HY-69.10은 `Max-Age`와 reply 상태의 범위를 binding이 판정한다고 적는다. binding은 그것을 type `int`로 받으므로 ±(2^53 − 1) 밖의 정수는 모든 언어에서 core가 실행되기 전에 binding의 kind `invalid_number`로 실패한다(B-2). HY-52.18과 HY-69.9는 PHP와 Python에 hyper의 kind `integer_range`를 주었다. core는 Rust 호출자의 `i64`에 대해 `integer_range`를 유지하며, `packages/rust/tests/rules.rs`가 그것을 시험한다. `contracts/reply.json`에서 안전 범위 밖 정수의 case 세 쌍은 각각 `invalid_number`를 내는 case 하나가 된다. `rules.reply_status`는 `integer_range`를 지정하지 않으므로 v0.0.13의 `binding check`는 CK-19, CK-20, CK-94 외에 아무것도 보고하지 않는다. `make core-test`는 78개 통과를 준다.

@@ -536,7 +536,7 @@ CI_TARGETS_python := hyper-test-python hyper-test-python-render
 # The group core checks the Rust core and the bindings of its five targets with the binding cli of Cargo.lock (H35.2):
 # test-bindings runs lint-bindings, test-wasm and test-go first, so each runs once. Its tools build the PHP extension, the
 # Python module, the WASM module and the static library of Go. The wasm-bindgen CLI of mise.toml, which test-wasm runs, has
-# no selector of install-tools of kit, so the group cannot name it, and test-wasm fails there until kit selects it.
+# no selector of install-tools of kit, so the group does not install it; name it here once install-tools selects it.
 CI_TOOLS_core := node rust php python uv go
 CI_SETUP_core := install-tools install-binding
 CI_TARGETS_core := core-test core-lint core-fmt-check bindings-check test-bindings

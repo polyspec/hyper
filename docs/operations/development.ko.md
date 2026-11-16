@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 279d53546bf2f291c072b4fc2d725cb7d5a47fb7de17b3a557e633bfe45b735c -->
+<!-- source-sha256: 5deb660f40fc143fcca7d013d5bc371a285490819ed272a927e20ec961a4c219 -->
 # 개발
 
 [English](development.md).
@@ -163,7 +163,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
 | `board` | Node/npm, PHP/Composer, PIE, Python/uv | Root npm, root와 board Composer, Python uv lock | Browser parity, Node/Python server 비교, bundle 크기와 E2E |
 | `python` | Node/npm, Python/uv | Root npm과 Python uv lock | Python unit과 rendering |
-| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock과 `Cargo.lock`의 binding cli(`make install-binding`) | Rust core 시험, clippy, format, contract 검사, 바인딩의 clippy와 시험, WASM과 Go의 생성된 시험(H35.2). kit이 wasm-bindgen을 선택하지 못하는 동안 `test-wasm`은 그 group에서 실패한다 |
+| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock과 `Cargo.lock`의 binding cli(`make install-binding`) | Rust core 시험, clippy, format, contract 검사, 바인딩의 clippy와 시험, WASM과 Go의 생성된 시험(H35.2). group은 kit의 `install-tools`가 선택하지 않는 wasm-bindgen CLI를 설치하지 않으며, `install-tools`가 그것을 선택하게 되면 그것을 지정한다 |
 
 group의 local 실행은 그 job의 호출과 같은 `make ci-check NAME=<group>`이다. bootstrap action처럼 `make bootstrap`, `make install-tools TOOLS=npm`, `make install-packages`를 실행한 checkout에서 실행한다. 어떤 group도 가리키지 않는 `NAME`은 어떤 step보다 먼저 실패하고 group들을 적는다.
 
