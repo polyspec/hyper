@@ -6532,6 +6532,12 @@
                   "koSource": "055d55868b73f4bf3d8d52cbf73705a5325d4270618658b10624631631e87a2a"
                 },
                 {
+                  "id": "HY-106.22",
+                  "en": "A failure of the manifest checks, of the check of the form types and of the check of the value limit when an application opens raises an error of kind `invalid_application` (HY-106.21, HY-132).",
+                  "ko": "애플리케이션을 열 때 manifest 검사, form type 검사, value limit 검사의 실패는 kind `invalid_application`의 오류를 던진다(HY-106.21, HY-132).",
+                  "koSource": "f7af3060fde43c5df5d415964bf5e42348ca08c8efd679d00c4e59f4702a6bed"
+                },
+                {
                   "id": "HY-106.7",
                   "en": "A file that starts with U+FEFF is not valid JSON, because JSON allows no character before a value.",
                   "ko": "U+FEFF로 시작하는 파일은 올바른 JSON이 아니다. JSON은 값 앞에 어떤 문자도 허용하지 않기 때문이다.",
@@ -6924,6 +6930,12 @@
                   "en": "A stored flash value or kept value of another form fails the request with HY-43, and no server repairs it.",
                   "ko": "다른 형태로 저장된 flash 값이나 kept 값은 HY-43으로 요청을 실패시키며, 어떤 서버도 그것을 고쳐 쓰지 않는다.",
                   "koSource": "c80dece20175a916486c165621ffe7e846fd73c79dec8712b331f86920233fc3"
+                },
+                {
+                  "id": "HY-104.36",
+                  "en": "A stored session record whose kept values, kept values of a region, flash data, flash values or changed topics are not of the form of HY-104.22, such as a value that is not a map or a changed topic that is not a string, raises an error of kind `invalid_session_record` of category `store` (HY-104.23, HY-132).",
+                  "ko": "kept 값, 한 region의 kept 값, flash 데이터, flash 값 또는 변경된 topic이 HY-104.22의 형태가 아닌 저장된 session record는, 예를 들어 map이 아닌 값이나 문자열이 아닌 변경된 topic은, category `store`의 kind `invalid_session_record` 오류를 던진다(HY-104.23, HY-132).",
+                  "koSource": "b7c487321c3830e6e9e90dc2e42f7741509c25a13885220868980ab9b0e6e3ce"
                 },
                 {
                   "id": "HY-104.35",

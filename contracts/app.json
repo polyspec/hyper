@@ -9813,7 +9813,13 @@
       },
       "requirements": [
         "HY-59"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_form_type_that_is_no_form_media_type_fails_the_open",
@@ -9826,7 +9832,13 @@
       },
       "requirements": [
         "HY-59"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_repeated_form_type_fails_the_open",
@@ -9840,7 +9852,13 @@
       },
       "requirements": [
         "HY-59"
-      ]
+      ],
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_body_limit_of_zero_fails_the_open",
