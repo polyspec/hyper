@@ -233,8 +233,9 @@ final class Reply
     public function cookieHeaders(bool $secure): array
     {
         return array_map(
-            static fn (array $cookie): string => "{$cookie[0]}={$cookie[1]}; Path=/; HttpOnly; SameSite=Lax"
-                . ($secure ? '; Secure' : '') . ($cookie[2] === null ? '' : "; Max-Age={$cookie[2]}"),
+            static fn (array $cookie): string => "{$cookie[0]}={$cookie[1]}"
+                . ($cookie[2] === null ? '' : "; Max-Age={$cookie[2]}") . '; Path=/'
+                . ($secure ? '; Secure' : '') . '; HttpOnly; SameSite=Lax',
             $this->cookies,
         );
     }

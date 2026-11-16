@@ -152,8 +152,8 @@ class Reply:
     def _cookie_headers(self, secure: bool) -> list[str]:
         """Returns the Set-Cookie values of the cookies of the reply (HY-52)."""
         return [
-            f"{name}={value}; Path=/; HttpOnly; SameSite=Lax"
-            f"{'; Secure' if secure else ''}{'' if max_age is None else f'; Max-Age={max_age}'}"
+            f"{name}={value}{'' if max_age is None else f'; Max-Age={max_age}'}; Path=/"
+            f"{'; Secure' if secure else ''}; HttpOnly; SameSite=Lax"
             for name, value, max_age in self.__cookies
         ]
 

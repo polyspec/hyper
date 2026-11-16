@@ -138,6 +138,6 @@ export class Reply {
 
   /** @internal */
   cookieHeaders(secure: boolean): string[] {
-    return this.cookies.map(([name, value, maxAge]) => `${name}=${value}; Path=/; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}${maxAge === null ? '' : `; Max-Age=${maxAge}`}`);
+    return this.cookies.map(([name, value, maxAge]) => `${name}=${value}${maxAge === null ? '' : `; Max-Age=${maxAge}`}; Path=/${secure ? '; Secure' : ''}; HttpOnly; SameSite=Lax`);
   }
 }
