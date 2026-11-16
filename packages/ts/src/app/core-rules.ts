@@ -39,6 +39,7 @@ interface PagesOptions {
   readonly dataBasePath?: string | null;
 }
 
+/** @internal */
 export interface PageInput {
   readonly route: string;
   readonly params: ReadonlyMap<string, string>;
@@ -85,6 +86,7 @@ interface Front {
   readonly mediaType?: string | null;
 }
 
+/** @internal */
 export interface Plain {
   readonly status: number;
   readonly body: Uint8Array;
@@ -157,6 +159,7 @@ interface CorePagesInstance {
 // The members of the Node binding of the core that the server calls, under the names that the binding gives the
 // members of `packages/rust/interface.json`: a function of a unit of kind functions is a function of the module, and a
 // class is a class of the module.
+/** @internal */
 export interface CoreBinding {
   csrfMask(token: string, mask: string): string;
   csrfVerify(token: string, value: string): boolean;
@@ -221,6 +224,7 @@ interface PageHeaderParts {
   readonly body: boolean;
 }
 
+/** @internal */
 export interface CoreRules {
   // Exact units.
   // csrfMask: rules.csrf_mask (HY-24.2, HY-24.14).
@@ -357,6 +361,7 @@ function isBinding(module: object, missing: readonly string[]): module is CoreBi
 
 // Returns the rules of the core under the names of the units of the server. A module that lacks a member of the
 // binding fails here with its name, before a request calls it.
+/** @internal */
 export function coreRules(module: object): CoreRules {
   const missing = MEMBERS.filter((name) => typeof Reflect.get(module, name) !== 'function');
   if (!isBinding(module, missing)) throw new Error(`hyper: the binding of the core has no member ${missing.join(', ')}`);

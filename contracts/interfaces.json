@@ -1279,6 +1279,707 @@
               }
             }
           ]
+        },
+        {
+          "id": "core-rules",
+          "native": {
+            "php": {
+              "file": "packages/php/src/App/CoreRules.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/ts/src/app/core-rules.ts",
+              "kind": "interface",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/python/src/polyspec/hyper/app/_core_rules.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "core-rules.csrfMask",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Csrf.mask: rules.csrf_mask (HY-24.2, HY-24.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::csrfMask",
+                  "signature": "public function csrfMask(string $token, string $mask): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.csrfMask",
+                  "signature": "csrfMask(token: string, mask: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.csrf_mask",
+                  "signature": "def csrf_mask(self, token: str, mask: str) -> str"
+                }
+              },
+              "tests": [
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testAUnitCallsItsFunctionWithItsArgumentsAndReturnsItsResult: Every server opens the rules of the core through one unit (HY-132.2); each member calls its function of the binding with its arguments and returns its result.",
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testThereAreFifteenExactUnits: Every server opens the rules of the core through one unit (HY-132.2); the exact members are the fifteen that the core decides alone.",
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testANamespaceWithoutAFunctionOfTheBindingFailsWithTheNamesOfTheFunctions: Every server opens the rules of the core through one unit (HY-132.2); a binding that lacks a function fails with the names of the functions.",
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testAFailureOfTheBindingReachesTheCallerAsTheBindingRaisedIt: Every server opens the rules of the core through one unit (HY-132.2); a failure of the binding reaches the caller unchanged (HY-132.1).",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_each_unit_calls_its_member_with_its_arguments_and_returns_its_result: Every server opens the rules of the core through one unit (HY-132.2); each member calls its member of the binding with its arguments and returns its result.",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_there_are_fifteen_exact_units: Every server opens the rules of the core through one unit (HY-132.2); the exact members are the fifteen that the core decides alone.",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_a_module_without_a_member_of_the_binding_fails_with_the_name_of_the_member: Every server opens the rules of the core through one unit (HY-132.2); a binding that lacks a member fails with the name of the member.",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_a_failure_of_the_binding_reaches_the_caller_as_the_binding_raised_it: Every server opens the rules of the core through one unit (HY-132.2); a failure of the binding reaches the caller unchanged (HY-132.1)."
+              ]
+            },
+            {
+              "id": "core-rules.csrfVerify",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Csrf.verify: rules.csrf_verify (HY-24.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::csrfVerify",
+                  "signature": "public function csrfVerify(string $token, string $value): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.csrfVerify",
+                  "signature": "csrfVerify(token: string, value: string): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.csrf_verify",
+                  "signature": "def csrf_verify(self, token: str, value: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "core-rules.csrfBrowserOf",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Csrf.browser_of: rules.browser (HY-24.10, HY-24.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::csrfBrowserOf",
+                  "signature": "public function csrfBrowserOf(string $masked): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.csrfBrowserOf",
+                  "signature": "csrfBrowserOf(masked: string): string | null"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.csrf_browser_of",
+                  "signature": "def csrf_browser_of(self, masked: str) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "core-rules.contextHash",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Context.hash: rules.context_hash (HY-125.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::contextHash",
+                  "signature": "public function contextHash(string $build, string $text): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.contextHash",
+                  "signature": "contextHash(build: string, text: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.context_hash",
+                  "signature": "def context_hash(self, build: str, text: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.contextValidHeader",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Context.valid_header: rules.valid_context_header (HY-127.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::contextValidHeader",
+                  "signature": "public function contextValidHeader(?string $value): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.contextValidHeader",
+                  "signature": "contextValidHeader(value: string | null): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.context_valid_header",
+                  "signature": "def context_valid_header(self, value: Optional[str]) -> bool"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sessionCookieName",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "RecordSession.cookie_name: rules.session_name (HY-45.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionCookieName",
+                  "signature": "public function sessionCookieName(bool $secure): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionCookieName",
+                  "signature": "sessionCookieName(secure: boolean): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_cookie_name",
+                  "signature": "def session_cookie_name(self, secure: bool) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sessionCookieHeader",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "RecordSession.cookie_header: rules.session_cookie gives the field value (HY-45.8). The server still decides when a response sets the cookie, only for a session that the request started (HY-45.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionCookieHeader",
+                  "signature": "public function sessionCookieHeader(string $id, bool $secure): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionCookieHeader",
+                  "signature": "sessionCookieHeader(id: string, secure: boolean): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_cookie_header",
+                  "signature": "def session_cookie_header(self, id: str, secure: bool) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.representationEtag",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "RepresentationResponse.etag: rules.representation_tag (HY-122.10, HY-122.11), of the UTF-8 bytes of the body.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::representationEtag",
+                  "signature": "public function representationEtag(string $contentType, string $body): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.representationEtag",
+                  "signature": "representationEtag(contentType: string, body: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.representation_etag",
+                  "signature": "def representation_etag(self, content_type: str, body: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestCurrentPath",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Request.current_path: rules.current_path of the value of HX-Current-URL (HY-11.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestCurrentPath",
+                  "signature": "public function requestCurrentPath(?string $header): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.requestCurrentPath",
+                  "signature": "requestCurrentPath(header: string | null): string | null"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.request_current_path",
+                  "signature": "def request_current_path(self, header: Optional[str]) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "core-rules.replyCacheControl",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Reply.cache_control: rules.cache_control gives the value that the reply keeps (HY-52.6).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyCacheControl",
+                  "signature": "public function replyCacheControl(string $value): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyCacheControl",
+                  "signature": "replyCacheControl(value: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.reply_cache_control",
+                  "signature": "def reply_cache_control(self, value: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.replyReferrerPolicy",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Reply.referrer_policy: rules.referrer_policy gives the value that the reply keeps (HY-103.2, HY-103.9).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyReferrerPolicy",
+                  "signature": "public function replyReferrerPolicy(string $value): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyReferrerPolicy",
+                  "signature": "replyReferrerPolicy(value: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.reply_referrer_policy",
+                  "signature": "def reply_referrer_policy(self, value: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.replyStatus",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "number"
+              ],
+              "output": "number",
+              "errors": [],
+              "state": "Reply.status: rules.reply_status gives the page status that the reply keeps (HY-69).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyStatus",
+                  "signature": "public function replyStatus(int $status): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyStatus",
+                  "signature": "replyStatus(status: number): number"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.reply_status",
+                  "signature": "def reply_status(self, status: int) -> int"
+                }
+              }
+            },
+            {
+              "id": "core-rules.replyKeepsOutOfSharedCaches",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "rules.keeps_out_of_shared_caches (HY-52.6), which Reply.cache_control decided inside its check; the server reads it for no other rule.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyKeepsOutOfSharedCaches",
+                  "signature": "public function replyKeepsOutOfSharedCaches(string $value): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyKeepsOutOfSharedCaches",
+                  "signature": "replyKeepsOutOfSharedCaches(value: string): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.reply_keeps_out_of_shared_caches",
+                  "signature": "def reply_keeps_out_of_shared_caches(self, value: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "core-rules.resultRedirect",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Result.redirect: rules.redirect_location gives the location of the result (HY-46).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::resultRedirect",
+                  "signature": "public function resultRedirect(string $location): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.resultRedirect",
+                  "signature": "resultRedirect(location: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.result_redirect",
+                  "signature": "def result_redirect(self, location: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.resultPage",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "number"
+              ],
+              "output": "number",
+              "errors": [],
+              "state": "Result.page: rules.page_status gives the status of the result (HY-58).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::resultPage",
+                  "signature": "public function resultPage(int $status): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.resultPage",
+                  "signature": "resultPage(status: number): number"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.result_page",
+                  "signature": "def result_page(self, status: int) -> int"
+                }
+              }
+            },
+            {
+              "id": "core-rules.resultIsApplicationPath",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "rules.is_application_path (HY-46), the test inside Result.redirect; the server has no caller of it besides the redirect.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::resultIsApplicationPath",
+                  "signature": "public function resultIsApplicationPath(string $location): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.resultIsApplicationPath",
+                  "signature": "resultIsApplicationPath(location: string): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.result_is_application_path",
+                  "signature": "def result_is_application_path(self, location: str) -> bool"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appVaryHeader",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "App._vary_header: rules.page_vary (HY-117.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appVaryHeader",
+                  "signature": "public function appVaryHeader(bool $context): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appVaryHeader",
+                  "signature": "appVaryHeader(context: boolean): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_vary_header",
+                  "signature": "def app_vary_header(self, context: bool) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appFrameHeaders",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "number",
+                "string"
+              ],
+              "output": "map<string>",
+              "errors": [],
+              "state": "App.frame: front_functions.frame_headers gives the headers that every response carries (HY-45.5, HY-65.1). The server still adds them to its response, a header of the same name replaced.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appFrameHeaders",
+                  "signature": "public function appFrameHeaders(int $status, string $frameAncestors): array"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appFrameHeaders",
+                  "signature": "appFrameHeaders(status: number, frameAncestors: string): Record<string, string>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_frame_headers",
+                  "signature": "def app_frame_headers(self, status: int, frame_ancestors: str) -> dict[str, str]"
+                }
+              },
+              "tests": [
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheFrameHeadersAreAMapInTheOrderOfTheCore: Every server opens the rules of the core through one unit (HY-132.2); the frame headers keep the order of the core (HY-65.1).",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_the_frame_headers_are_a_record_in_the_order_of_the_core: Every server opens the rules of the core through one unit (HY-132.2); the frame headers keep the order of the core (HY-65.1)."
+              ]
+            },
+            {
+              "id": "core-rules.appCheckShellPath",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "The static shell of App.open: rules.check_shell_path checks its path before the server reads the file (HY-62). The server still reads the file, and checks the data base path of the declaration against the routes and the meta element of the shell (HY-62.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appCheckShellPath",
+                  "signature": "public function appCheckShellPath(string $path): void"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appCheckShellPath",
+                  "signature": "appCheckShellPath(path: string): void"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_check_shell_path",
+                  "signature": "def app_check_shell_path(self, path: str) -> None"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appShellText",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "bytes"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "rules.shell_text gives the text of the bytes of the static shell (HY-62), which the server read.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appShellText",
+                  "signature": "public function appShellText(string $path, string $bytes): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appShellText",
+                  "signature": "appShellText(path: string, bytes: Uint8Array): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_shell_text",
+                  "signature": "def app_shell_text(self, path: str, data: bytes) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appKeptValue",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "string",
+                "string",
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "The value check of the kept endpoint: front_functions.kept_value (HY-40.1). The server still checks the token of the form (HY-24) and stores the value in the session.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appKeptValue",
+                  "signature": "public function appKeptValue(object $pages, string $region, string $path, string $text): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appKeptValue",
+                  "signature": "appKeptValue(pages: CorePages, region: string, path: string, text: string): CoreValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_kept_value",
+                  "signature": "def app_kept_value(self, pages: Any, region: str, path: str, text: str) -> Any"
+                }
+              },
+              "tests": [
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields: Every server opens the rules of the core through one unit (HY-132.2); the kept value check gives the core the pages and the fields of the form (HY-40.1)."
+              ]
+            },
+            {
+              "id": "core-rules.pageTag",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "The tag of a JSON response of Page.respond: rules.page_tag (HY-53.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::pageTag",
+                  "signature": "public function pageTag(string $body, string $maskedToken, string $token): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageTag",
+                  "signature": "pageTag(body: string, maskedToken: string, token: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.page_tag",
+                  "signature": "def page_tag(self, body: str, masked_token: str, token: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sessionStoredToken",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Session.csrf_token: rules.stored_token checks the value that the session holds in the place of the token (HY-24.14). The server still reads the store and creates the token of a session that holds none (HY-24.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionStoredToken",
+                  "signature": "public function sessionStoredToken(string $stored): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionStoredToken",
+                  "signature": "sessionStoredToken(stored: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_stored_token",
+                  "signature": "def session_stored_token(self, stored: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.keptCookieName",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "The name of the cookie of the kept values: rules.keep_name (HYC-13.6). The server still reads the cookie from the request (HY-129).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::keptCookieName",
+                  "signature": "public function keptCookieName(bool $secure): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.keptCookieName",
+                  "signature": "keptCookieName(secure: boolean): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.kept_cookie_name",
+                  "signature": "def kept_cookie_name(self, secure: bool) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildRead",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Build.read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18, HY-125.19). The server still reads the file and names the absolute path of the file in a failure (HY-125.18).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::buildRead",
+                  "signature": "public function buildRead(string $bytes): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildRead",
+                  "signature": "buildRead(bytes: Uint8Array): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.build_read",
+                  "signature": "def build_read(self, data: bytes) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildCheckId",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "rules.check_build_id (HY-125.19), for a caller that holds a build id as text.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::buildCheckId",
+                  "signature": "public function buildCheckId(string $text): void"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildCheckId",
+                  "signature": "buildCheckId(text: string): void"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.build_check_id",
+                  "signature": "def build_check_id(self, text: str) -> None"
+                }
+              }
+            }
+          ]
         }
       ]
     },
@@ -3017,7 +3718,8 @@
                 }
               },
               "tests": [
-                "packages/python/tests/test_wsgi.py::WsgiTest.test_a_start_response_that_raises_is_an_escape_answered_through_start_response_again: Only the Python server has a WSGI callable (HY-100.3); it passes the plain 500 to start_response with the exception information when start_response raised."
+                "packages/python/tests/test_wsgi.py::WsgiTest.test_a_start_response_that_raises_is_an_escape_answered_through_start_response_again: Only the Python server has a WSGI callable (HY-100.3); it passes the plain 500 to start_response with the exception information when start_response raised.",
+                "packages/python/tests/test_wsgi.py::WsgiTest.test_a_start_response_that_raises_again_reports_the_write_before_the_error_propagates: Only the Python server has a WSGI callable (HY-100.3); a second start_response that raises returns no iterable, so the callable reports the write before the error propagates (HY-100.36)."
               ]
             },
             {
@@ -3522,16 +4224,13 @@
               "inputs": [],
               "output": "value",
               "errors": [],
-              "state": "Yields the chunks and reports the ended write after the last (HY-100.6).",
+              "state": "Yields the chunks and marks the body consumed after the last, which close() reports (HY-100.34).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/_wsgi_body.py::WsgiBody.__iter__",
                   "signature": "def __iter__(self)"
                 }
-              },
-              "tests": [
-                "packages/python/tests/test_wsgi.py::WsgiTest.test_an_empty_response_reports_its_write_at_the_end_of_the_iterable: Only the Python server has a WSGI callable (HY-100.3); it reports the write of an empty body when the server consumed the iterable."
-              ]
+              }
             },
             {
               "id": "wsgi-body.close",
@@ -3540,7 +4239,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Reports a write that the server closed before its end and calls the disconnect hook (HY-100.6).",
+              "state": "Reports the write once, ended when the server consumed the body, calls the disconnect hook for a write that did not end and releases the request (HY-100.34, HY-131.14).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/_wsgi_body.py::WsgiBody.close",
@@ -3549,25 +4248,11 @@
               },
               "tests": [
                 "packages/python/tests/test_wsgi.py::WsgiTest.test_a_premature_close_of_the_plain_failure_reports_a_failed_write: Only the Python server has a WSGI callable (HY-100.3); it reports a failed write when the server closes the iterable of the plain 500 before its end.",
-                "packages/python/tests/test_wsgi.py::WsgiTest.test_closing_the_body_before_its_first_item_reports_an_unended_write: Only the Python server has a WSGI callable (HY-100.3); it reports an unended write when the server closes the iterable before its first item."
+                "packages/python/tests/test_wsgi.py::WsgiTest.test_closing_the_body_before_its_first_item_reports_an_unended_write: Only the Python server has a WSGI callable (HY-100.3); it reports an unended write when the server closes the iterable before its first item.",
+                "packages/python/tests/test_wsgi.py::WsgiTest.test_an_empty_response_reports_its_write_when_the_consumed_iterable_is_closed: Only the Python server has a WSGI callable (HY-100.3); it reports the write of an empty body when the server closes the consumed iterable.",
+                "packages/python/tests/test_wsgi.py::WsgiTest.test_close_runs_the_write_hook_of_a_write_that_ended: Only the Python server has a WSGI callable (HY-100.3); close() runs the write hook of a body that the server consumed.",
+                "packages/python/tests/test_wsgi.py::WsgiTest.test_close_runs_the_write_hook_and_the_disconnect_hook_of_a_write_that_failed: Only the Python server has a WSGI callable (HY-100.3); close() runs the write hook and the disconnect hook of a body that the server did not consume."
               ]
-            },
-            {
-              "id": "wsgi-body.finish",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "boolean"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Reports the write once and releases the request (HY-100.6).",
-              "native": {
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/host/_wsgi_body.py::WsgiBody._finish",
-                  "signature": "def _finish(self, ended: bool) -> None"
-                }
-              }
             }
           ]
         },
