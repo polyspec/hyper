@@ -269,8 +269,7 @@ export class App<S extends object = Record<string, never>> {
     const build = Build.read(options.build);
     if (options.context !== undefined && typeof options.context !== 'function') throw rules().valueError('the context must be a function (HY-106)', 'invalid_application');
     if (options.onDisconnect !== undefined && typeof options.onDisconnect !== 'function') throw rules().valueError('the disconnect hook is not callable (HY-67)', 'invalid_application');
-    const manifestJson = App.readJsonFile(options.manifest);
-    const manifest = App.clientCheck(() => checkManifest(manifestJson));
+    const manifest = checkManifest(App.readJsonFile(options.manifest));
     // HY-118: the representations of each route, by the route name. The manifest is decoded with maps for objects,
     // because the parameters of an entry keep the order of the manifest, which a plain object does not keep for a name
     // that is an integer.
@@ -290,7 +289,7 @@ export class App<S extends object = Record<string, never>> {
     }
     const index = App.templateIndex(options.templates.index);
     const fetcher = async (url: string): Promise<Template> => decodeTemplate(App.readJsonFile(join(options.templates.root, url)));
-    const application = App.clientCheck(() => createApplication(manifest, index, fetcher, options.functions));
+    const application = createApplication(manifest, index, fetcher, options.functions);
     App.checkHandlers({ ...manifest, entries }, options.handlers);
     const shell = options.clientRendering === undefined ? '' : App.checkedShell(options.clientRendering, manifest);
     App.routeTemplates(index, manifest);
@@ -299,11 +298,11 @@ export class App<S extends object = Record<string, never>> {
     // HY-73: the read paths of every route, from the templates that the asset build wrote.
     const parsed = new Map<string, Template>();
     for (const [name, entry] of Object.entries(index)) parsed.set(name, await fetcher(entry.url));
-    const reads = App.clientCheck(() => routeReads(manifest, (name) => {
+    const reads = routeReads(manifest, (name) => {
       const template = parsed.get(name);
       if (template === undefined) throw rules().valueError(`template ${name} is not in the template index`, 'invalid_application');
       return template;
-    }, resolvePath));
+    }, resolvePath);
     return new App({
       application,
       handlers: options.handlers,
@@ -340,20 +339,7 @@ export class App<S extends object = Record<string, never>> {
 
   // Reads the template index that the asset build wrote and fails when it is not a template index (HY-48.12).
   private static templateIndex(path: string): TemplateIndex {
-    const json = App.readJsonFile(path);
-    return App.clientCheck(() => checkTemplateIndex(json, `the template index ${path}`));
-  }
-
-  // Runs a manifest, template index or route check of @polyspec/hyper-client at open. Its Error fails the open of the
-  // application with kind invalid_application and the message without a leading `hyper: ` (HY-106.21, HY-4.6); an
-  // error of hyper that it passes on, such as one of the template callback, stays as it was thrown.
-  private static clientCheck<T>(call: () => T): T {
-    try {
-      return call();
-    } catch (error) {
-      if (!(error instanceof Error) || 'kind' in error) throw error;
-      throw rules().valueError(error.message.replace(/^hyper: /u, ''), 'invalid_application');
-    }
+    return checkTemplateIndex(App.readJsonFile(path), `the template index ${path}`);
   }
 
   // Fails when the template index does not hold an entry template of a route or the template of the embedded data
