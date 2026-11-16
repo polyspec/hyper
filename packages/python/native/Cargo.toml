@@ -21,8 +21,8 @@ thrown-count-test = []
 [dependencies]
 polyspec-hyper = { path = "../../rust" }
 polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core", features = ["construct", "lock"] }
-polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", branch = "v1/rust-core" }
-polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", branch = "v1/rust-core" }
+polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", tag = "v0.0.6" }
+polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.3" }
 polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", branch = "v1/rust-core" }
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", branch = "v1/rust-core", default-features = false }
 polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core" }
