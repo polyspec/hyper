@@ -1,37 +1,35 @@
-# The package data of `pyproject.toml` (H15.3-15): every key names a package under `src`, and the namespace package
-# `polyspec.hyper` declares its `py.typed` marker, so a built package carries the marker.
+# The package data of `pyproject.toml` (H15.3-15, H35.7): maturin builds the package from its `python-source`, which
+# holds the namespace package `polyspec.hyper` with its `py.typed` marker, so a built package carries the marker.
 import tomllib
 import unittest
 from pathlib import Path
 
 PACKAGE = Path(__file__).resolve().parents[2] / "packages" / "python"
-SRC = PACKAGE / "src"
 
 
 class PackageDataTest(unittest.TestCase):
-    def package_data(self) -> dict:
+    def maturin(self) -> dict:
         with (PACKAGE / "pyproject.toml").open("rb") as file:
             declared = tomllib.load(file)
-        return declared.get("tool", {}).get("setuptools", {}).get("package-data", {})
+        return declared.get("tool", {}).get("maturin", {})
 
-    def test_every_key_names_a_package_under_src(self) -> None:
-        for key in self.package_data():
-            directory = SRC / key.replace(".", "/")
-            self.assertTrue(
-                directory.is_dir(),
-                f"package-data key {key!r} names no package directory: expected {directory} to exist",
-            )
-
-    def test_namespace_package_declares_py_typed(self) -> None:
-        entries = self.package_data().get("polyspec.hyper", [])
-        self.assertIn(
-            "py.typed",
-            entries,
-            f'package-data of polyspec.hyper: expected an entry "py.typed", actual {entries!r}',
+    def test_the_python_source_is_a_directory_of_the_package(self) -> None:
+        source = self.maturin().get("python-source")
+        self.assertIsNotNone(
+            source,
+            "tool.maturin of pyproject.toml: expected a python-source, actual none",
         )
         self.assertTrue(
-            (SRC / "polyspec" / "hyper" / "py.typed").is_file(),
-            "expected the marker src/polyspec/hyper/py.typed to exist",
+            (PACKAGE / source).is_dir(),
+            f"tool.maturin python-source {source!r}: expected the directory {PACKAGE / source} to exist",
+        )
+
+    def test_namespace_package_declares_py_typed(self) -> None:
+        source = PACKAGE / self.maturin().get("python-source", "src")
+        marker = source / "polyspec" / "hyper" / "py.typed"
+        self.assertTrue(
+            marker.is_file(),
+            f"expected the marker {marker} in the python-source of maturin",
         )
 
 

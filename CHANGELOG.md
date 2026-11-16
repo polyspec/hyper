@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The package data test reads the `python-source` of `tool.maturin`, which builds the Python package, and checks the `py.typed` marker in it: it read `tool.setuptools`, which `pyproject.toml` no longer has, and failed on a package that carries the marker (H35.7).
 - `CoreRules` of the Node and the Python server is one unit with one member per rule, named after its unit and its rule (`csrfMask`, `csrf_mask`), as the PHP server has it: the namespaces of its members were no unit of `contracts/interfaces.json`, and the Python module held fourteen classes in one file against HYR-4 (H35.7).
 - The rules of the core of the Node server are in `packages/ts/src/app/core-rules.ts`, the directory of the group `app` (HYR-4); `src/core/` was no group, and `make recipe-check` reported the file as owned by no unit (H35.7).
 - `make node-package` packs the dependencies of `packages/ts` from the root install and installs them with the packed package: the offline install of the packed package looked up `@polyspec/hyper-client`, which is in no registry, and `make test-wasm` failed with `ENOTCACHED` (H35.7).
