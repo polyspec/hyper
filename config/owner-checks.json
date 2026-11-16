@@ -318,7 +318,8 @@
         "tests/scripts/binding-commit.test.mts",
         "scripts/binding-cases.mts",
         "config/binding-cases.json",
-        "tests/scripts/binding-cases.test.mts"
+        "tests/scripts/binding-cases.test.mts",
+        "tests/scripts/hyper-install.test.mts"
       ],
       "targets": [
         "typecheck",

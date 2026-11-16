@@ -115,11 +115,13 @@ help: ## List the targets
 # The install order of a checkout: the mise, node and npm of mise.toml (the bootstrap of install-tools), the packages of
 # package-lock.json with that npm, then the other tools of mise.toml, the symbol extractor of PHP, whose php-parser
 # lint-php reads, and the Composer projects and the venv of hyper.
-hyper-install: ## Install the pinned tools and the npm packages, fetch the archives of the template release and install the Composer dependencies and the Python venv (HR-89, H14.1-7); ONLINE
+hyper-install: ## Install the pinned tools and the npm packages, the binding cli of Cargo.lock and the sources it generates, fetch the archives of the template release and install the Composer dependencies and the Python venv (HR-89, H14.1-7, H35.1); ONLINE
 	$(MAKE) --no-print-directory install-tools TOOLS=npm
 	$(MAKE) --no-print-directory install-packages
 	$(MAKE) --no-print-directory install-tools
 	$(MAKE) --no-print-directory install-symbols EXTRACTORS=php
+	$(MAKE) --no-print-directory install-binding
+	$(MAKE) --no-print-directory bindings
 	$(MAKE) --no-print-directory hyper-install-php
 	$(MAKE) --no-print-directory hyper-install-python
 

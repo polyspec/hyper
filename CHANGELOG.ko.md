@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 26a663711f42d50d4ec9fbc2f6e21910f84f74ae80d354d497bcdfa76a6ef70b -->
+<!-- source-sha256: cc0e4c46ec7d2279630f9f8b2215459f1857dcdd13991e70092b1fc2c193fa2d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make hyper-install`은 `hyper-install-php`와 `hyper-install-python` 전에 `install-binding`과 `bindings`를 실행한다. 그래서 새 checkout은 Python 패키지의 native module을 `packages/python/native/generated`에서 빌드하며, 그것이 없으면 `hyper-install-python`은 실패했다(H35.1). `tests/scripts/hyper-install.test.mts`는 dry run으로 그 순서를 검사한다. `Cargo.lock`의 binding이 Go와 WASM을 거부하는 동안(H35.4) `bindings`는 PHP, Python, Node를 쓴 뒤 exit status 1로 끝나며, `hyper-install`도 그렇다.
 - Git은 `make bindings`가 쓰는 Python 패키지 `packages/python/src/polyspec/hyper/_binding/`을 무시한다. `make layout-check`는 그것을 Git이 무시하지 않는 생성 디렉터리로 실패시켰다(H35.3). `tests/scripts/ignored-files.test.mts`는 그것을 출력 가운데 하나로 지정한다.
 - HY-52.18과 HY-69.9는 은퇴하고, HY-52.19와 HY-69.10은 `Max-Age`와 reply 상태의 범위를 binding이 판정한다고 적는다. binding은 그것을 type `int`로 받으므로 ±(2^53 − 1) 밖의 정수는 모든 언어에서 core가 실행되기 전에 binding의 kind `invalid_number`로 실패한다(B-2). HY-52.18과 HY-69.9는 PHP와 Python에 hyper의 kind `integer_range`를 주었다. core는 Rust 호출자의 `i64`에 대해 `integer_range`를 유지하며, `packages/rust/tests/rules.rs`가 그것을 시험한다. `contracts/reply.json`에서 안전 범위 밖 정수의 case 세 쌍은 각각 `invalid_number`를 내는 case 하나가 된다. `rules.reply_status`는 `integer_range`를 지정하지 않으므로 v0.0.13의 `binding check`는 CK-19, CK-20, CK-94 외에 아무것도 보고하지 않는다. `make core-test`는 78개 통과를 준다.
 - `make binding-cases`는 `contracts/`의 section 12개(csrf, result, reply, context, build)에서 group 14개의 case 154개를 `var/binding-cases/`에 쓰고, `packages/rust/interface.json`은 각 group을 `cases`의 행에서 지정하므로 다섯 binding의 생성된 test가 그것을 실행한다(HR-100). v0.0.13의 `binding check`는 그 형식을 받아들인다. `rules.reply_status`는 type `int`를 받으므로, core가 `integer_range`로 거부하는 2^53 + 1의 case(HY-52.18)는 type 밖이며 binding이 core 전에 거부한다. CK-22는 `integer_range`를 내는 case가 없다고 보고한다. `tests/scripts/binding-cases.test.mts`는 test 4개를 가진다.
