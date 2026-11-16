@@ -222,15 +222,16 @@ fn reply_cookies() {
             let result = match (name.as_str(), args.as_slice()) {
                 ("cookie", [Argument::Text(n), Argument::Text(v)])
                 | ("cookie", [Argument::Text(n), Argument::Text(v), Argument::Null]) => {
-                    reply::cookie(n, v, None)
+                    reply::reply_cookie(n, v, None, secure)
                 }
                 ("cookie", [Argument::Text(n), Argument::Text(v), Argument::Integer(age)]) => {
-                    reply::cookie(n, v, Some(*age))
+                    reply::reply_cookie(n, v, Some(*age), secure)
                 }
-                ("removeCookie", [Argument::Text(n)]) => reply::removed_cookie(n),
+                ("removeCookie", [Argument::Text(n)]) => reply::removed_cookie(n)
+                    .and_then(|cookie| reply::set_cookie_field(&cookie, secure)),
                 _ => continue 'cases,
             };
-            match result.and_then(|cookie| reply::set_cookie_field(&cookie, secure)) {
+            match result {
                 Ok(field) => headers.push(String::from_utf8_lossy(&field).into_owned()),
                 Err(error) => {
                     failure = Some(error);
@@ -364,12 +365,17 @@ fn representation_tags() {
         let Some(tag) = case["etag"].as_str() else {
             continue;
         };
-        // A media type made without a content type tags with the empty type (HY-122.11).
         let body = text(case, "body").as_bytes();
-        let computed = match case["contentType"].as_str() {
-            Some(content_type) => etag::representation_tag(content_type.as_bytes(), body),
-            None => etag::representation_tag(b"", body),
-        };
+        // The binding passes the latin1 content type as one byte for each character (HY-122.14); a content type above
+        // U+00FF fails in the binding before the core (`invalid_text`), so its case has no tag here. A media type made without a content
+        // type tags with the empty type (HY-122.11).
+        let content_type: Vec<u8> = case["contentType"]
+            .as_str()
+            .unwrap_or("")
+            .chars()
+            .map(|character| u8::try_from(u32::from(character)).expect("a latin1 content type"))
+            .collect();
+        let computed = etag::representation_tag(&content_type, body);
         assert_eq!(computed, tag, "{}", case["id"]);
         ran += 1;
     }
