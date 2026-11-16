@@ -22,9 +22,11 @@ final class JsonSteps
     public static function decode(CaseReader $case): void
     {
         $json = self::text($case);
-        $outcome = CaseRules::failureOf(
-            static fn (): string => JsonCodec::inDataModel(JsonCodec::decode($json)) ? 'value' : 'outside',
-        );
+        $outcome = CaseRules::failureOf(static function () use ($json): string {
+            JsonCodec::decode($json);
+
+            return 'value';
+        });
         $case->compare('result', $outcome['result']);
         $case->compare('raises', $outcome['raises']);
     }

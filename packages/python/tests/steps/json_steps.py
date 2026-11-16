@@ -36,9 +36,8 @@ def decode(case) -> None:
     result = None
     raises = None
     try:
-        result = (
-            "value" if JsonCodec.in_data_model(JsonCodec.decode(text)) else "outside"
-        )
+        JsonCodec.decode(text)
+        result = "value"
     except FAILURES as failure:
         raises = raises_of(failure)
     case.compare("result", result)

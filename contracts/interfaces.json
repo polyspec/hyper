@@ -11901,7 +11901,7 @@
               ],
               "output": "string",
               "errors": [],
-              "state": "Returns the JSON text of a value with the bytes of PHP json_encode.",
+              "state": "Returns the JSON text of a value of the data model with the bytes of PHP json_encode, and fails with the kind data_unsupported_type for a value outside the data model (HY-54.18, HY-54.21).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::encode",
@@ -11925,10 +11925,8 @@
                 "string"
               ],
               "output": "value",
-              "errors": [
-                "json-decode-error"
-              ],
-              "state": "Decodes a JSON text as PHP json_decode reads it, with maps in document order.",
+              "errors": [],
+              "state": "Reads a JSON text to a value of the data model, with maps in document order, and fails with the kind malformed_json for a text that is no JSON text and with the kind data_number_range, data_number_not_finite, data_invalid_utf8 or data_depth for a text whose value is outside the data model (HY-54.20).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::decode",
@@ -11941,31 +11939,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec.decode",
                   "signature": "def decode(text: str) -> object"
-                }
-              }
-            },
-            {
-              "id": "json-codec.inDataModel",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "value"
-              ],
-              "output": "boolean",
-              "errors": [],
-              "state": "Tells whether a decoded value is a value of the data model.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::inDataModel",
-                  "signature": "public static function inDataModel(mixed $value): bool"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.inDataModel",
-                  "signature": "static inDataModel(value: Value | DecodedValue): value is Value"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec.in_data_model",
-                  "signature": "def in_data_model(value: object) -> bool"
                 }
               }
             },
@@ -17030,8 +17003,7 @@
             }
           },
           "members": [
-            "json-codec.decode",
-            "json-codec.inDataModel"
+            "json-codec.decode"
           ]
         }
       }

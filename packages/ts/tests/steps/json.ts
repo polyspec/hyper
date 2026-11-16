@@ -30,7 +30,10 @@ export const steps = {
   },
   decode(reader: CaseReader): void {
     const json = text(reader);
-    const outcome = failureOf(() => (JsonCodec.inDataModel(JsonCodec.decode(json)) ? 'value' : 'outside'));
+    const outcome = failureOf(() => {
+      JsonCodec.decode(json);
+      return 'value';
+    });
     reader.compare('result', outcome.result);
     reader.compare('raises', outcome.raises);
   },
