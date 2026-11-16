@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 8f04f4989ec59d39bbbacdfbbdb7969186b75a3b9dbfcf4dbf13cd6b65c481ce -->
+<!-- source-sha256: a9d045fd3a01ab0a086f9141f131d4a602df6134b12ebd32bfc19ea1ce00fcfa -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -502,4 +502,4 @@
 | H35.14 | 저장소의 Rust 도구와 binding 도구를 선언된 입력으로 두고 kit를 거쳐 실행한다. | Makefile, package.json, package-lock.json, Cargo.toml, Cargo.lock, scripts, tests/scripts, config/owner-checks.json, docs/operations, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.14-1 | Makefile의 모든 cargo 명령은 kit link script의 `cargo <dir> <args>`, 곧 `$(CARGO)`를 거쳐 실행한다. 그래서 개발 checkout의 polyspec crate는 `.cargo` 파일 없이 `.links`의 provider로 patch된다. `tests/scripts/cargo-through-kit.test.mts`는 cargo를 직접 시작하는 recipe 줄을 실패시킨다. | Makefile, tests/scripts, config/owner-checks.json | `make hyper-test-scripts` | [ ] |
 | H35.14-2 | binding generator는 npm package `@polyspec/binding`이다. `package.json`이 release asset v0.0.13의 URL로 선언하고 `package-lock.json`이 integrity로 pin한다(HR-70). recipe는 그 bin을 시작하며, `Cargo.lock`의 commit으로 binding을 clone하던 `make install-binding`은 지운다. | package.json, package-lock.json, Makefile, scripts, tests/scripts, config/owner-checks.json, docs/operations | `make hyper-test-scripts` | [ ] |
-| H35.14-3 | 저장소의 모든 Cargo.toml은 `polyspec-binding-core`를 branch `v1/rust-core` 대신 generator의 release인 tag `v0.0.13`으로 요구하고, `Cargo.lock`이 그 tag를 pin한다. | Cargo.toml, Cargo.lock | `make core-test` | [ ] |
+| H35.14-3 | 저장소의 모든 Cargo.toml은 `polyspec-binding-core`를 branch `v1/rust-core` 대신 generator의 release인 tag `v0.0.13`으로 요구하고, `Cargo.lock`이 그 tag를 pin한다. | Cargo.toml, Cargo.lock | `make core-test` | [!] cause: 공개된 provider가 binding-core를 서로 다른 tag로 pin한다(http-cookie v0.0.5, http-negotiation v0.0.2, http-media-type v0.0.5는 binding v0.0.9, php-serialization v0.0.12는 v0.0.10, json v0.0.32는 v0.0.13, session-store는 release 없음). 이 저장소에서 binding-core만 tag로 pin하면 graph에 binding-core crate가 둘 생기고, 그 type은 합쳐지지 않는다; retry: binding 0.0.15가 release되고, 그다음 provider 일곱이 그 pin으로 release되고, 그다음 이 저장소가 provider와 binding-core를 그 tag로 pin한다 |
