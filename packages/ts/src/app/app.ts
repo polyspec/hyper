@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
-import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type TemplateIndex } from '@polyspec/hyper-client';
+import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, HyperTypeError as ClientTypeError, HyperValueError as ClientValueError, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type TemplateIndex } from '@polyspec/hyper-client';
 import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@polyspec/template/render';
 import { Choice } from '../page/choice.js';
 import type { ClientRendering } from '../page/client-rendering.js';
@@ -243,6 +243,23 @@ export class App<S extends object = Record<string, never>> {
   static async open<S extends object = Record<string, never>>(options: AppOptions<S>): Promise<App<S>> {
     ArgumentCountError.between(arguments.length, 1, 1);
     ArgumentCountError.members(options, APP_REQUIRED, APP_OPTIONAL);
+    try {
+      return await App.opened(options);
+    } catch (error) {
+      throw App.bindingError(error);
+    }
+  }
+
+  // HY-132.8: a failure of a check of the browser code at open is raised as the class of the binding of its category,
+  // with its kind and message; every other error is raised as it is. The binding gives the status null, which is the
+  // status of every kind that these checks raise.
+  private static bindingError(error: unknown): unknown {
+    if (error instanceof ClientValueError) return rules().valueError(error.message, error.kind);
+    if (error instanceof ClientTypeError) return rules().typeError(error.message, error.kind);
+    return error;
+  }
+
+  private static async opened<S extends object>(options: AppOptions<S>): Promise<App<S>> {
     const basePath = options.basePath ?? '';
     if (basePath !== '' && (!basePath.startsWith('/') || basePath.endsWith('/'))) {
       throw rules().valueError(`base path ${basePath} must start with / and must not end with /`, 'invalid_application');

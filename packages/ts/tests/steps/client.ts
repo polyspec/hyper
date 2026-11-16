@@ -9,7 +9,8 @@ import { App, ArraySession, Choice, ClientRendering, Representation, Result, typ
 import type { CaseReader } from '../case-reader.js';
 import { FIXTURES, list, listAndItem, parsedBody, record, requestFrom, TEMPLATES, TOKEN, type Counter, type Services } from '../support.js';
 import { mapOf, plain, textOf, textsOf } from '../inputs.js';
-import { comparesOpen, failureOf, Recorded, RecordingStore } from './recorded.js';
+import { raisesOf } from '../case-rules.js';
+import { failureOf, Recorded, RecordingStore } from './recorded.js';
 
 // What the representation handlers of a case received: the number of their calls, and the media parameters and the
 // request of the last call.
@@ -327,6 +328,8 @@ export const steps = {
       if (reader.input('shellFile') === 'unreadable') chmodSync(join(directory, 'index.html'), 0o600);
       rmSync(directory, { recursive: true, force: true });
     }
-    comparesOpen(reader, failure);
+    // The case states the outcome open and the field raises, as the PHP and Python steps give them.
+    reader.outcome('open', failure);
+    reader.compare('raises', failure === null ? null : raisesOf(failure));
   },
 };
