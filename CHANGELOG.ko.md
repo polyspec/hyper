@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 060feecde7df0dfb9d1d35cb59f4f90fc58c9d32ef697018803de7656522e09d -->
+<!-- source-sha256: 912b42907fec81bb735e91f0c588a0935e499f80c4186e26be04b75c656c091e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- knip이 `@polyspec/json`을 무시한다. 루트는 그것을 `@polyspec/template`을 위해서만 요구하고, 어떤 import도 닿지 않는다. 그래서 H35.22 뒤에도 `make lint-ts`가 다시 통과한다(H35.22).
 - `contracts/interfaces.json`의 `json-codec.decode`는 JSON 텍스트를 데이터 모델의 값으로 읽고 `malformed_json`, `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`로 실패한다고 적고(HY-54.20), `json-codec.encode`는 데이터 모델 밖의 값이 `data_unsupported_type`으로 실패한다고 적는다(HY-54.21). 어떤 section도 어떤 statement도 필요로 하지 않으므로 member `json-codec.inDataModel`을 없앤다. PHP, Node, Python runner의 step `decode`는 결과 `value` 또는 decode의 실패를 준다. 전에는 데이터 모델 밖의 decode 값에 `outside`를 주었는데, HY-54의 어떤 statement도 그것을 허용하지 않는다. server는 아직 전처럼 decode하므로 데이터 모델 kind의 decode case는 H35.20-5-3까지 실패한다(H35.20-5-4).
 - PHP 소스가 `phpcs.xml.dist`의 줄 길이를 지킨다. 주석 둘, 메시지 하나, cookie 조회 하나가 120자보다 길어서 `make lint-php`가 phpcs에서 실패했다(H35.21).
 - core의 representation tag 시험이 helper `latin1`로 content type을 바꾼다. 전에는 lint 설정이 금하는 `unwrap_or`와 `expect`를 불러, H35.10-4 뒤로 `make core-lint`가 실패했다(H35.23).

@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- knip ignores `@polyspec/json`, which the root requires only for `@polyspec/template` and which no import reaches, so `make lint-ts` passes again after H35.22 (H35.22).
 - `json-codec.decode` of `contracts/interfaces.json` states that a JSON text reads to a value of the data model and fails with `malformed_json`, `data_number_range`, `data_number_not_finite`, `data_invalid_utf8` or `data_depth` (HY-54.20), and `json-codec.encode` states that a value outside the data model fails with `data_unsupported_type` (HY-54.21). The member `json-codec.inDataModel` is removed, because no section and no statement needs it. The step `decode` of the PHP, Node and Python runners gives the result `value` or the failure of the decoding; it gave `outside` for a decoded value outside the data model, which no statement of HY-54 allows. The servers still decode as before, so the decode cases with a data-model kind fail until H35.20-5-3 (H35.20-5-4).
 - The PHP sources keep the line length of `phpcs.xml.dist`: two comments, one message and one cookie lookup were longer than 120 characters, so `make lint-php` failed in phpcs (H35.21).
 - The representation tag test of the core converts its content type with the `latin1` helper; it called `unwrap_or` and `expect`, which the lint configuration forbids, so `make core-lint` failed since H35.10-4 (H35.23).
