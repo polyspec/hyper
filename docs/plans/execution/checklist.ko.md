@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 74c969da92690d12619ec878b1f151976dcd6959968e9210fcba6d32360282e3 -->
+<!-- source-sha256: 84f5da484c72c4a65a5007a326bf34679673fdd0cb3d315255a4d858358d2fbc -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -540,3 +540,5 @@
 | H35.28-1 | template 0.0.28 release 뒤에 `packages/python/pyproject.toml`은 v0.0.27 wheel 대신 Rust core binding과 그 `Environment`를 담은 그 release의 Python package를 요구하고, uv가 `uv.lock`을 다시 쓴다. template은 0.0.28 전에 Rust core Python package를 release하지 않는다. | packages/python/pyproject.toml, packages/python/uv.lock | `make hyper-test-python` | [ ] |
 | H35.28-2 | Python 시험의 대역 application(`packages/python/tests/test_request_target.py`의 `Application`과, `tests/transport.py`가 쓰는 다른 대역)은 host pipeline이 부르는 `App`의 member(`_log_failure`, `_frame` 포함)를 모두 가진다. 그래서 core의 실패가 `'Application' object has no attribute '_log_failure'` 대신 그 실패로 보고된다. | packages/python/tests | `make hyper-test-python` | [ ] |
 | H35.27 | PHP, Node, Python 서버는 case가 `raises`를 적는 자리에서 hyper의 error class(binding의 `Hyper<Category>Error`, HY-132.2)로만 실패하고, `\InvalidArgumentException`(`packages/php/src/Page/Result.php:44`) 같은 언어의 일반 오류로 실패하지 않는다. H35.15의 routing이 core를 거쳐 주는 실패는 H35.15의 몫이고, 이 행은 그 나머지를 맡는다: `make hyper-test-php`가 case 오류로 보고하는 result, manifest, reply, app, accept, build, session, context, request, client, media-type, representations section이다. | packages/php/src, packages/ts/src, packages/python/src | `make recipe-check` | [ ] |
+| H35.27-1 | PHP와 Node 서버는 case가 `raises`를 적는 자리에서 hyper의 error class를 던진다(HY-132.2). | packages/php/src, packages/ts/src | `make hyper-test-php`와 `make hyper-test-node` | [ ] |
+| H35.27-2 | Python 서버는 case가 `raises`를 적는 자리에서 hyper의 error class를 던지며(HY-132.2), H35.28 뒤에 그 case run이 이를 확인한다. | packages/python/src | `make hyper-test-python` | [ ] |
