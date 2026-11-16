@@ -1,0 +1,17 @@
+{
+  "comment": "The sections of contracts/ whose cases the generated tests of every binding run (HR-100): scripts/binding-cases.mts writes each section as the group <group> of var/binding-cases/<source>, each parameter of the member from a field of a case and its result from the field result, and packages/rust/interface.json names the group in a row of cases. An argument is a field of the case, a field read as UTF-8 bytes, or the argument of the one call of the case, whose float is left out. A case with only goes to the group <group>_only_<targets>, which its row names in only. A case is left out when a field of skip is true, when it raises a kind that the binding decides, or when its call does not match.",
+  "sections": [
+    { "source": "csrf.json", "group": "mask", "member": "rules.csrf_mask", "args": { "token": { "field": "token" }, "mask": { "field": "mask" } }, "result": "value" },
+    { "source": "csrf.json", "group": "verify", "member": "rules.csrf_verify", "args": { "token": { "field": "token" }, "value": { "field": "value" } }, "result": "valid" },
+    { "source": "csrf.json", "group": "browser", "member": "rules.browser", "args": { "masked": { "field": "value" } }, "result": "browser" },
+    { "source": "result.json", "group": "redirect", "member": "rules.redirect_location", "args": { "location": { "field": "location" } }, "result": "redirect", "skip": ["notUtf8"] },
+    { "source": "result.json", "group": "page", "member": "rules.page_status", "args": { "status": { "field": "status" } }, "result": "result" },
+    { "source": "result.json", "group": "outside", "member": "rules.outside_location", "args": { "location": { "field": "location" } }, "result": "outside" },
+    { "source": "result.json", "group": "origin", "member": "rules.origin", "args": { "text": { "field": "text" } }, "result": "origin" },
+    { "source": "reply.json", "group": "cacheControl", "member": "rules.cache_control", "args": { "value": { "call": "cacheControl" } }, "result": "value" },
+    { "source": "reply.json", "group": "referrerPolicy", "member": "rules.referrer_policy", "args": { "value": { "call": "referrerPolicy" } }, "result": "value" },
+    { "source": "reply.json", "group": "status", "member": "rules.reply_status", "args": { "status": { "call": "status" } }, "result": "value" },
+    { "source": "context.json", "group": "contexts", "member": "rules.context_hash", "args": { "build": { "field": "build" }, "text": { "field": "text" } }, "result": "hash" },
+    { "source": "build.json", "group": "read", "member": "rules.read_build", "args": { "bytes": { "field": "text", "as": "bytes" } }, "result": "build" }
+  ]
+}

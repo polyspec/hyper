@@ -357,13 +357,17 @@ core-fmt-check: ## Check the format of the Rust core
 .PHONY: bindings bindings-check lint-bindings test-bindings node-package test-wasm test-go
 BINDING_COMMIT := $(shell $(NODE) $(CURDIR)/scripts/binding-commit.mts $(CURDIR)/Cargo.lock)
 BINDING := $(CURDIR)/var/binding/$(BINDING_COMMIT)/packages/ts/src/cli.ts
-.PHONY: install-binding
+.PHONY: install-binding binding-cases
+# The cases of contracts/ that the generated tests of every binding run (HR-100): scripts/binding-cases.mts writes the
+# sections of config/binding-cases.json into var/binding-cases, which the rows of cases of the contract name.
+binding-cases: ## Write var/binding-cases, the cases of contracts/ in the form of the binding (HR-100)
+	$(NODE) scripts/binding-cases.mts --config $(CURDIR)/config/binding-cases.json --contracts $(CURDIR)/contracts --output $(CURDIR)/var/binding-cases > /dev/null
 install-binding: ## Clone the binding cli of the commit that Cargo.lock pins into var/binding and install its locked packages; ONLINE
 	$(ONLINE) $(NODE) scripts/install-binding.mts --cargo cargo --npm $(NPM) --output $(CURDIR)/var/binding
-bindings: ## Write the generated sources of every binding with the binding cli of the commit of Cargo.lock (binding L-1)
+bindings: binding-cases ## Write the generated sources of every binding with the binding cli of the commit of Cargo.lock (binding L-1)
 	@test -f $(BINDING) || { echo "bindings: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
 	$(NODE) $(BINDING) generate --root $(CURDIR)
-bindings-check: ## Check the interface contract and the tracked binding packages with the binding cli of the commit of Cargo.lock (binding CK-19)
+bindings-check: binding-cases ## Check the interface contract and the tracked binding packages with the binding cli of the commit of Cargo.lock (binding CK-19)
 	@test -f $(BINDING) || { echo "bindings-check: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
 	$(NODE) $(BINDING) check $(CURDIR)/packages/rust/interface.json
 

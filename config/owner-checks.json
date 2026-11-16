@@ -315,7 +315,10 @@
     {
       "paths": [
         "scripts/binding-commit.mts",
-        "tests/scripts/binding-commit.test.mts"
+        "tests/scripts/binding-commit.test.mts",
+        "scripts/binding-cases.mts",
+        "config/binding-cases.json",
+        "tests/scripts/binding-cases.test.mts"
       ],
       "targets": [
         "typecheck",

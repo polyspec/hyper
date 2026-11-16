@@ -3872,6 +3872,66 @@
       "member": "opening_functions.open_page",
       "file": "packages/rust/tests/cases/faults.json",
       "group": "session"
+    },
+    {
+      "member": "rules.csrf_mask",
+      "file": "var/binding-cases/csrf.json",
+      "group": "mask"
+    },
+    {
+      "member": "rules.csrf_verify",
+      "file": "var/binding-cases/csrf.json",
+      "group": "verify"
+    },
+    {
+      "member": "rules.browser",
+      "file": "var/binding-cases/csrf.json",
+      "group": "browser"
+    },
+    {
+      "member": "rules.redirect_location",
+      "file": "var/binding-cases/result.json",
+      "group": "redirect"
+    },
+    {
+      "member": "rules.page_status",
+      "file": "var/binding-cases/result.json",
+      "group": "page"
+    },
+    {
+      "member": "rules.outside_location",
+      "file": "var/binding-cases/result.json",
+      "group": "outside"
+    },
+    {
+      "member": "rules.origin",
+      "file": "var/binding-cases/result.json",
+      "group": "origin"
+    },
+    {
+      "member": "rules.cache_control",
+      "file": "var/binding-cases/reply.json",
+      "group": "cacheControl"
+    },
+    {
+      "member": "rules.referrer_policy",
+      "file": "var/binding-cases/reply.json",
+      "group": "referrerPolicy"
+    },
+    {
+      "member": "rules.reply_status",
+      "file": "var/binding-cases/reply.json",
+      "group": "status"
+    },
+    {
+      "member": "rules.context_hash",
+      "file": "var/binding-cases/context.json",
+      "group": "contexts"
+    },
+    {
+      "member": "rules.read_build",
+      "file": "var/binding-cases/build.json",
+      "group": "read"
     }
   ]
 }
