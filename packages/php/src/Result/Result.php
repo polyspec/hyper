@@ -85,11 +85,7 @@ final class Result
     public static function page(int $status, array $data): self
     {
         ArgumentCount::most(\func_num_args(), 2);
-        if (!in_array($status, [200, 409, 422], true)) {
-            throw new \InvalidArgumentException("a page status {$status} is not 200, 409 or 422 (HY-58)");
-        }
-
-        return new self(null, $status, $data, [], []);
+        return new self(null, CoreRules::shared()->resultPage($status), $data, [], []);
     }
 
     /**

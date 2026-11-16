@@ -1301,6 +1301,30 @@
           },
           "members": [
             {
+              "id": "core-rules.shared",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "core-rules",
+              "errors": [],
+              "state": "The one CoreRules of the PHP server over the extension polyspec_hyper, created on its first use; without the extension it fails with the name of the extension, and no rule of the server answers in its place (HY-132.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::shared",
+                  "signature": "public static function shared(): self"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-132.2"
+              },
+              "tests": [
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheServerHasOneCoreRulesOverTheExtensionOrFailsWithItsName: The PHP server reaches the core through one CoreRules over the extension polyspec_hyper (HY-132.2); without the extension it fails with the name of the extension."
+              ]
+            },
+            {
               "id": "core-rules.csrfMask",
               "kind": "method",
               "visibility": "internal",
@@ -1314,7 +1338,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::csrfMask",
-                  "signature": "public function csrfMask(string $token, string $mask): mixed"
+                  "signature": "public function csrfMask(string $token, string $mask): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.csrfMask",
@@ -1350,7 +1374,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::csrfVerify",
-                  "signature": "public function csrfVerify(string $token, string $value): mixed"
+                  "signature": "public function csrfVerify(string $token, string $value): bool"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.csrfVerify",
@@ -1375,7 +1399,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::csrfBrowserOf",
-                  "signature": "public function csrfBrowserOf(string $masked): mixed"
+                  "signature": "public function csrfBrowserOf(string $masked): ?string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.csrfBrowserOf",
@@ -1401,7 +1425,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::contextHash",
-                  "signature": "public function contextHash(string $build, string $text): mixed"
+                  "signature": "public function contextHash(string $build, string $text): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.contextHash",
@@ -1426,7 +1450,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::contextValidHeader",
-                  "signature": "public function contextValidHeader(?string $value): mixed"
+                  "signature": "public function contextValidHeader(?string $value): bool"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.contextValidHeader",
@@ -1451,7 +1475,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionCookieName",
-                  "signature": "public function sessionCookieName(bool $secure): mixed"
+                  "signature": "public function sessionCookieName(bool $secure): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionCookieName",
@@ -1477,7 +1501,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionCookieHeader",
-                  "signature": "public function sessionCookieHeader(string $id, bool $secure): mixed"
+                  "signature": "public function sessionCookieHeader(string $id, bool $secure): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionCookieHeader",
@@ -1503,7 +1527,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::representationEtag",
-                  "signature": "public function representationEtag(string $contentType, string $body): mixed"
+                  "signature": "public function representationEtag(string $contentType, string $body): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.representationEtag",
@@ -1528,7 +1552,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestCurrentPath",
-                  "signature": "public function requestCurrentPath(?string $header): mixed"
+                  "signature": "public function requestCurrentPath(?string $header): ?string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.requestCurrentPath",
@@ -1553,7 +1577,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyCacheControl",
-                  "signature": "public function replyCacheControl(string $value): mixed"
+                  "signature": "public function replyCacheControl(string $value): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyCacheControl",
@@ -1578,7 +1602,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyReferrerPolicy",
-                  "signature": "public function replyReferrerPolicy(string $value): mixed"
+                  "signature": "public function replyReferrerPolicy(string $value): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyReferrerPolicy",
@@ -1603,7 +1627,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyStatus",
-                  "signature": "public function replyStatus(int $status): mixed"
+                  "signature": "public function replyStatus(int $status): int"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyStatus",
@@ -1628,7 +1652,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyKeepsOutOfSharedCaches",
-                  "signature": "public function replyKeepsOutOfSharedCaches(string $value): mixed"
+                  "signature": "public function replyKeepsOutOfSharedCaches(string $value): bool"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyKeepsOutOfSharedCaches",
@@ -1653,7 +1677,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::resultRedirect",
-                  "signature": "public function resultRedirect(string $location): mixed"
+                  "signature": "public function resultRedirect(string $location): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.resultRedirect",
@@ -1678,7 +1702,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::resultPage",
-                  "signature": "public function resultPage(int $status): mixed"
+                  "signature": "public function resultPage(int $status): int"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.resultPage",
@@ -1703,7 +1727,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::resultIsApplicationPath",
-                  "signature": "public function resultIsApplicationPath(string $location): mixed"
+                  "signature": "public function resultIsApplicationPath(string $location): bool"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.resultIsApplicationPath",
@@ -1728,7 +1752,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appVaryHeader",
-                  "signature": "public function appVaryHeader(bool $context): mixed"
+                  "signature": "public function appVaryHeader(bool $context): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appVaryHeader",
@@ -1809,7 +1833,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appShellText",
-                  "signature": "public function appShellText(string $path, string $bytes): mixed"
+                  "signature": "public function appShellText(string $path, string $bytes): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appShellText",
@@ -1867,7 +1891,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::pageTag",
-                  "signature": "public function pageTag(string $body, string $maskedToken, string $token): mixed"
+                  "signature": "public function pageTag(string $body, string $maskedToken, string $token): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageTag",
@@ -1892,7 +1916,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::sessionStoredToken",
-                  "signature": "public function sessionStoredToken(string $stored): mixed"
+                  "signature": "public function sessionStoredToken(string $stored): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionStoredToken",
@@ -1917,7 +1941,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::keptCookieName",
-                  "signature": "public function keptCookieName(bool $secure): mixed"
+                  "signature": "public function keptCookieName(bool $secure): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.keptCookieName",
@@ -1942,7 +1966,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::buildRead",
-                  "signature": "public function buildRead(string $bytes): mixed"
+                  "signature": "public function buildRead(string $bytes): string"
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildRead",
@@ -9705,10 +9729,6 @@
               "errors": [],
               "state": "Fails for a token or a mask that is not 64 lowercase hexadecimal digits (HY-24.14).",
               "native": {
-                "php": {
-                  "symbol": "packages/php/src/Session/Csrf.php::Polyspec\\Hyper\\Csrf::requireToken",
-                  "signature": "private static function requireToken(string $text): void"
-                },
                 "node": {
                   "symbol": "packages/ts/src/session/csrf.ts::Csrf.requireToken",
                   "signature": "private static requireToken(text: string): void"
@@ -9717,6 +9737,13 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/_csrf.py::Csrf._require_token",
                   "signature": "def _require_token(text: str) -> None"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-132.2"
               }
             },
             {
@@ -9730,10 +9757,6 @@
               "errors": [],
               "state": "Returns the bytes of an even number of hexadecimal digits.",
               "native": {
-                "php": {
-                  "symbol": "packages/php/src/Session/Csrf.php::Polyspec\\Hyper\\Csrf::bytes",
-                  "signature": "private static function bytes(string $hex): string"
-                },
                 "node": {
                   "symbol": "packages/ts/src/session/csrf.ts::Csrf.bytes",
                   "signature": "private static bytes(hex: string): Buffer"
@@ -9742,6 +9765,13 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/_csrf.py::Csrf._bytes",
                   "signature": "def _bytes(hex_text: str) -> bytes"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-132.2"
               }
             },
             {
@@ -9756,10 +9786,6 @@
               "errors": [],
               "state": "Returns the bytes of the first XOR the bytes of the second.",
               "native": {
-                "php": {
-                  "symbol": "packages/php/src/Session/Csrf.php::Polyspec\\Hyper\\Csrf::xor",
-                  "signature": "private static function xor(string $first, string $second): string"
-                },
                 "node": {
                   "symbol": "packages/ts/src/session/csrf.ts::Csrf.xor",
                   "signature": "private static xor(first: Buffer, second: Buffer): Buffer"
@@ -9768,6 +9794,13 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/_csrf.py::Csrf._xor",
                   "signature": "def _xor(first: bytes, second: bytes) -> bytes"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-132.2"
               }
             }
           ]

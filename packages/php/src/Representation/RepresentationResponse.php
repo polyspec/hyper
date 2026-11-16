@@ -85,7 +85,7 @@ final class RepresentationResponse
      */
     public static function etag(string $contentType, string $body): string
     {
-        return '"' . substr(hash('sha256', "{$contentType}\n{$body}"), 0, 32) . '"';
+        return CoreRules::shared()->representationEtag($contentType, $body);
     }
 
     /**

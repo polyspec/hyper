@@ -31,7 +31,32 @@ final class CoreRules
         'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader',
     ];
 
+    /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
+    private const string EXTENSION = 'polyspec_hyper';
+
+    private static ?self $shared = null;
+
     private readonly string $namespace;
+
+    /**
+     * The one CoreRules of the server, over the extension `polyspec_hyper`, created on its first use (HY-132.2). A
+     * server without the extension stops here with the name of the extension; no rule of the server answers in its
+     * place.
+     */
+    public static function shared(): self
+    {
+        if (self::$shared === null) {
+            if (!extension_loaded(self::EXTENSION)) {
+                throw new \RuntimeException(
+                    'hyper: the PHP extension ' . self::EXTENSION . ' is not loaded; the server calls the rules of the core '
+                    . 'through it (HY-132.2)',
+                );
+            }
+            self::$shared = new self(__NAMESPACE__);
+        }
+
+        return self::$shared;
+    }
 
     /**
      * Takes the namespace of the functions of the binding. A namespace that lacks a function fails here with its name,
@@ -61,93 +86,138 @@ final class CoreRules
     }
 
     /** Csrf::mask: rules.csrf_mask (HY-24.2, HY-24.14). */
-    public function csrfMask(string $token, string $mask): mixed
+    public function csrfMask(string $token, string $mask): string
     {
-        return $this->call('csrfMask', $token, $mask);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('csrfMask', $token, $mask);
+
+        return $result;
     }
 
     /** Csrf::verify: rules.csrf_verify (HY-24.4). */
-    public function csrfVerify(string $token, string $value): mixed
+    public function csrfVerify(string $token, string $value): bool
     {
-        return $this->call('csrfVerify', $token, $value);
+        /** @var bool $result The return type that the extension declares (T-1a). */
+        $result = $this->call('csrfVerify', $token, $value);
+
+        return $result;
     }
 
     /** Csrf::browserOf: rules.browser (HY-24.10, HY-24.13). */
-    public function csrfBrowserOf(string $masked): mixed
+    public function csrfBrowserOf(string $masked): ?string
     {
-        return $this->call('browser', $masked);
+        /** @var null|string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('browser', $masked);
+
+        return $result;
     }
 
     /** Context::hash: rules.context_hash (HY-125.12). */
-    public function contextHash(string $build, string $text): mixed
+    public function contextHash(string $build, string $text): string
     {
-        return $this->call('contextHash', $build, $text);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('contextHash', $build, $text);
+
+        return $result;
     }
 
     /** Context::validHeader: rules.valid_context_header (HY-127.2). */
-    public function contextValidHeader(?string $value): mixed
+    public function contextValidHeader(?string $value): bool
     {
-        return $this->call('validContextHeader', $value);
+        /** @var bool $result The return type that the extension declares (T-1a). */
+        $result = $this->call('validContextHeader', $value);
+
+        return $result;
     }
 
     /** The name of the session cookie (HY-45.1), which NativeSession gives the session options: rules.session_name. */
-    public function sessionCookieName(bool $secure): mixed
+    public function sessionCookieName(bool $secure): string
     {
-        return $this->call('sessionName', $secure);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('sessionName', $secure);
+
+        return $result;
     }
 
     /** RepresentationResponse::etag: rules.representation_tag (HY-122.10, HY-122.11). */
-    public function representationEtag(string $contentType, string $body): mixed
+    public function representationEtag(string $contentType, string $body): string
     {
-        return $this->call('representationTag', $contentType, $body);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('representationTag', $contentType, $body);
+
+        return $result;
     }
 
     /** Request::currentPath: rules.current_path of the value of HX-Current-URL (HY-11.5). */
-    public function requestCurrentPath(?string $header): mixed
+    public function requestCurrentPath(?string $header): ?string
     {
-        return $this->call('currentPath', $header);
+        /** @var null|string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('currentPath', $header);
+
+        return $result;
     }
 
     /** Reply::cacheControl: rules.cache_control gives the value that the reply keeps (HY-52.6). */
-    public function replyCacheControl(string $value): mixed
+    public function replyCacheControl(string $value): string
     {
-        return $this->call('cacheControl', $value);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('cacheControl', $value);
+
+        return $result;
     }
 
     /** Reply::referrerPolicy: rules.referrer_policy gives the value that the reply keeps (HY-103.2, HY-103.9). */
-    public function replyReferrerPolicy(string $value): mixed
+    public function replyReferrerPolicy(string $value): string
     {
-        return $this->call('referrerPolicy', $value);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('referrerPolicy', $value);
+
+        return $result;
     }
 
     /** Reply::status: rules.reply_status gives the page status that the reply keeps (HY-69). */
-    public function replyStatus(int $status): mixed
+    public function replyStatus(int $status): int
     {
-        return $this->call('replyStatus', $status);
+        /** @var int $result The return type that the extension declares (T-1a). */
+        $result = $this->call('replyStatus', $status);
+
+        return $result;
     }
 
     /** Result::redirect: rules.redirect_location gives the location of the result (HY-46). */
-    public function resultRedirect(string $location): mixed
+    public function resultRedirect(string $location): string
     {
-        return $this->call('redirectLocation', $location);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('redirectLocation', $location);
+
+        return $result;
     }
 
     /** Result::page: rules.page_status gives the status of the result (HY-58). */
-    public function resultPage(int $status): mixed
+    public function resultPage(int $status): int
     {
-        return $this->call('pageStatus', $status);
+        /** @var int $result The return type that the extension declares (T-1a). */
+        $result = $this->call('pageStatus', $status);
+
+        return $result;
     }
 
     /** App::varyHeader: rules.page_vary (HY-117.1). */
-    public function appVaryHeader(bool $context): mixed
+    public function appVaryHeader(bool $context): string
     {
-        return $this->call('pageVary', $context);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('pageVary', $context);
+
+        return $result;
     }
 
     /** The tag of a JSON response of Page::respond: rules.page_tag (HY-53.1). */
-    public function pageTag(string $body, string $maskedToken, string $token): mixed
+    public function pageTag(string $body, string $maskedToken, string $token): string
     {
-        return $this->call('pageTag', $body, $maskedToken, $token);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('pageTag', $body, $maskedToken, $token);
+
+        return $result;
     }
 
     /**
@@ -155,27 +225,36 @@ final class CoreRules
      * session of PHP, which writes the cookie of a native session itself, and decides when a response sets the cookie
      * (HY-45.4).
      */
-    public function sessionCookieHeader(string $id, bool $secure): mixed
+    public function sessionCookieHeader(string $id, bool $secure): string
     {
-        return $this->call('sessionCookie', $id, $secure);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('sessionCookie', $id, $secure);
+
+        return $result;
     }
 
     /**
      * Partial. rules.keeps_out_of_shared_caches (HY-52.6), which Reply::cacheControl decided inside its check; the
      * server reads it for no other rule.
      */
-    public function replyKeepsOutOfSharedCaches(string $value): mixed
+    public function replyKeepsOutOfSharedCaches(string $value): bool
     {
-        return $this->call('keepsOutOfSharedCaches', $value);
+        /** @var bool $result The return type that the extension declares (T-1a). */
+        $result = $this->call('keepsOutOfSharedCaches', $value);
+
+        return $result;
     }
 
     /**
      * Partial. rules.is_application_path (HY-46), the test inside Result::redirect; the server has no caller of it
      * besides the redirect.
      */
-    public function resultIsApplicationPath(string $location): mixed
+    public function resultIsApplicationPath(string $location): bool
     {
-        return $this->call('isApplicationPath', $location);
+        /** @var bool $result The return type that the extension declares (T-1a). */
+        $result = $this->call('isApplicationPath', $location);
+
+        return $result;
     }
 
     /**
@@ -187,16 +266,12 @@ final class CoreRules
      */
     public function appFrameHeaders(int $status, string $frameAncestors): array
     {
-        $headers = [];
+        // The extension declares `array` (T-1a) and its contract a list of pairs of texts (front_functions.frame_headers).
+        /** @var list<array{string, string}> $pairs */
         $pairs = $this->call('frameHeaders', $status, $frameAncestors);
-        if (!is_iterable($pairs)) {
-            throw new \RuntimeException('hyper: frameHeaders of the binding of the core gave no list of pairs');
-        }
-        foreach ($pairs as $pair) {
-            if (!is_array($pair) || !is_string($pair[0] ?? null) || !is_string($pair[1] ?? null)) {
-                throw new \RuntimeException('hyper: frameHeaders of the binding of the core gave no pair of texts');
-            }
-            $headers[$pair[0]] = $pair[1];
+        $headers = [];
+        foreach ($pairs as [$name, $value]) {
+            $headers[$name] = $value;
         }
 
         return $headers;
@@ -213,9 +288,12 @@ final class CoreRules
     }
 
     /** Partial. rules.shell_text gives the text of the bytes of the static shell (HY-62), which the server read. */
-    public function appShellText(string $path, string $bytes): mixed
+    public function appShellText(string $path, string $bytes): string
     {
-        return $this->call('shellText', $path, $bytes);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('shellText', $path, $bytes);
+
+        return $result;
     }
 
     /**
@@ -231,27 +309,36 @@ final class CoreRules
      * Partial. Session::csrfToken: rules.stored_token checks the value that the session holds in the place of the
      * token (HY-24.14). The server still reads the store and creates the token of a session that holds none (HY-24.1).
      */
-    public function sessionStoredToken(string $stored): mixed
+    public function sessionStoredToken(string $stored): string
     {
-        return $this->call('storedToken', $stored);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('storedToken', $stored);
+
+        return $result;
     }
 
     /**
      * Partial. The name of the cookie of the kept values: rules.keep_name (HYC-13.6). The server still reads the
      * cookie from the request (HY-129).
      */
-    public function keptCookieName(bool $secure): mixed
+    public function keptCookieName(bool $secure): string
     {
-        return $this->call('keepName', $secure);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('keepName', $secure);
+
+        return $result;
     }
 
     /**
      * Partial. Build::read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18, HY-125.19).
      * The server still reads the file and names the absolute path of the file in a failure (HY-125.18).
      */
-    public function buildRead(string $bytes): mixed
+    public function buildRead(string $bytes): string
     {
-        return $this->call('readBuild', $bytes);
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('readBuild', $bytes);
+
+        return $result;
     }
 
     /** Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text. */

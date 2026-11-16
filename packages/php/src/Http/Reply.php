@@ -13,12 +13,6 @@ final class Reply
     /** @var list<array{string, string, ?int}> name, value and Max-Age */
     private array $cookies = [];
 
-    /** The tokens of the Referrer-Policy specification that a reply may set (HY-103). */
-    private const REFERRER_POLICIES = [
-        'no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin',
-        'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url',
-    ];
-
     private ?string $cacheControl = null;
 
     private ?string $referrerPolicy = null;
@@ -120,23 +114,7 @@ final class Reply
         if (!is_string($value)) {
             throw new \TypeError('a Cache-Control is not a string (HY-52)');
         }
-        if (preg_match('/^[\x20-\x7e]+$/D', $value) !== 1) {
-            throw new \InvalidArgumentException('Cache-Control has a character that is not allowed (HY-52)');
-        }
-        $directives = array_map(
-            fn (string $part): string => strtolower(trim(explode('=', $part, 2)[0])),
-            explode(',', $value),
-        );
-        if (
-            array_intersect($directives, ['private', 'no-store']) === []
-            || array_intersect($directives, ['public', 's-maxage']) !== []
-        ) {
-            throw new \InvalidArgumentException(
-                "Cache-Control {$value} lets a shared cache store the page; "
-                . 'it needs private or no-store and neither public nor s-maxage (HY-52)',
-            );
-        }
-        $this->cacheControl = $value;
+        $this->cacheControl = CoreRules::shared()->replyCacheControl($value);
 
         return $this;
     }
@@ -179,12 +157,7 @@ final class Reply
         if (!is_string($value)) {
             throw new \TypeError('a Referrer-Policy is not a string (HY-103)');
         }
-        if (!in_array($value, self::REFERRER_POLICIES, true)) {
-            throw new \InvalidArgumentException(
-                "Referrer-Policy {$value} is not a token of the Referrer-Policy specification (HY-103)",
-            );
-        }
-        $this->referrerPolicy = $value;
+        $this->referrerPolicy = CoreRules::shared()->replyReferrerPolicy($value);
 
         return $this;
     }
@@ -216,10 +189,7 @@ final class Reply
         if ($code === null) {
             throw new \TypeError('a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)');
         }
-        if ($code !== 403) {
-            throw new \InvalidArgumentException("page status {$code} of a reply is not 403 (HY-69)");
-        }
-        $this->status = $code;
+        $this->status = CoreRules::shared()->replyStatus($code);
 
         return $this;
     }
