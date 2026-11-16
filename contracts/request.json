@@ -6,6 +6,9 @@
     {"id": "a_header_name_with_a_character_above_u_00ff_fails", "label": "a header name with U+0100 fails the request (HY-42.7)", "path": "/", "query": "", "headers": {"X-\u0100": "1"}},
     {"id": "a_content_type_with_a_character_above_u_00ff_fails", "label": "a body type with U+2713 fails the request (HY-42.7)", "path": "/", "query": "", "headers": {"Content-Type": "text/plain; note=\u2713"}}
   ],
+  "bytes": [
+    {"id": "a_php_request_holds_the_bytes_of_characters_above_u_00ff", "label": "a PHP request whose path, raw query and header values hold the UTF-8 bytes of U+0100, U+D55C, U+20AC and U+2713 is created (HY-42.7)", "path": "/Ā", "query": "q=한", "headers": {"X-Name": "€", "Content-Type": "text/plain; note=✓"}, "raises": null}
+  ],
   "files": [
     {"id": "the_last_file_of_a_name_and_the_pairs_in_request_order", "label": "file(name) gives the last file of a name, null for a name with only a value or without a part, and files() pairs each name with its files in request order (HY-113.2)", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"f\"; filename=\"a.txt\"\r\n\r\nfirst\r\n--XyZ\r\nContent-Disposition: form-data; name=\"t\"\r\n\r\ntext\r\n--XyZ\r\nContent-Disposition: form-data; name=\"g\"; filename=\"g.txt\"\r\nContent-Type: text/plain\r\n\r\nthird\r\n--XyZ\r\nContent-Disposition: form-data; name=\"f\"; filename=\"b.txt\"\r\n\r\nsecond\r\n--XyZ--\r\n", "names": ["f", "g", "t", "none"], "last": ["b.txt", "g.txt", null, null], "pairs": [["f", ["a.txt", "b.txt"]], ["g", ["g.txt"]]], "limits": [5, 6, 7], "over": [true, false, false]},
     {"id": "a_file_with_an_empty_filename_is_the_file_of_its_name", "label": "a file with an empty filename is the file of its name (HY-113.21)", "type": "multipart/form-data; boundary=XyZ", "body": "--XyZ\r\nContent-Disposition: form-data; name=\"f\"; filename=\"\"\r\n\r\n\r\n--XyZ--\r\n", "names": ["f"], "last": [""], "pairs": [["f", [""]]]},

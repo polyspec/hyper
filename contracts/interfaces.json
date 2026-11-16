@@ -18183,7 +18183,6 @@
       "sections": {
         "texts": {
           "runners": [
-            "php",
             "node",
             "python"
           ],
@@ -18209,6 +18208,35 @@
             "request": {
               "compare": "raises",
               "sentence": "HY-42.7"
+            }
+          }
+        },
+        "bytes": {
+          "runners": [
+            "php"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "path": {
+              "role": "input"
+            },
+            "query": {
+              "role": "input"
+            },
+            "headers": {
+              "role": "input"
+            },
+            "raises": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-42.7",
+              "state": "`raises` is the failure of the creation of a request whose path, raw query and headers are the UTF-8 bytes of the texts of the case, or null; a PHP string holds bytes, so a character above U+00FF is its bytes and does not fail."
             }
           }
         },
