@@ -37,7 +37,7 @@ polyspec-template = { git = "https://github.com/polyspec/template.git", branch =
 # The stores of files and Redis are features of the library that the bindings build; the core needs the interface only.
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", branch = "v1/rust-core", default-features = false }
 # The values of a session record (RQ-001 to RQ-012; HY-104.13, HY-104.14).
-polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", branch = "v1/rust-core" }
+polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", tag = "v0.0.15" }
 # The digests of HY-24.10, HY-53 and HY-122.10.
 sha2 = "0.10"
 

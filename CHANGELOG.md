@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- php-serialization moves to v0.0.15, its release on binding 0.0.17: every Cargo.toml requires `polyspec-php-serialization` by the tag `v0.0.15` in place of the branch `v1/rust-core`, and `package.json`, `packages/ts/package.json` and `tests/package-install` require `@polyspec/php-serialization` 0.0.15 and its platform packages; the branch commit that session-store still takes stays as it was (H35.8-1-1).
 - A host function that the template engine refuses at the open, a built-in name (template FUN-44) or an entry that is not a function (template RT-5), fails the open of the three servers with kind `invalid_application` of category `value` and the message of the engine (HYC-24.2, HYC-24.5, HY-106.21); the servers raised the error of the engine, which has no kind of hyper (H35.27-4).
 
 - `Result.page` of the Node server checks the status with `rules.page_status` of the core, so a status other than 200, 409 or 422 fails with kind `page_status_not_allowed` of category `value` (HY-58.6), and `Result::redirect` of the PHP server checks the location with `rules.redirect_location` of the core, so a location that is not UTF-8 fails with kind `invalid_text` (HY-46.1); the Node server raised a `RangeError` without a kind and the PHP server checked the location with its own pattern (H35.10-8).

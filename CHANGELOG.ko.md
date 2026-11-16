@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8fdf16a7e4ba12b76af593934a50edbf28bac10cbdff34cf889366ca20044c0d -->
+<!-- source-sha256: f2d4ae1e3dc9fc4c5d556a4ccf9ca30865936f718b764a9f92b78b21b6061586 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- php-serialization은 binding 0.0.17 위의 release인 v0.0.15로 옮긴다. 모든 Cargo.toml이 `polyspec-php-serialization`을 branch `v1/rust-core` 대신 tag `v0.0.15`로 요구하고, `package.json`, `packages/ts/package.json`, `tests/package-install`이 `@polyspec/php-serialization` 0.0.15와 그 platform package를 요구한다. session-store가 아직 받는 branch commit은 그대로 둔다(H35.8-1-1).
 - open에서 template engine이 거부하는 host function, 즉 built-in 이름(template FUN-44)이나 함수가 아닌 항목(template RT-5)은 세 서버의 open을 category `value`의 kind `invalid_application`과 engine의 message로 실패시킨다(HYC-24.2, HYC-24.5, HY-106.21). 서버는 hyper의 kind가 없는 engine의 오류를 던졌다(H35.27-4).
 
 - Node 서버의 `Result.page`는 core의 `rules.page_status`로 status를 검사하므로, 200, 409, 422가 아닌 status는 category `value`의 kind `page_status_not_allowed`로 실패한다(HY-58.6). PHP 서버의 `Result::redirect`는 core의 `rules.redirect_location`으로 location을 검사하므로, UTF-8이 아닌 location은 kind `invalid_text`로 실패한다(HY-46.1). Node 서버는 kind가 없는 `RangeError`를 던졌고 PHP 서버는 자체 pattern으로 location을 검사했다(H35.10-8).
