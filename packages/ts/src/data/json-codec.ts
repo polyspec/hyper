@@ -1,30 +1,12 @@
 // The JSON text of the servers (HY-17, HY-54): the JSON response value, its text with the bytes of PHP json_encode with
-// JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, the reading of a JSON text with rules.json_read of the core, and the
-// reading of the cookie of the kept values. An instance reads one cookie text from its start to its end.
+// JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES, and the reading of a JSON text with rules.json_read of the core.
 import { rules } from '../app/core-rules.js';
-import { JsonDecodeError } from './json-decode-error.js';
-import { OutsideNumber } from './outside-number.js';
 import { MAX_SAFE_INTEGER, NativeObject, SafeString, type MapValue, type Value } from './values.js';
 
-/** @internal */
-export type DecodedValue = null | boolean | number | string | OutsideNumber | DecodedValue[] | Map<string, DecodedValue>;
-
 const ESCAPES: Record<string, string> = { '"': '\\"', '\\': '\\\\', '\b': '\\b', '\f': '\\f', '\n': '\\n', '\r': '\\r', '\t': '\\t', '\u2028': '\\u2028', '\u2029': '\\u2029' };
-const SIMPLE_ESCAPES: Record<string, string> = { '"': '"', '\\': '\\', '/': '/', b: '\b', f: '\f', n: '\n', r: '\r', t: '\t' };
-const NUMBER = /^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/u;
-// PHP json_decode fails when containers nest 512 levels deep.
-const MAX_DEPTH = 511;
 
 /** @internal */
 export class JsonCodec {
-  // The position of the next character to read.
-  private index = 0;
-  private readonly text: string;
-
-  private constructor(text: string) {
-    this.text = text;
-  }
-
   // Returns the JSON response value of a page (HY-17, HY-128): `build` is the build id and `context` the member context
   // of HY-128 when the response has one, both after `params`; `regions` holds the loader data by region name and `kept`
   // the kept values by region name and path.
@@ -59,22 +41,6 @@ export class JsonCodec {
   // the kind of the data model, as the core raises them (HY-54.21).
   static decode(text: string): Value {
     return rules().jsonCodecDecode(text);
-  }
-
-  // Returns the value of the cookie of the kept values, or null for a text that is no JSON text (HY-38.11). A number
-  // outside ±(2^53 − 1) or one that is not finite is an OutsideNumber, so that Kept ignores that value alone and keeps
-  // the others (HY-38.2).
-  static keptCookie(text: string): DecodedValue {
-    const reader = new JsonCodec(text);
-    try {
-      const result = reader.parseValue(0);
-      reader.skipWhitespace();
-      if (reader.index < text.length) reader.failAt('unexpected character after the value');
-      return result;
-    } catch (error) {
-      if (error instanceof JsonDecodeError) return null;
-      throw error;
-    }
   }
 
   // Writes an integer within ±(2^53 − 1) in decimal and another number with the shortest digits that read back as the
@@ -113,115 +79,5 @@ export class JsonCodec {
   // Fails for a string with a lone surrogate, which has no UTF-8 form.
   private static checkWellFormed(text: string): void {
     if (!text.isWellFormed()) throw new TypeError('hyper: a string with a lone surrogate is not UTF-8');
-  }
-
-  // Returns the text of decoded string units, in which an escaped high and low surrogate are one character; a lone
-  // surrogate fails, as PHP json_decode accepts a pair and refuses a lone half.
-  private static combineSurrogates(text: string): string {
-    if (!text.isWellFormed()) throw new JsonDecodeError('hyper: lone surrogate');
-    return text;
-  }
-
-  // Fails the decoding at the current position.
-  private failAt(message: string): never {
-    throw new JsonDecodeError(`hyper: ${message} at offset ${this.index}`);
-  }
-
-  // Skips the JSON white space.
-  private skipWhitespace(): void {
-    while (this.index < this.text.length && ' \t\n\r'.includes(this.text.charAt(this.index))) this.index++;
-  }
-
-  // Reads a string from its opening quote.
-  private parseString(): string {
-    this.index++;
-    let result = '';
-    for (;;) {
-      const char = this.text[this.index];
-      if (char === undefined) return this.failAt('unterminated string');
-      if (char === '"') {
-        this.index++;
-        return JsonCodec.combineSurrogates(result);
-      }
-      if (char < ' ') this.failAt('control character in string');
-      if (char !== '\\') {
-        result += char;
-        this.index++;
-        continue;
-      }
-      const escape = this.text[this.index + 1];
-      const simple = escape === undefined ? undefined : SIMPLE_ESCAPES[escape];
-      if (simple !== undefined) {
-        result += simple;
-        this.index += 2;
-      } else if (escape === 'u' && /^[0-9A-Fa-f]{4}$/u.test(this.text.slice(this.index + 2, this.index + 6))) {
-        result += String.fromCharCode(Number.parseInt(this.text.slice(this.index + 2, this.index + 6), 16));
-        this.index += 6;
-      } else {
-        this.failAt('invalid escape');
-      }
-    }
-  }
-
-  // Reads a number: an integer literal is an integer, so -0 is 0, and a float literal -0.0 stays negative zero.
-  private parseNumber(): number | OutsideNumber {
-    const match = NUMBER.exec(this.text.slice(this.index));
-    if (match === null) return this.failAt('invalid number');
-    const literal = match[0];
-    this.index += literal.length;
-    const value = Number(literal);
-    if (!Number.isFinite(value) || Math.abs(value) > MAX_SAFE_INTEGER) return new OutsideNumber(literal);
-    return match[2] === undefined && match[3] === undefined ? value + 0 : value;
-  }
-
-  // Reads a value at a nesting depth.
-  private parseValue(depth: number): DecodedValue {
-    this.skipWhitespace();
-    const char = this.text[this.index];
-    if (char === '{' || char === '[') {
-      if (depth >= MAX_DEPTH) this.failAt('nesting is too deep');
-      this.index++;
-      this.skipWhitespace();
-      const close = char === '{' ? '}' : ']';
-      const map = new Map<string, DecodedValue>();
-      const list: DecodedValue[] = [];
-      if (this.text[this.index] === close) {
-        this.index++;
-        return char === '{' ? map : list;
-      }
-      for (;;) {
-        if (char === '{') {
-          this.skipWhitespace();
-          if (this.text[this.index] !== '"') this.failAt('expected a string key');
-          const key = this.parseString();
-          if (key.startsWith('\u0000')) this.failAt('key starts with U+0000');
-          this.skipWhitespace();
-          if (this.text[this.index] !== ':') this.failAt('expected ":"');
-          this.index++;
-          map.set(key, this.parseValue(depth + 1));
-        } else {
-          list.push(this.parseValue(depth + 1));
-        }
-        this.skipWhitespace();
-        if (this.text[this.index] === ',') {
-          this.index++;
-          continue;
-        }
-        if (this.text[this.index] === close) {
-          this.index++;
-          return char === '{' ? map : list;
-        }
-        this.failAt(`expected "," or "${close}"`);
-      }
-    }
-    if (char === '"') return this.parseString();
-    for (const [word, result] of [['true', true], ['false', false], ['null', null]] as const) {
-      if (this.text.startsWith(word, this.index)) {
-        this.index += word.length;
-        return result;
-      }
-    }
-    if (char === '-' || (char !== undefined && char >= '0' && char <= '9')) return this.parseNumber();
-    return this.failAt('unexpected character');
   }
 }

@@ -99,6 +99,13 @@ EXACT = [
         {"r": {}},
     ),
     (
+        "Page._kept (HY-38.11)",
+        "kept_cookie",
+        lambda rules: rules.page_kept_cookie("{}"),
+        ("{}",),
+        {"r": {}},
+    ),
+    (
         "RecordSession.cookie_name (HY-45.1)",
         "session_name",
         lambda rules: rules.session_cookie_name(True),
@@ -253,8 +260,8 @@ class CoreRulesTest(unittest.TestCase):
                 self.assertEqual(call(CoreRules(core)), result)
                 self.assertEqual(calls, [(name, args)])
 
-    def test_there_are_eighteen_exact_units(self):
-        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 18)
+    def test_there_are_nineteen_exact_units(self):
+        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 19)
 
     def test_the_frame_headers_are_a_record_in_the_order_of_the_core(self):
         # HY-45.5, HY-65.1

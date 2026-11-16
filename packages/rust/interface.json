@@ -1621,6 +1621,28 @@
           ],
           "wait": "none",
           "core": "polyspec_hyper::session::kept_record"
+        },
+        {
+          "id": "rules.kept_cookie",
+          "name": [
+            "kept",
+            "cookie"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "text"
+              ],
+              "type": "text",
+              "required": true
+            }
+          ],
+          "returns": "template_value",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::keep::cookie_record"
         }
       ]
     },

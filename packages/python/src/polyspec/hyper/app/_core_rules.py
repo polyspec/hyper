@@ -50,6 +50,7 @@ _MEMBERS = (
     "json_read",
     "flash_of",
     "kept_of",
+    "kept_cookie",
 )
 
 
@@ -102,6 +103,12 @@ class CoreRules:
         the map of its values by path, and fails with ``invalid_session_record`` for kept values of another form,
         those of every region (HY-104.22, HY-104.23)."""
         return self._core.kept_of(stored)
+
+    def page_kept_cookie(self, text: str) -> object:
+        """Page._kept: rules.kept_cookie reads the cookie of the kept values to a map from each region to the map of
+        its readable values by path; a cookie that is no JSON object, a region that holds no object and a value
+        outside the data model give no value (HY-38.2, HY-38.11, HY-42)."""
+        return self._core.kept_cookie(text)
 
     def session_cookie_name(self, secure: bool) -> str:
         """RecordSession.cookie_name: rules.session_name (HY-45.1)."""

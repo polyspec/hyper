@@ -1,13 +1,12 @@
 // Kept values (HY-37, HY-38). Values outside the template data model are ignored; the cases of contracts/keep.json hold
 // the rules.
 import { DataModel } from './data-model.js';
-import type { DecodedValue } from './json-codec.js';
 import { SafeString, toValue, type MapValue, type Value } from './values.js';
 
 /** @internal */
 export class Kept {
   // Replaces values at kept paths when the path exists and the kept value conforms to its value.
-  static apply(data: MapValue, kept: readonly (readonly [string, Value | DecodedValue])[]): MapValue {
+  static apply(data: MapValue, kept: readonly (readonly [string, Value])[]): MapValue {
     let result = data;
     for (const [path, value] of kept) {
       if (!DataModel.contains(value)) continue;
@@ -18,7 +17,7 @@ export class Kept {
   }
 
   // Returns the kept values that conform to the data, by path (HY-17, HY-38), applying each one before the next.
-  static select(data: MapValue, kept: readonly (readonly [string, Value | DecodedValue])[]): MapValue {
+  static select(data: MapValue, kept: readonly (readonly [string, Value])[]): MapValue {
     const selected: MapValue = new Map();
     let result = data;
     for (const [path, value] of kept) {

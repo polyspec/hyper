@@ -403,9 +403,12 @@ final class Page
         );
     }
 
-    /** Returns the decoded hy-keep cookie, or null for a cookie that is absent or not JSON (HY-42). */
+    /**
+     * Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or null
+     * for a cookie that is absent (HY-42).
+     */
     private static function decodedCookie(?string $text): mixed
     {
-        return $text === null ? null : JsonCodec::keptCookie($text);
+        return $text === null ? null : CoreRules::shared()->pageKeptCookie($text);
     }
 }

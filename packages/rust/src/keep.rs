@@ -128,6 +128,22 @@ pub fn apply(data: &Value, kept: &[(String, Value)]) -> Value {
     select(data, kept).1
 }
 
+/// [`cookie_values`] as one value, the member `rules.kept_cookie` of the interface contract (HY-38.2, HY-38.11): a map
+/// from each region to the map of its readable values by path.
+#[must_use]
+pub fn cookie_record(text: &str) -> Value {
+    let values = cookie_values(text);
+    let mut regions = OrderedMap::with_capacity(values.len());
+    for (region, pairs) in values {
+        let mut paths = OrderedMap::with_capacity(pairs.len());
+        for (path, value) in pairs {
+            paths.insert(path, value);
+        }
+        regions.insert(region, Value::Map(Arc::new(paths)));
+    }
+    Value::Map(Arc::new(regions))
+}
+
 /// The `cookie` kept values of the cookie `hy-keep` (HY-38.10, HY-38.11), whose value is the JSON object
 /// `{ "<region>": { "<path>": <value> } }`, by region: a cookie that is no JSON object, a region that holds no object,
 /// and a value outside the data model (HY-38.2), such as a number outside ±(2^53 − 1), give no value, because hyper

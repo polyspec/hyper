@@ -173,3 +173,8 @@ function keptOf(mixed ...$arguments): mixed
 {
     return Calls::record('keptOf', array_values($arguments));
 }
+
+function keptCookie(mixed ...$arguments): mixed
+{
+    return Calls::record('keptCookie', array_values($arguments));
+}

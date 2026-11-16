@@ -200,6 +200,7 @@ export interface CoreBinding {
   jsonRead(text: Uint8Array): JsonValue;
   flashOf(stored: unknown): JsonValue;
   keptOf(stored: unknown): JsonValue;
+  keptCookie(text: string): JsonValue;
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
   computePageHeaders(response: PageResponse): PageHeaders;
   frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];
@@ -224,7 +225,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-  'jsonRead', 'flashOf', 'keptOf', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'jsonRead', 'flashOf', 'keptOf', 'keptCookie', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
 
 // A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
@@ -268,6 +269,10 @@ export interface CoreRules {
   // path, and fails with `invalid_session_record` for kept values of another form, those of every region (HY-104.22,
   // HY-104.23).
   sessionKeptOf(stored: unknown): JsonValue;
+  // pageKeptCookie: rules.kept_cookie reads the cookie of the kept values to a map from each region to the map of its
+  // readable values by path; a cookie that is no JSON object, a region that holds no object and a value outside the
+  // data model give no value (HY-38.2, HY-38.11, HY-42).
+  pageKeptCookie(text: string): JsonValue;
   // sessionCookieName: rules.session_name (HY-45.1).
   sessionCookieName(secure: boolean): string;
   // Partial. sessionCookieHeader: rules.session_cookie gives the field value (HY-45.8). The server still
@@ -408,6 +413,7 @@ export function coreRules(module: object): CoreRules {
     jsonCodecDecode: (text) => core.jsonRead(encoder.encode(text)),
     sessionFlashOf: (stored) => core.flashOf(stored),
     sessionKeptOf: (stored) => core.keptOf(stored),
+    pageKeptCookie: (text) => core.keptCookie(text),
     sessionCookieName: (secure) => core.sessionName(secure),
     sessionCookieHeader: (id, secure) => core.sessionCookie(id, secure),
     representationEtag: (contentType, body) => core.representationTag(contentType, encoder.encode(body)),

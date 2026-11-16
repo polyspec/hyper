@@ -248,8 +248,9 @@ class Page:
 
     @staticmethod
     def _decoded_cookie(text: Optional[str]) -> object:
-        """Returns the decoded hy-keep cookie, or None without a cookie and for a cookie that is not JSON (HY-42)."""
-        return None if text is None else JsonCodec.kept_cookie(text)
+        """Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or
+        None without a cookie (HY-38.2, HY-38.11, HY-42)."""
+        return None if text is None else core_rules().page_kept_cookie(text)
 
     def _document(
         self,

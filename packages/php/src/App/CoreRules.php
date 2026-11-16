@@ -29,7 +29,7 @@ final class CoreRules
         'keepsOutOfSharedCaches', 'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag',
         'representationTag', 'pageStatus', 'replyStatus', 'pageVary', 'contextHash', 'currentPath', 'checkShellPath',
         'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader', 'jsonRead',
-        'flashOf', 'keptOf',
+        'flashOf', 'keptOf', 'keptCookie',
     ];
 
     /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
@@ -157,6 +157,16 @@ final class CoreRules
     public function sessionKeptOf(mixed $stored): mixed
     {
         return $this->call('keptOf', $stored);
+    }
+
+    /**
+     * Page::kept: rules.kept_cookie reads the cookie of the kept values to a `stdClass` map from each region to the
+     * `stdClass` map of its readable values by path; a cookie that is no JSON object, a region that holds no object
+     * and a value outside the data model give no value (HY-38.2, HY-38.11, HY-42).
+     */
+    public function pageKeptCookie(string $text): mixed
+    {
+        return $this->call('keptCookie', $text);
     }
 
     /** The name of the session cookie (HY-45.1), which NativeSession gives the session options: rules.session_name. */

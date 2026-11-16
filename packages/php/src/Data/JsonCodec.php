@@ -80,20 +80,6 @@ final class JsonCodec
     }
 
     /**
-     * Returns the value of the cookie of the kept values, or null for a text that is no JSON text (HY-38.11). A value
-     * outside the data model stays in the result, so that Kept ignores that value alone and keeps the others
-     * (HY-38.2).
-     */
-    public static function keptCookie(string $text): mixed
-    {
-        try {
-            return json_decode($text, false, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
-            return null;
-        }
-    }
-
-    /**
      * @param array<array-key, mixed> $value
      * @return array<array-key, mixed>|\stdClass
      */

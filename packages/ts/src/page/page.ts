@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { decodeResponse, keepRead, keptPaths, renderDocument, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
 import type { Handlers, RouteHandlers } from '../app/app.js';
 import { Context, type ContextHandler } from '../app/context.js';
-import { JsonCodec, type DecodedValue } from '../data/json-codec.js';
+import { JsonCodec } from '../data/json-codec.js';
 import { Kept } from '../data/kept.js';
 import { RegionPlanner } from './region-planner.js';
 import type { Reply } from '../http/reply.js';
@@ -154,7 +154,7 @@ export class Page<S extends object> {
     for (const [name, regionData] of data) {
       const stored = session.kept(name);
       const cookieValues = cookie instanceof Map ? cookie.get(name) : undefined;
-      const pairs: [string, Value | DecodedValue][] = [];
+      const pairs: [string, Value][] = [];
       for (const [path, kind] of Object.entries(keptPaths(this.parts.application.manifest, name))) {
         const value = kind === 'server' ? stored.get(path) : kind === 'cookie' && cookieValues instanceof Map ? cookieValues.get(path) : undefined;
         if (value !== undefined) pairs.push([path, value]);
@@ -165,8 +165,9 @@ export class Page<S extends object> {
     return values;
   }
 
-  // Returns the decoded hy-keep cookie, or null for a cookie that is absent or not JSON (HY-42).
-  private static decodedCookie(text: string | null): DecodedValue {
-    return text === null ? null : JsonCodec.keptCookie(text);
+  // Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or null for
+  // a cookie that is absent (HY-38.2, HY-38.11, HY-42).
+  private static decodedCookie(text: string | null): Value {
+    return text === null ? null : rules().pageKeptCookie(text);
   }
 }
