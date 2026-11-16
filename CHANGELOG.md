@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The failed open of the section `outputs` of `build.json` cites HY-106.21, which states the kind of the failure: `invalid_build` for a missing build file and `invalid_application` for another missing output; it cited HY-48.2, which states only the path in the message, and HY-48.2 stays on the field `message` (H35.27-1).
 - The cases of `request.json` `texts`, a path, a query or a header with a character above U+00FF, run only in Node and Python, as HY-42.7 states; the PHP runner ran them by converting the text to bytes first. The new section `bytes` shows in PHP that a request whose path, raw query and header values hold the UTF-8 bytes of such characters is created without failure (HY-42.7) (H35.27-3).
 - json moves to v0.0.34, its release on binding 0.0.17: the Rust core requires `polyspec-json` by the tag `v0.0.34` and `package.json` requires `@polyspec/json` and its platform packages by their v0.0.34 release assets, so `Cargo.lock` no longer holds `polyspec-binding-core` 0.0.13 (H35.22-1).
 - php-serialization moves to v0.0.15, its release on binding 0.0.17: every Cargo.toml requires `polyspec-php-serialization` by the tag `v0.0.15` in place of the branch `v1/rust-core`, and `package.json`, `packages/ts/package.json` and `tests/package-install` require `@polyspec/php-serialization` 0.0.15 and its platform packages; the branch commit that session-store still takes stays as it was (H35.8-1-1).

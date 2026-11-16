@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 228ab35f6975ed8d5021996e6f459f6c71ff0386b5c8bd43a68bc496ffd7f956 -->
+<!-- source-sha256: 85a9090b8f1448f73195793adbf396f152ae680b527667844b4af79e8c04a3bd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `build.json`의 section `outputs`의 실패한 open은 실패의 kind를 말하는 HY-106.21을 인용한다. 없는 build 파일은 `invalid_build`, 다른 없는 출력은 `invalid_application`이다. 이전에는 message의 경로만 말하는 HY-48.2를 인용했으며, HY-48.2는 field `message`에 남는다(H35.27-1).
 - U+00FF보다 큰 문자가 있는 path, query, header인 `request.json` `texts`의 case는 HY-42.7이 말하는 대로 Node와 Python에서만 실행된다. PHP runner는 text를 먼저 byte로 바꿔 이 case를 실행했다. 새 section `bytes`는 PHP에서 path, raw query, header 값이 그런 문자의 UTF-8 byte를 가진 요청이 실패 없이 만들어짐을 보인다(HY-42.7) (H35.27-3).
 - json은 binding 0.0.17 위의 release인 v0.0.34로 옮긴다. Rust core는 `polyspec-json`을 tag `v0.0.34`로, `package.json`은 `@polyspec/json`과 그 platform package를 v0.0.34 release asset으로 요구하므로 `Cargo.lock`에는 `polyspec-binding-core` 0.0.13이 더 없다(H35.22-1).
 - php-serialization은 binding 0.0.17 위의 release인 v0.0.15로 옮긴다. 모든 Cargo.toml이 `polyspec-php-serialization`을 branch `v1/rust-core` 대신 tag `v0.0.15`로 요구하고, `package.json`, `packages/ts/package.json`, `tests/package-install`이 `@polyspec/php-serialization` 0.0.15와 그 platform package를 요구한다. session-store가 아직 받는 branch commit은 그대로 둔다(H35.8-1-1).
