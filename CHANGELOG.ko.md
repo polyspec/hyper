@@ -1,11 +1,22 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1ec421cc0393bda5e8820512cd0af3d84026fd840e82f911d1e2dbb2c01dbc2a -->
+<!-- source-sha256: f4b8b687dca847ab0bbc67fc2067141c6eb75e1fd09f0f35ab2652b04fe1820f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 세 서버는 protocol의 모든 JSON 글을 core의 `rules.json_read`와 `rules.json_write`로 읽고 쓰므로, 잘못된 글, 데이터 모델 밖의 수, 수와 U+2028의 바이트가 core를 따른다(HY-17, HY-54). PHP 서버는 decode된 값을 순서 키 배열이면 목록으로, `stdClass`나 다른 키의 배열이면 맵으로 읽으며, 이는 binding의 형태다(GN-13v). 서버 자신의 JSON reader와 writer는 지운다(H35.20-5-3).
+- kept 값의 cookie는 데이터 모델 밖의 값만 버리는 core의 `rules.kept_cookie`로 읽으며(HY-38.2), 서버의 그 reader 사본은 지운다(H35.20-5-5).
+- 서버 store의 저장된 flash와 kept 값은 core의 `rules.flash_of`와 `rules.kept_of`가 검사하며, 다른 형태의 값은 category `store`의 kind `invalid_session_record`로 실패한다(HY-104.36). 자기 message를 가진 서버 검사는 지운다(H35.6).
+- 세 서버는 Accept 값을 core의 `rules.accept_ranges`로 읽으므로, 잘못된 값은 kind `invalid_accept`나 `invalid_weight`와 core의 message로, 접두어 `hyper:` 없이 실패한다(HY-116, HY-132.4). 서버 자신의 Accept parser는 지운다(H35.29-3-1).
+- Node 서버는 open 때 브라우저 코드 검사의 실패를 같은 category, kind, message의 binding class로 낸다(HY-132.8)(H35.29-5-2).
+- 호출할 수 없는 `around` 값이나 write hook 값은 kind `invalid_application`으로 Node와 Python 서버의 생성을 실패시킨다(HY-97.13)(H35.29-6).
+- media type이 form type이 아닌 POST는 session이 열리기 전에 거부되며(HY-59.12), 빈 `Content-Type`은 400으로 답한다(HY-59.13)(H35.12-1, H35.12-2).
+- reply의 cookie는 속성을 `Max-Age`, `Path`, `Secure`, `HttpOnly`, `SameSite` 순서로 쓴다(HY-52.13)(H35.12-3).
+- Python 서버는 template 0.0.28 API로 렌더링한다: `Engine(loader, functions)`와 `Environment`를 받는 `render_bound`(H35.28).
+- 새 statement: HY-106.22(manifest, form type, value limit 검사는 `invalid_application`으로 실패), HY-104.36(다른 형태의 저장된 session record는 `invalid_session_record`로 실패), HY-97.13(호출할 수 없는 hook은 `invalid_application`으로 실패). form type과 hooks의 case가 그 kind를 적는다(H35.29-1, H35.29-6).
+- case runner: Node open step은 선언된 outcome `messageStart`를 runtime 접두어 없는 message로(HY-106.19), manifest `read`를 kind `invalid_application`으로 비교한다. hooks step은 `raises`를 비교한다. orm package의 class를 던지는 case는 hyper가 orm에 의존할 때까지 실패한다(HY-107.7)(H35.29-5-2, H35.29-6, H35.29-2).
 - 저장소는 kit 0.0.118을 쓴다. `make hyper-install-python`을 실행하는 각 CI group은 install-tools로 maturin을 설치하고(kit K1278), link는 Python provider의 maturin python-source를 읽으며(K1279) 설치된 배포판일 때만 provider package를 연결한다(K1280)(H35.16-1).
 - 브라우저 코드(packages/client)는 HY-132.7의 hyper 오류 class인 `HyperValueError`(`RangeError` 확장), `HyperTypeError`(`TypeError` 확장), `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`(`Error` 확장)를 property `kind`와 `status`와 함께 정의하고 entry에서 export한다. open 때 `checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`의 실패는 kind `invalid_application`, status null의 `HyperValueError`를 던진다(HY-106.21). 이 검사들은 kind 없는 `Error`를 던졌으므로 호출자가 open 실패를 kind로 구별할 수 없었다. shared data의 member context는 kind `shared_holds_context`의 `HyperValueError`를 던진다(HY-128). 브라우저 코드의 어떤 message도 더 이상 `hyper: `로 시작하지 않는다(HY-132.4, HY-106.19). 브라우저 코드의 다른 실패는 어떤 statement도 kind를 정하지 않으므로 class를 유지한다. `tests/errors.test.ts`는 open 때 각 검사의 class, kind, message를 읽는다(H35.29-5-1).
 - 모든 Cargo.toml이 `polyspec-binding-core`를 tag `v0.0.17`로, `package.json`이 생성기 `@polyspec/binding`을 v0.0.17 release asset으로 요구하고, lock이 둘을 pin한다. release 0.0.16과 0.0.17은 생성 코드를 고치며(GN-4e, GN-13be), 생성기의 명령행은 바뀌지 않아 recipe는 형태를 유지한다(H35.14-3-3).
