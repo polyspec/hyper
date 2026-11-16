@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 3b7d37c5ebafe4854d63cb1a2d3211995f79803e9ed3cf0b6b45f852c2c0b119 -->
+<!-- source-sha256: e2466b6d2144c0f6ac1adac635f841220c330a6f3b24fd5f9a54d3fabd3bc98d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -507,3 +507,4 @@
 | H35.14-1 | Makefile의 모든 cargo 명령은 kit link script의 `cargo <dir> <args>`, 곧 `$(CARGO)`를 거쳐 실행한다. 그래서 개발 checkout의 polyspec crate는 `.cargo` 파일 없이 `.links`의 provider로 patch된다. `tests/scripts/cargo-through-kit.test.mts`는 cargo를 직접 시작하는 recipe 줄을 실패시킨다. | Makefile, tests/scripts, config/owner-checks.json | `make hyper-test-scripts` | [ ] |
 | H35.14-2 | binding generator는 npm package `@polyspec/binding`이다. `package.json`이 release asset v0.0.13의 URL로 선언하고 `package-lock.json`이 integrity로 pin한다(HR-70). recipe는 그 bin을 시작하며, `Cargo.lock`의 commit으로 binding을 clone하던 `make install-binding`은 지운다. | package.json, package-lock.json, Makefile, scripts, tests/scripts, config/owner-checks.json, docs/operations | `make hyper-test-scripts` | [ ] |
 | H35.14-3 | 저장소의 모든 Cargo.toml은 `polyspec-binding-core`를 branch `v1/rust-core` 대신 generator의 release인 tag `v0.0.13`으로 요구하고, `Cargo.lock`이 그 tag를 pin한다. | Cargo.toml, Cargo.lock | `make core-test` | [!] cause: 공개된 provider가 binding-core를 서로 다른 tag로 pin한다(http-cookie v0.0.5, http-negotiation v0.0.2, http-media-type v0.0.5는 binding v0.0.9, php-serialization v0.0.12는 v0.0.10, json v0.0.32는 v0.0.13, session-store는 release 없음). 이 저장소에서 binding-core만 tag로 pin하면 graph에 binding-core crate가 둘 생기고, 그 type은 합쳐지지 않는다; retry: binding 0.0.15가 release되고, 그다음 provider 일곱이 그 pin으로 release되고, 그다음 이 저장소가 provider와 binding-core를 그 tag로 pin한다 |
+| H35.15 | 세 서버는 core의 `Pages`를 만들고 각 요청을 `routeRequest`로 route한다(HY-132.2). plain route는 session 없이 답하며(HY-120.3), 손 routing과 손 media type 검사는 같은 커밋에서 지운다. 이것이 H35.12-1과 H35.12-2를 낸다. | packages/php/src, packages/ts/src, packages/python/src, contracts/interfaces.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-node` | [ ] |
