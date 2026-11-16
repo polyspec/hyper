@@ -1,12 +1,8 @@
 // The cookies, the cache control, the page status and the embedding of the data that the loaders and actions of one
 // request give its response (HY-52, HY-69, HY-92), and the notes that they give the response hook (HY-60).
-// The tokens of the Referrer-Policy specification that a reply may set (HY-103).
+// The core states the rule of each value (HY-132.2); this class checks the JavaScript type of an argument.
 import { ArgumentCountError } from '../app/argument-count-error.js';
-
-const REFERRER_POLICIES: readonly string[] = [
-  'no-referrer', 'no-referrer-when-downgrade', 'origin', 'origin-when-cross-origin',
-  'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'unsafe-url',
-];
+import { rules } from '../app/core-rules.js';
 
 export class Reply {
   private readonly cookies: [string, string, number | null][] = [];
@@ -61,12 +57,7 @@ export class Reply {
   cacheControl(value: string): this {
     ArgumentCountError.between(arguments.length, 1, 1);
     if (typeof value !== 'string') throw new TypeError('a Cache-Control is not a string (HY-52)');
-    if (!/^[\x20-\x7e]+$/.test(value)) throw new RangeError('Cache-Control has a character that is not allowed (HY-52)');
-    const directives = value.split(',').map((part) => (part.includes('=') ? part.slice(0, part.indexOf('=')) : part).trim().toLowerCase());
-    if (!directives.some((name) => name === 'private' || name === 'no-store') || directives.some((name) => name === 'public' || name === 's-maxage')) {
-      throw new RangeError(`Cache-Control ${value} lets a shared cache store the page; it needs private or no-store and neither public nor s-maxage (HY-52)`);
-    }
-    this.cacheControlText = value;
+    this.cacheControlText = rules().replyCacheControl(value);
     return this;
   }
 
@@ -95,8 +86,7 @@ export class Reply {
   referrerPolicy(value: string): this {
     ArgumentCountError.between(arguments.length, 1, 1);
     if (typeof value !== 'string') throw new TypeError('a Referrer-Policy is not a string (HY-103)');
-    if (!REFERRER_POLICIES.includes(value)) throw new RangeError(`Referrer-Policy ${value} is not a token of the Referrer-Policy specification (HY-103)`);
-    this.referrerPolicyText = value;
+    this.referrerPolicyText = rules().replyReferrerPolicy(value);
     return this;
   }
 
@@ -116,8 +106,7 @@ export class Reply {
     ArgumentCountError.between(arguments.length, 1, 1);
     const code = Reply.integer(status);
     if (code === null) throw new TypeError('a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)');
-    if (code !== 403) throw new RangeError(`page status ${code} of a reply is not 403 (HY-69)`);
-    this.pageStatus = code;
+    this.pageStatus = rules().replyStatus(code);
     return this;
   }
 

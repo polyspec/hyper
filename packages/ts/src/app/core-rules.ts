@@ -1,13 +1,16 @@
 // The rules of the Rust core behind the names of the units of the Node server (HY-132.2). `coreRules` takes the module
 // of the Node binding of the core, the generated entry of `native/generated`, and gives each rule under the name of the
 // unit of the server that states it today, so that a unit of the server calls the core in place of its own rule. This
-// file imports nothing of the package, and its caller loads the binding, so a test gives it a stand-in of that module.
+// file imports nothing of the package, so a test gives `coreRules` a stand-in of that module; `rules` gives the one
+// shared instance of the units of the server, which it builds on first use from the addon of the package.
 //
 // A unit below is exact when the core decides everything that the unit of the server decides, and partial when the
 // server still does a part itself; each partial unit names that part by its rule.
 //
 // A failure of the core reaches the caller as the binding raises it: an error of the class of its category with
 // `kind` and `status` (HY-132.1, HY-132.2). No function here catches or replaces one.
+
+import { createRequire } from 'node:module';
 
 // A value of the template data model as the binding passes it (HY-44).
 type CoreValue = unknown;
@@ -422,4 +425,39 @@ export function coreRules(module: object): CoreRules {
       },
     },
   };
+}
+
+// The generated entry of the Node binding, which loads the addon `hyper.<platform>.node` of the package (binding T-2);
+// src/app and dist/app are both two directories below the package.
+const ENTRY = '../../native/generated/index.cjs';
+
+// The error of an addon that does not load, by its name `CoreBindingError`.
+class CoreBindingError extends Error {
+  constructor(message: string, options: { cause: unknown }) {
+    super(message, options);
+    this.name = 'CoreBindingError';
+  }
+}
+
+let shared: CoreRules | null = null;
+
+// Returns the one CoreRules of the server, built on first use from the native addon of the package (HY-132.2). An
+// addon that does not load fails with CoreBindingError at that use and at every later use; no rule of the server
+// answers in its place.
+/** @internal */
+export function rules(): CoreRules {
+  if (shared !== null) return shared;
+  let module: unknown;
+  try {
+    module = createRequire(import.meta.url)(ENTRY);
+  } catch (error) {
+    const platform = `${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}`;
+    throw new CoreBindingError(
+      `hyper: the native addon hyper.${platform}.node of the Node package does not load (HY-132.2): ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+  if (module === null || typeof module !== 'object') throw new CoreBindingError(`hyper: the native addon of the Node package gave no module (HY-132.2)`, { cause: module });
+  shared = coreRules(module);
+  return shared;
 }

@@ -1,11 +1,11 @@
 // The response of a representation request (HY-122): the checks of what a handler returned, its headers, its body as
 // the JSON text of HY-54 and its strong tag.
-import { createHash } from 'node:crypto';
 import { JsonCodec } from '../data/json-codec.js';
 import { Representation } from './representation.js';
 import { Response } from '../http/response.js';
 import { Result } from '../result/result.js';
 import { toValue } from '../data/values.js';
+import { rules } from '../app/core-rules.js';
 
 const STATUSES = [200, 201, 204, 400, 401, 403, 404, 406, 409, 412, 415, 422, 428];
 const ALLOWED = ['location', 'www-authenticate', 'cache-control'];
@@ -49,7 +49,7 @@ export class RepresentationResponse {
   // Returns the strong tag of a body of a type: the first 32 hexadecimal digits of the SHA-256 digest of the
   // Content-Type, a line feed and the body, in quotes (HY-122.10).
   static etag(contentType: string, body: string): string {
-    return `"${createHash('sha256').update(`${contentType}\n${body}`).digest('hex').slice(0, 32)}"`;
+    return rules().representationEtag(contentType, body);
   }
 
   // Returns the Cache-Control of a response: `no-store` for a status of 400 or more, which a handler must not set, the

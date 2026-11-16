@@ -39,6 +39,7 @@ import { Session } from '../session/session.js';
 import type { SessionStore } from '../session/session-store.js';
 import type { Data, Value } from '../data/values.js';
 import { ArgumentCountError } from './argument-count-error.js';
+import { rules } from './core-rules.js';
 
 // The one argument of every loader and action: the request, the reply of the request and the services that the
 // application binds by key.
@@ -174,7 +175,6 @@ const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
 const PAGE_TYPE = 'text/html';
 const PAGE_AND_DATA = [PAGE_TYPE, HYPER_JSON];
 // The Vary of a response with text/html or the JSON of hyper (HY-117).
-const VARY = 'Accept, HX-Request, HX-Current-URL';
 
 export class App<S extends object = Record<string, never>> {
   /** @internal */
@@ -499,8 +499,9 @@ export class App<S extends object = Record<string, never>> {
   // cache stores it (HY-65).
   /** @internal */
   frame(response: Response): Response {
-    const framed = response.withHeader('Content-Security-Policy', `frame-ancestors ${this.frameAncestors}`);
-    return framed.status >= 400 ? framed.withHeader('Cache-Control', 'no-store') : framed;
+    let framed = response;
+    for (const [name, value] of Object.entries(rules().appFrameHeaders(response.status, this.frameAncestors))) framed = framed.withHeader(name, value);
+    return framed;
   }
 
   // Writes the log line of an unhandled error (HY-43) and returns its failure for the response hook (HY-60): the
@@ -590,7 +591,7 @@ export class App<S extends object = Record<string, never>> {
 
   // Returns the Vary of the html and JSON responses, with `Hyper-Context` for an application with a context (HY-117).
   private varyHeader(): string {
-    return this.context === null ? VARY : `${VARY}, Hyper-Context`;
+    return rules().appVaryHeader(this.context !== null);
   }
 
   // Selects the media type of a request among the page, the JSON of hyper and the representations of its route by its
