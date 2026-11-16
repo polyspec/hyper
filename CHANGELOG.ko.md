@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f9a08bf3ad8cca73ea2aa5052c6438b2dbe34d5a7706a9cdb1d221210e0cc00f -->
+<!-- source-sha256: 62c9eabf198a026e9473e652b8042720fc45442891885f5379c50fc9d922028a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 서버의 `Build::read`는 `build.json` 파일을 읽어 그 byte를 `CoreRules::shared()`에 준다. core가 build id를 읽고 그 형식을 검사한다(HY-125.18, HY-125.19). kind `invalid_build`인 core의 실패는 core의 message 앞에 파일 경로를 붙인 `InvalidBuild`가 된다(HY-125.5). build id의 PHP decoding과 pattern은 없어졌다(H35.9-2).
 - PHP 서버의 `Reply::cacheControl`, `Reply::referrerPolicy`, `Reply::status`, `Result::page`는 값을 `CoreRules::shared()`로 검사한다(HY-52.6, HY-103.2, HY-69.10, HY-58). PHP 코드는 core가 보지 않는 인자 type 검사만 남기고, 규칙이나 Referrer-Policy 명세 token의 사본을 갖지 않는다(H35.9-2).
 - PHP 서버는 context hash와 `Hyper-Context` 검사(HY-125.12, HY-127.2), representation의 tag(HY-122.10)와 JSON page 응답의 tag(HY-53.1), session cookie와 kept cookie의 이름(HY-45.1, HYC-13.6), page 응답의 `Vary`(HY-117.1), 모든 응답의 frame header(HY-45.5, HY-65.1)를 `CoreRules::shared()`에서 받는다. `Context`, `RepresentationResponse`, `NativeSession`, `Page`, `App`은 이 규칙의 손 코드를 갖지 않는다(H35.9-2).
 - PHP 서버는 session token의 mask와 검증, `browser()`를 `Csrf`의 손 코드 대신 `CoreRules::shared()`로 한다. 이것은 extension `polyspec_hyper` 위의 `CoreRules` 하나다(HY-24, HY-132.2). extension이 없는 서버는 처음 쓸 때 extension의 이름을 담은 `RuntimeException`으로 멈춘다. 서버가 부르는 `CoreRules`의 member는 그 규칙의 type을 돌려준다(H35.9-2).

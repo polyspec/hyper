@@ -13,8 +13,9 @@ namespace Polyspec\Hyper;
 final class Build
 {
     /**
-     * Reads the build id of a `build.json` file. The file must exist, be valid JSON and hold exactly the key `build`
-     * with a build id of 64 lowercase hexadecimal characters; a failure names the path of the file (HY-125.5).
+     * Reads the build id of a `build.json` file. The file must exist, and the core reads its bytes: valid JSON that holds
+     * exactly the key `build` with a build id of 64 lowercase hexadecimal characters; a failure names the path of the
+     * file (HY-125.5, HY-125.18).
      *
      * @throws InvalidBuild
      */
@@ -25,25 +26,14 @@ final class Build
             throw new InvalidBuild("{$file} is missing or not readable (HY-125)");
         }
         try {
-            // Bytes that are not UTF-8 and a leading U+FEFF are not valid JSON (HY-106.7); the JSON text is decoded by
-            // the decoder of the server, with its one nesting limit (HY-54).
-            $value = JsonCodec::decode($text);
-        } catch (JsonDecodeError $error) {
-            throw new InvalidBuild("{$file} is not valid JSON (HY-125)", previous: $error);
-        }
-        $members = $value instanceof \stdClass ? get_object_vars($value) : null;
-        if (
-            $members === null
-            || array_keys($members) !== ['build']
-            || !is_string($members['build'])
-            || preg_match('/^[0-9a-f]{64}$/D', $members['build']) !== 1
-        ) {
-            throw new InvalidBuild(
-                "{$file} does not hold exactly the key build with a build id of 64 lowercase hexadecimal "
-                . "characters (HY-125)",
-            );
-        }
+            // Bytes that are not UTF-8, a leading U+FEFF and another form fail in the core (HY-106.7, HY-125.18).
+            return CoreRules::shared()->buildRead($text);
+        } catch (HyperValueError $error) {
+            if ($error->kind() !== 'invalid_build') {
+                throw $error;
+            }
 
-        return $members['build'];
+            throw new InvalidBuild("{$file}: {$error->getMessage()}", previous: $error);
+        }
     }
 }
