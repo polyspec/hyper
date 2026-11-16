@@ -200,7 +200,9 @@ class CoreRules:
     def __init__(self, core: Any) -> None:
         missing = [name for name in _MEMBERS if not callable(getattr(core, name, None))]
         if missing:
-            raise RuntimeError(f"hyper: the binding of the core has no member {', '.join(missing)}")
+            raise RuntimeError(
+                f"hyper: the binding of the core has no member {', '.join(missing)}"
+            )
         self.Csrf = _Csrf(core)
         self.Context = _Context(core)
         self.RecordSession = _RecordSession(core)

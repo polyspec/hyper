@@ -9,8 +9,6 @@ use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\CoreRules;
 use Polyspec\Hyper\Tests\Support\CoreStandIn\Calls;
 
-require_once __DIR__ . '/Support/CoreStandIn/functions.php';
-
 /**
  * The rules of the core behind the names of the units of the PHP server (CoreRules, HY-132.2), against stand-in
  * functions of the binding, which record each call and return the value that the test gives them, so the tests need no
@@ -46,14 +44,24 @@ final class CoreRulesTest extends TestCase
             'Context::hash (HY-125.12)' => ['contextHash', ['build', '{}'], 'contextHash', 'hash'],
             'Context::validHeader (HY-127.2)' => ['contextValidHeader', [null], 'validContextHeader', true],
             'the session cookie name (HY-45.1)' => ['sessionCookieName', [true], 'sessionName', '__Host-hy-session'],
-            'RepresentationResponse::etag (HY-122.10)' => ['representationEtag', ['application/json', '{}'], 'representationTag', '"tag"'],
+            'RepresentationResponse::etag (HY-122.10)' => [
+                'representationEtag',
+                ['application/json', '{}'],
+                'representationTag',
+                '"tag"',
+            ],
             'Request::currentPath (HY-11.4)' => ['requestCurrentPath', ['http://a.test/b?c'], 'currentPath', '/b'],
             'Reply::cacheControl (HY-52.6)' => ['replyCacheControl', ['private'], 'cacheControl', 'private'],
             'Reply::referrerPolicy (HY-103.2)' => ['replyReferrerPolicy', ['origin'], 'referrerPolicy', 'origin'],
             'Reply::status (HY-69)' => ['replyStatus', [403], 'replyStatus', 403],
             'Result::redirect (HY-46)' => ['resultRedirect', ['/list'], 'redirectLocation', '/list'],
             'Result::page (HY-58)' => ['resultPage', [422], 'pageStatus', 422],
-            'App::varyHeader (HY-117.1)' => ['appVaryHeader', [true], 'pageVary', 'Accept, HX-Request, HX-Current-URL, Hyper-Context'],
+            'App::varyHeader (HY-117.1)' => [
+                'appVaryHeader',
+                [true],
+                'pageVary',
+                'Accept, HX-Request, HX-Current-URL, Hyper-Context',
+            ],
             'the tag of Page::respond (HY-53.1)' => ['pageTag', ['{}', 'masked', self::TOKEN], 'pageTag', 'W/"0"'],
         ];
     }
@@ -66,23 +74,57 @@ final class CoreRulesTest extends TestCase
     public static function partialUnits(): array
     {
         return [
-            'the session cookie (HY-45.8)' => ['sessionCookieHeader', ['id', true], 'sessionCookie', '__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax'],
-            'Reply keeps out of shared caches (HY-52.6)' => ['replyKeepsOutOfSharedCaches', ['private'], 'keepsOutOfSharedCaches', true],
+            'the session cookie (HY-45.8)' => [
+                'sessionCookieHeader',
+                ['id', true],
+                'sessionCookie',
+                '__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax',
+            ],
+            'Reply keeps out of shared caches (HY-52.6)' => [
+                'replyKeepsOutOfSharedCaches',
+                ['private'],
+                'keepsOutOfSharedCaches',
+                true,
+            ],
             'Result is an application path (HY-46)' => ['resultIsApplicationPath', ['//a'], 'isApplicationPath', false],
-            'the path of the static shell (HY-62)' => ['appCheckShellPath', ['/srv/csr/index.html'], 'checkShellPath', null],
-            'the text of the static shell (HY-62)' => ['appShellText', ['/srv/csr/index.html', '<html>'], 'shellText', '<html>'],
+            'the path of the static shell (HY-62)' => [
+                'appCheckShellPath',
+                ['/srv/csr/index.html'],
+                'checkShellPath',
+                null,
+            ],
+            'the text of the static shell (HY-62)' => [
+                'appShellText',
+                ['/srv/csr/index.html', '<html>'],
+                'shellText',
+                '<html>',
+            ],
             'the stored token (HY-24.14)' => ['sessionStoredToken', [self::TOKEN], 'storedToken', self::TOKEN],
             'the name of the kept cookie (HYC-13.6)' => ['keptCookieName', [false], 'keepName', 'hy-keep'],
-            'Build::read (HY-125.18)' => ['buildRead', ['{}'], 'readBuild', '1111111111111111111111111111111111111111111111111111111111111111'],
-            'the form of a build id (HY-125.19)' => ['buildCheckId', ['1111111111111111111111111111111111111111111111111111111111111111'], 'checkBuildId', null],
+            'Build::read (HY-125.18)' => [
+                'buildRead',
+                ['{}'],
+                'readBuild',
+                '1111111111111111111111111111111111111111111111111111111111111111',
+            ],
+            'the form of a build id (HY-125.19)' => [
+                'buildCheckId',
+                ['1111111111111111111111111111111111111111111111111111111111111111'],
+                'checkBuildId',
+                null,
+            ],
         ];
     }
 
     /** @param list<mixed> $arguments */
     #[DataProvider('exactUnits')]
     #[DataProvider('partialUnits')]
-    public function testAUnitCallsItsFunctionWithItsArgumentsAndReturnsItsResult(string $method, array $arguments, string $function, mixed $result): void
-    {
+    public function testAUnitCallsItsFunctionWithItsArgumentsAndReturnsItsResult(
+        string $method,
+        array $arguments,
+        string $function,
+        mixed $result,
+    ): void {
         Calls::$results = [$function => $result];
         $rules = new CoreRules(self::STAND_IN);
         self::assertSame($result, $rules->{$method}(...$arguments));
@@ -106,9 +148,14 @@ final class CoreRulesTest extends TestCase
     public function testTheFrameHeadersAreAMapInTheOrderOfTheCore(): void
     {
         // HY-45.5, HY-65.1
-        Calls::$results = ['frameHeaders' => [['Content-Security-Policy', "frame-ancestors 'self'"], ['Cache-Control', 'no-store']]];
+        Calls::$results = [
+            'frameHeaders' => [['Content-Security-Policy', "frame-ancestors 'self'"], ['Cache-Control', 'no-store']],
+        ];
         $headers = (new CoreRules(self::STAND_IN))->appFrameHeaders(403, "'self'");
-        self::assertSame(['Content-Security-Policy' => "frame-ancestors 'self'", 'Cache-Control' => 'no-store'], $headers);
+        self::assertSame(
+            ['Content-Security-Policy' => "frame-ancestors 'self'", 'Cache-Control' => 'no-store'],
+            $headers,
+        );
         self::assertSame([['frameHeaders', [403, "'self'"]]], Calls::$calls);
     }
 
@@ -128,7 +175,9 @@ final class CoreRulesTest extends TestCase
     public function testANamespaceWithoutAFunctionOfTheBindingFailsWithTheNamesOfTheFunctions(): void
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('hyper: the binding of the core has no member ' . implode(', ', CoreRules::MEMBERS));
+        $this->expectExceptionMessage(
+            'hyper: the binding of the core has no member ' . implode(', ', CoreRules::MEMBERS),
+        );
         new CoreRules('Polyspec\Hyper\Tests\Support\NoBinding');
     }
 }

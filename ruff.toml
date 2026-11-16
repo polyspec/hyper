@@ -1,7 +1,8 @@
 # The ruff configuration of hyper. make lint-python runs ruff from the root, and ruff applies the nearest configuration of each
-# file, this one where no folder below holds its own. var holds the installs and the outputs of the tools, never code of hyper.
+# file, this one where no folder below holds its own. var holds the installs and the outputs of the tools, never code of hyper;
+# the binding generator writes _binding and native/generated, which no hand edits.
 target-version = "py314"
-extend-exclude = ["var"]
+extend-exclude = ["var", "packages/python/src/polyspec/hyper/_binding", "packages/python/native/generated"]
 # ruff's own setting for its cache, which otherwise is .ruff_cache at the root (layout S5 refuses it): var holds what the tools
 # write, and the setting holds for every ruff run of the repository, an editor's too. ruff reads the path relative to this file
 # when it finds the file and relative to its working directory under --config, so both are the root under make lint-python.

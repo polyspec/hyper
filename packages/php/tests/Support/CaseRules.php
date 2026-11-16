@@ -43,7 +43,10 @@ final class CaseRules
             return [];
         }
 
-        return self::declarations(Json::file(self::LEGACY . 'interfaces.json')['caseFiles'] ?? null, 'legacy caseFiles');
+        return self::declarations(
+            Json::file(self::LEGACY . 'interfaces.json')['caseFiles'] ?? null,
+            'legacy caseFiles',
+        );
     }
 
     /** The path of a case file: under tests/legacy for a fixed case file, under contracts/ for every other one. */
@@ -99,7 +102,9 @@ final class CaseRules
     public static function statedMessage(string $name, mixed $expected, mixed $observed): mixed
     {
         // The reader holds a case with its objects as `stdClass`, so the expected failure is an object, not an array.
-        $unstated = $expected instanceof \stdClass && property_exists($expected, 'message') && $expected->message === null;
+        $unstated = $expected instanceof \stdClass
+            && property_exists($expected, 'message')
+            && $expected->message === null;
         if ($name !== 'raises' || !$unstated || !is_array($observed)) {
             return $observed;
         }

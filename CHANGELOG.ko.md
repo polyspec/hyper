@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 24b335df35b4274938ebdc0e69cd8541d231ebe8a2b29db002805113be34e5fa -->
+<!-- source-sha256: 03fdbaa57090ac1d42c196b803b2a0ece39e7d1f6d2b60c3a8914b15da3e2415 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Pint는 `packages/php/native/generated`를, ruff는 `packages/python/src/polyspec/hyper/_binding`과 `packages/python/native/generated`를 검사하지 않는다. binding 생성기가 그것을 쓰기 때문이다. `_core_rules.py`와 `test_core_rules.py`는 ruff의 format을 따른다. root `composer.json`은 시험 안의 `require_once` 대신 `autoload-dev.files`로 `CoreRulesTest`의 stand-in 함수를 읽으며, 시험, support class, board front controller의 PHP 줄은 120자 안에 있다. `make hyper-lint`, `make lint-python`, `make lint-php`가 그것을 실패시켰다(H35.7).
 - `tests/legacy/context-before-s3b.json`의 application `with_context`는 H32.1의 merge가 그곳에 복사한 outside redirect case가 호출하는 route, loader, action `away`를 가진다. PHP 서버는 그 application을 열지 못했으므로 그 case 21개가 `route away declares post but has no POST action`으로 실패했다(H35.7).
 - `config/rebuild.json`은 `scripts/binding-cases.mts`와 `scripts/binding-commit.mts`를 policy로 분류한다. `make rebuild-check`가 그것을 실패시켰다(H35.7).
 - `.github/workflows/ci.yml`의 CI group `core`와 `CHECK_TARGETS`는 `install-tools`와 `install-binding` 뒤에 `core-test`, `core-lint`, `core-fmt-check`, `bindings-check`, 그리고 `lint-bindings`, `test-wasm`, `test-go`를 실행하는 `test-bindings`를 실행한다. 어떤 job도 Rust core와 바인딩을 검사하지 않았기 때문이다(H35.2). `tests/scripts/ci-workflow.test.mts`가 그 group을 검사한다. kit의 `install-tools`에는 `mise.toml`이 고정한 wasm-bindgen CLI의 selector가 없으므로 group은 그것을 설치하지 않는다. `install-tools`가 그것을 선택하게 되면 group이 그것을 지정한다.

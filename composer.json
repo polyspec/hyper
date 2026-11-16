@@ -52,7 +52,10 @@
             "Polyspec\\Hyper\\Tests\\": "packages/php/tests/",
             "Polyspec\\Hyper\\Tests\\Program\\": "packages/php/tests/build/server/php/",
             "Polyspec\\Hyper\\Tests\\Contract\\": "var/contract-programs/"
-        }
+        },
+        "files": [
+            "packages/php/tests/Support/CoreStandIn/functions.php"
+        ]
     },
     "config": {
         "platform": {
