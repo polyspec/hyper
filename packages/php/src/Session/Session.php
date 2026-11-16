@@ -19,14 +19,18 @@ final class Session
     {
     }
 
-    /** Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use or over another value (HY-24). */
+    /**
+     * Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use (HY-24.1). A stored text of
+     * another form fails, which the core checks (HY-24.14, HY-132.2).
+     */
     public function csrfToken(): string
     {
         $token = $this->store->get(self::TOKEN);
-        if (!is_string($token) || preg_match('/^[0-9a-f]{64}$/D', $token) !== 1) {
-            $token = bin2hex(random_bytes(32));
-            $this->store->set(self::TOKEN, $token);
+        if (is_string($token)) {
+            return CoreRules::shared()->sessionStoredToken($token);
         }
+        $token = bin2hex(random_bytes(32));
+        $this->store->set(self::TOKEN, $token);
 
         return $token;
     }
@@ -46,6 +50,9 @@ final class Session
     {
         $stored = $this->store->get(self::FLASH);
         if ($stored === null) {
+            // HY-120.6: the opening of the session reads and removes the flash data, also when it holds none.
+            $this->store->remove(self::FLASH);
+
             return new Flash([], []);
         }
         $flash = self::coreMap(CoreRules::shared()->sessionFlashOf($stored));

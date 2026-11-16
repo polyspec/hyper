@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2370e85e62b338f0d2ad1e837a2a423e6e5132ac64a823ccc6a30bdf7fbe8421 -->
+<!-- source-sha256: 3592631d72c0ff92c47d98ed0b2f4d9fab470ffa5913c6acdba905b7473312e3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 세 서버에서 page 요청의 session을 열 때 session에 flash 데이터가 없어도 token을 읽기 전에 flash 데이터를 제거한다(HY-120.6). 서버는 저장되어 있을 때만 제거했다. Node와 PHP 서버는 저장된 token을 core의 `rules.stored_token`으로 검사하므로, 소문자 16진수 64자리가 아닌 저장된 text는 kind `invalid_session_token`으로 요청을 실패시킨다(HY-24.14). 서버는 그것을 새 token으로 바꿨다(H35.12).
 
 - PHP 서버는 representation tag의 content type을 header field의 바이트로, U+00FF까지의 글자마다 한 바이트로 digest하며, U+00FF 위의 글자가 있는 content type은 kind `invalid_text`로 실패한다(HY-122.14). 서버는 content type의 UTF-8 바이트를 digest했으므로 `text/é`는 다른 tag를, `text/Ā`는 tag를 주었다(H35.27-1).
 

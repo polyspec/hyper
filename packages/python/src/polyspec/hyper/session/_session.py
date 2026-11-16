@@ -41,6 +41,8 @@ class Session:
         flash first and fails with ``invalid_session_record`` for one of another form (HY-25.2, HY-104.23)."""
         stored = self._store.get(_FLASH_KEY)
         if stored is None:
+            # HY-120.6: the opening of the session reads and removes the flash data, also when it holds none.
+            self._store.remove(_FLASH_KEY)
             return Flash({}, [])
         flash = Session._core_map(core_rules().session_flash_of(stored))
         self._store.remove(_FLASH_KEY)

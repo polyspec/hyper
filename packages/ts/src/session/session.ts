@@ -19,10 +19,11 @@ export class Session {
     this.store = store;
   }
 
-  // Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use or over another value (HY-24).
+  // Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use (HY-24.1). A stored text of
+  // another form fails, which the core checks (HY-24.14, HY-132.2).
   csrfToken(): string {
     const token = this.store.get(TOKEN);
-    if (typeof token === 'string' && /^[0-9a-f]{64}$/.test(token)) return token;
+    if (typeof token === 'string') return rules().sessionStoredToken(token);
     const created = randomBytes(32).toString('hex');
     this.store.set(TOKEN, created);
     return created;
@@ -39,7 +40,11 @@ export class Session {
   // `values` or without `changed` has none.
   takeFlash(): Flash {
     const stored = this.store.get(FLASH);
-    if (stored === undefined || stored === null) return new Flash(new Map<string, Value>(), []);
+    if (stored === undefined || stored === null) {
+      // HY-120.6: the opening of the session reads and removes the flash data, also when it holds none.
+      this.store.remove(FLASH);
+      return new Flash(new Map<string, Value>(), []);
+    }
     const flash = Session.coreMap(rules().sessionFlashOf(stored));
     this.store.remove(FLASH);
     const changed = flash.get('changed');
