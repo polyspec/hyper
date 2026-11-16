@@ -44,6 +44,13 @@
             "post": true
           },
           {
+            "name": "away",
+            "path": "/away",
+            "title": "Away",
+            "template": "home.tpl",
+            "post": true
+          },
+          {
             "name": "missing",
             "path": "/missing",
             "title": "Missing",
@@ -73,7 +80,8 @@
         "leave": {},
         "missing": {
           "stop": "NotFound"
-        }
+        },
+        "away": {}
       },
       "embedData": [
         "list"
@@ -85,6 +93,9 @@
         },
         "leave": {
           "redirect": "/list"
+        },
+        "away": {
+          "outside": "https://outside.example/back"
         }
       }
     },

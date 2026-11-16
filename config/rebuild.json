@@ -138,6 +138,14 @@
       "kind": "policy",
       "reason": "it writes the program of a test fixture with its fixed build id through the assembly of the command tool (HY-125.21); no ecosystem tool writes it"
     },
+    "scripts/binding-cases.mts": {
+      "kind": "policy",
+      "reason": "writes the cases of contracts/ in the case form of binding for the rows of cases of the contract (HR-100); no tool of an ecosystem converts between the two case forms of this repository"
+    },
+    "scripts/binding-commit.mts": {
+      "kind": "policy",
+      "reason": "reads the commit of the polyspec-binding-core that polyspec-hyper names in Cargo.lock, which selects the binding cli (G-6, CK-20); cargo metadata gives the source of each package but not which of two versions polyspec-hyper names"
+    },
     "scripts/install-binding.mts": {
       "kind": "ecosystem",
       "tool": "git clone of the checkout that Cargo made of the commit of Cargo.lock, and npm ci of the lock of the binding cli; binding is in no package registry before its release (binding design L-2)"
