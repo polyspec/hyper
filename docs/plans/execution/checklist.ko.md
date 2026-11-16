@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: ceeb156d1b3fde58b64c3a122c2dbd0dc5ef4820b2adfeeecdcbb86a700fe6d7 -->
+<!-- source-sha256: f7a1aa7cade92626a00c374d49c59502b7157e2390c8ae73e0bf2d08c2d065fc -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -487,6 +487,7 @@
 | H35.9-1 | Node 서버: `make hyper-install`은 Node package의 native addon(`hyper.<platform>.node`)을 빌드해 설치하고 `make hyper-test-node`가 그것을 load하며, 그다음 Node unit이 `CoreRules`를 부른다. | Makefile, packages/ts/src, tests/scripts | `make hyper-test-node` | [ ] |
 | H35.9-2 | PHP 서버: unit은 확장 `polyspec_hyper`의 `CoreRules`를 부르고, 확장이 없으면 이름 붙은 오류로 실패한다. | packages/php/src, packages/php/tests | `make hyper-test-php` | [ ] |
 | H35.9-3 | Python 서버: unit은 `polyspec.hyper._binding`의 `CoreRules`를 부르고, import되지 않는 binding은 이름 붙은 오류로 실패한다. binding 0.0.15가 생성한 binding은 `polyspec.template`의 `Environment`를 import하는데, lock의 template release 0.0.27에는 그것이 없다. 그래서 그것을 가진 template release를 pin하기 전까지 Python binding은 import되지 않는다. | packages/python/src, packages/python/tests | `make hyper-test-python` | [ ] |
+| H35.9-4 | 세 case runner의 step은 살아 있는 section의 field(`raises`, `read`)를 읽고, 지운 사본의 field는 읽지 않는다. | packages/php/tests, packages/ts/tests, packages/python/tests, CHANGELOG.md와 한국어 짝 | `make recipe-check` | [ ] |
 | H35.10 | 서버와 Rust core가 달랐고 `contracts/`의 live case가 답을 정하지 않은 입력마다, 먼저 live case를 쓰고(그것이 Red다) 그다음 core와 세 서버가 그 case의 답을 낸다(H35.9). | contracts, packages/rust, packages/php/src, packages/ts/src, packages/python/src, CHANGELOG.md와 한국어 짝 | `make recipe-check` | [ ] |
 | H35.10-1 | live case가 짝 없는 surrogate를 가진 값에 대한 `csrf.verify`의 답을 정하고, core와 세 서버가 그 답을 낸다(HY-24.4). | contracts, packages/rust | `make recipe-check` | [-] cause: 그런 값으로 `csrf.verify`에 닿는 요청은 없다. UTF-8이 아닌 form 값은 action 전에 bad request이기 때문이다(`contracts/app.json` `a_form_value_that_is_not_utf8_is_a_bad_request_before_the_action`). |
 | H35.10-2 | live case가 U+00FF 위의 글자를 가진 값에 대한 context header 검사의 답을 정한다(HY-127.2). | contracts, packages/rust | `make recipe-check` | [-] cause: U+00FF 위의 header 값을 가진 요청은 context 검사 전에 실패한다(HY-42.7, `contracts/request.json` `a_header_value_with_a_character_above_u_00ff_fails`). |
