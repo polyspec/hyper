@@ -10,6 +10,7 @@ from typing import Optional
 
 from polyspec.php_serialize import Reference, StdClass, serialize, unserialize
 
+from ..app._core_rules import core_rules
 from .session_store import SessionStore
 
 _IDENTIFIER = re.compile(r"[A-Za-z0-9,-]{22,128}\Z")
@@ -77,8 +78,9 @@ class RecordSession(SessionStore):
 
     @staticmethod
     def cookie_name(secure: bool) -> str:
-        """Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45)."""
-        return "__Host-hy-session" if secure else "hy-session"
+        """Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45); the core
+        names it (HY-132.2)."""
+        return core_rules().session_cookie_name(secure)
 
     @staticmethod
     def cookie_header(id: str, secure: bool) -> str:

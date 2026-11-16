@@ -3,10 +3,10 @@ HY-69, HY-73, HY-75, HY-92, HY-124)."""
 
 from __future__ import annotations
 
-import hashlib
 from typing import TYPE_CHECKING, Callable, Optional
 
 from ..app._context import Context
+from ..app._core_rules import core_rules
 from ..data._data_model import DataModel
 from ..session._flash import Flash
 from ..data._json_codec import JsonCodec
@@ -176,14 +176,8 @@ class Page:
             # HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does
             # not change it; a matching GET request receives 304 without a body and without `Content-Type`, because
             # a 304 carries no representation.
-            tag = (
-                'W/"'
-                + hashlib.sha256(
-                    body.replace(request.csrf_token(), session.csrf_token()).encode(
-                        "utf-8"
-                    )
-                ).hexdigest()[:32]
-                + '"'
+            tag = core_rules().page_tag(
+                body, request.csrf_token(), session.csrf_token()
             )
             headers["ETag"] = tag
             if request.method != "GET" or request.header("If-None-Match") != tag:
@@ -227,9 +221,7 @@ class Page:
         HY-38)."""
         # On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
         cookie = Page._decoded_cookie(
-            request.cookie(
-                "__Host-hy-keep" if self._https or request.https else "hy-keep"
-            )
+            request.cookie(core_rules().kept_cookie_name(self._https or request.https))
         )
         kept: dict[str, dict] = {}
         for name, region_data in data.items():

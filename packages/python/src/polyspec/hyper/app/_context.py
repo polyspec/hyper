@@ -4,10 +4,10 @@ the place of the context in the shared data of a document (HY-10)."""
 
 from __future__ import annotations
 
-import hashlib
 import re
 from typing import Callable, Optional
 
+from ._core_rules import core_rules
 from ..data._data_model import DataModel
 from ._hyper_value_error import HyperValueError
 from ..data._json_codec import JsonCodec
@@ -32,9 +32,8 @@ class Context:
     @staticmethod
     def hash(build: str, text: str) -> str:
         """Returns the context hash: the lowercase hexadecimal SHA-256 digest of `{"build":"<build id>","context":`,
-        the JSON text of the context and `}` (HY-125)."""
-        signed = '{"build":"' + build + '","context":' + text + "}"
-        return hashlib.sha256(signed.encode("utf-8")).hexdigest()
+        the JSON text of the context and `}` (HY-125); the core computes it (HY-132.2)."""
+        return core_rules().context_hash(build, text)
 
     @staticmethod
     def member(build: str, map: dict, held: Optional[str]) -> dict:
