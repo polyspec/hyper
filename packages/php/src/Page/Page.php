@@ -152,8 +152,7 @@ final class Page
             // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not
             // change it; a matching GET request receives 304 without a body and without `Content-Type`, because a
             // 304 carries no representation.
-            $hash = hash('sha256', str_replace($request->csrfToken(), $session->csrfToken(), $body));
-            $tag = 'W/"' . substr($hash, 0, 32) . '"';
+            $tag = CoreRules::shared()->pageTag($body, $request->csrfToken(), $session->csrfToken());
             $headers['ETag'] = $tag;
             if ($request->method !== 'GET' || $request->header('If-None-Match') !== $tag) {
                 return new Response(200, $headers, $body);
@@ -201,7 +200,7 @@ final class Page
     private function kept(Request $request, Session $session, array $data): array
     {
         // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
-        $cookie = self::decodedCookie($request->cookie($this->https || $request->https ? '__Host-hy-keep' : 'hy-keep'));
+        $cookie = self::decodedCookie($request->cookie(CoreRules::shared()->keptCookieName($this->https || $request->https)));
         $kept = [];
         foreach ($data as $name => $regionData) {
             $region = $this->manifest->region($name);

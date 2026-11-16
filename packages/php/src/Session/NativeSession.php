@@ -102,7 +102,7 @@ final class NativeSession implements SessionStore
      */
     public static function name(bool $https): string
     {
-        return $https ? '__Host-hy-session' : 'hy-session';
+        return CoreRules::shared()->sessionCookieName($https);
     }
 
     /**

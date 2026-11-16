@@ -435,9 +435,11 @@ final class App
      */
     public function frame(Response $response): Response
     {
-        $response = $response->withHeader('Content-Security-Policy', "frame-ancestors {$this->frameAncestors}");
+        foreach (CoreRules::shared()->appFrameHeaders($response->status, $this->frameAncestors) as $name => $value) {
+            $response = $response->withHeader($name, $value);
+        }
 
-        return $response->status >= 400 ? $response->withHeader('Cache-Control', 'no-store') : $response;
+        return $response;
     }
 
     /**
@@ -628,7 +630,7 @@ final class App
     /** Returns the Vary of a response with text/html or application/vnd.hyper+json (HY-117). */
     private function varyHeader(): string
     {
-        return 'Accept, HX-Request, HX-Current-URL' . ($this->context === null ? '' : ', Hyper-Context');
+        return CoreRules::shared()->appVaryHeader($this->context !== null);
     }
 
     /**

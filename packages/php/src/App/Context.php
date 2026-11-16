@@ -46,7 +46,7 @@ final class Context
      */
     public static function hash(string $build, string $text): string
     {
-        return hash('sha256', '{"build":"' . $build . '","context":' . $text . '}');
+        return CoreRules::shared()->contextHash($build, $text);
     }
 
     /**
@@ -66,7 +66,7 @@ final class Context
     /** Returns true for a request without `Hyper-Context` or with a context hash, 64 lowercase hexadecimal (HY-127). */
     public static function validHeader(?string $value): bool
     {
-        return $value === null || preg_match('/^[0-9a-f]{64}$/D', $value) === 1;
+        return CoreRules::shared()->contextValidHeader($value);
     }
 
     /**

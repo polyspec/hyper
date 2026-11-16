@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- PHP 서버는 context hash와 `Hyper-Context` 검사(HY-125.12, HY-127.2), representation의 tag(HY-122.10)와 JSON page 응답의 tag(HY-53.1), session cookie와 kept cookie의 이름(HY-45.1, HYC-13.6), page 응답의 `Vary`(HY-117.1), 모든 응답의 frame header(HY-45.5, HY-65.1)를 `CoreRules::shared()`에서 받는다. `Context`, `RepresentationResponse`, `NativeSession`, `Page`, `App`은 이 규칙의 손 코드를 갖지 않는다(H35.9-2).
 - PHP 서버는 session token의 mask와 검증, `browser()`를 `Csrf`의 손 코드 대신 `CoreRules::shared()`로 한다. 이것은 extension `polyspec_hyper` 위의 `CoreRules` 하나다(HY-24, HY-132.2). extension이 없는 서버는 처음 쓸 때 extension의 이름을 담은 `RuntimeException`으로 멈춘다. 서버가 부르는 `CoreRules`의 member는 그 규칙의 type을 돌려준다(H35.9-2).
 - `contracts/interfaces.json`은 세 서버의 unit `core-rules`를 member 26개와 그 시험과 함께 적고, `wsgi-body`의 member를 H34.1이 남긴 대로 적는다. `close()`가 쓰기를 보고하고 `_finish`는 없다. `core-rules.ts`의 Node 선언은 `@internal`을 단다(H35.7).
 - package data 시험은 설치된 `polyspec-hyper`의 파일을 읽는다. 이 package는 `make hyper-install-python`이 maturin으로 wheel을 빌드해 non-editable로 설치한 것이며, wheel에 `polyspec/hyper/py.typed`가 없으면 시험이 실패한다. 전에는 `pyproject.toml`의 `tool.setuptools`를 읽었는데, maturin이 package를 빌드한 뒤로 그 설정은 없으므로 표지를 가진 package에서도 실패했다(H35.7).
