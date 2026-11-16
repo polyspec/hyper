@@ -267,6 +267,14 @@ test('H33.1 the matrix of ci.yml names the CI groups of the Makefile, whose targ
   assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'gates'), makeWords(makefile, 'GATE_TARGETS'), 'the group gates does not run GATE_TARGETS');
 });
 
+test('a CI group checks the Rust core and the bindings with the binding of Cargo.lock (H35.2)', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const targets = ['core-test', 'core-lint', 'core-fmt-check', 'bindings-check', 'test-bindings'];
+  assert.deepEqual(targets.filter((target) => !checkTargets().includes(target)), [], 'CHECK_TARGETS runs every target of the core and the bindings');
+  assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'core'), targets, 'the group core runs the targets of the core and the bindings');
+  assert.ok(groupWords(makefile, 'CI_SETUP', 'core').includes('install-binding'), 'the group core installs the binding of Cargo.lock');
+});
+
 /**
  * The order of the call that a job makes (HR-90, HR-91), read from the dry run of the recipe: each setup step of the group
  * with its make variables, then `make ci-targets` with the targets of the group and its report var/ci/<group>, then

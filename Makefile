@@ -503,7 +503,7 @@ bench: bench-server bench-browser bench-uploads ## Run the measurements; results
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
 GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
-CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e
+CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
 
 # The CI groups of the full suite (HR-91): the matrix of the job check of .github/workflows/ci.yml names CI_GROUPS, and
 # each entry runs `make ci-check NAME=<group>` (HR-90). A group declares the tools that install-tools installs (CI_TOOLS),
@@ -513,7 +513,7 @@ CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse
 # and Redis for the case runners of recipe-check and the session tests, php PHP and the template build, node Node.js
 # alone, board also Python and Chromium, python only the Python of its pins. The group bench is the job of bench.yml,
 # whose targets are reports and belong to no check (make ci-bench).
-CI_GROUPS := gates docs php node board python
+CI_GROUPS := gates docs php node board python core
 CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan
 CI_SETUP_gates := install-tools install-symbols hyper-install-php hyper-install-python
 CI_SYMBOLS_gates := php
@@ -533,6 +533,13 @@ CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
 CI_TOOLS_python := node python uv
 CI_SETUP_python := install-tools hyper-install-python
 CI_TARGETS_python := hyper-test-python hyper-test-python-render
+# The group core checks the Rust core and the bindings of its five targets with the binding cli of Cargo.lock (H35.2):
+# test-bindings runs lint-bindings, test-wasm and test-go first, so each runs once. Its tools build the PHP extension, the
+# Python module, the WASM module and the static library of Go. The wasm-bindgen CLI of mise.toml, which test-wasm runs, has
+# no selector of install-tools of kit, so the group cannot name it, and test-wasm fails there until kit selects it.
+CI_TOOLS_core := node rust php python uv go
+CI_SETUP_core := install-tools install-binding
+CI_TARGETS_core := core-test core-lint core-fmt-check bindings-check test-bindings
 CI_TOOLS_bench := node php composer pie python uv
 CI_SETUP_bench := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser
 CI_TARGETS_bench := bench bench-sessions
