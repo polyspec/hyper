@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 540dbccb9629f51a7d8c745005f29f320709f687bf69eeb792a990854acc2cf7 -->
+<!-- source-sha256: 42738233608345dba93914d372cb050803b638796f1c98691dbb39ae30685648 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 서버는 session token의 mask와 검증, `browser()`를 `Csrf`의 손 코드 대신 `CoreRules::shared()`로 한다. 이것은 extension `polyspec_hyper` 위의 `CoreRules` 하나다(HY-24, HY-132.2). extension이 없는 서버는 처음 쓸 때 extension의 이름을 담은 `RuntimeException`으로 멈춘다. 서버가 부르는 `CoreRules`의 member는 그 규칙의 type을 돌려준다(H35.9-2).
 - `contracts/interfaces.json`은 세 서버의 unit `core-rules`를 member 26개와 그 시험과 함께 적고, `wsgi-body`의 member를 H34.1이 남긴 대로 적는다. `close()`가 쓰기를 보고하고 `_finish`는 없다. `core-rules.ts`의 Node 선언은 `@internal`을 단다(H35.7).
 - package data 시험은 설치된 `polyspec-hyper`의 파일을 읽는다. 이 package는 `make hyper-install-python`이 maturin으로 wheel을 빌드해 non-editable로 설치한 것이며, wheel에 `polyspec/hyper/py.typed`가 없으면 시험이 실패한다. 전에는 `pyproject.toml`의 `tool.setuptools`를 읽었는데, maturin이 package를 빌드한 뒤로 그 설정은 없으므로 표지를 가진 package에서도 실패했다(H35.7).
 - Node와 Python 서버의 `CoreRules`는 규칙마다 member 하나를 갖는 unit 하나이며, member는 unit과 규칙의 이름을 따른다(`csrfMask`, `csrf_mask`). PHP 서버와 같은 모양이다. 전에는 member의 이름공간이 `contracts/interfaces.json`의 unit이 아니었고, Python module은 파일 하나에 class 열넷을 담아 HYR-4를 어겼다(H35.7).

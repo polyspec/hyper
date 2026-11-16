@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The PHP server masks and verifies the session token and gives `browser()` through `CoreRules::shared()`, the one `CoreRules` over the extension `polyspec_hyper`, in place of the hand code of `Csrf` (HY-24, HY-132.2): a server without the extension stops at the first use with a `RuntimeException` that names the extension. The members of `CoreRules` that the server calls return the type of their rule (H35.9-2).
 - `contracts/interfaces.json` lists the unit `core-rules` of the three servers with its 26 members and their tests, and the members of `wsgi-body` as H34.1 left them: `close()` reports the write and `_finish` is gone; the Node declarations of `core-rules.ts` carry `@internal` (H35.7).
 - The package data test reads the files of the installed `polyspec-hyper`, which `make hyper-install-python` builds as a wheel with maturin and installs non-editable, and fails when the wheel lacks `polyspec/hyper/py.typed`: it read `tool.setuptools` of `pyproject.toml`, which the package no longer has since maturin builds it, and failed on a package that carries the marker (H35.7).
 - `CoreRules` of the Node and the Python server is one unit with one member per rule, named after its unit and its rule (`csrfMask`, `csrf_mask`), as the PHP server has it: the namespaces of its members were no unit of `contracts/interfaces.json`, and the Python module held fourteen classes in one file against HYR-4 (H35.7).

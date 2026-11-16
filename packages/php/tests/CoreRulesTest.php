@@ -172,6 +172,19 @@ final class CoreRulesTest extends TestCase
         }
     }
 
+    public function testTheServerHasOneCoreRulesOverTheExtensionOrFailsWithItsName(): void
+    {
+        // HY-132.2: the run with the extension gets one instance; the run without it gets the error that names it.
+        if (extension_loaded('polyspec_hyper')) {
+            self::assertSame(CoreRules::shared(), CoreRules::shared());
+
+            return;
+        }
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('hyper: the PHP extension polyspec_hyper is not loaded');
+        CoreRules::shared();
+    }
+
     public function testANamespaceWithoutAFunctionOfTheBindingFailsWithTheNamesOfTheFunctions(): void
     {
         $this->expectException(\RuntimeException::class);

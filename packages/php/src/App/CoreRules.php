@@ -31,7 +31,32 @@ final class CoreRules
         'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader',
     ];
 
+    /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
+    private const string EXTENSION = 'polyspec_hyper';
+
+    private static ?self $shared = null;
+
     private readonly string $namespace;
+
+    /**
+     * The one CoreRules of the server, over the extension `polyspec_hyper`, created on its first use (HY-132.2). A
+     * server without the extension stops here with the name of the extension; no rule of the server answers in its
+     * place.
+     */
+    public static function shared(): self
+    {
+        if (self::$shared === null) {
+            if (!extension_loaded(self::EXTENSION)) {
+                throw new \RuntimeException(
+                    'hyper: the PHP extension ' . self::EXTENSION . ' is not loaded; the server calls the rules of the core '
+                    . 'through it (HY-132.2)',
+                );
+            }
+            self::$shared = new self(__NAMESPACE__);
+        }
+
+        return self::$shared;
+    }
 
     /**
      * Takes the namespace of the functions of the binding. A namespace that lacks a function fails here with its name,
@@ -60,46 +85,90 @@ final class CoreRules
         return $function(...$arguments);
     }
 
-    /** Csrf::mask: rules.csrf_mask (HY-24.2, HY-24.14). */
-    public function csrfMask(string $token, string $mask): mixed
+    /** Calls a function of the binding that gives a text; another value fails with the name of the function. */
+    private function text(string $name, mixed ...$arguments): string
     {
-        return $this->call('csrfMask', $token, $mask);
+        $value = $this->call($name, ...$arguments);
+        if (is_string($value)) {
+            return $value;
+        }
+
+        throw new \RuntimeException("hyper: {$name} of the binding of the core gave no text");
+    }
+
+    /** Calls a function of the binding that gives a text or null; another value fails with the name of the function. */
+    private function optionalText(string $name, mixed ...$arguments): ?string
+    {
+        $value = $this->call($name, ...$arguments);
+        if ($value === null || is_string($value)) {
+            return $value;
+        }
+
+        throw new \RuntimeException("hyper: {$name} of the binding of the core gave neither a text nor null");
+    }
+
+    /** Calls a function of the binding that gives a boolean; another value fails with the name of the function. */
+    private function flag(string $name, mixed ...$arguments): bool
+    {
+        $value = $this->call($name, ...$arguments);
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        throw new \RuntimeException("hyper: {$name} of the binding of the core gave no boolean");
+    }
+
+    /** Calls a function of the binding that gives an integer; another value fails with the name of the function. */
+    private function number(string $name, mixed ...$arguments): int
+    {
+        $value = $this->call($name, ...$arguments);
+        if (is_int($value)) {
+            return $value;
+        }
+
+        throw new \RuntimeException("hyper: {$name} of the binding of the core gave no integer");
+    }
+
+    /** Csrf::mask: rules.csrf_mask (HY-24.2, HY-24.14). */
+    public function csrfMask(string $token, string $mask): string
+    {
+        return $this->text('csrfMask', $token, $mask);
     }
 
     /** Csrf::verify: rules.csrf_verify (HY-24.4). */
-    public function csrfVerify(string $token, string $value): mixed
+    public function csrfVerify(string $token, string $value): bool
     {
-        return $this->call('csrfVerify', $token, $value);
+        return $this->flag('csrfVerify', $token, $value);
     }
 
     /** Csrf::browserOf: rules.browser (HY-24.10, HY-24.13). */
-    public function csrfBrowserOf(string $masked): mixed
+    public function csrfBrowserOf(string $masked): ?string
     {
-        return $this->call('browser', $masked);
+        return $this->optionalText('browser', $masked);
     }
 
     /** Context::hash: rules.context_hash (HY-125.12). */
-    public function contextHash(string $build, string $text): mixed
+    public function contextHash(string $build, string $text): string
     {
-        return $this->call('contextHash', $build, $text);
+        return $this->text('contextHash', $build, $text);
     }
 
     /** Context::validHeader: rules.valid_context_header (HY-127.2). */
-    public function contextValidHeader(?string $value): mixed
+    public function contextValidHeader(?string $value): bool
     {
-        return $this->call('validContextHeader', $value);
+        return $this->flag('validContextHeader', $value);
     }
 
     /** The name of the session cookie (HY-45.1), which NativeSession gives the session options: rules.session_name. */
-    public function sessionCookieName(bool $secure): mixed
+    public function sessionCookieName(bool $secure): string
     {
-        return $this->call('sessionName', $secure);
+        return $this->text('sessionName', $secure);
     }
 
     /** RepresentationResponse::etag: rules.representation_tag (HY-122.10, HY-122.11). */
-    public function representationEtag(string $contentType, string $body): mixed
+    public function representationEtag(string $contentType, string $body): string
     {
-        return $this->call('representationTag', $contentType, $body);
+        return $this->text('representationTag', $contentType, $body);
     }
 
     /** Request::currentPath: rules.current_path of the value of HX-Current-URL (HY-11.4). */
@@ -109,21 +178,21 @@ final class CoreRules
     }
 
     /** Reply::cacheControl: rules.cache_control gives the value that the reply keeps (HY-52.6). */
-    public function replyCacheControl(string $value): mixed
+    public function replyCacheControl(string $value): string
     {
-        return $this->call('cacheControl', $value);
+        return $this->text('cacheControl', $value);
     }
 
     /** Reply::referrerPolicy: rules.referrer_policy gives the value that the reply keeps (HY-103.2, HY-103.9). */
-    public function replyReferrerPolicy(string $value): mixed
+    public function replyReferrerPolicy(string $value): string
     {
-        return $this->call('referrerPolicy', $value);
+        return $this->text('referrerPolicy', $value);
     }
 
     /** Reply::status: rules.reply_status gives the page status that the reply keeps (HY-69). */
-    public function replyStatus(int $status): mixed
+    public function replyStatus(int $status): int
     {
-        return $this->call('replyStatus', $status);
+        return $this->number('replyStatus', $status);
     }
 
     /** Result::redirect: rules.redirect_location gives the location of the result (HY-46). */
@@ -133,21 +202,21 @@ final class CoreRules
     }
 
     /** Result::page: rules.page_status gives the status of the result (HY-58). */
-    public function resultPage(int $status): mixed
+    public function resultPage(int $status): int
     {
-        return $this->call('pageStatus', $status);
+        return $this->number('pageStatus', $status);
     }
 
     /** App::varyHeader: rules.page_vary (HY-117.1). */
-    public function appVaryHeader(bool $context): mixed
+    public function appVaryHeader(bool $context): string
     {
-        return $this->call('pageVary', $context);
+        return $this->text('pageVary', $context);
     }
 
     /** The tag of a JSON response of Page::respond: rules.page_tag (HY-53.1). */
-    public function pageTag(string $body, string $maskedToken, string $token): mixed
+    public function pageTag(string $body, string $maskedToken, string $token): string
     {
-        return $this->call('pageTag', $body, $maskedToken, $token);
+        return $this->text('pageTag', $body, $maskedToken, $token);
     }
 
     /**
@@ -240,18 +309,18 @@ final class CoreRules
      * Partial. The name of the cookie of the kept values: rules.keep_name (HYC-13.6). The server still reads the
      * cookie from the request (HY-129).
      */
-    public function keptCookieName(bool $secure): mixed
+    public function keptCookieName(bool $secure): string
     {
-        return $this->call('keepName', $secure);
+        return $this->text('keepName', $secure);
     }
 
     /**
      * Partial. Build::read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18, HY-125.19).
      * The server still reads the file and names the absolute path of the file in a failure (HY-125.18).
      */
-    public function buildRead(string $bytes): mixed
+    public function buildRead(string $bytes): string
     {
-        return $this->call('readBuild', $bytes);
+        return $this->text('readBuild', $bytes);
     }
 
     /** Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text. */
