@@ -1,13 +1,15 @@
 """The masked session token (HY-24). A masked value is 32 mask bytes followed by the mask XOR the token, as 128
-lowercase hexadecimal digits, so no response contains the token."""
+lowercase hexadecimal digits, so no response contains the token. The core masks a token and reads the browser of a
+masked value (HY-132.2)."""
 
 from __future__ import annotations
 
-import hashlib
 import hmac
 import re
 import secrets
 from typing import Optional
+
+from ..app._core_rules import core_rules
 
 _MASKED = re.compile(r"[0-9a-f]{128}\Z")
 _TOKEN = re.compile(r"[0-9a-f]{64}\Z")
@@ -23,9 +25,7 @@ class Csrf:
     @staticmethod
     def mask(token: str, mask: str) -> str:
         """Returns the token masked with a mask; both are 64 lowercase hexadecimal digits."""
-        Csrf._require_token(token)
-        Csrf._require_token(mask)
-        return mask + Csrf._xor(Csrf._bytes(mask), Csrf._bytes(token)).hex()
+        return core_rules().csrf_mask(token, mask)
 
     @staticmethod
     def verify(token: str, value: str) -> bool:
@@ -40,14 +40,7 @@ class Csrf:
     def browser_of(masked: str) -> Optional[str]:
         """Returns the SHA-256 digest, as 64 lowercase hexadecimal digits, of the token that a masked value holds, or
         None for the empty text, which a request without a session holds (HY-24.10, HY-24.12)."""
-        if masked == "":
-            return None
-        mask, rest = masked[:64], masked[64:]
-        Csrf._require_token(mask)
-        Csrf._require_token(rest)
-        return hashlib.sha256(
-            Csrf._xor(Csrf._bytes(rest), Csrf._bytes(mask))
-        ).hexdigest()
+        return core_rules().csrf_browser_of(masked)
 
     @staticmethod
     def _require_token(text: str) -> None:

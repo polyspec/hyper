@@ -1,8 +1,8 @@
 """The rules of the Rust core behind the names of the units of the Python server (HY-132.2). `CoreRules` takes the
 module of the Python binding of the core, `polyspec.hyper._binding._root`, and gives each rule under the name of the
-unit of the server that states it today, so that a unit of the server calls the core in place of its own rule. This
-module imports nothing of the package, and its caller imports the binding, so a test gives it a stand-in of that
-module.
+unit of the server that states it, so that a unit of the server calls the core in place of its own rule. The units of
+the server reach one shared instance through `core_rules`, which imports the binding on its first call; a test gives
+`CoreRules` a stand-in of that module.
 
 A unit is exact when the core decides everything that the unit of the server decides, and partial when the server still
 does a part itself; each partial unit names that part by its rule. The members of the binding that take a record
@@ -15,6 +15,9 @@ and `status` (HY-132.1, HY-132.2). No function here catches or replaces one."""
 from __future__ import annotations
 
 from typing import Any, Optional
+
+# The module of the binding that `core_rules` imports.
+BINDING = "polyspec.hyper._binding._root"
 
 # The members of the binding that this module calls, which `CoreRules` requires of the module that it receives.
 _MEMBERS = (
@@ -175,3 +178,26 @@ class CoreRules:
     def build_check_id(self, text: str) -> None:
         """Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text."""
         self._core.check_build_id(text)
+
+
+class CoreBindingError(ImportError):
+    """The binding of the core does not import. The server has no rule of its own in place of the core, so the first
+    unit that needs a rule fails with this error, which names the module (HY-132.2)."""
+
+
+_shared: Optional[CoreRules] = None
+
+
+def core_rules() -> CoreRules:
+    """Returns the one `CoreRules` of the process, which the first call creates from the module of the binding. A
+    module that does not import fails with `CoreBindingError`, and the next call imports it again."""
+    global _shared
+    if _shared is None:
+        try:
+            from .._binding import _root as module
+        except ImportError as error:
+            raise CoreBindingError(
+                f"hyper: the binding of the core, the module {BINDING}, does not import: {error}"
+            ) from error
+        _shared = CoreRules(module)
+    return _shared
