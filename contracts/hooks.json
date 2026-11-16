@@ -11,7 +11,13 @@
         ],
         "sentence": "HY-97.1"
       },
-      "message": "the request hook is not callable (HY-97)"
+      "message": "the request hook is not callable (HY-97)",
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_write_hook_that_is_not_callable_fails_the_creation",
@@ -27,7 +33,13 @@
       "requirements": [
         "HY-99"
       ],
-      "message": "the write hook is not callable (HY-99)"
+      "message": "the write hook is not callable (HY-99)",
+      "raises": {
+        "kind": "invalid_application",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
     },
     {
       "id": "a_disconnect_hook_that_is_not_callable_fails_the_open",

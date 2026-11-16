@@ -5343,6 +5343,12 @@
                   "koSource": "dc01efd2fa13f5b26c1550debd3ec91591c020935edca5c7cf043feded3f0b87"
                 },
                 {
+                  "id": "HY-97.13",
+                  "en": "A value of `around` or of the write hook that is not callable fails the creation of the server (HY-97.7, HY-99.14) with an error of category `value` and kind `invalid_application` (HY-132).",
+                  "ko": "호출할 수 없는 `around` 값이나 write hook 값은 category `value`와 kind `invalid_application`의 오류로 서버 생성을 실패시킨다(HY-97.7, HY-99.14, HY-132).",
+                  "koSource": "c5928d99407b0154bd9fe0d42da8be9be0e70dfcfc2e5c4d73ac97901fe2f75f"
+                },
+                {
                   "id": "HY-97.8",
                   "en": "An error that `around` raises outside `answer`, and a return value that is not a response, are escaped errors (HY-60), also for PHP, where `run` writes the plain 500 of an uncaught exception: the server logs them and answers the plain 500, which the write hook receives (HY-99).",
                   "ko": "`around`가 `answer` 밖에서 던지는 오류와 응답이 아닌 반환값은 escape된 오류다(HY-60); PHP에서도 마찬가지이며, 그때 `run`은 잡히지 않은 예외의 평문 500을 쓴다: 서버는 그것을 로그에 남기고 평문 500으로 응답하며, 그 500은 write hook이 받는다(HY-99).",

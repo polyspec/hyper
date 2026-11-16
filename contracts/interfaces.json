@@ -19690,6 +19690,13 @@
               "compare": "contains",
               "sentence": "HY-106.13",
               "state": "`message` is a text that the message of the error of every entry that takes the hook contains."
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-97.13",
+              "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
           "outcomes": {
