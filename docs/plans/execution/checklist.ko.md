@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 138e16a25fb867644848a310094a5fbc47b1e6f110f2002af8c85d0e79e05750 -->
+<!-- source-sha256: dd95418961f58e3847d8db1173f26f94ccfccb39206bcd4c3cc822331eb4232c -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -498,3 +498,4 @@
 | H35.10-8 | live case가 200.5처럼 정수가 아닌 status에 대한 `Result.page`의 답을 정한다(HY-58). | contracts, packages/rust | `make recipe-check` | [ ] |
 | H35.10-9 | live case가 masked token이 빈 JSON page의 tag를 정한다(HY-53.1). | contracts, packages/rust | `make recipe-check` | [ ] |
 | H35.11 | 세 서버의 form 읽기는 http-form의 case를 따른다. 그 case는 `tests/legacy/fields.json`이 값 없음으로 정한 것을 실패로 정한다: boundary가 없거나 빈 quoted boundary인 multipart body는 `no_boundary` 400이고, 다른 disposition, name 없음, header 줄 없음, 홀로 된 carriage return, parameter 앞의 no-break space, 두 번째 name을 가진 part는 `invalid`이며, 끝나지 않은 quoted string은 `invalid`이고, line feed가 뒤따르는 urlencoded type은 `malformed_content_type`이다(http-form F-6, F-7, F-12, F-16, F-23, RFC 2046 5.1.1절). hyper의 명세가 먼저 그 변경을 정하고, 서버는 http-form release asset의 case를 pin과 integrity로 읽으며, `tests/legacy/fields.json`은 지운다. 재시도 조건: case 파일을 digest가 있는 release asset으로 싣는 http-form release. | docs/spec, contracts, Makefile, packages/php/src, packages/ts/src, packages/python/src, tests/legacy/fields.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-node` | [ ] |
+| H35.13 | 개발, 시험, release 검증의 PHP 기준을 PHP 8.5.10으로 바꾼다. | AGENTS.md, .php-version, composer.json, composer.lock | `make docs-check` | [-] cause: PHP 기준은 PHP 8.4.27로 남는다 |
