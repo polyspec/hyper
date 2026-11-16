@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c6aba5b2f2d2b9b86590778c6df5af359ce5d7870296496636284f0c99801d7f -->
+<!-- source-sha256: a6050c18b4dd8a8f2394883824e2746a75ab4f0172f889b8757e3803cde6e883 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Node와 Python 서버의 `CoreRules`는 규칙마다 member 하나를 갖는 unit 하나이며, member는 unit과 규칙의 이름을 따른다(`csrfMask`, `csrf_mask`). PHP 서버와 같은 모양이다. 전에는 member의 이름공간이 `contracts/interfaces.json`의 unit이 아니었고, Python module은 파일 하나에 class 열넷을 담아 HYR-4를 어겼다(H35.7).
 - Node 서버의 core 규칙은 group `app`의 디렉터리인 `packages/ts/src/app/core-rules.ts`에 있다(HYR-4). `src/core/`는 group이 아니어서 `make recipe-check`가 이 파일을 어느 unit도 갖지 않는 파일로 보고했다(H35.7).
 - `make node-package`는 `packages/ts`의 의존을 root install에서 pack해 묶은 package와 함께 설치한다. 묶은 package의 offline 설치는 어느 registry에도 없는 `@polyspec/hyper-client`를 찾았고, `make test-wasm`이 `ENOTCACHED`로 실패했다(H35.7).
 - `make install-binding`은 Cargo.lock의 binding이 로컬 경로일 때(`BINDING_COMMIT`이 `local`) 아무것도 clone하지 않고, 실행이 `BINDING`으로 주는 cli를 알린다. 그것은 `cargo metadata names no polyspec-binding-core at the commit local of Cargo.lock`으로 실패했으므로 `make hyper-install`이 멈췄다(H35.7).

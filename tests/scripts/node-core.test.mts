@@ -62,36 +62,36 @@ const STORE = { store: true };
 // The exact units: the name of the unit of the server, the member of the binding, the arguments of the call, the
 // arguments that the member must receive and the value that the member returns, which the unit returns as it is.
 const EXACT: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[], unknown][] = [
-  ['Csrf.mask (HY-24.2)', 'csrfMask', (rules) => rules.Csrf.mask(TOKEN, MASK), [TOKEN, MASK], 'masked'],
-  ['Csrf.verify (HY-24.4)', 'csrfVerify', (rules) => rules.Csrf.verify(TOKEN, 'value'), [TOKEN, 'value'], true],
-  ['Csrf.browserOf (HY-24.10)', 'browser', (rules) => rules.Csrf.browserOf('masked'), ['masked'], 'digest'],
-  ['Csrf.browserOf of a request without a session (HY-24.12)', 'browser', (rules) => rules.Csrf.browserOf(''), [''], null],
-  ['Context.hash (HY-125.12)', 'contextHash', (rules) => rules.Context.hash('build', '{}'), ['build', '{}'], 'hash'],
-  ['Context.validHeader (HY-127.2)', 'validContextHeader', (rules) => rules.Context.validHeader(null), [null], true],
-  ['RecordSession.cookieName (HY-45.1)', 'sessionName', (rules) => rules.RecordSession.cookieName(true), [true], '__Host-hy-session'],
-  ['Request.currentPath (HY-11.4)', 'currentPath', (rules) => rules.Request.currentPath('http://a.test/b?c'), ['http://a.test/b?c'], '/b'],
-  ['Reply.cacheControl (HY-52.6)', 'cacheControl', (rules) => rules.Reply.cacheControl('private'), ['private'], 'private'],
-  ['Reply.referrerPolicy (HY-103.2)', 'referrerPolicy', (rules) => rules.Reply.referrerPolicy('origin'), ['origin'], 'origin'],
-  ['Reply.status (HY-69)', 'replyStatus', (rules) => rules.Reply.status(403), [403], 403],
-  ['Result.redirect (HY-46)', 'redirectLocation', (rules) => rules.Result.redirect('/list'), ['/list'], '/list'],
-  ['Result.page (HY-58)', 'pageStatus', (rules) => rules.Result.page(422), [422], 422],
-  ['App.varyHeader (HY-117.1)', 'pageVary', (rules) => rules.App.varyHeader(true), [true], 'Accept, HX-Request, HX-Current-URL, Hyper-Context'],
-  ['the tag of Page.respond (HY-53.1)', 'pageTag', (rules) => rules.Page.tag('{}', 'masked', TOKEN), ['{}', 'masked', TOKEN], 'W/"0"'],
+  ['Csrf.mask (HY-24.2)', 'csrfMask', (rules) => rules.csrfMask(TOKEN, MASK), [TOKEN, MASK], 'masked'],
+  ['Csrf.verify (HY-24.4)', 'csrfVerify', (rules) => rules.csrfVerify(TOKEN, 'value'), [TOKEN, 'value'], true],
+  ['Csrf.browserOf (HY-24.10)', 'browser', (rules) => rules.csrfBrowserOf('masked'), ['masked'], 'digest'],
+  ['Csrf.browserOf of a request without a session (HY-24.12)', 'browser', (rules) => rules.csrfBrowserOf(''), [''], null],
+  ['Context.hash (HY-125.12)', 'contextHash', (rules) => rules.contextHash('build', '{}'), ['build', '{}'], 'hash'],
+  ['Context.validHeader (HY-127.2)', 'validContextHeader', (rules) => rules.contextValidHeader(null), [null], true],
+  ['RecordSession.cookieName (HY-45.1)', 'sessionName', (rules) => rules.sessionCookieName(true), [true], '__Host-hy-session'],
+  ['Request.currentPath (HY-11.4)', 'currentPath', (rules) => rules.requestCurrentPath('http://a.test/b?c'), ['http://a.test/b?c'], '/b'],
+  ['Reply.cacheControl (HY-52.6)', 'cacheControl', (rules) => rules.replyCacheControl('private'), ['private'], 'private'],
+  ['Reply.referrerPolicy (HY-103.2)', 'referrerPolicy', (rules) => rules.replyReferrerPolicy('origin'), ['origin'], 'origin'],
+  ['Reply.status (HY-69)', 'replyStatus', (rules) => rules.replyStatus(403), [403], 403],
+  ['Result.redirect (HY-46)', 'redirectLocation', (rules) => rules.resultRedirect('/list'), ['/list'], '/list'],
+  ['Result.page (HY-58)', 'pageStatus', (rules) => rules.resultPage(422), [422], 422],
+  ['App.varyHeader (HY-117.1)', 'pageVary', (rules) => rules.appVaryHeader(true), [true], 'Accept, HX-Request, HX-Current-URL, Hyper-Context'],
+  ['the tag of Page.respond (HY-53.1)', 'pageTag', (rules) => rules.pageTag('{}', 'masked', TOKEN), ['{}', 'masked', TOKEN], 'W/"0"'],
 ];
 
 test('RepresentationResponse.etag gives representation_tag the content type and the UTF-8 bytes of the body (HY-122.10)', () => {
   const { rules, calls } = rulesOf({ representationTag: '"tag"' });
-  assert.equal(rules.RepresentationResponse.etag('application/json', '{"a":"é"}'), '"tag"');
+  assert.equal(rules.representationEtag('application/json', '{"a":"é"}'), '"tag"');
   assert.deepEqual(calls, [['representationTag', ['application/json', new TextEncoder().encode('{"a":"é"}')]]]);
 });
 
 test('a failure of the binding reaches the caller as the binding raised it (HY-132.1, HY-132.2)', () => {
   const failure = Object.assign(new RangeError('a CSRF token is not 64 lowercase hexadecimal digits'), { kind: 'invalid_csrf_form', status: null });
   const { rules } = rulesOf({ csrfMask: failure, storedToken: failure, openPage: failure });
-  assert.throws(() => rules.Csrf.mask('x', MASK), (error) => error === failure);
+  assert.throws(() => rules.csrfMask('x', MASK), (error) => error === failure);
   // HY-24.14: a session that holds another value in the place of the token fails the request.
-  assert.throws(() => rules.Session.storedToken('conformance-token'), (error) => error === failure);
-  assert.throws(() => rules.Page.open(PAGES, STORE, opening()), (error) => error === failure);
+  assert.throws(() => rules.sessionStoredToken('conformance-token'), (error) => error === failure);
+  assert.throws(() => rules.pageOpen(PAGES, STORE, opening()), (error) => error === failure);
 });
 
 test('a module without a member of the binding fails with the name of the member', () => {
@@ -104,19 +104,19 @@ function plain(status: number, body: string, more: Partial<Plain> = {}): Plain {
   return { status, body: new TextEncoder().encode(body), varyAccept: false, ...more };
 }
 
-function opening(): Parameters<CoreRules['Page']['open']>[2] {
+function opening(): Parameters<CoreRules['pageOpen']>[2] {
   return { route: 'list', params: [], kind: 'html', action: false, path: '/list', basePath: '', mask: MASK, now: 0 };
 }
 
 test('a plain answer of the core is a text response with its Allow and its Vary (HY-58, HY-27.6, HY-117.3)', () => {
   const { rules } = rulesOf({});
-  assert.deepEqual(rules.App.plain(plain(404, 'Not Found')), { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: 'Not Found' });
-  assert.deepEqual(rules.App.plain(plain(405, 'Method Not Allowed', { allow: 'GET, HEAD' })), {
+  assert.deepEqual(rules.appPlain(plain(404, 'Not Found')), { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: 'Not Found' });
+  assert.deepEqual(rules.appPlain(plain(405, 'Method Not Allowed', { allow: 'GET, HEAD' })), {
     status: 405,
     headers: { 'Content-Type': 'text/plain; charset=utf-8', Allow: 'GET, HEAD' },
     body: 'Method Not Allowed',
   });
-  assert.deepEqual(rules.App.plain(plain(406, 'text/html', { varyAccept: true, allow: null })), {
+  assert.deepEqual(rules.appPlain(plain(406, 'text/html', { varyAccept: true, allow: null })), {
     status: 406,
     headers: { 'Content-Type': 'text/plain; charset=utf-8', Vary: 'Accept' },
     body: 'text/html',
@@ -126,23 +126,23 @@ test('a plain answer of the core is a text response with its Allow and its Vary 
 test('App.storeKept gives answer_keep_request the pages, the store and the request, and the 204 has no Content-Type (HY-40.1)', () => {
   const request = { region: 'rows', path: 'open', value: 'true', formCsrf: 'masked' };
   const { rules, calls } = rulesOf({ answerKeepRequest: plain(204, '') });
-  assert.deepEqual(rules.App.storeKept(PAGES, STORE, request), { status: 204, headers: {}, body: '' });
+  assert.deepEqual(rules.appStoreKept(PAGES, STORE, request), { status: 204, headers: {}, body: '' });
   assert.deepEqual(calls, [['answerKeepRequest', [PAGES, STORE, request]]]);
   const refused = rulesOf({ answerKeepRequest: plain(403, 'Forbidden') });
-  assert.deepEqual(refused.rules.App.storeKept(PAGES, STORE, request), { status: 403, headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: 'Forbidden' });
+  assert.deepEqual(refused.rules.appStoreKept(PAGES, STORE, request), { status: 403, headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: 'Forbidden' });
 });
 
 test('App.route gives route_request the pages, the choice and the parts of the request (HY-116, HY-59.12, HY-120.2)', () => {
   const front = { method: 'POST', path: '/add', accept: ['text/html'], hxRequest: false, malformedContentType: true };
   const route = { route: 'plain', answer: plain(400, 'Bad Request') };
   const { rules, calls } = rulesOf({ routeRequest: route });
-  assert.equal(rules.App.route(PAGES, false, front), route);
+  assert.equal(rules.appRoute(PAGES, false, front), route);
   assert.deepEqual(calls, [['routeRequest', [PAGES, false, front]]]);
 });
 
 test('App.frameHeaders gives the headers of frame_headers as a record (HY-45.5, HY-65.1)', () => {
   const { rules, calls } = rulesOf({ frameHeaders: [['Content-Security-Policy', "frame-ancestors 'self'"], ['Cache-Control', 'no-store']] });
-  assert.deepEqual(rules.App.frameHeaders(403, "'self'"), { 'Content-Security-Policy': "frame-ancestors 'self'", 'Cache-Control': 'no-store' });
+  assert.deepEqual(rules.appFrameHeaders(403, "'self'"), { 'Content-Security-Policy': "frame-ancestors 'self'", 'Cache-Control': 'no-store' });
   assert.deepEqual(calls, [['frameHeaders', [403, "'self'"]]]);
 });
 
@@ -150,7 +150,7 @@ test('the headers of Page.respond are those of compute_page_headers in their ord
   const response = { status: 200, json: true, body: '{}', context: false, maskedToken: 'masked', token: TOKEN, method: 'GET', ifNoneMatch: 'W/"0"', referrerPolicy: 'origin' };
   const computed = { status: 304, headers: [['Cache-Control', 'no-store'], ['Vary', 'Accept'], ['Referrer-Policy', 'origin'], ['ETag', 'W/"0"']], body: false };
   const { rules, calls } = rulesOf({ computePageHeaders: computed });
-  const headers = rules.Page.headers(response);
+  const headers = rules.pageHeaders(response);
   assert.deepEqual(headers, { status: 304, headers: { 'Cache-Control': 'no-store', Vary: 'Accept', 'Referrer-Policy': 'origin', ETag: 'W/"0"' }, body: false });
   assert.deepEqual(Object.keys(headers.headers), ['Cache-Control', 'Vary', 'Referrer-Policy', 'ETag']);
   assert.deepEqual(calls, [['computePageHeaders', [response]]]);
@@ -159,8 +159,8 @@ test('the headers of Page.respond are those of compute_page_headers in their ord
 test('App.checkShellPath and App.shellText call the two rules of the static shell, the path first (HY-62)', () => {
   const bytes = new TextEncoder().encode('<html>');
   const { rules, calls } = rulesOf({ shellText: '<html>' });
-  rules.App.checkShellPath('/srv/csr/index.html');
-  assert.equal(rules.App.shellText('/srv/csr/index.html', bytes), '<html>');
+  rules.appCheckShellPath('/srv/csr/index.html');
+  assert.equal(rules.appShellText('/srv/csr/index.html', bytes), '<html>');
   assert.deepEqual(calls, [['checkShellPath', ['/srv/csr/index.html']], ['shellText', ['/srv/csr/index.html', bytes]]]);
 });
 
@@ -181,23 +181,23 @@ test('Page.open and Page.request give the core the pages, the store and the inpu
   const opened = { opened: 'page', input, flash: new Map(), token: TOKEN };
   const step = { step: 'call', call: { call: 'shared' } };
   const { rules, calls } = rulesOf({ openPage: opened, 'PageRequest.next': step });
-  assert.equal(rules.Page.open(PAGES, STORE, opening()), opened);
-  assert.equal(rules.Page.request(PAGES, input).next({ input: 'start' }), step);
+  assert.equal(rules.pageOpen(PAGES, STORE, opening()), opened);
+  assert.equal(rules.pageRequest(PAGES, input).next({ input: 'start' }), step);
   assert.deepEqual(calls, [['openPage', [PAGES, STORE, opening()]], ['new PageRequest', [PAGES, input]], ['PageRequest.next', [{ input: 'start' }]]]);
 });
 
 // The other partial units, which return the result of their member as it is.
 const PARTIAL: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[], unknown][] = [
-  ['RecordSession.cookieHeader (HY-45.8)', 'sessionCookie', (rules) => rules.RecordSession.cookieHeader('id', true), ['id', true], '__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax'],
-  ['Reply.keepsOutOfSharedCaches (HY-52.6)', 'keepsOutOfSharedCaches', (rules) => rules.Reply.keepsOutOfSharedCaches('private'), ['private'], true],
-  ['Result.isApplicationPath (HY-46)', 'isApplicationPath', (rules) => rules.Result.isApplicationPath('//a'), ['//a'], false],
-  ['App.keptValue (HY-40.1)', 'keptValue', (rules) => rules.App.keptValue(PAGES, 'rows', 'open', 'true'), [PAGES, 'rows', 'open', 'true'], true],
-  ['Session.storedToken (HY-24.14)', 'storedToken', (rules) => rules.Session.storedToken(TOKEN), [TOKEN], TOKEN],
-  ['Kept.cookieName (HYC-13.6)', 'keepName', (rules) => rules.Kept.cookieName(false), [false], 'hy-keep'],
-  ['Build.read (HY-125.18)', 'readBuild', (rules) => rules.Build.read(new Uint8Array([123])), [new Uint8Array([123])], '1'.repeat(64)],
-  ['Build.checkId (HY-125.19)', 'checkBuildId', (rules) => rules.Build.checkId('1'.repeat(64)), ['1'.repeat(64)], undefined],
-  ['Build.id (HY-125.15)', 'buildId', (rules) => rules.Build.id([{ path: 'program/reads.json', bytes: new Uint8Array() }]), [[{ path: 'program/reads.json', bytes: new Uint8Array() }]], '2'.repeat(64)],
-  ['Build.fileText (HY-125.18)', 'buildFileText', (rules) => rules.Build.fileText('1'.repeat(64)), ['1'.repeat(64)], `{"build":"${'1'.repeat(64)}"}`],
+  ['RecordSession.cookieHeader (HY-45.8)', 'sessionCookie', (rules) => rules.sessionCookieHeader('id', true), ['id', true], '__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax'],
+  ['Reply.keepsOutOfSharedCaches (HY-52.6)', 'keepsOutOfSharedCaches', (rules) => rules.replyKeepsOutOfSharedCaches('private'), ['private'], true],
+  ['Result.isApplicationPath (HY-46)', 'isApplicationPath', (rules) => rules.resultIsApplicationPath('//a'), ['//a'], false],
+  ['App.keptValue (HY-40.1)', 'keptValue', (rules) => rules.appKeptValue(PAGES, 'rows', 'open', 'true'), [PAGES, 'rows', 'open', 'true'], true],
+  ['Session.storedToken (HY-24.14)', 'storedToken', (rules) => rules.sessionStoredToken(TOKEN), [TOKEN], TOKEN],
+  ['Kept.cookieName (HYC-13.6)', 'keepName', (rules) => rules.keptCookieName(false), [false], 'hy-keep'],
+  ['Build.read (HY-125.18)', 'readBuild', (rules) => rules.buildRead(new Uint8Array([123])), [new Uint8Array([123])], '1'.repeat(64)],
+  ['Build.checkId (HY-125.19)', 'checkBuildId', (rules) => rules.buildCheckId('1'.repeat(64)), ['1'.repeat(64)], undefined],
+  ['Build.id (HY-125.15)', 'buildId', (rules) => rules.buildId([{ path: 'program/reads.json', bytes: new Uint8Array() }]), [[{ path: 'program/reads.json', bytes: new Uint8Array() }]], '2'.repeat(64)],
+  ['Build.fileText (HY-125.18)', 'buildFileText', (rules) => rules.buildFileText('1'.repeat(64)), ['1'.repeat(64)], `{"build":"${'1'.repeat(64)}"}`],
   ['Templates.problems (HY-48.3)', 'templateProblems', (rules) => rules.Templates.problems(new Uint8Array(), new Map()), [new Uint8Array(), new Map()], ['a problem']],
   ['Templates.routeReads (HY-73)', 'routeReads', (rules) => rules.Templates.routeReads(new Uint8Array(), new Map()), [new Uint8Array(), new Map()], new Map([['list', true]])],
   ['Templates.reads (HY-73)', 'templateReads', (rules) => rules.Templates.reads(new Map(), 'layout.tpl'), [new Map(), 'layout.tpl'], true],
