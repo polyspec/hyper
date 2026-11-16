@@ -428,8 +428,9 @@ export function coreRules(module: object): CoreRules {
 }
 
 // The generated entry of the Node binding, which loads the addon `hyper.<platform>.node` of the package (binding T-2);
-// src/app and dist/app are both two directories below the package.
-const ENTRY = '../../native/generated/index.cjs';
+// src/app and dist/app are both two directories below the package, whose files hold native/generated/index.cjs.
+/** @internal */
+export const ENTRY = '../../native/generated/index.cjs';
 
 // The error of an addon that does not load, by its name `CoreBindingError`.
 class CoreBindingError extends Error {
@@ -439,25 +440,30 @@ class CoreBindingError extends Error {
   }
 }
 
-let shared: CoreRules | null = null;
-
-// Returns the one CoreRules of the server, built on first use from the native addon of the package (HY-132.2). An
-// addon that does not load fails with CoreBindingError at that use and at every later use; no rule of the server
-// answers in its place.
+// Returns the function that gives one CoreRules, built on its first successful call from the module that `load`
+// returns (HY-132.2). A load that throws fails with CoreBindingError, which names the addon, at that call and at every
+// later call; no rule of the server answers in its place.
 /** @internal */
-export function rules(): CoreRules {
-  if (shared !== null) return shared;
-  let module: unknown;
-  try {
-    module = createRequire(import.meta.url)(ENTRY);
-  } catch (error) {
-    const platform = `${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}`;
-    throw new CoreBindingError(
-      `hyper: the native addon hyper.${platform}.node of the Node package does not load (HY-132.2): ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
-  if (module === null || typeof module !== 'object') throw new CoreBindingError(`hyper: the native addon of the Node package gave no module (HY-132.2)`, { cause: module });
-  shared = coreRules(module);
-  return shared;
+export function sharedRules(load: () => unknown): () => CoreRules {
+  let shared: CoreRules | null = null;
+  return () => {
+    if (shared !== null) return shared;
+    let module: unknown;
+    try {
+      module = load();
+    } catch (error) {
+      const platform = `${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}`;
+      throw new CoreBindingError(
+        `hyper: the native addon hyper.${platform}.node of the Node package does not load (HY-132.2): ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
+      );
+    }
+    if (module === null || typeof module !== 'object') throw new CoreBindingError('hyper: the native addon of the Node package gave no module (HY-132.2)', { cause: module });
+    shared = coreRules(module);
+    return shared;
+  };
 }
+
+// Returns the one CoreRules of the server, from the native addon of the package.
+/** @internal */
+export const rules: () => CoreRules = sharedRules(() => createRequire(import.meta.url)(ENTRY));

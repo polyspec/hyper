@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ea8739c584d0a2c596e7d3162e918dcc68df3084ef4d56514b4a82e4d9705318 -->
+<!-- source-sha256: e70d03890d6fd2592bef913dbbb786a16863e2ec4ec0118948899da761280993 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/ts/src/app/core-rules.ts`의 `sharedRules`는 바인딩 모듈의 로더를 받습니다. 그래서 `tests/scripts/node-core.test.mts`는 예외를 던지는 로더로 `rules()`의 모든 호출이 `hyper.<platform>.node`를 이름에 담은 `CoreBindingError`로 실패함을, 대역 모듈로 모듈을 한 번 읽고 인스턴스 하나를 줌을 검사합니다. `tests/scripts/node-addon.test.mts`는 진입점 `../../native/generated/index.cjs`가 `src/app`와 `dist/app`에서 해석되고 패킹된 패키지의 파일임을 검사합니다 (H35.9-1).
 - Node 서버는 코어의 규칙을 공유된 `CoreRules` 하나로 호출합니다. `packages/ts/src/app/core-rules.ts`의 `rules()`가 처음 쓰일 때 패키지의 네이티브 애드온으로 이를 만들고, 애드온을 읽지 못하면 애드온 이름을 담은 `CoreBindingError`로 실패합니다 (HY-132.2). `Csrf.mask`, `Csrf.verify`, `Csrf.browserOf`, `Context.hash`, `Context.validHeader`, `RecordSession.cookieName`, `RecordSession.cookieHeader`, `RepresentationResponse.etag`, `Reply.cacheControl`, `Reply.referrerPolicy`, `Reply.status`, `Result.redirect`, `App`의 `Vary`와 프레임 헤더, `Page`의 보관 값 쿠키 이름이 각자의 멤버를 호출하고, 자체 코드는 삭제되었습니다. 세션 쿠키는 `path`와 `secure` 대신 코어의 속성 이름 `Path`와 `Secure`로 기록됩니다 (H35.9-1).
 - `make node-addon`은 Node 바인딩 크레이트의 애드온을 빌드해, 체크아웃에서 생성된 진입점 `index.cjs`가 읽는 파일 `packages/ts/native/generated/hyper.<platform>.node`에 둡니다. `make hyper-install`은 `make bindings` 다음에 이를 실행하고, `make hyper-test-node`와 `make node-package`는 이에 의존합니다. 어떤 타깃도 애드온을 그 자리에 두지 않아, 바인딩을 읽는 Node 테스트가 `Cannot find module './hyper.darwin-arm64.node'`로 실패했습니다 (H35.9-1).
 - `contracts/interfaces.json`은 세 서버의 unit `core-rules`를 member 26개와 그 시험과 함께 적고, `wsgi-body`의 member를 H34.1이 남긴 대로 적는다. `close()`가 쓰기를 보고하고 `_finish`는 없다. `core-rules.ts`의 Node 선언은 `@internal`을 단다(H35.7).
