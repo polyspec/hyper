@@ -165,7 +165,7 @@ final class CaseReader
 
     /**
      * Compares an outcome of the section (HYR-11): `raises` takes the error that the step caught, or null, and expects
-     * the value true by default; `exact` compares the observed value with the expected one that the step gives.
+     * the error of the statement that the outcome cites (`CaseRules::outcomeError`); `exact` compares the observed value with the expected one that the step gives.
      */
     public function outcome(string $name, mixed $observed, mixed $expected = true): void
     {
@@ -179,7 +179,11 @@ final class CaseReader
             return;
         }
         $this->checks++;
-        if (!self::matches(Json::string($outcome['compare'] ?? null), $expected, $observed, false)) {
+        $compare = Json::string($outcome['compare'] ?? null);
+        $holds = $compare === 'raises'
+            ? CaseRules::outcomeError($outcome['sentence'] ?? null, $observed)
+            : self::matches($compare, $expected, $observed, false);
+        if (!$holds) {
             $this->differs ??= $name;
         }
     }

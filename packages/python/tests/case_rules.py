@@ -155,6 +155,19 @@ def open_error(observed: BaseException | None) -> bool:
     return raises["category"] == "value" and raises["kind"] == "invalid_application"
 
 
+def outcome_error(sentence: str | None, observed: BaseException | None) -> bool:
+    """HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites.
+    The texts of a request fail with the kind `invalid_text` (HY-42.7); the creation of a server fails with an error of
+    hyper whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; every other `raises`
+    outcome is an open failure and expects the open error (HY-106.21)."""
+    if sentence not in ("HY-42.7", "HY-97.7"):
+        return open_error(observed)
+    if observed is None:
+        return False
+    raises = raises_of(observed)
+    return sentence == "HY-97.7" or (raises["category"] == "value" and raises["kind"] == "invalid_text")
+
+
 def stated_message(name: str, expected: Any, observed: Any) -> Any:
     """The observed failure of a field `raises` without its message when the case states none: a case compares only a
     message that a rule states (HY-132.4). Any other field as observed."""

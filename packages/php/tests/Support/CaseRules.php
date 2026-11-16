@@ -305,6 +305,25 @@ final class CaseRules
         return $raises['category'] === 'value' && $raises['kind'] === 'invalid_application';
     }
 
+    /**
+     * HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites.
+     * The texts of a request fail with the kind `invalid_text` (HY-42.7); the creation of a server fails with an error
+     * of hyper whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; every other
+     * `raises` outcome is an open failure and expects the open error (HY-106.21).
+     */
+    public static function outcomeError(mixed $sentence, mixed $observed): bool
+    {
+        if ($sentence !== 'HY-42.7' && $sentence !== 'HY-97.7') {
+            return self::openError($observed);
+        }
+        if (!$observed instanceof \Throwable) {
+            return false;
+        }
+        $raises = self::raisesOf($observed);
+
+        return $sentence === 'HY-97.7' || ($raises['category'] === 'value' && $raises['kind'] === 'invalid_text');
+    }
+
     /** @return list<string> */
     public static function needles(mixed $expected): array
     {

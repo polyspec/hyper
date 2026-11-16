@@ -3,7 +3,7 @@
 // the cases of its section with the inputs that it reads and the comparisons that it makes. The steps of the Node server
 // and the browser and build runners read their cases through this reader; the reader has no test of its own.
 import { readFileSync } from 'node:fs';
-import { type Compare, caseFileUrl, caseFiles, entriesOf, field, folded, kind, lookup, member, openError, parsed, statedMessage, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
+import { type Compare, caseFileUrl, caseFiles, entriesOf, field, folded, kind, lookup, member, openError, outcomeError, parsed, statedMessage, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
 
 // Returns an expected value that is a list of strings, and fails for any other value.
 function stringsOf(expected: unknown): string[] {
@@ -99,15 +99,15 @@ export class CaseReader {
     if (!this.matches(comparison, folded(name, expected), folded(name, statedMessage(name, expected, observed)))) this.differs.push(name);
   }
 
-  // Compares an outcome of the section. A `raises` outcome holds when the step raised the open error; any other outcome
-  // is given as the pair of values that must be equal.
+  // Compares an outcome of the section. A `raises` outcome holds when the step raised the error of the statement that the
+  // outcome cites (`outcomeError`); any other outcome is given as the pair of values that must be equal.
   outcome(name: string, observed: unknown): void {
     const declared = this.section_.outcomes?.[name];
     if (declared === undefined) throw new Error(`${this.sectionName} declares no outcome ${name}`);
     if (!visible(declared, this.runner)) return;
     this.compared.add(name);
     if (declared.compare === 'raises') {
-      if (!this.matches('raises', true, observed)) this.differs.push(name);
+      if (!outcomeError(declared.sentence, observed)) this.differs.push(name);
       return;
     }
     if (!Array.isArray(observed) || observed.length !== 2) throw new Error(`the outcome ${name} is not a pair of values`);

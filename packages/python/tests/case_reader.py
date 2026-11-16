@@ -87,13 +87,14 @@ class CaseReader:
             self._differs.append(name)
 
     def outcome(self, name: str, observed: Any) -> None:
-        """Compares an outcome: `raises` takes the error that the step caught, or None; any other takes the pair."""
+        """Compares an outcome: `raises` takes the error that the step caught, or None, and expects the error of the
+        statement that the outcome cites (`outcome_error`); any other takes the pair."""
         node = self._spec.get("outcomes", {})[name]
         if not rules.visible(node):
             return
         self._compared.add(name)
         if node["compare"] == "raises":
-            ok = CaseReader._matches("raises", True, observed)
+            ok = rules.outcome_error(node.get("sentence"), observed)
         else:
             ok = CaseReader._matches(node["compare"], observed[0], observed[1])
         if not ok:
