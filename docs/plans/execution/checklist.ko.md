@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: a9d045fd3a01ab0a086f9141f131d4a602df6134b12ebd32bfc19ea1ce00fcfa -->
+<!-- source-sha256: 3b7d37c5ebafe4854d63cb1a2d3211995f79803e9ed3cf0b6b45f852c2c0b119 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -498,6 +498,10 @@
 | H35.10-8 | live case가 200.5처럼 정수가 아닌 status에 대한 `Result.page`의 답을 정한다(HY-58). | contracts, packages/rust | `make recipe-check` | [ ] |
 | H35.10-9 | live case가 masked token이 빈 JSON page의 tag를 정한다(HY-53.1). | contracts, packages/rust | `make recipe-check` | [ ] |
 | H35.11 | 세 서버의 form 읽기는 http-form의 case를 따른다. 그 case는 `tests/legacy/fields.json`이 값 없음으로 정한 것을 실패로 정한다: boundary가 없거나 빈 quoted boundary인 multipart body는 `no_boundary` 400이고, 다른 disposition, name 없음, header 줄 없음, 홀로 된 carriage return, parameter 앞의 no-break space, 두 번째 name을 가진 part는 `invalid`이며, 끝나지 않은 quoted string은 `invalid`이고, line feed가 뒤따르는 urlencoded type은 `malformed_content_type`이다(http-form F-6, F-7, F-12, F-16, F-23, RFC 2046 5.1.1절). hyper의 명세가 먼저 그 변경을 정하고, 서버는 http-form release asset의 case를 pin과 integrity로 읽으며, `tests/legacy/fields.json`은 지운다. 재시도 조건: case 파일을 digest가 있는 release asset으로 싣는 http-form release. | docs/spec, contracts, Makefile, packages/php/src, packages/ts/src, packages/python/src, tests/legacy/fields.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-node` | [ ] |
+| H35.12 | 세 서버는 `tests/legacy/app-before-s3b.json`이 정하지 않은 세 입력에 대해 `contracts/app.json` live case의 답을 낸다. | packages/php/src, packages/ts/src, packages/python/src, CHANGELOG.md와 한국어 짝 | `make hyper-test-node` | [ ] |
+| H35.12-1 | media type 검사가 거절하는 POST는 session을 열지 않는다. HY-59.12의 검사가 session, 그 flash, 그 token보다 먼저 돈다(HY-120.2, HY-120.3, `a_post_whose_media_type_is_no_form_type_opens_no_session`). | packages/php/src/App/App.php, packages/ts/src/app/app.ts, packages/python/src/polyspec/hyper/app/app.py | `make hyper-test-node` | [ ] |
+| H35.12-2 | 빈 `Content-Type`은 media type이 아닌 header이므로 400 `Bad Request`로 답하고, 없는 header는 빈 type으로 남는다(HY-59.12, HY-59.13, `a_keep_request_with_an_empty_content_type_is_a_bad_request`). | packages/php/src/Http/Request.php, packages/ts/src/http/request.ts, packages/python/src/polyspec/hyper/http/request.py | `make hyper-test-node` | [ ] |
+| H35.12-3 | reply의 cookie는 `<name>=<value>; Max-Age=<n>; Path=/; Secure; HttpOnly; SameSite=Lax` 순서로 쓰며, `Max-Age`와 `Secure`는 해당할 때만 쓴다(HY-52.13, `contracts/app.json`의 cookie case 셋). | packages/php/src/Http/Reply.php, packages/ts/src/http/reply.ts, packages/python/src/polyspec/hyper/http/reply.py | `make hyper-test-node` | [ ] |
 | H35.13 | 개발, 시험, release 검증의 PHP 기준을 PHP 8.5.10으로 바꾼다. | AGENTS.md, .php-version, composer.json, composer.lock | `make docs-check` | [-] cause: PHP 기준은 PHP 8.4.27로 남는다 |
 | H35.14 | 저장소의 Rust 도구와 binding 도구를 선언된 입력으로 두고 kit를 거쳐 실행한다. | Makefile, package.json, package-lock.json, Cargo.toml, Cargo.lock, scripts, tests/scripts, config/owner-checks.json, docs/operations, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.14-1 | Makefile의 모든 cargo 명령은 kit link script의 `cargo <dir> <args>`, 곧 `$(CARGO)`를 거쳐 실행한다. 그래서 개발 checkout의 polyspec crate는 `.cargo` 파일 없이 `.links`의 provider로 patch된다. `tests/scripts/cargo-through-kit.test.mts`는 cargo를 직접 시작하는 recipe 줄을 실패시킨다. | Makefile, tests/scripts, config/owner-checks.json | `make hyper-test-scripts` | [ ] |
