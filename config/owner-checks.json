@@ -314,6 +314,17 @@
     },
     {
       "paths": [
+        "scripts/binding-commit.mts",
+        "tests/scripts/binding-commit.test.mts"
+      ],
+      "targets": [
+        "typecheck",
+        "hyper-test-scripts",
+        "bindings-check"
+      ]
+    },
+    {
+      "paths": [
         "tests/scripts/build-fixture.mts"
       ],
       "tests": [

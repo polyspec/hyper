@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 55324ca0e62d21be1e3a591ec45357e30a130f86568332e03760f8da34d2705d -->
+<!-- source-sha256: 5f4fe9dfd477bfe79276fda9054ebf4294927fb2568e3d802a07aed6f4680a62 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Makefile과 `scripts/install-binding.mts`는 `polyspec-hyper`가 `Cargo.lock`에서 지정하는 `polyspec-binding-core`의 binding cli를 쓰며, 그 commit은 `scripts/binding-commit.mts`가 준다(G-6, CK-20). 둘은 lock의 첫 번째 `polyspec-binding-core`를 골랐으므로, 다른 source에 있는 다른 library의 `polyspec-binding-core`도 가진 lock은 그 library의 binding cli를, 또는 두 commit을 경로 하나로 주었다. `tests/scripts/binding-commit.test.mts`는 4개 통과를 주고, 이 변경 전의 tree에서는 실패한다.
 - WSGI callable의 body iterable은 자기 `close()`에서 write hook `written`을, 그리고 쓰기가 실패했으면 이어서 disconnect hook을 호출하므로, `close()`가 돌아오면 요청의 두 hook이 모두 실행된 것이다(HY-100.34). 두 번째 `close()`는 어떤 hook도 호출하지 않으며(HY-100.35), plain 500의 `start_response`도 예외를 던지면 callable은 오류가 전파되기 전에 `written`을 호출한다(HY-100.36). 이전에는 iterable이 WSGI 서버가 iteration의 끝을 가져갈 때 `close()`보다 먼저 `written`을 호출했고, WSGI 요청의 두 hook이 모두 실행된 뒤의 시점을 정하는 규칙이 없었다. 검증: `make hyper-test-python`이 `test_close_runs_the_write_hook_of_a_write_that_ended`를 실행하며, 이 test는 변경 전에는 `written`이 iteration의 끝보다 먼저 와서 실패했고 변경 후에는 통과한다(H34.1).
 - recipe는 PHP signature의 형식을 적고(HYR-8), `make recipe-check`의 PHP reader는 그것을 PHP 8.4와 PHP 8.5에서 같게 쓴다: property의 set visibility는 `public readonly` property가 스스로 가진 `protected(set)`과 다를 때만 쓰고, member를 선언한 class와 그 parent class는 `self`와 `parent`로 쓴다. 이전에는 reader가 `Reflection::getModifierNames`와 `ReflectionType`의 문자열로 signature를 써서, PHP 8.4에서 통과하는 tree에서 PHP 8.5의 check가 `MEMBER_SIGNATURE` finding 76개로 실패했다(H28.11-11).
 - action은 다른 origin의 `http`나 `https` location으로의 outside redirect를 결과로 돌려줄 수 있고, loader나 action은 그것으로 요청을 멈출 수 있다: PHP `Result::outside($location)`, Node와 Python `Result.outside(location)`. server는 그것에 303과 `Location`으로, `HX-Request: true`인 요청과 document request에는 200과 `HX-Redirect`로 응답하며, 두 응답 모두 `Cache-Control: no-store`와 HY-117.1의 `Vary`를 가지고 base path를 붙이지 않으며, flash value와 changed topic을 저장하지 않는다. outside redirect의 `flash`와 `changed`는 실패한다. `Result::origin`과 `Result.origin`은 outside location의 origin을, 다른 text에는 null을 돌려준다. 브라우저 코드는 region 응답의 location을 htmx가 불러오게 하고(HYC-14.6), location의 렌더, document request, server-side rendering의 history 복원에서는 페이지의 location을 바꾸어(HYC-8.4, HYC-7.10, HYC-4.8), outside 페이지에서 뒤로 가기가 브라우저를 내보낸 URL에 닿지 않게 한다. `@polyspec/hyper-client`의 `DocumentAdapter`는 member `replace(url)`을 가지며, `document`로 넘기는 adapter가 그것을 구현한다. board 예제는 loader가 outside redirect로 멈추는 route `/away`를 가진다(HY-133, H32.1).

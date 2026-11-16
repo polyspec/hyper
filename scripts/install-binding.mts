@@ -11,9 +11,10 @@
 //   node scripts/install-binding.mts --cargo <cargo> --npm <npm> --output <var/binding>
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, renameSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { bindingCommit } from './binding-commit.mts';
 import { jsonArray, jsonObject, jsonString } from './json.mts';
 
 const { values } = parseArgs({ options: { cargo: { type: 'string' }, npm: { type: 'string' }, output: { type: 'string' } } });
@@ -31,12 +32,12 @@ const metadata: unknown = JSON.parse(
   }),
 );
 const packages = jsonArray(jsonObject(metadata, 'cargo metadata').packages, 'cargo metadata packages').map((entry, i) => jsonObject(entry, `cargo metadata package ${i}`));
-const core = packages.find((entry) => entry.name === 'polyspec-binding-core');
-if (core === undefined) throw new Error('Cargo.lock has no Git dependency polyspec-binding-core');
-const source = jsonString(core.source, 'the source of polyspec-binding-core');
+// The polyspec-binding-core that polyspec-hyper depends on, by its commit (scripts/binding-commit.mts): the lock can hold
+// another one that a library of the core requires.
+const commit = bindingCommit(readFileSync(join(root, 'Cargo.lock'), 'utf8'));
+const core = packages.find((entry) => entry.name === 'polyspec-binding-core' && typeof entry.source === 'string' && entry.source.endsWith(`#${commit}`));
+if (core === undefined) throw new Error(`cargo metadata names no polyspec-binding-core at the commit ${commit} of Cargo.lock`);
 const manifest = jsonString(core.manifest_path, 'the manifest of polyspec-binding-core');
-const commit = /#([0-9a-f]{40})$/u.exec(source)?.[1];
-if (commit === undefined) throw new Error(`polyspec-binding-core has no pinned commit: ${source}`);
 
 // The crate is packages/core/rust of the binding repository; the tool is packages/ts of the same checkout.
 const checkout = resolve(dirname(manifest), '../../..');
