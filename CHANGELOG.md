@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The Node and PHP servers read the current path of a request with `rules.current_path` of the core (HY-11.5), so `mailto:a/b`, `1a://x/p` and `://x` give no current path and `http:///x` and `http://h:99999/x` give `/x`; the Node server read a path that does not start with a slash and the PHP server read the path of `parse_url`, which fails for an empty authority and a port above 65535 (H35.10-7).
 - A path, a query or a header name or value with a character above U+00FF fails the creation of a Node or Python request with the class of the binding of the category `value`, the kind `invalid_text` and the message `<subject> holds a character above U+00FF` of the binding, with no prefix `hyper:` (HY-42.7); the Node server threw an `Error` and the Python server a `ValueError` without a kind (H35.27-3).
 - The three servers read and write every JSON text of the protocol with `rules.json_read` and `rules.json_write` of the core, so a malformed text, a number outside the data model and the bytes of a number or of U+2028 follow the core (HY-17, HY-54); the PHP server reads a decoded value as a list when it is an array with sequence keys and as a map when it is a `stdClass` or an array with other keys, the form of the binding (GN-13v), and the servers' own JSON readers and writers are removed (H35.20-5-3).
 - The cookie of the kept values is read with `rules.kept_cookie` of the core, which drops only a value outside the data model (HY-38.2), and the server copies of that reader are removed (H35.20-5-5).

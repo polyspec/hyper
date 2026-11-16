@@ -339,15 +339,10 @@ export class Request {
     return this.wantsJson() && this.header('HX-Request') === 'true';
   }
 
-  // Returns the path of the page that sent the request, or null (HY-11).
+  // Returns the path of the page that sent the request, or null: rules.current_path of the core (HY-11.5).
   currentPath(): string | null {
     ArgumentCountError.between(arguments.length, 0, 0);
-    const header = this.header('HX-Current-URL');
-    if (header === null || !Request.validUtf8(header)) return null;
-    const url = Buffer.from(header, 'latin1').toString('utf8');
-    const rest = url.replace(/^([A-Za-z][A-Za-z0-9+.-]*:)?\/\/[^/?#]*/, '');
-    const path = rest.split(/[?#]/, 1)[0] ?? '';
-    return path === '' ? null : path;
+    return rules().requestCurrentPath(this.header('HX-Current-URL'));
   }
 
   // Returns the request path; after routing, the path without the base path.

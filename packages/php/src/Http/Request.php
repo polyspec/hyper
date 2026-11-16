@@ -355,19 +355,13 @@ final class Request
     }
 
     /**
-     * Returns the path of the page that sent the request, or null without the header, without a path and for a header
-     * whose bytes are not valid UTF-8 (HY-11.5).
+     * Returns the path of the page that sent the request, or null: rules.current_path of the core of the value of
+     * HX-Current-URL (HY-11.5).
      */
     public function currentPath(): ?string
     {
         ArgumentCount::most(\func_num_args(), 0);
-        $url = $this->header('HX-Current-URL');
-        if ($url === null || !self::validUtf8($url)) {
-            return null;
-        }
-        $path = parse_url($url, PHP_URL_PATH);
-
-        return is_string($path) ? $path : null;
+        return CoreRules::shared()->requestCurrentPath($this->header('HX-Current-URL'));
     }
 
     /** Returns the request path; after routing, the path without the base path. */
