@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 907f2e1d25f2f65efe14017e6f8ee89dac942212a378f1b6ada23e35f01c5050 -->
+<!-- source-sha256: 58b2f96afd9cbc6a3bbc07572b20f4e4914396a03987e871f93c9b3ec8b06ea7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Node package가 `@polyspec/php-serialization` 0.0.13을 요구하고, 루트와 `tests/package-install`이 그것과 platform package 셋의 release asset을 적으며, lock이 그것을 pin한다. 생성된 Node binding이 그 package를 요구하므로, Node addon이 `Cannot find module '@polyspec/php-serialization'`로 load되지 않았다. `@polyspec/php-serialize` 0.0.6은 Node와 Python 서버의 session record를 위해 남는다(H35.8-1).
 - build가 각 템플릿 AST 파일을 template 0.0.28의 `encodeTemplate`으로 쓴다. 전에는 field `type`이 없는 native parse 기록의 `JSON.stringify`를 써서, Node 서버가 `AstDecodeError: invalid template AST at the root: must have required property 'type'`로 실패했다. `make node-server`는 서버가 load하는 Node addon을 build한다. 전에는 build하지 않아서, 서버가 `Cannot find module './hyper.darwin-arm64.node'`로 실패했다(H35.26).
 - `make hyper-install-python`이 잠긴 의존성을 `uv sync --no-install-project`로 설치하고, 이제 `mise.toml`과 `mise.lock`이 pin하는 maturin 1.16.0으로, maturin이 실행하는 cargo에 `.links`의 patch를 넘기는 kit의 `link.mjs maturin`을 통해 package와 그 native module을 build한다. uv가 그 wheel을 venv에 설치한다. uv sync는 build backend로 package를 build했고, 그 plain cargo는 patch를 적용하지 않아 binding-core crate 둘을 해석했기 때문에 build가 E0308과 E0599로 실패했다. 그것을 실행하는 CI group은 Rust를 설치한다. maturin에는 아직 kit install-tools의 selector가 없다(H35.24).
 - `make hyper-ext`가 `.links`의 patch를 적용하는 `$(CARGO)`로, 이제 `config/toolchain.json`이 pin하는 LLVM 21(`llvm.version`)의 libclang과 clang으로 packages/php/native의 PHP extension `polyspec_hyper`를 build하고, checkout의 PHP에 load되는지 확인한 뒤 build/hyper-ext에 publish한다. 개발용으로 그것을 build하는 target이 없어서 `make hyper-test-php`는 `CoreRules::shared()`에 닿는 모든 시험에서 "the PHP extension polyspec_hyper is not loaded"로 실패했다. 이제 `hyper-test-php`가 그것을 build하여 두 PHPUnit run에 넘기고, `hyper-install`이 `bindings` 뒤에 그것을 build하며, PHP session worker가 그것을 load하고, session 시험이 `requireBuilt`로 그것을 이름 짓고, CI group docs, php, bench가 그것을 위해 Rust를 설치한다(H35.25).

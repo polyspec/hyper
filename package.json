@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@polyspec/json": "https://github.com/polyspec/json/releases/download/v0.0.32/polyspec-json-0.0.32.tgz",
+    "@polyspec/php-serialization": "https://github.com/polyspec/php-serialization/releases/download/v0.0.13/polyspec-php-serialization-0.0.13.tgz",
     "@polyspec/php-serialize": "https://github.com/polyspec/php-serialization/releases/download/v0.0.6/polyspec-php-serialize-0.0.6.tgz",
     "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.27/polyspec-template-0.0.27.tgz",
     "@polyspec/template-compiler": "https://github.com/polyspec/template/releases/download/v0.0.27/polyspec-template-compiler-0.0.27.tgz"
@@ -46,13 +47,20 @@
   "optionalDependencies": {
     "@polyspec/json-darwin-arm64": "https://github.com/polyspec/json/releases/download/v0.0.32/polyspec-json-darwin-arm64-0.0.32.tgz",
     "@polyspec/json-linux-arm64-gnu": "https://github.com/polyspec/json/releases/download/v0.0.32/polyspec-json-linux-arm64-gnu-0.0.32.tgz",
-    "@polyspec/json-linux-x64-gnu": "https://github.com/polyspec/json/releases/download/v0.0.32/polyspec-json-linux-x64-gnu-0.0.32.tgz"
+    "@polyspec/json-linux-x64-gnu": "https://github.com/polyspec/json/releases/download/v0.0.32/polyspec-json-linux-x64-gnu-0.0.32.tgz",
+    "@polyspec/php-serialization-darwin-arm64": "https://github.com/polyspec/php-serialization/releases/download/v0.0.13/polyspec-php-serialization-darwin-arm64-0.0.13.tgz",
+    "@polyspec/php-serialization-linux-arm64-gnu": "https://github.com/polyspec/php-serialization/releases/download/v0.0.13/polyspec-php-serialization-linux-arm64-gnu-0.0.13.tgz",
+    "@polyspec/php-serialization-linux-x64-gnu": "https://github.com/polyspec/php-serialization/releases/download/v0.0.13/polyspec-php-serialization-linux-x64-gnu-0.0.13.tgz"
   },
   "overrides": {
     "@polyspec/json": "$@polyspec/json",
     "@polyspec/json-darwin-arm64": "$@polyspec/json-darwin-arm64",
     "@polyspec/json-linux-arm64-gnu": "$@polyspec/json-linux-arm64-gnu",
     "@polyspec/json-linux-x64-gnu": "$@polyspec/json-linux-x64-gnu",
+    "@polyspec/php-serialization": "$@polyspec/php-serialization",
+    "@polyspec/php-serialization-darwin-arm64": "$@polyspec/php-serialization-darwin-arm64",
+    "@polyspec/php-serialization-linux-arm64-gnu": "$@polyspec/php-serialization-linux-arm64-gnu",
+    "@polyspec/php-serialization-linux-x64-gnu": "$@polyspec/php-serialization-linux-x64-gnu",
     "@polyspec/php-serialize": "$@polyspec/php-serialize",
     "@polyspec/template": "$@polyspec/template",
     "@polyspec/template-compiler": "$@polyspec/template-compiler"
