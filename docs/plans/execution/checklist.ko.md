@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 8a812ae7601a497e3e7f60ebaeacec5c3f18ad1da796698980ccea096cbe1abf -->
+<!-- source-sha256: 499dd981792ec535938daea1483fdf842848bb92935f141a73219fcf2de71e6a -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -486,10 +486,10 @@
 | H35.9 | 각 서버는 처음 쓸 때 binding을 load하는 공유 `CoreRules` 하나로 binding에 닿고, core의 규칙을 정하는 서버의 각 unit은 자기 코드 대신 그 `CoreRules` member를 부른다(HY-132.2). load되지 않는 binding은 이름 붙은 오류로 실패하고 손 코드가 대신 답하지 않으며, 연결한 규칙의 손 코드는 같은 변경에서 지운다. `make recipe-check`는 `core-rules`의 `MEMBER_UNREACHED`를 보고하지 않는다. | packages/php/src, packages/ts/src, packages/python/src, contracts/interfaces.json, CHANGELOG.md와 한국어 짝 | `make recipe-check` | [ ] |
 | H35.9-1 | Node 서버: `make hyper-install`은 Node package의 native addon(`hyper.<platform>.node`)을 빌드해 설치하고 `make hyper-test-node`가 그것을 load하며, 그다음 Node unit이 `CoreRules`를 부른다. | Makefile, packages/ts/src, tests/scripts | `make hyper-test-node` | [ ] |
 | H35.9-2 | PHP 서버: unit은 확장 `polyspec_hyper`의 `CoreRules`를 부르고, 확장이 없으면 이름 붙은 오류로 실패한다. | packages/php/src, packages/php/tests | `make hyper-test-php` | [ ] |
-| H35.9-3 | Python 서버: unit은 `polyspec.hyper._binding`의 `CoreRules`를 부르고, import되지 않는 binding은 이름 붙은 오류로 실패한다. | packages/python/src, packages/python/tests | `make hyper-test-python` | [ ] |
+| H35.9-3 | Python 서버: unit은 `polyspec.hyper._binding`의 `CoreRules`를 부르고, import되지 않는 binding은 이름 붙은 오류로 실패한다. binding 0.0.15가 생성한 binding은 `polyspec.template`의 `Environment`를 import하는데, lock의 template release 0.0.27에는 그것이 없다. 그래서 그것을 가진 template release를 pin하기 전까지 Python binding은 import되지 않는다. | packages/python/src, packages/python/tests | `make hyper-test-python` | [ ] |
 | H35.10 | 서버와 Rust core가 달랐고 `contracts/`의 live case가 답을 정하지 않은 입력마다, 먼저 live case를 쓰고(그것이 Red다) 그다음 core와 세 서버가 그 case의 답을 낸다(H35.9). | contracts, packages/rust, packages/php/src, packages/ts/src, packages/python/src, CHANGELOG.md와 한국어 짝 | `make recipe-check` | [ ] |
-| H35.10-1 | live case가 짝 없는 surrogate를 가진 값에 대한 `csrf.verify`의 답을 정하고, core와 세 서버가 그 답을 낸다(HY-24.4). | contracts, packages/rust | `make recipe-check` | [ ] |
-| H35.10-2 | live case가 U+00FF 위의 글자를 가진 값에 대한 context header 검사의 답을 정한다(HY-127.2). | contracts, packages/rust | `make recipe-check` | [ ] |
+| H35.10-1 | live case가 짝 없는 surrogate를 가진 값에 대한 `csrf.verify`의 답을 정하고, core와 세 서버가 그 답을 낸다(HY-24.4). | contracts, packages/rust | `make recipe-check` | [-] cause: 그런 값으로 `csrf.verify`에 닿는 요청은 없다. UTF-8이 아닌 form 값은 action 전에 bad request이기 때문이다(`contracts/app.json` `a_form_value_that_is_not_utf8_is_a_bad_request_before_the_action`). |
+| H35.10-2 | live case가 U+00FF 위의 글자를 가진 값에 대한 context header 검사의 답을 정한다(HY-127.2). | contracts, packages/rust | `make recipe-check` | [-] cause: U+00FF 위의 header 값을 가진 요청은 context 검사 전에 실패한다(HY-42.7, `contracts/request.json` `a_header_value_with_a_character_above_u_00ff_fails`). |
 | H35.10-3 | live case가 token 문자 밖의 id를 session cookie가 어떻게 쓰는지 정한다(HY-45.8). | contracts, packages/rust | `make recipe-check` | [ ] |
 | H35.10-4 | live case가 content type이 ASCII가 아닌 representation의 tag를 정하거나, 그런 content type이 tag에 닿지 않음을 정한다(HY-122.10, HY-118). | contracts, packages/rust | `make recipe-check` | [ ] |
 | H35.10-5 | Node 숫자 403.0에 대한 `reply.status`는 core와 Node binding을 거쳐 `contracts/reply.json`대로 403을 낸다(HY-69). | contracts, packages/rust | `make recipe-check` | [ ] |
