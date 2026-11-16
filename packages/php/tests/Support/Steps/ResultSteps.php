@@ -65,9 +65,15 @@ final class ResultSteps
         $case->compare('result', $result?->status);
         $case->compare('redirect', $result?->location);
         $case->compare('raises', $outcome['raises']);
-        if ($case->has('held') && $result instanceof Result) {
-            $case->compare('held', Plain::map($result->data));
+        if ($case->has('held') && $result !== null) {
+            self::compareHeld($case, $result);
         }
+    }
+
+    /** Compares the data that a page result holds. */
+    private static function compareHeld(CaseReader $case, Result $result): void
+    {
+        $case->compare('held', Plain::map($result->data));
     }
 
     /** Makes the invalid result with the data (HY-26). */
