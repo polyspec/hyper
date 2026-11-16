@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6d05213dcb716647a21295c01a980be9b89c70e5739d7bc65d2242fa0be3ea5e -->
+<!-- source-sha256: 873525799ee56775e5a3014c2b58119ff4f552e6230a125d6ef1cae2277ebb79 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP, Node, Python case runner는 `raises` outcome의 오류를, 그 kind가 인용한 `contracts/protocol.json` statement가 "kind `name`"으로 적은 kind 중 하나일 때 받는다. 이전에는 HY-42.7과 HY-97.7의 outcome을 빼고 모든 outcome에 `invalid_application`을 기대해서, HY-106.21이 `invalid_build`로 말하는 없는 build 파일의 open이 case에서 실패했다. kind를 적지 않은 statement의 outcome은 여전히 open 오류를 기대하고, HY-97.7은 여전히 class만 검사한다(H35.9-6).
 - `result.json`의 case `a_flash_name_that_is_a_string_is_taken`과 `a_changed_topic_that_is_a_string_is_taken`은 HY-25.7이 문자열에 주는 성공인 `raises: null`을 말한다. 이전에는 아무것도 비교하지 않아 runner가 `CASE_EMPTY`로 실패시켰다(H35.10-8).
 - `build.json`의 section `outputs`의 실패한 open은 실패의 kind를 말하는 HY-106.21을 인용한다. 없는 build 파일은 `invalid_build`, 다른 없는 출력은 `invalid_application`이다. 이전에는 message의 경로만 말하는 HY-48.2를 인용했으며, HY-48.2는 field `message`에 남는다(H35.27-1).
 - U+00FF보다 큰 문자가 있는 path, query, header인 `request.json` `texts`의 case는 HY-42.7이 말하는 대로 Node와 Python에서만 실행된다. PHP runner는 text를 먼저 byte로 바꿔 이 case를 실행했다. 새 section `bytes`는 PHP에서 path, raw query, header 값이 그런 문자의 UTF-8 byte를 가진 요청이 실패 없이 만들어짐을 보인다(HY-42.7) (H35.27-3).

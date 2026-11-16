@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The PHP, Node and Python case runners accept the error of a `raises` outcome when its kind is one of the kinds that the cited statement of `contracts/protocol.json` names as "kind `name`"; they expected `invalid_application` for every outcome except those of HY-42.7 and HY-97.7, so that an open of a missing build file, which HY-106.21 states as `invalid_build`, failed its case. An outcome whose statement names no kind still expects the open error, and HY-97.7 still checks only the class (H35.9-6).
 - The cases `a_flash_name_that_is_a_string_is_taken` and `a_changed_topic_that_is_a_string_is_taken` of `result.json` state `raises: null`, the success that HY-25.7 gives a string; they compared nothing, which a runner fails with `CASE_EMPTY` (H35.10-8).
 - The failed open of the section `outputs` of `build.json` cites HY-106.21, which states the kind of the failure: `invalid_build` for a missing build file and `invalid_application` for another missing output; it cited HY-48.2, which states only the path in the message, and HY-48.2 stays on the field `message` (H35.27-1).
 - The cases of `request.json` `texts`, a path, a query or a header with a character above U+00FF, run only in Node and Python, as HY-42.7 states; the PHP runner ran them by converting the text to bytes first. The new section `bytes` shows in PHP that a request whose path, raw query and header values hold the UTF-8 bytes of such characters is created without failure (HY-42.7) (H35.27-3).

@@ -318,13 +318,15 @@ final class CaseRules
 
     /**
      * HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites.
-     * The texts of a request fail with the kind `invalid_text` (HY-42.7); the creation of a server fails with an error
-     * of hyper whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; every other
-     * `raises` outcome is an open failure and expects the open error (HY-106.21).
+     * A statement that names kinds, such as HY-106.21 with `invalid_application` and `invalid_build` or HY-42.7 with
+     * `invalid_text`, accepts an error of hyper of one of them (`statedKinds`); the creation of a server fails with an
+     * error of hyper whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; a statement
+     * that names no kind is an open failure and expects the open error (HY-106.21).
      */
     public static function outcomeError(mixed $sentence, mixed $observed): bool
     {
-        if ($sentence !== 'HY-42.7' && $sentence !== 'HY-97.7') {
+        $kinds = is_string($sentence) ? self::statedKinds($sentence) : [];
+        if ($kinds === [] && $sentence !== 'HY-97.7') {
             return self::openError($observed);
         }
         if (!$observed instanceof \Throwable) {
@@ -332,7 +334,39 @@ final class CaseRules
         }
         $raises = self::raisesOf($observed);
 
-        return $sentence === 'HY-97.7' || ($raises['category'] === 'value' && $raises['kind'] === 'invalid_text');
+        return $sentence === 'HY-97.7' || in_array($raises['kind'], $kinds, true);
+    }
+
+    /**
+     * The kinds that a statement of contracts/protocol.json names in its English text, each as "kind `name`", in their
+     * order; none for a statement that names no kind or that the file does not hold.
+     *
+     * @return list<string>
+     */
+    private static function statedKinds(string $sentence): array
+    {
+        /** @var array<string, string>|null $texts */
+        static $texts = null;
+        $texts ??= self::statementTexts(Json::file(self::CONTRACTS . 'protocol.json'));
+        preg_match_all('/\bkind `([a-z_]+)`/', $texts[$sentence] ?? '', $found);
+
+        return array_values(array_unique($found[1]));
+    }
+
+    /** @return array<string, string> the English text of every statement under a value, by its id */
+    private static function statementTexts(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+        $texts = isset($value['id'], $value['en']) && is_string($value['id']) && is_string($value['en'])
+            ? [$value['id'] => $value['en']]
+            : [];
+        foreach ($value as $child) {
+            $texts += self::statementTexts($child);
+        }
+
+        return $texts;
     }
 
     /** @return list<string> */

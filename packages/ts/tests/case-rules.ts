@@ -213,16 +213,41 @@ export function openError(observed: unknown): boolean {
 }
 
 /**
- * HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites. The
- * texts of a request fail with the kind `invalid_text` (HY-42.7); the creation of a server fails with an error of hyper
- * whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; every other `raises` outcome is
- * an open failure and expects the open error (HY-106.21).
+ * HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites. A
+ * statement that names kinds, such as HY-106.21 with `invalid_application` and `invalid_build` or HY-42.7 with
+ * `invalid_text`, accepts an error of hyper of one of them (`statedKinds`); the creation of a server fails with an error
+ * of hyper whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; a statement that names
+ * no kind is an open failure and expects the open error (HY-106.21).
  */
 export function outcomeError(sentence: unknown, observed: unknown): boolean {
-  if (sentence !== 'HY-42.7' && sentence !== 'HY-97.7') return openError(observed);
+  const kinds = typeof sentence === 'string' ? statedKinds(sentence) : [];
+  if (kinds.length === 0 && sentence !== 'HY-97.7') return openError(observed);
   if (observed === null || observed === undefined) return false;
   const raises = raisesOf(observed);
-  return sentence === 'HY-97.7' || (raises.category === 'value' && raises.kind === 'invalid_text');
+  return sentence === 'HY-97.7' || (typeof raises.kind === 'string' && kinds.includes(raises.kind));
+}
+
+let statements: Map<string, string> | undefined;
+
+/** The English text of every statement under a value, by its id. */
+function statementTexts(value: unknown, texts: Map<string, string>): Map<string, string> {
+  if (Array.isArray(value)) {
+    for (const child of value) statementTexts(child, texts);
+  } else if (isObject(value)) {
+    if (typeof value.id === 'string' && typeof value.en === 'string' && !texts.has(value.id)) texts.set(value.id, value.en);
+    for (const child of Object.values(value)) statementTexts(child, texts);
+  }
+  return texts;
+}
+
+/**
+ * The kinds that a statement of contracts/protocol.json names in its English text, each as "kind `name`", in their
+ * order; none for a statement that names no kind or that the file does not hold.
+ */
+function statedKinds(sentence: string): string[] {
+  statements ??= statementTexts(JSON.parse(readFileSync(new URL('protocol.json', CONTRACTS), 'utf8')), new Map());
+  const text = statements.get(sentence) ?? '';
+  return [...new Set(Array.from(text.matchAll(/\bkind `([a-z_]+)`/gu), (match) => match[1] ?? ''))];
 }
 
 /** The result of a call, or null and the failure of hyper with which it fails; any other error is thrown again. */
