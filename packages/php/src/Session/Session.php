@@ -95,17 +95,13 @@ final class Session
     }
 
     /**
-     * Returns the entries of a map that the core gives, a `stdClass` or an empty array.
+     * Returns the entries of a map that the core gives, or no entries for another value (JsonCodec::mapEntries).
      *
      * @return array<array-key, mixed>
      */
     private static function coreMap(mixed $value): array
     {
-        if ($value instanceof \stdClass) {
-            return get_object_vars($value);
-        }
-
-        return is_array($value) ? $value : [];
+        return JsonCodec::mapEntries($value) ?? [];
     }
 
     /** Stores flash data for the next request. */

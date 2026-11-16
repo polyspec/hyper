@@ -178,7 +178,9 @@ final class Request
 
     /**
      * Returns the value of the JSON body of a representation request, or null for a request without a body
-     * (HY-121.9). An object of the body is a `stdClass`, as `json_decode` gives it.
+     * (HY-121.9). The value has the form of the JSON reader of the core (JsonCodec::decode): a list
+     * is an array with sequence keys, an object a `stdClass` or an array whose keys are not a sequence, a number a
+     * float.
      */
     public function json(): mixed
     {

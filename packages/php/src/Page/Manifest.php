@@ -45,8 +45,8 @@ final class Manifest
         try {
             $text = (string) file_get_contents($file);
             $data = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
-            // HY-2.8: the manifest is JSON text as HY-54 decodes it. The objects tell an empty object from an empty
-            // array, which the representations of a route need (HY-118.7).
+            // HY-2.8: the manifest is JSON text as HY-54 decodes it. The value of the core tells an empty object from
+            // an empty list, which the representations of a route need (HY-118.7).
             $objects = JsonCodec::decode($text);
             $decoded = true;
         } catch (\JsonException | HyperValueError) {
@@ -107,7 +107,8 @@ final class Manifest
 
         $routes = [];
         $regionNames = array_fill_keys(array_keys($regions), true);
-        $routeObjects = $objects instanceof \stdClass && is_array($objects->routes ?? null) ? $objects->routes : [];
+        $routeObjects = JsonCodec::mapEntries($objects)['routes'] ?? null;
+        $routeObjects = JsonCodec::isList($routeObjects) ? $routeObjects : [];
         foreach (self::entries($data, 'routes') as $index => $route) {
             $name = is_string($route['name'] ?? null) ? $route['name'] : '';
             $title = $route['title'] ?? null;
@@ -157,8 +158,7 @@ final class Manifest
                     $name,
                     match (true) {
                         !array_key_exists('representations', $route) => [],
-                        $routeObject instanceof \stdClass => $routeObject->representations ?? null,
-                        default => null,
+                        default => JsonCodec::mapEntries($routeObject)['representations'] ?? null,
                     },
                 ),
             ];

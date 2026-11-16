@@ -29,20 +29,21 @@ final class RepresentationEntries
     /**
      * Returns the entries of a route in the order of the manifest, checked by HY-2 and HY-118: a duplicate type, a
      * page type, a wildcard, an invalid type, parameter or value, an empty method or value list, and an invalid vary
-     * name fail the manifest. `$raw` is the value of `representations` of the route, decoded with `stdClass` for
-     * objects, which tells an empty object from an empty array.
+     * name fail the manifest. `$raw` is the value of `representations` of the route as the JSON reader of the core
+     * gives it (JsonCodec::decode), which tells an empty object from an empty list.
      *
      * @return list<RepresentationEntry>
      */
     public static function declare(string $route, mixed $raw): array
     {
-        if (!is_array($raw)) {
+        if (!JsonCodec::isList($raw)) {
             throw self::invalid('manifest representations is not a list');
         }
         $entries = [];
         $mediaTypes = [];
-        foreach ($raw as $item) {
-            if (!$item instanceof \stdClass) {
+        foreach ($raw as $value) {
+            $item = JsonCodec::mapEntries($value);
+            if ($item === null) {
                 throw self::invalid('manifest representations contains a value that is not an object');
             }
             $entry = self::entry($route, $item);
@@ -83,14 +84,15 @@ final class RepresentationEntries
         }
     }
 
-    private static function entry(string $route, \stdClass $item): RepresentationEntry
+    /** @param array<array-key, mixed> $item */
+    private static function entry(string $route, array $item): RepresentationEntry
     {
         foreach (['type', 'parameters', 'methods', 'vary'] as $key) {
-            if (!property_exists($item, $key)) {
+            if (!array_key_exists($key, $item)) {
                 throw self::invalid("route {$route} has a representation without {$key} (HY-118)");
             }
         }
-        $kind = $item->type;
+        $kind = $item['type'];
         if (!is_string($kind)) {
             throw self::invalid("route {$route} has a representation type that is not text (HY-118)");
         }
@@ -114,23 +116,24 @@ final class RepresentationEntries
         return new RepresentationEntry(
             $kind,
             $media,
-            self::servedParameters($route, $kind, $item->parameters),
-            self::answeredMethods($route, $kind, $item->methods),
-            self::varyNames($route, $kind, $item->vary),
+            self::servedParameters($route, $kind, $item['parameters']),
+            self::answeredMethods($route, $kind, $item['methods']),
+            self::varyNames($route, $kind, $item['vary']),
         );
     }
 
     /** @return list<array{0: string, 1: list<string>}> */
     private static function servedParameters(string $route, string $kind, mixed $raw): array
     {
-        if (!$raw instanceof \stdClass) {
+        $map = JsonCodec::mapEntries($raw);
+        if ($map === null) {
             throw self::invalid(
                 "route {$route} has parameters of {$kind} that are not an object (HY-118)",
             );
         }
         $parameters = [];
         $names = [];
-        foreach (get_object_vars($raw) as $key => $values) {
+        foreach ($map as $key => $values) {
             // PHP gives a decimal name as an integer key; the name is its string.
             $name = (string) $key;
             $lower = strtolower($name);
@@ -140,7 +143,7 @@ final class RepresentationEntries
                 );
             }
             $names[] = $lower;
-            if (!is_array($values) || $values === []) {
+            if (!JsonCodec::isList($values) || $values === []) {
                 throw self::invalid(
                     "route {$route} has no served value for {$name} of {$kind} (HY-118)",
                 );
@@ -167,12 +170,13 @@ final class RepresentationEntries
     private static function answeredMethods(string $route, string $kind, mixed $raw): array
     {
         $methods = [];
-        foreach (is_array($raw) ? $raw : [] as $method) {
+        $list = JsonCodec::isList($raw) ? $raw : [];
+        foreach ($list as $method) {
             if (is_string($method) && in_array($method, self::METHODS, true)) {
                 $methods[] = $method;
             }
         }
-        if (!is_array($raw) || $methods === [] || count($methods) !== count($raw)) {
+        if (!JsonCodec::isList($raw) || $methods === [] || count($methods) !== count($raw)) {
             throw self::invalid(
                 "route {$route} has methods of {$kind} that are not a nonempty subset of GET, POST, PUT, DELETE "
                 . '(HY-118)',
@@ -185,7 +189,7 @@ final class RepresentationEntries
     /** @return list<string> */
     private static function varyNames(string $route, string $kind, mixed $raw): array
     {
-        if (!is_array($raw)) {
+        if (!JsonCodec::isList($raw)) {
             throw self::invalid(
                 "route {$route} has vary names of {$kind} that are not a list (HY-118)",
             );

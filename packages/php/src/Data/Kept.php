@@ -122,8 +122,8 @@ final class Kept
         if (self::valueKind($current) !== self::valueKind($value)) {
             return false;
         }
-        $data = self::mapEntries($current);
-        $kept = self::mapEntries($value);
+        $data = JsonCodec::mapEntries($current);
+        $kept = JsonCodec::mapEntries($value);
         if ($data !== null && $kept !== null) {
             if ($data === []) {
                 return true;
@@ -150,20 +150,6 @@ final class Kept
         return true;
     }
 
-    /**
-     * Returns the entries of a map of the data model, or null for another value.
-     *
-     * @return array<array-key, mixed>|null
-     */
-    private static function mapEntries(mixed $value): ?array
-    {
-        return match (true) {
-            $value instanceof \stdClass => get_object_vars($value),
-            is_array($value) && !array_is_list($value) => $value,
-            default => null,
-        };
-    }
-
     /** Returns the value type of the data model: null, bool, number, string, list or map. */
     private static function valueKind(mixed $value): string
     {
@@ -172,8 +158,8 @@ final class Kept
             is_bool($value) => 'bool',
             is_int($value), is_float($value) => 'number',
             is_string($value) => 'string',
-            $value instanceof \stdClass => 'map',
-            is_array($value) => array_is_list($value) ? 'list' : 'map',
+            JsonCodec::isList($value) => 'list',
+            JsonCodec::mapEntries($value) !== null => 'map',
             default => 'other',
         };
     }

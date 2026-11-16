@@ -68,15 +68,40 @@ final class JsonCodec
     }
 
     /**
-     * Reads a JSON text to a value of the data model with `stdClass` maps in document order: rules.json_read of the
-     * core (HY-54.20). A text that json refuses fails with the kind `malformed_json`, and a value outside the data
-     * model with the kind of the data model, as the core raises them (HY-54.21).
+     * Reads a JSON text to a value of the data model in document order: rules.json_read of the core (HY-54.20). A
+     * list is an array with sequence keys, a map a `stdClass` or an array whose keys are not a sequence, and a
+     * number a float; isList and mapEntries read them. A text that json refuses
+     * fails with the kind `malformed_json`, and a value outside the data model with the kind of the data model, as the core raises them (HY-54.21).
      *
      * @throws HyperValueError
      */
     public static function decode(string $text): mixed
     {
         return CoreRules::shared()->jsonCodecDecode($text);
+    }
+
+    /**
+     * Returns true when a value that the core gives is a list: an array with sequence keys, the empty array
+     * included. The core gives a list as such an array (HY-54.20).
+     */
+    public static function isList(mixed $value): bool
+    {
+        return is_array($value) && array_is_list($value);
+    }
+
+    /**
+     * Returns the entries of a map that the core gives, or null for another value. The core gives a map as a
+     * `stdClass` or as an array whose keys are not a sequence (HY-54.20).
+     *
+     * @return array<array-key, mixed>|null
+     */
+    public static function mapEntries(mixed $value): ?array
+    {
+        return match (true) {
+            $value instanceof \stdClass => get_object_vars($value),
+            is_array($value) && !array_is_list($value) => $value,
+            default => null,
+        };
     }
 
     /**

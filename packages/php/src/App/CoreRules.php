@@ -132,8 +132,9 @@ final class CoreRules
     }
 
     /**
-     * JsonCodec::decode: rules.json_read reads a JSON text to a value of the data model with `stdClass` maps in
-     * document order, and fails with `malformed_json` or the kind of the data model (HY-54.20, HY-54.21).
+     * JsonCodec::decode: rules.json_read reads a JSON text to a value of the data model in document order, in the
+     * form that JsonCodec::isList and JsonCodec::mapEntries read, and fails with
+     * `malformed_json` or the kind of the data model (HY-54.20, HY-54.21).
      */
     public function jsonCodecDecode(string $text): mixed
     {

@@ -213,9 +213,7 @@ final class Page
             foreach ($region->keep as $keptPath => $kind) {
                 $source = match ($kind) {
                     'server' => $stored,
-                    'cookie' => $cookie instanceof \stdClass && ($cookie->{$name} ?? null) instanceof \stdClass
-                        ? get_object_vars($cookie->{$name})
-                        : [],
+                    'cookie' => JsonCodec::mapEntries(JsonCodec::mapEntries($cookie)[$name] ?? null) ?? [],
                     default => [],
                 };
                 if (array_key_exists($keptPath, $source)) {
