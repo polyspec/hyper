@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 540dbccb9629f51a7d8c745005f29f320709f687bf69eeb792a990854acc2cf7 -->
+<!-- source-sha256: dfa1f9e0f17ebcf138fdc9820ae84a86a709d553f110ec5bfc4a0c18470b56ae -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make node-addon`은 Node 바인딩 크레이트의 애드온을 빌드해, 체크아웃에서 생성된 진입점 `index.cjs`가 읽는 파일 `packages/ts/native/generated/hyper.<platform>.node`에 둡니다. `make hyper-install`은 `make bindings` 다음에 이를 실행하고, `make hyper-test-node`와 `make node-package`는 이에 의존합니다. 어떤 타깃도 애드온을 그 자리에 두지 않아, 바인딩을 읽는 Node 테스트가 `Cannot find module './hyper.darwin-arm64.node'`로 실패했습니다 (H35.9-1).
 - `contracts/interfaces.json`은 세 서버의 unit `core-rules`를 member 26개와 그 시험과 함께 적고, `wsgi-body`의 member를 H34.1이 남긴 대로 적는다. `close()`가 쓰기를 보고하고 `_finish`는 없다. `core-rules.ts`의 Node 선언은 `@internal`을 단다(H35.7).
 - package data 시험은 설치된 `polyspec-hyper`의 파일을 읽는다. 이 package는 `make hyper-install-python`이 maturin으로 wheel을 빌드해 non-editable로 설치한 것이며, wheel에 `polyspec/hyper/py.typed`가 없으면 시험이 실패한다. 전에는 `pyproject.toml`의 `tool.setuptools`를 읽었는데, maturin이 package를 빌드한 뒤로 그 설정은 없으므로 표지를 가진 package에서도 실패했다(H35.7).
 - Node와 Python 서버의 `CoreRules`는 규칙마다 member 하나를 갖는 unit 하나이며, member는 unit과 규칙의 이름을 따른다(`csrfMask`, `csrf_mask`). PHP 서버와 같은 모양이다. 전에는 member의 이름공간이 `contracts/interfaces.json`의 unit이 아니었고, Python module은 파일 하나에 class 열넷을 담아 HYR-4를 어겼다(H35.7).

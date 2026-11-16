@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- `make node-addon` builds the addon of the Node binding crate and puts it at `packages/ts/native/generated/hyper.<platform>.node`, the file that the generated entry `index.cjs` loads in a checkout; `make hyper-install` runs it after `make bindings`, and `make hyper-test-node` and `make node-package` depend on it. No target put the addon there, so a Node test that loads the binding failed with `Cannot find module './hyper.darwin-arm64.node'` (H35.9-1).
 - `contracts/interfaces.json` lists the unit `core-rules` of the three servers with its 26 members and their tests, and the members of `wsgi-body` as H34.1 left them: `close()` reports the write and `_finish` is gone; the Node declarations of `core-rules.ts` carry `@internal` (H35.7).
 - The package data test reads the files of the installed `polyspec-hyper`, which `make hyper-install-python` builds as a wheel with maturin and installs non-editable, and fails when the wheel lacks `polyspec/hyper/py.typed`: it read `tool.setuptools` of `pyproject.toml`, which the package no longer has since maturin builds it, and failed on a package that carries the marker (H35.7).
 - `CoreRules` of the Node and the Python server is one unit with one member per rule, named after its unit and its rule (`csrfMask`, `csrf_mask`), as the PHP server has it: the namespaces of its members were no unit of `contracts/interfaces.json`, and the Python module held fourteen classes in one file against HYR-4 (H35.7).
