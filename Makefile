@@ -122,6 +122,7 @@ hyper-install: ## Install the pinned tools and the npm packages, the binding cli
 	$(MAKE) --no-print-directory install-symbols EXTRACTORS=php
 	$(MAKE) --no-print-directory install-binding
 	$(MAKE) --no-print-directory bindings
+	$(MAKE) --no-print-directory node-addon
 	$(MAKE) --no-print-directory hyper-install-php
 	$(MAKE) --no-print-directory hyper-install-python
 
@@ -241,7 +242,7 @@ hyper-test-js: ## Run the browser code tests, including the browser case runner 
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
-hyper-test-node: packages node-fixtures ## Run the Node server tests, including the case runner (HYR-7), and the type check
+hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests, including the case runner (HYR-7), and the type check
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,the tests of $(NODE_PACKAGE),RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE)) \
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
@@ -414,12 +415,19 @@ NODE_VERSION := $(shell sed -n 's/^  "version": "\(.*\)",$$/\1/p' $(NODE_PACKAGE
 # package holds the WASM module and its glue, which wasm-bindgen writes into packages/ts/native/wasm/generated before
 # the package is packed (binding GN-18, P-5); the addon is the package of this platform that the package names in
 # optionalDependencies (binding T-2), installed from its tarball without the packages of the other platforms.
-node-package: bindings packages ## Build the WASM module and the Node addon, then pack and install the npm package into var/bindings/node
+# The addon of the Node package in a checkout (binding T-2): the generated entry native/generated/index.cjs loads the
+# package of the platform or, in a checkout, the file hyper.<platform>.node beside it, so the build of the crate is
+# copied there and published with one rename (HR-82).
+.PHONY: node-addon
+node-addon: bindings ## Build the Node addon of this platform and put it beside the generated entry of the Node package
+	cargo build --locked -p polyspec-hyper-node --features panic-test
+	cp $(CARGO_TARGET)/debug/libpolyspec_hyper_node.$(CDYLIB) $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ && mv -f $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ $(NODE_PACKAGE)/native/generated/$(NODE_ADDON)
+
+node-package: bindings packages node-addon ## Build the WASM module and the Node addon, then pack and install the npm package into var/bindings/node
 	test "$$($(WASM_BINDGEN) --version)" = "wasm-bindgen $(WASM_BINDGEN_RELEASE)"
 	cargo build --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test
 	$(WASM_BINDGEN) --target web --out-dir $(NODE_PACKAGE)/native/wasm/generated --out-name hyper_wasm \
 		$(CARGO_TARGET)/wasm32-unknown-unknown/debug/polyspec_hyper_wasm.wasm
-	cargo build --locked -p polyspec-hyper-node --features panic-test
 	mkdir -p $(BINDINGS_VAR)/node $(BINDINGS_VAR)/node-platform
 	cp $(CARGO_TARGET)/debug/libpolyspec_hyper_node.$(CDYLIB) $(BINDINGS_VAR)/node-platform/$(NODE_ADDON)
 	$(NODE) -e 'require("fs").writeFileSync("$(BINDINGS_VAR)/node-platform/package.json", JSON.stringify({ name: "@polyspec/hyper-$(NODE_PLATFORM)", version: "$(NODE_VERSION)", os: [process.platform], cpu: [process.arch], main: "$(NODE_ADDON)", files: ["$(NODE_ADDON)"] }, null, 2) + "\n")'

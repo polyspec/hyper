@@ -2,6 +2,7 @@
 // HY-58), with the flash values and the changed topics that it stores for the next request.
 import { toValue, type Data, type Value } from '../data/values.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
+import { rules } from '../app/core-rules.js';
 
 // An outside location (HY-133.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
 // holds every visible ASCII character except the backslash.
@@ -27,10 +28,7 @@ export class Result {
   // Returns a redirect to a path of this application (HY-46).
   static redirect(location: string): Result {
     ArgumentCountError.between(arguments.length, 1, 1);
-    if (!location.isWellFormed() || !/^\/(?![/\\])[^\p{Cc} \\]*$/u.test(location) || Result.hasDotSegment(location)) {
-      throw new RangeError('a redirect location is not an application path (HY-46)');
-    }
-    return new Result(location, 303, {}, new Map(), []);
+    return new Result(rules().resultRedirect(location), 303, {}, new Map(), []);
   }
 
   // Returns an outside redirect to an outside location (HY-133).
@@ -98,11 +96,5 @@ export class Result {
   // Fails for an outside redirect, which stores no flash value and no changed topic (HY-133).
   private refuseOutside(): void {
     if (this.isOutside()) throw new RangeError('an outside redirect holds no flash value or changed topic (HY-133)');
-  }
-
-  // Returns true when the path of a location has a `.` or `..` segment, also with a percent-encoded dot.
-  private static hasDotSegment(location: string): boolean {
-    const path = location.slice(0, location.search(/[?#]|$/));
-    return path.split('/').some((segment) => ['.', '..'].includes(segment.replace(/%2e/gi, '.')));
   }
 }

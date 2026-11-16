@@ -2,6 +2,7 @@
 // session store that holds its values, whatever keeps the record (HY-104, HY-115).
 import { randomBytes } from 'node:crypto';
 import { PhpFloat, Reference, serialize, StdClass, unserialize, type ArrayKey, type Value as Stored } from '@polyspec/php-serialize';
+import { rules } from '../app/core-rules.js';
 import type { SessionStore } from './session-store.js';
 
 const IDENTIFIER = /^[A-Za-z0-9,-]{22,128}$/;
@@ -78,12 +79,12 @@ export abstract class RecordSession implements SessionStore {
 
   // Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45).
   static cookieName(secure: boolean): string {
-    return secure ? '__Host-hy-session' : 'hy-session';
+    return rules().sessionCookieName(secure);
   }
 
-  // Returns the Set-Cookie value of a new session, with the attributes of the PHP session cookie (HY-45).
+  // Returns the Set-Cookie value of a new session (HY-45.8).
   static cookieHeader(id: string, secure: boolean): string {
-    return `${RecordSession.cookieName(secure)}=${id}; path=/${secure ? '; secure' : ''}; HttpOnly; SameSite=Lax`;
+    return rules().sessionCookieHeader(id, secure);
   }
 
   // Returns the values of the session, which the first use of the request reads or starts.

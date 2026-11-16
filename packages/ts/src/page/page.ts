@@ -12,6 +12,7 @@ import { RegionPlanner } from './region-planner.js';
 import type { Reply } from '../http/reply.js';
 import { HYPER_JSON, type Request } from '../http/request.js';
 import { Response } from '../http/response.js';
+import { rules } from '../app/core-rules.js';
 import type { Container } from '../app/container.js';
 import type { Flash } from '../session/flash.js';
 import type { Session } from '../session/session.js';
@@ -149,7 +150,7 @@ export class Page<S extends object> {
   // Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17, HY-38).
   private kept(request: Request, session: Session, data: Map<string, MapValue>): MapValue {
     // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
-    const cookie = Page.decodedCookie(request.cookie(this.parts.https || request.https ? '__Host-hy-keep' : 'hy-keep'));
+    const cookie = Page.decodedCookie(request.cookie(rules().keptCookieName(this.parts.https || request.https)));
     const values: MapValue = new Map();
     for (const [name, regionData] of data) {
       const stored = session.kept(name);

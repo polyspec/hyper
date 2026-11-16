@@ -1,9 +1,8 @@
 // Masks the session token for a response and verifies a masked form value (HY-24). A masked value is 32 mask bytes
-// followed by the mask XOR the token, as 128 lowercase hexadecimal digits, so no response contains the token.
-import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-
-const MASKED = /^[0-9a-f]{128}$/u;
-const TOKEN = /^[0-9a-f]{64}$/u;
+// followed by the mask XOR the token, as 128 lowercase hexadecimal digits, so no response contains the token. The core
+// states each rule (HY-132.2); this class draws the random mask.
+import { randomBytes } from 'node:crypto';
+import { rules } from '../app/core-rules.js';
 
 /** @internal */
 export class Csrf {
@@ -12,45 +11,19 @@ export class Csrf {
     return Csrf.mask(token, randomBytes(32).toString('hex'));
   }
 
-  // Returns the token masked with a mask; both are 64 lowercase hexadecimal digits.
+  // Returns the token masked with a mask; both are 64 lowercase hexadecimal digits (HY-24.2).
   static mask(token: string, mask: string): string {
-    Csrf.requireToken(token);
-    Csrf.requireToken(mask);
-    return mask + Csrf.xor(Csrf.bytes(mask), Csrf.bytes(token)).toString('hex');
+    return rules().csrfMask(token, mask);
   }
 
-  // Returns true when a form value is a masked value of the token, compared in constant time.
+  // Returns true when a form value is a masked value of the token, compared in constant time (HY-24.4).
   static verify(token: string, value: string): boolean {
-    Csrf.requireToken(token);
-    if (!MASKED.test(value)) return false;
-    return timingSafeEqual(Csrf.bytes(token), Csrf.xor(Csrf.bytes(value.slice(64)), Csrf.bytes(value.slice(0, 64))));
+    return rules().csrfVerify(token, value);
   }
 
   // Returns the SHA-256 digest, as 64 lowercase hexadecimal digits, of the token that a masked value holds, or null
   // for the empty text, which a request without a session holds (HY-24.10, HY-24.12).
   static browserOf(masked: string): string | null {
-    if (masked === '') return null;
-    const mask = masked.slice(0, 64);
-    const rest = masked.slice(64);
-    Csrf.requireToken(mask);
-    Csrf.requireToken(rest);
-    return createHash('sha256').update(Csrf.xor(Csrf.bytes(rest), Csrf.bytes(mask))).digest('hex');
-  }
-
-  // Fails for a token or a mask that is not 64 lowercase hexadecimal digits (HY-24.9).
-  private static requireToken(text: string): void {
-    if (!TOKEN.test(text)) throw new RangeError('a CSRF token or mask is not 64 lowercase hexadecimal digits (HY-24)');
-  }
-
-  // Returns the bytes of an even number of lowercase hexadecimal digits; other text fails.
-  private static bytes(hex: string): Buffer {
-    if (!/^(?:[0-9a-f]{2})*$/u.test(hex)) throw new RangeError('a CSRF token or mask is not lowercase hexadecimal digits (HY-24)');
-    return Buffer.from(hex, 'hex');
-  }
-
-  // Returns the bytes of the first XOR the bytes of the second, which have one length; other bytes fail.
-  private static xor(first: Buffer, second: Buffer): Buffer {
-    if (first.length !== second.length) throw new RangeError('the bytes of a CSRF token and its mask differ in length (HY-24)');
-    return Buffer.from(first.map((byte, index) => byte ^ second.readUInt8(index)));
+    return rules().csrfBrowserOf(masked);
   }
 }

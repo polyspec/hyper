@@ -4,7 +4,7 @@
 // which arguments, and what the unit returns; the rules themselves are tested in the core.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { coreRules, type CoreBinding, type CoreRules, type PageInput, type Plain } from '../../packages/ts/src/app/core-rules.ts';
+import { coreRules, sharedRules, type CoreBinding, type CoreRules, type PageInput, type Plain } from '../../packages/ts/src/app/core-rules.ts';
 
 type Call = [string, unknown[]];
 
@@ -211,3 +211,30 @@ for (const [label, name, call, args, result] of [...EXACT, ...PARTIAL]) {
     assert.deepEqual(calls, [[name, args]]);
   });
 }
+
+const ADDON = `hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`;
+
+test('a loader that throws fails each call with CoreBindingError naming the addon, and no rule answers (HY-132.2)', () => {
+  let loads = 0;
+  const rules = sharedRules(() => {
+    loads += 1;
+    throw new Error(`Cannot find module './${ADDON}'`);
+  });
+  for (const call of [() => rules(), () => rules().csrfMask(TOKEN, MASK)]) {
+    assert.throws(call, (error: unknown) => error instanceof Error && error.name === 'CoreBindingError' && error.message.includes(ADDON) && error.cause instanceof Error);
+  }
+  assert.equal(loads, 2);
+});
+
+test('the shared rules load the module once and give one instance (HY-132.2)', () => {
+  let loads = 0;
+  const { core, calls } = standIn({ csrfMask: 'masked' });
+  const rules = sharedRules(() => {
+    loads += 1;
+    return core;
+  });
+  assert.equal(rules(), rules());
+  assert.equal(rules().csrfMask(TOKEN, MASK), 'masked');
+  assert.equal(loads, 1);
+  assert.deepEqual(calls, [['csrfMask', [TOKEN, MASK]]]);
+});
