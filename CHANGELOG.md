@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The rules of the core of the Node server are in `packages/ts/src/app/core-rules.ts`, the directory of the group `app` (HYR-4); `src/core/` was no group, and `make recipe-check` reported the file as owned by no unit (H35.7).
 - `make node-package` packs the dependencies of `packages/ts` from the root install and installs them with the packed package: the offline install of the packed package looked up `@polyspec/hyper-client`, which is in no registry, and `make test-wasm` failed with `ENOTCACHED` (H35.7).
 - `make install-binding` clones nothing when the binding of Cargo.lock is a local path (`BINDING_COMMIT` is `local`) and names the cli that the run gives with `BINDING`; it failed with `cargo metadata names no polyspec-binding-core at the commit local of Cargo.lock`, so `make hyper-install` stopped (H35.7).
 - The workspace of Cargo denies `unsafe_code` and `packages/rust/src/lib.rs` forbids it, in place of a forbid of the workspace: the binding crates take the lints of the workspace and allow unsafe code with its reason (binding B-4), which a forbid refuses, so `make lint-bindings` and `make test-go` failed with E0453 and with about 150 errors of unsafe code in the generated sources (H35.7).

@@ -1,10 +1,10 @@
-// The rules of the core behind the names of the units of the Node server (packages/ts/src/core/rules.ts, HY-132.2),
+// The rules of the core behind the names of the units of the Node server (packages/ts/src/app/core-rules.ts, HY-132.2),
 // against a stand-in of the module of the Node binding: the stand-in records each call and returns the value that the
 // test gives it, so the tests need no native module. They state which member of the binding each unit calls, with
 // which arguments, and what the unit returns; the rules themselves are tested in the core.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { coreRules, type CoreBinding, type CoreRules, type PageInput, type Plain } from '../../packages/ts/src/core/rules.ts';
+import { coreRules, type CoreBinding, type CoreRules, type PageInput, type Plain } from '../../packages/ts/src/app/core-rules.ts';
 
 type Call = [string, unknown[]];
 
