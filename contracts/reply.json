@@ -127,7 +127,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.18"
+        "sentence": "HY-52.19"
       }
     },
     {
@@ -154,7 +154,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.18"
+        "sentence": "HY-52.19"
       }
     },
     {
@@ -177,7 +177,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.18"
+        "sentence": "HY-52.19"
       }
     },
     {
@@ -204,7 +204,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.18"
+        "sentence": "HY-52.19"
       }
     },
     {
@@ -495,8 +495,8 @@
       }
     },
     {
-      "id": "a_max_age_above_the_safe_range_is_not_an_integer_in_node",
-      "label": "a max age above the safe range is not an integer in Node, whose binding takes a safe integer only (B-2)",
+      "id": "a_max_age_above_the_safe_range_fails_with_invalid_number",
+      "label": "a Max-Age above the safe range is outside the type int, which the binding refuses with invalid_number (B-2)",
       "calls": [
         [
           "cookie",
@@ -512,44 +512,11 @@
         "status": null,
         "category": "value",
         "message": null
-      },
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-52.18"
       }
     },
     {
-      "id": "a_max_age_above_the_safe_range_is_out_of_range_in_php_and_python",
-      "label": "a max age of 2^53 is an integer of PHP and Python outside ±(2^53 − 1), which hyper refuses with integer_range",
-      "calls": [
-        [
-          "cookie",
-          [
-            "\"a\"",
-            "\"b\"",
-            "9007199254740992"
-          ]
-        ]
-      ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-52.18"
-      },
-      "raises": {
-        "kind": "integer_range",
-        "status": null,
-        "category": "value",
-        "message": null
-      }
-    },
-    {
-      "id": "a_negative_max_age_outside_the_safe_range_fails_with_its_type_in_node",
-      "label": "a negative max age outside the safe range fails with its type in Node, whose binding takes a safe integer only (B-2)",
+      "id": "a_negative_max_age_outside_the_safe_range_fails_with_invalid_number",
+      "label": "a negative Max-Age outside the safe range is outside the type int, which the binding refuses with invalid_number (B-2)",
       "calls": [
         [
           "cookie",
@@ -565,39 +532,6 @@
         "status": null,
         "category": "value",
         "message": null
-      },
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-52.18"
-      }
-    },
-    {
-      "id": "a_negative_max_age_outside_the_safe_range_is_out_of_range_in_php_and_python",
-      "label": "a max age of -2^53 is an integer of PHP and Python outside ±(2^53 − 1), which hyper refuses with integer_range",
-      "calls": [
-        [
-          "cookie",
-          [
-            "\"a\"",
-            "\"b\"",
-            "-9007199254740992"
-          ]
-        ]
-      ],
-      "raises": {
-        "kind": "integer_range",
-        "status": null,
-        "category": "value",
-        "message": null
-      },
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-52.18"
       }
     },
     {
@@ -1323,7 +1257,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.18"
+        "sentence": "HY-52.19"
       }
     },
     {
@@ -1348,7 +1282,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.18"
+        "sentence": "HY-52.19"
       }
     },
     {
@@ -1408,7 +1342,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.18"
+        "sentence": "HY-52.19"
       }
     },
     {
@@ -1433,7 +1367,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.18"
+        "sentence": "HY-52.19"
       }
     },
     {
@@ -1509,8 +1443,8 @@
       }
     },
     {
-      "id": "a_status_above_the_safe_range_fails_with_its_type_in_node",
-      "label": "a status above the safe range fails with its type in Node, whose binding takes a safe integer only (B-2)",
+      "id": "a_status_above_the_safe_range_fails_with_invalid_number",
+      "label": "a status above the safe range is outside the type int, which the binding refuses with invalid_number (B-2)",
       "calls": [
         [
           "status",
@@ -1524,37 +1458,6 @@
         "status": null,
         "category": "value",
         "message": null
-      },
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-52.18"
-      }
-    },
-    {
-      "id": "a_status_above_the_safe_range_is_out_of_range_in_php_and_python",
-      "label": "a status of 2^53 + 1 is an integer of PHP and Python outside ±(2^53 − 1), which hyper refuses with integer_range",
-      "calls": [
-        [
-          "status",
-          [
-            "9007199254740993"
-          ]
-        ]
-      ],
-      "raises": {
-        "kind": "integer_range",
-        "status": null,
-        "category": "value",
-        "message": null
-      },
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-52.18"
       }
     }
   ],

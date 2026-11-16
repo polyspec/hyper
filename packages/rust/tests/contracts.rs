@@ -71,8 +71,8 @@ fn check<T: std::fmt::Debug>(case: &Value, result: &Result<T, Error>, ok: impl F
     }
 }
 
-/// Whether a case runs in PHP and Python, whose binding gives the core every i64 (B-2); a case only of Node states
-/// what the binding of Node refuses before the core runs.
+/// Whether a case runs in PHP and Python, whose binding gives the core the integers of the type `int` (B-2); a case
+/// only of Node states what Node takes as such an integer, a float with an integer value, which PHP and Python refuse.
 fn runs_in_php(case: &Value) -> bool {
     match case.get("only") {
         None => true,
@@ -87,7 +87,7 @@ fn runs_in_php(case: &Value) -> bool {
 fn is_binding_case(case: &Value) -> bool {
     matches!(
         case["raises"]["kind"].as_str(),
-        Some("invalid_argument_type" | "invalid_text")
+        Some("invalid_argument_type" | "invalid_number" | "invalid_text")
     )
 }
 

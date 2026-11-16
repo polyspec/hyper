@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2ce765a1c7f146f2faa462fa3e636dd619e6e375f42f2848c7eaadeb973c2826 -->
+<!-- source-sha256: 78b22f84100dacf9ab56f31b20edc40d6abaa825dd425c9e841f591a63c1df84 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- HY-52.18과 HY-69.9는 은퇴하고, HY-52.19와 HY-69.10은 `Max-Age`와 reply 상태의 범위를 binding이 판정한다고 적는다. binding은 그것을 type `int`로 받으므로 ±(2^53 − 1) 밖의 정수는 모든 언어에서 core가 실행되기 전에 binding의 kind `invalid_number`로 실패한다(B-2). HY-52.18과 HY-69.9는 PHP와 Python에 hyper의 kind `integer_range`를 주었다. core는 Rust 호출자의 `i64`에 대해 `integer_range`를 유지하며, `packages/rust/tests/rules.rs`가 그것을 시험한다. `contracts/reply.json`에서 안전 범위 밖 정수의 case 세 쌍은 각각 `invalid_number`를 내는 case 하나가 된다. `rules.reply_status`는 `integer_range`를 지정하지 않으므로 v0.0.13의 `binding check`는 CK-19, CK-20, CK-94 외에 아무것도 보고하지 않는다. `make core-test`는 78개 통과를 준다.
 - `make binding-cases`는 `contracts/`의 section 12개(csrf, result, reply, context, build)에서 group 14개의 case 154개를 `var/binding-cases/`에 쓰고, `packages/rust/interface.json`은 각 group을 `cases`의 행에서 지정하므로 다섯 binding의 생성된 test가 그것을 실행한다(HR-100). v0.0.13의 `binding check`는 그 형식을 받아들인다. `rules.reply_status`는 type `int`를 받으므로, core가 `integer_range`로 거부하는 2^53 + 1의 case(HY-52.18)는 type 밖이며 binding이 core 전에 거부한다. CK-22는 `integer_range`를 내는 case가 없다고 보고한다. `tests/scripts/binding-cases.test.mts`는 test 4개를 가진다.
 - HY-42.12는 은퇴하고 HY-42.14가 그 규칙을 protocol에 맞게 적는다. 두 `Content-Type` 줄은 media type이 아닌 이어진 값을 주며 그것은 상태 400을 받는다(HY-59.12). HY-42.12는 은퇴한 HY-59.7과 form type이 아닌 media type의 415를 지정했다. 두 `Hyper-Context` 줄은 context hash가 아닌 값을 준다(HY-127.2). core를 부르지 않는 서버의 Node test는 그 415를 유지하고 protocol의 400을 밝힌다. `contracts/interfaces.json`의 field line 행 네 개는 HY-42.8부터 HY-42.13까지의 번호를 지정하는데, H28.11-10의 merge가 그것을 main의 번호로 남겼다. `packages/rust/tests/rules.rs`는 이어진 `Hyper-Context`의 test를 가지며, core는 host가 이은 값을 읽으므로 그 test는 이 변경 전의 tree에서도 통과한다. `make core-test`는 77개 통과를 준다.
 - Rust core는 HY-133의 외부 location을 정한다. `location::outside_location`은 location을 HY-133.2의 문법으로 검사하고 `not_outside_location`으로 실패하며(HY-133.5), `location::origin`은 그 origin을 주거나 없음을 준다(HY-133.13). `packages/rust/interface.json`은 둘을 `rules.outside_location`과 `rules.origin`으로, 그 `errors.kinds`는 variant `NotOutsideLocation`을 지정한다. protocol의 kind 표는 행 `not_outside_location`과 `outside_redirect_stores`(HY-133.10)를 가지며, 그 kind는 `contracts/result.json`이 적는다. `packages/rust/tests/contracts.rs`는 `outside`의 case 30개와 `origin`의 case 10개를 core에 대해 실행하며, 이 변경 전의 tree에서는 compile되지 않는다. `make core-test`는 76개 통과를 주고, `make core-lint`와 `make core-fmt-check`는 통과한다.

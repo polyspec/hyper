@@ -771,3 +771,21 @@ fn a_joined_hyper_context_is_no_context_hash() {
         joined.as_bytes()
     )));
 }
+
+#[test]
+fn an_integer_outside_the_data_model_is_out_of_range() {
+    // HY-52.19, HY-69.10: a binding refuses such an integer with its type int before the core runs; the core refuses
+    // the i64 that a Rust caller gives with integer_range, before the sign of a Max-Age and the status are checked.
+    use polyspec_hyper::{reply, Error};
+    for value in [9_007_199_254_740_992, -9_007_199_254_740_992] {
+        assert!(matches!(reply::status(value), Err(Error::IntegerRange)));
+        assert!(matches!(
+            reply::cookie("a", "b", Some(value)),
+            Err(Error::IntegerRange)
+        ));
+    }
+    assert!(matches!(
+        reply::status(9_007_199_254_740_991),
+        Err(Error::ReplyStatusNotAllowed(_))
+    ));
+}

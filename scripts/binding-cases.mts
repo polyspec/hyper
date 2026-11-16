@@ -21,7 +21,7 @@ export interface Section {
 }
 
 // The kinds that a binding decides before the core runs (binding G-5): their cases are the binding's own.
-const BINDING_KINDS = new Set(['invalid_argument_type', 'invalid_text']);
+const BINDING_KINDS = new Set(['invalid_argument_type', 'invalid_number', 'invalid_text']);
 
 // The targets of a case whose `only` names languages of the servers: Node is also WASM, whose numbers are those of
 // JavaScript, and Go, whose numbers no language of the servers states, takes no such case.
