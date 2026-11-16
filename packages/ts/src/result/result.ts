@@ -95,6 +95,6 @@ export class Result {
 
   // Fails for an outside redirect, which stores no flash value and no changed topic (HY-133).
   private refuseOutside(): void {
-    if (this.isOutside()) throw new RangeError('an outside redirect holds no flash value or changed topic (HY-133)');
+    if (this.isOutside()) throw rules().valueError('an outside redirect holds no flash value or changed topic (HY-133)', 'outside_redirect_stores');
   }
 }

@@ -173,7 +173,10 @@ final class Result
     private function refuseOutside(): void
     {
         if ($this->isOutside()) {
-            throw new \InvalidArgumentException('an outside redirect holds no flash value or changed topic (HY-133)');
+            throw new HyperValueError(
+                'an outside redirect holds no flash value or changed topic (HY-133)',
+                'outside_redirect_stores',
+            );
         }
     }
 

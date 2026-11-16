@@ -14,6 +14,8 @@ pub enum Error {
     NotRedirectResult,
     /// An outside redirect to a text that is no outside location (HY-133.5).
     NotOutsideLocation,
+    /// A flash value or a changed topic of an outside redirect, which stores neither (HY-133.10).
+    OutsideRedirectStores,
     /// A page status other than 200, 409 and 422 (HY-58.6).
     PageStatusNotAllowed(i64),
     /// A page status of a reply other than 403 (HY-69.10).
@@ -80,6 +82,8 @@ pub enum ErrorCode<'a> {
     NotRedirectResult,
     /// An outside redirect to a text that is no outside location (HY-133.5).
     NotOutsideLocation,
+    /// A flash value or a changed topic of an outside redirect, which stores neither (HY-133.10).
+    OutsideRedirectStores,
     /// A page status other than 200, 409 and 422 (HY-58.6).
     PageStatusNotAllowed,
     /// A page status of a reply other than 403 (HY-69.10).
@@ -148,6 +152,7 @@ impl Error {
         match self {
             Error::NotApplicationPath => Part::Own("not_application_path", Category::Value),
             Error::NotOutsideLocation => Part::Own("not_outside_location", Category::Value),
+            Error::OutsideRedirectStores => Part::Own("outside_redirect_stores", Category::Value),
             Error::NotRedirectResult => Part::Own("not_redirect_result", Category::Value),
             Error::PageStatusNotAllowed(_) => Part::Own("page_status_not_allowed", Category::Value),
             Error::ReplyStatusNotAllowed(_) => {
@@ -191,6 +196,7 @@ impl Error {
         match self {
             Error::NotApplicationPath => ErrorCode::NotApplicationPath,
             Error::NotOutsideLocation => ErrorCode::NotOutsideLocation,
+            Error::OutsideRedirectStores => ErrorCode::OutsideRedirectStores,
             Error::NotRedirectResult => ErrorCode::NotRedirectResult,
             Error::PageStatusNotAllowed(_) => ErrorCode::PageStatusNotAllowed,
             Error::ReplyStatusNotAllowed(_) => ErrorCode::ReplyStatusNotAllowed,
@@ -291,6 +297,7 @@ impl fmt::Display for Error {
         match self {
             Error::NotApplicationPath => f.write_str("a redirect location is not an application path (HY-46)"),
             Error::NotOutsideLocation => f.write_str("an outside location is not an http or https URL with a host (HY-133)"),
+            Error::OutsideRedirectStores => f.write_str("an outside redirect holds no flash value or changed topic (HY-133)"),
             Error::NotRedirectResult => f.write_str("a redirect stop needs a redirect result (HY-50)"),
             Error::PageStatusNotAllowed(status) => write!(f, "a page status {status} is not 200, 409 or 422 (HY-58)"),
             Error::ReplyStatusNotAllowed(status) => write!(f, "page status {status} of a reply is not 403 (HY-69)"),

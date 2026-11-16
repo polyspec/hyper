@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 13ce090471898eda155e512d91e1278c577fade2bc15b40bbb01ee26e45fe6cb -->
+<!-- source-sha256: bdfb61e58e4e92d5d3bdcc3ca56a8b9d4c4a294a470d9fe92e89cca0cf638a5a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- core는 HY-132 kind 표의 category `value`인 kind `outside_redirect_stores`를 가진다(HY-133.10): `Error::OutsideRedirectStores`와 그 `ErrorCode`, `packages/rust/interface.json`의 `errors.kinds` 행이며, 생성된 binding이 이제 이를 가진다. PHP, Node, Python 서버에서 outside redirect의 `flash`와 `changed`는 그 kind로 binding의 class `HyperValueError`를 던진다. 이들은 `\InvalidArgumentException`, `RangeError`, `ValueError`를 던졌고 binding은 그 kind를 만들 수 없었으므로 contracts/result.json의 `outsideStores` case 4개가 실패했다. `tests/error_code.rs`는 계약이 이름 붙인 code 사이에 그 kind를 둔다(H35.30).
 
 - case 단계가 `raises`로 적는 open error는 kind `invalid_application`을 가진 category `value`의 hyper class다(HY-106.21). docs/spec/recipe.md가 이제 이를 정한다. PHP runner의 `CaseRules::openError`, `case-rules.ts`의 `openError`, `case_rules.py`의 `open_error`는 `raisesOf`로 이를 검사하며, `raisesOf`는 hyper의 오류가 아닌 오류를 다시 던진다. 이들은 class `\InvalidArgumentException`, `Error`, `ValueError`를 정확히 검사했다. PHP, Node, Python 서버는 애플리케이션을 여는 모든 경로에서 이 오류를 던진다: option의 limit, form type, base path, disconnect hook, manifest와 그 region, route, kept path, router의 route path(HY-4.6), representation과 그 handler(HY-118), `reads.json`, `program.json`, 서버 program의 빠진 출력(HY-48.2)이며, 빠진 `build.json`은 kind `invalid_build`를 유지한다. Node 서버는 open 때 `@polyspec/hyper-client` 검사의 오류에도 그 kind를 준다. 이들은 `\InvalidArgumentException`, `Error`, `ValueError`를 던졌다. link된 template checkout의 `@polyspec/template/render`에서 `make packages`가 TS2307로 실패하므로 case run은 돌릴 수 없었다(H35.29-4).
 

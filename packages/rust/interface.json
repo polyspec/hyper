@@ -119,6 +119,10 @@
         "category": "value"
       },
       {
+        "variant": "polyspec_hyper::ErrorCode::OutsideRedirectStores",
+        "category": "value"
+      },
+      {
         "variant": "polyspec_hyper::ErrorCode::PageStatusNotAllowed",
         "category": "value"
       },

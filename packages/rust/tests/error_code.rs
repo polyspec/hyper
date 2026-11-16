@@ -38,6 +38,7 @@ fn name(code: ErrorCode<'_>) -> &'static str {
     match code {
         ErrorCode::NotApplicationPath => "NotApplicationPath",
         ErrorCode::NotOutsideLocation => "NotOutsideLocation",
+        ErrorCode::OutsideRedirectStores => "OutsideRedirectStores",
         ErrorCode::NotRedirectResult => "NotRedirectResult",
         ErrorCode::PageStatusNotAllowed => "PageStatusNotAllowed",
         ErrorCode::ReplyStatusNotAllowed => "ReplyStatusNotAllowed",
@@ -297,6 +298,7 @@ fn a_failure_of_hyper_projects_to_its_own_code_which_the_contract_lists() -> Res
     let failures = [
         (Error::NotApplicationPath, ErrorCode::NotApplicationPath),
         (Error::NotOutsideLocation, ErrorCode::NotOutsideLocation),
+        (Error::OutsideRedirectStores, ErrorCode::OutsideRedirectStores),
         (Error::NotRedirectResult, ErrorCode::NotRedirectResult),
         (
             Error::PageStatusNotAllowed(500),

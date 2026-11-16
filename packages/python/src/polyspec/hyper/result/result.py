@@ -126,6 +126,7 @@ class Result:
     def _refuse_outside(self) -> None:
         """Fails for an outside redirect, which stores no flash value and no changed topic (HY-133)."""
         if self._is_outside():
-            raise ValueError(
-                "an outside redirect holds no flash value or changed topic (HY-133)"
+            raise core_rules().value_error(
+                "an outside redirect holds no flash value or changed topic (HY-133)",
+                "outside_redirect_stores",
             )
