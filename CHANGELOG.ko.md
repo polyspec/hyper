@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 55b957585056630469f6049f4572747611903b7511a97a3c266d45a8c12643f9 -->
+<!-- source-sha256: 1ec421cc0393bda5e8820512cd0af3d84026fd840e82f911d1e2dbb2c01dbc2a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 저장소는 kit 0.0.118을 쓴다. `make hyper-install-python`을 실행하는 각 CI group은 install-tools로 maturin을 설치하고(kit K1278), link는 Python provider의 maturin python-source를 읽으며(K1279) 설치된 배포판일 때만 provider package를 연결한다(K1280)(H35.16-1).
 - 브라우저 코드(packages/client)는 HY-132.7의 hyper 오류 class인 `HyperValueError`(`RangeError` 확장), `HyperTypeError`(`TypeError` 확장), `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`(`Error` 확장)를 property `kind`와 `status`와 함께 정의하고 entry에서 export한다. open 때 `checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`의 실패는 kind `invalid_application`, status null의 `HyperValueError`를 던진다(HY-106.21). 이 검사들은 kind 없는 `Error`를 던졌으므로 호출자가 open 실패를 kind로 구별할 수 없었다. shared data의 member context는 kind `shared_holds_context`의 `HyperValueError`를 던진다(HY-128). 브라우저 코드의 어떤 message도 더 이상 `hyper: `로 시작하지 않는다(HY-132.4, HY-106.19). 브라우저 코드의 다른 실패는 어떤 statement도 kind를 정하지 않으므로 class를 유지한다. `tests/errors.test.ts`는 open 때 각 검사의 class, kind, message를 읽는다(H35.29-5-1).
 - 모든 Cargo.toml이 `polyspec-binding-core`를 tag `v0.0.17`로, `package.json`이 생성기 `@polyspec/binding`을 v0.0.17 release asset으로 요구하고, lock이 둘을 pin한다. release 0.0.16과 0.0.17은 생성 코드를 고치며(GN-4e, GN-13be), 생성기의 명령행은 바뀌지 않아 recipe는 형태를 유지한다(H35.14-3-3).
 - HY-132.7은 binding 없이 실행되는 브라우저 코드(packages/client)의 실패의 오류를 정한다: member `kind`와 `status`를 가진 그 실패 category의 자기 class이며, 따라서 open 때 `checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`의 실패는 kind `invalid_application`의 `HyperValueError`이다(HY-106.21). HY-132.8은 Node 서버가 open 때 그런 실패를 같은 category의 binding class로, 같은 kind, 상태, message를 가지고 낸다고 정한다. 어떤 statement도 class나 kind를 정하지 않았고, 브라우저 코드는 kind 없는 `Error`를 던진다. checklist는 구현을 H35.29-5-1과 H35.29-5-2로 등록한다(H35.29-5).

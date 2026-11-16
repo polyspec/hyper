@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: f3187b511b4c99ad7a7348d624ca9ec15ef371500b549285c7587b873a379351 -->
+<!-- source-sha256: ed2d500521003d3a524249299452bee5dea7856a609a96c1a8811cb24a23e76d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -517,6 +517,7 @@
 | H35.14-3-3 | 모든 Cargo.toml이 `polyspec-binding-core`를 tag `v0.0.17`(tag object 00fd80e9, commit 8db1add6)로, `package.json`이 `@polyspec/binding`을 v0.0.17 release asset으로 요구하고, lock이 둘을 pin한다. 생성기의 명령행은 0.0.15와 같으므로 recipe는 형태를 유지한다. 개발 checkout은 binding을 그 tag의 detached worktree에 연결한다. 연결된 run은 template이 binding 0.0.17 위에서 빌드한 snapshot을 낸 뒤에야 증거가 된다. | Cargo.toml, Cargo.lock, package.json, package-lock.json | `make core-test` | [v] |
 | H35.15 | 세 서버는 core의 `Pages`를 만들고 각 요청을 `routeRequest`로 route한다(HY-132.2). plain route는 session 없이 답하며(HY-120.3), 손 routing과 손 media type 검사는 같은 커밋에서 지운다. 이것이 H35.12-1과 H35.12-2를 낸다. | packages/php/src, packages/ts/src, packages/python/src, contracts/interfaces.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-node` | [ ] |
 | H35.16 | kit 0.0.116(kit K1266~K1273)을 채택한다. `package.json`이 그 release asset을, `package-lock.json`이 그 integrity를 적는다. | package.json, package-lock.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
+| H35.16-1 | kit 0.0.118(kit K1277~K1280)을 채택한다. `package.json`이 그 release asset을, `package-lock.json`이 그 integrity를 적고, `make hyper-install-python`을 실행하는 각 CI group은 install-tools로 maturin을 설치한다(K1278). link는 provider의 maturin python-source를 읽고(K1279) 설치된 배포판만 연결하며(K1280), H35.28이 이를 필요로 한다. | package.json, package-lock.json, Makefile, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.17 | script 시험의 빠진 입력은 그것을 쓰는 target을 이름하고, install target을 돌리지 않는 `make hyper-test-scripts` 전에 그것을 돌리라고 말한다(HR-85, HR-89). | tests/scripts/requires.mts, tests/scripts/requires.test.mts, config/owner-checks.json | `make hyper-test-scripts` | [ ] |
 | H35.18 | 실패하는 test는 그 실패로 실행을 끝내고 process와 임시 directory를 남기지 않는다(HR-84, HR-87). worker가 실패한 session test는 시작한 process를 모두 멈추고 그 directory를 지운다. | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.19 | script 시험의 모든 기다림은 timer나 test runner의 시간 제한이 아니라 사건으로 끝난다(HR-89, HR-84). | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |

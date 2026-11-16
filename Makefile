@@ -547,13 +547,13 @@ CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse
 # alone, board also Python and Chromium, python only the Python of its pins. The group bench is the job of bench.yml,
 # whose targets are reports and belong to no check (make ci-bench).
 CI_GROUPS := gates docs php node board python core
-# hyper-install-python builds the native module with Cargo, so each group that runs it names rust. Its maturin of mise.toml
-# has no selector of install-tools of kit, so no group installs it yet; name it in those groups once install-tools selects it.
-CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan rust
+# hyper-install-python builds the native module with maturin of mise.toml and Cargo, so each group that runs it names
+# maturin and rust (install-tools of kit selects maturin since K1278).
+CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan rust maturin
 CI_SETUP_gates := install-tools install-symbols hyper-install-php hyper-install-python
 CI_SYMBOLS_gates := php
 CI_TARGETS_gates := $(GATE_TARGETS)
-CI_TOOLS_docs := node php composer pie python uv rust
+CI_TOOLS_docs := node php composer pie python uv rust maturin
 CI_SETUP_docs := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-ext
 CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check recipe-check
 CI_TOOLS_php := node php composer pie rust
@@ -562,10 +562,10 @@ CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php
 CI_TOOLS_node := node
 CI_SETUP_node := install-tools
 CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check
-CI_TOOLS_board := node php composer pie python uv rust
+CI_TOOLS_board := node php composer pie python uv rust maturin
 CI_SETUP_board := install-tools hyper-install-php hyper-install-python hyper-install-browser
 CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
-CI_TOOLS_python := node python uv rust
+CI_TOOLS_python := node python uv rust maturin
 CI_SETUP_python := install-tools hyper-install-python
 CI_TARGETS_python := hyper-test-python hyper-test-python-render
 # The group core checks the Rust core and the bindings of its five targets with the binding generator of package.json (H35.2):
@@ -575,7 +575,7 @@ CI_TARGETS_python := hyper-test-python hyper-test-python-render
 CI_TOOLS_core := node rust php python uv go
 CI_SETUP_core := install-tools
 CI_TARGETS_core := core-test core-lint core-fmt-check bindings-check test-bindings
-CI_TOOLS_bench := node php composer pie python uv rust
+CI_TOOLS_bench := node php composer pie python uv rust maturin
 CI_SETUP_bench := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser hyper-ext
 CI_TARGETS_bench := bench bench-sessions
 
