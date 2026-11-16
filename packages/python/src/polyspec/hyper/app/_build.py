@@ -19,7 +19,9 @@ class Build:
         try:
             data = Path(file).read_bytes()
         except OSError as error:
-            raise InvalidBuild(f"{file} is missing or not readable (HY-125)") from error
+            failure = InvalidBuild(f"{file} is missing or not readable (HY-125)")
+            failure.add_note(f"hyper: the build file is {file}")
+            raise failure from error
         # HY-132.2: the core reads the build id of the bytes and fails with invalid_build; the note of the failure
         # names the path of the file (HY-125.5).
         try:

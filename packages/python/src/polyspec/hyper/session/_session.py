@@ -3,14 +3,13 @@ HY-40)."""
 
 from __future__ import annotations
 
-import re
 import secrets
 
+from ..app._core_rules import core_rules
 from ..data._data_model import DataModel
 from ._flash import Flash
 from .session_store import SessionStore
 
-_TOKEN = re.compile(r"[0-9a-f]{64}\Z")
 _TOKEN_KEY = "_hyper_csrf"
 _FLASH_KEY = "_hyper_flash"
 _KEEP_KEY = "_hyper_keep"
@@ -23,11 +22,11 @@ class Session:
         self._store = store
 
     def csrf_token(self) -> str:
-        """Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use or over another
-        value (HY-24)."""
+        """Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use (HY-24.1). A stored
+        text of another form fails, which the core checks (HY-24.14, HY-132.2)."""
         token = self._store.get(_TOKEN_KEY)
-        if isinstance(token, str) and _TOKEN.fullmatch(token) is not None:
-            return token
+        if isinstance(token, str):
+            return core_rules().session_stored_token(token)
         created = secrets.token_bytes(32).hex()
         self._store.set(_TOKEN_KEY, created)
         return created
