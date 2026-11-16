@@ -1,12 +1,11 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a3e301bac9015f039e705dd9cff6ae9af6a517e1f4687aa0e33ed1de4b0a18ed -->
+<!-- source-sha256: a6050c18b4dd8a8f2394883824e2746a75ab4f0172f889b8757e3803cde6e883 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
-- package data 시험은 Python package를 빌드하는 `tool.maturin`의 `python-source`를 읽고, 그 안의 `py.typed` 표지를 확인한다. 전에는 `pyproject.toml`에 더는 없는 `tool.setuptools`를 읽어, 표지를 가진 package에서도 실패했다(H35.7).
 - Node와 Python 서버의 `CoreRules`는 규칙마다 member 하나를 갖는 unit 하나이며, member는 unit과 규칙의 이름을 따른다(`csrfMask`, `csrf_mask`). PHP 서버와 같은 모양이다. 전에는 member의 이름공간이 `contracts/interfaces.json`의 unit이 아니었고, Python module은 파일 하나에 class 열넷을 담아 HYR-4를 어겼다(H35.7).
 - Node 서버의 core 규칙은 group `app`의 디렉터리인 `packages/ts/src/app/core-rules.ts`에 있다(HYR-4). `src/core/`는 group이 아니어서 `make recipe-check`가 이 파일을 어느 unit도 갖지 않는 파일로 보고했다(H35.7).
 - `make node-package`는 `packages/ts`의 의존을 root install에서 pack해 묶은 package와 함께 설치한다. 묶은 package의 offline 설치는 어느 registry에도 없는 `@polyspec/hyper-client`를 찾았고, `make test-wasm`이 `ENOTCACHED`로 실패했다(H35.7).
