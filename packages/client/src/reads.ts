@@ -3,6 +3,7 @@
 // entry of a map or element of a list. This module imports only types, so that Node runs it with its type stripping and
 // without a bundler.
 import type { Expr, MapValue, Node as Statement, Template, Value } from '@polyspec/template/render';
+import { invalidApplication } from './errors.js';
 import type { Manifest } from './manifest.js';
 
 // Resolves a path of an include or block tag against the name of the template that contains it (RT-9).
@@ -32,7 +33,7 @@ export function templateReads(load: (name: string) => Template, resolve: Resolve
 export function routeReads(manifest: Manifest, load: (name: string) => Template, resolve: ResolvePath): Record<string, RouteReads> {
   const regions = manifest.regions.flatMap((region) => (region.template === undefined ? [] : [[region.name, region.template] as const]));
   const page = manifest.regions.find((region) => region.page === true)?.name;
-  if (page === undefined) throw new Error('hyper: the manifest must declare exactly one page region');
+  if (page === undefined) throw invalidApplication('the manifest must declare exactly one page region');
   const cache = new Map<string, ReadNode>();
   const read = (name: string): ReadNode => {
     let node = cache.get(name);

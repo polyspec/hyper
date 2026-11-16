@@ -16,7 +16,7 @@ export class ObtainError extends Error {
 // page, so the call does not continue, and no region is marked.
 export class OutsideRedirect extends Error {
   constructor(url: string, location: string) {
-    super(`hyper: the document request for ${url} sends the browser to ${location}`);
+    super(`the document request for ${url} sends the browser to ${location}`);
     this.name = 'OutsideRedirect';
   }
 }
@@ -43,18 +43,18 @@ export async function requestDocument(request: Fetch, url: string, context: stri
   try {
     response = await request(url, { headers: documentHeaders(context), credentials: 'same-origin' });
   } catch (error) {
-    throw new ObtainError(`hyper: the document request for ${url} failed: ${String(error)}`, '0');
+    throw new ObtainError(`the document request for ${url} failed: ${String(error)}`, '0');
   }
   const outside = outsideLocation(response.status, response.headers);
   if (outside !== null) return { outside };
   const type = response.headers.get('content-type') ?? '';
   if (response.status !== 200 || !isHyperJson(type)) {
-    throw new ObtainError(`hyper: the document request for ${url} received status ${response.status} with ${JSON.stringify(type)}, expected status 200 with application/vnd.hyper+json`, String(response.status));
+    throw new ObtainError(`the document request for ${url} received status ${response.status} with ${JSON.stringify(type)}, expected status 200 with application/vnd.hyper+json`, String(response.status));
   }
   const text = await response.text();
   try {
     return { value: parseJson(text), url: response.url || url };
   } catch (error) {
-    throw new ObtainError(`hyper: the document JSON of ${url} is not JSON: ${String(error)}`, '0');
+    throw new ObtainError(`the document JSON of ${url} is not JSON: ${String(error)}`, '0');
   }
 }

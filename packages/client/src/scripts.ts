@@ -13,7 +13,7 @@ export function scriptKey(type: string | null, src: string | null, base: string)
 // A module script that failed to load (HYC-14, HYC-25).
 export class ScriptError extends HeadError {
   constructor(src: string) {
-    super(`hyper: module script ${src} failed to load`);
+    super(`module script ${src} failed to load`);
     this.name = 'ScriptError';
   }
 }
@@ -79,7 +79,7 @@ export class PageScripts<E extends ScriptElement> {
     for (const { element: from, key } of wanted) {
       if (held.has(key)) continue;
       // A static shell that does not declare its entry cannot tell the entry from this script (HYC-25).
-      if (entry === null && this.page.shell()) throw new HeadError(`hyper: the static shell declares no hyper-entry, so the module script ${key} is not created`);
+      if (entry === null && this.page.shell()) throw new HeadError(`the static shell declares no hyper-entry, so the module script ${key} is not created`);
       held.add(key);
       const script = this.page.element();
       for (const { name, value } of Array.from(from.attributes)) script.setAttribute(name, value);

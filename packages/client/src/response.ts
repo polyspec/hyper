@@ -1,5 +1,6 @@
 import { bind, merge, type BoundMap, type Engine, type HostFunction, type MapValue, type Value } from '@polyspec/template/render';
 import { createEngine } from './engine.js';
+import { HyperValueError } from './errors.js';
 import { applyKept } from './keep.js';
 import { DATA_TEMPLATE_NAME, keptPaths, pageRegion, type Manifest, type RouteDeclaration } from './manifest.js';
 import { Router } from './router.js';
@@ -56,14 +57,14 @@ export function createApplication(manifest: Manifest, index: TemplateIndex, fetc
 export function decodeResponse(app: Application, response: Value, path: string): DecodedResponse {
   const root = requireMap(response, 'response');
   const timezone = requireMap(root.get('env') ?? null, 'env').get('timezone');
-  if (typeof timezone !== 'string') throw new Error('hyper: env.timezone is not a string');
+  if (typeof timezone !== 'string') throw new Error('env.timezone is not a string');
   const match = app.router.match(path);
   const name = root.get('route');
   if (match === null || match.name !== name) {
-    throw new Error(`hyper: browser route ${JSON.stringify(match?.name ?? null)} for ${path} differs from server route ${JSON.stringify(name)}`);
+    throw new Error(`browser route ${JSON.stringify(match?.name ?? null)} for ${path} differs from server route ${JSON.stringify(name)}`);
   }
   const route = app.manifest.routes.find((item) => item.name === match.name);
-  if (route === undefined) throw new Error(`hyper: route ${match.name} is not in the manifest`);
+  if (route === undefined) throw new Error(`route ${match.name} is not in the manifest`);
   const loader = requireMap(root.get('regions') ?? null, 'regions');
   const decoded: DecodedResponse = {
     value: root,
@@ -133,7 +134,7 @@ export function regionTemplate(app: Application, route: RouteDeclaration, name: 
   if (name === app.page) return route.template;
   const template = app.manifest.regions.find((item) => item.name === name)?.template
     ?? route.regions?.find((item) => item.name === name)?.template;
-  if (template === undefined) throw new Error(`hyper: region ${JSON.stringify(name)} is not in the manifest or the route ${route.name}`);
+  if (template === undefined) throw new Error(`region ${JSON.stringify(name)} is not in the manifest or the route ${route.name}`);
   return template;
 }
 
@@ -156,7 +157,7 @@ export function bindParts(shared: MapValue, regions: MapValue): BoundParts {
 // present route region rendered alone as an HTML definition; an absent one has no definition (HY-13, HY-30, HY-75).
 export function renderRegion(app: Application, route: RouteDeclaration, name: string, parts: BoundParts, timezone: string): string {
   const data = parts.regions.get(name);
-  if (data === undefined) throw new Error(`hyper: region ${name} is not an object`);
+  if (data === undefined) throw new Error(`region ${name} is not an object`);
   const define: Record<string, { html: string }> = {};
   if (name === app.page) {
     for (const region of presentRouteRegions(route, parts.regions)) define[region] = { html: renderRegion(app, route, region, parts, timezone) };
@@ -190,7 +191,7 @@ export function renderParts(app: Application, decoded: DecodedResponse): Rendere
 export function toHtml(app: Application, decoded: DecodedResponse): string {
   const { title, regions } = renderParts(app, decoded);
   const page = regions.get(app.page);
-  if (page === undefined) throw new Error(`hyper: response has no region ${app.page}`);
+  if (page === undefined) throw new Error(`response has no region ${app.page}`);
   const routeRegions = new Set((decoded.route.regions ?? []).map((region) => region.name));
   let html = `<title>${title}</title>${page}`;
   for (const [name, region] of regions) {
@@ -204,7 +205,7 @@ export function toHtml(app: Application, decoded: DecodedResponse): string {
 // HYC-8, HY-31, HY-38, HY-92).
 export function renderDocument(app: Application, decoded: DecodedResponse, options: { embed: boolean }): string {
   for (const { name } of app.manifest.regions) {
-    if (!decoded.regions.has(name)) throw new Error(`hyper: document response has no region ${name}`);
+    if (!decoded.regions.has(name)) throw new Error(`document response has no region ${name}`);
   }
   const parts = bindParts(decoded.shared, decoded.regions);
   return withKeptCheck(app, decoded, parts, () => {
@@ -224,7 +225,7 @@ export function renderDocument(app: Application, decoded: DecodedResponse, optio
 // build id is 64 lowercase hexadecimal characters, which the server checked when the application opened.
 function buildHtml(decoded: DecodedResponse): string {
   const build = decoded.value.get('build');
-  if (typeof build !== 'string' || !/^[0-9a-f]{64}$/.test(build)) throw new Error('hyper: the build id of the response is not 64 lowercase hexadecimal characters (HY-125)');
+  if (typeof build !== 'string' || !/^[0-9a-f]{64}$/.test(build)) throw new Error('the build id of the response is not 64 lowercase hexadecimal characters (HY-125)');
   return `<meta name="hyper-build" content="${build}">`;
 }
 
@@ -232,7 +233,7 @@ function buildHtml(decoded: DecodedResponse): string {
 // the title rendered alone as the definition `title`, the definition `build` of the build of the page (HYC-22), and an
 // empty definition `data` and an empty definition for every manifest region (HYC-15).
 export function renderLayout(app: Application, shared: MapValue, timezone: string, build: string): string {
-  if (!/^[0-9a-f]{64}$/.test(build)) throw new Error('hyper: the build of the page is not 64 lowercase hexadecimal characters (HY-125)');
+  if (!/^[0-9a-f]{64}$/.test(build)) throw new Error('the build of the page is not 64 lowercase hexadecimal characters (HY-125)');
   const env = { timezone };
   const define: Record<string, { html: string }> = {
     title: { html: app.engine.render(app.manifest.title, shared, { env }) },
@@ -265,7 +266,7 @@ function embeddedHtml(app: Application, decoded: DecodedResponse, env: { timezon
 // because the context has one place and one source (HY-124, HY-128).
 export function withContext(shared: MapValue, context: MapValue): MapValue {
   if (shared.has('context')) {
-    throw Object.assign(new RangeError('the shared data already holds the member context (HY-128)'), { kind: 'shared_holds_context', status: null });
+    throw new HyperValueError('shared_holds_context', 'the shared data already holds the member context (HY-128)');
   }
   const anchor = shared.has('csrf') ? 'csrf' : 'title';
   const entries: [string, Value][] = [];
@@ -282,7 +283,7 @@ export function withContext(shared: MapValue, context: MapValue): MapValue {
 }
 
 export function requireMap(value: Value, label: string): MapValue {
-  if (!(value instanceof Map)) throw new Error(`hyper: ${label} is not an object`);
+  if (!(value instanceof Map)) throw new Error(`${label} is not an object`);
   return value;
 }
 

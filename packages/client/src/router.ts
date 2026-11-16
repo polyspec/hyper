@@ -1,4 +1,5 @@
 // Route matching (HY-4 to HY-8, HY-49). The PHP router implements the same rules; both pass contracts/routes.json and contracts/rest.json.
+import { invalidApplication } from './errors.js';
 
 export interface RouteMatch {
   name: string;
@@ -46,7 +47,7 @@ export function stripBasePath(path: string, basePath: string): string | null {
 }
 
 function compilePath(path: string): Segment[] {
-  if (!path.startsWith('/')) throw new Error(`route path ${JSON.stringify(path)} does not start with /`);
+  if (!path.startsWith('/')) throw invalidApplication(`route path ${JSON.stringify(path)} does not start with /`);
   if (path === '/') return [];
   const names = new Set<string>();
   const parts = path.slice(1).split('/');
@@ -59,7 +60,7 @@ function compilePath(path: string): Segment[] {
     }
     const rest = REST.exec(part)?.[1];
     if (rest !== undefined && index === parts.length - 1 && !names.has(rest)) return { rest };
-    throw new Error(`route path ${JSON.stringify(path)} has an invalid segment ${JSON.stringify(part)}`);
+    throw invalidApplication(`route path ${JSON.stringify(path)} has an invalid segment ${JSON.stringify(part)}`);
   });
 }
 
@@ -80,7 +81,7 @@ function matchSegments(segments: Segment[], parts: string[]): Record<string, str
   for (const [index, segment] of segments.entries()) {
     const part = parts[index];
     // segments and parts have the same length, checked above.
-    if (part === undefined) throw new Error(`hyper: the path has no part ${index} for its segment`);
+    if (part === undefined) throw new Error(`the path has no part ${index} for its segment`);
     if ('literal' in segment) {
       if (segment.literal !== part) return null;
     } else if ('param' in segment) {
@@ -105,7 +106,7 @@ function decodeSegment(part: string): string | null {
     } else {
       // index is below the length of part, so a code point starts there.
       const codePoint = part.codePointAt(index);
-      if (codePoint === undefined) throw new Error(`hyper: ${part} has no code point at ${index}`);
+      if (codePoint === undefined) throw new Error(`${part} has no code point at ${index}`);
       const character = String.fromCodePoint(codePoint);
       bytes.push(...encoder.encode(character));
       index += character.length;
@@ -124,7 +125,7 @@ function decodeSegment(part: string): string | null {
 // value (HY-5).
 function emptyParams(): Record<string, string> {
   const made: unknown = Object.create(null);
-  if (!isParams(made)) throw new TypeError('hyper: Object.create returned no object');
+  if (!isParams(made)) throw new TypeError('Object.create returned no object');
   return made;
 }
 

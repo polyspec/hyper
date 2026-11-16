@@ -155,7 +155,7 @@ describe('PageScripts (HYC-25)', () => {
       error = failure;
     }
     expect(error).toBeInstanceOf(HeadError);
-    expect(error).toHaveProperty('message', 'hyper: the static shell declares no hyper-entry, so the module script http://site.test/assets/hyper-AAAAAAAA.js is not created');
+    expect(error).toHaveProperty('message', 'the static shell declares no hyper-entry, so the module script http://site.test/assets/hyper-AAAAAAAA.js is not created');
     expect(page.appended).toHaveLength(0);
   });
 
@@ -198,7 +198,7 @@ describe('PageScripts (HYC-25)', () => {
     const error = await second.wait().catch((failure: unknown) => failure);
     expect(error).toBeInstanceOf(ScriptError);
     expect(error).toBeInstanceOf(HeadError);
-    expect(error).toHaveProperty('message', 'hyper: module script http://site.test/assets/reader.js failed to load');
+    expect(error).toHaveProperty('message', 'module script http://site.test/assets/reader.js failed to load');
     second.remove();
     expect(page.appended.map((script) => script.removed)).toEqual([false, true, true]);
     // The page no longer holds the removed scripts, so the next application creates them again.

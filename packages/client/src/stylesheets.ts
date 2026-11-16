@@ -36,7 +36,7 @@ export function planStylesheets(page: readonly string[], source: readonly string
 // A stylesheet link that failed to load (HYC-14, HYC-15).
 export class StylesheetError extends HeadError {
   constructor(href: string) {
-    super(`hyper: stylesheet ${href} failed to load`);
+    super(`stylesheet ${href} failed to load`);
     this.name = 'StylesheetError';
   }
 }
@@ -130,6 +130,6 @@ function loaded(link: HTMLLinkElement, key: string): Promise<void> {
 // Returns the entry of a list at an index that planStylesheets planned from that list.
 function entryAt<T>(list: readonly T[], index: number): T {
   const entry = list[index];
-  if (entry === undefined) throw new Error(`hyper: the stylesheet plan names the missing entry ${index}`);
+  if (entry === undefined) throw new Error(`the stylesheet plan names the missing entry ${index}`);
   return entry;
 }

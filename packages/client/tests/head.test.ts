@@ -21,7 +21,7 @@ describe('applyHead (HYC-15, HYC-25)', () => {
 
   it('removes what every part put into the page when one part fails to load', async () => {
     const events: string[] = [];
-    const failure = new HeadError('hyper: module script http://site.test/a.js failed to load');
+    const failure = new HeadError('module script http://site.test/a.js failed to load');
     const fails = async (): Promise<void> => {
       throw failure;
     };

@@ -218,7 +218,7 @@ describe('the build of the page (HYC-22, HY-125)', () => {
       basePath: '', element: (id) => element(id), storage: emptyStorage, document: page, currentUrl: () => 'http://localhost/list?page=2',
       fetch: async () => jsonResponse('http://localhost/list?page=2', responseBody('list', OTHER_BUILD, null, { content: { heading: 'H' }, rows: { items: [], flag: false, tab: 'a' } })),
     });
-    await expect(hyper.data('rows')).rejects.toThrow('hyper: the document of /list?page=2');
+    await expect(hyper.data('rows')).rejects.toThrow('the document of /list?page=2');
     expect(page.assigned).toEqual(['/list?page=2']);
     expect(page.mounted).toEqual([]);
   });

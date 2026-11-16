@@ -165,8 +165,8 @@ export class Hyper<E extends RegionElement = Element> {
     this.page = options.document ?? browserDocument(htmx);
     this.currentUrl = options.currentUrl ?? (() => window.location.href);
     const build = this.page.build();
-    if (build === null) throw new Error('hyper: the document has no meta element hyper-build with the build of the page (HY-125)');
-    if (!/^[0-9a-f]{64}$/.test(build)) throw new Error(`hyper: the build of the page ${JSON.stringify(build)} is not a SHA-256 hexadecimal digest (HY-125)`);
+    if (build === null) throw new Error('the document has no meta element hyper-build with the build of the page (HY-125)');
+    if (!/^[0-9a-f]{64}$/.test(build)) throw new Error(`the build of the page ${JSON.stringify(build)} is not a SHA-256 hexadecimal digest (HY-125)`);
     this.build = build;
   }
 
@@ -269,7 +269,7 @@ export class Hyper<E extends RegionElement = Element> {
     if (this.held !== null) return this.held;
     const route = this.pageRoute();
     if (!(route?.regions ?? []).some((item) => item.name === region)) {
-      throw new Error(`hyper: region ${region} is not a route region of the route ${route?.name ?? 'none'} of the current page`);
+      throw new Error(`region ${region} is not a route region of the route ${route?.name ?? 'none'} of the current page`);
     }
     try {
       await this.obtain();
@@ -307,20 +307,20 @@ export class Hyper<E extends RegionElement = Element> {
     // A response of another build is not rendered: the browser loads its page URL as a new document (HYC-22).
     if (this.buildOf(root) !== this.build) {
       this.page.assign(this.responsePath(answered).page);
-      throw new ObtainError(`hyper: the document of ${url} has another build, and the browser loads its page URL instead`, '0');
+      throw new ObtainError(`the document of ${url} has another build, and the browser loads its page URL instead`, '0');
     }
     const route = this.pageRoute();
     const path = stripBasePath(pathOf(answered), this.options.basePath);
     const routed = path === null ? null : this.app.router.match(path);
     if (path === null || routed === null || routed.name !== route?.name) {
-      throw new ObtainError(`hyper: the document of ${url} routes to ${routed?.name ?? 'no route'}, expected the route ${route?.name ?? 'none'} of the current page`, '0');
+      throw new ObtainError(`the document of ${url} routes to ${routed?.name ?? 'no route'}, expected the route ${route?.name ?? 'none'} of the current page`, '0');
     }
     let decoded: DecodedResponse;
     try {
       decoded = decodeResponse(this.app, root, path);
       this.adoptContext(decoded);
     } catch (error) {
-      throw new ObtainError(`hyper: the document of ${url} cannot be decoded: ${String(error)}`, '0');
+      throw new ObtainError(`the document of ${url} cannot be decoded: ${String(error)}`, '0');
     }
     this.applyBrowserKept(decoded);
     this.hold(decoded);
@@ -394,10 +394,10 @@ export class Hyper<E extends RegionElement = Element> {
   async setFrom(element: AssignmentElement): Promise<void> {
     // While nothing is held, the route regions of the route of the current page (HYC-7).
     const names = this.held === null ? (this.pageRoute()?.regions ?? []).map((item) => item.name) : [...this.held.regions.keys()];
-    if (names.length === 0) throw new Error('hyper: hy-set is outside a route region');
+    if (names.length === 0) throw new Error('hy-set is outside a route region');
     // A region element is the element whose id is the name of a route region of the held route (HY-3, HYC-5).
     const region = element.closest(names.map((name) => `[id="${name}"]`).join(','))?.id;
-    if (region === undefined || region === '') throw new Error('hyper: hy-set is outside a route region');
+    if (region === undefined || region === '') throw new Error('hy-set is outside a route region');
     const assignments = parseAssignments(element.getAttribute('hy-set') ?? '');
     await this.change(region, (data) => {
       for (const { path, value } of assignments) assignPath(data, path, bindValue(value));
@@ -433,7 +433,7 @@ export class Hyper<E extends RegionElement = Element> {
       const html = await this.app.templates.render(() => renderRegionOf(this.app, held.route, region, held.shared, regions, held.timezone));
       if (replaced()) return;
       const target = this.element(region);
-      if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
+      if (target === null) throw new Error(`region element #${region} does not exist`);
       await this.htmx.swap({ text: html, target, swap: 'innerMorph', sourceElement: target });
       if (replaced()) {
         if (this.requireHeld().regions.has(region)) await this.renderHeld(region);
@@ -707,7 +707,7 @@ export class Hyper<E extends RegionElement = Element> {
   // value is sent next; otherwise a success clears the pending value and a failure marks the region (HYC-13).
   private save(region: string, path: string): void {
     const pending = this.pending.get(region)?.get(path);
-    if (pending === undefined) throw new Error(`hyper: region ${region} has no pending value at ${path}`);
+    if (pending === undefined) throw new Error(`region ${region} has no pending value at ${path}`);
     const change = pending.change;
     pending.sending = change;
     const csrf = this.held?.shared.get('csrf');
@@ -731,7 +731,7 @@ export class Hyper<E extends RegionElement = Element> {
     const held = this.requireHeld();
     const html = await this.app.templates.render(() => renderRegionOf(this.app, held.route, region, held.shared, held.regions, held.timezone));
     const target = this.element(region);
-    if (target === null) throw new Error(`hyper: region element #${region} does not exist`);
+    if (target === null) throw new Error(`region element #${region} does not exist`);
     await this.htmx.swap({ text: html, target, swap: 'innerMorph', sourceElement: target });
     clearError(target);
   }
@@ -739,19 +739,19 @@ export class Hyper<E extends RegionElement = Element> {
   // Returns the declaration of a route that the router matched; the router holds the routes of the manifest.
   private routeNamed(name: string): RouteDeclaration {
     const route = this.app.manifest.routes.find((item) => item.name === name);
-    if (route === undefined) throw new Error(`hyper: route ${name} is not in the manifest`);
+    if (route === undefined) throw new Error(`route ${name} is not in the manifest`);
     return route;
   }
 
   private requireHeld(): Held {
-    if (this.held === null) throw new Error('hyper: no response data is held');
+    if (this.held === null) throw new Error('no response data is held');
     return this.held;
   }
 
   // Only the present route regions of the held route change in the browser (HYC-11, HY-75).
   private requireRouteRegion(region: string): void {
     if (!this.requireHeld().regions.has(region)) {
-      throw new Error(`hyper: region ${region} is not a present route region of the held route`);
+      throw new Error(`region ${region} is not a present route region of the held route`);
     }
   }
 
@@ -776,13 +776,13 @@ export class Hyper<E extends RegionElement = Element> {
     if (member === undefined) return;
     const context = requireMap(member, 'context');
     const hash = context.get('hash');
-    if (typeof hash !== 'string') throw new Error('hyper: context.hash is not a string');
+    if (typeof hash !== 'string') throw new Error('context.hash is not a string');
     const value = context.get('value');
     if (value !== undefined) {
       this.contextHash = hash;
       this.contextValue = requireMap(value, 'context.value');
     } else if (hash !== this.contextHash) {
-      throw new Error(`hyper: the response has the context ${hash} without value, and the browser holds ${this.contextHash ?? 'no context'} (HYC-22)`);
+      throw new Error(`the response has the context ${hash} without value, and the browser holds ${this.contextHash ?? 'no context'} (HYC-22)`);
     }
     if (this.contextValue !== null) decoded.shared = withContext(decoded.shared, this.contextValue);
   }
@@ -790,14 +790,14 @@ export class Hyper<E extends RegionElement = Element> {
   // Returns the build id of a JSON response, which every response holds (HY-128).
   private buildOf(root: MapValue): string {
     const build = root.get('build');
-    if (typeof build !== 'string') throw new Error('hyper: the response has no build id (HY-128)');
+    if (typeof build !== 'string') throw new Error('the response has no build id (HY-128)');
     return build;
   }
 
   // Returns the path of a response URL without the base path, and the page URL of it with its query (HYC-1, HYC-22).
   private responsePath(url: string): { path: string; page: string } {
     const path = stripBasePath(pathOf(url), this.options.basePath);
-    if (path === null) throw new Error(`hyper: response URL ${url} is outside the base path ${this.options.basePath}`);
+    if (path === null) throw new Error(`response URL ${url} is outside the base path ${this.options.basePath}`);
     return { path, page: path + new URL(url, 'http://hyper.invalid').search };
   }
 
@@ -826,7 +826,7 @@ export function parseAssignments(text: string): { path: string; value: unknown }
       if (part === '') continue;
       const found = /^([A-Za-z_][A-Za-z0-9_]*(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|\d+))*)\s*=\s*(.+)$/s.exec(part);
       const [, assignedPath, json] = found ?? [];
-      if (assignedPath === undefined || json === undefined) throw new Error(`hyper: invalid hy-set assignment ${JSON.stringify(part)}`);
+      if (assignedPath === undefined || json === undefined) throw new Error(`invalid hy-set assignment ${JSON.stringify(part)}`);
       assignments.push({ path: assignedPath, value: JSON.parse(json) });
     }
   }
@@ -841,9 +841,9 @@ function assignPath(data: Value | undefined, path: string, value: Value): void {
   let container = data;
   for (const key of dot < 0 ? [] : path.slice(0, dot).split('.')) {
     container = childOf(container, key);
-    if (container === undefined) throw new Error(`hyper: ${path} does not exist in the region data`);
+    if (container === undefined) throw new Error(`${path} does not exist in the region data`);
   }
-  if (childOf(container, last) === undefined) throw new Error(`hyper: ${path} does not exist in the region data`);
+  if (childOf(container, last) === undefined) throw new Error(`${path} does not exist in the region data`);
   if (container instanceof Map) container.set(last, value);
   else if (Array.isArray(container)) container[Number(last)] = value;
 }

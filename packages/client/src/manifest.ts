@@ -1,4 +1,5 @@
 // The application manifest (HY-1, HY-2, HY-30).
+import { invalidApplication } from './errors.js';
 import { KEEP_KINDS, type KeepKind } from './keep.js';
 
 export interface RegionDeclaration {
@@ -43,21 +44,21 @@ const KEPT_PATH = /^[A-Za-z_][A-Za-z0-9_]*(\.([A-Za-z_][A-Za-z0-9_]*|\d+))*$/;
 // Checks the manifest rules that the browser code relies on and returns the manifest. The manifest is JSON that a file or
 // a response holds, so the check takes it as unknown and returns the declarations that it read.
 export function checkManifest(manifest: unknown): Manifest {
-  if (!isRecord(manifest) || typeof manifest.layout !== 'string' || typeof manifest.title !== 'string') throw new Error('hyper: the manifest has no layout or title template');
+  if (!isRecord(manifest) || typeof manifest.layout !== 'string' || typeof manifest.title !== 'string') throw invalidApplication('the manifest has no layout or title template');
   const regionNames = new Set<string>();
   const addRegion = (name: unknown, keep: unknown, manifestRegion: boolean): { name: string; keep?: Record<string, KeepKind> } => {
     if (typeof name !== 'string' || !REGION_NAME.test(name) || RESERVED.has(name) || regionNames.has(name)) {
-      throw new Error(`hyper: invalid or duplicated region name ${JSON.stringify(name)}`);
+      throw invalidApplication(`invalid or duplicated region name ${JSON.stringify(name)}`);
     }
     regionNames.add(name);
     if (keep === undefined) return { name };
     // HY-37: only route regions change in the browser, so only they keep values.
-    if (manifestRegion) throw new Error(`hyper: manifest region ${name} cannot keep values; only route regions keep values`);
-    if (!isRecord(keep)) throw new Error(`hyper: region ${name} has an invalid kept path ${JSON.stringify(keep)}`);
+    if (manifestRegion) throw invalidApplication(`manifest region ${name} cannot keep values; only route regions keep values`);
+    if (!isRecord(keep)) throw invalidApplication(`region ${name} has an invalid kept path ${JSON.stringify(keep)}`);
     const kept: Record<string, KeepKind> = {};
     for (const [path, kind] of Object.entries(keep)) {
       const keepKind = KEEP_KINDS.find((known) => known === kind);
-      if (!KEPT_PATH.test(path) || keepKind === undefined) throw new Error(`hyper: region ${name} has an invalid kept path ${path}`);
+      if (!KEPT_PATH.test(path) || keepKind === undefined) throw invalidApplication(`region ${name} has an invalid kept path ${path}`);
       kept[path] = keepKind;
     }
     return { name, keep: kept };
@@ -65,49 +66,49 @@ export function checkManifest(manifest: unknown): Manifest {
   let pages = 0;
   const regions: RegionDeclaration[] = [];
   for (const region of listOf(manifest.regions, 'regions')) {
-    if (!isRecord(region)) throw new Error('hyper: the manifest has a region that is not an object');
+    if (!isRecord(region)) throw invalidApplication('the manifest has a region that is not an object');
     const declaration: RegionDeclaration = addRegion(region.name, region.keep, true);
     if (region.uses !== undefined) {
       const uses: string[] = [];
       for (const topic of listOf(region.uses, `uses of region ${declaration.name}`)) {
-        if (typeof topic !== 'string' || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(topic)) throw new Error(`hyper: region ${declaration.name} uses an invalid topic ${JSON.stringify(topic)}`);
+        if (typeof topic !== 'string' || !/^[A-Za-z_][A-Za-z0-9_]*$/.test(topic)) throw invalidApplication(`region ${declaration.name} uses an invalid topic ${JSON.stringify(topic)}`);
         uses.push(topic);
       }
       declaration.uses = uses;
     }
     if (region.page === true) {
       pages++;
-      if (region.template !== undefined) throw new Error(`hyper: page region ${declaration.name} has a template`);
+      if (region.template !== undefined) throw invalidApplication(`page region ${declaration.name} has a template`);
       declaration.page = true;
     } else if (typeof region.template !== 'string') {
-      throw new Error(`hyper: region ${declaration.name} has no template`);
+      throw invalidApplication(`region ${declaration.name} has no template`);
     } else {
       declaration.template = region.template;
     }
     regions.push(declaration);
   }
-  if (pages !== 1) throw new Error('hyper: the manifest must declare exactly one page region');
+  if (pages !== 1) throw invalidApplication('the manifest must declare exactly one page region');
   const routeNames = new Set<string>();
   const routes: RouteDeclaration[] = [];
   for (const route of listOf(manifest.routes, 'routes')) {
-    if (!isRecord(route)) throw new Error('hyper: the manifest has a route that is not an object');
+    if (!isRecord(route)) throw invalidApplication('the manifest has a route that is not an object');
     const { name, title, template, path } = route;
-    if (typeof name !== 'string' || name === '' || routeNames.has(name)) throw new Error(`hyper: duplicate or empty route name ${String(name)}`);
-    if (typeof title !== 'string' || typeof template !== 'string') throw new Error(`hyper: route ${name} has no title or template`);
+    if (typeof name !== 'string' || name === '' || routeNames.has(name)) throw invalidApplication(`duplicate or empty route name ${String(name)}`);
+    if (typeof title !== 'string' || typeof template !== 'string') throw invalidApplication(`route ${name} has no title or template`);
     routeNames.add(name);
-    if (typeof path !== 'string') throw new Error(`hyper: route ${name} has no path`);
-    if (path.startsWith('/_hyper')) throw new Error(`hyper: route ${name} uses the reserved path /_hyper`);
+    if (typeof path !== 'string') throw invalidApplication(`route ${name} has no path`);
+    if (path.startsWith('/_hyper')) throw invalidApplication(`route ${name} uses the reserved path /_hyper`);
     const declaration: RouteDeclaration = { name, path, title, template };
     if (route.post !== undefined) {
-      if (typeof route.post !== 'boolean') throw new Error(`hyper: route ${name} has a post that is not a boolean`);
+      if (typeof route.post !== 'boolean') throw invalidApplication(`route ${name} has a post that is not a boolean`);
       declaration.post = route.post;
     }
     if (route.regions !== undefined) {
       const routeRegions: RouteRegionDeclaration[] = [];
       for (const region of listOf(route.regions, `regions of route ${name}`)) {
-        if (!isRecord(region)) throw new Error(`hyper: route ${name} has a region that is not an object`);
+        if (!isRecord(region)) throw invalidApplication(`route ${name} has a region that is not an object`);
         const checked = addRegion(region.name, region.keep, false);
-        if (typeof region.template !== 'string') throw new Error(`hyper: route region ${checked.name} has no template`);
+        if (typeof region.template !== 'string') throw invalidApplication(`route region ${checked.name} has no template`);
         routeRegions.push({ ...checked, template: region.template });
       }
       declaration.regions = routeRegions;
@@ -122,7 +123,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function listOf(value: unknown, what: string): unknown[] {
-  if (!Array.isArray(value)) throw new Error(`hyper: the ${what} of the manifest are not a list`);
+  if (!Array.isArray(value)) throw invalidApplication(`the ${what} of the manifest are not a list`);
   return value;
 }
 
@@ -136,6 +137,6 @@ export function keptPaths(manifest: Manifest, region: string): Record<string, Ke
 // Returns the page region name.
 export function pageRegion(manifest: Manifest): string {
   const page = manifest.regions.find((region) => region.page === true);
-  if (page === undefined) throw new Error('hyper: the manifest must declare exactly one page region');
+  if (page === undefined) throw invalidApplication('the manifest must declare exactly one page region');
   return page.name;
 }

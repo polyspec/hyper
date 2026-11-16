@@ -65,7 +65,7 @@ export function valueToJson(value: Value): string {
   if (value instanceof Map) return `{${[...value].map(([key, item]) => `${JSON.stringify(key)}:${valueToJson(item)}`).join(',')}}`;
   if (Array.isArray(value)) return `[${value.map(valueToJson).join(',')}]`;
   if (value instanceof SafeString) return JSON.stringify(value.text);
-  if (value instanceof NativeObject) throw new TypeError('hyper: an application object has no JSON text');
+  if (value instanceof NativeObject) throw new TypeError('an application object has no JSON text');
   return JSON.stringify(value);
 }
 

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 12bdb5387a8b4dded966fe198c355dad70c2f9b05608934a2c71d52168fe79da -->
+<!-- source-sha256: 55b957585056630469f6049f4572747611903b7511a97a3c266d45a8c12643f9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 브라우저 코드(packages/client)는 HY-132.7의 hyper 오류 class인 `HyperValueError`(`RangeError` 확장), `HyperTypeError`(`TypeError` 확장), `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`(`Error` 확장)를 property `kind`와 `status`와 함께 정의하고 entry에서 export한다. open 때 `checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`의 실패는 kind `invalid_application`, status null의 `HyperValueError`를 던진다(HY-106.21). 이 검사들은 kind 없는 `Error`를 던졌으므로 호출자가 open 실패를 kind로 구별할 수 없었다. shared data의 member context는 kind `shared_holds_context`의 `HyperValueError`를 던진다(HY-128). 브라우저 코드의 어떤 message도 더 이상 `hyper: `로 시작하지 않는다(HY-132.4, HY-106.19). 브라우저 코드의 다른 실패는 어떤 statement도 kind를 정하지 않으므로 class를 유지한다. `tests/errors.test.ts`는 open 때 각 검사의 class, kind, message를 읽는다(H35.29-5-1).
 - 모든 Cargo.toml이 `polyspec-binding-core`를 tag `v0.0.17`로, `package.json`이 생성기 `@polyspec/binding`을 v0.0.17 release asset으로 요구하고, lock이 둘을 pin한다. release 0.0.16과 0.0.17은 생성 코드를 고치며(GN-4e, GN-13be), 생성기의 명령행은 바뀌지 않아 recipe는 형태를 유지한다(H35.14-3-3).
 - HY-132.7은 binding 없이 실행되는 브라우저 코드(packages/client)의 실패의 오류를 정한다: member `kind`와 `status`를 가진 그 실패 category의 자기 class이며, 따라서 open 때 `checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`의 실패는 kind `invalid_application`의 `HyperValueError`이다(HY-106.21). HY-132.8은 Node 서버가 open 때 그런 실패를 같은 category의 binding class로, 같은 kind, 상태, message를 가지고 낸다고 정한다. 어떤 statement도 class나 kind를 정하지 않았고, 브라우저 코드는 kind 없는 `Error`를 던진다. checklist는 구현을 H35.29-5-1과 H35.29-5-2로 등록한다(H35.29-5).
 - case의 `raises` 결과는 docs/spec/recipe.md가 이제 정하는 대로 그 결과의 statement가 정하는 kind의 오류를 기대하며, open 실패만 kind `invalid_application`을 기대한다(HY-106.21). `case-rules.ts`의 `outcomeError`, `case_rules.py`의 `outcome_error`, PHP runner의 `CaseRules::outcomeError`는 오류를 `raisesOf`로 읽고, `request.json`의 `request`에 대해 kind `invalid_text`(HY-42.7)를, HY-97.7이 kind를 정하지 않는 `hooks.json`의 `creation`에 대해 hyper의 오류만을 기대한다(H35.29-6). reader는 모든 `raises` 결과에 open error를 기대했으므로 그 두 결과는 통과할 수 없었다(H35.29-4).

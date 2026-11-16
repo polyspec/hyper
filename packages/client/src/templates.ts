@@ -1,4 +1,5 @@
 import { MapLoader, type Loader, type LoadResult, type Template } from '@polyspec/template/render';
+import { invalidApplication } from './errors.js';
 import type { Manifest, RouteDeclaration } from './manifest.js';
 
 // Template name to its file URL (HR-34).
@@ -7,12 +8,12 @@ export type TemplateIndex = Record<string, { url: string }>;
 // Returns the template index of a JSON value, the URL of each template by its name (HR-34); another value fails. source
 // names the value in the error, such as the file that held it.
 export function checkTemplateIndex(value: unknown, source = 'the template index'): TemplateIndex {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error(`hyper: ${source} is not an object of templates`);
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw invalidApplication(`${source} is not an object of templates`);
   const index: TemplateIndex = {};
   const entries: [string, unknown][] = Object.entries(value);
   for (const [name, entry] of entries) {
     const url: unknown = typeof entry === 'object' && entry !== null && 'url' in entry ? entry.url : undefined;
-    if (typeof url !== 'string') throw new Error(`hyper: template ${name} has no URL in ${source}`);
+    if (typeof url !== 'string') throw invalidApplication(`template ${name} has no URL in ${source}`);
     index[name] = { url };
   }
   return index;
@@ -46,7 +47,7 @@ export class TemplateStore {
   // Loads every named template that is not loaded yet; requests run in parallel.
   ensure(names: readonly string[]): Promise<void> {
     for (const name of names) {
-      if (this.index[name] === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
+      if (this.index[name] === undefined) throw new Error(`template ${name} is not in the template index`);
     }
     return Promise.all(names.map((name) => this.load(name))).then(() => undefined);
   }
@@ -75,7 +76,7 @@ export class TemplateStore {
     let pending = this.loading.get(name);
     if (pending === undefined) {
       const entry = this.index[name];
-      if (entry === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
+      if (entry === undefined) throw new Error(`template ${name} is not in the template index`);
       pending = this.fetcher(entry.url).then((template) => this.held.set(name, template));
       pending.catch(() => this.loading.delete(name));
       this.loading.set(name, pending);

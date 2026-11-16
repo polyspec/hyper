@@ -1,4 +1,5 @@
 export { createEngine } from './engine.js';
+export { HyperBusyError, HyperInternalError, HyperIoError, HyperStoreError, HyperTypeError, HyperValueError } from './errors.js';
 export {
   checkManifest,
   DATA_TEMPLATE_NAME,
