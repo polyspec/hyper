@@ -1085,16 +1085,6 @@ dependencies = [
 
 [[package]]
 name = "polyspec-binding-core"
-version = "0.0.13"
-source = "git+https://github.com/polyspec/binding.git?tag=v0.0.13#4c3653bef093f696efb6c0c679887548f0f57103"
-dependencies = [
- "indexmap",
- "libc",
- "tokio-util",
-]
-
-[[package]]
-name = "polyspec-binding-core"
 version = "0.0.17"
 source = "git+https://github.com/polyspec/binding.git?tag=v0.0.17#8db1add67c520673e07cfaf75038252ede40f282"
 dependencies = [
@@ -1139,7 +1129,7 @@ dependencies = [
  "polyspec-http-media-type",
  "polyspec-http-negotiation",
  "polyspec-hyper",
- "polyspec-json 0.0.32",
+ "polyspec-json 0.0.34",
  "polyspec-php-serialization 0.0.15",
  "polyspec-session-store",
  "polyspec-template",
@@ -1232,10 +1222,10 @@ dependencies = [
 
 [[package]]
 name = "polyspec-json"
-version = "0.0.32"
-source = "git+https://github.com/polyspec/json.git?tag=v0.0.32#ef641ccfba2341136831075e774df7a527ec9de8"
+version = "0.0.34"
+source = "git+https://github.com/polyspec/json.git?tag=v0.0.34#f13de8d689c62958650fc4f6c441e3b69652dfe6"
 dependencies = [
- "polyspec-binding-core 0.0.13",
+ "polyspec-binding-core 0.0.17",
  "ryu-js",
  "serde",
  "serde_json",

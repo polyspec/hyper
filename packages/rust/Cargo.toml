@@ -30,7 +30,7 @@ polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiatio
 # The reading and writing of media types (MT-4, MT-6; HY-119.4, HY-121.11).
 polyspec-http-media-type = { git = "https://github.com/polyspec/http-media-type.git", tag = "v0.0.6" }
 # The JSON text of HY-54.18 to HY-54.21 (RQ-006, RQ-011, RQ-028, RQ-030).
-polyspec-json = { git = "https://github.com/polyspec/json.git", tag = "v0.0.32" }
+polyspec-json = { git = "https://github.com/polyspec/json.git", tag = "v0.0.34" }
 # The values of the data model and their JSON form (VAL-2, VAL-12, VAL-20; HY-44, HY-54.20).
 polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core" }
 # The store interface of a session and its values (SE-2, SE-7; HY-104.25, HY-104.30), which the host entries take.

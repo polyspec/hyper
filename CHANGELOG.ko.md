@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f2d4ae1e3dc9fc4c5d556a4ccf9ca30865936f718b764a9f92b78b21b6061586 -->
+<!-- source-sha256: 411e19d30e2ea33c5b4b7c0e36b05d90af0153cdd248921bc756f076339f6b94 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- json은 binding 0.0.17 위의 release인 v0.0.34로 옮긴다. Rust core는 `polyspec-json`을 tag `v0.0.34`로, `package.json`은 `@polyspec/json`과 그 platform package를 v0.0.34 release asset으로 요구하므로 `Cargo.lock`에는 `polyspec-binding-core` 0.0.13이 더 없다(H35.22-1).
 - php-serialization은 binding 0.0.17 위의 release인 v0.0.15로 옮긴다. 모든 Cargo.toml이 `polyspec-php-serialization`을 branch `v1/rust-core` 대신 tag `v0.0.15`로 요구하고, `package.json`, `packages/ts/package.json`, `tests/package-install`이 `@polyspec/php-serialization` 0.0.15와 그 platform package를 요구한다. session-store가 아직 받는 branch commit은 그대로 둔다(H35.8-1-1).
 - open에서 template engine이 거부하는 host function, 즉 built-in 이름(template FUN-44)이나 함수가 아닌 항목(template RT-5)은 세 서버의 open을 category `value`의 kind `invalid_application`과 engine의 message로 실패시킨다(HYC-24.2, HYC-24.5, HY-106.21). 서버는 hyper의 kind가 없는 engine의 오류를 던졌다(H35.27-4).
 
