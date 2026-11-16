@@ -390,7 +390,8 @@ test('.php-version holds the PHP minor release, and every setup-php step reads i
 // that its recipes and workflows run, and no workflow calls a workflow that kit wrote.
 test('H27.83 the Makefile includes no file of kit, and every make target of a workflow is a target of the Makefile', () => {
   const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
-  assert.deepEqual(makefile.split('\n').filter((line) => /^-?include\b/.test(line)), [], 'the Makefile includes a file');
+  // The one include is packages/release.mk, the release recipes that binding writes (HR-99), which is no file of kit.
+  assert.deepEqual(makefile.split('\n').filter((line) => /^-?include\b/.test(line)), ['-include $(CURDIR)/packages/release.mk'], 'the Makefile includes a file');
   const defined = new Set([...makefile.matchAll(/^([a-z][\w-]*(?: [a-z][\w-]*)*):(?!=)/gm)].flatMap((match) => (match[1] ?? '').split(' ')));
   const action = readFileSync(path.join(ROOT, '.github/actions/bootstrap/action.yml'), 'utf8');
   const called = [...workflows().map((workflow) => workflow.text), action].flatMap((text) => [...text.matchAll(/^\s*(?:- )?run: make ([a-z][\w-]*)/gm)].map((match) => match[1] ?? ''));

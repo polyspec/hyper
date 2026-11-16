@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5f4fe9dfd477bfe79276fda9054ebf4294927fb2568e3d802a07aed6f4680a62 -->
+<!-- source-sha256: 503a76d7ca40444bab811b5ec6c1fd5a29d3e0dd99614daf637cf2d491800b55 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Makefile은 binding의 release recipe인 `packages/release.mk`를 `BINDING_RUN`과 `BINDING_DEP` 뒤에서 `-include`로 include한다(HR-99, binding GN-19h). `make release-recipes`가 `binding release-recipes`로 그것을 쓰고, release는 `release-assets` 전에 `install-binding`과 `release-recipes`를 실행하며, Git은 그 파일을 무시한다. binding 0.0.13의 `binding check`는 include가 없는 Makefile에 대해 CK-94를 보고했다. Makefile이 kit의 파일을 include하지 않는다는 AGENTS.md의 규칙은 이 include를 밝히고, `tests/scripts/ci-workflow.test.mts`는 그것만 허용한다. `tests/scripts/release-recipes.test.mts`는 5개 통과를 주고, 이 변경 전의 tree에서는 5개 중 4개가 실패한다.
 - Makefile과 `scripts/install-binding.mts`는 `polyspec-hyper`가 `Cargo.lock`에서 지정하는 `polyspec-binding-core`의 binding cli를 쓰며, 그 commit은 `scripts/binding-commit.mts`가 준다(G-6, CK-20). 둘은 lock의 첫 번째 `polyspec-binding-core`를 골랐으므로, 다른 source에 있는 다른 library의 `polyspec-binding-core`도 가진 lock은 그 library의 binding cli를, 또는 두 commit을 경로 하나로 주었다. `tests/scripts/binding-commit.test.mts`는 4개 통과를 주고, 이 변경 전의 tree에서는 실패한다.
 - WSGI callable의 body iterable은 자기 `close()`에서 write hook `written`을, 그리고 쓰기가 실패했으면 이어서 disconnect hook을 호출하므로, `close()`가 돌아오면 요청의 두 hook이 모두 실행된 것이다(HY-100.34). 두 번째 `close()`는 어떤 hook도 호출하지 않으며(HY-100.35), plain 500의 `start_response`도 예외를 던지면 callable은 오류가 전파되기 전에 `written`을 호출한다(HY-100.36). 이전에는 iterable이 WSGI 서버가 iteration의 끝을 가져갈 때 `close()`보다 먼저 `written`을 호출했고, WSGI 요청의 두 hook이 모두 실행된 뒤의 시점을 정하는 규칙이 없었다. 검증: `make hyper-test-python`이 `test_close_runs_the_write_hook_of_a_write_that_ended`를 실행하며, 이 test는 변경 전에는 `written`이 iteration의 끝보다 먼저 와서 실패했고 변경 후에는 통과한다(H34.1).
 - recipe는 PHP signature의 형식을 적고(HYR-8), `make recipe-check`의 PHP reader는 그것을 PHP 8.4와 PHP 8.5에서 같게 쓴다: property의 set visibility는 `public readonly` property가 스스로 가진 `protected(set)`과 다를 때만 쓰고, member를 선언한 class와 그 parent class는 `self`와 `parent`로 쓴다. 이전에는 reader가 `Reflection::getModifierNames`와 `ReflectionType`의 문자열로 signature를 써서, PHP 8.4에서 통과하는 tree에서 PHP 8.5의 check가 `MEMBER_SIGNATURE` finding 76개로 실패했다(H28.11-11).

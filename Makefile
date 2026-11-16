@@ -367,6 +367,18 @@ bindings-check: ## Check the interface contract and the tracked binding packages
 	@test -f $(BINDING) || { echo "bindings-check: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
 	$(NODE) $(BINDING) check $(CURDIR)/packages/rust/interface.json
 
+# The release recipes of the bindings (HR-99, binding GN-19h, CK-94): packages/release.mk, which binding release-recipes
+# writes and Git ignores, defines the release targets of the bindings with BINDING_RUN, the command that starts the
+# binding of Cargo.lock, and BINDING_DEP, its install target; -include lets a checkout without the file run every other
+# target. No rule of this Makefile has a recipe for one of its targets.
+.PHONY: release-recipes
+BINDING_RUN := $(NODE) $(BINDING)
+BINDING_DEP := install-binding
+release-recipes: ## Write packages/release.mk, the release recipes of the bindings, with binding release-recipes (HR-99)
+	@test -f $(BINDING) || { echo "release-recipes: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
+	$(BINDING_RUN) release-recipes --root $(CURDIR) --out $(CURDIR)
+-include $(CURDIR)/packages/release.mk
+
 # The binding crates of the workspace. The WASM crate is not in the tree (Cargo.toml): its lint and its build name the
 # manifest of the place that binding scaffold gives it, and fail while it is missing.
 BINDING_CRATES := polyspec-hyper-php-ext polyspec-hyper-python polyspec-hyper-node polyspec-hyper-go
@@ -737,7 +749,7 @@ ci-passed: ## Fail unless every job of RESULTS, the JSON of toJSON(needs), has t
 # follows a workflow_run event (GITHUB_EVENT_NAME), and a dispatch or a local run `make ci-release RUN=<id>` releases the
 # commit of RUN. The tools of var/tools are on the PATH of this Makefile, so the recipe needs no release-tools-path.
 RELEASE_ENV := var/release/tag.env
-RELEASE_STEPS := release-checkout release-php-check bootstrap install-tools install-packages release-archive-tool release-prepare release-tools release-assets release-publish release-undraft
+RELEASE_STEPS := release-checkout release-php-check bootstrap install-tools install-packages release-archive-tool release-prepare release-tools install-binding release-recipes release-assets release-publish release-undraft
 .PHONY: ci-release release-php-check
 # setup-php sets up the PHP of the .php-version of the checkout before the tag is checked out, and a dispatch checks out main,
 # so the release requires the PHP on PATH to be the minor release of the .php-version of the tag before it builds anything.

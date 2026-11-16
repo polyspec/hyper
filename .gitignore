@@ -48,3 +48,6 @@ coverage/
 
 # The link declaration of this checkout, its own development state (kit K869)
 /.links
+
+# The release recipes of the bindings, which binding release-recipes writes (HR-99).
+/packages/release.mk

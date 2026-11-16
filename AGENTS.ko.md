@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 94e64c2f75f43d93dac2076087fad6d8460b0732ac15b3edb515aba91d7af31a -->
+<!-- source-sha256: c92965ce6d1671760552b50916c595130e1d9ffd9ba4099c69a40db175c7e285 -->
 # 개발
 
 [English](AGENTS.md).
@@ -62,7 +62,7 @@
   Enforced by: none, 실행보다 오래 남는 process는 코드를 읽어 찾는다.
 - Own: 추적하는 모든 경로는 `config/owner-checks.json`에 owner를 가진다(HR-88). 경로를 추가하는 변경은 그 owner 규칙도 추가하며, 저장소의 일부를 복사하는 test는 그 일부가 import하는 것을 함께 복사한다.
   Enforced by: `make owner-validate`
-- Own: 공유 도구는 npm package `@polyspec/kit`이며 `package.json`의 release asset URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `devEngines`가 이름하는 version의 기본 npm을 checkout 밖에서 호출해 lock을 설치한 뒤(kit K938) `make install-tools TOOLS=npm`과 `make install-packages`를 실행한다. Makefile은 kit의 파일을 include하지 않는다. Makefile이 이 저장소의 모든 레시피를 담고, 각 레시피는 설치 package의 유틸리티를 명시적 인자로 실행한다. 기본 로컬 package link이면 그 소스를, pack된 release이면 그 dist를 실행한다. 기본 로컬 package link는 선택 사항이며 설치 package의 소스 link는 로컬 개발 상태로 유지한다. 도구의 설정은 이 저장소의 기본 파일이다: `.npmrc`, `mise.toml`의 `[settings]`와 `[env]`, `knip.json`, `.oxlintrc.json`, `ruff.toml`, `phpcs.xml.dist`, `phpstan.dist.neon`. `PRINCIPLES.md`, 그 짝, `.editorconfig`, `config/layout.kit.yml`, `config/composer.schema.json`, `.github/workflows/release.yml`, `.github/actions/bootstrap`은 이 저장소의 파일이다. 앱 작업을 완료하기 위해 Kit checkout을 직접 수정하지 않는다. 공유 도구 결함이나 빠진 기능은 재현 방법, 기대 동작, 실제 동작과 앱 영향을 담아 polyspec/kit GitHub issue로 등록하고 개선을 요구한다. 모든 로컬 및 CI runtime test는 설치된 Kit runner를 사용한다. 이를 대체하거나 guard를 끄거나 필수 coverage를 줄이거나 우회 결과를 릴리즈 근거로 삼지 않는다. 별도 결함은 보고하면서 지원되는 Kit 선택 방식을 사용할 수 있다. 릴리즈 공개에는 Kit을 통한 필수 CI와 native archive 증명의 성공이 필요하다.
+- Own: 공유 도구는 npm package `@polyspec/kit`이며 `package.json`의 release asset URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `devEngines`가 이름하는 version의 기본 npm을 checkout 밖에서 호출해 lock을 설치한 뒤(kit K938) `make install-tools TOOLS=npm`과 `make install-packages`를 실행한다. Makefile은 kit의 파일을 include하지 않는다. include하는 것은 binding이 쓰는 binding의 release recipe `packages/release.mk`뿐이다(HR-99). Makefile이 이 저장소의 모든 레시피를 담고, 각 레시피는 설치 package의 유틸리티를 명시적 인자로 실행한다. 기본 로컬 package link이면 그 소스를, pack된 release이면 그 dist를 실행한다. 기본 로컬 package link는 선택 사항이며 설치 package의 소스 link는 로컬 개발 상태로 유지한다. 도구의 설정은 이 저장소의 기본 파일이다: `.npmrc`, `mise.toml`의 `[settings]`와 `[env]`, `knip.json`, `.oxlintrc.json`, `ruff.toml`, `phpcs.xml.dist`, `phpstan.dist.neon`. `PRINCIPLES.md`, 그 짝, `.editorconfig`, `config/layout.kit.yml`, `config/composer.schema.json`, `.github/workflows/release.yml`, `.github/actions/bootstrap`은 이 저장소의 파일이다. 앱 작업을 완료하기 위해 Kit checkout을 직접 수정하지 않는다. 공유 도구 결함이나 빠진 기능은 재현 방법, 기대 동작, 실제 동작과 앱 영향을 담아 polyspec/kit GitHub issue로 등록하고 개선을 요구한다. 모든 로컬 및 CI runtime test는 설치된 Kit runner를 사용한다. 이를 대체하거나 guard를 끄거나 필수 coverage를 줄이거나 우회 결과를 릴리즈 근거로 삼지 않는다. 별도 결함은 보고하면서 지원되는 Kit 선택 방식을 사용할 수 있다. 릴리즈 공개에는 Kit을 통한 필수 CI와 native archive 증명의 성공이 필요하다.
   Enforced by: `make hyper-test-scripts`, whose tests/scripts/ci-workflow.test.mts fails an include of the Makefile and a workflow target that the Makefile does not define
 - Own: 코드와 test는 각 package 안에서 서로 다른 디렉터리에 둔다.
   Enforced by: `make layout-check`

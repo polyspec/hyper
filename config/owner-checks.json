@@ -325,6 +325,14 @@
     },
     {
       "paths": [
+        "tests/scripts/release-recipes.test.mts"
+      ],
+      "targets": [
+        "hyper-test-scripts"
+      ]
+    },
+    {
+      "paths": [
         "tests/scripts/build-fixture.mts"
       ],
       "tests": [
