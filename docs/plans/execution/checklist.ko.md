@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 567f37d48e4c1a819210e269afb2942787483446f9243b492bf2c50d1c533db5 -->
+<!-- source-sha256: 1e60c4aff417468633add230e700bdc80e52e5ac0ddabf786003592d6586c2cc -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -517,8 +517,8 @@
 | H35.19-1 | `tests/scripts/session-shared-redis.test.mts`는 더 이상 요청을 `setTimeout(200)`과 경쟁시키지 않는다. 시험은 그 결과를 정하는 사건을 기다린다. | tests/scripts/session-shared-redis.test.mts | `make hyper-test-scripts` | [ ] |
 | H35.19-2 | holder가 끝난 뒤 `until()`에서 기다리는 session 시험의 step은 test runner의 60초 제한이 아니라 그 holder나 server의 실패로 끝난다. | tests/scripts/session-redis-server.mts, tests/scripts/session-redis-cluster.test.mts | `make hyper-test-scripts` | [ ] |
 | H35.20 | template 0.0.28을 pin한 tree에서 `make lint-ts`, `make lint-python`, `make typecheck`가 통과하고, 각 case runner는 hyper의 오류만 `raises`로 보고한다. | knip.json, packages/ts, packages/client, packages/php/tests, packages/python/tests, contracts | `make lint-ts` | [ ] |
-| H35.20-1 | knip은 Makefile이 `node_modules/@polyspec/binding/dist/cli.js`를 경로로 시작한다는 것을 알고, 그래서 `@polyspec/binding`을 쓰이지 않는다고 보고하지 않는다. | knip.json | `make lint-ts` | [ ] |
-| H35.20-2 | PHP, Node, Python case runner의 `failureOf`는 hyper와 binding의 오류 class만 잡는다. 다른 오류는 step의 오류로 case를 실패시킨다. | packages/php/tests/Support/CaseRules.php, packages/ts/tests/case-rules.ts, packages/python/tests/case_rules.py와 그 시험 | `make typecheck` | [ ] |
-| H35.20-3 | packages/ts, packages/client와 그 시험은 template 0.0.28의 TypeScript API(`Template`, `parseJson`)를 쓴다. | packages/ts, packages/client | `make lint-ts` | [ ] |
-| H35.20-4 | vulture는 packages/python/tests/test_core_rules.py에서 죽은 code를 찾지 않는다. | packages/python/tests/test_core_rules.py | `make lint-python` | [ ] |
+| H35.20-1 | knip은 Makefile이 `node_modules/@polyspec/binding/dist/cli.js`를 경로로 시작한다는 것을 알고, 그래서 `@polyspec/binding`을 쓰이지 않는다고 보고하지 않는다. | knip.json | `make lint-ts` | [o] |
+| H35.20-2 | PHP, Node, Python case runner의 `failureOf`는 hyper와 binding의 오류 class만 잡는다. 다른 오류는 step의 오류로 case를 실패시킨다. | packages/php/tests/Support/CaseRules.php, packages/ts/tests/case-rules.ts, packages/python/tests/case_rules.py와 그 시험 | `make typecheck` | [o] |
+| H35.20-3 | packages/ts, packages/client와 그 시험은 template 0.0.28의 TypeScript API(`Template`, `parseJson`)를 쓴다. | packages/ts, packages/client | `make lint-ts` | [o] |
+| H35.20-4 | vulture는 packages/python/tests/test_core_rules.py에서 죽은 code를 찾지 않는다. | packages/python/tests/test_core_rules.py | `make lint-python` | [o] |
 | H35.20-5 | contracts/json.json의 encode와 decode section의 case와 interfaces.json이 그것에 이름 붙인 member는 같은 결과를 말한다. | contracts/json.json, contracts/interfaces.json | `make core-test` | [ ] |
