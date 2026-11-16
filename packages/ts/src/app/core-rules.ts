@@ -96,9 +96,8 @@ interface Front {
   readonly path: string;
   readonly accept: Iterable<string>;
   readonly hxRequest: boolean;
-  readonly malformedContentType: boolean;
   readonly contextHeader?: string | null;
-  readonly mediaType?: string | null;
+  readonly contentType?: string | null;
 }
 
 /** @internal */
@@ -190,6 +189,7 @@ export interface CoreBinding {
   sessionCookie(identifier: string, https: boolean): string;
   pageTag(body: string, maskedToken: string, token: string): string;
   representationTag(contentType: string, body: Uint8Array): string;
+  mediaType(contentType: string): string;
   pageStatus(status: number): number;
   replyStatus(status: number): number;
   pageVary(hasContext: boolean): string;
@@ -233,7 +233,7 @@ interface HyperError extends Error {
 // The names of the members of `CoreBinding`, which `coreRules` requires of the module that it receives.
 const MEMBERS: readonly (keyof CoreBinding)[] = [
   'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl', 'keepsOutOfSharedCaches',
-  'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'pageStatus', 'replyStatus', 'pageVary',
+  'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
   'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
@@ -298,6 +298,9 @@ export interface CoreRules {
   sessionCookieHeader(id: string, secure: boolean): string;
   // representationEtag: rules.representation_tag (HY-122.10, HY-122.11), of the UTF-8 bytes of the body.
   representationEtag(contentType: string, body: string): string;
+  // requestMediaType: rules.media_type of the value of Content-Type (HY-59.13), which throws the kind
+  // `malformed_content_type` (status 400) for a value that is no media type.
+  requestMediaType(contentType: string): string;
   // requestCurrentPath: rules.current_path of the value of HX-Current-URL (HY-11.5).
   requestCurrentPath(header: string | null): string | null;
   // replyCacheControl: rules.cache_control gives the value that the reply keeps (HY-52.6).
@@ -437,6 +440,7 @@ export function coreRules(module: object): CoreRules {
     sessionCookieName: (secure) => core.sessionName(secure),
     sessionCookieHeader: (id, secure) => core.sessionCookie(id, secure),
     representationEtag: (contentType, body) => core.representationTag(contentType, encoder.encode(body)),
+    requestMediaType: (contentType) => core.mediaType(contentType),
     requestCurrentPath: (header) => core.currentPath(header),
     replyCacheControl: (value) => core.cacheControl(value),
     replyReferrerPolicy: (value) => core.referrerPolicy(value),

@@ -1455,8 +1455,7 @@ fn the_route_of_a_request_before_its_page() -> Result<(), Error> {
         accept: vec![accept.as_bytes().to_vec()],
         hx_request: false,
         context_header: None,
-        media_type: Some("application/x-www-form-urlencoded".to_owned()),
-        malformed_content_type: false,
+        content_type: Some(b"application/x-www-form-urlencoded; charset=UTF-8".to_vec()),
     };
     let page = |route: &str, kind: PageKind, action: bool| Route::Page {
         name: route.to_owned(),
@@ -1504,7 +1503,7 @@ fn the_route_of_a_request_before_its_page() -> Result<(), Error> {
     assert_eq!(
         route(
             &Front {
-                media_type: Some("text/plain".to_owned()),
+                content_type: Some(b"text/plain".to_vec()),
                 ..front("POST", "/add", html)
             },
             false
@@ -1514,13 +1513,25 @@ fn the_route_of_a_request_before_its_page() -> Result<(), Error> {
     assert_eq!(
         route(
             &Front {
-                malformed_content_type: true,
+                content_type: None,
                 ..front("POST", "/add", html)
             },
             false
         )?,
-        refused(400, "Bad Request", None, false)
+        refused(415, "Unsupported Media Type", None, false)
     );
+    for malformed in [&b""[..], b"\xa0application/x-www-form-urlencoded"] {
+        assert_eq!(
+            route(
+                &Front {
+                    content_type: Some(malformed.to_vec()),
+                    ..front("POST", "/add", html)
+                },
+                false
+            )?,
+            refused(400, "Bad Request", None, false)
+        );
+    }
     assert_eq!(
         route(&front("GET", "/nowhere", html), false)?,
         refused(404, "Not Found", None, false)
@@ -2018,8 +2029,7 @@ fn the_fault_cases_raise_their_kind_where_their_points_break() -> Result<(), Err
             accept: accept.map(|line| from_hex(text(line, "hex"))).collect(),
             hx_request: front["hx_request"] == Value::Bool(true),
             context_header: front["context_header"].as_str().map(latin1),
-            media_type: front["media_type"].as_str().map(str::to_owned),
-            malformed_content_type: front["malformed_content_type"] == Value::Bool(true),
+            content_type: front["content_type"].as_str().map(latin1),
         };
         let chosen = case["chosen"] == Value::Bool(true);
         let member = "front_functions.route_request";

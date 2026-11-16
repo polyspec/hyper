@@ -27,9 +27,9 @@ final class CoreRules
     public const array MEMBERS = [
         'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl',
         'keepsOutOfSharedCaches', 'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag',
-        'representationTag', 'pageStatus', 'replyStatus', 'pageVary', 'contextHash', 'currentPath', 'checkShellPath',
-        'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader', 'jsonRead',
-        'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges',
+        'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary', 'contextHash', 'currentPath',
+        'checkShellPath', 'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader',
+        'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges',
     ];
 
     /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
@@ -211,6 +211,18 @@ final class CoreRules
     {
         /** @var string $result The return type that the extension declares (T-1a). */
         $result = $this->call('representationTag', $contentType, $body);
+
+        return $result;
+    }
+
+    /**
+     * Request::mediaType: rules.media_type of the value of Content-Type (HY-59.13), which fails with kind
+     * `malformed_content_type` (status 400) for a value that is no media type.
+     */
+    public function requestMediaType(string $contentType): string
+    {
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('mediaType', $contentType);
 
         return $result;
     }

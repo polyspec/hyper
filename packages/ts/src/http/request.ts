@@ -305,18 +305,13 @@ export class Request {
     return Math.max(this.init.bodySize ?? this.body.byteLength, this.read?.size() ?? 0, /^[0-9]+$/.test(declared) ? Number(declared) : 0);
   }
 
-  // Returns the media type of the Content-Type header in lower case, without its parameters (HY-59).
+  // Returns the media type of the Content-Type header in lower case, without its parameters, as the core reads it, or
+  // the empty text without the header (HY-59.13). Throws the value error of the core with kind `malformed_content_type`
+  // (status 400) for a Content-Type that is no media type.
   mediaType(): string {
     ArgumentCountError.between(arguments.length, 0, 0);
-    const type = this.header('Content-Type') ?? '';
-    return (type.split(';', 1)[0] ?? '').trim().toLowerCase();
-  }
-
-  // Returns true when the request has a Content-Type header whose media type is empty (HY-59.12, HY-59.13); a request
-  // without the header has the empty type and returns false.
-  /** @internal */
-  emptyContentType(): boolean {
-    return this.header('Content-Type') !== null && this.mediaType() === '';
+    const type = this.header('Content-Type');
+    return type === null ? '' : rules().requestMediaType(type);
   }
 
   // Returns the value of a header as text whose characters are its bytes, or null.

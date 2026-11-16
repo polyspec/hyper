@@ -44,6 +44,8 @@ pub enum Error {
     SharedHoldsContext,
     /// A question that only a request with a selected media type answers (HY-116.21).
     NotSelected,
+    /// A `Content-Type` of a request that is no media type, the empty value included (HY-59.13).
+    MalformedContentType,
     /// A representation entry that the manifest check refuses (HY-118.5 to HY-118.7).
     InvalidApplication(std::borrow::Cow<'static, str>),
     /// A file that a build writes with a path that HY-125.17 does not allow, a build id of another form, or a
@@ -112,6 +114,8 @@ pub enum ErrorCode<'a> {
     SharedHoldsContext,
     /// A question that only a request with a selected media type answers (HY-116.21).
     NotSelected,
+    /// A `Content-Type` of a request that is no media type (HY-59.13).
+    MalformedContentType,
     /// A representation entry that the manifest check refuses (HY-118.5 to HY-118.7).
     InvalidApplication,
     /// A build that HY-125.17 to HY-125.19 refuse.
@@ -176,6 +180,7 @@ impl Error {
             Error::InvalidSessionRecord => Part::Own("invalid_session_record", Category::Store),
             Error::SharedHoldsContext => Part::Own("shared_holds_context", Category::Value),
             Error::NotSelected => Part::Own("not_selected", Category::Type),
+            Error::MalformedContentType => Part::Own("malformed_content_type", Category::Value),
             Error::InvalidApplication(_) => Part::Own("invalid_application", Category::Value),
             Error::InvalidBuild(_) => Part::Own("invalid_build", Category::Value),
             Error::InvalidRepresentation(_) => Part::Own("invalid_representation", Category::Value),
@@ -212,6 +217,7 @@ impl Error {
             Error::InvalidSessionRecord => ErrorCode::InvalidSessionRecord,
             Error::SharedHoldsContext => ErrorCode::SharedHoldsContext,
             Error::NotSelected => ErrorCode::NotSelected,
+            Error::MalformedContentType => ErrorCode::MalformedContentType,
             Error::InvalidApplication(_) => ErrorCode::InvalidApplication,
             Error::InvalidBuild(_) => ErrorCode::InvalidBuild,
             Error::InvalidRepresentation(_) => ErrorCode::InvalidRepresentation,
@@ -272,6 +278,10 @@ impl Kinds for Error {
     }
 
     fn status(&self) -> Option<u16> {
+        // HY-59.12: a request whose Content-Type is no media type receives 400.
+        if let Error::MalformedContentType = self {
+            return Some(400);
+        }
         match self.part() {
             Part::Negotiate(error) => error.status(),
             Part::Sessions(error) => error.status(),
@@ -326,6 +336,7 @@ impl fmt::Display for Error {
             }
             Error::SharedHoldsContext => f.write_str("the shared handler returned the key context (HY-124)"),
             Error::NotSelected => f.write_str("the request holds no selected media type (HY-116)"),
+            Error::MalformedContentType => f.write_str("the Content-Type of the request is no media type (HY-59)"),
             Error::InvalidApplication(reason) | Error::InvalidBuild(reason) => f.write_str(reason),
             Error::InvalidRepresentation(reason) => write!(f, "{reason} (HY-122)"),
             Error::MalformedJson(error) => write!(f, "a JSON text is malformed: {error} (HY-54)"),

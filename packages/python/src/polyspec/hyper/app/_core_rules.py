@@ -35,6 +35,7 @@ _MEMBERS = (
     "session_cookie",
     "page_tag",
     "representation_tag",
+    "media_type",
     "page_status",
     "reply_status",
     "page_vary",
@@ -136,6 +137,11 @@ class CoreRules:
         """RepresentationResponse.etag: rules.representation_tag (HY-122.10, HY-122.11), of the UTF-8 bytes of the
         body."""
         return self._core.representation_tag(content_type, body.encode("utf-8"))
+
+    def request_media_type(self, content_type: str) -> str:
+        """Request.media_type: rules.media_type of the value of Content-Type (HY-59.13), which raises the kind
+        `malformed_content_type` (status 400) for a value that is no media type."""
+        return self._core.media_type(content_type)
 
     def request_current_path(self, header: Optional[str]) -> Optional[str]:
         """Request.current_path: rules.current_path of the value of HX-Current-URL (HY-11.5)."""

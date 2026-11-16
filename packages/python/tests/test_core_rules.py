@@ -127,6 +127,13 @@ EXACT = [
         '"tag"',
     ),
     (
+        "Request.media_type (HY-59.13)",
+        "media_type",
+        lambda rules: rules.request_media_type("text/plain; charset=UTF-8"),
+        ("text/plain; charset=UTF-8",),
+        "text/plain",
+    ),
+    (
         "Request.current_path (HY-11.5)",
         "current_path",
         lambda rules: rules.request_current_path("http://a.test/b?c"),

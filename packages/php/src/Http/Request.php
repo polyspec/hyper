@@ -306,24 +306,18 @@ final class Request
         );
     }
 
-    /** Returns the media type of the Content-Type header in lower case, without its parameters (HY-59). */
+    /**
+     * Returns the media type of the Content-Type header in lower case, without its parameters, as the core reads it,
+     * or the empty text without the header (HY-59.13).
+     *
+     * @throws HyperValueError With kind `malformed_content_type` (status 400) for a Content-Type that is no media type.
+     */
     public function mediaType(): string
     {
         ArgumentCount::most(\func_num_args(), 0);
-        $type = $this->header('Content-Type') ?? '';
+        $type = $this->header('Content-Type');
 
-        return strtolower(trim(substr($type, 0, strcspn($type, ';'))));
-    }
-
-    /**
-     * Returns true when the request has a Content-Type header whose media type is empty (HY-59.12, HY-59.13); a
-     * request without the header has the empty type and returns false.
-     *
-     * @internal
-     */
-    public function emptyContentType(): bool
-    {
-        return $this->header('Content-Type') !== null && $this->mediaType() === '';
+        return $type === null ? '' : CoreRules::shared()->requestMediaType($type);
     }
 
     /** Returns the value of a header, or null. */

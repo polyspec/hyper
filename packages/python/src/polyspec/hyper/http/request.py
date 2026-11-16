@@ -198,14 +198,13 @@ class Request:
         return max(len(self._body), length, self._given_body_size or 0, read)
 
     def media_type(self) -> str:
-        """Returns the media type of the Content-Type header in lower case, without its parameters (HY-59)."""
-        content_type = self.header("Content-Type") or ""
-        return content_type.split(";", 1)[0].strip().lower()
-
-    def _empty_content_type(self) -> bool:
-        """Returns True when the request has a Content-Type header whose media type is empty (HY-59.12, HY-59.13); a
-        request without the header has the empty type and returns False."""
-        return self.header("Content-Type") is not None and self.media_type() == ""
+        """Returns the media type of the Content-Type header in lower case, without its parameters, as the core reads
+        it, or the empty text without the header (HY-59.13). It raises the value error of the core with kind
+        `malformed_content_type` (status 400) for a Content-Type that is no media type."""
+        content_type = self.header("Content-Type")
+        if content_type is None:
+            return ""
+        return core_rules().request_media_type(content_type)
 
     def header(self, name: str) -> Optional[str]:
         """Returns the value of a header, or None."""

@@ -55,6 +55,12 @@ final class CoreRulesTest extends TestCase
                 'representationTag',
                 '"tag"',
             ],
+            'Request::mediaType (HY-59.13)' => [
+                'requestMediaType',
+                ['text/plain; charset=UTF-8'],
+                'mediaType',
+                'text/plain',
+            ],
             'Request::currentPath (HY-11.5)' => ['requestCurrentPath', ['http://a.test/b?c'], 'currentPath', '/b'],
             'Reply::cacheControl (HY-52.6)' => ['replyCacheControl', ['private'], 'cacheControl', 'private'],
             'Reply::referrerPolicy (HY-103.2)' => ['replyReferrerPolicy', ['origin'], 'referrerPolicy', 'origin'],

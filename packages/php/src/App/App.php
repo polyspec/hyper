@@ -741,7 +741,11 @@ final class App
                 return Response::text(400, 'Bad Request')->withHeader('Vary', $vary);
             }
         } else {
-            if ($request->mediaType() !== 'application/json') {
+            $mediaType = self::readMediaType($request);
+            if ($mediaType === null) {
+                return Response::text(400, 'Bad Request')->withHeader('Vary', $vary);
+            }
+            if ($mediaType !== 'application/json') {
                 return Response::text(415, 'Unsupported Media Type')->withHeader('Vary', $vary);
             }
             // HY-121.8: a text that json refuses and a value outside the data model are no value that a handler reads.
@@ -939,19 +943,37 @@ final class App
     }
 
     /**
-     * The response that refuses a form request: 400 for a Content-Type that is empty and 415 for a media type that the
-     * application does not accept (HY-59.12), or null. It reads no session (HY-120.3).
+     * The response that refuses a form request: 400 for a Content-Type that is no media type and 415 for a media type
+     * that the application does not accept (HY-59.12), or null. It reads no session (HY-120.3).
      */
     private function refusedMedia(Request $request): ?Response
     {
-        if ($request->emptyContentType()) {
+        $mediaType = self::readMediaType($request);
+        if ($mediaType === null) {
             return Response::text(400, 'Bad Request');
         }
-        if (!in_array($request->mediaType(), $this->formTypes, true)) {
+        if (!in_array($mediaType, $this->formTypes, true)) {
             return Response::text(415, 'Unsupported Media Type');
         }
 
         return null;
+    }
+
+    /**
+     * The media type of a request as the core reads it, or null for a Content-Type that is no media type, which the
+     * core fails with kind `malformed_content_type` (HY-59.12, HY-59.13).
+     */
+    private static function readMediaType(Request $request): ?string
+    {
+        try {
+            return $request->mediaType();
+        } catch (HyperValueError $error) {
+            if ($error->kind() !== 'malformed_content_type') {
+                throw $error;
+            }
+
+            return null;
+        }
     }
 
     /** The response that refuses a form request with a wrong CSRF token, 403, or null. */

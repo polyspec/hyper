@@ -179,6 +179,10 @@
         "category": "type"
       },
       {
+        "variant": "polyspec_hyper::ErrorCode::MalformedContentType",
+        "category": "value"
+      },
+      {
         "variant": "polyspec_hyper::ErrorCode::InvalidApplication",
         "category": "value"
       },
@@ -1033,6 +1037,31 @@
           "raises": [],
           "wait": "none",
           "core": "polyspec_hyper::etag::representation_tag"
+        },
+        {
+          "id": "rules.media_type",
+          "name": [
+            "media",
+            "type"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "content",
+                "type"
+              ],
+              "type": "latin1",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::ErrorCode::MalformedContentType"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::front::media_type"
         },
         {
           "id": "rules.page_status",
@@ -2994,15 +3023,6 @@
         },
         {
           "name": [
-            "malformed",
-            "content",
-            "type"
-          ],
-          "type": "bool",
-          "required": true
-        },
-        {
-          "name": [
             "context",
             "header"
           ],
@@ -3016,11 +3036,11 @@
         },
         {
           "name": [
-            "media",
+            "content",
             "type"
           ],
           "type": {
-            "optional": "text"
+            "optional": "latin1"
           },
           "default": {
             "literal": null

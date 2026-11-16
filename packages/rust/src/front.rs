@@ -25,12 +25,22 @@ pub struct Front {
     pub accept: Vec<Vec<u8>>,
     /// Whether the request has `HX-Request: true` (HY-15.1).
     pub hx_request: bool,
-    /// Whether `Content-Type` is no media type, the empty value included (HY-59.12).
-    pub malformed_content_type: bool,
     /// The value of `Hyper-Context`, or `None` (HY-127).
     pub context_header: Option<Vec<u8>>,
-    /// The media type of the body as F-12 of http-form reads it, or `None` without `Content-Type` (HY-59.12).
-    pub media_type: Option<String>,
+    /// The value of `Content-Type`, or `None` without the field, which `media_type` reads (HY-59.12, HY-59.13).
+    pub content_type: Option<Vec<u8>>,
+}
+
+/// The media type of a `Content-Type` field value, its type and subtype in lower case without parameters, as F-12 of
+/// http-form reads it with MT-4 of http-media-type (HY-59.13).
+///
+/// # Errors
+/// `malformed_content_type` (status 400) for a value that is no media type, the empty value included (HY-59.12).
+pub fn media_type(content_type: &[u8]) -> Result<String, Error> {
+    match polyspec_http_media_type::parse(content_type) {
+        Ok(parsed) => Ok(format!("{}/{}", parsed.r#type, parsed.subtype)),
+        Err(_) => Err(Error::MalformedContentType),
+    }
 }
 
 /// The declarations of the application that the route of a request reads (HY-8, HY-62.2, HY-59.1).
@@ -102,12 +112,13 @@ fn refuse(answer: Plain) -> Route {
 
 /// The 400 and 415 of the media type of the body of a `POST` (HY-59.12).
 fn form_type(front: &Front, declared: &Declared) -> Option<Plain> {
-    if front.malformed_content_type {
-        return Some(plain(400, "Bad Request"));
-    }
-    match &front.media_type {
-        Some(media_type) if declared.form_types.contains(media_type) => None,
-        Some(_) | None => Some(plain(415, "Unsupported Media Type")),
+    let Some(content_type) = &front.content_type else {
+        return Some(plain(415, "Unsupported Media Type"));
+    };
+    match media_type(content_type) {
+        Err(_) => Some(plain(400, "Bad Request")),
+        Ok(media_type) if declared.form_types.contains(&media_type) => None,
+        Ok(_) => Some(plain(415, "Unsupported Media Type")),
     }
 }
 

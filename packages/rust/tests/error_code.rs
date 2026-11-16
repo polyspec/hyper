@@ -54,6 +54,7 @@ fn name(code: ErrorCode<'_>) -> &'static str {
         ErrorCode::InvalidSessionRecord => "InvalidSessionRecord",
         ErrorCode::SharedHoldsContext => "SharedHoldsContext",
         ErrorCode::NotSelected => "NotSelected",
+        ErrorCode::MalformedContentType => "MalformedContentType",
         ErrorCode::InvalidApplication => "InvalidApplication",
         ErrorCode::InvalidBuild => "InvalidBuild",
         ErrorCode::InvalidRepresentation => "InvalidRepresentation",
@@ -338,6 +339,7 @@ fn a_failure_of_hyper_projects_to_its_own_code_which_the_contract_lists() -> Res
         (Error::InvalidSessionRecord, ErrorCode::InvalidSessionRecord),
         (Error::SharedHoldsContext, ErrorCode::SharedHoldsContext),
         (Error::NotSelected, ErrorCode::NotSelected),
+        (Error::MalformedContentType, ErrorCode::MalformedContentType),
         (
             Error::InvalidApplication("a reason".into()),
             ErrorCode::InvalidApplication,

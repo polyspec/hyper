@@ -1,11 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 873525799ee56775e5a3014c2b58119ff4f552e6230a125d6ef1cae2277ebb79 -->
+<!-- source-sha256: cf67323dc58d90426797f9a060bcff8026946aa73ddbcd9828c566d820b4f808 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 새 statement HY-25.8은 문자열인 flash 이름이나 바뀐 topic이 세 server에서 실패 없이 받아들여진다고 말하며, `result.json`의 case `a_flash_name_that_is_a_string_is_taken`과 `a_changed_topic_that_is_a_string_is_taken`이 이를 인용한다. HY-25.7은 문자열이 아닌 값의 실패만 말하므로 두 case의 `raises: null`에는 근거가 없었다(H35.10-8).
+- 세 서버의 request `mediaType()`은 코어의 `rules.media_type`으로 `Content-Type`을 읽는다. 이 규칙은 http-form의 F-12처럼 http-media-type의 MT-4로 값을 읽고, media type이 아닌 값(빈 값 포함)에는 category `value`, 상태 400의 kind `malformed_content_type`으로 실패한다(HY-59.13). 이전에는 서버가 값을 `;`에서 자르고 공백을 없애고 소문자로 바꾸기만 해서, U+00A0 뒤의 ` application/x-www-form-urlencoded`, `À`가 있는 type, 빈 값이 media type을 반환했다. action, `/_hyper/keep`, representation의 `POST`나 `PUT`은 이 실패에 400 `Bad Request`로 답한다(HY-59.12). 각 서버의 빈 값 검사는 제거했다. 코어의 route는 media type과 flag 대신 `Content-Type`의 값을 받아 같은 규칙으로 읽는다(H35.27-1).
 - PHP, Node, Python case runner는 `raises` outcome의 오류를, 그 kind가 인용한 `contracts/protocol.json` statement가 "kind `name`"으로 적은 kind 중 하나일 때 받는다. 이전에는 HY-42.7과 HY-97.7의 outcome을 빼고 모든 outcome에 `invalid_application`을 기대해서, HY-106.21이 `invalid_build`로 말하는 없는 build 파일의 open이 case에서 실패했다. kind를 적지 않은 statement의 outcome은 여전히 open 오류를 기대하고, HY-97.7은 여전히 class만 검사한다(H35.9-6).
 - `result.json`의 case `a_flash_name_that_is_a_string_is_taken`과 `a_changed_topic_that_is_a_string_is_taken`은 HY-25.7이 문자열에 주는 성공인 `raises: null`을 말한다. 이전에는 아무것도 비교하지 않아 runner가 `CASE_EMPTY`로 실패시켰다(H35.10-8).
 - `build.json`의 section `outputs`의 실패한 open은 실패의 kind를 말하는 HY-106.21을 인용한다. 없는 build 파일은 `invalid_build`, 다른 없는 출력은 `invalid_application`이다. 이전에는 message의 경로만 말하는 HY-48.2를 인용했으며, HY-48.2는 field `message`에 남는다(H35.27-1).

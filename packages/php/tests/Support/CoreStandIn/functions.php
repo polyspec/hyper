@@ -99,6 +99,11 @@ function representationTag(mixed ...$arguments): mixed
     return Calls::record('representationTag', array_values($arguments));
 }
 
+function mediaType(mixed ...$arguments): mixed
+{
+    return Calls::record('mediaType', array_values($arguments));
+}
+
 function pageStatus(mixed ...$arguments): mixed
 {
     return Calls::record('pageStatus', array_values($arguments));

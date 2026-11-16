@@ -596,7 +596,10 @@ class App:
             if request.body_size() != 0:
                 return Response.text(400, "Bad Request").with_header("Vary", vary)
         else:
-            if request.media_type() != "application/json":
+            media_type = App._read_media_type(request)
+            if media_type is None:
+                return Response.text(400, "Bad Request").with_header("Vary", vary)
+            if media_type != "application/json":
                 return Response.text(415, "Unsupported Media Type").with_header(
                     "Vary", vary
                 )
@@ -777,13 +780,25 @@ class App:
         return Response(303, {"Location": base_path + result.location}, "")
 
     def _refused_media(self, request: Request) -> Optional[Response]:
-        """Returns the response that refuses a form request: 400 for a Content-Type that is empty and 415 for a media
-        type that the application does not accept (HY-59.12), or None. It reads no session (HY-120.3)."""
-        if request._empty_content_type():
+        """Returns the response that refuses a form request: 400 for a Content-Type that is no media type and 415 for a
+        media type that the application does not accept (HY-59.12), or None. It reads no session (HY-120.3)."""
+        media_type = App._read_media_type(request)
+        if media_type is None:
             return Response.text(400, "Bad Request")
-        if request.media_type() not in self._form_types:
+        if media_type not in self._form_types:
             return Response.text(415, "Unsupported Media Type")
         return None
+
+    @staticmethod
+    def _read_media_type(request: Request) -> Optional[str]:
+        """Returns the media type of a request as the core reads it, or None for a Content-Type that is no media type,
+        which the core raises with kind `malformed_content_type` (HY-59.12, HY-59.13)."""
+        try:
+            return request.media_type()
+        except ValueError as error:
+            if getattr(error, "kind", None) != "malformed_content_type":
+                raise
+            return None
 
     def _refused_form(self, request: Request, session: Session) -> Optional[Response]:
         """Returns the response that refuses a form request with a wrong CSRF token, 403, or None."""

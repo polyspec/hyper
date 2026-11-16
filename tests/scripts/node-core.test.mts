@@ -20,7 +20,7 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
   };
   const names = [
     'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl', 'keepsOutOfSharedCaches',
-    'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'pageStatus', 'replyStatus', 'pageVary',
+    'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
     'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
     'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
     'keptValue', 'openPage', 'answerKeepRequest',
@@ -69,6 +69,7 @@ const EXACT: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[
   ['Context.hash (HY-125.12)', 'contextHash', (rules) => rules.contextHash('build', '{}'), ['build', '{}'], 'hash'],
   ['Context.validHeader (HY-127.2)', 'validContextHeader', (rules) => rules.contextValidHeader(null), [null], true],
   ['RecordSession.cookieName (HY-45.1)', 'sessionName', (rules) => rules.sessionCookieName(true), [true], '__Host-hy-session'],
+  ['Request.mediaType (HY-59.13)', 'mediaType', (rules) => rules.requestMediaType('text/plain; charset=UTF-8'), ['text/plain; charset=UTF-8'], 'text/plain'],
   ['Request.currentPath (HY-11.5)', 'currentPath', (rules) => rules.requestCurrentPath('http://a.test/b?c'), ['http://a.test/b?c'], '/b'],
   ['Reply.cacheControl (HY-52.6)', 'cacheControl', (rules) => rules.replyCacheControl('private'), ['private'], 'private'],
   ['Reply.referrerPolicy (HY-103.2)', 'referrerPolicy', (rules) => rules.replyReferrerPolicy('origin'), ['origin'], 'origin'],
@@ -133,7 +134,7 @@ test('App.storeKept gives answer_keep_request the pages, the store and the reque
 });
 
 test('App.route gives route_request the pages, the choice and the parts of the request (HY-116, HY-59.12, HY-120.2)', () => {
-  const front = { method: 'POST', path: '/add', accept: ['text/html'], hxRequest: false, malformedContentType: true };
+  const front = { method: 'POST', path: '/add', accept: ['text/html'], hxRequest: false, contentType: '' };
   const route = { route: 'plain', answer: plain(400, 'Bad Request') };
   const { rules, calls } = rulesOf({ routeRequest: route });
   assert.equal(rules.appRoute(PAGES, false, front), route);

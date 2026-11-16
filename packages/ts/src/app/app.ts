@@ -665,7 +665,9 @@ export class App<S extends object = Record<string, never>> {
     if (method === 'GET' || method === 'DELETE') {
       if (request.bodySize() !== 0) return Response.text(400, 'Bad Request').withHeader('Vary', vary);
     } else {
-      if (request.mediaType() !== 'application/json') return Response.text(415, 'Unsupported Media Type').withHeader('Vary', vary);
+      const mediaType = App.readMediaType(request);
+      if (mediaType === null) return Response.text(400, 'Bad Request').withHeader('Vary', vary);
+      if (mediaType !== 'application/json') return Response.text(415, 'Unsupported Media Type').withHeader('Vary', vary);
       // HY-121.8: bytes that are not UTF-8, a text that json refuses and a value outside the data model are no value
       // that a handler reads.
       try {
@@ -782,12 +784,24 @@ export class App<S extends object = Record<string, never>> {
     return new Response(303, { Location: basePath + result.location }, '');
   }
 
-  // Returns the refusal of a form request: 400 for a Content-Type that is empty and 415 for a media type that the
-  // application does not accept (HY-59.12), or null. It reads no session (HY-120.3).
+  // Returns the refusal of a form request: 400 for a Content-Type that is no media type and 415 for a media type that
+  // the application does not accept (HY-59.12), or null. It reads no session (HY-120.3).
   private refusedMedia(request: Request): Response | null {
-    if (request.emptyContentType()) return Response.text(400, 'Bad Request');
-    if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
+    const mediaType = App.readMediaType(request);
+    if (mediaType === null) return Response.text(400, 'Bad Request');
+    if (!this.formTypes.includes(mediaType)) return Response.text(415, 'Unsupported Media Type');
     return null;
+  }
+
+  // Returns the media type of a request as the core reads it, or null for a Content-Type that is no media type, which
+  // the core throws with kind `malformed_content_type` (HY-59.12, HY-59.13).
+  private static readMediaType(request: Request): string | null {
+    try {
+      return request.mediaType();
+    } catch (error) {
+      if (error instanceof Error && Reflect.get(error, 'kind') === 'malformed_content_type') return null;
+      throw error;
+    }
   }
 
   // Returns the refusal of a form request whose token does not match the session, 403, or null.

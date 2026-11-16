@@ -386,6 +386,43 @@ fn errors_name_their_kind_and_category() {
 }
 
 #[test]
+fn the_media_type_of_a_content_type_is_its_type_and_subtype() -> Result<(), Error> {
+    // HY-59.13, MT-1.3, MT-2.1, MT-4.1: the type and subtype in lower case without parameters, and
+    // malformed_content_type (400) for a value that is no media type.
+    use polyspec_hyper::front::media_type;
+    assert_eq!(
+        media_type(b" Application/X-WWW-Form-Urlencoded ; charset=UTF-8")?,
+        "application/x-www-form-urlencoded"
+    );
+    assert_eq!(
+        media_type(b"multipart/form-data; boundary=x")?,
+        "multipart/form-data"
+    );
+    for value in [
+        &b""[..],
+        b" ",
+        b"\xa0application/x-www-form-urlencoded",
+        b"applic\xc0tion/x-www-form-urlencoded",
+        b"text",
+        b"text/",
+        b"*/*",
+        b"text/plain; q=1",
+        b"text/plain, text/html",
+    ] {
+        match media_type(value) {
+            Ok(parsed) => panic!("{value:?} reads as {parsed}"),
+            Err(error) => {
+                assert_eq!(error, Error::MalformedContentType);
+                assert_eq!(error.kind(), "malformed_content_type");
+                assert_eq!(error.status(), Some(400));
+                assert_eq!(error.category().as_str(), "value");
+            }
+        }
+    }
+    Ok(())
+}
+
+#[test]
 fn integers_of_the_data_model_are_php_integers_in_a_record() -> Result<(), Error> {
     // HY-104.14: an integral number within ±(2^53 − 1) is written as a PHP integer, another number as a float.
     use polyspec_php_serialization::Node;
