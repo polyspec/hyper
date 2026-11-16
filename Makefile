@@ -132,10 +132,17 @@ hyper-install-php: ## Install only the locked root and board Composer projects a
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
 
-hyper-install-python: ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5)
+# uv sync installs the locked dependencies without the project, because its build backend runs maturin with plain cargo,
+# which applies no patch of .links and resolves two binding-core crates. The package with its native module is the wheel
+# that maturin of mise.toml builds through the link script of kit, which passes the patches to the cargo that maturin runs
+# (K1266), into a staging directory of the process that the shell removes when it ends (HR-87); uv installs that wheel
+# into the venv without its dependencies.
+MATURIN := $(KIT_TOOLS)/mise/shims/maturin
+hyper-install-python: ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5, H35.24)
 	rm -rf $(PYTHON_VENV)
 	$(NODE) $(KIT)/python-venv.$(KIT_EXT) $(PYTHON_VENV)
-	UV_SYNC='--locked --quiet --no-editable --project $(PYTHON_PACKAGE)' $(ONLINE) $(NODE) $(KIT)/uv-install.$(KIT_EXT) .
+	UV_SYNC='--locked --quiet --no-editable --no-install-project --project $(PYTHON_PACKAGE)' $(ONLINE) $(NODE) $(KIT)/uv-install.$(KIT_EXT) .
+	wheels=$(CURDIR)/var/python-wheel.next-$$$$ && trap 'rm -rf '"$$wheels" EXIT && trap 'exit 130' INT TERM && MATURIN=$(MATURIN) $(NODE) $(KIT)/link.$(KIT_EXT) maturin $(CURDIR)/$(PYTHON_PACKAGE) build --locked --offline --out "$$wheels" && $(UV) pip install --offline --python $(PYTHON_VENV)/bin/python --no-deps --reinstall "$$wheels"/*.whl
 
 hyper-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HR-91)
 	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
@@ -540,7 +547,9 @@ CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse
 # alone, board also Python and Chromium, python only the Python of its pins. The group bench is the job of bench.yml,
 # whose targets are reports and belong to no check (make ci-bench).
 CI_GROUPS := gates docs php node board python core
-CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan
+# hyper-install-python builds the native module with Cargo, so each group that runs it names rust. Its maturin of mise.toml
+# has no selector of install-tools of kit, so no group installs it yet; name it in those groups once install-tools selects it.
+CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan rust
 CI_SETUP_gates := install-tools install-symbols hyper-install-php hyper-install-python
 CI_SYMBOLS_gates := php
 CI_TARGETS_gates := $(GATE_TARGETS)
@@ -553,10 +562,10 @@ CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php
 CI_TOOLS_node := node
 CI_SETUP_node := install-tools
 CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check
-CI_TOOLS_board := node php composer pie python uv
+CI_TOOLS_board := node php composer pie python uv rust
 CI_SETUP_board := install-tools hyper-install-php hyper-install-python hyper-install-browser
 CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
-CI_TOOLS_python := node python uv
+CI_TOOLS_python := node python uv rust
 CI_SETUP_python := install-tools hyper-install-python
 CI_TARGETS_python := hyper-test-python hyper-test-python-render
 # The group core checks the Rust core and the bindings of its five targets with the binding generator of package.json (H35.2):

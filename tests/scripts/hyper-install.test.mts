@@ -19,3 +19,10 @@ test('hyper-install writes the sources of the bindings before it installs the PH
   assert.ok(at('bindings') < at('hyper-install-python'), `bindings runs before hyper-install-python: ${steps.join(' ')}`);
 });
 
+test('hyper-install-python builds the native module with maturin of the link script and uv sync does not build it (H35.24)', () => {
+  const lines = dryRun('hyper-install-python').join('\n');
+  assert.match(lines, /UV_SYNC='[^']*--no-install-project[^']*'/u, lines);
+  assert.match(lines, /MATURIN=\S+ \S+ \S+\/link\.m[jt]s maturin \S+\/packages\/python build --locked --offline/u, lines);
+  assert.match(lines, /pip install --offline --python \S+\/packages\/python\/\.venv\/bin\/python --no-deps --reinstall/u, lines);
+});
+

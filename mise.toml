@@ -12,6 +12,10 @@ ruff = "0.17.3"
 go = "1.27.3"
 # The wasm-bindgen CLI writes the glue of the WASM crate and is the release of its wasm-bindgen crate (binding GN-18).
 "github:wasm-bindgen/wasm-bindgen" = "0.2.130"
+# maturin builds the native module of the Python server package (make hyper-install-python) through the link script of
+# kit, so that the cargo that it runs applies the patches of .links (K1266): the binary of its GitHub release, whose
+# digest mise.lock pins, at the pin of binding.
+"github:PyO3/maturin" = "1.16.0"
 "pypi:vulture" = "2.16"
 "http:composer" = { version = "2.10.3", url = "https://getcomposer.org/download/{{ version }}/composer.phar", checksum = "sha256:7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6", bin = "composer" }
 # The PIE PHAR builds and installs the template extension from the Composer repository of the template release (H27.45); its
