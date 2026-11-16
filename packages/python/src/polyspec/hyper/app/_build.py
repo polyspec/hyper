@@ -4,9 +4,9 @@ it (HY-48)."""
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
+from ._core_rules import core_rules
 from ._invalid_build import InvalidBuild
 from ..data._json_codec import JsonCodec
 from ..data._json_decode_error import JsonDecodeError
@@ -33,9 +33,19 @@ class Build:
             if isinstance(value, dict) and list(value) == ["build"]
             else None
         )
-        if not isinstance(build, str) or re.fullmatch(r"[0-9a-f]{64}", build) is None:
-            raise InvalidBuild(
-                f"{file} does not hold exactly the key build with a build id of 64 lowercase"
-                " hexadecimal characters (HY-125)"
-            )
+        if not isinstance(build, str):
+            raise Build._invalid_id(file)
+        # HY-132.2: the core checks the form of the build id; the failure names the path of the file (HY-125.5).
+        try:
+            core_rules().build_check_id(build)
+        except ValueError as error:
+            raise Build._invalid_id(file) from error
         return build
+
+    @staticmethod
+    def _invalid_id(file: str) -> InvalidBuild:
+        """Returns the failure of a file that does not hold a build id, which names the path of the file."""
+        return InvalidBuild(
+            f"{file} does not hold exactly the key build with a build id of 64 lowercase"
+            " hexadecimal characters (HY-125)"
+        )

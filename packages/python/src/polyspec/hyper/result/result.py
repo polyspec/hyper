@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import re
 
+from ..app._core_rules import core_rules
 from ..data._data_model import DataModel
 
 # A lone surrogate is not UTF-8 text, so that a location holds none (HY-46).
@@ -76,10 +77,9 @@ class Result:
 
     @staticmethod
     def page(status: int, data: dict) -> Result:
-        """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58)."""
-        if type(status) is not int or status not in (200, 409, 422):
-            raise ValueError(f"a page status {status} is not 200, 409 or 422 (HY-58)")
-        return Result(None, status, data, {}, [])
+        """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58); the core
+        checks the status (HY-132.2)."""
+        return Result(None, core_rules().result_page(status), data, {}, [])
 
     @staticmethod
     def invalid(data: dict) -> Result:
