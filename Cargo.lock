@@ -1095,8 +1095,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-binding-core"
-version = "0.0.15"
-source = "git+https://github.com/polyspec/binding.git?tag=v0.0.15#da4b39329ee8a80483a354b53c5eaab89ffd03e1"
+version = "0.0.17"
+source = "git+https://github.com/polyspec/binding.git?tag=v0.0.17#8db1add67c520673e07cfaf75038252ede40f282"
 dependencies = [
  "indexmap",
  "libc",
@@ -1134,7 +1134,7 @@ dependencies = [
 name = "polyspec-hyper"
 version = "0.0.0"
 dependencies = [
- "polyspec-binding-core 0.0.15",
+ "polyspec-binding-core 0.0.17",
  "polyspec-http-cookie",
  "polyspec-http-media-type",
  "polyspec-http-negotiation",
@@ -1151,7 +1151,7 @@ dependencies = [
 name = "polyspec-hyper-go"
 version = "0.0.0"
 dependencies = [
- "polyspec-binding-core 0.0.15",
+ "polyspec-binding-core 0.0.17",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
@@ -1167,7 +1167,7 @@ dependencies = [
  "napi",
  "napi-build",
  "napi-derive",
- "polyspec-binding-core 0.0.15",
+ "polyspec-binding-core 0.0.17",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
@@ -1181,7 +1181,7 @@ name = "polyspec-hyper-php-ext"
 version = "0.0.0"
 dependencies = [
  "ext-php-rs",
- "polyspec-binding-core 0.0.15",
+ "polyspec-binding-core 0.0.17",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
@@ -1194,7 +1194,7 @@ dependencies = [
 name = "polyspec-hyper-python"
 version = "0.0.0"
 dependencies = [
- "polyspec-binding-core 0.0.15",
+ "polyspec-binding-core 0.0.17",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
@@ -1209,7 +1209,7 @@ name = "polyspec-hyper-wasm"
 version = "0.0.0"
 dependencies = [
  "js-sys",
- "polyspec-binding-core 0.0.15",
+ "polyspec-binding-core 0.0.17",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
