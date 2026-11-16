@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The repository uses kit 0.0.116 (kit K1266 to K1273), pinned by the URL of its release asset and the integrity of its lock (H35.16).
 - The PHP, Node and Python runners read every section of `contracts/` live, including the 33 sections that they read from the copies `tests/legacy/<name>-before-s3b.json`; the 18 copies, their entries in `tests/legacy/interfaces.json`, the field `fixedCopy` of a case section and its handling in the recipe check are removed. The live cases that the servers do not answer yet are those of H35.12, H35.15 and H35.10. `tests/legacy` keeps `fields.json`, `file-store-sessions.json` and `redis-sessions.json` (H35.9).
 - The contract test of the core passes the content type of a media type case as one byte for each character, as the binding passes a latin1 text, and the case `the_tag_digests_a_character_of_the_content_type_as_one_byte` of HY-122.14 failed there with the tag of the UTF-8 bytes (H35.10-4).
 - The rule `rules.reply_cookie` of the core writes the `Set-Cookie` field of a cookie that a reply adds (HY-52.13), checked in the order of HY-52.16, so that the three servers call one rule instead of writing the attributes in an older order (H35.12-3); the cookie cases of the contract test call it. The commit 0d85bc5d holds the test change of this rule without the rule and does not compile alone.

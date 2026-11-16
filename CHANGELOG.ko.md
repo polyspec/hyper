@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 3608bc435068ee2d48e9663e80ee32a8bf42bcefc90ddf3baadde295192d416d -->
+<!-- source-sha256: 1a493efabd5476c03659f6c7b429bb0a8c7ce8cb00040d1c0c8a8dc088375b2b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 저장소는 kit 0.0.116(kit K1266~K1273)을 쓰며, release asset의 URL과 lock의 integrity로 pin한다(H35.16).
 - PHP, Node, Python runner는 `contracts/`의 모든 section을 live로 읽으며, 사본 `tests/legacy/<name>-before-s3b.json`에서 읽던 section 33개도 그렇다. 사본 18개, `tests/legacy/interfaces.json`의 그 항목, case section의 field `fixedCopy`와 recipe check의 그 처리는 지운다. 서버가 아직 답하지 않는 live case는 H35.12, H35.15, H35.10의 case다. `tests/legacy`에는 `fields.json`, `file-store-sessions.json`, `redis-sessions.json`이 남는다(H35.9).
 - core의 계약 시험은 media type case의 content type을, binding이 latin1 text를 넘기듯 글자마다 한 바이트로 넘긴다. HY-122.14의 case `the_tag_digests_a_character_of_the_content_type_as_one_byte`는 거기서 UTF-8 바이트의 tag로 실패했다(H35.10-4).
 - core의 규칙 `rules.reply_cookie`는 reply가 더하는 cookie의 `Set-Cookie` field를 HY-52.16 순서로 검사한 뒤 쓴다(HY-52.13). 그래서 세 서버는 속성을 옛 순서로 쓰는 대신 규칙 하나를 부른다(H35.12-3). 계약 시험의 cookie case가 그것을 부른다. 커밋 0d85bc5d는 이 규칙 없이 그 시험 변경만 담아, 혼자서는 compile되지 않는다.

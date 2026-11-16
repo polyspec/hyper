@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: e5c9504bec7277ac56e693737cf71a599ddac03da6b96492ef48a05bae707967 -->
+<!-- source-sha256: b19bf8ece2c9492a3797e3c3ee4b4f248344d3789270047c7979578447b53557 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -508,3 +508,4 @@
 | H35.14-2 | binding generator는 npm package `@polyspec/binding`이다. `package.json`이 release asset v0.0.13의 URL로 선언하고 `package-lock.json`이 integrity로 pin한다(HR-70). recipe는 그 bin을 시작하며, `Cargo.lock`의 commit으로 binding을 clone하던 `make install-binding`은 지운다. | package.json, package-lock.json, Makefile, scripts, tests/scripts, config/owner-checks.json, docs/operations | `make hyper-test-scripts` | [ ] |
 | H35.14-3 | 저장소의 모든 Cargo.toml은 `polyspec-binding-core`를 branch `v1/rust-core` 대신 generator의 release인 tag `v0.0.13`으로 요구하고, `Cargo.lock`이 그 tag를 pin한다. | Cargo.toml, Cargo.lock | `make core-test` | [!] cause: 공개된 provider가 binding-core를 서로 다른 tag로 pin한다(http-cookie v0.0.5, http-negotiation v0.0.2, http-media-type v0.0.5는 binding v0.0.9, php-serialization v0.0.12는 v0.0.10, json v0.0.32는 v0.0.13, session-store는 release 없음). 이 저장소에서 binding-core만 tag로 pin하면 graph에 binding-core crate가 둘 생기고, 그 type은 합쳐지지 않는다; retry: binding 0.0.15가 release되고, 그다음 provider 일곱이 그 pin으로 release되고, 그다음 이 저장소가 provider와 binding-core를 그 tag로 pin한다 |
 | H35.15 | 세 서버는 core의 `Pages`를 만들고 각 요청을 `routeRequest`로 route한다(HY-132.2). plain route는 session 없이 답하며(HY-120.3), 손 routing과 손 media type 검사는 같은 커밋에서 지운다. 이것이 H35.12-1과 H35.12-2를 낸다. | packages/php/src, packages/ts/src, packages/python/src, contracts/interfaces.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-node` | [ ] |
+| H35.16 | kit 0.0.116(kit K1266~K1273)을 채택한다. `package.json`이 그 release asset을, `package-lock.json`이 그 integrity를 적는다. | package.json, package-lock.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
