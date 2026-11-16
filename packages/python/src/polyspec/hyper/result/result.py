@@ -5,10 +5,8 @@ from __future__ import annotations
 
 import re
 
+from ..app._core_rules import core_rules
 from ..data._data_model import DataModel
-
-# A lone surrogate is not UTF-8 text, so that a location holds none (HY-46).
-_PATH = re.compile(r"/(?![/\\])[^\x00-\x20\x7f-\x9f\\\ud800-\udfff]*\Z", re.DOTALL)
 
 # An outside location (HY-133.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
 # holds every visible ASCII character except the backslash.
@@ -43,10 +41,8 @@ class Result:
 
     @staticmethod
     def redirect(location: str) -> Result:
-        """Returns a redirect to a path of this application (HY-46)."""
-        if _PATH.fullmatch(location) is None or Result._has_dot_segment(location):
-            raise ValueError("a redirect location is not an application path (HY-46)")
-        return Result(location, 303, {}, {}, [])
+        """Returns a redirect to a path of this application (HY-46); the core checks the location (HY-132.2)."""
+        return Result(core_rules().result_redirect(location), 303, {}, {}, [])
 
     @staticmethod
     def outside(location: str) -> Result:
@@ -76,10 +72,9 @@ class Result:
 
     @staticmethod
     def page(status: int, data: dict) -> Result:
-        """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58)."""
-        if type(status) is not int or status not in (200, 409, 422):
-            raise ValueError(f"a page status {status} is not 200, 409 or 422 (HY-58)")
-        return Result(None, status, data, {}, [])
+        """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58); the core
+        checks the status (HY-132.2)."""
+        return Result(None, core_rules().result_page(status), data, {}, [])
 
     @staticmethod
     def invalid(data: dict) -> Result:
@@ -129,12 +124,3 @@ class Result:
             raise ValueError(
                 "an outside redirect holds no flash value or changed topic (HY-133)"
             )
-
-    @staticmethod
-    def _has_dot_segment(location: str) -> bool:
-        """Returns True when the path of a location has a `.` or `..` segment, also with a percent-encoded dot."""
-        path = re.split(r"[?#]", location, maxsplit=1)[0]
-        return any(
-            re.sub("%2e", ".", segment, flags=re.IGNORECASE) in (".", "..")
-            for segment in path.split("/")
-        )

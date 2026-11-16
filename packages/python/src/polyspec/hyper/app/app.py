@@ -16,6 +16,7 @@ from .container import Container
 from ._build import Build
 from ..representation._representation_entries import RepresentationEntries
 from ._context import Context
+from ._core_rules import core_rules
 from ..session._csrf import Csrf
 from ..data._json_codec import JsonCodec
 from ..data._json_decode_error import JsonDecodeError
@@ -233,21 +234,20 @@ class App:
         for name, route in manifest.routes.items():
             if route["path"] == base or route["path"].startswith(base + "/"):
                 raise ValueError(f"route {name} lies under the data base path {base}")
+        # HY-132.2: the core checks the path before the file is read and gives the text of its bytes.
+        core_rules().app_check_shell_path(client.shell)
         shell_path = Path(client.shell)
-        if not client.shell.startswith("/") or not shell_path.is_file():
+        if not shell_path.is_file():
             raise ValueError(
                 f"static shell {client.shell} is not a readable file at an absolute path"
             )
         try:
-            shell = shell_path.read_text(encoding="utf-8")
+            data = shell_path.read_bytes()
         except OSError:
             raise ValueError(
                 f"static shell {client.shell} is not a readable file at an absolute path"
             ) from None
-        except UnicodeDecodeError as error:
-            raise ValueError(
-                f"static shell {client.shell} is not valid UTF-8: {error}"
-            ) from None
+        shell = core_rules().app_shell_text(client.shell, data)
         # The base path is escaped as PHP `htmlspecialchars` with `ENT_QUOTES` escapes it.
         escaped = (
             base.replace("&", "&amp;")
@@ -370,12 +370,13 @@ class App:
 
     def _frame(self, response: Response) -> Response:
         """Adds the frame-ancestors policy of the application to a response (HY-45), and no-store to a failure
-        (HY-65)."""
-        response = response.with_header(
-            "Content-Security-Policy", f"frame-ancestors {self.frame_ancestors}"
-        )
-        if response.status >= 400:
-            response = response.with_header("Cache-Control", "no-store")
+        (HY-65); the core gives the headers (HY-132.2)."""
+        for name, value in (
+            core_rules()
+            .app_frame_headers(response.status, self.frame_ancestors)
+            .items()
+        ):
+            response = response.with_header(name, value)
         return response
 
     def _log_failure(self, error: BaseException) -> str:
@@ -512,10 +513,9 @@ class App:
         )
 
     def _vary_header(self) -> str:
-        """Returns the `Vary` of a response that `Accept` and the context decide (HY-117)."""
-        if self._context_handler is None:
-            return "Accept, HX-Request, HX-Current-URL"
-        return "Accept, HX-Request, HX-Current-URL, Hyper-Context"
+        """Returns the `Vary` of a response that `Accept` and the context decide (HY-117); the core gives it
+        (HY-132.2)."""
+        return core_rules().app_vary_header(self._context_handler is not None)
 
     @staticmethod
     def _negotiate(

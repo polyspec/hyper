@@ -2,8 +2,10 @@
 # HY-132.2), against a stand-in of the module of the Python binding: the stand-in records each call and returns the
 # value that the test gives it, so the tests need no native module. They state which member of the binding each unit
 # calls, with which arguments, and what the unit returns; the rules themselves are tested in the core.
+import sys
 import types
 import unittest
+import unittest.mock
 
 from polyspec.hyper.app._core_rules import _MEMBERS, CoreRules
 
@@ -269,3 +271,39 @@ class CoreRulesTest(unittest.TestCase):
             str(raised.exception),
             "hyper: the binding of the core has no member csrf_mask, read_build",
         )
+
+
+class SharedCoreRulesTest(unittest.TestCase):
+    """`core_rules` gives the units of the server one `CoreRules` of the binding module, and a binding that does not
+    import fails with an error that names the module, with no rule of the server in its place (HY-132.2)."""
+
+    def setUp(self):
+        from polyspec.hyper.app import _core_rules
+
+        self.module = _core_rules
+        self.addCleanup(setattr, _core_rules, "_shared", _core_rules._shared)
+        _core_rules._shared = None
+
+    def test_the_shared_rules_are_one_instance(self):
+        binding, _ = stand_in({})
+        package = types.ModuleType("polyspec.hyper._binding")
+        package.__path__ = []
+        package._root = binding
+        with unittest.mock.patch.dict(
+            sys.modules,
+            {package.__name__: package, self.module.BINDING: binding},
+        ):
+            first = self.module.core_rules()
+            self.assertIs(first, self.module.core_rules())
+        self.assertIsInstance(first, CoreRules)
+
+    def test_a_binding_that_does_not_import_fails_with_the_name_of_the_module(self):
+        from polyspec.hyper.session._csrf import Csrf
+
+        with unittest.mock.patch.dict(sys.modules, {self.module.BINDING: None}):
+            with self.assertRaises(self.module.CoreBindingError) as raised:
+                self.module.core_rules()
+            self.assertIn("polyspec.hyper._binding._root", str(raised.exception))
+            # No rule of the server answers in place of the core.
+            with self.assertRaises(self.module.CoreBindingError):
+                Csrf.mask("a" * 64, "b" * 64)
