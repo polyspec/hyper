@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 912b42907fec81bb735e91f0c588a0935e499f80c4186e26be04b75c656c091e -->
+<!-- source-sha256: 977ee84820d00a9767ad441f696f6b053e87a75b578e26fff1b248ce6f09504e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 모든 Cargo.toml이 `polyspec-binding-core`를 branch `v1/rust-core` 대신 tag `v0.0.15`로 요구하고, `package.json`이 생성기 `@polyspec/binding`을 v0.0.15 release asset으로 요구한다. lock이 둘을 pin한다. recipe `bindings`와 `bindings-check`는 `--cargo "$(CARGO)"`를 넘긴다. binding 0.0.15의 생성기는 Cargo의 모든 호출을 저장소의 cargo 명령으로 돌리며, 그것 없이는 실패하기 때문이다(GN-1d). `Cargo.lock`에는 아직 공개된 provider의 binding-core v0.0.10과 v0.0.13, 그리고 template, session-store, php-serialization의 branch가 있으므로, `.links` 없는 tree는 H35.14-3의 retry 뒤에야 compile된다. AGENTS.md와 `docs/operations/dependencies.md`가 이 출처를 적는다(H35.14-3-2).
 - knip이 `@polyspec/json`을 무시한다. 루트는 그것을 `@polyspec/template`을 위해서만 요구하고, 어떤 import도 닿지 않는다. 그래서 H35.22 뒤에도 `make lint-ts`가 다시 통과한다(H35.22).
 - `contracts/interfaces.json`의 `json-codec.decode`는 JSON 텍스트를 데이터 모델의 값으로 읽고 `malformed_json`, `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`로 실패한다고 적고(HY-54.20), `json-codec.encode`는 데이터 모델 밖의 값이 `data_unsupported_type`으로 실패한다고 적는다(HY-54.21). 어떤 section도 어떤 statement도 필요로 하지 않으므로 member `json-codec.inDataModel`을 없앤다. PHP, Node, Python runner의 step `decode`는 결과 `value` 또는 decode의 실패를 준다. 전에는 데이터 모델 밖의 decode 값에 `outside`를 주었는데, HY-54의 어떤 statement도 그것을 허용하지 않는다. server는 아직 전처럼 decode하므로 데이터 모델 kind의 decode case는 H35.20-5-3까지 실패한다(H35.20-5-4).
 - PHP 소스가 `phpcs.xml.dist`의 줄 길이를 지킨다. 주석 둘, 메시지 하나, cookie 조회 하나가 120자보다 길어서 `make lint-php`가 phpcs에서 실패했다(H35.21).

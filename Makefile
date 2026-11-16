@@ -368,10 +368,10 @@ binding-cases: ## Write var/binding-cases, the cases of contracts/ in the form o
 	$(NODE) scripts/binding-cases.mts --config $(CURDIR)/config/binding-cases.json --contracts $(CURDIR)/contracts --output $(CURDIR)/var/binding-cases > /dev/null
 bindings: binding-cases ## Write the generated sources of every binding with the binding generator of package.json (binding L-1)
 	@test -f $(BINDING) || { echo "bindings: the binding cli $(BINDING) is missing: run make install-packages"; exit 1; }
-	$(NODE) $(BINDING) generate --root $(CURDIR)
+	$(NODE) $(BINDING) generate --root $(CURDIR) --cargo "$(CARGO)"
 bindings-check: binding-cases ## Check the interface contract and the tracked binding packages with the binding generator of package.json (binding CK-19)
 	@test -f $(BINDING) || { echo "bindings-check: the binding cli $(BINDING) is missing: run make install-packages"; exit 1; }
-	$(NODE) $(BINDING) check $(CURDIR)/packages/rust/interface.json
+	$(NODE) $(BINDING) check $(CURDIR)/packages/rust/interface.json --cargo "$(CARGO)"
 
 # The release recipes of the bindings (HR-99, binding GN-19h, CK-94): packages/release.mk, which binding release-recipes
 # writes and Git ignores, defines the release targets of the bindings with BINDING_RUN, the command that starts the
