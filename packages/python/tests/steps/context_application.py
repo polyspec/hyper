@@ -10,18 +10,11 @@ from polyspec.hyper.result.not_found import NotFound
 from polyspec.hyper.result.result import Result
 
 from .recorded import decoded
+from .representations_steps import orm_error
 
 
 ROOT = Path(__file__).resolve().parents[4]
 PROGRAMS = ROOT / "var" / "contract-programs"
-
-
-class OrmError(Exception):
-    """An error shaped like the OrmError of polyspec.orm, which hyper identifies by its class name and its code (HY-107)."""
-
-    def __init__(self, code: str):
-        super().__init__(f"{code}: a failure of the ORM")
-        self.code = code
 
 
 def program_of(name: str) -> tuple[Path, Path]:
@@ -34,17 +27,9 @@ def program_of(name: str) -> tuple[Path, Path]:
     return root / "manifest.json", root / "program"
 
 
-def _thrown(handler: str, thrown: object) -> OrmError:
-    """Returns the ORM error that a handler of the contract raises (HY-107.2), and fails for another class."""
-    if (
-        not isinstance(thrown, dict)
-        or thrown.get("class") != "OrmError"
-        or not isinstance(thrown.get("code"), str)
-    ):
-        raise ValueError(
-            f"handler {handler} throws a value other than an OrmError with a code"
-        )
-    return OrmError(thrown["code"])
+def _thrown(handler: str, thrown: object) -> Exception:
+    """Returns the error of the ORM that a handler of the contract raises (HY-107.7), and fails for another class."""
+    return orm_error(thrown, f"handler {handler}")
 
 
 def open_application(

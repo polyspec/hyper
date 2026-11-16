@@ -9,7 +9,7 @@ import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
 import { mapOf, plain, stringsOf, textOf, textsOf } from '../inputs.js';
-import { list, OrmError, parsedBody, record, requestFrom } from '../support.js';
+import { list, ormError, parsedBody, record, requestFrom } from '../support.js';
 import { failureOf, messageStart } from './recorded.js';
 
 const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));
@@ -52,10 +52,7 @@ function handlerOf(spec: Map<string, unknown> | null, calls: Observed[]): Repres
     calls.push({ method: request.method, parameters: media.parameters(), request, body: request.json(), params: request.params(), service: service === null ? null : services.get(service) });
     if (spec === null) throw new Error('a case without a handler calls a representation handler');
     const thrown = spec.get('throw');
-    if (thrown instanceof Map) {
-      if (thrown.get('class') !== 'OrmError') throw new Error(`the case throws an unknown class ${String(thrown.get('class'))}`);
-      throw new OrmError(textOf(thrown.get('code'), 'the code'));
-    }
+    if (thrown instanceof Map) throw ormError(thrown, 'the representation handler');
     const status = spec.get('status');
     if (typeof status !== 'number') throw new Error('the status of the handler of the case is not a number');
     return new Representation(status, spec.get('body') ?? null, spec.has('headers') ? textsOf(spec.get('headers'), 'the headers of the handler') : {});

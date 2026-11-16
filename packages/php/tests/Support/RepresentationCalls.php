@@ -67,12 +67,7 @@ final class RepresentationCalls
             throw new \LogicException('a case without a handler calls a representation handler');
         }
         if (isset($response['throw'])) {
-            $thrown = Json::array($response['throw']);
-            if (($thrown['class'] ?? null) !== 'OrmError') {
-                throw new \LogicException('the case throws an unknown class');
-            }
-
-            throw new OrmException(Json::string($thrown['code'] ?? null));
+            throw OrmStoreError::thrown($response['throw'], 'the representation handler');
         }
         $status = $response['status'] ?? null;
         if (!is_int($status)) {

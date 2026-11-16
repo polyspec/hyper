@@ -261,10 +261,11 @@ final class ContextRun
             };
         }
         if (array_key_exists('throw', $spec)) {
-            $code = self::ormCodeOf($spec['throw'], "the loader {$name}");
+            $thrown = $spec['throw'];
+            $what = "the loader {$name}";
 
-            return static function () use ($code): array {
-                throw new OrmException($code);
+            return static function () use ($thrown, $what): array {
+                throw OrmStoreError::thrown($thrown, $what);
             };
         }
         if (($spec['renew'] ?? null) === true) {
@@ -300,7 +301,7 @@ final class ContextRun
                 $reply->renewSession();
             }
             if (array_key_exists('throw', $spec)) {
-                throw new OrmException(self::ormCodeOf($spec['throw'], "the action of {$route}"));
+                throw OrmStoreError::thrown($spec['throw'], "the action of {$route}");
             }
             if (array_key_exists('redirect', $spec)) {
                 return Result::redirect(self::string($spec['redirect'], "the redirect of {$route}"));
@@ -315,17 +316,6 @@ final class ContextRun
 
             return Result::page($page, self::stringMap($spec['data'] ?? null, "the data of the action of {$route}"));
         };
-    }
-
-    /** Returns the code of the ORM error that a handler of the application raises (HY-107.2). */
-    private static function ormCodeOf(mixed $thrown, string $what): string
-    {
-        $thrown = Json::map($thrown, "the member throw of {$what}");
-        if (($thrown['class'] ?? null) !== 'OrmError') {
-            throw new \UnexpectedValueException("{$what} raises a class other than OrmError");
-        }
-
-        return self::string($thrown['code'] ?? null, "the code that {$what} raises");
     }
 
     /**

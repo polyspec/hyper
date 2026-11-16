@@ -319,7 +319,7 @@ final class AppRun
             } elseif (array_key_exists('throw', $step)) {
                 $thrown = Json::map($step['throw'], 'the member throw');
                 throw match ($thrown['class'] ?? null) {
-                    'OrmError' => new OrmException(Json::string($thrown['code'] ?? null)),
+                    'OrmValueError', 'OrmStoreError' => OrmStoreError::thrown($thrown, "the handler {$name}"),
                     'Error' => new \RuntimeException(Json::string($thrown['message'] ?? null)),
                     default => new \UnexpectedValueException("the handler {$name} throws an unknown class"),
                 };

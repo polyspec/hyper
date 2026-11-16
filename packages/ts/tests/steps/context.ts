@@ -10,14 +10,14 @@ import { decoded } from './session-requests.js';
 import { App, ArraySession, NotFound, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
-import { OrmError, parsedBody, record, requestFrom } from '../support.js';
+import { ormError, parsedBody, record, requestFrom } from '../support.js';
 
-// An action of an application of a case: it renews the session when `renew` is true, and then raises the ORM error of
-// the code `raises`, redirects, redirects to an outside location when `outside` is true (HY-133), or returns a page with
-// its data.
+// An action of an application of a case: it renews the session when `renew` is true, and then raises the error of the
+// orm binding that `raises` names by its class and its kind, redirects, redirects to an outside location when `outside`
+// is true (HY-133), or returns a page with its data.
 interface Action {
   renew: boolean;
-  raises: string | null;
+  raises: Map<string, unknown> | null;
   redirect: string | null;
   outside: boolean;
   page: number;
@@ -85,7 +85,7 @@ function applicationOf(value: unknown, name: string): Application {
       const action = mapIn(item, `the action of ${route}`);
       const renew = action.has('renew') && action.get('renew') === true;
       if (action.has('throw')) {
-        actions.set(route, { renew, raises: raisedCode(action.get('throw'), `the action of ${route}`), redirect: null, outside: false, page: 0, data: new Map() });
+        actions.set(route, { renew, raises: raisedError(action.get('throw'), `the action of ${route}`), redirect: null, outside: false, page: 0, data: new Map() });
         continue;
       }
       if (action.has('redirect')) {
@@ -111,12 +111,12 @@ function applicationOf(value: unknown, name: string): Application {
   };
 }
 
-// Returns the code of a `throw` of a loader or an action, which names the ORM error of Node (HY-107.2), and fails for
-// any other value.
-function raisedCode(value: unknown, what: string): string {
+// Returns the `throw` of a loader or an action, which names an error of the orm binding by its class and its kind
+// (HY-107.7), and fails for any other value.
+function raisedError(value: unknown, what: string): Map<string, unknown> {
   const thrown = mapIn(value, `the throw of ${what}`);
-  if (thrown.get('class') !== 'OrmError') throw new Error(`${what} throws an unknown class ${String(thrown.get('class'))}`);
-  return stringIn(thrown.get('code'), `the code of the throw of ${what}`);
+  ormError(thrown, what);
+  return thrown;
 }
 
 // Returns what a loader of a case returns: it calls renewSession of its reply and returns an empty map for
@@ -126,7 +126,7 @@ function loaded(spec: Map<string, unknown>, name: string, reply: Reply): Map<str
     reply.renewSession();
     return new Map();
   }
-  if (spec.has('throw')) throw new OrmError(raisedCode(spec.get('throw'), `the loader ${name}`));
+  if (spec.has('throw')) throw ormError(raisedError(spec.get('throw'), `the loader ${name}`), `the loader ${name}`);
   return new Map(spec);
 }
 
@@ -163,7 +163,7 @@ function handlersOf(application: Application, shared: Map<string, unknown> | nul
       handler.post = ({ reply }) => {
         calls.push(`action:${route.name}`);
         if (action.renew) reply.renewSession();
-        if (action.raises !== null) throw new OrmError(action.raises);
+        if (action.raises !== null) throw ormError(action.raises, `the action of ${route.name}`);
         if (action.redirect === null) return Result.page(action.page, action.data);
         return action.outside ? Result.outside(action.redirect) : Result.redirect(action.redirect);
       };

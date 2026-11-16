@@ -15,7 +15,7 @@ import { Session } from '../../src/session/session.js';
 import { toValue } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
-import { bytesOf, OrmError, parsedBody, record, requestFrom } from '../support.js';
+import { bytesOf, ormError, parsedBody, record, requestFrom } from '../support.js';
 import { listOf, mapOf, textOf } from '../inputs.js';
 import { comparesParts } from './parts-cases.js';
 import { comparesOpen, failureOf, Recorded, RecordingStore } from './recorded.js';
@@ -194,7 +194,7 @@ function performed(name: string, steps: Map<string, unknown>[], run: Run, argume
       throw new Error(`the stop ${String(kind)} of the case is unknown`);
     } else if (step.has('throw')) {
       const thrown = mapOf(step.get('throw'), 'the throw of a handler');
-      if (thrown.get('class') === 'OrmError') throw new OrmError(textOf(thrown.get('code'), 'the code of a throw'));
+      if (thrown.get('class') === 'OrmValueError' || thrown.get('class') === 'OrmStoreError') throw ormError(thrown, 'a handler');
       if (thrown.get('class') === 'Error') throw new Error(textOf(thrown.get('message'), 'the message of a throw'));
       throw new Error(`the case throws the unknown class ${String(thrown.get('class'))}`);
     } else if (step.has('redirect') || step.has('outside')) {

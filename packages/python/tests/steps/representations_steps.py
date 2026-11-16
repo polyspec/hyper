@@ -20,12 +20,41 @@ from .container_steps import SERVICES
 from .recorded import decoded
 
 
-class OrmError(Exception):
-    """An error of the ORM, which hyper answers by its code (HY-107) because it checks the name of the class."""
+class OrmValueError(ValueError):
+    """An error of category value of the orm binding, which a case names by its class and its kind (HY-107.7); hyper
+    has no orm package among its test dependencies, so the test gives the class its name, base and `kind`."""
 
-    def __init__(self, code: str):
-        super().__init__(code)
-        self.code = code
+    def __init__(self, kind: str):
+        super().__init__(f"{kind}: a failure of the ORM")
+        self.kind = kind
+        self.status = None
+
+
+class OrmStoreError(RuntimeError):
+    """An error of category store of the orm binding, which a case names by its class and its kind (HY-107.7)."""
+
+    def __init__(self, kind: str):
+        super().__init__(f"{kind}: a failure of the ORM")
+        self.kind = kind
+        self.status = None
+
+
+_ORM_CLASSES: dict[str, type[OrmValueError] | type[OrmStoreError]] = {
+    "OrmValueError": OrmValueError,
+    "OrmStoreError": OrmStoreError,
+}
+
+
+def orm_error(thrown: object, what: str) -> Exception:
+    """Returns the error of the orm binding that a case throws by its class and its kind, and fails for another
+    class."""
+    if (
+        not isinstance(thrown, dict)
+        or thrown.get("class") not in _ORM_CLASSES
+        or not isinstance(thrown.get("kind"), str)
+    ):
+        raise ValueError(f"{what} throws a value other than an error of the ORM with a kind")
+    return _ORM_CLASSES[thrown["class"]](thrown["kind"])
 
 
 def manifest_rejections(case: CaseReader) -> None:
@@ -211,10 +240,7 @@ def _handler(spec: dict | None, calls: list):
                 "a case without a handler calls a representation handler"
             )
         if "throw" in spec:
-            thrown = spec["throw"]
-            if thrown["class"] != "OrmError":
-                raise ValueError(f"the case throws an unknown class {thrown['class']}")
-            raise OrmError(thrown["code"])
+            raise orm_error(spec["throw"], "the representation handler")
         return Representation(spec["status"], spec.get("body"), spec.get("headers"))
 
     if spec is None or "service" not in spec:

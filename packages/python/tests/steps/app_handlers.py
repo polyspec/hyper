@@ -15,7 +15,7 @@ from polyspec.hyper.result.result import Result
 
 from .recorded import decoded
 from . import reply_steps
-from .representations_steps import OrmError
+from .representations_steps import orm_error
 
 _STEPS = ("calls", "observe", "add", "warn")
 _RESULTS = ("return", "stop", "throw", "redirect", "outside", "page")
@@ -218,8 +218,8 @@ class _Run:
             raise _STOPS[step["stop"]]()
         if "throw" in step:
             thrown = step["throw"]
-            if thrown["class"] == "OrmError":
-                raise OrmError(thrown["code"])
+            if thrown["class"] in ("OrmValueError", "OrmStoreError"):
+                raise orm_error(thrown, "the handler")
             if thrown["class"] != "Error":
                 raise LookupError(
                     f"the case throws the unknown class {thrown['class']}"
