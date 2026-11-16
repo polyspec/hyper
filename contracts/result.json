@@ -558,13 +558,15 @@
       "id": "a_flash_name_that_is_a_string_is_taken",
       "label": "a flash name that is a string is taken",
       "call": "flash",
-      "argument": "\"5\""
+      "argument": "\"5\"",
+      "raises": null
     },
     {
       "id": "a_changed_topic_that_is_a_string_is_taken",
       "label": "a changed topic that is a string is taken",
       "call": "changed",
-      "argument": "\"5\""
+      "argument": "\"5\"",
+      "raises": null
     }
   ],
   "outside": [

@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The cases `a_flash_name_that_is_a_string_is_taken` and `a_changed_topic_that_is_a_string_is_taken` of `result.json` state `raises: null`, the success that HY-25.7 gives a string; they compared nothing, which a runner fails with `CASE_EMPTY` (H35.10-8).
 - The failed open of the section `outputs` of `build.json` cites HY-106.21, which states the kind of the failure: `invalid_build` for a missing build file and `invalid_application` for another missing output; it cited HY-48.2, which states only the path in the message, and HY-48.2 stays on the field `message` (H35.27-1).
 - The cases of `request.json` `texts`, a path, a query or a header with a character above U+00FF, run only in Node and Python, as HY-42.7 states; the PHP runner ran them by converting the text to bytes first. The new section `bytes` shows in PHP that a request whose path, raw query and header values hold the UTF-8 bytes of such characters is created without failure (HY-42.7) (H35.27-3).
 - json moves to v0.0.34, its release on binding 0.0.17: the Rust core requires `polyspec-json` by the tag `v0.0.34` and `package.json` requires `@polyspec/json` and its platform packages by their v0.0.34 release assets, so `Cargo.lock` no longer holds `polyspec-binding-core` 0.0.13 (H35.22-1).
