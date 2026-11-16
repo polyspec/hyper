@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The parameter `host_function` of `pages.register` in `packages/rust/interface.json` states `keeps: true` and the core of `page_request.next` states `failure: true` (binding GN-6aa, GN-6h): the core keeps the function at registration and calls it in `next`, so `register` returns `Error` and `next` returns `Failure<Error>`; the Python binding crate failed with E0308, because the generator gave the failure to the member that takes the function (H35.7). The check of this form needs a binding release whose CK-90 takes `keeps` on a function.
 - `client_rendering::shell_text` of the core borrows the bytes of the shell (`&[u8]`), as a binding passes a parameter of the type bytes (binding T-1); the Python binding crate failed to build with E0308 under binding 0.0.15 (H35.7).
 - Git ignores `packages/go/go.work` and `go.work.sum`, which `make link` of kit writes to link the Go modules of local providers; `make link` refused to write a file that Git does not ignore (H35.7).
 - The browser code sets `HX-Request: true` on the request of a history restoration in server-side rendering (HYC-4.9): htmx 4.0.0 replaced the options of that request and sent it without its own headers, so the server answered the outside redirect of `/away` with 303, the fetch followed it, and the page stayed at `/away` in place of `https://outside.example/landing` (H35.7).

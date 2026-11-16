@@ -2089,7 +2089,8 @@
                   "async_allowed": false
                 }
               },
-              "required": true
+              "required": true,
+              "keeps": true
             }
           ],
           "returns": "none",
@@ -2681,7 +2682,8 @@
           "wait": "none",
           "core": {
             "path": "polyspec_hyper::steps::PageRequest::next",
-            "receiver": "&mut self"
+            "receiver": "&mut self",
+            "failure": true
           }
         }
       ]

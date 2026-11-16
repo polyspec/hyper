@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a3c5f0546395ae3b6fc95758a8cbe18c2c03e57a4a3ae4174135e21d8e30b4a3 -->
+<!-- source-sha256: a47082a2c98d53af18d28b9169ed5a6348b758e20e58008786dafce3ba32dee0 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/rust/interface.json`에서 `pages.register`의 parameter `host_function`은 `keeps: true`를, `page_request.next`의 core는 `failure: true`를 적는다(binding GN-6aa, GN-6h). core는 등록할 때 함수를 보관하고 `next`에서 부르므로 `register`는 `Error`를, `next`는 `Failure<Error>`를 돌려준다. generator가 함수를 받는 member에 failure를 주었으므로 Python binding crate가 E0308로 실패했다(H35.7). 이 형식의 검사에는 CK-90이 function의 `keeps`를 받는 binding release가 필요하다.
 - core의 `client_rendering::shell_text`는 shell의 bytes를 빌려 받는다(`&[u8]`). binding이 type bytes의 parameter를 그렇게 넘기기 때문이다(binding T-1). binding 0.0.15에서 Python binding crate가 E0308로 build에 실패했다(H35.7).
 - Git은 kit의 `make link`가 로컬 provider의 Go module을 연결하려고 쓰는 `packages/go/go.work`와 `go.work.sum`을 무시한다. `make link`는 Git이 무시하지 않는 파일을 쓰기를 거부했다(H35.7).
 - browser code는 server-side rendering의 history 복원 요청에 `HX-Request: true`를 설정한다(HYC-4.9). htmx 4.0.0은 그 요청의 option을 바꾸어 자기 header 없이 보냈으므로, 서버는 `/away`의 outside redirect에 303으로 응답했고 fetch가 그것을 따라가 page는 `https://outside.example/landing` 대신 `/away`에 남았다(H35.7).
