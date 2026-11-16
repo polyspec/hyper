@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: f8ac198ad1a102b17996da5511c8922141e211facff8ffc762048aab69ffeb14 -->
+<!-- source-sha256: 0264ec59abdaf8e1ddad9f5878d4d54e69e9e70ca8a8adf4c783fcdf2fa7ac50 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -530,3 +530,5 @@
 | H35.21 | phpcs가 PHP 소스에서 통과한다. `src/App/Build.php:16`, `src/App/CoreRules.php:51`과 `:269`, `src/Page/Page.php:203`이 `phpcs.xml.dist`의 줄 길이를 지킨다. | packages/php/src | `make lint-php` | [v] |
 | H35.22 | 루트 `package.json`은 template 0.0.28이 요구하는 `@polyspec/json`을 v0.0.32 release asset의 URL로, 그 platform package를 `optionalDependencies`로 요구하고 `package-lock.json`이 그것을 pin한다. 그래서 client 시험이 template을 읽고, `make link`에는 연결할 json 설치가 있다. | package.json, package-lock.json | `make hyper-test-js` | [v] |
 | H35.23 | `make core-lint`가 `packages/rust/tests/contracts.rs`에서 통과한다. representation tag 시험은 lint 설정이 금하는 `unwrap_or`와 `expect` 대신 helper `latin1`로 content type을 바꾼다. | packages/rust/tests/contracts.rs | `make core-lint` | [v] |
+| H35.24 | `make hyper-install-python`이 packages/python/native의 native module을 `.links`의 patch를 적용하는 kit link script의 `maturin`으로 build하고 venv에 설치한다. uv sync는 그것을 build backend로 build하지 않는다. build backend는 plain cargo를 실행하여 binding-core crate 둘을 해석한다. | Makefile, packages/python | `make hyper-install-python` | [ ] |
+| H35.25 | `make hyper-ext`가 `bindings` 뒤에 `$(CARGO)`로 packages/php/native의 PHP extension `polyspec_hyper`를 build/hyper-ext에 build한다. `make hyper-test-php`는 그것을 build하고 두 PHPUnit run에서 load하며, PHP session worker는 그것을 load하고 `requireBuilt`로 이름 짓는다. | Makefile, config/toolchain.json, tests/scripts | `make hyper-test-php` | [ ] |
