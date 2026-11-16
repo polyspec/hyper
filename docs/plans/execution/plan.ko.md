@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 15170c58e69ab1c316785dfcb00a345720c216f865cc42d6364a5f3b64dbfb65 -->
+<!-- source-sha256: b769b921b4dcdc3528a259f4f209c3688e5e48c3015ad7a44f32ab7414d801b4 -->
 # 실행
 
 [English](plan.md).
@@ -213,4 +213,4 @@ core를 부르지 않는 서버는 `tests/legacy/`의 case를 실행하고, core
 
 ## Wave 35 — 설치와 검사의 core와 바인딩
 
-Depends on: none. 새 checkout은 core를 부르지 않는 서버만 설치하고 검사한다. `make hyper-install`은 `make bindings`가 소스를 쓰기 전에 바인딩의 Python 패키지를 설치하고(H35.1), 어떤 CI group도 core나 바인딩의 target을 실행하지 않으며(H35.2), Git은 `make bindings`가 쓰는 Python 패키지를 무시하지 않으며(H35.3), `Cargo.lock`의 binding은 session-store의 callback unit과 function result에 대해 Go와 WASM을 생성하지 않으며(H35.4), 다음 binding은 음의 0의 case를 바꾼다(H35.5). core는 사본이 여럿인 kept 값을 첫 릴리스 뒤에 맡는다(H35.6).
+Depends on: none. 새 checkout은 core를 부르지 않는 서버만 설치하고 검사한다. `make hyper-install`은 `make bindings`가 소스를 쓰기 전에 바인딩의 Python 패키지를 설치하고(H35.1), 어떤 CI group도 core나 바인딩의 target을 실행하지 않으며(H35.2), Git은 `make bindings`가 쓰는 Python 패키지를 무시하지 않으며(H35.3), `Cargo.lock`의 binding은 session-store의 callback unit과 function result에 대해 Go와 WASM을 생성하지 않으며(H35.4), 다음 binding은 음의 0의 case를 바꾼다(H35.5). core는 사본이 여럿인 kept 값을 첫 릴리스 뒤에 맡는다(H35.6). H35.7은 로컬 provider에 대한 전체 실행이 지목한 결함을 고친다.
