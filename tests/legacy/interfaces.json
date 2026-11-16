@@ -2096,7 +2096,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-11.4",
+              "sentence": "HY-11.5",
               "state": "`currentPath` is what `currentPath()` returns, or null."
             },
             "wantsJson": {

@@ -1097,7 +1097,7 @@
           "returns": {
             "optional": "text"
           },
-          "optional_reason": "HY-11.4",
+          "optional_reason": "HY-11.5",
           "raises": [],
           "wait": "none",
           "core": "polyspec_hyper::page::current_path"
@@ -3341,7 +3341,7 @@
           "default": {
             "literal": null
           },
-          "reason": "HY-11.4"
+          "reason": "HY-11.5"
         },
         {
           "name": [

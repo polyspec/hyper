@@ -1524,7 +1524,7 @@
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Request.current_path: rules.current_path of the value of HX-Current-URL (HY-11.4).",
+              "state": "Request.current_path: rules.current_path of the value of HX-Current-URL (HY-11.5).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestCurrentPath",
@@ -18630,7 +18630,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-11.4",
+              "sentence": "HY-11.5",
               "state": "`currentPath` is what `currentPath()` returns, or null."
             },
             "wantsJson": {

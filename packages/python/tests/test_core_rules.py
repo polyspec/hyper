@@ -90,7 +90,7 @@ EXACT = [
         '"tag"',
     ),
     (
-        "Request.current_path (HY-11.4)",
+        "Request.current_path (HY-11.5)",
         "current_path",
         lambda rules: rules.request_current_path("http://a.test/b?c"),
         ("http://a.test/b?c",),

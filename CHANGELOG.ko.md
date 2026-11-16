@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 540dbccb9629f51a7d8c745005f29f320709f687bf69eeb792a990854acc2cf7 -->
+<!-- source-sha256: 042d6d6ff3ab316a0c7f599a6147d0f34d24dc735559f5bd4fab8e5d14826a1d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- HY-11.5가 HY-11.4를 대신한다. current path는 `HX-Current-URL` 값을 RFC 3986의 일반 문법으로 나누며, scheme이 아닌 첫 segment가 colon으로 끝날 때와 경로가 `/`로 시작하지 않을 때는 없다. `contracts/request.json`이 `mailto:a/b`, `1a://x/p`, `://x`, `http:///x`, `http://h:99999/x`에 대해 이를 정하며, core는 `mailto:a/b`를 current path로 냈다(H35.10-7).
 - `contracts/interfaces.json`은 세 서버의 unit `core-rules`를 member 26개와 그 시험과 함께 적고, `wsgi-body`의 member를 H34.1이 남긴 대로 적는다. `close()`가 쓰기를 보고하고 `_finish`는 없다. `core-rules.ts`의 Node 선언은 `@internal`을 단다(H35.7).
 - package data 시험은 설치된 `polyspec-hyper`의 파일을 읽는다. 이 package는 `make hyper-install-python`이 maturin으로 wheel을 빌드해 non-editable로 설치한 것이며, wheel에 `polyspec/hyper/py.typed`가 없으면 시험이 실패한다. 전에는 `pyproject.toml`의 `tool.setuptools`를 읽었는데, maturin이 package를 빌드한 뒤로 그 설정은 없으므로 표지를 가진 package에서도 실패했다(H35.7).
 - Node와 Python 서버의 `CoreRules`는 규칙마다 member 하나를 갖는 unit 하나이며, member는 unit과 규칙의 이름을 따른다(`csrfMask`, `csrf_mask`). PHP 서버와 같은 모양이다. 전에는 member의 이름공간이 `contracts/interfaces.json`의 unit이 아니었고, Python module은 파일 하나에 class 열넷을 담아 HYR-4를 어겼다(H35.7).

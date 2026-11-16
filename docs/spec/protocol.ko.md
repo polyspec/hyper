@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: b4a8d9783002b22283c25d9ab575348616ba7b10df222869c9c9bc299830d984 -->
+<!-- source-sha256: 346b595be3be635277cf0e179255e0c55ea40b6740d0a09a0a6f2e2b291c1741 -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -51,7 +51,7 @@
 
 - **HY-10** <a id="HY-10.1"></a> 공유 데이터는 레이아웃, 제목, 모든 영역이 받는 맵 하나다. <a id="HY-10.2"></a> 라우트 제목 `title`과 이 응답을 위해 가린 HY-24의 세션 토큰 `csrf`로 시작하고, 애플리케이션이 context를 선언하면 그다음에 애플리케이션의 context인 `context`(HY-124)가 오며, 그 뒤에 애플리케이션이 추가하는 값이 온다. <a id="HY-10.3"></a> 라우트의 read path(HY-73)가 `csrf`를 빼면 `context`는 `title` 바로 뒤에 오고, 둘 다 빼면 맨 앞에 온다. context의 자리와 출처는 하나이므로, 이미 member `context`를 가진 공유 데이터에 context를 넣으면 서버에서는 HY-43으로, 브라우저에서는 오류로 실패한다.
 
-- **HY-11** <a id="HY-11.1"></a> 페이지 영역이 아닌 모든 영역은 사용하는 주제를 선언한다. <a id="HY-11.2"></a> 주제는 바뀔 수 있는 데이터의 이름이다(예: `posts`). <a id="HY-11.3"></a> `path` 주제는 내장 주제이며, 요청 경로가 `HX-Current-URL` 요청 헤더의 경로(기본 경로 제거 후)와 다르면 바뀐다. <a id="HY-11.4"></a> current path는 `HX-Current-URL`의 URL 경로를 UTF-8로 읽은 것이며, 요청에 그 header가 없을 때, URL에 경로가 없을 때, 바이트가 유효한 UTF-8이 아닐 때는 없다.
+- **HY-11** <a id="HY-11.1"></a> 페이지 영역이 아닌 모든 영역은 사용하는 주제를 선언한다. <a id="HY-11.2"></a> 주제는 바뀔 수 있는 데이터의 이름이다(예: `posts`). <a id="HY-11.3"></a> `path` 주제는 내장 주제이며, 요청 경로가 `HX-Current-URL` 요청 헤더의 경로(기본 경로 제거 후)와 다르면 바뀐다. <a id="HY-11.5"></a> current path는 `HX-Current-URL` 값의 경로이며, 그 바이트는 UTF-8로 읽고 scheme, authority, 경로는 RFC 3986의 일반 문법으로 나눈다. 요청에 그 header가 없을 때, 바이트가 유효한 UTF-8이 아닐 때, scheme이 아닌 첫 segment가 colon으로 끝날 때, 경로가 `/`로 시작하지 않을 때는 없다.
 
 ## 렌더
 

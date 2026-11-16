@@ -63,25 +63,30 @@ fn scheme_length(url: &str) -> usize {
     }
 }
 
-/// The current path of a request (HY-11.4): the path of the URL of `HX-Current-URL`, after its scheme and its
-/// authority and before its query or fragment, with its bytes read as UTF-8 and its percent-encoded octets as written;
-/// `None` without the header, for a URL without a path and for bytes that are not UTF-8.
+/// The current path of a request (HY-11.5): the path of the value of `HX-Current-URL`, split by the generic syntax of
+/// RFC 3986 after its scheme and its authority and before its query or fragment, with its bytes read as UTF-8 and its
+/// percent-encoded octets as written; `None` without the header, for bytes that are not UTF-8, for a first segment
+/// that ends with a colon and is no scheme, and for a path that does not start with `/`.
 #[must_use]
 pub fn current_path(header: Option<&[u8]>) -> Option<String> {
     let Ok(url) = std::str::from_utf8(header?) else {
         return None;
     };
-    let after_scheme = url.get(scheme_length(url)..)?;
+    let scheme = scheme_length(url);
+    // RFC 3986 section 4.2: a reference without a scheme has no colon in its first segment.
+    if scheme == 0 && url.get(..end_at(url, &['/', '?', '#']))?.contains(':') {
+        return None;
+    }
+    let after_scheme = url.get(scheme..)?;
     let rest = match after_scheme.strip_prefix("//") {
         Some(authority) => authority.get(end_at(authority, &['/', '?', '#'])..)?,
-        // A URL without an authority keeps its scheme in its path, as the reader of the three servers reads it.
-        None => url,
+        None => after_scheme,
     };
     let path = rest.get(..end_at(rest, &['?', '#']))?;
-    if path.is_empty() {
-        None
-    } else {
+    if path.starts_with('/') {
         Some(path.to_owned())
+    } else {
+        None
     }
 }
 

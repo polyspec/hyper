@@ -399,7 +399,9 @@
         {
           "kind": "rule",
           "id": "HY-11",
-          "retired": [],
+          "retired": [
+            4
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -423,10 +425,10 @@
                   "koSource": "4f90c94421770cdc778a5dc49dddcb9835944a0a88051315d62e9e7c0610d6e9"
                 },
                 {
-                  "id": "HY-11.4",
-                  "en": "The current path is the path of the URL of `HX-Current-URL` with its bytes read as UTF-8, and it is absent when the request has no such header, when the URL has no path, and when the bytes are not valid UTF-8.",
-                  "ko": "current path는 `HX-Current-URL`의 URL 경로를 UTF-8로 읽은 것이며, 요청에 그 header가 없을 때, URL에 경로가 없을 때, 바이트가 유효한 UTF-8이 아닐 때는 없다.",
-                  "koSource": "6a633f82f416f5135e5aa857a05c7dc894d4d1edbb2e3a2950ffff73b63b75ce"
+                  "id": "HY-11.5",
+                  "en": "The current path is the path of the value of `HX-Current-URL`, with its bytes read as UTF-8 and its scheme, authority and path split by the generic syntax of RFC 3986, and it is absent when the request has no such header, when the bytes are not valid UTF-8, when a colon ends a first segment that is no scheme, and when the path does not start with `/`.",
+                  "ko": "current path는 `HX-Current-URL` 값의 경로이며, 그 바이트는 UTF-8로 읽고 scheme, authority, 경로는 RFC 3986의 일반 문법으로 나눈다. 요청에 그 header가 없을 때, 바이트가 유효한 UTF-8이 아닐 때, scheme이 아닌 첫 segment가 colon으로 끝날 때, 경로가 `/`로 시작하지 않을 때는 없다.",
+                  "koSource": "6b42dace6f3647c333fd219441c10dded0c8edfca8dcd7fdaab898fe9225efab"
                 }
               ]
             }

@@ -102,7 +102,7 @@ final class CoreRules
         return $this->call('representationTag', $contentType, $body);
     }
 
-    /** Request::currentPath: rules.current_path of the value of HX-Current-URL (HY-11.4). */
+    /** Request::currentPath: rules.current_path of the value of HX-Current-URL (HY-11.5). */
     public function requestCurrentPath(?string $header): mixed
     {
         return $this->call('currentPath', $header);

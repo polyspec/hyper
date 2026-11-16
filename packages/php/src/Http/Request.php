@@ -343,7 +343,7 @@ final class Request
 
     /**
      * Returns the path of the page that sent the request, or null without the header, without a path and for a header
-     * whose bytes are not valid UTF-8 (HY-11.4).
+     * whose bytes are not valid UTF-8 (HY-11.5).
      */
     public function currentPath(): ?string
     {

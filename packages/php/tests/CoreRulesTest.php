@@ -50,7 +50,7 @@ final class CoreRulesTest extends TestCase
                 'representationTag',
                 '"tag"',
             ],
-            'Request::currentPath (HY-11.4)' => ['requestCurrentPath', ['http://a.test/b?c'], 'currentPath', '/b'],
+            'Request::currentPath (HY-11.5)' => ['requestCurrentPath', ['http://a.test/b?c'], 'currentPath', '/b'],
             'Reply::cacheControl (HY-52.6)' => ['replyCacheControl', ['private'], 'cacheControl', 'private'],
             'Reply::referrerPolicy (HY-103.2)' => ['replyReferrerPolicy', ['origin'], 'referrerPolicy', 'origin'],
             'Reply::status (HY-69)' => ['replyStatus', [403], 'replyStatus', 403],

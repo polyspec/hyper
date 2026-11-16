@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- HY-11.5 replaces HY-11.4: the current path splits the value of `HX-Current-URL` by the generic syntax of RFC 3986, and is absent for a first segment that ends with a colon and is no scheme and for a path that does not start with `/`; `contracts/request.json` states it for `mailto:a/b`, `1a://x/p`, `://x`, `http:///x` and `http://h:99999/x`, and the core gave `mailto:a/b` as a current path (H35.10-7).
 - `contracts/interfaces.json` lists the unit `core-rules` of the three servers with its 26 members and their tests, and the members of `wsgi-body` as H34.1 left them: `close()` reports the write and `_finish` is gone; the Node declarations of `core-rules.ts` carry `@internal` (H35.7).
 - The package data test reads the files of the installed `polyspec-hyper`, which `make hyper-install-python` builds as a wheel with maturin and installs non-editable, and fails when the wheel lacks `polyspec/hyper/py.typed`: it read `tool.setuptools` of `pyproject.toml`, which the package no longer has since maturin builds it, and failed on a package that carries the marker (H35.7).
 - `CoreRules` of the Node and the Python server is one unit with one member per rule, named after its unit and its rule (`csrfMask`, `csrf_mask`), as the PHP server has it: the namespaces of its members were no unit of `contracts/interfaces.json`, and the Python module held fourteen classes in one file against HYR-4 (H35.7).

@@ -244,7 +244,7 @@ export interface CoreRules {
   sessionCookieHeader(id: string, secure: boolean): string;
   // representationEtag: rules.representation_tag (HY-122.10, HY-122.11), of the UTF-8 bytes of the body.
   representationEtag(contentType: string, body: string): string;
-  // requestCurrentPath: rules.current_path of the value of HX-Current-URL (HY-11.4).
+  // requestCurrentPath: rules.current_path of the value of HX-Current-URL (HY-11.5).
   requestCurrentPath(header: string | null): string | null;
   // replyCacheControl: rules.cache_control gives the value that the reply keeps (HY-52.6).
   replyCacheControl(value: string): string;

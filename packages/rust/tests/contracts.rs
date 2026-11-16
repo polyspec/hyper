@@ -856,7 +856,7 @@ fn latin1(text: &str) -> Vec<u8> {
 
 #[test]
 fn the_current_path_of_a_request() {
-    // HY-11.4
+    // HY-11.5
     use polyspec_hyper::page::current_path;
     let file = cases("request.json");
     let mut ran = 0;

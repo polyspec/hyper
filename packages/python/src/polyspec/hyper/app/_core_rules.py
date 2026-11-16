@@ -94,7 +94,7 @@ class CoreRules:
         return self._core.representation_tag(content_type, body.encode("utf-8"))
 
     def request_current_path(self, header: Optional[str]) -> Optional[str]:
-        """Request.current_path: rules.current_path of the value of HX-Current-URL (HY-11.4)."""
+        """Request.current_path: rules.current_path of the value of HX-Current-URL (HY-11.5)."""
         return self._core.current_path(header)
 
     def reply_cache_control(self, value: str) -> str:

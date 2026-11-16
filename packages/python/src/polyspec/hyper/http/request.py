@@ -215,7 +215,7 @@ class Request:
 
     def current_path(self) -> Optional[str]:
         """Returns the path of the page that sent the request, with its bytes read as UTF-8, or None for a request
-        without the header, a URL without a path and bytes that are not UTF-8 (HY-11.4)."""
+        without the header, a URL without a path and bytes that are not UTF-8 (HY-11.5)."""
         header = self.header("HX-Current-URL")
         if header is None or not Request._valid_utf8(header):
             return None

@@ -31,7 +31,7 @@ pub struct Opening {
     pub mask: String,
     /// The current time of the render, in seconds since the Unix epoch.
     pub now: f64,
-    /// The value of `HX-Current-URL`, or `None` (HY-11.4).
+    /// The value of `HX-Current-URL`, or `None` (HY-11.5).
     pub current_url: Option<Vec<u8>>,
     /// The value of the cookie `hy-keep`, or `None` (HY-38.10).
     pub keep_cookie: Option<String>,
