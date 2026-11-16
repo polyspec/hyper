@@ -65,7 +65,7 @@ final class ResultSteps
         $case->compare('result', $result?->status);
         $case->compare('redirect', $result?->location);
         $case->compare('raises', $outcome['raises']);
-        if ($case->has('held') && $result !== null) {
+        if ($case->has('held') && $result instanceof Result) {
             $case->compare('held', Plain::map($result->data));
         }
     }
