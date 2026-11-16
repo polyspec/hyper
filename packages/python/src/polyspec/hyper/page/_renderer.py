@@ -7,10 +7,11 @@ again (VAL-22)."""
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Optional
 
-from polyspec.template import AstProgram, Engine, EngineOptions, FsLoader, RenderOptions
+from polyspec.template import DefineInput, Engine, Environment, FsLoader
 from polyspec.template import bind as template_bind
 from polyspec.template import merge as template_merge
 
@@ -48,11 +49,7 @@ class Renderer:
                     "invalid_build" if path == build else "invalid_application",
                 )
         return Renderer(
-            Engine(
-                AstProgram(
-                    EngineOptions(loader=FsLoader(str(templates)), functions=functions)
-                )
-            ),
+            Engine(loader=FsLoader(str(templates)), functions=functions or {}),
             timezone,
         )
 
@@ -107,7 +104,9 @@ class Renderer:
 
     def _render(self, template: str, assign, define: dict) -> str:
         """Renders one template with an assigned bound root and HTML definitions (HY-14)."""
-        options = RenderOptions(env={"timezone": self.timezone})
-        if define != {}:
-            options.define = define
-        return self._program.render(template, assign, options)
+        return self._program.render_bound(
+            template,
+            assign,
+            define={name: DefineInput(**value) for name, value in define.items()},
+            env=Environment(timezone=self.timezone, now=time.time()),
+        )
