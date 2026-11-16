@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: dd95418961f58e3847d8db1173f26f94ccfccb39206bcd4c3cc822331eb4232c -->
+<!-- source-sha256: 8f04f4989ec59d39bbbacdfbbdb7969186b75a3b9dbfcf4dbf13cd6b65c481ce -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -499,3 +499,7 @@
 | H35.10-9 | live case가 masked token이 빈 JSON page의 tag를 정한다(HY-53.1). | contracts, packages/rust | `make recipe-check` | [ ] |
 | H35.11 | 세 서버의 form 읽기는 http-form의 case를 따른다. 그 case는 `tests/legacy/fields.json`이 값 없음으로 정한 것을 실패로 정한다: boundary가 없거나 빈 quoted boundary인 multipart body는 `no_boundary` 400이고, 다른 disposition, name 없음, header 줄 없음, 홀로 된 carriage return, parameter 앞의 no-break space, 두 번째 name을 가진 part는 `invalid`이며, 끝나지 않은 quoted string은 `invalid`이고, line feed가 뒤따르는 urlencoded type은 `malformed_content_type`이다(http-form F-6, F-7, F-12, F-16, F-23, RFC 2046 5.1.1절). hyper의 명세가 먼저 그 변경을 정하고, 서버는 http-form release asset의 case를 pin과 integrity로 읽으며, `tests/legacy/fields.json`은 지운다. 재시도 조건: case 파일을 digest가 있는 release asset으로 싣는 http-form release. | docs/spec, contracts, Makefile, packages/php/src, packages/ts/src, packages/python/src, tests/legacy/fields.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-node` | [ ] |
 | H35.13 | 개발, 시험, release 검증의 PHP 기준을 PHP 8.5.10으로 바꾼다. | AGENTS.md, .php-version, composer.json, composer.lock | `make docs-check` | [-] cause: PHP 기준은 PHP 8.4.27로 남는다 |
+| H35.14 | 저장소의 Rust 도구와 binding 도구를 선언된 입력으로 두고 kit를 거쳐 실행한다. | Makefile, package.json, package-lock.json, Cargo.toml, Cargo.lock, scripts, tests/scripts, config/owner-checks.json, docs/operations, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
+| H35.14-1 | Makefile의 모든 cargo 명령은 kit link script의 `cargo <dir> <args>`, 곧 `$(CARGO)`를 거쳐 실행한다. 그래서 개발 checkout의 polyspec crate는 `.cargo` 파일 없이 `.links`의 provider로 patch된다. `tests/scripts/cargo-through-kit.test.mts`는 cargo를 직접 시작하는 recipe 줄을 실패시킨다. | Makefile, tests/scripts, config/owner-checks.json | `make hyper-test-scripts` | [ ] |
+| H35.14-2 | binding generator는 npm package `@polyspec/binding`이다. `package.json`이 release asset v0.0.13의 URL로 선언하고 `package-lock.json`이 integrity로 pin한다(HR-70). recipe는 그 bin을 시작하며, `Cargo.lock`의 commit으로 binding을 clone하던 `make install-binding`은 지운다. | package.json, package-lock.json, Makefile, scripts, tests/scripts, config/owner-checks.json, docs/operations | `make hyper-test-scripts` | [ ] |
+| H35.14-3 | 저장소의 모든 Cargo.toml은 `polyspec-binding-core`를 branch `v1/rust-core` 대신 generator의 release인 tag `v0.0.13`으로 요구하고, `Cargo.lock`이 그 tag를 pin한다. | Cargo.toml, Cargo.lock | `make core-test` | [ ] |
