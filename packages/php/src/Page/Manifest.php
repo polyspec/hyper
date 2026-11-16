@@ -38,19 +38,26 @@ final class Manifest
     public static function fromFile(string $file): self
     {
         if (!is_file($file)) {
-            throw new \InvalidArgumentException("manifest {$file} does not exist");
+            throw new HyperValueError("manifest {$file} does not exist", 'invalid_application');
         }
+        $data = null;
+        $objects = null;
         try {
             $text = (string) file_get_contents($file);
             $data = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
             // HY-2.8: the manifest is JSON text as HY-54 decodes it. The objects tell an empty object from an empty
             // array, which the representations of a route need (HY-118.7).
             $objects = JsonCodec::decode($text);
-        } catch (\JsonException | JsonDecodeError $error) {
-            throw new \InvalidArgumentException("manifest {$file} is not valid JSON or UTF-8", previous: $error);
+            $decoded = true;
+        } catch (\JsonException | JsonDecodeError) {
+            $decoded = false;
+        }
+        // The class of the binding takes no previous error, so the error is thrown outside the catch (HY-106.21).
+        if (!$decoded) {
+            throw new HyperValueError("manifest {$file} is not valid JSON or UTF-8", 'invalid_application');
         }
         if (!is_array($data) || !is_string($data['layout'] ?? null) || !is_string($data['title'] ?? null)) {
-            throw new \InvalidArgumentException("manifest {$file} has no layout or title template");
+            throw new HyperValueError("manifest {$file} has no layout or title template", 'invalid_application');
         }
 
         $regions = [];
@@ -58,42 +65,44 @@ final class Manifest
         foreach (self::entries($data, 'regions') as $region) {
             $name = is_string($region['name'] ?? null) ? $region['name'] : '';
             if (!self::regionName($name) || isset($regions[$name])) {
-                throw new \InvalidArgumentException("manifest region name {$name} is not allowed");
+                throw new HyperValueError("manifest region name {$name} is not allowed", 'invalid_application');
             }
             $isPage = ($region['page'] ?? false) === true;
             $template = $region['template'] ?? null;
             if ($isPage === is_string($template)) {
-                throw new \InvalidArgumentException(
+                throw new HyperValueError(
                     "manifest region {$name} must have a template unless it is the page region",
+                    'invalid_application',
                 );
             }
             $declaredUses = $region['uses'] ?? [];
             if (!is_array($declaredUses)) {
-                throw new \InvalidArgumentException("manifest region {$name} uses an invalid topic");
+                throw new HyperValueError("manifest region {$name} uses an invalid topic", 'invalid_application');
             }
             $uses = [];
             foreach ($declaredUses as $topic) {
                 if (!is_string($topic) || preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $topic) !== 1) {
-                    throw new \InvalidArgumentException("manifest region {$name} uses an invalid topic");
+                    throw new HyperValueError("manifest region {$name} uses an invalid topic", 'invalid_application');
                 }
                 $uses[] = $topic;
             }
             // HY-37: only route regions change in the browser, so only they keep values.
             if (array_key_exists('keep', $region)) {
-                throw new \InvalidArgumentException(
+                throw new HyperValueError(
                     "manifest region {$name} cannot keep values; only route regions keep values",
+                    'invalid_application',
                 );
             }
             $regions[$name] = new Region($name, $isPage, is_string($template) ? $template : null, $uses);
             if ($isPage) {
                 if ($page !== null) {
-                    throw new \InvalidArgumentException('manifest declares more than one page region');
+                    throw new HyperValueError('manifest declares more than one page region', 'invalid_application');
                 }
                 $page = $regions[$name];
             }
         }
         if ($page === null) {
-            throw new \InvalidArgumentException('manifest declares no page region');
+            throw new HyperValueError('manifest declares no page region', 'invalid_application');
         }
 
         $routes = [];
@@ -111,18 +120,25 @@ final class Manifest
                 || !is_string($template)
                 || !is_string($path)
             ) {
-                throw new \InvalidArgumentException("manifest route {$name} is duplicated or incomplete");
+                throw new HyperValueError(
+                    "manifest route {$name} is duplicated or incomplete",
+                    'invalid_application',
+                );
             }
             if (str_starts_with($path, '/_hyper')) {
-                throw new \InvalidArgumentException("manifest route {$name} uses the reserved path /_hyper (HY-40)");
+                throw new HyperValueError(
+                    "manifest route {$name} uses the reserved path /_hyper (HY-40)",
+                    'invalid_application',
+                );
             }
             $routeRegions = [];
             foreach (self::entries($route, 'regions') as $region) {
                 $regionName = is_string($region['name'] ?? null) ? $region['name'] : '';
                 $regionTemplate = $region['template'] ?? null;
                 if (!self::regionName($regionName) || isset($regionNames[$regionName]) || !is_string($regionTemplate)) {
-                    throw new \InvalidArgumentException(
+                    throw new HyperValueError(
                         "manifest route {$name} has an invalid or duplicated region {$regionName}",
+                        'invalid_application',
                     );
                 }
                 $regionNames[$regionName] = true;
@@ -168,12 +184,15 @@ final class Manifest
     {
         $list = $object[$key] ?? [];
         if (!is_array($list) || !array_is_list($list)) {
-            throw new \InvalidArgumentException("manifest {$key} is not a list");
+            throw new HyperValueError("manifest {$key} is not a list", 'invalid_application');
         }
         $entries = [];
         foreach ($list as $entry) {
             if (!is_array($entry)) {
-                throw new \InvalidArgumentException("manifest {$key} contains a value that is not an object");
+                throw new HyperValueError(
+                    "manifest {$key} contains a value that is not an object",
+                    'invalid_application',
+                );
             }
             $entries[] = $entry;
         }
@@ -191,12 +210,18 @@ final class Manifest
     {
         $declared = $region['keep'] ?? [];
         if (!is_array($declared)) {
-            throw new \InvalidArgumentException("region {$name} has kept paths that are not an object");
+            throw new HyperValueError(
+                "region {$name} has kept paths that are not an object",
+                'invalid_application',
+            );
         }
         $keep = [];
         foreach ($declared as $path => $kind) {
             if (!is_string($path) || !is_string($kind)) {
-                throw new \InvalidArgumentException("region {$name} has an invalid kept path {$path}");
+                throw new HyperValueError(
+                    "region {$name} has an invalid kept path {$path}",
+                    'invalid_application',
+                );
             }
             $keep[$path] = $kind;
         }

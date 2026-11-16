@@ -202,6 +202,16 @@ export function raisesOf(error: unknown): Raises {
   return { kind: kind ?? null, status: status ?? null, category, message: error.message };
 }
 
+/**
+ * HYR-11: the error that a step raises is the open error when it is the hyper class of the category `value` with the
+ * kind `invalid_application` (HY-106.21). An error that is no error of hyper is thrown again by `raisesOf`.
+ */
+export function openError(observed: unknown): boolean {
+  if (observed === null || observed === undefined) return false;
+  const raises = raisesOf(observed);
+  return raises.category === 'value' && raises.kind === 'invalid_application';
+}
+
 /** The result of a call, or null and the failure of hyper with which it fails; any other error is thrown again. */
 export function failureOf<T>(call: () => T): { result: T | null; raises: Raises | null } {
   try {

@@ -245,17 +245,17 @@ export class App<S extends object = Record<string, never>> {
     ArgumentCountError.members(options, APP_REQUIRED, APP_OPTIONAL);
     const basePath = options.basePath ?? '';
     if (basePath !== '' && (!basePath.startsWith('/') || basePath.endsWith('/'))) {
-      throw new Error(`hyper: base path ${basePath} must start with / and must not end with /`);
+      throw rules().valueError(`base path ${basePath} must start with / and must not end with /`, 'invalid_application');
     }
     const bodyLimit = options.bodyLimit ?? 8 * 1024 * 1024;
-    if (!Number.isSafeInteger(bodyLimit) || bodyLimit < 1) throw new Error(`hyper: body limit ${bodyLimit} is not a positive number of bytes`);
+    if (!Number.isSafeInteger(bodyLimit) || bodyLimit < 1) throw rules().valueError(`body limit ${bodyLimit} is not a positive number of bytes`, 'invalid_application');
     const fileLimit = options.fileLimit ?? Math.min(8 * 1024 * 1024, bodyLimit);
     if (!Number.isSafeInteger(fileLimit) || fileLimit < 1 || fileLimit > bodyLimit) {
-      throw new Error(`hyper: file limit ${fileLimit} is not a positive number of bytes no larger than the body limit ${bodyLimit} (HY-114)`);
+      throw rules().valueError(`file limit ${fileLimit} is not a positive number of bytes no larger than the body limit ${bodyLimit} (HY-114)`, 'invalid_application');
     }
     const valueLimit = options.valueLimit ?? Math.min(8 * 1024 * 1024, bodyLimit);
     if (!Number.isSafeInteger(valueLimit) || valueLimit < 1 || valueLimit > bodyLimit) {
-      throw new Error(`hyper: value limit ${valueLimit} is not a positive number of bytes no larger than the body limit ${bodyLimit} (HY-131)`);
+      throw rules().valueError(`value limit ${valueLimit} is not a positive number of bytes no larger than the body limit ${bodyLimit} (HY-131)`, 'invalid_application');
     }
     const partLimit = options.partLimit ?? 1000;
     if (!Number.isSafeInteger(partLimit) || partLimit < 1) throw rules().valueError(`part limit ${partLimit} is not a positive number (HY-131)`, 'invalid_application');
@@ -263,13 +263,14 @@ export class App<S extends object = Record<string, never>> {
     if (!Number.isSafeInteger(responseLimit) || responseLimit < 1) throw rules().valueError(`response limit ${responseLimit} is not a positive number of bytes`, 'invalid_application');
     const formTypes = options.formTypes ?? ['application/x-www-form-urlencoded'];
     if (formTypes.length === 0 || new Set(formTypes).size !== formTypes.length || formTypes.some((type) => !FORM_TYPES.includes(type))) {
-      throw new Error('hyper: form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data');
+      throw rules().valueError('form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data', 'invalid_application');
     }
     App.absolutePaths(options);
     const build = Build.read(options.build);
-    if (options.context !== undefined && typeof options.context !== 'function') throw new Error('hyper: the context must be a function (HY-106)');
-    if (options.onDisconnect !== undefined && typeof options.onDisconnect !== 'function') throw new Error('hyper: the disconnect hook is not callable (HY-67)');
-    const manifest = checkManifest(App.readJsonFile(options.manifest));
+    if (options.context !== undefined && typeof options.context !== 'function') throw rules().valueError('the context must be a function (HY-106)', 'invalid_application');
+    if (options.onDisconnect !== undefined && typeof options.onDisconnect !== 'function') throw rules().valueError('the disconnect hook is not callable (HY-67)', 'invalid_application');
+    const manifestJson = App.readJsonFile(options.manifest);
+    const manifest = App.clientCheck(() => checkManifest(manifestJson));
     // HY-118: the representations of each route, by the route name. The manifest is decoded with maps for objects,
     // because the parameters of an entry keep the order of the manifest, which a plain object does not keep for a name
     // that is an integer.
@@ -278,7 +279,7 @@ export class App<S extends object = Record<string, never>> {
       decoded = JsonCodec.decode(App.readJsonText(options.manifest));
     } catch (error) {
       if (!(error instanceof JsonDecodeError)) throw error;
-      throw new Error(`hyper: ${options.manifest} is not valid JSON`, { cause: error });
+      throw rules().valueError(`${options.manifest} is not valid JSON`, 'invalid_application');
     }
     const entries = new Map<string, RepresentationEntry[]>();
     const routes = decoded instanceof Map ? decoded.get('routes') : undefined;
@@ -289,7 +290,7 @@ export class App<S extends object = Record<string, never>> {
     }
     const index = App.templateIndex(options.templates.index);
     const fetcher = async (url: string): Promise<Template> => decodeTemplate(App.readJsonFile(join(options.templates.root, url)));
-    const application = createApplication(manifest, index, fetcher, options.functions);
+    const application = App.clientCheck(() => createApplication(manifest, index, fetcher, options.functions));
     App.checkHandlers({ ...manifest, entries }, options.handlers);
     const shell = options.clientRendering === undefined ? '' : App.checkedShell(options.clientRendering, manifest);
     App.routeTemplates(index, manifest);
@@ -298,11 +299,11 @@ export class App<S extends object = Record<string, never>> {
     // HY-73: the read paths of every route, from the templates that the asset build wrote.
     const parsed = new Map<string, Template>();
     for (const [name, entry] of Object.entries(index)) parsed.set(name, await fetcher(entry.url));
-    const reads = routeReads(manifest, (name) => {
+    const reads = App.clientCheck(() => routeReads(manifest, (name) => {
       const template = parsed.get(name);
-      if (template === undefined) throw new Error(`hyper: template ${name} is not in the template index`);
+      if (template === undefined) throw rules().valueError(`template ${name} is not in the template index`, 'invalid_application');
       return template;
-    }, resolvePath);
+    }, resolvePath));
     return new App({
       application,
       handlers: options.handlers,
@@ -332,14 +333,27 @@ export class App<S extends object = Record<string, never>> {
   // the build file.
   private static absolutePaths<S extends object>(options: AppOptions<S>): void {
     for (const path of [options.manifest, options.templates.index, options.templates.root]) {
-      if (!isAbsolute(path)) throw new Error(`hyper: ${path} is not an absolute path`);
+      if (!isAbsolute(path)) throw rules().valueError(`${path} is not an absolute path`, 'invalid_application');
     }
-    if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw new Error(`hyper: the build file ${String(options.build)} is not an absolute path`);
+    if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw rules().valueError(`the build file ${String(options.build)} is not an absolute path`, 'invalid_application');
   }
 
   // Reads the template index that the asset build wrote and fails when it is not a template index (HY-48.12).
   private static templateIndex(path: string): TemplateIndex {
-    return checkTemplateIndex(App.readJsonFile(path), `the template index ${path}`);
+    const json = App.readJsonFile(path);
+    return App.clientCheck(() => checkTemplateIndex(json, `the template index ${path}`));
+  }
+
+  // Runs a manifest, template index or route check of @polyspec/hyper-client at open. Its Error fails the open of the
+  // application with kind invalid_application and the message without a leading `hyper: ` (HY-106.21, HY-4.6); an
+  // error of hyper that it passes on, such as one of the template callback, stays as it was thrown.
+  private static clientCheck<T>(call: () => T): T {
+    try {
+      return call();
+    } catch (error) {
+      if (!(error instanceof Error) || 'kind' in error) throw error;
+      throw rules().valueError(error.message.replace(/^hyper: /u, ''), 'invalid_application');
+    }
   }
 
   // Fails when the template index does not hold an entry template of a route or the template of the embedded data
@@ -347,30 +361,39 @@ export class App<S extends object = Record<string, never>> {
   private static routeTemplates(index: TemplateIndex, manifest: Manifest): void {
     for (const route of manifest.routes) {
       for (const name of [...routeTemplates(manifest, route), DATA_TEMPLATE_NAME]) {
-        if (typeof index[name]?.url !== 'string') throw new Error(`hyper: template ${name} is not in the template index`);
+        if (typeof index[name]?.url !== 'string') throw rules().valueError(`template ${name} is not in the template index`, 'invalid_application');
       }
     }
   }
 
-  // Reads a JSON file of an application as strict UTF-8 JSON. A file that cannot be read fails with its system error;
-  // a file that is not valid UTF-8 or not valid JSON raises an Error that names it (HY-106).
+  // Reads a JSON file of an application as strict UTF-8 JSON. A file that cannot be read, is not valid UTF-8 or is not
+  // valid JSON fails the open with kind invalid_application (HY-106.21).
   private static readJsonFile(path: string): unknown {
     const text = App.readJsonText(path);
     try {
       return JSON.parse(text);
     } catch (error) {
-      throw new Error(`hyper: ${path} is not valid JSON`, { cause: error });
+      if (!(error instanceof SyntaxError)) throw error;
+      throw rules().valueError(`${path} is not valid JSON`, 'invalid_application');
     }
   }
 
   // Reads the text of a JSON file of an application as strict UTF-8.
+  // A file that cannot be read fails the open with kind invalid_application and the message of the system error
+  // (HY-106.21).
   private static readJsonText(path: string): string {
+    let bytes: Buffer;
+    try {
+      bytes = readFileSync(path);
+    } catch (error) {
+      throw rules().valueError(error instanceof Error ? error.message : String(error), 'invalid_application');
+    }
     try {
       // ignoreBOM keeps a leading U+FEFF, so that a file that starts with it is not valid JSON, as in PHP and Python.
-      return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(readFileSync(path));
+      return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
     } catch (error) {
       if (!(error instanceof TypeError)) throw error;
-      throw new Error(`hyper: ${path} is not valid UTF-8`, { cause: error });
+      throw rules().valueError(`${path} is not valid UTF-8`, 'invalid_application');
     }
   }
 

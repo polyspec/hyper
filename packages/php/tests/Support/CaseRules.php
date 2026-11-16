@@ -291,10 +291,18 @@ final class CaseRules
         return null;
     }
 
-    /** HYR-11: the error that a step raises is the open error of HY-106 when its class is exactly that error. */
+    /**
+     * HYR-11: the error that a step raises is the open error when it is the hyper class of the category `value` with
+     * the kind `invalid_application` (HY-106.21). An error that is no error of hyper is thrown again by `raisesOf`.
+     */
     public static function openError(mixed $observed): bool
     {
-        return $observed instanceof \Throwable && $observed::class === \InvalidArgumentException::class;
+        if (!$observed instanceof \Throwable) {
+            return false;
+        }
+        $raises = self::raisesOf($observed);
+
+        return $raises['category'] === 'value' && $raises['kind'] === 'invalid_application';
     }
 
     /** @return list<string> */

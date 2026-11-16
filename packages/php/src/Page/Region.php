@@ -27,7 +27,10 @@ final class Region
                 preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.([A-Za-z_][A-Za-z0-9_]*|\d+))*$/D', (string) $path) !== 1
                 || !in_array($kind, Kept::KINDS, true)
             ) {
-                throw new \InvalidArgumentException("region {$name} has an invalid kept path {$path}");
+                throw new HyperValueError(
+                    "region {$name} has an invalid kept path {$path}",
+                    'invalid_application',
+                );
             }
         }
     }

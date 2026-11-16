@@ -67,7 +67,7 @@ final class Router
     private static function compiledPath(string $path): array
     {
         if (!str_starts_with($path, '/')) {
-            throw new \InvalidArgumentException("route path {$path} does not start with /");
+            throw new HyperValueError("route path {$path} does not start with /", 'invalid_application');
         }
         if ($path === '/') {
             return [];
@@ -91,7 +91,10 @@ final class Router
             ) {
                 $segments[] = ['rest', $found[1]];
             } else {
-                throw new \InvalidArgumentException("route path {$path} has an invalid segment {$part}");
+                throw new HyperValueError(
+                    "route path {$path} has an invalid segment {$part}",
+                    'invalid_application',
+                );
             }
         }
 

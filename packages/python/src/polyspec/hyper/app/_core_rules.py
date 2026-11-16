@@ -213,3 +213,9 @@ def core_rules() -> CoreRules:
             ) from error
         _shared = CoreRules(module)
     return _shared
+
+
+def open_error(message: str) -> ValueError:
+    """The error with which an application fails to open: the class of the binding of the category value with the
+    kind `invalid_application` (HY-106.21)."""
+    return core_rules().value_error(message, "invalid_application")

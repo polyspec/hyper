@@ -146,6 +146,15 @@ def raises_of(error: BaseException) -> dict:
     }
 
 
+def open_error(observed: BaseException | None) -> bool:
+    """HYR-11: the error that a step raises is the open error when it is the hyper class of the category `value` with
+    the kind `invalid_application` (HY-106.21). An error that is no error of hyper is raised again by raises_of."""
+    if observed is None:
+        return False
+    raises = raises_of(observed)
+    return raises["category"] == "value" and raises["kind"] == "invalid_application"
+
+
 def stated_message(name: str, expected: Any, observed: Any) -> Any:
     """The observed failure of a field `raises` without its message when the case states none: a case compares only a
     message that a rule states (HY-132.4). Any other field as observed."""

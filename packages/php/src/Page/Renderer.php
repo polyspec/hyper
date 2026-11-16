@@ -44,9 +44,11 @@ final class Renderer
         ];
         foreach ($required as $path => $exists) {
             if (!$exists($path)) {
-                throw new \InvalidArgumentException(
+                throw new HyperValueError(
                     "{$path} of the server program {$program} is missing; "
                     . 'hyper build of @polyspec/hyper-cli builds it',
+                    // HY-106.21: only a missing build file has the kind invalid_build.
+                    $path === "{$program}/build.json" ? 'invalid_build' : 'invalid_application',
                 );
             }
         }
@@ -62,28 +64,34 @@ final class Renderer
      */
     private static function program(string $program, array $functions): Program
     {
-        try {
-            $text = (string) file_get_contents("{$program}/program.json");
-            $declaration = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException $error) {
-            throw new \InvalidArgumentException("{$program}/program.json is not valid JSON or UTF-8", 0, $error);
+        $declaration = json_decode((string) file_get_contents("{$program}/program.json"), true);
+        // HY-106.21: a program file that is not JSON fails the open.
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new HyperValueError(
+                "{$program}/program.json is not valid JSON or UTF-8",
+                'invalid_application',
+            );
         }
         $namespace = is_array($declaration) ? $declaration['namespace'] ?? null : null;
         if (!is_string($namespace)) {
-            throw new \InvalidArgumentException("{$program}/program.json names no namespace");
+            throw new HyperValueError("{$program}/program.json names no namespace", 'invalid_application');
         }
         $class = "{$namespace}\\GeneratedProgram";
         if (!class_exists($class)) {
-            throw new \InvalidArgumentException(
+            throw new HyperValueError(
                 "the autoload loads no class {$class} of the server program {$program}; "
                 . "map the namespace {$namespace} to {$program}/php in autoload.psr-4 of composer.json",
+                'invalid_application',
             );
         }
         // HYC-24, RT-5: the host functions of the application are registered by the engine, which fails the open of a
         // name that is built in or an entry that is not a function.
         $generated = new $class(new RuntimeEnvironment(hostFunctions: $functions));
         if (!$generated instanceof Program) {
-            throw new \InvalidArgumentException("{$class} of the server program {$program} is not a template program");
+            throw new HyperValueError(
+                "{$class} of the server program {$program} is not a template program",
+                'invalid_application',
+            );
         }
 
         return $generated;

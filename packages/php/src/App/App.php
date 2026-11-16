@@ -145,20 +145,25 @@ final class App
     ): self {
         ArgumentCount::most(\func_num_args(), 21);
         if ($bodyLimit < 1) {
-            throw new \InvalidArgumentException("body limit {$bodyLimit} is not a positive number of bytes");
+            throw new HyperValueError(
+                "body limit {$bodyLimit} is not a positive number of bytes",
+                'invalid_application',
+            );
         }
         $fileLimit ??= min(8 * 1024 * 1024, $bodyLimit);
         if ($fileLimit < 1 || $fileLimit > $bodyLimit) {
-            throw new \InvalidArgumentException(
+            throw new HyperValueError(
                 "file limit {$fileLimit} is not a positive number of bytes no larger than the body limit "
                 . "{$bodyLimit} (HY-114)",
+                'invalid_application',
             );
         }
         $valueLimit ??= min(8 * 1024 * 1024, $bodyLimit);
         if ($valueLimit < 1 || $valueLimit > $bodyLimit) {
-            throw new \InvalidArgumentException(
+            throw new HyperValueError(
                 "value limit {$valueLimit} is not a positive number of bytes no larger than the body limit "
                 . "{$bodyLimit} (HY-131)",
+                'invalid_application',
             );
         }
         if ($partLimit < 1) {
@@ -178,12 +183,16 @@ final class App
             || array_values(array_unique($formTypes)) !== $formTypes
             || array_diff($formTypes, ['application/x-www-form-urlencoded', 'multipart/form-data']) !== []
         ) {
-            throw new \InvalidArgumentException(
+            throw new HyperValueError(
                 'form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data',
+                'invalid_application',
             );
         }
         if ($basePath !== '' && (!str_starts_with($basePath, '/') || str_ends_with($basePath, '/'))) {
-            throw new \InvalidArgumentException("base path {$basePath} must start with / and must not end with /");
+            throw new HyperValueError(
+                "base path {$basePath} must start with / and must not end with /",
+                'invalid_application',
+            );
         }
         $declared = Manifest::fromFile($manifest);
 

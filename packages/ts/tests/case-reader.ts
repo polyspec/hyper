@@ -3,7 +3,7 @@
 // the cases of its section with the inputs that it reads and the comparisons that it makes. The steps of the Node server
 // and the browser and build runners read their cases through this reader; the reader has no test of its own.
 import { readFileSync } from 'node:fs';
-import { type Compare, caseFileUrl, caseFiles, entriesOf, field, folded, kind, lookup, member, parsed, statedMessage, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
+import { type Compare, caseFileUrl, caseFiles, entriesOf, field, folded, kind, lookup, member, openError, parsed, statedMessage, type Declaration, type Section, uncovered, undeclared, visible } from './case-rules.ts';
 
 // Returns an expected value that is a list of strings, and fails for any other value.
 function stringsOf(expected: unknown): string[] {
@@ -181,8 +181,8 @@ export class CaseReader {
       case 'keys':
         return this.equal(expected, (entriesOf(observed) ?? []).map(([key]) => key), true);
       case 'raises':
-        // Whether a value is an error of exactly the class Error (HY-106), not a subclass of it.
-        return expected === (typeof observed === 'object' && observed !== null && observed.constructor === Error);
+        // Whether a value is the open error of HY-106.21; with the expected value false, whether the step raised nothing.
+        return expected === true ? openError(observed) : observed === null || observed === undefined;
     }
   }
 }

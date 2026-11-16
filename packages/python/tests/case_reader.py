@@ -166,7 +166,7 @@ class CaseReader:
         if kind == "keys":
             return list(observed) == list(expected)
         if kind == "raises":
-            return type(observed) is ValueError if expected else observed is None
+            return rules.open_error(observed) if expected else observed is None
         raise ValueError(f"unknown comparison {kind}")
 
     @staticmethod

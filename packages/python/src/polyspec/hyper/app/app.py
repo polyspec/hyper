@@ -147,20 +147,23 @@ class App:
         `create_server` of `polyspec.hyper` could not write because the client closed the connection (HY-67)."""
         # A limit is an integer (HY-59.2, HY-114.6, HY-131.10, HY-66.1); a boolean is an int of Python and no limit.
         if type(body_limit) is not int or body_limit < 1:
-            raise ValueError(
-                f"body limit {body_limit} is not a positive number of bytes"
+            raise core_rules().value_error(
+                f"body limit {body_limit} is not a positive number of bytes",
+                "invalid_application",
             )
         if file_limit is None:
             file_limit = min(8 * 1024 * 1024, body_limit)
         if type(file_limit) is not int or file_limit < 1 or file_limit > body_limit:
-            raise ValueError(
-                f"file limit {file_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-114)"
+            raise core_rules().value_error(
+                f"file limit {file_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-114)",
+                "invalid_application",
             )
         if value_limit is None:
             value_limit = min(8 * 1024 * 1024, body_limit)
         if type(value_limit) is not int or value_limit < 1 or value_limit > body_limit:
-            raise ValueError(
-                f"value limit {value_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-131)"
+            raise core_rules().value_error(
+                f"value limit {value_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-131)",
+                "invalid_application",
             )
         if type(part_limit) is not int or part_limit < 1:
             raise core_rules().value_error(
@@ -180,18 +183,22 @@ class App:
             or len(set(types)) != len(types)
             or any(kind not in _FORM_TYPES for kind in types)
         ):
-            raise ValueError(
+            raise core_rules().value_error(
                 "form types must be distinct values of application/x-www-form-urlencoded "
-                "and multipart/form-data"
+                "and multipart/form-data",
+                "invalid_application",
             )
         if base_path != "" and (
             not base_path.startswith("/") or base_path.endswith("/")
         ):
-            raise ValueError(
-                f"base path {base_path} must start with / and must not end with /"
+            raise core_rules().value_error(
+                f"base path {base_path} must start with / and must not end with /",
+                "invalid_application",
             )
         if on_disconnect is not None and not callable(on_disconnect):
-            raise ValueError("the disconnect hook is not callable (HY-67)")
+            raise core_rules().value_error(
+                "the disconnect hook is not callable (HY-67)", "invalid_application"
+            )
         declared = Manifest.from_file(manifest)
         App._check_handlers(declared, handlers)
         shell = (

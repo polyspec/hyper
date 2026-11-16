@@ -8,6 +8,8 @@ import json
 from pathlib import Path
 from typing import Optional, Union
 
+from ..app._core_rules import open_error
+
 Node = Union[bool, dict]
 
 
@@ -24,14 +26,14 @@ class Reads:
         try:
             reads = json.loads(file.read_text(encoding="utf-8"))
         except FileNotFoundError:
-            raise ValueError(
+            raise open_error(
                 f"{file} of the server program {program} is missing; "
                 "hyper build of @polyspec/hyper-cli builds it"
             ) from None
         except ValueError as error:
-            raise ValueError(f"{file} is not valid JSON or UTF-8: {error}") from None
+            raise open_error(f"{file} is not valid JSON or UTF-8: {error}") from None
         if not isinstance(reads, dict) or not isinstance(reads.get("routes"), dict):
-            raise ValueError(f"{file} has no routes")
+            raise open_error(f"{file} has no routes")
         return Reads(reads["routes"])
 
     def shared(self, route: str, shared: dict) -> dict:

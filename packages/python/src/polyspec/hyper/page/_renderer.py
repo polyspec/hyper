@@ -14,6 +14,8 @@ from polyspec.template import AstProgram, Engine, EngineOptions, FsLoader, Rende
 from polyspec.template import bind as template_bind
 from polyspec.template import merge as template_merge
 
+from ..app._core_rules import core_rules
+
 # The reserved template that the embedded data renders (HY-31).
 DATA_NAME = "hyper/data.tpl"
 
@@ -38,9 +40,12 @@ class Renderer:
         build = Path(program) / "build.json"
         for path, is_directory in ((reads, False), (build, False), (templates, True)):
             if not (path.is_dir() if is_directory else path.is_file()):
-                raise ValueError(
+                # HY-106.21: a missing build file fails with `invalid_build`, any other missing output with
+                # `invalid_application`.
+                raise core_rules().value_error(
                     f"{path} of the server program {program} is missing; "
-                    "hyper build of @polyspec/hyper-cli builds it"
+                    "hyper build of @polyspec/hyper-cli builds it",
+                    "invalid_build" if path == build else "invalid_application",
                 )
         return Renderer(
             Engine(

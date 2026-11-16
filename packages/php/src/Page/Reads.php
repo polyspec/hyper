@@ -22,13 +22,13 @@ final class Reads
     public static function open(string $program): self
     {
         $file = "{$program}/reads.json";
-        try {
-            $reads = json_decode((string) file_get_contents($file), true, flags: JSON_THROW_ON_ERROR);
-        } catch (\JsonException $error) {
-            throw new \InvalidArgumentException("{$file} is not valid JSON or UTF-8", 0, $error);
+        $reads = json_decode((string) file_get_contents($file), true);
+        // HY-106.21: a reads file that is not JSON fails the open.
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new HyperValueError("{$file} is not valid JSON or UTF-8", 'invalid_application');
         }
         if (!is_array($reads) || !is_array($reads['routes'] ?? null)) {
-            throw new \InvalidArgumentException("{$file} has no routes");
+            throw new HyperValueError("{$file} has no routes", 'invalid_application');
         }
 
         return new self($reads['routes']);
