@@ -22,7 +22,7 @@ fault-test = ["polyspec-binding-core/fault-test"]
 
 [dependencies]
 # The kind interface of every error (plan F-2, binding design E-1).
-polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core" }
+polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag = "v0.0.15" }
 # The Cookie and Set-Cookie fields (CK-1 to CK-14; HY-129.13, HY-45.8, HY-52.13).
 polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", tag = "v0.0.6" }
 # The weights of Accept (NG-5 to NG-10; HY-116.17 to HY-116.20).
@@ -48,7 +48,7 @@ polyspec-hyper = { path = ".", features = ["fault-test"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 # tests/contracts.rs arms the fault injection points of the cases that name them, those of hyper, of
 # http-negotiation, of session-store and of template, as a generated binding test does (binding design G-5).
-polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", branch = "v1/rust-core", features = ["construct", "fault-test"] }
+polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag = "v0.0.15", features = ["construct", "fault-test"] }
 # The file store of session-store with its fault injection points, which a case of opening_functions.open_page gives.
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", branch = "v1/rust-core", default-features = false, features = ["file", "fault-test"] }
 polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.3", features = ["fault-test"] }

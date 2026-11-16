@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- 모든 Cargo.toml이 `polyspec-binding-core`를 branch `v1/rust-core` 대신 tag `v0.0.15`로 요구하고, `package.json`이 생성기 `@polyspec/binding`을 v0.0.15 release asset으로 요구한다. lock이 둘을 pin한다. recipe `bindings`와 `bindings-check`는 `--cargo "$(CARGO)"`를 넘긴다. binding 0.0.15의 생성기는 Cargo의 모든 호출을 저장소의 cargo 명령으로 돌리며, 그것 없이는 실패하기 때문이다(GN-1d). `Cargo.lock`에는 아직 공개된 provider의 binding-core v0.0.10과 v0.0.13, 그리고 template, session-store, php-serialization의 branch가 있으므로, `.links` 없는 tree는 H35.14-3의 retry 뒤에야 compile된다. AGENTS.md와 `docs/operations/dependencies.md`가 이 출처를 적는다(H35.14-3-2).
 - PHP 소스가 `phpcs.xml.dist`의 줄 길이를 지킨다. 주석 둘, 메시지 하나, cookie 조회 하나가 120자보다 길어서 `make lint-php`가 phpcs에서 실패했다(H35.21).
 - core의 representation tag 시험이 helper `latin1`로 content type을 바꾼다. 전에는 lint 설정이 금하는 `unwrap_or`와 `expect`를 불러, H35.10-4 뒤로 `make core-lint`가 실패했다(H35.23).
 - `packages/rust/interface.json`의 rules unit은 UTF-8 byte를 template 값으로 읽는 `rules.json_read`와 template 값을 텍스트로 쓰는 `rules.json_write`를 선언한다. 그 core 함수 `json::json_read`와 `json::json_write`는 `json::read`와 `json::write`를 부르고 hyper의 오류를 준다. json이 거부하는 텍스트는 새 kind `malformed_json`(`Error::MalformedJson`, category value)으로 실패하며 그 원인은 json의 거부이고, 데이터 모델 밖의 값은 template 데이터 모델의 kind로 실패한다(HY-54.20, HY-54.21). `json_text_is_written_and_read`는 `contracts/json.json`의 case를 contract가 적은 core 경로의 이 함수들로 실행한다(H35.20-5-1).
