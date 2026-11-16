@@ -773,8 +773,10 @@ class App:
         return Response(303, {"Location": base_path + result.location}, "")
 
     def _refused_media(self, request: Request) -> Optional[Response]:
-        """Returns the response that refuses a form request whose media type the application does not accept, 415
-        (HY-59.12), or None. It reads no session (HY-120.3)."""
+        """Returns the response that refuses a form request: 400 for a Content-Type that is empty and 415 for a media
+        type that the application does not accept (HY-59.12), or None. It reads no session (HY-120.3)."""
+        if request._empty_content_type():
+            return Response.text(400, "Bad Request")
         if request.media_type() not in self._form_types:
             return Response.text(415, "Unsupported Media Type")
         return None

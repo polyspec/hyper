@@ -198,6 +198,11 @@ class Request:
         content_type = self.header("Content-Type") or ""
         return content_type.split(";", 1)[0].strip().lower()
 
+    def _empty_content_type(self) -> bool:
+        """Returns True when the request has a Content-Type header whose media type is empty (HY-59.12, HY-59.13); a
+        request without the header has the empty type and returns False."""
+        return self.header("Content-Type") is not None and self.media_type() == ""
+
     def header(self, name: str) -> Optional[str]:
         """Returns the value of a header, or None."""
         return self._headers.get(name.lower())

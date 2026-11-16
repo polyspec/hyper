@@ -309,6 +309,13 @@ export class Request {
     return (type.split(';', 1)[0] ?? '').trim().toLowerCase();
   }
 
+  // Returns true when the request has a Content-Type header whose media type is empty (HY-59.12, HY-59.13); a request
+  // without the header has the empty type and returns false.
+  /** @internal */
+  emptyContentType(): boolean {
+    return this.header('Content-Type') !== null && this.mediaType() === '';
+  }
+
   // Returns the value of a header as text whose characters are its bytes, or null.
   header(name: string): string | null {
     ArgumentCountError.between(arguments.length, 1, 1);

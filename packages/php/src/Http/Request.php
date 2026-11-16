@@ -313,6 +313,17 @@ final class Request
         return strtolower(trim(substr($type, 0, strcspn($type, ';'))));
     }
 
+    /**
+     * Returns true when the request has a Content-Type header whose media type is empty (HY-59.12, HY-59.13); a
+     * request without the header has the empty type and returns false.
+     *
+     * @internal
+     */
+    public function emptyContentType(): bool
+    {
+        return $this->header('Content-Type') !== null && $this->mediaType() === '';
+    }
+
     /** Returns the value of a header, or null. */
     public function header(string $name): ?string
     {

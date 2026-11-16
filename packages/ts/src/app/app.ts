@@ -769,9 +769,10 @@ export class App<S extends object = Record<string, never>> {
     return new Response(303, { Location: basePath + result.location }, '');
   }
 
-  // Returns the refusal of a form request whose media type the application does not accept, 415 (HY-59.12), or null.
-  // It reads no session (HY-120.3).
+  // Returns the refusal of a form request: 400 for a Content-Type that is empty and 415 for a media type that the
+  // application does not accept (HY-59.12), or null. It reads no session (HY-120.3).
   private refusedMedia(request: Request): Response | null {
+    if (request.emptyContentType()) return Response.text(400, 'Bad Request');
     if (!this.formTypes.includes(request.mediaType())) return Response.text(415, 'Unsupported Media Type');
     return null;
   }

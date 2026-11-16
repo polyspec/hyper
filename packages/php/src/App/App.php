@@ -931,11 +931,14 @@ final class App
     }
 
     /**
-     * The response that refuses a form request whose media type the application does not accept, 415 (HY-59.12), or
-     * null. It reads no session (HY-120.3).
+     * The response that refuses a form request: 400 for a Content-Type that is empty and 415 for a media type that the
+     * application does not accept (HY-59.12), or null. It reads no session (HY-120.3).
      */
     private function refusedMedia(Request $request): ?Response
     {
+        if ($request->emptyContentType()) {
+            return Response::text(400, 'Bad Request');
+        }
         if (!in_array($request->mediaType(), $this->formTypes, true)) {
             return Response::text(415, 'Unsupported Media Type');
         }
