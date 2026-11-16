@@ -9,7 +9,7 @@ import path from 'node:path';
 import { test, type TestContext } from 'node:test';
 
 import { requireBuilt } from './requires.mts';
-import { CANONICAL, COMMANDS, IDENTIFIER, NAMED, NAMES, PYTHON, ROOT, run as runWorker, VALUES, type Server } from './session-workers.mts';
+import { CANONICAL, COMMANDS, HYPER_EXT, IDENTIFIER, NAMED, NAMES, PYTHON, ROOT, run as runWorker, VALUES, type Server } from './session-workers.mts';
 
 const PROCESSES = 3;
 const REQUESTS = 300;
@@ -28,6 +28,7 @@ test('processes of the three servers that write one session at the same time los
   requireBuilt('packages', 'packages/ts/dist/index.js');
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
+  requireBuilt('hyper-ext', HYPER_EXT);
   const directory = directoryOf(t);
   writeFileSync(file(directory), 'a:1:{s:1:"n";i:0;}');
   await Promise.all(NAMES.flatMap((server) => Array.from({ length: PROCESSES }, () => run(server, directory, 'count', String(REQUESTS), server))));

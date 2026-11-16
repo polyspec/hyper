@@ -9,8 +9,10 @@ const WORKERS = path.join(ROOT, 'tests/scripts/fixtures/session-worker');
 export type Server = 'php' | 'python' | 'node';
 export const NAMES: Server[] = ['php', 'python', 'node'];
 export const PYTHON = path.join(ROOT, 'packages/python/.venv/bin/python');
+// The PHP extension polyspec_hyper of `make hyper-ext`, through which the PHP server calls the rules of the core (HY-132.2).
+export const HYPER_EXT = 'build/hyper-ext/polyspec_hyper.so';
 export const COMMANDS: Record<Server, { command: string; prefix: string[] }> = {
-  php: { command: 'php', prefix: [path.join(WORKERS, 'worker.php')] },
+  php: { command: 'php', prefix: [`-dextension=${path.join(ROOT, HYPER_EXT)}`, path.join(WORKERS, 'worker.php')] },
   python: { command: PYTHON, prefix: [path.join(WORKERS, 'worker.py')] },
   node: { command: process.execPath, prefix: ['--no-warnings', path.join(WORKERS, 'worker.mjs')] },
 };

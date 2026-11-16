@@ -122,6 +122,7 @@ hyper-install: ## Install the pinned tools and the npm packages, the sources tha
 	$(MAKE) --no-print-directory install-symbols EXTRACTORS=php
 	$(MAKE) --no-print-directory bindings
 	$(MAKE) --no-print-directory node-addon
+	$(MAKE) --no-print-directory hyper-ext
 	$(MAKE) --no-print-directory hyper-install-php
 	$(MAKE) --no-print-directory hyper-install-python
 
@@ -191,6 +192,18 @@ hyper-install-redis: ## Build the Redis server and the phpredis extension of the
 ext: ## Fail unless the native template extension of make template-ext is in build/ext (HY-48, H14.1-7, H27.45)
 	@test -f $(EXT) || { echo "ext: $(EXT) does not exist; run make hyper-install, which builds it with PIE (make template-ext)" >&2; exit 1; }
 
+# The PHP extension polyspec_hyper of the server (HY-132.2) for development: packages/php/native, built through $(CARGO),
+# which applies the patches of .links, against the php and the php-config of the checkout, with the libclang and the
+# clang of the LLVM of config/toolchain.json (LLVM_ROOT of packages/release.mk), as release-php-ext builds it for a
+# release. The library is checked to load into that PHP without a php.ini and published into build/hyper-ext with one
+# rename (HR-82); the PHP tests and the session holders load it with -d extension.
+HYPER_EXT := build/hyper-ext/polyspec_hyper.so
+.PHONY: hyper-ext
+hyper-ext: bindings ## Build the PHP extension polyspec_hyper of packages/php/native into build/hyper-ext (HY-132.2, H35.25)
+	@test -x "$(LLVM_ROOT)/bin/clang" && ls "$(LLVM_ROOT)/lib" 2>/dev/null | grep -q '^libclang' || { echo 'hyper-ext: the bindgen of ext-php-rs needs the libclang and the clang of LLVM $(LLVM_MAJOR) (config/toolchain.json) in $(LLVM_ROOT)' >&2; exit 2; }
+	PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang $(CARGO) build --locked -p polyspec-hyper-php-ext
+	mkdir -p build/hyper-ext.next-$$$$ && trap 'rm -rf build/hyper-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp $(CARGO_TARGET)/debug/libpolyspec_hyper.$(CDYLIB) build/hyper-ext.next-$$$$/polyspec_hyper.so && php -n -d extension=$(CURDIR)/build/hyper-ext.next-$$$$/polyspec_hyper.so -r 'exit(extension_loaded("polyspec_hyper") ? 0 : 1);' && $(NODE) scripts/publish.mts directory build/hyper-ext.next-$$$$ build/hyper-ext
+
 # A build that fails or is interrupted leaves no staging directory: the shell of each line removes its own when it ends
 # (HR-87).
 packages: ## Build the JavaScript modules and type declarations of the npm packages into their dist directories; npm links the workspaces (HR-61, HR-79, HR-96)
@@ -247,10 +260,10 @@ hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests,
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
-hyper-test-php: server-fixtures ext ## Run the server package tests, the case runner included (HYR-7), with the generated program and with the native extension
+hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the generated program and with the native extension
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
-	$(call check,PHPUnit with the generated program,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE)) \
-	$(call check,PHPUnit with the native extension,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php-extension.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(EXT)) \
+	$(call check,PHPUnit with the generated program,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(HYPER_EXT)) \
+	$(call check,PHPUnit with the native extension,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php-extension.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(HYPER_EXT) --php-extension $(EXT)) \
 	$(checks_result)
 
 hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7)
@@ -531,10 +544,10 @@ CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpst
 CI_SETUP_gates := install-tools install-symbols hyper-install-php hyper-install-python
 CI_SYMBOLS_gates := php
 CI_TARGETS_gates := $(GATE_TARGETS)
-CI_TOOLS_docs := node php composer pie python uv
-CI_SETUP_docs := install-tools hyper-install-php hyper-install-python hyper-install-redis
+CI_TOOLS_docs := node php composer pie python uv rust
+CI_SETUP_docs := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-ext
 CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check recipe-check
-CI_TOOLS_php := node php composer pie
+CI_TOOLS_php := node php composer pie rust
 CI_SETUP_php := install-tools hyper-install-php
 CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php
 CI_TOOLS_node := node
@@ -553,8 +566,8 @@ CI_TARGETS_python := hyper-test-python hyper-test-python-render
 CI_TOOLS_core := node rust php python uv go
 CI_SETUP_core := install-tools
 CI_TARGETS_core := core-test core-lint core-fmt-check bindings-check test-bindings
-CI_TOOLS_bench := node php composer pie python uv
-CI_SETUP_bench := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser
+CI_TOOLS_bench := node php composer pie python uv rust
+CI_SETUP_bench := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser hyper-ext
 CI_TARGETS_bench := bench bench-sessions
 
 # The targets of the full suite that exist on one platform only. Apple `container`, whose bind mounts are virtiofs,

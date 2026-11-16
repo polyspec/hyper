@@ -13,7 +13,7 @@ import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
 import { requireBuilt } from './requires.mts';
-import { COMMANDS, IDENTIFIER, ROOT, type Server } from './session-workers.mts';
+import { COMMANDS, HYPER_EXT, IDENTIFIER, ROOT, type Server } from './session-workers.mts';
 
 // A certificate authority, the certificate of the servers that it signed, and the password of the ACL user hyper.
 export interface Secure { ca: string; certificate: string; key: string; password: string }
@@ -103,6 +103,7 @@ export function redisRun(prefix: string, started: () => Promise<void>, ending: (
     requireBuilt('packages', 'packages/ts/dist/index.js');
     requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
     requireBuilt('hyper-install-php', 'vendor/autoload.php');
+    requireBuilt('hyper-ext', HYPER_EXT);
     run.directory = mkdtempSync(path.join(tmpdir(), prefix));
     run.port = await freePort();
     run.server = await startRedis(run.directory, run.port);

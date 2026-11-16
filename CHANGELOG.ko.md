@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 977ee84820d00a9767ad441f696f6b053e87a75b578e26fff1b248ce6f09504e -->
+<!-- source-sha256: 66b020d7ebedd36dcb4300e3e0058e02719e7b80ae5dee727e2c56705a32da2f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make hyper-ext`가 `.links`의 patch를 적용하는 `$(CARGO)`로, 이제 `config/toolchain.json`이 pin하는 LLVM 21(`llvm.version`)의 libclang과 clang으로 packages/php/native의 PHP extension `polyspec_hyper`를 build하고, checkout의 PHP에 load되는지 확인한 뒤 build/hyper-ext에 publish한다. 개발용으로 그것을 build하는 target이 없어서 `make hyper-test-php`는 `CoreRules::shared()`에 닿는 모든 시험에서 "the PHP extension polyspec_hyper is not loaded"로 실패했다. 이제 `hyper-test-php`가 그것을 build하여 두 PHPUnit run에 넘기고, `hyper-install`이 `bindings` 뒤에 그것을 build하며, PHP session worker가 그것을 load하고, session 시험이 `requireBuilt`로 그것을 이름 짓고, CI group docs, php, bench가 그것을 위해 Rust를 설치한다(H35.25).
 - 모든 Cargo.toml이 `polyspec-binding-core`를 branch `v1/rust-core` 대신 tag `v0.0.15`로 요구하고, `package.json`이 생성기 `@polyspec/binding`을 v0.0.15 release asset으로 요구한다. lock이 둘을 pin한다. recipe `bindings`와 `bindings-check`는 `--cargo "$(CARGO)"`를 넘긴다. binding 0.0.15의 생성기는 Cargo의 모든 호출을 저장소의 cargo 명령으로 돌리며, 그것 없이는 실패하기 때문이다(GN-1d). `Cargo.lock`에는 아직 공개된 provider의 binding-core v0.0.10과 v0.0.13, 그리고 template, session-store, php-serialization의 branch가 있으므로, `.links` 없는 tree는 H35.14-3의 retry 뒤에야 compile된다. AGENTS.md와 `docs/operations/dependencies.md`가 이 출처를 적는다(H35.14-3-2).
 - knip이 `@polyspec/json`을 무시한다. 루트는 그것을 `@polyspec/template`을 위해서만 요구하고, 어떤 import도 닿지 않는다. 그래서 H35.22 뒤에도 `make lint-ts`가 다시 통과한다(H35.22).
 - `contracts/interfaces.json`의 `json-codec.decode`는 JSON 텍스트를 데이터 모델의 값으로 읽고 `malformed_json`, `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`로 실패한다고 적고(HY-54.20), `json-codec.encode`는 데이터 모델 밖의 값이 `data_unsupported_type`으로 실패한다고 적는다(HY-54.21). 어떤 section도 어떤 statement도 필요로 하지 않으므로 member `json-codec.inDataModel`을 없앤다. PHP, Node, Python runner의 step `decode`는 결과 `value` 또는 decode의 실패를 준다. 전에는 데이터 모델 밖의 decode 값에 `outside`를 주었는데, HY-54의 어떤 statement도 그것을 허용하지 않는다. server는 아직 전처럼 decode하므로 데이터 모델 kind의 decode case는 H35.20-5-3까지 실패한다(H35.20-5-4).
