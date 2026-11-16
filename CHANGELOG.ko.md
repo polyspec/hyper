@@ -1,5 +1,5 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 62c9eabf198a026e9473e652b8042720fc45442891885f5379c50fc9d922028a -->
+<!-- source-sha256: 21e0c83c522f4f68d36875eb9172fdc39c7ef059011fb5f2e3ba2eb743289ce4 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
