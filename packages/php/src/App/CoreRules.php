@@ -29,7 +29,7 @@ final class CoreRules
         'keepsOutOfSharedCaches', 'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag',
         'representationTag', 'pageStatus', 'replyStatus', 'pageVary', 'contextHash', 'currentPath', 'checkShellPath',
         'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader', 'jsonRead',
-        'flashOf', 'keptOf', 'keptCookie',
+        'jsonWrite', 'flashOf', 'keptOf', 'keptCookie',
     ];
 
     /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
@@ -139,6 +139,18 @@ final class CoreRules
     public function jsonCodecDecode(string $text): mixed
     {
         return $this->call('jsonRead', $text);
+    }
+
+    /**
+     * JsonCodec::encode: rules.json_write gives the JSON text of a value of the data model, and fails with the kind of
+     * the data model for a value that has no JSON form (HY-54.18, HY-54.19).
+     */
+    public function jsonCodecEncode(mixed $value): string
+    {
+        /** @var string $result The return type that the extension declares (T-1a). */
+        $result = $this->call('jsonWrite', $value);
+
+        return $result;
     }
 
     /**

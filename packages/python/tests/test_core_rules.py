@@ -85,6 +85,13 @@ EXACT = [
         {"a": "é"},
     ),
     (
+        "JsonCodec.encode (HY-54.18)",
+        "json_write",
+        lambda rules: rules.json_codec_encode({"a": -0.0}),
+        ({"a": -0.0},),
+        '{"a":0}',
+    ),
+    (
         "Session.take_flash (HY-25.2)",
         "flash_of",
         lambda rules: rules.session_flash_of({"values": {}}),

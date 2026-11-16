@@ -114,4 +114,4 @@ const response = await app.handle(new Request({ method: 'GET', path: '/board', h
 
 ## JSON
 
-The package exports no JSON function. The server writes a JSON text with the bytes of PHP `json_encode` with `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`, and reads a JSON text with `rules.json_read` of the core, which gives a value of the data model with maps in document order and fails a text that json refuses with the kind `malformed_json` and a value outside the data model with the kind of the data model (HY-54). Both pass `contracts/json.json`, as the PHP server does.
+The package exports no JSON function. The server writes a JSON text with `rules.json_write` of the core, and reads a JSON text with `rules.json_read` of the core, which gives a value of the data model with maps in document order and fails a text that json refuses with the kind `malformed_json` and a value outside the data model with the kind of the data model (HY-54). Both pass `contracts/json.json`, as the PHP server does.

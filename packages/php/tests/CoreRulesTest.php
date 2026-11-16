@@ -44,6 +44,7 @@ final class CoreRulesTest extends TestCase
             'Context::hash (HY-125.12)' => ['contextHash', ['build', '{}'], 'contextHash', 'hash'],
             'Context::validHeader (HY-127.2)' => ['contextValidHeader', [null], 'validContextHeader', true],
             'JsonCodec::decode (HY-54.20)' => ['jsonCodecDecode', ['[1]'], 'jsonRead', [1]],
+            'JsonCodec::encode (HY-54.18)' => ['jsonCodecEncode', [[1]], 'jsonWrite', '[1]'],
             'Session::takeFlash (HY-25.2)' => ['sessionFlashOf', [['values' => []]], 'flashOf', ['changed' => []]],
             'Session::kept (HY-104.22)' => ['sessionKeptOf', [['r' => []]], 'keptOf', ['r' => []]],
             'Page::kept (HY-38.11)' => ['pageKeptCookie', ['{}'], 'keptCookie', ['r' => []]],

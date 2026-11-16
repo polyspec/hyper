@@ -164,6 +164,11 @@ function jsonRead(mixed ...$arguments): mixed
     return Calls::record('jsonRead', array_values($arguments));
 }
 
+function jsonWrite(mixed ...$arguments): mixed
+{
+    return Calls::record('jsonWrite', array_values($arguments));
+}
+
 function flashOf(mixed ...$arguments): mixed
 {
     return Calls::record('flashOf', array_values($arguments));

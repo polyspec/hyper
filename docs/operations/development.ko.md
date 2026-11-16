@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: b70bc7261269c9df26786abdad6abc92558d9ff051511ec6eb608d8db1ad5abe -->
+<!-- source-sha256: e06372e00cdabf80cba960c2ee69637b85b3798d1a1e7650926efa46913ad3bf -->
 # 개발
 
 [English](development.md).
@@ -234,7 +234,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 | 동작 | 근거 |
 |---|---|
 | 유지 값 | `contracts/keep.json`을 `make test-php`와 `make test-js`가 실행한다(HY-38). |
-| JSON 텍스트 | `contracts/json.json`을 `make test-php`와 `make hyper-test-node`가 실행한다. Node 서버는 PHP `json_encode`의 바이트를 쓰고 유지 값을 PHP `json_decode`처럼 읽는다(HY-54). |
+| JSON 텍스트 | `contracts/json.json`을 `make test-php`와 `make hyper-test-node`가 실행한다. 모든 서버는 core의 `rules.json_write`로 JSON 텍스트를 쓰고 core의 `rules.json_read`로 읽는다(HY-54). |
 | 라우팅 | `contracts/routes.json`을 `make test-php`와 `make test-js`가 실행한다. 렌더할 때 브라우저는 자기 라우트가 서버가 보고한 라우트와 같은지도 확인한다(HYC-1). |
 | Node 서버 | `make server-parity`는 parity 단계의 모든 요청을 각자 데이터베이스와 session을 가진 PHP 서버와 board Node 서버에 보내고, session 식별자, 응답마다 가린 CSRF token, `ETag` 값을 placeholder로 바꾼 뒤 상태, header, body가 같은지 확인한다(HR-55). |
 | 문서 렌더 | `make parity`는 비교 단계마다 같은 세션에서 HTML 문서, 문서 JSON, 영역 JSON을 요청한다. 라우트 영역, 내장 데이터, `server`와 `cookie` 유지 값(HY-30, HY-31, HY-38)을 포함한 문서 JSON의 브라우저 렌더 결과는 응답마다 다른 가린 CSRF 토큰(HY-24)을 각 응답에서 `<csrf>`로 바꾼 뒤 PHP 문서와 바이트 단위로 같아야 하고, 영역 JSON의 모든 부분이 그 문서에 나타나야 한다. 검사는 단계가 시작할 때 한 줄을, 끝나면 결과와 경과 밀리초를 출력한다. 10초 안에 응답이 없는 요청은 그 단계의 이름으로 실패하고 검사를 끝낸다. |

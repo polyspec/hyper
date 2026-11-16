@@ -198,6 +198,7 @@ export interface CoreBinding {
   reservedDataTemplate(): DataTemplate;
   validContextHeader(value: string | null): boolean;
   jsonRead(text: Uint8Array): JsonValue;
+  jsonWrite(value: CoreValue): string;
   flashOf(stored: unknown): JsonValue;
   keptOf(stored: unknown): JsonValue;
   keptCookie(text: string): JsonValue;
@@ -225,7 +226,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-  'jsonRead', 'flashOf', 'keptOf', 'keptCookie', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
 
 // A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
@@ -262,6 +263,9 @@ export interface CoreRules {
   // jsonCodecDecode: rules.json_read of the UTF-8 bytes of the text gives a value of the data model with maps in
   // document order, and fails with `malformed_json` or the kind of the data model (HY-54.20, HY-54.21).
   jsonCodecDecode(text: string): JsonValue;
+  // jsonCodecEncode: rules.json_write gives the JSON text of a value of the data model, and fails with the kind of the
+  // data model for a value that has no JSON form (HY-54.18, HY-54.19).
+  jsonCodecEncode(value: CoreValue): string;
   // sessionFlashOf: rules.flash_of checks a stored flash and gives the map of its `values` and its `changed` topics,
   // and fails with `invalid_session_record` for a stored flash of another form (HY-25.2, HY-104.23).
   sessionFlashOf(stored: unknown): JsonValue;
@@ -411,6 +415,7 @@ export function coreRules(module: object): CoreRules {
     contextHash: (build, text) => core.contextHash(build, text),
     contextValidHeader: (value) => core.validContextHeader(value),
     jsonCodecDecode: (text) => core.jsonRead(encoder.encode(text)),
+    jsonCodecEncode: (value) => core.jsonWrite(value),
     sessionFlashOf: (stored) => core.flashOf(stored),
     sessionKeptOf: (stored) => core.keptOf(stored),
     pageKeptCookie: (text) => core.keptCookie(text),

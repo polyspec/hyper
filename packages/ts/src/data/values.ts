@@ -2,10 +2,7 @@
 import { NativeObject, SafeString, type MapValue, type Value } from '@polyspec/template/render';
 import { DataModel } from './data-model.js';
 
-export { NativeObject, SafeString, type MapValue, type Value };
-
-/** @internal */
-export const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
+export { SafeString, type MapValue, type Value };
 
 // Data that a loader returns: a plain object or a map with string keys. A plain object keeps the key order of
 // JavaScript, which puts integer-like keys first; a Map keeps insertion order.

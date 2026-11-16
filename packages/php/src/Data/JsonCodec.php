@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The JSON text of the servers (HY-17, HY-54): the JSON response value, its text with the bytes of `json_encode` with
- * `JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES`, and the reading of a JSON text with rules.json_read of the core.
+ * The JSON text of the servers (HY-17, HY-54): the JSON response value, its text with rules.json_write of the core, and
+ * the reading of a JSON text with rules.json_read of the core.
  *
  * @internal
  */
@@ -58,13 +58,12 @@ final class JsonCodec
     }
 
     /**
-     * Returns the JSON text of a value; a number that is not finite or a string that is not UTF-8 fails (HY-44).
-     *
-     * @throws \JsonException
+     * Returns the JSON text of a value of the data model: rules.json_write of the core (HY-54.18, HY-54.19). A value
+     * that has no JSON form fails with the kind of the data model, as the core raises it (HY-44).
      */
     public static function encode(mixed $value): string
     {
-        return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        return CoreRules::shared()->jsonCodecEncode($value);
     }
 
     /**

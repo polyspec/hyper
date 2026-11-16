@@ -48,6 +48,7 @@ _MEMBERS = (
     "kept_value",
     "valid_context_header",
     "json_read",
+    "json_write",
     "flash_of",
     "kept_of",
     "kept_cookie",
@@ -91,6 +92,11 @@ class CoreRules:
         dictionaries in document order, and fails with `malformed_json` or the kind of the data model (HY-54.20,
         HY-54.21). A lone surrogate of the text stays in its bytes, so that the core judges it."""
         return self._core.json_read(text.encode("utf-8", "surrogatepass"))
+
+    def json_codec_encode(self, value: object) -> str:
+        """JsonCodec.encode: rules.json_write gives the JSON text of a value of the data model, and fails with the
+        kind of the data model for a value that has no JSON form (HY-54.18, HY-54.19)."""
+        return self._core.json_write(value)
 
     def session_flash_of(self, stored: object) -> object:
         """Session.take_flash: rules.flash_of checks a stored flash and gives the map of its ``values`` and its
