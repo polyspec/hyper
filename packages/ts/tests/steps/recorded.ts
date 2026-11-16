@@ -36,10 +36,11 @@ export class RecordingStore implements SessionStore {
   }
 }
 
-// Gives the reader the first seven characters of the message of a failure and the text that the message of an error of
-// the Node server starts with (HY-106.10).
+// Gives the reader whether the message of a failure starts with a prefix of the runtime, which a message of an error of
+// hyper never has (HY-106.19, HY-132.4).
 export function messageStart(reader: CaseReader, failure: unknown): void {
-  reader.outcome('messageStart', [failure instanceof Error ? failure.message.slice(0, 7) : '', 'hyper: ']);
+  const message = failure instanceof Error ? failure.message : '';
+  reader.outcome('messageStart', [message.startsWith('hyper:'), false]);
 }
 
 // Returns the error of a rejected open, or null when the open did not fail.

@@ -39,8 +39,10 @@ export const steps = {
         failure = error;
       }
       if (failure === undefined) throw new Error('the open read a template index that does not exist');
-      // The missing template index is read after the manifest, so its system error tells that the manifest was read.
-      const read = failure instanceof Error && 'code' in failure && failure.code === 'ENOENT' && failure.message.includes(index);
+      // The missing template index is read after the manifest, so the failure to read it, which the open raises as its
+      // value error of kind invalid_application with the message of the system error (HY-106.21), tells that the
+      // manifest was read.
+      const read = failure instanceof Error && 'kind' in failure && failure.kind === 'invalid_application' && failure.message.includes(index);
       reader.compare('read', read ? true : null);
       reader.compare('raises', read ? null : raisesOf(failure));
     } finally {
