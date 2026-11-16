@@ -30,9 +30,11 @@ test('hyper-test-node builds the Node addon before the tests (H35.9-1)', () => {
 });
 
 test('the entry that rules() loads resolves from src/app and dist/app and is a file of the packed package (H35.9-1)', () => {
-  const pkg = JSON.parse(readFileSync('packages/ts/package.json', 'utf8')) as { files: string[] };
-  const build = JSON.parse(readFileSync('packages/ts/tsconfig.build.json', 'utf8')) as { compilerOptions: { rootDir: string; outDir: string } };
-  assert.deepEqual([build.compilerOptions.rootDir, build.compilerOptions.outDir], ['src', 'dist']);
+  const pkg: unknown = JSON.parse(readFileSync('packages/ts/package.json', 'utf8'));
+  const build: unknown = JSON.parse(readFileSync('packages/ts/tsconfig.build.json', 'utf8'));
+  assert.ok(build !== null && typeof build === 'object' && 'compilerOptions' in build, 'tsconfig.build.json has compilerOptions');
+  assert.partialDeepStrictEqual(build.compilerOptions, { rootDir: 'src', outDir: 'dist' });
+  assert.ok(pkg !== null && typeof pkg === 'object' && 'files' in pkg && Array.isArray(pkg.files), 'package.json has files');
   for (const place of ['src/app', 'dist/app']) assert.equal(path.posix.join('packages/ts', place, ENTRY), 'packages/ts/native/generated/index.cjs', place);
-  assert.ok(pkg.files.includes('dist') && pkg.files.includes('native/generated/index.cjs') && pkg.files.includes('native/generated/*.node'), pkg.files.join(' '));
+  assert.ok(pkg.files.includes('dist') && pkg.files.includes('native/generated/index.cjs') && pkg.files.includes('native/generated/*.node'), String(pkg.files));
 });
