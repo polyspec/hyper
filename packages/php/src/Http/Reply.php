@@ -241,16 +241,13 @@ final class Reply
     }
 
     /**
-     * Returns an integer of the data model, or null for another value: an int or a float within ±(2^53 − 1) without a
-     * fraction, as Node takes a number (HY-44).
+     * Returns an integer of the data model, or null for another value: an int within ±(2^53 − 1); a float is no
+     * integer of the interface contract, even without a fraction (HY-52.19).
      */
     private static function integer(mixed $value): ?int
     {
         if (is_int($value)) {
             return $value >= -9007199254740991 && $value <= 9007199254740991 ? $value : null;
-        }
-        if (is_float($value) && is_finite($value) && floor($value) === $value && abs($value) <= 9007199254740991) {
-            return (int) $value;
         }
 
         return null;

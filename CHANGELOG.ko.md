@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: feec55d090ff0207d38a8401f198efa9cc8d414a4157f0b1f602869de155cb90 -->
+<!-- source-sha256: 0bd5d48cc10b57b9e87a433ceef7357ff886eef3512b5ecb8c912c175b483551 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- PHP나 Python reply의 `cookie`의 Max-Age와 `status`의 status가 `60.0`, `403.0`, `-0.0` 같은 float이면 kind `invalid_number`로 실패한다. float는 interface contract의 정수가 아니기 때문이다(HY-52.19). 두 서버는 소수부가 없는 float를 정수로 받았다(H35.27-1).
 
 - Node와 PHP 서버는 요청의 current path를 core의 `rules.current_path`로 읽으므로(HY-11.5), `mailto:a/b`, `1a://x/p`, `://x`는 current path가 없고 `http:///x`와 `http://h:99999/x`는 `/x`를 준다. Node 서버는 slash로 시작하지 않는 path를 읽었고, PHP 서버는 빈 authority와 65535보다 큰 port에서 실패하는 `parse_url`의 path를 읽었다(H35.10-7).
 - path, query, header 이름이나 값에 U+00FF보다 큰 문자가 있으면 Node와 Python 요청의 생성은 category `value`인 binding의 class, kind `invalid_text`, binding의 message `<subject> holds a character above U+00FF`로, 접두어 `hyper:` 없이 실패한다(HY-42.7). Node 서버는 `Error`를, Python 서버는 kind 없는 `ValueError`를 던졌다(H35.27-3).

@@ -3,7 +3,6 @@ request give its response (HY-52, HY-69, HY-92), and the notes that they give th
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 import re
 
@@ -159,17 +158,10 @@ class Reply:
 
     @staticmethod
     def _integer(value: object) -> int | None:
-        """Returns an integer of the data model, or None for another value: an int or a float within ±(2^53 − 1)
-        without a fraction, as Node takes a number; a bool is not one (HY-44)."""
+        """Returns an integer of the data model, or None for another value: an int within ±(2^53 − 1); a float,
+        even without a fraction, and a bool are not one (HY-52.19)."""
         if isinstance(value, bool):
             return None
         if isinstance(value, int):
             return value if -9007199254740991 <= value <= 9007199254740991 else None
-        if (
-            isinstance(value, float)
-            and math.isfinite(value)
-            and value.is_integer()
-            and abs(value) <= 9007199254740991
-        ):
-            return int(value)
         return None

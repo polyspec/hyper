@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- A Max-Age of `cookie` and the status of `status` of a PHP or Python reply that is a float, such as `60.0`, `403.0` or `-0.0`, fail with the kind `invalid_number`, because a float is no integer of the interface contract (HY-52.19); the two servers took a float without a fraction as an integer (H35.27-1).
+
 - The Node and PHP servers read the current path of a request with `rules.current_path` of the core (HY-11.5), so `mailto:a/b`, `1a://x/p` and `://x` give no current path and `http:///x` and `http://h:99999/x` give `/x`; the Node server read a path that does not start with a slash and the PHP server read the path of `parse_url`, which fails for an empty authority and a port above 65535 (H35.10-7).
 - A path, a query or a header name or value with a character above U+00FF fails the creation of a Node or Python request with the class of the binding of the category `value`, the kind `invalid_text` and the message `<subject> holds a character above U+00FF` of the binding, with no prefix `hyper:` (HY-42.7); the Node server threw an `Error` and the Python server a `ValueError` without a kind (H35.27-3).
 - The three servers read and write every JSON text of the protocol with `rules.json_read` and `rules.json_write` of the core, so a malformed text, a number outside the data model and the bytes of a number or of U+2028 follow the core (HY-17, HY-54); the PHP server reads a decoded value as a list when it is an array with sequence keys and as a map when it is a `stdClass` or an array with other keys, the form of the binding (GN-13v), and the servers' own JSON readers and writers are removed (H35.20-5-3).
