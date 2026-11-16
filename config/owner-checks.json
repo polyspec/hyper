@@ -339,10 +339,12 @@
     },
     {
       "paths": [
-        "tests/scripts/requires.mts"
+        "tests/scripts/requires.mts",
+        "tests/scripts/requires.test.mts"
       ],
       "tests": [
         "tests/scripts/check-recipes.test.mts",
+        "tests/scripts/requires.test.mts",
         "tests/scripts/template-dir.test.mts"
       ],
       "targets": [

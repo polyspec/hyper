@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a3a5fa51e9373a9f87c8f0cd292cbbfae43cad37f2ebe196d754d1e515096b0e -->
+<!-- source-sha256: 09c5bdbc7c212e1534ccbca329cc49b745fd1cdc85936052ad7231bfecadafeb -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- script 시험의 빠진 입력 메시지는 `make hyper-test-scripts` 전에 그 install target을 돌리라고 말한다. 전에는 `make hyper-test-scripts`가 그 target을 먼저 돌린다고 했는데, 그렇게 하는 check target은 없다(H35.17).
 - PHP, Node, Python runner의 case step은 살아 있는 section의 field를 읽고, 지운 사본의 field는 읽지 않는다. 실패를 말하는 각 step은 `raises`, 곧 자기 호출이 낸 실패의 kind, 상태, category, message를 비교한다. `CaseRules::raisesOf`와 `CaseRules::failureOf`, `case-rules.ts`의 `raisesOf`와 `failureOf`, `case_rules.py`의 `raises_of`와 `FAILURES`가 그것을 한 방식으로 주며, category는 오류의 첫 class `Hyper<Category>Error`가 이름한다(HY-132.2). manifest check는 `read`를 비교한다. step은 어떤 살아 있는 section도 선언하지 않는 `error`, `class`, `failure`, `openError`, `invalid`, `rejected`를 비교했기 때문에, 실패가 있는 모든 case가 선언되지 않은 field에서 실패했다(H35.9-4). 대상 section은 csrf mask, verify, browser; build read; result redirect, page, copies, stop, types, outside, outsideStores; session flash, kept; reply cookies, cacheControl, referrerPolicy, status, notes; client openRejections; app opens; accept parse, select; media-type values; manifest checks; json encode, decode; request files, values이다. case 실행에는 native binding이 필요하며, 이 변경은 그것을 실행하지 않는다.
 - 모든 Cargo.toml이 json, http-media-type, http-cookie, http-negotiation을 tag v0.0.32, v0.0.6, v0.0.6, v0.0.3으로 요구한다. manifest가 이름하던 그들의 branch `v1/rust-core`가 더 이상 없어서, 어떤 crate 해석도 통과할 수 없었기 때문이다. `.links`가 있으면 graph에 binding-core가 하나이고 binding이 생성되며, 연결 없는 tree는 binding-core v0.0.10과 v0.0.13을 가지므로 provider가 binding pin 하나로 release된 뒤에야 compile된다(H35.14-3-1).
 - lock을 잡기 전에 끝나는 holder process가 있는 session test는 그 process의 상태와 출력으로 곧바로 실패한다. `tests/scripts/session-redis-server.mts`의 `holding`이 아무 첫 출력이나 기다리고 process의 끝은 기다리지 않았기 때문이다. PHP는 fatal error를 표준 출력에 쓰므로 실패한 PHP holder도 lock을 잡은 것으로 셌다. Redis session test 파일의 after hook은 아직 실행 중인 holder를 모두 멈추므로, holder가 그 줄을 기다리는 동안 실패한 test가 더는 test 파일을 끝없이 실행 상태로 두지 않는다(HR-84, HR-87, H35.18).
