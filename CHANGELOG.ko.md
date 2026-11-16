@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1a493efabd5476c03659f6c7b429bb0a8c7ce8cb00040d1c0c8a8dc088375b2b -->
+<!-- source-sha256: f60a64ae8843f6f9dc007a98c070fe599000343dcb1480d1097a7ef39e2c7d71 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 모든 Cargo.toml이 json, http-media-type, http-cookie, http-negotiation을 tag v0.0.32, v0.0.6, v0.0.6, v0.0.3으로 요구한다. manifest가 이름하던 그들의 branch `v1/rust-core`가 더 이상 없어서, 어떤 crate 해석도 통과할 수 없었기 때문이다. `.links`가 있으면 graph에 binding-core가 하나이고 binding이 생성되며, 연결 없는 tree는 binding-core v0.0.10과 v0.0.13을 가지므로 provider가 binding pin 하나로 release된 뒤에야 compile된다(H35.14-3-1).
 - 저장소는 kit 0.0.116(kit K1266~K1273)을 쓰며, release asset의 URL과 lock의 integrity로 pin한다(H35.16).
 - PHP, Node, Python runner는 `contracts/`의 모든 section을 live로 읽으며, 사본 `tests/legacy/<name>-before-s3b.json`에서 읽던 section 33개도 그렇다. 사본 18개, `tests/legacy/interfaces.json`의 그 항목, case section의 field `fixedCopy`와 recipe check의 그 처리는 지운다. 서버가 아직 답하지 않는 live case는 H35.12, H35.15, H35.10의 case다. `tests/legacy`에는 `fields.json`, `file-store-sessions.json`, `redis-sessions.json`이 남는다(H35.9).
 - core의 계약 시험은 media type case의 content type을, binding이 latin1 text를 넘기듯 글자마다 한 바이트로 넘긴다. HY-122.14의 case `the_tag_digests_a_character_of_the_content_type_as_one_byte`는 거기서 UTF-8 바이트의 tag로 실패했다(H35.10-4).

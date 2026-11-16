@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- Every Cargo.toml requires json, http-media-type, http-cookie and http-negotiation by their tags v0.0.32, v0.0.6, v0.0.6 and v0.0.3, because their branch `v1/rust-core`, which the manifests named, no longer exists, so that no resolution of the crates could pass; with `.links` the graph has one binding-core and the bindings generate, while a tree without links holds binding-core v0.0.10 and v0.0.13 and compiles only after the providers release with one binding pin (H35.14-3-1).
 - The repository uses kit 0.0.116 (kit K1266 to K1273), pinned by the URL of its release asset and the integrity of its lock (H35.16).
 - The PHP, Node and Python runners read every section of `contracts/` live, including the 33 sections that they read from the copies `tests/legacy/<name>-before-s3b.json`; the 18 copies, their entries in `tests/legacy/interfaces.json`, the field `fixedCopy` of a case section and its handling in the recipe check are removed. The live cases that the servers do not answer yet are those of H35.12, H35.15 and H35.10. `tests/legacy` keeps `fields.json`, `file-store-sessions.json` and `redis-sessions.json` (H35.9).
 - The contract test of the core passes the content type of a media type case as one byte for each character, as the binding passes a latin1 text, and the case `the_tag_digests_a_character_of_the_content_type_as_one_byte` of HY-122.14 failed there with the tag of the UTF-8 bytes (H35.10-4).
