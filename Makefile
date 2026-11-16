@@ -115,12 +115,11 @@ help: ## List the targets
 # The install order of a checkout: the mise, node and npm of mise.toml (the bootstrap of install-tools), the packages of
 # package-lock.json with that npm, then the other tools of mise.toml, the symbol extractor of PHP, whose php-parser
 # lint-php reads, and the Composer projects and the venv of hyper.
-hyper-install: ## Install the pinned tools and the npm packages, the binding cli of Cargo.lock and the sources it generates, fetch the archives of the template release and install the Composer dependencies and the Python venv (HR-89, H14.1-7, H35.1); ONLINE
+hyper-install: ## Install the pinned tools and the npm packages, the sources that the binding generator of package.json writes, fetch the archives of the template release and install the Composer dependencies and the Python venv (HR-89, H14.1-7, H35.1); ONLINE
 	$(MAKE) --no-print-directory install-tools TOOLS=npm
 	$(MAKE) --no-print-directory install-packages
 	$(MAKE) --no-print-directory install-tools
 	$(MAKE) --no-print-directory install-symbols EXTRACTORS=php
-	$(MAKE) --no-print-directory install-binding
 	$(MAKE) --no-print-directory bindings
 	$(MAKE) --no-print-directory node-addon
 	$(MAKE) --no-print-directory hyper-install-php
@@ -353,39 +352,37 @@ core-fmt-check: ## Check the format of the Rust core
 	$(CARGO) fmt --check -p polyspec-hyper
 
 # The bindings of the Rust core for the five targets of packages/rust/interface.json (binding design L-1, L-2, L-2a).
-# BINDING is the cli of binding at the commit that Cargo.lock pins for the polyspec-binding-core of polyspec-hyper
-# (scripts/binding-commit.mts), which make install-binding
-# clones into var/binding/<commit> (scripts/install-binding.mts), so the generator and binding_core are one version
-# (G-6, CK-20); bindings and bindings-check fail with that install target while it is missing. bindings writes the generated folders, which Git ignores (native/generated/ of packages/php,
+# BINDING is the bin of the npm package @polyspec/binding, which package.json declares by its release asset and
+# make install-packages installs from package-lock.json (HR-70, H35.14-2); the Cargo.toml files require
+# polyspec-binding-core by the tag of the same release, so the generator and binding_core are one version (G-6, CK-20),
+# which binding check compares. bindings writes the generated folders, which Git ignores (native/generated/ of packages/php,
 # packages/python and packages/ts, packages/ts/native/wasm/generated, packages/go/internal/ffi/generated), and the
 # tracked Go files zz_generated_*.go of packages/go (binding GN-3). bindings-check runs the contract check, which also
 # compares the tracked binding packages with what binding scaffold writes (binding L-2, CK-19).
 .PHONY: bindings bindings-check lint-bindings test-bindings node-package test-wasm test-go
-BINDING_COMMIT := $(shell $(NODE) $(CURDIR)/scripts/binding-commit.mts $(CURDIR)/Cargo.lock)
-BINDING := $(CURDIR)/var/binding/$(BINDING_COMMIT)/packages/ts/src/cli.ts
-.PHONY: install-binding binding-cases
+BINDING := $(CURDIR)/node_modules/@polyspec/binding/dist/cli.js
+.PHONY: binding-cases
 # The cases of contracts/ that the generated tests of every binding run (HR-100): scripts/binding-cases.mts writes the
 # sections of config/binding-cases.json into var/binding-cases, which the rows of cases of the contract name.
 binding-cases: ## Write var/binding-cases, the cases of contracts/ in the form of the binding (HR-100)
 	$(NODE) scripts/binding-cases.mts --config $(CURDIR)/config/binding-cases.json --contracts $(CURDIR)/contracts --output $(CURDIR)/var/binding-cases > /dev/null
-install-binding: ## Clone the binding cli of the commit that Cargo.lock pins into var/binding and install its locked packages; ONLINE
-	$(if $(filter local,$(BINDING_COMMIT)),@echo "install-binding: the binding of Cargo.lock is a local path; the run names its cli $(BINDING)",$(ONLINE) $(NODE) scripts/install-binding.mts --cargo cargo --npm $(NPM) --output $(CURDIR)/var/binding)
-bindings: binding-cases ## Write the generated sources of every binding with the binding cli of the commit of Cargo.lock (binding L-1)
-	@test -f $(BINDING) || { echo "bindings: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
+bindings: binding-cases ## Write the generated sources of every binding with the binding generator of package.json (binding L-1)
+	@test -f $(BINDING) || { echo "bindings: the binding cli $(BINDING) is missing: run make install-packages"; exit 1; }
 	$(NODE) $(BINDING) generate --root $(CURDIR)
-bindings-check: binding-cases ## Check the interface contract and the tracked binding packages with the binding cli of the commit of Cargo.lock (binding CK-19)
-	@test -f $(BINDING) || { echo "bindings-check: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
+bindings-check: binding-cases ## Check the interface contract and the tracked binding packages with the binding generator of package.json (binding CK-19)
+	@test -f $(BINDING) || { echo "bindings-check: the binding cli $(BINDING) is missing: run make install-packages"; exit 1; }
 	$(NODE) $(BINDING) check $(CURDIR)/packages/rust/interface.json
 
 # The release recipes of the bindings (HR-99, binding GN-19h, CK-94): packages/release.mk, which binding release-recipes
 # writes and Git ignores, defines the release targets of the bindings with BINDING_RUN, the command that starts the
-# binding of Cargo.lock, and BINDING_DEP, its install target; -include lets a checkout without the file run every other
+# binding generator, and BINDING_DEP, its install target, which is empty, since make install-packages of every checkout
+# installs the generator; -include lets a checkout without the file run every other
 # target. No rule of this Makefile has a recipe for one of its targets.
 .PHONY: release-recipes
 BINDING_RUN := $(NODE) $(BINDING)
-BINDING_DEP := install-binding
+BINDING_DEP :=
 release-recipes: ## Write packages/release.mk, the release recipes of the bindings, with binding release-recipes (HR-99)
-	@test -f $(BINDING) || { echo "release-recipes: the binding cli $(BINDING) is missing: run make install-binding"; exit 1; }
+	@test -f $(BINDING) || { echo "release-recipes: the binding cli $(BINDING) is missing: run make install-packages"; exit 1; }
 	$(BINDING_RUN) release-recipes --root $(CURDIR) --out $(CURDIR)
 -include $(CURDIR)/packages/release.mk
 
@@ -549,12 +546,12 @@ CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
 CI_TOOLS_python := node python uv
 CI_SETUP_python := install-tools hyper-install-python
 CI_TARGETS_python := hyper-test-python hyper-test-python-render
-# The group core checks the Rust core and the bindings of its five targets with the binding cli of Cargo.lock (H35.2):
+# The group core checks the Rust core and the bindings of its five targets with the binding generator of package.json (H35.2):
 # test-bindings runs lint-bindings, test-wasm and test-go first, so each runs once. Its tools build the PHP extension, the
 # Python module, the WASM module and the static library of Go. The wasm-bindgen CLI of mise.toml, which test-wasm runs, has
 # no selector of install-tools of kit, so the group does not install it; name it here once install-tools selects it.
 CI_TOOLS_core := node rust php python uv go
-CI_SETUP_core := install-tools install-binding
+CI_SETUP_core := install-tools
 CI_TARGETS_core := core-test core-lint core-fmt-check bindings-check test-bindings
 CI_TOOLS_bench := node php composer pie python uv
 CI_SETUP_bench := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser
@@ -778,7 +775,7 @@ ci-passed: ## Fail unless every job of RESULTS, the JSON of toJSON(needs), has t
 # follows a workflow_run event (GITHUB_EVENT_NAME), and a dispatch or a local run `make ci-release RUN=<id>` releases the
 # commit of RUN. The tools of var/tools are on the PATH of this Makefile, so the recipe needs no release-tools-path.
 RELEASE_ENV := var/release/tag.env
-RELEASE_STEPS := release-checkout release-php-check bootstrap install-tools install-packages release-archive-tool release-prepare release-tools install-binding release-recipes release-assets release-publish release-undraft
+RELEASE_STEPS := release-checkout release-php-check bootstrap install-tools install-packages release-archive-tool release-prepare release-tools release-recipes release-assets release-publish release-undraft
 .PHONY: ci-release release-php-check
 # setup-php sets up the PHP of the .php-version of the checkout before the tag is checked out, and a dispatch checks out main,
 # so the release requires the PHP on PATH to be the minor release of the .php-version of the tag before it builds anything.

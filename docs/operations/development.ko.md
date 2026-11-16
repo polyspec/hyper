@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 5deb660f40fc143fcca7d013d5bc371a285490819ed272a927e20ec961a4c219 -->
+<!-- source-sha256: b70bc7261269c9df26786abdad6abc92558d9ff051511ec6eb608d8db1ad5abe -->
 # 개발
 
 [English](development.md).
@@ -71,6 +71,10 @@ Darwin virtiofs 검사는 Makefile의 digest로 고정한 `VIRTIOFS_IMAGE`를 �
 `lint-ts`는 검사 전에 `packages`로 workspace 선언을 build한다.
 
 Script 검사는 runner 전에 `assets`와 `server`를 요구한다. `package-check`는 고정 설치와 호환 source link를 native npm에 맡긴 뒤 editor hook 설정 없이 type 검사와 설치된 package 실행을 검증한다.
+
+## 의존성 추가
+
+다른 polyspec 저장소의 의존성은 release asset의 URL로 선언한다(HR-70). 사람이 checkout의 npm으로 `npm_config_offline=false`와 함께 `var/tools/bin/npm install --save-dev <release asset url>`을 실행해 더하고, integrity를 기록하는 `package-lock.json`과 함께 `package.json`을 커밋한다. 이것은 check가 아니라 설치이므로 어떤 target도 실행하지 않는다. 그 release가 없는 동안 개발 checkout은 `.links`와 `make link`로 provider를 연결한다.
 
 ## 전체 실행
 
@@ -163,7 +167,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
 | `board` | Node/npm, PHP/Composer, PIE, Python/uv | Root npm, root와 board Composer, Python uv lock | Browser parity, Node/Python server 비교, bundle 크기와 E2E |
 | `python` | Node/npm, Python/uv | Root npm과 Python uv lock | Python unit과 rendering |
-| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock과 `Cargo.lock`의 binding cli(`make install-binding`) | Rust core 시험, clippy, format, contract 검사, 바인딩의 clippy와 시험, WASM과 Go의 생성된 시험(H35.2). group은 kit의 `install-tools`가 선택하지 않는 wasm-bindgen CLI를 설치하지 않으며, `install-tools`가 그것을 선택하게 되면 그것을 지정한다 |
+| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock과 `package-lock.json`의 binding generator(`make install-packages`) | Rust core 시험, clippy, format, contract 검사, 바인딩의 clippy와 시험, WASM과 Go의 생성된 시험(H35.2). group은 kit의 `install-tools`가 선택하지 않는 wasm-bindgen CLI를 설치하지 않으며, `install-tools`가 그것을 선택하게 되면 그것을 지정한다 |
 
 group의 local 실행은 그 job의 호출과 같은 `make ci-check NAME=<group>`이다. bootstrap action처럼 `make bootstrap`, `make install-tools TOOLS=npm`, `make install-packages`를 실행한 checkout에서 실행한다. 어떤 group도 가리키지 않는 `NAME`은 어떤 step보다 먼저 실패하고 group들을 적는다.
 

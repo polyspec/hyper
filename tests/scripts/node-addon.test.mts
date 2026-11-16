@@ -8,16 +8,14 @@ import { test } from 'node:test';
 import { ENTRY } from '../../packages/ts/src/app/core-rules.ts';
 import { dryRun } from './make-dry-run.mts';
 
-const LOCAL = ['BINDING_COMMIT=local', 'BINDING=/lane/cli.js'];
-
 test('node-addon puts the addon beside the generated entry of the Node package (H35.9-1)', () => {
-  const lines = dryRun('node-addon', { variables: LOCAL }).join('\n');
+  const lines = dryRun('node-addon').join('\n');
   assert.match(lines, /cargo \S+ build --locked -p polyspec-hyper-node/u, lines);
   assert.match(lines, /mv -f \S+ packages\/ts\/native\/generated\/hyper\.[a-z0-9-]+\.node$/mu, lines);
 });
 
 test('hyper-install builds the Node addon after it writes the sources of the bindings (H35.9-1)', () => {
-  const steps = dryRun('hyper-install', { variables: LOCAL })
+  const steps = dryRun('hyper-install')
     .map((line) => /--no-print-directory (\S+)/u.exec(line)?.[1])
     .filter((step) => step !== undefined);
   assert.ok(steps.includes('node-addon'), `hyper-install runs node-addon: ${steps.join(' ')}`);
@@ -25,7 +23,7 @@ test('hyper-install builds the Node addon after it writes the sources of the bin
 });
 
 test('hyper-test-node builds the Node addon before the tests (H35.9-1)', () => {
-  const lines = dryRun('hyper-test-node', { variables: LOCAL }).join('\n');
+  const lines = dryRun('hyper-test-node').join('\n');
   assert.match(lines, /packages\/ts\/native\/generated\/hyper\.[a-z0-9-]+\.node/u, lines);
 });
 

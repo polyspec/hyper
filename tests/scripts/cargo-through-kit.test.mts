@@ -9,7 +9,6 @@ import { fileURLToPath } from 'node:url';
 import { dryRun } from './make-dry-run.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const LOCAL = ['BINDING_COMMIT=local', 'BINDING=/lane/cli.js'];
 // A command that starts cargo itself: at the start of a line, or after cd, a list operator or a pipe.
 const BARE = /(?:^|&&|\|\||;|\|)\s*cargo\s/u;
 
@@ -20,7 +19,7 @@ test('no recipe line of the Makefile starts cargo itself (H35.14-1)', () => {
 });
 
 test('the cargo commands of the core and the bindings run through the link script of kit (H35.14-1)', () => {
-  const lines = ['core-test', 'core-lint', 'core-fmt-check', 'test-bindings'].flatMap((target) => dryRun(target, { variables: LOCAL }));
+  const lines = ['core-test', 'core-lint', 'core-fmt-check', 'test-bindings'].flatMap((target) => dryRun(target));
   const cargo = lines.filter((line) => /\bcargo\s/u.test(line));
   assert.ok(cargo.length >= 8, `make -n names the cargo commands of the core and the bindings:\n${lines.join('\n')}`);
   const bare = cargo.filter((line) => BARE.test(line) || !/link\.m[jt]s cargo \S+ /u.test(line));

@@ -71,6 +71,10 @@ The Darwin virtiofs tests read the digest-pinned `VIRTIOFS_IMAGE` of the Makefil
 
 Script checks require `assets` and `server` before the runner. `package-check` delegates locked installation and compatible source links to native npm, then checks types and executes the installed packages without setting up editor hooks.
 
+## Adding a dependency
+
+A dependency of another polyspec repository is declared by the URL of its release asset (HR-70). A person adds it with the npm of the checkout, `var/tools/bin/npm install --save-dev <release asset url>` with `npm_config_offline=false`, and commits `package.json` with `package-lock.json`, which records its integrity. This is an installation, not a check, so no target runs it. Until that release exists, a development checkout links the provider through `.links` and `make link`.
+
 ## Full run
 
 The full suite runs on GitHub after the push of `main`. A local full run is not required before a commit or push. During checklist development, run only the unit checks that own the change. Run `make check` exactly once after checklist development finishes; after a failure, fix and rerun only its owners. A new commit does not call for another full run.
@@ -162,7 +166,7 @@ The workflow `.github/workflows/ci.yml` runs the full suite for the push of `mai
 | `node` | Node/npm | Root npm lock | Template, browser-unit, Node-server and npm consumer checks |
 | `board` | Node/npm, PHP/Composer, PIE, Python/uv | Root npm, root and board Composer, Python uv locks | Browser parity, Node/Python server comparisons, bundle sizes and E2E |
 | `python` | Node/npm, Python/uv | Root npm and Python uv locks | Python unit and rendering checks |
-| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock and the binding cli of `Cargo.lock` (`make install-binding`) | Rust core tests, clippy and format; the contract check; clippy, tests and the generated tests of WASM and Go of the bindings (H35.2). The group does not install the wasm-bindgen CLI, which `install-tools` of kit does not select; it names it once `install-tools` selects it |
+| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock and the binding generator of `package-lock.json` (`make install-packages`) | Rust core tests, clippy and format; the contract check; clippy, tests and the generated tests of WASM and Go of the bindings (H35.2). The group does not install the wasm-bindgen CLI, which `install-tools` of kit does not select; it names it once `install-tools` selects it |
 
 A local run of a group is the call of its job, `make ci-check NAME=<group>`, on a checkout that ran `make bootstrap`, `make install-tools TOOLS=npm` and `make install-packages`, as the bootstrap action does. A `NAME` that names no group fails before any step runs and names the groups.
 

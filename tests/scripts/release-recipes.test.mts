@@ -1,5 +1,5 @@
 // Tests the release recipes of the bindings (HR-99, binding GN-19h, CK-94): `make release-recipes` writes
-// packages/release.mk with binding release-recipes of the binding of Cargo.lock, the release runs it before it builds
+// packages/release.mk with binding release-recipes of the binding generator of package.json, the release runs it before it builds
 // an asset, the Makefile includes the file with -include after BINDING_RUN and BINDING_DEP and holds no recipe of its
 // own for a target of the file, and Git ignores the file.
 import assert from 'node:assert/strict';
@@ -20,7 +20,7 @@ const lineOf = (pattern: RegExp) => MAKEFILE.findIndex((line) => pattern.test(li
 
 test('make release-recipes runs binding release-recipes for the contract (HR-99)', () => {
   const lines = dryRun('release-recipes').join('\n');
-  assert.match(lines, /cli\.ts release-recipes --root \S+ --out \S+/, lines);
+  assert.match(lines, /binding\/dist\/cli\.js release-recipes --root \S+ --out \S+/, lines);
 });
 
 test('the release writes the recipes before it builds an asset (HR-99)', () => {

@@ -1,4 +1,4 @@
-// Tests the steps of `make hyper-install` (H35.1): it installs the binding cli of Cargo.lock and writes the generated
+// Tests the steps of `make hyper-install` (H35.1): it writes the generated
 // sources of the bindings before it installs the PHP and Python packages, since the Python package builds its native
 // module from packages/python/native/generated, which only `make bindings` writes.
 import assert from 'node:assert/strict';
@@ -15,13 +15,7 @@ test('hyper-install writes the sources of the bindings before it installs the PH
     assert.ok(index >= 0, `hyper-install runs ${step}: ${steps.join(' ')}`);
     return index;
   };
-  assert.ok(at('install-binding') < at('bindings'), `install-binding runs before bindings: ${steps.join(' ')}`);
   assert.ok(at('bindings') < at('hyper-install-php'), `bindings runs before hyper-install-php: ${steps.join(' ')}`);
   assert.ok(at('bindings') < at('hyper-install-python'), `bindings runs before hyper-install-python: ${steps.join(' ')}`);
 });
 
-test('install-binding clones nothing when the binding of Cargo.lock is a local path (H35.7)', () => {
-  const lines = dryRun('install-binding', { variables: ['BINDING_COMMIT=local', 'BINDING=/lane/cli.js'] }).join('\n');
-  assert.doesNotMatch(lines, /install-binding\.mts/u, lines);
-  assert.match(lines, /\/lane\/cli\.js/u, lines);
-});
