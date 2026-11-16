@@ -1,37 +1,45 @@
-# The package data of `pyproject.toml` (H15.3-15): every key names a package under `src`, and the namespace package
-# `polyspec.hyper` declares its `py.typed` marker, so a built package carries the marker.
-import tomllib
+# The installed package carries the `py.typed` marker of the namespace package `polyspec.hyper` (H15.3-15, H35.7).
+# `make hyper-install-python` builds the wheel of packages/python with maturin and installs it non-editable into the
+# venv that runs this test, so the files of the installed distribution are the files of that wheel.
+import importlib.metadata
+import json
 import unittest
-from pathlib import Path
 
-PACKAGE = Path(__file__).resolve().parents[2] / "packages" / "python"
-SRC = PACKAGE / "src"
+DISTRIBUTION = "polyspec-hyper"
+MARKER = "polyspec/hyper/py.typed"
 
 
 class PackageDataTest(unittest.TestCase):
-    def package_data(self) -> dict:
-        with (PACKAGE / "pyproject.toml").open("rb") as file:
-            declared = tomllib.load(file)
-        return declared.get("tool", {}).get("setuptools", {}).get("package-data", {})
-
-    def test_every_key_names_a_package_under_src(self) -> None:
-        for key in self.package_data():
-            directory = SRC / key.replace(".", "/")
-            self.assertTrue(
-                directory.is_dir(),
-                f"package-data key {key!r} names no package directory: expected {directory} to exist",
+    def distribution(self) -> importlib.metadata.Distribution:
+        try:
+            return importlib.metadata.distribution(DISTRIBUTION)
+        except importlib.metadata.PackageNotFoundError:
+            self.fail(
+                f"expected the distribution {DISTRIBUTION} in the venv: run make hyper-install-python"
             )
 
-    def test_namespace_package_declares_py_typed(self) -> None:
-        entries = self.package_data().get("polyspec.hyper", [])
+    def test_the_package_is_installed_from_its_wheel(self) -> None:
+        text = self.distribution().read_text("direct_url.json")
+        editable = bool(text) and json.loads(text).get("dir_info", {}).get(
+            "editable", False
+        )
+        self.assertFalse(
+            editable,
+            f"expected {DISTRIBUTION} installed from its wheel, actual an editable install",
+        )
+
+    def test_the_wheel_carries_the_py_typed_marker(self) -> None:
+        files = [str(path) for path in self.distribution().files or []]
         self.assertIn(
-            "py.typed",
-            entries,
-            f'package-data of polyspec.hyper: expected an entry "py.typed", actual {entries!r}',
+            MARKER,
+            files,
+            f"files of the installed {DISTRIBUTION}: expected {MARKER}, actual {files!r}",
+        )
+        marker = next(
+            path for path in self.distribution().files or [] if str(path) == MARKER
         )
         self.assertTrue(
-            (SRC / "polyspec" / "hyper" / "py.typed").is_file(),
-            "expected the marker src/polyspec/hyper/py.typed to exist",
+            marker.locate().is_file(), f"expected the installed file {marker.locate()}"
         )
 
 
