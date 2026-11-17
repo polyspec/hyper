@@ -245,9 +245,16 @@ function jobToolProblems(job: string, calls: Call[], provided: string[]): { foun
   const matched = new Set<string>();
   const found: string[] = [];
   let installs = 0;
+  // The crates of Cargo.lock are fetched by a command line of the job, as in a check group (HR-89, H34.9).
+  let fetched = false;
   for (const call of calls) {
     for (const line of commands(call.target, call.variables)) {
       if (WHERE_INSTALLED.test(line)) continue;
+      if (FETCH.test(line)) fetched = true;
+      else if (!ONLINE.test(line) && !NO_CRATES.includes(CARGO_COMMAND.exec(line)?.[1] ?? '')) {
+        const reader = CRATES.find((entry) => entry.pattern.test(line));
+        if (reader !== undefined && !fetched) found.push(`${job}: make ${call.target} starts ${reader.program} before a command line of the job fetched the crates of Cargo.lock (hyper-install-crates): ${line.trim().slice(0, 200)}`);
+      }
       for (const entry of rows) {
         if (!entry.pattern.test(line)) continue;
         matched.add(entry.program);
