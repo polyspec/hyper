@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 277e44b526ab2a406c87148342bfeb5731a8cccd56fc46aff596cf5df4b49b6a -->
+<!-- source-sha256: 34c0998fe1d36ad2e55361baedfdada1787537b087f49b900a16aa99fe8565ca -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `tests/scripts/spec-docs.test.mts`는 표시 `unimplemented`의 서버별 형태를 서술한다(H35.40-2). 표시는 행의 목록이고, 각 행은 statement를 지키지 않는 서버를 가지며, 각 문서는 서버를 그 행과 함께 렌더링한다. checklist에 없는 행은 실패하고, 두 행이 같은 서버를 적어도 실패한다. Red: 지금 schema는 문자열만 받는다. 작성만 했고 실행하지 않았다.
 
 - 행 H35.38은 이제 Green 전에 남은 것을 적는다. `contracts/interfaces.json`에서 제거된 session 코드의 unit은 recipe 도구로 다시 쓴다. 아직 어떤 생성 파일에도 없는 binding 이름은 `make bindings` 뒤에 대조한다. Redis store의 certificate authority는 session-store 0.0.5의 `authorities`를 기다린다. 행 H35.38-1을 새로 추가한다: store의 host 호출을 core member 뒤로 옮기고, 손 변환은 binding B2.489 뒤에 제거한다. 행 H35.40-2를 새로 추가한다: protocol schema에서 표시 `unimplemented`의 서버별 형태다.
 
