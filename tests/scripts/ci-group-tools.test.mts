@@ -38,8 +38,7 @@ const INSTALLS: readonly { name: string; tools: (line: string) => string[] }[] =
   // install-tools of kit installs the selectors that follow its option.
   { name: 'install-tools of kit', tools: (line) => (/\/install-tools\.m[jt]s --no-self-update (.+)$/u.exec(line)?.[1] ?? '').split(' ').filter(Boolean) },
   // install-wasm-bindgen of packages/release.mk installs the wasm-bindgen CLI alone with the mise of the checkout.
-  { name: 'mise install of wasm-bindgen', tools: (line) => (line.endsWith('/var/tools/bin/mise install --locked github:wasm-bindgen/wasm-bindgen') ? ['wasm-bindgen'] : []) },
-];
+  { name: 'mise install of wasm-bindgen', tools: (line) => (line.endsWith('/var/tools/bin/mise install --locked github:wasm-bindgen/wasm-bindgen') ? ['wasm-bindgen'] : []) },];
 
 // A command line pattern and the tools without which the matched program does not start.
 const STARTED: readonly { program: string; pattern: RegExp; tools: readonly string[] }[] = [
@@ -82,11 +81,17 @@ const NO_CRATES = ['fmt'];
 // it downloads by its purpose (HR-89), as cargo update of cargo-lock does, so the rule of the fetched crates and of
 // --offline does not read it.
 const ONLINE = /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK /u;
-// The programs that only a recipe of the release starts, which no CI group matches: the wheel build of uv, whose build
-// backend maturin compiles the crate with cargo, and the napi CLI, which builds the Node addon with cargo.
+// The programs that only a recipe of the release starts, which no CI group matches: the wheel build of release-wheel of
+// binding (GN-19c), whose maturin compiles the crate with cargo for the interpreter python3, and the napi CLI, which
+// builds the Node addon with cargo.
 const RELEASE_STARTED: typeof STARTED = [
-  { program: 'wheel build', pattern: /\/mise\/shims\/uv build --wheel /u, tools: ['uv', 'python', 'rust'] },
+  { program: 'wheel build', pattern: /\/mise\/shims\/maturin build --release /u, tools: ['maturin', 'python', 'rust'] },
   { program: 'napi', pattern: /\/node_modules\/\.bin\/napi build /u, tools: ['rust'] },
+];
+// The installs that only a recipe of the release makes: release-wheel of binding installs maturin alone with the mise of
+// the checkout before it starts it (GN-19c).
+const RELEASE_INSTALLS: typeof INSTALLS = [
+  { name: 'mise install of maturin', tools: (line) => (line.endsWith('/var/tools/bin/mise install --locked github:PyO3/maturin') ? ['maturin'] : []) },
 ];
 
 // The line of php-check-installed, which install-tools runs: it starts the PHP wrapper only in a checkout that holds
@@ -250,7 +255,7 @@ function jobToolProblems(job: string, calls: Call[], provided: string[]): { foun
           if (!installed.has(tool)) found.push(`${job}: make ${call.target} starts ${entry.program}, and no command line of the job before it installs ${tool}: ${line.trim().slice(0, 200)}`);
         }
       }
-      const selected = INSTALLS.flatMap((install) => install.tools(line));
+      const selected = [...INSTALLS, ...RELEASE_INSTALLS].flatMap((install) => install.tools(line));
       const all = INSTALLS_ALL.test(line);
       if (all || selected.length > 0) installs += 1;
       for (const tool of all ? every : selected) installed.add(tool);
@@ -262,7 +267,7 @@ function jobToolProblems(job: string, calls: Call[], provided: string[]): { foun
 // The jobs of assets.yml: the recipe of each, the variables that its matrix gives, and the tools that a uses: step of the
 // job sets up, which the recipe does not install: the job php takes the PHP of its matrix entry from setup-php.
 const ASSET_JOBS: readonly { job: string; variables: string[]; provided: string[]; programs: string[] }[] = [
-  { job: 'platform', variables: [], provided: [], programs: ['cargo', 'go of binding', 'uv', 'wheel build', 'napi'] },
+  { job: 'platform', variables: [], provided: [], programs: ['cargo', 'go of binding', 'maturin', 'wheel build', 'napi'] },
   { job: 'php', variables: ['EXPECTED_PHP_MINOR=8.4'], provided: ['php'], programs: ['cargo', 'go of binding'] },
   { job: 'npm', variables: [], provided: [], programs: ['cargo', 'go of binding', 'wasm-bindgen'] },
 ];

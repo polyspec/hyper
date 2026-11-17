@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 89540c32ebca42881f976d9ca25170cf8667e708db053b756485a604075461cd -->
+<!-- source-sha256: 1803f765e99470ea58acee0e398a3ab1a6c658a952f73430b73e27596a89d25b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `assets.yml`의 job platform test는 binding 0.0.21의 wheel build를 읽는다(H35.35-2, H35.35-5). 입력: `make -n release-assets-platform`. 그 안의 binding 0.0.21 `release-wheel`은 checkout의 mise로 maturin을 설치하고 `maturin build --release … --manifest-path packages/python/Cargo.toml`을 실행한다. 이전 동작: `release-assets.test.mts`와 `ci-group-tools.test.mts`가 `uv build --wheel … packages/python`을 찾다가 실패했다. 기대 동작: 두 test가 maturin build를 찾고, job이 그 build를 시작하는 줄보다 먼저 maturin을 설치한다.
 
 - `make go-release-build`는 checkout의 go를 절대 경로로 시작한다(HR-81, H35.35-7). 입력: `make -n go-release-build`. 이전 동작: `packages/release.mk`가 `GO ?= go`를 정하고 Makefile은 그 파일의 include 뒤에야 `GO`를 정의했으므로, recipe가 `PATH`의 go인 맨 `go`를 실행했다. 기대 동작: Makefile이 include 앞에서 `GO`, `GOFMT`, `WASM_BINDGEN`을 정의하고, recipe가 `var/tools/mise/shims/go`를 실행한다.
 

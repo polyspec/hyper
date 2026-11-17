@@ -32,7 +32,8 @@ test('H35.35-2 no wheel of kit is a package with a native build backend, and the
   assert.equal(config.manifests['packages/python/pyproject.toml'], 'version', 'config/release.json does not list packages/python/pyproject.toml as a manifest that carries the version');
   assert.ok(started('ci-assets-platform').includes('release-assets-platform'), 'make ci-assets-platform does not run release-assets-platform');
   const build = dryRun('release-assets-platform').join('\n');
-  assert.match(build, /\/mise\/shims\/uv build --wheel .* packages\/python$/m, build);
+  // release-wheel of binding 0.0.21 builds the wheel with the maturin of mise.toml from the manifest of packages/python.
+  assert.match(build, /\/mise\/shims\/maturin build --release .*--manifest-path packages\/python\/Cargo\.toml /m, build);
 });
 
 test('H35.35-3 no npm package of kit packs a native file of the checkout, and the jobs platform and npm build the Node package', () => {
