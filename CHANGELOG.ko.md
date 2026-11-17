@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7efbb14fdceb37280df22dd83a667c7f7ccd39419431f89adc61dc097823d7cd -->
+<!-- source-sha256: 2c9cf51101abc923ba113dfa07ef5c8ad12f4b934b69b86f4fa15bac3c786983 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Redis Cluster setting은 `user`와 `password`를 적는다(H35.38). 입력: `Setting`의 case `cluster`가 두 field를 요구하는 session-store 0.0.7로 `make hyper-test-scripts`. 이전 동작: `examples/board/node`의 `tsc`가 `{ kind: 'cluster', urls, authorities: null }`에서 TS2322로 실패했고, `tests/scripts`의 session worker와 Python board 예제는 두 field 없는 setting을 주었다. 기대 동작: URL이 자격 증명을 담으므로 board 예제, session worker와 `docs/operations/deployment.md`는 `user`와 `password`를 null(Python `None`)로 준다.
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 - `tests/scripts/upload-servers.test.mts`는 scenario의 server가 시작하지 않아도 끝난다(HR-87, H34.3). 입력: Node application을 build할 수 없을 때처럼 `started()`가 throw하는 scenario. 이전 동작: `hostsOf`가 gate listener의 close를 `started()` 뒤에야 등록했으므로, 모든 case가 실패한 뒤에도 listener가 열린 채 남아 파일이 끝나지 않았다. 기대 동작: listener가 listen한 직후 close를 등록하고, 파일은 실패와 함께 끝난다.
 - `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts`는 test가 load하는 Node addon을 build한다(HR-85, H34.4). 입력: `make bindings`가 addon 없이 `packages/ts/native/generated/`를 다시 쓴 checkout. 이전 동작: test가 addon을 선언하지 않았고 `SCRIPT_TEST_INPUTS`에 `node-addon`이 없었으므로 선택은 `packages ext hyper-ext`를 build했고, 모든 case가 `Cannot find module './hyper.darwin-arm64.node'`로 실패했다. `TESTS` 선택은 `fixture-program.test.mts`가 선언한 `node-addon`도 빠뜨렸다. 기대 동작: `started()`가 platform의 addon과 함께 `node-addon`을 선언하고, 선택이 그것을 build한다.

@@ -45,7 +45,10 @@ def stores(directory):
 
     if nodes is not None:
         setting = SettingCluster(
-            urls=[url(item) for item in nodes.split(",")], authorities=authorities
+            urls=[url(item) for item in nodes.split(",")],
+            user=None,
+            password=None,
+            authorities=authorities,
         )
     elif sentinels is not None:
         setting = SettingSentinel(

@@ -8,7 +8,8 @@ import { ArgumentCountError } from '../app/argument-count-error.js';
 // The connection settings of the store (HY-115.17, HY-115.29): `{ kind: 'server', url, authorities }` with a URL
 // `redis://` or `rediss://` that may name an ACL user and its password, `{ kind: 'sentinel', urls, service, tls, user,
 // password, authorities }`, whose store asks the Sentinels for the primary of `service` before each request that has a
-// session (HY-115.26), or `{ kind: 'cluster', urls, authorities }`. `authorities` is the path of a PEM file whose
+// session (HY-115.26), or `{ kind: 'cluster', urls, user, password, authorities }`, whose `user` and `password` are null where the URLs
+// give the credentials. `authorities` is the path of a PEM file whose
 // authorities alone verify the servers of TLS, or null for the trust store of the machine.
 export type RedisSetting = Setting;
 

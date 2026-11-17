@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 3af0f75f9c4d228a59bf89a4e11347ec7a4613e975c7b3a5c7cac40311689ebc -->
+<!-- source-sha256: 320e69baa6046432ef0446fd5f715ebcefdc96271812ac9095b982c5bf86a178 -->
 # 배포
 
 [English](deployment.md).
@@ -207,12 +207,12 @@ Seed 다음 인자는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이
 Node와 Python 서버는 `RedisSessions`에 store의 cluster 설정, 곧 seed의 URL을 준다. Protocol의 모든 명령은 key가 하나이므로 hash tag가 필요 없고, session과 잠금은 서로 다른 primary에 있어도 된다.
 
 ```ts
-new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'], authorities: null }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'], user: null, password: null, authorities: null }, lockExpire: 30 });
 ```
 
 ```python
 RedisSessions(
-    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"], authorities=None),
+    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"], user=None, password=None, authorities=None),
     lock_expire=30,
 )
 ```

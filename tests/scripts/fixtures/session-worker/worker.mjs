@@ -24,7 +24,7 @@ const url = (item) => {
   return `${tls ? 'rediss' : 'redis'}://${credentials}127.0.0.1:${item}`;
 };
 const setting = nodes !== undefined
-  ? { kind: 'cluster', urls: nodes.split(',').map(url), authorities }
+  ? { kind: 'cluster', urls: nodes.split(',').map(url), user: null, password: null, authorities }
   : sentinels !== undefined
     ? { kind: 'sentinel', urls: sentinels.split(',').map((item) => `redis://127.0.0.1:${item}`), service: 'hyper', tls, user, password, authorities }
     : port !== undefined

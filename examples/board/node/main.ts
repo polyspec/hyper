@@ -28,7 +28,7 @@ const port = Number(env('BOARD_PORT'));
 const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
   const nodes = process.env.BOARD_CLUSTER;
   if (nodes !== undefined && nodes !== '') {
-    return new RedisSessions({ setting: { kind: 'cluster', urls: nodes.split(',').map((item) => `redis://${item}`), authorities: null }, lockExpire: 30 });
+    return new RedisSessions({ setting: { kind: 'cluster', urls: nodes.split(',').map((item) => `redis://${item}`), user: null, password: null, authorities: null }, lockExpire: 30 });
   }
   const sentinels = process.env.BOARD_SENTINEL;
   if (sentinels !== undefined && sentinels !== '') {

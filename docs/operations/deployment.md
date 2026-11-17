@@ -195,12 +195,12 @@ The arguments after the seeds are `lockExpire` 30, `lockRetries` 100, `lockWait`
 The Node and Python servers give `RedisSessions` the cluster setting of the store, the URLs of its seeds. Every command of the protocol has one key, so no hash tag is needed, and the session and its lock can live on different primaries:
 
 ```ts
-new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'], authorities: null }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'], user: null, password: null, authorities: null }, lockExpire: 30 });
 ```
 
 ```python
 RedisSessions(
-    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"], authorities=None),
+    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"], user=None, password=None, authorities=None),
     lock_expire=30,
 )
 ```
