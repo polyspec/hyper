@@ -1,12 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 60ad44e5cef43b5958b9e2f78ba318660496362b53126172733b2dc2f8baded4 -->
+<!-- source-sha256: da70422cdbcfc8c0292a4d32bc29ea9ff6d4577f03dc3a15b419530439788f6d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
-- Node와 Python package는 session-store 0.0.5를 요구한다. 그 Redis 설정은 `authorities`를 받는다: TLS Redis 서버를 단독으로 검증하는 기관의 PEM 파일 경로, 또는 machine의 trust store를 쓰는 null이다. 모든 Redis 설정이 이를 준다. `tests/scripts`의 session worker는 `HYPER_SESSION_TLS_CA`의 test 기관을 넘긴다. `package-lock.json`, `tests/package-install/package-lock.json`, `packages/python/uv.lock`은 `make npm-lock`과 `make python-lock`이 쓴다. `make cargo-lock`이 `.links`가 있는 checkout을 거절하므로, Rust crate는 tag `v0.0.4`를 유지하고 `Cargo.lock`은 바뀌지 않는다. 작성만 했고 실행하지 않았다.
+- Node와 Python package는 session-store 0.0.5를 요구한다. 그 Redis 설정은 `authorities`를 받는다: TLS Redis 서버를 단독으로 검증하는 기관의 PEM 파일 경로, 또는 machine의 trust store를 쓰는 null이다. 모든 Redis 설정이 이를 준다. `tests/scripts`의 session worker는 `HYPER_SESSION_TLS_CA`의 test 기관을 넘긴다. `package-lock.json`, `tests/package-install/package-lock.json`, `packages/python/uv.lock`은 `make npm-lock`과 `make python-lock`이 쓴다. workspace의 Rust crate 여섯 개는 tag `v0.0.5`를 적고, `make cargo-lock CRATES=polyspec-session-store`가 `Cargo.lock`을 쓴다. 그 안에서는 `polyspec-session-store`, `-core`, `-file`만 각각 한 version 0.0.5로 바뀐다. 작성만 했고 실행하지 않았다.
 
 - `contracts/protocol.json`에서 statement의 표시 `unimplemented`가 두 번째 형태를 받는다: `{ "row", "servers" }`의 목록이며, statement를 지키지 않는 서버에 대해서만 표시한다(H35.40-2). `scripts/schema/protocol.schema.json`이 그 목록을 받는다. `scripts/spec-docs.mts`는 그것을 렌더링하고(예: `*(구현되지 않음: Node와 Python은 행 H35.38, PHP는 행 H35.37.)*`), 모든 행을 checklist와 대조하며, 두 행이 같은 서버를 적으면 실패한다. HY-104.25, HY-104.26, HY-104.27, HY-104.32, HY-115.28, HY-115.29, HY-132.1, HY-132.3은 이제 PHP에 대해서만 표시된다. HY-104.38은 Node와 Python에 대해 행 H35.38로, PHP에 대해 행 H35.37로 표시된다. `make spec-docs`와 `make spec-docs-check`는 통과했고, `tests/scripts/spec-docs.test.mts`의 test는 실행하지 않았다.
 

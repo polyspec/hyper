@@ -1243,8 +1243,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-session-store"
-version = "0.0.4"
-source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.4#3c0e383f2aca2e71260332df9da4cccba3886f6c"
+version = "0.0.5"
+source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.5#806f5baddc3098de9448859c27feeabb4ebf683a"
 dependencies = [
  "polyspec-php-serialization",
  "polyspec-session-store-core",
@@ -1253,8 +1253,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-session-store-core"
-version = "0.0.4"
-source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.4#3c0e383f2aca2e71260332df9da4cccba3886f6c"
+version = "0.0.5"
+source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.5#806f5baddc3098de9448859c27feeabb4ebf683a"
 dependencies = [
  "getrandom 0.3.4",
  "polyspec-binding-core 0.0.17",
@@ -1263,8 +1263,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-session-store-file"
-version = "0.0.4"
-source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.4#3c0e383f2aca2e71260332df9da4cccba3886f6c"
+version = "0.0.5"
+source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.5#806f5baddc3098de9448859c27feeabb4ebf683a"
 dependencies = [
  "polyspec-binding-core 0.0.17",
  "polyspec-php-serialization",
