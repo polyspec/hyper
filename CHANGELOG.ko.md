@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b78b026390729891bf3b618d6d0fe28a4236fc52f946d8793d4bc2d46e6e3802 -->
+<!-- source-sha256: 28278fb8c8bffbbfea62bd7eab4d67b19994756e9da7d969d04bac037a242ab2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- core는 binding-core v0.0.17에 의존하는 http-form v0.0.2를 고정했고, hyper는 binding 0.0.21을 고정한다(H35.11). 입력: Cargo tag를 옮긴 뒤의 `make hyper-test-scripts TESTS=tests/scripts/release-file-pins.test.mts`. 이전 동작: `config/release-files.json`이 v0.0.2를 적었고, test가 Cargo 줄의 tag에서 실패했다. 기대 동작: `packages/rust/Cargo.toml`은 `polyspec-http-form`에 tag `v0.0.3`으로 의존하고, 그 lock 항목은 `make cargo-lock CRATES=polyspec-http-form`이 `polyspec-binding-core` 하나(0.0.21)와 함께 썼으며, `config/release-files.json`은 v0.0.3의 asset `files.json`의 files 객체를 담고, 그 sha256 값은 GitHub release의 digest와 같다.
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 - `tests/scripts/upload-servers.test.mts`는 scenario의 server가 시작하지 않아도 끝난다(HR-87, H34.3). 입력: Node application을 build할 수 없을 때처럼 `started()`가 throw하는 scenario. 이전 동작: `hostsOf`가 gate listener의 close를 `started()` 뒤에야 등록했으므로, 모든 case가 실패한 뒤에도 listener가 열린 채 남아 파일이 끝나지 않았다. 기대 동작: listener가 listen한 직후 close를 등록하고, 파일은 실패와 함께 끝난다.
 - `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts`는 test가 load하는 Node addon을 build한다(HR-85, H34.4). 입력: `make bindings`가 addon 없이 `packages/ts/native/generated/`를 다시 쓴 checkout. 이전 동작: test가 addon을 선언하지 않았고 `SCRIPT_TEST_INPUTS`에 `node-addon`이 없었으므로 선택은 `packages ext hyper-ext`를 build했고, 모든 case가 `Cannot find module './hyper.darwin-arm64.node'`로 실패했다. `TESTS` 선택은 `fixture-program.test.mts`가 선언한 `node-addon`도 빠뜨렸다. 기대 동작: `started()`가 platform의 addon과 함께 `node-addon`을 선언하고, 선택이 그것을 build한다.

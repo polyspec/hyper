@@ -1085,11 +1085,11 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-form"
-version = "0.0.2"
-source = "git+https://github.com/polyspec/http-form.git?tag=v0.0.2#f498161cd4a379fdf8fe866eb72087929ca69818"
+version = "0.0.3"
+source = "git+https://github.com/polyspec/http-form.git?tag=v0.0.3#07e2042e36e49bf8dd6c1facfe8c9f443de8b7a4"
 dependencies = [
  "memchr",
- "polyspec-binding-core 0.0.17",
+ "polyspec-binding-core",
  "polyspec-http-media-type",
  "rustix",
  "tempfile",
@@ -1681,7 +1681,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys",
