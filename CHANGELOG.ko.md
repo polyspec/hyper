@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b75ca99fb9c7c0f3b44913cf33e348b79aa79cc66aed567efdf5994d340f8e3f -->
+<!-- source-sha256: af8a0a42f26ec33d5b5b6c27ec14968dace1f2b0b18df23a20c87ebd61b1e0fa -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 빌드된 npm package가 없는 tree에서 `make templates-check`는 `Cannot find module …/node_modules/@polyspec/hyper-client/dist/index.js imported from …/packages/cli/lib/check.mjs`로 실패했다. 이 target에는 prerequisite가 없었고, 다른 target이 먼저 package를 빌드한 곳에서만 통과했다. 이제 prerequisite `packages`를 가진다. `tests/scripts/check-recipes.test.mts`는 전체 suite의 모든 target의 dry run을 읽어, `packages/client`와 `packages/ts`를 빌드하기 전에 command tool을 시작하는 target을 실패시킨다.
 
 - `Cargo.lock`의 crate를 가져오는 target이 없었다. cargo cache에 crate가 없는 기계에서 `make hyper-install-python`은 maturin에서 `can't checkout from 'https://github.com/polyspec/binding.git': you are in the offline mode (--offline)`로 실패했고, `make bindings`와 `make bindings-check`는 binding 생성기의 `cargo metadata --locked --offline`에서 실패했으며, `make core-test`는 검사 중에 crate를 다운로드했다. 이제 `make hyper-install-crates`가 `cargo fetch --locked`로 crate를 가져온다. `make hyper-install`이 이를 실행하고, 모든 CI group의 두 번째 setup step이다. 그 밖의 모든 recipe는 cargo를 `--offline`으로 시작한다: `core-test`, `core-lint`, `hyper-ext`, `node-addon`, `node-package`, `test-go`, `lint-bindings`, `test-bindings`. cargo, maturin, binding 생성기를 시작하는 각 target의 prerequisite인 `make crates-check`는 crate가 가져와지지 않았을 때 install target의 이름과 함께 실패한다(HR-89). `tests/scripts/ci-group-tools.test.mts`는 fetch 전에 이들을 시작하는 CI group과 `--offline` 없는 cargo 명령을 실패시킨다.
 

@@ -433,7 +433,9 @@ hyper-lint: ## Check PHP formatting
 analyse-php: ext ## Run PHPStan at level max on the source and the tests of the server package
 	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
-templates-check: ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
+# The command tool imports the built modules of the two npm packages (packages/cli/lib/check.mjs reads
+# @polyspec/hyper-client, and build.mjs @polyspec/hyper/build), so a target that starts it builds them first.
+templates-check: packages ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs check --app $(BOARD)
 
 # The TypeScript of scripts/, tests/ and benchmarks/ (tsconfig.json), which Node runs by type stripping and so never checks
