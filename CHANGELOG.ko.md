@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b9c1b462d7d351197b9ead551bea1e7b80979a9d9a89943d1476b04a3207f19a -->
+<!-- source-sha256: 4108fa531e1501bf26ad8966929f8bc9cd2d4bbf96d352092b6e652cccdf755e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- npm-native package의 release가 읽는 `packages/ts/package.json`의 항목을 읽는 test가 없었다. `napi.binaryName`, `napi.targets`, `"type": "module"`의 변경은 `make bindings-check`의 여러 finding 중 하나로만 보고되었다. `tests/scripts/napi-package.test.mts`가 세 항목을 읽는다: 이름 `hyper`, target `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `aarch64-apple-darwin`, type `module`.
 
 - `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`은 자기 package의 unit test 파일 하나를 target의 다른 모든 test와 함께만 실행할 수 있었고, 그래서 한 파일의 검사가 다른 변경의 case가 실패하는 동안 실패했다. 이제 세 target은 package 아래 test 파일의 경로인 `PHP_TESTS`, `NODE_TESTS`, `PYTHON_TESTS`를 받는다. recipe는 그 파일들만 실행하고, 경로가 파일을 가리키지 않거나(HR-84) `CASES`도 설정되어 있으면 runner를 시작하기 전에 실패하며, 전체 실행의 results 파일을 쓰지 않는다. `docs/operations/development.md`가 이 선택을 명시하고, `tests/scripts/test-selection.test.mts`가 dry run으로 recipe를 읽고 guard 줄을 실행한다.
 
