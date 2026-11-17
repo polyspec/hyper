@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 40af63e8d3241929376b104f82f6f1fe0fba69bdd564294a533d70c487478c58 -->
+<!-- source-sha256: 0b821b861c7ef4fdd2f58e6a994ffa3629c3cdea7593265858313aa63f863e2d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- hyper는 kit 0.0.120을 채택한다. 그 `release candidate-assets`는 호출자가 버전을 적지 않으면 HEAD의 change log의 첫 section `## X.Y.Z`에서 candidate의 버전을 읽는다(kit K1286). `package.json`은 그 release asset을, `package-lock.json`은 그 integrity를 적는다(H35.35-5).
 - `docs/operations/development.md`는 릴리스의 step 가운데 어떤 CI job도 실행하지 않는 것을 적지 않았다. 그 section "릴리스만 실행하는 step"은 `make ci-release`의 각 step을 순서대로, 그것이 시작하는 명령, 도구와 그것을 설치하는 것, 같은 target을 실행하는 CI group, 릴리스만 보여 주는 것과 함께 나열한다. 이 section은 `make release-tag`가 다른 모든 step보다 먼저 tag를 push한다는 것, 어떤 job도 `binding check --release`와 `install-wasm-bindgen` 외의 `packages/release.mk`의 target을 실행하지 않는다는 것, kit의 `release assets`가 wheel, npm 패키지 `@polyspec/hyper`, Composer 패키지 `polyspec/hyper`를 이 패키지들이 더는 갖지 않는 형태로 pack한다는 것을 적는다. checklist의 행 H35.35는 dry run이 검증하는 것과 릴리스만 보여 주는 것을 적는다(H35.35).
 - `rust-toolchain.toml`은 target을 적지 않아 `make install-tools`가 host의 표준 라이브러리만 설치했는데, CI group core의 `make test-bindings`가 실행하는 `make lint-bindings`와 `make node-package`는 WASM crate를 `wasm32-unknown-unknown`으로 build한다. 이제 `rust-toolchain.toml`이 그 target을 적는다. `tests/scripts/ci-group-tools.test.mts`는 CI group 또는 release job의 cargo 명령 줄이 그 파일에 없는 Rust target을 적으면 실패한다. 이 test는 release job의 make 호출, 곧 bootstrap action의 호출, `release-tag`, `RELEASE_STEPS`도 CI group처럼 판정하여, 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패한다(H35.35).
 - `make recipe-check`는 case runner를 `make -k` 하나의 goal로 실행했다. 실패한 runner가 newline 없이 출력을 끝내면 그 마지막 줄이 다음 명령 줄과 붙었고, 비교 뒤의 어떤 줄도 실패한 runner를 밝히지 않았다. 이제 `recipe-check`는 다섯 runner와 비교의 명령을 `$(call check,...)`로 실행한다. 각 출력은 newline으로 끝나고, 마지막 줄은 실패한 것을 모두 적은 `failed checks:`이다. target은 runner의 prerequisite을 가지며 dry run은 아무것도 시작하지 않는다(HR-84, HR-86, H35.16-8).
