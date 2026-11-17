@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1317100948721f9924f503a4e20b5e83f1ba140d0b8f516d1b448d35028030a2 -->
+<!-- source-sha256: 4388efd795d1ce9b6b9827123208f0f4e7116384dd01f39d1eba07869acc1f21 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `config/release.json`은 `packages/python`을 kind `wheel`인 패키지로 적었고, kit는 그 kind를 그 디렉터리만의 git archive에서 순수 Python wheel `polyspec_hyper-X.Y.Z-py3-none-any.whl`로 build한다. 그 패키지의 build backend는 maturin이고 그 crate는 core를 `packages/rust`에서 받으므로, `make release-assets`는 tag가 생긴 뒤 wheel에서 실패했을 것이다. 이제 그 패키지는 kit의 패키지가 아니다: `assets.yml`의 job `platform`의 `make release-wheel`이 세 runner 각각에서 platform wheel을 build하며, `config/release.json`은 `packages/python/pyproject.toml`을 버전을 담는 manifest로 나열한다. `tests/scripts/release-assets.test.mts`는 build backend가 maturin인 kind `wheel` 패키지가 있으면 실패한다(H35.35-2).
 - `make cargo-lock`은 `.links`가 있는 checkout에서 cargo를 시작하기 전에 실패했다. kit의 link script가 link된 cargo에 자기 lock 복사본을 주고 `Cargo.lock`은 그대로 두었기 때문이다. 이제 recipe는 kit 0.0.121의 `link.mjs cargo --tracked-lock`을 시작한다(kit K1287). 이것은 patch와 그 복사본 없이 cargo를 실행하므로, `make cargo-lock CRATES="<crate> ..."`는 `.links`가 있든 없든 tracked `Cargo.lock`을 쓰며, 거부는 없앴다(H35.8-5).
 - 릴리스는 job 하나로 실행되었고, 그 recipe `make ci-release`는 commit에 tag를 붙인 뒤 `make hyper-install`과 kit의 packer를 실행했으며, 어떤 CI job도 tag 뒤의 step을 실행하지 않아 거기서 실패한 step은 버전을 잃게 했다. 이제 `.github/workflows/release.yml`은 세 job을 가진다: `tag`(`make ci-release-tag`), tag와 `release: true`로 새 `.github/workflows/assets.yml`을 부르는 `assets`, 그리고 kit의 archive를 build하고 draft를 만들고 download된 각 platform의 asset을 폴더와 함께 더하고(`cp -R`) `release-go-module`과 `release-platform-assets`를 실행한 뒤 릴리스를 공개하는 `release`(`make ci-release-release`). `assets.yml`의 job `platform`, `php`, `npm`은 `make ci-assets-<job>`을 실행한다. 이 recipe는 Go와 그 job의 다른 도구를 설치하고, release recipe를 쓰고, build 전에 binding을 check한다: 릴리스에서는 `make release-binding-check`, CI에서는 `make bindings-check`. `ci.yml`의 모든 실행은 자기 commit으로 `assets.yml`을 부르고 `ci-passed`가 그것을 필요로 하며, CI group node는 tag 없이 commit된 HEAD에서 kit의 archive를 build하는 새 `make release-candidate-assets`를 실행한다. `make release-rehearsal VERSION=X.Y.Z`는 버전 커밋을 push하기 전에 깨끗한 clone에서 그 archive를 build한다. job `platform`과 `php`는 각 platform의 runner(`ubuntu-26.04`, `ubuntu-26.04-arm`, `macos-15`)에서 실행하며, 이것이 runner 규칙의 유일한 예외이다. `make ci-release`, `release-checkout`, `release-php-check`, `release-archive-tool`, `release-prepare`, `release-tools-path`는 없앴다. `tests/scripts/ci-workflow.test.mts`가 job, 호출, runner, 각 recipe의 순서를 검사한다(H35.35-1).
 - hyper는 kit 0.0.121을 채택한다. 그 link script는 `link.mjs cargo --tracked-lock <dir> <cargo args>`로 시작되면 patch와 lock의 사본 없이 cargo를 실행한다(kit K1287). `package.json`은 그 release asset을, `package-lock.json`은 그 integrity를 적는다(H35.35-5).

@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 46ae286df1610e03f91b96286cf908465f8a3ca5511ffe4766aabaecf28552d7 -->
+<!-- source-sha256: a4af591563d400559baa33c8f80abac05fe7896931c783cc7e4d82f838368ab9 -->
 # 개발
 
 [English](development.md).
@@ -140,9 +140,10 @@ binding의 두 check는 모두 `go mod download`로 `packages/go/go.mod`의 `go.
 
 `make ci-release-tag`, `make ci-release-release`와 `assets.yml`의 job은 어떤 릴리스에서도, GitHub의 어떤 CI 실행에서도 실행된 적이 없다.
 
-kit의 `release assets`는 아직 세 패키지를 그것들이 더는 갖지 않는 형태로 pack한다.
+Python 패키지 `packages/python`은 `release-wheel`이 각 platform의 runner에서 maturin으로 build하는 platform wheel `polyspec_hyper-X.Y.Z-cp314-abi3-<platform>.whl`로 릴리스하며, `config/release.json`은 그 `pyproject.toml`을 버전을 담는 manifest로 나열한다. 이 패키지는 kit의 kind `wheel`인 패키지가 아니다. kit는 그 kind를 그 디렉터리만의 `git archive`에서 순수 Python wheel로 build하는데, 그 archive에는 `native/Cargo.toml`이 경로 `../../rust`로 받는 core의 crate도, 생성된 source도 없다.
 
-- Wheel. kit는 kind `wheel`인 패키지를 그 디렉터리의 `git archive`만으로 build하고 archive `polyspec_hyper-X.Y.Z-py3-none-any.whl`을 요구한다. `packages/python/pyproject.toml`의 build backend는 `native/Cargo.toml`을 build하는 maturin이다. 그 crate는 core를 경로 `../../rust`로, lint를 workspace에서 받는데 `packages/python`의 archive에는 둘 다 없으며, 그 생성된 source는 ignore된 파일이다. 그 backend의 wheel은 platform으로 이름이 정해진다(`cp314-abi3-<platform>`). 그래서 `release-assets`는 tag가 생긴 뒤 wheel에서 실패한다.
+kit의 `release assets`는 아직 두 패키지를 그것들이 더는 갖지 않는 형태로 pack한다.
+
 - npm 패키지 `@polyspec/hyper`. `packages/ts`의 `npm pack`은 checkout의 파일을 pack하며, 그 가운데 `native/generated/*.node`에는 `make node-addon`이 feature `panic-test`를 가진 debug build의 addon을 두고, WASM module은 pack하지 않는다. `release-npm`은 WASM module을 담은 같은 이름의 archive를 build한다. `release-npm-platform`이 시작하는 napi CLI는 `package.json`의 devDependency가 아니다.
 - PHP extension. `config/toolchain.json`은 `release-platform-assets`가 요구하는 `phpExtension.minors`를 적지 않고, job `php`는 PHP 8.4로만 build하며, `config/release.json`은 extension의 Composer 패키지를 적지 않으므로 릴리스에는 그 source zip도, `packages.json`의 그 항목도 없다.
 

@@ -33,13 +33,6 @@
       "name": "polyspec/hyper",
       "product": "hyper",
       "runtime": "php"
-    },
-    {
-      "kind": "wheel",
-      "directory": "packages/python",
-      "name": "polyspec-hyper",
-      "product": "hyper",
-      "runtime": "python"
     }
   ],
   "manifests": {
@@ -48,7 +41,7 @@
     "packages/ts/package.json": "archive",
     "packages/cli/package.json": "archive",
     "packages/php/composer.json": "archive",
-    "packages/python/pyproject.toml": "archive"
+    "packages/python/pyproject.toml": "version"
   },
   "notReleased": {
     "Cargo.toml": "the root Cargo workspace of the core crate and the binding crates (binding design L-2)",
