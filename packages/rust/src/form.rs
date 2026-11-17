@@ -210,6 +210,10 @@ impl RequestBody {
     }
 }
 
+/// `remove` is the cleanup call of a body (binding GN-6p, F-10). The body of http-form that this type holds removes
+/// its directory in its `Drop` when no host called `remove`, so this type, which drops it, releases it too.
+impl binding_core::Cleanup for RequestBody {}
+
 /// The text fields and the files of a body held as one value, under the value limit (F-21, F-22, F-25.2): an
 /// `application/x-www-form-urlencoded` body or a `multipart/form-data` body that is not read in chunks.
 ///
