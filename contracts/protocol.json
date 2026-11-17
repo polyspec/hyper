@@ -7624,6 +7624,12 @@
                   "en": "`handle` of every server takes the start of the request as an optional value of its monotonic clock, `hrtime(true)` in PHP, `performance.now()` in Node and `time.perf_counter_ns()` in Python, and counts from its own call without it.",
                   "ko": "모든 서버의 `handle`은 요청의 시작을 자기 단조 시계의 값으로 선택적으로 받는다. PHP에서는 `hrtime(true)`, Node에서는 `performance.now()`, Python에서는 `time.perf_counter_ns()`의 값이며, 그 값이 없으면 자기 호출부터 측정한다.",
                   "koSource": "2e8598cc046da9c8e6da319d28d7bf6ea59cb52e451fbb271a06dbfdf58333bf"
+                },
+                {
+                  "id": "HY-60.32",
+                  "en": "In the PHP server, when headers have been sent before an error escapes, `run` writes no 500 and records only that the write of the response is not complete, so the write hook receives that response with `ended` false and the failure of the error (HY-99); a write whose client has closed the connection is reported with `ended` false by `connection_aborted()`, and the PHP server does not close the connection itself, which the SAPI that runs it does.",
+                  "ko": "PHP 서버에서 오류가 빠져나가기 전에 header가 이미 보내졌으면 `run`은 500을 쓰지 않고 응답의 쓰기가 완료되지 않았다는 것만 기록한다. 그래서 쓰기 hook은 그 응답을 `ended` false와 그 오류의 실패와 함께 받는다(HY-99). client가 연결을 닫은 쓰기는 `connection_aborted()`로 `ended` false로 보고되며, PHP 서버는 연결을 직접 닫지 않고 그것을 실행하는 SAPI가 닫는다.",
+                  "koSource": "cb0ac85a8d18a50c4eea25c4ee63add8f7c7ea86208bae81884c3045e5be20f0"
                 }
               ]
             }
