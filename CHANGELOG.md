@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- No test showed what a holder of the session tests does when it fails: `holding` of `tests/scripts/session-redis-server.mts` rejects for a holder that ends before it holds the lock, and the hooks of a test file stop the holders that still run, and both were read only in the code. `tests/scripts/session-holder.test.mts` starts a holder of the Node server that fails in its request and reads the rejection with the status and the output and that its process has ended, and starts a holder that holds its session and reads that stopping the holders ends its process. Each wait is an event of the process.
+
 - No test read the items of `packages/ts/package.json` that the release of the npm-native package reads: a change of `napi.binaryName`, of `napi.targets` or of `"type": "module"` was reported only as one finding of `make bindings-check` among others. `tests/scripts/napi-package.test.mts` reads the three items: the name `hyper`, the targets `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu` and `aarch64-apple-darwin`, and the type `module`.
 
 - `make hyper-test-php`, `make hyper-test-node` and `make hyper-test-python` could run one unit test file of their package only with every other test of the target, so a check of one file failed while a case of another change failed. The targets now take `PHP_TESTS`, `NODE_TESTS` and `PYTHON_TESTS`, paths of test files below the package: the recipe runs those files alone, fails before the runner starts when a path names no file (HR-84) or when `CASES` is set too, and writes no results file of a full run. `docs/operations/development.md` states the selection, and `tests/scripts/test-selection.test.mts` reads the recipes by their dry runs and runs the guard line.

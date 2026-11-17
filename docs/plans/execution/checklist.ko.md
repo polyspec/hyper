@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 2d8739546ccc0457a6a437f17d3b30323e14ce83755b8d7d3ff081657c80880e -->
+<!-- source-sha256: 86fa754c8a96846f407670cbc4dfd14549a1f18637cf1126c2efc4416b8b1733 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -537,7 +537,7 @@
 | H35.16-7 | `make -n recipe-check`는 실제 명령을 돌린다. 그 recipe 줄에 `$(MAKE)`와 `$(NODE) scripts/recipe/check.mts`가 함께 있고, make는 `$(MAKE)`를 이름하는 줄을 -n에서도 실행하므로, dry run으로 그 target을 읽는 시험이 check를 시작한다. recipe는 `$(MAKE)`를 자기 줄에만 두어, dry run이 다른 명령을 출력만 하고 돌리지 않는다. | Makefile, tests/scripts | `make hyper-test-scripts TESTS=tests/scripts/make-recursion.test.mts` | [ ] |
 | H35.16-8 | `make recipe-check`는 마지막 newline 없이 끝난 case runner의 출력을 newline으로 끝내고, 마지막 줄에 실패한 runner를 모두 이름한다(HR-84, HR-86). 그 check는 6d5c817c가 만든 한 make의 goal이 아니라 `$(call check,...)`를 거치는 runner와 비교의 명령이다. | Makefile, tests/scripts | `make hyper-test-scripts TESTS="tests/scripts/check-recipes.test.mts tests/scripts/make-recursion.test.mts"` | [ ] |
 | H35.17 | script 시험의 빠진 입력은 그것을 쓰는 target을 이름하고, install target을 돌리지 않는 `make hyper-test-scripts` 전에 그것을 돌리라고 말한다(HR-85, HR-89). | tests/scripts/requires.mts, tests/scripts/requires.test.mts, config/owner-checks.json | `make hyper-test-scripts TESTS=tests/scripts/requires.test.mts` | [ ] |
-| H35.18 | 실패하는 test는 그 실패로 실행을 끝내고 process와 임시 directory를 남기지 않는다(HR-84, HR-87). worker가 실패한 session test는 시작한 process를 모두 멈추고 그 directory를 지운다. | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
+| H35.18 | 실패하는 test는 그 실패로 실행을 끝내고 process와 임시 directory를 남기지 않는다(HR-84, HR-87). worker가 실패한 session test는 시작한 process를 모두 멈추고 그 directory를 지운다. | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts TESTS=tests/scripts/session-holder.test.mts` | [ ] |
 | H35.19 | script 시험의 모든 기다림은 timer나 test runner의 시간 제한이 아니라 사건으로 끝난다(HR-89, HR-84). | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.19-1 | `tests/scripts/session-shared-redis.test.mts`는 더 이상 요청을 `setTimeout(200)`과 경쟁시키지 않는다. 시험은 그 결과를 정하는 사건을 기다린다. | tests/scripts/session-shared-redis.test.mts | `make hyper-test-scripts` | [ ] |
 | H35.19-2 | holder가 끝난 뒤 `until()`에서 기다리는 session 시험의 step은 test runner의 60초 제한이 아니라 그 holder나 server의 실패로 끝난다. | tests/scripts/session-redis-server.mts, tests/scripts/session-redis-cluster.test.mts | `make hyper-test-scripts` | [ ] |

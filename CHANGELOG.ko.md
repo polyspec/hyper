@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4108fa531e1501bf26ad8966929f8bc9cd2d4bbf96d352092b6e652cccdf755e -->
+<!-- source-sha256: 01a7cbd0feee3769cb0d9939a9429a843a38335ee7a269c9a509309df73536ed -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- session test의 holder가 실패할 때의 동작을 보이는 test가 없었다. `tests/scripts/session-redis-server.mts`의 `holding`은 lock을 잡기 전에 끝난 holder에 대해 reject하고, test 파일의 hook은 아직 실행 중인 holder를 멈추는데, 둘 다 코드로만 읽을 수 있었다. `tests/scripts/session-holder.test.mts`는 요청 중에 실패하는 Node 서버 holder를 시작해 status와 출력을 담은 rejection과 그 process가 끝났음을 읽고, session을 잡고 있는 holder를 시작해 holder들을 멈추면 그 process가 끝남을 읽는다. 모든 대기는 process의 event이다.
 
 - npm-native package의 release가 읽는 `packages/ts/package.json`의 항목을 읽는 test가 없었다. `napi.binaryName`, `napi.targets`, `"type": "module"`의 변경은 `make bindings-check`의 여러 finding 중 하나로만 보고되었다. `tests/scripts/napi-package.test.mts`가 세 항목을 읽는다: 이름 `hyper`, target `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, `aarch64-apple-darwin`, type `module`.
 
