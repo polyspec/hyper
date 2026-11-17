@@ -287,6 +287,7 @@
         "tests/scripts/session-redis-failure.test.mts",
         "tests/scripts/session-redis-failover.test.mts",
         "tests/scripts/session-redis-cluster.test.mts",
+        "tests/scripts/session-waits.test.mts",
         "tests/scripts/benchmark-sessions.test.mts"
       ]
     },

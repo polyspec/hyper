@@ -84,9 +84,30 @@ for (const name of NAMES) {
   test(`the ${name} server waits for the lock that a request of another server holds (HY-115)`, { timeout: 60_000 }, async () => {
     const other = name === 'python' ? 'node' : 'python';
     const holder = await holding(other, state.directory, { HYPER_SESSION_REDIS: state.port });
+    const record = await text(KEY);
+    const secret = await text(LOCK);
+    assert.ok(secret !== null, 'the holder holds the lock');
+    // The event of a request that waits: Redis refused it the lock and it asked for the lock again. MONITOR reports each
+    // command that a client sends, and the holder sends none while it waits for its line.
+    const monitor = await createClient({ socket: { port: Number(state.port) } }).connect();
+    let asked = 0;
+    let askedAgain: () => void = () => undefined;
+    const again = new Promise<void>((resolve) => {
+      askedAgain = resolve;
+    });
+    await monitor.monitor((line) => {
+      if (commandOf(line) !== 'SET' || !line.includes(`"${LOCK}"`)) return;
+      asked += 1;
+      if (asked === 2) askedAgain();
+    });
     const waiting = run(name, 'count', '1', name);
-    const first = await Promise.race([waiting.then(() => 'finished'), new Promise((resolve) => setTimeout(() => resolve('waiting'), 200))]);
-    assert.equal(first, 'waiting');
+    try {
+      await Promise.race([again, waiting.then(() => assert.fail(`the request of the ${name} server ended while the ${other} server held the lock`))]);
+    } finally {
+      monitor.destroy();
+    }
+    assert.equal(await text(LOCK), secret, 'the holder keeps its lock');
+    assert.equal(await text(KEY), record, 'the request that waits has written nothing');
     holder.stdin.write('\n');
     await waiting;
     assert.deepEqual(JSON.parse(await run('php', 'read', JSON.stringify(['n', 'stale', name]))), [1, 1, 1]);
