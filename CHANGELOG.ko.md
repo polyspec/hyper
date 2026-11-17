@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f0c613b22cd4b3debabf98399b477128a44341bb4661e5ed371d4357edea204e -->
+<!-- source-sha256: ecc15952be8b1b71112118509c3e3e6e11214cd92cb4c5e0c38aca42fc7c6048 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 서버: shared data에 `JsonSerializable`이 있는 `Accept: application/vnd.hyper+json` GET 요청은 JSON 텍스트를 쓰지 못했다. core의 `rules.json_write`가 `JsonSerializable`을 받지 않기 때문이다. 이제 문서와 리전 응답은 그 값을 쓰며, 값은 검사에서 한 번, JSON 텍스트에서 한 번 읽힌다(HY-44.6, H35.31-3).
 - PHP 서버: multipart 본문 요청의 `fileOver(-1)`은 파일을 비교해 false를 돌려주었다. 이제 파일 비교 전에 kind `invalid_number`로 실패한다(HY-114.12, H35.31-2).
 - hyper는 kit 0.0.118이 순서 없이 내던 cargo 출력을 순서대로 내는 kit 0.0.119를 쓴다(kit K1283). `package.json`은 그 release asset을, `package-lock.json`은 그 integrity를 적는다(H35.16-2).
 - script test는 hyper extension의 상대 경로를 기대했고, recipe의 `--` 뒤 옵션을 script의 옵션으로 읽었으며, server benchmark에서 generated PHP program의 footer를, Composer root에서 template repository만을 기대했다. 이제 absolute path를 기대하고, `--` 뒤 명령의 옵션은 무시하며, template extension 버전과 json release repository를 기대한다(H35.31).

@@ -35,6 +35,26 @@ final class DataModel
         return $value;
     }
 
+    /**
+     * Returns the value with each `JsonSerializable` replaced by its value, read once (HY-44.6); every other value is
+     * kept. The extensions of the template and of the core take no `JsonSerializable`, so the renderer and the JSON
+     * text give them this value.
+     */
+    public static function plain(mixed $value): mixed
+    {
+        if ($value instanceof \JsonSerializable) {
+            return self::plain($value->jsonSerialize());
+        }
+        if (is_array($value)) {
+            return array_map(self::plain(...), $value);
+        }
+        if ($value instanceof \stdClass) {
+            return (object) array_map(self::plain(...), get_object_vars($value));
+        }
+
+        return $value;
+    }
+
     /** Returns true for a value of the data model; for example, integers outside ±(2^53 − 1) are not. */
     public static function contains(mixed $value): bool
     {

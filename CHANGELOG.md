@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The PHP server: a GET request with `Accept: application/vnd.hyper+json`, whose shared data holds a `JsonSerializable`, failed to write its JSON text, because `rules.json_write` of the core takes no `JsonSerializable`; the document and the region response now write its value, which is read once for the check and once for the JSON text (HY-44.6, H35.31-3).
 - The PHP server: `fileOver(-1)` of a request with a multipart body compared the files and returned false; it now fails with kind `invalid_number` before the files are compared (HY-114.12, H35.31-2).
 - hyper adopts kit 0.0.119, which orders the cargo output that kit 0.0.118 printed out of order (kit K1283): `package.json` names its release asset and `package-lock.json` its integrity (H35.16-2).
 - The script tests expected a relative path of the hyper extension, read the options after `--` of a recipe as options of the script, expected the footer of the generated PHP program in the server benchmark and expected only the template repository in the Composer roots; they now expect the absolute path, ignore the options of the command after `--`, expect the template extension version and expect the json release repository (H35.31).

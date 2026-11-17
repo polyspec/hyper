@@ -63,7 +63,8 @@ final class JsonCodec
      */
     public static function encode(mixed $value): string
     {
-        return CoreRules::shared()->jsonCodecEncode($value);
+        // rules.json_write takes no `JsonSerializable`, so the value of each is written (HY-44.6).
+        return CoreRules::shared()->jsonCodecEncode(DataModel::plain($value));
     }
 
     /**

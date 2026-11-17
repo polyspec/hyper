@@ -89,28 +89,10 @@ final class Renderer
     public function bind(array|\stdClass $value): BoundMap
     {
         // An empty PHP array is a list for the extension; a root is a map, so the empty root binds as an empty object.
-        $plain = self::plain($value);
+        // The binding of the extension keeps a `JsonSerializable` as a native object, so its value is bound (HY-44.6).
+        $plain = DataModel::plain($value);
 
         return bind($plain === [] ? new \stdClass() : $plain);
-    }
-
-    /**
-     * The value with each `JsonSerializable` replaced by its value, which the binding of the extension keeps as a
-     * native object (HY-44.6); every other value is kept.
-     */
-    private static function plain(mixed $value): mixed
-    {
-        if ($value instanceof \JsonSerializable) {
-            return self::plain($value->jsonSerialize());
-        }
-        if (is_array($value)) {
-            return array_map(self::plain(...), $value);
-        }
-        if ($value instanceof \stdClass) {
-            return (object) array_map(self::plain(...), get_object_vars($value));
-        }
-
-        return $value;
     }
 
     /**
