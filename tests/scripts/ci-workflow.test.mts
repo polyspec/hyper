@@ -325,6 +325,18 @@ test('H33.1 make ci-check NAME=<group> and make ci-bench run the setup, the targ
   assert.match(unknown.stderr, new RegExp(`NAME=nope names no CI group of CI_GROUPS: ${groups.join(' ')}`));
 });
 
+test('H35.35-7 make go-release-build builds and vets packages/go alone with the go of the checkout, and make ci-release publishes the Go module before the draft', () => {
+  const build = dryRun('go-release-build').join('\n');
+  const go = `${ROOT}/var/tools/mise/shims/go`;
+  for (const command of ['build -mod=readonly ./...', 'vet ./...']) {
+    assert.ok(build.includes(`cd packages/go && GOWORK=off GOTOOLCHAIN=local ${go} ${command}`), `make -n go-release-build runs no "${command}" of ${go} with GOWORK=off in packages/go: ${build}`);
+  }
+  assert.ok(dryRun('test-bindings').join('\n').includes('-mod=readonly ./...'), 'make test-bindings runs no go-release-build');
+  const release = readFileSync(path.join(ROOT, 'Makefile'), 'utf8').match(/^RELEASE_STEPS := (.*)$/m)?.[1].split(' ') ?? [];
+  const order = ['release-assets', 'release-go-tools', 'release-go-module', 'release-go-module-push', 'release-publish'];
+  assert.deepEqual(release.filter((step) => order.includes(step)), order, `RELEASE_STEPS: ${release.join(' ')}`);
+});
+
 test('H35.46 make ci-results copies the case results of the recipe runners into the report, and passes without them (HR-84, HR-91)', (t) => {
   const work = mkdtempSync(path.join(tmpdir(), 'hyper-ci-results-'));
   t.after(() => rmSync(work, { recursive: true, force: true }));

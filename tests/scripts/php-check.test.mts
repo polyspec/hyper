@@ -184,7 +184,7 @@ function extensionTree(t: TestContext): { directory: string; run: (...words: str
     rmSync(log, { force: true });
     // -o keeps make from the recipes of the prerequisites, which write the sources of the bindings, read the crates of
     // the lock (crates-check) and run their tests.
-    const result = make(directory, '-o', 'bindings', '-o', 'crates-check', '-o', 'test-node-addon', '-o', 'test-wasm', '-o', 'test-go', ...words, ...variables);
+    const result = make(directory, '-o', 'bindings', '-o', 'crates-check', '-o', 'test-node-addon', '-o', 'test-wasm', '-o', 'test-go', '-o', 'go-release-build', ...words, ...variables);
     assert.equal(result.status, 0, `make ${words.join(' ')}:\n${result.stdout}\n${result.stderr}`);
     const starts = readFileSync(log, 'utf8').split('\n').filter(Boolean).map((line) => /^target=(\S*) php=(\S*) config=(\S*) args=(.*)$/u.exec(line));
     return starts.map((start) => ({ target: start?.[1] ?? '', php: start?.[2] ?? '', config: start?.[3] ?? '', args: start?.[4] ?? '' }));

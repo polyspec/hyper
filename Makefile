@@ -163,7 +163,7 @@ hyper-install: ## Install the pinned tools and the npm packages, the sources tha
 # of the install target when one is not fetched, so the failure is not the advice of cargo to leave the offline mode.
 # A target that starts cargo is named here and in the setup of its CI group, and tests/scripts/ci-group-tools.test.mts
 # fails for a group that starts one of them before hyper-install-crates.
-CRATE_TARGETS := hyper-install-python hyper-ext core-test core-lint bindings bindings-check lint-bindings test-bindings node-addon node-package test-go
+CRATE_TARGETS := hyper-install-python hyper-ext core-test core-lint bindings bindings-check lint-bindings test-bindings node-addon node-package test-go go-release-build
 .PHONY: hyper-install-crates crates-check
 $(CRATE_TARGETS): crates-check
 hyper-install-crates: ## Fetch the crates that Cargo.lock pins, which every other recipe reads offline (HR-89); ONLINE
@@ -582,7 +582,7 @@ composer-lock: ## Write composer.lock and examples/board/composer.lock for the p
 # compares the tracked binding packages with what binding scaffold writes (binding L-2, CK-19). bindings-scaffold runs
 # binding scaffold, which writes those tracked packages: the Cargo manifest, the entry file and the language manifest of
 # each binding, packages/go/go.mod and go.sum among them, after a change of the contract or of a pin that they state.
-.PHONY: bindings bindings-check bindings-scaffold lint-bindings test-bindings node-package test-wasm test-go
+.PHONY: bindings bindings-check bindings-scaffold lint-bindings test-bindings node-package test-wasm test-go go-release-build
 BINDING := $(CURDIR)/node_modules/@polyspec/binding/dist/cli.js
 .PHONY: binding-cases
 # The cases of contracts/ that the generated tests of every binding run (HR-100): scripts/binding-cases.mts writes the
@@ -638,7 +638,7 @@ lint-bindings: bindings ## Run clippy on the binding crates with every warning a
 	$(CARGO) clippy --locked --offline $(foreach crate,$(BINDING_CRATES),-p $(crate)) --all-targets --features panic-test -- -D warnings
 	$(PHP_EXT_CARGO) clippy --locked --offline -p polyspec-hyper-php-ext --all-targets --features panic-test -- -D warnings
 	$(CARGO) clippy --locked --offline --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test -- -D warnings
-test-bindings: lint-bindings test-node-addon test-wasm test-go ## Run the tests of the binding crates and the generated tests of Node, WASM and Go
+test-bindings: lint-bindings test-node-addon test-wasm test-go go-release-build ## Run the tests of the binding crates, the generated tests of Node, WASM and Go, and the released form of the Go module
 	$(CARGO) test --locked --offline $(foreach crate,$(BINDING_CRATES),-p $(crate))
 	$(PHP_EXT_CARGO) test --locked --offline -p polyspec-hyper-php-ext
 
@@ -714,6 +714,13 @@ test-go: bindings ## Build the static library of the Go binding, run gofmt and g
 	test -z "$$(cd packages/go && $(GOFMT) -l .)"
 	cd packages/go && $(GO_ENV) $(GO) vet ./...
 	cd packages/go && $(GO_ENV) $(GO) test -count=1 -v ./...
+
+# The released form of the Go module (H35.35-7, binding GN-15g): the module alone, with no go.work of make link
+# (GOWORK=off), with the go.mod and go.sum of the tree (-mod=readonly) and the sources that make bindings writes, as the
+# commit of its tag holds them. go build of a library package compiles it and links nothing, so it needs no static library.
+go-release-build: bindings ## Build and vet packages/go alone as a release tags it: GOWORK=off, -mod=readonly
+	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) build -mod=readonly ./...
+	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) vet ./...
 
 .PHONY: spec-docs spec-docs-check
 spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/protocol.json (H2)
@@ -1040,7 +1047,11 @@ ci-passed: ## Fail unless every job of RESULTS, the JSON of toJSON(needs), has t
 # follows a workflow_run event (GITHUB_EVENT_NAME), and a dispatch or a local run `make ci-release RUN=<id>` releases the
 # commit of RUN. The tools of var/tools are on the PATH of this Makefile, so the recipe needs no release-tools-path.
 RELEASE_ENV := var/release/tag.env
-RELEASE_STEPS := release-checkout release-php-check bootstrap install-tools install-packages release-archive-tool release-prepare release-tools release-recipes release-assets release-publish release-undraft
+# After the archives, the release publishes the Go module (H35.35-7): release-go-tools installs the Go of mise.lock,
+# release-go-module of packages/release.mk commits the module with the static libraries below var/release/assets/go and
+# records its tag, and release-go-module-push of binding 0.0.21 pushes the tags with one git push --atomic (B2.488).
+# binding makes that commit with the identity of the actor of the run (GITHUB_ACTOR), which ci-release exports.
+RELEASE_STEPS := release-checkout release-php-check bootstrap install-tools install-packages release-archive-tool release-prepare release-tools release-recipes release-assets release-go-tools release-go-module release-go-module-push release-publish release-undraft
 .PHONY: ci-release release-php-check
 # setup-php sets up the PHP of the .php-version of the checkout before the tag is checked out, and a dispatch checks out main,
 # so the release requires the PHP on PATH to be the minor release of the .php-version of the tag before it builds anything.
@@ -1052,15 +1063,19 @@ ci-release: ## Run the job of release.yml: tag the commit of the CI run RUN, the
 	GITHUB_ENV=$(CURDIR)/$(RELEASE_ENV) $(CI_MAKE) release-tag$(if $(filter workflow_run,$(GITHUB_EVENT_NAME)), AUTO=1) && \
 	set -a && . ./$(RELEASE_ENV) && set +a && \
 	if test -z "$$TAG"; then echo "ci-release: release-tag tagged no version, so nothing is released"; exit 0; fi && \
+	export GIT_AUTHOR_NAME="$$GITHUB_ACTOR" GIT_AUTHOR_EMAIL="$$GITHUB_ACTOR@users.noreply.github.com" GIT_COMMITTER_NAME="$$GITHUB_ACTOR" GIT_COMMITTER_EMAIL="$$GITHUB_ACTOR@users.noreply.github.com" && \
 	$(foreach step,$(RELEASE_STEPS),$(CI_MAKE) $(step)$(if $(filter install-tools,$(step)), TOOLS=npm) &&) true
 
-.PHONY: release-tag release-checkout release-archive-tool release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
+.PHONY: release-tag release-checkout release-go-tools release-archive-tool release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
 release-tag: ## Tag the commit of the successful CI run RUN of ci.yml on main with vX.Y.Z of the change log; AUTO=1 releases only a version commit; reads the run with gh
 	@test -n "$$RUN" || { echo "release-tag: RUN is required, for example make release-tag RUN=123"; exit 1; }
 	RELEASE_MAIN=origin/main $(NODE) $(KIT)/release-run.$(KIT_EXT) tag "$$RUN"$(if $(AUTO), --auto)
 
 release-checkout: ## Check out the tag TAG that release-tag created
 	git checkout --quiet "$$TAG"
+
+release-go-tools: ## Install the Go of mise.lock that release-go-module starts; ONLINE
+	$(CI_MAKE) install-tools TOOLS=go
 
 release-archive-tool: ## Fail unless Info-ZIP, which builds the Composer archives of the release, is on PATH
 	@command -v zip >/dev/null || { echo 'release-archive-tool: Info-ZIP is required for the Composer release archives; install the zip package'; exit 1; }
