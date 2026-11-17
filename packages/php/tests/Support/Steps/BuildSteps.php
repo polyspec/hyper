@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\Build;
-use Polyspec\Hyper\Renderer;
+use Polyspec\Hyper\Program;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
@@ -54,8 +54,6 @@ final class BuildSteps
         'reads.json' => false,
         'build.json' => false,
         'templates' => true,
-        // HY-31.10: the copy of the reserved template, which the server reads while it renders by itself.
-        'legacy/hyper/data.tpl' => false,
     ];
 
     /** Opens a program directory that holds every output but those of `missing`, and records the error of the open. */
@@ -84,7 +82,17 @@ final class BuildSteps
             }
             $failure = null;
             try {
-                Renderer::open($program, 'Z');
+                // HY-48.21: the open checks the outputs before it reads the manifest, which the program lacks.
+                Program::pages(
+                    "{$program}/manifest.json",
+                    $program,
+                    'Z',
+                    false,
+                    '',
+                    ['application/x-www-form-urlencoded'],
+                    null,
+                    [],
+                );
             } catch (\Throwable $error) {
                 $failure = $error;
             }

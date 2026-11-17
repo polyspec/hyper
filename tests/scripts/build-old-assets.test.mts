@@ -64,8 +64,8 @@ test('the files of a build stay through the build after it and are removed and p
   // B: the files of A stay, for the pages of A that are still open.
   assert.deepEqual(removedOf(buildVersion(app, 'b')), []);
   const b = listed(app);
-  assert.ok(without(a, b).some((path) => /^public\/assets\/hyper-chunk-/u.test(path)), without(a, b).join(' '));
-  assert.ok(without(a, b).some((path) => /^public\/assets\/templates\/home\./u.test(path)), without(a, b).join(' '));
+  assert.ok(without(a, b).some((path) => path.startsWith('public/assets/hyper-chunk-')), without(a, b).join(' '));
+  assert.ok(without(a, b).some((path) => path.startsWith('public/assets/templates/home.')), without(a, b).join(' '));
   assert.deepEqual(assetsOf(app), [...new Set([...a, ...b, own])].sort());
   assert.deepEqual(listed(app, 'assets.previous.json'), a);
   // C: the files of A that neither B nor C writes are gone and printed; the files of B and of the application stay.

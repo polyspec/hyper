@@ -432,7 +432,8 @@ test('H35.35-1 the release tags the commit of the CI run, builds the assets of t
 test('H35.35-1 every CI run builds the assets with the recipes of the release, and each recipe checks the bindings before it builds', () => {
   const ci = jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
   const called = ci.find((job) => job.name === 'assets');
-  assert.ok(called?.text.split('\n').includes(`    uses: ${ASSETS_CALL}`), 'ci.yml has no job assets that calls assets.yml');
+  assert.ok(called !== undefined, 'ci.yml has no job assets');
+  assert.ok(called.text.split('\n').includes(`    uses: ${ASSETS_CALL}`), 'the job assets of ci.yml does not call assets.yml');
   assert.ok(!/^ {6}release:/m.test(called.text), 'the job assets of ci.yml passes release, which is the input of a release alone');
   const assets = jobs(readFileSync(path.join(WORKFLOWS, ASSETS), 'utf8'));
   assert.deepEqual(assets.map((job) => job.name), ['platform', 'php', 'npm']);

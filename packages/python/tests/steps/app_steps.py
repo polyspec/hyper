@@ -14,7 +14,6 @@ import warnings
 from pathlib import Path
 
 from polyspec.hyper.session._csrf import Csrf
-from polyspec.hyper.page._renderer import Renderer
 from polyspec.hyper.session._session import Session
 from polyspec.hyper.app.app import App
 from polyspec.hyper.session.array_session import ArraySession
@@ -226,57 +225,35 @@ def parts(case) -> None:
     )
     if route is None:
         raise LookupError(f"the application {name} has no route {case.input('route')}")
-    renderer = Renderer.open(
-        str(program_of(name)[1]), application.get("timezone", "+09:00")
+    # The pages of the core render the parts and the document, as the server renders a page (HY-48.19).
+    manifest_path, program = program_of(name)
+    pages = App._open_pages(
+        manifest_path.read_bytes(),
+        str(program),
+        None,
+        {
+            "timezone": application.get("timezone", "+09:00"),
+            "context": False,
+            "base_path": "",
+            "form_types": ["application/x-www-form-urlencoded"],
+            "data_base_path": None,
+        },
     )
-    shared = renderer.bind(case.input("shared"))
-    bound = {
-        region: renderer.bind(data) for region, data in case.input("regions").items()
-    }
-    route_regions = {
-        region["name"]: {"template": region["template"], "data": bound[region["name"]]}
-        for region in route.get("regions", [])
-        if region["name"] in bound
-    }
+    shared = case.input("shared")
+    regions = case.input("regions")
+    rendered = pages.render_parts(route["name"], shared, regions, 0.0)
+    document = pages.render_document(route["name"], shared, regions, 0.0)
+    texts = rendered.regions
     page = next(region["name"] for region in manifest["regions"] if region.get("page"))
-    title = renderer.alone(manifest["title"], shared, renderer.bind({}))
-    texts = {}
-    manifest_regions = {}
-    for region in manifest["regions"]:
-        template = route["template"] if region["name"] == page else region["template"]
-        manifest_regions[region["name"]] = {
-            "template": template,
-            "data": bound[region["name"]],
-        }
-        texts[region["name"]] = renderer.alone(
-            template,
-            shared,
-            bound[region["name"]],
-            route_regions if region["name"] == page else None,
-        )
-    for region, entry in route_regions.items():
-        texts[region] = renderer.alone(entry["template"], shared, entry["data"])
-    frame = _placed(
-        renderer.document(
-            manifest["layout"],
-            manifest["title"],
-            shared,
-            manifest_regions,
-            page,
-            route_regions,
-            None,
-            application["build"],
-        ),
-        "title",
-        title,
-    )
+    frame = _placed(document, "title", rendered.title)
     for region in manifest["regions"]:
         frame = _placed(frame, region["name"], texts[region["name"]])
     page_frame = texts[page]
-    for region in route_regions:
-        page_frame = _placed(page_frame, region, texts[region])
-    case.compare("title", title)
-    case.compare("parts", {region: texts[region] for region in bound})
+    for region in route.get("regions", []):
+        if region["name"] in regions:
+            page_frame = _placed(page_frame, region["name"], texts[region["name"]])
+    case.compare("title", rendered.title)
+    case.compare("parts", dict(texts))
     case.compare("frame", frame)
     case.compare("pageFrame", page_frame)
 
@@ -458,6 +435,8 @@ class _Session:
         self.reports = Reports()
         self.session = ArraySession()
         self.store = RecordingStore(self.session)
+        # The handlers write the store that the requests use with a step `store` (HY-38.20).
+        self.calls.session = self.session
         self.earlier: dict[str, _Answered] = {}
         manifest, program = program_of(self._application.name)
         self._app = self._application.open(manifest, program, self.calls, self.reports)

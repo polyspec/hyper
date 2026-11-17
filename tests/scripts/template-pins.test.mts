@@ -12,6 +12,7 @@ import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { requireBuilt } from './requires.mts';
+import { JSON_PACKAGES, JSON_VERSION, NPM_PACKAGE, NPM_PLATFORMS, releaseOf, tarballOf } from './template-release.mts';
 
 const repository = resolve('.');
 // The JSON object of the file `file`.
@@ -21,16 +22,9 @@ const platform = (file: string) => jsonObject(jsonObject(readObject(file).config
 // The template release: the exact version that the platform of the private root composer.json declares for
 // ext-polyspec_template; every pin below names it.
 const VERSION = jsonString(platform('composer.json')['ext-polyspec_template'], 'composer.json platform ext-polyspec_template');
-const RELEASE = `https://github.com/polyspec/template/releases/download/v${VERSION}`;
-// The json release whose extension the template extension requires (HY-48.15): the version that the platform of the
-// root composer.json declares for ext-polyspec_json, whose Composer repository both Composer roots declare.
-const JSON_VERSION = jsonString(platform('composer.json')['ext-polyspec_json'], 'composer.json platform ext-polyspec_json');
-const JSON_PACKAGES = `https://github.com/polyspec/json/releases/download/v${JSON_VERSION}/packages.json`;
-// The package @polyspec/template and its platform packages, which hold the native module of the napi root.
-const NPM_PACKAGE = '@polyspec/template';
-const NPM_PLATFORMS = ['@polyspec/template-darwin-arm64', '@polyspec/template-linux-arm64-gnu', '@polyspec/template-linux-x64-gnu'];
+const RELEASE = releaseOf(VERSION);
 // The tarball asset of the npm package `name` of the release.
-const tarball = (name: string) => `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`;
+const tarball = (name: string) => tarballOf(VERSION, name);
 // The wheel assets of the release, one for each platform.
 const WHEELS = ['macosx_11_0_arm64', 'manylinux_2_34_aarch64', 'manylinux_2_34_x86_64'].map((tag) => `${RELEASE}/polyspec_template-${VERSION}-cp314-abi3-${tag}.whl`);
 
@@ -144,6 +138,6 @@ test('pyproject.toml and uv.lock name the wheel assets of the release and pin ea
     const [, url, sha256] = requirement;
     assert.ok(lock.includes(`{ url = "${url}", hash = "sha256:${sha256}" }`), `uv.lock pins ${url} by the sha256 of pyproject.toml`);
   }
-  const urls = new Set([...lock.matchAll(/"(https:\/\/github\.com\/polyspec\/template\/[^"]*)"/g)].map((match) => match[1]));
+  const urls = new Set([...lock.matchAll(/"(https:\/\/github\.com\/polyspec\/template\/[^"]*)"/g)].map((match) => match[1] ?? ''));
   assert.deepEqual([...urls].sort(), [...WHEELS].sort(), 'uv.lock names only the template wheels of the release');
 });

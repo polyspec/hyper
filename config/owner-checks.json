@@ -307,6 +307,18 @@
     },
     {
       "paths": [
+        "tests/scripts/template-release.mts"
+      ],
+      "tests": [
+        "tests/scripts/template-pins.test.mts",
+        "tests/scripts/template-version.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "tests/scripts/release-recipes-tree.mts"
       ],
       "tests": [
@@ -554,7 +566,8 @@
         "scripts/php-ext-verify.mts",
         "scripts/php-ext-requires.mts",
         "config/php-ext-pins.json",
-        "scripts/test-inputs.mts"
+        "scripts/test-inputs.mts",
+        "scripts/python-install-stamp.mts"
       ],
       "targets": [
         "typecheck"
@@ -563,7 +576,8 @@
         "tests/scripts/php-ext-verify.test.mts",
         "tests/scripts/php-ext-requires.test.mts",
         "tests/scripts/template-pins.test.mts",
-        "tests/scripts/test-inputs.test.mts"
+        "tests/scripts/test-inputs.test.mts",
+        "tests/scripts/python-install-stamp.test.mts"
       ]
     },
     {
@@ -619,6 +633,17 @@
       ],
       "tests": [
         "tests/scripts/run-e2e.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "scripts/dependency-closure.mts"
+      ],
+      "tests": [
+        "tests/scripts/node-package.test.mts"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {

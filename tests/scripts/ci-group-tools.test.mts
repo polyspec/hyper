@@ -27,6 +27,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 import { treeWithoutReleaseRecipes } from './release-recipes-tree.mts';
 
@@ -55,6 +56,9 @@ const STARTED: readonly { program: string; pattern: RegExp; tools: readonly stri
   // binding release-go-module proves the module with go; both start the go of PATH inside their process.
   { program: 'go of binding', pattern: /\/binding\/dist\/cli\.js (?:check|release-go-module) /u, tools: ['go'] },
   { program: 'wasm-bindgen', pattern: /\/mise\/shims\/wasm-bindgen\b/u, tools: ['wasm-bindgen'] },
+  // release candidate-assets of kit checks that no link leaves the checkout, and finds the environment of a Python project
+  // that declares a polyspec package with `uv workspace dir` inside its process (link.mjs, H34.11).
+  { program: 'uv of kit release', pattern: /\/release\.m[jt]s candidate-assets\b/u, tools: ['uv'] },
   { program: 'uv', pattern: /\/mise\/shims\/uv\b|\/uv-install\.m[jt]s /u, tools: ['uv'] },
   // The virtual environment of a Python package is made by the python of mise, and the Python test runner starts it.
   { program: 'python', pattern: /\/mise\/shims\/python3?\b|\/python-venv\.m[jt]s |\/run-tests\.m[jt]s python /u, tools: ['python'] },
@@ -223,7 +227,8 @@ test('each CI group installs every tool that its setup steps and its targets sta
 });
 
 test('the job of release.yml installs every tool that its steps start, before the command line that starts it (HR-95, H35.35)', () => {
-  const kinds = (JSON.parse(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8')) as { packages: { kind: string }[] }).packages.map((item) => item.kind);
+  const release = parseJsonObject(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8'), 'config/release.json');
+  const kinds = jsonObjects(release.packages, 'config/release.json packages').map((item, index) => jsonString(item.kind, `config/release.json packages[${index}] kind`));
   assert.ok(kinds.includes('composer') || kinds.includes('wheel'), 'config/release.json holds no Composer package and no wheel, so release-tools of kit installs no tool');
   const judged = jobToolProblems('release', releaseCalls(), []);
   // release-go-module generates the Go binding with cargo; a dry run that does not name it judged nothing (HR-84).
@@ -245,9 +250,16 @@ function jobToolProblems(job: string, calls: Call[], provided: string[]): { foun
   const matched = new Set<string>();
   const found: string[] = [];
   let installs = 0;
+  // The crates of Cargo.lock are fetched by a command line of the job, as in a check group (HR-89, H34.9).
+  let fetched = false;
   for (const call of calls) {
     for (const line of commands(call.target, call.variables)) {
       if (WHERE_INSTALLED.test(line)) continue;
+      if (FETCH.test(line)) fetched = true;
+      else if (!ONLINE.test(line) && !NO_CRATES.includes(CARGO_COMMAND.exec(line)?.[1] ?? '')) {
+        const reader = CRATES.find((entry) => entry.pattern.test(line));
+        if (reader !== undefined && !fetched) found.push(`${job}: make ${call.target} starts ${reader.program} before a command line of the job fetched the crates of Cargo.lock (hyper-install-crates): ${line.trim().slice(0, 200)}`);
+      }
       for (const entry of rows) {
         if (!entry.pattern.test(line)) continue;
         matched.add(entry.program);

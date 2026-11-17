@@ -27,15 +27,12 @@ READS = {
 
 def open_app(load: Callable, **options) -> App:
     """Opens a copy of the fixture manifest with a server program of its own: the read paths and an empty template
-    directory and an empty copy of the reserved template, because a JSON response renders no template."""
+    directory, because a JSON response renders no template."""
     program = Path(tempfile.mkdtemp(prefix="hyper-program-"))
     try:
         manifest = program / "app.json"
         shutil.copyfile(MANIFEST, manifest)
         (program / "templates").mkdir()
-        # HY-48.18: the open needs the copy of the reserved template; no response of these tests renders it.
-        (program / "legacy" / "hyper").mkdir(parents=True)
-        (program / "legacy" / "hyper" / "data.tpl").write_bytes(b"")
         (program / "reads.json").write_text(json.dumps(READS), encoding="utf-8")
         shutil.copyfile(FIXTURES / "build.json", program / "build.json")
         handlers = {

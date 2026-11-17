@@ -34,17 +34,14 @@ test('writes the program of the fixture with the build id of its build file (HY-
   const output = written(t);
   assert.equal(readFileSync(join(output, 'build.json'), 'utf8'), readFileSync(join(fixtures, 'build.json'), 'utf8'));
   // HY-48.20: the program holds no generated PHP program.
-  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'legacy', 'reads.json', 'templates']);
+  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'reads.json', 'templates']);
 });
 
-test('the program holds the reserved template below legacy/ and no copy of it below templates/ (HY-31.9, HY-31.10)', (t) => {
+test('the program holds no copy of the reserved template (HY-31.9, HY-48.21)', (t) => {
   const output = written(t);
   // HY-31.9: templates/ holds the templates of the application only, so the core takes the whole directory.
   assert.equal(existsSync(join(output, 'templates', dataTemplate.name)), false, `templates/${dataTemplate.name} exists`);
-  // HY-31.10: the copy for a server that does not call the core is the only file below legacy/.
-  assert.deepEqual(readdirSync(join(output, 'legacy')), ['hyper']);
-  assert.deepEqual(readdirSync(join(output, 'legacy', 'hyper')), ['data.tpl']);
-  assert.equal(readFileSync(join(output, 'legacy', dataTemplate.name), 'utf8'), dataTemplate.source);
+  assert.equal(existsSync(join(output, 'legacy')), false, 'legacy/ exists');
 });
 
 test('the program names the literal key of an index in reads.json by its text (HY-73.33)', (t) => {

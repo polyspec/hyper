@@ -24,8 +24,9 @@ test('the Node package names the addon hyper in napi.binaryName (H31.3-3)', () =
 
 test('the Node package names the three targets of the release in napi.targets (H31.3-3)', () => {
   const targets = member(napi, 'targets');
-  assert.ok(Array.isArray(targets), `${MANIFEST} napi.targets is a list`);
-  assert.deepEqual([...targets].sort(), ['aarch64-apple-darwin', 'aarch64-unknown-linux-gnu', 'x86_64-unknown-linux-gnu'], `${MANIFEST} napi.targets`);
+  assert.ok(Array.isArray(targets) && targets.every((target): target is string => typeof target === 'string'), `${MANIFEST} napi.targets is a list of strings`);
+  const names: string[] = targets;
+  assert.deepEqual([...names].sort(), ['aarch64-apple-darwin', 'aarch64-unknown-linux-gnu', 'x86_64-unknown-linux-gnu'], `${MANIFEST} napi.targets`);
 });
 
 test('the Node package is a module package (H31.3-3)', () => {

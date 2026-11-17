@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
-use Polyspec\Hyper\Reads;
-use Polyspec\Hyper\Renderer;
+use Polyspec\Hyper\App;
+use Polyspec\Hyper\ArraySession;
+use Polyspec\Hyper\Program;
+use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\CaseInput;
-use Polyspec\Hyper\Tests\Support\Json;
 
 /**
- * HY-73: the cases of contracts/reads.json. A read node is true or a map. Each case is the application `reads_<id>`
- * that scripts/contract-programs.mts builds from the templates of the case, so the render of the template with the
+ * HY-73: the cases of contracts/reads.json. Each case is the application `reads_<id>` that
+ * scripts/contract-programs.mts builds from the templates of the case, whose route `reads` renders the template of the
+ * case in its page region `content`. The PHP server keeps the read paths with the core: the region data of the JSON
+ * response of a loader that returns the data of the case is the kept data, and the render of the template with the
  * kept data and with the data gives the same bytes (HY-73.28).
  */
 final class ReadsSteps
@@ -21,12 +24,7 @@ final class ReadsSteps
 
     public static function cases(CaseReader $case): void
     {
-        // A read node is true or a map, and an empty map at any depth is an empty object, so it is read as an array.
-        $node = json_decode(json_encode($case->input('reads'), JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
         $data = self::root($case->input('data'));
-        $kept = self::root(Reads::keep($data, $node === true ? true : Json::array($node)));
-        $case->compare('kept', $kept);
-
         $templates = (array) $case->input('templates');
         $template = CaseInput::text($case, 'template');
         if (!array_key_exists($template, $templates)) {
@@ -34,7 +32,7 @@ final class ReadsSteps
         }
         $directory = self::PROGRAMS . '/reads_' . $case->id();
         // HY-73.34: the build wrote the read paths of the template of the case, the page region of the route `reads`
-        // of the application, to reads.json of the program that the renderer opens.
+        // of the application, to reads.json of the program that the server opens.
         $file = "{$directory}/program/reads.json";
         $json = file_get_contents($file);
         if ($json === false) {
@@ -46,23 +44,68 @@ final class ReadsSteps
         foreach (['routes', 'reads', 'regions', 'content'] as $member) {
             $paths = $paths instanceof \stdClass ? ($paths->{$member} ?? null) : null;
         }
+        // The input `reads` is the paths that the core keeps; the core takes them from that file, which is compared
+        // with it, so the step reads it only through the comparison.
+        $case->input('reads');
         $case->compare('reads', $paths);
-        $renderer = Renderer::open("{$directory}/program", 'Z');
-        $shared = $renderer->bind([]);
-        $text = $renderer->alone($template, $shared, $renderer->bind($data));
-        $case->outcome('render', $renderer->alone($template, $shared, $renderer->bind($kept)), $text);
+
+        $app = App::open(
+            "{$directory}/manifest.json",
+            "{$directory}/program",
+            ['routes' => ['reads' => ['load' => static fn (): array => $data]]],
+            'Z',
+        );
+        $response = $app->handle(
+            new Request('GET', '/', ['Accept' => 'application/vnd.hyper+json']),
+            new ArraySession(),
+        );
+        if ($response->status !== 200) {
+            throw new \UnexpectedValueException("the JSON response of the case has status {$response->status}");
+        }
+        $value = json_decode($response->body, false, 512, JSON_THROW_ON_ERROR);
+        $regions = $value instanceof \stdClass && $value->regions instanceof \stdClass ? $value->regions : null;
+        $kept = $regions->content ?? throw new \UnexpectedValueException('the JSON response has no region content');
+        $case->compare('kept', $kept);
+
+        $pages = Program::pages(
+            "{$directory}/manifest.json",
+            "{$directory}/program",
+            'Z',
+            false,
+            '',
+            ['application/x-www-form-urlencoded'],
+            null,
+            [],
+        );
+        $text = self::alone($pages, $data);
+        $case->outcome('render', self::alone($pages, self::root($kept)), $text);
         $case->compare('text', $text);
     }
 
     /**
-     * Returns the data of a case, which a renderer binds: a map.
+     * Renders the template of the case alone with the data, as the page region of the route `reads`.
      *
-     * @return array<array-key, mixed>|\stdClass
+     * @param array<array-key, mixed> $data
      */
-    private static function root(mixed $value): array|\stdClass
+    private static function alone(\Polyspec\Hyper\Pages $pages, array $data): string
     {
-        return is_array($value) || $value instanceof \stdClass
-            ? $value
-            : throw new \UnexpectedValueException('the data of the case is no map');
+        $regions = (array) $pages->renderParts('reads', [], ['content' => $data], 0.0)->regions;
+        $part = $regions['content'] ?? null;
+
+        return is_string($part) ? $part : throw new \UnexpectedValueException('the region content has no part');
+    }
+
+    /**
+     * Returns the data of a case, a map, as the array that a loader returns; its values keep their form.
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function root(mixed $value): array
+    {
+        return match (true) {
+            is_array($value) => $value,
+            $value instanceof \stdClass => get_object_vars($value),
+            default => throw new \UnexpectedValueException('the data of the case is no map'),
+        };
     }
 }
