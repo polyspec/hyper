@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `packages/ts/tests/core-values.test.ts` expects the message of HY-44.12 for a value that the conversion of the Node binding refuses (H34.8). Input: shared data that holds a number outside the safe range, a number that is not finite, a Date, a function, a lone surrogate or lists 65 levels deep. Behaviour before: since binding 0.0.21 the binding gives the whole text of the template error, such as `data_number_range: number 9007199254740992 is outside the safe range`, and the eight cases expected `data_number_range in  at 0:0: …`, the form that HY-44.12 retired, so they failed. Expected: every case expects `kind: message`, as the cases of the check of the core already did. Verified by `make hyper-test-node NODE_TESTS=tests/core-values.test.ts`: 8 of 16 failed before, 16 of 16 pass after.
+
 - The test of the full set in `tests/scripts/test-inputs.test.mts` passes under a selection (HR-85, H34.5). Input: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. Behaviour before: make exports a command-line variable to the environment of a recipe, so the dry run of the full set read that `TESTS`, built only its inputs and held no cargo line, and the test failed. Expected: the dry run of the full set passes `TESTS=` and holds the cargo builds.
 
 - `tests/scripts/upload-servers.test.mts` ends when the servers of a scenario do not start (HR-87, H34.3). Input: a scenario whose `started()` throws, as when the Node application cannot be built. Behaviour before: `hostsOf` registered the close of its gate listener only after `started()`, so the listener stayed open and the file ran without end after every case had failed. Expected: the close is registered right after the listener listens, and the file ends with the failures.

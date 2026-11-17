@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `packages/ts/tests/core-values.test.ts`는 Node binding의 변환이 거부하는 값에 HY-44.12의 message를 기대한다(H34.8). 입력: 안전 범위 밖의 수, 유한하지 않은 수, Date, 함수, 짝 없는 surrogate 또는 65단계 깊이의 list를 담은 shared data. 이전 동작: binding 0.0.21부터 binding은 `data_number_range: number 9007199254740992 is outside the safe range`처럼 template 오류의 전체 text를 주는데, 여덟 case는 HY-44.12가 폐기한 형식 `data_number_range in  at 0:0: …`를 기대해 실패했다. 기대 동작: core 검사의 case가 이미 그랬듯 모든 case가 `kind: message`를 기대한다. `make hyper-test-node NODE_TESTS=tests/core-values.test.ts`로 검증했다: 이전에는 16개 중 8개가 실패했고, 이후에는 16개 모두 통과한다.
+
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 
 - `tests/scripts/upload-servers.test.mts`는 scenario의 server가 시작하지 않아도 끝난다(HR-87, H34.3). 입력: Node application을 build할 수 없을 때처럼 `started()`가 throw하는 scenario. 이전 동작: `hostsOf`가 gate listener의 close를 `started()` 뒤에야 등록했으므로, 모든 case가 실패한 뒤에도 listener가 열린 채 남아 파일이 끝나지 않았다. 기대 동작: listener가 listen한 직후 close를 등록하고, 파일은 실패와 함께 끝난다.
