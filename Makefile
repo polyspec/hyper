@@ -1085,6 +1085,7 @@ ci-release-tag: ## Run the job tag of release.yml: tag the commit of the CI run 
 ci-release-release: ## Run the job release of release.yml: build the archives of TAG, publish the draft, add the assets of each platform and make the release public; ONLINE
 	@test -n "$(TAG)" || { echo 'ci-release-release: TAG is required, for example make ci-release-release TAG=v0.0.1' >&2; exit 2; }
 	$(CI_MAKE) release-tools
+	$(CI_MAKE) hyper-install-crates
 	$(CI_MAKE) release-assets
 	$(CI_MAKE) release-publish
 	mkdir -p var/release/assets && cp -R var/release/downloaded/. var/release/assets/
@@ -1136,6 +1137,7 @@ musl-cc-check: ## Fail on Linux unless the clang and the llvm-ar of the LLVM of 
 
 ci-assets-platform: ## Run the job platform of assets.yml: the Go static library, the wheel and the npm platform package of this host; RELEASE=true for a release; ONLINE
 	$(CI_MAKE) install-tools TOOLS="rust uv python go"
+	$(CI_MAKE) hyper-install-crates
 	$(CI_MAKE) release-recipes
 	$(CI_MAKE) binding-cases
 	$(CI_MAKE) musl-cc-check
@@ -1147,6 +1149,7 @@ ci-assets-php: LD_LIBRARY_PATH :=
 ci-assets-php: ## Run the job php of assets.yml: the PHP extension for the PHP on PATH, whose minor is EXPECTED_PHP_MINOR; RELEASE=true for a release; ONLINE
 	@test -n "$(EXPECTED_PHP_MINOR)" || { echo 'ci-assets-php needs EXPECTED_PHP_MINOR, the PHP minor of the job, for example make ci-assets-php EXPECTED_PHP_MINOR=8.4' >&2; exit 2; }
 	$(CI_MAKE) install-tools TOOLS="rust go"
+	$(CI_MAKE) hyper-install-crates
 	$(CI_MAKE) release-recipes
 	$(CI_MAKE) binding-cases
 	$(CI_MAKE) $(ASSETS_CHECK)
@@ -1154,6 +1157,7 @@ ci-assets-php: ## Run the job php of assets.yml: the PHP extension for the PHP o
 
 ci-assets-npm: ## Run the job npm of assets.yml: the npm package @polyspec/hyper with its WASM module; RELEASE=true for a release; ONLINE
 	$(CI_MAKE) install-tools TOOLS="rust go"
+	$(CI_MAKE) hyper-install-crates
 	$(CI_MAKE) release-recipes
 	$(CI_MAKE) binding-cases
 	$(CI_MAKE) $(ASSETS_CHECK)

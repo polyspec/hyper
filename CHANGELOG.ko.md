@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 13f19b8a248b5a76e35abb5635448b0411748e13139de12d9f872de7cbd6995a -->
+<!-- source-sha256: 4db85a78dcb5b17c0c1d660c59e3e5d742eb55c47f5d5de8b609661a66782105 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `assets.yml`의 모든 job과 `release.yml`의 job release는 cargo를 시작하기 전에 `Cargo.lock`의 crate를 fetch한다(HR-89, H34.9). 입력: CI run 44130032438의 새 runner. 이전 동작: `ci-assets-*` recipe와 `ci-release-release`가 `hyper-install-crates`를 실행하지 않았으므로, 각 assets job이 `crates-check`에서 "can't checkout https://github.com/polyspec/binding.git?tag=v0.0.21 … offline"으로 실패했다. 기대 동작: 이 recipe들은 tool을 설치한 뒤 `hyper-install-crates`를 실행하고, `ci-group-tools.test.mts`는 check group처럼 이 job들에도 그 순서를 요구한다.
 
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 

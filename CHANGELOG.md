@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- Every job of `assets.yml` and the job release of `release.yml` fetch the crates of `Cargo.lock` before they start cargo (HR-89, H34.9). Input: a fresh runner of CI run 44130032438. Behaviour before: the `ci-assets-*` recipes and `ci-release-release` ran no `hyper-install-crates`, so each assets job failed at `crates-check` with "can't checkout https://github.com/polyspec/binding.git?tag=v0.0.21 … offline". Expected: each of these recipes runs `hyper-install-crates` after it installs its tools, and `ci-group-tools.test.mts` holds that order for these jobs as for the check groups.
+
 - The test of the full set in `tests/scripts/test-inputs.test.mts` passes under a selection (HR-85, H34.5). Input: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. Behaviour before: make exports a command-line variable to the environment of a recipe, so the dry run of the full set read that `TESTS`, built only its inputs and held no cargo line, and the test failed. Expected: the dry run of the full set passes `TESTS=` and holds the cargo builds.
 
 - `tests/scripts/upload-servers.test.mts` ends when the servers of a scenario do not start (HR-87, H34.3). Input: a scenario whose `started()` throws, as when the Node application cannot be built. Behaviour before: `hostsOf` registered the close of its gate listener only after `started()`, so the listener stayed open and the file ran without end after every case had failed. Expected: the close is registered right after the listener listens, and the file ends with the failures.
