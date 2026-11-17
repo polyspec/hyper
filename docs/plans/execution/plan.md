@@ -213,3 +213,53 @@ Depends on: none. H34.1 states that the body iterable of the WSGI callable runs 
 ## Wave 35 — The core and the bindings in the install and the checks
 
 Depends on: none. A fresh checkout installs and checks only the servers that do not call the core: `make hyper-install` installs the Python package of the bindings before `make bindings` writes its sources (H35.1), no CI group runs a target of the core or the bindings (H35.2), and Git does not ignore the Python package that `make bindings` writes (H35.3), and the binding of `Cargo.lock` does not generate Go and WASM for the callback unit of session-store and a function result (H35.4); a later binding changes the cases of negative zero (H35.5). The core takes the kept values, which have several copies, after the first release (H35.6). H35.7 fixes the defects that the full run against the local providers names. H35.8 takes each provider by its release in npm and in Cargo.
+
+Scope of the first release of this wave. The first release holds these rows, and the rows of H35.32 and H35.33 come after it:
+
+- H35.34 and H35.34-1: the read paths of `reads.json` that `hyper build` writes, and the comparison of that file in the PHP and the Python case runner.
+- H35.31-2-1: the check of a file limit as a rule of the core.
+- H35.16-3, H35.16-4 and H35.16-5: the install of the extension on a fresh checkout, the check of the PHP of the checkout, and the rebuild of the extension when that PHP changes.
+- H35.27-1-1: the status of an action with two `Content-Type` lines in the Node HTTP test.
+- H35.9-8: the Node case of a warning of the runtime during a request.
+- H35.35: the dry run of each step of the release workflow that CI does not run.
+- The pins by tag: template, session-store, orm, json and the three http repositories are each taken by the tag of a release (AGENTS.md, a dependency on another polyspec repository). template is taken at the release that runs its current conformance cases against its JS render engine and removes the differences of that engine from its Rust core.
+
+The first release waits for that release of template, because the servers render with two engines of template: the Node server and the browser with the JS render engine, and the PHP and the Python server with the binding of the Rust core. Without that release the Node server and the PHP and Python servers give different results for one template.
+
+Inputs of the design of H35.32. The Node server (`packages/ts/src/page/page.ts`, `packages/ts/src/app/app.ts`) and the browser code (`packages/client`) render with the JS render engine of template (`@polyspec/template/render`), the server through `createApplication` and `renderDocument` of `@polyspec/hyper-client`. The PHP server (`packages/php/src/Page/Renderer.php`) and the Python server (`packages/python/src/polyspec/hyper/page/_renderer.py`) render with the binding of the Rust core of template. The page render of the core of hyper (`render_document` of `packages/rust/src/render.rs`, `Pages` and `PageRequest` of `packages/rust/src/steps.rs`, `route_reads` and `template_reads` of `packages/rust/src/read_paths.rs`; the binding members `Pages`, `PageRequest.next`, `routeReads` and `templateReads`) is called by no server. The two engines differ for an input that the template specification refuses: an index by a fractional number renders in the JS engine and fails with `runtime_type` in the core. The move of the Node server to the page render of the core is not one row and is not part of the first release, because the core lacks five parts and the move changes the inputs of `App.open`, the page response and nine statements. The design document of H35.32-2 comes first, and it takes the four lists below as its inputs.
+
+The gap list compares what the three servers do for a page with what `PageRequest.next` and `render_document` do.
+
+- Covered as it is: the composition of a document with its route regions (HY-12, HY-13); the order in which a document with kept values is rendered again, and the removal of the dropped kept values from the embedded data (HY-38.16, HY-38.17); the script of the embedded data (HY-31); the meta element of the build (HY-125); the shared data and the refusal of the key of the context (HY-124.8); the selection of the regions (HY-19); the data of the action merged over the data of the route (HY-26.2, HY-58.3); the read paths applied (HY-73.29); the selection of the kept values; the JSON value and its text (HY-17, HY-54); the member `context` (HY-128.2); the status of the reply (HY-69); and status 409 for a changed revision (HY-107).
+- Covered differently:
+  - The core parses a template when a render first reaches it, and the servers parse or decode the templates when the application opens.
+  - The core takes the read paths as a value (`Pages`) or computes them from the sources (`routeReads`), and the Node server computes them from the AST files with the browser package.
+  - `now` is one value of a request, which the host gives in `PageInput`, and the PHP and the Python renderer read the clock in each render.
+  - The second argument of a host function is `{timezone, now}` in the binding and `{env: {…}}` in the JS engine.
+  - The error of a registration that fails carries the text ` (HYC-24)` after the reason of the template language.
+  - For a template that is missing while the document has kept values, the core runs the render without the kept values (HY-38.16), and the browser code throws the error again.
+  - A document without the data of one of its regions fails with kind `internal`.
+  - An index by a fractional number fails with `runtime_type`.
+- Missing in the core:
+  - The token after an action renews the session (HY-72.3): `PageInput.csrf` is fixed when the `PageRequest` is built, and the action runs inside the steps (H35.32-3).
+  - The check of HY-44.3 for a value that the read paths drop and for a native object, before the read paths are applied (H35.32-4).
+  - The value of a PHP `JsonSerializable` (HY-44.6), which the binding keeps as a native object and `packages/php/src/Data/DataModel.php` replaces before the render.
+  - The message `functions.<name> is not a function` of `contracts/functions.json` (H35.32-5).
+  - A render below the whole request as a binding member (H35.32-6).
+- Supplied by the host through a step or the input: every call of a handler (the action, the context handler, the shared handler and the loaders), the values of the reply (whether it embeds the data, and its status), `now`, the masked token, the text of the cookie `hy-keep`, the held hash of `Hyper-Context`, the changed topics, the stored kept values, and the results of the loaders as maps.
+- Kept in the host: the file reads, the checks of the handlers, the stop between the steps for a closed connection (HY-67), the guard of the warnings (HY-74), the mapping of the results and of the ORM codes to the outcome of the action, the response headers and 304, the cookies, the limits, the logging, the selection of client rendering, and the representations.
+
+The statements whose meaning changes, which retire their ids (AGENTS.md, a statement keeps its id only while its meaning stays): HY-54.3, HYC-24.2 (its clause of the Node server), HY-132.8, HY-48.11, HY-48.12, HYC-12.6 (its second clause), HYC-12.9, HY-128.4 and HY-73.23. The statements that need a judgement of whether their meaning stays: HY-132.7, HY-48.1, HY-13.4 and HY-14.1.
+
+The questions that the design answers:
+
+1. How does a page get the new token after its action renews the session (HY-72.3)?
+2. Where is HY-44.3 enforced for a document, whose render binds only the values that the read paths keep?
+3. Does `App.open` of the Node server take `program/templates` and `reads.json`, as the PHP and the Python server do?
+4. Which second argument does a host function receive in the Node server?
+5. Does the Node server adopt `openPage`, `routeRequest` and `computePageHeaders` with `PageRequest`? `openPage` takes a `Store` of session-store.
+6. What do the test steps of the Node server for the parts, the read paths and `withContext` call?
+7. Is one `now` per request the rule for every server?
+8. Which evidence holds HY-13.4 while the server renders with the Rust engine and the browser with the JS engine?
+
+The Node tests that depend on the JS engine or on the `Application` of the browser code: the parts and the opens of `packages/ts/tests/steps/app.ts`, `packages/ts/tests/steps/reads.ts` and `packages/ts/tests/steps/reads-cases.ts`, `packages/ts/tests/parse-template.ts`, `packages/ts/tests/steps/context-place.ts`, `packages/ts/tests/steps/functions.ts`, and the option `templates` of `packages/ts/tests/support.ts`.

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 2ea2e949077560c59743ff3ba6bb7b4c7610f9c0deb88be9d7f1070406b0e5b1 -->
+<!-- source-sha256: 3be87cfcdfb8c34dee8e0e4f770767be1ab0884fc2f2b497885a0d990026ce67 -->
 # 기능 상태
 
 [English](features.md).
@@ -20,6 +20,8 @@
 | node-core-rules | Node 서버 unit의 이름으로 주는 core의 규칙. `packages/ts/src/core/rules.ts`의 `coreRules`가 core의 Node binding module을 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고 core의 Node binding은 build되지 않았다. `tests/scripts/node-core.test.mts`는 binding module의 대역으로 그 호출을 적으며 시험 40개가 통과한다(H31.20, H31.7) | — |
 | python-core-rules | Python 서버 unit의 이름으로 주는 core의 규칙. `polyspec/hyper/app/_core_rules.py`의 `CoreRules`가 core의 Python binding module을 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고, record를 받는 member의 unit이 없으며, `tests/test_core_rules.py`는 실행되지 않았다(H31.24, H31.8) | — |
 | php-core-rules | PHP 서버 unit의 이름으로 주는 core의 규칙. `Polyspec\Hyper\CoreRules`가 core의 binding 함수들의 namespace를 받는다(HY-132.2) | not implemented: `CoreRules::shared()`가 extension `polyspec_hyper` 위에서 이것을 load하고, `Csrf`, `Context`, `RepresentationResponse`, `NativeSession::name`, `Page`, `App`, `Reply`, `Result::page`, `Build::read`가 이것을 부른다. `Request::currentPath`, `Result::redirect`, `Session::csrfToken`, session cookie, static shell, kept value는 아직 자기 코드를 갖고, 서버 시험은 extension과 함께 실행되지 않았으며, record를 받는 member의 unit이 없다(H31.25, H35.9-2) | — |
+| core-page-render | 세 서버가 hyper core의 page 렌더로 page를 렌더한다: `packages/rust/src/render.rs`의 `render_document`, `packages/rust/src/steps.rs`의 `Pages`와 `PageRequest`, `packages/rust/src/read_paths.rs`의 `route_reads`와 `template_reads`, 그리고 binding member `Pages`, `PageRequest.next`, `routeReads`, `templateReads` | not implemented: 어떤 서버도 core의 page 렌더를 부르지 않는다. Node 서버(`packages/ts/src/page/page.ts`, `packages/ts/src/app/app.ts`)는 `@polyspec/hyper-client`의 `createApplication`과 `renderDocument`를 거쳐 template의 JS render engine(`@polyspec/template/render`)으로 렌더하고, PHP 서버(`packages/php/src/Page/Renderer.php`)와 Python 서버(`packages/python/src/polyspec/hyper/page/_renderer.py`)는 template Rust core의 binding으로 렌더한다. 두 engine은 template 명세가 거부하는 입력에서 다르다. 분수 숫자 인덱스를 JS engine은 렌더하고 core는 `runtime_type`으로 실패시킨다(H35.32, H35.32-1) | core만 `make core-test` |
+| browser-core-template | browser 코드(`packages/client`)가 template Rust core의 wasm binding으로 렌더한다 | not implemented: browser 코드는 Node 서버처럼 template의 JS render engine(`@polyspec/template/render`)으로 렌더한다(H35.33) | — |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |

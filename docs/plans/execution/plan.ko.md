@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: ab1e40eb70a7385aab79b24c5e2450578e345f50efb195c6689773a9e2470710 -->
+<!-- source-sha256: 8289ecc0bc00a685323d3a23499d9c64a3a9540b42c5d4518392e7ec4ddbd772 -->
 # 실행
 
 [English](plan.md).
@@ -214,3 +214,53 @@ core를 부르지 않는 서버와 core는 모두 `contracts/`의 case를 실행
 ## Wave 35 — 설치와 검사의 core와 바인딩
 
 Depends on: none. 새 checkout은 core를 부르지 않는 서버만 설치하고 검사한다. `make hyper-install`은 `make bindings`가 소스를 쓰기 전에 바인딩의 Python 패키지를 설치하고(H35.1), 어떤 CI group도 core나 바인딩의 target을 실행하지 않으며(H35.2), Git은 `make bindings`가 쓰는 Python 패키지를 무시하지 않으며(H35.3), `Cargo.lock`의 binding은 session-store의 callback unit과 function result에 대해 Go와 WASM을 생성하지 않으며(H35.4), 다음 binding은 음의 0의 case를 바꾼다(H35.5). core는 사본이 여럿인 kept 값을 첫 릴리스 뒤에 맡는다(H35.6). H35.7은 로컬 provider에 대한 전체 실행이 지목한 결함을 고친다. H35.8은 npm과 Cargo에서 각 provider를 그 release로 받는다.
+
+이 wave의 첫 릴리스의 범위. 첫 릴리스는 다음 행을 가지며, H35.32와 H35.33의 행은 그 뒤에 온다.
+
+- H35.34와 H35.34-1: `hyper build`가 쓰는 `reads.json`의 read path, 그리고 PHP와 Python case runner가 그 파일을 비교하는 일.
+- H35.31-2-1: core의 규칙인 파일 limit 검사.
+- H35.16-3, H35.16-4, H35.16-5: 새 checkout에서의 확장 설치, checkout의 PHP 검사, 그 PHP가 바뀔 때의 확장 재빌드.
+- H35.27-1-1: Node HTTP 테스트에서 `Content-Type` 줄이 둘인 action의 상태.
+- H35.9-8: 요청 중 runtime 경고에 대한 Node case.
+- H35.35: CI가 실행하지 않는 릴리스 workflow의 각 step의 dry run.
+- tag로 하는 pin: template, session-store, orm, json, 그리고 http 저장소 셋은 각각 release의 tag로 받는다(AGENTS.md, 다른 polyspec 저장소에 대한 의존). template은 현재의 conformance case를 자기 JS render engine에 대해 실행하고 그 engine이 Rust core와 다른 점을 없앤 release로 받는다.
+
+첫 릴리스는 template의 그 release를 기다린다. 서버들이 template의 두 engine으로 렌더하기 때문이다. Node 서버와 브라우저는 JS render engine으로, PHP와 Python 서버는 Rust core의 binding으로 렌더한다. 그 release가 없으면 Node 서버와 PHP·Python 서버는 한 template에 대해 다른 결과를 준다.
+
+H35.32 설계의 입력. Node 서버(`packages/ts/src/page/page.ts`, `packages/ts/src/app/app.ts`)와 browser 코드(`packages/client`)는 template의 JS render engine(`@polyspec/template/render`)으로 렌더하고, 서버는 `@polyspec/hyper-client`의 `createApplication`과 `renderDocument`를 거친다. PHP 서버(`packages/php/src/Page/Renderer.php`)와 Python 서버(`packages/python/src/polyspec/hyper/page/_renderer.py`)는 template Rust core의 binding으로 렌더한다. hyper core의 page 렌더(`packages/rust/src/render.rs`의 `render_document`, `packages/rust/src/steps.rs`의 `Pages`와 `PageRequest`, `packages/rust/src/read_paths.rs`의 `route_reads`와 `template_reads`. binding member는 `Pages`, `PageRequest.next`, `routeReads`, `templateReads`)는 어떤 서버도 부르지 않는다. 두 engine은 template 명세가 거부하는 입력에서 다르다. 분수 숫자 인덱스를 JS engine은 렌더하고 core는 `runtime_type`으로 실패시킨다. Node 서버를 core의 page 렌더로 옮기는 일은 한 행이 아니며 첫 릴리스에 들지 않는다. core에 다섯 부분이 없고, 이 이전이 `App.open`의 입력, page 응답, statement 아홉 개를 바꾸기 때문이다. H35.32-2의 설계 문서가 먼저이며, 그 문서는 아래 네 목록을 입력으로 받는다.
+
+차이 목록은 세 서버가 page에 대해 하는 일을 `PageRequest.next`와 `render_document`가 하는 일과 비교한다.
+
+- 그대로 덮는 것: route 영역을 가진 문서의 구성(HY-12, HY-13), kept 값을 가진 문서를 다시 렌더하는 순서와 버려진 kept 값을 내장 데이터에서 빼는 일(HY-38.16, HY-38.17), 내장 데이터의 script(HY-31), build의 meta 요소(HY-125), shared 데이터와 context key의 거부(HY-124.8), 영역 선택(HY-19), route 데이터 위에 합쳐지는 action 데이터(HY-26.2, HY-58.3), read path의 적용(HY-73.29), kept 값의 선택, JSON 값과 그 텍스트(HY-17, HY-54), member `context`(HY-128.2), reply의 상태(HY-69), 바뀐 revision에 대한 상태 409(HY-107).
+- 다르게 덮는 것:
+  - core는 렌더가 처음 닿을 때 template을 parse하고, 서버들은 애플리케이션이 열릴 때 template을 parse하거나 decode한다.
+  - core는 read path를 값으로 받거나(`Pages`) source에서 계산하고(`routeReads`), Node 서버는 browser package로 AST 파일에서 계산한다.
+  - `now`는 host가 `PageInput`으로 주는 요청당 한 값이고, PHP와 Python renderer는 렌더마다 시계를 읽는다.
+  - host function의 둘째 인자는 binding에서 `{timezone, now}`이고 JS engine에서 `{env: {…}}`이다.
+  - 실패한 등록의 오류는 template 언어의 이유 뒤에 텍스트 ` (HYC-24)`를 가진다.
+  - 문서에 kept 값이 있는데 template이 없으면 core는 kept 값 없는 렌더를 실행하고(HY-38.16), browser 코드는 오류를 다시 던진다.
+  - 자기 영역 하나의 데이터가 없는 문서는 kind `internal`로 실패한다.
+  - 분수 숫자 인덱스는 `runtime_type`으로 실패한다.
+- core에 없는 것:
+  - action이 session을 갱신한 뒤의 token(HY-72.3). `PageInput.csrf`는 `PageRequest`를 만들 때 고정되고 action은 step 안에서 실행된다(H35.32-3).
+  - read path가 버리는 값과 native object에 대한, read path를 적용하기 전의 HY-44.3 검사(H35.32-4).
+  - PHP `JsonSerializable`의 값(HY-44.6). binding은 그것을 native object로 두고, `packages/php/src/Data/DataModel.php`가 렌더 전에 바꾼다.
+  - `contracts/functions.json`의 메시지 `functions.<name> is not a function`(H35.32-5).
+  - binding member인, 요청 전체보다 작은 렌더(H35.32-6).
+- host가 step이나 입력으로 주는 것: 모든 handler 호출(action, context handler, shared handler, loader), reply의 값(데이터를 내장하는지와 그 상태), `now`, mask된 token, cookie `hy-keep`의 텍스트, `Hyper-Context`의 held hash, 바뀐 topic, 저장된 kept 값, map인 loader 결과.
+- host에 남는 것: 파일 읽기, handler 검사, 닫힌 연결에 대한 step 사이의 중단(HY-67), 경고의 guard(HY-74), 결과와 ORM code를 action outcome으로 옮기는 일, 응답 header와 304, cookie, limit, logging, client rendering 선택, representation.
+
+의미가 바뀌어 id를 폐기하는 statement(AGENTS.md, statement는 의미가 유지되는 동안만 id를 유지한다): HY-54.3, HYC-24.2(Node 서버의 절), HY-132.8, HY-48.11, HY-48.12, HYC-12.6(둘째 절), HYC-12.9, HY-128.4, HY-73.23. 의미가 유지되는지 판단이 필요한 statement: HY-132.7, HY-48.1, HY-13.4, HY-14.1.
+
+설계가 답하는 질문:
+
+1. action이 session을 갱신한 뒤 page는 새 token을 어떻게 받는가(HY-72.3)?
+2. 렌더가 read path가 남긴 값만 bind하는 문서에 대해 HY-44.3은 어디서 강제되는가?
+3. Node 서버의 `App.open`은 PHP와 Python 서버처럼 `program/templates`와 `reads.json`을 받는가?
+4. Node 서버에서 host function은 어떤 둘째 인자를 받는가?
+5. Node 서버는 `PageRequest`와 함께 `openPage`, `routeRequest`, `computePageHeaders`를 채택하는가? `openPage`는 session-store의 `Store`를 받는다.
+6. Node 서버의 part, read path, `withContext` 테스트 step은 무엇을 부르는가?
+7. 요청당 하나의 `now`는 모든 서버의 규칙인가?
+8. 서버가 Rust engine으로, 브라우저가 JS engine으로 렌더하는 동안 어떤 근거가 HY-13.4를 지탱하는가?
+
+JS engine이나 browser 코드의 `Application`에 의존하는 Node 테스트: `packages/ts/tests/steps/app.ts`의 part와 open, `packages/ts/tests/steps/reads.ts`와 `packages/ts/tests/steps/reads-cases.ts`, `packages/ts/tests/parse-template.ts`, `packages/ts/tests/steps/context-place.ts`, `packages/ts/tests/steps/functions.ts`, `packages/ts/tests/support.ts`의 option `templates`.
