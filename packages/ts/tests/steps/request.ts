@@ -116,7 +116,8 @@ export const steps = {
   // Reads the body of the case as a request and records the last file of each name and the pairs of the files.
   files(reader: CaseReader): void {
     const request = new Request({ method: 'POST', path: '/', headers: { 'Content-Type': bytesOf(textOf(reader.input('type'), 'type')).toString('latin1') }, body: bytesOf(textOf(reader.input('body'), 'body')) });
-    reader.compare('last', namesIn(reader, 'names').map((name) => request.file(name)?.filename() ?? null));
+    // `names` is optional: a case of a failing limit states no files (HY-114.12).
+    if (reader.has('names')) reader.compare('last', namesIn(reader, 'names').map((name) => request.file(name)?.filename() ?? null));
     reader.compare('pairs', request.files().map(([name, files]) => [name, files.map((file) => file.filename())]));
     if (reader.has('limits')) {
       const limits = listOf(reader.input('limits'), 'the case field limits').map((limit) => {

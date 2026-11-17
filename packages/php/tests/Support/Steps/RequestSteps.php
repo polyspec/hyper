@@ -47,10 +47,13 @@ final class RequestSteps
             '',
             Bytes::of(Json::string($case->input('body'))),
         );
-        $case->compare('last', array_map(
-            static fn (string $name): ?string => $request->file($name)?->filename(),
-            Json::strings($case->input('names')),
-        ));
+        // `names` is optional: a case of a failing limit states no files (HY-114.12).
+        if ($case->has('names')) {
+            $case->compare('last', array_map(
+                static fn (string $name): ?string => $request->file($name)?->filename(),
+                Json::strings($case->input('names')),
+            ));
+        }
         $case->compare('pairs', array_map(
             static fn (array $pair): array => [
                 $pair[0],

@@ -26,11 +26,13 @@ def files(case) -> None:
     request = Request(
         "POST", "/", {"Content-Type": kind}, "", case.input("body").encode("latin-1")
     )
-    last = []
-    for name in case.input("names"):
-        found = request.file(name)
-        last.append(None if found is None else found.filename())
-    case.compare("last", last)
+    # `names` is optional: a case of a failing limit states no files (HY-114.12).
+    if case.has("names"):
+        last = []
+        for name in case.input("names"):
+            found = request.file(name)
+            last.append(None if found is None else found.filename())
+        case.compare("last", last)
     case.compare(
         "pairs",
         [
