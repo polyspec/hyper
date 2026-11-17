@@ -10120,7 +10120,8 @@
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsNoCookieForTheSessionOfTheRequest: NativeSession sends no Set-Cookie header for the session that the request cookie names.",
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsTheCookieOfTheSessionThatReplacesAnUnknownIdentifier: NativeSession sends the cookie of the identifier with which the strict mode of PHP replaced an unknown identifier.",
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsTheCookieOfARegeneratedIdentifier: NativeSession sends the cookie of the identifier that session_regenerate_id created.",
-            "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsNoCookieWhenTheSessionCannotStart: NativeSession sends no Set-Cookie header when session_start of PHP fails, and the request ends with status 500."
+            "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsNoCookieWhenTheSessionCannotStart: NativeSession sends no Set-Cookie header when session_start of PHP fails, and the request ends with status 500.",
+            "packages/php/tests/AppTest.php::AppTest::testClosesTheSessionWhenTheDispatchFails: Only the PHP server keeps the session in the session module of PHP, which closes it at the end of the script unless the server closes it; the test reads session_status() in the loader, in the response hook and after App::handle of a request whose loader throws (HY-115.23)."
           ]
         },
         {

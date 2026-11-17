@@ -409,7 +409,23 @@ final class App
         try {
             // HY-74: a warning, notice or deprecation of the request becomes an exception instead of a wrong page.
             $response = WarningsGuard::run(function () use ($request, $store, $reply): Response {
-                $response = $this->dispatch($request, $store, $reply);
+                try {
+                    $response = $this->dispatch($request, $store, $reply);
+                } catch (\Throwable $error) {
+                    // The session is closed also when the dispatch failed, so that no path leaves it open until the
+                    // end of the script, where an application would have to close it by hand before it finishes the
+                    // request early. The first failure answers: the error of the dispatch is the cause that the
+                    // request reports, so a failure of this close is logged and does not replace it.
+                    if ($store instanceof NativeSession) {
+                        try {
+                            $store->close();
+                        } catch (SessionCloseError $closing) {
+                            $this->logFailure($closing);
+                        }
+                    }
+
+                    throw $error;
+                }
                 // HY-115.23: the session of PHP is written and closed before the server answers, so a request whose
                 // write the save handler refuses, such as one that lost its lock, fails instead of sending the
                 // response that it prepared. PHP would otherwise close the session after the response was sent.
