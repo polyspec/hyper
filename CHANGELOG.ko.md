@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a0071cce066fe5809fffb5ffbe133ee7584a6eb62594800cd2bd3a678d60ca19 -->
+<!-- source-sha256: b25e1d5ae54a5d0200019407fd871bc4a6d199d602096b2949bb531dab6593b7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `tests/legacy/file-store-sessions.json`은 이제 session-store 라이브러리의 file store를 기대한다. 배열을 갖지 않은 session file의 message는 `holds no array of values`이다. 음의 0은 `i:0`으로 쓴다(HY-104.39). section `open`은 제거된 store의 message와 class를 기대했으므로 폐기한다. 같은 option은 `contracts/file-sessions.json`의 section `storeFailures`가 라이브러리의 kind(`invalid_directory`, `invalid_lifetime`, `invalid_number`, `invalid_argument_type`)로 서술한다. 그 Node와 Python step도 함께 제거한다. `packages/ts/tests/sessions.test.ts`는 제거된 store의 member를 쓰지 않으므로 그대로 둔다. 작성만 했고 실행하지 않았다.
 
 - HY-104.38은 route가 session을 쓰지 않는 방법을 정한다: manifest의 route가 `"session": false`를 가진다. 서버는 그 요청에 session을 열지 않으므로, 그 요청은 lock을 잡지 않고 session cookie를 설정하지 않는다. Node와 Python 서버는 그 field를 읽지 않으며, 새 test `packages/ts/tests/session-routes.test.ts`와 `packages/python/tests/test_session_routes.py`는 그때까지 실패한다. 각 test는 같은 cookie로 두 요청을 보낸다. 첫 요청은 test가 놓아 주는 event로 잡혀 있고, 둘째 요청은 test가 쓴 manifest의 route `plain`으로 간다. session을 두 번째로 열면 첫 요청이 풀리므로, 실패는 기다림이 아니라 응답 순서로 드러난다. Python test의 `fixture_app`은 `manifest`를 받는다. 작성만 했고 실행하지 않았다.
 

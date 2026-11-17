@@ -105,7 +105,6 @@ STEPS = {
     ("file-sessions.json", "storeFailures"): file_sessions_steps.store_failures,
     # The fixed copy of the store cases that the sessions library holds (tests/legacy), until S-4 removes it.
     ("file-store-sessions.json", "requests"): file_store_sessions_steps.requests,
-    ("file-store-sessions.json", "open"): file_store_sessions_steps.open,
     ("redis-sessions.json", "cases"): redis_sessions_steps.cases,
     ("redis-sessions.json", "open"): redis_sessions_steps.open,
     ("session.json", "token"): session_steps.token,
