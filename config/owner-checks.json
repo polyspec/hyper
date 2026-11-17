@@ -635,6 +635,17 @@
     },
     {
       "paths": [
+        "scripts/dependency-closure.mts"
+      ],
+      "tests": [
+        "tests/scripts/node-package.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "scripts/line-end.mts"
       ],
       "tests": [
