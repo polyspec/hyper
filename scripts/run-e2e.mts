@@ -4,22 +4,32 @@
 // and removes the directory. `make e2e` passes the Playwright run of the shared test runner, which reports each case and
 // gives it its own timeout (H27.26). Starting the servers is a step without a time limit.
 //
-// Usage: node scripts/run-e2e.mts -- <command> [<arguments>...]
+// Each --extension loads a PHP extension into both PHP servers in the given order (HY-48.15, HY-132.2).
+//
+// Usage: node scripts/run-e2e.mts [--extension <library>]... -- <command> [<arguments>...]
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
+import { parseArgs } from 'node:util';
 import { serverRun, startBoard } from './board-servers.mts';
 
+const usage = 'Usage: node scripts/run-e2e.mts [--extension <library>]... -- <command> [<arguments>...]';
 const separator = process.argv.indexOf('--', 2);
-const [command, ...args] = separator === 2 ? process.argv.slice(3) : [];
+if (separator === -1) {
+  console.error(usage);
+  process.exit(2);
+}
+const { values } = parseArgs({ args: process.argv.slice(2, separator), options: { extension: { type: 'string', multiple: true } } });
+const extensions = values.extension ?? [];
+const [command, ...args] = process.argv.slice(separator + 1);
 if (command === undefined) {
-  console.error('Usage: node scripts/run-e2e.mts -- <command> [<arguments>...]');
+  console.error(usage);
   process.exit(2);
 }
 
 const run = serverRun('hyper-e2e-');
 console.log(`run directory: ${run.directory}`);
 try {
-  const board = await startBoard({ app: 'examples/board', database: join(run.directory, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 }, children: run.children });
+  const board = await startBoard({ app: 'examples/board', database: join(run.directory, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 }, extensions, children: run.children });
   const tests = spawn(command, args, {
     env: { ...process.env, HYPER_E2E_SSR: board.ssr, HYPER_E2E_CSR: board.edge },
     stdio: 'inherit',

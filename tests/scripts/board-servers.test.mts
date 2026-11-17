@@ -49,7 +49,7 @@ test('a board whose server fails to start stops the servers that started before 
   const cwd = process.cwd();
   process.chdir(ROOT);
   t.after(() => process.chdir(cwd));
-  await assert.rejects(startBoard({ app, database: path.join(app, 'board.db'), ports: { api: 0, edge: 0, ssr: portOf(holder) }, children }), /start ssr: the server exited with \d+ before it reported its address/);
+  await assert.rejects(startBoard({ app, database: path.join(app, 'board.db'), ports: { api: 0, edge: 0, ssr: portOf(holder) }, extensions: [], children }), /start ssr: the server exited with \d+ before it reported its address/);
   assert.equal(children.length, 3);
   assert.deepEqual(children.map(exited), [true, true, true]);
 });

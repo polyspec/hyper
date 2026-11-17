@@ -9,7 +9,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test, type TestContext } from 'node:test';
-import { requireBuilt } from './requires.mts';
+import { phpServerExtensions, requireBuilt } from './requires.mts';
 
 requireBuilt('packages', 'node_modules/@polyspec/hyper-client/dist/index.js');
 
@@ -51,7 +51,7 @@ function fixture(t: TestContext, steps: Step[]): string {
 // 20 s the whole group is killed, so its servers end with it (HR-87). `whenOutput(text, act)` acts once the output
 // holds `text`.
 async function check(app: string, { whenOutput }: { whenOutput?: WhenOutput } = {}): Promise<{ status: number | NodeJS.Signals | 'killed' | null; output: string }> {
-  const child = spawn(process.execPath, ['scripts/check-parity.mts', '--app', app, '--requests', join(app, 'requests.json')], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
+  const child = spawn(process.execPath, ['scripts/check-parity.mts', '--app', app, '--requests', join(app, 'requests.json'), ...phpServerExtensions().flatMap((file) => ['--extension', file])], { stdio: ['ignore', 'pipe', 'pipe'], detached: true });
   const pid = child.pid;
   if (pid === undefined) throw new Error('scripts/check-parity.mts did not start');
   let output = '';

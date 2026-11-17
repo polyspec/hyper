@@ -7,7 +7,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
-import { requireBuilt } from './requires.mts';
+import { phpServerExtensions, requireBuilt } from './requires.mts';
 
 requireBuilt('hyper-install', 'node_modules/@playwright/test/cli.js', 'examples/board/vendor/autoload.php');
 
@@ -19,7 +19,7 @@ test('the browser tests run on servers of the run while another server holds a p
     foreign.listen(8091, '127.0.0.1', () => resolve(true));
   });
   t.after(() => new Promise<void>((resolve) => (held ? foreign.close(() => resolve()) : resolve())));
-  const child = spawn(process.execPath, ['scripts/run-e2e.mts', '--', process.execPath, 'node_modules/@playwright/test/cli.js', 'test', '--config', 'tests/e2e/playwright.config.ts', '--list'], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(process.execPath, ['scripts/run-e2e.mts', ...phpServerExtensions().flatMap((file) => ['--extension', file]), '--', process.execPath, 'node_modules/@playwright/test/cli.js', 'test', '--config', 'tests/e2e/playwright.config.ts', '--list'], { stdio: ['ignore', 'pipe', 'pipe'] });
   let output = '';
   child.stdout.on('data', (data) => { output += data; });
   child.stderr.on('data', (data) => { output += data; });
@@ -44,5 +44,5 @@ test('Playwright without the runner fails and names the missing address', () => 
 test('the browser tests need the command that runs them', () => {
   const result = spawnSync(process.execPath, ['scripts/run-e2e.mts'], { encoding: 'utf8' });
   assert.equal(result.status, 2);
-  assert.match(result.stderr, /Usage: node scripts\/run-e2e\.mts -- <command>/);
+  assert.match(result.stderr, /Usage: node scripts\/run-e2e\.mts \[--extension <library>\]\.\.\. -- <command>/);
 });

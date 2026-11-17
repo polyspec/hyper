@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: c5a1175df3a075c1104a53cd2ec46ff4694c0f62de487c9315996cc6015bd7b8 -->
+<!-- source-sha256: a736cd342bed02d70cfb67f59bc98414b06ce30781e6a328fc0ccf8b61641d37 -->
 # 개발
 
 [English](development.md).
@@ -199,7 +199,7 @@ workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실�
 
 `make parity`와 `make server-parity`는 `scripts/board-servers.mts`로 자기 서버를 띄운다. 모든 서버는 system이 배정하는 port에서 listen하고, 검사는 서버가 출력에 알리는 주소로 요청을 보낸다(PHP의 `Development Server (http://127.0.0.1:<port>) started`, board Node 서버의 `board on http://127.0.0.1:<port>`, `scripts/serve-edge.mts`의 `edge http://127.0.0.1:<port>`). 따라서 다른 checkout이나 session의 실행이 도는 동안에도 요청은 같은 실행의 서버에 닿는다. 서버를 띄우는 일은 시간 제한이 없는 단계다. 시작, `[<name>]`을 붙인 서버의 모든 출력 줄, 경과 시간이 붙은 주소를 출력하고, 서버가 먼저 종료하면 실패한다. 한 실행의 database와 session 디렉터리는 임시 디렉터리에 있으며, `scripts/check-parity.mts`는 그 디렉터리를 `run directory: <path>`로 출력하고 지운다.
 
-`make e2e`도 같은 방식으로 `scripts/run-e2e.mts`를 실행한다. 이 script는 board 예제를 두 rendering 방식(API origin, edge, SSR origin)으로 실행 디렉터리의 빈 database 위에 띄우고, `tests/e2e/origins.ts`가 요구하는 `HYPER_E2E_SSR`과 `HYPER_E2E_CSR`에 주소를 담아 `--` 뒤의 명령을 실행한다. `make e2e`는 공유 test runner의 Playwright 실행을 넘기며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다(H27.26). `make e2e CASES=stylesheet`는 제목이 맞는 사례를 실행하고, 선택 없는 실행은 CI에서만 한다. Playwright는 서버를 직접 띄우지 않는다. `make bench-browser`도 같은 방식으로 서버와 데이터베이스를 띄운다.
+`make e2e`도 같은 방식으로 `scripts/run-e2e.mts`를 실행한다. 이 script는 board 예제를 두 rendering 방식(API origin, edge, SSR origin)으로 실행 디렉터리의 빈 database 위에 띄우고, `tests/e2e/origins.ts`가 요구하는 `HYPER_E2E_SSR`과 `HYPER_E2E_CSR`에 주소를 담아 `--` 뒤의 명령을 실행한다. `make e2e`는 공유 test runner의 Playwright 실행을 넘기며, 이 실행은 사례마다 자체 timeout과 결과를 보고한다(H27.26). `make e2e CASES=stylesheet`는 제목이 맞는 사례를 실행하고, 선택 없는 실행은 CI에서만 한다. Playwright는 서버를 직접 띄우지 않는다. `make bench-browser`도 같은 방식으로 서버와 데이터베이스를 띄운다. 이 target들, `make parity`, `make serve-demo`, `make hyper-test-scripts`의 test가 띄우는 모든 PHP 서버는 Makefile의 `PHP_SERVER_EXTENSIONS`를 그 순서대로, 곧 json, template, hyper extension을 load한다. template extension은 json extension을 요구하고, 서버는 hyper extension을 통해 core의 규칙을 부르기 때문이다. script는 이것을 `--extension` 인자로 받고, test는 `HYPER_PHP_EXTENSIONS`에서 읽는다.
 
 ## 빌드
 

@@ -292,8 +292,12 @@ hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests,
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
-# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.15, HY-132.2).
-PHPUNIT_EXTENSIONS = $(foreach library,$(PHP_EXTENSIONS) $(abspath $(HYPER_EXT)),--php-extension $(library))
+# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.15, HY-132.2). Every PHP server
+# of a check, a test and the demo loads PHP_SERVER_EXTENSIONS: scripts take them as --extension arguments, and the tests
+# of hyper-test-scripts read them from HYPER_PHP_EXTENSIONS.
+PHP_SERVER_EXTENSIONS = $(PHP_EXTENSIONS) $(abspath $(HYPER_EXT))
+PHP_SERVER_ARGUMENTS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--extension $(library))
+PHPUNIT_EXTENSIONS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--php-extension $(library))
 hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS)
@@ -334,9 +338,9 @@ toolchain-policy-test: ## Verify the declared toolchain and offline recipe polic
 
 # The tests are the files of tests/scripts itself: a file below tests/scripts/fixtures that is named as a test is the
 # input of a test and is not run.
-hyper-test-scripts: packages board node-server ## Run the tests of the check scripts, the build case runner included (HYR-7), or only the files of TESTS
+hyper-test-scripts: packages board node-server ext hyper-ext ## Run the tests of the check scripts, the build case runner included (HYR-7), or only the files of TESTS
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),$(wildcard tests/scripts/*.test.mts))
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt HYPER_PHP_EXTENSIONS='$(PHP_SERVER_EXTENSIONS)' $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),$(wildcard tests/scripts/*.test.mts))
 
 # The recipe check (HYR-8) and the candidate of its spec (HYR-10). The TypeScript reader needs the pinned TypeScript of
 # scripts/recipe/typescript, which `make install-packages` installs from its lock; `typecheck` and `lint-ts` read its declarations. The case results (HYR-7) are the
@@ -510,44 +514,44 @@ spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/prot
 spec-docs-check: ## Check contracts/protocol.json and the protocol documents against their generation (H2)
 	$(NODE) scripts/spec-docs.mts check
 
-parity: board ext ## Compare PHP documents, rendered with the template extension, with browser renders of document and region JSON
-	node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json $(foreach library,$(PHP_EXTENSIONS),--extension $(library))
+parity: board ext hyper-ext ## Compare PHP documents, rendered with the template extension, with browser renders of document and region JSON
+	node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json $(PHP_SERVER_ARGUMENTS)
 
-server-parity: node-server board ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HR-55)
-	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
+server-parity: node-server board ext hyper-ext ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HR-55)
+	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node $(PHP_SERVER_ARGUMENTS)
 
-server-parity-python: board ## Compare the Python server responses with the PHP responses, with the browser comparison of parity (HR-55)
-	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python
+server-parity-python: board ext hyper-ext ## Compare the Python server responses with the PHP responses, with the browser comparison of parity (HR-55)
+	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --python $(PHP_SERVER_ARGUMENTS)
 
 bundle-size: board ## Print the sizes of the SSR script, the CSR shell, the chunks and the largest template with their gzip limits; a size above its limit is a warning, never a failure
 	$(NODE) scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build/client --limits config/bundle-size.json$(if $(filter true,$(GITHUB_ACTIONS)), --annotations)
 
-e2e: board ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run; CASES=<pattern> runs the cases whose title matches
-	$(NODE) scripts/run-e2e.mts -- $(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
+e2e: board ext hyper-ext ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run; CASES=<pattern> runs the cases whose title matches
+	$(NODE) scripts/run-e2e.mts $(PHP_SERVER_ARGUMENTS) --$(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
 
 virtiofs-check: ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HR-68); a target of the full suite on Darwin
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/virtiofs/
 
-serve-demo: board ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
-	$(NODE) scripts/serve-demo.mts --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK)
+serve-demo: board ext hyper-ext ## Serve SSR on :8080, CSR on :8081 and the comparison page on :8081/compare; fails with the holder while another demo runs
+	$(NODE) scripts/serve-demo.mts --db $(BOARD)/var/board.db --ssr 8080 --edge 8081 --api 8082 --lock $(SERVE_DEMO_LOCK) $(PHP_SERVER_ARGUMENTS)
 
 serve-demo-unlock: ## Remove the lock of a demo whose process has ended
 	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) clear $(SERVE_DEMO_LOCK)
 
-bench-server: board ext ## Measure PHP request handling and rendering cost per row count, with the template extension
-	php $(foreach library,$(PHP_EXTENSIONS),-d extension=$(library)) benchmarks/server.php --app $(BOARD) --iterations 300
+bench-server: board ext hyper-ext ## Measure PHP request handling and rendering cost per row count, with the template extension
+	php $(foreach library,$(PHP_SERVER_EXTENSIONS),-d extension=$(library)) benchmarks/server.php --app $(BOARD) --iterations 300
 
-bench-browser: board ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
-	$(NODE) benchmarks/browser.mts --runs 15
+bench-browser: board ext hyper-ext ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
+	$(NODE) benchmarks/browser.mts --runs 15 $(PHP_SERVER_ARGUMENTS)
 
 bench-sessions: packages ## Measure the requests per second of the three servers on one Redis server
 	$(NODE) benchmarks/sessions.mts --requests 20000
 
-bench-uploads: packages ## Measure the time, the processor time and the memory of an upload in the three servers and in the reader of PHP itself
-	$(NODE) benchmarks/uploads.mts --size 1073741824 --runs 3
+bench-uploads: packages ext hyper-ext ## Measure the time, the processor time and the memory of an upload in the three servers and in the reader of PHP itself
+	$(NODE) benchmarks/uploads.mts --size 1073741824 --runs 3 $(PHP_SERVER_ARGUMENTS)
 
-bench-server-smoke: board ext ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
-	php $(foreach library,$(PHP_EXTENSIONS),-d extension=$(library)) benchmarks/server.php --app $(BOARD) --iterations 1 > /dev/null
+bench-server-smoke: board ext hyper-ext ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
+	php $(foreach library,$(PHP_SERVER_EXTENSIONS),-d extension=$(library)) benchmarks/server.php --app $(BOARD) --iterations 1 > /dev/null
 
 bench: bench-server bench-browser bench-uploads ## Run the measurements; results are reports, not pass or fail checks
 
@@ -582,7 +586,7 @@ CI_TOOLS_node := node
 CI_SETUP_node := install-tools
 CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check
 CI_TOOLS_board := node php composer pie python uv rust maturin
-CI_SETUP_board := install-tools hyper-install-php hyper-install-python hyper-install-browser
+CI_SETUP_board := install-tools hyper-install-php hyper-install-python hyper-install-browser hyper-ext
 CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
 CI_TOOLS_python := node python uv rust maturin
 CI_SETUP_python := install-tools hyper-install-python

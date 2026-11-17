@@ -152,13 +152,14 @@ export function startEdge({ name, app, port, api, children }: StartOptions & { a
  * edge that serves the static shell and forwards /api to it, and the SSR origin (PHP at the root), whose pages the
  * comparison page of the edge frames. `ports` gives the port of each server, 0 for a port that the system assigns;
  * every server joins `children` when it is spawned. When a server fails to start, the servers that started are
- * stopped and have exited before the returned promise rejects. Resolves { ssr, edge, api }.
+ * stopped and have exited before the returned promise rejects. `extensions` are the PHP extensions of both PHP servers,
+ * in their order (PHP_SERVER_EXTENSIONS of the Makefile). Resolves { ssr, edge, api }.
  */
-export async function startBoard({ app, database, ports, children }: { app: string; database: string; ports: { ssr: number; edge: number; api: number }; children: ChildProcess[] }): Promise<{ ssr: string; edge: string; api: string }> {
+export async function startBoard({ app, database, ports, extensions, children }: { app: string; database: string; ports: { ssr: number; edge: number; api: number }; extensions: string[]; children: ChildProcess[] }): Promise<{ ssr: string; edge: string; api: string }> {
   try {
-    const api = await startPhp({ name: 'api', app, port: ports.api, env: { BOARD_DB: database, BOARD_BASE_PATH: '/api' }, children });
+    const api = await startPhp({ name: 'api', app, port: ports.api, extensions, env: { BOARD_DB: database, BOARD_BASE_PATH: '/api' }, children });
     const edge = await startEdge({ name: 'edge', app, port: ports.edge, api: api.url, children });
-    const ssr = await startPhp({ name: 'ssr', app, port: ports.ssr, env: { BOARD_DB: database, BOARD_BASE_PATH: '', BOARD_FRAME_ANCESTORS: `'self' ${edge.url}` }, children });
+    const ssr = await startPhp({ name: 'ssr', app, port: ports.ssr, extensions, env: { BOARD_DB: database, BOARD_BASE_PATH: '', BOARD_FRAME_ANCESTORS: `'self' ${edge.url}` }, children });
     return { ssr: ssr.url, edge: edge.url, api: api.url };
   } catch (error) {
     await stopServers(children);

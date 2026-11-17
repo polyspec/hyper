@@ -4,7 +4,7 @@ import type { ChildProcess } from 'node:child_process';
 import path from 'node:path';
 
 import { startNode, startPhp, startPython } from '../../scripts/board-servers.mts';
-import { requireBuilt } from './requires.mts';
+import { phpServerExtensions, requireBuilt } from './requires.mts';
 import { ROOT } from './session-workers.mts';
 
 const BOARD = path.join(ROOT, 'examples/board');
@@ -29,6 +29,7 @@ export async function startBoards(children: ChildProcess[], env: Record<string, 
     app: BOARD,
     port: 0,
     env,
+    extensions: phpServerExtensions(),
     ini: [`extension=${path.join(ROOT, 'var/redis/redis.so')}`, 'session.save_handler=redis', 'redis.session.locking_enabled=1', 'redis.session.lock_expire=30', ...ini],
     children,
   });

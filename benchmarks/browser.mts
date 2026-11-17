@@ -4,7 +4,9 @@
 // with scripts/board-servers.mts on ports that the system assigns and its own database in a temporary directory of
 // the run, which it removes.
 //
-// Usage: node benchmarks/browser.mts --runs 15
+// Each --extension loads a PHP extension into both PHP servers in the given order (HY-48.15, HY-132.2).
+//
+// Usage: node benchmarks/browser.mts --runs 15 [--extension <library>]...
 
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -37,7 +39,7 @@ interface HeapSnapshot {
   strings: string[];
 }
 
-const { values } = parseArgs({ options: { runs: { type: 'string' } } });
+const { values } = parseArgs({ options: { runs: { type: 'string' }, extension: { type: 'string', multiple: true } } });
 if (!values.runs) throw new Error('--runs is required');
 const runs = Number(values.runs);
 const TRACE_CATEGORIES = ['toplevel', 'devtools.timeline', 'disabled-by-default-devtools.timeline', 'v8', 'blink.user_timing'];
@@ -144,7 +146,7 @@ const observer = (): void => {
 
 let browser: Browser | undefined;
 try {
-  const board = await startBoard({ app: 'examples/board', database: join(run.directory, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 }, children: run.children });
+  const board = await startBoard({ app: 'examples/board', database: join(run.directory, 'board.db'), ports: { ssr: 0, edge: 0, api: 0 }, extensions: values.extension ?? [], children: run.children });
   const ssr = board.ssr;
   const csr = board.edge;
   await seed(ssr, 30);

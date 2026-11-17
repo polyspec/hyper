@@ -10,7 +10,9 @@
 // it. The servers start with scripts/board-servers.mts, which prints their output; SIGINT and SIGTERM stop them.
 //
 // Usage: node scripts/serve-demo.mts --db examples/board/var/board.db --ssr 8080 --edge 8081 --api 8082
-//          --lock /tmp/hyper-serve-demo.lock
+//          --lock /tmp/hyper-serve-demo.lock --extension build/json-ext/polyspec_json.so
+//          --extension build/ext/polyspec_template.so --extension build/hyper-ext/polyspec_hyper.so
+// Each --extension loads a PHP extension into both PHP servers in the given order (HY-48.15, HY-132.2).
 import type { ChildProcess } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,8 +20,8 @@ import { parseArgs } from 'node:util';
 import { startBoard, stopServers } from './board-servers.mts';
 import { acquireHolderLock } from '@polyspec/kit/holder-lock';
 
-const { values } = parseArgs({ options: { db: { type: 'string' }, ssr: { type: 'string' }, edge: { type: 'string' }, api: { type: 'string' }, lock: { type: 'string' } } });
-const required = (name: keyof typeof values): string => {
+const { values } = parseArgs({ options: { db: { type: 'string' }, ssr: { type: 'string' }, edge: { type: 'string' }, api: { type: 'string' }, lock: { type: 'string' }, extension: { type: 'string', multiple: true } } });
+const required = (name: Exclude<keyof typeof values, 'extension'>): string => {
   const value = values[name];
   if (!value) throw new Error(`--${name} is required`);
   return value;
@@ -48,7 +50,7 @@ try {
   // signal handler that would end the process before the servers stop.
   acquireHolderLock(resolve(lock), { checkout: resolve(dirname(fileURLToPath(import.meta.url)), '..'), releaseOnSignals: false });
   console.log(`holding ${lock}`);
-  const board = await startBoard({ app: 'examples/board', database: resolve(db), ports: { ssr: Number(ssr), edge: Number(edge), api: Number(api) }, children });
+  const board = await startBoard({ app: 'examples/board', database: resolve(db), ports: { ssr: Number(ssr), edge: Number(edge), api: Number(api) }, extensions: values.extension ?? [], children });
   console.log(`SSR ${board.ssr}/board`);
   console.log(`CSR ${board.edge}/board`);
   console.log(`compare ${board.edge}/compare?ssr=${board.ssr}`);

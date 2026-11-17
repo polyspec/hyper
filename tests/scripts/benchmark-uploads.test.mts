@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-import { requireBuilt } from './requires.mts';
+import { phpServerExtensions, requireBuilt } from './requires.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -14,7 +14,7 @@ test('the benchmark of the uploads measures each implementation for each body', 
   requireBuilt('packages', 'packages/ts/dist/index.js');
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
-  const { stdout } = await promisify(execFile)(process.execPath, ['benchmarks/uploads.mts', '--size', '1048576', '--runs', '2', '--json'], { cwd: ROOT, maxBuffer: 1 << 24 });
+  const { stdout } = await promisify(execFile)(process.execPath, ['benchmarks/uploads.mts', '--size', '1048576', '--runs', '2', '--json', ...phpServerExtensions().flatMap((file) => ['--extension', file])], { cwd: ROOT, maxBuffer: 1 << 24 });
   const results: unknown = JSON.parse(stdout.trim().split('\n').at(-1) ?? '');
   assert.ok(Array.isArray(results));
   const implementations = ['PHP itself (PHP-FPM)', 'hyper PHP (PHP-FPM)', 'hyper Node (App.server)', 'hyper Python (http.server)'];

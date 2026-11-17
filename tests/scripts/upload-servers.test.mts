@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual, promisify } from 'node:util';
 
 import { startPhp, startServer, stopServers } from '../../scripts/board-servers.mts';
-import { requireBuilt } from './requires.mts';
+import { phpServerExtensions, requireBuilt } from './requires.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FIXTURE = path.join(ROOT, 'tests/scripts/fixtures/upload-server');
@@ -88,7 +88,7 @@ test('the three servers read an upload over HTTP alike and remove its directory 
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   const { directory, children, environment } = await started(t);
   const urls = {
-    php: (await startPhp({ name: 'php', app: FIXTURE, port: 0, env: environment('php'), ini: ['enable_post_data_reading=0', 'post_max_size=64M', `session.save_path=${path.join(directory, 'php/sessions')}`], children })).url,
+    php: (await startPhp({ name: 'php', app: FIXTURE, port: 0, extensions: phpServerExtensions(), env: environment('php'), ini: ['enable_post_data_reading=0', 'post_max_size=64M', `session.save_path=${path.join(directory, 'php/sessions')}`], children })).url,
     node: (await startServer({ name: 'node', command: process.execPath, args: ['--no-warnings', path.join(FIXTURE, 'server.mjs')], env: { ...process.env, ...environment('node') }, ready: READY, children })).url,
     python: (await startServer({ name: 'python', command: PYTHON, args: [path.join(FIXTURE, 'server.py')], env: { ...process.env, ...environment('python') }, ready: READY, children })).url,
   };
@@ -130,10 +130,10 @@ test('App::run of PHP fails under a server when PHP reads the request body itsel
   const env = { ...environment('php'), UPLOAD_FORMS: 'urlencoded' };
   // The application accepts no multipart body, and the two servers differ only in the setting, so the 500 of the first
   // is the refusal of `App::run` for a SAPI that serves requests.
-  const reading = await startPhp({ name: 'php-reading', app: FIXTURE, port: 0, env, ini: ['post_max_size=64M', 'enable_post_data_reading=1', 'log_errors=0'], children });
+  const reading = await startPhp({ name: 'php-reading', app: FIXTURE, port: 0, extensions: phpServerExtensions(), env, ini: ['post_max_size=64M', 'enable_post_data_reading=1', 'log_errors=0'], children });
   const refused = await send(reading.url, 'GET', {}, Buffer.alloc(0));
   assert.equal(refused.status, 500, 'the application answered although PHP reads the request body itself');
-  const left = await startPhp({ name: 'php-left', app: FIXTURE, port: 0, env, ini: ['post_max_size=64M', 'log_errors=0'], children });
+  const left = await startPhp({ name: 'php-left', app: FIXTURE, port: 0, extensions: phpServerExtensions(), env, ini: ['post_max_size=64M', 'log_errors=0'], children });
   assert.equal((await send(left.url, 'GET', {}, Buffer.alloc(0))).status, 200);
 });
 
@@ -144,7 +144,7 @@ test('the three servers answer a page and a representation over HTTP alike, a HE
   const { directory, children, environment } = await started(t);
   const env = (server: string): Record<string, string> => ({ ...environment(server), UPLOAD_ANSWER: 'app' });
   const urls = {
-    php: (await startPhp({ name: 'php', app: FIXTURE, port: 0, env: env('php'), ini: ['enable_post_data_reading=0', 'post_max_size=64M', `session.save_path=${path.join(directory, 'php/sessions')}`], children })).url,
+    php: (await startPhp({ name: 'php', app: FIXTURE, port: 0, extensions: phpServerExtensions(), env: env('php'), ini: ['enable_post_data_reading=0', 'post_max_size=64M', `session.save_path=${path.join(directory, 'php/sessions')}`], children })).url,
     node: (await startServer({ name: 'node', command: process.execPath, args: ['--no-warnings', path.join(FIXTURE, 'server.mjs')], env: { ...process.env, ...env('node') }, ready: READY, children })).url,
     python: (await startServer({ name: 'python', command: PYTHON, args: [path.join(FIXTURE, 'server.py')], env: { ...process.env, ...env('python') }, ready: READY, children })).url,
   };
@@ -508,7 +508,7 @@ async function hostsOf(t: TestContext, start: Start = {}): Promise<{ hosts: Host
     }
     // The settings of PHP that the answers depend on are given here, so that no php.ini of the machine decides them.
     const server = name === 'php'
-      ? await startPhp({ name, app: FIXTURE, port: 0, env, ini: ['enable_post_data_reading=0', 'post_max_size=64M', `session.save_path=${path.join(own, 'sessions')}`, 'output_buffering=0', ...(start.ini ?? [])], children })
+      ? await startPhp({ name, app: FIXTURE, port: 0, extensions: phpServerExtensions(), env, ini: ['enable_post_data_reading=0', 'post_max_size=64M', `session.save_path=${path.join(own, 'sessions')}`, 'output_buffering=0', ...(start.ini ?? [])], children })
       : await startServer({ name, command: name === 'node' ? process.execPath : PYTHON, args: name === 'node' ? ['--no-warnings', path.join(FIXTURE, 'server.mjs')] : [path.join(FIXTURE, 'server.py')], env: { ...process.env, ...env }, ready: READY, children });
     hosts.push({ name, url: server.url, lines: linesOf(t, server.child), directory: own, read: 0 });
   }

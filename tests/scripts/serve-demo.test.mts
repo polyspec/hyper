@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { parseJsonObject } from '../../scripts/json.mts';
+import { phpServerExtensions } from './requires.mts';
 
 const repository = resolve('.');
 const HOLDER = /held by process (\d+) \(started ([^)]+)\) of the checkout (\S+), held since/;
@@ -34,7 +35,7 @@ function workspace(t: TestContext): { directory: string; demos: Demo[] } {
   return { directory, demos };
 }
 
-const demoArgs = (directory: string): string[] => ['scripts/serve-demo.mts', '--db', join(directory, 'board.db'), '--ssr', '0', '--edge', '0', '--api', '0', '--lock', join(directory, 'demo.lock')];
+const demoArgs = (directory: string): string[] => ['scripts/serve-demo.mts', '--db', join(directory, 'board.db'), '--ssr', '0', '--edge', '0', '--api', '0', '--lock', join(directory, 'demo.lock'), ...phpServerExtensions().flatMap((file) => ['--extension', file])];
 
 // Starts a demo in a workspace and resolves it once it prints its comparison address.
 function startDemo({ directory, demos }: { directory: string; demos: Demo[] }): Promise<Demo> {

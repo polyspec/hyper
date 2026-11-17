@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 36e9f13bcf864023fefbc0d7704bf402177e9b4ff3300b31db43ee58db3299f3 -->
+<!-- source-sha256: 467834288eba045aefac49f506cfe891c8839bccafacd74a5a83670b380f1a84 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make serve-demo`, `make e2e`, server parity, benchmark, script test의 PHP 서버는 json, template, hyper extension 없이 PHP를 띄워서 `App::open`이 "the PHP extension polyspec_hyper is not loaded"로 실패했다. 이제 그 모두가 Makefile의 `PHP_SERVER_EXTENSIONS`를 그 순서대로 load한다(H35.31).
 - `CoreRulesTest`는 CoreRules의 exact unit을 19개로 기대했으나 지금은 21개이고, `RequestTest`는 SAPI가 이은 두 `Content-Type` 줄의 media type을 `application/x-www-form-urlencoded, text/plain`으로 기대했다. 이제 테스트는 unit 21개를 세고, `mediaType()`이 `malformed_content_type`과 상태 400으로 실패하기를 기대한다(HY-42.14, H35.31).
 - case runner는 `raises` outcome이 기대하는 kind를 인용된 statement의 영어 text에서 pattern ``kind `name` ``으로 읽었으므로, "`a` 또는 `b`"로 적힌 두 번째 kind를 놓치고 statement가 언급만 하는 kind를 가져왔다. 이제 runner는 kind를 `contracts/protocol.json`의 HY-132 kind 표에서 읽으며, 그 표의 열 규칙은 각 kind를 정하는 statement를 적는다. HY-132.9는 hyper의 규칙이 정하는 binding과 라이브러리의 kind 표를 더한다(HY-42.7의 `invalid_text` 포함). HY-132.3의 표에는 `malformed_content_type`(HY-59.12, HY-59.13)이 더해지고, 그 규칙 칸은 statement id의 list가 된다(H35.9-7).
 - 세 서버의 case runner는 `contracts/request.json`의 case가 `names`를 적을 때만 그 파일을 비교한다. 실패하는 limit의 case는 파일을 적지 않는데(HY-114.12), Node runner는 그 case를 "the case field names is not a list of strings"로 거부했다(H35.9-5).

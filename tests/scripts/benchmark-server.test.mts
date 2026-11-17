@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
 
 import { dryRun } from './make-dry-run.mts';
-import { requireBuilt } from './requires.mts';
+import { phpServerExtensions, requireBuilt } from './requires.mts';
 
 /** A copy of the board with what the benchmark reads, removed after the test. */
 function boardCopy(t: TestContext): string {
@@ -25,10 +25,10 @@ function boardCopy(t: TestContext): string {
 
 test('the server benchmark reports its program without PHP warnings and removes its database', (t) => {
   const app = boardCopy(t);
-  const result = spawnSync('php', ['-d', 'error_reporting=32767', '-d', 'display_errors=stderr', 'benchmarks/server.php', '--app', app, '--iterations', '1'], { encoding: 'utf8' });
+  const result = spawnSync('php', [...phpServerExtensions().flatMap((file) => ['-d', `extension=${file}`]), '-d', 'error_reporting=32767', '-d', 'display_errors=stderr', 'benchmarks/server.php', '--app', app, '--iterations', '1'], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '', result.stderr);
-  assert.match(result.stdout, /generated PHP template program, template extension (?:loaded|not loaded), 1 iterations per request/);
+  assert.match(result.stdout, /, template extension \d+\.\d+\.\d+, 1 iterations per request, /);
   assert.match(result.stdout, /GET \/board, document HTML \| 200/);
   assert.match(result.stdout, /POST \/board\/create, 422 region JSON \| 422/);
   assert.equal(existsSync(join(app, 'var/bench-server.db')), false);
@@ -37,7 +37,7 @@ test('the server benchmark reports its program without PHP warnings and removes 
 test('the server benchmark fails, and removes its database, when a request answers another status', (t) => {
   const app = boardCopy(t);
   rmSync(join(app, 'build/client/manifest.json'));
-  const result = spawnSync('php', ['benchmarks/server.php', '--app', app, '--iterations', '1'], { encoding: 'utf8' });
+  const result = spawnSync('php', [...phpServerExtensions().flatMap((file) => ['-d', `extension=${file}`]), 'benchmarks/server.php', '--app', app, '--iterations', '1'], { encoding: 'utf8' });
   assert.equal(result.status, 1, result.stdout);
   assert.equal(existsSync(join(app, 'var/bench-server.db')), false);
 });

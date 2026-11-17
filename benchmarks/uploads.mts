@@ -4,7 +4,9 @@
 // PHP application under PHP-FPM, which a FastCGI client of this file calls as a web server does, the server of
 // `App.server` of Node and the `http.server` server of Python. The reader of PHP itself is benchmarks/uploads-native.php
 // under PHP-FPM with `enable_post_data_reading` on. The results are a report and judge nothing.
-// Usage: node benchmarks/uploads.mts --size <bytes of the large file> --runs <n> [--json].
+// Each --extension loads a PHP extension into the PHP-FPM of the hyper application in the given order (HY-48.15,
+// HY-132.2).
+// Usage: node benchmarks/uploads.mts --size <bytes of the large file> --runs <n> [--json] [--extension <library>]...
 import { type ChildProcess, execFile, spawn } from 'node:child_process';
 import { closeSync, createReadStream, existsSync, mkdirSync, mkdtempSync, openSync, rmSync, statSync, writeFileSync, writeSync } from 'node:fs';
 import { request as httpRequest } from 'node:http';
@@ -22,7 +24,8 @@ const FIXTURE = path.join(ROOT, 'tests/scripts/fixtures/upload-server');
 const BOUNDARY = 'BenchBoundary';
 const TYPE = `multipart/form-data; boundary=${BOUNDARY}`;
 
-const { values } = parseArgs({ options: { size: { type: 'string' }, runs: { type: 'string' }, json: { type: 'boolean', default: false } } });
+const { values } = parseArgs({ options: { size: { type: 'string' }, runs: { type: 'string' }, json: { type: 'boolean', default: false }, extension: { type: 'string', multiple: true } } });
+const extensions = (values.extension ?? []).map((file) => path.resolve(file));
 const size = Number(values.size);
 const runs = Number(values.runs);
 if (!Number.isInteger(size) || size < 1) throw new Error('--size must name a positive number of bytes');
@@ -215,7 +218,7 @@ async function startFpm(name: string, script: string, reading: boolean): Promise
     `php_admin_flag[enable_post_data_reading] = ${reading ? 'on' : 'off'}`,
     '',
   ].join('\n'));
-  const child = spawn('php-fpm', ['-y', configuration, '-c', '/dev/null'], { env: { ...process.env, ...env }, stdio: 'ignore' });
+  const child = spawn('php-fpm', ['-y', configuration, '-c', '/dev/null', ...extensions.flatMap((file) => ['-d', `extension=${file}`])], { env: { ...process.env, ...env }, stdio: 'ignore' });
   children.push(child);
   // PHP-FPM prints no line when it listens; its socket is the event that tells it.
   await new Promise<void>((resolve, reject) => {
