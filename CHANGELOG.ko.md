@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- PHP 서버와 Python 서버는 모든 loader 뒤에야 데이터 모델을 검사했으므로, application 객체를 돌려준 shared handler 뒤에도 loader가 실행된 뒤 요청이 실패했고, 데이터 모델 밖의 값에 자신의 message를 썼으므로, `contracts/context.json`의 세 숫자 case와 깊이 case, `contracts/app.json`의 `an_application_object_in_shared_data_fails_before_any_loader_runs`가 실패했다(CI run 44130032438). 두 서버는 이제 공유 데이터를 key `shared` 아래에서 어떤 loader보다 먼저 검사하고, 각 영역의 데이터를 그 loader가 돌려줄 때 `regions` 안의 그 이름 아래에서 검사하며(HY-44.10, HY-44.11), message를 kind, 콜론, template 데이터 모델의 text로 쓴다. 예: `data_depth: lists and maps nest deeper than 64 levels`(HY-44.12) (H35.32-1, H35.32-4).
+- PHP와 Python의 case runner에는 handler step `store`가 없었으므로 `contracts/app.json`의 `a_server_value_that_a_loader_of_the_request_stores_is_sent_in_kept`가 case 오류로 실패했다. 이제 그 step은 자신의 각 key를 요청의 session store에 쓴다(HY-38.20, H35.32-1, H35.32-10).
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 
 - `tests/scripts/upload-servers.test.mts`는 scenario의 server가 시작하지 않아도 끝난다(HR-87, H34.3). 입력: Node application을 build할 수 없을 때처럼 `started()`가 throw하는 scenario. 이전 동작: `hostsOf`가 gate listener의 close를 `started()` 뒤에야 등록했으므로, 모든 case가 실패한 뒤에도 listener가 열린 채 남아 파일이 끝나지 않았다. 기대 동작: listener가 listen한 직후 close를 등록하고, 파일은 실패와 함께 끝난다.

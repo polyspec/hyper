@@ -12,34 +12,33 @@ from ..app._core_rules import core_rules
 
 _MAX_SAFE = 9007199254740991
 _MAX_DEPTH = 64
-# The kind of each failure (HY-44.8), the kind of the template data model, and its message.
-_NUMBER = (
-    "data_number_range",
-    "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)",
-)
-_FINITE = (
-    "data_number_not_finite",
-    "a number that is not finite is not a value of the data model (HY-44)",
-)
-_UTF8 = (
-    "data_invalid_utf8",
-    "a string that is not UTF-8 text is not a value of the data model (HY-44)",
-)
-_DEPTH = (
-    "data_depth",
-    "lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)",
-)
-_TYPE = (
-    "data_unsupported_type",
-    "a value or a map key of another type is not a value of the data model (HY-44)",
-)
+# The kind of each failure (HY-44.8), the kind of the template data model, and the text of its message after the
+# kind (HY-44.12); the text of `data_number_range` names the number.
+_NUMBER = ("data_number_range", "number {} is outside the safe range")
+_FINITE = ("data_number_not_finite", "number {} is not finite")
+_UTF8 = ("data_invalid_utf8", "string is not valid UTF-8")
+_DEPTH = ("data_depth", "lists and maps nest deeper than 64 levels")
+_TYPE = ("data_unsupported_type", "value of type {} is not supported")
 _KINDS = frozenset(kind for kind, _ in (_NUMBER, _FINITE, _UTF8, _DEPTH, _TYPE))
 
 
-def _failure(failure: tuple[str, str]) -> Exception:
+def _number(value: float) -> str:
+    """The text of a number in a message: an integer as its digits, a float as its shortest decimal form."""
+    if isinstance(value, int):
+        return str(value)
+    if not math.isfinite(value):
+        return "NaN" if math.isnan(value) else ("inf" if value > 0 else "-inf")
+    if value.is_integer() and abs(value) < 1e21:
+        return str(int(value))
+    return repr(value)
+
+
+def _failure(failure: tuple[str, str], detail: str = "") -> Exception:
     """The error of a failure of the data model: of the category type for `data_unsupported_type` and of the category
-    value for every other kind, as the template data model gives them (HY-132.3)."""
-    kind, message = failure
+    value for every other kind, as the template data model gives them (HY-132.3). Its message is the kind, a colon and
+    the text of the failure, the form of the error of the template data model (HY-44.12)."""
+    kind, text = failure
+    message = f"{kind}: {text.format(detail)}"
     if kind == "data_unsupported_type":
         return core_rules().type_error(message, kind)
     return core_rules().value_error(message, kind)
@@ -75,13 +74,13 @@ class DataModel:
                 continue
             if isinstance(item, int):
                 if abs(item) > _MAX_SAFE:
-                    raise _failure(_NUMBER)
+                    raise _failure(_NUMBER, _number(item))
                 continue
             if isinstance(item, float):
                 if not math.isfinite(item):
-                    raise _failure(_FINITE)
+                    raise _failure(_FINITE, _number(item))
                 if abs(item) > _MAX_SAFE:
-                    raise _failure(_NUMBER)
+                    raise _failure(_NUMBER, _number(item))
                 continue
             if isinstance(item, str):
                 if any(0xD800 <= ord(char) <= 0xDFFF for char in item):
@@ -95,8 +94,8 @@ class DataModel:
             if isinstance(item, dict):
                 for key, child in reversed(list(item.items())):
                     if not isinstance(key, str):
-                        raise _failure(_TYPE)
+                        raise _failure(_TYPE, type(key).__name__)
                     stack.append((key, level + 1))
                     stack.append((child, level + 1))
                 continue
-            raise _failure(_TYPE)
+            raise _failure(_TYPE, type(item).__name__)

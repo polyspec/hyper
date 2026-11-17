@@ -88,6 +88,8 @@ class Page:
             if "context" in handed:
                 raise ValueError("the shared handler returned the key context (HY-124)")
             shared.update(handed)
+        # HY-44.10, HY-44.11: the shared data is checked under the key `shared` before any loader runs.
+        DataModel.check({"shared": shared})
 
         changed = RegionPlanner.changed_topics(request, flash, base_path)
         data: dict[str, dict] = {}
@@ -105,6 +107,7 @@ class Page:
                     else {}
                 )
                 data[selected.name] = {**loaded, **invalid}
+                Page._check_region(selected.name, data[selected.name])
                 templates[selected.name] = route["template"]
                 for route_region in route["regions"]:
                     loader = handler.get("regions", {}).get(route_region.name)
@@ -118,6 +121,7 @@ class Page:
                     data[route_region.name] = Page._loader_map(
                         region_data, f"the loader of region {route_region.name}"
                     )
+                    Page._check_region(route_region.name, data[route_region.name])
                     templates[route_region.name] = route_region.template
             else:
                 loader = self._region_loaders.get(selected.name)
@@ -129,11 +133,10 @@ class Page:
                     if loader is not None
                     else {}
                 )
+                Page._check_region(selected.name, data[selected.name])
                 templates[selected.name] = selected.template
 
-        # HY-44: every value that the handlers returned belongs to the data model, also a value that no template
-        # reads.
-        DataModel.check({"shared": shared, "regions": data})
+        # HY-44.3: each value that the handlers returned was checked above, also a value that no template reads.
         # HY-73: the page keeps only the paths that the templates of the route read.
         shared = self._reads.shared(route["name"], shared)
         for name, region_data in data.items():
@@ -206,6 +209,12 @@ class Page:
                 reply._embeds_data(),
             ),
         )
+
+    @staticmethod
+    def _check_region(name: str, data: dict) -> None:
+        """Checks the data of a region when its loader returns it, before the next loader runs (HY-44.10), under its
+        name in the map `regions` of one map, so the limit of 64 levels counts those two maps (HY-44.11)."""
+        DataModel.check({"regions": {name: data}})
 
     @staticmethod
     def _loader_map(value: object, source: str) -> dict:

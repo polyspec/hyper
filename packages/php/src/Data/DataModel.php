@@ -18,13 +18,16 @@ final class DataModel
     private const MAX_SAFE = 9007199254740991;
     private const MAX_DEPTH = 64;
 
-    /** The kind of each failure (HY-44.8), the kind of the template data model, and its message. */
+    /**
+     * The kind of each failure (HY-44.8), the kind of the template data model, and the text of its message after the
+     * kind (HY-44.12); the text of `data_number_range` names the number.
+     */
     private const FAILURES = [
-        'data_number_range' => 'a number outside ±(2^53 − 1) is not a value of the data model (HY-44)',
-        'data_number_not_finite' => 'a number that is not finite is not a value of the data model (HY-44)',
-        'data_invalid_utf8' => 'a string that is not UTF-8 text is not a value of the data model (HY-44)',
-        'data_depth' => 'lists and maps that nest deeper than 64 levels are not a value of the data model (HY-44)',
-        'data_unsupported_type' => 'a value or a map key of another type is not a value of the data model (HY-44)',
+        'data_number_range' => 'number %s is outside the safe range',
+        'data_number_not_finite' => 'number %s is not finite',
+        'data_invalid_utf8' => 'string is not valid UTF-8',
+        'data_depth' => 'lists and maps nest deeper than 64 levels',
+        'data_unsupported_type' => 'value of type %s is not supported',
     ];
 
     /** Fails with the error of its kind when a value is not a value of the data model, and returns the value. */
@@ -74,15 +77,32 @@ final class DataModel
 
     /**
      * The error of a failure of the data model: of the category type for `data_unsupported_type` and of the category
-     * value for every other kind, as the template data model gives them (HY-132.3).
+     * value for every other kind, as the template data model gives them (HY-132.3). Its message is the kind, a colon
+     * and the text of the failure, the form of the error of the template data model (HY-44.12).
      */
-    private static function failure(string $kind): HyperValueError|HyperTypeError
+    private static function failure(string $kind, string $detail = ''): HyperValueError|HyperTypeError
     {
-        $message = self::FAILURES[$kind];
+        $message = $kind . ': ' . sprintf(self::FAILURES[$kind], $detail);
 
         return $kind === 'data_unsupported_type'
             ? new HyperTypeError($message, $kind)
             : new HyperValueError($message, $kind);
+    }
+
+    /** The text of a number in a message: an integer as its digits, a float as its shortest decimal form. */
+    private static function number(int|float $value): string
+    {
+        if (is_int($value)) {
+            return (string) $value;
+        }
+        if (!is_finite($value)) {
+            return is_nan($value) ? 'NaN' : ($value > 0 ? 'inf' : '-inf');
+        }
+        if (floor($value) === $value && abs($value) < 1e21) {
+            return sprintf('%.0f', $value);
+        }
+
+        return (string) json_encode($value);
     }
 
     /**
@@ -100,16 +120,16 @@ final class DataModel
             }
             if (is_int($item)) {
                 if ($item > self::MAX_SAFE || $item < -self::MAX_SAFE) {
-                    throw self::failure('data_number_range');
+                    throw self::failure('data_number_range', self::number($item));
                 }
                 continue;
             }
             if (is_float($item)) {
                 if (!is_finite($item)) {
-                    throw self::failure('data_number_not_finite');
+                    throw self::failure('data_number_not_finite', self::number($item));
                 }
                 if (abs($item) > self::MAX_SAFE) {
-                    throw self::failure('data_number_range');
+                    throw self::failure('data_number_range', self::number($item));
                 }
                 continue;
             }
@@ -125,7 +145,7 @@ final class DataModel
                 continue;
             }
             if (!is_array($item) && !$item instanceof \stdClass) {
-                throw self::failure('data_unsupported_type');
+                throw self::failure('data_unsupported_type', get_debug_type($item));
             }
             if ($level + 1 > self::MAX_DEPTH) {
                 throw self::failure('data_depth');
