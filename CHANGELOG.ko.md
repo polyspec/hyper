@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 94071dfadfb143302a1e330dd82cc1b5b637b432f9e1fd3b9dc169ff7a97f204 -->
+<!-- source-sha256: dc792f712d594c46af56ab01a285b60183ab070ab0d4b928f537f45f4b5c9c21 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- HY-100.6, HY-100.18, HY-100.27을 폐기하고 HY-100.37, HY-100.38, HY-100.39가 대체한다. HY-100.6과 HY-100.18은 WSGI host와 ASGI host의 disconnect hook의 요청으로 callable이 `around`에 넘긴 요청을 이름했다. host는 HY-97.5가 적는 대로 마지막 `answer` 호출의 요청을 주며, 새 statement가 그렇게 적는다. HY-100.27은 `raw_path`가 없는 scope의 평문 500의 send가 실패하면 `written`을 부른다고 적었다. 그때는 요청이 없어 HY-99.12가 적는 대로 hook을 부르지 않으며, HY-100.39가 그렇게 적는다. 폐기된 id를 인용하던 `contracts/interfaces.json`의 member 둘은 HY-100.38과 HY-100.9를 인용한다. 코드는 바뀌지 않는다(H35.44).
 - 어떤 target도 root와 `tests/package-install`의 `package-lock.json`을 쓰지 않았다. 요구가 바뀐 뒤 `npm install --package-lock-only`는 각각에서 손으로 실행하는 명령이었다. 이제 `make npm-lock`이 둘 모두에 `--ignore-scripts`와 함께, 두 번째는 `--prefix`로, checkout의 npm을 절대 경로로 `$(ONLINE)`을 통해 실행한다. 아무것도 설치하지 않는다. root `package.json`은 패키지 하나를 range로 적는다: `ajv` `^8.20.0`이며, npm은 range가 허용하는 동안 그 lock된 버전을 그대로 둔다(H35.41).
 - 어떤 target도 `packages/python/uv.lock`, `composer.lock`, `examples/board/composer.lock`을 쓰지 않았다. 요구가 바뀐 뒤 `uv lock`과 `composer update`는 손으로 실행하는 명령이었다. 이제 `make python-lock`이 Python package에 `uv lock`을 실행하고, `make composer-lock PACKAGES="<vendor/package> ..."`가 private root와 board에서 적은 패키지에 `composer update --no-install`을 실행한다. 모든 패키지의 update는 실행 시점에 각 range를 해석하므로 `PACKAGES` 없이는 dry run에서도 실패한다. 각 target은 checkout의 도구를 절대 경로로 `$(ONLINE)`을 통해 시작하며, `composer-lock`은 Composer를 시작하는 모든 target처럼 checkout의 PHP를 먼저 검사한다(H35.41).
 - HY-104.25, HY-104.26, HY-104.27, HY-115.28, HY-115.29는 서버가 session을 session-store 라이브러리의 저장소에 둔다고 명시하는데, 어느 서버도 그렇게 하지 않는다. 이제 contract가 각 statement를 그 행과 함께 미구현으로 표시하고(`"unimplemented": "H35.37"`), `docs/spec/protocol.md`가 그 표시를 렌더링한다. `docs/features.md`의 행 `session-library-stores`는 정확히 이 다섯 statement를 적는다. 표시가 없는 HY-104.32는 더 이상 적지 않는다.

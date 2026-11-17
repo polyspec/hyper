@@ -3820,7 +3820,7 @@
               ],
               "output": "wsgi-body",
               "errors": [],
-              "state": "Starts the plain 500 of an escaped error (HY-100.27).",
+              "state": "Starts the plain 500 of an escaped error (HY-100.9).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/wsgi.py::_escape",
@@ -3999,7 +3999,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Returns the header pairs and the body bytes of a response (HY-100.18).",
+              "state": "Returns the header pairs and the body bytes of a response (HY-100.38).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/asgi.py::_messages",

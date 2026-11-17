@@ -5530,7 +5530,11 @@
         {
           "kind": "rule",
           "id": "HY-100",
-          "retired": [],
+          "retired": [
+            6,
+            18,
+            27
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -5592,10 +5596,10 @@
                       "koSource": "157b565b7e8557908413357bd03fff04e929f1c843d24d0dc401e549ad09e0bc"
                     },
                     {
-                      "id": "HY-100.6",
-                      "en": "The write hook `written` (HY-99) reports that the write ended when the WSGI server consumed the whole body iterable, and that it failed when the server closed the iterable before its end, which PEP 3333 defines as premature termination; when the write failed, the callable calls the disconnect hook (HY-67) with the request that it gave to `around` and the reply of the last call of `answer`.",
-                      "ko": "write hook `written`(HY-99)은 WSGI 서버가 body iterable 전체를 소비하면 쓰기가 끝났다고 보고하고, 서버가 iterable을 끝나기 전에 닫으면(PEP 3333이 premature termination으로 정의하는 경우) 실패했다고 보고한다; 쓰기가 실패하면 callable은 `around`에 넘긴 요청과 마지막 `answer` 호출의 reply로 disconnect hook(HY-67)을 호출한다.",
-                      "koSource": "48d1d5abb037d7caf792c10ab322f212bccc5cf301b52c1a10c020dcf24ff935"
+                      "id": "HY-100.37",
+                      "en": "The write hook `written` (HY-99) reports that the write ended when the WSGI server consumed the whole body iterable, and that it failed when the server closed the iterable before its end, which PEP 3333 defines as premature termination; when the write failed, the callable calls the disconnect hook (HY-67) with the request and the reply of the last call of `answer` (HY-97.5).",
+                      "ko": "write hook `written`(HY-99)은 WSGI 서버가 body iterable 전체를 소비하면 쓰기가 끝났다고 보고하고, 서버가 iterable을 끝나기 전에 닫으면(PEP 3333이 premature termination으로 정의하는 경우) 실패했다고 보고한다; 쓰기가 실패하면 callable은 마지막 `answer` 호출의 요청과 reply로 disconnect hook(HY-67)을 호출한다(HY-97.5).",
+                      "koSource": "46487f89361e0ff6e01f77a4cbf4f35ce18c6ff49f817b88c324e2be90fe4ce3"
                     },
                     {
                       "id": "HY-100.34",
@@ -5687,10 +5691,10 @@
                       "koSource": "6c42faef49be144c4ffae2b09ff2304d7f6dca90b3027e273207517ce9fd454a"
                     },
                     {
-                      "id": "HY-100.18",
-                      "en": "It sends one `http.response.start` with the status and the headers of the `Response` and one `http.response.body` with the complete body: the write hook `written` (HY-99) reports that the write ended when both sends return, and that it failed when a send raises, which an ASGI server does for a connection that the client closed; when the write failed, the callable calls `written`, then the disconnect hook (HY-67) with the request that it gave to `around` and the reply of the last call of `answer`, and lets the error propagate to the server.",
-                      "ko": "callable은 `Response`의 status와 header를 담은 `http.response.start` 하나와 완전한 body를 담은 `http.response.body` 하나를 전송한다: write hook `written`(HY-99)은 두 send가 모두 반환하면 쓰기가 끝났다고 보고하고, send가 예외를 던지면 실패했다고 보고하며, ASGI 서버는 클라이언트가 닫은 연결에 대해 예외를 던진다; 쓰기가 실패하면 callable은 `written`을 호출한 뒤, `around`에 넘긴 요청과 마지막 `answer` 호출의 reply로 disconnect hook(HY-67)을 호출하고, 오류를 서버로 전파한다.",
-                      "koSource": "94da86adac82fa17352e653a18f287dbd83437eac984623c0db75775a3e5327e"
+                      "id": "HY-100.38",
+                      "en": "It sends one `http.response.start` with the status and the headers of the `Response` and one `http.response.body` with the complete body: the write hook `written` (HY-99) reports that the write ended when both sends return, and that it failed when a send raises, which an ASGI server does for a connection that the client closed; when the write failed, the callable calls `written`, then the disconnect hook (HY-67) with the request and the reply of the last call of `answer` (HY-97.5), and lets the error propagate to the server.",
+                      "ko": "callable은 `Response`의 status와 header를 담은 `http.response.start` 하나와 완전한 body를 담은 `http.response.body` 하나를 전송한다: write hook `written`(HY-99)은 두 send가 모두 반환하면 쓰기가 끝났다고 보고하고, send가 예외를 던지면 실패했다고 보고하며, ASGI 서버는 클라이언트가 닫은 연결에 대해 예외를 던진다; 쓰기가 실패하면 callable은 `written`을 호출한 뒤, 마지막 `answer` 호출의 요청과 reply로 disconnect hook(HY-67)을 호출하고(HY-97.5), 오류를 서버로 전파한다.",
+                      "koSource": "8a943df491ccb503c68e89f5dabd354236617ac47660c19016d3ad2d958ff669"
                     },
                     {
                       "id": "HY-100.19",
@@ -5741,10 +5745,10 @@
                       "koSource": "8b7842647b9726a555300b262c32bf215b4ada302d60be83adc3e98cf5f85929"
                     },
                     {
-                      "id": "HY-100.27",
-                      "en": "When a send of that 500 fails, the callable calls `written` with the failed write and lets the error propagate to the server, as HY-67 does for a failed send.",
-                      "ko": "그 500의 send가 실패하면 callable은 실패한 쓰기와 함께 `written`을 부르고, 실패한 send에 대해 HY-67이 하듯 오류를 서버로 전파되게 둔다.",
-                      "koSource": "72d23ceb285d8177c11e652e239e66c6b12698c165b6c060e158b6027a60d887"
+                      "id": "HY-100.39",
+                      "en": "When a send of that 500 fails, the callable calls no write hook, because the transport gave no request to report (HY-99.12), and lets the error propagate to the server, as HY-67 does for a failed send.",
+                      "ko": "그 500의 send가 실패하면 callable은 write hook을 부르지 않고(전송이 보고할 요청을 주지 않았기 때문이다, HY-99.12), 실패한 send에 대해 HY-67이 하듯 오류를 서버로 전파되게 둔다.",
+                      "koSource": "53b5d3511c454336d1c5461608d6d1a957f3b04ec8b48a5dab10586fcdd6f4f6"
                     }
                   ],
                   "blocks": []
