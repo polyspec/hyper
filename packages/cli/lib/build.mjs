@@ -6,7 +6,7 @@
 //   <app>/public/assets/<name>.<hash>.<extension>       each asset of --asset and --tailwind (HR-77, HYC-16.12)
 //   <output>/client/manifest.json                       the URL of the entry as hyper and of each asset by its name
 //   <output>/client/assets.json                         {"files": [...]}: the paths public/assets/... of this build
-//   <output>/client/templates.index.json                template name -> file URL, which the Node server reads
+//   <output>/client/templates.index.json                template name -> file URL, the index of the client bundle
 //   <output>/client/build.json                          {"build":"<id>"}
 //   <output>/client/csr/                                the static shell index.html with the copies of this build
 //                                                       below assets/ and the --static files, with client/main.ts

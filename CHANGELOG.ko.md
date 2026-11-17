@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e35e588367aa104898f6558d43c67c23fe990b03c5f3860c3be40eda40112e19 -->
+<!-- source-sha256: 9ce8deea05f873ac64ff32605a928d563040f6dfcfa101b4fbe03bc33852c473 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/cli/lib/build.mjs`의 주석과 `packages/cli/README.md`는 Node 서버가 `client/templates.index.json`과 `client/build.json`을 읽는다고 적었다. Node 서버는 core로 열게 된 뒤로 `program/`을 읽는다. 이제 그 색인은 클라이언트 번들의 색인이고 `client/build.json`은 어떤 서버도 읽지 않는다고 적는다. 행 H35.32-1은 PHP 서버와 Python 서버만 읽는 `program/legacy/hyper/data.tpl`을 거기서 지운다고 적는다(H35.32-8).
 - HY-54.3을 retire하면서, 아직 성립하는 Node 서버의 차이 하나를 적는 statement가 없어졌다. `packages/ts/src/app/app.ts`의 `App`은 요청의 경로를 브라우저 코드의 `Router`로 match하고 매니페스트의 선언을 브라우저 코드의 `checkManifest`와 `keptPaths`로 읽는다. HY-54.23이 core가 요청을 routing할 때까지의 이 차이를 적는다. PHP와 Python만 가진 `contracts/interfaces.json`의 concern `browser-code`의 unit `manifest`, `region`, `router`는 HY-54.3 대신 이것을 인용한다. unit `reads`와 `renderer`는 아직 HY-54.3을 인용한다. PHP 서버와 Python 서버는 template library의 `Engine`과 `FsLoader`로 `program/templates`와 `program/legacy`를 렌더하고 읽기 경로를 직접 유지하는데, Node 서버가 core를 부르는 동안 두 서버가 이 unit을 가진다고 적는 statement는 없다. `make spec-docs`, `make spec-docs-check`, `make docs-check` 말고는 실행하지 않았다(H35.32-8).
 - `scripts/recipe/check.mts`는 끝날 때까지 아무것도 출력하지 않았다. 그 self test는 `tests/scripts/fixtures/recipe/mutations.json`의 mutation 123개를 각각 fixture의 사본에 적용하고, 저장소를 읽기 전에 mutation마다 PHP, Node, Python reader를 process 하나씩 차례로 시작하므로, `make recipe-compare`는 한 줄도 없이 3분 넘게 실행됐다. 이제 각 mutation 전과 reader가 저장소를 읽기 전에 표준 오류로 한 줄을 출력하며, 표준 출력은 여전히 finding만 담는다(HR-89). 이 변경은 type 검사만 했고 실행하지 않았다(H35.32-8).
 - `contracts/interfaces.json`은 더 이상 없는 Node 서버 `App`의 private member 넷(`app.templateIndex`, `app.routeTemplates`, `app.readJsonFile`, `app.readJsonText`)을 적었고, `app.absolutePaths`에 retire한 HY-48.11을, field `valueReads`에 HY-54.3을 인용했다. 네 member는 HY-48.19 아래의 `app.readBytes`, `app.routeReads`, `app.templateSources`로 바꾸고, `app.absolutePaths`는 매니페스트와 프로그램 디렉터리를 적으며, `valueReads`는 HY-13.7을 적는다. 아직 낡은 것: `appParts`와 `pageParts`의 field, unit `page`, `context`, `regionPlanner`, `jsonCodec`, `dataModel`의 Node member, 그리고 HY-54.3 아래 PHP와 Python으로 제한된 `browser-code`의 unit 다섯. 이 제한을 오늘 적는 statement는 없다. `make recipe-compare`는 실행하지 않았다(H35.32-8).
