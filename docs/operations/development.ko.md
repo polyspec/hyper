@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: a27e5f58db910c803a62b148072672f52981e4dd4bf23ad0551159912f343693 -->
+<!-- source-sha256: 4efe138dc9c4c684d2eb7d51e30e0f929a918de86fdb793636d1aadf71bb2317 -->
 # 개발
 
 [English](development.md).
@@ -31,7 +31,7 @@
 | `make python-lock` | Python package의 요구가 바뀐 뒤, checkout의 uv의 `uv lock`으로 `$(ONLINE)`을 통해 `pyproject.toml`에서 `packages/python/uv.lock`을 쓴다. uv는 manifest가 여전히 허용하는 lock된 버전을 그대로 둔다(H35.41) |
 | `make composer-lock PACKAGES="<vendor/package> ..."` | manifest에서 pin이 바뀐 뒤, checkout의 Composer의 `composer update --no-install`로 `$(ONLINE)`을 통해 적은 패키지에 대해서만 `composer.lock`과 `examples/board/composer.lock`을 쓴다. 모든 패키지의 update는 실행 시점에 각 range를 해석하므로 `PACKAGES` 없이는 실패한다(HR-89, H35.41) |
 | `make hyper-php-install` | `packages/php`를 가리키는 symbolic link로 `polyspec/hyper`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
-| `make ext` | `make hyper-install-php`의 `make json-ext`와 `make template-ext`가 json과 template release의 Composer repository(`packages.json`)에서 PIE로 가져온 json 확장 `build/json-ext/polyspec_json.so`와 template 확장이 없으면 실패한다. 링크된 실행에서 template 확장은 `vendor/polyspec/template`이 링크하는 template checkout의 `target/release/libpolyspec_template`이다. offline으로 실행하며 아무것도 build하지 않는다(HY-48.15, H27.45) |
+| `make ext` | `make hyper-install-php`의 `make json-ext`와 `make template-ext`가 json과 template release의 Composer repository(`packages.json`)에서 PIE로 가져온 json 확장 `build/json-ext/polyspec_json.so`와 template 확장이 없으면 실패한다. 링크된 실행에서 template 확장은 `vendor/polyspec/template`이 링크하는 template checkout의 `target/release/libpolyspec_template`이다. offline으로 실행하며 아무것도 build하지 않는다(HY-48.23, H27.45) |
 | `make hyper-ext` | `packages/php/native`의 PHP 확장 `polyspec_hyper`를 checkout의 php와 php-config에 대해 Cargo로 build하고, 그 PHP가 확장을 load하는지 확인한 뒤 `build/hyper-ext`에 publish한다. PHP는 build의 입력이고, `PHP`와 `PHP_CONFIG`에 주는 wrapper의 경로는 그 뒤의 PHP가 바뀌어도 같으므로, 출력이 자기 입력을 이름으로 밝힌다(HR-80). Cargo는 확장의 crate를 그 PHP의 API가 정하는 target 디렉터리 `target/php-<headers><build>`에서 build한다. `<headers>`는 header의 release(`php-config --vernum`)이고 `<build>`는 `release-php-ext`가 PHP의 build를 쓰는 형식인 `-nts`, `-zts`, `-debug-nts`, `-debug-zts` 중 하나다. 예를 들면 `target/php-80427-nts`이다. recipe는 그 디렉터리를 `CARGO_TARGET_DIR`로 Cargo에 주고, `make lint-bindings`와 `make test-bindings`도 그 crate의 clippy와 test를 같은 디렉터리에서 실행한다. 다른 PHP는 다른 디렉터리에서 build하므로 다른 API의 library가 복사되는 일이 없고, 어떤 recipe도 target 디렉터리를 지우지 않는다. checkout이 더 이상 build하지 않는 API의 디렉터리는 손으로 지운다. `build/hyper-ext`는 마지막 build의 library를 담는다. `hyper-ext`는 그것을 load하는 모든 target의 선행 조건이므로, 각 실행은 library를 load하기 전에 checkout의 PHP에 맞는 library를 publish한다(HY-132.2) |
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) 테스트는 `NPM_BIN`으로 고정된 npm을 받으며 `tests/package-install/var/`에는 ignore된 기본 링크 상태를 저장한다. |
@@ -279,7 +279,7 @@ build id는 HY-125.15~HY-125.17의 파일로 한 번 계산하고 `program/build
 
 고정 build id가 필요한 test fixture는 같은 조립으로 만든다: `make server-fixtures`는 `scripts/fixture-program.mts`를 실행하고, 그것은 `packages/php/tests/fixtures/build.json`의 id로 `packages/cli/lib/program.mjs`의 `writeProgram`과 `writeBuildFile`을 불러 root `composer.json`이 test fixture의 namespace에 대응시키는 `packages/php/tests/build/server`에 프로그램을 쓴다. `make contract-programs`도 같은 방법으로 계약 애플리케이션을 만든다.
 
-PHP는 Node와 Python 서버처럼 템플릿 확장 `polyspec_template`의 `Engine`과 `FsLoader`로 `templates/`를 렌더하며, 그보다 먼저 json 확장 `polyspec_json`을 불러온다(HY-48.15).
+PHP는 Node 서버처럼 확장 `polyspec_hyper`에 있는 core의 페이지 렌더로 `templates/`를 렌더하며(HY-48.22), 그보다 먼저 json 확장 `polyspec_json`과 템플릿 확장 `polyspec_template`을 불러온다(HY-48.23).
 
 ## Node 서버
 

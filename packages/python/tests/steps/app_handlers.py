@@ -217,7 +217,9 @@ class _Run:
             # HY-38.20: the step writes each key in the session store of the request, as the application does through
             # its hold on that store, so the page reads the value after the handler returned.
             if self._calls.session is None:
-                raise LookupError(f"the handler {self._name} stores outside a request run")
+                raise LookupError(
+                    f"the handler {self._name} stores outside a request run"
+                )
             for key, value in step["store"].items():
                 self._calls.session.set(key, value)
         else:

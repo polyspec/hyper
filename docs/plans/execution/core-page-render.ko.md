@@ -1,5 +1,5 @@
 <!-- doc-id: core-page-render-execution -->
-<!-- source-sha256: f9bf3d8639b3147c25fb0871e25134ad52ae437c2c66c5cfa95c9d836e923599 -->
+<!-- source-sha256: a249b20905906eeb4a8e74d93fe505cb2776f41dc785e9c9ad6a4d92685f0b6c -->
 # 서버의 core page render: 설계
 
 [English](core-page-render.md).

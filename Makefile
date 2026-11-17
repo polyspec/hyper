@@ -280,14 +280,14 @@ hyper-install-redis: ## Build the Redis server and the phpredis extension of the
 # The template extension that the PHP checks load. In a linked run `make link` links vendor/polyspec/template to the
 # packages/php-ext of a template checkout, and the checks load the library that the checkout builds into its
 # target/release; otherwise they load the library of template-ext. PHP_EXTENSIONS lists the json extension before the
-# template extension, which requires it (HY-48.15).
+# template extension, which requires it (HY-48.23).
 TEMPLATE_LINKED_EXT = $(wildcard $(realpath $(PHP_VENDOR)/polyspec/template)/../../target/release/libpolyspec_template.$(CDYLIB))
 PHP_TEMPLATE_EXT = $(or $(TEMPLATE_LINKED_EXT),$(abspath $(EXT)))
 PHP_EXTENSIONS = $(abspath $(JSON_EXT)) $(PHP_TEMPLATE_EXT)
 
 # The checks load the libraries that `make hyper-install` built with PIE (json-ext, template-ext) or the linked template
 # library; they run offline and build nothing.
-ext: ## Fail unless the json extension and the template extension that the PHP checks load exist (HY-48.15, H14.1-7, H27.45)
+ext: ## Fail unless the json extension and the template extension that the PHP checks load exist (HY-48.23, H14.1-7, H27.45)
 	@for library in $(PHP_EXTENSIONS); do test -f "$$library" || { echo "ext: $$library does not exist; run make hyper-install-php, which builds it with PIE (make json-ext, make template-ext)" >&2; exit 1; }; done
 
 # The PHP extension polyspec_hyper of the server (HY-132.2) for development: packages/php/native, built through $(CARGO),
@@ -409,7 +409,7 @@ else
 	$(call cases_selected,node) $(case_run_node)
 endif
 
-# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.15, HY-132.2). Every PHP server
+# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.23, HY-132.2). Every PHP server
 # of a check, a test and the demo loads PHP_SERVER_EXTENSIONS: scripts take them as --extension arguments, and the tests
 # of hyper-test-scripts read them from HYPER_PHP_EXTENSIONS.
 PHP_SERVER_EXTENSIONS = $(PHP_EXTENSIONS) $(abspath $(HYPER_EXT))
