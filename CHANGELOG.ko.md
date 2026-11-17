@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: af8a0a42f26ec33d5b5b6c27ec14968dace1f2b0b18df23a20c87ebd61b1e0fa -->
+<!-- source-sha256: 2b356cda7f89a34701db83ce40fe7597ae815cd79a15b29d92946b52f06ee98c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `make analyse-php`가 PHPStan이 type을 모르는 값에 대해 finding 열 개를 보고했다. `JsonCodec::isList`는 bool을 돌려주면서 인자에 대해 아무것도 명시하지 않아, 그 함수가 받아들인 값에 대한 loop나 count가 `RepresentationEntries.php`(44, 152, 174, 179, 198행)와 `Manifest.php`(149행)에서 `foreach.nonIterable`, `argument.type`, `offsetAccess.nonOffsetAccessible`였다. 이제 이 함수는 true 결과가 list를 뜻한다고 명시한다(`@phpstan-assert-if-true list<mixed>`). 함수 본문이 검사하는 것이 바로 그것이다. `tests/Support/Steps/ReadsSteps.php`는 type을 모르는 decode 결과에서 `routes->reads->regions->content`를 읽었다(44행의 finding 네 개). 이제 각 member를 object에서만 가져온다.
 
 - 빌드된 npm package가 없는 tree에서 `make templates-check`는 `Cannot find module …/node_modules/@polyspec/hyper-client/dist/index.js imported from …/packages/cli/lib/check.mjs`로 실패했다. 이 target에는 prerequisite가 없었고, 다른 target이 먼저 package를 빌드한 곳에서만 통과했다. 이제 prerequisite `packages`를 가진다. `tests/scripts/check-recipes.test.mts`는 전체 suite의 모든 target의 dry run을 읽어, `packages/client`와 `packages/ts`를 빌드하기 전에 command tool을 시작하는 target을 실패시킨다.
 
