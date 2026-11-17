@@ -408,10 +408,20 @@ final class App
         $failure = null;
         try {
             // HY-74: a warning, notice or deprecation of the request becomes an exception instead of a wrong page.
-            $response = WarningsGuard::run(fn (): Response => $this->dispatch($request, $store, $reply));
-        } catch (SessionOpenError $error) {
-            // HY-60.14: a failed session open is no error of the application: it escapes the answer, and the response
-            // hook does not receive its 500 (HY-60.16).
+            $response = WarningsGuard::run(function () use ($request, $store, $reply): Response {
+                $response = $this->dispatch($request, $store, $reply);
+                // HY-115.23: the session of PHP is written and closed before the server answers, so a request whose
+                // write the save handler refuses, such as one that lost its lock, fails instead of sending the
+                // response that it prepared. PHP would otherwise close the session after the response was sent.
+                if ($store instanceof NativeSession) {
+                    $store->close();
+                }
+
+                return $response;
+            });
+        } catch (SessionOpenError | SessionCloseError $error) {
+            // HY-60.14: a failed session open or close is no error of the application: it escapes the answer, and
+            // the response hook does not receive its 500 (HY-60.16).
             throw $error;
         } catch (\Throwable $error) {
             $failure = $this->logFailure($error);

@@ -10079,6 +10079,21 @@
                   "signature": "public function renew(): void"
                 }
               }
+            },
+            {
+              "id": "native-session.close",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Writes and closes the PHP session of the request before the server answers; a warning raised meanwhile fails the close whatever error_reporting keeps (HY-115.23).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::close",
+                  "signature": "public function close(): void"
+                }
+              }
             }
           ],
           "only": {
@@ -10113,6 +10128,23 @@
           "native": {
             "php": {
               "file": "packages/php/src/Session/SessionOpenError.php",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-104.26"
+          },
+          "members": []
+        },
+        {
+          "id": "session-close-error",
+          "native": {
+            "php": {
+              "file": "packages/php/src/Session/SessionCloseError.php",
               "kind": "class",
               "internal": true
             }

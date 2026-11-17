@@ -160,7 +160,58 @@ final class NativeSession implements SessionStore
     {
         ArgumentCount::most(\func_num_args(), 0);
         $this->start();
-        session_regenerate_id(true);
+        // A warning that PHP or the save handler raises while the identifier is replaced, such as a lock that the
+        // handler could not release, fails the request whatever error_reporting() keeps (HY-115.3): the request would
+        // otherwise go on with a session that was not moved.
+        $failure = null;
+        set_error_handler(static function (int $level, string $message) use (&$failure): bool {
+            $failure ??= $message;
+
+            return true;
+        });
+        try {
+            $renewed = session_regenerate_id(true);
+        } finally {
+            restore_error_handler();
+        }
+        if ($failure !== null || !$renewed) {
+            throw new \RuntimeException(
+                'hyper: the session could not be renewed' . ($failure === null ? '' : ": {$failure}"),
+            );
+        }
         $this->sendCookie();
+    }
+
+    /**
+     * Writes and closes the session of the request, which the server does after the application answered and before
+     * it sends the response (HY-115.23); a session that did not start is left as it is. A warning that PHP or the save
+     * handler raises meanwhile, such as the one of a write that the handler refuses because the request lost its lock
+     * (HY-115.5), fails the close whatever error_reporting() keeps, as a failed open does: PHP would otherwise send the
+     * response of a request whose write was dropped.
+     *
+     * @internal
+     */
+    public function close(): void
+    {
+        ArgumentCount::most(\func_num_args(), 0);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+        $failure = null;
+        set_error_handler(static function (int $level, string $message) use (&$failure): bool {
+            $failure ??= $message;
+
+            return true;
+        });
+        try {
+            session_write_close();
+        } catch (\Throwable $error) {
+            throw new SessionCloseError($error->getMessage(), 0, $error);
+        } finally {
+            restore_error_handler();
+        }
+        if ($failure !== null) {
+            throw new SessionCloseError("hyper: the session could not be closed: {$failure}");
+        }
     }
 }
