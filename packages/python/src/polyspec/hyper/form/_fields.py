@@ -3,16 +3,10 @@ in request order; a bracketed name is the name as written (HY-56, HY-57)."""
 
 from __future__ import annotations
 
-import re
 from typing import Optional
 
-from . import _multipart
+from ..app._core_rules import core_rules
 from ._named_values import NamedValues
-
-_URLENCODED = re.compile(
-    r"application/x-www-form-urlencoded[ \t]*(;|\Z)", re.IGNORECASE | re.ASCII
-)
-_HEX = re.compile(rb"[0-9A-Fa-f]{2}")
 
 
 class Fields(NamedValues[str]):
@@ -25,57 +19,21 @@ class Fields(NamedValues[str]):
 
     @staticmethod
     def parse(text: bytes) -> Optional[Fields]:
-        """Parses ``name=value&name=value``: ``+`` is a space, ``%XX`` is its byte and another ``%`` stays. Returns
-        None when a name or a value is not UTF-8 (HY-42, HY-56)."""
-        names: list[str] = []
-        values: dict[str, list[str]] = {}
-        for part in text.split(b"&"):
-            if part == b"":
-                continue
-            equals = part.find(b"=")
-            name = Fields._percent_decoded(part if equals < 0 else part[:equals])
-            value = Fields._percent_decoded(b"" if equals < 0 else part[equals + 1 :])
-            if name is None or value is None:
-                return None
-            if name not in values:
-                names.append(name)
-                values[name] = []
-            values[name].append(value)
-        return Fields(names, values)
+        """Parses ``name=value&name=value`` through the core (form_functions.parse_urlencoded): ``+`` is a space,
+        ``%XX`` is its byte and another ``%`` stays. Returns None when a name or a value is not UTF-8 (HY-42, HY-56)."""
+        try:
+            pairs = core_rules().parse_urlencoded(text)
+        except ValueError:
+            return None
+        return Fields([name for name, _ in pairs], {name: list(values) for name, values in pairs})
 
     @staticmethod
     def from_body(content_type: str, body: bytes) -> Optional[Fields]:
-        """Returns the fields of a request body: of an ``application/x-www-form-urlencoded`` body, or the text fields
-        of a ``multipart/form-data`` body; a body of another type has none (HY-57). Returns None when a part of the
-        body fails with HY-42 (HY-113.15)."""
-        if _URLENCODED.match(content_type) is not None:
-            return Fields.parse(body)
-        boundary = _multipart.Multipart.boundary(content_type)
-        if boundary is None:
-            return Fields.empty()
-        parts = _multipart.Multipart.read(body, boundary)
-        return None if parts is None else parts[0]
+        """Returns the fields of a request body held as one value, as the core reads it: of an
+        ``application/x-www-form-urlencoded`` body, or the text fields of a ``multipart/form-data`` body; a body of
+        another type has none (HY-57). Returns None when the body fails with ``invalid`` or ``header_limit``
+        (HY-42, HY-113.25)."""
+        from ._core_body import NO_LIMIT, held_form
 
-    @staticmethod
-    def _percent_decoded(text: bytes) -> Optional[str]:
-        """Decodes ``+`` to a space and ``%XX`` to its byte, as PHP urldecode does, and the bytes as UTF-8, or None
-        when they are not UTF-8."""
-        decoded = bytearray()
-        index = 0
-        while index < len(text):
-            byte = text[index]
-            if byte == 0x2B:  # '+'
-                decoded.append(0x20)
-                index += 1
-            elif (
-                byte == 0x25 and _HEX.fullmatch(text[index + 1 : index + 3]) is not None
-            ):
-                decoded.append(int(text[index + 1 : index + 3], 16))
-                index += 3
-            else:
-                decoded.append(byte)
-                index += 1
-        try:
-            return bytes(decoded).decode("utf-8")
-        except UnicodeDecodeError:
-            return None
+        form, _ = held_form(content_type, body, NO_LIMIT, NO_LIMIT, NO_LIMIT)
+        return None if form is None else form[0]

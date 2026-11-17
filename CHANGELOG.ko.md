@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f13a84852b425c3ca04b0e0a68709715cea39dda23799ea6767d6e6d4628ac2f -->
+<!-- source-sha256: 9329b9ca85cde315a958fe98ee76fc2622b5cc6622c4bc25f4c1bff9229ffd29 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 각 서버는 자기 reader로 `multipart/form-data`를 해석하고 body의 네 제한과 그 순서를 검사했으며, `name` 매개변수 없는 part를 건너뛰었다. HY-113.23은 그런 part를 `invalid`로 실패시킨다. 이제 세 서버는 모든 body를 core의 `form` unit으로 읽고, core는 그것을 http-form으로 읽는다. PHP `BodyReader.php`, Python `_core_body.py`, Node host가 core의 `RequestBody`를 감싸고, 하나의 값으로 보관된 body와 urlencoded 텍스트는 core의 `read_held_body`와 `parse_urlencoded`가 읽으며, `UploadedFile`은 core의 파일을 감싼다. PHP, Node, Python의 `Multipart`, `MultipartReader`, `RequestBody`는 지웠다. HY-113.23이 적은 part는 이제 body를 `invalid`와 400으로 실패시키고, 옮긴 파일의 읽기나 이동은 http-form의 kind로 실패한다. Node에서 `UploadedFile`의 `moveTo`와 `content`는 promise를 돌려주고(HY-131.34), board 예제는 이동을 기다린다. core의 파일 unit은 `form_file`이며, 그래서 그 생성 class가 hyper의 이름 `UploadedFile`을 갖지 않는다. `contracts/interfaces.json`의 `caseFiles`는 http-form의 `fields.json`과 `forms.json`을 `release: "http-form"`으로 선언하고, recipe check와 세 언어의 case reader는 그것을 `var/release-files/`에서 읽으며, field step은 그 case 형식으로 썼고, `tests/legacy/fields.json`은 지웠다. `tests/scripts/multipart-compare.test.mts`의 worker는 같은 코드로 읽는다(H35.11). 실행하지 않은 것: 이 변경의 binding, build, 모든 테스트. 서버가 부르는 binding 이름은 생성기에서 추론했다.
 
 - core는 요청 body를 읽지 않았다. 각 서버가 자기 reader로 `multipart/form-data`를 해석하고 네 제한과 그 순서를 검사했다. 이제 `packages/rust`의 module `form`이 http-form v0.0.2로 body를 읽는다. `RequestBody`는 body, value, part, file 제한 아래에서 각 제한을 넘기는 byte의 순서대로 조각을 읽고, `read_held_body`는 하나의 값으로 보관된 body를, `parse_urlencoded`는 urlencoded 텍스트를 읽으며, `UploadedFile`은 파일을 읽고 옮긴다. http-form의 실패는 http-form의 kind, status, category를 가진 hyper의 error `Form`이고, 그 `partial_target`은 그 class의 두 property를 유지한다. `RequestBody::start`는 boundary를 가진 `multipart/form-data` type에만 조각 단위 reader를 시작하므로, boundary가 없는 type은 읽기를 실패시키지 않는다(HY-113.24). `packages/rust/interface.json`은 WASM을 뺀 모든 target에 이 unit들을, http-form의 kind 행과 넘겨받는 class `partial_target_error`를 선언하고, WASM core를 feature `fs` 없이 빌드한다. `tests/error_code.rs`는 http-form의 모든 실패가 그 kind, status, category, 행을 유지하는지 검사한다(H35.11). 실행하지 않은 것: core의 build와 그 테스트.
 

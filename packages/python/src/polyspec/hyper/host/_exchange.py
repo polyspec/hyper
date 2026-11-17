@@ -6,7 +6,7 @@ from __future__ import annotations
 import time
 from typing import Callable, Optional
 
-from ..form._request_body import RequestBody
+from ..form._core_body import RequestBody
 from ..app.app import App
 from ..http.reply import Reply
 from ..http.request import Request

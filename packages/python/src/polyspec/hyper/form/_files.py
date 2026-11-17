@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from typing import Optional
 
-from . import _multipart
 from ._named_values import NamedValues
 from .uploaded_file import UploadedFile
 
@@ -20,13 +19,12 @@ class Files(NamedValues[UploadedFile]):
 
     @staticmethod
     def from_body(content_type: str, body: bytes) -> Optional[Files]:
-        """Returns the files of a ``multipart/form-data`` body, and none for another body type. Returns None when a
+        """Returns the files of a ``multipart/form-data`` body held as one value, as the core reads it, and none for another body type. Returns None when a
         part of the body fails with HY-42 (HY-113.15)."""
-        boundary = _multipart.Multipart.boundary(content_type)
-        if boundary is None:
-            return Files.empty()
-        parts = _multipart.Multipart.read(body, boundary)
-        return None if parts is None else parts[1]
+        from ._core_body import NO_LIMIT, held_form
+
+        form, _ = held_form(content_type, body, NO_LIMIT, NO_LIMIT, NO_LIMIT)
+        return None if form is None else form[1]
 
     def sizes(self) -> list[int]:
         """Returns the size in bytes of each file, in the order of the pairs (HY-114)."""

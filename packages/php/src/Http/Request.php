@@ -19,9 +19,6 @@ final class Request
     /** The file parts of the body, or null when a name, a filename or a content type is not UTF-8 (HY-42, HY-113). */
     private readonly ?Files $fileParts;
 
-    /** The number of parts of a multipart body that is one value (HY-131.12). */
-    private readonly int $partCount;
-
     /**
      * @param array<string, string> $headers header names in any case
      * @param string $query the raw query: the request target after its first `?` up to its first `#`
@@ -31,7 +28,7 @@ final class Request
      * @param array<array-key, string> $cookies cookie values by name; PHP gives a decimal name as an integer key
      * @param ?int $bodySize the size of the body that the host received, when it stopped reading a body larger than
      *     the limit (HY-59); null counts the body itself
-     * @param ?RequestBody $read the body as a host read it: a body read in chunks gives its parts (HY-131)
+     * @param ?BodyReader $read the body as a host read it: a body read in chunks gives its parts (HY-131)
      * @param mixed $json the decoded JSON body of a representation request (HY-121), which the server gives
      */
     public function __construct(
@@ -48,36 +45,25 @@ final class Request
         private readonly mixed $selection = null,
         private readonly ?int $bodySize = null,
         private readonly ?string $media = null,
-        private readonly ?RequestBody $read = null,
+        private readonly ?BodyReader $read = null,
         private readonly mixed $json = null,
     ) {
         ArgumentCount::most(\func_num_args(), 15);
         $this->headers = array_change_key_case($headers, CASE_LOWER);
         $this->queryFields = Fields::parse($query);
-        $boundary = Multipart::boundary($this->header('Content-Type') ?? '');
-        if ($read !== null && $read->streamed()) {
-            $parts = $read->parts();
-            $this->formFields = $parts[0] ?? null;
-            $this->fileParts = $parts[1] ?? null;
-            $this->partCount = 0;
-        } elseif ($boundary !== null) {
-            // A multipart body that is one value is read once, which also gives the number of its parts.
-            $reader = new Multipart($boundary, null, null, null, null);
-            $parts = $reader->feed($body) ? $reader->result() : null;
-            $this->formFields = $parts[0] ?? null;
-            $this->fileParts = $parts[1] ?? null;
-            $this->partCount = $reader->count();
-        } else {
-            $this->formFields = Fields::fromBody($this->header('Content-Type') ?? '', $body);
-            $this->fileParts = Files::empty();
-            $this->partCount = 0;
-        }
+        // The core reads the body (H35.11): the parts of a body that its host read in chunks, or the form of a body
+        // that is one value, which fails as a whole (HY-113.23, HY-113.25).
+        $parts = $read !== null && $read->streamed()
+            ? $read->parts()
+            : Files::heldForm($this->header('Content-Type') ?? '', $body);
+        $this->formFields = $parts[0] ?? null;
+        $this->fileParts = $parts[1] ?? null;
     }
 
     /**
-     * Returns true when the body passed the value limit, the part limit or the file limit (HY-131.32): as its host
-     * read it, or for a body that is one value by its size, and by its parts and files when `$streams` tells that the
-     * application reads a multipart body in chunks.
+     * Returns true when the body passed the value limit, the part limit or the file limit (HY-131.32), as the core
+     * decides it: as its host read it, or for a body that is one value by `readHeldBody`, with the part limit and the
+     * file limit when `$streams` tells that the application reads a multipart body in chunks.
      *
      * @internal
      */
@@ -86,9 +72,20 @@ final class Request
         if ($this->read !== null && ($this->read->exceeded() || $this->read->streamed())) {
             return $this->read->exceeded();
         }
+        $limits = new BodyLimits(
+            limit: PHP_INT_MAX,
+            valueLimit: $valueLimit,
+            partLimit: $streams ? $partLimit : PHP_INT_MAX,
+            fileLimit: $streams ? $fileLimit : PHP_INT_MAX,
+        );
+        $type = $this->header('Content-Type') ?? '';
+        try {
+            readHeldBody($type === '' ? null : $type, $this->body, $limits);
+        } catch (HyperValueError $error) {
+            return BodyReader::overLimit($error);
+        }
 
-        return strlen($this->body) > $valueLimit
-            || ($streams && ($this->partCount > $partLimit || ($this->fileParts?->largest() ?? 0) > $fileLimit));
+        return false;
     }
 
     /**
@@ -527,7 +524,7 @@ final class Request
 
         // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data request
         // here only when enable_post_data_reading is off, and holds what was read in a temporary file of its own.
-        $read = new RequestBody($headers['Content-Type'] ?? '', $limit, $stream, $valueLimit, $partLimit, $fileLimit);
+        $read = new BodyReader($headers['Content-Type'] ?? '', $limit, $stream, $valueLimit, $partLimit, $fileLimit);
         $input = fopen('php://input', 'rb');
         if ($input === false) {
             throw new \RuntimeException('hyper: cannot open php://input');
@@ -539,6 +536,7 @@ final class Request
             }
         }
         fclose($input);
+        $read->finish();
 
         return new self(
             strtoupper(is_string($method) ? $method : 'GET'),

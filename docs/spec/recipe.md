@@ -252,8 +252,11 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     their sections through `caseReaders.node`, and the check counts the results of all five runners.
     For `php`, `node` and `python`, `runners` also names the directory of the steps (`steps`) and the registry of the
     runner (`registry`), the file that maps each section to its step.
-    The case files `fields.json`, `file-store-sessions.json` and `redis-sessions.json`, whose cases other libraries hold,
-    are read from `tests/legacy` with their declaration in `tests/legacy/interfaces.json`.
+    The case files `file-store-sessions.json` and `redis-sessions.json`, whose cases other libraries hold, are read from
+    `tests/legacy` with their declaration in `tests/legacy/interfaces.json`. A case file whose `caseFiles` entry names a
+    library in `release`, such as `fields.json` and `forms.json` of http-form, is read from
+    `var/release-files/<library>/<tag>/contracts/<file>`, which `make hyper-install-release-files` writes from the pin of
+    `config/release-files.json`; a reader that does not find it fails with its path and that target.
   - **Steps.** The step of a section in a language is one function below the `steps` directory of that language, at the
     place that the words of the case file and the name of the section give: PHP the static method `<section>` of the
     class `<Words>Steps` in `<Words>Steps.php`, Node the property `<section>` of the exported object `steps` in

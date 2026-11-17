@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 2a4483fb64b1c1659a8f9b32cace5a9b85de5459402d393c82cee7e6cf255621 -->
+<!-- source-sha256: a5c82e8daae4628f7c1ed433413e7fc7c8544d1082c06a6ffcede1180eb2c9f2 -->
 # 의존성
 
 [English](dependencies.md).
@@ -54,7 +54,7 @@ PHP 8.4의 기본 `request_parse_body()`도 검토했으나 채택하지 않았�
 
 ## release의 plain 파일 고정
 
-일부 구현됨(H35.11): `config/release-files.json`이 http-form v0.0.2의 파일을 고정하고, `make hyper-install-release-files`가 그것을 설치하며, `tests/scripts/release-file-pins.test.mts`가 그 pin을 테스트한다. 구현되지 않음: `caseFiles`와 case reader가 아직 release 파일을 찾지 못하므로 case runner는 여전히 고정 사본 `tests/legacy/fields.json`을 읽는다.
+H35.11이 구현했고 아직 실행하지 않았다. `config/release-files.json`이 http-form v0.0.2의 파일을 고정하고, `make hyper-install-release-files`가 그것을 설치하며, `tests/scripts/release-file-pins.test.mts`가 그 pin을 테스트하고, `contracts/interfaces.json`의 `caseFiles`가 `fields.json`과 `forms.json`을 `release: "http-form"`으로 선언하며, recipe check와 세 언어의 case reader가 그것을 설치된 파일로 찾는다. `tests/legacy/fields.json`은 지웠다.
 
 패키지 관리자는 패키지를 lock으로 고정한다. http-form의 case 파일 `fields.json`과 `forms.json`처럼 release가 asset으로 내는 plain 파일에는 패키지 관리자가 없으므로, 저장소가 release tag와 파일의 sha256으로 직접 고정한다(HR-80).
 

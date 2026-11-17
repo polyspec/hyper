@@ -57,7 +57,7 @@ STEPS = {
     ("fields.json", "urlencoded"): fields_steps.urlencoded,
     ("fields.json", "multipart"): fields_steps.multipart,
     ("fields.json", "streamed"): fields_steps.streamed,
-    ("fields.json", "uploaded"): fields_steps.uploaded,
+    ("forms.json", "multipart"): fields_steps.multipart,
     ("functions.json", "cases"): functions_steps.cases,
     ("hooks.json", "creation"): hooks_steps.creation,
     ("json.json", "encode"): json_steps.encode,

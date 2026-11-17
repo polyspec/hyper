@@ -2,14 +2,23 @@
 import { Csrf } from '../session/csrf.js';
 import { Fields } from '../form/fields.js';
 import { Files } from '../form/files.js';
-import { Multipart } from '../form/multipart.js';
-import type { RequestBody } from '../form/request-body.js';
 import type { Flash } from '../session/flash.js';
-import type { UploadedFile } from '../form/uploaded-file.js';
+import { UploadedFile } from '../form/uploaded-file.js';
 import type { Value } from '../data/values.js';
 import { Disconnected } from '../app/disconnected.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
-import { rules } from '../app/core-rules.js';
+import { rules, type BodyLimits, type CoreForm, type CoreRequestBody } from '../app/core-rules.js';
+
+/**
+ * The body of a request as its host read it through the core (HY-131, F-9, F-25): the body of the core and the kind of
+ * its first failure, or null when it read to its end.
+ *
+ * @internal
+ */
+export interface ReadBody {
+  readonly core: CoreRequestBody;
+  readonly failure: string | null;
+}
 
 // The parts of a request as its host gives them, the named parameters of the constructor (HY-106): the path and the raw
 // query of the request target and the header values are text whose characters are bytes, and the body is bytes. The
@@ -40,7 +49,7 @@ export interface RequestInit {
    *
    * @internal
    */
-  read?: RequestBody | null;
+  read?: ReadBody | null;
   // The decoded JSON body of a representation request (HY-121).
   json?: Value;
   /**
@@ -59,10 +68,39 @@ const REQUEST_OPTIONAL = ['headers', 'query', 'body', 'flash', 'csrfToken', 'par
 /** @internal */
 export const HYPER_JSON = 'application/vnd.hyper+json';
 
-// The form values and the files of each body that is one value, each null when it fails with HY-42, and the number of
-// its parts when it is multipart (HY-131.12), by its content type: the copies of a request share its body, which is
-// read once.
-const READ = new WeakMap<Uint8Array, Map<string, [Fields | null, Files | null, number]>>();
+// The form values and the files of each body that is one value, each null when it fails with HY-42, by its content
+// type: the copies of a request share its body, which is read once.
+const READ = new WeakMap<Uint8Array, Map<string, [Fields | null, Files | null]>>();
+
+// The kinds of http-form of a body that passed one of its four limits (F-25, HY-131.32).
+const LIMIT_KINDS = new Set(['body_limit', 'value_limit', 'part_limit', 'file_limit']);
+
+// Limits that no body passes, for the form of a body whose limits the application judges apart (HY-59.15).
+const UNBOUNDED: BodyLimits = { limit: Number.MAX_SAFE_INTEGER, valueLimit: Number.MAX_SAFE_INTEGER, partLimit: Number.MAX_SAFE_INTEGER, fileLimit: Number.MAX_SAFE_INTEGER };
+
+// The kind of a failure of the core, or null for another error.
+function kindOf(error: unknown): string | null {
+  return error instanceof Error && 'kind' in error && typeof error.kind === 'string' ? error.kind : null;
+}
+
+// The form values and the files of a form of the core.
+function formOf(form: CoreForm): [Fields, Files] {
+  return [Fields.of(form.fields), Files.of(form.files.map(([name, files]) => [name, files.map((file) => UploadedFile.ofCore(file))]))];
+}
+
+// The form values and the files of a body held as one value, read by form_functions.read_held_body (HY-57, HY-113):
+// both null when a part fails with `invalid` or `header_limit` (HY-42, HY-113.23, HY-113.25), and none for a content
+// type that is no media type or a multipart type without a boundary, which the route judges (HY-59.12, HY-113.24).
+function heldForm(type: string, body: Uint8Array): [Fields | null, Files | null] {
+  try {
+    return formOf(rules().formReadHeld(type === '' ? null : type, body, UNBOUNDED));
+  } catch (error) {
+    const kind = kindOf(error);
+    if (kind === 'malformed_content_type' || kind === 'no_boundary') return [Fields.empty(), Files.empty()];
+    if (kind === 'invalid' || kind === 'header_limit') return [null, null];
+    throw error;
+  }
+}
 
 export class Request {
   // ignoreBOM keeps a leading U+FEFF as a character, as PHP and Python decode it; the default of TextDecoder drops it.
@@ -79,9 +117,8 @@ export class Request {
   private readonly queryFields: Fields | null;
   private readonly formFields: Fields | null;
   private readonly fileParts: Files | null;
-  private readonly partCount: number;
   private readonly media: string | null;
-  private readonly read: RequestBody | null;
+  private readonly read: ReadBody | null;
 
   // Creates a request from the parts that a host gives. The form values are read from an
   // application/x-www-form-urlencoded body and from the text fields of a multipart/form-data body, without nesting
@@ -106,27 +143,17 @@ export class Request {
     this.read = init.read ?? null;
     this.queryFields = Fields.parse(Buffer.from(this.queryText, 'latin1'));
     const type = this.headerValues.get('content-type') ?? '';
-    if (this.read?.streamed() === true) {
-      const parts = this.read.parts();
-      this.formFields = parts?.[0] ?? null;
-      this.fileParts = parts?.[1] ?? null;
-      this.partCount = 0;
+    if (this.read?.core.streamed() === true) {
+      // HY-131.5: a body read in chunks gives its parts, none when it failed (HY-113.25, HY-131.32).
+      [this.formFields, this.fileParts] = this.read.failure === null ? formOf(this.read.core.parts()) : [null, null];
     } else {
       // A body that is one value is read once for the copies of a request, which share it.
       let parts = READ.get(this.body)?.get(type);
       if (parts === undefined) {
-        const boundary = Multipart.boundary(type);
-        if (boundary === null) {
-          parts = [Fields.fromBody(type, this.body), Files.empty(), 0];
-        } else {
-          // A multipart body that is one value is read once, which also gives the number of its parts.
-          const reader = new Multipart(boundary, null, null, null, null);
-          const read = reader.feed(this.body) ? reader.result() : null;
-          parts = [read?.[0] ?? null, read?.[1] ?? null, reader.count()];
-        }
-        READ.set(this.body, (READ.get(this.body) ?? new Map<string, [Fields | null, Files | null, number]>()).set(type, parts));
+        parts = heldForm(type, this.body);
+        READ.set(this.body, (READ.get(this.body) ?? new Map<string, [Fields | null, Files | null]>()).set(type, parts));
       }
-      [this.formFields, this.fileParts, this.partCount] = parts;
+      [this.formFields, this.fileParts] = parts;
     }
   }
 
@@ -144,8 +171,20 @@ export class Request {
    */
   exceeded(valueLimit: number, partLimit: number, fileLimit: number, streams: boolean): boolean {
     const read = this.read;
-    if (read !== null && (read.exceeded() || read.streamed())) return read.exceeded();
-    return this.body.byteLength > valueLimit || (streams && (this.partCount > partLimit || (this.fileParts?.largest() ?? 0) > fileLimit));
+    if (read !== null && (read.failure !== null || read.core.streamed())) return read.failure !== null && LIMIT_KINDS.has(read.failure);
+    // A body that is one value passes a limit as form_functions.read_held_body reads it, in the order of the byte that
+    // passes each (F-25); its parts and files count only when the application reads a multipart body in chunks.
+    const type = this.headerValues.get('content-type') ?? '';
+    const limits: BodyLimits = { limit: Number.MAX_SAFE_INTEGER, valueLimit, partLimit: streams ? partLimit : Number.MAX_SAFE_INTEGER, fileLimit: streams ? fileLimit : Number.MAX_SAFE_INTEGER };
+    try {
+      rules().formReadHeld(type === '' ? null : type, this.body, limits);
+      return false;
+    } catch (error) {
+      const kind = kindOf(error);
+      if (kind !== null && LIMIT_KINDS.has(kind)) return true;
+      if (kind === null || kind === 'internal') throw error;
+      return false;
+    }
   }
 
   /**
@@ -154,7 +193,7 @@ export class Request {
    * @internal
    */
   async release(): Promise<void> {
-    await this.read?.remove();
+    await this.read?.core.remove();
   }
 
   // Returns the path of a request target: the target before `?` or `#`, after the authority of an absolute-form

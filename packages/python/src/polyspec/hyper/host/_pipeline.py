@@ -13,7 +13,7 @@ from typing import BinaryIO, Callable, Optional
 
 from ._exchange import Exchange
 from ._file_response import FileResponse
-from ..form._request_body import RequestBody
+from ..form._core_body import RequestBody
 from ..app._core_rules import core_rules
 from ..app.app import App
 from ..session._record_session import RecordSession

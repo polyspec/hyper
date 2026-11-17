@@ -11,6 +11,8 @@ namespace Polyspec\Hyper\Tests\Support;
 final class CaseRules
 {
     public const LANGUAGE = 'php';
+    /** The root of the repository. */
+    public const ROOT = __DIR__ . '/../../../../';
     public const CONTRACTS = __DIR__ . '/../../../../contracts/';
     /** The fixed case files of tests/legacy, which a library holds now; the steps read them until S-4 removes the directory. */
     public const LEGACY = __DIR__ . '/../../../../tests/legacy/';
@@ -60,10 +62,38 @@ final class CaseRules
         );
     }
 
-    /** The path of a case file: under tests/legacy for a fixed case file, under contracts/ for every other one. */
+    /**
+     * The path of a case file: under tests/legacy for a fixed case file, the installed file of a release for a case
+     * file of another library (`release` of its declaration, H35.11), under contracts/ for every other one.
+     */
     public static function caseFilePath(string $file): string
     {
-        return (array_key_exists($file, self::legacyCaseFiles()) ? self::LEGACY : self::CONTRACTS) . $file;
+        if (array_key_exists($file, self::legacyCaseFiles())) {
+            return self::LEGACY . $file;
+        }
+        $library = (self::caseFiles()[$file] ?? [])['release'] ?? null;
+
+        return is_string($library) ? self::releaseFilePath($library, $file) : self::CONTRACTS . $file;
+    }
+
+    /**
+     * The installed path of the case file of a release that config/release-files.json pins:
+     * var/release-files/<library>/<tag>/contracts/<file>, which `make hyper-install-release-files` writes. A missing
+     * file fails with its path and that target; the runner downloads nothing.
+     */
+    private static function releaseFilePath(string $library, string $file): string
+    {
+        $releases = Json::map(Json::file(self::ROOT . 'config/release-files.json')['releases'] ?? null, 'releases');
+        $tag = Json::map($releases[$library] ?? null, "releases.{$library}")['tag'] ?? null;
+        if (!is_string($tag)) {
+            throw new \UnexpectedValueException("config/release-files.json pins no tag of {$library}");
+        }
+        $path = "var/release-files/{$library}/{$tag}/contracts/{$file}";
+        if (!is_file(self::ROOT . $path)) {
+            throw new \UnexpectedValueException("{$path} is missing; `make hyper-install-release-files` writes it");
+        }
+
+        return self::ROOT . $path;
     }
 
     /**

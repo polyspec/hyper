@@ -1,78 +1,68 @@
-# The steps of contracts/fields.json (HY-56, HY-57, HY-113): a urlencoded text is the UTF-8 encoding of its JSON
-# string, and a multipart type and body are text whose characters are their bytes.
-from polyspec.hyper.form._fields import Fields
+# The steps of fields.json and forms.json of the pinned http-form release (HY-56, HY-57, HY-113, HY-131; H35.11): the
+# cases are in the case form of binding, a text and a body being `{"hex": ...}`, and the server reads each through the
+# core, as a request does.
 import os
 import shutil
 import tempfile
 
+from polyspec.hyper.app._core_rules import core_rules
+
+from ..case_rules import raises_of
+from polyspec.hyper.form._core_body import NO_LIMIT, RequestBody, body_form
+from polyspec.hyper.form._fields import Fields
 from polyspec.hyper.form._files import Files
-from polyspec.hyper.form._multipart import Multipart
-from polyspec.hyper.form._request_body import RequestBody
 from polyspec.hyper.form.uploaded_file import UploadedFile
 
 
 def urlencoded(case) -> None:
-    """Parses the text and records its pairs and its names, or None for both when it fails with HY-42 (HY-56)."""
-    fields = Fields.parse(_text(case, "text").encode("utf-8"))
-    case.compare(
-        "fields", None if fields is None else [list(pair) for pair in fields.pairs()]
-    )
-    case.compare("names", None if fields is None else fields.names())
+    """Parses the text as Fields.parse does, and records its pairs and its names, or the failure of http-form (HY-56,
+    HY-57, HY-42)."""
+    text = _bytes(case, "text")
+    failure = _raised(lambda: core_rules().parse_urlencoded(text))
+    fields = Fields.parse(text)
+    _compare_raises(case, failure)
+    if fields is not None:
+        case.compare("fields", _fields_of(fields))
+        case.compare("names", fields.names())
 
 
 def multipart(case) -> None:
-    """Reads the form values and the files of the body, or None for each when the body fails with HY-42 (HY-57,
-    HY-113)."""
-    kind = _text(case, "type").encode("latin-1").decode("latin-1")
-    body = _text(case, "body").encode("latin-1")
-    whole = [
-        _fields_of(Fields.from_body(kind, body)),
-        _files_of(Files.from_body(kind, body)),
-    ]
-    # HY-131.6: the body read in two chunks, divided at every position, gives the result of the whole body, and the
-    # reader holds between two chunks at most its bound; the first division that differs is the result of the case.
-    boundary = Multipart.boundary(kind)
-    result = whole
-    if boundary is not None:
-        bound = max(8192 + 3, len(boundary) + 3)
-        for at in range(len(body) + 1):
-            parts = Multipart(boundary, None, None, None, None)
-            for chunk in (body[:at], body[at:]):
-                parts.feed(chunk)
-                if parts.buffered() > bound:
-                    raise AssertionError(
-                        f"the reader holds {parts.buffered()} bytes after a chunk that ends at {at}; its bound is {bound}"
-                    )
-            read = parts.result()
-            divided = [
-                _fields_of(None if read is None else read[0]),
-                _files_of(None if read is None else read[1]),
-            ]
-            if divided != whole:
-                result = divided
-                break
-    case.compare("fields", result[0])
-    case.compare("files", result[1])
+    """Reads a body held as one value as a request does, and records its form values and its files, or the failure of
+    http-form, so that a part without a name fails the body (HY-57, HY-113.21, HY-113.23, HY-113.25)."""
+    content_type = _text(case, "content_type")
+    body = _bytes(case, "body")
+    rules = core_rules()
+    limits = rules.body_limits(NO_LIMIT, NO_LIMIT, NO_LIMIT, NO_LIMIT)
+    form = None
+    failure = None
+    try:
+        form = body_form(rules.read_held_body(content_type or None, body, limits))
+    except Exception as error:
+        failure = error
+    _compare_raises(case, failure)
+    if form is not None:
+        case.compare("fields", _fields_of(form[0]))
+        case.compare("files", _files_of(form[1], sized=False))
 
 
 def streamed(case) -> None:
     """Reads the body in chunks as a host does, and records what the body holds, its parts, the files of its
     directory, the move of its first file and the removal of the directory (HY-131)."""
-    kind = _text(case, "type")
-    body = _text(case, "body").encode("latin-1")
+    content_type = _text(case, "content_type")
+    body = _bytes(case, "body")
     chunk = case.input("chunk")
-    limit = case.input("limit")
+    limits = case.input("limits")
     move = _text(case, "move")
-    if not isinstance(chunk, int) or chunk < 1 or not isinstance(limit, int):
-        raise LookupError("the chunk or the limit of the case is not a number")
-    limits = [
-        case.input("valueLimit"),
-        case.input("partLimit"),
-        case.input("fileLimit"),
-    ]
-    if not all(isinstance(value, int) for value in limits):
-        raise LookupError("a limit of the case is not a number")
-    read = RequestBody(kind, limit, case.input("stream") is True, *limits)
+    if not isinstance(chunk, int) or chunk < 1 or not isinstance(limits, dict):
+        raise LookupError("the chunk or the limits of the case are not given")
+    read = RequestBody(
+        content_type,
+        limits["limit"],
+        case.input("stream") is True,
+        limits["value_limit"],
+        limits["part_limit"],
+        limits["file_limit"],
+    )
     scratch = tempfile.mkdtemp(prefix="hyper-case-")
     try:
         stopped = False
@@ -83,38 +73,23 @@ def streamed(case) -> None:
         held = read.held()
         if read.streamed():
             parts = read.parts()
-            fields = None if parts is None else parts[0]
-            files = None if parts is None else parts[1]
         else:
-            fields = None if stopped else Fields.from_body(kind, held)
-            files = None if stopped else Files.from_body(kind, held)
+            parts = None if stopped else (Fields.from_body(content_type, held), Files.from_body(content_type, held))
+            if parts is not None and (parts[0] is None or parts[1] is None):
+                parts = None
         directory = read.directory()
 
         def count():
             return None if directory is None else len(os.listdir(directory))
 
+        _compare_raises(case, read.failure())
         case.compare("stopped", stopped)
         case.compare("exceeded", read.exceeded())
         case.compare("held", held.decode("latin-1"))
-        case.compare("fields", _fields_of(fields))
-        case.compare(
-            "files",
-            None
-            if files is None
-            else [
-                {
-                    "name": item.name(),
-                    "filename": item.filename(),
-                    "contentType": item.content_type(),
-                    "content": item.content().decode("latin-1"),
-                    "size": item.size(),
-                }
-                for _, items in files.pairs()
-                for item in items
-            ],
-        )
+        case.compare("fields", None if parts is None else _fields_of(parts[0]))
+        case.compare("files", None if parts is None else _files_of(parts[1], sized=True))
         case.compare("entries", count())
-        pairs = [] if files is None else files.pairs()
+        pairs = [] if parts is None else parts[1].pairs()
         if move == "none" or not pairs:
             case.compare("moved", None)
         else:
@@ -128,9 +103,7 @@ def streamed(case) -> None:
             if failed is None:
                 with open(target, "rb") as moved:
                     content = moved.read().decode("latin-1")
-                failed = _failure(
-                    lambda: first.move_to(os.path.join(scratch, "second"))
-                )
+                failed = _failure(lambda: first.move_to(os.path.join(scratch, "second")))
                 read_failure = _failure(first.content)
                 after = None if read_failure is None else read_failure[0]
             else:
@@ -146,38 +119,30 @@ def streamed(case) -> None:
                 },
             )
         read.remove()
-        case.compare(
-            "removed", None if directory is None else not os.path.isdir(directory)
-        )
+        case.compare("removed", None if directory is None else not os.path.isdir(directory))
     finally:
         read.remove()
         shutil.rmtree(scratch)
 
 
-def uploaded(case) -> None:
-    """Makes a file with the public constructor, its content being the bytes of the characters of `content`, and
-    compares its four parts and its size (HY-113.3)."""
-    made = UploadedFile(
-        _text(case, "name"),
-        _text(case, "filename"),
-        _text(case, "contentType"),
-        _text(case, "content").encode("latin-1"),
-    )
-    case.compare(
-        "file",
-        {
-            "name": made.name(),
-            "filename": made.filename(),
-            "contentType": made.content_type(),
-            "size": made.size(),
-            "content": made.content().decode("latin-1"),
-        },
-    )
+def _raised(work):
+    """Runs the work and returns the error that it raised, or None."""
+    try:
+        work()
+        return None
+    except Exception as error:
+        return error
+
+
+def _compare_raises(case, failure) -> None:
+    """Compares the failure of http-form, its kind, its status, its category and its message, with `raises`; an
+    error that is no error of hyper is raised again (`raises_of`)."""
+    case.compare("raises", None if failure is None else raises_of(failure))
 
 
 def _failure(work):
     """Runs the work and returns the message and the class of its failure, ``type`` for a TypeError and ``value`` for
-    the class of HY-46.2, or None when it does not fail."""
+    the class of the category value, or None when it does not fail."""
     try:
         work()
         return None
@@ -188,22 +153,28 @@ def _failure(work):
 
 
 def _fields_of(fields):
-    return None if fields is None else [list(pair) for pair in fields.pairs()]
+    return [list(pair) for pair in fields.pairs()]
 
 
-def _files_of(files):
-    if files is None:
-        return None
+def _files_of(files, sized: bool):
     return [
         {
             "name": item.name(),
             "filename": item.filename(),
             "contentType": item.content_type(),
             "content": item.content().decode("latin-1"),
+            **({"size": item.size()} if sized else {}),
         }
         for _, items in files.pairs()
         for item in items
     ]
+
+
+def _bytes(case, name: str) -> bytes:
+    value = case.input(name)
+    if not isinstance(value, dict) or not isinstance(value.get("hex"), str):
+        raise LookupError(f"the case field {name} is not a {{hex}} value")
+    return bytes.fromhex(value["hex"])
 
 
 def _text(case, name: str) -> str:

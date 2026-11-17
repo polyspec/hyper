@@ -11,8 +11,7 @@ from ..app._core_rules import core_rules
 from ..session._csrf import Csrf
 from ..form._fields import Fields
 from ..form._files import Files
-from ..form._multipart import Multipart
-from ..form._request_body import RequestBody
+from ..form._core_body import NO_LIMIT, RequestBody, held_form
 from ..form.uploaded_file import UploadedFile
 from ..session._flash import Flash
 
@@ -78,27 +77,16 @@ class Request:
         self._query_fields = Fields.parse(query.encode("latin-1"))
         # The body as a host read it: a body read in chunks gives its parts (HY-131).
         self._read = read
-        boundary = Multipart.boundary(self.header("Content-Type") or "")
-        # The number of parts of a multipart body that is one value (HY-131.12).
-        self._part_count = 0
         if read is not None and read.streamed():
             parts = read.parts()
-            self._form_fields = None if parts is None else parts[0]
-            self._file_parts = None if parts is None else parts[1]
-        elif boundary is not None:
-            # A multipart body that is one value is read once, which also gives the number of its parts.
-            reader = Multipart(boundary, None, None, None, None)
-            parts = reader.result() if reader.feed(body) else None
-            self._form_fields = None if parts is None else parts[0]
-            self._file_parts = None if parts is None else parts[1]
-            self._part_count = reader.count()
         else:
-            # The form values of the body, or None when a name or a value is not UTF-8 (HY-42, HY-57).
-            self._form_fields = Fields.from_body(
-                self.header("Content-Type") or "", body
-            )
-            # The file parts of the body, or None when a name, a filename or a content type is not UTF-8 (HY-113).
-            self._file_parts = Files.empty()
+            # A body that is one value is read once by the core (HY-57, HY-113, H35.11); its limits are judged by
+            # `_exceeded`.
+            parts, _ = held_form(self.header("Content-Type") or "", body, NO_LIMIT, NO_LIMIT, NO_LIMIT)
+        # The form values and the file parts of the body, or None when it fails with `invalid` or `header_limit` of
+        # http-form (HY-42, HY-113.23, HY-113.25).
+        self._form_fields = None if parts is None else parts[0]
+        self._file_parts = None if parts is None else parts[1]
 
     def _exceeded(
         self, value_limit: int, part_limit: int, file_limit: int, streams: bool
@@ -109,10 +97,16 @@ class Request:
         read = self._read
         if read is not None and (read.exceeded() or read.streamed()):
             return read.exceeded()
-        largest = 0 if self._file_parts is None else self._file_parts.largest()
-        return len(self._body) > value_limit or (
-            streams and (self._part_count > part_limit or largest > file_limit)
+        # The core judges a body that is one value: the value limit always, the part limit and the file limit only
+        # when the application reads a multipart body in chunks (HY-131.7 to HY-131.12).
+        _, passed = held_form(
+            self.header("Content-Type") or "",
+            self._body,
+            value_limit,
+            part_limit if streams else NO_LIMIT,
+            file_limit if streams else NO_LIMIT,
         )
+        return passed
 
     def _release(self) -> None:
         """Removes the directory of the files of the body with the files that were not moved (HY-131.14)."""

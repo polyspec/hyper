@@ -6,17 +6,19 @@ namespace Polyspec\Hyper;
 
 /**
  * A file that a request sent in a file part (HY-113): its name, its filename, its content type and its bytes. The
- * bytes are a value, or a temporary file of the request for a body that the server read in chunks (HY-131).
+ * bytes are a value, or the file of the core for a body that the server read (HY-131, H35.11), which http-form reads
+ * and moves (F-11).
  */
 final class UploadedFile
 {
     private ?string $bytes;
 
-    private ?string $path = null;
-
     private int $length;
 
     private bool $moved = false;
+
+    /** The file of the core, which reads and moves its bytes, or null for a file whose bytes are a value. */
+    private ?object $core = null;
 
     public function __construct(
         private readonly string $name,
@@ -30,16 +32,16 @@ final class UploadedFile
     }
 
     /**
-     * Returns a file whose bytes are the file of the path, of the size in bytes (HY-131.13).
+     * Returns the file of a form of the core (HY-131.13, H35.11).
      *
      * @internal
      */
-    public static function stored(string $name, string $filename, string $contentType, string $path, int $size): self
+    public static function ofCore(object $core): self
     {
-        $file = new self($name, $filename, $contentType, '');
+        $file = new self($core->name(), $core->filename(), $core->contentType(), '');
         $file->bytes = null;
-        $file->path = $path;
-        $file->length = $size;
+        $file->core = $core;
+        $file->length = $core->size();
 
         return $file;
     }
@@ -76,21 +78,13 @@ final class UploadedFile
     public function content(): string
     {
         ArgumentCount::most(\func_num_args(), 0);
+        if ($this->core !== null) {
+            return $this->core->content();
+        }
         if ($this->moved) {
             throw new \InvalidArgumentException('the file was moved (HY-131)');
         }
-        if ($this->bytes !== null) {
-            return $this->bytes;
-        }
-        if ($this->path === null) {
-            throw new \LogicException('hyper: a stored file has no path');
-        }
-        $bytes = file_get_contents($this->path);
-        if ($bytes === false) {
-            throw new \RuntimeException("hyper: cannot read {$this->path}");
-        }
-
-        return $bytes;
+        return $this->bytes ?? '';
     }
 
     /**
@@ -100,23 +94,21 @@ final class UploadedFile
     {
         ArgumentCount::most(\func_num_args(), 1);
         if (!is_string($path)) {
-            throw new \TypeError('a path is not a string (HY-131)');
+            throw new \TypeError('a path is not a string (F-11)');
+        }
+        if ($this->core !== null) {
+            $this->core->moveTo($path);
+
+            return;
         }
         if ($this->moved) {
             throw new \InvalidArgumentException('the file was moved (HY-131)');
         }
-        if ($this->path === null) {
-            $target = self::createdFile($path);
-            $written = fwrite($target, $this->bytes ?? '');
-            fclose($target);
-            if ($written !== $this->length) {
-                throw new \RuntimeException("hyper: cannot write {$path}");
-            }
-        } else {
-            self::linkedFile($this->path, $path);
-            if (!unlink($this->path)) {
-                throw new \RuntimeException("hyper: cannot remove {$this->path}");
-            }
+        $target = self::createdFile($path);
+        $written = fwrite($target, $this->bytes ?? '');
+        fclose($target);
+        if ($written !== $this->length) {
+            throw new \RuntimeException("hyper: cannot write {$path}");
         }
         $this->bytes = null;
         $this->moved = true;
@@ -140,40 +132,5 @@ final class UploadedFile
         chmod($path, 0600);
 
         return $target;
-    }
-
-    /**
-     * Gives the file of the source the path as a second name, or copies it there when the file system gives no second
-     * name, as between two file systems; fails when the path exists.
-     */
-    private static function linkedFile(string $source, string $path): void
-    {
-        if (file_exists($path)) {
-            throw new \InvalidArgumentException('the path exists (HY-131)');
-        }
-        // link fails with a warning between two file systems and on a file system without second names; its result
-        // decides, and the copy below then moves the file.
-        set_error_handler(static fn (): bool => true);
-        try {
-            $linked = link($source, $path);
-        } finally {
-            restore_error_handler();
-        }
-        if ($linked) {
-            return;
-        }
-        $target = self::createdFile($path);
-        $from = fopen($source, 'r');
-        if ($from === false) {
-            fclose($target);
-
-            throw new \RuntimeException("hyper: cannot read {$source}");
-        }
-        $copied = stream_copy_to_stream($from, $target);
-        fclose($from);
-        fclose($target);
-        if ($copied === false) {
-            throw new \RuntimeException("hyper: cannot write {$path}");
-        }
     }
 }

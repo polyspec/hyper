@@ -1,15 +1,16 @@
-// The urlencoded, multipart and uploaded steps of contracts/fields.json (HY-56, HY-57, HY-106.5, HY-113): a urlencoded
-// text is the UTF-8 encoding of its JSON string, and a multipart type and body are text whose characters are their bytes.
+// The urlencoded, multipart and streamed steps of fields.json and the multipart step of forms.json of the http-form
+// release that config/release-files.json pins (HY-56, HY-57, HY-113, HY-131; H35.11). A body and a text are
+// `{"hex": …}`, the limits are the record `limits`, and a failure is `raises` with its kind, its status, its category
+// and its message. Each step reads through the functions that the server calls: the core reads every body.
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { rules, type BodyLimits, type CoreForm, type CoreRequestBody } from '../../src/app/core-rules.js';
 import { Fields } from '../../src/form/fields.js';
-import { Files } from '../../src/form/files.js';
-import { Multipart } from '../../src/form/multipart.js';
-import { RequestBody } from '../../src/form/request-body.js';
 import { UploadedFile } from '../../src/form/uploaded-file.js';
 import type { CaseReader } from '../case-reader.js';
-import { bytesOf } from '../support.js';
+
+const UNBOUNDED: BodyLimits = { limit: Number.MAX_SAFE_INTEGER, valueLimit: Number.MAX_SAFE_INTEGER, partLimit: Number.MAX_SAFE_INTEGER, fileLimit: Number.MAX_SAFE_INTEGER };
 
 function text(reader: CaseReader, name: string): string {
   const value = reader.input(name);
@@ -17,95 +18,119 @@ function text(reader: CaseReader, name: string): string {
   return value;
 }
 
-function fieldsOf(fields: Fields | null): unknown {
-  return fields?.pairs() ?? null;
+// The bytes of a field `{"hex": …}` of the case.
+function bytes(reader: CaseReader, name: string): Uint8Array {
+  const value = reader.input(name);
+  const hex = typeof value === 'object' && value !== null && 'hex' in value ? value.hex : undefined;
+  if (typeof hex !== 'string' || !/^(?:[0-9a-f]{2})*$/.test(hex)) throw new Error(`the case field ${name} is no {"hex": …}`);
+  return Uint8Array.from(Buffer.from(hex, 'hex'));
 }
 
-function filesOf(files: Files | null): unknown {
-  if (files === null) return null;
-  return files.pairs().flatMap(([, list]) =>
-    list.map((file) => ({ name: file.name(), filename: file.filename(), contentType: file.contentType(), content: Buffer.from(file.content()).toString('latin1') })),
-  );
+// The record `limits` of the case as the core takes it.
+function limitsOf(reader: CaseReader): BodyLimits {
+  const value = reader.input('limits');
+  const read = (name: string): number => {
+    const limit = typeof value === 'object' && value !== null ? (value as Record<string, unknown>)[name] : undefined;
+    if (typeof limit !== 'number') throw new Error(`the limit ${name} of the case is not a number`);
+    return limit;
+  };
+  return { limit: read('limit'), valueLimit: read('value_limit'), partLimit: read('part_limit'), fileLimit: read('file_limit') };
 }
 
-export const steps = {
-  // Makes a file with the public constructor, as an application makes one, and compares its members (HY-106.5).
-  uploaded(reader: CaseReader): void {
-    const file = new UploadedFile(text(reader, 'name'), text(reader, 'filename'), text(reader, 'contentType'), bytesOf(text(reader, 'content')));
-    reader.compare('file', { name: file.name(), filename: file.filename(), contentType: file.contentType(), size: file.size(), content: Buffer.from(file.content()).toString('latin1') });
-  },
-  // Parses the text and records its pairs and its names, or null for both when it fails with HY-42 (HY-56).
+// The failure of the core as the field `raises` states it, or a rejection of any other error.
+function raised(error: unknown): { kind: string; status: number | null; category: string; message: string } {
+  if (!(error instanceof Error) || !('kind' in error) || typeof error.kind !== 'string') throw error;
+  const status = 'status' in error && typeof error.status === 'number' ? error.status : null;
+  const category = 'category' in error && typeof error.category === 'string' ? error.category : error instanceof TypeError ? 'type' : 'value';
+  return { kind: error.kind, status, category, message: error.message };
+}
+
+function fileRows(form: CoreForm, size: boolean): Promise<unknown>[] {
+  return form.files.flatMap(([, list]) => list.map((core) => UploadedFile.ofCore(core))).map(async (file) => ({
+    name: file.name(),
+    filename: file.filename(),
+    contentType: file.contentType(),
+    content: Buffer.from(await file.content()).toString('latin1'),
+    ...(size ? { size: file.size() } : {}),
+  }));
+}
+
+// Reads the form of the body held as one value and compares its fields and files, or its failure (HY-57, HY-113).
+async function held(reader: CaseReader): Promise<void> {
+  let form: CoreForm;
+  try {
+    form = rules().formReadHeld(text(reader, 'content_type'), bytes(reader, 'body'), UNBOUNDED);
+  } catch (error) {
+    reader.compare('raises', raised(error));
+    return;
+  }
+  reader.compare('fields', form.fields);
+  reader.compare('files', await Promise.all(fileRows(form, false)));
+}
+
+export const fieldsSteps = {
+  // Parses the text and records its pairs and its names, or its failure (HY-42, HY-56).
   urlencoded(reader: CaseReader): void {
-    const fields = Fields.parse(Buffer.from(text(reader, 'text'), 'utf8'));
-    reader.compare('fields', fields?.pairs() ?? null);
-    reader.compare('names', fields?.names() ?? null);
-  },
-  // Reads the form values and the files of the body, or null for each when the body fails with HY-42 (HY-57, HY-113).
-  multipart(reader: CaseReader): void {
-    const type = bytesOf(text(reader, 'type')).toString('latin1');
-    const body = bytesOf(text(reader, 'body'));
-    const whole = [fieldsOf(Fields.fromBody(type, body)), filesOf(Files.fromBody(type, body))];
-    // HY-131.6: the body read in two chunks, divided at every position, gives the result of the whole body, and the
-    // reader holds between two chunks at most its bound; the first division that differs is the result of the case.
-    const boundary = Multipart.boundary(type);
-    let result = whole;
-    if (boundary !== null) {
-      const bound = Math.max(8192 + 3, boundary.length + 3);
-      for (let at = 0; at <= body.length && result === whole; at += 1) {
-        const parts = new Multipart(boundary, null, null, null, null);
-        for (const chunk of [body.subarray(0, at), body.subarray(at)]) {
-          parts.feed(chunk);
-          if (parts.buffered() > bound) throw new Error(`the reader holds ${parts.buffered()} bytes after a chunk that ends at ${at}; its bound is ${bound}`);
-        }
-        const read = parts.result();
-        const divided = [fieldsOf(read?.[0] ?? null), filesOf(read?.[1] ?? null)];
-        if (JSON.stringify(divided) !== JSON.stringify(whole)) result = divided;
-      }
+    let fields: Fields;
+    try {
+      fields = Fields.of(rules().formParseUrlencoded(bytes(reader, 'text')));
+    } catch (error) {
+      reader.compare('raises', raised(error));
+      return;
     }
-    reader.compare('fields', result[0]);
-    reader.compare('files', result[1]);
+    reader.compare('fields', fields.pairs());
+    reader.compare('names', fields.names());
   },
-  // Reads the body in chunks as a host does, and records what the body holds, its parts, the files of its directory,
+  multipart: held,
+  // Reads the body in chunks as the host does, and records what the body holds, its parts, the files of its directory,
   // the move of its first file and the removal of the directory (HY-131).
   async streamed(reader: CaseReader): Promise<void> {
-    const type = text(reader, 'type');
-    const body = bytesOf(text(reader, 'body'));
+    const body = bytes(reader, 'body');
     const chunk = reader.input('chunk');
-    const limit = reader.input('limit');
     const move = text(reader, 'move');
-    if (typeof chunk !== 'number' || typeof limit !== 'number') throw new Error('the chunk or the limit of the case is not a number');
-    const limits = [reader.input('valueLimit'), reader.input('partLimit'), reader.input('fileLimit')];
-    const [valueLimit, partLimit, fileLimit] = limits;
-    if (typeof valueLimit !== 'number' || typeof partLimit !== 'number' || typeof fileLimit !== 'number') throw new Error('a limit of the case is not a number');
-    const read = new RequestBody(type, limit, reader.input('stream') === true, valueLimit, partLimit, fileLimit);
+    if (typeof chunk !== 'number') throw new Error('the chunk of the case is not a number');
+    const read: CoreRequestBody = await rules().formStart(text(reader, 'content_type'), reader.input('stream') === true, limitsOf(reader));
     const scratch = mkdtempSync(join(tmpdir(), 'hyper-case-'));
     try {
-      let stopped = false;
-      for (let at = 0; at < body.length && !stopped; at += chunk) {
-        stopped = !read.feed(body.subarray(at, at + chunk));
-        await read.written();
+      let failure: unknown = null;
+      for (let at = 0; at < body.length && failure === null; at += chunk) {
+        await read.feed(body.subarray(at, at + chunk)).catch((error: unknown) => {
+          failure = error;
+        });
       }
-      const held = Buffer.from(read.held());
-      const parts = read.streamed() ? read.parts() : null;
-      const fields = read.streamed() ? (parts?.[0] ?? null) : stopped ? null : Fields.fromBody(type, held);
-      const files = read.streamed() ? (parts?.[1] ?? null) : stopped ? null : Files.fromBody(type, held);
+      const stopped = failure !== null;
+      if (!stopped) await read.finish().catch((error: unknown) => {
+        failure = error;
+      });
+      if (failure !== null) reader.compare('raises', raised(failure));
+      const kind = failure === null ? null : raised(failure).kind;
+      const heldBytes = Buffer.from(read.held());
+      let form: CoreForm | null = null;
+      if (failure === null) {
+        try {
+          form = read.streamed() ? read.parts() : rules().formReadHeld(text(reader, 'content_type'), heldBytes, UNBOUNDED);
+        } catch (error) {
+          reader.compare('raises', raised(error));
+        }
+      }
       const directory = read.directory();
       const count = (): number | null => (directory === null ? null : readdirSync(directory).length);
       reader.compare('stopped', stopped);
-      reader.compare('exceeded', read.exceeded());
-      reader.compare('held', held.toString('latin1'));
-      reader.compare('fields', fieldsOf(fields));
-      reader.compare('files', files === null ? null : files.pairs().flatMap(([, list]) => list.map((file) => ({ name: file.name(), filename: file.filename(), contentType: file.contentType(), content: Buffer.from(file.content()).toString('latin1'), size: file.size() }))));
+      reader.compare('exceeded', kind !== null && ['body_limit', 'value_limit', 'part_limit', 'file_limit'].includes(kind));
+      reader.compare('held', heldBytes.toString('latin1'));
+      reader.compare('fields', form?.fields ?? null);
+      reader.compare('files', form === null ? null : await Promise.all(fileRows(form, true)));
       reader.compare('entries', count());
-      const first: UploadedFile | undefined = files?.pairs()[0]?.[1][0];
-      if (move === 'none' || first === undefined) {
+      const firstCore = form?.files[0]?.[1][0];
+      if (move === 'none' || firstCore === undefined) {
         reader.compare('moved', null);
       } else {
+        const first = UploadedFile.ofCore(firstCore);
         const target = join(scratch, 'target');
         if (move === 'exists') writeFileSync(target, 'taken');
-        const failure = (work: () => void): [string, string] | null => {
+        const attempt = async (work: () => Promise<unknown>): Promise<[string, string] | null> => {
           try {
-            work();
+            await work();
             return null;
           } catch (error) {
             if (error instanceof TypeError) return [error.message, 'type'];
@@ -114,15 +139,15 @@ export const steps = {
           }
         };
         // @ts-expect-error -- a caller may pass a path of any type
-        let failed = failure(() => first.moveTo(move === 'type' ? 7 : target));
+        let failed = await attempt(() => first.moveTo(move === 'type' ? 7 : target));
         let content: string;
         let after: string | null = null;
         if (failed === null) {
           content = readFileSync(target).toString('latin1');
-          failed = failure(() => first.moveTo(join(scratch, 'second')));
-          after = failure(() => first.content())?.[0] ?? null;
+          failed = await attempt(() => first.moveTo(join(scratch, 'second')));
+          after = (await attempt(() => first.content()))?.[0] ?? null;
         } else {
-          content = Buffer.from(first.content()).toString('latin1');
+          content = Buffer.from(await first.content()).toString('latin1');
         }
         reader.compare('moved', { content, left: count(), again: failed?.[0] ?? null, read: after, class: failed?.[1] ?? null });
       }
@@ -133,4 +158,8 @@ export const steps = {
       rmSync(scratch, { recursive: true, force: true });
     }
   },
+};
+
+export const formsSteps = {
+  multipart: held,
 };

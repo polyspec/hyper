@@ -29,7 +29,7 @@ from ._pipeline import (
     read_body,
     validate,
 )
-from ..form._request_body import RequestBody
+from ..form._core_body import RequestBody
 from ._wsgi_body import WsgiBody
 from ..http.request import Request
 from ..http.response import Response

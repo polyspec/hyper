@@ -222,10 +222,10 @@ describe('a multipart body read in chunks', () => {
       let handled: Promise<void> = Promise.resolve();
       const app = await new Fixture().app({ formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'], bodyLimit: 4 * 1024 * 1024 });
       const listener = app.listener(new FileSessions({ directory }), {
-        around: (request) => {
+        around: async (request) => {
           const file = request.file('f');
           seen.push(request.validInput(), request.form(), file?.filename() ?? null, file?.size() ?? null, readdirSync(uploads).length);
-          if (move) file?.moveTo(join(uploads, 'kept.bin'));
+          if (move) await file?.moveTo(join(uploads, 'kept.bin'));
           return Promise.resolve(Response.text(200, 'stored'));
         },
         written: () => {

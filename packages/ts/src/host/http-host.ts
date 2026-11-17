@@ -5,15 +5,14 @@ import type { Socket } from 'node:net';
 import { extname, isAbsolute, join } from 'node:path';
 import { TLSSocket } from 'node:tls';
 import type { App } from '../app/app.js';
-import { rules } from '../app/core-rules.js';
+import { rules, type CoreRequestBody } from '../app/core-rules.js';
 import { Cookies } from '../http/cookies.js';
 import type { FileSessions } from '../session/file-sessions.js';
 import type { RedisSessions } from '../session/redis-sessions.js';
 import { RecordSession } from '../session/record-session.js';
 import { Reply } from '../http/reply.js';
 import { Disconnected } from '../app/disconnected.js';
-import { Request } from '../http/request.js';
-import { RequestBody } from '../form/request-body.js';
+import { Request, type ReadBody } from '../http/request.js';
 import { Response } from '../http/response.js';
 
 export interface ServerOptions {
@@ -99,7 +98,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     // The request of the last call of `answer`, which the disconnect hook receives (HY-97).
     let disconnectedRequest: Request | null = null;
     // The body as it is read, whose directory holds the files of a body read in chunks (HY-131).
-    let read: RequestBody | null = null;
+    let read: ReadBody | null = null;
     // The request that holds `read`, which releases the files of the body (HY-131.14).
     let holder: Request | null = null;
     try {
@@ -113,9 +112,12 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, https });
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
       // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
-      read = new RequestBody(request.header('Content-Type') ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'), app.valueLimit, app.partLimit, app.fileLimit);
-      await readBody(incoming, read, app.bodyLimit);
-      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, body: read.held(), bodySize: read.size(), https }, read);
+      // The core reads the chunks under the four limits in their order (F-25, HY-131.32).
+      const body = await rules().formStart(request.header('Content-Type') ?? null, app.formTypes.includes('multipart/form-data'), { limit: app.bodyLimit, valueLimit: app.valueLimit, partLimit: app.partLimit, fileLimit: app.fileLimit });
+      read = { core: body, failure: null };
+      const failure = await readBody(incoming, body, app.bodyLimit);
+      read = { core: body, failure };
+      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, body: body.held(), bodySize: failure === 'body_limit' ? Math.max(body.size(), app.bodyLimit + 1) : body.size(), https }, read);
       holder = request;
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
       const last: { request?: Request; reply?: Reply } = {};
@@ -206,7 +208,7 @@ function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions
 /** @internal */
 export function requestOf(
   parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean },
-  read: RequestBody | null = null,
+  read: ReadBody | null = null,
 ): Request {
   const headers: Record<string, string> = {};
   for (const [name, value] of Object.entries(parts.headers ?? {})) {
@@ -248,38 +250,37 @@ function publicFile(files: string, incoming: IncomingMessage): string | null {
   }
 }
 
-// Gives the request body to `read` in chunks. A body larger than the limit is not kept: the rest of it is read and
-// discarded, so that the response can be sent (HY-59). The next chunk is read after the files of the body took the
-// bytes of the last one (HY-131.21).
-function readBody(incoming: IncomingMessage, read: RequestBody, limit: number): Promise<void> {
+// Gives the request body to the body of the core in chunks, each after the core took the last one (HY-131.21), and
+// resolves with the kind of http-form of the first failure of the body, or null when it read to its end. After a
+// failure the rest of the body is read and discarded, so that the response can be sent (HY-59); a declared length
+// above the limit reads none of it.
+function readBody(incoming: IncomingMessage, body: CoreRequestBody, limit: number): Promise<string | null> {
   return new Promise((resolve, reject) => {
-    const stop = (): void => {
+    // The failure of the core: its kind for a failure of the body, or a rejection for any other error.
+    const failed = (error: unknown): void => {
       incoming.removeListener('data', collect);
       incoming.resume();
+      const kind = error instanceof Error && 'kind' in error && typeof error.kind === 'string' ? error.kind : null;
+      if (kind === null || kind === 'internal' || (error instanceof Error && 'category' in error && error.category === 'io')) reject(error instanceof Error ? error : new Error(String(error)));
+      else resolve(kind);
     };
+    let pending: Promise<void> = Promise.resolve();
     const collect = (chunk: Buffer): void => {
-      if (!read.feed(chunk)) {
-        stop();
-        resolve();
-        return;
-      }
       incoming.pause();
-      read.written().then(
-        () => incoming.resume(),
-        (error: unknown) => {
-          stop();
-          reject(error instanceof Error ? error : new Error(String(error)));
-        },
-      );
+      pending = pending.then(() => body.feed(chunk)).then(() => {
+        incoming.resume();
+      }, failed);
     };
     if (Number(incoming.headers['content-length'] ?? 0) > limit) {
       incoming.resume();
-      resolve();
+      resolve('body_limit');
       return;
     }
     incoming.on('data', collect);
     incoming.on('end', () => {
-      read.written().then(resolve, reject);
+      pending.then(() => body.finish()).then(() => {
+        resolve(null);
+      }, failed);
     });
     incoming.on('error', reject);
   });

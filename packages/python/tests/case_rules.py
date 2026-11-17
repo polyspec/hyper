@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Any
 
 LANGUAGE = "python"
-CONTRACTS = Path(__file__).resolve().parents[3] / "contracts"
+ROOT = Path(__file__).resolve().parents[3]
+CONTRACTS = ROOT / "contracts"
 # The fixed case files of tests/legacy, which a library holds now; the steps read them until S-4 removes the directory.
 LEGACY = Path(__file__).resolve().parents[3] / "tests" / "legacy"
 # The keys of a case that are not fields of its section (HYR-6, HYR-11).
@@ -29,9 +30,33 @@ HEADER_FIELDS = frozenset({"headers", "allHeaders", "absentHeaders"})
 
 
 def contract(name: str) -> Any:
-    """The JSON value of a file under contracts/, or of a fixed case file under tests/legacy."""
-    folder = LEGACY if name in _legacy_case_files() else CONTRACTS
-    return json.loads((folder / name).read_text(encoding="utf-8"))
+    """The JSON value of a file under contracts/, of a fixed case file under tests/legacy, or of a case file that a
+    release of another library publishes (`release` of its caseFiles entry, H35.11)."""
+    if name in _legacy_case_files():
+        path = LEGACY / name
+    else:
+        path = _release_file(name) or CONTRACTS / name
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _release_file(name: str) -> Path | None:
+    """The installed case file of a release, var/release-files/<library>/<tag>/contracts/<name> from the tag of
+    config/release-files.json, or None for a case file of this repository. A missing file fails with its path and the
+    target that writes it; the reader downloads nothing (HR-81, HR-85)."""
+    if name == "interfaces.json":
+        return None
+    entry = contract("interfaces.json")["caseFiles"].get(name, {})
+    library = entry.get("release")
+    if library is None:
+        return None
+    pins = json.loads((ROOT / "config" / "release-files.json").read_text(encoding="utf-8"))
+    tag = pins["releases"][library]["tag"]
+    path = ROOT / "var" / "release-files" / library / tag / "contracts" / name
+    if not path.exists():
+        raise FileNotFoundError(
+            f"{path.relative_to(ROOT)} is missing; `make hyper-install-release-files` writes it"
+        )
+    return path
 
 
 def _legacy_case_files() -> dict[str, dict]:

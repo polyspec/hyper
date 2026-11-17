@@ -28,7 +28,7 @@ from ._pipeline import (
     served_file,
     validate,
 )
-from ..form._request_body import RequestBody
+from ..form._core_body import RequestBody
 from ..http.request import Request
 from ..http.response import Response
 

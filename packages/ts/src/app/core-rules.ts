@@ -159,6 +159,48 @@ interface KeepRequest {
   readonly formCsrf?: string | null;
 }
 
+// The four limits of a body as the record body_limits of the core takes them (F-25, HY-59.15, HY-131.7 to HY-131.12).
+/** @internal */
+export interface BodyLimits {
+  readonly limit: number;
+  readonly valueLimit: number;
+  readonly partLimit: number;
+  readonly fileLimit: number;
+}
+
+// A file of a body as the class uploaded_file of the core gives it (F-22, F-11); `content` and `moveTo` wait on the
+// file system, so the binding gives their result as a promise (GN-6m).
+/** @internal */
+export interface CoreUploadedFile {
+  name(): string;
+  filename(): string;
+  contentType(): string;
+  size(): number;
+  content(): Promise<Uint8Array>;
+  moveTo(path: string): Promise<void>;
+}
+
+// The text fields and the files of a body as the record form of the core gives them (F-21, F-22).
+/** @internal */
+export interface CoreForm {
+  readonly fields: readonly (readonly [string, readonly string[]])[];
+  readonly files: readonly (readonly [string, readonly CoreUploadedFile[]])[];
+}
+
+// The body of a request as the class request_body of the core reads it (F-9, F-24, F-25): the members that write or
+// remove files wait on the file system and give a promise (GN-6m).
+/** @internal */
+export interface CoreRequestBody {
+  feed(chunk: Uint8Array): Promise<void>;
+  finish(): Promise<void>;
+  parts(): CoreForm;
+  held(): Uint8Array;
+  size(): number;
+  streamed(): boolean;
+  directory(): string | null;
+  remove(): Promise<void>;
+}
+
 // A host function of the templates as the binding calls it (HYC-24).
 type CoreHostFunction = (args: readonly CoreValue[], environment: unknown) => CoreValue;
 
@@ -221,6 +263,9 @@ export interface CoreBinding {
   answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;
   Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions) => CorePagesInstance;
   PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;
+  readHeldBody(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;
+  parseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];
+  RequestBody: { start(contentType: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody> };
   HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;
   HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;
 }
@@ -237,7 +282,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'readHeldBody', 'parseUrlencoded', 'RequestBody', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
 
 // A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
@@ -305,6 +350,15 @@ export interface CoreRules {
   // requestFileOver: rules.file_over of the bytes of each file of the body and the limit (HY-114.12). The binding
   // throws the kind `invalid_number` for a limit that is no unsigned integer, before the core compares the files.
   requestFileOver(sizes: readonly number[], limit: number): boolean;
+  // Exact. formStart: request_body.start starts the body of a request with its four limits (F-24, F-25, HY-131.1);
+  // its feed, finish and parts read the chunks under the limits in their order and give the form (HY-131.32).
+  formStart(contentType: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody>;
+  // Exact. formReadHeld: form_functions.read_held_body gives the form of a body held as one value under its limits
+  // (F-21, F-22, F-25.2, HY-57).
+  formReadHeld(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;
+  // Exact. formParseUrlencoded: form_functions.parse_urlencoded gives the values of a query or of an urlencoded text
+  // (F-20, HY-56).
+  formParseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];
   // requestCurrentPath: rules.current_path of the value of HX-Current-URL (HY-11.5).
   requestCurrentPath(header: string | null): string | null;
   // replyCacheControl: rules.cache_control gives the value that the reply keeps (HY-52.6).
@@ -446,6 +500,9 @@ export function coreRules(module: object): CoreRules {
     representationEtag: (contentType, body) => core.representationTag(contentType, encoder.encode(body)),
     requestMediaType: (contentType) => core.mediaType(contentType),
     requestFileOver: (sizes, limit) => core.fileOver(sizes, limit),
+    formStart: (contentType, stream, limits) => core.RequestBody.start(contentType, stream, limits),
+    formReadHeld: (contentType, body, limits) => core.readHeldBody(contentType, body, limits),
+    formParseUrlencoded: (text) => core.parseUrlencoded(text),
     requestCurrentPath: (header) => core.currentPath(header),
     replyCacheControl: (value) => core.cacheControl(value),
     replyReferrerPolicy: (value) => core.referrerPolicy(value),

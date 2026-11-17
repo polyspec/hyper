@@ -11,7 +11,7 @@ import { steps as cookiesSteps } from './steps/cookies.js';
 import { steps as buildSteps } from './steps/build.js';
 import { steps as containerSteps } from './steps/container.js';
 import { steps as csrfSteps } from './steps/csrf.js';
-import { steps as fieldsSteps } from './steps/fields.js';
+import { fieldsSteps, formsSteps } from './steps/fields.js';
 import { steps as fileSessionsSteps } from './steps/file-sessions.js';
 import { steps as fileStoreSessionsSteps } from './steps/file-store-sessions.js';
 import { steps as functionsSteps } from './steps/functions.js';
@@ -43,6 +43,7 @@ const STEPS: Record<string, Step> = {
   ...prefixed('container.json', containerSteps),
   ...prefixed('csrf.json', csrfSteps),
   ...prefixed('fields.json', fieldsSteps),
+  ...prefixed('forms.json', formsSteps),
   ...prefixed('file-sessions.json', fileSessionsSteps),
   // The fixed copy of the store cases that the sessions library holds (tests/legacy), until S-4 removes it.
   ...prefixed('file-store-sessions.json', fileStoreSessionsSteps),

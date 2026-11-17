@@ -328,6 +328,10 @@
       "additionalProperties": false,
       "required": ["fixtures", "sections"],
       "properties": {
+        "release": {
+          "description": "The library of config/release-files.json whose release publishes the file; the case readers read it from var/release-files/<library>/<tag>/contracts/<file>, which make hyper-install-release-files writes.",
+          "$ref": "#/$defs/kebab"
+        },
         "fixtures": {
           "type": "object",
           "additionalProperties": { "enum": ["label", "input"] }

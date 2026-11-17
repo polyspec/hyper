@@ -90,7 +90,7 @@ export const handlers: Handlers<Services> = {
     },
 
     'board.create': {
-      post: ({ request, services }) => {
+      post: async ({ request, services }) => {
         const values = { title: trim(request.formString('title')), author: trim(request.formString('author')), body: trim(request.formString('body')) };
         const errors: Record<string, string> = {};
         if (values.title === '') errors.title = '제목을 입력하세요.';
@@ -104,7 +104,7 @@ export const handlers: Handlers<Services> = {
         const file = request.file('attachment');
         const attached = file !== null && file.filename() !== '';
         const id = services.get('posts').create(values.title, values.author, values.body, attached ? file.filename() : '', attached ? file.size() : 0);
-        if (attached) file.moveTo(services.get('posts').attachmentPath(id));
+        if (attached) await file.moveTo(services.get('posts').attachmentPath(id));
         return Result.redirect('/board').flash('created', id).changed('posts');
       },
     },

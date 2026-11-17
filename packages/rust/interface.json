@@ -4224,7 +4224,7 @@
                 "text",
                 {
                   "list": {
-                    "unit": "uploaded_file"
+                    "unit": "form_file"
                   }
                 }
               ]
@@ -4244,9 +4244,9 @@
       }
     },
     {
-      "id": "uploaded_file",
+      "id": "form_file",
       "name": [
-        "uploaded",
+        "form",
         "file"
       ],
       "module": "",
@@ -4256,7 +4256,7 @@
       "core_type": "polyspec_hyper::form::UploadedFile",
       "members": [
         {
-          "id": "uploaded_file.new",
+          "id": "form_file.new",
           "name": [
             "new"
           ],
@@ -4302,7 +4302,7 @@
           }
         },
         {
-          "id": "uploaded_file.name",
+          "id": "form_file.name",
           "name": [
             "name"
           ],
@@ -4317,7 +4317,7 @@
           }
         },
         {
-          "id": "uploaded_file.filename",
+          "id": "form_file.filename",
           "name": [
             "filename"
           ],
@@ -4332,7 +4332,7 @@
           }
         },
         {
-          "id": "uploaded_file.content_type",
+          "id": "form_file.content_type",
           "name": [
             "content",
             "type"
@@ -4348,7 +4348,7 @@
           }
         },
         {
-          "id": "uploaded_file.size",
+          "id": "form_file.size",
           "name": [
             "size"
           ],
@@ -4363,7 +4363,7 @@
           }
         },
         {
-          "id": "uploaded_file.content",
+          "id": "form_file.content",
           "name": [
             "content"
           ],
@@ -4384,7 +4384,7 @@
           }
         },
         {
-          "id": "uploaded_file.move_to",
+          "id": "form_file.move_to",
           "name": [
             "move",
             "to"

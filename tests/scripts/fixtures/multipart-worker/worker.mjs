@@ -5,39 +5,52 @@
 import { createHash } from 'node:crypto';
 import { createReadStream, readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { RequestBody } from '../../../../packages/ts/dist/form/request-body.js';
+import { rules } from '../../../../packages/ts/dist/app/core-rules.js';
 
 const cases = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 for (const [index, item] of cases.entries()) {
   const started = performance.now();
-  const read = new RequestBody(item.type, item.limit, true, item.valueLimit, item.partLimit, item.fileLimit);
-  let stopped = false;
+  // The core reads the chunks under the four limits in their order (F-25, HY-131.32); its first failure stops the body.
+  const read = await rules().formStart(item.type === '' ? null : item.type, true, { limit: item.limit, valueLimit: item.valueLimit, partLimit: item.partLimit, fileLimit: item.fileLimit });
+  let failure = null;
   for await (const chunk of createReadStream(item.body, { highWaterMark: item.chunk })) {
-    stopped = !read.feed(chunk);
-    if (stopped) break;
-    await read.written();
+    try {
+      await read.feed(chunk);
+    } catch (error) {
+      failure = error;
+      break;
+    }
   }
-  await read.written();
-  const parts = read.parts();
+  const stopped = failure !== null;
+  let parts = null;
+  if (!stopped) {
+    try {
+      await read.finish();
+      parts = read.parts();
+    } catch (error) {
+      failure = error;
+    }
+  }
+  const exceeded = ['body_limit', 'value_limit', 'part_limit', 'file_limit'].includes(failure?.kind);
   const ms = performance.now() - started;
   const hash = createHash('sha256');
   let values = 0;
   let files = 0;
   let bytes = 0;
   if (parts !== null) {
-    for (const [name, list] of parts[0].pairs()) {
+    for (const [name, list] of parts.fields) {
       hash.update(`V\0${name}\0`);
       for (const value of list) {
         values += 1;
         hash.update(`${Buffer.byteLength(value)}\0${value}\0`);
       }
     }
-    for (const [name, list] of parts[1].pairs()) {
+    for (const [name, list] of parts.files) {
       for (const file of list) {
         files += 1;
         bytes += file.size();
         const target = join(process.argv[3], `node-${index}-${files}`);
-        file.moveTo(target);
+        await file.moveTo(target);
         const content = createHash('sha256');
         for await (const block of createReadStream(target)) content.update(block);
         hash.update(`F\0${name}\0${file.filename()}\0${file.contentType()}\0${file.size()}\0${content.digest('hex')}\0`);
@@ -47,5 +60,5 @@ for (const [index, item] of cases.entries()) {
   }
   await read.remove();
   const usage = process.resourceUsage();
-  console.log(JSON.stringify({ result: [parts !== null, stopped, read.exceeded(), values, files, bytes, hash.digest('hex')], ms: Math.round(ms * 10) / 10, cpu: Math.round((usage.userCPUTime + usage.systemCPUTime) / 1000) }));
+  console.log(JSON.stringify({ result: [parts !== null, stopped, exceeded, values, files, bytes, hash.digest('hex')], ms: Math.round(ms * 10) / 10, cpu: Math.round((usage.userCPUTime + usage.systemCPUTime) / 1000) }));
 }

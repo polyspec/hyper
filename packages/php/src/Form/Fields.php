@@ -21,28 +21,32 @@ final class Fields extends NamedValues
     }
 
     /**
-     * Parses `name=value&name=value`: `+` is a space, `%XX` is its byte and another `%` stays. Returns null when a
-     * name or a value is not UTF-8 (HY-42, HY-56).
+     * Parses `name=value&name=value` through `parseUrlencoded` of the core, which reads it with http-form: `+` is a
+     * space, `%XX` is its byte and another `%` stays. Returns null when a name or a value is not UTF-8 (HY-42, HY-56).
      */
     public static function parse(string $text): ?self
     {
+        try {
+            return self::read($text);
+        } catch (HyperValueError) {
+            return null;
+        }
+    }
+
+    /**
+     * Parses the text as `parse` does, and fails with the error of the core, kind `invalid` of http-form, where
+     * `parse` returns null (HY-42, HY-56).
+     *
+     * @internal
+     */
+    public static function read(string $text): self
+    {
+        $pairs = parseUrlencoded($text);
         $names = [];
         $values = [];
-        foreach (explode('&', $text) as $part) {
-            if ($part === '') {
-                continue;
-            }
-            $equals = strpos($part, '=');
-            $name = self::percentDecoded($equals === false ? $part : substr($part, 0, $equals));
-            $value = self::percentDecoded($equals === false ? '' : substr($part, $equals + 1));
-            if ($name === null || $value === null) {
-                return null;
-            }
-            if (!array_key_exists($name, $values)) {
-                $names[] = $name;
-                $values[$name] = [];
-            }
-            $values[$name][] = $value;
+        foreach ($pairs as [$name, $items]) {
+            $names[] = $name;
+            $values[$name] = $items;
         }
 
         return new self($names, $values);
@@ -51,28 +55,10 @@ final class Fields extends NamedValues
     /**
      * Returns the fields of a request body: of an `application/x-www-form-urlencoded` body, or the text fields of a
      * `multipart/form-data` body; a body of another type has none (HY-57). Returns null when a part of the body fails
-     * with HY-42 (HY-113.15).
+     * (HY-113.15, HY-113.23, HY-113.25).
      */
     public static function fromBody(string $type, string $body): ?self
     {
-        if (preg_match('#^application/x-www-form-urlencoded[ \t]*(;|$)#iD', $type) === 1) {
-            return self::parse($body);
-        }
-        $boundary = Multipart::boundary($type);
-        if ($boundary === null) {
-            return self::empty();
-        }
-
-        return Multipart::read($body, $boundary)[0] ?? null;
-    }
-
-    /**
-     * Decodes `+` to a space and `%XX` to its byte, and returns the bytes when they are UTF-8, or null.
-     */
-    private static function percentDecoded(string $text): ?string
-    {
-        $decoded = urldecode($text);
-
-        return preg_match('//u', $decoded) === 1 ? $decoded : null;
+        return Files::heldForm($type, $body)[0] ?? null;
     }
 }

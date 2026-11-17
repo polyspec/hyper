@@ -55,6 +55,11 @@ _MEMBERS = (
     "kept_cookie",
     "accept_ranges",
     "file_over",
+    "RequestBody",
+    "BodyLimits",
+    "FormFile",
+    "read_held_body",
+    "parse_urlencoded",
 )
 
 
@@ -149,6 +154,32 @@ class CoreRules:
         binding raises the kind `invalid_number` for a limit that is no unsigned integer, before the core compares
         the files."""
         return self._core.file_over(sizes, limit)
+
+    def body_limits(self, limit: int, value_limit: int, part_limit: int, file_limit: int) -> Any:
+        """The record body_limits of the four limits of a body (HY-59.15, HY-131.7 to HY-131.12)."""
+        return self._core.BodyLimits(
+            limit=limit, value_limit=value_limit, part_limit=part_limit, file_limit=file_limit
+        )
+
+    def request_body_start(self, content_type: Optional[str], stream: bool, limits: Any) -> Any:
+        """RequestBody: request_body.start of the core reads the chunks of a body under its four limits and in their
+        order through http-form (F-9, F-24, F-25, HY-131.32); it starts the reader in chunks only for a
+        `multipart/form-data` type with a boundary (HY-113.24)."""
+        return self._core.RequestBody.start(content_type, stream, limits)
+
+    def read_held_body(self, content_type: Optional[str], body: bytes, limits: Any) -> Any:
+        """Request: form_functions.read_held_body gives the form of a body held as one value, under its limits, and
+        fails with the kind of http-form (F-21, F-22, F-25.2, HY-113.23, HY-113.25)."""
+        return self._core.read_held_body(content_type, body, limits)
+
+    def parse_urlencoded(self, text: bytes) -> list[Any]:
+        """Fields.parse: form_functions.parse_urlencoded gives the values of an urlencoded text, and fails with
+        `invalid` for a name or a value that is not UTF-8 (F-20, F-21, HY-42, HY-56)."""
+        return self._core.parse_urlencoded(text)
+
+    def uploaded_file(self, name: str, filename: str, content_type: str, content: bytes) -> Any:
+        """UploadedFile: form_file.new gives a file of the core that holds its bytes as a value (F-22)."""
+        return self._core.FormFile(name, filename, content_type, content)
 
     def request_current_path(self, header: Optional[str]) -> Optional[str]:
         """Request.current_path: rules.current_path of the value of HX-Current-URL (HY-11.5)."""

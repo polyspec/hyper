@@ -33,6 +33,8 @@ export interface Section {
 }
 
 export interface Declaration {
+  // The library of config/release-files.json whose release publishes the file (H35.11).
+  release?: string;
   fixtures: Record<string, string>;
   sections: Record<string, Section>;
 }
@@ -40,6 +42,8 @@ export interface Declaration {
 const CONTRACTS = new URL('../../../contracts/', import.meta.url);
 // The fixed case files of tests/legacy, which a library holds now; the steps read them until S-4 removes the directory.
 const LEGACY = new URL('../../../tests/legacy/', import.meta.url);
+// The checkout, whose config/release-files.json pins the release files and whose var/release-files holds them.
+const ROOT = new URL('../../../', import.meta.url);
 
 // The comparison of each response field, which is compared by its name (HYR-11).
 const RESPONSE_KINDS: Record<string, Compare> = {
@@ -114,9 +118,23 @@ function legacyCaseFiles(): Record<string, Declaration> {
   return declarations;
 }
 
-/** The URL of a case file: under tests/legacy for a fixed case file, under contracts/ for every other one. */
+/**
+ * The URL of a case file: under tests/legacy for a fixed case file, var/release-files/<library>/<tag>/contracts/<file>
+ * for a file that the release of another library publishes (`release` of its declaration, H35.11), under contracts/
+ * for every other one. A release file that is missing fails with its path and the target that writes it, and nothing
+ * is downloaded (HR-85).
+ */
 export function caseFileUrl(file: string): URL {
-  return Object.hasOwn(legacyCaseFiles(), file) ? new URL(file, LEGACY) : new URL(file, CONTRACTS);
+  if (Object.hasOwn(legacyCaseFiles(), file)) return new URL(file, LEGACY);
+  const library = caseFiles()[file]?.release;
+  if (library === undefined) return new URL(file, CONTRACTS);
+  const pins: unknown = JSON.parse(readFileSync(new URL('config/release-files.json', ROOT), 'utf8'));
+  const release = isObject(pins) && isObject(pins.releases) ? pins.releases[library] : undefined;
+  if (!isObject(release) || typeof release.tag !== 'string') throw new Error(`config/release-files.json pins no release of ${library}, which contracts/interfaces.json names for ${file}`);
+  const name = `var/release-files/${library}/${release.tag}/contracts/${file}`;
+  const url = new URL(name, ROOT);
+  if (!existsSync(url)) throw new Error(`${name} is missing; \`make hyper-install-release-files\` writes it`);
+  return url;
 }
 
 /** Whether a field, an outcome or a case applies to the runner (HYR-6). */
