@@ -70,6 +70,10 @@ const CRATES: readonly { program: string; pattern: RegExp }[] = [
 ];
 // The cargo subcommands that read no crate of the lock from the network, so they carry no --offline.
 const NO_CRATES = ['fmt'];
+// A command line of an install target or of a target that writes a lock lifts the offline settings with $(ONLINE):
+// it downloads by its purpose (HR-89), as cargo update of cargo-lock does, so the rule of the fetched crates and of
+// --offline does not read it.
+const ONLINE = /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK /u;
 
 // The line of php-check-installed, which install-tools runs: it starts the PHP wrapper only in a checkout that holds
 // one, which an install that selects no PHP tool does not write, so the line starts no tool that the group lacks.
@@ -113,7 +117,7 @@ test('each CI group installs every tool that its setup steps and its targets sta
     /** Adds a finding for each tool that the lines of `target` start and the steps so far did not install. */
     const judge = (target: string, lines: string[]): void => {
       judged += 1;
-      for (const line of lines.filter((text) => !FETCH.test(text))) {
+      for (const line of lines.filter((text) => !ONLINE.test(text))) {
         const subcommand = CARGO_COMMAND.exec(line)?.[1];
         if (subcommand !== undefined && NO_CRATES.includes(subcommand)) continue;
         const reader = CRATES.find((entry) => entry.pattern.test(line));

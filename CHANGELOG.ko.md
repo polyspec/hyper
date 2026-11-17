@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 94071dfadfb143302a1e330dd82cc1b5b637b432f9e1fd3b9dc169ff7a97f204 -->
+<!-- source-sha256: 5cf3e9cc6d3a39939d5a0b1b88e25000c08b9e3e078486d8bb4817920f1f3076 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `tests/scripts/ci-group-tools.test.mts`는 cargo 명령이 `--offline`을 가진다는 규칙에서 `make hyper-install-crates`의 명령 줄만 제외했고, 그래서 CI group 안의 `make cargo-lock`의 `cargo update`는 finding이 되었을 것이다. 이제 이 규칙은 `$(ONLINE)`으로 offline 설정을 푸는 모든 명령 줄을 제외한다. 그런 줄은 목적상 다운로드하기 때문이다(HR-89).
 
 - 어떤 target도 root와 `tests/package-install`의 `package-lock.json`을 쓰지 않았다. 요구가 바뀐 뒤 `npm install --package-lock-only`는 각각에서 손으로 실행하는 명령이었다. 이제 `make npm-lock`이 둘 모두에 `--ignore-scripts`와 함께, 두 번째는 `--prefix`로, checkout의 npm을 절대 경로로 `$(ONLINE)`을 통해 실행한다. 아무것도 설치하지 않는다. root `package.json`은 패키지 하나를 range로 적는다: `ajv` `^8.20.0`이며, npm은 range가 허용하는 동안 그 lock된 버전을 그대로 둔다(H35.41).
 - 어떤 target도 `packages/python/uv.lock`, `composer.lock`, `examples/board/composer.lock`을 쓰지 않았다. 요구가 바뀐 뒤 `uv lock`과 `composer update`는 손으로 실행하는 명령이었다. 이제 `make python-lock`이 Python package에 `uv lock`을 실행하고, `make composer-lock PACKAGES="<vendor/package> ..."`가 private root와 board에서 적은 패키지에 `composer update --no-install`을 실행한다. 모든 패키지의 update는 실행 시점에 각 range를 해석하므로 `PACKAGES` 없이는 dry run에서도 실패한다. 각 target은 checkout의 도구를 절대 경로로 `$(ONLINE)`을 통해 시작하며, `composer-lock`은 Composer를 시작하는 모든 target처럼 checkout의 PHP를 먼저 검사한다(H35.41).
