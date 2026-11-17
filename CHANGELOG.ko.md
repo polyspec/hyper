@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 13f19b8a248b5a76e35abb5635448b0411748e13139de12d9f872de7cbd6995a -->
+<!-- source-sha256: 9bfc289e86f2766dd675ade4313e42bfd09a3dc0e6541d363d72f28514a5d927 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- PHP case runner는 `openFails`를 적지 않은 `contracts/functions.json` case에서 실패한 open의 오류를 보고한다(HYC-24, H34.6). 입력: host function `shout`으로 여는 `App::open`이 실패하는 `a_document_renders_the_host_function`. 이전 동작: `FunctionsSteps`는 없는 field `openFails`와 `openError`를 비교하고 반환했으므로 case는 오류 없이 `CASE_EMPTY`를 보고했다. 이제: case는 오류의 메시지와 함께 `CASE_ERROR`를 보고한다.
 
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 

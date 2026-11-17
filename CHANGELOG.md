@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The PHP case runner reports the error of a failed open in a `contracts/functions.json` case that states no `openFails` (HYC-24, H34.6). Input: `a_document_renders_the_host_function`, whose `App::open` with the host function `shout` fails. Behaviour before: `FunctionsSteps` compared the absent fields `openFails` and `openError` and returned, so the case reported `CASE_EMPTY` without the error. Now: the case reports `CASE_ERROR` with the message of the error.
+
 - The test of the full set in `tests/scripts/test-inputs.test.mts` passes under a selection (HR-85, H34.5). Input: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. Behaviour before: make exports a command-line variable to the environment of a recipe, so the dry run of the full set read that `TESTS`, built only its inputs and held no cargo line, and the test failed. Expected: the dry run of the full set passes `TESTS=` and holds the cargo builds.
 
 - `tests/scripts/upload-servers.test.mts` ends when the servers of a scenario do not start (HR-87, H34.3). Input: a scenario whose `started()` throws, as when the Node application cannot be built. Behaviour before: `hostsOf` registered the close of its gate listener only after `started()`, so the listener stayed open and the file ran without end after every case had failed. Expected: the close is registered right after the listener listens, and the file ends with the failures.

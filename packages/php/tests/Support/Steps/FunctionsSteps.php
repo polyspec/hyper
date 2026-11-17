@@ -42,6 +42,11 @@ final class FunctionsSteps
                 functions: $functions,
             );
         } catch (\Throwable $error) {
+            // A case that states no openFails expects the open to succeed, so its error fails the case with the
+            // message of the engine; without this the case compared nothing and reported only CASE_EMPTY (H34.6).
+            if (!$case->has('openFails')) {
+                throw $error;
+            }
             $case->compare('openFails', $error);
             $case->compare('openError', $error->getMessage());
 
