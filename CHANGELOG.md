@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `package-names.test.mts` and HR-98 state that the recipes of binding release `@polyspec/hyper` and `polyspec-hyper` (HR-98, H35.35-2, H35.35-3). Input: `config/release.json`, which has had no entry for these two packages since they were moved to `release-npm` and `release-wheel`, and which names their manifests as `version`. Behaviour before: the test required a kit entry for each, and the two tests failed. Expected: the test requires no kit entry and a `version` manifest for these two packages, and the entry of kit for every other package.
+
 - The tests of the job platform of `assets.yml` read the wheel build of binding 0.0.21 (H35.35-2, H35.35-5). Input: `make -n release-assets-platform`, whose `release-wheel` of binding 0.0.21 installs maturin with the mise of the checkout and runs `maturin build --release … --manifest-path packages/python/Cargo.toml`. Behaviour before: `release-assets.test.mts` and `ci-group-tools.test.mts` looked for `uv build --wheel … packages/python` and failed. Expected: both tests find the maturin build, and the job installs maturin before the line that starts it.
 
 - `make go-release-build` starts the go of the checkout by its absolute path (HR-81, H35.35-7). Input: `make -n go-release-build`. Behaviour before: the recipe ran a bare `go`, the go of `PATH`, because `packages/release.mk` sets `GO ?= go` and the Makefile defined `GO` only after the include of that file. Expected: the Makefile defines `GO`, `GOFMT` and `WASM_BINDGEN` before the include, and the recipe runs `var/tools/mise/shims/go`.

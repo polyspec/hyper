@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1803f765e99470ea58acee0e398a3ab1a6c658a952f73430b73e27596a89d25b -->
+<!-- source-sha256: 5a638ee4f7d81632fe5bf93bc55f54ed98ab34f652161d21cb4d05906f542d5a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `package-names.test.mts`와 HR-98은 `@polyspec/hyper`와 `polyspec-hyper`를 binding의 recipe가 release한다고 적는다(HR-98, H35.35-2, H35.35-3). 입력: `config/release.json`. 두 package가 `release-npm`과 `release-wheel`로 옮겨진 뒤로 이 파일에는 두 package의 entry가 없고, 그 manifest를 `version`으로 적는다. 이전 동작: test가 두 package마다 kit entry를 요구했고, 두 test가 실패했다. 기대 동작: test가 두 package에는 kit entry가 없고 `version` manifest가 있기를 요구하며, 다른 모든 package에는 kit의 entry를 요구한다.
 
 - `assets.yml`의 job platform test는 binding 0.0.21의 wheel build를 읽는다(H35.35-2, H35.35-5). 입력: `make -n release-assets-platform`. 그 안의 binding 0.0.21 `release-wheel`은 checkout의 mise로 maturin을 설치하고 `maturin build --release … --manifest-path packages/python/Cargo.toml`을 실행한다. 이전 동작: `release-assets.test.mts`와 `ci-group-tools.test.mts`가 `uv build --wheel … packages/python`을 찾다가 실패했다. 기대 동작: 두 test가 maturin build를 찾고, job이 그 build를 시작하는 줄보다 먼저 maturin을 설치한다.
 
