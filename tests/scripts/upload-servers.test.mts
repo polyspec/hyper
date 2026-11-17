@@ -479,6 +479,12 @@ async function hostsOf(t: TestContext, start: Start = {}): Promise<{ hosts: Host
   await new Promise<void>((resolve) => listener.listen(0, '127.0.0.1', () => resolve()));
   gates.add(listener);
   listener.on('close', () => gates.delete(listener));
+  // The test owns the listener from here: a start of the servers that fails ends the test, and an open listener would
+  // keep the file from ending (HR-87).
+  t.after(async () => {
+    for (const socket of sockets) socket.destroy();
+    await new Promise<void>((resolve) => listener.close(() => resolve()));
+  });
   const address = listener.address();
   if (address === null || typeof address === 'string') throw new Error(`the gate listens on no TCP port: ${String(address)}`);
   const gate: Gate = {
@@ -493,10 +499,6 @@ async function hostsOf(t: TestContext, start: Start = {}): Promise<{ hosts: Host
   };
   start.starting?.();
   const { directory, children, environment } = await started(t);
-  t.after(async () => {
-    for (const socket of sockets) socket.destroy();
-    await new Promise<void>((resolve) => listener.close(() => resolve()));
-  });
   const hosts: Host[] = [];
   for (const name of start.servers ?? SERVERS) {
     const own = path.join(directory, name);
