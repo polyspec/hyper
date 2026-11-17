@@ -973,6 +973,12 @@
                   "koSource": "a6721f7d4392a75b4f1522caf1b9d5f2638c263b2b6e552331479952ee6d83d3"
                 },
                 {
+                  "id": "HY-131.30",
+                  "en": "A body that passes a limit fails with the kind of that limit of http-form, each of status 413: `body_limit` for the body limit (F-25.1), `value_limit` for the value limit (F-25.2), `part_limit` for the part limit, which counts every part of the body (F-25.3), and `file_limit` for the file limit (F-25.4).",
+                  "ko": "제한을 넘는 body는 http-form의 그 제한의 kind로 실패하며 각각 상태 413이다. body 제한은 `body_limit`(F-25.1), value 제한은 `value_limit`(F-25.2), body의 모든 part를 세는 part 제한은 `part_limit`(F-25.3), file 제한은 `file_limit`(F-25.4)이다.",
+                  "koSource": "26cd54f5e9339a55c8be50bc87a74dae3da947ab3fe39ac2ab754cc7625f74e6"
+                },
+                {
                   "id": "HY-131.28",
                   "en": "The server writes the content of a file part, as it arrives, to the directory of the request of F-10 of http-form, and `UploadedFile` gives the bytes of its file as `size()`, moves it with `moveTo(path)` (`move_to` in Python) and reads it with `content()` as F-11 states, so that a path that exists and a file that was moved fail with the kinds `exists` and `moved` of http-form.",
                   "ko": "서버는 파일 part의 내용을 도착하는 대로 http-form F-10의 요청 디렉터리에 쓰고, `UploadedFile`은 F-11대로 파일의 byte 수를 `size()`로 주고 `moveTo(path)`(Python은 `move_to`)로 옮기며 `content()`로 읽는다. 그래서 이미 있는 경로와 이미 옮긴 파일은 http-form의 kind `exists`와 `moved`로 실패한다.",
@@ -6218,8 +6224,8 @@
                     "ko": "`malformed_content_type`"
                   },
                   {
-                    "en": "none",
-                    "ko": "없음"
+                    "en": "400",
+                    "ko": "400"
                   },
                   {
                     "en": "`value`",
@@ -6296,6 +6302,12 @@
                 [{ "en": "`invalid`", "ko": "`invalid`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
                 [{ "en": "`header_limit`", "ko": "`header_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
                 [{ "en": "`no_boundary`", "ko": "`no_boundary`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
+                [{ "en": "`body_limit`", "ko": "`body_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`value_limit`", "ko": "`value_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`part_limit`", "ko": "`part_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`file_limit`", "ko": "`file_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`exists`", "ko": "`exists`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
+                [{ "en": "`moved`", "ko": "`moved`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
                 [{ "en": "`no_rows`", "ko": "`no_rows`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.8", "ko": "HY-107.8" }],
                 [{ "en": "`revision_changed`", "ko": "`revision_changed`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.9", "ko": "HY-107.9" }]
               ]

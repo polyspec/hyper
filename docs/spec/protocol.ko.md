@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 0a9e03d3d49a2362296cac7a72849eefaf6e9e52cc688746f6322bbee5d085d7 -->
+<!-- source-sha256: 07ce9338b2ccee1fe9de6ad594355b6f881d3b78b919de9772baf00ca0136a5a -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -79,7 +79,7 @@
 
 - **HY-114** <a id="HY-114.1"></a> 애플리케이션은 파일 제한, 즉 한 file(HY-113)의 최대 바이트 수를 선언할 수 있으며, 이는 body 제한(HY-59) 옆에 있는 애플리케이션의 옵션이다. <a id="HY-114.2"></a> 기본값은 8 MiB로 기본 body 제한과 같다. <a id="HY-114.3"></a> 파일 제한을 선언하지 않은 애플리케이션은 8 MiB와 body 제한 중 작은 값을 파일 제한으로 쓰므로, 어떤 body 제한으로도 열리며 body 제한이 요청을 거절할 때에만 파일을 거절한다. <a id="HY-114.4"></a> 선언한 파일 제한에 대한 아래의 검사는 선언한 값에만 적용한다. <a id="HY-114.11"></a> 파일 한도는 http-form F-25.4의 파일 한도다. 파일 하나의 임시 저장을 제한하며, 파일은 잘리지 않고 일부만 전달되지도 않는다. <a id="HY-114.6"></a> 양의 정수가 아니거나 body 제한보다 큰 파일 제한은 HY-59가 다른 제한에 대해 정하는 것과 같이 애플리케이션을 열 때 실패한다. <a id="HY-114.7"></a> server는 body를 읽는 동안 각 file part의 byte를 검사한다(HY-131.11). byte가 file 제한보다 많은 file은 HY-59.4처럼, 그리고 HY-59.3의 순서에서 그 자리에서 text `Content Too Large`와 함께 status 413으로 요청을 실패시키며 action은 실행되지 않는다. <a id="HY-114.12"></a> 요청의 `fileOver(limit)`는 body의 파일에 대한 http-form F-27의 `file_over`이며, 부호 없는 정수가 아닌 `limit`는 파일을 비교하기 전에 binding의 kind `invalid_number`로 실패한다.
 
-- **HY-131** <a id="HY-131.26"></a> 서버는 form type에 `multipart/form-data`가 있는 애플리케이션(HY-59.1)의 `multipart/form-data` body를 도착하는 대로 http-form F-24의 reader로 조각 단위로 읽으며, 이 reader는 body도 파일 part의 내용도 한 값으로 들고 있지 않는다(F-24.1). delimiter와 byte의 실패는 F-24.2부터 F-24.5까지의 것이고, 결과는 조각 나눔에 달려 있지 않으며(F-24.6), body의 첫 실패는 그 byte가 먼저 오는 실패다(F-8). 그래서 잘못된 byte가 body 한도보다 먼저 오는 body는 413이 아니라 HY-42처럼 400을 받는다. <a id="HY-131.27"></a> 애플리케이션은 http-form F-25.2의 값 한도를 선언할 수 있으며, 이 한도는 애플리케이션이나 테스트가 byte로 만든 body도 제한한다. <a id="HY-131.8"></a> value 제한을 선언하지 않은 application은 8 MiB와 body 제한 중 작은 것을 쓴다. <a id="HY-131.9"></a> application은 body의 part 수의 최대인 part 제한을 선언할 수 있으며 기본값은 1000이다. <a id="HY-131.10"></a> 양의 정수가 아닌 value 제한이나 part 제한, 그리고 body 제한보다 큰 value 제한은 HY-59.2가 정하듯 application이 열릴 때 실패한다. <a id="HY-131.11"></a> body 제한, value 제한, part 제한, file 제한(HY-114)을 넘는 body는 text `Content Too Large`와 함께 status 413을 받고, 모든 server는 제한을 넘는 순간 body 읽기를 멈춘다. <a id="HY-131.28"></a> 서버는 파일 part의 내용을 도착하는 대로 http-form F-10의 요청 디렉터리에 쓰고, `UploadedFile`은 F-11대로 파일의 byte 수를 `size()`로 주고 `moveTo(path)`(Python은 `move_to`)로 옮기며 `content()`로 읽는다. 그래서 이미 있는 경로와 이미 옮긴 파일은 http-form의 kind `exists`와 `moved`로 실패한다. <a id="HY-131.14"></a> server는 요청의 response hook(HY-60)이나 disconnect hook(HY-67)이 반환한 뒤에 그 directory를 지우며 실패한 요청도 그렇고, application이 옮긴 file은 그 안에 없다. <a id="HY-131.18"></a> 검사는 HY-59.3의 순서를 유지하여, body 제한보다 큰 `Content-Length`는 body를 읽기 전에 413을 받고, 이 rule의 제한과 HY-42의 실패는 body를 읽는 동안 답하며, 그 뒤에 routing, form type(HY-59.12), CSRF token(HY-59.8)이 답하고 그것들이 거부한 요청은 임시 file을 남기지 않는다. <a id="HY-131.29"></a> 숫자가 아닌 `Content-Length`는 body를 읽기 전에 http-form의 kind `invalid_content_length`와 상태 400을 받고(F-9), host는 그 field 값을 core에 넘겨 core가 body 한도와 비교한다(F-25.1). <a id="HY-131.19"></a> 느린 client나 끝나지 않는 요청은 application 앞단 server의 일이며 이 rule은 시간 제한을 두지 않는다. <a id="HY-131.25"></a> Node host는 body를 paused mode로 읽는다. `'readable'` event마다 `request.read()`가 주는 byte를 buffer 하나로 받아 그 buffer의 `feed`를 기다리고, 그것이 끝난 뒤에만 다시 읽으며, 조각을 모으지 않는다. 모으면 HY-131.26의 한도를 넘고 제한의 판정이 늦어지기 때문이다. PHP와 Python server는 조각 하나를 넘긴 뒤에 다음 조각을 읽는다.
+- **HY-131** <a id="HY-131.26"></a> 서버는 form type에 `multipart/form-data`가 있는 애플리케이션(HY-59.1)의 `multipart/form-data` body를 도착하는 대로 http-form F-24의 reader로 조각 단위로 읽으며, 이 reader는 body도 파일 part의 내용도 한 값으로 들고 있지 않는다(F-24.1). delimiter와 byte의 실패는 F-24.2부터 F-24.5까지의 것이고, 결과는 조각 나눔에 달려 있지 않으며(F-24.6), body의 첫 실패는 그 byte가 먼저 오는 실패다(F-8). 그래서 잘못된 byte가 body 한도보다 먼저 오는 body는 413이 아니라 HY-42처럼 400을 받는다. <a id="HY-131.27"></a> 애플리케이션은 http-form F-25.2의 값 한도를 선언할 수 있으며, 이 한도는 애플리케이션이나 테스트가 byte로 만든 body도 제한한다. <a id="HY-131.8"></a> value 제한을 선언하지 않은 application은 8 MiB와 body 제한 중 작은 것을 쓴다. <a id="HY-131.9"></a> application은 body의 part 수의 최대인 part 제한을 선언할 수 있으며 기본값은 1000이다. <a id="HY-131.10"></a> 양의 정수가 아닌 value 제한이나 part 제한, 그리고 body 제한보다 큰 value 제한은 HY-59.2가 정하듯 application이 열릴 때 실패한다. <a id="HY-131.11"></a> body 제한, value 제한, part 제한, file 제한(HY-114)을 넘는 body는 text `Content Too Large`와 함께 status 413을 받고, 모든 server는 제한을 넘는 순간 body 읽기를 멈춘다. <a id="HY-131.30"></a> 제한을 넘는 body는 http-form의 그 제한의 kind로 실패하며 각각 상태 413이다. body 제한은 `body_limit`(F-25.1), value 제한은 `value_limit`(F-25.2), body의 모든 part를 세는 part 제한은 `part_limit`(F-25.3), file 제한은 `file_limit`(F-25.4)이다. <a id="HY-131.28"></a> 서버는 파일 part의 내용을 도착하는 대로 http-form F-10의 요청 디렉터리에 쓰고, `UploadedFile`은 F-11대로 파일의 byte 수를 `size()`로 주고 `moveTo(path)`(Python은 `move_to`)로 옮기며 `content()`로 읽는다. 그래서 이미 있는 경로와 이미 옮긴 파일은 http-form의 kind `exists`와 `moved`로 실패한다. <a id="HY-131.14"></a> server는 요청의 response hook(HY-60)이나 disconnect hook(HY-67)이 반환한 뒤에 그 directory를 지우며 실패한 요청도 그렇고, application이 옮긴 file은 그 안에 없다. <a id="HY-131.18"></a> 검사는 HY-59.3의 순서를 유지하여, body 제한보다 큰 `Content-Length`는 body를 읽기 전에 413을 받고, 이 rule의 제한과 HY-42의 실패는 body를 읽는 동안 답하며, 그 뒤에 routing, form type(HY-59.12), CSRF token(HY-59.8)이 답하고 그것들이 거부한 요청은 임시 file을 남기지 않는다. <a id="HY-131.29"></a> 숫자가 아닌 `Content-Length`는 body를 읽기 전에 http-form의 kind `invalid_content_length`와 상태 400을 받고(F-9), host는 그 field 값을 core에 넘겨 core가 body 한도와 비교한다(F-25.1). <a id="HY-131.19"></a> 느린 client나 끝나지 않는 요청은 application 앞단 server의 일이며 이 rule은 시간 제한을 두지 않는다. <a id="HY-131.25"></a> Node host는 body를 paused mode로 읽는다. `'readable'` event마다 `request.read()`가 주는 byte를 buffer 하나로 받아 그 buffer의 `feed`를 기다리고, 그것이 끝난 뒤에만 다시 읽으며, 조각을 모으지 않는다. 모으면 HY-131.26의 한도를 넘고 제한의 판정이 늦어지기 때문이다. PHP와 Python server는 조각 하나를 넘긴 뒤에 다음 조각을 읽는다.
 
 ## Media type과 representation
 
@@ -364,7 +364,7 @@
   | `invalid_session_record` | 없음 | `store` | HY-104.23 |
   | `shared_holds_context` | 없음 | `value` | HY-124.8 |
   | `invalid_representation` | 없음 | `value` | HY-122.2, HY-122.3, HY-122.4, HY-122.5, HY-122.6, HY-122.7, HY-122.8 |
-  | `malformed_content_type` | 없음 | `value` | HY-59.12, HY-59.13 |
+  | `malformed_content_type` | 400 | `value` | HY-59.12, HY-59.13 |
   | `integer_range` | 없음 | `value` | HY-52.19, HY-69.10 |
   | `internal` | 없음 | `internal` | HY-132.6 |
 
@@ -381,6 +381,12 @@
   | `invalid` | http-form | HY-113.22 |
   | `header_limit` | http-form | HY-113.22 |
   | `no_boundary` | http-form | HY-113.22 |
+  | `body_limit` | http-form | HY-131.30 |
+  | `value_limit` | http-form | HY-131.30 |
+  | `part_limit` | http-form | HY-131.30 |
+  | `file_limit` | http-form | HY-131.30 |
+  | `exists` | http-form | HY-131.28 |
+  | `moved` | http-form | HY-131.28 |
   | `no_rows` | orm | HY-107.8 |
   | `revision_changed` | orm | HY-107.9 |
 

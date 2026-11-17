@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: aa78e729adb6f4bc6fc9494efda6a7e370dc43e5d2426035bc810b02c8388fcf -->
+<!-- source-sha256: b5dd31eb33ec5fc7e8cb4cf098f992495a80496d452864fcce4bd3ceec8f62e0 -->
 # 기능 상태
 
 [English](features.md).
@@ -90,6 +90,7 @@
 | file-parts | multipart body의 file part는 method `name()`, `filename()`, `contentType()`, `content()`를 가진 `UploadedFile` 값이고, 세 server에서 `query()`, `form()`, `files()`는 이름과 값 목록의 쌍 목록을 반환한다. 8192 byte보다 긴 part header는 body를 실패시킨다(HY-56.7, HY-106, HY-113, HY-114) | implemented | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`의 `tests/legacy/fields.json`, 즉 http-form가 이제 가진 case(F-20부터 F-27까지)의 고정 사본이며 S-4에서 지운다, `make recipe-run-python` |
 | multipart-stream | 한계가 있는 buffer로 조각 단위로 읽는 multipart body, 요청의 임시 file에 두는 file part, value 제한과 part 제한, `UploadedFile`의 `size()`와 `moveTo()`(HY-131) | 진행 중: 세 server의 모든 host가 multipart body를 조각 단위로 요청의 file에 읽고, value 제한과 part 제한과 file 제한에서 멈추며, hook 뒤에 file을 지운다(HY-131). 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`의 `tests/legacy/fields.json`, 즉 http-form가 이제 가진 case(F-20부터 F-27까지)의 고정 사본이며 S-4에서 지운다; `docs/plans/execution/checklist.md`의 H29.3부터 H29.5까지, 그리고 `make parity`, `make server-parity`, `make server-parity-python`, `make e2e`의 board 예제 upload |
 | form-values | urlencoded body나 multipart body에서 중첩 없이 순서대로 읽는 모든 폼 값이며 세 server가 똑같이 읽는다(HY-57.13, HY-113.21, HY-113.22, http-form의 F-20부터 F-23까지) | implemented | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`의 `tests/legacy/fields.json`, 즉 http-form가 이제 가진 case(F-20부터 F-27까지)의 고정 사본이며 S-4에서 지운다 |
+| form-kinds | body와 파일의 실패를 http-form의 kind로 준다. 넘은 제한은 `body_limit`, `value_limit`, `part_limit`, `file_limit`(HY-131.30), 파일의 이동이나 읽기는 `exists`와 `moved`(HY-131.28) | not implemented: 세 서버는 넘은 제한에 자기 reader의 `exceeded()`로 413을 답하고 kind를 가진 오류를 내지 않으며, `UploadedFile`의 `moveTo`와 `content`는 kind 없이 category의 기본 클래스를 낸다(H35.11) | — |
 | representations | route의 representation: `Accept`로 `text/html`, `application/vnd.hyper+json`, 선언된 type 중에서 고르는 선택, 매니페스트 검사와 열기 검사, session 없는 handler, `Allow`가 있는 405, `HEAD`, 406, 415, 400, handler 응답의 검사, strong `ETag`와 304, `etag(body)`(HY-116부터 HY-122까지) | 진행 중: 세 server가 답하고 모든 case를 통과한다. 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`의 `contracts/representations.json`과 `contracts/client.json` |
 | head | body의 `Content-Length`와 함께 body 없이 그 `GET`으로 답하는 `HEAD` 요청, 그리고 모든 405의 `Allow`(HY-27.4부터 HY-27.6까지) | 진행 중: 세 server와 그 host가 답한다. 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`의 `contracts/client.json`, `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HYC-14) | implemented | `make test-php`, `make test-js`, `make e2e` |

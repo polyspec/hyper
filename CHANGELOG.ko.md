@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6b74d54f78f88ab9617ebe3463cc9c3eaee8e0819e864ffc4d20fea6e8d6c5ef -->
+<!-- source-sha256: 755ca78017534c77a0bdcb3c74dadc2dbdc300c98de93e3cb13d4dbe62586d63 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-132.9의 표에는 규칙이 정하거나 전제하는 http-form의 kind 여섯이 없었다. HY-131.28이 정하는 `exists`와 `moved`, 그리고 어떤 statement도 이름을 적지 않은 네 제한의 kind다. HY-131.30을 추가해 제한을 넘는 body가 http-form의 `body_limit`, `value_limit`, `part_limit`, `file_limit`로 실패하며 각각 상태 413임을 정했고, 표는 여섯 행을 얻었다. HY-132.3의 표에서 `malformed_content_type` 행은 상태를 적지 않았는데, HY-59.13은 상태 400을 정하고 core의 variant `Error::MalformedContentType`은 400을 준다. 그 행은 이제 400을 적는다. `front::media_type`이 core 자신의 variant를 내므로 이 kind는 그 표에서 hyper의 kind로 남는다. 어떤 case도 HY-131.28이나 HY-131.30으로 실패를 비교하지 않으므로, 각 행의 첫 cell과 마지막 cell을 읽는 case runner는 전과 같은 결과를 낸다. `docs/features.md`는 행 `form-kinds`를 not implemented로 얻었다. 서버는 이 kind의 오류를 내지 않는다(H35.11).
 
 - `make recipe-check`는 case runner를 `make -k` 하나의 goal로 실행했다. 실패한 runner가 newline 없이 출력을 끝내면 그 마지막 줄이 다음 명령 줄과 붙었고, 비교 뒤의 어떤 줄도 실패한 runner를 밝히지 않았다. 이제 `recipe-check`는 다섯 runner와 비교의 명령을 `$(call check,...)`로 실행한다. 각 출력은 newline으로 끝나고, 마지막 줄은 실패한 것을 모두 적은 `failed checks:`이다. target은 runner의 prerequisite을 가지며 dry run은 아무것도 시작하지 않는다(HR-84, HR-86, H35.16-8).
 - `Cargo.lock`과 tracked binding package를 쓰는 target이 없었다. crate의 새 tag 뒤에 `cargo update`와 `binding scaffold`를 손으로 실행했다. 이제 `make cargo-lock CRATES="<crate> ..."`가 적은 crate에 `cargo update -p`를 link script로 실행하고, `make bindings-scaffold`가 `binding scaffold`를 실행해 `packages/go/go.mod`와 `go.sum`을 포함한 binding의 manifest를 쓴다. `.links`가 있는 checkout에서는 link script가 자기 lock 사본을 갱신하고 `Cargo.lock`은 그대로 두므로, `cargo-lock`은 cargo를 시작하기 전에 그 원인을 밝히며 실패한다(H35.8-3).
