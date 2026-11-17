@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: fcdcb590dbc4fff353d06c3f497d08d04992b3b93668829a02d45f646f351240 -->
+<!-- source-sha256: 90847e87aabb5566ef2bc0c2d7d46010104bc8b37243b5f1a3de21b9a03af43e -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -574,5 +574,7 @@
 | H35.31-3 | contracts/app.json의 case a_document_json_reads_a_shared_value_twice와 a_region_json_reads_a_shared_value_twice가 PHP 서버에서 통과한다. 원인은 바꾸기 전에 사본 run의 출력에서 읽는다. | packages/php | `make hyper-test-php` | [ ] |
 | H35.31-4 | tests/scripts/cargo-through-kit.test.mts는 H35.14-2의 recipe 줄 `binding generate --cargo "..."`를 pattern \bcargo\s로 cargo 직접 호출로 읽는다. 시험은 binding generator의 option 값과 cargo 명령을 구별하고, 그 recipe는 통과한다. | tests/scripts | `make hyper-test-scripts` | [ ] |
 | H35.31-5 | benchmarks/sessions.mts는 session-workers의 prefix로 hyper 확장만 load해 PHP를 띄우므로 그 PHP 서버는 template 확장으로 렌더하지 못한다. 8ca4a33f 이후 run의 다른 PHP 서버처럼 Makefile의 PHP_SERVER_EXTENSIONS를 순서대로 load한다. | benchmarks/sessions.mts, Makefile | `make hyper-test-scripts` | [ ] |
-| H35.32 | Node 서버는 PHP 서버(H35.31)와 Python 서버(H35.28)처럼 template Rust core의 napi binding으로 렌더한다. `@polyspec/template/render`의 JS render engine은 core와 다르므로(분수 숫자 인덱스를 core는 runtime_type으로 실패시키는데 그 engine은 렌더한다) 그것을 쓰지 않고, 세 서버는 한 template을 한 결과로 렌더한다. 범위는 구현 전에 서버가 JS engine에서 쓰는 이름의 읽기 전용 조사로 확정한다. | packages/ts | `make hyper-test-node` | [ ] |
-| H35.33 | browser client(packages/client)가 JS render engine 대신 template Rust core의 wasm binding으로 렌더할 때를 잰다: 지금의 bundle 크기와 wasm binding을 쓸 때의 크기, 그리고 그것을 load하며 바뀌는 것. 옮기는 일은 이 측정이 정하는 뒤의 행이다. | packages/client | `make bundle-size` | [ ] |
+| H35.32 | Node 서버는 browser 코드와 `@polyspec/template/render`의 JS render engine 대신 hyper core의 page 렌더(binding의 render_document, route_reads, Pages)로 page를 렌더하고, 그 렌더는 template의 Rust core로 한다. JS engine은 core와 다르다(분수 숫자 인덱스를 core는 runtime_type으로 실패시키는데 그 engine은 렌더한다). 명세를 먼저 바꾼다: HY-54.3, HYC-24.2, HY-132.7, HY-132.8, HY-48.11, HY-48.12, HYC-12.6, HYC-12.9가 지금의 browser 코드 결합을 말한다. 이 행의 크기는 PHP와 Python의 renderer가 하는 일 가운데 render_document가 덮지 않는 것의 목록이다. | packages/ts | `make hyper-test-node` | [ ] |
+| H35.32-1 | PHP와 Python 서버는 H35.32 뒤의 Node 서버처럼 hyper core의 page 렌더(render_document, route_reads, Pages)로 page를 렌더한다. template binding 위의 자기 renderer(Renderer.php, _renderer.py)를 쓰지 않는다. | packages/php, packages/python | `make hyper-test-php` | [ ] |
+| H35.33 | browser client(packages/client)를 JS render engine에서 template Rust core의 wasm binding으로 옮길지를 잰 비용으로 정한다. template의 wasm은 1,232,105 byte(gzip 357,063)이고 json의 wasm(246,724 byte, gzip 81,731)을 import해, gzip 약 40 kB(그중 render runtime 12.7 kB)인 entry에 gzip 약 450 kB가 더해진다. wasm entry는 top-level await와 import.meta.url의 fetch로 load되고, packages/cli의 esbuild 설정은 .wasm asset을 내지 않는다. 옮기는 일은 뒤의 행이다. | packages/client | `make bundle-size` | [ ] |
+| H35.34 | `hyper build`는 키가 문자열이나 숫자 리터럴인 인덱스에 대해 reads.json에 key "[object Object]"를 쓴다(contract program 39개 중 6개). packages/cli/lib/program.mjs가 template binding의 AST를 packages/client의 JS walker routeReads에 넘기는데 그 walker는 다른 AST 형태를 읽기 때문이다. PHP와 Python 서버는 그 파일을 읽고 그런 key의 값을 kept data에 담지 못한다. CLI는 hyper core의 routeReads로 읽기 경로를 계산해 경로의 구현이 하나가 된다. Red: literal key가 있는 template의 build가 쓴 reads.json을 읽는 시험. 왜 이전에 어떤 시험도 실패하지 않았는지 이 행에 적는다. | packages/cli, tests/scripts | `make hyper-test-scripts` | [ ] |
