@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 01fe5bce9e0e23d3849fb36ddf192ce8e3b756fd2863ffc7c54fd32293927181 -->
+<!-- source-sha256: d6996b6a10baf8f9fa941c19ddace076955c67bb240ec0db8dc761108fab3cf3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `AGENTS.md`의 버전 올림 commit 규칙은 `@polyspec/hyper-client`와 `polyspec/hyper` 요구만 적었다. `packages/cli/package.json`도 `@polyspec/hyper`를 그 버전으로 요구하고, 두 Composer root는 `config.platform`에 `ext-polyspec_hyper`를 그 버전으로 적으며, lock 네 개와 `docs/operations/dependencies.md`의 행이 그 버전을 기록한다. 규칙은 이제 이 파일을 모두 적는다(H35.34).
 - 부호 없는 정수가 아닌 limit(예: -1)로 `Request.fileOver(limit)`를 호출하면, Node 서버와 Python 서버는 파일을 limit와 비교해 boolean을 반환했고, PHP 서버는 자체 검사로 limit를 거절했다. 이제 각 서버는 body의 각 파일 byte 수와 limit로 Rust core의 member `rules.file_over`를 호출하므로, 호출은 파일을 비교하기 전에 binding의 kind `invalid_number`로 실패하고, 비교는 core가 한다(HY-114.12, HY-132.2, H35.31-2-1).
 - `tests/scripts/cargo-through-kit.test.mts`는 recipe 줄 `binding generate --cargo "$(CARGO)"`를 kit의 link script를 거치지 않는 cargo 명령으로 읽어 실패했다. 이제 테스트는 옵션 `--cargo "<명령>"`의 값을 cargo 명령과 구별해 읽는다. 값은 link script 명령이어야 하고 Makefile에서는 `$(CARGO)`여야 하며, cargo 명령은 이전과 같이 link script를 거쳐야 한다. cargo를 직접 시작하는 줄, 값이 다른 명령인 옵션, 값이 큰따옴표 안에 없는 옵션은 거부되며, 두 테스트가 이를 예로 서술한다(H35.31-4).
 - `tests/scripts/node-core.test.mts`: Node binding의 stand-in이 `jsonRead`, `jsonWrite`, `flashOf`, `keptOf`, `keptCookie`, `acceptRanges`, `HyperValueError`, `HyperTypeError`가 없는 고정 목록을 가지고 있어 `coreRules`가 stand-in을 거부했고, 43개 테스트 중 42개가 실패했다. 이제 stand-in은 `coreRules({})`의 실패가 이름을 밝히는 모든 member를 가지며, 필수 member 중 이 파일의 어떤 테스트도 호출하지 않는 member가 있으면 한 테스트가 그 이름과 함께 실패한다. `jsonCodecDecode`, `jsonCodecEncode`, `sessionFlashOf`, `sessionKeptOf`, `pageKeptCookie`, `acceptParse`, `valueError`, `typeError` 단위에 테스트가 있다(H35.31-6).
