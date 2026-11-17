@@ -722,7 +722,6 @@ mod build {
         ];
         let mut all = hashed_files.to_vec();
         all.extend([
-            output("client/build.json", "{\"build\":\"x\"}"),
             output("program/build.json", "{\"build\":\"x\"}"),
             output(
                 "csr/index.html",
@@ -781,12 +780,12 @@ mod build {
     #[test]
     fn a_path_given_twice_fails() {
         match hashed(&[
-            output("client/build.json", "a"),
-            output("client/build.json", "b"),
+            output("client/manifest.json", "a"),
+            output("client/manifest.json", "b"),
         ]) {
             Err(error) => {
                 assert_eq!(error.kind(), "invalid_build");
-                assert!(error.to_string().contains("client/build.json"));
+                assert!(error.to_string().contains("client/manifest.json"));
             }
             Ok(_) => panic!("a path given twice passes"),
         }

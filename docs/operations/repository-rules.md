@@ -17,7 +17,6 @@ These rules govern how this repository builds, installs, checks and releases its
   | `<output>/client/manifest.json` | the layout code of the application | the URL of the entry as `hyper` and the URL of each asset by its name (HYC-16) |
   | `<output>/client/assets.json` | the application, for the removal of old files | `{"files": [...]}`, every path `public/assets/...` that this build wrote, in byte order |
   | `<output>/client/templates.index.json` | the checks of a build | each template name with its file URL; the client bundle holds the same index |
-  | `<output>/client/build.json` | no server; the test of the build compares it | the build id (HY-125.18), which `<output>/program/build.json` holds for the servers |
   | `<output>/client/csr/` | static deployment, `ClientRendering` of HY-62 | the static shell `index.html`, `assets/` with the copies of the files of this build and the `--static` files, when `client/main.ts` exists and `--api` is given |
   | `<output>/program/` | the three servers | `templates/`, `reads.json` (HY-73), `build.json`, and with `--php-namespace` `program.json` and `php/` (HY-48) |
 

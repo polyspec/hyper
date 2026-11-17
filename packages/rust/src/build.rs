@@ -13,7 +13,7 @@ use crate::Error;
 const PLACES: [&str; 4] = ["public/assets/", "client/", "program/", "csr/"];
 
 /// The files that hold the id or a copy of another file, which the hash leaves out (HY-125.22).
-const LEFT_OUT: [&str; 3] = ["client/build.json", "program/build.json", "csr/index.html"];
+const LEFT_OUT: [&str; 2] = ["program/build.json", "csr/index.html"];
 
 /// The copies of the files below `public/assets` in the static shell (HY-125.22).
 const SHELL_ASSETS: &str = "csr/assets/";

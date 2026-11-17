@@ -1,5 +1,5 @@
 <!-- doc-id: repository-rules -->
-<!-- source-sha256: e4a253065582300fb88608ec37162de06eb6712aa8225de8f9e56233032826bd -->
+<!-- source-sha256: c14d240bde0f47b447512406f8a814c4fdf86fa26ddb11344f04b27cd644b812 -->
 # 저장소 규칙
 
 [English](repository-rules.md).
@@ -18,7 +18,6 @@
   | `<output>/client/manifest.json` | 애플리케이션의 레이아웃 코드 | `hyper`로 진입 파일의 URL, 이름마다 각 에셋의 URL(HYC-16) |
   | `<output>/client/assets.json` | 오래된 파일을 지우는 애플리케이션 | `{"files": [...]}`, 이 build가 쓴 모든 경로 `public/assets/...`를 바이트 순서로 |
   | `<output>/client/templates.index.json` | build의 검사 | 각 템플릿 이름과 그 파일 URL. 클라이언트 번들도 같은 색인을 담는다 |
-  | `<output>/client/build.json` | 어떤 서버도 읽지 않으며 build의 test가 비교한다 | build id(HY-125.18). 서버는 `<output>/program/build.json`의 것을 읽는다 |
   | `<output>/client/csr/` | 정적 배포, HY-62의 `ClientRendering` | `client/main.ts`가 있고 `--api`가 주어질 때 정적 셸 `index.html`, 이 build의 파일 사본을 담은 `assets/`, `--static` 파일 |
   | `<output>/program/` | 세 서버 | `templates/`, `reads.json`(HY-73), `build.json`, 그리고 `--php-namespace`가 있으면 `program.json`과 `php/`(HY-48) |
 

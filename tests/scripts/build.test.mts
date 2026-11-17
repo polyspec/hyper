@@ -1,7 +1,7 @@
 // Tests the outputs of one run of `hyper build` (HR-34, HYC-16, HY-125): below public/assets it only adds files whose
 // names hold a hash of their content, it publishes client/ and program/ of --output and nothing else there, and it
-// computes the build id once over the files of HY-125.15 to HY-125.17, which client/build.json, program/build.json and
-// the static shell hold.
+// computes the build id once over the files of HY-125.15 to HY-125.17, which program/build.json and the static shell
+// hold (HY-125.23).
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -21,8 +21,7 @@ const readJson = (file: string) => parseJsonObject(readFileSync(file, 'utf8'), f
 const buildOf = (file: string) => jsonString(readJson(file).build, `${file} build`);
 
 // The files that the build id hashes, read back from disk by the paths of HY-125.17: the files of assets.json, the
-// files of client/ without build.json and csr/, the --static files as csr/<path>, and the files of program/ without
-// build.json.
+// files of client/ without csr/, the --static files as csr/<path>, and the files of program/ without build.json.
 function hashedFiles(app: string, statics: string[] = []) {
   const output = join(app, 'out');
   const assets = jsonArray(readJson(join(output, 'client', 'assets.json')).files, 'assets.json files').map((path) => jsonString(path, 'assets.json path'));
@@ -45,7 +44,8 @@ test('writes the outputs of HR-34 below public/assets, client/ and program/ and 
   build(app, '--api', '/api', '--php-namespace', 'Fixture\\Program');
   assert.deepEqual(readdirSync(output).sort(), ['app.json', 'client', 'program']);
   assert.equal(readFileSync(join(output, 'app.json'), 'utf8'), '{"own":true}');
-  assert.deepEqual(readdirSync(join(output, 'client')).sort(), ['assets.json', 'build.json', 'csr', 'manifest.json', 'templates.index.json']);
+  // HY-125.23: the build id file is a file of program/ only.
+  assert.deepEqual(readdirSync(join(output, 'client')).sort(), ['assets.json', 'csr', 'manifest.json', 'templates.index.json']);
   // The intermediate files of the PHP compilation, graph/ and types.json, are not in the program.
   assert.deepEqual(readdirSync(join(output, 'program')).sort(), ['build.json', 'legacy', 'php', 'program.json', 'reads.json', 'templates']);
   assert.deepEqual(readJson(join(output, 'program', 'program.json')), { namespace: 'Fixture\\Program' });
@@ -110,16 +110,15 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
   assert.deepEqual(readdirSync(join(client, 'csr', 'assets')).filter((name) => name.endsWith('.js')), [secondChunk]);
 });
 
-test('computes the build id once over the files of HY-125.15 to HY-125.17 and writes it into both build.json and the shell', (t) => {
+test('computes the build id once over the files of HY-125.15 to HY-125.17 and writes it into build.json of the program and the shell', (t) => {
   const app = fixture('chunks', t);
   mkdirSync(join(app, 'public', 'assets'), { recursive: true });
   writeFileSync(join(app, 'public', 'assets', 'app.css'), 'p {}\n');
   build(app, '--api', '/api', '--php-namespace', 'Fixture\\Program', '--static', 'public/assets/app.css');
-  const client = join(app, 'out', 'client', 'build.json');
   const program = join(app, 'out', 'program', 'build.json');
-  const id = buildOf(client);
+  const id = buildOf(program);
   assert.match(id, /^[0-9a-f]{64}$/);
-  assert.equal(readFileSync(client, 'utf8'), `{"build":"${id}"}`);
+  assert.equal(existsSync(join(app, 'out', 'client', 'build.json')), false);
   assert.equal(readFileSync(program, 'utf8'), `{"build":"${id}"}`);
   assert.equal(id, buildId(hashedFiles(app, ['assets/app.css'])));
   const shell = readFileSync(join(app, 'out', 'client', 'csr', 'index.html'), 'utf8');
@@ -127,7 +126,7 @@ test('computes the build id once over the files of HY-125.15 to HY-125.17 and wr
   // A changed --static file gives another id (HY-125.15).
   writeFileSync(join(app, 'public', 'assets', 'app.css'), 'p { margin: 0; }\n');
   build(app, '--api', '/api', '--php-namespace', 'Fixture\\Program', '--static', 'public/assets/app.css');
-  const secondId = buildOf(client);
+  const secondId = buildOf(program);
   assert.notEqual(secondId, id);
   assert.equal(secondId, buildId(hashedFiles(app, ['assets/app.css'])));
 });

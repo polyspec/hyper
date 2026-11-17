@@ -7,7 +7,6 @@
 //   <output>/client/manifest.json                       the URL of the entry as hyper and of each asset by its name
 //   <output>/client/assets.json                         {"files": [...]}: the paths public/assets/... of this build
 //   <output>/client/templates.index.json                template name -> file URL, the index of the client bundle
-//   <output>/client/build.json                          {"build":"<id>"}
 //   <output>/client/csr/                                the static shell index.html with the copies of this build
 //                                                       below assets/ and the --static files, with client/main.ts
 //                                                       and --api (HY-62)
@@ -15,7 +14,7 @@
 //
 // The checks of lib/options.mjs and lib/check.mjs and every input read pass before a file is written. The outputs are
 // made in staging directories of this process; the id hashes them; then public/assets gains its files, and client/ and
-// program/ are published file by file, each build.json last, so a server or a page of an earlier build never finds a
+// program/ are published file by file, the shell and build.json last, so a server or a page of an earlier build never finds a
 // file missing (HR-82). Below --output the build owns client/ and program/ only.
 //
 // The template ASTs and the template render runtime of the bundle come from the template package `@polyspec/template`
@@ -122,11 +121,11 @@ export async function runBuild(options) {
       }
       for (const { path, file } of options.statics) copyFile(file, join(clientNext, 'csr', path));
     }
-    writeBuildFile(clientNext, id);
+    // HY-125.23: the id is written into build.json of program/ only, where every server reads it.
     writeBuildFile(programNext, id);
 
     for (const file of assetFiles) writeFileAtomic(join(app, 'public', 'assets', file.name), file.bytes);
-    publish(clientNext, clientTarget, { last: [join('csr', 'index.html'), 'build.json'] });
+    publish(clientNext, clientTarget, { last: [join('csr', 'index.html')] });
     publish(programNext, programTarget, { last: PROGRAM_LAST });
 
     const lines = [`build ${id}: ${count} templates, ${assetFiles.length} files below ${join(app, 'public', 'assets')}, ${clientTarget}, ${programTarget}`];
