@@ -1,5 +1,5 @@
 <!-- doc-id: core-page-render-execution -->
-<!-- source-sha256: cffb8ab741e2aa8a7f941e0f7baa766724fd86bca70cc4200915e9eb892dfc20 -->
+<!-- source-sha256: f9bf3d8639b3147c25fb0871e25134ad52ae437c2c66c5cfa95c9d836e923599 -->
 # 서버의 core page render: 설계
 
 [English](core-page-render.md).
@@ -35,7 +35,7 @@ case. 11개가 갱신을 관찰한다. `contracts/app.json`의 8개(`an_action_t
 
 바꾸는 것. H35.32-3이 `Input::Action`과 `packages/rust/interface.json`의 `page_step_input`의 variant `action`에 member를 더한다. host는 액션 뒤에 세션을 갱신하고, `csrfMask`로 새 토큰을 가리고, 그 값을 액션 입력에 주고, `computePageHeaders`를 위해 새로 가린 값과 새 토큰의 쌍을 보관한다(`PageResponse.masked_token`과 `token`, `packages/rust/src/front.rs`). statement는 바뀌지 않는다.
 
-저장된 유지 값. `PageInput.stored`는 `PageRequest`를 만들 때, 곧 액션과 로더 전에 준다(`steps.rs:327`, 읽는 곳은 `:762`). Node와 PHP는 로더 뒤에 저장된 유지 값을 읽는다(`page.ts:116`과 `:155`, `packages/php/src/Page/Page.php:118`과 `:211`). 두 순서는 요청의 handler가 세션의 저장된 유지 값을 바꿀 때에만 다른 결과를 준다. 그 순서를 고정하는 case는 0개다(검색: `contracts/app.json`과 `contracts/keep.json`의 case 중 유지 값을 쓰는 handler. 찾지 못함). 확인하지 못함: handler가 세션의 유지 값을 쓰는 interface를 가지는지. kept endpoint는 별도의 요청이다. 갱신은 유지 값을 그대로 두므로(HY-72.2) 액션 입력에 member `stored`는 필요하지 않다.
+저장된 유지 값. core는 지금의 Node와 PHP 서버처럼 요청의 로더가 돌아온 뒤에 저장된 유지 값을 읽는다(`page.ts:116`과 `:155`, `packages/php/src/Page/Page.php:118`과 `:211`). 지금 `PageInput.stored`는 `PageRequest`를 만들 때, 곧 액션과 로더 전에 주므로(`steps.rs`, `PageInput`. `answer`의 `kept_values`가 읽는다), 요청의 handler가 저장한 값은 그 응답의 `kept`에서 빠진다. handler는 그런 값을 저장할 수 있다. 애플리케이션은 `handle`에 주는 session store를 가지고 있고, `Session.keep`은 그 store로 저장된 유지 값을 쓴다(`packages/ts/src/session/session.ts:62-65`). 그 순서를 고정하는 case는 0개이며(검색: `contracts/app.json`과 `contracts/keep.json`의 case 중 유지 값을 쓰는 handler), 그것이 빈틈이다. 변경: `stored`는 `PageInput`을 떠나 마지막 step의 입력 `Input::Reply`의 member가 되며, host는 모든 로더가 돌아온 뒤에 그것을 준다(`steps.rs`, `State::Reply`의 arm). `open_page`(`packages/rust/src/opening.rs`, `server`로 값을 유지하는 영역의 loop)는 그것을 더 읽지 않는다. statement HY-38.20과 그 case는 아래에 있다. 갱신은 유지 값을 그대로 두므로(HY-72.2) 액션 입력에 member `stored`는 필요하지 않다.
 
 ## 질문 2 — HY-44를 판정하는 곳
 
@@ -63,7 +63,7 @@ HY-44.9와 case가 어긋나는 것이 결함이다. `contracts/context.json`의
 
 이 표에서 따르는 세 가지.
 
-- 수의 message는 언어가 가진 대로의 수를 적는다. case의 context는 JSON text `{"n":9007199254740993}`이다. 이것을 double로 읽는 runner는 `9007199254740992`를, 정수로 읽는 runner는 `9007199254740993`을 준다. case에는 세 runtime에서 글자가 같은 수, 예를 들어 float `1e20`이 필요하거나, case가 message가 아니라 kind를 비교한다. 이것은 세 runner의 실행으로 정한다.
+- 수의 message는 언어가 가진 대로의 수를 적는다. case의 context는 JSON text `{"n":9007199254740993}`이다. 이것을 double로 읽는 runner는 `9007199254740992`를, 정수로 읽는 runner는 `9007199254740993`을 가진다. 그래서 세 case는 수 9007199254740992(2^53)를 쓴다. double이 정확히 담고, 모든 runtime이 한 글자로 가지며, 안전 범위 밖인 수다. 그 message는 `number 9007199254740992 is outside the safe range`다. 범위 경계의 case는 남는다. 세 runner의 실행이 그 글자를 확인한다.
 - `packages/ts/src/data/values.ts:15-17`의 `toValue`와 JS engine의 `bindValue`(`data-model.ts:40`)가 Node 서버를 떠나면, 경계가 안쪽의 일반 객체를 map으로, bigint를 수로 바꾼다. host에 남는 변환은 handler의 결과 자체 하나다. HY-44.4는 Node handler가 일반 객체나 `Map`을 돌려주게 하고 경계는 `Map`만 받으므로, `Page.loaderMap`(`page.ts:143-147`)은 일반 객체에 대해 `new Map(Object.entries(result))`가 되고, 결과가 map인지의 검사(HY-44.4, HY-44.5)를 가진다. 이것은 결과의 형태 검사이며 HY-44의 검사가 아니다.
 - `page.ts:90`의 `JsonCodec.encode`는 끝난다.
 
@@ -73,7 +73,7 @@ HY-44.9와 case가 어긋나는 것이 결함이다. `contracts/context.json`의
 
 case. 45개가 HY-44 또는 데이터 모델의 kind를 적는다. `contracts/app.json`의 42개와 `contracts/context.json`의 3개다. 상태가 바뀌는 것은 0개이고, message가 바뀌는 것은 3개다(위).
 
-바꾸는 것. core(H35.32-4): arm에서의 검사. 나머지는 만들어져 있다. host: 세 `FAILURES` 표와 host의 검사가 끝난다. Node 서버는 한 변경에서, PHP와 Python은 H35.32-1에서 끝난다. statement: HY-44.10과 HY-44.11(아래). case: 세 message, 깊이의 case 하나, 시점의 case 하나.
+바꾸는 것. core(H35.32-4): arm에서의 검사. 나머지는 만들어져 있다. host: 세 `FAILURES` 표와 host의 검사가 끝난다. Node 서버는 한 변경에서, PHP와 Python은 H35.32-1에서 끝난다. statement: 시점의 HY-44.10과 깊이의 HY-44.11(아래). 각각 case를 가진다. case: 세 message, 깊이의 case 하나, 시점의 case 하나.
 
 ## 질문 3 — Node 서버 `App.open`의 입력
 
@@ -159,15 +159,25 @@ Node runner는 40개 중 전에 37개, 뒤에 3개를 실행한다. core는 전�
 
 case. `now`를 관찰하는 것은 0개다. 검색: `contracts/`의 모든 파일에서 `now(`는 5건이며 `protocol.json`에 4건, `interfaces.json`에 1건이고 모두 글자 `performance.now()`다. case의 템플릿에는 0건, `examples/board/templates`에도 0건이다. 날짜 함수는 `examples/board/templates/board/rows.tpl:24`와 `board/show.tpl:6`에서 저장된 시각과 함께 호출되며 시간대만 읽는다. 그래서 PHP나 Python의 출력이 바뀌는 case는 0개다. 템플릿이 `date(now(), …)`를 호출하는 PHP나 Python 애플리케이션은 지금 실패하며 H35.32-1 뒤에 렌더된다.
 
-바꾸는 것. core: `PageInput`과 두 member의 정수 type. host: 각 host가 요청마다 한 번 자기 시계의 정수 초를 준다. statement: HY-14.3. test: `now`를 입력으로 주는 core case. 문서의 제목, 두 영역, 레이아웃이 `now()`를 호출하며, 문서는 각 자리에 그 값을 담는다. 어떤 test도 시계를 읽지 않는다(HR-89).
+바꾸는 것. core: `PageInput`과 두 member의 정수 type. host: 각 host가 요청마다 한 번 자기 시계의 정수 초를 준다. statement: HY-14.3, 그리고 브라우저를 위한 HY-14.4와 HY-17.4(아래). test: `now`를 입력으로 주는 core case. 문서의 제목, 두 영역, 레이아웃이 `now()`를 호출하며, 문서는 각 자리에 그 값을 담는다. 어떤 test도 시계를 읽지 않는다(HR-89).
 
-브라우저. 브라우저는 `now`를 넘기지 않으므로 JS engine이 렌더마다 브라우저의 시계를 읽는다(`response.ts:165`, `:186`, `:212`). 응답의 JSON 값은 `timezone`만 가진 `env`를 담고(`packages/rust/src/page.rs`, `json_value`, 첫 member), `decodeResponse`는 `env.timezone`을 읽는다(`response.ts:59`). 그래서 `now()`를 호출하는 템플릿에서는 서버의 문서와 문서 JSON의 브라우저 렌더가 다르며, 지금 HY-13.4는 그런 템플릿에 성립하지 않는다. 선택지:
+브라우저와 `now()`. 서버는 응답의 `now`를 JSON 값의 `env`에 보내되, 템플릿이 그것을 읽는 라우트에서만 보낸다. 브라우저는 그 값을 그 응답의 모든 렌더에 준다. 그러면 `now()`를 호출하는 템플릿에서도 서버의 문서와 문서 JSON의 브라우저 렌더가 같은 바이트를 담는다. HY-13.4가 이것을 요구하며 지금은 성립하지 않는다. 그런 페이지의 body와 tag는 초마다 바뀌고 304가 나오지 않는다. 페이지가 초마다 다르므로 이것이 옳다. 템플릿이 `now`를 읽지 않는 페이지는 지금과 같다.
 
-- 서버가 `env`에 `now`를 보낸다. 브라우저는 그것을 자기 렌더에 주고, 둘은 같은 바이트를 만든다. navigation은 그 영역 응답의 `now`로 렌더한다. 비용: 모든 JSON 응답의 body가 초마다 바뀐다. body에서 계산하는 HY-53의 weak tag(`packages/rust/src/etag.rs`, `page_tag`)가 초마다 바뀌며, tag가 `env.now`를 빼지 않는 한 304가 더 나오지 않는다. case의 12줄이 `"env"`를 담고(`contracts/app.json` 5, `contracts/context.json` 7), 기대하는 모든 JSON body가 바뀐다.
-- 브라우저가 응답마다 한 번 시계를 읽어 그 값을 그 응답의 모든 렌더에 준다. 그러면 브라우저에서도 서버처럼 응답 하나가 `now` 하나를 가진다. 두 값은 다르므로 `now()`를 호출하는 템플릿의 바이트는 다르다. 비용: `packages/client/src/response.ts`의 변경이며 wire는 바뀌지 않는다.
-- 변경 없음: 바이트가 다르고, 브라우저 응답 하나의 렌더가 초를 넘으며 달라질 수 있다.
+현재 코드. 브라우저는 시간대만 넘기므로(`packages/client/src/response.ts:165`, `:186`, `:212`, `:237`), JS engine은 렌더마다 브라우저의 시계를 쓴다(snapshot, `packages/ts/render/chunk-6S74TFTF.mjs:2258`, `fields.now ?? Math.floor(Date.now() / 1e3)`). 같은 줄은 option `env`에 `now`가 있으면 engine이 그것을 쓴다는 것을 보여 준다. JSON 값은 `timezone`만 가진 `env`를 담고(`packages/rust/src/page.rs`, `json_value`), `decodeResponse`는 `env.timezone`을 읽으며(`response.ts:59`), 문서의 내장 데이터는 그 값이다(`page.rs`, `embedded_data`). tag는 body에서 계산한다(`packages/rust/src/etag.rs`, `page_tag`).
 
-사실은 두 번째 선택지를 가리킨다. 첫 번째는 `now()`를 호출하는 템플릿을 위해 모든 페이지의 HY-53의 304를 깨뜨리며, 이 저장소에는 그런 템플릿이 없다. 그러면 HY-13.4는 같은 환경에 대해 성립하고, 환경의 `now`는 렌더하는 쪽의 시계다. HY-14.3이 서버에 대해 그것을 적고, 브라우저의 행이 브라우저에 대해 적는다.
+core는 라우트의 템플릿이 `now`를 읽는지 알 수 있는가? 알 수 있으며, 한 부분이 없다.
+
+- 있는 것. 읽기 경로 walk는 템플릿과, 그것이 include하거나 경로로 배치하는 모든 템플릿의 모든 node를 방문한다. `statement`는 `Node::Include`와 `Node::Block`을 다루고 그 경로를 `resolve_path`로 푼다(`packages/rust/src/read_paths.rs`, `statement`, `resolve`). `expr`은 `Expr::Call`을 포함한 모든 expression에 닿는다(`read_paths.rs`, `expr`). 호출은 함수의 이름을 가지며(snapshot, `packages/rust/src/ast.rs:399-406`, `Expr::Call { name, args, span }`), include나 block의 경로는 템플릿의 literal이다(`ast.rs:181-196`). 그래서 템플릿이 닿는 함수 이름의 집합은 렌더 없이 알 수 있다. `route_reads`는 이미 라우트의 템플릿을 적는다: 레이아웃, 제목, 각 매니페스트 영역, 라우트 템플릿, 각 라우트 영역(`read_paths.rs`, `route_reads`). 내장 데이터의 예약 템플릿은 `json`만 호출한다(`render.rs`, `DATA_SOURCE`).
+- `now`를 읽는 이름. 내장 함수 중에는 `now`만 `env.now`를 읽고, `date`는 시간대를 읽는다(snapshot, `packages/rust/src/functions/date.rs:229-240`). 애플리케이션이 등록한 함수는 두 번째 인자로 `now`를 가진 환경을 받으므로(질문 4), 등록된 함수의 호출은 모두 그것을 읽을 수 있고, core는 함수 안을 볼 수 없다. 그래서 규칙은 내장이 아닌 이름의 모든 호출을 `now`의 읽기로 다룬다: 라우트가 닿는 템플릿이 `now`나 내장이 아닌 이름을 호출하면 그 라우트는 `now`를 읽는다. 그런 이름은 등록된 함수이거나 렌더를 실패시킨다(HYC-24.6). 이 규칙은 option `functions`를 알 필요가 없으므로 빌드가 계산할 수 있다. class 호출과 member 호출은 세지 않는다. hyper는 class 함수를 등록하지 않으며(`Pages::register`는 함수만 받는다), member 호출에는 HY-44가 거부하는 native object가 필요하다.
+- 없는 것. (1) walk는 이름을 버린다. `expr`은 `Expr::Call { args, .. }`로 match하고 인자만 읽는다. 이름의 수집을 얻는다. (2) 라우트의 읽기 경로에는 그 결과를 둘 자리가 없다. `RouteReads`(`steps.rs`)와 `reads.json`의 routes가 boolean member `now`를 얻으며, core의 `routeReads`가 그것을 계산하고 H35.34 뒤의 빌드가 쓴다. (3) template crate는 내장 이름의 집합을 export하지 않는다. `builtins`는 private module `functions`의 함수다(snapshot, `packages/rust/src/lib.rs:19`, `functions/mod.rs:50`). 확인하지 못함: crate의 다른 public 함수가 내장 이름을 알려 주는지. 그것이 없으면 hyper가 목록의 사본을 가지며, template의 release가 그 사본을 틀리게 만들 수 있다. template에 요청할 것은 이름이 내장인지 알려 주는 public 함수다. (4) `json_value`(`page.rs`)는 라우트가 `now`를 읽을 때 `env`에 `now`를 얻고, `Response`는 그 값을 얻는다.
+
+등록된 함수에 대한 비용을 세면 이렇다. `contracts/`에서 내장이 아닌 이름을 호출하는 템플릿은 정확히 1개다: `contracts/functions.json`의 애플리케이션 `with_functions`의 `home.tpl`(`shout`). case의 다른 모든 애플리케이션은 `functions` 없이 또는 빈 map으로 열리며(`packages/ts/tests/steps/arguments.ts:609`), 거기서 그런 호출은 렌더를 실패시킨다. `contracts/functions.json`의 4개 case는 문서를 요청하고 body의 일부를 비교하므로 바뀌는 기대 값은 0개다. `examples/board`의 템플릿 중 `now()`나 등록된 함수를 호출하는 것은 0개다. 모든 라우트가 등록된 함수를 호출하는 애플리케이션은 모든 JSON 응답에서 304를 잃는다. 그것이 이 규칙의 비용이며, 애플리케이션은 그 값을 로더에서 계산해서 피한다.
+
+브라우저. `decodeResponse`는 응답에 `env.now`가 있으면 그것을 읽어 시간대와 함께 decode된 응답에 둔다(`response.ts`, `decodeResponse`, `DecodedResponse`). `renderRegion`, `renderParts`, `renderDocument`, `renderLayout`, `embeddedHtml`은 `{timezone}` 대신 `env: {timezone, now}`를 engine에 넘긴다. navigation은 그 영역 JSON 응답의 `now`로 영역을 렌더하고, 응답에 없는 영역은 렌더된 대로 남는다. 브라우저가 보관 데이터에서 다시 렌더하는 영역(`renderRegionOf`, HYC-11)은 그 데이터를 준 응답의 `now`로 렌더하므로, 서버가 그 응답 때 렌더했을 페이지를 보여 준다. `env.now`가 없는 응답은 지금처럼 engine의 시계로 렌더되며, 그 라우트의 어떤 템플릿도 그것을 읽지 않는다.
+
+바뀌는 statement의 초안은 아래에 있다: HY-14.1, HY-14.2, HY-14.4, HY-17.4. HY-13.4와 HY-53.1부터 HY-53.4는 글을 유지한다. tag는 body의 tag이고, 그런 페이지의 body가 이제 `now`를 담기 때문이다.
+
+Red. (1) core: 라우트 둘을 가진 case. 하나는 라우트 템플릿이 `now()`를 호출하는 템플릿을 include하고 하나는 그렇지 않다. `now`를 86400으로 주면 첫 라우트의 JSON text는 `"env":{"timezone":"Z","now":86400}`을 담고 둘째의 text는 `now`를 담지 않는다. 어떤 응답도 `now`를 담지 않는 지금은 실패한다. (2) 템플릿이 등록된 함수를 호출하는 라우트로 같은 것. (3) 브라우저: `packages/client`의 test가 `env.now` 86400과 템플릿 `{= now()}`를 가진 응답에서 문서를 렌더해, core가 `now` 86400으로 렌더한 문서와 비교한다. 지금 브라우저는 자기 시계를 쓴다. 어떤 test도 시계를 읽지 않는다(HR-89).
 
 ## 질문 8 — engine이 둘일 때 HY-13.4의 증거
 
@@ -177,13 +187,13 @@ case. `now`를 관찰하는 것은 0개다. 검색: `contracts/`의 모든 파�
 
 그 조건은 지금 성립하지 않는다. `package.json:44`와 `composer.json:33`은 release 0.0.27을, `packages/rust/Cargo.toml:35`는 branch를 받는다. `tests/scripts/template-pins.test.mts`(`make hyper-test-scripts`)는 npm 패키지, Composer 패키지, wheel을 한 version에 대해 검사하며(`:4`, `:17-18`, `:66`), `Cargo.toml`은 읽지 않는다(검색: 그 파일의 `Cargo`, 0건). 첫 release의 tag 고정이 crate를 고정하고, 그 test가 crate를 얻는다.
 
-한계. `make parity`는 `examples/board`의 템플릿을 다룬다. conformance case는 언어를 다루고 hyper의 조립은 다루지 않는다. 조립은 브라우저 step과 core가 실행하는 `parts` case가 다룬다(질문 6). 두 engine은 template 명세가 거부하는 입력과 `now()`(질문 7)에서 다르다.
+한계. `make parity`는 `examples/board`의 템플릿을 다룬다. conformance case는 언어를 다루고 hyper의 조립은 다루지 않는다. 조립은 브라우저 step과 core가 실행하는 `parts` case가 다룬다(질문 6). 두 engine은 template 명세가 거부하는 입력에서 다르다.
 
 case. HY-13.4를 적는 것은 0개이고, 바뀌는 것도 0개다.
 
 ## statement
 
-retire되는 id는 그 rule의 목록 `retired`에 들어가고, 새 statement는 쓰이지도 retire되지도 않은 다음 번호를 받는다. 이 트리의 `contracts/protocol.json`의 statement와 목록 `retired`에서 계산한 번호: HY-54.23, HYC-24.9, HY-132.10, HY-48.17, HYC-12.10, HY-128.13, HY-73.34, HY-14.3, HY-44.10. HYC-24.7과 HYC-24.8은 쓰이고 있고, HY-128.6부터 HY-128.12까지와 HY-44.8은 retire되어 있다.
+retire되는 id는 그 rule의 목록 `retired`에 들어가고, 새 statement는 쓰이지도 retire되지도 않은 다음 번호를 받는다. 이 트리의 `contracts/protocol.json`의 statement와 목록 `retired`에서 계산한 번호: HY-54.23, HYC-24.9, HY-132.10, HY-48.17, HYC-12.10, HY-128.13, HY-73.34, HY-14.3, HY-44.10, HY-38.20, HY-17.4. HYC-24.7과 HYC-24.8은 쓰이고 있고, HY-128.6부터 HY-128.12까지와 HY-44.8은 retire되어 있다.
 
 ### retire되는 statement
 
@@ -220,10 +230,19 @@ HY-73.23, 현재: "The build writes the read paths of every route to `reads.json
 
 - HY-14.3 (en): "The `now` of the environment of a response is one whole number of seconds since the Unix epoch, which the page input of the core holds, and every render of the response gives `now()` that value."
 - HY-14.3 (ko): "응답의 환경의 `now`는 core의 page 입력이 담는 Unix epoch 이후의 정수 초 하나이며, 그 응답의 모든 렌더는 `now()`에 그 값을 준다."
-- HY-44.10 (en): "The limit of 64 levels of lists and maps (VAL-20) counts from the map that a handler returns, which is level 1, for the context, the shared data and the data of each region alike."
-- HY-44.10 (ko): "list와 map의 64단계 한계(VAL-20)는 handler가 돌려준 map을 1단계로 하여 세며, context, 공유 데이터, 각 영역의 데이터에 똑같이 적용한다."
-- HY-44.11 (en): "A value outside the data model fails the request when its handler returns, before the server calls the next handler."
-- HY-44.11 (ko): "데이터 모델 밖의 값은 그 handler가 돌아올 때, 서버가 다음 handler를 호출하기 전에 요청을 실패시킨다."
+- HY-44.10 (en): "A value outside the data model fails the request when its handler returns, before the server calls the next handler."
+- HY-44.10 (ko): "데이터 모델 밖의 값은 그 handler가 돌아올 때, 서버가 다음 handler를 호출하기 전에 요청을 실패시킨다."
+- 그 case: shared handler가 데이터 모델 밖의 값을 돌려주고, case가 기록한 호출에 route loader의 호출이 없다.
+- HY-44.11 (en): "The limit of 64 levels of lists and maps (VAL-20) counts from the map that a handler returns, which is level 1, for the context, the shared data and the data of each region alike."
+- HY-44.11 (ko): "list와 map의 64단계 한계(VAL-20)는 handler가 돌려준 map을 1단계로 하여 세며, context, 공유 데이터, 각 영역의 데이터에 똑같이 적용한다."
+- 그 case: 64단계의 map은 페이지로 답하고 65단계의 map은 `data_depth`로 실패한다. 공유 데이터와 영역의 데이터에 대해 각각 둔다.
+- HY-38.20 (en): "The server reads the stored kept values of a response after the loaders of the request returned, so a kept value that a handler of the request stores is in `kept` of that response."
+- HY-38.20 (ko): "서버는 요청의 로더가 돌아온 뒤에 응답의 저장된 유지 값을 읽으므로, 요청의 handler가 저장한 유지 값은 그 응답의 `kept`에 있다."
+- 그 case: route loader가 경로를 `server`로 유지하는 영역의 유지 값을 저장하고, 그 요청의 응답의 `kept`가 그 값을 담는다.
+- HY-14.4 (en): "A route reads `now` when a template that it renders, the layout, the title, the template of a region or of the route, or a template that one of them includes or places by path, calls `now` or a function that is not built in; the JSON value of a response of such a route holds `now` in `env`, and the response of another route holds no `now`."
+- HY-14.4 (ko): "라우트가 렌더하는 템플릿, 곧 레이아웃, 제목, 영역이나 라우트의 템플릿, 또는 그중 하나가 include하거나 경로로 배치하는 템플릿이 `now`나 내장이 아닌 함수를 호출하면 그 라우트는 `now`를 읽는다. 그런 라우트의 응답의 JSON 값은 `env`에 `now`를 담고, 다른 라우트의 응답은 `now`를 담지 않는다."
+- HY-17.4 (en): "The member `env` holds `timezone`, and after it `now` for a route that reads it (HY-14.4)."
+- HY-17.4 (ko): "member `env`는 `timezone`을 담고, `now`를 읽는 라우트(HY-14.4)에서는 그 뒤에 `now`를 담는다."
 
 ### id를 유지하는 statement
 
@@ -231,9 +250,13 @@ HY-132.7(브라우저 코드의 class)은 의미를 유지한다. 브라우저 �
 
 HY-48.1(서버는 "with the template engine of its runtime, from the outputs of the build" 렌더한다)은 의미를 유지한다. 이동은 Node 서버를 그 출력 목록에 맞게 만든다.
 
-HY-13.4("the same bytes")는 의미를 유지한다. 그 증거와 `now()`에 대한 한계는 질문 7과 8에 있다.
+HY-13.4("the same bytes")는 의미를 유지한다. 그 증거는 질문 8에 있고, `env`의 `now`가 `now`를 읽는 템플릿에서도 그것을 성립하게 한다(질문 7).
 
-HY-14.1("Server and browser render with the same environment")은 서버가 보내는 시간대(HY-14.2)에 대해 의미를 유지한다. `now`에 대해서는 지금도 이동 뒤에도 성립하지 않는다(질문 7).
+HY-14.1("Server and browser render with the same environment")은 글과 id를 유지한다. 지금 `now`에 대해서는 성립하지 않으며, `env`의 `now`가 그것을 성립하게 한다(질문 7). 그래서 이 변경은 statement가 아니라 코드를 고친다.
+
+HY-14.2, 현재: "The server sends the time zone in every JSON response." 의미를 유지한다. HY-14.4와 HY-17.4가 `now`를 더한다.
+
+HY-53.1부터 HY-53.4는 글을 유지한다. tag는 body의 digest이고, `now`를 읽는 라우트의 body는 초마다 바뀌므로 그 tag도 바뀌며, 다른 초의 tag를 적은 요청은 body를 받는다.
 
 HY-13.7은 PHP와 Python 서버가 공유 값을 읽는 횟수를 적는다: 문서는 두 번, 데이터를 내장하는 문서는 세 번, JSON 응답은 두 번. `contracts/app.json`의 다섯 case가 그 수를 고정한다: `a_document_reads_a_shared_value_twice_whatever_the_number_of_its_renders`(2), `a_document_json_reads_a_shared_value_twice`(2), `a_region_json_reads_a_shared_value_twice`(2), `a_document_of_a_route_with_a_route_region_reads_a_shared_value_twice`(2), `a_document_that_embeds_its_data_reads_a_shared_value_three_times`(3). 이들은 retire되는 문장 HY-54.3 아래에서 PHP와 Python으로 제한되어 있으므로, 한 변경에서 그 `only` 항목에 다른 문장이 필요하다. H35.32-1에서는 경계가 값을 변환할 때 한 번 읽으므로 수가 바뀌고, HY-13.7은 새 수를 적는 후속과 함께 retire된다. H35.32-1이 그 수를 잰다.
 
@@ -248,6 +271,8 @@ H35.32-7과 H35.32-8은 한 변경이다. Node 서버에는 한 입력으로 열
 | H35.32-5 | 없음 | 만들어짐: `check_function_entry`, HYC-24.7, HYC-24.8. |
 | H35.32-6 | 질문 6 | 만들어짐: `render_document`와 `render_parts`. 남은 것은 `now`의 정수 type(질문 7)이다: `now`를 `1.5`로 주는 Node binding의 test는 정수가 아닌 값에 대한 binding의 kind로 실패해야 한다. 지금은 문서가 렌더된다. |
 | H35.32-7과 H35.32-8, 한 변경 | 질문 1부터 7. H35.32-3, H35.32-4. H31.4-2. H35.34. statement가 먼저 | JS engine이 어떻게 되든 성립하는 Red 셋. (1) template 데이터 모델의 message를 가진 `contracts/context.json`의 세 case는 Node 서버의 표가 message를 쓰는 동안 Node 서버에서 실패한다. (2) open `an_open_without_reads_json_…`, `…_build_json_…`, `…_templates_…`와 세 `a_reads_json_…`를 Node 서버에 실행하면 `App.open`이 index를 받는 동안 실패한다. (3) 두 번째 인자의 `timezone`을 돌려주는 `contracts/functions.json`의 새 function kind는 engine이 `{env: {…}}`를 주는 Node 서버에서 실패한다. |
+| 저장된 유지 값의 행(HY-38.20) | 질문 1. 한 변경 전 | HY-38.20의 case를 core에 실행한다: host는 route loader를 실행하는 동안 유지 값을 저장하고, core가 요청할 때 `stored`를 준다. 지금은 답의 `kept`가 loader 전에 읽은 `PageInput.stored`의 값을 담는다. |
+| `env`의 `now`의 행(HY-14.4, HY-17.4) | 질문 7. `reads.json`은 H35.34. 내장 이름을 알려 주는 template의 public 함수 | 질문 7의 Red 셋. |
 | H35.32-9 | H35.34. 한 변경 | `@polyspec/hyper-client`가 `routeReads`, `templateReads`, `keepRead` 중 하나를 export하는 동안 `tests/scripts`의 test가 실패한다. |
 | H35.32-1 | H35.32-3, H35.32-4. 질문 2, 4, 7 | PHP와 Python: 시점의 case(실패하는 공유 값 뒤의 loader가 호출되지 않는다)는 그들이 모든 로더 뒤에 검사하는 동안 실패한다. `contracts/context.json`의 세 message는 그들의 표가 그것을 쓰는 동안 실패한다. test가 `now`를 주고 템플릿에 `{= date(now(), 'Y')}`를 둔 case는 그들이 소수를 주는 동안 `runtime_type`으로 실패한다. PHP: case `a_json_serializable_object_in_shared_data_passes_…`(3)는 core를 통해서도 통과해야 한다. |
 | 뒤의 행(질문 5) | session-store release. 한 변경 | 맞지 않는 form 토큰을 가진 POST의 Node HTTP test가 session store의 호출을 기록한다. `open_page`가 하는 호출의 순서(flash, 그다음 토큰)는 host가 다를 때에만 지금 host의 순서와 다르므로, Red는 그 순서를 고정하는 `contracts/session.json`의 case를 기록하는 store로 실행한 것이다. 확인하지 못함: 그런 case가 있는지. 그 행이 찾거나 더한다. |
@@ -261,4 +286,4 @@ PHP와 Python의 이동이 더하는 것. `JsonSerializable`은 HY-44.6을 통�
 - `decodeResponse`(`page.ts:136`)는 브라우저 router가 서버의 라우트를 선택하는지도 검사했다. 서버는 그 검사를 자신에게 더 실행하지 않는다.
 - 브라우저 패키지는 질문 5의 행까지 Node 서버의 routing(`app.ts:573`), `stripBasePath`, 매니페스트 type을 유지한다. `keepRead`, `keptPaths`, `Context.withContext`, `Context.member`는 페이지에 대해 끝난다(`steps.rs:740`, `:756`, `:762`, `:778`, `:810`).
 - 두 engine은 template 명세가 거부하는 입력에서 다르다. Node 서버는 그런 템플릿에서 답이 바뀌며, 한 변경의 changelog entry가 그 입력을 적는다.
-- 확인하지 못한 것은 각각 쓰이는 곳에 적었다: runtime마다의 message 안 수의 글자, 지금 서버의 깊이 셈, 경계를 지나는 짝 없는 surrogate, `JsonSerializable`과 closure의 두 번째 인자에 대한 PHP 경계, `checkManifest`가 거부하는 모든 매니페스트를 core가 거부하는지, handler가 저장된 유지 값을 쓸 수 있는지, `the_context_hash_and_its_place`가 `withContext`의 모든 항목을 읽는지, 빌드가 받는 template crate의 revision.
+- 확인하지 못한 것은 각각 쓰이는 곳에 적었다: runtime마다의 message 안 수의 글자, 지금 서버의 깊이 셈, 경계를 지나는 짝 없는 surrogate, `JsonSerializable`과 closure의 두 번째 인자에 대한 PHP 경계, `checkManifest`가 거부하는 모든 매니페스트를 core가 거부하는지, template crate에 내장 이름을 알려 주는 public 함수가 있는지, `the_context_hash_and_its_place`가 `withContext`의 모든 항목을 읽는지, 빌드가 받는 template crate의 revision.
