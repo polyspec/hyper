@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d2fe7243d236d459e08643bf68b8dd1c05485c237a0305a3d82f53b62aae990f -->
+<!-- source-sha256: 143e66319415600ce6eaf25efc1821556fe7820dc7bb257c9274eb48e3073784 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 행 H35.40-2는 검증되었다: `make spec-docs-check`가 통과하고, `make hyper-test-scripts`가 8ed75980의 tree에서 642개 test, 실패 없이 통과했다. 46b97e6f 이전에는 `tests/scripts/spec-docs.test.mts`의 test가 21 passed, 3 failed였고, 이후에는 24 passed다.
 - `tests/scripts`의 Node와 Python session worker는 TLS와 ACL 사용자만 받는 Sentinel에 닿는다(H35.38). 입력: `tests/scripts/session-redis-failover.test.mts`의 test `the three servers go on through a failover with Sentinels and Redis servers that take only TLS and the ACL user`. 이전 동작: worker가 각 Sentinel을 `redis://127.0.0.1:<port>`로 주어서, Sentinel의 TLS와 사용자를 그 주소에서 읽는 session-store 0.0.7(SR-6.1)이 Python worker의 첫 쓰기를 kind `connection`으로 실패시켰다. 6 passed, 1 failed. 기대 동작: PHP worker처럼 worker가 Redis 서버의 scheme과 자격 증명으로 Sentinel을 준다. 7 passed, 0 failed.
 - 실패한 session open이 다시 Node와 Python 서버의 응답을 벗어난다(HY-60.14, HY-104.37, H35.38). 입력: session 디렉터리가 없는 `tests/scripts/upload-servers.test.mts`의 test `session-open-error-is-the-plain-500`. 이전 동작: application이 session을 쓰는 route에서 session을 열게 된 뒤(HY-104.38), open이 `App.respond` 안에서 실패해서 application이 그것을 기록하고, response hook이 실행되고, HY-43의 500이 답했다. 기대 동작: host의 plain 500이 write hook에 한 번 주어진다. `App.respond`와 `App._respond`는 open의 실패를 발생한 그대로 발생시킨다. `packages/python/tests/transport.py`의 가짜 application은 받은 open call을 부르고, `tests/scripts/node-core.test.mts`는 core rule의 `sessionValue`와 `sessionRecord`를 test한다. `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts`: 95 passed, 0 failed.
 - 행 H35.38은 모든 생태계가 고정한 session-store 0.0.7과, Node와 Python 서버가 충족하는 HY-104.38을 적는다. Green 전에 항목 하나가 남는다: `contracts/interfaces.json`에서 제거된 session 코드의 unit으로, 새 source의 member를 쓰는 recipe 도구가 없어서 `make recipe-candidates`는 그 member를 둔 채 native 항목 54개를 stale로 표시한다.
