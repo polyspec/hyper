@@ -17,7 +17,6 @@ export MISE_STATE_DIR := $(KIT_TOOLS)/mise/state
 export MISE_CONFIG_DIR := $(KIT_TOOLS)/mise/config
 export MISE_GLOBAL_CONFIG_FILE := $(CURDIR)/mise.toml
 export MISE_GLOBAL_CONFIG_ROOT := $(CURDIR)
-MISE_ENVIRONMENT := MISE_DATA_DIR MISE_CACHE_DIR MISE_STATE_DIR MISE_CONFIG_DIR MISE_GLOBAL_CONFIG_FILE MISE_GLOBAL_CONFIG_ROOT
 # The node of mise.toml, which the bootstrap wraps in var/tools/bin; the bootstrap itself runs on the Node.js of the machine.
 NODE := $(KIT_TOOLS)/bin/node
 BOOTSTRAP_NODE := node
@@ -185,11 +184,6 @@ install: hyper-install ## Install everything that the checks read, then link the
 test: hyper-test-js hyper-test-node hyper-test-php hyper-test-python hyper-test-python-render hyper-test-scripts ## Run the tests of every package and of the scripts
 
 lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language of the checkout
-
-# The release workflow runs make release-prepare before release-tools: the release installs as CI does, each template asset
-# verified by the integrity of its lock (HR-80, H23.7).
-release-prepare: ## Install the locked dependencies, for a release; ONLINE
-	$(ONLINE) $(MAKE) hyper-install
 
 # PIE resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1
 # of its zip, and builds it with phpize and the php-config of the PHP of PATH (H27.51). PIE keeps one Composer project per
@@ -656,7 +650,7 @@ bench: bench-server bench-browser bench-uploads ## Run the measurements; results
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
 GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
-CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
+CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check release-candidate-assets hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
 
 # The CI groups of the full suite (HR-91): the matrix of the job check of .github/workflows/ci.yml names CI_GROUPS, and
 # each entry runs `make ci-check NAME=<group>` (HR-90). A group declares the tools that install-tools installs (CI_TOOLS),
@@ -681,7 +675,7 @@ CI_SETUP_php := install-tools hyper-install-php
 CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php
 CI_TOOLS_node := node rust
 CI_SETUP_node := install-tools
-CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check
+CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check release-candidate-assets
 CI_TOOLS_board := node php composer pie python uv rust maturin
 CI_SETUP_board := install-tools hyper-install-php hyper-install-python hyper-install-browser hyper-ext
 CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
@@ -908,51 +902,113 @@ ci-passed: ## Fail unless every job of RESULTS, the JSON of toJSON(needs), has t
 	$(NODE) $(KIT)/ci-passed.$(KIT_EXT)
 
 # ---- Release (config/release.json) -----------------------------------------------------------------------------------
-# The steps of .github/workflows/release.yml, in this order: release-tag tags the commit of the successful CI run RUN of ci.yml
-# on main and appends TAG and VERSION to GITHUB_ENV; release-checkout checks that tag out; release-prepare installs as make
-# hyper-install does; release-tools installs the tools of the release and release-tools-path puts them on the PATH of the
-# later steps; release-assets builds the packages and their archives into var/release/assets; release-publish creates the
-# draft GitHub Release and release-undraft makes it public.
-# The job of .github/workflows/release.yml runs make ci-release (HR-90): each step in this order, a make of its own, so the
-# steps after release-checkout read the Makefile and the packages of the tagged commit, and the first failure stops the run,
-# since each step reads what the step before wrote. release-tag writes TAG and VERSION into var/release/tag.env, the
-# GITHUB_ENV of this run, which the recipe reads; when it tagged no version, the run ends with nothing to release. AUTO=1
-# follows a workflow_run event (GITHUB_EVENT_NAME), and a dispatch or a local run `make ci-release RUN=<id>` releases the
-# commit of RUN. The tools of var/tools are on the PATH of this Makefile, so the recipe needs no release-tools-path.
-RELEASE_ENV := var/release/tag.env
-RELEASE_STEPS := release-checkout release-php-check bootstrap install-tools install-packages release-archive-tool release-prepare release-tools release-recipes release-assets release-publish release-undraft
-.PHONY: ci-release release-php-check
-# setup-php sets up the PHP of the .php-version of the checkout before the tag is checked out, and a dispatch checks out main,
-# so the release requires the PHP on PATH to be the minor release of the .php-version of the tag before it builds anything.
-release-php-check: ## Fail unless the PHP on PATH is the minor release that .php-version of the checkout names, naming both
-	@want="$$(tr -d '[:space:]' < .php-version)"; have="$$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;')"; \
-	test "$$have" = "$$want" || { echo "release-php-check: the PHP on PATH is $$have, and .php-version of $${TAG:-the checkout} names $$want; set up PHP $$want"; exit 1; }
-ci-release: ## Run the job of release.yml: tag the commit of the CI run RUN, then check out, build and publish its release; ONLINE
-	@mkdir -p $(dir $(RELEASE_ENV)) && : > $(RELEASE_ENV) && \
-	GITHUB_ENV=$(CURDIR)/$(RELEASE_ENV) $(CI_MAKE) release-tag$(if $(filter workflow_run,$(GITHUB_EVENT_NAME)), AUTO=1) && \
-	set -a && . ./$(RELEASE_ENV) && set +a && \
-	if test -z "$$TAG"; then echo "ci-release: release-tag tagged no version, so nothing is released"; exit 0; fi && \
-	$(foreach step,$(RELEASE_STEPS),$(CI_MAKE) $(step)$(if $(filter install-tools,$(step)), TOOLS=npm) &&) true
+# .github/workflows/release.yml has three jobs, each with one recipe (HR-90, HR-95). The job tag runs ci-release-tag:
+# release-tag tags the commit of the successful CI run RUN of ci.yml on main and appends TAG and VERSION to GITHUB_ENV,
+# which a later line of the same step does not receive in its environment, so release-tag-output reads them from that
+# file and gives them to the later jobs. The job assets calls assets.yml, whose jobs run ci-assets-<job>. The job release
+# runs ci-release-release on the tag, each line a make of its own that stops the recipe when it fails, since each reads
+# what the line before wrote: release-tools installs the tools of the release, release-assets builds the archives of kit
+# into var/release/assets, release-publish creates the draft GitHub Release, the assets of each platform that the
+# workflow downloaded into var/release/downloaded join var/release/assets with their folders, release-go-module commits
+# and tags the Go module with the identity of the actor of the run, release-platform-assets uploads the assets of each
+# platform to the draft and release-undraft makes it public. The tools of var/tools are on the PATH of this Makefile.
+#
+# The tag exists before the jobs assets and release run. So CI runs what they run without a tag: every run of ci.yml
+# calls assets.yml, and release-candidate-assets, a target of the full suite, builds the archives of kit from the
+# committed HEAD for the version of the first section ## X.Y.Z of the change log (kit K1286); kit refuses a checkout with
+# a changed or an untracked path or with a dependency linked from outside it.
+.PHONY: ci-release-tag ci-release-release release-tag-output release-candidate-assets
+RELEASE_IDENTITY = GIT_AUTHOR_NAME="$${GITHUB_ACTOR:?}" GIT_AUTHOR_EMAIL="$${GITHUB_ACTOR:?}@users.noreply.github.com" \
+	GIT_COMMITTER_NAME="$${GITHUB_ACTOR:?}" GIT_COMMITTER_EMAIL="$${GITHUB_ACTOR:?}@users.noreply.github.com"
+ci-release-tag: ## Run the job tag of release.yml: tag the commit of the CI run RUN and give TAG and VERSION to the later jobs; AUTO=1 for a workflow_run
+	@test -n "$$GITHUB_ENV" || { echo 'ci-release-tag: GITHUB_ENV is set only in a step of a workflow' >&2; exit 2; }
+	$(CI_MAKE) release-tag
+	$(CI_MAKE) release-tag-output TAG="$$(sed -n 's/^TAG=//p' "$$GITHUB_ENV" | tail -n 1)" VERSION="$$(sed -n 's/^VERSION=//p' "$$GITHUB_ENV" | tail -n 1)"
 
-.PHONY: release-tag release-checkout release-archive-tool release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
+ci-release-release: ## Run the job release of release.yml: build the archives of TAG, publish the draft, add the assets of each platform and make the release public; ONLINE
+	@test -n "$(TAG)" || { echo 'ci-release-release: TAG is required, for example make ci-release-release TAG=v0.0.1' >&2; exit 2; }
+	$(CI_MAKE) release-tools
+	$(CI_MAKE) release-assets
+	$(CI_MAKE) release-publish
+	mkdir -p var/release/assets && cp -R var/release/downloaded/. var/release/assets/
+	$(CI_MAKE) release-recipes
+	$(CI_MAKE) binding-cases
+	$(RELEASE_IDENTITY) $(CI_MAKE) release-go-module
+	$(CI_MAKE) release-platform-assets
+	$(CI_MAKE) release-undraft
+
+release-tag-output: ## Write TAG and VERSION as the outputs tag and version of the step (GITHUB_OUTPUT); both are empty when the run releases nothing
+	@test -n "$$GITHUB_OUTPUT" || { echo 'release-tag-output: GITHUB_OUTPUT is set only in a step of a workflow' >&2; exit 2; }
+	printf 'tag=%s\nversion=%s\n' "$$TAG" "$$VERSION" >> "$$GITHUB_OUTPUT"
+
+release-candidate-assets: packages ## Build the archive of every package of config/release.json from the committed HEAD with no tag into var/release-candidate/assets (kit K1286)
+	RELEASE_ASSETS=var/release-candidate/assets $(NODE) $(KIT)/release.$(KIT_EXT) candidate-assets
+
+# The rehearsal of a release before its version commit is pushed: on a clean clone of that commit, the archives of kit
+# for VERSION, the version that the commit names, with no tag; it prints the commit that it packed.
+.PHONY: release-rehearsal
+release-rehearsal: packages ## Build the archives of VERSION from the committed HEAD of a clean clone with release-run prepare of kit, before the version commit is pushed
+	@test -n "$(VERSION)" || { echo 'release-rehearsal: VERSION is required, for example make release-rehearsal VERSION=0.0.1' >&2; exit 2; }
+	RELEASE_ASSETS=var/release-candidate/assets $(NODE) $(KIT)/release-run.$(KIT_EXT) prepare "$(VERSION)"
+
+# The jobs of .github/workflows/assets.yml, each one recipe (HR-90, binding GN-19i). A recipe installs the tools that it
+# starts, writes the release recipes and the cases of the generated tests, and checks the bindings before it builds: with
+# RELEASE=true, which a release passes, the release check of binding (release-binding-check, CK-70), and otherwise the
+# check that CI runs (bindings-check). Both compute the go.sum of packages/go/go.mod with `go mod download`, so every
+# recipe installs go, and a job that lacks a tool of the check fails in CI, before a tag exists. The builds are the
+# targets release-assets-<job> of packages/release.mk, which run each build of the job to its end.
+# The crates of the musl targets of release-go-static compile C with the clang and the llvm-ar of the LLVM of
+# config/toolchain.json, by their paths in LLVM_ROOT of packages/release.mk; musl-cc-check fails on Linux while that
+# clang is missing or is of another major release.
+# install-llvm-action of the job php appends DYLD_LIBRARY_PATH and LD_LIBRARY_PATH with /usr/lib first to GITHUB_ENV on
+# macOS, and the PHP of that runner then loads the libsqlite3 of the system and aborts; ci-assets-php and its makes run
+# with both empty, and the build reads LLVM through LLVM_ROOT alone, which is the LLVM_PATH that the action sets.
+ASSETS_CHECK = $(if $(filter true,$(RELEASE)),release-binding-check,bindings-check)
+export CC_x86_64_unknown_linux_musl = $(LLVM_ROOT)/bin/clang
+export AR_x86_64_unknown_linux_musl = $(LLVM_ROOT)/bin/llvm-ar
+export CC_aarch64_unknown_linux_musl = $(LLVM_ROOT)/bin/clang
+export AR_aarch64_unknown_linux_musl = $(LLVM_ROOT)/bin/llvm-ar
+.PHONY: ci-assets-platform ci-assets-php ci-assets-npm musl-cc-check
+musl-cc-check: ## Fail on Linux unless the clang and the llvm-ar of the LLVM of config/toolchain.json, which build the C of the musl targets, exist
+	@test "$$(uname -s)" != Linux || { \
+	test -n "$(LLVM_MAJOR)" || { echo 'musl-cc-check: config/toolchain.json pins no major release of LLVM (llvm.version), or packages/release.mk is not written (make release-recipes)' >&2; exit 2; }; \
+	test -x "$(LLVM_ROOT)/bin/clang" && test -x "$(LLVM_ROOT)/bin/llvm-ar" || { echo 'musl-cc-check: the musl targets build C with the clang and the llvm-ar of LLVM $(LLVM_MAJOR) (config/toolchain.json) in $(LLVM_ROOT), which are missing' >&2; exit 2; }; \
+	test "$$("$(LLVM_ROOT)/bin/clang" -dumpversion | cut -d. -f1)" = "$(LLVM_MAJOR)" || { echo "musl-cc-check: $(LLVM_ROOT)/bin/clang is clang $$("$(LLVM_ROOT)/bin/clang" -dumpversion), not $(LLVM_MAJOR) (config/toolchain.json)" >&2; exit 2; }; \
+	}
+
+ci-assets-platform: ## Run the job platform of assets.yml: the Go static library, the wheel and the npm platform package of this host; RELEASE=true for a release; ONLINE
+	$(CI_MAKE) install-tools TOOLS="rust uv python go"
+	$(CI_MAKE) release-recipes
+	$(CI_MAKE) binding-cases
+	$(CI_MAKE) musl-cc-check
+	$(CI_MAKE) $(ASSETS_CHECK)
+	$(CI_MAKE) release-assets-platform
+
+ci-assets-php: DYLD_LIBRARY_PATH :=
+ci-assets-php: LD_LIBRARY_PATH :=
+ci-assets-php: ## Run the job php of assets.yml: the PHP extension for the PHP on PATH, whose minor is EXPECTED_PHP_MINOR; RELEASE=true for a release; ONLINE
+	@test -n "$(EXPECTED_PHP_MINOR)" || { echo 'ci-assets-php needs EXPECTED_PHP_MINOR, the PHP minor of the job, for example make ci-assets-php EXPECTED_PHP_MINOR=8.4' >&2; exit 2; }
+	$(CI_MAKE) install-tools TOOLS="rust go"
+	$(CI_MAKE) release-recipes
+	$(CI_MAKE) binding-cases
+	$(CI_MAKE) $(ASSETS_CHECK)
+	$(CI_MAKE) release-assets-php EXPECTED_PHP_MINOR=$(EXPECTED_PHP_MINOR)$(if $(LLVM_PATH), LLVM_ROOT=$(LLVM_PATH))
+
+ci-assets-npm: ## Run the job npm of assets.yml: the npm package @polyspec/hyper with its WASM module; RELEASE=true for a release; ONLINE
+	$(CI_MAKE) install-tools TOOLS="rust go"
+	$(CI_MAKE) release-recipes
+	$(CI_MAKE) binding-cases
+	$(CI_MAKE) $(ASSETS_CHECK)
+	$(CI_MAKE) packages
+	$(CI_MAKE) release-assets-npm
+
+.PHONY: release-tag release-tools release-assets release-publish release-undraft release-coverage
 release-tag: ## Tag the commit of the successful CI run RUN of ci.yml on main with vX.Y.Z of the change log; AUTO=1 releases only a version commit; reads the run with gh
 	@test -n "$$RUN" || { echo "release-tag: RUN is required, for example make release-tag RUN=123"; exit 1; }
 	RELEASE_MAIN=origin/main $(NODE) $(KIT)/release-run.$(KIT_EXT) tag "$$RUN"$(if $(AUTO), --auto)
 
-release-checkout: ## Check out the tag TAG that release-tag created
-	git checkout --quiet "$$TAG"
-
-release-archive-tool: ## Fail unless Info-ZIP, which builds the Composer archives of the release, is on PATH
-	@command -v zip >/dev/null || { echo 'release-archive-tool: Info-ZIP is required for the Composer release archives; install the zip package'; exit 1; }
-
 release-tools: ## Install the tools that config/release.json needs for the release, with the Composer home of install-tools; ONLINE
 	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/release-tools.$(KIT_EXT)
-
-release-tools-path: ## Append var/tools/bin and the shims of mise to GITHUB_PATH and the environment of mise to GITHUB_ENV
-	@test -n "$$GITHUB_PATH" && test -n "$$GITHUB_ENV" || { echo 'release-tools-path: GITHUB_PATH and GITHUB_ENV are set only between the steps of a workflow'; exit 1; }
-	@echo "$(KIT_TOOLS)/mise/shims" >> "$$GITHUB_PATH"
-	@echo "$(KIT_TOOLS)/bin" >> "$$GITHUB_PATH"
-	@for name in $(MISE_ENVIRONMENT); do echo "$$name=$$(printenv $$name)"; done >> "$$GITHUB_ENV"
 
 # The archives are built from the built packages, so release-assets builds them first.
 release-assets: packages ## Build the archive of every package of TAG and packages.json into var/release/assets; ONLINE

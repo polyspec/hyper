@@ -12,12 +12,11 @@
 // (cp, test, a C compiler, the libclang of hyper-ext), and what a setup step of the group installs for itself (Chromium,
 // Redis, the packages of Composer and uv).
 //
-// The job of release.yml is judged in the same way (HR-95): its make calls are those of the bootstrap action,
-// release-tag and RELEASE_STEPS, and a tool counts as installed for the command lines after the line that installs
-// every tool, since make release-prepare installs and builds in one step. A cargo command line that names a Rust
-// target needs the standard library of that target, which install-tools installs only for the targets of
-// rust-toolchain.toml. What a utility of kit starts inside its process (npm pack, git archive, uv build, gh) is in no
-// dry run and is not judged here.
+// The job release of release.yml is judged in the same way (HR-95): its make calls are those of the bootstrap action
+// and the makes that its recipe ci-release-release starts, and a tool counts as installed for the command lines after
+// the line that installs it. A cargo command line that names a Rust target needs the standard library of that target,
+// which install-tools installs only for the targets of rust-toolchain.toml. What a utility of kit starts inside its
+// process (npm pack, git archive, gh) is in no dry run and is not judged here.
 import assert from 'node:assert/strict';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -93,20 +92,31 @@ function setupVariables(group: string, step: string): string[] {
   return [`EXTRACTORS=${new RegExp(`^CI_SYMBOLS_${group} := `, 'm').test(MAKEFILE) ? makeWords(`CI_SYMBOLS_${group}`).join(' ') : ''}`];
 }
 
+interface Call { target: string; variables: string[] }
+
 /**
- * The make calls of the job of release.yml in their order (HR-95): the run steps of the bootstrap action, release-tag,
- * then RELEASE_STEPS as make ci-release starts them, install-tools with TOOLS=npm.
+ * The make calls of a job whose one run step is `make <recipe> <variables>` (HR-90), in their order: the run steps of
+ * the bootstrap action, then the makes that the recipe starts, each with the variables of its line; a variable whose
+ * value the shell computes is left out. A dry run prints a line that starts a make through CI_MAKE and does not run it.
  */
-function releaseCalls(): { target: string; variables: string[] }[] {
+function jobCalls(recipe: string, variables: string[] = []): Call[] {
   const action = readFileSync(path.join(ROOT, '.github/actions/bootstrap/action.yml'), 'utf8');
   const bootstrap = [...action.matchAll(/^\s+run: make (\S+)((?: \S+=\S+)*)$/gmu)].map((call) => ({ target: call[1] ?? '', variables: (call[2] ?? '').split(' ').filter(Boolean) }));
   assert.ok(bootstrap.length > 0, 'the bootstrap action runs no make target');
-  const steps = makeWords('RELEASE_STEPS').map((step) => ({ target: step, variables: step === 'install-tools' ? ['TOOLS=npm'] : [] }));
-  return [...bootstrap, { target: 'release-tag', variables: [] }, ...steps];
+  const started = commands(recipe, variables).flatMap((line) => {
+    const call = / --no-print-directory ([a-z][\w-]*)((?: [A-Z_]+=(?:"[^"$]*"|[^\s"$]*))*)/u.exec(line);
+    if (!call) return [];
+    return [{ target: call[1] ?? '', variables: [...(call[2] ?? '').matchAll(/([A-Z_]+)=(?:"([^"]*)"|(\S*))/gu)].map((variable) => `${variable[1]}=${variable[2] ?? variable[3] ?? ''}`) }];
+  });
+  assert.ok(started.length > 0, `make -n ${recipe} starts no make`);
+  return [...bootstrap, ...started];
 }
 
-// A command line that installs every tool of the checkout: install-tools of kit without a selector, which make
-// hyper-install runs, and release-tools of kit, which runs it for a configuration that holds a Composer package or a wheel.
+/** The make calls of the job release of release.yml (HR-95). */
+const releaseCalls = (): Call[] => jobCalls('ci-release-release', ['TAG=v0.0.0', 'VERSION=0.0.0']);
+
+// A command line that installs every tool of the checkout: install-tools of kit without a selector, and release-tools of
+// kit, which runs it for a configuration that holds a Composer package or a wheel.
 const INSTALLS_ALL = /\/install-tools\.m[jt]s --no-self-update\s*$|\/release-tools\.m[jt]s\s*$/u;
 
 // The Rust target that a cargo command line builds for, when it names one by its triple.
@@ -183,9 +193,9 @@ test('the job of release.yml installs every tool that its steps start, before th
       for (const tool of every) installed.add(tool);
     }
   }
-  // The steps that build start these programs; a dry run that names none of them judged nothing (HR-84).
-  assert.deepEqual(['cargo', 'composer', 'maturin', 'php', 'pie', 'python', 'uv'].filter((program) => !matched.has(program)), [], 'no command line of the release starts a program that its steps build with');
-  assert.ok(installs >= 2, `${installs} command lines of the release install the tools: install-tools of make hyper-install and release-tools`);
+  // release-go-module generates the Go binding with cargo; a dry run that does not name it judged nothing (HR-84).
+  assert.deepEqual(['cargo'].filter((program) => !matched.has(program)), [], 'no command line of the release starts a program that its steps build with');
+  assert.ok(installs >= 1, `${installs} command lines of the release install the tools: release-tools`);
   assert.deepEqual(found, []);
 });
 
