@@ -11,9 +11,14 @@ import { copyDirectory } from './output-files.mjs';
 
 const BUILD_ID = /^[0-9a-f]{64}$/;
 
+/** The directory of the program that holds the copy of the reserved template (HY-31.10). */
+const LEGACY = 'legacy';
+
 /**
- * Copies the templates below `templates` into `templates/` of `directory`, which must not exist, adds the reserved
- * template hyper/data.tpl and returns that directory of templates.
+ * Copies the templates below `templates` into `templates/` of `directory`, which must not exist, and returns that
+ * directory of templates. It holds no copy of the reserved template hyper/data.tpl (HY-31.9), because the core
+ * refuses a template of the application of that name. The copy of the reserved template for a server that does not
+ * call the core is written to `legacy/hyper/data.tpl` of `directory` (HY-31.10).
  * @param {string} templates
  * @param {string} directory
  * @returns {string}
@@ -21,9 +26,17 @@ const BUILD_ID = /^[0-9a-f]{64}$/;
 export function writeProgramTemplates(templates, directory) {
   const programTemplates = join(directory, 'templates');
   copyDirectory(templates, programTemplates);
-  mkdirSync(dirname(join(programTemplates, dataTemplate.name)), { recursive: true });
-  writeFileSync(join(programTemplates, dataTemplate.name), dataTemplate.source);
+  writeReservedTemplate(join(directory, LEGACY));
   return programTemplates;
+}
+
+/**
+ * Writes the reserved template hyper/data.tpl below `root` by its name.
+ * @param {string} root
+ */
+export function writeReservedTemplate(root) {
+  mkdirSync(dirname(join(root, dataTemplate.name)), { recursive: true });
+  writeFileSync(join(root, dataTemplate.name), dataTemplate.source);
 }
 
 /**

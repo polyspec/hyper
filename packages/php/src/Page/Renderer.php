@@ -17,6 +17,9 @@ use function Polyspec\Template\merge;
  * Renders documents and single regions with the template extension `polyspec_template` (HY-12, HY-13, HY-30, HY-31,
  * HY-48.15): its `Engine` reads the directory `templates` of the server program that `hyper build` of
  * `@polyspec/hyper-cli` built with an `FsLoader`, as the Node and the Python servers render the same templates.
+ * That directory holds no copy of the reserved template of the embedded data (HY-31.9), so a second `Engine` reads
+ * the copy `legacy/hyper/data.tpl` of the program with an `FsLoader` of the directory `legacy` (HY-31.10); the
+ * reserved template includes no template and calls no function of the application, so that engine registers none.
  * The caller binds each root of a document once with `bind`, and every render merges the bound roots, so the
  * renders of a document check no value again (HY-13, VAL-22).
  *
@@ -26,8 +29,12 @@ final class Renderer
 {
     public const DATA_NAME = 'hyper/data.tpl';
 
+    /** The directory of the program that holds the copy of the reserved template (HY-31.10). */
+    private const LEGACY = 'legacy';
+
     private function __construct(
         private readonly Engine $program,
+        private readonly Engine $legacy,
         private readonly string $timezone,
     ) {
     }
@@ -44,6 +51,8 @@ final class Renderer
             "{$program}/reads.json" => is_file(...),
             "{$program}/build.json" => is_file(...),
             "{$program}/templates" => is_dir(...),
+            // HY-31.10: the copy of the reserved template, which this server needs while it renders by itself.
+            "{$program}/" . self::LEGACY . '/' . self::DATA_NAME => is_file(...),
         ];
         foreach ($required as $path => $exists) {
             if (!$exists($path)) {
@@ -78,7 +87,7 @@ final class Renderer
             throw new HyperValueError((string) $refused, 'invalid_application');
         }
 
-        return new self($engine, $timezone);
+        return new self($engine, new Engine(new FsLoader("{$program}/" . self::LEGACY)), $timezone);
     }
 
     /**
@@ -120,7 +129,7 @@ final class Renderer
         $define = [
             'build' => '<meta name="hyper-build" content="' . $build . '">',
             'title' => $this->render($title, $shared, []),
-            'data' => $data === null ? '' : $this->render(self::DATA_NAME, $data, []),
+            'data' => $data === null ? '' : $this->prepared($this->legacy, self::DATA_NAME, $data, []),
         ];
         foreach ($regions as $name => $region) {
             $define[$name] = $this->alone(
@@ -162,7 +171,18 @@ final class Renderer
      */
     private function render(string $template, BoundMap $assign, array $define): string
     {
-        return $this->program->prepareBound(
+        return $this->prepared($this->program, $template, $assign, $define);
+    }
+
+    /**
+     * Prepares and renders one template of an engine: the templates of the application with the engine of the
+     * directory `templates`, the reserved template with the engine of the directory `legacy`.
+     *
+     * @param array<string, string> $define
+     */
+    private function prepared(Engine $engine, string $template, BoundMap $assign, array $define): string
+    {
+        return $engine->prepareBound(
             $template,
             $assign,
             array_map(static fn (string $html): DefineInput => new DefineInput(null, null, null, $html), $define),

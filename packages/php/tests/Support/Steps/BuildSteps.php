@@ -54,6 +54,8 @@ final class BuildSteps
         'reads.json' => false,
         'build.json' => false,
         'templates' => true,
+        // HY-31.10: the copy of the reserved template, which the server reads while it renders by itself.
+        'legacy/hyper/data.tpl' => false,
     ];
 
     /** Opens a program directory that holds every output but those of `missing`, and records the error of the open. */
@@ -75,6 +77,9 @@ final class BuildSteps
                     continue;
                 }
                 $created[] = $name;
+                if (!$isDirectory && !is_dir(dirname("{$program}/{$name}"))) {
+                    mkdir(dirname("{$program}/{$name}"), 0o700, true);
+                }
                 $isDirectory ? mkdir("{$program}/{$name}") : file_put_contents("{$program}/{$name}", '');
             }
             $failure = null;
@@ -88,6 +93,10 @@ final class BuildSteps
         } finally {
             foreach ($created as $name) {
                 self::OUTPUTS[$name] ? rmdir("{$program}/{$name}") : unlink("{$program}/{$name}");
+                // The directories that the step made for a file below the program directory.
+                for ($parent = dirname($name); $parent !== '.'; $parent = dirname($parent)) {
+                    rmdir("{$program}/{$parent}");
+                }
             }
             rmdir($program);
             rmdir($directory);

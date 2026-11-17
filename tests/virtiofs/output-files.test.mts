@@ -93,9 +93,10 @@ test('the program of hyper build writes its files on a virtiofs bind mount', { t
     assert.deepEqual(readFileSync(join(copied, name)), readFileSync(join(templates, name)), name);
     assert.equal(statSync(join(copied, name)).mode & 0o777, 0o644, name);
   }
-  assert.ok(files(copied).includes('hyper/data.tpl'));
+  // HY-31.9, HY-31.10: the copy of the reserved template lies below legacy/ and not below templates/.
+  assert.equal(files(copied).includes('hyper/data.tpl'), false);
   // Every file of the program is on the mount with the content that the host computed, and no other file.
-  assert.deepEqual(files(join(output, 'program')), [...files(copied).map((name) => `templates/${name}`), ...names, 'build.json'].sort());
+  assert.deepEqual(files(join(output, 'program')), [...files(copied).map((name) => `templates/${name}`), 'legacy/hyper/data.tpl', ...names, 'build.json'].sort());
   for (const [name, content] of computed.files) assert.equal(readFileSync(join(output, 'program', name), 'utf8'), content, name);
   assert.equal(readFileSync(join(output, 'program', 'build.json'), 'utf8'), `{"build":"${id}"}`);
 });

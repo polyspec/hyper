@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 77e03c733a0b4aac2e34f8699ced342c2285ca835f3a4ddd03c29bbe703b845b -->
+<!-- source-sha256: e190d49b8d4407a6dad4a0ee29f9beb5aba112bb8b12f401974bbf1064275b2b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `hyper build`는 예약 템플릿 `hyper/data.tpl`을 `program/templates/`에 썼고 PHP 서버와 Python 서버는 그것을 거기에서 읽었으므로, core는 디렉터리 `program/templates/`를 애플리케이션의 템플릿으로 받지 않았다(HY-31.3). build는 `program/legacy/hyper/data.tpl`을 쓰고 `program/templates/` 아래에는 사본을 쓰지 않으며(HY-31.9, HY-31.10), PHP compile은 예약 템플릿을 실행의 디렉터리에서 받는다. PHP 서버와 Python 서버는 내장 데이터를 `program/legacy/`에서 렌더하고, `legacy/hyper/data.tpl`이 없으면 open은 그 경로를 밝히며 실패한다(HY-48.2, HY-48.14). Python 서버는 실행하지 않았다(H31.4-2).
 - 모든 `Cargo.toml`이 `polyspec-session-store`를 branch `v1/rust-core`로 받았고, `packages/ts/package.json`, `packages/python/pyproject.toml`, `packages/go/go.mod`는 session-store의 release를 적지 않아서 `make bindings-check`가 `packages/ts/package.json`, `packages/go/go.mod`, `packages/go/go.sum`에 CK-19를 보고했다. 이제 crate들은 tag `v0.0.4`를 받고 `Cargo.lock`이 그 commit을 고정한다. `packages/ts`는 `@polyspec/session-store` `0.0.4`를 요구하고, root와 `tests/package-install`은 그 release의 tarball과 platform package에서 설치한다. `packages/python/pyproject.toml`은 session-store 0.0.4의 wheel과, 그 wheel이 요구하는 php-serialization 0.0.15의 wheel을 macOS arm64, Linux aarch64, Linux x86_64별로 sha256과 함께 적는다. `packages/go/go.mod`는 session-store의 Go module을 `v0.0.4`로, php-serialization의 Go module을 `v0.0.15`로 요구하고 그 sum은 `packages/go/go.sum`에 있다. `Cargo.lock`은 template branch와 http-cookie, http-media-type, http-negotiation에서 오는 `polyspec-binding-core` 0.0.1과 0.0.10을 아직 가지므로 CK-20은 남는다(H35.8-2).
 - `make virtiofs-check`는 Node만 있고 native addon이 없는 Linux container 안에서 `writeProgram`을 실행했다. template library의 import와 core의 읽기 경로 계산은 각각 platform의 addon을 올리므로 test는 `MODULE_NOT_FOUND`로 실패했다. 이 test가 증명하는 것은 virtiofs bind mount에 출력 파일을 만드는 것(HR-68)이고 그 내용이 아니다. 프로그램 조립은 이제 계산 부분(`packages/cli/lib/program.mjs`의 `programFiles`)과 addon을 올리지 않는 쓰기 부분(`packages/cli/lib/program-files.mjs`)으로 나뉘고 `writeProgram`이 둘을 합성한다. test는 host에서 `programFiles`로 내용을 계산하고 container는 쓰기 부분으로 그 내용을 쓴다. 고정 image가 설치되어 있지 않아 `make virtiofs-check`는 실행하지 않았다(H35.34-5).
 - `make hyper-ext`는 Cargo에 wrapper `var/tools/bin/php`와 `php-config`의 경로를 주었고, 이 경로는 그 뒤의 PHP가 바뀌어도 같다. wrapper가 PHP 8.5에서 8.4로 바뀐 뒤 Cargo는 module API 20250925로 build한 library를 그대로 두었고 PHP 8.4는 그것을 load하지 않았다. 이제 recipe는 runtime의 release, thread safety, debug build 여부와 header의 release를 ext-php-rs의 build script가 Cargo에 선언하는 변수 `EXT_PHP_RS_ALLOWED_BINDINGS`에 적으므로, Cargo는 다른 PHP에 대해 확장을 다시 build한다(H35.16-5).

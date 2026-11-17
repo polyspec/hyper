@@ -1,7 +1,10 @@
 """Renders documents and single regions with the template package `polyspec-template` (HY-12, HY-13, HY-30, HY-31,
 HY-48). The server program that `hyper build` of `@polyspec/hyper-cli` built holds the templates and the
 read paths; the Python server reads its `templates` directory and its `reads.json` and needs neither the directory
-`php` nor `program.json`, which the generated PHP program of the same templates uses. The caller binds each root of a
+`php` nor `program.json`, which the generated PHP program of the same templates uses. The directory `templates` holds
+no copy of the reserved template of the embedded data (HY-31.9), so a second engine reads the copy
+`legacy/hyper/data.tpl` of the program with a loader of the directory `legacy` (HY-31.10, HY-48.14); the reserved
+template includes no template and calls no function of the application, so that engine registers none. The caller binds each root of a
 document once with `bind`, and every render merges the bound roots, so the renders of a document check no value
 again (VAL-22)."""
 
@@ -19,13 +22,16 @@ from ..app._core_rules import core_rules
 
 # The reserved template that the embedded data renders (HY-31).
 DATA_NAME = "hyper/data.tpl"
+# The directory of the program that holds the copy of the reserved template (HY-31.10).
+LEGACY = "legacy"
 
 
 class Renderer:
     """Renders the documents and regions of one server program."""
 
-    def __init__(self, program: Engine, timezone: str):
+    def __init__(self, program: Engine, legacy: Engine, timezone: str):
         self._program = program
+        self._legacy = legacy
         self.timezone = timezone
 
     @staticmethod
@@ -39,7 +45,15 @@ class Renderer:
         templates = Path(program) / "templates"
         reads = Path(program) / "reads.json"
         build = Path(program) / "build.json"
-        for path, is_directory in ((reads, False), (build, False), (templates, True)):
+        # HY-48.14: the copy of the reserved template, which the server needs until it calls the core.
+        legacy = Path(program) / LEGACY
+        outputs = (
+            (reads, False),
+            (build, False),
+            (templates, True),
+            (legacy / DATA_NAME, False),
+        )
+        for path, is_directory in outputs:
             if not (path.is_dir() if is_directory else path.is_file()):
                 # HY-106.21: a missing build file fails with `invalid_build`, any other missing output with
                 # `invalid_application`.
@@ -54,7 +68,7 @@ class Renderer:
             # HYC-24.2, HYC-24.5, HY-106.21: a registration that the engine refuses fails the open with kind
             # `invalid_application` and the message of the engine.
             raise core_rules().value_error(str(error), "invalid_application") from error
-        return Renderer(engine, timezone)
+        return Renderer(engine, Engine(loader=FsLoader(str(legacy))), timezone)
 
     def bind(self, value: dict):
         """Binds a root of the data of a document once, with the bound map of the template package (VAL-22)."""
@@ -79,7 +93,11 @@ class Renderer:
         # HY-125: the html definition `build` is the element that the layout places with `{# build}`.
         define = {
             "title": {"html": self._render(title, shared, {})},
-            "data": {"html": "" if data is None else self._render(DATA_NAME, data, {})},
+            "data": {
+                "html": ""
+                if data is None
+                else self._render(DATA_NAME, data, {}, self._legacy)
+            },
             "build": {"html": f'<meta name="hyper-build" content="{build}">'},
         }
         for name, region in regions.items():
@@ -105,9 +123,12 @@ class Renderer:
             }
         return self._render(template, template_merge(shared, data), define)
 
-    def _render(self, template: str, assign, define: dict) -> str:
-        """Renders one template with an assigned bound root and HTML definitions (HY-14)."""
-        return self._program.render_bound(
+    def _render(
+        self, template: str, assign, define: dict, engine: Engine | None = None
+    ) -> str:
+        """Renders one template with an assigned bound root and HTML definitions (HY-14), with the engine of the
+        directory `templates`, or with `engine`, the engine of the directory `legacy`, for the reserved template."""
+        return (self._program if engine is None else engine).render_bound(
             template,
             assign,
             define={name: DefineInput(**value) for name, value in define.items()},
