@@ -12,7 +12,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 import { stopServers } from '../../scripts/board-servers.mts';
 import { requireServers, shareAcross, startBoards } from './session-board.mts';
-import { ask, certificates, EXTENSION, freePort, holders, holding, startRedis, stopRedis, until, type Secure } from './session-redis-server.mts';
+import { ask, certificates, EXTENSION, freePort, holders, holding, startRedis, stopRedis, until, type Needed, type Secure } from './session-redis-server.mts';
 import { IDENTIFIER, NAMES, run as runWorker, type Server } from './session-workers.mts';
 
 const KEY = `PHPREDIS_SESSION:${IDENTIFIER}`;
@@ -78,7 +78,7 @@ class Cluster {
       await until(async () => {
         const info = String(await this.ask(node.port, 'CLUSTER', 'INFO'));
         return info.includes('cluster_state:ok') && info.includes(`cluster_known_nodes:${String(PRIMARIES)}`);
-      });
+      }, ...this.needed());
     }
   }
 
@@ -96,6 +96,11 @@ class Cluster {
 
   liveports(): string[] {
     return this.nodes.filter((node) => node.server.exitCode === null && node.server.signalCode === null).map((node) => node.port);
+  }
+
+  // The processes that a wait on the cluster needs: its nodes, and the others that the condition reads, such as a holder.
+  needed(...others: Needed[]): Needed[] {
+    return [...this.nodes.map((node) => ({ name: `the Redis node of the port ${node.port}`, process: node.server })), ...others];
   }
 
   // Moves the slot of a key to another primary as a resharding does, and resolves when the nodes name the new owner.
@@ -117,7 +122,7 @@ class Cluster {
     for (const port of [target, source, ...this.ports.filter((item) => item !== source && item !== target)]) {
       await this.ask(port, 'CLUSTER', 'SETSLOT', slot, 'NODE', targetId);
     }
-    await until(async () => (await this.ownerOf(key)) === target);
+    await until(async () => (await this.ownerOf(key)) === target, ...this.needed());
   }
 }
 
@@ -185,7 +190,7 @@ for (const [index, name] of NAMES.entries()) {
     const env = environment();
     const lockOwner = await cluster.ownerOf(LOCK);
     const holder = await holding(name, directory, { ...env, HYPER_SESSION_EXPIRE: '1' });
-    await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0);
+    await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0, ...cluster.needed({ name: `the ${name} holder`, process: holder }));
     await runWorker(other, directory, env, 'write', '{"x":1}');
     const exit = once(holder, 'exit');
     holder.stdin.write('\n');
@@ -210,7 +215,7 @@ test('a request of the PHP server whose lock expired leaves the lock of the next
   const env = environment();
   const lockOwner = await cluster.ownerOf(LOCK);
   const expired = await holding('php', directory, { ...env, HYPER_SESSION_EXPIRE: '1' }, 'hold');
-  await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0);
+  await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0, ...cluster.needed({ name: 'the php holder', process: expired }));
   const next = await holding('node', directory, env);
   const ended = once(expired, 'exit');
   expired.stdin.write('\n');
@@ -305,14 +310,15 @@ test('a replica takes over a primary that dies and the three servers go on with 
   const replica = await cluster.startNode('replica');
   await cluster.ask(ownerPort, 'CLUSTER', 'MEET', '127.0.0.1', replica.port, replica.bus);
   const ownerId = String(await cluster.ask(ownerPort, 'CLUSTER', 'MYID'));
-  await until(async () => String(await cluster.ask(replica.port, 'CLUSTER', 'NODES')).includes(ownerId));
+  const joining = { name: `the Redis node of the port ${replica.port}`, process: replica.server };
+  await until(async () => String(await cluster.ask(replica.port, 'CLUSTER', 'NODES')).includes(ownerId), ...cluster.needed(joining));
   await cluster.ask(replica.port, 'CLUSTER', 'REPLICATE', ownerId);
-  await until(async () => String(await cluster.ask(replica.port, 'INFO', 'replication')).includes('master_link_status:up'));
+  await until(async () => String(await cluster.ask(replica.port, 'INFO', 'replication')).includes('master_link_status:up'), ...cluster.needed(joining));
   for (const name of NAMES) await runWorker(name, directory, env, 'write', JSON.stringify({ [`before_${name}`]: 1 }));
   assert.equal(await cluster.ask(ownerPort, 'WAIT', '1', '10000'), 1, 'the replica acknowledged');
   await stopRedis(owner.server, 'SIGKILL');
   cluster.nodes.splice(cluster.nodes.indexOf(owner), 1, replica);
-  await until(async () => String(await cluster.ask(replica.port, 'CLUSTER', 'INFO')).includes('cluster_state:ok') && String(await cluster.ask(replica.port, 'INFO', 'replication')).includes('role:master'));
+  await until(async () => String(await cluster.ask(replica.port, 'CLUSTER', 'INFO')).includes('cluster_state:ok') && String(await cluster.ask(replica.port, 'INFO', 'replication')).includes('role:master'), ...cluster.needed());
   const after_ = { ...env, HYPER_SESSION_CLUSTER: [ownerPort, ...cluster.ports].join(',') };
   const names = JSON.stringify(NAMES.map((name) => `before_${name}`));
   for (const name of NAMES) {

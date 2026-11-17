@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d4f01857fc597b6e4346b190e2de9f0daafbf3ff2c5d7ae7ed0efd7cae649615 -->
+<!-- source-sha256: 8106804febf98a8b81d6eb15278d0b62c7b9e8b50c6af1c1b4e87e600448def9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `tests/scripts/session-redis-server.mts`의 `until()`은 check를 끝없이 반복했다. check가 묻는 Redis 서버나 check가 lock을 읽는 holder가 끝난 뒤에는 check가 매번 실패했고, 그 step은 test의 시간 제한까지 이어졌으며 그 제한은 어떤 process도 밝히지 않았다. 이제 `until(check, ...needed)`는 조건이 필요로 하는 process를 각각 이름과 함께 받는다. 그 가운데 하나가 먼저 끝나면, 또는 이미 끝나 있으면 첫 check 전에, `<name> ended with <status or signal> while a step waited for a condition that needs it`로 reject하고, 끝날 때 자기 listener를 제거한다. `tests/scripts/session-redis-cluster.test.mts`의 일곱 wait는 cluster의 node를 지정하고, 만료된 lock을 기다리는 wait는 holder도 지정한다. `tests/scripts/session-redis-failover.test.mts`의 wait는 아직 process를 지정하지 않으며 이전처럼 기다린다(HR-84, H35.19-2).
 - `tests/scripts/session-shared-redis.test.mts`의 세 test `the <name> server waits for the lock that a request of another server holds`는 기다리는 요청을 시작하고 그 요청의 끝을 200밀리초 timer와 경쟁시켰다. 그 시간 안에 아직 lock을 요청하지 않은 요청도 기다리는 것으로 통과했고, 결과가 기계의 부하에 달려 있었다. 이제 test는 Redis 서버의 명령을 `MONITOR`로 읽고 lock key의 두 번째 `SET`을 기다린다. 이는 Redis가 lock을 거절했고 요청이 다시 요청했음을 보인다. 그 전에 끝나는 요청은 test를 실패시킨다. 그 뒤 test는 holder를 풀기 전에 holder의 lock 값과 바뀌지 않은 session record를 기대한다. `tests/scripts/session-waits.test.mts`는 `tests/scripts/session-*.mts` 파일의 `setTimeout(` 호출에 대해 파일과 줄을 밝히며 실패한다(HR-89, H35.19-1).
 - `make bench-sessions`는 PHP extension 인자 없이 `benchmarks/sessions.mts`를 시작했고, script는 자기 PHP 서버를 `polyspec_hyper`만으로 시작했다. 그래서 그 PHP에는 json extension도 template extension도 없었고, extension이 하나도 없는 실행도 결과를 출력했다. 이제 script는 `--extension <library>` 인자를 받아 그 순서대로 자기 PHP 서버에 load한다. recipe는 `PHP_SERVER_ARGUMENTS`(json, template, hyper)를 넘기고 prerequisite `ext`와 `hyper-ext`를 가진다. script는 Redis를 시작하기 전에, `polyspec_json`, `polyspec_template`, `polyspec_hyper` 가운데 자기 PHP가 load하지 않은 module의 이름을 밝히며 실패하고 결과를 출력하지 않는다. benchmark 자체는 실행하지 않았다(H35.31-5).
 - `CASES="reads.json"`을 준 `make hyper-test-js`, `make hyper-test-node`, `make hyper-test-php`, `make hyper-test-python`이 target의 모든 test와 case runner의 모든 case를 실행했다. 어떤 recipe도 그 변수를 읽지 않아서, 명령이 한 파일의 case를 지정할 수 없었다. 이제 `CASES`가 있으면 recipe는 case runner만 시작하고, runner는 이름이 선택한 case를 실행한다. 이름은 case 파일(`reads.json`), case 파일의 section(`app.json#opens`) 또는 case id이며, 여럿은 공백으로 나눈다. 어떤 이름이 runner의 case를 하나도 선택하지 않으면 실행은 case를 실행하기 전에 선택과 그 이름을 밝히며 실패한다. 선택한 실행은 `var/recipe/results/<runner>.selected.txt`를 쓰고 그 첫 줄은 `SELECTION <이름들>`이다. `make recipe-check`가 읽는 전체 실행의 `<runner>.txt`는 그대로 둔다. 문법은 `docs/operations/development.md`가 적는다(HR-84, H35.9-11).

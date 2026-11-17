@@ -1,6 +1,6 @@
 // The Redis server of a run of the session tests (HY-115) and a request of a server that holds its session until a line
 // of its input.
-import { execFileSync, spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { execFileSync, spawn, type ChildProcess, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -44,13 +44,34 @@ export async function ask(port: string, secure: Secure | undefined, ...words: st
   }
 }
 
-// Repeats a check until it holds. The timeout of a test fails the test and leaves a check that never holds repeating, so
-// the wait between two checks does not keep the process: while a test waits, the servers of the file keep it, and after
-// the file stopped them a check that is left ends with the process (HR-87).
-export async function until(check: () => Promise<boolean>): Promise<void> {
-  for (;;) {
-    if (await check().catch(() => false)) return;
-    await delay(100, undefined, { ref: false });
+// A process that the condition of a wait needs: a server that the check asks, or a holder whose lock it reads.
+export interface Needed { name: string; process: ChildProcess }
+
+// Repeats a check until it holds, and fails when a process that the condition needs ends first (HR-84): a check that asks
+// a server that has ended fails every time, so without its processes the wait would last until the time limit of the
+// test. The failure names the process and its status. The timeout of a test fails the test and leaves a check that
+// never holds repeating, so the wait between two checks does not keep the process: while a test waits, the servers of
+// the file keep it, and after the file stopped them a check that is left ends with the process (HR-87).
+export async function until(check: () => Promise<boolean>, ...needed: Needed[]): Promise<void> {
+  const ended = (item: Needed): Error => new Error(`${item.name} ended with ${String(item.process.exitCode ?? item.process.signalCode)} while a step waited for a condition that needs it`);
+  const gone = needed.find((item) => item.process.exitCode !== null || item.process.signalCode !== null);
+  if (gone !== undefined) throw ended(gone);
+  const stop = new AbortController();
+  const exits = needed.map(async (item): Promise<void> => {
+    await once(item.process, 'exit', { signal: stop.signal });
+    throw ended(item);
+  });
+  const repeat = async (): Promise<void> => {
+    while (!stop.signal.aborted) {
+      if (await check().catch(() => false)) return;
+      await delay(100, undefined, { ref: false, signal: stop.signal }).catch(() => undefined);
+    }
+  };
+  try {
+    await Promise.race([repeat(), ...exits]);
+  } finally {
+    // Ends the repetition and removes the listeners of the processes; the exits that are left reject and the race holds them.
+    stop.abort();
   }
 }
 
