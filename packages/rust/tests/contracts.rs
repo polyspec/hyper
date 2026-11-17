@@ -1614,6 +1614,12 @@ fn the_data_model_cases_of_the_context_file_run_as_the_steps_of_a_page() {
         if !names.into_iter().any(|name| name == "HY-44") {
             continue;
         }
+        // HYR-6: a case with `only` states the behaviour of the hosts that it names, with a host value that only those
+        // hosts build, such as bytes that are not UTF-8 or a resource; the host runners skip a case that does not name
+        // their language, and the core, which no `only` names, skips every such case (H35.32-1-6-1).
+        if case.get("only").is_some() {
+            continue;
+        }
         let id = &case["id"];
         let fixture = &file["applications"][text(case, "application")];
         let route = case_route(&file, case);

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f79fc7690db5980ea4de647d40be3c02846e9f2aa2a4d4450d0877a36d422ea6 -->
+<!-- source-sha256: 547868bfd66b93c2f910c9f4a5ed2ec0369e0df844f5521654e32d0a28574444 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `contracts/context.json`의 data model case를 실행하는 core test는 host runner가 자기 language를 적지 않은 case를 건너뛰듯 `only`가 있는 case를 건너뛴다(HYR-6, H35.32-1-6-1). 입력: `make core-test`. 이전 동작: `packages/rust/tests/contracts.rs`의 `the_data_model_cases_of_the_context_file_run_as_the_steps_of_a_page`는 `only`를 읽지 않았으므로 core runner가 host 값을 null로 주는 H35.32-1-6의 case 여덟 개를 실행했고, PHP로 한정된 `a_shared_text_that_is_not_utf8_fails_with_the_cause_of_the_bytes`가 500을 기대하는 곳에서 status 200으로 실패했다. 기대 동작: test는 `only`가 있는 각 case를 건너뛴다. `make core-test`로 검증했다. `contracts`는 이전 38개 중 37개, 이후 38개 모두 통과했고 모든 suite가 통과한다.
 
 - template을 적는 모든 추적 manifest와 lock이 template 0.0.31을 적는다(H35.57). 입력: `packages/rust/Cargo.toml`, 각 binding crate의 `Cargo.toml`, `Cargo.lock`, `packages/go/go.mod`, `packages/go/go.sum`, `packages/php/native/composer.json`. 이전 동작: PHP, npm, Python package가 0.0.31을 적는 동안 이들은 template 0.0.30을 적었고 어떤 test도 이들을 읽지 않았으므로 tree가 두 template release에 의존했다. 기대 동작: `tests/scripts/template-pins.test.mts`의 test가 추적하는 모든 `Cargo.toml`, `Cargo.lock`, `go.mod`, `go.sum`, `composer.json`, `composer.lock`, `package.json`, `package-lock.json`, `pyproject.toml`, `uv.lock`을 git으로 나열하고 다른 release의 각 위치를 밝힌다. core는 `v0.0.31`을 적고, `make bindings-scaffold`가 binding package, `go.mod`, `go.sum`을 썼으며, `make cargo-lock`이 `Cargo.lock`에서 template 0.0.30을 지웠다. `make hyper-test-scripts TESTS=tests/scripts/template-pins.test.mts`(이전 8개 중 7개, 13개 위치를 밝힘. 이후 8개 모두 통과)로 검증했다. build는 실행하지 않았다.
 
