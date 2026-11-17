@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c8c541b3540e22cd446e1ce6092074578bd65ec94c5f4cba570545575bb67b23 -->
+<!-- source-sha256: 62598abc87626bd9306e2287aa863b11df1275ab0265ec085c088def6a9f08d8 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 서버(H35.32-1-2)와 Python 서버(H35.32-1-3)가 모두 core로 렌더하고, 공유 값을 한 번 읽고, `reads.json`, `build.json`, `templates`의 프로그램 디렉터리를 열므로, HY-13.8과 HY-48.21은 구현되지 않음 표시를 잃는다.
 - PHP 서버는 Node와 Python 서버처럼 `App::open`의 `functions` entry를 core의 `rules.check_function_entry`로 판단한다(HYC-24.7). 입력: 함수가 아닌 entry. 이전 동작: `Program::pages`가 core 텍스트의 사본인 message `functions.<name> is not a function`을 직접 썼다. 지금 동작: core가 kind `invalid_application`과 자기 message로 그 entry를 실패시키며, `CoreRules::programFunctionEntry`가 그것을 부르는 unit이다.
 - Python 서버는 core의 페이지 렌더로 페이지를 렌더한다(HY-13.8, HY-48.21, H35.32-1-3). 입력: `contracts/app.json`의 다섯 `*_once` case처럼 값이 `dict`의 하위 클래스인 map을 반환하는 공유 handler. 이전 동작: 서버가 하위 클래스 객체를 그대로 템플릿 바인딩 위의 자기 렌더러에 넘겼고, 렌더러가 그것을 native object로 거부해서 다섯 case가 각각 상태 500으로 실패했다. 기대 동작: `App.open`은 매니페스트 바이트, 템플릿, `reads.json`, 옵션, 함수로 core의 `Pages`를 연다. `Page.respond`는 `PageRequest.next`의 step으로 답하고, action의 결과를 갱신된 masked token과 함께 그 outcome으로 넘기며, handler의 각 dictionary와 list를 core가 받기 전에 한 번 변환하므로 값은 한 번 읽힌다. core가 영역을 고르고 값을 검사하고 read path를 남기고 렌더하므로 `_renderer.py`, `_reads.py`, `legacy/hyper/data.tpl` 읽기, 검사가 이제 core 호출인 `_data_model.py`의 message 표, `_page.py`의 데이터 모델 검사를 없앴다. 검증: `make hyper-test-python`은 handler가 orm package의 오류를 던지는 `contracts/context.json`의 13개(H35.45)를 뺀 모든 case를 통과한다.
 - host 함수를 등록하는 PHP 애플리케이션의 이전 방법(HYC-24.10, HYC-24.11): core의 바인딩은 `App::open`의 option `functions`의 각 함수를 두 인자, 곧 호출의 인자 목록과 렌더의 환경(`timezone`과 `now`를 가진 `Polyspec\Template\Environment`)으로 부른다. `fn (array $arguments) => ...`처럼 매개변수가 하나인 closure는 이제 kind `invalid_callback`의 `HyperTypeError`로 `App::open`에 실패한다. 함수가 읽지 않더라도 `fn (array $arguments, Environment $environment) => ...`처럼 두 번째 매개변수를 선언한다. 그 class가 템플릿 확장에서 오므로 PHP는 계속 `polyspec_hyper` 앞에 템플릿 확장을 불러온다(HY-48.24). runner case의 병합인 commit f054ecd3은 H35.32-1-2의 `Renderer.php`, `Reads.php`, `RendererTest.php` 삭제를 담는다.
