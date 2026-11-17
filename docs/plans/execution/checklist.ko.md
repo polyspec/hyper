@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: fcc99cfd9904459bca9ccb696f14c04dd7c906b775ecb91a39f3280e27f9f741 -->
+<!-- source-sha256: 312cbb3b013dc3fb45bdc158f9adc42f47089b539cd3695e2963a0e15bb7fd94 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -553,6 +553,7 @@
 | H35.27 | PHP, Node, Python 서버는 case가 `raises`를 적는 자리에서 hyper의 error class(binding의 `Hyper<Category>Error`, HY-132.2)로만 실패하고, `\InvalidArgumentException`(`packages/php/src/Page/Result.php:44`) 같은 언어의 일반 오류로 실패하지 않는다. H35.15의 routing이 core를 거쳐 주는 실패는 H35.15의 몫이고, 이 행은 그 나머지를 맡는다: `make hyper-test-php`가 case 오류로 보고하는 result, manifest, reply, app, accept, build, session, context, request, client, media-type, representations section이다. | packages/php/src, packages/ts/src, packages/python/src | `make recipe-check` | [ ] |
 | H35.27-1 | PHP와 Node 서버는 case가 `raises`를 적는 자리에서 hyper의 error class를 던진다(HY-132.2). | packages/php/src, packages/ts/src | `make hyper-test-php`와 `make hyper-test-node` | [ ] |
 | H35.27-1-1 | packages/ts/tests/http.test.ts는 407c396b 이전처럼 두 Content-Type 줄의 action에 415를 기대한다. core는 이어진 값을 media type이 아닌 것으로 읽고 서버는 400으로 답하므로(HY-59.13) 두 시험은 400을 기대한다. | packages/ts/tests | `make hyper-test-node` | [ ] |
+| H35.27-1-2 | `make core-fmt-check`가 packages/rust/tests/error_code.rs에서 실패한다. failures 목록의 한 쌍이 rustfmt의 줄 너비보다 긴데 한 줄에 적혀 있다. 그 쌍을 rustfmt의 형태로 적는다. | packages/rust/tests | `make core-fmt-check` | [ ] |
 | H35.27-2 | Python 서버는 case가 `raises`를 적는 자리에서 hyper의 error class를 던지며(HY-132.2), H35.28 뒤에 그 case run이 이를 확인한다. | packages/python/src | `make hyper-test-python` | [ ] |
 | H35.27-3 | 경로, query나 header에 U+00FF보다 큰 문자를 가진 요청은 contracts/request.json의 case가 적은 대로, core의 message로, runtime 접두어 없이 실패한다(HY-132.4): PHP case runner는 지금 UTF-8이 아니라며 거부하는 그런 case의 글을 읽고(5 case), Node 서버는 접두어 `hyper:`를 지운다(5 case). | packages/php/tests, packages/ts/src | `make hyper-test-php`와 `make hyper-test-node` | [ ] |
 | H35.27-4 | PHP와 Node 서버가 실패하는 contracts/functions.json의 case가 통과한다: `upper` 같은 내장 이름의 function은 case가 적은 대로 실패하고(두 서버), PHP 서버는 case가 선언한 function `functions.shout`을 찾는다. | packages/php/src, packages/ts/src, packages/php/tests | `make hyper-test-php`와 `make hyper-test-node` | [ ] |
@@ -574,6 +575,7 @@
 | H35.31-3 | contracts/app.json의 case a_document_json_reads_a_shared_value_twice와 a_region_json_reads_a_shared_value_twice가 PHP 서버에서 통과한다. 원인은 바꾸기 전에 사본 run의 출력에서 읽는다. | packages/php | `make hyper-test-php` | [ ] |
 | H35.31-4 | tests/scripts/cargo-through-kit.test.mts는 H35.14-2의 recipe 줄 `binding generate --cargo "..."`를 pattern \bcargo\s로 cargo 직접 호출로 읽는다. 시험은 binding generator의 option 값과 cargo 명령을 구별하고, 그 recipe는 통과한다. | tests/scripts | `make hyper-test-scripts` | [ ] |
 | H35.31-5 | benchmarks/sessions.mts는 session-workers의 prefix로 hyper 확장만 load해 PHP를 띄우므로 그 PHP 서버는 template 확장으로 렌더하지 못한다. 8ca4a33f 이후 run의 다른 PHP 서버처럼 Makefile의 PHP_SERVER_EXTENSIONS를 순서대로 load한다. | benchmarks/sessions.mts, Makefile | `make hyper-test-scripts` | [ ] |
+| H35.31-6 | tests/scripts/node-core.test.mts의 44개 시험 중 43개가 실패한다. binding의 stand-in에 core의 규칙이 얻은 member(jsonRead, jsonWrite, flashOf, keptOf, keptCookie, acceptRanges, HyperValueError, HyperTypeError)가 없어 CoreRules가 그 module을 거부하기 때문이다. stand-in은 core-rules.ts가 요구하는 모든 member를 갖고, 없는 member의 시험은 자기가 뺀 member만 이름한다. | tests/scripts | `make hyper-test-scripts` | [ ] |
 | H35.32 | Node 서버는 browser 코드와 `@polyspec/template/render`의 JS render engine 대신 hyper core의 page 렌더(PageRequest.next. render_document와 template의 Rust core로 렌더한다)로 page를 렌더한다. 이 행은 H35.32-2부터 H35.32-8까지의 부모이고, 그 행들이 끝나면 끝난다. 이 wave의 첫 릴리스 뒤에 시작하며 H35.32-2의 설계 문서가 먼저다. core에는 이 이전에 필요한 부분이 없고(H35.32-3부터 H35.32-6), 이 이전은 App.open의 입력, page 응답, statement 아홉 개를 바꾸기 때문이다. 그 목록은 docs/plans/execution/plan.md에 있다. | packages/ts | `make hyper-test-node` | [ ] |
 | H35.32-1 | PHP와 Python 서버는 H35.32 뒤의 Node 서버처럼 hyper core의 page 렌더(render_document, route_reads, Pages)로 page를 렌더한다. template binding 위의 자기 renderer(Renderer.php, _renderer.py)를 쓰지 않는다. | packages/php, packages/python | `make hyper-test-php` | [ ] |
 | H35.32-2 | Node 서버를 core의 page 렌더로 옮기는 일(H35.32)의 설계 문서는 docs/plans/execution/plan.md가 H35.32 설계의 입력 아래에 나열한 여덟 질문에, 그 절의 차이 목록과 statement를 근거로 답한다. 초안을 쓰고, 독립된 감사 둘이 읽고, 합의된 본문이 H35.32-3부터 H35.32-8까지와 명세 변경의 입력이 된다. | docs/plans/execution/core-page-render.md, docs/plans/execution/core-page-render.ko.md | `make docs-check` | [ ] |
