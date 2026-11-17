@@ -633,6 +633,20 @@
     },
     {
       "paths": [
+        "config/release-files.json",
+        "scripts/install-release-files.mts",
+        "tests/scripts/release-file-pins.test.mts"
+      ],
+      "tests": [
+        "tests/scripts/release-file-pins.test.mts"
+      ],
+      "targets": [
+        "hyper-test-scripts",
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "scripts/serve-demo.mts"
       ],
       "tests": [

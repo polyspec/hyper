@@ -53,7 +53,7 @@ PHP 8.4's native `request_parse_body()` was also considered and refused: it nest
 
 ## Pin of a plain file of a release
 
-Not implemented: this section is the design of H35.11, and no file, target or test of it exists. The case runners read the fixed copy `tests/legacy/fields.json`.
+Partly implemented (H35.11): `config/release-files.json` pins the files of http-form v0.0.2, `make hyper-install-release-files` installs them and `tests/scripts/release-file-pins.test.mts` tests the pin. Not implemented: the case runners still read the fixed copy `tests/legacy/fields.json`, because `caseFiles` and the case readers do not resolve a release file yet.
 
 A package manager pins a package by its lock. A plain file that a release publishes as an asset, such as the case files `fields.json` and `forms.json` of http-form, has no package manager, so the repository pins it itself, by the release tag and the sha256 of the file (HR-80).
 

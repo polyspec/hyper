@@ -1105,6 +1105,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "polyspec-http-form"
+version = "0.0.2"
+source = "git+https://github.com/polyspec/http-form.git?tag=v0.0.2#f498161cd4a379fdf8fe866eb72087929ca69818"
+dependencies = [
+ "memchr",
+ "polyspec-binding-core 0.0.17",
+ "polyspec-http-media-type",
+ "rustix",
+ "tempfile",
+]
+
+[[package]]
 name = "polyspec-http-media-type"
 version = "0.0.8"
 source = "git+https://github.com/polyspec/http-media-type.git?tag=v0.0.8#d311d2acccc81845dd9ba935ac3e768713cea86f"
@@ -1127,6 +1139,7 @@ version = "0.0.0"
 dependencies = [
  "polyspec-binding-core 0.0.17",
  "polyspec-http-cookie",
+ "polyspec-http-form",
  "polyspec-http-media-type",
  "polyspec-http-negotiation",
  "polyspec-hyper",

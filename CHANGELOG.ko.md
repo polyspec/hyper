@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 27eac5e5a603a3a9c3dc1c003d3ccfe1cc648cc51169edb61246a37d7e6d54a9 -->
+<!-- source-sha256: 1d0469ab56ba358eea091678bc283855fd19d86c2fb0ef08e7ca3f0fadfbc5e7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- core는 http-form에 대한 의존을 선언하지 않았고, 어떤 추적 파일도 http-form release의 case 파일 `fields.json`과 `forms.json`을 고정하지 않았다. 이제 `packages/rust/Cargo.toml`은 tag `v0.0.2`로 `polyspec-http-form`에 의존하고, 그 lock 항목은 `make cargo-lock CRATES=polyspec-hyper`가 썼다. http-form v0.0.2는 hyper가 고정한 release인 binding-core v0.0.17과 http-media-type v0.0.8에 의존한다. `config/release-files.json`은 두 case 파일을 tag와 sha256으로 고정하고, `make hyper-install-release-files`가 그것을 `var/release-files/http-form/v0.0.2/`에 설치하며 `make hyper-install`이 이를 실행하고, `tests/scripts/release-file-pins.test.mts`가 그 pin을 테스트한다(H35.11). 아직 그 crate를 부르는 member는 없고, case runner는 여전히 `tests/legacy/fields.json`을 읽는다. 실행하지 않은 것: core의 build, 새 테스트, 서버 테스트.
 
 - CI group `gates`는 setup에서 native module을 포함한 Python package를 빌드했고(`make hyper-install-python`), 그 때문에 maturin과 Rust를 설치하고 crate를 가져왔다. 그러나 그 target들의 dry run은 package의 Python, cargo, maturin, binding 생성기를 시작하지 않는다. `make lint-python`은 소스에 ruff와 vulture를 실행한다. 이제 `CI_SETUP_gates`는 `install-tools install-symbols hyper-install-php`이고, `CI_TOOLS_gates`는 `rust`와 `maturin`을 적지 않는다. `python`과 `uv`는 남는다. mise가 그것으로 vulture를 설치하기 때문이다. gate가 설치된 package를 읽는지는 이 group의 다음 CI 실행이 결정하며, 그 실행은 아직 없었다.
 

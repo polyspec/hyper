@@ -148,6 +148,7 @@ hyper-install: ## Install the pinned tools and the npm packages, the sources tha
 	$(MAKE) --no-print-directory install-tools
 	$(MAKE) --no-print-directory install-symbols EXTRACTORS=php
 	$(MAKE) --no-print-directory hyper-install-crates
+	$(MAKE) --no-print-directory hyper-install-release-files
 	$(MAKE) --no-print-directory bindings
 	$(MAKE) --no-print-directory node-addon
 	$(MAKE) --no-print-directory hyper-ext
@@ -168,6 +169,9 @@ CRATE_TARGETS := hyper-install-python hyper-ext core-test core-lint bindings bin
 $(CRATE_TARGETS): crates-check
 hyper-install-crates: ## Fetch the crates that Cargo.lock pins, which every other recipe reads offline (HR-89); ONLINE
 	$(ONLINE) $(CARGO) fetch --locked
+.PHONY: hyper-install-release-files
+hyper-install-release-files: ## Install the release files that config/release-files.json pins by their sha256 into var/release-files (HR-80, H35.11); ONLINE
+	$(ONLINE) $(NODE) scripts/install-release-files.mts
 crates-check: ## Fail unless every crate that Cargo.lock pins is fetched, naming make hyper-install-crates (HR-89)
 	@$(CARGO) metadata --locked --offline --format-version 1 > /dev/null || { echo "crates-check: a crate that Cargo.lock pins is not fetched, or the lock does not match the manifests; run make hyper-install-crates" >&2; exit 1; }
 
