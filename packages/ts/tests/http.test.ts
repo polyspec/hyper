@@ -137,24 +137,32 @@ describe('the field lines of a request', () => {
   const lines = 'Content-Type: application/x-www-form-urlencoded\r\nContent-Type: text/plain\r\nUser-Agent: a\r\nUser-Agent: b\r\n';
   const post = Buffer.from(`POST /add HTTP/1.1\r\nHost: x\r\n${lines}Content-Length: 3\r\nConnection: close\r\n\r\na=1`);
 
-  it('reads the lines of a name as one value joined with `, `, the media type of the body included (HY-42.8, HY-42.9)', async () => {
+  it('reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.8, HY-42.9, HY-42.14, HY-59.13)', async () => {
     const seen: unknown[] = [];
     const app = await new Fixture().app();
     const listener = app.listener(new FileSessions({ directory }), {
       around: (request) => {
-        seen.push(request.header('Content-Type'), request.mediaType(), request.header('User-Agent'), request.form());
+        seen.push(request.header('Content-Type'), request.header('User-Agent'));
+        // The read of the media type reads the joined value, which the core reads as no media type.
+        try {
+          seen.push(request.mediaType());
+        } catch (error) {
+          seen.push(error instanceof Error ? Reflect.get(error, 'kind') : error);
+        }
         return Promise.resolve(Response.text(200, 'seen'));
       },
     });
     server = createHttpServer(listener);
     await listen(server);
     expect((await raw(post)).startsWith('HTTP/1.1 200 ')).toBe(true);
-    expect(seen).toEqual(['application/x-www-form-urlencoded, text/plain', 'application/x-www-form-urlencoded, text/plain', 'a, b', []]);
+    expect(seen).toEqual(['application/x-www-form-urlencoded, text/plain', 'a, b', 'malformed_content_type']);
   });
 
-  it('answers an action with two Content-Type lines with 415, as the servers that do not call the core answer a value that is no media type, where the protocol answers 400 (HY-42.14, HY-59.12)', async () => {
+  it('answers an action with two Content-Type lines with 400, because the joined value is no media type (HY-42.14, HY-59.12)', async () => {
     await start();
-    expect((await raw(post)).startsWith('HTTP/1.1 415 Unsupported Media Type\r\n')).toBe(true);
+    const response = await raw(post);
+    expect(response.startsWith('HTTP/1.1 400 Bad Request\r\n')).toBe(true);
+    expect(response.endsWith('\r\n\r\nBad Request')).toBe(true);
   });
 
   it('leaves a request with two Content-Length lines to the 400 of node:http (HY-42.13, HY-60.7)', async () => {

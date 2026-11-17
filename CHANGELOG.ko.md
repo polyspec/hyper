@@ -1,11 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b9e1eb9a452a477b67643749c491992f21b9c3ab0b3088766437cf2bfa4469e0 -->
+<!-- source-sha256: ad523b9629efcae6005bce9f29e890030b9cd0f12f78a8a875b698cdc4cb7775 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Node case runner에서 `restored`를 확인하는 step(HY-74.4)은 요청 뒤에 경고 `outside`를 내고 process가 처음 전달한 경고를 읽었다. `node:ffi`의 `ExperimentalWarning`처럼 process가 먼저 낸 경고가 아직 전달되지 않았으면 그 경고가 먼저 도착했고, 서버가 오류를 내지 않고 경고를 전달했는데도 `contracts/app.json`의 case `a_warning_of_the_runtime_during_a_request_fails_it_and_a_warning_outside_is_raised_as_before`가 `FIELD_DIFFERS restored`로 실패했다. 이제 step은 자신이 낸 경고를 기다리고 다른 경고는 지나친다. 경고를 내는 호출이 오류를 내면 false를 보고한다(H35.9-8).
+- `packages/ts/tests/http.test.ts`의 요청 field line 테스트는 `Content-Type: application/x-www-form-urlencoded`와 `Content-Type: text/plain` 두 줄을 가진 action `POST`에 대해 `mediaType()`이 이어진 값을 반환하고 서버가 415로 답한다고 기대했다. `mediaType()`은 이어진 값을 core의 규칙으로 읽으며, core는 그 값을 media type이 아닌 것으로 읽는다. 이제 테스트는 `mediaType()`이 kind `malformed_content_type`으로 실패하고 서버가 상태 400과 텍스트 `Bad Request`로 답한다고 기대한다(HY-42.14, HY-59.12, HY-59.13). `header('Content-Type')`과 `header('User-Agent')`는 그대로 줄들의 값을 `, `로 이은 값이다(HY-42.8, HY-42.9, H35.27-1-1).
 - PHP와 Python case runner는 `contracts/reads.json` case의 필드 `reads`를 입력으로만 받고 프로그램 `reads_<id>`의 `reads.json`이 있는지만 확인했으므로, build가 쓴 틀린 `reads.json`이 어떤 case도 실패시키지 않았다. 두 runner는 그 파일의 page region node를 `reads`와 비교하며(HY-73.23), 다른 파일은 `FIELD_DIFFERS reads`로 case를 실패시킨다(H35.34-1).
 - `hyper build`는 키가 문자열 리터럴이나 숫자 리터럴인 인덱스(`{= a["k"]}`, `{= a[2]}`, `{= a[1e21]}`)에 대해 `reads.json`에 키 `[object Object]`를 썼고, node의 키를 템플릿이 읽은 순서로 썼다. 이 파일은 키 `k`, `2`, `1e+21`을(HY-73.33) 그 텍스트의 바이트 순서로(HY-73.32) 담는다. 명령 도구 `@polyspec/hyper-cli`는 `@polyspec/hyper`를 요구하고, 그 새 entry `@polyspec/hyper/build`의 `readsFile`로 파일을 쓴다. `readsFile`은 Rust core로 read path를 계산하므로 build는 그 platform의 native addon이 필요하다. `make board`, `make contract-programs`, `make server-fixtures`는 addon을 먼저 build한다(H35.34).
 - `make core-fmt-check`가 `packages/rust/tests/error_code.rs`에서 실패했다. failures 목록의 한 쌍이 rustfmt의 줄 너비보다 긴데 한 줄에 적혀 있었다. 그 쌍을 rustfmt의 형태로 적었다(H35.27-1-2).
