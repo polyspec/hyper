@@ -26,6 +26,13 @@
       "name": "polyspec/hyper",
       "product": "hyper",
       "runtime": "php"
+    },
+    {
+      "kind": "composer",
+      "directory": "packages/php/native",
+      "name": "polyspec/hyper-native",
+      "product": "hyper",
+      "runtime": "php-ext"
     }
   ],
   "manifests": {
@@ -34,19 +41,20 @@
     "packages/ts/package.json": "version",
     "packages/cli/package.json": "archive",
     "packages/php/composer.json": "archive",
-    "packages/python/pyproject.toml": "version"
+    "packages/php/native/composer.json": "archive",
+    "packages/python/pyproject.toml": "version",
+    "packages/rust/Cargo.toml": "version",
+    "packages/go/internal/ffi/Cargo.toml": "version",
+    "packages/php/native/Cargo.toml": "version",
+    "packages/python/native/Cargo.toml": "version",
+    "packages/ts/native/Cargo.toml": "version",
+    "packages/ts/native/wasm/Cargo.toml": "version"
   },
   "notReleased": {
     "Cargo.toml": "the root Cargo workspace of the core crate and the binding crates (binding design L-2)",
     "composer.json": "the private development root of packages/php, which resolves the packages from the checkout",
     "examples/board/composer.json": "the example application, which installs the packages from the checkout",
-    "packages/go/go.mod": "a binding package of binding, which binding scaffold writes; it is released after the generated bindings pass the contract and the package tests and kit makes its platform assets",
-    "packages/go/internal/ffi/Cargo.toml": "a binding package of binding, which binding scaffold writes; it is released after the generated bindings pass the contract and the package tests and kit makes its platform assets",
-    "packages/php/native/Cargo.toml": "a binding package of binding, which binding scaffold writes; it is released after the generated bindings pass the contract and the package tests and kit makes its platform assets",
-    "packages/php/native/composer.json": "a binding package of binding, which binding scaffold writes; it is released after the generated bindings pass the contract and the package tests and kit makes its platform assets",
-    "packages/python/native/Cargo.toml": "a binding package of binding, which binding scaffold writes; it is released after the generated bindings pass the contract and the package tests and kit makes its platform assets",
-    "packages/rust/Cargo.toml": "the core crate polyspec-hyper, publish = false: the bindings that packages/rust/interface.json generates build it from the source of the checkout, and no runtime installs it alone",
-    "packages/ts/native/Cargo.toml": "a binding package of binding, which binding scaffold writes; it is released after the generated bindings pass the contract and the package tests and kit makes its platform assets",
+    "packages/go/go.mod": "the Go module of the binding: make release-go-module carries it in a commit with the generated files and the static library of each platform and creates the tag packages/go/vX.Y.Z of that commit (binding GN-19f), which kit does not make, so goModules names no module and no tag of kit releases it",
     "scripts/recipe/typescript/package.json": "the private install of the TypeScript compiler API that the Node reader of the recipe check reads",
     "tests/package-install/package.json": "the test package that installs the npm archives of the packages"
   },

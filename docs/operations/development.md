@@ -143,9 +143,7 @@ The Python package `packages/python` is released as the platform wheels `polyspe
 
 The npm package `@polyspec/hyper` of `packages/ts` is released as `polyspec-hyper-X.Y.Z.tgz`, which `release-npm` of the job `npm` packs with its WASM module from a copy of the files that `npm pack` lists in a checkout that built no addon, and as the platform packages `polyspec-hyper-<platform>-X.Y.Z.tgz`, which `release-npm-platform` builds with the napi CLI, a devDependency of `package.json`. It is no npm package of kit, whose `npm pack` takes the files of the checkout, the debug addon of `make node-addon` among them; `config/release.json` lists its `package.json` as a manifest that carries the version. kit packs `@polyspec/hyper-client` and `@polyspec/hyper-cli`, which hold no native file.
 
-One part of the release is not declared yet:
-
-- The PHP extension. `config/toolchain.json` names no `phpExtension.minors`, which `release-platform-assets` requires, the job `php` builds for PHP 8.4 alone, and `config/release.json` names no Composer package of the extension, so the release holds no source zip of it and no entry of it in `packages.json`.
+The PHP extension `polyspec_hyper`, which `polyspec/hyper` requires as `ext-polyspec_hyper`, is released as the archives `php_polyspec_hyper-vX.Y.Z_php<minor>-<platform>-nts.zip` that `release-php-ext` builds in the job `php` for each platform and each PHP minor of `phpExtension.minors` of `config/toolchain.json` (8.4 and 8.5), and as the Composer package `polyspec/hyper-native` of `packages/php/native`, whose source zip `polyspec-hyper-php-ext-X.Y.Z.zip` kit packs and names in `packages.json`, where PIE finds the archive of a platform. `release-php-ext` names an archive by the version of the crate `polyspec-hyper-php-ext`, and `release-platform-assets` requires the name of the version of the tag, so the version-bump commit sets the version of the core crate, from which the binding crates take theirs; `config/release.json` lists these `Cargo.toml` files as manifests that carry the version. The crates hold the version 0.0.0 until that commit.
 
 ### Development layout
 

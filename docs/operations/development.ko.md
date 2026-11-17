@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: f93dc2a776edcc3d8a50b540f37a18486b81c2b32ba93f4a0901f83713e762d6 -->
+<!-- source-sha256: e368a73c3c96581aeb3b04230102b9fc880abb5b702073b4415b866f18373bd5 -->
 # 개발
 
 [English](development.md).
@@ -144,9 +144,7 @@ Python 패키지 `packages/python`은 `release-wheel`이 각 platform의 runner�
 
 `packages/ts`의 npm 패키지 `@polyspec/hyper`는 `polyspec-hyper-X.Y.Z.tgz`와 platform 패키지 `polyspec-hyper-<platform>-X.Y.Z.tgz`로 릴리스한다. 앞의 것은 job `npm`의 `release-npm`이 addon을 build하지 않은 checkout에서 `npm pack`이 나열하는 파일의 복사본에 WASM module을 더해 pack하고, 뒤의 것은 `release-npm-platform`이 `package.json`의 devDependency인 napi CLI로 build한다. 이 패키지는 kit의 npm 패키지가 아니다. kit의 `npm pack`은 checkout의 파일을 받으며, 그 가운데에는 `make node-addon`의 debug addon이 있다. `config/release.json`은 그 `package.json`을 버전을 담는 manifest로 나열한다. kit는 native 파일이 없는 `@polyspec/hyper-client`와 `@polyspec/hyper-cli`를 pack한다.
 
-릴리스의 한 부분은 아직 선언되지 않았다.
-
-- PHP extension. `config/toolchain.json`은 `release-platform-assets`가 요구하는 `phpExtension.minors`를 적지 않고, job `php`는 PHP 8.4로만 build하며, `config/release.json`은 extension의 Composer 패키지를 적지 않으므로 릴리스에는 그 source zip도, `packages.json`의 그 항목도 없다.
+`polyspec/hyper`가 `ext-polyspec_hyper`로 require하는 PHP extension `polyspec_hyper`는 archive `php_polyspec_hyper-vX.Y.Z_php<minor>-<platform>-nts.zip`과 `packages/php/native`의 Composer 패키지 `polyspec/hyper-native`로 릴리스한다. archive는 job `php`의 `release-php-ext`가 각 platform과 `config/toolchain.json`의 `phpExtension.minors`의 각 PHP minor(8.4와 8.5)로 build하고, Composer 패키지는 kit가 그 source zip `polyspec-hyper-php-ext-X.Y.Z.zip`을 pack해 `packages.json`에 적으며, PIE는 거기서 platform의 archive를 찾는다. `release-php-ext`는 archive 이름을 crate `polyspec-hyper-php-ext`의 버전으로 짓고 `release-platform-assets`는 tag의 버전의 이름을 요구하므로, 버전 커밋은 core crate의 버전을 정하고 binding crate는 거기서 자기 버전을 받는다. `config/release.json`은 이 `Cargo.toml` 파일들을 버전을 담는 manifest로 나열한다. crate는 그 commit 전까지 버전 0.0.0을 가진다.
 
 ### 개발 구성
 

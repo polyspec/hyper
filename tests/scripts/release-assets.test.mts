@@ -54,5 +54,28 @@ test('H35.35-3 no npm package of kit packs a native file of the checkout, and th
   // The napi CLI that release-npm-platform starts is the bin of a devDependency, pinned by its exact version (HR-70).
   assert.match(platform, /\/node_modules\/\.bin\/napi build --platform --release /, platform);
   const napi = (JSON.parse(read('package.json')) as { devDependencies?: Record<string, string> }).devDependencies?.['@napi-rs/cli'];
+  assert.ok(napi !== undefined, 'package.json holds no devDependency @napi-rs/cli');
   assert.match(napi ?? '', /^\d+\.\d+\.\d+$/, `package.json pins no @napi-rs/cli, whose bin make release-npm-platform starts: ${napi}`);
+});
+
+test('H35.35-4 the job php builds the extension for each PHP minor of config/toolchain.json on each platform, and kit packs its Composer package', () => {
+  // release-platform-assets requires one extension archive for each platform and each minor of phpExtension.minors.
+  const minors = (JSON.parse(read('config/toolchain.json')) as { phpExtension?: { minors?: unknown } }).phpExtension?.minors;
+  assert.ok(Array.isArray(minors) && minors.length > 0 && minors.every((minor) => typeof minor === 'string' && /^\d+\.\d+$/.test(minor)), `config/toolchain.json names no PHP minor of the extension in phpExtension.minors: ${JSON.stringify(minors)}`);
+  assert.ok(minors.includes(read('.php-version').trim()), `phpExtension.minors lacks the PHP of .php-version: ${minors.join(' ')}`);
+  // The matrix of the job php of assets.yml: one entry for each platform and each minor, and no other.
+  const php = /^ {2}php:\n((?: {4}.*\n|\n)*)/m.exec(read('.github/workflows/assets.yml'))?.[1] ?? '';
+  const entries = [...php.matchAll(/^ {10}- platform: (\S+)\n {12}runner: \S+\n {12}php: '([^']+)'$/gm)].map((entry) => `${entry[1]} ${entry[2]}`);
+  const wanted = ['linux-x64-gnu', 'linux-arm64-gnu', 'darwin-arm64'].flatMap((platform) => minors.map((minor) => `${platform} ${String(minor)}`));
+  assert.deepEqual([...entries].sort(), [...wanted].sort(), 'the matrix of the job php of assets.yml is not each platform with each minor of phpExtension.minors');
+  assert.ok(started('ci-assets-php', ['EXPECTED_PHP_MINOR=8.4']).includes('release-assets-php'), 'make ci-assets-php does not run release-assets-php');
+  assert.match(dryRun('release-assets-php', { variables: ['EXPECTED_PHP_MINOR=8.4'] }).join('\n'), / release-php-ext PHP=php EXPECTED_PHP_MINOR=8\.4$/m);
+  // The Composer package of the extension is the package of the crate that release-php-ext builds: kit packs its source
+  // zip and names it in packages.json, from which PIE finds the archive of a platform.
+  const extensions = config.packages.filter((item) => item.kind === 'composer').filter((item) => (JSON.parse(read(`${item.directory}/composer.json`)) as { type?: string }).type === 'php-ext');
+  assert.deepEqual(extensions.map((item) => [item.directory, item.runtime]), [['packages/php/native', 'php-ext']], 'config/release.json names no Composer package of the PHP extension of packages/php/native');
+  const [extension] = extensions;
+  assert.ok(extension !== undefined);
+  assert.equal((JSON.parse(read('packages/php/native/composer.json')) as { name?: string }).name, extension.name);
+  assert.equal(config.manifests['packages/php/native/composer.json'], 'archive');
 });
