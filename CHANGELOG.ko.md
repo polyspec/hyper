@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1d0469ab56ba358eea091678bc283855fd19d86c2fb0ef08e7ca3f0fadfbc5e7 -->
+<!-- source-sha256: f13a84852b425c3ca04b0e0a68709715cea39dda23799ea6767d6e6d4628ac2f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- core는 요청 body를 읽지 않았다. 각 서버가 자기 reader로 `multipart/form-data`를 해석하고 네 제한과 그 순서를 검사했다. 이제 `packages/rust`의 module `form`이 http-form v0.0.2로 body를 읽는다. `RequestBody`는 body, value, part, file 제한 아래에서 각 제한을 넘기는 byte의 순서대로 조각을 읽고, `read_held_body`는 하나의 값으로 보관된 body를, `parse_urlencoded`는 urlencoded 텍스트를 읽으며, `UploadedFile`은 파일을 읽고 옮긴다. http-form의 실패는 http-form의 kind, status, category를 가진 hyper의 error `Form`이고, 그 `partial_target`은 그 class의 두 property를 유지한다. `RequestBody::start`는 boundary를 가진 `multipart/form-data` type에만 조각 단위 reader를 시작하므로, boundary가 없는 type은 읽기를 실패시키지 않는다(HY-113.24). `packages/rust/interface.json`은 WASM을 뺀 모든 target에 이 unit들을, http-form의 kind 행과 넘겨받는 class `partial_target_error`를 선언하고, WASM core를 feature `fs` 없이 빌드한다. `tests/error_code.rs`는 http-form의 모든 실패가 그 kind, status, category, 행을 유지하는지 검사한다(H35.11). 실행하지 않은 것: core의 build와 그 테스트.
 
 - core는 http-form에 대한 의존을 선언하지 않았고, 어떤 추적 파일도 http-form release의 case 파일 `fields.json`과 `forms.json`을 고정하지 않았다. 이제 `packages/rust/Cargo.toml`은 tag `v0.0.2`로 `polyspec-http-form`에 의존하고, 그 lock 항목은 `make cargo-lock CRATES=polyspec-hyper`가 썼다. http-form v0.0.2는 hyper가 고정한 release인 binding-core v0.0.17과 http-media-type v0.0.8에 의존한다. `config/release-files.json`은 두 case 파일을 tag와 sha256으로 고정하고, `make hyper-install-release-files`가 그것을 `var/release-files/http-form/v0.0.2/`에 설치하며 `make hyper-install`이 이를 실행하고, `tests/scripts/release-file-pins.test.mts`가 그 pin을 테스트한다(H35.11). 아직 그 crate를 부르는 member는 없고, case runner는 여전히 `tests/legacy/fields.json`을 읽는다. 실행하지 않은 것: core의 build, 새 테스트, 서버 테스트.
 

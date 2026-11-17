@@ -14,6 +14,8 @@ pub mod cookies;
 pub mod csrf;
 pub mod error;
 pub mod etag;
+#[cfg(feature = "fs")]
+pub mod form;
 pub mod front;
 pub mod json;
 pub mod keep;

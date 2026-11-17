@@ -65,6 +65,7 @@ fn name(code: ErrorCode<'_>) -> &'static str {
         ErrorCode::Sessions(_) => "Sessions",
         ErrorCode::Negotiate(_) => "Negotiate",
         ErrorCode::Cookies(_) => "Cookies",
+        ErrorCode::Form(_) => "Form",
     }
 }
 
@@ -461,6 +462,52 @@ fn every_failure_of_http_cookie_projects_to_cookies_and_has_its_row() -> Result<
     Ok(())
 }
 
+/// Every failure of http-form, one of each variant, with the name of its variant (H35.11).
+fn form_failures() -> Vec<(&'static str, polyspec_http_form::Error)> {
+    use polyspec_http_form::{Error as Form, IoFailure};
+    let io = || IoFailure::from(std::io::Error::other("a detail"));
+    vec![
+        ("Invalid", Form::Invalid),
+        ("HeaderLimit", Form::HeaderLimit),
+        ("NoBoundary", Form::NoBoundary),
+        ("MalformedContentType", Form::MalformedContentType(polyspec_http_media_type::Error::MalformedMediaType)),
+        ("InvalidContentLength", Form::InvalidContentLength),
+        ("BodyLimit", Form::BodyLimit),
+        ("ValueLimit", Form::ValueLimit),
+        ("PartLimit", Form::PartLimit),
+        ("FileLimit", Form::FileLimit),
+        ("NotFinished", Form::NotFinished),
+        ("NotStreamed", Form::NotStreamed),
+        ("Finished", Form::Finished),
+        ("Moved", Form::Moved),
+        ("Exists", Form::Exists),
+        ("Removed", Form::Removed),
+        ("Io", Form::Io(io())),
+        ("SourceLeft", Form::SourceLeft(io())),
+        ("PartialTarget", Form::PartialTarget { failure: io(), removal: io() }),
+        ("Internal", Form::Internal("a detail")),
+    ]
+}
+
+/// H35.11, HY-132.3: every failure of http-form is `Error::Form`, keeps the kind and the status of http-form, and has
+/// its row in the contract of hyper.
+#[test]
+fn every_failure_of_http_form_projects_to_form_and_has_its_row() -> Result<(), String> {
+    let failures = form_failures();
+    let mut expected = BTreeSet::new();
+    for (variant, failure) in &failures {
+        let error = Error::Form(failure.clone());
+        assert_eq!(error.code(), ErrorCode::Form(failure));
+        assert_eq!(name(error.code()), "Form");
+        assert_eq!(binding_core::Kinds::kind(&error), failure.kind());
+        assert_eq!(binding_core::Kinds::status(&error), failure.status());
+        expected.insert(format!("polyspec_hyper::ErrorCode::Form/polyspec_http_form::Error::{variant}"));
+    }
+    assert_eq!(expected.len(), failures.len());
+    assert_eq!(rows(&contract()?, Some("http-form")), expected);
+    Ok(())
+}
+
 /// The categories that the interface contract of a library gives its kinds, by the name of the variant of each row of
 /// `errors.kinds`. The contract is the `interface.json` beside the manifest of the package `polyspec-<library>` that
 /// Cargo resolved for the core (binding I-1), which `cargo metadata` names: it is the contract of the code that the
@@ -605,7 +652,12 @@ fn a_failure_of_a_library_has_the_category_of_the_contract_of_the_library() -> R
         .into_iter()
         .map(|failure| (cookie_name(failure), Error::Cookies(failure)))
         .collect();
+    let form: Vec<(&'static str, Error)> = form_failures()
+        .into_iter()
+        .map(|(variant, failure)| (variant, Error::Form(failure)))
+        .collect();
     for (library, given) in [
+        ("http-form", &form),
         ("template", &renders),
         ("template", &data),
         ("session-store", &sessions),

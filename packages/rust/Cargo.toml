@@ -19,6 +19,10 @@ path = "src/lib.rs"
 # G-5, X-1: compiles the arming of the fault injection points of `fault`; a generated binding crate turns it on for its
 # tests only, and a release build never does (binding design 3.6).
 fault-test = ["polyspec-binding-core/fault-test"]
+# The body reader of http-form, whose files, paths and blocking I/O every target but WASM builds (F-28); the generated
+# WASM crate builds the core without it, as `core.features.wasm` of packages/rust/interface.json states.
+default = ["fs"]
+fs = ["polyspec-http-form/fs"]
 
 [dependencies]
 # The kind interface of every error (plan F-2, binding design E-1).
@@ -32,7 +36,7 @@ polyspec-http-media-type = { git = "https://github.com/polyspec/http-media-type.
 # The form values and the files of a body, read in chunks under its limits (F-9, F-11, F-21, F-22, F-24, F-25, F-27;
 # H35.11). Its tag is the tag of the http-form entry of config/release-files.json, so the crate and its cases are of one
 # release.
-polyspec-http-form = { git = "https://github.com/polyspec/http-form.git", tag = "v0.0.2" }
+polyspec-http-form = { git = "https://github.com/polyspec/http-form.git", tag = "v0.0.2", default-features = false }
 # The JSON text of HY-54.18 to HY-54.21 (RQ-006, RQ-011, RQ-028, RQ-030).
 polyspec-json = { git = "https://github.com/polyspec/json.git", tag = "v0.0.34" }
 # The values of the data model and their JSON form (VAL-2, VAL-12, VAL-20; HY-44, HY-54.20).

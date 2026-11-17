@@ -68,6 +68,9 @@ pub enum Error {
     Negotiate(polyspec_http_negotiation::Error),
     /// A failure of the `Set-Cookie` writer, with the kind of http-cookie (HY-45.8, HY-52.13).
     Cookies(polyspec_http_cookie::Error),
+    /// A failure of the body of a request or of one of its files, with the kind, the status and the category of
+    /// http-form (F-9, F-11, F-25; H35.11).
+    Form(polyspec_http_form::Error),
     /// A broken invariant of the core (HY-132.6).
     Internal(&'static str),
 }
@@ -136,6 +139,8 @@ pub enum ErrorCode<'a> {
     Negotiate(polyspec_http_negotiation::Error),
     /// A failure of http-cookie (HY-45.8, HY-52.13).
     Cookies(polyspec_http_cookie::Error),
+    /// A failure of http-form (F-9, F-11, F-25).
+    Form(&'a polyspec_http_form::Error),
 }
 
 /// An error as its questions read it: a failure of hyper itself, with the kind and the category that HY-132.1 gives it,
@@ -148,6 +153,7 @@ enum Part<'a> {
     Sessions(&'a polyspec_session_store::Error),
     Negotiate(&'a polyspec_http_negotiation::Error),
     Cookies(&'a polyspec_http_cookie::Error),
+    Form(&'a polyspec_http_form::Error),
 }
 
 impl Error {
@@ -192,6 +198,7 @@ impl Error {
             Error::Sessions(error) => Part::Sessions(error),
             Error::Negotiate(error) => Part::Negotiate(error),
             Error::Cookies(error) => Part::Cookies(error),
+            Error::Form(error) => Part::Form(error),
         }
     }
 
@@ -229,6 +236,7 @@ impl Error {
             Error::Sessions(error) => ErrorCode::Sessions(error),
             Error::Negotiate(error) => ErrorCode::Negotiate(*error),
             Error::Cookies(error) => ErrorCode::Cookies(*error),
+            Error::Form(error) => ErrorCode::Form(error),
         }
     }
 
@@ -248,6 +256,7 @@ impl Error {
             Part::Template(error) => template_category(error.code),
             Part::Sessions(error) => sessions_category(error),
             Part::RecordValue(_) => Category::Internal,
+            Part::Form(error) => form_category(error),
         }
     }
 }
@@ -262,6 +271,32 @@ impl Error {
             _ => None,
         }
     }
+
+    /// The kind of the failed removal of the new file of `partial_target` of http-form (F-11), the property
+    /// `removalKind` of its error class.
+    ///
+    /// # Errors
+    ///
+    /// `internal` for every other failure, whose class has no such property.
+    pub fn removal_kind(&self) -> Result<&'static str, Error> {
+        match self {
+            Error::Form(error) => Ok(error.removal_kind()?),
+            _ => Err(Error::Internal("the removal of a failure that is not partial_target")),
+        }
+    }
+
+    /// The `errno` of the failed removal of the new file of `partial_target` of http-form (F-11), the property
+    /// `removalErrno` of its error class, or none when the system gave none.
+    ///
+    /// # Errors
+    ///
+    /// `internal` for every other failure, whose class has no such property.
+    pub fn removal_errno(&self) -> Result<Option<i64>, Error> {
+        match self {
+            Error::Form(error) => Ok(error.removal_errno()?),
+            _ => Err(Error::Internal("the removal of a failure that is not partial_target")),
+        }
+    }
 }
 
 impl Kinds for Error {
@@ -273,6 +308,7 @@ impl Kinds for Error {
             Part::Sessions(error) => error.kind(),
             Part::Negotiate(error) => error.kind(),
             Part::Cookies(error) => error.kind(),
+            Part::Form(error) => error.kind(),
             Part::RecordValue(_) => "internal",
         }
     }
@@ -285,6 +321,7 @@ impl Kinds for Error {
         match self.part() {
             Part::Negotiate(error) => error.status(),
             Part::Sessions(error) => error.status(),
+            Part::Form(error) => error.status(),
             Part::Own(..)
             | Part::RecordValue(_)
             | Part::DataModel(_)
@@ -296,6 +333,7 @@ impl Kinds for Error {
     fn errno(&self) -> Option<i32> {
         match self {
             Error::Sessions(error) => error.errno(),
+            Error::Form(error) => error.errno(),
             _ => None,
         }
     }
@@ -346,6 +384,7 @@ impl fmt::Display for Error {
             Error::RecordValue(error) => write!(f, "an invariant of a session record does not hold: {error} (HY-132)"),
             Error::Negotiate(error) => error.fmt(f),
             Error::Cookies(error) => error.fmt(f),
+            Error::Form(error) => error.fmt(f),
             Error::Internal(what) => write!(f, "an invariant of the core does not hold: {what} (HY-132)"),
         }
     }
@@ -362,6 +401,7 @@ impl std::error::Error for Error {
             Part::RecordValue(error) => Some(error),
             Part::Template(error) => Some(error),
             Part::Cookies(error) => Some(error),
+            Part::Form(error) => Some(error),
             Part::Own(..) | Part::DataModel(_) => None,
         }
     }
@@ -370,6 +410,12 @@ impl std::error::Error for Error {
 impl From<polyspec_http_negotiation::Error> for Error {
     fn from(error: polyspec_http_negotiation::Error) -> Self {
         Error::Negotiate(error)
+    }
+}
+
+impl From<polyspec_http_form::Error> for Error {
+    fn from(error: polyspec_http_form::Error) -> Self {
+        Error::Form(error)
     }
 }
 
@@ -393,6 +439,28 @@ fn cookies_category(error: polyspec_http_cookie::Error) -> Category {
 }
 
 /// The category of a failure of the session-store library, as its interface contract gives it (E-1b).
+/// The category of a failure of http-form, as the error rows of its interface contract give it (F-9, F-11, F-25).
+fn form_category(error: &polyspec_http_form::Error) -> Category {
+    use polyspec_http_form::Error as Form;
+    match error {
+        Form::Internal(_) => Category::Internal,
+        Form::NotFinished | Form::NotStreamed | Form::Finished => Category::Type,
+        Form::Io(_) | Form::SourceLeft(_) | Form::PartialTarget { .. } => Category::Io,
+        Form::Invalid
+        | Form::HeaderLimit
+        | Form::NoBoundary
+        | Form::MalformedContentType(_)
+        | Form::InvalidContentLength
+        | Form::BodyLimit
+        | Form::ValueLimit
+        | Form::PartLimit
+        | Form::FileLimit
+        | Form::Moved
+        | Form::Exists
+        | Form::Removed => Category::Value,
+    }
+}
+
 fn sessions_category(error: &polyspec_session_store::Error) -> Category {
     use polyspec_session_store::Error as Sessions;
     match error {
