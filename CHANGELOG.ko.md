@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 64ad3d17b6da1ed56aa969caf8f89fa36ccb10177bc5190fa74e380ea36f8de8 -->
+<!-- source-sha256: 3f5096d9cd58fbefc567832f64f2f58060eca8598d95c4308c927cf511f3a8cb -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-59.4를 retire하고 HY-59.15가 대신한다. HY-59.4는 한도보다 큰 body에 "모든 요청에 대해 그리고 HY-42 전에" 상태 413을 주었고, HY-131.26은 잘못된 byte가 body 제한보다 먼저 오는 body에 413이 아니라 400을 준다. 조각 단위로 읽는 body에서 둘은 어긋났다. HY-59.15는 한 규칙을 정한다. 413은 경로, query, header, 한 값으로 보유한 body에 대한 HY-42의 검사보다 먼저 온다. 조각 단위로 읽는 body에서는 byte가 먼저 오는 실패가 답하므로, 한도 전의 잘못된 byte는 뒤의 byte가 한도를 넘어도 400을 받는다. 한도보다 큰 `Content-Length`는 byte가 무엇이든 413을 받는다. 서버는 이를 지키지 않는다. `RequestBody.feed`는 reader가 실패한 뒤에 true를 돌려주고, host는 계속 먹이며, 그 뒤 body 제한을 넘는 body는 413을 받는다. `docs/plans/execution/plan.md`는 그 row의 Red인 section `streamed`의 case와 chunked body의 host 테스트를 적는다. 둘 다 지금 실패하므로 추가하지 않는다. HY-59.4를 인용하던 statement, `contracts/interfaces.json`의 텍스트, 소스의 주석, 테스트 제목 셋은 HY-59.15를 인용한다(H35.36-5).
 
 - HY-131.29는 수가 아닌 `Content-Length`에 http-form의 kind `invalid_content_length`의 상태 400을 정하는데, `docs/features.md`는 어떤 서버도 이를 내지 않는다는 것을 적지 않았다. 그 파일은 행 `content-length-kind`를 not implemented로 얻었다. 어떤 서버도 core도 그 kind를 갖지 않고, `node:http`와 Python `http.server` host는 그런 요청을 자기 400으로 거절하며, WSGI host, ASGI host, PHP는 그런 값을 0으로 읽어 WSGI host는 body를 읽지 않는다. `docs/plans/execution/plan.md`는 그 row의 Red인 case와 WSGI host 테스트를 얻었다. 그 case는 세 runner에서 실패하므로 `contracts/`에 추가하지 않는다. 그 kind는 core가 http-form을 부를 때 온다(H35.11, H35.36-2).
 

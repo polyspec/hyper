@@ -722,7 +722,7 @@ test('session-cookie-is-secure-when-the-application-declares-https (HY-45.1, HY-
 
 const TOO_LARGE: Wanted = { status: 413, body: 'Content Too Large', headers: { 'cache-control': 'no-store', 'content-security-policy': "frame-ancestors 'self'" }, absent: ['set-cookie'] };
 
-test('body-over-the-limit-is-413 (HY-59.4, HY-59.5, HY-59.14, HY-60.2, HY-60.8, HY-45.4, HY-65.1)', SCENARIO, async (t) => {
+test('body-over-the-limit-is-413 (HY-59.15, HY-59.5, HY-59.14, HY-60.2, HY-60.8, HY-45.4, HY-65.1)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_LIMIT: '10' } });
   await eachHost(t, hosts, async (host, check) => {
     check.response('POST /add', await ask(host, requestBytes('POST', '/add', { 'Content-Type': FORM }, 'name=aaaaaaaaaaaaaaaaaaaa')), TOO_LARGE);
@@ -731,7 +731,7 @@ test('body-over-the-limit-is-413 (HY-59.4, HY-59.5, HY-59.14, HY-60.2, HY-60.8, 
   });
 });
 
-test('chunked-body-is-read-and-the-body-limit-applies, a body over the limit (HY-59.4, HY-59.5, HY-59.14, HY-100.2, HY-60.2, HY-45.4, HY-65.1)', SCENARIO, async (t) => {
+test('chunked-body-is-read-and-the-body-limit-applies, a body over the limit (HY-59.15, HY-59.5, HY-59.14, HY-100.2, HY-60.2, HY-45.4, HY-65.1)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_LIMIT: '10' } });
   await eachHost(t, hosts, async (host, check) => {
     // 16 bytes in two chunks, without a Content-Length.
@@ -742,7 +742,7 @@ test('chunked-body-is-read-and-the-body-limit-applies, a body over the limit (HY
   });
 });
 
-test('chunked-body-is-read-and-the-body-limit-applies, a body under the limit (HY-59.4, HY-100.2)', SCENARIO, async (t) => {
+test('chunked-body-is-read-and-the-body-limit-applies, a body under the limit (HY-59.15, HY-100.2)', SCENARIO, async (t) => {
   // The request hook of the fixture answers what the request gave of its body.
   const { hosts } = await hostsOf(t);
   await eachHost(t, hosts, async (host, check) => {

@@ -8094,7 +8094,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4, HY-131.32).",
+              "state": "Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.15, HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/RequestBody.php::Polyspec\\Hyper\\RequestBody::feed",

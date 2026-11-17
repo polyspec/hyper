@@ -915,9 +915,9 @@
                 },
                 {
                   "id": "HY-114.7",
-                  "en": "The server checks the bytes of each file part while it reads the body (HY-131.32): a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59.4 does and at its place in the order of HY-59.3, and no action runs.",
-                  "ko": "server는 body를 읽는 동안 각 file part의 byte를 검사한다(HY-131.32). byte가 file 제한보다 많은 file은 HY-59.4처럼, 그리고 HY-59.3의 순서에서 그 자리에서 text `Content Too Large`와 함께 status 413으로 요청을 실패시키며 action은 실행되지 않는다.",
-                  "koSource": "c0a9874e6cbb07114020f749a8307717e3e7fb6fb0d55cddb5ac99bd730b0e70"
+                  "en": "The server checks the bytes of each file part while it reads the body (HY-131.32): a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59.15 does and at its place in the order of HY-59.3, and no action runs.",
+                  "ko": "server는 body를 읽는 동안 각 file part의 byte를 검사한다(HY-131.32). byte가 file 제한보다 많은 file은 HY-59.15처럼, 그리고 HY-59.3의 순서에서 그 자리에서 text `Content Too Large`와 함께 status 413으로 요청을 실패시키며 action은 실행되지 않는다.",
+                  "koSource": "d16720d58cefb21c0ee4c73d2583dc1f3971d5d3f992002993a9c76816f15f33"
                 },
                 {
                   "id": "HY-114.12",
@@ -2551,9 +2551,9 @@
                     },
                     {
                       "id": "HY-62.9",
-                      "en": "The server calls the selection once per request, after HY-59.4 and HY-42 and before routing, with the request without its `Cookie` header: the choice decides the shell response and the path of a representation, and neither varies by `Cookie` (HY-117).",
-                      "ko": "서버는 요청마다 HY-59.4와 HY-42 뒤, 라우팅 전에 `Cookie` header를 뺀 요청으로 선택을 한 번 호출한다. choice가 셸 응답과 representation의 경로를 정하고, 둘 다 `Cookie`에 따라 달라지지 않기 때문이다(HY-117).",
-                      "koSource": "74af890ff305d3d1635a44f4cb4edf08491ddafc25dd05cf6b249cc7f7fcc92d"
+                      "en": "The server calls the selection once per request, after HY-59.15 and HY-42 and before routing, with the request without its `Cookie` header: the choice decides the shell response and the path of a representation, and neither varies by `Cookie` (HY-117).",
+                      "ko": "서버는 요청마다 HY-59.15와 HY-42 뒤, 라우팅 전에 `Cookie` header를 뺀 요청으로 선택을 한 번 호출한다. choice가 셸 응답과 representation의 경로를 정하고, 둘 다 `Cookie`에 따라 달라지지 않기 때문이다(HY-117).",
+                      "koSource": "fcc6716fb3d8ed721ebc9e3f4c1dffbed5b57f6221055ff47af8508313defba5"
                     },
                     {
                       "id": "HY-62.10",
@@ -2722,9 +2722,9 @@
                 },
                 {
                   "id": "HY-62.38",
-                  "en": "A request that HY-59.4 or HY-42 refuses calls no selection.",
-                  "ko": "HY-59.4나 HY-42가 거절하는 요청은 selection을 호출하지 않는다.",
-                  "koSource": "e0347e9943aac6bbea1d7fc6d5e6ff29fe1139f2abf6bf553b74f0049718fe21"
+                  "en": "A request that HY-59.15 or HY-42 refuses calls no selection.",
+                  "ko": "HY-59.15나 HY-42가 거절하는 요청은 selection을 호출하지 않는다.",
+                  "koSource": "cf996945086865aedbc15bbfe00a75b994c7d2e17655eeb71d465a0539de1203"
                 }
               ]
             }
@@ -7286,6 +7286,7 @@
           "kind": "rule",
           "id": "HY-59",
           "retired": [
+            4,
             6,
             7,
             11
@@ -7321,10 +7322,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-59.4",
-                      "en": "A body larger than the limit receives status 413 with the text `Content Too Large`, for every request and before HY-42.",
-                      "ko": "한도보다 큰 body는 모든 요청에 대해 그리고 HY-42 전에 상태 413과 텍스트 `Content Too Large`를 받는다.",
-                      "koSource": "91762af08192cdeac0ce2a0cbdf0d1cbfd840faa09e04091c515a3e499559306"
+                      "id": "HY-59.15",
+                      "en": "A body larger than the limit receives status 413 with the text `Content Too Large`, for every request and before the checks of HY-42 on the path, the query, the headers and a body held as one value, while in a body read in chunks the failure whose byte comes first answers (HY-131.26), so that an invalid byte before the limit receives 400 also when later bytes pass the limit, and a `Content-Length` larger than the limit receives 413 whatever the bytes of the body are (HY-131.31).",
+                      "ko": "한도보다 큰 body는 모든 요청에 대해, 그리고 경로, query, header, 한 값으로 보유한 body에 대한 HY-42의 검사 전에 상태 413과 텍스트 `Content Too Large`를 받는다. 조각 단위로 읽는 body에서는 byte가 먼저 오는 실패가 답하므로(HY-131.26), 한도 전의 잘못된 byte는 뒤의 byte가 한도를 넘어도 400을 받고, 한도보다 큰 `Content-Length`는 body의 byte가 무엇이든 413을 받는다(HY-131.31).",
+                      "koSource": "b633f32e62779145f0de99c07c922eed788f8b618d0450558ec6610d2e0bbc77"
                     },
                     {
                       "id": "HY-59.5",

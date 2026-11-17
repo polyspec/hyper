@@ -44,7 +44,7 @@ final class RequestBody
     }
 
     /**
-     * Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4,
+     * Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.15,
      * HY-131.32).
      */
     public function feed(string $chunk): bool

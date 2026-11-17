@@ -44,7 +44,7 @@ class RequestBody:
 
     def feed(self, chunk: bytes) -> bool:
         """Reads the next chunk, and returns False when the body passed a limit, after which it holds no bytes
-        (HY-59.4, HY-131.32)."""
+        (HY-59.15, HY-131.32)."""
         if self.__over:
             return False
         self.__length += len(chunk)

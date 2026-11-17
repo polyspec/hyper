@@ -32,7 +32,7 @@ export class RequestBody {
     this.length = 0;
   }
 
-  // Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4,
+  // Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.15,
   // HY-131.32).
   feed(chunk: Uint8Array): boolean {
     if (this.over) return false;

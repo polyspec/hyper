@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 27e7a1589a4b1d4428feb78734d7336d7b0817b7934c65ce09c2f8f192c73fef -->
+<!-- source-sha256: c99f875634b83338f44453e1022f234f79860cd0a13e23f5116bde27ad024782 -->
 # 기능 상태
 
 [English](features.md).
@@ -116,7 +116,7 @@ Rust core(C-7)는 아직 모든 규칙을 갖지 않는다. 가질 때까지 세
 | 규칙 | core가 아직 갖지 않는 이유 | 기간 |
 |---|---|---|
 | template AST에서 read path를 계산하는 일(HY-73.1부터 HY-73.20) | build는 core로(`@polyspec/hyper/build`의 `readsFile`) 계산하고 Node server는 browser 패키지로 계산하며(HY-73.23), core는 그것으로 읽는 데이터를 보존한다 | template 언어의 compiler가 그것을 줄 때 |
-| client 렌더 selection 호출(HY-62.7부터 HY-62.11까지), 식별자로 session의 store 열기(HY-104), body 한도(HY-59.4, HY-131), handler가 반환한 값의 데이터 모델 변환(HY-44) | core는 요청을 라우팅하고, store interface로 session을 읽으며, token을 검사하고, page의 handler를 요청하며, page의 헤더를 준다. host는 selection을 부르고, session의 store를 열며, body를 읽는다 | S-4 |
+| client 렌더 selection 호출(HY-62.7부터 HY-62.11까지), 식별자로 session의 store 열기(HY-104), body 한도(HY-59.15, HY-131), handler가 반환한 값의 데이터 모델 변환(HY-44) | core는 요청을 라우팅하고, store interface로 session을 읽으며, token을 검사하고, page의 handler를 요청하며, page의 헤더를 준다. host는 selection을 부르고, session의 store를 열며, body를 읽는다 | S-4 |
 | 요청의 body(HY-56, HY-57, HY-113, HY-114, HY-131)와 요청의 cookie(HY-129.13) | http-form와 http-cookie 라이브러리가 가지며, 각 server가 binding으로 부른다 | S-4 |
 | hook, host 진입점, runtime(HY-43, HY-60, HY-66, HY-67, HY-74, HY-97, HY-99, HY-100, HY-105) | host 코드(L-3)이며 각 runtime에 남는다 | 없음: host 코드로 남는다 |
 | ORM 오류를 class로 알아보는 일(HY-107.7)과 handler를 부르는 요청 단계(HY-120, HY-121.5, HY-122.9) | core는 kind별 응답과 단계의 순서를 주고, server가 handler를 실행한다 | S-4 |
