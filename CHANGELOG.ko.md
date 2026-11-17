@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ad425968debe578c9a1207d0e6f7bb29897caebcded653f9568fd3d500b2c27e -->
+<!-- source-sha256: f2dd579364e7c8a31c32ab082552fcf9d108266fe3f5462687b081a4b58f2e06 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 서버는 `run`이 write hook, disconnect hook, 요청 파일 디렉터리의 제거를 등록하기 전에 `Request::fromGlobals`에서 body를 읽었고, php://input의 읽기가 실패하면 body가 거기서 끝났다. 요청은 잘린 body로 응답되었고, 예외를 던진 reader는 부를 hook을 남기지 않고 요청의 디렉터리를 그대로 두었다. 이제 `run`은 `Request::received`로 선언된 Content-Length를 크기로 가진 빈 body의 받은 그대로의 요청을 먼저 만들고, 그것으로 hook과 제거를 등록한 뒤 `withInput`으로 body를 읽으며, `withInput`은 실패한 읽기에서 예외를 던진다. hook은 body를 읽은 뒤에는 body를 가진 요청을 받는다. 실패한 읽기는 빠져나간 오류다: 평문 500과 write hook 한 번의 호출(HY-60.14, HY-60.17, HY-60.18, HY-131.14). `packages/php/tests/RunTest.php`의 시험 하나가 읽기가 실패하는 `php` stream wrapper로 이것을 적는다. 쓰였을 뿐 실행되지 않았다(H35.36-7).
 - HY-60.21은 응답이 시작되었거나 500의 쓰기가 실패하면 서버가 연결을 닫는다고 적지만, 연결을 닫지 않는 PHP 서버에 대해서는 아무것도 적지 않는다. 새 statement HY-60.33은 `packages/php/src/App/App.php`의 `escaped`가 하는 일을 적는다: header가 보내진 뒤에는 500을 쓰지 않고 쓰기를 완료되지 않은 것으로 기록하며, 쓰기 hook은 `ended` false와 실패를 받고, 닫힌 client는 `connection_aborted()`로 보이며, 연결은 SAPI가 닫는다(H35.44).
 - HY-100.28과 HY-106.20은 host 진입점을 host 코드의 함수, Node의 `listener(app, sessions, options)`와 `server(app, sessions, options)`, PHP의 `run($app, ...)`로 적지만, 코드에는 `App`의 member `listener`, `server`, `run`이 있고 `packages/rust/interface.json`의 host-listener와 host-run 행이 함수로의 이동을 기록한다. 이제 두 statement는 그 이동을 하는 행 H35.44-1의 unimplemented 표시를 가지며, `docs/features.md`에 상태가 not implemented인 행 host-entry-functions가 있다(H35.44).
 - target이 없는 요청에 PHP 서버(`REQUEST_URI`가 없는 `$_SERVER`, `Request::fromGlobals`)와 Node host(`node:http` 요청의 `url`이 undefined)가 경로 `/`의 요청으로 응답했는데, 그것은 다른 요청에 대한 응답이다. HY-100.2는 host가 target을 줄 수 없는 요청에 HY-60의 평문 500을 적으며, Python host들이 그렇게 응답한다. 이제 `Request::fromGlobals`는 `REQUEST_URI`를 이름하는 오류로 실패하고 `run`이 그것에 평문 500으로 응답하며, Node listener는 public 파일을 찾기 전에 실패한다. 그때는 요청이 없으므로 write hook이 불리지 않는다(HY-99.12). `packages/php/tests/RequestTest.php`의 시험 하나와 `packages/ts/tests/http.test.ts`의 시험 하나가 이것을 적는다. 쓰였을 뿐 실행되지 않았다(H35.44).

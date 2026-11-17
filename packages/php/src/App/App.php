@@ -1082,19 +1082,24 @@ final class App
                 $this->escaped($error['message'], $delivery, $kept);
             }
         });
-        // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
-        $request = Request::fromGlobals(
+        // HY-60.18: the request as received is built first, without its body, so that the hooks and the removal of the
+        // directory of its files are registered before the body is read, and a read that fails is an escaped error
+        // that the write hook reports once with that request (HY-60.14, HY-60.17, HY-131.14). HY-131: a multipart body
+        // of an application with that form type is read in chunks into files of the request.
+        $received = Request::received(
             $this->bodyLimit,
             in_array('multipart/form-data', $this->formTypes, true),
             $this->valueLimit,
             $this->partLimit,
             $this->fileLimit,
         );
+        // The hooks read the request by reference, so they receive the request with its body once it is read.
+        $request = $received;
         // HY-99: the write hook runs after the escape function and before the disconnect hook. A response that no write
         // started is the plain 500, and its write is not complete.
         if ($this->written !== null) {
             $hook = $this->written;
-            register_shutdown_function(static function () use ($hook, $request, $started, $delivery): void {
+            register_shutdown_function(static function () use ($hook, &$request, $started, $delivery): void {
                 // HY-99: a request that ended before a response started has no response; its write did not end.
                 $ended = $delivery->response !== null && $delivery->complete && connection_aborted() !== 1;
                 $hook($request, $delivery->response, $ended, (hrtime(true) - $started) / 1e6, $delivery->failure);
@@ -1110,9 +1115,10 @@ final class App
         }
         // HY-131.14: the files of the request are removed after the hooks above, which run first, also for a request
         // that fails or whose client closed the connection.
-        register_shutdown_function(static function () use ($request): void {
-            $request->release();
+        register_shutdown_function(static function () use ($received): void {
+            $received->release();
         });
+        $request = $received->withInput();
         $store = new NativeSession($this->https, $request, $this->sessionSetup);
         $response = $this->through($request, $store, $started, $delivery);
         $delivery->response = $response;

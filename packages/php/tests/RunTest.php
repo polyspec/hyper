@@ -236,6 +236,24 @@ final class RunTest extends TestCase
         self::assertSame("response 200\nwritten 500 true \"a fatal error of the response hook\"\n", $lines);
     }
 
+    /**
+     * HY-60.14, HY-60.17, HY-60.18: a read of the body that fails is an escaped error: the plain 500 and no shortened
+     * body, no response hook, and one call of the write hook, which the request as received reaches.
+     */
+    public function testAFailedReadOfTheBodyAnswersThePlain500AndCallsTheWriteHookOnce(): void
+    {
+        [$status, $headers, $body, $lines] = self::escape('read-fails');
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertContains('Cache-Control: no-store', $headers);
+        // json_encode writes each slash of php://input as `\/`.
+        self::assertMatchesRegularExpression(
+            '/\Awritten 500 true "hyper: the read of php:\S*input failed \(HY-60\)"\n\z/',
+            $lines,
+        );
+    }
+
     /** HY-99: a fatal error after App::run sent the response reports ended false with the failure, and no second response. */
     public function testAFatalErrorAfterTheHeadersWereSentReportsAnUnendedWrite(): void
     {
