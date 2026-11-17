@@ -48,6 +48,9 @@ const STARTED: readonly { program: string; pattern: RegExp; tools: readonly stri
   { program: 'composer', pattern: /\/mise\/shims\/composer\b/u, tools: ['composer'] },
   { program: 'pie', pattern: /\/mise\/shims\/pie\b/u, tools: ['pie'] },
   { program: 'go', pattern: /\/mise\/shims\/go(?:fmt)?\b/u, tools: ['go'] },
+  // binding check, with and without --release, computes the go.sum of packages/go/go.mod with `go mod download`, and
+  // binding release-go-module proves the module with go; both start the go of PATH inside their process.
+  { program: 'go of binding', pattern: /\/binding\/dist\/cli\.js (?:check|release-go-module) /u, tools: ['go'] },
   { program: 'wasm-bindgen', pattern: /\/mise\/shims\/wasm-bindgen\b/u, tools: ['wasm-bindgen'] },
   { program: 'uv', pattern: /\/mise\/shims\/uv\b|\/uv-install\.m[jt]s /u, tools: ['uv'] },
   // The virtual environment of a Python package is made by the python of mise, and the Python test runner starts it.
@@ -56,6 +59,13 @@ const STARTED: readonly { program: string; pattern: RegExp; tools: readonly stri
   // The lint scripts of kit start the lint programs of the checkout.
   { program: 'phpcs and phpstan', pattern: /\/lint-php\.m[jt]s\b/u, tools: ['php', 'phpcs', 'phpstan'] },
   { program: 'ruff and vulture', pattern: /\/lint-python\.m[jt]s\b/u, tools: ['ruff', 'vulture'] },
+];
+
+// The programs that only a recipe of the release starts, which no CI group matches: the wheel build of uv, whose build
+// backend maturin compiles the crate with cargo, and the napi CLI, which builds the Node addon with cargo.
+const RELEASE_STARTED: typeof STARTED = [
+  { program: 'wheel build', pattern: /\/mise\/shims\/uv build --wheel /u, tools: ['uv', 'python', 'rust'] },
+  { program: 'napi', pattern: /\/node_modules\/\.bin\/napi build /u, tools: ['rust'] },
 ];
 
 // The line of php-check-installed, which install-tools runs: it starts the PHP wrapper only in a checkout that holds
@@ -171,52 +181,100 @@ test('each CI group installs every tool that its setup steps and its targets sta
 test('the job of release.yml installs every tool that its steps start, before the command line that starts it (HR-95, H35.35)', () => {
   const kinds = (JSON.parse(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8')) as { packages: { kind: string }[] }).packages.map((item) => item.kind);
   assert.ok(kinds.includes('composer') || kinds.includes('wheel'), 'config/release.json holds no Composer package and no wheel, so release-tools of kit installs no tool');
-  const every = new Set(STARTED.flatMap((entry) => entry.tools));
-  const installed = new Set<string>();
+  const judged = jobToolProblems('release', releaseCalls(), []);
+  // release-go-module generates the Go binding with cargo; a dry run that does not name it judged nothing (HR-84).
+  assert.deepEqual(['cargo', 'go of binding'].filter((program) => !judged.matched.has(program)), [], 'no command line of the release starts a program that its steps build with');
+  assert.ok(judged.installs >= 1, `${judged.installs} command lines of the release install the tools: release-tools`);
+  assert.deepEqual(judged.found, []);
+});
+
+/**
+ * The tools that the command lines of the make calls `calls` of the job `job` start before a line of the job installs
+ * them, with the programs that were matched and the count of the lines that install. The command lines run in their
+ * order, those of the makes that a recipe starts included, so a tool counts as installed only for the lines after the
+ * line that installs it; `provided` are the tools that a uses: step of the job sets up before its run step.
+ */
+function jobToolProblems(job: string, calls: Call[], provided: string[]): { found: string[]; matched: Set<string>; installs: number } {
+  const rows = [...STARTED, ...RELEASE_STARTED];
+  const every = new Set(rows.flatMap((entry) => entry.tools));
+  const installed = new Set<string>(provided);
   const matched = new Set<string>();
   const found: string[] = [];
   let installs = 0;
-  // The command lines run in their order, those of the makes that a recipe starts included, so a tool counts as
-  // installed only for the lines after the line that installs it.
-  for (const call of releaseCalls()) {
+  for (const call of calls) {
     for (const line of commands(call.target, call.variables)) {
       if (WHERE_INSTALLED.test(line)) continue;
-      for (const entry of STARTED) {
+      for (const entry of rows) {
         if (!entry.pattern.test(line)) continue;
         matched.add(entry.program);
         for (const tool of entry.tools) {
-          if (!installed.has(tool)) found.push(`release: make ${call.target} starts ${entry.program}, and no command line of the job before it installs ${tool}: ${line.trim().slice(0, 200)}`);
+          if (!installed.has(tool)) found.push(`${job}: make ${call.target} starts ${entry.program}, and no command line of the job before it installs ${tool}: ${line.trim().slice(0, 200)}`);
         }
       }
-      if (!INSTALLS_ALL.test(line)) continue;
-      installs += 1;
-      for (const tool of every) installed.add(tool);
+      const selected = INSTALLS.flatMap((install) => install.tools(line));
+      const all = INSTALLS_ALL.test(line);
+      if (all || selected.length > 0) installs += 1;
+      for (const tool of all ? every : selected) installed.add(tool);
     }
   }
-  // release-go-module generates the Go binding with cargo; a dry run that does not name it judged nothing (HR-84).
-  assert.deepEqual(['cargo'].filter((program) => !matched.has(program)), [], 'no command line of the release starts a program that its steps build with');
-  assert.ok(installs >= 1, `${installs} command lines of the release install the tools: release-tools`);
+  return { found, matched, installs };
+}
+
+// The jobs of assets.yml: the recipe of each, the variables that its matrix gives, and the tools that a uses: step of the
+// job sets up, which the recipe does not install: the job php takes the PHP of its matrix entry from setup-php.
+const ASSET_JOBS: readonly { job: string; variables: string[]; provided: string[]; programs: string[] }[] = [
+  { job: 'platform', variables: [], provided: [], programs: ['cargo', 'go of binding', 'uv', 'wheel build', 'napi'] },
+  { job: 'php', variables: ['EXPECTED_PHP_MINOR=8.4'], provided: ['php'], programs: ['cargo', 'go of binding'] },
+  { job: 'npm', variables: [], provided: [], programs: ['cargo', 'go of binding', 'wasm-bindgen'] },
+];
+
+test('each job of assets.yml installs every tool that its recipe starts, before the command line that starts it, in CI and in a release (H35.35-5)', () => {
+  const workflow = readFileSync(path.join(ROOT, '.github/workflows/assets.yml'), 'utf8');
+  const found: string[] = [];
+  for (const { job, variables, provided, programs } of ASSET_JOBS) {
+    // A tool that a uses: step provides is one that the job sets up: the job php holds the setup-php step.
+    if (provided.includes('php')) assert.match(/^ {2}php:\n((?: {4}.*\n|\n)*)/mu.exec(workflow)?.[1] ?? '', /uses: shivammathur\/setup-php@/u, 'the job php of assets.yml sets up no PHP');
+    for (const release of [[], ['RELEASE=true']]) {
+      const judged = jobToolProblems(`assets ${job}${release.length ? ' of a release' : ''}`, jobCalls(`ci-assets-${job}`, [...variables, ...release]), provided);
+      found.push(...judged.found);
+      // The programs of the build and the check of binding are named; a dry run that names none judged nothing (HR-84).
+      assert.deepEqual(programs.filter((program) => !judged.matched.has(program)), [], `the recipe ci-assets-${job} ${release.join(' ')} starts none of the programs that its job builds with`);
+      assert.ok(judged.installs >= 1, `the recipe ci-assets-${job} installs no tool`);
+    }
+  }
   assert.deepEqual(found, []);
 });
 
-test('rust-toolchain.toml names every Rust target that a cargo command line of a CI group or of the release builds for (HR-81, H35.35)', () => {
-  // install-tools of kit passes the targets of rust-toolchain.toml to rustup with the toolchain, and no other step adds one.
-  const list = /^targets = \[(.*)\]$/mu.exec(readFileSync(path.join(ROOT, 'rust-toolchain.toml'), 'utf8'))?.[1] ?? '';
-  const declared = [...list.matchAll(/"([^"]+)"/gu)].map((target) => target[1] ?? '');
+test('rust-toolchain.toml names every Rust target and component that a command line of a CI group, of an assets job or of the release needs (HR-81, H35.35, H35.35-5)', () => {
+  // install-tools of kit passes the targets and the components of rust-toolchain.toml to rustup with the toolchain, and
+  // no other step adds one.
+  const toolchain = readFileSync(path.join(ROOT, 'rust-toolchain.toml'), 'utf8');
+  const listed = (key: string): string[] => [...(new RegExp(`^${key} = \\[(.*)\\]$`, 'mu').exec(toolchain)?.[1] ?? '').matchAll(/"([^"]+)"/gu)].map((item) => item[1] ?? '');
+  const targets = listed('targets');
+  const components = listed('components');
   const named = new Map<string, string>();
+  const tools = new Map<string, string>();
   const read = (where: string, lines: string[]): void => {
     for (const line of lines) {
-      const target = CARGO_TARGET.exec(line)?.[1];
-      if (target !== undefined && !named.has(target)) named.set(target, where);
+      // A target that cargo builds for, and the musl target of each Linux host of release-go-static.
+      for (const target of [CARGO_TARGET.exec(line)?.[1], ...[...line.matchAll(/\bmusl=([a-z0-9_]+-unknown-linux-musl)\b/gu)].map((musl) => musl[1])]) {
+        if (target !== undefined && !named.has(target)) named.set(target, where);
+      }
+      // A program of the component llvm-tools, started from the folder of the toolchain.
+      if (/\/lib\/rustlib\/[^/]+\/bin\/llvm-[a-z]+/u.test(line) && !tools.has('llvm-tools')) tools.set('llvm-tools', where);
     }
   };
   for (const group of [...makeWords('CI_GROUPS'), 'bench']) {
     for (const step of makeWords(`CI_SETUP_${group}`)) read(`${group}: make ${step}`, commands(step, setupVariables(group, step)));
     for (const target of makeWords(`CI_TARGETS_${group}`)) read(`${group}: make ${target}`, commands(target));
   }
+  for (const { job, variables } of ASSET_JOBS) for (const call of jobCalls(`ci-assets-${job}`, variables)) read(`assets ${job}: make ${call.target}`, commands(call.target, call.variables));
   for (const call of releaseCalls()) read(`release: make ${call.target}`, commands(call.target, call.variables));
-  assert.ok(named.size > 0, 'no cargo command line of a CI group or of the release names a Rust target');
-  assert.deepEqual([...named].filter(([target]) => !declared.includes(target)).map(([target, where]) => `${where} builds for the Rust target ${target}, which rust-toolchain.toml does not name in targets, so install-tools installs no standard library of it`), []);
+  assert.ok(named.has('wasm32-unknown-unknown') && [...named.keys()].some((target) => target.endsWith('-musl')) && tools.size > 0, `the dry runs name the WASM target, a musl target and a program of llvm-tools: ${[...named.keys(), ...tools.keys()].join(' ')}`);
+  assert.deepEqual([
+    ...[...named].filter(([target]) => !targets.includes(target)).map(([target, where]) => `${where} builds for the Rust target ${target}, which rust-toolchain.toml does not name in targets, so install-tools installs no standard library of it`),
+    ...[...tools].filter(([component]) => !components.includes(component)).map(([component, where]) => `${where} starts a program of the Rust component ${component}, which rust-toolchain.toml does not name in components, so install-tools does not install it`),
+  ], []);
 });
 
 test('install-wasm-bindgen of a tree without packages/release.mk writes the file first and installs the wasm-bindgen CLI with the mise of the checkout (H35.16-6)', (t) => {

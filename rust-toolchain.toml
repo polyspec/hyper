@@ -1,8 +1,12 @@
 [toolchain]
 channel = "1.99.0"
 profile = "minimal"
-components = ["rustfmt", "clippy"]
-# wasm32-unknown-unknown is the target of the WASM crate of packages/ts/native/wasm, which make lint-bindings and make
-# node-package build (binding GN-18). The install of the toolchain installs it, so a job that builds it needs no step of
-# its own.
-targets = ["wasm32-unknown-unknown"]
+# clippy is the lint of make core-lint and make lint-bindings. llvm-tools holds the llvm-strip that make release-go-static
+# runs from the toolchain of the checkout, never from PATH, and the llvm-nm and llvm-size that binding release-go-module
+# reads (binding GN-19b, GN-19f).
+components = ["rustfmt", "clippy", "llvm-tools"]
+# wasm32-unknown-unknown is the target of the WASM crate of packages/ts/native/wasm, which make lint-bindings, make
+# node-package and make release-npm build (binding GN-18); the musl targets are those of the Go libraries that make
+# release-go-static builds on a Linux host (binding GN-19b). The install of the toolchain installs them, so a job that
+# builds them needs no step of its own.
+targets = ["wasm32-unknown-unknown", "x86_64-unknown-linux-musl", "aarch64-unknown-linux-musl"]

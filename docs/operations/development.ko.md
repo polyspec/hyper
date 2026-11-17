@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: e368a73c3c96581aeb3b04230102b9fc880abb5b702073b4415b866f18373bd5 -->
+<!-- source-sha256: b9568bccaa3e3303aa9f8239f5f74d03eebd044249149f818374a8d1c04e7949 -->
 # 개발
 
 [English](development.md).
@@ -136,7 +136,7 @@ consumer는 자기 package manager로 archive를 설치해 릴리스를 확인�
 
 binding의 두 check는 모두 `go mod download`로 `packages/go/go.mod`의 `go.sum`을 계산하므로, 각 recipe는 check 전에 Go를 설치한다. check의 도구가 없는 job은 CI에서 실패한다. release check는 `Cargo.toml`의 개발 형태 의존성을 보고하는 규칙 CK-70을 더한다. core와 각 binding crate의 `Cargo.toml`은 `polyspec-template`을 branch `v1/rust-core`로 받고, `packages/go/go.mod`는 template module을 `v0.0.0`으로 require한다. 그래서 그 manifest들이 template의 release를 받을 때까지 `make release-binding-check`는 릴리스의 `assets.yml`의 모든 job에서 tag 뒤에 실패한다. CI는 이것을 보여 주지 않으며, checkout에서 `make release-binding-check`를 실행하면 보인다.
 
-`tests/scripts/ci-workflow.test.mts`는 `release.yml`의 세 job, `ci.yml`과 `release.yml`의 `assets.yml` 호출, 각 platform의 runner, 각 recipe의 make의 순서를 검사한다. `tests/scripts/ci-group-tools.test.mts`는 job `release`의 make의 dry run을 읽고, 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패하며, CI group 또는 릴리스의 cargo 명령 줄이 `rust-toolchain.toml`의 `targets`에 없는 Rust target을 적으면 실패한다. kit의 utility가 자기 process 안에서 시작하는 것, 곧 `npm pack`, `git archive`, `gh`는 어떤 dry run에도 없고 어떤 test도 판정하지 않는다.
+`tests/scripts/ci-workflow.test.mts`는 `release.yml`의 세 job, `ci.yml`과 `release.yml`의 `assets.yml` 호출, 각 platform의 runner, 각 recipe의 make의 순서를 검사한다. `tests/scripts/ci-group-tools.test.mts`는 job `release`와 `assets.yml`의 각 job의 make의 dry run을 `RELEASE=true`가 있을 때와 없을 때 모두 읽고, 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패한다. `binding check`와 `binding release-go-module`은 Go를 시작하는 것으로 센다. 이 test는 CI group, `assets.yml`의 job 또는 릴리스의 명령 줄이 `rust-toolchain.toml`에 없는 Rust target이나 Rust component를 필요로 하면 실패한다. 곧 WASM target, `release-go-static`의 musl target, 그리고 그 target이 `llvm-strip`을 시작하는 component `llvm-tools`이다. kit의 utility가 자기 process 안에서 시작하는 것, 곧 `npm pack`, `git archive`, `gh`는 어떤 dry run에도 없고 어떤 test도 판정하지 않는다.
 
 `make ci-release-tag`, `make ci-release-release`와 `assets.yml`의 job은 어떤 릴리스에서도, GitHub의 어떤 CI 실행에서도 실행된 적이 없다.
 
