@@ -211,7 +211,8 @@
         "tests/scripts/fixtures/{chunks,invalid-manifest}/**"
       ],
       "tests": [
-        "tests/scripts/build.test.mts"
+        "tests/scripts/build.test.mts",
+        "tests/scripts/build-old-assets.test.mts"
       ]
     },
     {
@@ -431,6 +432,7 @@
         "tests/scripts/cli.test.mts",
         "tests/scripts/build-inputs.test.mts",
         "tests/scripts/build.test.mts",
+        "tests/scripts/build-old-assets.test.mts",
         "tests/scripts/check-templates.test.mts",
         "tests/scripts/package-source.test.mts"
       ]

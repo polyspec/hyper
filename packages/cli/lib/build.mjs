@@ -14,8 +14,10 @@
 //
 // The checks of lib/options.mjs and lib/check.mjs and every input read pass before a file is written. The outputs are
 // made in staging directories of this process; the id hashes them; then public/assets gains its files, and client/ and
-// program/ are published file by file, the shell and build.json last, so a server or a page of an earlier build never finds a
-// file missing (HR-82). Below --output the build owns client/ and program/ only.
+// program/ are published file by file, the shell and build.json last, so a server never finds a file of its build
+// missing (HR-82). After the publish the build removes below public/assets the files that client/assets.json of the
+// build before it names and its own list does not, and reports each (HYC-16.15). Below --output the build owns
+// client/ and program/ only.
 //
 // The template ASTs and the template render runtime of the bundle come from the template package `@polyspec/template`
 // that this package depends on, whatever template package the application installed (HR-70).
@@ -87,6 +89,8 @@ export async function runBuild(options) {
 
   const clientTarget = join(output, 'client');
   const programTarget = join(output, 'program');
+  // HYC-16.15: the list of the build before this one, read before this build writes a file.
+  const earlier = earlierAssets(join(clientTarget, 'assets.json'));
   const clientNext = staging(clientTarget);
   const programNext = staging(programTarget);
   rmSync(clientNext, { recursive: true, force: true });
@@ -115,7 +119,8 @@ export async function runBuild(options) {
       const shell = shellText({ api: options.api, build: id, entry });
       shellBytes = Buffer.byteLength(shell);
       writeFileAtomic(join(clientNext, 'csr', 'index.html'), shell);
-      // The copies hold the files of this build only; public/assets keeps the files of earlier builds (HYC-16.7).
+      // The copies hold the files of this build only; public/assets also holds the files that the application placed
+      // there (HYC-16.14).
       for (const file of assetFiles) {
         if (file.name !== entry.name) writeFileAtomic(join(clientNext, 'csr', 'assets', file.name), file.bytes);
       }
@@ -128,7 +133,18 @@ export async function runBuild(options) {
     publish(clientNext, clientTarget, { last: [join('csr', 'index.html')] });
     publish(programNext, programTarget, { last: PROGRAM_LAST });
 
+    // HYC-16.15: the files that the list of the build before names and the list of this build does not. The removal
+    // comes after the publish of both directories: a build that ends between the publish and the removal leaves only
+    // files that no list names, and never a published list that names a missing file.
+    const removed = [];
+    for (const path of earlier) {
+      if (assetPaths.includes(path) || !existsSync(join(app, path))) continue;
+      rmSync(join(app, path));
+      removed.push(path);
+    }
+
     const lines = [`build ${id}: ${count} templates, ${assetFiles.length} files below ${join(app, 'public', 'assets')}, ${clientTarget}, ${programTarget}`];
+    for (const path of removed) lines.push(`removed ${path}`);
     if (entry !== undefined) lines.push(`entry ${entry.url}, ${chunks.length} chunks`);
     if (shellBytes > 0) {
       lines.push(`shell ${join(clientTarget, 'csr', 'index.html')} ${shellBytes} bytes`);
@@ -139,6 +155,35 @@ export async function runBuild(options) {
     rmSync(clientNext, { recursive: true, force: true });
     rmSync(programNext, { recursive: true, force: true });
   }
+}
+
+/**
+ * The paths that `client/assets.json` of the build before this one lists (HYC-16.15), or none for an output directory
+ * without that file. Each path is one that a build writes: below `public/assets/`, without an empty, `.` or `..`
+ * segment. A file of another form fails the build before it writes, because the build removes what the list names.
+ */
+function earlierAssets(file) {
+  let text;
+  try {
+    text = readFileSync(file, 'utf8');
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return [];
+    throw error;
+  }
+  const invalid = () => new Error(`${file} of the build before this one is not a list of the files below public/assets that it wrote`);
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw invalid();
+  }
+  const files = typeof parsed === 'object' && parsed !== null ? parsed.files : undefined;
+  if (!Array.isArray(files)) throw invalid();
+  for (const path of files) {
+    const rest = typeof path === 'string' && path.startsWith('public/assets/') ? path.slice('public/assets/'.length) : '';
+    if (rest === '' || rest.split('/').some((segment) => segment === '' || segment === '.' || segment === '..')) throw invalid();
+  }
+  return files;
 }
 
 /** Compares two strings by the bytes of their UTF-8 text, the order of HY-125.3. */

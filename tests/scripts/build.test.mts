@@ -94,19 +94,20 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
   assert.equal(shell.split(`<meta name="hyper-entry" content="/assets/${entry}">`).length - 1, 1, shell);
   assert.doesNotMatch(shell, /<style|<link/);
   assert.equal(readFileSync(join(client, 'csr', 'assets', chunk), 'utf8'), readFileSync(join(assets, chunk), 'utf8'));
-  // A build after a change of the chunk code and a template adds the new chunk and template file and keeps every
-  // file of the earlier build, which a server or an open page of that build still loads (HR-34).
+  // A build after a change of the chunk code and a template writes the new chunk, entry and template file and removes
+  // the files of the build before it that it no longer writes (HR-34, HYC-16.15); tests/scripts/build-old-assets.test.mts
+  // holds the cases of the removal.
   const templateFiles = () => readdirSync(join(assets, 'templates')).sort();
   const firstTemplates = templateFiles();
   writeFileSync(join(app, 'client', 'forms.ts'), "export function bindForms(): void {\n  console.log('chunk: bind the forms again');\n}\n");
   writeFileSync(join(app, 'templates', 'home.tpl'), '<p>home again</p>\n');
   build(app, '--api', '/api');
-  assert.equal(scripts().length, 4);
-  assert.ok(scripts().includes(chunk) && scripts().includes(entry));
-  for (const name of firstTemplates) assert.ok(templateFiles().includes(name), name);
-  assert.equal(templateFiles().length, firstTemplates.length + 1);
+  assert.equal(scripts().length, 2);
+  assert.ok(!scripts().includes(chunk) && !scripts().includes(entry));
+  assert.equal(templateFiles().length, firstTemplates.length);
+  assert.notDeepEqual(templateFiles(), firstTemplates);
   // The static shell of the second build holds the chunk of that build only.
-  const secondChunk = scripts().find((name) => name.startsWith('hyper-chunk-') && name !== chunk);
+  const secondChunk = scripts().find((name) => name.startsWith('hyper-chunk-'));
   assert.deepEqual(readdirSync(join(client, 'csr', 'assets')).filter((name) => name.endsWith('.js')), [secondChunk]);
 });
 

@@ -4154,7 +4154,8 @@
           "kind": "rule",
           "id": "HYC-16",
           "retired": [
-            6
+            6,
+            7
           ],
           "blocks": [
             {
@@ -4209,10 +4210,16 @@
                   "koSource": "0f04ae429defb5a2b8ff4e399ad710f855722a11da89d3730654a62804620553"
                 },
                 {
-                  "id": "HYC-16.7",
-                  "en": "The application places and links its own stylesheets and names with `--static` the files below `public/` that the static deployment holds at the same path, such as the stylesheets that its layouts link; the build adds no other file of `public/assets` to the deployment than the files that it writes, because `public/assets` keeps the files of earlier builds.",
-                  "ko": "애플리케이션은 자기 스타일시트를 두고 링크하며, 레이아웃이 링크하는 스타일시트처럼 정적 배포물이 같은 경로에 담을 `public/` 아래 파일을 `--static`으로 밝힌다. `public/assets`에는 이전 build의 파일이 남으므로, build는 자신이 쓰는 파일 말고는 `public/assets`의 파일을 배포물에 추가하지 않는다.",
-                  "koSource": "483705be6961b646b55dee07088351876e32573687c5b38f445861a9d6ca143c"
+                  "id": "HYC-16.14",
+                  "en": "The application places and links its own stylesheets and names with `--static` the files below `public/` that the static deployment holds at the same path, such as the stylesheets that its layouts link; the build adds no other file of `public/assets` to the deployment than the files that it writes, because `public/assets` also holds the files that the application placed there.",
+                  "ko": "애플리케이션은 자기 스타일시트를 두고 링크하며, 레이아웃이 링크하는 스타일시트처럼 정적 배포물이 같은 경로에 담을 `public/` 아래 파일을 `--static`으로 밝힌다. `public/assets`에는 애플리케이션이 직접 둔 파일도 있으므로, build는 자신이 쓰는 파일 말고는 `public/assets`의 파일을 배포물에 추가하지 않는다.",
+                  "koSource": "5f751e279f3cb08bda0ce8f52fcd4317b37a35c46852c90bbfa6eebb2b88f164"
+                },
+                {
+                  "id": "HYC-16.15",
+                  "en": "Before a build writes, it reads `client/assets.json` of the build before it; after it published its outputs, it removes below `public/assets` exactly the files that the earlier list names and its own list does not, and prints each file that it removed. A build without an earlier list removes nothing, and no file is removed for the form of its name, so a file that the application placed below `public/assets` stays.",
+                  "ko": "build는 쓰기 전에 앞선 build의 `client/assets.json`을 읽고, 출력을 게시한 뒤 앞선 목록이 적고 자기 목록이 적지 않는 파일만 `public/assets` 아래에서 지우며, 지운 파일을 하나씩 출력한다. 앞선 목록이 없는 build는 아무것도 지우지 않고, 이름의 형태로는 어떤 파일도 지우지 않으므로 애플리케이션이 `public/assets` 아래에 둔 파일은 남는다.",
+                  "koSource": "7ffa6fc5bac1396d53e3a19cc6e8116f8ebf10de8f175817b5c4b14c921a3dbd"
                 },
                 {
                   "id": "HYC-16.8",

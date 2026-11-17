@@ -1,5 +1,5 @@
 <!-- doc-id: repository-rules -->
-<!-- source-sha256: c14d240bde0f47b447512406f8a814c4fdf86fa26ddb11344f04b27cd644b812 -->
+<!-- source-sha256: ce789a9153a7226af5678436e9eb7c373fb4aea14110d9374f650b09068758cd -->
 # 저장소 규칙
 
 [English](repository-rules.md).
@@ -8,15 +8,15 @@
 
 ## 빌드와 asset
 
-- **HR-34** `hyper build`(HR-96)의 한 번의 실행은 다음 출력을 쓰고 build id(HY-125)를 한 번만 계산한다. 애플리케이션의 `public/assets` 아래에는 이름에 내용의 해시가 들어간 파일을 더하기만 하고 지우지 않는다. 그래서 이전 build의 서버나 열려 있는 페이지가 그 build의 모든 파일을 계속 불러온다. 쓰이는 어떤 build도 적지 않은 파일은 애플리케이션이 지우며, `client/assets.json`이 그 삭제를 위해 각 build의 파일을 적는다. `--output` 아래에서 build는 `client/`와 `program/`만 소유하고 디렉터리로 게시하며(HR-82), 그 밖의 파일은 읽지도 지우지도 않는다.
+- **HR-34** `hyper build`(HR-96)의 한 번의 실행은 다음 출력을 쓰고 build id(HY-125)를 한 번만 계산한다. 애플리케이션의 `public/assets` 아래에는 이름에 내용의 해시가 들어간 파일을 더하며, `client/assets.json`이 각 build의 파일을 적는다. build는 출력을 게시한 뒤 앞선 build의 목록이 적고 자기 목록이 적지 않는 파일만 지우고 하나씩 출력한다(HYC-16.15). 지움이 마지막이므로, 둘 사이에서 끝난 build는 아무도 적지 않는 파일만 남기고 없는 파일은 만들지 않는다. 그 밖의 파일은 지우지 않으므로 애플리케이션이 직접 둔 파일은 남고, 앞선 목록이 없는 build는 아무것도 지우지 않는다. 아직 열려 있는 앞선 build의 페이지는 다음 build가 끝날 때까지만 build의 디렉터리에서 그 build의 파일을 불러온다. 배포는 자기가 제공하는 파일을 유지한다(`docs/operations/deployment.ko.md`). `--output` 아래에서 build는 `client/`와 `program/`만 소유하고 디렉터리로 게시하며(HR-82), 그 밖의 파일은 읽지도 지우지도 않는다.
 
   | 경로 | 읽는 쪽 | 내용 |
   |---|---|---|
-  | `<app>/public/assets/templates/<name>.<hash>.json` | 브라우저, Node 서버 | 템플릿마다 AST 파일 하나, `hyper/data.tpl` 포함 |
+  | `<app>/public/assets/templates/<name>.<hash>.json` | 브라우저 | 템플릿마다 AST 파일 하나, `hyper/data.tpl` 포함 |
   | `<app>/public/assets/hyper-<hash>.js`, `hyper-chunk-<hash>.js` | 브라우저 | `client/main.ts`가 있을 때 클라이언트 진입 파일과 조각 파일(HYC-16) |
   | `<app>/public/assets/<name>.<hash>.<extension>` | 브라우저 | `--asset`과 `--tailwind`의 각 에셋(HR-77) |
   | `<output>/client/manifest.json` | 애플리케이션의 레이아웃 코드 | `hyper`로 진입 파일의 URL, 이름마다 각 에셋의 URL(HYC-16) |
-  | `<output>/client/assets.json` | 오래된 파일을 지우는 애플리케이션 | `{"files": [...]}`, 이 build가 쓴 모든 경로 `public/assets/...`를 바이트 순서로 |
+  | `<output>/client/assets.json` | 다음 build. 이 build의 파일 중 더 쓰지 않는 것을 지운다(HYC-16.15) | `{"files": [...]}`, 이 build가 쓴 모든 경로 `public/assets/...`를 바이트 순서로 |
   | `<output>/client/templates.index.json` | build의 검사 | 각 템플릿 이름과 그 파일 URL. 클라이언트 번들도 같은 색인을 담는다 |
   | `<output>/client/csr/` | 정적 배포, HY-62의 `ClientRendering` | `client/main.ts`가 있고 `--api`가 주어질 때 정적 셸 `index.html`, 이 build의 파일 사본을 담은 `assets/`, `--static` 파일 |
   | `<output>/program/` | 세 서버 | `templates/`, `reads.json`(HY-73), `build.json`, 그리고 `--php-namespace`가 있으면 `program.json`과 `php/`(HY-48) |

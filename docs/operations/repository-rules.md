@@ -7,15 +7,15 @@ These rules govern how this repository builds, installs, checks and releases its
 
 ## Build and assets
 
-- **HR-34** One run of `hyper build` (HR-96) writes the following outputs and computes the build id (HY-125) once. Below `public/assets` of the application the build only adds files whose names contain a hash of their content and removes none, so a server or an open page of an earlier build still loads every file of that build; the application removes the files that no build in use names, and `client/assets.json` lists the files of each build for that removal. Below `--output` the build owns only `client/` and `program/`, which it publishes as directories (HR-82); it neither reads nor removes any other file there.
+- **HR-34** One run of `hyper build` (HR-96) writes the following outputs and computes the build id (HY-125) once. Below `public/assets` of the application the build adds files whose names contain a hash of their content, and `client/assets.json` lists the files of each build. After the build published its outputs, it removes exactly the files that the list of the build before it names and its own list does not, and prints each (HYC-16.15); the removal comes last, so a build that ends between the two leaves only files that nothing names and never a missing one. It removes no other file, so a file that the application placed there stays, and a build without an earlier list removes nothing. A page of the build before, which is still open, loads a file of that build from the directory of the build only until the next build ends; a deployment keeps the files that it serves (`docs/operations/deployment.md`). Below `--output` the build owns only `client/` and `program/`, which it publishes as directories (HR-82); it neither reads nor removes any other file there.
 
   | Path | Consumer | Content |
   |---|---|---|
-  | `<app>/public/assets/templates/<name>.<hash>.json` | browser, Node server | one AST file per template, `hyper/data.tpl` included |
+  | `<app>/public/assets/templates/<name>.<hash>.json` | browser | one AST file per template, `hyper/data.tpl` included |
   | `<app>/public/assets/hyper-<hash>.js`, `hyper-chunk-<hash>.js` | browser | the client entry and its chunks (HYC-16), when `client/main.ts` exists |
   | `<app>/public/assets/<name>.<hash>.<extension>` | browser | each asset of `--asset` and `--tailwind` (HR-77) |
   | `<output>/client/manifest.json` | the layout code of the application | the URL of the entry as `hyper` and the URL of each asset by its name (HYC-16) |
-  | `<output>/client/assets.json` | the application, for the removal of old files | `{"files": [...]}`, every path `public/assets/...` that this build wrote, in byte order |
+  | `<output>/client/assets.json` | the next build, for the removal of the files of this build that it no longer writes (HYC-16.15) | `{"files": [...]}`, every path `public/assets/...` that this build wrote, in byte order |
   | `<output>/client/templates.index.json` | the checks of a build | each template name with its file URL; the client bundle holds the same index |
   | `<output>/client/csr/` | static deployment, `ClientRendering` of HY-62 | the static shell `index.html`, `assets/` with the copies of the files of this build and the `--static` files, when `client/main.ts` exists and `--api` is given |
   | `<output>/program/` | the three servers | `templates/`, `reads.json` (HY-73), `build.json`, and with `--php-namespace` `program.json` and `php/` (HY-48) |
