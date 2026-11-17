@@ -166,6 +166,14 @@ export type Answer = { stopped: false; response: Response; reply: Reply } | { st
 /** @internal */
 export type SessionOpening = SessionStore | (() => Promise<SessionStore>);
 
+// Carries the failure of the open of a session through the answer, which `respond` throws again as it was raised, so
+// that it escapes the answer as a failed open before the application did (HY-60.14, HY-104.37).
+class SessionOpenFailure extends Error {
+  constructor(cause: unknown) {
+    super('hyper: the session could not be opened', { cause });
+  }
+}
+
 // The names of the options of `open` and of a server, the members of their options records (HY-106.9).
 const APP_REQUIRED = ['manifest', 'program', 'handlers', 'timezone'];
 const APP_OPTIONAL = ['basePath', 'https', 'frameAncestors', 'bodyLimit', 'formTypes', 'fileLimit', 'responseLimit', 'valueLimit', 'partLimit', 'onResponse', 'clientRendering', 'onDisconnect', 'log', 'context', 'functions'];
@@ -492,6 +500,8 @@ export class App<S extends object = Record<string, never>> {
       response = await WarningsGuard.run(() => this.dispatch(request, store, reply));
     } catch (error) {
       if (error instanceof Disconnected) return { stopped: true, reply };
+      // HY-60.14: a failed open of the session is no failure of the application and escapes the answer.
+      if (error instanceof SessionOpenFailure) throw error.cause;
       failure = this.logFailure(error);
       response = Response.text(500, 'Internal Server Error');
     }
@@ -800,7 +810,12 @@ export class App<S extends object = Record<string, never>> {
   // the session opens (HY-120.3).
   // The store of a request, opened by the transport only when a route uses it (HY-104.38).
   private static async sessionOf(store: SessionOpening): Promise<SessionStore> {
-    return typeof store === 'function' ? store() : store;
+    if (typeof store !== 'function') return store;
+    try {
+      return await store();
+    } catch (error) {
+      throw new SessionOpenFailure(error);
+    }
   }
 
   private async storeKept(request: Request, store: SessionOpening): Promise<Response> {

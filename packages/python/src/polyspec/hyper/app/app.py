@@ -46,10 +46,24 @@ from ._warnings_guard import WarningsGuard
 SessionOpening = Union[SessionStore, Callable[[], SessionStore]]
 
 
+class _SessionOpenFailure(Exception):
+    """Carries the failure of the open of a session through the answer, which `_respond` raises again as it was
+    raised, so that it escapes the answer as a failed open before the application did (HY-60.14, HY-104.37)."""
+
+    def __init__(self, error: BaseException) -> None:
+        super().__init__("hyper: the session could not be opened")
+        self.error = error
+
+
 def _session_of(store: SessionOpening) -> SessionStore:
     """Returns the store of a request, which the transport opens only when a route uses it (HY-104.38)."""
     # A store is an object of the protocol SessionStore and never a function, so a callable is the opening.
-    return store() if callable(store) else store
+    if not callable(store):
+        return store
+    try:
+        return store()
+    except Exception as error:  # noqa: BLE001 - every failure of the open escapes the answer (HY-60.14)
+        raise _SessionOpenFailure(error) from error
 
 _FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
 _KEEP_VALUE_LIMIT = 4096
@@ -360,6 +374,9 @@ class App:
         try:
             # HY-74: a warning of the runtime fails the request instead of leaving a wrong page with status 200.
             response = WarningsGuard.run(lambda: self._dispatch(request, store, reply))
+        except _SessionOpenFailure as failed:
+            # HY-60.14: a failed open of the session is no failure of the application and escapes the answer.
+            raise failed.error from None
         except Exception as error:  # noqa: BLE001 - HY-43: every error of the application answers a plain 500
             failure = self._log_failure(error)
             response = Response.text(500, "Internal Server Error")

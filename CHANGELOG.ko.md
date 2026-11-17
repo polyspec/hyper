@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8d9d1d5197c575d328b0bad14828513f3edf84b33f40b96637921e1070d4d5b0 -->
+<!-- source-sha256: 6802c6c44ea41b7e7c34b918e14ec5dfd0cd37c96c1b5b12ff7dc6038a5a6897 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 실패한 session open이 다시 Node와 Python 서버의 응답을 벗어난다(HY-60.14, HY-104.37, H35.38). 입력: session 디렉터리가 없는 `tests/scripts/upload-servers.test.mts`의 test `session-open-error-is-the-plain-500`. 이전 동작: application이 session을 쓰는 route에서 session을 열게 된 뒤(HY-104.38), open이 `App.respond` 안에서 실패해서 application이 그것을 기록하고, response hook이 실행되고, HY-43의 500이 답했다. 기대 동작: host의 plain 500이 write hook에 한 번 주어진다. `App.respond`와 `App._respond`는 open의 실패를 발생한 그대로 발생시킨다. `packages/python/tests/transport.py`의 가짜 application은 받은 open call을 부르고, `tests/scripts/node-core.test.mts`는 core rule의 `sessionValue`와 `sessionRecord`를 test한다. `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts`: 95 passed, 0 failed.
 - 행 H35.38은 모든 생태계가 고정한 session-store 0.0.7과, Node와 Python 서버가 충족하는 HY-104.38을 적는다. Green 전에 항목 하나가 남는다: `contracts/interfaces.json`에서 제거된 session 코드의 unit으로, 새 source의 member를 쓰는 recipe 도구가 없어서 `make recipe-candidates`는 그 member를 둔 채 native 항목 54개를 stale로 표시한다.
 - Node와 Python 서버는 manifest 항목이 `"session": false`를 가진 route의 요청에 session을 열지 않는다(HY-104.38, H35.38). 입력: 같은 session의 다른 요청이 lock을 잡고 있는 동안 그런 route로 session cookie를 가진 요청. 이전 동작: host가 application이 답하기 전에 모든 요청의 session을 열어서, 그 요청은 lock을 기다렸다. 기대 동작: 그 route는 빈 session을 읽고, lock을 잡지 않고, cookie를 설정하지 않는다. `packages/client`의 `checkManifest`와 Python 서버의 manifest는 그 field를 읽고 boolean이 아닌 값을 거부한다. `App.respond`와 `App._respond`는 session을 여는 call을 받아 session을 쓰는 route와 kept endpoint에서만 부른다. fixture program이 가지지 않은 route는 render할 수 없으므로 두 test는 fixture의 route `item`을 표시한다. Red: Node 0 passed, 1 failed; Python 0 passed, 1 failed. Green: 각각 1 passed. PHP 서버는 표시가 남는다(행 H35.37).
 - Redis Cluster setting은 `user`와 `password`를 적는다(H35.38). 입력: `Setting`의 case `cluster`가 두 field를 요구하는 session-store 0.0.7로 `make hyper-test-scripts`. 이전 동작: `examples/board/node`의 `tsc`가 `{ kind: 'cluster', urls, authorities: null }`에서 TS2322로 실패했고, `tests/scripts`의 session worker와 Python board 예제는 두 field 없는 setting을 주었다. 기대 동작: URL이 자격 증명을 담으므로 board 예제, session worker와 `docs/operations/deployment.md`는 `user`와 `password`를 null(Python `None`)로 준다.
