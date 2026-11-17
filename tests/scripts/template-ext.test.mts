@@ -32,13 +32,18 @@ test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in
   const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line));
   assert.equal(pie.length, 2, text);
   for (const line of pie) {
-    assert.match(line, new RegExp(`^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK env PIE_WORKING_DIRECTORY=${escape(work)} COMPOSER_CACHE_DIR=${escape(work)}/cache \\S+/var/tools/mise/shims/pie `), line);
-    assert.match(line, / --no-interaction$/, line);
+    // make 3.81 keeps the tab of a continued recipe line in its dry run, and make 4 removes it.
+    assert.match(line, new RegExp(`^\\t?env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK env PIE_WORKING_DIRECTORY=${escape(work)} COMPOSER_CACHE_DIR=${escape(work)}/cache \\S+/var/tools/mise/shims/pie `), line);
+    // Each command of the one shell of the recipe goes on only when the one before it passed.
+    assert.match(line, / --no-interaction && \\$/, line);
   }
-  assert.match(pie[0] ?? '', new RegExp(` repository:add composer ${escape(packages)} --no-interaction$`));
-  assert.match(pie[1] ?? '', new RegExp(` build polyspec/template:${escape(version)} --no-interaction$`));
+  assert.match(pie[0] ?? '', new RegExp(` repository:add composer ${escape(packages)} --no-interaction && \\\\$`));
+  assert.match(pie[1] ?? '', new RegExp(` build polyspec/template:${escape(version)} --no-interaction && \\\\$`));
+  // The trap of that shell removes the working directory with its Composer cache at the end, the failure and a signal of
+  // the run, because no later target reads it (HR-87).
+  assert.match(text, new RegExp(`trap 'rm -rf ${escape(work)} build/ext\\.next-\\$\\$' EXIT && trap 'exit 130' INT TERM`), text);
   // pie install writes into the PHP of the machine, and kit has no pie-build any more (kit K931).
   assert.deepEqual(lines.filter((line) => /\/pie-build\.|\bpie install\b|mise install/.test(line)), [], text);
   // The recipe takes the one library that PIE recorded with scripts/pie-binary.mts, fails with its status and publishes a file.
-  assert.match(text, new RegExp(`binary=\\$\\(\\S+ scripts/pie-binary\\.mts ${escape(work)} polyspec/template\\) \\|\\| exit \\$\\?; \\\\\n\\s*mkdir -p build/ext\\.next-`), text);
+  assert.match(text, new RegExp(`binary=\\$\\(\\S+ scripts/pie-binary\\.mts ${escape(work)} polyspec/template\\) && \\\\\n\\t?mkdir -p build/ext\\.next-`), text);
 });

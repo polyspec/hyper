@@ -203,9 +203,10 @@ test: hyper-test-js hyper-test-node hyper-test-php hyper-test-python hyper-test-
 
 lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language of the checkout
 
-# PIE resolves polyspec/template TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1
-# of its zip, and builds it with phpize and the php-config of the PHP of PATH (H27.51). PIE keeps one Composer project per
-# target PHP in PIE_WORKING_DIRECTORY and never undoes repository:add, so each run starts in an empty PIE_WORK.
+# PIE resolves polyspec/template TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES and builds it for the PHP
+# of PATH (H27.51). PIE keeps one Composer project per target PHP in PIE_WORKING_DIRECTORY and never undoes repository:add,
+# so each run starts in an empty PIE_WORK, and the recipe is one shell whose trap removes PIE_WORK with its Composer cache at
+# its end, its failure and SIGINT and SIGTERM, because no later target reads it (HR-87).
 # scripts/pie-binary.mts prints the one library that PIE recorded there, which is published into build/ext with a rename
 # (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
 # PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs. The Composer repository of the release
@@ -218,12 +219,12 @@ PIE := $(KIT_TOOLS)/mise/shims/pie
 PIE_WORK := $(CURDIR)/var/pie/polyspec/template
 .PHONY: template-ext
 template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, H27.51); ONLINE
-	rm -rf $(PIE_WORK) && mkdir -p $(PIE_WORK)
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction
-	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/template $(PIE_WORK)
-	@binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template) || exit $$?; \
-	  mkdir -p build/ext.next-$$$$ && trap 'rm -rf build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
+	rm -rf $(PIE_WORK) && mkdir -p $(PIE_WORK) && trap 'rm -rf $(PIE_WORK) build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction && \
+	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/template $(PIE_WORK) && \
+	binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template) && \
+	mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
 # The template extension requires the json extension polyspec_json (ext-polyspec_json), which PHP loads before it. PIE gets
 # polyspec/json JSON_VERSION from the Composer repository JSON_PACKAGES of the json release, as template-ext gets the
@@ -234,12 +235,12 @@ JSON_EXT := build/json-ext/polyspec_json.so
 JSON_PIE_WORK := $(CURDIR)/var/pie/polyspec/json
 .PHONY: json-ext
 json-ext: ## Get the json extension polyspec_json of JSON_VERSION with PIE from the Composer repository of the json release into build/json-ext (H35.31); ONLINE
-	rm -rf $(JSON_PIE_WORK) && mkdir -p $(JSON_PIE_WORK)
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) repository:add composer $(JSON_PACKAGES) --no-interaction
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) build polyspec/json:$(JSON_VERSION) --no-interaction
-	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/json $(JSON_PIE_WORK)
-	@binary=$$($(NODE) scripts/pie-binary.mts $(JSON_PIE_WORK) polyspec/json) || exit $$?; \
-	  mkdir -p build/json-ext.next-$$$$ && trap 'rm -rf build/json-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/json-ext.next-$$$$/polyspec_json.so && $(NODE) scripts/publish.mts directory build/json-ext.next-$$$$ build/json-ext
+	rm -rf $(JSON_PIE_WORK) && mkdir -p $(JSON_PIE_WORK) && trap 'rm -rf $(JSON_PIE_WORK) build/json-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) repository:add composer $(JSON_PACKAGES) --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) build polyspec/json:$(JSON_VERSION) --no-interaction && \
+	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/json $(JSON_PIE_WORK) && \
+	binary=$$($(NODE) scripts/pie-binary.mts $(JSON_PIE_WORK) polyspec/json) && \
+	mkdir -p build/json-ext.next-$$$$ && cp "$$binary" build/json-ext.next-$$$$/polyspec_json.so && $(NODE) scripts/publish.mts directory build/json-ext.next-$$$$ build/json-ext
 
 # The session tests of HY-115 run against a real Redis server and the real phpredis extension, at these versions. PIE builds
 # phpredis as it builds the template extension; `pie build` installs nothing into the PHP, and the tests load the library
