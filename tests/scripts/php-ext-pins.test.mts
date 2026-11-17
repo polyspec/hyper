@@ -13,7 +13,7 @@ const asset = (name: string, bytes: string): ReleaseAsset => ({ name, digest: `s
 
 test('make php-ext-pins writes the pins with the script under $(ONLINE) (HR-89, H35.58)', () => {
   const lines = dryRun('php-ext-pins');
-  const line = lines.find((text) => /\/scripts\/php-ext-pins\.mts write config\/php-ext-pins\.json /u.test(text));
+  const line = lines.find((text) => /\/scripts\/php-ext-pins\.mts write config\/php-ext-pins\.json$/u.test(text));
   assert.ok(line !== undefined, `make -n php-ext-pins runs no scripts/php-ext-pins.mts write:\n${lines.join('\n')}`);
   assert.match(line, /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK /u, 'the writer downloads without $(ONLINE)');
 });

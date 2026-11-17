@@ -166,6 +166,10 @@
       "kind": "ecosystem",
       "tool": "node:fs reads the selected script tests and the modules that they import, whose requireBuilt calls name the make targets that a selection of hyper-test-scripts builds (HR-85, H35.55)"
     },
+    "scripts/php-ext-pins.mts": {
+      "kind": "ecosystem",
+      "tool": "fetch reads the assets of each pinned release from the GitHub releases API and downloads them, node:crypto compares the sha256 of each download with the field digest of its asset, and writeFileAtomic writes config/php-ext-pins.json with one rename (HR-80, HR-82, H35.58)"
+    },
     "scripts/python-install-stamp.mts": {
       "kind": "ecosystem",
       "tool": "node:crypto computes the sha256 of the tracked sources of packages/python and Cargo.lock that git ls-files lists, and node:fs writes it into the venv and compares it before the Python tests (HR-85, H34.17)"
