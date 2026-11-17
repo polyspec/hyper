@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e8c568362952b77d66e9a6bfc0be2541f82735a56a402b9457054d27891008d3 -->
+<!-- source-sha256: 11fb9277170964d78bba75c2f7463332e5561d0929bd8072c8ae1ea206825fca -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-57.15와 HY-113.25는 서버가 route가 정해진 뒤에만 body를 읽고, body를 읽지 않는 요청은 body로 판정하지 않는다고 적었다. 이는 HY-131.18, HY-59.4, 그리고 코드와 어긋났다. 세 host와 `packages/rust/src/pipeline.rs`의 `ORDER`는 모든 요청에서 route 전에 제한 아래에서 body의 byte를 읽는다. 이제 HY-57.15는 그 순서를 정한다. byte는 route 전에 읽고, `application/x-www-form-urlencoded`나 `multipart/form-data`로 읽히는 type만 form으로 읽으며, http-form의 reader는 boundary가 있을 때만 시작하고, media type이 아닌 `Content-Type`은 읽기를 실패시키지 않고 그 body는 byte로 보유되며, 알 수 없는 경로로의 요청은 `Content-Type`이 무엇이든 404를 받고, `Content-Type`은 route 뒤에 action과 `/_hyper/keep`은 HY-59.12로, representation은 HY-121.11로 판정한다. HY-113.25는 `invalid`, `header_limit`, `no_boundary`로 실패하는 body가 body를 읽는 동안, route 전에 400을 받는다고 정한다. http-form의 `malformed_content_type` 행은 HY-132.9의 표에서 빠졌다. 어떤 statement도 http-form의 그 kind를 주지 않기 때문이며, 그 kind는 HY-59.12와 HY-59.13의 hyper의 kind로 남는다. row H35.11, `docs/features.md`의 행 `form-failures`, `docs/plans/execution/plan.md`의 그 row의 입력도 같은 것을 적는다. plan은 답이 바뀌는 case를 열셋으로 세고, line feed가 뒤따르는 urlencoded type에는 고정 사본의 답을 유지하며, route 뒤에 body를 읽는 것을 다시 검토하는 두 조건을 얻었다(H35.11).
 
 - HY-57.15는 `Content-Type`이 media type이 아닌 모든 요청에 상태 400을 주었고, HY-113.25는 실패하는 body를 가진 모든 요청에 loader가 실행되기 전에 그것을 주었다. HY-59.12는 content type의 400을 라우팅 뒤에, action이나 `/_hyper/keep`으로의 `POST`에 정한다. 이제 두 statement는 서버가 body를 읽는 요청을 말한다. http-form의 reader는 route가 정해진 뒤에만, action, `/_hyper/keep`, representation으로의 `POST`에 부르고, media type이 아닌 content type의 400은 HY-59.12의 400이며, 알 수 없는 경로로의 요청은 `Content-Type`이 무엇이든 404를 받고, `GET`은 `Content-Type`이나 body로 판정하지 않는다. row H35.11, `docs/plans/execution/plan.md`의 그 row의 입력, `docs/features.md`의 행 `form-failures`도 같은 것을 적으며, plan은 HY-59.12의 자리를 더는 열어 두지 않는다(H35.11).
 
