@@ -260,10 +260,13 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	$(TSC) -p tests/package-install/tsconfig.json
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- --test-concurrency=1 package-install.test.ts
 
-server-fixtures: packages contract-programs ## Build the server program of the PHP test fixtures with the fixed build id of their build.json (HY-48, HY-125.21)
+# The program assembly of the command tool writes reads.json with the Rust core (HY-73.23), through the entry
+# @polyspec/hyper/build of the Node package, so each target that writes a server program needs the dist of `packages`
+# and the Node addon of this platform (`node-addon`).
+server-fixtures: packages node-addon contract-programs ##Build the server program of the PHP test fixtures with the fixed build id of their build.json (HY-48, HY-125.21)
 	$(NODE) scripts/fixture-program.mts --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --id-file $(FIXTURES)/build.json
 
-contract-programs: packages ## Build the applications of contracts/context.json, contracts/functions.json, contracts/representations.json and contracts/app.json and one application per case of contracts/reads.json for the tests of the three servers (HY-73, HY-118, HY-124, HYC-24)
+contract-programs: packages node-addon ##Build the applications of contracts/context.json, contracts/functions.json, contracts/representations.json and contracts/app.json and one application per case of contracts/reads.json for the tests of the three servers (HY-73, HY-118, HY-124, HYC-24)
 	$(NODE) scripts/contract-programs.mts --contract $(abspath contracts/context.json) --contract $(abspath contracts/functions.json) --contract $(abspath contracts/representations.json) --contract $(abspath contracts/app.json) --reads $(abspath contracts/reads.json) --output $(abspath var/contract-programs)
 
 # A Node server bundle keeps the packages of node_modules external, and Node loads them from there: a CommonJS package that
@@ -278,7 +281,7 @@ node-fixtures: packages contract-programs ## Build the template files of the PHP
 # Shared gates read the declarations and runtime fixtures built by this checkout.
 lint-ts: packages
 
-board: packages ## Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program with the generated PHP program (HR-34, HY-48, HY-125)
+board: packages node-addon ##Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program with the generated PHP program (HR-34, HY-48, HY-125)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs build --app $(BOARD) --output $(BOARD)/build --api /api --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
 
 hyper-test-js: ## Run the browser code tests, including the browser case runner (HYR-7), and the type check

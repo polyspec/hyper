@@ -2,7 +2,8 @@
 // (HR-34), and writes its build id. `hyper build` passes the id that it computed from its outputs (HY-125.21); a test
 // that needs a fixed id builds its program with the same functions and that id, so the rules of the assembly exist once.
 //   templates/    every template and, until the build takes it from the core, the reserved template hyper/data.tpl
-//   reads.json    the read paths of every route, by which the server keeps data (HY-73)
+//   reads.json    the read paths of every route, by which the server keeps data (HY-73), as readsFile of the core
+//                 writes them (@polyspec/hyper/build)
 //   php/          with a PHP namespace: the generated PHP program of the same templates, compiled with the compiler
 //                 package @polyspec/template-compiler into that namespace as PSR-4 files, one class per file
 //   program.json  with a PHP namespace: the namespace of the generated program
@@ -13,12 +14,12 @@
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { routeReads } from '@polyspec/hyper-client';
+import { readsFile } from '@polyspec/hyper/build';
 import dataTemplate from '@polyspec/hyper-client/data-template.json' with { type: 'json' };
 import { compileAst } from '@polyspec/template-compiler/ast-artifact.mjs';
 import { compileFiles } from '@polyspec/template-compiler/compiler.mjs';
 import { deriveTypeManifest } from '@polyspec/template-compiler/type-manifest.mjs';
-import { parse, resolvePath } from '@polyspec/template';
+import { parse } from '@polyspec/template';
 import { copyDirectory } from './output-files.mjs';
 
 const BUILD_ID = /^[0-9a-f]{64}$/;
@@ -36,9 +37,15 @@ export function writeProgram({ manifest, templates, directory, phpNamespace }) {
   mkdirSync(dirname(join(programTemplates, dataTemplate.name)), { recursive: true });
   writeFileSync(join(programTemplates, dataTemplate.name), dataTemplate.source);
   const parsed = new Map();
-  for (const name of listTemplates(programTemplates)) parsed.set(name, parse(readFileSync(join(programTemplates, name)), name));
+  const sources = new Map();
+  for (const name of listTemplates(programTemplates)) {
+    const source = readFileSync(join(programTemplates, name));
+    parsed.set(name, parse(source, name));
+    sources.set(name, source.toString('utf8'));
+  }
   if (phpNamespace !== undefined) writePhp({ manifest, parsed, templates: programTemplates, directory, phpNamespace });
-  writeFileSync(join(directory, 'reads.json'), `${JSON.stringify({ routes: routeReads(manifest, (name) => parsed.get(name), resolvePath) })}\n`);
+  // HY-73.23: the core computes the read paths from the manifest and the template sources and writes their text.
+  writeFileSync(join(directory, 'reads.json'), readsFile(Buffer.from(JSON.stringify(manifest)), sources));
   return parsed.size;
 }
 

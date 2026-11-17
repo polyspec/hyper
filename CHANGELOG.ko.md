@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: acfaeca5ac8c301f320bdbb682a07903fd0b770e1d5c646c545cb2db3949e2be -->
+<!-- source-sha256: 896bf9fc280e268738d0078ccbf6c618b103563e617c42bad449ca6c171534f4 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `hyper build`는 키가 문자열 리터럴이나 숫자 리터럴인 인덱스(`{= a["k"]}`, `{= a[2]}`, `{= a[1e21]}`)에 대해 `reads.json`에 키 `[object Object]`를 썼고, node의 키를 템플릿이 읽은 순서로 썼다. 이 파일은 키 `k`, `2`, `1e+21`을(HY-73.33) 그 텍스트의 바이트 순서로(HY-73.32) 담는다. 명령 도구 `@polyspec/hyper-cli`는 `@polyspec/hyper`를 요구하고, 그 새 entry `@polyspec/hyper/build`의 `readsFile`로 파일을 쓴다. `readsFile`은 Rust core로 read path를 계산하므로 build는 그 platform의 native addon이 필요하다. `make board`, `make contract-programs`, `make server-fixtures`는 addon을 먼저 build한다(H35.34).
 - `make core-fmt-check`가 `packages/rust/tests/error_code.rs`에서 실패했다. failures 목록의 한 쌍이 rustfmt의 줄 너비보다 긴데 한 줄에 적혀 있었다. 그 쌍을 rustfmt의 형태로 적었다(H35.27-1-2).
 - `docs/features.md`는 지금 어느 engine이 page를 렌더하는지 적는다. Node 서버와 browser는 template package의 JS render engine으로, PHP와 Python 서버는 template Rust core의 binding으로 렌더하고, 어느 서버도 hyper core의 page 렌더를 부르지 않는다. 행 `core-page-render`와 `browser-core-template`은 구현되지 않았다. `docs/plans/execution/plan.md`는 wave 35의 1차 release의 행과 H35.32의 설계 입력을 적고, 그 부분들은 행 H35.32-2부터 H35.32-8이다(H35.32).
 - `packages/release.mk`가 없는 checkout에서 `make hyper-install`은 `hyper-ext`에서 LLVM release와 LLVM 디렉터리가 빈 채로 실패했다. `LLVM_MAJOR`와 `LLVM_ROOT`는 그 생성 파일에만 정의되어 있고, 그 파일은 `make release-recipes`만 썼기 때문이다. 이제 `make install-packages`가 binding generator를 설치한 뒤에는 `packages/release.mk`가 `release-recipes`의 recipe를 가진 target이다. 그 파일을 찾지 못한 make는 그것을 쓰고 Makefile을 다시 읽으므로, `hyper-ext`는 `config/toolchain.json`의 LLVM으로 build한다. `LLVM_MAJOR`가 비어 있으면 `hyper-ext`는 없는 파일의 이름을 말하며 실패한다(H35.16-3).
