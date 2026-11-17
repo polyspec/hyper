@@ -35,6 +35,7 @@ import { Container } from './container.js';
 import { Flash } from '../session/flash.js';
 import { Session } from '../session/session.js';
 import type { SessionStore } from '../session/session-store.js';
+import { ArraySession } from '../session/array-session.js';
 import type { Data, Value } from '../data/values.js';
 import { ArgumentCountError } from './argument-count-error.js';
 import { rules, type CorePagesInstance, type HostFunction } from './core-rules.js';
@@ -159,6 +160,11 @@ export interface AppParts<S extends object> {
  * @internal
  */
 export type Answer = { stopped: false; response: Response; reply: Reply } | { stopped: true; reply: Reply };
+
+// The store of a request, or the call that opens it, which a transport gives so that a request of a route without a
+// session opens none (HY-104.38).
+/** @internal */
+export type SessionOpening = SessionStore | (() => Promise<SessionStore>);
 
 // The names of the options of `open` and of a server, the members of their options records (HY-106.9).
 const APP_REQUIRED = ['manifest', 'program', 'handlers', 'timezone'];
@@ -476,7 +482,7 @@ export class App<S extends object = Record<string, never>> {
   // whose client closed the connection stops and gives no response; the transport then calls `disconnected` after its
   // write hook (HY-99). The loaders and actions of a routed request receive the reply of the answer (HY-52, HY-60).
   /** @internal */
-  async respond(request: Request, store: SessionStore, started: number): Promise<Answer> {
+  async respond(request: Request, store: SessionOpening, started: number): Promise<Answer> {
     const reply = new Reply();
     let response: Response;
     // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
@@ -531,7 +537,7 @@ export class App<S extends object = Record<string, never>> {
   }
 
   // Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60).
-  private async dispatch(received: Request, store: SessionStore, reply: Reply): Promise<Response> {
+  private async dispatch(received: Request, store: SessionOpening, reply: Reply): Promise<Response> {
     // HY-131.32: a body that passed the value limit, the part limit or the file limit is answered as a body over the
     // body limit.
     if (received.bodySize() > this.bodyLimit || received.exceeded(this.valueLimit, this.partLimit, this.fileLimit, this.formTypes.includes('multipart/form-data'))) {
@@ -572,7 +578,8 @@ export class App<S extends object = Record<string, never>> {
     // HY-59.12, HY-120.3: the media type of a POST is checked before the session, its flash and its token.
     const refusedMedia = selected.method === 'POST' ? this.refusedMedia(selected) : null;
     if (refusedMedia !== null) return refusedMedia;
-    const session = new Session(store);
+    // HY-104.38: a route that uses no session reads an empty one, and its request opens none.
+    const session = new Session(route.session === false ? new ArraySession() : await App.sessionOf(store));
     const flash = session.takeFlash();
     const routed = selected.withRoute(path, match.params).withSession(flash, Csrf.masked(session.csrfToken()));
     const response = await this.routed(routed, route, handler, session, flash, reply, basePath);
@@ -791,11 +798,16 @@ export class App<S extends object = Record<string, never>> {
 
   // Stores a kept value of a `server` path in the session (HY-40); the method and the media type are checked before
   // the session opens (HY-120.3).
-  private storeKept(request: Request, store: SessionStore): Response {
+  // The store of a request, opened by the transport only when a route uses it (HY-104.38).
+  private static async sessionOf(store: SessionOpening): Promise<SessionStore> {
+    return typeof store === 'function' ? store() : store;
+  }
+
+  private async storeKept(request: Request, store: SessionOpening): Promise<Response> {
     if (request.method !== 'POST') return App.notAllowed('POST');
     const refusedMedia = this.refusedMedia(request);
     if (refusedMedia !== null) return refusedMedia;
-    const session = new Session(store);
+    const session = new Session(await App.sessionOf(store));
     const refused = this.refusedForm(request, session);
     if (refused !== null) return refused;
     if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');

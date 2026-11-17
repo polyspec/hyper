@@ -144,12 +144,17 @@ class Manifest:
                         Manifest._kept_kinds(region, region_name),
                     )
                 )
+            # HY-104.38: false for a route that uses no session, whose requests a server answers without opening one.
+            uses_session = route.get("session", True)
+            if not isinstance(uses_session, bool):
+                raise open_error(f"route {name} has a session that is not a boolean")
             routes[name] = {
                 "name": name,
                 "path": route_path,
                 "title": title,
                 "template": template,
                 "post": route.get("post") == True,  # noqa: E712 - only the JSON value true marks a post route, not any truthy value
+                "session": uses_session,
                 "regions": route_regions,
                 "representations": RepresentationEntries.declare(
                     name, Manifest._entries(route, "representations")

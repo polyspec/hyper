@@ -36,9 +36,11 @@ class SessionRoutesTest(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory() as directory:
             manifest = json.loads((FIXTURES / "app.json").read_text())
-            manifest["routes"].append(
-                {"name": "plain", "path": "/plain", "title": "Plain", "template": "page.tpl", "session": False}
-            )
+            # The route `item` of the fixture, whose program the fixture builds, uses no session; a route that the
+            # program does not hold could not render.
+            for route in manifest["routes"]:
+                if route["name"] == "item":
+                    route["session"] = False
             (Path(directory) / "app.json").write_text(json.dumps(manifest))
             (Path(directory) / "sessions").mkdir()
             entered = threading.Event()
@@ -52,7 +54,6 @@ class SessionRoutesTest(unittest.TestCase):
             given = handlers()
             given["regions"] = {"side": lambda: {"count": 0, "note": None}}
             given["routes"]["home"] = {"load": held}
-            given["routes"]["plain"] = {"load": lambda: {"name": "plain"}}
             app = fixture_app(Counter(), handlers=given, manifest=str(Path(directory) / "app.json"))
             order: list[str] = []
 
@@ -84,7 +85,7 @@ class SessionRoutesTest(unittest.TestCase):
             async def both() -> None:
                 first = asyncio.ensure_future(request("/", "held"))
                 await asyncio.to_thread(entered.wait)
-                await request("/plain", "plain")
+                await request("/items/1", "plain")
                 released.set()
                 await first
 

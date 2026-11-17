@@ -24,10 +24,12 @@ afterEach(async () => {
   rmSync(directory, { recursive: true, force: true });
 });
 
-// The manifest of the fixture with the route `plain`, which uses no session, written into the directory of the test.
+// The manifest of the fixture with `"session": false` on the route `item`, written into the directory of the test.
 function manifest(): string {
-  const app = JSON.parse(readFileSync(`${FIXTURES}app.json`, 'utf8')) as { routes: unknown[] };
-  app.routes.push({ name: 'plain', path: '/plain', title: 'Plain', template: 'page.tpl', session: false });
+  // The route `item` of the fixture, whose program the fixture builds, uses no session; a route that the program does
+  // not hold could not render.
+  const app = JSON.parse(readFileSync(`${FIXTURES}app.json`, 'utf8')) as { routes: { name: string; session?: boolean }[] };
+  for (const route of app.routes) if (route.name === 'item') route.session = false;
   const file = join(directory, 'app.json');
   writeFileSync(file, JSON.stringify(app));
   return file;
@@ -53,7 +55,6 @@ it('a request of a route without a session answers while the session is held (HY
             return { name: 'held' };
           },
         },
-        plain: { load: () => ({ name: 'plain' }) },
       },
     },
   });
@@ -79,7 +80,7 @@ it('a request of a route without a session answers while the session is held (HY
 
   const held = fetch(`${url}/`, { headers: { Cookie: COOKIE } }).then((response) => order.push(`held ${response.status}`));
   await running;
-  const plain = await fetch(`${url}/plain`, { headers: { Cookie: COOKIE } });
+  const plain = await fetch(`${url}/items/1`,{ headers: { Cookie: COOKIE } });
   order.push(`plain ${plain.status}`);
   release();
   await held;

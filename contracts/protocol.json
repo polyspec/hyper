@@ -7129,7 +7129,7 @@
                   "en": "A route of the manifest that holds `\"session\": false` uses no session, so a server opens no session for a request of that route, and such a request takes no lock of a session, does not wait for a request that holds one, reads an empty session and sets no session cookie.",
                   "ko": "manifest에서 `\"session\": false`를 가진 route는 session을 쓰지 않는다. 그래서 서버는 그 route의 요청에 session을 열지 않고, 그런 요청은 session의 lock을 잡지 않으며, session을 잡고 있는 요청을 기다리지 않고, 빈 session을 읽고, session cookie를 설정하지 않는다.",
                   "koSource": "7586ed3e09828a615911148295f08547af0cb7e49ca4f2d19f2ea41eb603d7c8",
-                  "unimplemented": [{ "row": "H35.38", "servers": ["node", "python"] }, { "row": "H35.37", "servers": ["php"] }]
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 }
               ]
             }
