@@ -194,7 +194,7 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       } finally {
         // HY-131.14: the files of the request are removed after its hooks returned; a body that failed while it was read
         // has no request that holds it.
-        if (holder === null) await read?.remove();
+        if (holder === null) await read?.core.remove();
         else await holder.release();
       }
     }

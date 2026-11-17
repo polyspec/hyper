@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5bdc506b5c2d0aa1b24397588ebc88a3dedbabdfd820d620b8dc573a8ebf28d5 -->
+<!-- source-sha256: 89d6664402388b46d535f277db9c7c2b9e412f1d8850c57f9f500aa67d88e2d3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 세 server가 생성된 binding에 없는 core의 member를 불렀다(H35.11, 행 항목 9). 입력: `make hyper-test-node`, `make hyper-test-python`, `make hyper-test-php`. 이전 동작: Node는 compile되지 않았고(`RequestBody.start`가 `contentLength` 없이 선언되었고, `ReadBody`를 core의 body처럼 불렀다), Python은 모든 request가 `the binding of the core has no member BodyLimits`로 실패했으며, PHP는 `Class "Polyspec\Hyper\BodyLimits" not found`로, 그다음 PHP_INT_MAX에 대해 `limit is not a value of the type uint`로 실패했다. 기대 동작: record `body_limits`는 generator가 쓰는 member의 keyword 인자(Python)나 이름 있는 인자(PHP)로 전달되고, PHP의 각 limit은 최대 2^53 - 1이며, Node는 core의 body에서 `remove`와 `size`를 부른다. 변경 뒤 실행하지 않음: 세 server test.
 - http-form의 fault point가 core의 test에서 발동하지 않았다(H35.11). 입력: `make core-test`. 이전 동작: `polyspec-hyper`의 feature `fault-test`가 binding-core의 것만 켰으므로 case `a_broken_invariant_of_a_file_is_internal`이 `the faults of http_form.internal did not fire`로 실패했다. 기대 동작: 그 feature가 `polyspec-http-form/fault-test`도 켜고, case는 `internal`을 낸다.
 - core의 Node addon이 compile되지 않았다(H35.11). 입력: `make hyper-install`. 이전 동작: 생성된 binding은 cleanup이 `remove`인 class `request_body`에 `binding_core::Cleanup`을 요구하는데, `polyspec_hyper::form::RequestBody`가 그것을 구현하지 않았다(E0277). 기대 동작: 그 type은 marker를 구현한다. 그것이 담는 http-form의 body가 `Drop`에서 자기 directory를 지우기 때문이다.
 - `make bindings`가 binding 0.0.21에서 core의 `packages/rust/interface.json`을 거부했다(H35.11). 입력: `make bindings-check`. 이전 동작: `partial_target_error`의 전달 행이 두 property `removal_kind`와 `removal_errno`를 한 이름의 단어로 적어 CK-1이 거부했고, cleanup `request_body.remove`를 두 번째로 부르는 case가 없었으며(CK-76), `http_form.internal`을 arm하는 case가 없었다(CK-22). 기대 동작: property마다 전달 행 하나, `["removal", "kind"]`와 `["removal", "errno"]`; `packages/rust/tests/cases/form.json`은 `form_file.content`에 `http_form.internal`을 arm하는 group `content`와, 둘째 case가 receiver의 then에서 body를 지우는 group `remove`를 주고; 다섯 binding manifest는 `make bindings-scaffold`가 쓴 대로 `polyspec-http-form`과 그 `fault-test`를 받으며; `tests/contracts.rs`가 두 group을 core에서 실행한다. 실행하지 않음: `make core-test`와 server test.

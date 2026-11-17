@@ -72,15 +72,15 @@ final class Request
         if ($this->read !== null && ($this->read->exceeded() || $this->read->streamed())) {
             return $this->read->exceeded();
         }
-        $limits = new BodyLimits(
-            limit: PHP_INT_MAX,
-            valueLimit: $valueLimit,
-            partLimit: $streams ? $partLimit : PHP_INT_MAX,
-            fileLimit: $streams ? $fileLimit : PHP_INT_MAX,
+        $limits = BodyReader::limits(
+            PHP_INT_MAX,
+            $valueLimit,
+            $streams ? $partLimit : PHP_INT_MAX,
+            $streams ? $fileLimit : PHP_INT_MAX,
         );
         $type = $this->header('Content-Type') ?? '';
         try {
-            readHeldBody($type === '' ? null : $type, $this->body, $limits);
+            readHeldBody($type === '' ? null : $type, $this->body, ...$limits);
         } catch (HyperValueError $error) {
             return BodyReader::overLimit($error);
         }

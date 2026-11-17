@@ -56,9 +56,9 @@ final class Files extends NamedValues
      */
     public static function readHeld(string $type, string $body): array
     {
-        $none = new BodyLimits(limit: PHP_INT_MAX, valueLimit: PHP_INT_MAX, partLimit: PHP_INT_MAX, fileLimit: PHP_INT_MAX);
+        $none = BodyReader::limits(PHP_INT_MAX, PHP_INT_MAX, PHP_INT_MAX, PHP_INT_MAX);
         try {
-            return BodyReader::named(readHeldBody($type === '' ? null : $type, $body, $none));
+            return BodyReader::named(readHeldBody($type === '' ? null : $type, $body, ...$none));
         } catch (HyperValueError $error) {
             if (in_array($error->kind(), ['malformed_content_type', 'no_boundary'], true)) {
                 return [Fields::empty(), self::empty()];

@@ -286,7 +286,7 @@ export interface CoreBinding {
   PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;
   readHeldBody(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;
   parseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];
-  RequestBody: { start(contentType: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody> };
+  RequestBody: { start(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody> };
   HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;
   HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;
 }

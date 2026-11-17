@@ -342,7 +342,7 @@ export class Request {
   bodySize(): number {
     ArgumentCountError.between(arguments.length, 0, 0);
     const declared = this.headerValues.get('content-length') ?? '';
-    return Math.max(this.init.bodySize ?? this.body.byteLength, this.read?.size() ?? 0, /^[0-9]+$/.test(declared) ? Number(declared) : 0);
+    return Math.max(this.init.bodySize ?? this.body.byteLength, this.read?.core.size() ?? 0, /^[0-9]+$/.test(declared) ? Number(declared) : 0);
   }
 
   // Returns the media type of the Content-Type header in lower case, without its parameters, as the core reads it, or

@@ -14,6 +14,30 @@ namespace Polyspec\Hyper;
  */
 final class BodyReader
 {
+    /**
+     * The largest limit that the binding takes: its type uint holds the integers up to 2^53 - 1 (binding B-2), and
+     * PHP_INT_MAX, the limit of a server without one, is above it; no body reaches that size.
+     */
+    private const NO_LIMIT = 9_007_199_254_740_991;
+
+    /**
+     * The fields of the record body_limits, which the binding takes as the last arguments of the member that reads a
+     * body, each limit at most NO_LIMIT.
+     *
+     * @return array{limit: int, valueLimit: int, partLimit: int, fileLimit: int}
+     *
+     * @internal
+     */
+    public static function limits(int $limit, int $valueLimit, int $partLimit, int $fileLimit): array
+    {
+        return [
+            'limit' => min($limit, self::NO_LIMIT),
+            'valueLimit' => min($valueLimit, self::NO_LIMIT),
+            'partLimit' => min($partLimit, self::NO_LIMIT),
+            'fileLimit' => min($fileLimit, self::NO_LIMIT),
+        ];
+    }
+
     /** The body of the core. */
     private readonly RequestBody $body;
 
@@ -36,13 +60,13 @@ final class BodyReader
         int $fileLimit,
         ?string $contentLength = null,
     ) {
-        $limits = new BodyLimits(limit: $limit, valueLimit: $valueLimit, partLimit: $partLimit, fileLimit: $fileLimit);
+        $limits = self::limits($limit, $valueLimit, $partLimit, $fileLimit);
         $contentType = $type === '' ? null : $type;
         try {
-            $this->body = RequestBody::start($contentType, $contentLength, $stream, $limits);
+            $this->body = RequestBody::start($contentType, $contentLength, $stream, ...$limits);
         } catch (HyperValueError $error) {
             $this->failure = $error;
-            $this->body = RequestBody::start($contentType, null, $stream, $limits);
+            $this->body = RequestBody::start($contentType, null, $stream, ...$limits);
         }
     }
 
