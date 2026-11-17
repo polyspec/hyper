@@ -35,35 +35,38 @@ case. 11개가 갱신을 관찰한다. `contracts/app.json`의 8개(`an_action_t
 
 바꾸는 것. H35.32-3이 `Input::Action`과 `packages/rust/interface.json`의 `page_step_input`의 variant `action`에 member를 더한다. host는 액션 뒤에 세션을 갱신하고, `csrfMask`로 새 토큰을 가리고, 그 값을 액션 입력에 주고, `computePageHeaders`를 위해 새로 가린 값과 새 토큰의 쌍을 보관한다(`PageResponse.masked_token`과 `token`, `packages/rust/src/front.rs`). statement는 바뀌지 않는다.
 
-저장된 유지 값. core는 지금의 Node와 PHP 서버처럼 요청의 로더가 돌아온 뒤에 저장된 유지 값을 읽는다(`page.ts:116`과 `:155`, `packages/php/src/Page/Page.php:118`과 `:211`). 지금 `PageInput.stored`는 `PageRequest`를 만들 때, 곧 액션과 로더 전에 주므로(`steps.rs`, `PageInput`. `answer`의 `kept_values`가 읽는다), 요청의 handler가 저장한 값은 그 응답의 `kept`에서 빠진다. handler는 그런 값을 저장할 수 있다. 애플리케이션은 `handle`에 주는 session store를 가지고 있고, `Session.keep`은 그 store로 저장된 유지 값을 쓴다(`packages/ts/src/session/session.ts:62-65`). 그 순서를 고정하는 case는 0개이며(검색: `contracts/app.json`과 `contracts/keep.json`의 case 중 유지 값을 쓰는 handler), 그것이 빈틈이다. 변경: `stored`는 `PageInput`을 떠나 마지막 step의 입력 `Input::Reply`의 member가 되며, host는 모든 로더가 돌아온 뒤에 그것을 준다(`steps.rs`, `State::Reply`의 arm). `open_page`(`packages/rust/src/opening.rs`, `server`로 값을 유지하는 영역의 loop)는 그것을 더 읽지 않는다. statement HY-38.20과 그 case는 아래에 있다. 갱신은 유지 값을 그대로 두므로(HY-72.2) 액션 입력에 member `stored`는 필요하지 않다.
+저장된 유지 값. core는 지금의 Node와 PHP 서버처럼 요청의 로더가 돌아온 뒤에 저장된 유지 값을 읽는다(`page.ts:116`과 `:155`, `packages/php/src/Page/Page.php:118`과 `:211`). 지금 `PageInput.stored`는 `PageRequest`를 만들 때, 곧 액션과 로더 전에 주므로(`steps.rs`, `PageInput`. `answer`의 `kept_values`가 읽는다), 요청의 handler가 실행되는 동안 저장된 값은 그 응답의 `kept`에서 빠진다. API로 그런 값을 저장하는 handler는 없다. handler는 request, reply, services를 받으며, 각 서버에서 `Session.keep`(`packages/ts/src/session/session.ts:62`, `packages/php/src/Session/Session.php:67`, `packages/python/src/polyspec/hyper/session/_session.py:61`)을 호출하는 곳은 kept endpoint뿐이다(`packages/ts/src/app/app.ts:837`, `packages/php/src/App/App.php:1025`, `packages/python/src/polyspec/hyper/app/app.py:835`). 저장된 유지 값이 요청 중에 바뀌는 길은 둘뿐이다. 그 session의 다른 요청이 저장하거나, 애플리케이션이 자기가 가지고 `handle`에 주는 session store에 쓴다. 그 순서를 고정하는 case는 0개였으며(검색: `contracts/app.json`과 `contracts/keep.json`의 case 중 handler가 실행되는 동안 저장된 유지 값이 바뀌는 것), 그것이 빈틈이다. 변경: `stored`는 `PageInput`을 떠나 마지막 step의 입력 `Input::Reply`의 member가 되며, host는 모든 로더가 돌아온 뒤에 그것을 준다(`steps.rs`, `State::Reply`의 arm). `open_page`(`packages/rust/src/opening.rs`, `server`로 값을 유지하는 영역의 loop)는 그것을 더 읽지 않는다. statement HY-38.20과 그 case는 아래에 있다. 갱신은 유지 값을 그대로 두므로(HY-72.2) 액션 입력에 member `stored`는 필요하지 않다.
 
 ## 질문 2 — HY-44를 판정하는 곳
 
-규칙. host는 HY-44의 검사를 갖지 않는다. 두 곳이 값을 판정한다. 생성된 binding의 경계가 언어의 값을 변환하며 데이터 모델에 형태가 없는 값을 실패시키고, core의 `data_model::check`가 변환된 값을 판정한다. 둘 다 template 데이터 모델의 kind와 message로 실패하며, hyper는 이를 그대로 넘긴다(HY-44.9). 이유: 그러면 세 서버가 값 하나에 kind 하나와 message 하나를 주고, 읽기 경로가 빼는 값은 읽기 경로를 적용하기 전에 판정된다.
+규칙. host는 HY-44의 검사를 갖지 않는다. 두 곳이 값을 판정한다. 생성된 binding의 경계가 언어의 값을 변환하며 데이터 모델에 형태가 없는 값을 실패시키고, core의 `data_model::check`가 변환된 값을 판정한다. 둘 다 template 데이터 모델의 kind와 message로 실패하며, hyper는 이를 그대로 넘긴다(HY-44.12). 호출자가 받는 message는 binding이 주는 오류의 전체 text이며 kind로 시작한다. 이유: 그러면 세 서버가 값 하나에 kind 하나와 message 하나를 주고, 읽기 경로가 빼는 값은 읽기 경로를 적용하기 전에 판정된다.
 
-HY-44.9와 case가 어긋나는 것이 결함이다. `contracts/context.json`의 세 case가 message `a number outside ±(2^53 − 1) is not a value of the data model (HY-44)`를 비교한다(`a_context_value_outside_the_data_model_fails`, `a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_document`, `a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_region_request`, `contracts/context.json:1222`, `:1840`, `:1874`). 그 글자는 template 데이터 모델이 아니라 각 host의 표(`packages/ts/src/data/data-model.ts:8-14`, `packages/php/src/Data/DataModel.php:22-28`, `packages/python/src/polyspec/hyper/data/_data_model.py`의 `FAILURES`)가 쓴다. template 데이터 모델의 글자는 `number <n> is outside the safe range`다(snapshot, `packages/rust/src/value/bind.rs:36-46`, `value/host.rs:86-106`). 세 case는 template 데이터 모델의 글자로 바뀌고, 세 표는 없앤다.
+message의 statement(HY-44.9. HY-44.12가 대신한다)와 case가 어긋나는 것이 결함이다. `contracts/context.json`의 세 case가 message `a number outside ±(2^53 − 1) is not a value of the data model (HY-44)`를 비교한다(`a_context_value_outside_the_data_model_fails`, `a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_document`, `a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_region_request`, `contracts/context.json:1222`, `:1840`, `:1874`). 그 글자는 template 데이터 모델이 아니라 각 host의 표(`packages/ts/src/data/data-model.ts:8-14`, `packages/php/src/Data/DataModel.php:22-28`, `packages/python/src/polyspec/hyper/data/_data_model.py`의 `FAILURES`)가 쓴다. template 데이터 모델의 글자는 `number <n> is outside the safe range`다(snapshot, `packages/rust/src/value/bind.rs:36-46`, `value/host.rs:86-106`). 세 case는 core의 검사가 주는 template 데이터 모델 오류의 전체 text `data_number_range: number 9007199254740992 is outside the safe range`로 바뀌고, 세 표는 없앤다. `contracts/context.json`의 field `failure`는 `contains`로 비교하며(`contracts/interfaces.json`, `caseFiles`, `context.json`), case는 전체 text를 적는다. 일부만 적으면 그 형태가 가려지기 때문이다.
 
-이동 뒤에 값을 거부하는 곳. 경계는 생성된 binding의 `in_template_value`(`packages/ts/native/generated/lib.rs`, 함수 `describe`, `describe_object_value`, `map_entries`)이며, template 라이브러리의 `value_in`(snapshot, `value/host.rs:78-141`)을 호출한다. "읽음"은 적힌 함수를 읽어 확인했다는 뜻이고, "실행"은 행을 시작하기 전에 실행으로 확인한다는 뜻이다.
+이동 뒤에 값을 거부하는 곳. 경계는 생성된 binding의 `in_template_value`(`packages/ts/native/generated/lib.rs`, 함수 `describe`, `describe_object_value`, `map_entries`)이며, template 라이브러리의 `value_in`(snapshot, `value/host.rs:78-141`)을 호출한다. "실행"은 `packages/ts/tests/core-values.test.ts`(`make hyper-test-node`)의 결과라는 뜻이다. 그 test는 값을 공유 데이터 map의 한 key 아래에 두어 빌드된 Node addon의 `PageRequest.next`에 주고, 오류의 class, kind, 전체 message를 단언한다. "읽음"은 적힌 함수를 읽어 확인했다는 뜻이다.
 
-| handler의 입력 | 거부하거나 변환하는 곳 | kind | message | 확인 |
+| handler의 입력 | 거부하거나 변환하는 곳 | class와 kind | 전체 message | 확인 |
 | --- | --- | --- | --- | --- |
-| handler의 결과인 일반 객체 | 경계가 거부한다: `map_entries`는 `Map`만 받는다 | binding의 `invalid_argument_type` | binding의 것 | 읽음(`lib.rs`, `map_entries`). 그래서 Node host가 먼저 결과를 `Map`으로 바꾼다 |
-| 결과 안의 일반 객체 | 경계가 map으로 변환한다(`describe_object_value`, `HostValue::PlainObject`. `host.rs:129`) | 없음 | 없음 | 읽음 |
-| `Map` | 경계가 변환한다(`HostValue::Map`) | 없음 | 없음 | 읽음 |
-| ±(2^53 − 1) 안의 bigint | 경계가 수로 변환한다(`describe`, `HostValue::Int`. `host.rs:86-101`) | 없음 | 없음 | 읽음 |
-| 범위 밖의 bigint | 경계 | `data_number_range` | `number <n> is outside the safe range` | 읽음(`host.rs:88-106`). `<n>`의 글자는 실행 |
-| 유한하지 않은 수 | 경계(`check_number`) | `data_number_not_finite` | `number is not finite` | 읽음(`bind.rs:36-38`) |
-| 범위 밖의 수 | 경계(`check_number`) | `data_number_range` | `number <n> is outside the safe range` | 읽음(`bind.rs:40-45`). `<n>`의 글자는 실행 |
-| 한계보다 깊은 list와 map | core(`data_model::check`, `bind_value`). 경계는 결과의 각 값을 0단계부터 센다 | `data_depth` | `lists and maps nest deeper than 64 levels` | 읽음(`bind.rs:51-57`). 세는 경계는 실행(깊이 규칙을 본다) |
-| 짝 없는 surrogate를 가진 문자열 | 경계(`text`, `String::from_utf16`) | `data_invalid_utf8` | `a string is not valid Unicode text: <cause>` | 실행: `contracts/app.json`의 case `a_string_with_a_lone_surrogate_in_the_data_of_a_route_loader_fails_a_region_request`를 행 시작 전에 core에 대해 실행한다 |
-| `Date` | 경계(`HostValue::Date`) | `data_unsupported_type` | `a date is not a template value` | 읽음(`host.rs:135`) |
-| 함수 | 경계(`HostValue::Callable`) | `data_unsupported_type` | `a function is not a template value` | 읽음(`host.rs:136`) |
-| 애플리케이션 객체 | 경계는 native object로 둔다(`host.rs:133`). core가 거부한다(`to_json_value`) | `data_unsupported_type` | `a native object has no JSON form` | 읽음(`bind.rs:231-235`, `data_model.rs:17-18`) |
-| PHP `JsonSerializable` | HY-44.6은 통과시킨다. `value_in`은 모든 객체를 native object로 두며(`host.rs:133`) core는 그것을 거부한다 | — | — | 실행, H35.32-1에서: PHP 경계는 읽지 않았다 |
+| handler의 결과인 일반 객체 | 경계가 거부한다: `map_entries`는 `Map`만 받는다 | `HyperTypeError`, binding의 `invalid_argument_type` | `shared is not an instance of a Map whose keys are strings` | 실행. 그래서 Node host가 먼저 결과를 `Map`으로 바꾼다 |
+| 결과 안의 일반 객체 | 경계가 map으로 변환한다(`describe_object_value`, `HostValue::PlainObject`. `host.rs:129`) | 없음 | 없음 | 실행: 요청이 계속된다 |
+| 결과 안의 `Map` | 경계가 변환한다(`HostValue::Map`) | 없음 | 없음 | 실행: 요청이 계속된다 |
+| ±(2^53 − 1) 안의 bigint | 경계가 수로 변환한다(`describe`, `HostValue::Int`. `host.rs:86-101`) | 없음 | 없음 | 실행: 요청이 계속된다 |
+| 범위 밖의 bigint, 2^53 + 1 | 경계(`host.rs:88-106`) | `HyperValueError`, `data_number_range` | `data_number_range in  at 0:0: number 9007199254740993 is outside the safe range` | 실행 |
+| 유한하지 않은 수, `NaN`과 `Infinity` | 경계(`check_number`, `bind.rs:36-38`) | `HyperValueError`, `data_number_not_finite` | `data_number_not_finite in  at 0:0: number is not finite` | 실행 |
+| 범위 밖의 수, 2^53 | 경계(`check_number`, `bind.rs:40-45`) | `HyperValueError`, `data_number_range` | `data_number_range in  at 0:0: number 9007199254740992 is outside the safe range` | 실행 |
+| map의 한 값인 65단계 깊이의 list | 경계. map의 각 값을 0단계부터 센다(`value_in`, `check_level`) | `HyperValueError`, `data_depth` | `data_depth in  at 0:0: lists and maps nest deeper than 64 levels` | 실행 |
+| 공유 데이터 map의 한 값인 64단계나 63단계 깊이의 list | 경계는 통과시킨다. core가 거부한다(`data_model::check`). core는 공유 데이터의 map과 그것을 담는 map도 세기 때문이다(HY-44.11) | `HyperValueError`, `data_depth` | `data_depth: lists and maps nest deeper than 64 levels` | 실행. 62단계 깊이의 list는 통과한다 |
+| 짝 없는 surrogate를 가진 문자열 | 경계(`text`, `String::from_utf16`) | `HyperValueError`, `data_invalid_utf8` | `data_invalid_utf8 in  at 0:0: a string is not valid Unicode text: invalid utf-16: lone surrogate found` | 실행 |
+| `Date` | 경계(`HostValue::Date`, `host.rs:135`) | `HyperTypeError`, `data_unsupported_type` | `data_unsupported_type in  at 0:0: a date is not a template value` | 실행 |
+| 함수 | 경계(`HostValue::Callable`, `host.rs:136`) | `HyperTypeError`, `data_unsupported_type` | `data_unsupported_type in  at 0:0: a function is not a template value` | 실행 |
+| 애플리케이션 객체, 곧 class의 instance | 경계는 native object로 둔다(`host.rs:133`). core가 거부한다(`to_json_value`, `data_model.rs:17-18`) | `HyperTypeError`, `data_unsupported_type` | `data_unsupported_type: a native object has no JSON form` | 실행 |
+| PHP `JsonSerializable` | HY-44.6은 통과시킨다. `value_in`은 모든 객체를 native object로 두며(`host.rs:133`) core는 그것을 거부한다 | — | — | 실행하지 않았다. H35.32-1에서: PHP 경계는 읽지 않았다 |
+
+두 곳은 전체 message를 두 형태로 준다. 이것은 실행의 결과이며, case가 적는 한 형태 `kind: text`와 다르다. core의 검사는 `BindError`의 text인 `kind: text`를 준다(snapshot, `value/bind.rs:20-24`). 경계는 `kind in  at 0:0: text`를 준다. `value_in`이 같은 kind와 text를 template 이름도 위치도 없는 template 언어의 오류로 감싸며(snapshot, `value/host.rs:39-41`, `TemplateError::without_position`), 그 오류의 text는 `kind in <template> at <line>:<col>: text`다(snapshot, `error.rs:331-343`). kind와 class는 두 곳에서 같다. 그래서 이동 뒤의 Node 서버에서 handler의 결과에 든 범위 밖의 수는 경계가 거부하고, 그 failure는 `data_number_range in  at 0:0: number 9007199254740992 is outside the safe range`이며, 이것은 세 case의 text를 담지 않는다. 깊이 case는 core가 거부하므로 그 text를 담는다. 따라서 세 수 case는 이동 뒤 Node 서버에서 두 변경 중 하나가 있기 전까지 실패한다. template 라이브러리의 경계가 자기가 거부하는 값에 text `kind: text`를 주는 것(template 라이브러리의 변경)이거나, case가 경계의 형태를 적는 것이다. 단일 변경의 행(H35.32-8)이 template 라이브러리와 함께 정하며, 이 문서는 정하지 않는다.
 
 이 표에서 따르는 세 가지.
 
-- 수의 message는 언어가 가진 대로의 수를 적는다. case의 context는 JSON text `{"n":9007199254740993}`이다. 이것을 double로 읽는 runner는 `9007199254740992`를, 정수로 읽는 runner는 `9007199254740993`을 가진다. 그래서 세 case는 수 9007199254740992(2^53)를 쓴다. double이 정확히 담고, 모든 runtime이 한 글자로 가지며, 안전 범위 밖인 수다. 그 message는 `number 9007199254740992 is outside the safe range`다. 범위 경계의 case는 남는다. 세 runner의 실행이 그 글자를 확인한다.
+- 수의 message는 언어가 가진 대로의 수를 적는다. case의 context는 JSON text `{"n":9007199254740993}`이다. 이것을 double로 읽는 runner는 `9007199254740992`를, 정수로 읽는 runner는 `9007199254740993`을 가진다. 그래서 세 case는 수 9007199254740992(2^53)를 쓴다. double이 정확히 담고, 모든 runtime이 한 글자로 가지며, 안전 범위 밖인 수다. 그 message는 `data_number_range: number 9007199254740992 is outside the safe range`다. 범위 경계의 case는 남는다. Node addon의 실행은 그 수를 `9007199254740992`로 준다. PHP와 Python runtime에서의 수의 글자는 실행하지 않았다.
 - `packages/ts/src/data/values.ts:15-17`의 `toValue`와 JS engine의 `bindValue`(`data-model.ts:40`)가 Node 서버를 떠나면, 경계가 안쪽의 일반 객체를 map으로, bigint를 수로 바꾼다. host에 남는 변환은 handler의 결과 자체 하나다. HY-44.4는 Node handler가 일반 객체나 `Map`을 돌려주게 하고 경계는 `Map`만 받으므로, `Page.loaderMap`(`page.ts:143-147`)은 일반 객체에 대해 `new Map(Object.entries(result))`가 되고, 결과가 map인지의 검사(HY-44.4, HY-44.5)를 가진다. 이것은 결과의 형태 검사이며 HY-44의 검사가 아니다.
 - `page.ts:90`의 `JsonCodec.encode`는 끝난다.
 
@@ -193,7 +196,7 @@ case. HY-13.4를 적는 것은 0개이고, 바뀌는 것도 0개다.
 
 ## statement
 
-retire되는 id는 그 rule의 목록 `retired`에 들어가고, 새 statement는 쓰이지도 retire되지도 않은 다음 번호를 받는다. 이 트리의 `contracts/protocol.json`의 statement와 목록 `retired`에서 계산한 번호: HY-54.23, HYC-24.9, HY-132.10, HY-48.17, HYC-12.10, HY-128.13, HY-73.34, HY-14.3, HY-44.10, HY-38.20, HY-17.4. HYC-24.7과 HYC-24.8은 쓰이고 있고, HY-128.6부터 HY-128.12까지와 HY-44.8은 retire되어 있다.
+retire되는 id는 그 rule의 목록 `retired`에 들어가고, 새 statement는 쓰이지도 retire되지도 않은 다음 번호를 받는다. 이 트리의 `contracts/protocol.json`의 statement와 목록 `retired`에서 계산한 번호: HY-54.23, HYC-24.9, HY-132.10, HY-48.17, HYC-12.10, HY-128.13, HY-73.34, HY-14.3, HY-44.10, HY-38.20, HY-17.4. HYC-24.7과 HYC-24.8은 쓰이고 있고, HY-128.6부터 HY-128.12까지와 HY-44.8은 retire되어 있다. 그 뒤로 HY-44.10과 HY-44.11이 쓰이고 있으므로, HY-44.9를 대신하는 statement는 HY-44.12다.
 
 ### retire되는 statement
 
@@ -226,6 +229,10 @@ HY-73.23, 현재: "The build writes the read paths of every route to `reads.json
 - HY-73.34 (ko): "빌드는 모든 라우트의 읽기 경로를 서버 프로그램의 `reads.json`(HY-48)에 쓴다."
 - 서버가 애플리케이션을 열 때 그것을 읽는다는 것은 HY-73.30이다.
 
+HY-44.9, 현재: "A value outside the data model fails with the error of the template data model, whose kind, such as `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth` or `data_unsupported_type`, and message hyper passes on as they are (VAL-2, VAL-3, VAL-13, VAL-20)." 이 statement는 retire된다. 읽는 사람이 그 낱말 "message"를 두 가지로 받아들이기 때문이다. kind를 뺀 오류의 text로 받아들이면 세 case가 적었던 `number 9007199254740992 is outside the safe range`이고, binding이 주는 전체 text로 받아들이면 호출자가 받는 것이다. 후속 statement는 뒤의 것을 적는다.
+- HY-44.12 (en): "A value outside the data model fails with the error of the template data model (VAL-2, VAL-3, VAL-13, VAL-20), and hyper passes on its kind, such as `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth` or `data_unsupported_type`, and its message as they are: the message that a caller receives, as the failure of the response hook does (HY-60), is the whole text of that error as the binding gives it, which starts with the kind, such as `data_number_range: number 9007199254740992 is outside the safe range`, and hyper adds nothing to it and removes nothing from it."
+- HY-44.12 (ko): "데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며(VAL-2, VAL-3, VAL-13, VAL-20), hyper는 그 kind(`data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`, `data_unsupported_type` 등)와 message를 그대로 넘긴다: 호출자가 받는 message는, 응답 hook이 받는 failure(HY-60)가 그렇듯, binding이 주는 그 오류의 전체 text이고 kind로 시작하며(예: `data_number_range: number 9007199254740992 is outside the safe range`), hyper는 거기에 아무것도 더하지 않고 거기에서 아무것도 빼지 않는다."
+
 ### 새 statement
 
 - HY-14.3 (en): "The `now` of the environment of a response is one whole number of seconds since the Unix epoch, which the page input of the core holds, and every render of the response gives `now()` that value."
@@ -236,9 +243,9 @@ HY-73.23, 현재: "The build writes the read paths of every route to `reads.json
 - HY-44.11 (en): "The limit of 64 levels of lists and maps (VAL-20) counts from the map that a handler returns, which is level 1, for the context, the shared data and the data of each region alike."
 - HY-44.11 (ko): "list와 map의 64단계 한계(VAL-20)는 handler가 돌려준 map을 1단계로 하여 세며, context, 공유 데이터, 각 영역의 데이터에 똑같이 적용한다."
 - 그 case: 64단계의 map은 페이지로 답하고 65단계의 map은 `data_depth`로 실패한다. 공유 데이터와 영역의 데이터에 대해 각각 둔다.
-- HY-38.20 (en): "The server reads the stored kept values of a response after the loaders of the request returned, so a kept value that a handler of the request stores is in `kept` of that response."
-- HY-38.20 (ko): "서버는 요청의 로더가 돌아온 뒤에 응답의 저장된 유지 값을 읽으므로, 요청의 handler가 저장한 유지 값은 그 응답의 `kept`에 있다."
-- 그 case: route loader가 경로를 `server`로 유지하는 영역의 유지 값을 저장하고, 그 요청의 응답의 `kept`가 그 값을 담는다.
+- HY-38.20 (en): "The server reads the stored kept values of a response after the loaders of the request returned, so `kept` of that response holds the stored values as they are then, a value that was stored while the handlers of the request ran included."
+- HY-38.20 (ko): "서버는 요청의 로더가 돌아온 뒤에 응답의 저장된 유지 값을 읽으므로, 그 응답의 `kept`는 그때의 저장된 값을 담으며, 요청의 handler가 실행되는 동안 저장된 값도 거기에 포함된다."
+- 그 case, `contracts/app.json`의 `a_server_value_that_a_loader_of_the_request_stores_is_sent_in_kept`: route region의 loader의 step `store`가, 자기 store를 가진 애플리케이션이 하듯, 경로를 `server`로 유지하는 영역의 유지 값을 요청의 session store에 쓰고, 그 요청의 응답의 `kept`가 그 값을 담는다. API로 유지 값을 저장하는 handler는 없다(질문 1).
 - HY-14.4 (en): "A route reads `now` when a template that it renders, the layout, the title, the template of a region or of the route, or a template that one of them includes or places by path, calls `now` or a function that is not built in; the JSON value of a response of such a route holds `now` in `env`, and the response of another route holds no `now`."
 - HY-14.4 (ko): "라우트가 렌더하는 템플릿, 곧 레이아웃, 제목, 영역이나 라우트의 템플릿, 또는 그중 하나가 include하거나 경로로 배치하는 템플릿이 `now`나 내장이 아닌 함수를 호출하면 그 라우트는 `now`를 읽는다. 그런 라우트의 응답의 JSON 값은 `env`에 `now`를 담고, 다른 라우트의 응답은 `now`를 담지 않는다."
 - HY-17.4 (en): "The member `env` holds `timezone`, and after it `now` for a route that reads it (HY-14.4)."
@@ -286,4 +293,4 @@ PHP와 Python의 이동이 더하는 것. `JsonSerializable`은 HY-44.6을 통�
 - `decodeResponse`(`page.ts:136`)는 브라우저 router가 서버의 라우트를 선택하는지도 검사했다. 서버는 그 검사를 자신에게 더 실행하지 않는다.
 - 브라우저 패키지는 질문 5의 행까지 Node 서버의 routing(`app.ts:573`), `stripBasePath`, 매니페스트 type을 유지한다. `keepRead`, `keptPaths`, `Context.withContext`, `Context.member`는 페이지에 대해 끝난다(`steps.rs:740`, `:756`, `:762`, `:778`, `:810`).
 - 두 engine은 template 명세가 거부하는 입력에서 다르다. Node 서버는 그런 템플릿에서 답이 바뀌며, 한 변경의 changelog entry가 그 입력을 적는다.
-- 확인하지 못한 것은 각각 쓰이는 곳에 적었다: runtime마다의 message 안 수의 글자, 지금 서버의 깊이 셈, 경계를 지나는 짝 없는 surrogate, `JsonSerializable`과 closure의 두 번째 인자에 대한 PHP 경계, `checkManifest`가 거부하는 모든 매니페스트를 core가 거부하는지, template crate에 내장 이름을 알려 주는 public 함수가 있는지, `the_context_hash_and_its_place`가 `withContext`의 모든 항목을 읽는지, 빌드가 받는 template crate의 revision.
+- 확인하지 못한 것은 각각 쓰이는 곳에 적었다: PHP와 Python runtime의 message 안 수의 글자, 지금 서버의 깊이 셈, 경계가 거부하는 값의 전체 message의 두 형태 중 이동 뒤에 세 수 case가 적는 것(질문 2), `JsonSerializable`과 closure의 두 번째 인자에 대한 PHP 경계, `checkManifest`가 거부하는 모든 매니페스트를 core가 거부하는지, template crate에 내장 이름을 알려 주는 public 함수가 있는지, `the_context_hash_and_its_place`가 `withContext`의 모든 항목을 읽는지, 빌드가 받는 template crate의 revision.

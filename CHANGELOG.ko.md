@@ -1,11 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c59892f31d624d7353ee82e4a2e6b8f861e718a39990fa32bae02559298c74b0 -->
+<!-- source-sha256: 658d599f367816994a5721ffc2c8b776c85bd3840e0fa2c3ad5ec1e3290a6743 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- checklist의 행 H35.32-1, H35.32-4, H35.32-8, H35.32-10은 각 서버가 그 행까지 실패하는 `contracts/context.json`과 `contracts/app.json`의 case를 코드의 원인과 함께 적는다(H35.32-4).
+- HY-38.20은 요청의 handler가 저장한 유지 값이 그 응답의 `kept`에 있다고 했으나, API로 유지 값을 저장하는 handler는 없다. 각 서버에서 `Session.keep`을 호출하는 곳은 kept endpoint뿐이다. HY-38.20은 이제 `kept`가 로더가 돌아온 뒤의 저장된 값을 담으며 handler가 실행되는 동안 저장된 값도 포함한다고 적는다(H35.32-10).
+- HY-44.9는 hyper가 template 데이터 모델 오류의 message를 그대로 넘긴다고 했으나 그것이 어느 text인지 적지 않았고, `contracts/context.json`의 세 case는 kind를 뺀 text를 적었다. HY-44.9는 retire되고, HY-44.12가 message는 binding이 주는 오류의 전체 text이며 kind로 시작한다고 적는다. `contracts/context.json`의 수 case 셋과 깊이 case는 이제 `data_number_range: number 9007199254740992 is outside the safe range`와 `data_depth: lists and maps nest deeper than 64 levels`를 적는다. `packages/ts/tests/core-values.test.ts`는 데이터 모델 밖의 값을 빌드된 Node addon의 `PageRequest.next`에 주고 class, kind, 전체 message를 단언한다. binding의 변환은 `kind in  at 0:0: text`를, core의 검사는 `kind: text`를 준다. Node case runner는 `contracts/context.json`을 읽다가 실패한다. 그 reader가 깊이 case를 거부하기 때문이다(H35.32-4).
 - `make hyper-ext`는 Cargo에 wrapper `var/tools/bin/php`와 `php-config`의 경로를 주었고, 이 경로는 그 뒤의 PHP가 바뀌어도 같다. wrapper가 PHP 8.5에서 8.4로 바뀐 뒤 Cargo는 module API 20250925로 build한 library를 그대로 두었고 PHP 8.4는 그것을 load하지 않았다. 이제 recipe는 runtime의 release, thread safety, debug build 여부와 header의 release를 ext-php-rs의 build script가 Cargo에 선언하는 변수 `EXT_PHP_RS_ALLOWED_BINDINGS`에 적으므로, Cargo는 다른 PHP에 대해 확장을 다시 build한다(H35.16-5).
 - `make install-tools`는 PATH에서 처음 나오는 php를 `var/tools/bin/php`로 wrap하고 이미 있는 wrapper는 그대로 둔다. wrapper가 PHP 8.5이고 `.php-version`이 8.4일 때 recipe는 PHP 8.5를 실행했고, PHP가 8.4용으로 build한 확장을 거부하는 나중 단계에서 실패했다. 이제 `make php-check`는 wrapper가 `.php-version`의 minor release를 실행하지 않으면 두 release와 wrapper를 바꾸는 절차를 적어 실패한다. recipe가 PHP를 시작하는 모든 target(`PHP_TARGETS`)의 선행 조건이며, `make install-tools`는 설치 후 이 검사를 실행한다(H35.16-4).
 - `make hyper-test-node`와 `make package-check`는 Cargo로 Node addon을 build하는데, CI 그룹 node는 Node.js만 설치하여 그 job에 cargo가 없었다. `CI_TOOLS_node`는 이제 rust를 적는다(H35.34).

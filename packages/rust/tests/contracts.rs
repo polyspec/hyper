@@ -570,7 +570,7 @@ fn manifest_checks() {
 
 #[test]
 fn json_text_is_written_and_read() {
-    // HY-54.18 to HY-54.21, HY-44.9: the cases run through the members `rules.json_read` and `rules.json_write`
+    // HY-54.18 to HY-54.21, HY-44.12: the cases run through the members `rules.json_read` and `rules.json_write`
     // of the interface contract, by the core paths that it names.
     use polyspec_hyper::json::{json_read as read, json_write as write};
     let interface: Value = match fs::read_to_string(
@@ -1547,7 +1547,7 @@ fn case_route(file: &Value, case: &Value) -> String {
 
 #[test]
 fn the_data_model_cases_of_the_context_file_run_as_the_steps_of_a_page() {
-    // HY-44.2, HY-44.3, HY-44.9, HY-44.11: every case of `cases` of context.json that names HY-44. The context handler
+    // HY-44.2, HY-44.3, HY-44.11, HY-44.12: every case of `cases` of context.json that names HY-44. The context handler
     // returns the context of the case or of its application, the shared handler the member `shared` of the case or of
     // its application, and each loader the entry of `loaders` of its route or region. A case with status 500 fails
     // with a failure that contains its `failure`, and a case with status 200 answers.

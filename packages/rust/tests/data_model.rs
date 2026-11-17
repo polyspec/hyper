@@ -1,4 +1,4 @@
-//! The data model check of a page (HY-44.3, HY-44.6, HY-44.9 to HY-44.11): the steps of a page check every value that
+//! The data model check of a page (HY-44.3, HY-44.6, HY-44.10 to HY-44.12): the steps of a page check every value that
 //! the context handler, the shared handler, the loaders and the action return in the step that receives it, before
 //! the read paths remove the values that no template reads (HY-73.29), so a value outside the data model fails the
 //! page also when no template reads it, with the kind of the template data model, and no later handler is asked for.
@@ -318,7 +318,7 @@ fn the_depth_of_a_value_counts_with_the_maps_that_hold_it() {
 
 #[test]
 fn a_shared_value_that_no_template_reads_is_judged() {
-    // HY-44.2, HY-44.3, HY-44.6, HY-44.9: the key `unread` is no read path of the shared data.
+    // HY-44.2, HY-44.3, HY-44.6, HY-44.12: the key `unread` is no read path of the shared data.
     let app = pages(false);
     for (label, value, expected) in [
         (

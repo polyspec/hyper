@@ -4561,9 +4561,9 @@
                 },
                 {
                   "id": "HY-38.20",
-                  "en": "The server reads the stored kept values of a response after the loaders of the request returned, so a kept value that a handler of the request stores is in `kept` of that response.",
-                  "ko": "서버는 요청의 로더가 돌아온 뒤에 응답의 저장된 유지 값을 읽으므로, 요청의 handler가 저장한 유지 값은 그 응답의 `kept`에 있다.",
-                  "koSource": "9f3bf3d4fdd266b09ba5579a0624cb6a42456328cdf8086b515f5d87deddf81c"
+                  "en": "The server reads the stored kept values of a response after the loaders of the request returned, so `kept` of that response holds the stored values as they are then, a value that was stored while the handlers of the request ran included.",
+                  "ko": "서버는 요청의 로더가 돌아온 뒤에 응답의 저장된 유지 값을 읽으므로, 그 응답의 `kept`는 그때의 저장된 값을 담으며, 요청의 handler가 실행되는 동안 저장된 값도 거기에 포함된다.",
+                  "koSource": "2f46d2ca9b22b3f7d1a4f3339151e0ef0f8499663917119077f87324ff92d0e7"
                 }
               ]
             }
@@ -4881,7 +4881,8 @@
           "kind": "rule",
           "id": "HY-44",
           "retired": [
-            8
+            8,
+            9
           ],
           "blocks": [
             {
@@ -4930,12 +4931,6 @@
                   "koSource": "2ba01cc5768542a57bc4f3e910c0f1e5abf811f7c12ddf5320a2950c367fab54"
                 },
                 {
-                  "id": "HY-44.9",
-                  "en": "A value outside the data model fails with the error of the template data model, whose kind, such as `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth` or `data_unsupported_type`, and message hyper passes on as they are (VAL-2, VAL-3, VAL-13, VAL-20).",
-                  "ko": "데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며, hyper는 그 kind(`data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`, `data_unsupported_type` 등)와 message를 그대로 넘긴다(VAL-2, VAL-3, VAL-13, VAL-20).",
-                  "koSource": "9db70dc460932177a39be716f1a747ed1becc1c3a010e5181fb7d153e2d8659c"
-                },
-                {
                   "id": "HY-44.10",
                   "en": "A value outside the data model fails the request when the server receives it from its handler: the context, the shared data, the data of each loader and the data of an action are each checked before the server calls the next handler, so no handler runs after one that returned such a value.",
                   "ko": "데이터 모델 밖의 값은 서버가 그 handler에게서 값을 받을 때 요청을 실패시킨다: context, 공유 데이터, 각 로더의 데이터, action의 데이터는 서버가 다음 handler를 호출하기 전에 각각 검사되므로, 그런 값을 돌려준 handler 뒤에는 어떤 handler도 실행되지 않는다.",
@@ -4946,6 +4941,12 @@
                   "en": "The limit of 64 levels of lists and maps (VAL-20) counts the maps that hold a value in the check: the context under the key `context` of one map, the shared data under the key `shared` of one map, and the data of a region under its name in the map `regions` of one map; so the map of a context or of the shared data nests at most 63 levels of lists and maps, itself included, and the map of the data of a region, the data of an action included, at most 62.",
                   "ko": "list와 map의 64단계 한계(VAL-20)는 검사에서 값을 담는 map도 센다: context는 한 map의 key `context` 아래에, 공유 데이터는 한 map의 key `shared` 아래에, 영역의 데이터는 한 map의 map `regions` 안에서 그 이름 아래에 있다. 그래서 context나 공유 데이터의 map은 자신을 포함해 list와 map을 최대 63단계까지 중첩하고, action의 데이터를 포함한 영역 데이터의 map은 최대 62단계까지 중첩한다.",
                   "koSource": "7d3d6ab76d5c6b954aff940058b4bbacd6c4cdda642b25d7da4aeedd31be78bf"
+                },
+                {
+                  "id": "HY-44.12",
+                  "en": "A value outside the data model fails with the error of the template data model (VAL-2, VAL-3, VAL-13, VAL-20), and hyper passes on its kind, such as `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth` or `data_unsupported_type`, and its message as they are: the message that a caller receives, as the failure of the response hook does (HY-60), is the whole text of that error as the binding gives it, which starts with the kind, such as `data_number_range: number 9007199254740992 is outside the safe range`, and hyper adds nothing to it and removes nothing from it.",
+                  "ko": "데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며(VAL-2, VAL-3, VAL-13, VAL-20), hyper는 그 kind(`data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`, `data_unsupported_type` 등)와 message를 그대로 넘긴다: 호출자가 받는 message는, 응답 hook이 받는 failure(HY-60)가 그렇듯, binding이 주는 그 오류의 전체 text이고 kind로 시작하며(예: `data_number_range: number 9007199254740992 is outside the safe range`), hyper는 거기에 아무것도 더하지 않고 거기에서 아무것도 빼지 않는다.",
+                  "koSource": "25600438c6861cabec4157c4c0a48e0eb2d17a9d6dbc8c03c2452fa600d93745"
                 }
               ]
             }

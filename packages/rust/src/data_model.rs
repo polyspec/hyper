@@ -1,4 +1,4 @@
-//! The data model check of hyper (HY-44.3, HY-44.6, HY-44.9 to HY-44.11): the host binding of the template data model for a value
+//! The data model check of hyper (HY-44.3, HY-44.6, HY-44.10 to HY-44.12): the host binding of the template data model for a value
 //! that a host built (VAL-13), followed by a check that the bound value holds no native object (VAL-19). Both are the
 //! functions of the template language, so the kind and the message of a failure are those of the template data model.
 

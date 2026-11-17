@@ -1219,7 +1219,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "number 9007199254740992 is outside the safe range",
+      "failure": "data_number_range: number 9007199254740992 is outside the safe range",
       "requirements": [
         "HY-43",
         "HY-44",
@@ -1837,7 +1837,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "number 9007199254740992 is outside the safe range",
+      "failure": "data_number_range: number 9007199254740992 is outside the safe range",
       "requirements": [
         "HY-43",
         "HY-44",
@@ -1871,7 +1871,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "number 9007199254740992 is outside the safe range",
+      "failure": "data_number_range: number 9007199254740992 is outside the safe range",
       "requirements": [
         "HY-43",
         "HY-44",
@@ -2049,7 +2049,7 @@
     },
     {
       "id": "a_shared_map_of_64_levels_fails_with_the_depth_of_the_data_model",
-      "label": "a shared handler that returns a map of 64 levels of lists and maps, the map itself included, fails with HY-43 and the message of the kind data_depth of the template data model (HY-44.11, HY-44.9)",
+      "label": "a shared handler that returns a map of 64 levels of lists and maps, the map itself included, fails with HY-43 and the message of the kind data_depth of the template data model (HY-44.11, HY-44.12)",
       "application": "without_context",
       "shared": {
         "deep": [
@@ -2186,7 +2186,7 @@
         }
       },
       "status": 500,
-      "failure": "lists and maps nest deeper than 64 levels",
+      "failure": "data_depth: lists and maps nest deeper than 64 levels",
       "requirements": [
         "HY-43",
         "HY-44"
