@@ -393,7 +393,10 @@ hyper-lint: ## Check PHP formatting
 	$(call check,Pint of $(BOARD),cd $(BOARD) && vendor/bin/pint --test app src public) \
 	$(checks_result)
 
-analyse-php: ext ## Run PHPStan at level max on the source and the tests of the server package
+# PHPStan reads the classes and the functions of the extension polyspec_hyper from the declarations that the binding
+# generator writes (packages/php/native/generated/polyspec_hyper.stub.php, scanFiles of phpstan-max.neon), which Git
+# ignores, so analyse-php writes them first.
+analyse-php: ext bindings ## Run PHPStan at level max on the source and the tests of the server package
 	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 templates-check: ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
