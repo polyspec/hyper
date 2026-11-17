@@ -16900,14 +16900,7 @@
               "role": "input",
               "compare": "exact",
               "sentence": "HY-73.2",
-              "state": "`reads` is the read paths of the template `template` among the templates `templates`, a tree whose node is true for a path read whole and otherwise holds `keys` or `each`.",
-              "only": {
-                "languages": [
-                  "node",
-                  "browser"
-                ],
-                "sentence": "HY-73.23"
-              }
+              "state": "`reads` is the read paths of the template `template` among the templates `templates`, a tree whose node is true for a path read whole and otherwise holds `keys` or `each`. The Node server and the browser compute it, and the PHP and the Python server read it as the node of the page region in `reads.json` of the program that the build wrote for the case (HY-73.23)."
             },
             "kept": {
               "role": "expected",
