@@ -16,6 +16,8 @@ _OUTPUTS = {
     "reads.json": False,
     "build.json": False,
     "templates": True,
+    # HY-48.14: the copy of the reserved template, which the server reads until it calls the core.
+    "legacy/hyper/data.tpl": False,
 }
 
 
@@ -65,6 +67,7 @@ def outputs(case) -> None:
             if is_directory:
                 (program / name).mkdir()
             else:
+                (program / name).parent.mkdir(parents=True, exist_ok=True)
                 (program / name).write_bytes(b"")
         error = None
         try:

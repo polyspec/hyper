@@ -23,6 +23,8 @@
 //     with allow-remote=root (H21.4); packages/ts requires it by its version;
 //   - @polyspec/php-serialization, which the generated Node binding requires (packages/ts/native/generated, which
 //     knip does not read) and the root names by the tarball URL of its release for the same reason (H35.8-1);
+//   - @polyspec/session-store, whose Store the generated Node binding takes (packages/ts/native/generated, which knip
+//     does not read) and which the root names by the tarball URL of its release for the same reason (H35.8-2);
 //   - @polyspec/binding, whose dist/cli.js the Makefile starts by its path (BINDING), which knip does not read, because knip
 //     reads no Makefile and ignoreBinaries names only programs that a script starts by name;
 //   - tailwindcss of packages/cli: lib/build.mjs compiles the stylesheet of an app with @tailwindcss/node from
@@ -46,11 +48,11 @@
     ]
   },
   "ignoreBinaries": ["container", "make", "openssl", "php", "php-fpm"],
-  "ignoreDependencies": ["@polyspec/binding", "@polyspec/php-serialization", "@polyspec/php-serialize"],
+  "ignoreDependencies": ["@polyspec/binding", "@polyspec/php-serialization", "@polyspec/php-serialize", "@polyspec/session-store"],
   "workspaces": {
     "packages/ts": {
       "entry": ["src/index.ts", "src/build.ts"],
-      "ignoreDependencies": ["@polyspec/php-serialization"]
+      "ignoreDependencies": ["@polyspec/php-serialization", "@polyspec/session-store"]
     },
     "packages/cli": {
       "ignoreDependencies": ["tailwindcss"]

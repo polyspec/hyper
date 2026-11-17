@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
+import dataTemplate from '../../packages/client/data-template.json' with { type: 'json' };
 import { shellText } from '../../packages/cli/lib/shell.mjs';
 import { requireBuilt } from './requires.mts';
 
@@ -25,8 +26,24 @@ test('writes the program of the fixture with the build id of its build file (HY-
   const result = program(output, join(fixtures, 'build.json'));
   assert.equal(result.status, 0, result.stderr);
   assert.equal(readFileSync(join(output, 'build.json'), 'utf8'), readFileSync(join(fixtures, 'build.json'), 'utf8'));
-  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'php', 'program.json', 'reads.json', 'templates']);
+  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'legacy', 'php', 'program.json', 'reads.json', 'templates']);
   assert.ok(existsSync(join(output, 'php', 'GeneratedProgram.php')));
+});
+
+test('the program holds the reserved template below legacy/ and no copy of it below templates/ (HY-31.9, HY-31.10)', (t) => {
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-fixture-program-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  const output = join(directory, 'program');
+  const result = program(output, join(fixtures, 'build.json'));
+  assert.equal(result.status, 0, result.stderr);
+  // HY-31.9: templates/ holds the templates of the application only, so the core takes the whole directory.
+  assert.equal(existsSync(join(output, 'templates', dataTemplate.name)), false, `templates/${dataTemplate.name} exists`);
+  // HY-31.10: the copy for a server that does not call the core is the only file below legacy/.
+  assert.deepEqual(readdirSync(join(output, 'legacy')), ['hyper']);
+  assert.deepEqual(readdirSync(join(output, 'legacy', 'hyper')), ['data.tpl']);
+  assert.equal(readFileSync(join(output, 'legacy', dataTemplate.name), 'utf8'), dataTemplate.source);
+  // The PHP compilation takes the reserved template as an input, so the generated program holds it.
+  assert.ok(readFileSync(join(output, 'php', 'GeneratedTemplates.php'), 'utf8').includes(`case '${dataTemplate.name}':`));
 });
 
 test('the program names the literal key of an index in reads.json by its text (HY-73.33)', (t) => {

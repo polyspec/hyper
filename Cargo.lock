@@ -619,9 +619,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "899def5c37c4fd7b2664648c28120ecec138e4d395b459e5ca34f9cce2dd77fd"
 dependencies = [
  "cfg-if",
+ "js-sys",
  "libc",
  "r-efi 5.3.0",
  "wasip2",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -1130,7 +1132,7 @@ dependencies = [
  "polyspec-http-negotiation",
  "polyspec-hyper",
  "polyspec-json 0.0.34",
- "polyspec-php-serialization 0.0.15",
+ "polyspec-php-serialization",
  "polyspec-session-store",
  "polyspec-template",
  "serde_json",
@@ -1145,7 +1147,7 @@ dependencies = [
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
- "polyspec-php-serialization 0.0.15",
+ "polyspec-php-serialization",
  "polyspec-session-store",
  "polyspec-template",
 ]
@@ -1161,7 +1163,7 @@ dependencies = [
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
- "polyspec-php-serialization 0.0.15",
+ "polyspec-php-serialization",
  "polyspec-session-store",
  "polyspec-template",
 ]
@@ -1175,7 +1177,7 @@ dependencies = [
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
- "polyspec-php-serialization 0.0.15",
+ "polyspec-php-serialization",
  "polyspec-session-store",
  "polyspec-template",
 ]
@@ -1188,7 +1190,7 @@ dependencies = [
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
- "polyspec-php-serialization 0.0.15",
+ "polyspec-php-serialization",
  "polyspec-session-store",
  "polyspec-template",
  "pyo3",
@@ -1203,7 +1205,7 @@ dependencies = [
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
- "polyspec-php-serialization 0.0.15",
+ "polyspec-php-serialization",
  "polyspec-session-store",
  "polyspec-template",
  "wasm-bindgen",
@@ -1233,15 +1235,6 @@ dependencies = [
 
 [[package]]
 name = "polyspec-php-serialization"
-version = "0.0.6"
-source = "git+https://github.com/polyspec/php-serialization.git?branch=v1%2Frust-core#51854a189584ccd241615988720f7e1de6e91197"
-dependencies = [
- "polyspec-binding-core 0.0.1",
- "ryu",
-]
-
-[[package]]
-name = "polyspec-php-serialization"
 version = "0.0.15"
 source = "git+https://github.com/polyspec/php-serialization.git?tag=v0.0.15#ba29eb528f449b6da80112d6bc0b54494220acf7"
 dependencies = [
@@ -1251,31 +1244,31 @@ dependencies = [
 
 [[package]]
 name = "polyspec-session-store"
-version = "0.0.0"
-source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#42c54617f3153578c06e1a61462614be0f565bc7"
+version = "0.0.4"
+source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.4#3c0e383f2aca2e71260332df9da4cccba3886f6c"
 dependencies = [
- "polyspec-php-serialization 0.0.6",
+ "polyspec-php-serialization",
  "polyspec-session-store-core",
  "polyspec-session-store-file",
 ]
 
 [[package]]
 name = "polyspec-session-store-core"
-version = "0.0.0"
-source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#42c54617f3153578c06e1a61462614be0f565bc7"
+version = "0.0.4"
+source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.4#3c0e383f2aca2e71260332df9da4cccba3886f6c"
 dependencies = [
  "getrandom 0.3.4",
- "polyspec-binding-core 0.0.1",
- "polyspec-php-serialization 0.0.6",
+ "polyspec-binding-core 0.0.17",
+ "polyspec-php-serialization",
 ]
 
 [[package]]
 name = "polyspec-session-store-file"
-version = "0.0.0"
-source = "git+https://github.com/polyspec/session-store.git?branch=v1%2Frust-core#42c54617f3153578c06e1a61462614be0f565bc7"
+version = "0.0.4"
+source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.4#3c0e383f2aca2e71260332df9da4cccba3886f6c"
 dependencies = [
- "polyspec-binding-core 0.0.1",
- "polyspec-php-serialization 0.0.6",
+ "polyspec-binding-core 0.0.17",
+ "polyspec-php-serialization",
  "polyspec-session-store-core",
  "rustix",
 ]

@@ -4,25 +4,30 @@
 // file with a mode that its owner cannot read, such as the mode 0200 with which `fs.cpSync` of
 // Node creates its destination files. The test runs the scripts in the official Node image with
 // a temporary output directory of the test mounted writable, which the test removes; a missing
-// `container` command fails the test.
+// `container` command fails the test. The rule is about the creation of the files, not their content: the image holds
+// Node and no native addon of the template library or of the core, so the container runs only the writes of the build
+// (packages/cli/lib/program-files.mjs, packages/cli/lib/output-files.mjs), and the test computes the content of the
+// program on the host with the function of the build.
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
+import { writeProgramTemplates } from '../../packages/cli/lib/program-files.mjs';
+import { programFiles } from '../../packages/cli/lib/program.mjs';
 import { requireBuilt } from '../scripts/requires.mts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 const image = /^VIRTIOFS_IMAGE := (\S+)$/m.exec(readFileSync(join(root, 'Makefile'), 'utf8'))?.[1];
 
-// Runs node with `args` in the container with a temporary output directory of the test mounted as /output.
-function run(t: TestContext, args: string[]) {
+// Runs node with `args` in the container with a temporary output directory of the test mounted as /output and, when
+// the test passes one, its directory `input` mounted read-only as /input.
+function run(t: TestContext, args: string[], input?: string) {
   assert.ok(image, 'Makefile declares no VIRTIOFS_IMAGE');
   requireBuilt('hyper-install', 'node_modules/@polyspec/template/package.json');
   // Native package source links retain their absolute targets in the container. Discover the provider checkout
@@ -43,6 +48,7 @@ function run(t: TestContext, args: string[]) {
   t.after(() => rmSync(output, { recursive: true, force: true }));
   const mounts = [
     ...[...sources].map((source) => ['--mount', `type=bind,source=${source},target=${source},readonly`]),
+    ...(input === undefined ? [] : [['--mount', `type=bind,source=${input},target=/input,readonly`]]),
     ['--mount', `type=bind,source=${output},target=/output`],
   ].flat();
   const result = spawnSync('container', ['run', '--rm', '--arch', 'arm64', ...mounts, image, 'node', ...args], { encoding: 'utf8' });
@@ -57,17 +63,29 @@ function files(directory: string, prefix = ''): string[] {
   }).sort();
 }
 
-test('the program of hyper build writes the templates on a virtiofs bind mount', { timeout: 120000 }, (t) => {
+test('the program of hyper build writes its files on a virtiofs bind mount', { timeout: 120000 }, (t) => {
   const templates = join(root, 'examples', 'board', 'templates');
-  const manifest = join(root, 'examples', 'board', 'app', 'app.json');
-  // The assembly of the program of hyper build (packages/cli/lib/program.mjs), into the bind mount.
+  const manifestFile = join(root, 'examples', 'board', 'app', 'app.json');
+  const id = '1'.repeat(64);
+  // The content of the program is computed here, on the host, with the function of the build (programFiles of
+  // packages/cli/lib/program.mjs), which loads the native addons of the host; the container holds no addon.
+  requireBuilt('packages node-addon', 'packages/ts/dist/build.js', `packages/ts/native/generated/hyper.${process.platform}-${process.arch}.node`);
+  const input = mkdtempSync(join(tmpdir(), 'hyper-virtiofs-input-'));
+  t.after(() => rmSync(input, { recursive: true, force: true }));
+  const manifest: unknown = JSON.parse(readFileSync(manifestFile, 'utf8'));
+  const computed = programFiles({ manifest, templates: writeProgramTemplates(templates, join(input, 'program')), phpNamespace: 'Polyspec\\Hyper\\Examples\\Board\\Program' });
+  const names = computed.files.map(([name]) => name);
+  assert.ok(names.includes('reads.json') && names.includes('program.json') && names.some((name) => name.startsWith('php/')), names.join(', '));
+  writeFileSync(join(input, 'files.json'), JSON.stringify(computed.files));
+  // The writes of the build (packages/cli/lib/program-files.mjs, which writeProgram calls), into the bind mount.
   const script = [
     `import { readFileSync } from 'node:fs';`,
-    `import { writeBuildFile, writeProgram } from ${JSON.stringify(join(root, 'packages', 'cli', 'lib', 'program.mjs'))};`,
-    `writeProgram({ manifest: JSON.parse(readFileSync(${JSON.stringify(manifest)}, 'utf8')), templates: ${JSON.stringify(templates)}, directory: '/output/program', phpNamespace: 'Polyspec\\\\Hyper\\\\Examples\\\\Board\\\\Program' });`,
-    `writeBuildFile('/output/program', '${'1'.repeat(64)}');`,
+    `import { writeBuildFile, writeProgramFiles, writeProgramTemplates } from ${JSON.stringify(join(root, 'packages', 'cli', 'lib', 'program-files.mjs'))};`,
+    `writeProgramTemplates(${JSON.stringify(templates)}, '/output/program');`,
+    `writeProgramFiles('/output/program', JSON.parse(readFileSync('/input/files.json', 'utf8')));`,
+    `writeBuildFile('/output/program', '${id}');`,
   ].join('\n');
-  const result = run(t, ['--input-type=module', '--eval', script]);
+  const result = run(t, ['--input-type=module', '--eval', script], input);
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
   const { output } = result;
   const copied = join(output, 'program', 'templates');
@@ -75,13 +93,12 @@ test('the program of hyper build writes the templates on a virtiofs bind mount',
     assert.deepEqual(readFileSync(join(copied, name)), readFileSync(join(templates, name)), name);
     assert.equal(statSync(join(copied, name)).mode & 0o777, 0o644, name);
   }
-  assert.ok(files(copied).includes('hyper/data.tpl'));
-  // HY-73: the read paths of every route, computed without a bundler in the container.
-  const readsFile = join(output, 'program', 'reads.json');
-  const reads = jsonObject(parseJsonObject(readFileSync(readsFile, 'utf8'), readsFile).routes, `${readsFile} routes`);
-  const manifestFile = join(root, 'examples', 'board', 'app', 'app.json');
-  const routes = jsonObjects(parseJsonObject(readFileSync(manifestFile, 'utf8'), manifestFile).routes, `${manifestFile} routes`);
-  assert.deepEqual(Object.keys(reads).sort(), routes.map((route, index) => jsonString(route.name, `${manifestFile} routes[${index}] name`)).sort());
+  // HY-31.9, HY-31.10: the copy of the reserved template lies below legacy/ and not below templates/.
+  assert.equal(files(copied).includes('hyper/data.tpl'), false);
+  // Every file of the program is on the mount with the content that the host computed, and no other file.
+  assert.deepEqual(files(join(output, 'program')), [...files(copied).map((name) => `templates/${name}`), 'legacy/hyper/data.tpl', ...names, 'build.json'].sort());
+  for (const [name, content] of computed.files) assert.equal(readFileSync(join(output, 'program', name), 'utf8'), content, name);
+  assert.equal(readFileSync(join(output, 'program', 'build.json'), 'utf8'), `{"build":"${id}"}`);
 });
 
 test('the output copies write a directory and a file on a virtiofs bind mount', { timeout: 120000 }, (t) => {
