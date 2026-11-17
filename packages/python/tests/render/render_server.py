@@ -33,7 +33,7 @@ def open_app(load: Callable, **options) -> App:
         manifest = program / "app.json"
         shutil.copyfile(MANIFEST, manifest)
         (program / "templates").mkdir()
-        # HY-48.14: the open needs the copy of the reserved template; no response of these tests renders it.
+        # HY-48.18: the open needs the copy of the reserved template; no response of these tests renders it.
         (program / "legacy" / "hyper").mkdir(parents=True)
         (program / "legacy" / "hyper" / "data.tpl").write_bytes(b"")
         (program / "reads.json").write_text(json.dumps(READS), encoding="utf-8")

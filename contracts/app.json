@@ -10230,7 +10230,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-48.10"
+        "sentence": "HY-48.18"
       },
       "raises": {
         "kind": "invalid_application",
@@ -10255,7 +10255,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-48.10"
+        "sentence": "HY-48.18"
       },
       "raises": {
         "kind": "invalid_build",
@@ -10279,7 +10279,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-48.10"
+        "sentence": "HY-48.18"
       },
       "raises": {
         "kind": "invalid_application",
