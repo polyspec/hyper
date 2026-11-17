@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4fb99ba04f71ccf84403d76bb6c13b52ab6678cd17fc2663bdf6ca26a04ab231 -->
+<!-- source-sha256: f0c613b22cd4b3debabf98399b477128a44341bb4661e5ed371d4357edea204e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 서버: multipart 본문 요청의 `fileOver(-1)`은 파일을 비교해 false를 돌려주었다. 이제 파일 비교 전에 kind `invalid_number`로 실패한다(HY-114.12, H35.31-2).
 - hyper는 kit 0.0.118이 순서 없이 내던 cargo 출력을 순서대로 내는 kit 0.0.119를 쓴다(kit K1283). `package.json`은 그 release asset을, `package-lock.json`은 그 integrity를 적는다(H35.16-2).
 - script test는 hyper extension의 상대 경로를 기대했고, recipe의 `--` 뒤 옵션을 script의 옵션으로 읽었으며, server benchmark에서 generated PHP program의 footer를, Composer root에서 template repository만을 기대했다. 이제 absolute path를 기대하고, `--` 뒤 명령의 옵션은 무시하며, template extension 버전과 json release repository를 기대한다(H35.31).
 - board 예제와 공개 패키지 `polyspec/hyper`는 template extension이 요구하는 `ext-polyspec_json`을 요구하지 않았다. 이제 board는 json release repository를 선언하고 그 extension을 요구하며 platform에 둔다. 공개 패키지는 그 extension을 요구한다(H35.31).

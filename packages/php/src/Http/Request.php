@@ -434,10 +434,16 @@ final class Request
         return $this->fileParts?->last($name);
     }
 
-    /** Returns true when a file of the body is larger than `$limit` bytes (HY-114). */
+    /**
+     * Returns true when a file of the body is larger than `$limit` bytes (HY-114). A limit that is no unsigned
+     * integer fails with `invalid_number` before the files are compared (HY-114.12).
+     */
     public function fileOver(int $limit): bool
     {
         ArgumentCount::most(\func_num_args(), 1);
+        if ($limit < 0) {
+            throw new HyperValueError('a file limit is not an unsigned integer (HY-114.12)', 'invalid_number');
+        }
         return ($this->fileParts?->largest() ?? 0) > $limit;
     }
 
