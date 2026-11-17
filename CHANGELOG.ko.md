@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d77f554c223041b15434f60fff30ea8f705e323920f743ab69650c602599352a -->
+<!-- source-sha256: 0b8f4b4a15683a3bc0f952e72e40d6fb326aaead744cb0ee312058873ba76d54 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `docs/spec/protocol.md`가 어떤 코드도 따르지 않는 statement를 현재 동작으로 렌더했고, 유일한 표시는 `docs/features.md` 행의 상태 텍스트였다. 이제 id를 가진 `contracts/protocol.json`의 statement는 `"unimplemented": "<row>"`, 곧 그것을 구현하는 checklist의 행을 가질 수 있다. `make spec-docs`는 statement 뒤에 ` *(Not implemented: row <row>.)*`를, 한국어 문서에는 그 번역 뒤에 한국어 문구를 쓴다. `make spec-docs-check`는 id 없는 statement의 표시, checklist에 없는 행, 상태가 완료 또는 검증인 행, 상태가 `not implemented`인 `docs/features.md`의 어떤 행도 Feature cell에 이름하지 않는 표시된 statement, 그런 행이 이름하는데 표시가 없는 statement에 대해 실패한다. 표시를 가진 statement: HY-113.23, HY-113.24, HY-113.25, HY-131.28, HY-131.30(H35.11)과 HY-131.29(H35.36-2). `docs/features.md`의 행 `node-core-rules`, `python-core-rules`, `php-core-rules`는 상태 `partial`을 가진다. 각 서버의 unit들이 core의 규칙을 부르는데도 그 행들은 `not implemented`라고 적었다. Node 행은 존재하지 않는 파일 대신 `packages/ts/src/app/core-rules.ts`의 `rules`를 이름한다. release 절차는 release의 changelog section이 표시된 모든 statement를 이름한다고 적는다(H35.40).
 - `docs/features.md`에 세션의 저장을 session-store 라이브러리에 맡기는 statement(HY-104.25, HY-104.26, HY-104.27, HY-104.32, HY-115.28, HY-115.29)의 행이 없어, 문서가 서버들이 그것을 따르는 것처럼 읽혔다. Node 서버와 Python 서버는 파일 저장소와 Redis 저장소를 직접 구현하고, 그 Redis 저장소는 application의 command 함수를 받으며, PHP 서버는 PHP의 세션을 쓰고, 어느 서버도 core에 저장소를 주지 않는다. 새 행 `session-library-stores`가 이것을 not implemented로 적는다(H35.37).
 - `make duplication-check`가 두 번 존재하는 코드 네 조각을 보고했다. 셋을 없앴다: `packages/ts/tests/steps/result.ts`의 step `outsideStores`와 `types`가 함수 `stores` 하나를 부른다. `tests/scripts/ci-group-tools.test.mts`와 `tests/scripts/hyper-ext.test.mts`가 Makefile과 `binding release-recipes`가 읽는 파일들의 복사본을 새 파일 `tests/scripts/release-recipes-tree.mts`의 `treeWithoutReleaseRecipes`에서 받는다. `tests/scripts/fixture-program.test.mts`의 두 시험이 함수 `written` 하나를 부른다. 넷째인 `packages/php/tests/CaseSelectionTest.php`와 `packages/php/tests/Support/CaseSelection.php`의 첫 줄들은 열려 있다. 조각들은 한 번의 실행 출력에서 읽은 것이며, target이나 바뀐 시험의 실행으로 수정을 확인하지 않았다(H35.9-15).
 - `make analyse-php`가 오류 249개를 보고했고, 그중 204개가 확장 `polyspec_hyper`의 class(`HyperValueError`, `HyperTypeError`, `AcceptRange`)를 알 수 없다고 했다. `packages/php/phpstan-max.neon`이 확장의 class와 함수를 선언하는 파일을 이름하지 않았고, 어떤 PHP 소스도 그것들을 선언하지 않는다. 이제 그 파일은 `make bindings`가 쓰는 선언 `native/generated/polyspec_hyper.stub.php`를 `scanFiles`에 이름하고, Git이 그 파일을 무시하므로 `analyse-php`가 `bindings`를 선행 target으로 가진다. template 확장의 class 또는 함수를 이름하는 32개와 mixed 형식의 값을 보고하는 13개는 열려 있다. 개수는 한 번의 실행 출력에서 읽은 것이며, target의 실행으로 수정을 확인하지 않았다(H35.9-14).

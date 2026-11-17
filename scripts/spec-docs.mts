@@ -1,6 +1,8 @@
 // The protocol documents (docs/spec/protocol.md and protocol.ko.md) rendered from contracts/protocol.json (plan H2).
 // Both modes first validate the model against scripts/schema/protocol.schema.json and the semantic rules: statement ids
-// and their numbering, koSource, and one sentence (HYR-6) per English statement. `write` renders the documents; `check`
+// and their numbering, koSource, one sentence (HYR-6) per English statement, and the marks of the statements that no
+// code follows (`unimplemented`, H35.40), which are compared with the checklist and the feature status of the root.
+// `write` renders the documents; `check`
 // also fails when a committed document differs from its rendering. Usage: spec-docs.mts write|check [--root <dir>]
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { createHash } from 'node:crypto';
@@ -12,7 +14,7 @@ import { isSchema } from './recipe/validators.mts';
 
 type Lang = 'en' | 'ko';
 type Text = { en: string; ko: string };
-type Statement = Text & { id?: string; koSource: string; term?: string };
+type Statement = Text & { id?: string; koSource: string; term?: string; unimplemented?: string };
 type Item = { statements: Statement[]; blocks: Block[] };
 type Block =
   | { kind: 'paragraph'; statements: Statement[] }
@@ -36,7 +38,106 @@ const GENERATED: Record<Lang, string> = {
   ko: '<!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->',
 };
 
+// The mark of a statement that no code follows (H35.40): the statement holds `unimplemented`, the id of the row of the
+// checklist that implements it, and each document shows this phrase with the row after the statement.
+const UNIMPLEMENTED: Record<Lang, (row: string) => string> = {
+  en: (row) => ` *(Not implemented: row ${row}.)*`,
+  ko: (row) => ` *(구현되지 않음: 행 ${row}.)*`,
+};
+const CHECKLIST = 'docs/plans/execution/checklist.md';
+const FEATURES = 'docs/features.md';
+// The states of a row of the checklist whose task is done: a mark that names such a row is removed with the task.
+const DONE = ['[o]', '[v]'];
+const NOT_IMPLEMENTED = 'not implemented';
+const STATEMENT_ID = /HYC?-[1-9][0-9]*\.[1-9][0-9]*/gu;
+
 const sha256 = (text: string): string => createHash('sha256').update(text, 'utf8').digest('hex');
+
+/** The statements of the contract that hold an id, in document order. */
+function statementsOf(contract: Contract): Statement[] {
+  const found: Statement[] = [];
+  const blocks = (list: Block[]): void => {
+    for (const block of list) {
+      if (block.kind === 'paragraph') found.push(...block.statements);
+      else if (block.kind === 'rule') blocks(block.blocks);
+      else if (block.kind === 'list') {
+        for (const item of block.items) {
+          found.push(...item.statements);
+          blocks(item.blocks);
+        }
+      }
+    }
+  };
+  blocks(contract.intro);
+  for (const section of contract.sections) blocks(section.blocks);
+  return found;
+}
+
+/** The cells of the rows of the first table of a document whose header row holds `header`, without the header rows. */
+function tableRows(text: string, header: string): string[][] {
+  const rows: string[][] = [];
+  let inside = false;
+  for (const line of text.split('\n')) {
+    if (!inside) {
+      inside = line === header;
+      continue;
+    }
+    if (!line.startsWith('|')) break;
+    if (/^\|[-| ]+\|$/u.test(line)) continue;
+    rows.push(line.slice(1, line.lastIndexOf('|')).split(' | ').map((cell) => cell.trim()));
+  }
+  return rows;
+}
+
+/**
+ * The rules of the marks (H35.40). The contract is the source of the fact that no code follows a statement: the row of
+ * a mark is an open row of the checklist, and the rows of the feature status with the status `not implemented` name
+ * exactly the marked statements, each statement by its id in the cell Feature. A tree without marks and without a
+ * feature status, such as the fixture of the tests, has nothing to compare.
+ */
+function markProblems(contract: Contract, root: string): string[] {
+  const problems: string[] = [];
+  const all = statementsOf(contract);
+  const marks = new Map<string, string>();
+  for (const s of all) {
+    if (s.unimplemented === undefined) continue;
+    if (s.id === undefined) problems.push(`"${s.en}" holds a mark and no id; only a statement with an id is marked`);
+    else marks.set(s.id, s.unimplemented);
+  }
+  const read = (name: string): string | undefined => (existsSync(path.join(root, name)) ? readFileSync(path.join(root, name), 'utf8') : undefined);
+
+  const checklist = read(CHECKLIST);
+  if (marks.size > 0 && checklist === undefined) problems.push(`${CHECKLIST} is missing, and the contract holds marks that name its rows`);
+  if (checklist !== undefined) {
+    const states = new Map<string, string>();
+    for (const line of checklist.split('\n')) {
+      const row = /^\| (H[0-9][^ |]*) \|.*\| (\[.\])[^|]*\|$/u.exec(line);
+      if (row?.[1] !== undefined && row[2] !== undefined) states.set(row[1], row[2]);
+    }
+    for (const [id, row] of marks) {
+      const state = states.get(row);
+      if (state === undefined) problems.push(`${id}: the row ${row} of its mark is no row of ${CHECKLIST}`);
+      else if (DONE.includes(state)) problems.push(`${id}: the row ${row} of its mark has the state ${state}; remove the mark`);
+    }
+  }
+
+  const features = read(FEATURES);
+  if (marks.size > 0 && features === undefined) problems.push(`${FEATURES} is missing, and the contract holds marks that its rows name`);
+  if (features !== undefined) {
+    const named = new Set<string>();
+    for (const [row, feature, status] of tableRows(features, '| ID | Feature | Status | Evidence |')) {
+      if (row === undefined || feature === undefined || status?.startsWith(NOT_IMPLEMENTED) !== true) continue;
+      for (const id of feature.match(STATEMENT_ID) ?? []) {
+        named.add(id);
+        if (!marks.has(id)) problems.push(`${FEATURES}: the row ${row} names ${id} as not implemented, and the statement holds no mark`);
+      }
+    }
+    for (const id of marks.keys()) {
+      if (!named.has(id)) problems.push(`${id} holds a mark, and no row of ${FEATURES} with the status ${NOT_IMPLEMENTED} names it`);
+    }
+  }
+  return problems;
+}
 
 /** The semantic rules the schema cannot state: statement ids and their numbering, koSource, one English sentence. */
 function semanticProblems(contract: Contract): string[] {
@@ -123,7 +224,7 @@ function semanticProblems(contract: Contract): string[] {
 }
 
 function inline(list: Statement[], lang: Lang): string {
-  return list.map((s) => (s.id === undefined ? '' : `<a id="${s.id}"></a> `) + s[lang]).join(' ');
+  return list.map((s) => (s.id === undefined ? '' : `<a id="${s.id}"></a> `) + s[lang] + (s.unimplemented === undefined ? '' : UNIMPLEMENTED[lang](s.unimplemented))).join(' ');
 }
 
 function indent(text: string): string {
@@ -214,7 +315,7 @@ function main(argv: string[]): number {
     const validate = ajv.compile<Contract>(schema);
     if (validate(model)) {
       contract = model;
-      problems.push(...semanticProblems(model));
+      problems.push(...semanticProblems(model), ...markProblems(model, root));
     } else {
       for (const error of validate.errors ?? []) {
         problems.push(`contracts/protocol.json${error.instancePath}: ${error.message}`);

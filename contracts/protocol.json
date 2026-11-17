@@ -834,19 +834,22 @@
                   "id": "HY-113.23",
                   "en": "The header lines of a part are read as F-23 of http-form states and the parameters of its `Content-Disposition` as F-6 states, and every part is a `form-data` part with a `name` parameter as F-16 states, so a part of another disposition type, also of a type that only starts with `form-data`, a part without a `name` parameter, a part without header lines, a part whose `Content-Disposition` follows a lone carriage return and so starts no line, a part whose `name` parameter follows a no-break space, a part that gives a parameter such as `name` twice and a part whose quoted parameter value has no end fail with kind `invalid` of http-form, and header lines of a part longer than 8192 bytes fail with kind `header_limit` (F-23.4).",
                   "ko": "part의 header 줄은 http-form의 F-23대로, 그 `Content-Disposition`의 매개변수는 F-6대로 읽고, 모든 part는 F-16대로 `name` 매개변수를 가진 `form-data` part다. 그래서 다른 disposition type의 part(`form-data`로 시작하기만 하는 type 포함), `name` 매개변수가 없는 part, header 줄이 없는 part, `Content-Disposition`이 홀로 있는 carriage return 뒤에 와서 줄을 시작하지 못하는 part, `name` 매개변수가 no-break space 뒤에 오는 part, `name` 같은 매개변수를 두 번 주는 part, 인용된 매개변수 값이 끝나지 않는 part는 http-form의 kind `invalid`로 실패하고, 8192 byte보다 긴 part의 header 줄은 kind `header_limit`로 실패한다(F-23.4).",
-                  "koSource": "51a5b420e5d40796d6d4d673a21ae363ef4bae0f51fb1ffe9880d200b58d981c"
+                  "koSource": "51a5b420e5d40796d6d4d673a21ae363ef4bae0f51fb1ffe9880d200b58d981c",
+                  "unimplemented": "H35.11"
                 },
                 {
                   "id": "HY-113.24",
                   "en": "A boundary is a parameter of the `Content-Type` and no byte of the body, so a `multipart/form-data` content type without a `boundary` parameter, or with an empty one such as `boundary=\"\"`, is no failure of the reading: the reader does not start, the body is held as bytes and gives no form value and no file (HY-57.15), a request to an unknown path receives 404, and after the route a `POST` to an action or to `/_hyper/keep` of an application whose form types include `multipart/form-data` receives status 400 with the text `Bad Request` and kind `malformed_content_type`, at the place of HY-59.12 and after its 415 for a type that is no form type, while a representation answers such a type by HY-121.11.",
                   "ko": "boundary는 `Content-Type`의 매개변수이고 body의 byte가 아니다. 그래서 `boundary` 매개변수가 없거나 `boundary=\"\"`처럼 비어 있는 `multipart/form-data` content type은 읽기의 실패가 아니다. reader는 시작하지 않고, body는 byte로 보유되어 폼 값도 파일도 주지 않으며(HY-57.15), 알 수 없는 경로로의 요청은 404를 받는다. route 뒤에, form 타입에 `multipart/form-data`가 있는 application의 action이나 `/_hyper/keep`으로의 `POST`는 HY-59.12의 자리에서, form 타입이 아닌 type에 대한 그 415 뒤에 상태 400과 텍스트 `Bad Request`, kind `malformed_content_type`을 받고, representation은 그런 type에 HY-121.11로 답한다.",
-                  "koSource": "2ee076a2801e00947a868b58c3fd13e314a80687510393b22424ac7880a741ed"
+                  "koSource": "2ee076a2801e00947a868b58c3fd13e314a80687510393b22424ac7880a741ed",
+                  "unimplemented": "H35.11"
                 },
                 {
                   "id": "HY-113.25",
                   "en": "A body whose bytes fail with kind `invalid` or `header_limit` of http-form fails as a whole, so that it gives no form value and no file (F-23.3), and its request receives status 400 as HY-42 does while the body is read, before the route is decided (HY-131.31), so that no loader and no action runs.",
                   "ko": "byte가 http-form의 kind `invalid`나 `header_limit`로 실패하는 body는 전체가 실패하여 폼 값도 파일도 주지 않고(F-23.3), 그 요청은 body를 읽는 동안, route가 정해지기 전에 HY-42처럼 상태 400을 받아(HY-131.31) loader도 action도 실행되지 않는다.",
-                  "koSource": "fac01f7c3d66c643f23b5469eab0b43482eba3f19096bb77959ab71ca30f760d"
+                  "koSource": "fac01f7c3d66c643f23b5469eab0b43482eba3f19096bb77959ab71ca30f760d",
+                  "unimplemented": "H35.11"
                 },
                 {
                   "id": "HY-113.2",
@@ -998,13 +1001,15 @@
                   "id": "HY-131.30",
                   "en": "A body that passes a limit fails with the kind of that limit of http-form, each of status 413: `body_limit` for the body limit (F-25.1), `value_limit` for the value limit (F-25.2), `part_limit` for the part limit, which counts every part of the body (F-25.3), and `file_limit` for the file limit (F-25.4).",
                   "ko": "제한을 넘는 body는 http-form의 그 제한의 kind로 실패하며 각각 상태 413이다. body 제한은 `body_limit`(F-25.1), value 제한은 `value_limit`(F-25.2), body의 모든 part를 세는 part 제한은 `part_limit`(F-25.3), file 제한은 `file_limit`(F-25.4)이다.",
-                  "koSource": "26cd54f5e9339a55c8be50bc87a74dae3da947ab3fe39ac2ab754cc7625f74e6"
+                  "koSource": "26cd54f5e9339a55c8be50bc87a74dae3da947ab3fe39ac2ab754cc7625f74e6",
+                  "unimplemented": "H35.11"
                 },
                 {
                   "id": "HY-131.28",
                   "en": "The server writes the content of a file part, as it arrives, to the directory of the request of F-10 of http-form, and `UploadedFile` gives the bytes of its file as `size()`, moves it with `moveTo(path)` (`move_to` in Python) and reads it with `content()` as F-11 states, so that a path that exists and a file that was moved fail with the kinds `exists` and `moved` of http-form.",
                   "ko": "서버는 파일 part의 내용을 도착하는 대로 http-form F-10의 요청 디렉터리에 쓰고, `UploadedFile`은 F-11대로 파일의 byte 수를 `size()`로 주고 `moveTo(path)`(Python은 `move_to`)로 옮기며 `content()`로 읽는다. 그래서 이미 있는 경로와 이미 옮긴 파일은 http-form의 kind `exists`와 `moved`로 실패한다.",
-                  "koSource": "00673cbb1e71ffc7eebb33eab59f51f4bcdf69d6775fb9f8e015c9d2b3b94bfe"
+                  "koSource": "00673cbb1e71ffc7eebb33eab59f51f4bcdf69d6775fb9f8e015c9d2b3b94bfe",
+                  "unimplemented": "H35.11"
                 },
                 {
                   "id": "HY-131.14",
@@ -1022,7 +1027,8 @@
                   "id": "HY-131.29",
                   "en": "A `Content-Length` that is no number receives status 400 with kind `invalid_content_length` of http-form before the body is read (F-9), and the host passes the field value to the core, which compares it with the body limit (F-25.1).",
                   "ko": "숫자가 아닌 `Content-Length`는 body를 읽기 전에 http-form의 kind `invalid_content_length`와 상태 400을 받고(F-9), host는 그 field 값을 core에 넘겨 core가 body 한도와 비교한다(F-25.1).",
-                  "koSource": "2c99960ae716bb9e2eaf81e377fd1bdb77c6029533f4acb6f01098b5096131cb"
+                  "koSource": "2c99960ae716bb9e2eaf81e377fd1bdb77c6029533f4acb6f01098b5096131cb",
+                  "unimplemented": "H35.36-2"
                 },
                 {
                   "id": "HY-131.19",
