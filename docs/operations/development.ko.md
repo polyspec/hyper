@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 5659b6fc21449393ba8d9b34f5ce2cd919b94bd28e99fa4ff2e2c8795acccb3e -->
+<!-- source-sha256: 730588c0168deae4e8f8966c1905040eb36798dfc4903cbcb5a98be3774a6a0c -->
 # 개발
 
 [English](development.md).
@@ -125,7 +125,7 @@ consumer는 자기 package manager로 archive를 설치해 릴리스를 확인�
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/cli`, `packages/ts`(HR-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 그 정확한 버전이 이 tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/php`와, dist가 template release zip을 URL과 sha1로 지정하는 그 release의 Composer repository `packages.json`에서 root `vendor`로 설치하고 `packages/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.27를 받는다(HR-70). 그 tag는 `make template-ext`가 package `polyspec/template-php-ext`를 build하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/cli`, `packages/ts`(HR-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언한다. npm은 workspace가 요구하는 정확한 버전을 이 tarball로 해석하므로 manifest는 `overrides`를 두지 않는다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/php`와, dist가 template release zip을 URL과 sha1로 지정하는 그 release의 Composer repository `packages.json`에서 root `vendor`로 설치하고 `packages/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.27를 받는다(HR-70). 그 tag는 `make template-ext`가 package `polyspec/template-php-ext`를 build하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
 
 ### 릴리스 에셋 설치
 

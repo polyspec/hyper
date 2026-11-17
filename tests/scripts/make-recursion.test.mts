@@ -4,6 +4,7 @@
 // the target by `make -n` starts it. Each recipe line that names $(MAKE) is one make call and nothing else. Each test runs
 // the Makefile in a directory of its own (HR-85).
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -33,8 +34,10 @@ test('a dry run of recipe-check prints the case runners and the check and starts
   const { directory, variables, started } = tree(t);
   const lines = dryRun('recipe-check', { cwd: directory, variables }).join('\n');
   assert.equal(started(), '', 'make -n recipe-check started a command of its recipe');
-  // One make runs the runners and then the comparison, each to its end after a failed one (HR-86): -k, and -j1 for the order.
-  assert.match(lines, /^\S*make --no-print-directory -k -j1 recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build recipe-compare$/mu, lines);
+  // The checks are the commands of the runners and of the comparison, and no make (HR-86): they end with the line that
+  // names the failed ones.
+  assert.doesNotMatch(lines, /(?:^|[\s;])\S*make (?:-|recipe-)/mu, lines);
+  assert.ok(lines.includes('echo "failed checks:$failed"'), lines);
   // The dry run prints what the target runs: the five case runners and the check that reads their results (HR-84).
   for (const part of ['--filter CaseRunnerTest', `--cwd packages/ts -- tests/case-runner.test.ts`, 'test_case_runner.py', `--cwd packages/client -- tests/case-runner.test.ts`, 'tests/scripts/build-id.test.mts', 'scripts/recipe/check.mts --root .']) {
     assert.ok(lines.includes(part), `make -n recipe-check prints "${part}":\n${lines}`);
@@ -51,6 +54,44 @@ test('a dry run of install-tools prints the check of the PHP of the checkout wit
   const check = lines.filter((line) => line.includes('php-check: '));
   assert.equal(check.length, 1, lines.join('\n'));
   assert.match(check[0] ?? '', /^test ! -e \S+\/var\/tools\/bin\/php \|\| \{ /u, 'the printed check holds the condition under which it starts PHP');
+});
+
+// The targets that write tracked files which their tools own (H35.8-3): Cargo.lock by cargo update, and the tracked
+// binding packages, go.mod and go.sum among them, by binding scaffold.
+test('a dry run of cargo-lock prints cargo update of the named crates through the link script by absolute paths and starts nothing (H35.8-3)', (t) => {
+  const real = dryRun('cargo-lock', { variables: ['CRATES=polyspec-one polyspec-two'] });
+  assert.match(real.at(-1) ?? '', /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \/\S+\/node \/\S+\/link\.m[jt]s cargo \/\S+ update -p polyspec-one -p polyspec-two$/u, real.join('\n'));
+  const { directory, variables, started } = tree(t);
+  writeFileSync(path.join(directory, '.links'), '../provider\n');
+  dryRun('cargo-lock', { cwd: directory, variables: [...variables, 'CRATES=polyspec-one'] });
+  assert.equal(started(), '', 'make -n cargo-lock started a command of its recipe');
+});
+
+test('cargo-lock starts no cargo without CRATES or in a checkout with .links, whose lock the link script does not write (H35.8-3)', (t) => {
+  const { directory, variables, started } = tree(t);
+  const make = (...more: string[]) => spawnSync('make', ['--no-print-directory', 'cargo-lock', ...variables, ...more], { cwd: directory, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))) });
+  const empty = make();
+  assert.notEqual(empty.status, 0, empty.stdout + empty.stderr);
+  assert.match(empty.stderr, /cargo-lock: CRATES is empty/u);
+  writeFileSync(path.join(directory, '.links'), '../provider\n');
+  const linked = make('CRATES=polyspec-one');
+  assert.notEqual(linked.status, 0, linked.stdout + linked.stderr);
+  assert.match(linked.stderr, /cargo-lock: \S+\/\.links exists, so the link script of kit would update its copy of the lock/u);
+  assert.equal(started(), '', 'cargo-lock started a command');
+  rmSync(path.join(directory, '.links'));
+  const released = make('CRATES=polyspec-one polyspec-two');
+  assert.equal(released.status, 0, released.stdout + released.stderr);
+  assert.match(started(), /link\.m[jt]s cargo \S+ update -p polyspec-one -p polyspec-two\n$/u);
+});
+
+test('a dry run of bindings-scaffold prints binding scaffold with the cargo of the link script by absolute paths and starts nothing (H35.8-3)', (t) => {
+  const real = dryRun('bindings-scaffold');
+  assert.match(real.at(-1) ?? '', /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \/\S+\/node \/\S+\/node_modules\/@polyspec\/binding\/dist\/cli\.js scaffold --root \/\S+ --cargo "\/\S+\/node \/\S+\/link\.m[jt]s cargo \/\S+"$/u, real.join('\n'));
+  // The cases of the contract are written first, as for bindings-check, which compares with what scaffold writes.
+  assert.ok(real.some((line) => line.includes('scripts/binding-cases.mts')), real.join('\n'));
+  const { directory, variables, started } = tree(t);
+  dryRun('bindings-scaffold', { cwd: directory, variables });
+  assert.equal(started(), '', 'make -n bindings-scaffold started a command of its recipe');
 });
 
 /** The recipe lines of the Makefile, each with its continuation lines. */

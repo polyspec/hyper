@@ -22,13 +22,5 @@
     "@polyspec/session-store-darwin-arm64": "https://github.com/polyspec/session-store/releases/download/v0.0.4/polyspec-session-store-darwin-arm64-0.0.4.tgz",
     "@polyspec/session-store-linux-arm64-gnu": "https://github.com/polyspec/session-store/releases/download/v0.0.4/polyspec-session-store-linux-arm64-gnu-0.0.4.tgz",
     "@polyspec/session-store-linux-x64-gnu": "https://github.com/polyspec/session-store/releases/download/v0.0.4/polyspec-session-store-linux-x64-gnu-0.0.4.tgz"
-  },
-  "overrides": {
-    "@polyspec/php-serialization": "$@polyspec/php-serialization",
-    "@polyspec/php-serialization-darwin-arm64": "$@polyspec/php-serialization-darwin-arm64",
-    "@polyspec/php-serialization-linux-arm64-gnu": "$@polyspec/php-serialization-linux-arm64-gnu",
-    "@polyspec/php-serialization-linux-x64-gnu": "$@polyspec/php-serialization-linux-x64-gnu",
-    "@polyspec/php-serialize": "$@polyspec/php-serialize",
-    "@polyspec/template": "$@polyspec/template"
   }
 }

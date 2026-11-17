@@ -102,8 +102,9 @@ INSTALL_LOCK := var/install.lock
 # runs it through scripts/line-end.mts, which ends its output with a newline so the next line starts at column 0
 # (HR-84), and records the name when it fails, and `$(checks_result)` then fails and names every failed
 # check. A recipe that uses them starts with `@failed=; \` and joins its checks with `\`. No check of such a recipe is a
-# make: make runs a recipe line that names $(MAKE) in a dry run too, with every command of that line (HR-83). Checks that
-# are targets are the goals of one make with -k on a line of its own, which runs each to its end and fails after the last.
+# make: make runs a recipe line that names $(MAKE) in a dry run too, with every command of that line (HR-83). A check
+# that a target also runs is a variable that holds its command, which the target and the recipe of the checks both name
+# (recipe-check).
 check = echo '$(2)'; $(NODE) scripts/line-end.mts '$(2)' || failed="$$failed $(1);";
 checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
@@ -394,37 +395,53 @@ RECIPE_RESULTS_DIR := $(CURDIR)/var/recipe/results
 
 .PHONY: recipe-check recipe-compare recipe-candidates recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build
 # Each case runner writes one line per case to the file that RECIPE_RESULTS names (HYR-7); recipe-check runs the five
-# runners to their end, then recipe-compare, which reads their files, and fails when a runner or the comparison fails
-# (HR-86). The six are the goals of one make with -k, which runs a goal after a failed one and names each failed goal,
-# and with -j1, since the comparison reads what the runners wrote and make orders its goals only when it runs one job.
-# That make is alone on its line, so a dry run of recipe-check prints the commands of the six and runs none (HR-83).
+# runners to their end, then the comparison, which reads their files, and fails when a runner or the comparison fails,
+# naming each failed one in its last line (HR-86). Its checks are the commands of the runners and of the comparison,
+# which the variables below hold for it and for the targets recipe-run-* and recipe-compare, and not those targets: a
+# check that is a make would run in a dry run (HR-83), and the goals of one make -k pass the output of a runner on as
+# it is, so a runner that ends without a newline joins the next line (HR-84), and make names a failed goal only where
+# it failed and not after the last one. recipe-check therefore has the prerequisites of the five runners, which are
+# built before its first check, and its dry run prints one accumulating command and runs none.
+recipe_run_php = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS) -- --filter CaseRunnerTest
+recipe_run_node = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE) -- tests/case-runner.test.ts
+recipe_run_python = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p test_case_runner.py
+recipe_run_browser = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/browser.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE) -- tests/case-runner.test.ts
+recipe_run_build = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/build-id.test.mts
+recipe_compare = $(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --results php=$(RECIPE_RESULTS_DIR)/php.txt --results node=$(RECIPE_RESULTS_DIR)/node.txt --results python=$(RECIPE_RESULTS_DIR)/python.txt --results browser=$(RECIPE_RESULTS_DIR)/browser.txt --results build=$(RECIPE_RESULTS_DIR)/build.txt
 recipe-run-php: server-fixtures ext hyper-ext ## Run the PHP case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS) -- --filter CaseRunnerTest
+	$(recipe_run_php)
 
 recipe-run-node: packages node-fixtures ## Run the Node case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE) -- tests/case-runner.test.ts
+	$(recipe_run_node)
 
 recipe-run-python: server-fixtures ## Run the Python case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p test_case_runner.py
+	$(recipe_run_python)
 
 recipe-run-browser: packages ## Run the browser case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/browser.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE) -- tests/case-runner.test.ts
+	$(recipe_run_browser)
 
 recipe-run-build: packages ## Run the build case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/build-id.test.mts
+	$(recipe_run_build)
 
-recipe-check: ## Check contracts/interfaces.json against the sources of the three servers and their case results (HYR-7, HYR-8)
+recipe-check: server-fixtures ext hyper-ext packages node-fixtures ## Check contracts/interfaces.json against the sources of the three servers and their case results (HYR-7, HYR-8)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-check needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
-	$(MAKE) --no-print-directory -k -j1 recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build recipe-compare
+	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
+	$(call check,the PHP case runner,$(recipe_run_php)) \
+	$(call check,the Node case runner,$(recipe_run_node)) \
+	$(call check,the Python case runner,$(recipe_run_python)) \
+	$(call check,the browser case runner,$(recipe_run_browser)) \
+	$(call check,the build case runner,$(recipe_run_build)) \
+	$(call check,the recipe check,$(recipe_compare)) \
+	$(checks_result)
 
 recipe-compare: ## Compare contracts/interfaces.json with the sources of the three servers and the case results that the runners wrote (HYR-7, HYR-8)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-compare needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
-	$(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --results php=$(RECIPE_RESULTS_DIR)/php.txt --results node=$(RECIPE_RESULTS_DIR)/node.txt --results python=$(RECIPE_RESULTS_DIR)/python.txt --results browser=$(RECIPE_RESULTS_DIR)/browser.txt --results build=$(RECIPE_RESULTS_DIR)/build.txt
+	$(recipe_compare)
 
 recipe-candidates: ## Write the candidate of contracts/interfaces.json under var/recipe, with the hand-written fields listed beside it (HYR-10)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-candidates needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
@@ -444,6 +461,17 @@ core-lint: ## Run clippy on the Rust core and its tests with every warning an er
 core-fmt-check: ## Check the format of the Rust core
 	$(CARGO) fmt --check -p polyspec-hyper
 
+# Cargo.lock is written by cargo (HR-70): after a change of the tag of a crate in a Cargo.toml, cargo-lock runs
+# `cargo update -p <crate>` for the crates of CRATES through $(CARGO), which fetches the tag. In a checkout with a link
+# declaration the link script gives cargo its own copy of the lock under var/link/cargo and leaves the tracked lock as
+# it is (kit K1269), and it has no mode that writes the tracked lock, so the target fails there before it starts cargo:
+# it writes Cargo.lock only in the release state, a checkout without .links, where the link script runs cargo as given.
+.PHONY: cargo-lock
+cargo-lock: ## Write Cargo.lock for the crates of CRATES with cargo update, in a checkout without .links; ONLINE
+	@test -n "$(strip $(CRATES))" || { echo 'cargo-lock: CRATES is empty; name the crates whose pin changed: make cargo-lock CRATES="<crate> <crate>"' >&2; exit 2; }
+	@test ! -e $(CURDIR)/.links || { echo 'cargo-lock: $(CURDIR)/.links exists, so the link script of kit would update its copy of the lock under var/link/cargo and leave Cargo.lock as it is (kit K1269); run the target in a checkout without .links' >&2; exit 1; }
+	$(ONLINE) $(CARGO) update $(foreach crate,$(CRATES),-p $(crate))
+
 # The bindings of the Rust core for the five targets of packages/rust/interface.json (binding design L-1, L-2, L-2a).
 # BINDING is the bin of the npm package @polyspec/binding, which package.json declares by its release asset and
 # make install-packages installs from package-lock.json (HR-70, H35.14-2); the Cargo.toml files require
@@ -451,8 +479,10 @@ core-fmt-check: ## Check the format of the Rust core
 # which binding check compares. bindings writes the generated folders, which Git ignores (native/generated/ of packages/php,
 # packages/python and packages/ts, packages/ts/native/wasm/generated, packages/go/internal/ffi/generated), and the
 # tracked Go files zz_generated_*.go of packages/go (binding GN-3). bindings-check runs the contract check, which also
-# compares the tracked binding packages with what binding scaffold writes (binding L-2, CK-19).
-.PHONY: bindings bindings-check lint-bindings test-bindings node-package test-wasm test-go
+# compares the tracked binding packages with what binding scaffold writes (binding L-2, CK-19). bindings-scaffold runs
+# binding scaffold, which writes those tracked packages: the Cargo manifest, the entry file and the language manifest of
+# each binding, packages/go/go.mod and go.sum among them, after a change of the contract or of a pin that they state.
+.PHONY: bindings bindings-check bindings-scaffold lint-bindings test-bindings node-package test-wasm test-go
 BINDING := $(CURDIR)/node_modules/@polyspec/binding/dist/cli.js
 .PHONY: binding-cases
 # The cases of contracts/ that the generated tests of every binding run (HR-100): scripts/binding-cases.mts writes the
@@ -465,6 +495,12 @@ bindings: binding-cases ## Write the generated sources of every binding with the
 bindings-check: binding-cases ## Check the interface contract and the tracked binding packages with the binding generator of package.json (binding CK-19)
 	@test -f $(BINDING) || { echo "bindings-check: the binding cli $(BINDING) is missing: run make install-packages"; exit 1; }
 	$(NODE) $(BINDING) check $(CURDIR)/packages/rust/interface.json --cargo "$(CARGO)"
+# binding scaffold reads the contracts of the libraries that the contract names through $(CARGO) and, for go.sum, the
+# sums that `go mod download` of the Go of the checkout gives for the modules that go.mod requires (binding GN-15f,
+# GN-15l), which Go downloads when its module cache does not hold them.
+bindings-scaffold: binding-cases ## Write the tracked binding packages, go.mod and go.sum among them, with binding scaffold (binding L-2); ONLINE
+	@test -f $(BINDING) || { echo "bindings-scaffold: the binding cli $(BINDING) is missing: run make install-packages"; exit 1; }
+	$(ONLINE) $(NODE) $(BINDING) scaffold --root $(CURDIR) --cargo "$(CARGO)"
 
 # The release recipes of the bindings (HR-99, binding GN-19h, CK-94): packages/release.mk, which binding release-recipes
 # writes and Git ignores, defines the release targets of the bindings with BINDING_RUN, the command that starts the

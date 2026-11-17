@@ -3,7 +3,7 @@
 // recipes with several checks show one accumulating command.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'node:test';
@@ -103,4 +103,62 @@ test('every option that a recipe passes to a script of scripts/ is declared by t
   }
   assert.ok(checked > 10, `only ${checked} options were checked`);
   assert.deepEqual(found, []);
+});
+
+/**
+ * A Makefile of the rules of recipe-check as the Makefile of the checkout holds them: `check` and `checks_result`, and
+ * the rules from the case runners to recipe-check, each without its prerequisites, which build what the real runners
+ * read and a stub runner does not.
+ */
+function recipeCheckRules(): string {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const macros = makefile.split('\n').filter((line) => /^(?:check|checks_result) = /u.test(line));
+  assert.equal(macros.length, 2, 'the Makefile defines check and checks_result');
+  const start = makefile.indexOf('\n.PHONY: recipe-check ');
+  const end = makefile.indexOf('\nrecipe-candidates:');
+  assert.ok(start >= 0 && end > start, 'the Makefile holds the rules of recipe-check before recipe-candidates');
+  const rules = makefile.slice(start, end);
+  assert.match(rules, /^recipe-check:/mu, 'the rules hold recipe-check');
+  return `${macros.join('\n')}\n${rules.replace(/^(recipe-[\w-]+):[^#\n]*/gmu, '$1: ')}\n`;
+}
+
+test('make recipe-check runs every case runner and the comparison after a failed runner, each line at column 0, and names the failed runners at its end (HR-84, HR-86)', (t) => {
+  const directory = temporary(t);
+  writeFileSync(path.join(directory, 'Makefile'), recipeCheckRules());
+  // The recipe starts scripts/line-end.mts by that path, so the directory holds it; it imports only modules of node.
+  mkdirSync(path.join(directory, 'scripts'));
+  copyFileSync(path.join(ROOT, 'scripts/line-end.mts'), path.join(directory, 'scripts/line-end.mts'));
+  // The program `node` of this run: it runs scripts/line-end.mts with the node of this test, and stands for every other
+  // command, which it records. The PHP and the Python case runner fail and print without a final newline.
+  const bin = path.join(directory, 'bin');
+  const record = path.join(directory, 'started');
+  mkdirSync(bin);
+  writeFileSync(path.join(bin, 'node'), [
+    '#!/bin/sh',
+    `case "$1" in scripts/line-end.mts) exec '${process.execPath}' "$@";; esac`,
+    `printf '%s\\n' "$*" >> '${record}'`,
+    'case "$*" in',
+    "  *CaseRunnerTest*) printf 'the PHP runner failed'; exit 1;;",
+    "  *test_case_runner.py*) printf 'the Python runner failed'; exit 1;;",
+    "  *) echo 'passed';;",
+    'esac',
+    '',
+  ].join('\n'));
+  chmodSync(path.join(bin, 'node'), 0o755);
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name)));
+  const variables = [`NODE=${path.join(bin, 'node')}`, 'KIT=kit', 'KIT_EXT=mjs', `RECIPE_RESULTS_DIR=${path.join(directory, 'results')}`, `RECIPE_TYPESCRIPT=${directory}`, 'PHP_PACKAGE=packages/php', 'NODE_PACKAGE=packages/ts', 'JS_PACKAGE=packages/client', 'PYTHON_PACKAGE=packages/python'];
+  const run = spawnSync('make', ['--no-print-directory', 'recipe-check', ...variables], { cwd: directory, env: { ...env, PATH: `${bin}:${env.PATH ?? ''}` }, encoding: 'utf8' });
+  const output = `stdout:\n${run.stdout}\nstderr:\n${run.stderr}`;
+  assert.notEqual(run.status, 0, output);
+  // Every runner ran after the failed PHP runner, and the comparison after the failed Python runner (HR-86).
+  const started = existsSync(record) ? readFileSync(record, 'utf8').trimEnd().split('\n') : [];
+  const expected = ['--filter CaseRunnerTest', '--cwd packages/ts -- tests/case-runner.test.ts', 'test_case_runner.py', '--cwd packages/client -- tests/case-runner.test.ts', 'tests/scripts/build-id.test.mts', 'scripts/recipe/check.mts --root .'];
+  assert.equal(started.length, expected.length, `${started.join('\n')}\n${output}`);
+  expected.forEach((part, index) => assert.ok(started[index]?.includes(part), `command ${index + 1} is "${part}":\n${started.join('\n')}`));
+  // The output of a runner that ends without a newline is a line of its own (HR-84).
+  const lines = run.stdout.trimEnd().split('\n');
+  assert.ok(lines.includes('the PHP runner failed'), output);
+  assert.ok(lines.includes('the Python runner failed'), output);
+  // The last line names each failed runner, after the output of the comparison (HR-86).
+  assert.equal(lines.at(-1), 'failed checks: the PHP case runner; the Python case runner;', output);
 });
