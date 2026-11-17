@@ -5,6 +5,7 @@ import type { Socket } from 'node:net';
 import { extname, isAbsolute, join } from 'node:path';
 import { TLSSocket } from 'node:tls';
 import type { App } from '../app/app.js';
+import { ArgumentCountError } from '../app/argument-count-error.js';
 import { rules } from '../app/core-rules.js';
 import { Cookies } from '../http/cookies.js';
 import type { FileSessions } from '../session/file-sessions.js';
@@ -48,6 +49,25 @@ const CONTENT_TYPES: Record<string, string> = {
   '.svg': 'image/svg+xml',
   '.txt': 'text/plain; charset=utf-8',
 };
+
+// The names of the options of a host entry, the members of its options record (HY-106.9).
+const SERVER_REQUIRED: string[] = [];
+const SERVER_OPTIONAL = ['files', 'written', 'around'];
+
+// Returns an HTTP server that answers every request with the application `app` and its sessions. The host entries
+// are functions of the host code that take the application first, and no members of `App` (HY-100.28, HY-106.20).
+export function server<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server {
+  ArgumentCountError.between(arguments.length, 2, 3);
+  ArgumentCountError.members(options, SERVER_REQUIRED, SERVER_OPTIONAL);
+  return createServer(app, sessions, options);
+}
+
+// Returns the node:http request listener that `server` installs (HY-100.28).
+export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener {
+  ArgumentCountError.between(arguments.length, 2, 3);
+  ArgumentCountError.members(options, SERVER_REQUIRED, SERVER_OPTIONAL);
+  return createListener(app, sessions, options);
+}
 
 // Returns a server that answers every request with the application. A request whose start line or headers
 // node:http cannot parse, such as a request target with a byte outside ASCII (HY-42), receives a plain 400.

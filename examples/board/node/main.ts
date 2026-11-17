@@ -6,7 +6,7 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { App, FileSessions, RedisSessions } from '@polyspec/hyper';
+import { App, FileSessions, RedisSessions, server as hostServer } from '@polyspec/hyper';
 import { handlers, type Services } from './handlers.js';
 import { Posts } from './posts.js';
 
@@ -100,7 +100,7 @@ app.bind('assets', () => {
   return { hyper: urls.hyper };
 });
 // The session cookie has the name that the PHP board uses, PHP's default session name.
-const server = app.server(await sessionStore(), { files: join(board, 'public') });
+const server = hostServer(app, await sessionStore(), { files: join(board, 'public') });
 server.listen(port, '127.0.0.1', () => {
   // A server that listens on a TCP port has an AddressInfo; a pipe or a closed server has none.
   const address = server.address();

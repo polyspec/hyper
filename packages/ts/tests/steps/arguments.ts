@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ArgumentCountError } from '../../src/app/argument-count-error.js';
 import { Container } from '../../src/app/container.js';
-import { App, ArraySession, BadRequest, Choice, ClientRendering, FileSessions, Forbidden, MediaType, NotFound, RedisSessions, Redirect, Reply, Representation, Request, Response, Result, UploadedFile } from '../../src/index.js';
+import { App, ArraySession, BadRequest, Choice, ClientRendering, FileSessions, Forbidden, listener, MediaType, NotFound, RedisSessions, Redirect, Reply, Representation, Request, Response, Result, server, UploadedFile } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
 import { client, Fixture, FIXTURES, handlers, PROGRAM, type Services } from '../support.js';
 import { textOf } from '../inputs.js';
@@ -74,15 +74,17 @@ const MEMBERS: Record<string, Member> = {
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
     call: (receiver, args) => app(receiver).handle(...args),
   },
+  // HY-106.20: the host entries are functions of the host code whose first argument is the application, which the
+  // case gives as the receiver; their other arguments are the arguments of the case.
   'app.server': {
-    required: App.prototype.server.length,
+    required: server.length - 1,
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
-    call: (receiver, args) => app(receiver).server(...args),
+    call: (receiver, args) => server(app(receiver), ...args),
   },
   'app.listener': {
-    required: App.prototype.listener.length,
+    required: listener.length - 1,
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
-    call: (receiver, args) => app(receiver).listener(...args),
+    call: (receiver, args) => listener(app(receiver), ...args),
   },
   'media-type.parameters': {
     required: MediaType.prototype.parameters.length,

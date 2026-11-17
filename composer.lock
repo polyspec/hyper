@@ -207,7 +207,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/php",
-                "reference": "ecde84f7e79716c3dce08b48259b74735b37f8b6"
+                "reference": "f86a94d4581b79dacf1fef3279b554f2a12ebb06"
             },
             "require": {
                 "ext-polyspec_hyper": "*",
@@ -234,7 +234,10 @@
                         "src/Result/",
                         "src/Session/"
                     ]
-                }
+                },
+                "files": [
+                    "src/Host/functions.php"
+                ]
             },
             "autoload-dev": {
                 "psr-4": {

@@ -7,7 +7,7 @@ declare(strict_types=1);
 // shared loader; `hook-fatal` raises E_USER_ERROR in the response hook; `after-send` raises E_USER_ERROR after App::run
 // sent the response, `after-send-flushed` flushes the output first; `exit` ends the script with exit() in the shared
 // loader, before any output; `read-fails` replaces the `php` stream wrapper with one whose read of php://input fails,
-// so that App::run fails while it reads the body (HY-60.14); `read-fails-multipart` accepts multipart/form-data and
+// so that `run` fails while it reads the body (HY-60.14); `read-fails-multipart` accepts multipart/form-data and
 // gives the head of a file part before the read fails, so that the request has a directory (HY-131.14). Every response hook call appends a `response` line and every write hook call appends a
 // `written` line to the file of HYPER_ESCAPE_LOG, so a test reads how often each hook ran and in which order.
 
@@ -16,6 +16,8 @@ require_once __DIR__ . '/FrontController.php';
 
 use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Tests\Support\FrontController;
+
+use function Polyspec\Hyper\run;
 
 /** A `php` stream wrapper whose stream opens and whose every read fails, as a read of a broken input does. */
 final class FailingInput
@@ -88,7 +90,7 @@ if ($mode === 'read-fails' || $mode === 'read-fails-multipart') {
     stream_wrapper_unregister('php');
     stream_wrapper_register('php', FailingInput::class);
 }
-$app->run();
+run($app);
 if ($mode === 'after-send-flushed') {
     while (ob_get_level() > 0) {
         ob_end_flush();

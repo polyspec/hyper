@@ -5473,9 +5473,9 @@
                   "statements": [
                     {
                       "id": "HY-97.9",
-                      "en": "The Node server gives the same through the `node:http` server that `app.server()` returns: a consumer replaces its `request` listener with a listener that calls the listener of the application, so that it runs each request in a context of its own, adds a request id header to the request and the response, or answers a request itself before the application, such as a 400 for a request that did not come from its web server.",
-                      "ko": "Node 서버는 `app.server()`가 돌려주는 `node:http` 서버를 통해 같은 기능을 제공한다: 소비자는 그 서버의 `request` listener를 애플리케이션의 listener를 호출하는 listener로 바꿔, 각 요청을 자기 context에서 실행하거나, 요청과 응답에 request id header를 붙이거나, 애플리케이션보다 먼저 요청에 직접 응답한다(예: 자기 web server에서 오지 않은 요청에 400).",
-                      "koSource": "6b49392bbf6550c4cb27ea6ff80cf01473b4b5fb4667d93f6e3e7d5399773d7d"
+                      "en": "The Node server gives the same through the `node:http` server that the host function `server(app, sessions, options)` returns: a consumer replaces its `request` listener with a listener that calls the listener of the application, so that it runs each request in a context of its own, adds a request id header to the request and the response, or answers a request itself before the application, such as a 400 for a request that did not come from its web server.",
+                      "ko": "Node 서버는 host 함수 `server(app, sessions, options)`가 돌려주는 `node:http` 서버를 통해 같은 기능을 제공한다: 소비자는 그 서버의 `request` listener를 애플리케이션의 listener를 호출하는 listener로 바꿔, 각 요청을 자기 context에서 실행하거나, 요청과 응답에 request id header를 붙이거나, 애플리케이션보다 먼저 요청에 직접 응답한다(예: 자기 web server에서 오지 않은 요청에 400).",
+                      "koSource": "8bae2d70089cd6722deb2181f73b564c0bc99f12a6c04f577e9213e912d60ad5"
                     },
                     {
                       "id": "HY-97.10",
@@ -5830,8 +5830,7 @@
                       "id": "HY-100.28",
                       "en": "Node: `listener(app, sessions, options)` of the Node server returns the `node:http` request listener that `server` installs.",
                       "ko": "Node: Node 서버의 `listener(app, sessions, options)`는 `server`가 설치하는 `node:http` 요청 listener를 돌려준다.",
-                      "koSource": "7af7bec8316b5885f6a4c64b52f1b3cfd35a773eeadbfc25706475e871f23829",
-                      "unimplemented": "H35.44-1"
+                      "koSource": "7af7bec8316b5885f6a4c64b52f1b3cfd35a773eeadbfc25706475e871f23829"
                     },
                     {
                       "id": "HY-100.29",
@@ -6766,8 +6765,7 @@
                   "id": "HY-106.20",
                   "en": "A host entry of HY-100 is a function of the host code of its server that takes the application as its first argument, `listener(app, sessions, options)` and `server(app, sessions, options)` in Node, `run($app, ...)` in PHP and `create_server(app, ...)`, `create_wsgi(app, ...)` and `create_asgi(app, ...)` in Python, and no member of `App`, because the host code is written by hand in each runtime and `App` is generated from the interface contract.",
                   "ko": "HY-100의 host 진입점은 애플리케이션을 첫 인자로 받는 그 server의 host 코드 함수이며(Node `listener(app, sessions, options)`와 `server(app, sessions, options)`, PHP `run($app, ...)`, Python `create_server(app, ...)`, `create_wsgi(app, ...)`, `create_asgi(app, ...)`), `App`의 member가 아니다. host 코드는 runtime마다 손으로 쓰고 `App`은 interface 계약에서 생성하기 때문이다.",
-                  "koSource": "8935e00202f745c48430a44e97142d2f4cebf2a8907896bd0341e4c95fa975e0",
-                  "unimplemented": "H35.44-1"
+                  "koSource": "8935e00202f745c48430a44e97142d2f4cebf2a8907896bd0341e4c95fa975e0"
                 },
                 {
                   "id": "HY-106.18",

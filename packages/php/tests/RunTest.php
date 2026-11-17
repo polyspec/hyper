@@ -12,7 +12,9 @@ use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Result;
 use Polyspec\Hyper\Tests\Support\Json;
 
-/** HY-43, HY-52, HY-100: the PHP settings that `App::run` applies before it answers the request. */
+use function Polyspec\Hyper\run;
+
+/** HY-43, HY-52, HY-100: the PHP settings that `the host function `run`` applies before it answers the request. */
 final class RunTest extends TestCase
 {
     #[RunInSeparateProcess]
@@ -28,7 +30,7 @@ final class RunTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/missing';
 
         ob_start();
-        $app->run();
+        run($app);
         $body = ob_get_clean();
 
         self::assertSame('Not Found', $body);
@@ -92,20 +94,20 @@ final class RunTest extends TestCase
         ];
         foreach ($apps as $option => $app) {
             try {
-                $app->run();
+                run($app);
                 self::fail("run accepted the option {$option}");
             } catch (\LogicException) {
                 self::addToAssertionCount(1);
             }
         }
         ob_start();
-        App::open(
+        run(App::open(
             __DIR__ . '/fixtures/app.json',
             __DIR__ . '/build/server',
             $handlers,
             'Z',
             bodyLimit: 8 * 1024 * 1024,
-        )->run();
+        ));
         self::assertSame('Not Found', ob_get_clean());
     }
 
@@ -121,7 +123,7 @@ final class RunTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/missing';
 
         ob_start();
-        $app->run(hrtime(true) - 1_500_000_000);
+        run($app, hrtime(true) - 1_500_000_000);
         ob_end_clean();
 
         self::assertCount(1, $reports);
@@ -146,7 +148,7 @@ final class RunTest extends TestCase
         $_SERVER['REQUEST_TIME_FLOAT'] = microtime(true) + 10.0;
 
         ob_start();
-        $app->run();
+        run($app);
         ob_end_clean();
 
         self::assertCount(1, $reports);
@@ -177,7 +179,7 @@ final class RunTest extends TestCase
         $server = null;
         try {
             // The server listens on a port that the system assigns and reports it, so no other process can take the
-            // port between its choice and its use (HR-89). ignore_user_abort is on here, so App::run must turn it off.
+            // port between its choice and its use (HR-89). ignore_user_abort is on here, so the host function `run` must turn it off.
             [$server, $stderr, $port] = self::startServer(
                 [
                     PHP_BINARY,
@@ -276,7 +278,7 @@ final class RunTest extends TestCase
         self::assertSame([], $entries);
     }
 
-    /** HY-99: a fatal error after App::run sent the response reports ended false with the failure, and no second response. */
+    /** HY-99: a fatal error after the host function `run` sent the response reports ended false with the failure, and no second response. */
     public function testAFatalErrorAfterTheHeadersWereSentReportsAnUnendedWrite(): void
     {
         [$status, , , $lines] = self::escape('after-send');

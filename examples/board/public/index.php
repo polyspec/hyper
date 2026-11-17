@@ -12,6 +12,8 @@ use Polyspec\Hyper\Examples\Board\Posts;
 use Polyspec\Hyper\RedisClusterSessions;
 use Polyspec\Hyper\RedisSentinelSessions;
 
+use function Polyspec\Hyper\run;
+
 require __DIR__ . '/../vendor/autoload.php';
 
 $database = getenv('BOARD_DB');
@@ -65,4 +67,4 @@ $app = App::open(
 );
 $app->bind(Posts::class, fn (): Posts => new Posts($database, $now));
 $app->bind(Assets::class, fn (): Assets => Assets::fromManifest(__DIR__ . '/../build/client/manifest.json'));
-$app->run();
+run($app);

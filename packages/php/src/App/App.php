@@ -499,7 +499,7 @@ final class App
 
     /**
      * Writes hyper's plain 500 for an error that escapes the answer of the request (HY-60): the text, no-store and the
-     * frame policy, as the other failures of the server. The headers that the caller set before `App::run` (`$kept`)
+     * frame policy, as the other failures of the server. The headers that the caller set before `run` (`$kept`)
      * stay, and no other header does (HY-60). Headers that have been sent leave the response as it is, and the write
      * is then not complete (HY-99). The response hook receives no escaped 500 (HY-60). The caller has written the log
      * line of the error, whose failure is `$failure`.
@@ -1033,9 +1033,12 @@ final class App
      * A response without a body receives no Content-Type from PHP (HY-52), and a client that closed the connection
      * ends the script at the first failed write and is reported to the disconnect hook (HY-67). The elapsed time of
      * HY-60 counts from `$started`, an hrtime(true) value of the monotonic clock that the caller takes at the start
-     * of the request, such as the first statement of its front controller, and that defaults to now.
+     * of the request, such as the first statement of its front controller, and that defaults to now. The host
+     * function `run` calls it (HY-106.20).
+     *
+     * @internal
      */
-    public function run(?int $started = null): void
+    public function serve(?int $started = null): void
     {
         ArgumentCount::most(\func_num_args(), 1);
         // The headers that the caller set before this call stay on the plain 500 of an escaped error (HY-60).
