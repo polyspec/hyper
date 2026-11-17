@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 74b7e81612e920058349a9d7bfe0227ab04305f9925f8b51eafad63998367061 -->
+<!-- source-sha256: 8876a80afc1a024e0ecc34302c8945ee29ec523112f1c270a2aeafb6c27ab65c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `docs/operations/dependencies.md`는 절 "release의 plain 파일 고정"을 얻었다. http-form의 case 파일처럼 release가 asset으로 내고 패키지 관리자가 설치하지 않는 파일을 이 저장소가 고정하는 설계다. 파일마다 tag, URL, sha256을 적는 추적 항목 `config/release-files.json`, `$(ONLINE)`으로 내려받고 고정된 digest일 때만 파일을 내는 설치 target `make hyper-install-release-files`, 자리 `var/release-files/<library>/<tag>/<path>`, 테스트 `tests/scripts/release-file-pins.test.mts`, 그리고 case reader가 파일을 찾고 없을 때 실패하는 방법을 정한다. 이 절은 구현되지 않음으로 표시되어 있다. 그 파일, target, 테스트는 아직 없다(H35.11).
 
 - HY-113.22를 retire하고 HY-113.23, HY-113.24, HY-113.25가 대신하며, HY-57.15를 추가했다. HY-113.22는 part의 header 줄, 매개변수, boundary에 대한 http-form의 규칙을 가리키고 모든 실패를 part의 실패라 불렀다. 어떤 part가 실패하는지는 정하지 않았고, media type이 아닌 content type에 대해서는 아무것도 정하지 않았다. HY-113.23은 `invalid`로 실패하는 part를 정한다. 다른 disposition type의 part, `name`이 없는 part, header 줄이 없는 part, 홀로 있는 carriage return 뒤의 part, 매개변수 앞에 no-break space가 있는 part, 매개변수를 두 번 주는 part, 인용된 값이 끝나지 않는 part다. HY-113.24는 boundary가 없거나 빈 `multipart/form-data` type에 `no_boundary`를 정한다. HY-113.25는 그런 body가 전체로 상태 400으로 실패함을 정한다. HY-57.15는 line feed가 뒤따르는 urlencoded type처럼 `Content-Type`이 media type이 아닌 body에 상태 400의 `malformed_content_type`을 정한다. HY-132.9의 표는 새 statement를 인용하고 http-form의 `malformed_content_type` 행을 얻었다. 어떤 서버도 이 답을 내지 않는다. `docs/features.md`는 행 `form-failures`를 not implemented로 얻었고, 행 `form-values`는 HY-113.22를 더 인용하지 않는다(H35.11).
 

@@ -51,3 +51,34 @@ Each server reads a `multipart/form-data` body with its own parser, which must m
 
 PHP 8.4's native `request_parse_body()` was also considered and refused: it nests bracketed names like `$_POST`, which HY-57 refuses.
 
+## Pin of a plain file of a release
+
+Not implemented: this section is the design of H35.11, and no file, target or test of it exists. The case runners read the fixed copy `tests/legacy/fields.json`.
+
+A package manager pins a package by its lock. A plain file that a release publishes as an asset, such as the case files `fields.json` and `forms.json` of http-form, has no package manager, so the repository pins it itself, by the release tag and the sha256 of the file (HR-80).
+
+- **The tracked entry.** `config/release-files.json` holds one entry per library. The entry names the repository, the release tag, and for each file its path in that repository, the URL of its asset and its sha256. The `files` object is the `files` object of the asset `files.json` of that release, copied as it is, so a reader compares the pin with the release by reading two files:
+
+  ```json
+  {
+    "schema": 1,
+    "releases": {
+      "http-form": {
+        "repository": "https://github.com/polyspec/http-form",
+        "tag": "vX.Y.Z",
+        "files": {
+          "contracts/fields.json": { "url": "https://github.com/polyspec/http-form/releases/download/vX.Y.Z/fields.json", "sha256": "<64 hexadecimal digits>" },
+          "contracts/forms.json": { "url": "https://github.com/polyspec/http-form/releases/download/vX.Y.Z/forms.json", "sha256": "<64 hexadecimal digits>" }
+        }
+      }
+    }
+  }
+  ```
+
+  The tag is the tag of the dependency line of `polyspec-http-form` in `packages/rust/Cargo.toml`, so the cases and the crate are of one release. A new release is one commit that changes the dependency line, `Cargo.lock` and this entry. The entry names a tag and never a branch or a commit (AGENTS.md, a dependency on another polyspec repository). `config/owner-checks.json` gains the owner rule of the file (HR-88).
+- **The install target.** `make hyper-install-release-files` runs `scripts/install-release-files.mts` through `$(ONLINE)`, and `make hyper-install` runs it. For each file of each entry the script downloads the URL into a staging file of its own process, computes the sha256 of the bytes, and publishes the file with one rename (`writeFileAtomic`, HR-82) only when the digest is the pinned one; another digest fails with the URL, the pinned and the computed digest, and writes nothing. A file that is present with the pinned digest is not downloaded again, so the target is idempotent. The script reads no `files.json` and no listing of a release, because a check or an install does not ask a live service what a release holds (HR-89); it downloads the pinned URLs only, as `npm ci` downloads what a lock pins.
+- **The place of the file.** `var/release-files/<library>/<tag>/<path>`, such as `var/release-files/http-form/vX.Y.Z/contracts/fields.json`. `/var/` is ignored, and the tag in the path keeps the file of an earlier pin from being read after the pin moved.
+- **The test of the pin.** `tests/scripts/release-file-pins.test.mts`, in the form of `tests/scripts/template-pins.test.mts`: the tag of an entry is `v` and an exact version and equals the tag of the Cargo dependency line of its library; each URL is `<repository>/releases/download/<tag>/<base name of the path>`; each sha256 is 64 lowercase hexadecimal digits; the recipe of the install target downloads through `$(ONLINE)`, read from its dry run (`dryRun` of `tests/scripts/make-dry-run.mts`, HR-83); and, after `requireBuilt('hyper-install-release-files', <the installed path>)`, the sha256 of each installed file is the pinned one. The test makes no request.
+- **How the case runners find the file.** `caseFiles` of `contracts/interfaces.json` declares `fields.json` and `forms.json` with `release: "http-form"` in place of the declaration of `tests/legacy/interfaces.json`, and the case reader of each language (`caseFileUrl` of `packages/ts/tests/case-rules.ts` and its PHP and Python equivalents) resolves such a file to the path above, from the tag and the path of `config/release-files.json`. A reader that does not find the file fails with its path and with `make hyper-install-release-files`, the target that writes it, and downloads nothing, because no check installs on first use (HR-81, HR-85). The script tests that read the file name it with `requireBuilt` and that target. The CI groups that run a case runner name the target among their installs.
+- **What the move changes besides the path.** The cases of http-form are in the case form of binding: a body and a text are `{"hex": …}`, the content type is `content_type`, the limits are the record `limits`, and a failure is `raises` with its kind, status and category. The fixed copy holds texts, `type`, four limit fields and null results. So the declarations of the sections and the steps of the three runners change with the pin, and the runners read the groups that `packages/rust/interface.json` of http-form links as well as the scenario groups `streamed` and `body`.
+
