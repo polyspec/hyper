@@ -19,7 +19,7 @@ const variable = (name: string): string => {
   return value;
 };
 
-test('PHP_INI_SCAN_DIR is set only in the env of the two PIE commands of template-ext, in no other recipe line (H35.52)', () => {
+test('PHP_INI_SCAN_DIR is set only in the env of the three PIE commands of template-ext, in no other recipe line (H35.52)', () => {
   // The data base of make (-p) prints each rule with its recipe lines unexpanded, after the line "# Make data base".
   const lines = dryRun('template-ext', { variables: ['-p'] });
   const start = lines.findIndex((line) => line.startsWith('# Make data base'));
@@ -31,7 +31,7 @@ test('PHP_INI_SCAN_DIR is set only in the env of the two PIE commands of templat
     if (rule) target = rule[1] ?? '';
     else if (line.startsWith('\t') && line.includes('PHP_INI_SCAN_DIR')) found.push(`${target}: ${line.trim()}`);
   }
-  assert.equal(found.length, 2, found.join('\n'));
+  assert.equal(found.length, 3, found.join('\n'));
   for (const line of found) assert.match(line, /^template-ext: \$\(ONLINE\) env PIE_WORKING_DIRECTORY=\$\(PIE_WORK\) COMPOSER_CACHE_DIR=\$\(PIE_WORK\)\/cache PHP_INI_SCAN_DIR=:\$\(PIE_WORK\)\/ini \$\(PIE\) /, line);
 });
 
@@ -64,7 +64,7 @@ test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in
   assert.match(text, new RegExp(`rm -rf ${escape(work)} && mkdir -p ${escape(work)}`), text);
   // The dry run holds json-ext first, a prerequisite (H35.52); these are the PIE commands of the template.
   const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line) && line.includes(`PIE_WORKING_DIRECTORY=${work} `));
-  assert.equal(pie.length, 2, text);
+  assert.equal(pie.length, 3, text);
   for (const line of pie) {
     // make 3.81 keeps the tab of a continued recipe line in its dry run, and make 4 removes it.
     assert.match(line, new RegExp(`^\\t?env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK env PIE_WORKING_DIRECTORY=${escape(work)} COMPOSER_CACHE_DIR=${escape(work)}/cache PHP_INI_SCAN_DIR=:${escape(work)}/ini \\S+/var/tools/mise/shims/pie `), line);
@@ -72,7 +72,11 @@ test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in
     assert.match(line, / --no-interaction && \\$/, line);
   }
   assert.match(pie[0] ?? '', new RegExp(` repository:add composer ${escape(packages)} --no-interaction && \\\\$`));
-  assert.match(pie[1] ?? '', new RegExp(` build polyspec/template:${escape(version)} --no-interaction && \\\\$`));
+  // The template package requires the Composer library polyspec/json, which only the repository of the json release holds,
+  // so the PIE project of the template adds it after the repository of the template release (H35.52).
+  const jsonVersion = variable('JSON_VERSION');
+  assert.match(pie[1] ?? '', new RegExp(` repository:add composer ${escape(`https://github.com/polyspec/json/releases/download/v${jsonVersion}/packages.json`)} --no-interaction && \\\\$`));
+  assert.match(pie[2] ?? '', new RegExp(` build polyspec/template:${escape(version)} --no-interaction && \\\\$`));
   // The trap of that shell removes the working directory with its Composer cache at the end, the failure and a signal of
   // the run, because no later target reads it (HR-87).
   assert.match(text, new RegExp(`trap 'rm -rf ${escape(work)} build/ext\\.next-\\$\\$' EXIT && trap 'exit 130' INT TERM`), text);

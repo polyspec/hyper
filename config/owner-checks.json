@@ -552,6 +552,7 @@
     {
       "paths": [
         "scripts/php-ext-verify.mts",
+        "scripts/php-ext-requires.mts",
         "config/php-ext-pins.json"
       ],
       "targets": [
@@ -559,6 +560,7 @@
       ],
       "tests": [
         "tests/scripts/php-ext-verify.test.mts",
+        "tests/scripts/php-ext-requires.test.mts",
         "tests/scripts/template-pins.test.mts"
       ]
     },

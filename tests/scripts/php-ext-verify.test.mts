@@ -84,12 +84,13 @@ test('the command exits 1 naming the file and both digests, 0 for a match and 2 
 });
 
 test('template-ext and json-ext give PIE a cache in its working directory and verify it after pie build', () => {
-  for (const [target, name, output] of [['template-ext', 'polyspec/template', 'build/ext'], ['json-ext', 'polyspec/json', 'build/json-ext']] as const) {
+  // template-ext adds two Composer repositories, those of the template and of the json release (H35.52), and builds.
+  for (const [target, name, output, commands] of [['template-ext', 'polyspec/template', 'build/ext', 3], ['json-ext', 'polyspec/json', 'build/json-ext', 2]] as const) {
     // The dry run of template-ext holds json-ext first, its prerequisite (H35.52), so the lines are those of `work`.
     const lines = dryRun(target);
     const work = `${ROOT}/var/pie/${name}`;
     const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line) && line.includes(`PIE_WORKING_DIRECTORY=${work} `));
-    assert.equal(pie.length, 2, lines.join('\n'));
+    assert.equal(pie.length, commands, lines.join('\n'));
     for (const line of pie) assert.ok(line.includes(` COMPOSER_CACHE_DIR=${work}/cache `), line);
     const build = lines.findIndex((line) => line.includes(` build ${name}:`) && / --no-interaction && \\$/.test(line));
     const check = lines.findIndex((line) => line.includes(`scripts/php-ext-verify.mts config/php-ext-pins.json ${name} ${work}`));
