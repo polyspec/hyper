@@ -320,7 +320,13 @@ class AsgiTest(UploadCases, TransportCase):
         with contextlib.redirect_stderr(io.StringIO()):
             run(
                 application,
-                scope(method="POST", headers=[(b"content-length", b"5")]),
+                scope(
+                    method="POST",
+                    path="/notes",
+                    raw_path=b"/notes",
+                    query_string=b"a=1&b=%C3%A9",
+                    headers=[(b"content-length", b"5")],
+                ),
                 sends,
                 BrokenReceives(),
             )
@@ -334,6 +340,10 @@ class AsgiTest(UploadCases, TransportCase):
         request, status, ended = written[0]
         self.assertEqual("POST", request.method)
         self.assertEqual((5, 500, True), (request.body_size(), status, ended))
+        # HY-100.24: the request as received has the raw query of `query_string`, which `raw_path` does not hold.
+        self.assertEqual(
+            ("/notes", "a=1&b=%C3%A9"), (request.path(), request.raw_query())
+        )
 
     def test_a_failed_send_of_the_plain_failure_reports_it_and_propagates(self) -> None:
         # HY-60, HY-100: when the send of the plain 500 fails, the write failed; the error propagates to the server.

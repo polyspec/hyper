@@ -155,14 +155,17 @@ def head_request(
     cookies: dict[str, str],
     https: bool,
     declared: int,
+    query: Optional[str] = None,
 ) -> Request:
     """Returns the request as the transport received it before its body was read (HY-60): the target, the
-    headers and the cookies of its one parse (HY-129), an empty body, and the size that the Content-Length declares."""
+    headers and the cookies of its one parse (HY-129), an empty body, and the size that the Content-Length declares.
+    `query` is the raw query of a transport that gives it apart from the target, as ASGI does (HY-100.24); without
+    it the raw query is the one of the target."""
     return Request(
         method,
         Request.target_path(target),
         headers,
-        Request.target_query(target),
+        Request.target_query(target) if query is None else query,
         b"",
         cookies=cookies,
         https=https,

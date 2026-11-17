@@ -149,6 +149,8 @@ async def _answer(
     cookies = Cookies.parse(_cookie_header(scope))
     # The request is HTTPS when the application was opened with https or the ASGI server says so.
     https = app.https or scope.get("scheme") == "https"
+    # HY-100.24: the raw query is `query_string`, which `raw_path` does not hold, also for the request as received.
+    query = scope.get("query_string", b"").decode("latin-1")
     exchange.request = head_request(
         method,
         target,
@@ -156,6 +158,7 @@ async def _answer(
         cookies,
         https,
         declared,
+        query,
     )
     served = served_file(files, method, target)
     if served is not None:
@@ -183,7 +186,7 @@ async def _answer(
         method,
         Request.target_path(target),
         headers,
-        scope.get("query_string", b"").decode("latin-1"),
+        query,
         exchange.body.held(),
         cookies=cookies,
         https=https,
