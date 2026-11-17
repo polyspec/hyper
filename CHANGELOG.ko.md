@@ -1,12 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 08a66d013781a0f7203c9f52d3ff1d25779360589e70fad63e516003a3cc1455 -->
+<!-- source-sha256: ad425968debe578c9a1207d0e6f7bb29897caebcded653f9568fd3d500b2c27e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
-- HY-60.21은 응답이 시작되었거나 500의 쓰기가 실패하면 서버가 연결을 닫는다고 적지만, 연결을 닫지 않는 PHP 서버에 대해서는 아무것도 적지 않는다. 새 statement HY-60.32는 `packages/php/src/App/App.php`의 `escaped`가 하는 일을 적는다: header가 보내진 뒤에는 500을 쓰지 않고 쓰기를 완료되지 않은 것으로 기록하며, 쓰기 hook은 `ended` false와 실패를 받고, 닫힌 client는 `connection_aborted()`로 보이며, 연결은 SAPI가 닫는다(H35.44).
+- HY-60.21은 응답이 시작되었거나 500의 쓰기가 실패하면 서버가 연결을 닫는다고 적지만, 연결을 닫지 않는 PHP 서버에 대해서는 아무것도 적지 않는다. 새 statement HY-60.33은 `packages/php/src/App/App.php`의 `escaped`가 하는 일을 적는다: header가 보내진 뒤에는 500을 쓰지 않고 쓰기를 완료되지 않은 것으로 기록하며, 쓰기 hook은 `ended` false와 실패를 받고, 닫힌 client는 `connection_aborted()`로 보이며, 연결은 SAPI가 닫는다(H35.44).
 - HY-100.28과 HY-106.20은 host 진입점을 host 코드의 함수, Node의 `listener(app, sessions, options)`와 `server(app, sessions, options)`, PHP의 `run($app, ...)`로 적지만, 코드에는 `App`의 member `listener`, `server`, `run`이 있고 `packages/rust/interface.json`의 host-listener와 host-run 행이 함수로의 이동을 기록한다. 이제 두 statement는 그 이동을 하는 행 H35.44-1의 unimplemented 표시를 가지며, `docs/features.md`에 상태가 not implemented인 행 host-entry-functions가 있다(H35.44).
 - target이 없는 요청에 PHP 서버(`REQUEST_URI`가 없는 `$_SERVER`, `Request::fromGlobals`)와 Node host(`node:http` 요청의 `url`이 undefined)가 경로 `/`의 요청으로 응답했는데, 그것은 다른 요청에 대한 응답이다. HY-100.2는 host가 target을 줄 수 없는 요청에 HY-60의 평문 500을 적으며, Python host들이 그렇게 응답한다. 이제 `Request::fromGlobals`는 `REQUEST_URI`를 이름하는 오류로 실패하고 `run`이 그것에 평문 500으로 응답하며, Node listener는 public 파일을 찾기 전에 실패한다. 그때는 요청이 없으므로 write hook이 불리지 않는다(HY-99.12). `packages/php/tests/RequestTest.php`의 시험 하나와 `packages/ts/tests/http.test.ts`의 시험 하나가 이것을 적는다. 쓰였을 뿐 실행되지 않았다(H35.44).
 - WSGI host가 인코딩할 수 없는 status, header, body의 평문 500을 그 오류의 예외 정보 없이 `start_response`에 넘겼고, public 디렉터리의 파일에 대해 예외를 던진 `start_response`는 잡히지 않고 callable을 빠져나갔다. HY-100.9는 두 오류의 평문 500에 예외 정보를 적으며, PEP 3333은 잡은 오류를 보고하는 application에 그 인자를 준다. 이제 host는 인코딩 오류에 그것을 넘기고, public 파일에 대해 예외를 던지는 `start_response`에는 예외 정보와 함께 다시 `start_response`로 평문 500을 응답한다. write hook은 그 500을 실패와 함께 받는다. `tests/test_wsgi.py`의 시험 둘이 이것을 적는다. 쓰였을 뿐 실행되지 않았다(H35.44).
