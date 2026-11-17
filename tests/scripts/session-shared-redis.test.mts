@@ -114,14 +114,15 @@ for (const name of NAMES) {
   });
 }
 
-// phpredis writes nothing for a request that lost its lock and warns; PHP closes the session after the response, so the
-// request has already answered (HY-115).
-test('a request of the php server that lost its lock writes nothing (HY-115)', { timeout: 60_000 }, async () => {
+// phpredis writes nothing for a request that lost its lock and warns. The PHP server closes the session before it
+// answers and turns a warning of the close into the failure of the request, so the request fails as in the other
+// servers (HY-115.23); tests/scripts/session-lost-lock.test.mts fixes the HTTP answer of the three servers.
+test('a request of the php server that lost its lock writes nothing and fails (HY-115)', { timeout: 60_000 }, async () => {
   const holder = await holding('php', state.directory, { HYPER_SESSION_REDIS: state.port });
   await redis.set(LOCK, 'another holder');
-  const exit = once(holder, 'exit');
+  const exit = new Promise<number | null>((resolve) => holder.once('exit', resolve));
   holder.stdin.write('\n');
-  await exit;
+  assert.notEqual(await exit, 0, 'the request fails');
   assert.equal(await text(KEY), 'a:1:{s:1:"n";i:0;}', 'the session keeps its record');
   assert.equal(await text(LOCK), 'another holder', 'the lock of the other holder stays');
 });

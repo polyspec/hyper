@@ -289,6 +289,7 @@
         "tests/scripts/session-redis-cluster.test.mts",
         "tests/scripts/session-waits.test.mts",
         "tests/scripts/session-until.test.mts",
+        "tests/scripts/session-lost-lock.test.mts",
         "tests/scripts/benchmark-sessions.test.mts"
       ]
     },
