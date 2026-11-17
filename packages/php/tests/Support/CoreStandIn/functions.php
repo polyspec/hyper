@@ -193,3 +193,8 @@ function acceptRanges(mixed ...$arguments): mixed
 {
     return Calls::record('acceptRanges', array_values($arguments));
 }
+
+function fileOver(mixed ...$arguments): mixed
+{
+    return Calls::record('fileOver', array_values($arguments));
+}

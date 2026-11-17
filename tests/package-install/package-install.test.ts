@@ -14,14 +14,18 @@ const BUILD = fileURLToPath(new URL('../../packages/ts/tests/build/', import.met
 
 // The exports of each package; the browser package also exports the declaration of the template index, which an
 // application build resolves to the index of its own asset build (HR-34), and the source of the reserved template
-// hyper/data.tpl, which the builds of @polyspec/hyper-cli read (HR-96).
+// hyper/data.tpl, which the builds of @polyspec/hyper-cli read (HR-96); the server package also exports the entry
+// `./build`, the rules of the core that the command tool applies in a build (HR-61).
 const EXPORTS: Record<string, unknown> = {
   '@polyspec/hyper-client': {
     '.': { types: './dist/index.d.ts', default: './dist/index.js' },
     './templates-index': { types: './templates-index.d.ts' },
     './data-template.json': './data-template.json',
   },
-  '@polyspec/hyper': { '.': { types: './dist/index.d.ts', default: './dist/index.js' } },
+  '@polyspec/hyper': {
+    '.': { types: './dist/index.d.ts', default: './dist/index.js' },
+    './build': { types: './dist/build.d.ts', default: './dist/build.js' },
+  },
 };
 
 // JSON.parse returns any: the test takes each JSON value as unknown and narrows the parts that it reads.
@@ -66,7 +70,7 @@ test('each package publishes its build and declarations without its source', () 
       if (typeof path !== 'string') throw new TypeError(`a file of npm pack ${name} has no path`);
       return path;
     });
-    const expected = ['package.json', 'dist/index.js', 'dist/index.d.ts', ...(name === '@polyspec/hyper-client' ? ['templates-index.d.ts', 'data-template.json'] : [])];
+    const expected = ['package.json', 'dist/index.js', 'dist/index.d.ts', ...(name === '@polyspec/hyper-client' ? ['templates-index.d.ts', 'data-template.json'] : ['dist/build.js', 'dist/build.d.ts'])];
     for (const file of expected) assert.ok(files.includes(file), `${name} publishes ${file}`);
     assert.deepEqual(files.filter((file) => file.startsWith('src/')), [], `${name} publishes its source`);
   }

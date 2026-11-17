@@ -550,22 +550,28 @@ function browserWord(value: unknown, after: unknown, before: unknown): string {
 }
 
 // Emits a warning of the runtime outside of every request and returns true when it is delivered and no error is raised
-// (HY-74.4).
+// (HY-74.4). Node delivers each warning in a later tick, in the order of emission, so a warning that the process
+// emitted before this one and has not delivered yet, such as the ExperimentalWarning of node:ffi, arrives first: the
+// listener waits for the warning that it emitted and passes every other one.
 async function warnedOutside(): Promise<boolean> {
-  let deliver: (message: string) => void = () => {};
-  const delivered = new Promise<string>((resolve) => {
+  let deliver: () => void = () => {};
+  const delivered = new Promise<void>((resolve) => {
     deliver = resolve;
   });
-  const listener = (warning: Error): void => deliver(warning.message);
-  process.once('warning', listener);
+  const listener = (warning: Error): void => {
+    if (warning.name === 'Warning' && warning.message === 'outside') deliver();
+  };
+  process.on('warning', listener);
   try {
     process.emitWarning('outside');
+    await delivered;
   } catch (error) {
-    process.off('warning', listener);
     if (!(error instanceof Error)) throw error;
     return false;
+  } finally {
+    process.off('warning', listener);
   }
-  return (await delivered) === 'outside';
+  return true;
 }
 
 // Returns how many times a text holds another, counted without overlap from the left.

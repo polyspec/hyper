@@ -386,6 +386,19 @@ fn errors_name_their_kind_and_category() {
 }
 
 #[test]
+fn a_file_is_over_a_limit_when_it_has_more_bytes() {
+    // HY-114.12: a file of more bytes than the limit is over it, a file of exactly the limit is not, and a body
+    // without a file has no file over any limit, the limit 0 included.
+    use polyspec_hyper::front::file_over;
+    assert!(file_over(&[3, 9, 4], 8));
+    assert!(!file_over(&[3, 9, 4], 9));
+    assert!(file_over(&[1], 0));
+    assert!(!file_over(&[0], 0));
+    assert!(!file_over(&[], 0));
+    assert!(!file_over(&[u64::MAX], u64::MAX));
+}
+
+#[test]
 fn the_media_type_of_a_content_type_is_its_type_and_subtype() -> Result<(), Error> {
     // HY-59.13, MT-1.3, MT-2.1, MT-4.1: the type and subtype in lower case without parameters, and
     // malformed_content_type (400) for a value that is no media type.

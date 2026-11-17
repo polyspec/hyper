@@ -12,6 +12,8 @@
 //   - tests/scripts/fixtures/multipart-worker/worker.mjs, one Node server process of
 //     tests/scripts/multipart-compare.test.mts;
 //   - tests/scripts/fixtures/upload-server/server.mjs, the Node server of tests/scripts/upload-servers.test.mts;
+//   - packages/ts/src/build.ts, the entry `./build` of the exports of @polyspec/hyper, which packages/cli imports by the
+//     package name as dist/build.js, a build output that knip does not trace to its source;
 //   - tests/scripts/fixtures/recipe/**/*.ts, the fixture tree of the recipe check, which the readers of scripts/recipe read.
 // The binaries are the programs that the scripts start from PATH: container (Apple container, make virtiofs-check on Darwin),
 // make (the dry runs of the recipe tests), openssl (the TLS certificates of session-redis-failover.test.mts), php
@@ -49,6 +51,7 @@
   "ignoreDependencies": ["@polyspec/binding", "@polyspec/json", "@polyspec/php-serialization", "@polyspec/php-serialize"],
   "workspaces": {
     "packages/ts": {
+      "entry": ["src/index.ts", "src/build.ts"],
       "ignoreDependencies": ["@polyspec/php-serialization"]
     },
     "packages/cli": {

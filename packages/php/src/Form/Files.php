@@ -34,16 +34,26 @@ final class Files extends NamedValues
         return Multipart::read($body, $boundary)[1] ?? null;
     }
 
-    /** Returns the size in bytes of the largest file, or 0 when there is none (HY-114). */
-    public function largest(): int
+    /**
+     * Returns the size in bytes of each file, in the order of the pairs (HY-114).
+     *
+     * @return list<int>
+     */
+    public function sizes(): array
     {
-        $sizes = [0];
+        $sizes = [];
         foreach ($this->pairs() as [, $files]) {
             foreach ($files as $file) {
                 $sizes[] = $file->size();
             }
         }
 
-        return max($sizes);
+        return $sizes;
+    }
+
+    /** Returns the size in bytes of the largest file, or 0 when there is none (HY-114). */
+    public function largest(): int
+    {
+        return max([0, ...$this->sizes()]);
     }
 }

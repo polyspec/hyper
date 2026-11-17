@@ -1,6 +1,7 @@
 # The steps of contracts/reads.json (HY-73): the data that a template keeps, by the reads that the case states, and the
 # render of the template with the kept data and with the data, which gives the same bytes (HY-73.28). Each case is the
 # application `reads_<id>` that scripts/contract-programs.mts builds from the templates of the case.
+import json
 from pathlib import Path
 
 from polyspec.hyper.page._reads import Reads
@@ -21,6 +22,10 @@ def cases(case) -> None:
             f"the template {template} is not among the templates of {case.id()}"
         )
     program = PROGRAMS / f"reads_{case.id()}" / "program"
+    # HY-73.23: the build wrote the read paths of the template of the case, the page region of the route `reads` of
+    # the application, to reads.json of the program that the renderer opens.
+    built = json.loads((program / "reads.json").read_text(encoding="utf-8"))
+    case.compare("reads", built["routes"]["reads"]["regions"]["content"])
     renderer = Renderer.open(str(program), "Z")
     shared = renderer.bind({})
     text = renderer.alone(template, shared, renderer.bind(data))

@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 5b00aa17e7ad2af724dff646dea5ca667b49edce17cc3bfa74dc268c0a45592c -->
+<!-- source-sha256: dbcc34a091e86e6e603595c2ddccf95d5356beec660f2e74ae37f8279f9880a5 -->
 # 개발
 
 [English](AGENTS.md).
@@ -113,7 +113,7 @@
 
 - Own: Version 0.1 전까지 `main`은 모든 task가 끝났을 때 한 번 push하며, 그 push의 CI 실행이 commit들의 근거다. release는 `main`에서 `.github/workflows/ci.yml`의 push 또는 수동 실행이 성공한 commit이며, 그 job `ci-passed`는 그 실행의 다른 모든 job이, kit의 검사기를 담은 entry `gates`까지 통과해야만 통과한다(HR-95). release는 maintainer만 시작하고, 아무도 손으로 tag를 만들거나 옮기거나 push하지 않는다.
   Enforced by: `make release-tag`, which tags only the commit of such a run; who dispatches the release is a permission of GitHub.
-- Own: 버전을 올리는 commit `chore(release): Release X.Y.Z (#<task>)`는 `package.json`, `packages/client/package.json`, `packages/ts/package.json`, `packages/cli/package.json`, `packages/php/composer.json`과 `packages/python/pyproject.toml`의 버전을 X.Y.Z로 정한다. `packages/ts/package.json`과 `packages/cli/package.json`의 `@polyspec/hyper-client` 요구와, private root `composer.json`과 `examples/board/composer.json`의 `polyspec/hyper` 요구를 정하며, 그 lock도 쓴다. 두 changelog의 `## Unreleased`를 `## X.Y.Z`로 바꾸고, 그 위에 빈 `## Unreleased`를 새로 둔다. private test package `tests/package-install`은 자기 버전을 유지한다. 그것은 아무것도 공개하지 않기 때문이다(`config/release.json`의 `notReleased`). 버전 올림 commit은 그 lock을 다시 쓰므로, lock이 로컬 package의 버전을 기록한다.
+- Own: 버전을 올리는 commit `chore(release): Release X.Y.Z (#<task>)`는 `package.json`, `packages/client/package.json`, `packages/ts/package.json`, `packages/cli/package.json`, `packages/php/composer.json`과 `packages/python/pyproject.toml`의 버전을 X.Y.Z로 정한다. 이 저장소의 package에 대한 요구 중 버전을 적은 것을 모두 정한다. `packages/ts/package.json`과 `packages/cli/package.json`의 `@polyspec/hyper-client`, `packages/cli/package.json`의 `@polyspec/hyper`, private root `composer.json`과 `examples/board/composer.json`의 `polyspec/hyper`와 platform 항목 `ext-polyspec_hyper`다. 이 버전을 기록하는 lock인 `package-lock.json`, `composer.lock`, `examples/board/composer.lock`과 `packages/python/uv.lock`을 다시 쓴다. 이 요구를 기록하는 `docs/operations/dependencies.md`의 행에 그 버전을 정한다. 두 changelog의 `## Unreleased`를 `## X.Y.Z`로 바꾸고, 그 위에 빈 `## Unreleased`를 새로 둔다. private test package `tests/package-install`은 자기 버전을 유지한다. 그것은 아무것도 공개하지 않기 때문이다(`config/release.json`의 `notReleased`). 버전 올림 commit은 그 lock을 다시 쓰므로, lock이 로컬 package의 버전을 기록한다.
   Enforced by: none, the version-bump commit is a judgement; the package managers resolve the versions.
 - Own: 버전 올림 commit은 `main`으로 가는 push의 맨 끝 commit이다. 그 push의 CI 실행이 성공하면 `.github/workflows/release.yml`이 스스로 시작해 그 commit을 릴리스하고(kit K987), maintainer는 `gh workflow run release.yml -f run=<id>`로 그것을 다시 시작할 수 있다. 그 `make release-tag`는 그 실행의 commit에 있는 `CHANGELOG.md`의 첫 section `## X.Y.Z`에서 X.Y.Z를 읽고(kit K924), `origin/main`에 commit이 있는, `main` 위 `.github/workflows/ci.yml`의 완료되고 성공한 push 또는 수동 실행을 요구하고, 그 commit에 annotated tag `vX.Y.Z`를 만들어 push한다. 그다음 workflow는 tag에서 packer가 주는 이름의 package 아카이브를 만들어 각각에 GitHub label `<vendor>-<product>-<runtime>-<version>`(kit P39)을 붙이고 GitHub Release를 만든다(`docs/operations/development.md`).
   Enforced by: `make release-tag`

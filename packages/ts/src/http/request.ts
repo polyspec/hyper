@@ -292,10 +292,11 @@ export class Request {
     return this.fileParts?.last(name) ?? null;
   }
 
-  // Returns true when a file of the body is larger than `limit` bytes (HY-114).
+  // Returns true when a file of the body is larger than `limit` bytes (HY-114), as rules.file_over of the core decides
+  // it. A limit that is no unsigned integer fails with `invalid_number` before the files are compared (HY-114.12).
   fileOver(limit: number): boolean {
     ArgumentCountError.between(arguments.length, 1, 1);
-    return (this.fileParts?.largest() ?? 0) > limit;
+    return rules().requestFileOver(this.fileParts?.sizes() ?? [], limit);
   }
 
   // Returns the size of the body in bytes: its length, or the Content-Length header when that is larger (HY-59).

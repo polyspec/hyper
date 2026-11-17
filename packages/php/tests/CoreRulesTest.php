@@ -61,6 +61,7 @@ final class CoreRulesTest extends TestCase
                 'mediaType',
                 'text/plain',
             ],
+            'Request::fileOver (HY-114.12)' => ['requestFileOver', [[3, 9], 8], 'fileOver', true],
             'Request::currentPath (HY-11.5)' => ['requestCurrentPath', ['http://a.test/b?c'], 'currentPath', '/b'],
             'Reply::cacheControl (HY-52.6)' => ['replyCacheControl', ['private'], 'cacheControl', 'private'],
             'Reply::referrerPolicy (HY-103.2)' => ['replyReferrerPolicy', ['origin'], 'referrerPolicy', 'origin'],
@@ -142,9 +143,9 @@ final class CoreRulesTest extends TestCase
         self::assertSame([[$function, $arguments]], Calls::$calls);
     }
 
-    public function testThereAreTwentyOneExactUnits(): void
+    public function testThereAreTwentyTwoExactUnits(): void
     {
-        self::assertCount(21, self::exactUnits());
+        self::assertCount(22, self::exactUnits());
     }
 
     public function testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields(): void

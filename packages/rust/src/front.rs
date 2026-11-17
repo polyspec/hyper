@@ -373,6 +373,14 @@ pub fn frame_headers(status: u16, frame_ancestors: &str) -> Vec<(String, String)
     headers
 }
 
+/// Whether a file of a body is larger than a limit (HY-114.12): `sizes` holds the bytes of each file of the body, and
+/// a file of exactly `limit` bytes is not over it. Both parameters are unsigned integers of the interface contract, so
+/// a binding refuses a limit that is none with its kind `invalid_number` before this comparison runs.
+#[must_use]
+pub fn file_over(sizes: &[u64], limit: u64) -> bool {
+    sizes.iter().any(|size| *size > limit)
+}
+
 /// The value that a request to the kept endpoint stores (HY-40.1): a region that declares the path as `server`, a JSON
 /// text of at most 4,096 bytes, and a value of the data model; `None` answers 400. The file limit (HY-114.7, 413)
 /// answers while the host reads the body, before the route and the session (HY-120.2), and the token of the form

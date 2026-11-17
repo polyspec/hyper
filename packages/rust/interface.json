@@ -1736,6 +1736,37 @@
           ],
           "wait": "none",
           "core": "polyspec_hyper::media::accept_ranges"
+        },
+        {
+          "id": "rules.file_over",
+          "name": [
+            "file",
+            "over"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "sizes"
+              ],
+              "type": {
+                "list": "uint"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "limit"
+              ],
+              "type": "uint",
+              "required": true
+            }
+          ],
+          "returns": "bool",
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::front::file_over"
         }
       ]
     },

@@ -29,7 +29,7 @@ final class CoreRules
         'keepsOutOfSharedCaches', 'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag',
         'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary', 'contextHash', 'currentPath',
         'checkShellPath', 'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader',
-        'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges',
+        'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver',
     ];
 
     /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
@@ -223,6 +223,20 @@ final class CoreRules
     {
         /** @var string $result The return type that the extension declares (T-1a). */
         $result = $this->call('mediaType', $contentType);
+
+        return $result;
+    }
+
+    /**
+     * Request::fileOver: rules.file_over of the bytes of each file of the body and the limit (HY-114.12). The binding
+     * fails with kind `invalid_number` for a limit that is no unsigned integer, before the core compares the files.
+     *
+     * @param list<int> $sizes
+     */
+    public function requestFileOver(array $sizes, int $limit): bool
+    {
+        /** @var bool $result The return type that the extension declares (T-1a). */
+        $result = $this->call('fileOver', $sizes, $limit);
 
         return $result;
     }

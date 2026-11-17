@@ -299,7 +299,10 @@ fn a_failure_of_hyper_projects_to_its_own_code_which_the_contract_lists() -> Res
     let failures = [
         (Error::NotApplicationPath, ErrorCode::NotApplicationPath),
         (Error::NotOutsideLocation, ErrorCode::NotOutsideLocation),
-        (Error::OutsideRedirectStores, ErrorCode::OutsideRedirectStores),
+        (
+            Error::OutsideRedirectStores,
+            ErrorCode::OutsideRedirectStores,
+        ),
         (Error::NotRedirectResult, ErrorCode::NotRedirectResult),
         (
             Error::PageStatusNotAllowed(500),
