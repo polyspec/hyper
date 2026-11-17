@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-python-readme -->
-<!-- source-sha256: e8af1ddd6a8fd97b1d9a55207332263497a6676ed6b8ff5fdae2520d1a82b12d -->
+<!-- source-sha256: e3d734df8f819fe202f163d474c8178b1aaf58a8b82b110898a713e57e97ef1e -->
 # polyspec-hyper
 
 [English](README.md).
@@ -30,8 +30,7 @@ Result.redirect("/board/7")  # the outcome of an action that succeeded (HY-25)
   데이터 내장 선택이다 (HY-52, HY-69, HY-92). `NotFound`, `Forbidden`, `BadRequest`, `Redirect`는 loader와 action의
   stop이다 (HY-27, HY-50, HY-51, HY-58).
 
-- `App.open`이 manifest, `hyper build`가 만든 서버 program(그중 `templates` 디렉터리와 `reads.json`. Python
-  서버는 생성된 PHP program이 쓰는 디렉터리 `php`와 `program.json`이 필요 없다), 데이터를 읽고 action을 실행하는
+- `App.open`이 manifest, `hyper build`가 만든 서버 program(그중 `templates` 디렉터리와 `reads.json`), 데이터를 읽고 action을 실행하는
   handler로 application을 만든다. `App.handle`이 요청 하나에 답한다 (HY-8, HY-15 to HY-19, HY-24 to HY-27, HY-40,
   HY-50 to HY-62, HY-65 to HY-67). handler parameter는 타입으로 request나 reply를 받고, `App.bind`가 등록한
   application service는 그 클래스로 받는다. `App.handle`의 응답는 `App.handle`처럼 요청에 답하고 응답과 요청의 reply를

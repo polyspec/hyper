@@ -2,10 +2,10 @@
 // without a context answers. Every expected value comes from the contract.
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { Context, type ContextHandler } from '../../src/app/context.js';
+import type { ContextHandler } from '../../src/app/context.js';
+import { rules } from '../../src/app/core-rules.js';
 import { Csrf } from '../../src/session/csrf.js';
 import { parsed } from '../case-rules.js';
-import { placesContext } from './context-place.js';
 import { decoded } from './session-requests.js';
 import { App, ArraySession, NotFound, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/data/values.js';
@@ -218,18 +218,16 @@ function bodyOf(form: Map<string, string> | undefined, token: string | null): st
 }
 
 export const steps = {
-  withContext(reader: CaseReader): void {
-    placesContext(reader, (shared, context) => Context.withContext(shared, context));
-  },
+  // The JSON text of a context and its hash with the build, which the core gives (HY-125.12, HY-54.18).
   contexts(reader: CaseReader): void {
     const build = stringField(reader, 'build');
-    const text = Context.text(mapOf(parsed(stringField(reader, 'context')), 'context'));
+    const text = rules().jsonCodecEncode(mapOf(parsed(stringField(reader, 'context')), 'context'));
     reader.compare('context', text);
     reader.compare('text', `{"build":"${build}","context":${text}}`);
-    reader.compare('hash', Context.hash(build, text));
+    reader.compare('hash', rules().contextHash(build, text));
     if (reader.has('reorderedText')) {
       const reordered = mapOf(parsed(stringField(reader, 'reorderedText')), 'reorderedText');
-      reader.compare('reorderedHash', Context.hash(build, Context.text(mapOf(reordered.get('context'), 'the member context of reorderedText'))));
+      reader.compare('reorderedHash', rules().contextHash(build, rules().jsonCodecEncode(mapOf(reordered.get('context'), 'the member context of reorderedText'))));
     }
   },
 
@@ -261,8 +259,7 @@ export const steps = {
     }
     const app = await App.open<Record<string, never>>({
       manifest: join(dir, 'manifest.json'),
-      build: join(dir, 'build.json'),
-      templates: { index: join(dir, 'node', 'templates.index.json'), root: join(dir, 'node') },
+      program: join(dir, 'program'),
       handlers,
       timezone: '+09:00',
       log: () => {},

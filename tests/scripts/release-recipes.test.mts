@@ -1,6 +1,6 @@
 // Tests the release recipes of the bindings (HR-99, binding GN-19h, CK-94): `make release-recipes` writes
-// packages/release.mk with binding release-recipes of the binding generator of package.json, the release runs it before it builds
-// an asset, the Makefile includes the file with -include after BINDING_RUN and BINDING_DEP and holds no recipe of its
+// packages/release.mk with binding release-recipes of the binding generator of package.json, each recipe of a job of the
+// release runs it before it runs a target of the file, the Makefile includes the file with -include after BINDING_RUN and BINDING_DEP and holds no recipe of its
 // own for a target of the file, and Git ignores the file.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -23,11 +23,19 @@ test('make release-recipes runs binding release-recipes for the contract (HR-99)
   assert.match(lines, /binding\/dist\/cli\.js release-recipes --root \S+ --out \S+/, lines);
 });
 
-test('the release writes the recipes before it builds an asset (HR-99)', () => {
-  const steps = (MAKEFILE.find((line) => line.startsWith('RELEASE_STEPS :=')) ?? '').split(/\s+/);
-  const recipes = steps.indexOf('release-recipes');
-  assert.ok(recipes > 0, `RELEASE_STEPS names release-recipes: ${steps.join(' ')}`);
-  assert.ok(recipes < steps.indexOf('release-assets'), `release-recipes runs before release-assets: ${steps.join(' ')}`);
+test('each recipe of a job of the release writes the recipes before it runs a target of the file (HR-99)', () => {
+  // The recipes of the jobs of assets.yml and of the job release of release.yml, with the variables that their jobs give.
+  const jobs: Record<string, string[]> = { 'ci-assets-platform': [], 'ci-assets-php': ['EXPECTED_PHP_MINOR=8.4'], 'ci-assets-npm': [], 'ci-release-release': ['TAG=v0.0.0', 'VERSION=0.0.0'] };
+  for (const [recipe, variables] of Object.entries(jobs)) {
+    for (const release of [[], ['RELEASE=true']]) {
+      // The makes that the recipe starts, in their order.
+      const started = dryRun(recipe, { variables: [...variables, ...release] }).map((line) => / --no-print-directory ([a-z][\w-]*)/.exec(line)?.[1]).filter((target) => target !== undefined);
+      const written = started.indexOf('release-recipes');
+      const uses = started.filter((target) => TARGETS.includes(target));
+      assert.ok(uses.length > 0, `make ${recipe} runs no target of packages/release.mk: ${started.join(' ')}`);
+      assert.ok(written >= 0 && uses.every((target) => started.indexOf(target) > written), `make ${recipe} ${release.join(' ')} runs ${uses.join(', ')} before release-recipes: ${started.join(' ')}`);
+    }
+  }
 });
 
 test('the Makefile includes packages/release.mk with -include after BINDING_RUN and BINDING_DEP (HR-99)', () => {

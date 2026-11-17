@@ -34,7 +34,7 @@ export function writeProgramTemplates(templates, directory) {
  * Writes the reserved template hyper/data.tpl below `root` by its name.
  * @param {string} root
  */
-export function writeReservedTemplate(root) {
+function writeReservedTemplate(root) {
   mkdirSync(dirname(join(root, dataTemplate.name)), { recursive: true });
   writeFileSync(join(root, dataTemplate.name), dataTemplate.source);
 }

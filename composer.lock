@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7a11e3c443b4499984d98620e41830ae",
+    "content-hash": "954007b72f7ca9ae05899b0cdc1e08ad",
     "packages": [
         {
             "name": "min-0-max/json-schema",
@@ -207,13 +207,13 @@
             "dist": {
                 "type": "path",
                 "url": "packages/php",
-                "reference": "85452177538bb9f2bdc688d58975ca6497952c1a"
+                "reference": "ecde84f7e79716c3dce08b48259b74735b37f8b6"
             },
             "require": {
                 "ext-polyspec_hyper": "*",
                 "ext-polyspec_json": "*",
-                "php": ">=8.4",
-                "polyspec/template": "0.0.27"
+                "ext-polyspec_template": "*",
+                "php": ">=8.4"
             },
             "require-dev": {
                 "laravel/pint": "^1.32.1",
@@ -238,9 +238,7 @@
             },
             "autoload-dev": {
                 "psr-4": {
-                    "Polyspec\\Hyper\\Tests\\": "tests/",
-                    "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/",
-                    "Polyspec\\Hyper\\Tests\\Contract\\": "../../var/contract-programs/"
+                    "Polyspec\\Hyper\\Tests\\": "tests/"
                 }
             },
             "scripts": {
@@ -258,39 +256,6 @@
             "transport-options": {
                 "relative": true
             }
-        },
-        {
-            "name": "polyspec/template",
-            "version": "0.0.27",
-            "dist": {
-                "type": "zip",
-                "url": "https://github.com/polyspec/template/releases/download/v0.0.27/polyspec-template-php-0.0.27.zip",
-                "shasum": "acd14354a989c1d3141cece58267223ddcd6226e"
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "min-0-max/json-schema": "*",
-                "php": ">=8.4"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.0",
-                "phpunit/phpunit": "^13.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Polyspec\\Template\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Polyspec\\Template\\Tests\\": "tests/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "description": "Template language implementation: lexer, parser, renderer, functions and CLI"
         }
     ],
     "packages-dev": [
@@ -2354,13 +2319,15 @@
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.4",
-        "ext-polyspec_json": "*"
+        "ext-polyspec_json": "*",
+        "ext-polyspec_template": "*"
     },
     "platform-dev": {},
     "platform-overrides": {
         "php": "8.4.1",
         "ext-polyspec_hyper": "0.0.40",
-        "ext-polyspec_json": "0.0.34"
+        "ext-polyspec_json": "0.0.38",
+        "ext-polyspec_template": "0.0.30"
     },
     "plugin-api-version": "2.9.0"
 }

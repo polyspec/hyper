@@ -1,5 +1,5 @@
 <!-- doc-id: readme -->
-<!-- source-sha256: e1aa9a2d8a39cdb5ab8d8e7feca9c53233028c508fd15100acab20b77fc24802 -->
+<!-- source-sha256: cc46ad8f60f5180dcbb0d67c1092dcdf94b7d8b3d0da1c67a47ed0c68aa12093 -->
 # hyper
 
 [English](README.md).
@@ -37,7 +37,7 @@ hyper는 애플리케이션 하나에서 template 언어 템플릿으로 두 가
 
 ## 시작
 
-npm은 template package `@polyspec/template`과 `@polyspec/template-compiler`를 template release v0.0.27의 tarball에서, `package.json`과 그 lock이 고정한 대로 설치하고, Composer는 `polyspec/template`을 그 release의 Composer repository인 `packages.json`에서 설치한다. 그 dist가 zip `polyspec-template-php-0.0.27.zip`을 sha1과 함께 지정하고 `composer.lock`이 기록한다(HR-70, H27.45). `make hyper-install`은 같은 Composer repository의 package `polyspec/template-php-ext`인 네이티브 확장을 PIE로(`make template-ext`) `var/pie`에서 build하고 library를 `build/ext/polyspec_template.so`에 게시하며, `make ext`는 그 library만 요구한다(H14.1-7).
+npm은 template package `@polyspec/template`과 그 platform package를 template release v0.0.30의 tarball에서, `package.json`과 그 lock이 고정한 대로 설치한다(HR-70). PHP의 template은 네이티브 확장 `polyspec_template`이며, Composer manifest는 그것을 `ext-polyspec_template`으로 요구한다. `make hyper-install`은 그 release의 Composer repository(`packages.json`, H27.45, H31.5)의 php-ext package `polyspec/template`인 그 확장을 PIE로(`make template-ext`) `var/pie`에서 build하고 library를 `build/ext/polyspec_template.so`에 게시하며, `make ext`는 그 library만 요구한다(H14.1-7).
 
 ```sh
 make hyper-install

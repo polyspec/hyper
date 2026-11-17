@@ -12,6 +12,7 @@ const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', imp
 
 const IMPLEMENTATIONS: Record<string, unknown> = {
   suffix: (args: unknown[]) => `${String(args[0])}!`,
+  zone: (_args: unknown[], environment: { timezone: string }) => environment.timezone,
   not_a_function: 'x',
 };
 
@@ -44,8 +45,7 @@ export const steps = {
     };
     const options: Record<string, unknown> = {
       manifest: `${dir}/manifest.json`,
-      build: `${dir}/build.json`,
-      templates: { index: `${dir}/node/templates.index.json`, root: `${dir}/node` },
+      program: `${dir}/program`,
       handlers,
       timezone: '+09:00',
       log: () => {},

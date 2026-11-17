@@ -113,7 +113,7 @@ final class CoreRulesTest extends TestCase
             ],
             'the stored token (HY-24.14)' => ['sessionStoredToken', [self::TOKEN], 'storedToken', self::TOKEN],
             'the name of the kept cookie (HYC-13.6)' => ['keptCookieName', [false], 'keepName', 'hy-keep'],
-            'Build::read (HY-125.18)' => [
+            'Build::read (HY-125.23)' => [
                 'buildRead',
                 ['{}'],
                 'readBuild',

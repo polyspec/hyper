@@ -99,7 +99,7 @@ test('--tailwind compiles a stylesheet with the utilities that the templates use
   assert.equal(readFileSync(join(app, 'out', 'client', 'csr', 'assets', url.slice('/assets/'.length)), 'utf8'), css);
 });
 
-test('a --static file joins the shell at its path below public/ (HYC-16.7)', (t) => {
+test('a --static file joins the shell at its path below public/ (HYC-16.14)', (t) => {
   const app = fixture('chunks', t);
   mkdirSync(join(app, 'public', 'assets'), { recursive: true });
   writeFileSync(join(app, 'public', 'assets', 'app.css'), 'p { margin: 0; }\n');

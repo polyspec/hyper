@@ -2,20 +2,18 @@
 // before it in one session, and the opens that fail. The handlers of an application are lists of steps of a closed
 // vocabulary, which the three servers build the same way.
 import { createHash } from 'node:crypto';
-import { cpSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkManifest, createApplication, decodeResponse, renderDocument, renderParts, type TemplateIndex } from '@polyspec/hyper-client';
-import { decodeTemplate } from '@polyspec/template/render';
 import type { ContextHandler } from '../../src/app/context.js';
+import { rules } from '../../src/app/core-rules.js';
 import { Csrf } from '../../src/session/csrf.js';
 import { App, ArraySession, BadRequest, Forbidden, NotFound, Redirect, Result, type Action, type AppOptions, type Container, type Handlers, type Loader, type Reply, type Request, type Response, type RouteHandlers } from '../../src/index.js';
 import { Session } from '../../src/session/session.js';
-import { toValue } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
-import { bytesOf, ormThrown, parsedBody, record, requestFrom } from '../support.js';
+import { bytesOf, ormThrown, requestFrom } from '../support.js';
 import { listOf, mapOf, textOf } from '../inputs.js';
 import { comparesParts } from './parts-cases.js';
 import { comparesOpen, failureOf, Recorded, RecordingStore } from './recorded.js';
@@ -44,6 +42,9 @@ interface Argument {
 interface Run {
   calls: string[];
   observed: [string, unknown][];
+  // The session store of the requests of the case, which the step `store` of a handler writes, as an application
+  // that holds its store does (HY-38.20); null until the requests of the case exist.
+  store: ArraySession | null;
 }
 
 // The response to a request of `before`, with the token that the session held after it.
@@ -188,6 +189,9 @@ function performed(name: string, steps: Map<string, unknown>[], run: Run, argume
       const record = argument.services.get(serviceName(service));
       const key = textOf(member, 'the member of add');
       record[key] = (record[key] ?? 0) + integerOf(amount, 'the amount of add');
+    } else if (step.has('store')) {
+      if (run.store === null) throw new Error(`the handler ${name} stores before the session of the case exists`);
+      for (const [key, value] of mapOf(step.get('store'), 'the values of store')) run.store.set(key, value);
     } else if (step.has('warn')) {
       process.emitWarning(textOf(step.get('warn'), 'the message of warn'));
     } else if (step.has('stop')) {
@@ -337,7 +341,7 @@ interface Opening {
   run: Run;
   recorded: Recorded;
   made: Map<keyof Services, Record<string, number>>;
-  options: Omit<AppOptions<Services>, 'manifest' | 'build' | 'templates'>;
+  options: Omit<AppOptions<Services>, 'manifest' | 'program'>;
 }
 
 // Reads the application of a case and builds the options of its `open`: the merged handlers and options, the time
@@ -347,7 +351,7 @@ function openingOf(reader: CaseReader): Opening & { name: string } {
   const applications = mapOf(reader.input('applications'), 'the fixture applications');
   if (!applications.has(name)) throw new Error(`the contract has no application ${name}`);
   const application = mapOf(applications.get(name), `the application ${name}`);
-  const run: Run = { calls: [], observed: [] };
+  const run: Run = { calls: [], observed: [], store: null };
   const recorded = new Recorded();
   const base = application.has('handlers') ? mapOf(application.get('handlers'), 'the handlers of the application') : new Map<string, unknown>();
   const over = reader.has('handlers') ? mapOf(reader.input('handlers'), 'the case field handlers') : new Map<string, unknown>();
@@ -371,8 +375,17 @@ function openingOf(reader: CaseReader): Opening & { name: string } {
 }
 
 // Returns the paths of the program of an application in a directory, as `open` takes them.
-function programOf(directory: string): Pick<AppOptions<Services>, 'manifest' | 'build' | 'templates'> {
-  return { manifest: join(directory, 'manifest.json'), build: join(directory, 'build.json'), templates: { index: join(directory, 'node', 'templates.index.json'), root: join(directory, 'node') } };
+function programOf(directory: string): Pick<AppOptions<Services>, 'manifest' | 'program'> {
+  return { manifest: join(directory, 'manifest.json'), program: join(directory, 'program') };
+}
+
+// Returns the sources of the templates of a program by their names, as the open of the server reads them.
+function sourcesOf(directory: string): Map<string, string> {
+  return new Map(
+    readdirSync(directory, { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry): [string, string] => [join(entry.parentPath, entry.name).slice(directory.length + 1), readFileSync(join(entry.parentPath, entry.name), 'utf8')]),
+  );
 }
 
 // Binds one factory for each service of the application, which returns one record with the stated members.
@@ -588,6 +601,7 @@ export const steps = {
     const app = await App.open<Services>({ ...programOf(join(PROGRAMS, opening.name)), ...opening.options });
     bind(app, opening);
     const requests = new Requests(app);
+    run.store = requests.inner;
     for (const [key, value] of reader.has('stored') ? mapOf(reader.input('stored'), 'the case field stored') : []) requests.inner.set(key, value);
     await requests.before(reader.has('before') ? listOf(reader.input('before'), 'the case field before') : []);
     // The calls, the observations, the reports and the log of the requests before are discarded; the state stays.
@@ -684,37 +698,38 @@ export const steps = {
     if (reader.has('restored')) reader.compare('restored', await warnedOutside());
   },
 
-  // Renders the title and each region of the case alone with the browser code, as the Node server renders (HY-54.3),
-  // and compares them with their places in the document of the same data and in the page region (HY-13).
-  async parts(reader: CaseReader): Promise<void> {
+  // Renders the title and each region of the case alone with `render_parts` of the core, and the document of the same
+  // data with `render_document`, the renders of a page of the Node server, and compares the parts with their places in
+  // the document and in the page region (HY-13).
+  parts(reader: CaseReader): void {
     const name = textOf(reader.input('application'), 'the case field application');
     const applications = mapOf(reader.input('applications'), 'the fixture applications');
     if (!applications.has(name)) throw new Error(`the contract has no application ${name}`);
     const stated = mapOf(applications.get(name), `the application ${name}`);
     const program = programOf(join(PROGRAMS, name));
-    const manifest = checkManifest(parsedBody(readFileSync(program.manifest, 'utf8')));
-    const index: TemplateIndex = Object.fromEntries(
-      Object.entries(record(parsedBody(readFileSync(program.templates.index, 'utf8')))).map(([template, entry]) => [template, { url: textOf(record(entry).url, `the url of the template ${template}`) }]),
+    const manifestBytes = readFileSync(program.manifest);
+    const manifest = mapOf(parsed(manifestBytes.toString('utf8')), 'the manifest of the application');
+    const routes = mapOf(mapOf(parsed(readFileSync(join(program.program, 'reads.json'), 'utf8')), 'reads.json').get('routes'), 'the routes of reads.json');
+    const pages = rules().Application.open(
+      manifestBytes,
+      sourcesOf(join(program.program, 'templates')),
+      routes,
+      { build: textOf(stated.get('build'), 'the build of the application'), timezone: stated.has('timezone') ? textOf(stated.get('timezone'), 'the time zone of the application') : '+09:00', context: false, basePath: '', formTypes: ['application/x-www-form-urlencoded'] },
+      new Map(),
     );
-    const application = createApplication(manifest, index, async (url) => Promise.resolve(decodeTemplate(parsedBody(readFileSync(join(program.templates.root, url), 'utf8')))));
-    await application.templates.ensure(Object.keys(index));
     const routeName = textOf(reader.input('route'), 'the case field route');
-    const route = manifest.routes.find((item) => item.name === routeName);
+    const declared = (value: unknown, what: string): { name: string; page?: boolean; regions?: { name: string }[] }[] =>
+      listOf(value ?? [], what).map((item) => {
+        const entry = mapOf(item, what);
+        return { name: textOf(entry.get('name'), `the name of ${what}`), ...(entry.get('page') === true ? { page: true } : {}), ...(entry.has('regions') ? { regions: declared(entry.get('regions'), 'a route region') } : {}) };
+      });
+    const route = declared(manifest.get('routes'), 'a route').find((item) => item.name === routeName);
     if (route === undefined) throw new Error(`the application ${name} has no route ${routeName}`);
-    if (route.path.includes('{')) throw new Error(`the path of the route ${routeName} has a parameter`);
-    const regions = mapOf(reader.input('regions'), 'the case field regions');
-    const value = toValue(new Map<string, unknown>([
-      ['env', new Map([['timezone', stated.has('timezone') ? textOf(stated.get('timezone'), 'the time zone of the application') : '+09:00']])],
-      ['route', routeName],
-      ['params', new Map()],
-      ['build', textOf(stated.get('build'), 'the build of the application')],
-      ['shared', mapOf(reader.input('shared'), 'the case field shared')],
-      ['regions', regions],
-      ['kept', new Map()],
-    ]));
-    const rendered = renderParts(application, decodeResponse(application, value, route.path));
-    const document = renderDocument(application, decodeResponse(application, value, route.path), { embed: false });
-    comparesParts(reader, rendered, document, manifest, route, regions);
+    const shared = mapOf(reader.input('shared'), 'the case field shared');
+    const regions = new Map([...mapOf(reader.input('regions'), 'the case field regions')].map(([region, data]): [string, Map<string, unknown>] => [region, mapOf(data, `the data of the region ${region}`)]));
+    const rendered = rules().pageParts(pages, routeName, shared, regions, 0);
+    const document = rules().pageDocument(pages, routeName, shared, regions, 0);
+    comparesParts(reader, rendered, document, { regions: declared(manifest.get('regions'), 'a region') }, route, regions);
   },
 
   // Opens the application of the case from a copy of its program whose files the case changes, and compares the error
@@ -726,13 +741,12 @@ export const steps = {
     try {
       const program = programOf(directory);
       cpSync(join(PROGRAMS, opening.name, 'manifest.json'), program.manifest);
-      cpSync(join(PROGRAMS, opening.name, 'build.json'), program.build);
-      cpSync(join(PROGRAMS, opening.name, 'node'), program.templates.root, { recursive: true });
-      const paths: Record<string, string> = { manifest: program.manifest, 'build.json': program.build, templateIndex: program.templates.index };
+      for (const name of ['reads.json', 'build.json', 'templates']) cpSync(join(PROGRAMS, opening.name, 'program', name), join(program.program, name), { recursive: true });
+      const paths: Record<string, string> = { manifest: program.manifest, 'reads.json': join(program.program, 'reads.json'), 'build.json': join(program.program, 'build.json'), templates: join(program.program, 'templates') };
       for (const [name, content] of reader.has('files') ? mapOf(reader.input('files'), 'the case field files') : []) {
         const path = Object.hasOwn(paths, name) ? paths[name] : undefined;
         if (path === undefined) throw new Error(`the Node server has no file ${name}`);
-        if (content === null) unlinkSync(path);
+        if (content === null) rmSync(path, { recursive: true });
         else writeFileSync(path, bytesOf(textOf(content, `the file ${name}`)));
       }
       failure = await failureOf(App.open<Services>({ ...program, ...opening.options }));

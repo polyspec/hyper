@@ -63,6 +63,16 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
     register(...args: unknown[]): void {
       calls.push(['Pages.register', args]);
     }
+
+    renderDocument(...args: unknown[]): unknown {
+      calls.push(['Pages.renderDocument', args]);
+      return results['Pages.renderDocument'];
+    }
+
+    renderParts(...args: unknown[]): unknown {
+      calls.push(['Pages.renderParts', args]);
+      return results['Pages.renderParts'];
+    }
   }
   class PageRequest {
     constructor(...args: unknown[]) {
@@ -250,8 +260,19 @@ test('Application.open opens the pages and registers each host function in its o
   assert.deepEqual(calls, [['new Pages', [manifest, templates, new Map(), options]], ['Pages.register', ['b', first]], ['Pages.register', ['a', second]]]);
 });
 
+test('Page.document and Page.parts give the pages the route, the shared data, the data of each region and the time (HY-12.1, HY-13)', () => {
+  const parts = { title: 'T - Site', regions: new Map([['content', '<p>T</p>\n']]) };
+  const { rules, calls } = rulesOf({ 'Pages.renderDocument': '<title>T - Site</title>', 'Pages.renderParts': parts });
+  const pages = rules.Application.open(new TextEncoder().encode('{}'), new Map(), new Map(), { build: '1'.repeat(64), timezone: 'Z', context: false, basePath: '', formTypes: [] }, new Map());
+  const shared = new Map([['title', 'T']]);
+  const regions = new Map([['content', new Map<string, unknown>()]]);
+  assert.equal(rules.pageDocument(pages, 'home', shared, regions, 0), '<title>T - Site</title>');
+  assert.equal(rules.pageParts(pages, 'home', shared, regions, 0), parts);
+  assert.deepEqual(calls.slice(1), [['Pages.renderDocument', ['home', shared, regions, 0]], ['Pages.renderParts', ['home', shared, regions, 0]]]);
+});
+
 test('Page.open and Page.request give the core the pages, the store and the input of a page (HY-120.6, HY-15)', () => {
-  const input: PageInput = { route: 'list', params: new Map(), kind: 'html', action: false, csrf: 'masked', changed: [], stored: new Map(), now: 0 };
+  const input: PageInput = { route: 'list', params: new Map(), kind: 'html', action: false, csrf: 'masked', changed: [], now: 0 };
   const opened = { opened: 'page', input, flash: new Map(), token: TOKEN };
   const step = { step: 'call', call: { call: 'shared' } };
   const { rules, calls } = rulesOf({ openPage: opened, 'PageRequest.next': step });
@@ -268,14 +289,15 @@ const PARTIAL: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknow
   ['App.keptValue (HY-40.1)', 'keptValue', (rules) => rules.appKeptValue(PAGES, 'rows', 'open', 'true'), [PAGES, 'rows', 'open', 'true'], true],
   ['Session.storedToken (HY-24.14)', 'storedToken', (rules) => rules.sessionStoredToken(TOKEN), [TOKEN], TOKEN],
   ['Kept.cookieName (HYC-13.6)', 'keepName', (rules) => rules.keptCookieName(false), [false], 'hy-keep'],
-  ['Build.read (HY-125.18)', 'readBuild', (rules) => rules.buildRead(new Uint8Array([123])), [new Uint8Array([123])], '1'.repeat(64)],
+  ['Build.read (HY-125.23)', 'readBuild', (rules) => rules.buildRead(new Uint8Array([123])), [new Uint8Array([123])], '1'.repeat(64)],
   ['Build.checkId (HY-125.19)', 'checkBuildId', (rules) => rules.buildCheckId('1'.repeat(64)), ['1'.repeat(64)], undefined],
   ['Build.id (HY-125.15)', 'buildId', (rules) => rules.buildId([{ path: 'program/reads.json', bytes: new Uint8Array() }]), [[{ path: 'program/reads.json', bytes: new Uint8Array() }]], '2'.repeat(64)],
-  ['Build.fileText (HY-125.18)', 'buildFileText', (rules) => rules.buildFileText('1'.repeat(64)), ['1'.repeat(64)], `{"build":"${'1'.repeat(64)}"}`],
+  ['Build.fileText (HY-125.23)', 'buildFileText', (rules) => rules.buildFileText('1'.repeat(64)), ['1'.repeat(64)], `{"build":"${'1'.repeat(64)}"}`],
   ['Templates.problems (HY-48.3)', 'templateProblems', (rules) => rules.Templates.problems(new Uint8Array(), new Map()), [new Uint8Array(), new Map()], ['a problem']],
   ['Templates.routeReads (HY-73)', 'routeReads', (rules) => rules.Templates.routeReads(new Uint8Array(), new Map()), [new Uint8Array(), new Map()], new Map([['list', true]])],
   ['Templates.reads (HY-73)', 'templateReads', (rules) => rules.Templates.reads(new Map(), 'layout.tpl'), [new Map(), 'layout.tpl'], true],
   ['Templates.reserved (HY-31.3)', 'reservedDataTemplate', (rules) => rules.Templates.reserved(), [], { name: 'hyper/data.tpl', source: '' }],
+  ['Application.checkFunctionEntry (HYC-24.7)', 'checkFunctionEntry', (rules) => rules.Application.checkFunctionEntry('shout', false), ['shout', false], undefined],
 ];
 
 for (const [label, name, call, args, result] of [...EXACT, ...PARTIAL]) {

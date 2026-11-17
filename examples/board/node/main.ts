@@ -76,10 +76,9 @@ const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
 
 const app = await App.open<Services>({
   manifest: join(board, 'app', 'app.json'),
-  // `make board` writes the build id into build/client/build.json, which App.open reads (HY-48.11, HY-125).
-  build: join(board, 'build', 'client', 'build.json'),
-  // `make board` builds the template files that the browser loads; the server renders with the same files.
-  templates: { index: join(board, 'build', 'client', 'templates.index.json'), root: join(board, 'public') },
+  // `make board` writes the server program, with its read paths, its build id and its templates, into build/program,
+  // which App.open reads (HY-48.19, HY-125).
+  program: join(board, 'build', 'program'),
   handlers,
   timezone: '+09:00',
   // The form of a new post is multipart, because it holds a file (HY-59.1, HY-131).
