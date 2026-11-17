@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- `make hyper-install-python` writes the generated sources of the bindings before it builds the Python native module (HR-85, H34.10). Input: a fresh checkout, as the setup steps of the CI groups python, board and docs run it, without `make hyper-install`. Behaviour before: maturin failed with "couldn't find file packages/python/native/generated/lib.rs", which only `make bindings` writes. Expected: `hyper-install-python` has `bindings` as a prerequisite.
+
 - Every job of `assets.yml` and the job release of `release.yml` fetch the crates of `Cargo.lock` before they start cargo (HR-89, H34.9). Input: a fresh runner of CI run 44130032438. Behaviour before: the `ci-assets-*` recipes and `ci-release-release` ran no `hyper-install-crates`, so each assets job failed at `crates-check` with "can't checkout https://github.com/polyspec/binding.git?tag=v0.0.21 … offline". Expected: each of these recipes runs `hyper-install-crates` after it installs its tools, and `ci-group-tools.test.mts` holds that order for these jobs as for the check groups.
 
 - The test of the full set in `tests/scripts/test-inputs.test.mts` passes under a selection (HR-85, H34.5). Input: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. Behaviour before: make exports a command-line variable to the environment of a recipe, so the dry run of the full set read that `TESTS`, built only its inputs and held no cargo line, and the test failed. Expected: the dry run of the full set passes `TESTS=` and holds the cargo builds.

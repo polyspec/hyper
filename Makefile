@@ -180,9 +180,10 @@ hyper-install-php: ## Install only the locked root and board Composer projects a
 # which applies no patch of .links and resolves two binding-core crates. The package with its native module is the wheel
 # that maturin of mise.toml builds through the link script of kit, which passes the patches to the cargo that maturin runs
 # (K1266), into a staging directory of the process that the shell removes when it ends (HR-87); uv installs that wheel
-# into the venv without its dependencies.
+# into the venv without its dependencies. The native module includes packages/python/native/generated/lib.rs, which
+# make bindings writes, so the target writes it first: a setup step of CI runs it without hyper-install (H34.10).
 MATURIN := $(KIT_TOOLS)/mise/shims/maturin
-hyper-install-python: ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5, H35.24)
+hyper-install-python: bindings ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5, H35.24)
 	rm -rf $(PYTHON_VENV)
 	$(NODE) $(KIT)/python-venv.$(KIT_EXT) $(PYTHON_VENV)
 	UV_SYNC='--locked --quiet --no-editable --no-install-project --project $(PYTHON_PACKAGE)' $(ONLINE) $(NODE) $(KIT)/uv-install.$(KIT_EXT) .

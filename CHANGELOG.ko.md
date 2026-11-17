@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4db85a78dcb5b17c0c1d660c59e3e5d742eb55c47f5d5de8b609661a66782105 -->
+<!-- source-sha256: 2bb578adea274be30acfaeb49e11fc777c4c35e004518996f10eee2348308af2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `make hyper-install-python`은 Python native module을 build하기 전에 binding의 생성 source를 쓴다(HR-85, H34.10). 입력: CI group python, board, docs의 setup step이 `make hyper-install` 없이 실행하는 새 checkout. 이전 동작: maturin이 `make bindings`만 쓰는 "packages/python/native/generated/lib.rs"를 찾지 못해 실패했다. 기대 동작: `hyper-install-python`은 `bindings`를 prerequisite로 갖는다.
 
 - `assets.yml`의 모든 job과 `release.yml`의 job release는 cargo를 시작하기 전에 `Cargo.lock`의 crate를 fetch한다(HR-89, H34.9). 입력: CI run 44130032438의 새 runner. 이전 동작: `ci-assets-*` recipe와 `ci-release-release`가 `hyper-install-crates`를 실행하지 않았으므로, 각 assets job이 `crates-check`에서 "can't checkout https://github.com/polyspec/binding.git?tag=v0.0.21 … offline"으로 실패했다. 기대 동작: 이 recipe들은 tool을 설치한 뒤 `hyper-install-crates`를 실행하고, `ci-group-tools.test.mts`는 check group처럼 이 job들에도 그 순서를 요구한다.
 
