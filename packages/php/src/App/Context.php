@@ -15,7 +15,7 @@ final class Context
 {
     /**
      * Calls the context handler with the selection value and returns its map, which belongs to the data model; a value
-     * that is not a map, or that holds a value outside the data model, fails (HY-124, HY-44, HY-43).
+     * that is not a map fails (HY-124, HY-43); the core checks its values when the page receives it (HY-44.10).
      *
      * @return array<array-key, mixed>
      */
@@ -25,7 +25,6 @@ final class Context
         if (!is_array($value) || ($value !== [] && array_is_list($value))) {
             throw new \LogicException('the context handler did not return a map (HY-124)');
         }
-        DataModel::check(['context' => $value]);
 
         return $value;
     }
@@ -47,20 +46,6 @@ final class Context
     public static function hash(string $build, string $text): string
     {
         return CoreRules::shared()->contextHash($build, $text);
-    }
-
-    /**
-     * Returns the member `context` of a JSON response (HY-128): `hash`, and `value` unless the held hash of the request
-     * equals the hash (HY-127). A document that embeds its data passes null, so it always has the value.
-     *
-     * @param array<array-key, mixed> $map
-     * @return array{hash: string, value?: array<array-key, mixed>|\stdClass}
-     */
-    public static function member(string $build, array $map, ?string $held): array
-    {
-        $hash = self::hash($build, self::text($map));
-
-        return $held === $hash ? ['hash' => $hash] : ['hash' => $hash, 'value' => $map === [] ? new \stdClass() : $map];
     }
 
     /** Returns true for a request without `Hyper-Context` or with a context hash, 64 lowercase hexadecimal (HY-127). */

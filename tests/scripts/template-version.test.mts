@@ -66,7 +66,7 @@ test('the Composer roots name the Composer repository of the release and declare
   }
   for (const manifest of ['composer.json', 'examples/board/composer.json']) {
     const urls = jsonObjects(json(manifest).repositories, `${manifest} repositories`).filter(({ type }) => type === 'composer').map(({ url }) => url);
-    // Beside the template release, each root declares the Composer repository of the json release (HY-48.15).
+    // Beside the template release, each root declares the Composer repository of the json release (HY-48.23).
     assert.deepEqual(urls, [`${RELEASE}/packages.json`, JSON_PACKAGES], `${manifest} Composer repository`);
   }
 });

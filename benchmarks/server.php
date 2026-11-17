@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Measures the CPU time of the PHP server without network, with the template extension (HY-48.15):
+// Measures the CPU time of the PHP server without network, with the extensions that it loads (HY-48.23):
 // App::handle per request kind, and the template, data model and JSON costs as the number of rows grows. It uses its
 // own database file, which it recreates on every run.
 //

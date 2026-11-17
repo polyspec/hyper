@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: aff59e9510eb8dabd58c620a2743bf04c22ce41d3bb5fc66879f32b20d60f486 -->
+<!-- source-sha256: 47f20568d8602b3ff0f689f2a0f0f12f191957c747038e3ad82732404bbd114f -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -63,7 +63,7 @@
 
 - **HY-48** <a id="HY-48.1"></a> 서버는 자기 런타임의 템플릿 엔진으로, 빌드(HR-96)의 출력 곧 매니페스트, 애플리케이션의 템플릿, 읽기 경로 `reads.json`(HY-73), build id `build.json`(HY-125)에서 HY-12와 HY-13이 정한 대로 문서와 영역을 렌더한다. <a id="HY-48.2"></a> 서버는 필요한 출력이 모두 있을 때만 애플리케이션을 열며, 하나라도 없으면 `open`이 처음 없는 출력의 절대 경로와 함께 실패하므로 빠진 빌드는 애플리케이션을 열 때 실패하고 빠진 파일을 밝힌다. <a id="HY-48.3"></a> 빌드는 먼저 레이아웃 밖의 `hx-*` 속성을 거부하고([애플리케이션 작성 규칙](../operations/composition.ko.md)의 HC-6), `hyper check`(HR-96)와 같은 HY-3(배치 `{# build}` 포함, HY-125), HY-30, HY-75 규칙으로 템플릿을 검사하며, 위반이 있으면 출력을 지우거나 쓰기 전에 모든 문제와 함께 실패하므로 서버 프로그램은 이 규칙을 어기는 템플릿을 제공하지 않는다. <a id="HY-48.13"></a> Rust core의 규칙 하나가 그 검사를 가지며 모든 문제를 템플릿 이름을 밝힌 줄로 이 순서대로 준다: 이름이 `.tpl`로 끝나는 layout 외 템플릿의 `hx-*` 속성을 이름의 바이트 순서와 줄 순서로, 그다음 layout의 `{# title}`, `{# data}`, `{# build}`, manifest 영역, page 영역 배치를, 그다음 manifest 순서로 각 라우트의 라우트 영역을.
 
-  - <a id="HY-48.15"></a> PHP: PHP 서버는 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 템플릿 확장 `polyspec_template`의 `Engine`과 `FsLoader`로 렌더하며, Node와 Python 서버가 같은 템플릿을 렌더하는 것과 같으므로 generated 프로그램 클래스를 불러오지 않는다. PHP는 템플릿 확장이 요구하는 json 확장 `polyspec_json`을 그보다 먼저 불러온다. <a id="HY-48.20"></a> 빌드는 generated PHP 프로그램도 `program.json`도 쓰지 않는다: 세 서버가 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 렌더하며, `hyper build`는 option `--php-namespace`를 그 option을 밝히고 명령에서 빼라고 말하는 usage error로 거부한다. <a id="HY-48.21"></a> PHP와 Python: 프로그램 디렉터리에는 `reads.json`, `build.json`, 디렉터리 `templates`가 있고, `App.open`은 그 순서에서 처음 없는 것의 절대 경로를 밝히는 `HyperValueError`(HY-106)로 실패한다. *(구현되지 않음: 행 H35.32-1.)*
+  - <a id="HY-48.22"></a> PHP: PHP 서버는 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 확장 `polyspec_hyper`에 있는 core의 페이지 렌더로 렌더하며(HY-48.21), Node 서버가 같은 템플릿을 렌더하는 것과 같으므로 generated 프로그램 클래스도 템플릿 확장의 engine도 불러오지 않는다. <a id="HY-48.23"></a> PHP는 json 확장 `polyspec_json`을, 그다음 그것을 요구하는 템플릿 확장 `polyspec_template`을, 그다음 확장 `polyspec_hyper`를 불러온다(HY-132.2). <a id="HY-48.20"></a> 빌드는 generated PHP 프로그램도 `program.json`도 쓰지 않는다: 세 서버가 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 렌더하며, `hyper build`는 option `--php-namespace`를 그 option을 밝히고 명령에서 빼라고 말하는 usage error로 거부한다. <a id="HY-48.21"></a> PHP와 Python: 프로그램 디렉터리에는 `reads.json`, `build.json`, 디렉터리 `templates`가 있고, `App.open`은 그 순서에서 처음 없는 것의 절대 경로를 밝히는 `HyperValueError`(HY-106)로 실패한다. *(구현되지 않음: 행 H35.32-1.)*
   - <a id="HY-48.19"></a> Node: `App.open`은 매니페스트를 option `manifest`의 절대 경로로 읽는다. 절대 경로인 option `program`의 프로그램 디렉터리는 `reads.json`, `build.json`, 디렉터리 `templates`를 담으며, `App.open`은 처음으로 없는 것의 절대 경로를 밝히는 `HyperValueError`(HY-106)로 실패한다.
 
 ## 요청

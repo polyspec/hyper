@@ -22,7 +22,7 @@ const platform = (file: string) => jsonObject(jsonObject(readObject(file).config
 // ext-polyspec_template; every pin below names it.
 const VERSION = jsonString(platform('composer.json')['ext-polyspec_template'], 'composer.json platform ext-polyspec_template');
 const RELEASE = `https://github.com/polyspec/template/releases/download/v${VERSION}`;
-// The json release whose extension the template extension requires (HY-48.15): the version that the platform of the
+// The json release whose extension the template extension requires (HY-48.23): the version that the platform of the
 // root composer.json declares for ext-polyspec_json, whose Composer repository both Composer roots declare.
 const JSON_VERSION = jsonString(platform('composer.json')['ext-polyspec_json'], 'composer.json platform ext-polyspec_json');
 const JSON_PACKAGES = `https://github.com/polyspec/json/releases/download/v${JSON_VERSION}/packages.json`;

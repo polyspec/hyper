@@ -561,6 +561,7 @@
             11,
             12,
             14,
+            15,
             16,
             17,
             18
@@ -602,10 +603,16 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-48.15",
-                      "en": "PHP: the PHP server renders the templates of the directory `templates` of the program directory with the `Engine` and the `FsLoader` of the template extension `polyspec_template`, as the Node and the Python servers render the same templates, so it loads no generated program class; PHP loads the json extension `polyspec_json`, which the template extension requires, before it.",
-                      "ko": "PHP: PHP 서버는 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 템플릿 확장 `polyspec_template`의 `Engine`과 `FsLoader`로 렌더하며, Node와 Python 서버가 같은 템플릿을 렌더하는 것과 같으므로 generated 프로그램 클래스를 불러오지 않는다. PHP는 템플릿 확장이 요구하는 json 확장 `polyspec_json`을 그보다 먼저 불러온다.",
-                      "koSource": "f6f557d92ac8514407a06b7d57b0471ba2360951502e421191118056dff60d82"
+                      "id": "HY-48.22",
+                      "en": "PHP: the PHP server renders the templates of the directory `templates` of the program directory with the page render of the core in the extension `polyspec_hyper` (HY-48.21), as the Node server renders the same templates, so it loads no generated program class and no engine of the template extension.",
+                      "ko": "PHP: PHP 서버는 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 확장 `polyspec_hyper`에 있는 core의 페이지 렌더로 렌더하며(HY-48.21), Node 서버가 같은 템플릿을 렌더하는 것과 같으므로 generated 프로그램 클래스도 템플릿 확장의 engine도 불러오지 않는다.",
+                      "koSource": "575499a1890397eb50e1423b507e6cd66a52e98b3611858b7e0153d6b3c1b12a"
+                    },
+                    {
+                      "id": "HY-48.23",
+                      "en": "PHP loads the json extension `polyspec_json`, then the template extension `polyspec_template`, which requires it, and then the extension `polyspec_hyper` (HY-132.2).",
+                      "ko": "PHP는 json 확장 `polyspec_json`을, 그다음 그것을 요구하는 템플릿 확장 `polyspec_template`을, 그다음 확장 `polyspec_hyper`를 불러온다(HY-132.2).",
+                      "koSource": "5bb769bc3938c65712ffa63ed8b6e9d3ac3e5952eb5aded3ebc35b7009da17b2"
                     },
                     {
                       "id": "HY-48.20",
