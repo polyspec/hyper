@@ -1065,8 +1065,8 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
 name = "polyspec-binding-core"
-version = "0.0.17"
-source = "git+https://github.com/polyspec/binding.git?tag=v0.0.17#8db1add67c520673e07cfaf75038252ede40f282"
+version = "0.0.21"
+source = "git+https://github.com/polyspec/binding.git?tag=v0.0.21#253ce88906757a7a74b46245538d1af943b03736"
 dependencies = [
  "indexmap",
  "libc",
@@ -1077,24 +1077,24 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-cookie"
-version = "0.0.8"
-source = "git+https://github.com/polyspec/http-cookie.git?tag=v0.0.8#304f1c04b7e154e321e48228b9dd84c666643c77"
+version = "0.0.9"
+source = "git+https://github.com/polyspec/http-cookie.git?tag=v0.0.9#00e31b1cb1bcc7a636de113316e4ed808cad5a93"
 dependencies = [
  "polyspec-binding-core",
 ]
 
 [[package]]
 name = "polyspec-http-media-type"
-version = "0.0.8"
-source = "git+https://github.com/polyspec/http-media-type.git?tag=v0.0.8#d311d2acccc81845dd9ba935ac3e768713cea86f"
+version = "0.0.9"
+source = "git+https://github.com/polyspec/http-media-type.git?tag=v0.0.9#000722bb3f88e652983a1d3f170fafd40b00110e"
 dependencies = [
  "polyspec-binding-core",
 ]
 
 [[package]]
 name = "polyspec-http-negotiation"
-version = "0.0.5"
-source = "git+https://github.com/polyspec/http-negotiation.git?tag=v0.0.5#9685ba1f8de653d6989918904c2f34111034071d"
+version = "0.0.6"
+source = "git+https://github.com/polyspec/http-negotiation.git?tag=v0.0.6#79242d32fcc3d64d18408f418036c23d9f86f6cc"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-http-media-type",
@@ -1191,8 +1191,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-json"
-version = "0.0.34"
-source = "git+https://github.com/polyspec/json.git?tag=v0.0.34#f13de8d689c62958650fc4f6c441e3b69652dfe6"
+version = "0.0.38"
+source = "git+https://github.com/polyspec/json.git?tag=v0.0.38#a9cbf59acccef569ef1a6324414b91e53b0a889d"
 dependencies = [
  "polyspec-binding-core",
  "ryu-js",
@@ -1202,8 +1202,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-php-serialization"
-version = "0.0.15"
-source = "git+https://github.com/polyspec/php-serialization.git?tag=v0.0.15#ba29eb528f449b6da80112d6bc0b54494220acf7"
+version = "0.0.16"
+source = "git+https://github.com/polyspec/php-serialization.git?tag=v0.0.16#a66c734dcab21b49053acd5e14fb51ec9b589156"
 dependencies = [
  "polyspec-binding-core",
  "ryu",
@@ -1211,8 +1211,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-session-store"
-version = "0.0.4"
-source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.4#3c0e383f2aca2e71260332df9da4cccba3886f6c"
+version = "0.0.7"
+source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.7#01d192cbb03dea5c9df48e8accd0e6180900be7f"
 dependencies = [
  "polyspec-php-serialization",
  "polyspec-session-store-core",
@@ -1221,8 +1221,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-session-store-core"
-version = "0.0.4"
-source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.4#3c0e383f2aca2e71260332df9da4cccba3886f6c"
+version = "0.0.7"
+source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.7#01d192cbb03dea5c9df48e8accd0e6180900be7f"
 dependencies = [
  "getrandom 0.3.4",
  "polyspec-binding-core",
@@ -1231,8 +1231,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-session-store-file"
-version = "0.0.4"
-source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.4#3c0e383f2aca2e71260332df9da4cccba3886f6c"
+version = "0.0.7"
+source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.7#01d192cbb03dea5c9df48e8accd0e6180900be7f"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-php-serialization",
@@ -1242,8 +1242,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.29"
-source = "git+https://github.com/polyspec/template.git?tag=v0.0.29#fa994feb9541a10a034723549b8499be0d019150"
+version = "0.0.30"
+source = "git+https://github.com/polyspec/template.git?tag=v0.0.30#1088507549ac8673852183b0fe3f6209291e8d09"
 dependencies = [
  "js-sys",
  "polyspec-binding-core",
