@@ -127,10 +127,13 @@ class Renderer:
         self, template: str, assign, define: dict, engine: Engine | None = None
     ) -> str:
         """Renders one template with an assigned bound root and HTML definitions (HY-14), with the engine of the
-        directory `templates`, or with `engine`, the engine of the directory `legacy`, for the reserved template."""
-        return (self._program if engine is None else engine).render_bound(
+        directory `templates`, or with `engine`, the engine of the directory `legacy`, for the reserved template.
+        The `FsLoader` reads files, which the engine does only in `prepare` and `load` (RT-77), so the render is
+        prepared and then rendered."""
+        prepared = (self._program if engine is None else engine).prepare_bound(
             template,
             assign,
             define={name: DefineInput(**value) for name, value in define.items()},
             env=Environment(timezone=self.timezone, now=time.time()),
         )
+        return prepared.render()

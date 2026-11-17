@@ -281,8 +281,8 @@ class CoreRulesTest(unittest.TestCase):
                 self.assertEqual(call(CoreRules(core)), result)
                 self.assertEqual(calls, [(name, args)])
 
-    def test_there_are_twenty_exact_units(self):
-        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 20)
+    def test_there_are_twenty_two_exact_units(self):
+        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 22)
 
     def test_the_frame_headers_are_a_record_in_the_order_of_the_core(self):
         # HY-45.5, HY-65.1
@@ -360,7 +360,12 @@ class SharedCoreRulesTest(unittest.TestCase):
     def test_a_binding_that_does_not_import_fails_with_the_name_of_the_module(self):
         from polyspec.hyper.session._csrf import Csrf
 
-        with unittest.mock.patch.dict(sys.modules, {self.module.BINDING: None}):
+        # The package of the binding imports its module `_root` and keeps it as an attribute, so a module that does not
+        # import fails the import of the package too; both names are absent here, as they are after that failure.
+        package = self.module.BINDING.rpartition(".")[0]
+        with unittest.mock.patch.dict(
+            sys.modules, {package: None, self.module.BINDING: None}
+        ):
             with self.assertRaises(self.module.CoreBindingError) as raised:
                 self.module.core_rules()
             self.assertIn("polyspec.hyper._binding._root", str(raised.exception))

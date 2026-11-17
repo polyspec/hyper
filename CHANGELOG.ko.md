@@ -1,11 +1,16 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 619367614f2f26ffb0dd905c4d387ff8ab539a975f89a9153a44786ccbce5e9f -->
+<!-- source-sha256: 3a895f6d02bf28571cf3a7805d8c9f78c17dca295fdb8c675e1945944e212e95 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Python 서버의 field line unit test 셋은 `Content-Type` 두 줄의 결합 값을 `media_type()`이 반환한다고 기대했으나 그 값은 `malformed_content_type`과 status 400으로 실패한다(HY-42.14). test 하나는 exact unit이 22개인데 20개로 세었고, test 하나는 binding package가 여전히 가진 module `_root`만 `sys.modules`에서 지웠다. test는 그 실패를 기대하고, 22개를 세고, 두 이름을 모두 지운다(H35.8-2).
+- Python 서버의 `MediaType.etag`는 content type `text/é`에 대해 `é`의 UTF-8 두 byte를 digest했고 `text/Ā`에는 tag를 반환했다. HY-122.14는 U+00FF까지의 문자는 한 byte로, 그 위의 문자는 `invalid_text`로 정한다. tag는 core의 `rules.representation_tag`가 계산한다(H35.8-2).
+- Python 서버의 `Reply.status("403")`과 `Reply.status(True)`는 binding의 kind `invalid_argument_type`으로 실패했다. HY-69는 `invalid_number`를 정한다. reply는 core를 부르기 전에 status가 데이터 모델의 integer인지 검사한다(H35.8-2).
+- Python 서버의 모든 document와 region이 `load_not_loaded`와 함께 500으로 응답했다. renderer가 파일을 읽지 않는 `render_bound`를 불렀기 때문이다(template의 RT-77). renderer는 PHP 서버처럼 `prepare_bound`를 부르고 준비된 render를 실행한다. Python 서버는 template binding 0.0.28을 받은 뒤 한 번도 실행되지 않아 어떤 run도 이것을 보이지 못했다(H35.8-2).
+- template binding 0.0.28을 쓰는 Python 서버의 render가 `No module named 'polyspec.json'`으로 실패했다. binding의 native module이 그 module을 import하는데 package의 어떤 의존도 그것을 설치하지 않았기 때문이다. `pyproject.toml`이 json release v0.0.34의 wheel을 platform마다 sha256과 함께 적고 `uv.lock`이 그것을 고정한다(H35.8-2).
 - HY-48.16을 폐기하고 HY-48.17이 그것을 대신한다. HY-48.16은 PHP 서버의 `App::open`이 필요로 하는 출력으로 `reads.json`, `build.json`, 디렉터리 `templates`를 밝혔으나, open은 예약 템플릿의 사본 `legacy/hyper/data.tpl`(HY-31.10)도 요구한다. HY-48.17은 네 출력을 open이 처음 없는 것을 보고하는 순서로 밝힌다. `contracts/interfaces.json`과 `contracts/arguments.json`의 open 매개변수 `program`, `contracts/build.json`의 사본이 없는 case, `Renderer::open`의 주석, `docs/features.md`의 행 `legacy-data-template`은 HY-48.17을 인용한다. 동작은 바뀌지 않는다(H31.4-2).
 - root `package.json`과 `tests/package-install/package.json`이 `@polyspec/session-store`와 그 platform package 셋의 `overrides`를 가졌다. npm은 이것 없이도 `packages/ts`의 요구 `0.0.4`를 root가 적은 release asset URL로 해석하고 같은 lock을 쓰므로 그 항목을 지웠다. `make lint-ts`는 knip에서 `package.json`과 `packages/ts/package.json`의 쓰이지 않는 의존 `@polyspec/session-store`로 실패했는데, knip이 읽지 않는 생성된 Node binding만 이를 요구하기 때문이다. 이제 `knip.json`이 두 곳에서 이를 무시한다(H35.8-2).
 - CI group core는 wasm-bindgen CLI를 시작하는 `make test-bindings`를 실행했지만, group의 어떤 setup step도 그것을 설치하지 않았다. 이제 group의 setup은 `make release-recipes`로 `packages/release.mk`를 쓰고 그 target인 `make install-wasm-bindgen`을 실행한다. `tests/scripts/ci-group-tools.test.mts`는 모든 CI group의 setup step과 target의 dry run을 읽고, group이 시작하는데 그 setup이 설치하지 않는 tool이 있으면 group, target, tool을 밝히며 실패한다(HR-91, H35.16-6).
