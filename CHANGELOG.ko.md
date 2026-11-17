@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2bb578adea274be30acfaeb49e11fc777c4c35e004518996f10eee2348308af2 -->
+<!-- source-sha256: 4e2e3e68c419188b462f97c79e82adff7c22edccff791f0e78dd0386817d9c9b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- CI group node는 `make release-candidate-assets`에 필요한 uv를 설치한다(HR-91, H34.11). 입력: CI run 44130032438의 check (node). 이전 동작: group이 node와 rust만 설치했고, kit의 release candidate-assets는 uv로 `packages/python`의 environment를 찾으므로 "uv workspace dir could not start: spawnSync uv ENOENT"로 실패했다. `ci-group-tools.test.mts`는 command line만 읽어 그 uv를 보지 못했다. 기대 동작: `CI_TOOLS_node`에 uv가 있고, test가 kit이 시작하는 uv를 적는다.
 
 - `make hyper-install-python`은 Python native module을 build하기 전에 binding의 생성 source를 쓴다(HR-85, H34.10). 입력: CI group python, board, docs의 setup step이 `make hyper-install` 없이 실행하는 새 checkout. 이전 동작: maturin이 `make bindings`만 쓰는 "packages/python/native/generated/lib.rs"를 찾지 못해 실패했다. 기대 동작: `hyper-install-python`은 `bindings`를 prerequisite로 갖는다.
 

@@ -822,7 +822,9 @@ CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check recipe-check
 CI_TOOLS_php := node php composer pie rust
 CI_SETUP_php := install-tools hyper-install-crates hyper-install-php
 CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php
-CI_TOOLS_node := node rust
+# release-candidate-assets runs release candidate-assets of kit, which finds the environment of packages/python with uv
+# workspace dir (H34.11).
+CI_TOOLS_node := node rust uv
 CI_SETUP_node := install-tools hyper-install-crates
 CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check release-candidate-assets
 CI_TOOLS_board := node php composer pie python uv rust maturin

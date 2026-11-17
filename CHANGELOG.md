@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The CI group node installs uv, which `make release-candidate-assets` needs (HR-91, H34.11). Input: check (node) of CI run 44130032438. Behaviour before: the group installed node and rust, and release candidate-assets of kit failed with "uv workspace dir could not start: spawnSync uv ENOENT", because it finds the environment of `packages/python` with uv; `ci-group-tools.test.mts` read only the command lines and saw no uv. Expected: `CI_TOOLS_node` holds uv, and the test names the uv that kit starts.
+
 - `make hyper-install-python` writes the generated sources of the bindings before it builds the Python native module (HR-85, H34.10). Input: a fresh checkout, as the setup steps of the CI groups python, board and docs run it, without `make hyper-install`. Behaviour before: maturin failed with "couldn't find file packages/python/native/generated/lib.rs", which only `make bindings` writes. Expected: `hyper-install-python` has `bindings` as a prerequisite.
 
 - Every job of `assets.yml` and the job release of `release.yml` fetch the crates of `Cargo.lock` before they start cargo (HR-89, H34.9). Input: a fresh runner of CI run 44130032438. Behaviour before: the `ci-assets-*` recipes and `ci-release-release` ran no `hyper-install-crates`, so each assets job failed at `crates-check` with "can't checkout https://github.com/polyspec/binding.git?tag=v0.0.21 … offline". Expected: each of these recipes runs `hyper-install-crates` after it installs its tools, and `ci-group-tools.test.mts` holds that order for these jobs as for the check groups.
