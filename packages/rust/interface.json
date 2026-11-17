@@ -425,68 +425,132 @@
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Record",
         "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        },
         "class": "record_error"
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordNotArray",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::RecordWrite",
         "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        },
         "class": "record_error"
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::InvalidDirectory",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::InvalidLifetime",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Cancelled",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::IdentifierTaken",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Io",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::InvalidLockExpire",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::InvalidSetting",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::LockTimeout",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::LockLost",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Reply",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Redis",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Connection",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Sessions/polyspec_session_store::Error::Internal",
-        "library": "session-store"
+        "library": "session-store",
+        "through": {
+          "unit": "store",
+          "library": "session-store"
+        }
       },
       {
         "variant": "polyspec_hyper::ErrorCode::Cookies/polyspec_http_cookie::Error::InvalidName",
@@ -4470,6 +4534,11 @@
       "member": "page_request.new",
       "file": "packages/rust/tests/cases/members.json",
       "group": "request"
+    },
+    {
+      "member": "pages.register",
+      "file": "packages/rust/tests/cases/members.json",
+      "group": "register"
     },
     {
       "member": "rules.csrf_mask",
