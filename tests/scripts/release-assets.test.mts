@@ -79,3 +79,24 @@ test('H35.35-4 the job php builds the extension for each PHP minor of config/too
   assert.equal((JSON.parse(read('packages/php/native/composer.json')) as { name?: string }).name, extension.name);
   assert.equal(config.manifests['packages/php/native/composer.json'], 'archive');
 });
+
+/** The version that the manifest `file` states, or undefined: `version` of a JSON manifest, and of [package] or [project] of a TOML one. */
+function manifestVersion(file: string): string | undefined {
+  const text = read(file);
+  if (file.endsWith('.json')) return (JSON.parse(text) as { version?: string }).version;
+  return /^\[(?:package|project)\]\n(?:(?!\[).*\n)*?version = "([^"]+)"$/m.exec(text)?.[1];
+}
+
+test('H35.35-6 every manifest of config/release.json that states a version states the version of the released packages', () => {
+  // The version of a release is the first section ## X.Y.Z of CHANGELOG.md, which package.json carries between
+  // releases too. release-php-ext names the archive of the extension by the version of its crate, and
+  // release-platform-assets requires the name of the version of the tag, so the crates carry that version as the
+  // package manifests do.
+  const released = /^## (\d+\.\d+\.\d+)$/m.exec(read('CHANGELOG.md'))?.[1];
+  assert.equal(manifestVersion('package.json'), released, 'package.json does not state the version of the first section ## X.Y.Z of CHANGELOG.md');
+  const crates = Object.keys(config.manifests).filter((file) => file.endsWith('Cargo.toml'));
+  assert.ok(crates.includes('packages/rust/Cargo.toml') && crates.includes('packages/php/native/Cargo.toml'), `config/release.json lists the Cargo.toml of the core and of the PHP extension as manifests: ${crates.join(' ')}`);
+  for (const crate of crates) assert.ok(manifestVersion(crate) !== undefined, `${crate} states no version`);
+  const other = Object.keys(config.manifests).map((file) => [file, manifestVersion(file)] as const).filter(([, version]) => version !== undefined && version !== released);
+  assert.deepEqual(other.map(([file, version]) => `${file} states the version ${String(version)}, and the released packages state ${String(released)}`), []);
+});

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 80cf98176c9866efe80b6690228f8fd59224887076524bb346ee64d2dda0ba08 -->
+<!-- source-sha256: 7785bc49f5157f23867baac66001a0bf188ca9b412049af5c85b83e0a381c398 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 패키지가 0.0.40을 적는 동안 core crate와 binding crate는 버전 0.0.0을 적었고, 어떤 check도 둘을 비교하지 않았다. `make release-php-ext`는 PHP extension의 archive 이름을 그 crate의 버전으로 짓고 `make release-platform-assets`는 tag의 버전의 이름을 요구하므로, 릴리스는 tag 뒤에 거기서 실패했을 것이다. 이제 `packages/rust/Cargo.toml`은 0.0.40을 적고, binding crate와 `Cargo.lock`은 `make bindings-scaffold`와 `make cargo-lock`이 쓰는 대로 그것을 적으며, `tests/scripts/release-assets.test.mts`는 `config/release.json`이 나열하고 버전을 적는 모든 manifest가 `CHANGELOG.md`의 첫 section `## X.Y.Z`인 `package.json`의 버전을 적지 않으면 실패한다(H35.35-6).
 - `docs/operations/development.md`는 link된 개발 checkout에서 `make release-candidate-assets`가 어떻게 되는지 적지 않았다. 이제 `.links` 선언이 있고 그 패키지가 link된 checkout은 릴리스의 candidate가 아니므로, 전체 suite가 실행하는 그 target은 거기서 kit의 거부로 실패하고 어떤 checkout에도 link가 없는 CI에서는 통과한다고 적는다(H35.35-1).
 - `assets.yml`의 job `platform`이 CI와 릴리스에서 실행하는 `make release-go-static`은 Linux host의 musl target으로 build하고 toolchain의 `llvm-strip`으로 library를 strip하는데, `rust-toolchain.toml`은 musl target도 component `llvm-tools`도 적지 않아 `make install-tools`가 둘 다 설치하지 않았다. 이제 `rust-toolchain.toml`은 `x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `llvm-tools`를 적는다. `tests/scripts/ci-group-tools.test.mts`는 recipe `ci-assets-platform`, `ci-assets-php`, `ci-assets-npm`을 `RELEASE=true`가 있을 때와 없을 때 모두 CI group처럼 판정한다. 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패하며(`binding check`와 `binding release-go-module`은 Go를 시작하는 것으로 센다), 명령 줄이 `rust-toolchain.toml`에 없는 Rust target이나 component를 필요로 하면 실패한다(H35.35-5).
 - `polyspec/hyper`는 `ext-polyspec_hyper`를 require하는데 릴리스의 어떤 step도 그 extension을 build하지 않았다. `config/toolchain.json`은 `make release-platform-assets`가 요구하는 `phpExtension.minors`를 적지 않았고, `config/release.json`은 extension의 Composer 패키지를 적지 않았다. 이제 `config/toolchain.json`은 minor 8.4와 8.5를 적고, `assets.yml`의 job `php`의 matrix는 각 platform에서 그 각각으로 extension을 build하며, `config/release.json`은 `packages/php/native`의 Composer 패키지 `polyspec/hyper-native`를 적어 kit가 그 source zip과 `packages.json`의 항목을 쓴다. `config/release.json`은 core와 각 binding crate의 `Cargo.toml`을 버전을 담는 manifest로 나열하며, 분류되지 않아 `make release-coverage`를 실패하게 했던 `packages/ts/native/wasm/Cargo.toml`도 그 가운데 있다. extension의 archive 이름은 그 crate의 버전으로 지어지므로, 버전 커밋은 core crate의 버전을 정한다(`AGENTS.md`). `tests/scripts/release-assets.test.mts`는 matrix가 각 platform과 각 minor의 조합이 아니거나 extension의 Composer 패키지가 선언되지 않으면 실패한다(H35.35-4).
