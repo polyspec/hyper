@@ -34,9 +34,9 @@
   },
   "dependencies": {
     "@polyspec/hyper-client": "0.0.40",
-    "@polyspec/php-serialization": "0.0.15",
+    "@polyspec/php-serialization": "0.0.16",
     "@polyspec/php-serialize": "0.0.6",
-    "@polyspec/session-store": "0.0.4",
+    "@polyspec/session-store": "0.0.7",
     "@polyspec/template": "0.0.29"
   },
   "napi": {

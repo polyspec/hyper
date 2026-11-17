@@ -39,18 +39,19 @@
     },
     "polyspec/session-store": {
       "repository": "polyspec/session-store",
-      "version": "0.0.4",
+      "version": "0.0.7",
+      "packages": "bdc25f83cffd8cdc7dcfadb82d14925b21e3c0efd7a4177ec6f33b544a3295b8",
       "extension": "polyspec_session_store",
       "zips": {
         "8.4": {
-          "arm64-darwin-bsdlibc-nts": "826e1954c4a590337d9d61e73f57f94e349b327174d0ab69f550cbd4a03dcf88",
-          "arm64-linux-glibc-nts": "50dd8c0b173fdba32350c8b17206fd829a618965232a093fbb3c99849d9720b3",
-          "x86_64-linux-glibc-nts": "011863e363d6cb1f3bfd54f92f8e931f195079e6aff695c00e3a7cdcbd0ad3a0"
+          "arm64-darwin-bsdlibc-nts": "38e1d05d09478615548579da726ba2fad0ed9806342f96b38b12c2590c6f5508",
+          "arm64-linux-glibc-nts": "55505004e3f88db6d4f74b778d2c9b55f866ed49aace7f84bf4799dd74441978",
+          "x86_64-linux-glibc-nts": "636aa3425a5bf046a78eda8e356f60ec44135b4ca42359936f7352fa1f019efc"
         },
         "8.5": {
-          "arm64-darwin-bsdlibc-nts": "5ea66d6859901b062b5f5d9d103a3870fa9fece5d4ef504b2956eccb8ecd7c2b",
-          "arm64-linux-glibc-nts": "6dd8dabf4340da546de16e33216dc6af0ce28ada57e135c36ef34491c845e7bf",
-          "x86_64-linux-glibc-nts": "8930745927009afa31ba415e6ecde00d71ea25f5d05e269338738da306460df2"
+          "arm64-darwin-bsdlibc-nts": "c14a743adf1508c8a1326012b12a31a5442641ba137932ca54aa212bb8c05683",
+          "arm64-linux-glibc-nts": "0b635c1f5082b9c0e4bf211ac70bdf00da942d741405b3d6482398dd75948676",
+          "x86_64-linux-glibc-nts": "103a965c7ee5859a84f1527c433387df1a245709adcd1408619961361aefdc6a"
         }
       }
     }
