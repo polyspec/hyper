@@ -631,11 +631,12 @@ node-package: bindings packages node-addon ## Build the WASM module and the Node
 	echo '{ "private": true }' > $(BINDINGS_VAR)/node/package.json
 	cd $(BINDINGS_VAR)/node && $(NPM) install --no-audit --no-fund --omit=optional ./deps/*.tgz ./polyspec-hyper-$(NODE_VERSION).tgz ./polyspec-hyper-$(NODE_PLATFORM)-$(NODE_VERSION).tgz
 
-# The generated tests of the WASM binding through the subpath ./wasm of the installed package (binding P-5);
-# --expose-gc serves the generated tests that collect instances (binding GN-18a).
-test-wasm: node-package ## Run the generated tests of the WASM binding on node --test against the installed package
-	cp $(NODE_PACKAGE)/native/wasm/generated/tests/generated.test.mjs $(BINDINGS_VAR)/node/generated.wasm.test.mjs
-	cd $(BINDINGS_VAR)/node && $(NODE) --expose-gc --test generated.wasm.test.mjs
+# The generated tests of the WASM binding are a node:test file that imports the generated entry ../index.mjs, which
+# loads the module hyper_wasm.js that node-package writes beside it, so test-wasm runs them where the generator writes
+# them, as test-node-addon does; a copy in another directory does not find the entry. --expose-gc serves the generated
+# tests that collect instances (binding GN-18a).
+test-wasm: node-package ## Run the generated tests of the WASM binding on node --test against the WASM module of the checkout
+	$(NODE) --expose-gc --test $(NODE_PACKAGE)/native/wasm/generated/tests/generated.test.mjs
 
 # The static library with the test features (binding GN-13b), which Go links through CGO_LDFLAGS; gofmt and go vet,
 # then the generated tests on go test. GOTOOLCHAIN=local: a go of another release than the go directive fails instead
