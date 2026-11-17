@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 202a9395adc290d4f4b670c0e4de64b0d8a2b375aa0deda47d5b2fb138749dd0 -->
+<!-- source-sha256: ad5e408039e51cae3b3a429c647329ac537559ce4c69d76a64cabe12f8306f61 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- WSGI host가 인코딩할 수 없는 status, header, body의 평문 500을 그 오류의 예외 정보 없이 `start_response`에 넘겼고, public 디렉터리의 파일에 대해 예외를 던진 `start_response`는 잡히지 않고 callable을 빠져나갔다. HY-100.9는 두 오류의 평문 500에 예외 정보를 적으며, PEP 3333은 잡은 오류를 보고하는 application에 그 인자를 준다. 이제 host는 인코딩 오류에 그것을 넘기고, public 파일에 대해 예외를 던지는 `start_response`에는 예외 정보와 함께 다시 `start_response`로 평문 500을 응답한다. write hook은 그 500을 실패와 함께 받는다. `tests/test_wsgi.py`의 시험 둘이 이것을 적는다. 쓰였을 뿐 실행되지 않았다(H35.44).
 - ASGI host가 body를 받지 못했거나 수신이 취소된 요청에 대해 write hook에 raw query가 빈 요청을 주었다. 받은 그대로의 요청이 query를 담지 않는 `raw_path`로 만들어졌기 때문이다. 이제 그 요청의 raw query는 body를 읽은 요청과 같이 `scope['query_string']`을 latin-1로 decode한 것이다(HY-100.24). `tests/test_asgi.py`가 body 읽기 실패의 시험에서 그것을 기대한다. 이 변경은 쓰였을 뿐 실행되지 않았다(H35.44).
 - HY-100.6, HY-100.18, HY-100.27을 폐기하고 HY-100.37, HY-100.38, HY-100.39가 대체한다. HY-100.6과 HY-100.18은 WSGI host와 ASGI host의 disconnect hook의 요청으로 callable이 `around`에 넘긴 요청을 이름했다. host는 HY-97.5가 적는 대로 마지막 `answer` 호출의 요청을 주며, 새 statement가 그렇게 적는다. HY-100.27은 `raw_path`가 없는 scope의 평문 500의 send가 실패하면 `written`을 부른다고 적었다. 그때는 요청이 없어 HY-99.12가 적는 대로 hook을 부르지 않으며, HY-100.39가 그렇게 적는다. 폐기된 id를 인용하던 `contracts/interfaces.json`의 member 둘은 HY-100.38과 HY-100.9를 인용한다. 코드는 바뀌지 않는다(H35.44).
 - 어떤 target도 root와 `tests/package-install`의 `package-lock.json`을 쓰지 않았다. 요구가 바뀐 뒤 `npm install --package-lock-only`는 각각에서 손으로 실행하는 명령이었다. 이제 `make npm-lock`이 둘 모두에 `--ignore-scripts`와 함께, 두 번째는 `--prefix`로, checkout의 npm을 절대 경로로 `$(ONLINE)`을 통해 실행한다. 아무것도 설치하지 않는다. root `package.json`은 패키지 하나를 range로 적는다: `ajv` `^8.20.0`이며, npm은 range가 허용하는 동안 그 lock된 버전을 그대로 둔다(H35.41).
