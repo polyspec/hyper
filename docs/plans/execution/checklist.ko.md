@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 2db640f543b96c01e8ac0891ce8a2b998750f83714d25f1522eb213a1afbe6b0 -->
+<!-- source-sha256: ac7fba65a5268d33c4a473064090a4423b028e71832ccc1be46632caed715fe4 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -595,5 +595,5 @@
 | H35.34-2 | packages/cli/lib/build-id.mjs는 core의 규칙 곁에서 build id를 JS로 계산한다. CLI는 @polyspec/hyper의 build subpath(H35.34)로 core를 불러 규칙의 구현이 하나가 된다. | packages/cli | `make hyper-test-scripts` | [ ] |
 | H35.34-3 | packages/cli/lib/shell.mjs는 core의 규칙 곁에서 client rendering shell을 JS로 쓴다. CLI는 @polyspec/hyper의 build subpath(H35.34)로 core를 불러 규칙의 구현이 하나가 된다. | packages/cli | `make hyper-test-scripts` | [ ] |
 | H35.34-4 | packages/cli/lib/template-rules.mjs는 core의 templateProblems 곁에서 template binding의 AST를 자기 JS walker로 읽는다. `hyper check`와 build는 @polyspec/hyper의 build subpath(H35.34)로 core를 불러 규칙의 구현이 하나가 된다. | packages/cli | `make hyper-test-scripts` | [ ] |
-| H35.34-5 | tests/virtiofs/output-files.test.mts는 Node만 있는 Linux container 안에서 CLI의 writeProgram을 부른다. H35.34 이후 writeProgram은 core의 native addon으로 읽기 경로를 계산하는데 container에는 Linux용 addon이 없어 시험이 MODULE_NOT_FOUND로 실패한다. 이 행은 먼저 그 시험이 증명하는 규칙을 적는다. 그것이 virtiofs 위에서 출력 파일을 빠짐없이 공개하는 것이라면, 읽기 경로는 host에서 계산하고 container는 그 내용으로 파일을 쓰기만 한다. | tests/virtiofs, packages/cli | `make virtiofs-check` | [ ] |
+| H35.34-5 | tests/virtiofs/output-files.test.mts는 Node만 있는 Linux container 안에서 CLI의 writeProgram을 불렀고, template library가 그 Rust core의 binding이 된 때부터 거기서 MODULE_NOT_FOUND로 실패했다. 그 import가 platform의 addon을 올리기 때문이다. H35.34는 같은 경로에 hyper core의 addon을 더했다. 이 시험이 증명하는 규칙은 HR-68 하나다: build는 virtiofs bind mount에 출력 파일을 만들 수 있고, 복사한 파일의 mode는 0644다. 내용은 그 규칙에 들지 않는다. 프로그램 조립은 계산 부분(`programFiles`)과 addon을 올리지 않는 쓰기 부분(packages/cli/lib/program-files.mjs)을 갖고 writeProgram이 둘을 합성한다. 시험은 host에서 계산하고 container는 쓰기만 한다(b2964383). 이 변경은 container에서 실행된 적이 없다: `make virtiofs-check`는 Mac의 마지막 전체 run에서만 돌고 그것이 증거이며, 고정 image는 설치되어 있지 않다. | tests/virtiofs, packages/cli | `make virtiofs-check` | [ ] |
 | H35.35 | 버전 커밋 전에, release workflow의 단계 가운데 CI가 돌지 않는 것을 찾아 release가 주는 입력으로 dry run한다. 이 행은 그런 단계마다 그것이 부르는 도구, 그 job이 그 도구를 설치하는지, 그리고 어떤 CI job도 돌지 않는 단계가 무엇인지 적는다. release는 assets job보다 먼저 tag를 만들므로 거기서만 실패하는 단계는 버전 번호를 잃게 한다: assets job의 `binding check --release`는 생성된 go.mod가 다른 polyspec Go module의 release를 require하면 `go mod download`를 부르는데, 그 job은 Go를 설치하지 않았다. | .github/workflows/release.yml, Makefile, docs/operations/development.md | `make hyper-test-scripts` | [ ] |
