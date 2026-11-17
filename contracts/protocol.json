@@ -4217,9 +4217,15 @@
                 },
                 {
                   "id": "HYC-16.15",
-                  "en": "Before a build writes, it reads `client/assets.json` of the build before it; after it published its outputs, it removes below `public/assets` exactly the files that the earlier list names and its own list does not, and prints each file that it removed. A build without an earlier list removes nothing, and no file is removed for the form of its name, so a file that the application placed below `public/assets` stays.",
-                  "ko": "build는 쓰기 전에 앞선 build의 `client/assets.json`을 읽고, 출력을 게시한 뒤 앞선 목록이 적고 자기 목록이 적지 않는 파일만 `public/assets` 아래에서 지우며, 지운 파일을 하나씩 출력한다. 앞선 목록이 없는 build는 아무것도 지우지 않고, 이름의 형태로는 어떤 파일도 지우지 않으므로 애플리케이션이 `public/assets` 아래에 둔 파일은 남는다.",
-                  "koSource": "7ffa6fc5bac1396d53e3a19cc6e8116f8ebf10de8f175817b5c4b14c921a3dbd"
+                  "en": "Before a build writes, it reads `client/assets.json` of the build before it; after it published its outputs, it removes below `public/assets` exactly the files that the earlier list names and its own list does not, and prints each file that it removed.",
+                  "ko": "build는 쓰기 전에 앞선 build의 `client/assets.json`을 읽고, 출력을 게시한 뒤 앞선 목록이 적고 자기 목록이 적지 않는 파일만 `public/assets` 아래에서 지우며, 지운 파일을 하나씩 출력한다.",
+                  "koSource": "33589554662fb3c37162dadb9109e9e140bb75056df03b4fe2ee5c20a90fb862"
+                },
+                {
+                  "id": "HYC-16.16",
+                  "en": "A build without an earlier list removes nothing, and no file is removed for the form of its name, so a file that the application placed below `public/assets` stays.",
+                  "ko": "앞선 목록이 없는 build는 아무것도 지우지 않고, 이름의 형태로는 어떤 파일도 지우지 않으므로 애플리케이션이 `public/assets` 아래에 둔 파일은 남는다.",
+                  "koSource": "b876bbe4c2cde598f75d6ffe2eebbe4d3b6272d5c871d04bc54445ed5dd007b5"
                 },
                 {
                   "id": "HYC-16.8",
