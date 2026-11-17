@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 28278fb8c8bffbbfea62bd7eab4d67b19994756e9da7d969d04bac037a242ab2 -->
+<!-- source-sha256: 0f79979e917ed15d5308b708b9d70463d001a3cb0b2a06bcfc96a7fcc25aa0bc -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make bindings`가 binding 0.0.21에서 core의 `packages/rust/interface.json`을 거부했다(H35.11). 입력: `make bindings-check`. 이전 동작: `partial_target_error`의 전달 행이 두 property `removal_kind`와 `removal_errno`를 한 이름의 단어로 적어 CK-1이 거부했고, cleanup `request_body.remove`를 두 번째로 부르는 case가 없었으며(CK-76), `http_form.internal`을 arm하는 case가 없었다(CK-22). 기대 동작: property마다 전달 행 하나, `["removal", "kind"]`와 `["removal", "errno"]`; `packages/rust/tests/cases/form.json`은 `form_file.content`에 `http_form.internal`을 arm하는 group `content`와, 둘째 case가 receiver의 then에서 body를 지우는 group `remove`를 주고; 다섯 binding manifest는 `make bindings-scaffold`가 쓴 대로 `polyspec-http-form`과 그 `fault-test`를 받으며; `tests/contracts.rs`가 두 group을 core에서 실행한다. 실행하지 않음: `make core-test`와 server test.
 - core는 binding-core v0.0.17에 의존하는 http-form v0.0.2를 고정했고, hyper는 binding 0.0.21을 고정한다(H35.11). 입력: Cargo tag를 옮긴 뒤의 `make hyper-test-scripts TESTS=tests/scripts/release-file-pins.test.mts`. 이전 동작: `config/release-files.json`이 v0.0.2를 적었고, test가 Cargo 줄의 tag에서 실패했다. 기대 동작: `packages/rust/Cargo.toml`은 `polyspec-http-form`에 tag `v0.0.3`으로 의존하고, 그 lock 항목은 `make cargo-lock CRATES=polyspec-http-form`이 `polyspec-binding-core` 하나(0.0.21)와 함께 썼으며, `config/release-files.json`은 v0.0.3의 asset `files.json`의 files 객체를 담고, 그 sha256 값은 GitHub release의 digest와 같다.
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 - `tests/scripts/upload-servers.test.mts`는 scenario의 server가 시작하지 않아도 끝난다(HR-87, H34.3). 입력: Node application을 build할 수 없을 때처럼 `started()`가 throw하는 scenario. 이전 동작: `hostsOf`가 gate listener의 close를 `started()` 뒤에야 등록했으므로, 모든 case가 실패한 뒤에도 listener가 열린 채 남아 파일이 끝나지 않았다. 기대 동작: listener가 listen한 직후 close를 등록하고, 파일은 실패와 함께 끝난다.

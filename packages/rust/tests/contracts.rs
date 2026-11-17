@@ -2558,6 +2558,101 @@ fn armed<T>(case: &Value, member: &str, call: impl FnOnce() -> T) -> T {
     outcome
 }
 
+/// The cases of tests/cases/form.json.
+fn form_cases() -> Value {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/form.json");
+    let text = match fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(error) => panic!("{}: {error}", path.display()),
+    };
+    match serde_json::from_str(&text) {
+        Ok(value) => value,
+        Err(error) => panic!("{}: {error}", path.display()),
+    }
+}
+
+/// The limits of a case of tests/cases/form.json.
+fn form_limits(case: &Value, limits: &Value) -> polyspec_hyper::form::BodyLimits {
+    let limit = |key: &str| match limits[key].as_u64() {
+        Some(limit) => limit,
+        None => panic!("{}: {key} is no number", case["id"]),
+    };
+    polyspec_hyper::form::BodyLimits {
+        limit: limit("limit"),
+        value_limit: limit("value_limit"),
+        part_limit: limit("part_limit"),
+        file_limit: limit("file_limit"),
+    }
+}
+
+#[test]
+fn the_content_case_of_a_file_raises_internal_where_http_form_breaks() -> Result<(), Error> {
+    // HY-132.6; binding design G-5, X-1. The case of the group content of tests/cases/form.json arms
+    // http_form.internal for form_file.content and raises internal, the kind of the error enum of http-form that the
+    // core passes on; the same call without the arming gives the bytes of the file.
+    use polyspec_hyper::form::UploadedFile;
+    let file = form_cases();
+    let mut ran = 0;
+    for case in group(&file, "content") {
+        let content = from_hex(text(&case["content"], "hex"));
+        let made = UploadedFile::new(
+            text(case, "name"),
+            text(case, "filename"),
+            text(case, "content_type"),
+            &content,
+        )?;
+        let io = binding_core::Io::for_generated_call;
+        match armed(case, "form_file.content", || made.content(io())) {
+            Ok(bytes) => panic!("{}: {bytes:?}", case["id"]),
+            Err(error) => check_raises(case, &error),
+        }
+        assert_eq!(made.content(io())?, content, "{}", case["id"]);
+        ran += 1;
+    }
+    assert!(ran > 0);
+    Ok(())
+}
+
+#[test]
+fn the_remove_cases_remove_a_body_once_and_then_do_nothing() -> Result<(), Error> {
+    // HY-131.14, F-10; binding CK-76, GN-6p. The cases of the group remove of tests/cases/form.json start a body read
+    // in chunks and remove it; a case with a receiver removes it in the then of the receiver and once more, and the
+    // second removal does nothing and raises no kind.
+    use polyspec_hyper::form::RequestBody;
+    let file = form_cases();
+    let mut ran = 0;
+    for case in group(&file, "remove") {
+        let (args, then) = match case.get("receiver") {
+            Some(receiver) => {
+                assert_eq!(text(receiver, "new"), "request_body.start", "{}", case["id"]);
+                (&receiver["args"], receiver["then"].as_array().map_or(0, Vec::len))
+            }
+            None => (case, 0),
+        };
+        let io = binding_core::Io::for_generated_call;
+        let mut body = RequestBody::start(
+            io(),
+            args["content_type"].as_str().map(str::as_bytes),
+            args["content_length"].as_str().map(str::as_bytes),
+            args["stream"] == Value::Bool(true),
+            &form_limits(case, &args["limits"]),
+        )?;
+        let directory = match body.directory() {
+            Some(directory) => directory,
+            None => panic!("{}: a body read in chunks has no directory", case["id"]),
+        };
+        assert!(directory.is_dir(), "{}", case["id"]);
+        for _ in 0..then {
+            body.remove(io())?;
+        }
+        body.remove(io())?;
+        assert!(!directory.exists(), "{}", case["id"]);
+        ran += 1;
+    }
+    assert!(ran > 0);
+    Ok(())
+}
+
 #[test]
 fn the_fault_cases_raise_their_kind_where_their_points_break() -> Result<(), Error> {
     // HY-132.6; binding design G-5, X-1. Each case of the group internal of tests/cases/faults.json arms a point for

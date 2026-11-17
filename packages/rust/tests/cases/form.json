@@ -1,0 +1,66 @@
+{
+  "comment": "The cases of the interface contract for the body of a request and its files, whose error enum of http-form the core passes on (H35.11; binding design G-5, X-1), in the case form of binding (G-5). The group content arms http_form.internal for form_file.content with a file that holds its bytes as a value; without the faults the file gives its bytes. The group remove removes the directory of a body read in chunks, and its second case removes it a second time in the then of its receiver, which does nothing and raises no kind, because the body stays after its cleanup (binding CK-76, GN-6p; F-10).",
+  "content": [
+    {
+      "id": "a_broken_invariant_of_a_file_is_internal",
+      "rule": "HY-132.6",
+      "name": "upload",
+      "filename": "a.txt",
+      "content_type": "text/plain",
+      "content": {
+        "hex": "68656c6c6f"
+      },
+      "faults": [
+        {
+          "point": "http_form.internal",
+          "kind": "broken"
+        }
+      ],
+      "raises": {
+        "kind": "internal",
+        "status": null,
+        "category": "internal",
+        "message": null
+      }
+    }
+  ],
+  "remove": [
+    {
+      "id": "a_new_streamed_body_is_removed",
+      "rule": "HY-131.14",
+      "content_type": "multipart/form-data; boundary=XyZ",
+      "content_length": null,
+      "stream": true,
+      "limits": {
+        "limit": 1000,
+        "value_limit": 1000,
+        "part_limit": 10,
+        "file_limit": 1000
+      }
+    },
+    {
+      "id": "a_second_removal_does_nothing",
+      "rule": "HY-131.14",
+      "receiver": {
+        "new": "request_body.start",
+        "args": {
+          "content_type": "multipart/form-data; boundary=XyZ",
+          "content_length": null,
+          "stream": true,
+          "limits": {
+            "limit": 1000,
+            "value_limit": 1000,
+            "part_limit": 10,
+            "file_limit": 1000
+          }
+        },
+        "then": [
+          {
+            "call": "request_body.remove",
+            "args": {}
+          }
+        ]
+      }
+    }
+  ]
+}

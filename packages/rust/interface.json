@@ -607,8 +607,17 @@
         "library": "http-form",
         "unit": "partial_target_error",
         "property": [
-          "removal_kind",
-          "removal_errno"
+          "removal",
+          "kind"
+        ],
+        "forward": "partial_target_error"
+      },
+      {
+        "library": "http-form",
+        "unit": "partial_target_error",
+        "property": [
+          "removal",
+          "errno"
         ],
         "forward": "partial_target_error"
       }
@@ -5247,6 +5256,16 @@
       "member": "front_functions.route_request",
       "file": "packages/rust/tests/cases/faults.json",
       "group": "internal"
+    },
+    {
+      "member": "form_file.content",
+      "file": "packages/rust/tests/cases/form.json",
+      "group": "content"
+    },
+    {
+      "member": "request_body.remove",
+      "file": "packages/rust/tests/cases/form.json",
+      "group": "remove"
     },
     {
       "member": "rules.template_reads",
