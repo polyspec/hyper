@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 11d8707b622d51f35c7a921dafc623c749e29ec0ea085eeba862eaf21bc94a56 -->
+<!-- source-sha256: 7b2099edd626d772c525a7fd43ea62806b402be495f886bec3722332dcbd4499 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 행 H35.38을 우회한다: `scripts/recipe/candidate.mts`는 unit에 member가 하나도 없을 때만 source에서 member를 끌어낸다(222행). 그래서 source가 session-store library로 옮겨 간 `contracts/interfaces.json`의 unit은 예전 member를 stale 항목으로 유지하고 새 member는 하나도 얻지 못한다. 이를 고치는 lane/recipe-candidate의 행이 merge되면 이 행을 다시 진행한다.
 - `hyper build`는 `program/legacy/hyper/data.tpl`을 쓰지 않는다(H35.32-1-5, HY-48.21). 입력: 모든 build. 이전 동작: build는 core를 부르지 않는 서버를 위해 예약 템플릿의 사본을 썼으나, PHP와 Python 서버가 core로 렌더한 뒤로는 어느 서버도 그것을 읽지 않는다. 지금 동작: `program/`은 `templates/`, `reads.json`, `build.json`을 담는다. 파일이 지워진 `contracts/interfaces.json`의 unit `reads`와 `renderer`는 사라진다. PHP와 Python runner는 core가 실행하는 `contracts/context.json`의 section `withContext`를 더 실행하지 않으며, `Context::withContext`, `Context.with_context`, `ContextTest.php`도 함께 사라진다. Python render test는 예약 템플릿의 빈 사본을 쓰지 않는다.
 - PHP 서버(H35.32-1-2)와 Python 서버(H35.32-1-3)가 모두 core로 렌더하고, 공유 값을 한 번 읽고, `reads.json`, `build.json`, `templates`의 프로그램 디렉터리를 열므로, HY-13.8과 HY-48.21은 구현되지 않음 표시를 잃는다.
 - PHP 서버는 Node와 Python 서버처럼 `App::open`의 `functions` entry를 core의 `rules.check_function_entry`로 판단한다(HYC-24.7). 입력: 함수가 아닌 entry. 이전 동작: `Program::pages`가 core 텍스트의 사본인 message `functions.<name> is not a function`을 직접 썼다. 지금 동작: core가 kind `invalid_application`과 자기 message로 그 entry를 실패시키며, `CoreRules::programFunctionEntry`가 그것을 부르는 unit이다.
