@@ -29,6 +29,8 @@
 //     does not read) and which the root names by the tarball URL of its release for the same reason (H35.8-2);
 //   - @polyspec/binding, whose dist/cli.js the Makefile starts by its path (BINDING), which knip does not read, because knip
 //     reads no Makefile and ignoreBinaries names only programs that a script starts by name;
+//   - @napi-rs/cli, whose bin node_modules/.bin/napi the target release-npm-platform of packages/release.mk starts by its
+//     path (NAPI), in a file that binding writes and knip does not read (H35.35-3);
 //   - tailwindcss of packages/cli: lib/build.mjs compiles the stylesheet of an app with @tailwindcss/node from
 //     the CSS text '@import "tailwindcss/theme.css"', which Tailwind CSS resolves from this package.
 {
@@ -50,7 +52,7 @@
     ]
   },
   "ignoreBinaries": ["container", "make", "openssl", "php", "php-fpm"],
-  "ignoreDependencies": ["@polyspec/binding", "@polyspec/json", "@polyspec/php-serialization", "@polyspec/php-serialize", "@polyspec/session-store"],
+  "ignoreDependencies": ["@napi-rs/cli", "@polyspec/binding", "@polyspec/json", "@polyspec/php-serialization", "@polyspec/php-serialize", "@polyspec/session-store"],
   "workspaces": {
     "packages/ts": {
       "entry": ["src/index.ts", "src/build.ts"],

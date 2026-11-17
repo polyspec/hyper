@@ -34,3 +34,25 @@ test('H35.35-2 no wheel of kit is a package with a native build backend, and the
   const build = dryRun('release-assets-platform').join('\n');
   assert.match(build, /\/mise\/shims\/uv build --wheel .* packages\/python$/m, build);
 });
+
+test('H35.35-3 no npm package of kit packs a native file of the checkout, and the jobs platform and npm build the Node package', () => {
+  // `npm pack` of kit packs the files of the checkout that `files` names. An addon or a WASM module there is what the
+  // checkout happens to hold: the debug addon of the runner that make node-addon builds, and no module of another platform.
+  const native = config.packages.filter((item) => item.kind === 'npm').flatMap((item) => {
+    const files = (JSON.parse(read(`${item.directory}/package.json`)) as { files?: string[] }).files ?? [];
+    return files.filter((file) => /\.(?:node|wasm)$/.test(file)).map((file) => `${item.directory}: config/release.json names an npm package of kit, and its files hold ${file}, a native file that npm pack takes from the checkout`);
+  });
+  assert.deepEqual(native, []);
+  // @polyspec/hyper is packed by release-npm with its WASM module, and its addon by release-npm-platform for each
+  // platform; its manifest carries the version.
+  assert.equal(config.manifests['packages/ts/package.json'], 'version', 'config/release.json does not list packages/ts/package.json as a manifest that carries the version');
+  assert.ok(started('ci-assets-npm').includes('release-assets-npm'), 'make ci-assets-npm does not run release-assets-npm');
+  assert.ok(!started('ci-assets-npm').includes('node-addon'), 'make ci-assets-npm builds the addon of the runner into the folder that release-npm packs');
+  const npm = dryRun('release-assets-npm').join('\n');
+  assert.match(npm, /-p polyspec-hyper-wasm --target wasm32-unknown-unknown\b/, npm);
+  const platform = dryRun('release-assets-platform').join('\n');
+  // The napi CLI that release-npm-platform starts is the bin of a devDependency, pinned by its exact version (HR-70).
+  assert.match(platform, /\/node_modules\/\.bin\/napi build --platform --release /, platform);
+  const napi = (JSON.parse(read('package.json')) as { devDependencies?: Record<string, string> }).devDependencies?.['@napi-rs/cli'];
+  assert.match(napi ?? '', /^\d+\.\d+\.\d+$/, `package.json pins no @napi-rs/cli, whose bin make release-npm-platform starts: ${napi}`);
+});

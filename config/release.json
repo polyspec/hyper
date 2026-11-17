@@ -15,13 +15,6 @@
     },
     {
       "kind": "npm",
-      "directory": "packages/ts",
-      "name": "@polyspec/hyper",
-      "product": "hyper",
-      "runtime": "ts"
-    },
-    {
-      "kind": "npm",
       "directory": "packages/cli",
       "name": "@polyspec/hyper-cli",
       "product": "hyper-cli",
@@ -38,7 +31,7 @@
   "manifests": {
     "package.json": "version",
     "packages/client/package.json": "archive",
-    "packages/ts/package.json": "archive",
+    "packages/ts/package.json": "version",
     "packages/cli/package.json": "archive",
     "packages/php/composer.json": "archive",
     "packages/python/pyproject.toml": "version"

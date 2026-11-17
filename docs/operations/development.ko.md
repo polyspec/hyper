@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: a4af591563d400559baa33c8f80abac05fe7896931c783cc7e4d82f838368ab9 -->
+<!-- source-sha256: f93dc2a776edcc3d8a50b540f37a18486b81c2b32ba93f4a0901f83713e762d6 -->
 # 개발
 
 [English](development.md).
@@ -142,9 +142,10 @@ binding의 두 check는 모두 `go mod download`로 `packages/go/go.mod`의 `go.
 
 Python 패키지 `packages/python`은 `release-wheel`이 각 platform의 runner에서 maturin으로 build하는 platform wheel `polyspec_hyper-X.Y.Z-cp314-abi3-<platform>.whl`로 릴리스하며, `config/release.json`은 그 `pyproject.toml`을 버전을 담는 manifest로 나열한다. 이 패키지는 kit의 kind `wheel`인 패키지가 아니다. kit는 그 kind를 그 디렉터리만의 `git archive`에서 순수 Python wheel로 build하는데, 그 archive에는 `native/Cargo.toml`이 경로 `../../rust`로 받는 core의 crate도, 생성된 source도 없다.
 
-kit의 `release assets`는 아직 두 패키지를 그것들이 더는 갖지 않는 형태로 pack한다.
+`packages/ts`의 npm 패키지 `@polyspec/hyper`는 `polyspec-hyper-X.Y.Z.tgz`와 platform 패키지 `polyspec-hyper-<platform>-X.Y.Z.tgz`로 릴리스한다. 앞의 것은 job `npm`의 `release-npm`이 addon을 build하지 않은 checkout에서 `npm pack`이 나열하는 파일의 복사본에 WASM module을 더해 pack하고, 뒤의 것은 `release-npm-platform`이 `package.json`의 devDependency인 napi CLI로 build한다. 이 패키지는 kit의 npm 패키지가 아니다. kit의 `npm pack`은 checkout의 파일을 받으며, 그 가운데에는 `make node-addon`의 debug addon이 있다. `config/release.json`은 그 `package.json`을 버전을 담는 manifest로 나열한다. kit는 native 파일이 없는 `@polyspec/hyper-client`와 `@polyspec/hyper-cli`를 pack한다.
 
-- npm 패키지 `@polyspec/hyper`. `packages/ts`의 `npm pack`은 checkout의 파일을 pack하며, 그 가운데 `native/generated/*.node`에는 `make node-addon`이 feature `panic-test`를 가진 debug build의 addon을 두고, WASM module은 pack하지 않는다. `release-npm`은 WASM module을 담은 같은 이름의 archive를 build한다. `release-npm-platform`이 시작하는 napi CLI는 `package.json`의 devDependency가 아니다.
+릴리스의 한 부분은 아직 선언되지 않았다.
+
 - PHP extension. `config/toolchain.json`은 `release-platform-assets`가 요구하는 `phpExtension.minors`를 적지 않고, job `php`는 PHP 8.4로만 build하며, `config/release.json`은 extension의 Composer 패키지를 적지 않으므로 릴리스에는 그 source zip도, `packages.json`의 그 항목도 없다.
 
 ### 개발 구성

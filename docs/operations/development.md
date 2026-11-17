@@ -141,9 +141,10 @@ Both checks of binding compute the `go.sum` of `packages/go/go.mod` with `go mod
 
 The Python package `packages/python` is released as the platform wheels `polyspec_hyper-X.Y.Z-cp314-abi3-<platform>.whl` that `release-wheel` builds with maturin on the runner of each platform, and `config/release.json` lists its `pyproject.toml` as a manifest that carries the version. It is no package of the kind `wheel` of kit, which builds a pure Python wheel from the `git archive` of the directory alone: that archive holds neither the crate of the core, which `native/Cargo.toml` takes by the path `../../rust`, nor the generated sources.
 
-`release assets` of kit still packs two packages in a form that they no longer have:
+The npm package `@polyspec/hyper` of `packages/ts` is released as `polyspec-hyper-X.Y.Z.tgz`, which `release-npm` of the job `npm` packs with its WASM module from a copy of the files that `npm pack` lists in a checkout that built no addon, and as the platform packages `polyspec-hyper-<platform>-X.Y.Z.tgz`, which `release-npm-platform` builds with the napi CLI, a devDependency of `package.json`. It is no npm package of kit, whose `npm pack` takes the files of the checkout, the debug addon of `make node-addon` among them; `config/release.json` lists its `package.json` as a manifest that carries the version. kit packs `@polyspec/hyper-client` and `@polyspec/hyper-cli`, which hold no native file.
 
-- The npm package `@polyspec/hyper`. `npm pack` of `packages/ts` packs the files of the checkout, `native/generated/*.node` among them, where `make node-addon` puts a debug build of the addon with the feature `panic-test`, and it packs no WASM module; `release-npm` builds the archive of the same name with the WASM module. The napi CLI that `release-npm-platform` starts is no devDependency of `package.json`.
+One part of the release is not declared yet:
+
 - The PHP extension. `config/toolchain.json` names no `phpExtension.minors`, which `release-platform-assets` requires, the job `php` builds for PHP 8.4 alone, and `config/release.json` names no Composer package of the extension, so the release holds no source zip of it and no entry of it in `packages.json`.
 
 ### Development layout
