@@ -297,6 +297,7 @@ const PARTIAL: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknow
   ['Templates.routeReads (HY-73)', 'routeReads', (rules) => rules.Templates.routeReads(new Uint8Array(), new Map()), [new Uint8Array(), new Map()], new Map([['list', true]])],
   ['Templates.reads (HY-73)', 'templateReads', (rules) => rules.Templates.reads(new Map(), 'layout.tpl'), [new Map(), 'layout.tpl'], true],
   ['Templates.reserved (HY-31.3)', 'reservedDataTemplate', (rules) => rules.Templates.reserved(), [], { name: 'hyper/data.tpl', source: '' }],
+  ['Application.checkFunctionEntry (HYC-24.7)', 'checkFunctionEntry', (rules) => rules.Application.checkFunctionEntry('shout', false), ['shout', false], undefined],
 ];
 
 for (const [label, name, call, args, result] of [...EXACT, ...PARTIAL]) {

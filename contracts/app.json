@@ -9259,7 +9259,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.7"
       }
     },
     {
@@ -9291,7 +9291,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.7"
       }
     },
     {
@@ -9316,7 +9316,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.7"
       }
     },
     {
@@ -9341,7 +9341,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.7"
       }
     },
     {
@@ -9391,7 +9391,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.7"
       }
     },
     {
@@ -10237,14 +10237,7 @@
       },
       "requirements": [
         "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-73.23"
-      }
+      ]
     },
     {
       "id": "a_reads_json_that_is_cut_fails_the_open",
@@ -10255,14 +10248,7 @@
       },
       "requirements": [
         "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-73.23"
-      }
+      ]
     },
     {
       "id": "a_reads_json_that_is_not_utf8_fails_the_open",
@@ -10273,31 +10259,7 @@
       },
       "requirements": [
         "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-73.23"
-      }
-    },
-    {
-      "id": "a_template_index_that_is_cut_fails_the_open",
-      "label": "opening fails with the open error for a template index whose JSON text is cut",
-      "application": "b_board",
-      "files": {
-        "templateIndex": "{\"layout\":"
-      },
-      "requirements": [
-        "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-48.11"
-      }
+      ]
     },
     {
       "id": "an_open_without_reads_json_names_it_as_the_first_missing_output",
@@ -10311,13 +10273,6 @@
       "requirements": [
         "HY-48"
       ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-48.10"
-      },
       "raises": {
         "kind": "invalid_application",
         "status": null,
@@ -10336,13 +10291,6 @@
       "requirements": [
         "HY-48"
       ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-48.10"
-      },
       "raises": {
         "kind": "invalid_build",
         "status": null,
@@ -10360,13 +10308,6 @@
       "requirements": [
         "HY-48"
       ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-48.10"
-      },
       "raises": {
         "kind": "invalid_application",
         "status": null,

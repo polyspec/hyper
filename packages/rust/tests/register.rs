@@ -1,4 +1,4 @@
-//! The function that `pages.register` takes (HYC-24.2, binding GN-6z): a generated binding gives the core a function
+//! The function that `pages.register` takes (HYC-24.9, binding GN-6z): a generated binding gives the core a function
 //! of the application in the form of the interface contract, the arguments and the environment of the call borrowed,
 //! and a template value or a failure whose kind is an error of hyper.
 
@@ -12,12 +12,12 @@ type Given = Box<dyn Fn(&[Value], &Environment) -> Result<Value, Failure<Error>>
 
 #[test]
 fn register_takes_the_function_in_the_form_of_the_contract() {
-    // HYC-24.2: the member that the contract names `pages.register` takes that form by value.
+    // HYC-24.9: the member that the contract names `pages.register` takes that form by value.
     let _: fn(&mut Pages, &str, Given) -> Result<(), Error> = Pages::register;
 }
 
 mod failures {
-    //! What the template language receives from a function of the application that fails (HYC-24.2, template
+    //! What the template language receives from a function of the application that fails (HYC-24.9, template
     //! FUN-46): `steps::host_function` gives the engine the host function that calls a function of the contract.
 
     use binding_core::{Failure, Native, NativeObject, Raised};
@@ -153,7 +153,7 @@ mod entries {
     }
 
     /// Opens the functions of a case as a host does: the core judges each entry (HYC-24.7), and the entry that is a
-    /// function is registered (HYC-24.2).
+    /// function is registered (HYC-24.9).
     fn open(file: &Json, case: &Json) -> Result<(), Error> {
         let mut templates = templates(file, case);
         for (name, kind) in case["functions"].as_object().into_iter().flatten() {

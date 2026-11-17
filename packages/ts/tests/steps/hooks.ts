@@ -6,13 +6,13 @@ import { join } from 'node:path';
 import { App, FileSessions, type AppOptions, type ServerOptions } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
 import { raisesOf } from '../case-rules.js';
-import { FIXTURES, TEMPLATES, type Services } from '../support.js';
+import { FIXTURES, PROGRAM, type Services } from '../support.js';
 import { fixtureHandlers } from './client.js';
 import { messageStart } from './recorded.js';
 
 // The options of the fixture application of contracts/client.json without a client rendering, which opens.
 function fixture(): AppOptions<Services> {
-  return { manifest: `${FIXTURES}app.json`, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: fixtureHandlers(), timezone: '+09:00', log: () => {} };
+  return { manifest: `${FIXTURES}app.json`, program: PROGRAM, handlers: fixtureHandlers(), timezone: '+09:00', log: () => {} };
 }
 
 // Returns the error of a call that fails, which the field `raises` of the case judges (HY-97.13), and fails the case for

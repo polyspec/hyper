@@ -46,8 +46,16 @@ function isFunctionCase(value: unknown): value is FunctionCase {
 }
 // The JSON import is typed by the union of its literal cases, where a member that one case omits is undefined in another.
 const all: readonly unknown[] = fixture.cases;
-const cases = all.filter(isFunctionCase);
-if (cases.length !== all.length) throw new Error('functions.json holds a case that the runner cannot read');
+const readable = all.filter(isFunctionCase);
+if (readable.length !== all.length) throw new Error('functions.json holds a case that the runner cannot read');
+// A case that `only` limits to other runners is no case of the browser code: the function of a server receives the
+// environment as its second argument, and that of the browser as the member `env` of it (HYC-24.10).
+const cases = readable.filter((testCase) => {
+  const only: unknown = Reflect.get(testCase, 'only');
+  const languages: unknown = isRecord(only) ? only.languages : undefined;
+  return !Array.isArray(languages) || languages.includes('browser');
+});
+if (cases.length === 0) throw new Error('functions.json holds no case of the browser code');
 const spec = fixture.applications.with_functions;
 const manifest = checkManifest(spec.manifest);
 const sources: Record<string, string> = spec.templates;

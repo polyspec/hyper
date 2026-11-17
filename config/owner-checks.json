@@ -389,8 +389,7 @@
     },
     {
       "paths": [
-        "packages/cli/lib/template-files.mjs",
-        "scripts/build-templates.mts"
+        "packages/cli/lib/template-files.mjs"
       ],
       "targets": [
         "bundle-size",

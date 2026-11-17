@@ -15225,34 +15225,7 @@
       "shape": {
         "fields": {
           "manifest": "string",
-          "build": {
-            "term": "string",
-            "only": {
-              "languages": [
-                "node"
-              ],
-              "sentence": "HY-48.11"
-            }
-          },
-          "templates": {
-            "term": "map<string>",
-            "only": {
-              "languages": [
-                "node"
-              ],
-              "sentence": "HY-48.11"
-            }
-          },
-          "program": {
-            "term": "string",
-            "only": {
-              "languages": [
-                "php",
-                "python"
-              ],
-              "sentence": "HY-48.16"
-            }
-          },
+          "program": "string",
           "handlers": "handlers",
           "timezone": "string",
           "basePath": "string",
@@ -16288,7 +16261,6 @@
         "withContext": {
           "runners": [
             "php",
-            "node",
             "python",
             "browser"
           ],
@@ -16875,7 +16847,6 @@
         "cases": {
           "runners": [
             "php",
-            "node",
             "python",
             "browser"
           ],

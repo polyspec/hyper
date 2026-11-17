@@ -122,10 +122,6 @@
       "kind": "ecosystem",
       "tool": "node:child_process starts the servers of a run and node:fs and node:os give each run its temporary directory (HR-87, HR-89)"
     },
-    "scripts/build-templates.mts": {
-      "kind": "ecosystem",
-      "tool": "@polyspec/template parses the templates, through writeTemplateFiles of packages/cli/lib/template-files.mjs"
-    },
     "scripts/check-bundle-size.mts": {
       "kind": "ecosystem",
       "tool": "node:zlib measures the gzip and brotli sizes against the limits of config/bundle-size.json"

@@ -5,7 +5,7 @@
 import { rules } from './app/core-rules.js';
 
 /**
- * Returns the text of `reads.json` of a server program (HY-73.23): the read paths of every route of the manifest, whose
+ * Returns the text of `reads.json` of a server program (HY-73.34): the read paths of every route of the manifest, whose
  * JSON text is `manifest`, with the templates `templates`, a map from the template names to their sources. The text is
  * `{"routes":<routes>}` and a line feed, where the JSON writer of the core writes the routes in the order of HY-73.32.
  */

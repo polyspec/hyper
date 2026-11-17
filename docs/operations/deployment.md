@@ -32,7 +32,7 @@ One build is deployed as one set: upload the new files of `public/assets` first,
 - the call: one run of `hyper build --app <directory> --output <directory>` with `--api`, `--static` and `--php-namespace` as before; the option `--build` does not exist, and the manifest and the templates are read from `app/app.json` and `templates/` of `--app`;
 - the program directory: `<output>/program` in place of the directory of `--output` of the server build, and the PSR-4 path of the generated program `<output>/program/php/` in `composer.json`;
 - the manifest of the layout: `<output>/client/manifest.json` in place of `<output>/manifest.json`; it holds the URL of each asset by its name besides `hyper`;
-- the Node server: the option `build` of `App.open` names `<output>/client/build.json` and `templates.index` names `<output>/client/templates.index.json`;
+- the Node server: the option `program` of `App.open` names `<output>/program`, as the PHP and the Python server take it; the options `build` and `templates` do not exist (HY-48.17);
 - the static shell: `<output>/client/csr/` in place of `<output>/csr/`;
 - a stylesheet of `--tailwind <source>=<output>` or a file that the application wrote below `public/assets` after the build: `--tailwind <source>=<name>` or `--asset <name>=<path>`, and the layout links the URL of `<name>` of `client/manifest.json`; no output is changed after the build (HR-77).
 

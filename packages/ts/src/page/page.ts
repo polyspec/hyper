@@ -1,173 +1,165 @@
-// Renders the route page as a document or as JSON (HY-12 to HY-19, HY-26, HY-30, HY-31, HY-38, HY-44, HY-52,
-// HY-53, HY-69). The document is the browser rendering of the document JSON value, with the browser code. The app
-// creates one page when it opens.
-import { createHash } from 'node:crypto';
-import { decodeResponse, keepRead, keptPaths, renderDocument, type Application, type RouteDeclaration, type RouteReads } from '@polyspec/hyper-client';
+// Answers the route page as a document or as JSON (HY-12 to HY-19, HY-26, HY-30, HY-31, HY-38, HY-44, HY-52, HY-53,
+// HY-69) with the steps of a page of the core: `PageRequest.next` names each handler, the server calls it and gives its
+// result to the next step, and the last step holds the document or the JSON text. The core selects the regions, checks
+// every value (HY-44), keeps the read paths (HY-73) and renders; the server holds no rule of them. The app creates one
+// page when it opens.
+import type { Manifest, RouteDeclaration } from '@polyspec/hyper-client';
 import type { Handlers, RouteHandlers } from '../app/app.js';
 import { Context, type ContextHandler } from '../app/context.js';
-import { JsonCodec } from '../data/json-codec.js';
-import { Kept } from '../data/kept.js';
 import { RegionPlanner } from './region-planner.js';
 import type { Reply } from '../http/reply.js';
-import { HYPER_JSON, type Request } from '../http/request.js';
+import type { Request } from '../http/request.js';
 import { Response } from '../http/response.js';
-import { rules } from '../app/core-rules.js';
+import { rules, type CorePagesInstance, type PageStepInput } from '../app/core-rules.js';
 import type { Container } from '../app/container.js';
 import type { Flash } from '../session/flash.js';
 import type { Session } from '../session/session.js';
-import { replaced, toValue, type Data, type MapValue, type Value } from '../data/values.js';
+import type { Data } from '../data/values.js';
 
 // The state of the application that the page reads, the one argument of the constructor.
 /** @internal */
 export interface PageParts<S extends object> {
-  application: Application;
+  // The pages of the application that the core opened (HY-48.17).
+  pages: CorePagesInstance;
+  manifest: Manifest;
   handlers: Handlers<S>;
   services: Container<S>;
-  timezone: string;
   https: boolean;
-  // The read paths of every route, by the route name (HY-73).
-  reads: Record<string, RouteReads>;
-  // The build id of the asset output (HY-125), which every JSON response holds after its params (HY-128).
-  build: string;
   // The context handler of the application (HY-124), or null for an application without a context.
   context: ContextHandler | null;
-  // The Vary of the application's html and JSON responses (HY-117).
-  vary: string;
+}
+
+// The action of a request that answers its route page: the status and the data of its result, or null for an action
+// that let `REVISION_CHANGED` escape (HY-107.4), and the masked value of the token that the request held before the
+// action, which differs from that of the request of the page after a renewal (HY-72.3).
+/** @internal */
+export interface PageAction {
+  readonly result: { readonly status: number; readonly data: Data } | null;
+  readonly masked: string;
 }
 
 /** @internal */
 export class Page<S extends object> {
   private readonly parts: PageParts<S>;
+  // The name of the page region of the manifest, whose data the loader of the route gives.
+  private readonly pageRegion: string;
 
   constructor(parts: PageParts<S>) {
     this.parts = parts;
+    const page = parts.manifest.regions.find((region) => region.page === true);
+    if (page === undefined) throw new Error('hyper: the manifest has no page region');
+    this.pageRegion = page.name;
   }
 
-  // Renders the page of a routed request with the status and the invalid data of its action. `basePath` is the base
-  // path of the request: the data base path for a client-rendered request (HY-8, HY-62). A request whose client closed
-  // the connection stops (HY-67).
-  async respond(request: Request, route: RouteDeclaration, handler: RouteHandlers<S>, session: Session, flash: Flash, status: number, invalid: Data, reply: Reply, basePath: string): Promise<Response> {
-    const environment = this.parts;
-    const { application, handlers } = environment;
-    // The read paths of a route, which the open computes for every route of the manifest (HY-73).
-    const routeReads = environment.reads[route.name];
-    if (routeReads === undefined) throw new Error(`hyper: route ${route.name} has no read paths`);
-    const argument = { request, reply, services: environment.services };
-    // HY-124: the context handler runs after the action of the request and before the shared handler and any loader.
-    const held = environment.context === null ? null : await Context.held(environment.context, request.selection());
-    let shared: MapValue = new Map<string, Value>([['title', route.title], ['csrf', request.csrfToken()]]);
-    if (handlers.shared !== undefined) {
-      const returned = Page.loaderMap(await handlers.shared(argument), 'shared data');
-      // HY-124: a shared handler that returns the key context fails.
-      if (returned.has('context')) throw new Error('hyper: the shared handler returned the key context (HY-124)');
-      shared = replaced(shared, returned);
-    }
-    request.stopClosed();
-
-    const changed = RegionPlanner.changedTopics(request, flash, basePath);
-    const data = new Map<string, MapValue>();
-    for (const selected of RegionPlanner.select(application.manifest, !request.isRegionRequest(), changed)) {
-      if (selected.page === true) {
-        const loaded = handler.load === undefined ? new Map() : Page.loaderMap(await handler.load(argument), `data of route ${route.name}`);
-        request.stopClosed();
-        data.set(selected.name, replaced(loaded, Page.loaderMap(invalid, `invalid data of route ${route.name}`)));
-        for (const region of route.regions ?? []) {
-          const loader = handler.regions?.[region.name];
-          const loaded = loader === undefined ? {} : await loader(argument);
+  // Answers the page of a routed request. `action` is the action of a POST request that answers its page, or null for
+  // a GET request. `basePath` is the base path of the request: the data base path for a client-rendered request (HY-8,
+  // HY-62). A request whose client closed the connection stops (HY-67).
+  async respond(request: Request, route: RouteDeclaration, handler: RouteHandlers<S>, session: Session, flash: Flash, action: PageAction | null, reply: Reply, basePath: string): Promise<Response> {
+    const { handlers, context } = this.parts;
+    const argument = { request, reply, services: this.parts.services };
+    // The masked value of the page input is that of before the action; the action step gives the new one (HY-72.3).
+    const masked = request.csrfToken();
+    const page = rules().pageRequest(this.parts.pages, {
+      route: route.name,
+      params: new Map(Object.entries(request.params())),
+      kind: request.wantsJson() ? (request.isRegionRequest() ? 'region_json' : 'document_json') : 'html',
+      action: action !== null,
+      csrf: action?.masked ?? masked,
+      changed: RegionPlanner.changedTopics(request, flash, basePath),
+      // HY-14.3: one whole number of seconds for every render of the response.
+      now: Math.floor(Date.now() / 1000),
+      // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
+      keepCookie: request.cookie(rules().keptCookieName(this.parts.https || request.https)),
+      heldHash: request.header('Hyper-Context'),
+    });
+    // The regions whose loader gave data, in the order of their calls; the session is read for these (HY-38.20).
+    const present: string[] = [];
+    let step = page.next({ input: 'start' });
+    while (step.step === 'call') {
+      const call = step.call;
+      let input: PageStepInput;
+      switch (call.call) {
+        case 'action': {
+          if (action === null) throw new Error('hyper: a page without an action asked for its action');
+          const csrf = masked === action.masked ? null : masked;
+          input = action.result === null
+            ? { input: 'action', outcome: { outcome: 'revision_changed' }, csrf }
+            : { input: 'action', outcome: { outcome: 'page', status: action.result.status, data: Page.resultMap(action.result.data, `invalid data of route ${route.name}`) }, csrf };
+          break;
+        }
+        case 'context':
+          // HY-124: the context handler runs after the action of the request and before the shared handler and any loader.
+          if (context === null) throw new Error('hyper: a page without a context handler asked for its context');
+          input = { input: 'context', context: await Context.held(context, request.selection()) };
+          break;
+        case 'shared':
+          input = handlers.shared === undefined ? { input: 'no_handler' } : { input: 'shared', shared: Page.resultMap(await handlers.shared(argument), 'shared data') };
+          request.stopClosed();
+          break;
+        case 'route_loader':
+          input = handler.load === undefined ? { input: 'no_handler' } : { input: 'loaded', data: Page.resultMap(await handler.load(argument), `data of route ${route.name}`) };
+          request.stopClosed();
+          present.push(this.pageRegion);
+          break;
+        case 'route_region_loader': {
+          const loader = handler.regions?.[call.region];
+          const loaded = loader === undefined ? undefined : await loader(argument);
           request.stopClosed();
           // HY-75: a route region loader that returns null makes the region absent from this response.
-          if (loaded === null) continue;
-          data.set(region.name, Page.loaderMap(loaded, `data of region ${region.name}`));
+          if (loaded === null) {
+            input = { input: 'absent' };
+            break;
+          }
+          input = loaded === undefined && loader === undefined ? { input: 'no_handler' } : { input: 'loaded', data: Page.resultMap(loaded, `data of region ${call.region}`) };
+          present.push(call.region);
+          break;
         }
-      } else {
-        const loader = handlers.regions?.[selected.name];
-        data.set(selected.name, loader === undefined ? new Map() : Page.loaderMap(await loader(argument), `data of region ${selected.name}`));
-        request.stopClosed();
+        case 'region_loader': {
+          const loader = handlers.regions?.[call.region];
+          input = loader === undefined ? { input: 'no_handler' } : { input: 'loaded', data: Page.resultMap(await loader(argument), `data of region ${call.region}`) };
+          request.stopClosed();
+          present.push(call.region);
+          break;
+        }
+        case 'reply':
+          // HY-38.20: the stored kept values are read after every loader returned. HY-92, HY-69: the reply states
+          // whether a document embeds its data and the status of a page with status 200.
+          input = { input: 'reply', embeds: reply.embedsData(), stored: new Map(present.map((name) => [name, session.kept(name)])), status: reply.statusValue() };
+          break;
       }
+      step = page.next(input);
     }
-
-    // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
-    JsonCodec.encode(new Map<string, Value>([['shared', shared], ['regions', new Map(data)]]));
-    // HY-73: the page keeps only the paths that the templates of the route read.
-    const readShared = keepRead(shared, routeReads.shared);
-    if (!(readShared instanceof Map)) throw new TypeError('hyper: the shared data is not a map');
-    shared = readShared;
-    for (const [name, regionData] of data) {
-      const reads = routeReads.regions[name];
-      if (reads === undefined) throw new Error(`hyper: region ${name} has no read paths`);
-      const read = keepRead(regionData, reads);
-      if (!(read instanceof Map)) throw new TypeError(`hyper: data of region ${name} is not a map`);
-      data.set(name, read);
-    }
-
-    // HY-31, HY-92: a document embeds its data when its reply asks for it and a route region is present (HY-75).
-    const embeds = reply.embedsData() && (route.regions ?? []).some((region) => data.has(region.name));
-    // HY-128: a JSON response, and a document that embeds its data, hold the member context after build. Only the
-    // document always holds the value (HY-128.4); a JSON response omits it for the current hash (HY-128.2).
-    const contextValue = held !== null && (request.wantsJson() || embeds) ? Context.member(environment.build, held, request.wantsJson() ? request.header('Hyper-Context') : null) : null;
-    const value = JsonCodec.value(
-      environment.timezone,
-      route.name,
-      new Map(Object.entries(request.params())),
-      environment.build,
-      contextValue,
-      shared,
-      new Map(data),
-      this.kept(request, session, data),
-    );
-    // HY-69: the reply gives a page with status 200 the status 403.
-    const pageStatus = status === 200 ? (reply.statusValue() ?? status) : status;
-    const cacheControl = pageStatus === 200 ? (reply.cacheControlValue() ?? 'no-store') : 'no-store';
-    if (request.wantsJson()) {
-      const body = JsonCodec.encode(value);
-      const headers: Response['headers'] = { 'Content-Type': HYPER_JSON, 'Cache-Control': cacheControl, Vary: environment.vary, ...reply.referrerPolicyHeaders() };
-      if (pageStatus !== 200) return new Response(pageStatus, headers, body);
-      // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not change
-      // it; a matching GET request receives 304 without a body and without `Content-Type`, because a 304 carries no
-      // representation.
-      const tag = `W/"${createHash('sha256').update(body.replaceAll(request.csrfToken(), session.csrfToken())).digest('hex').slice(0, 32)}"`;
-      headers.ETag = tag;
-      if (request.method !== 'GET' || request.header('If-None-Match') !== tag) return new Response(200, headers, body);
-      const { 'Content-Type': _, ...notModified } = headers;
-      return new Response(304, notModified, '');
-    }
-    // HY-92: the document embeds its data only when the reply asks for it.
-    // HY-124, HY-10: the templates read the context in the shared data (HY-126: the read paths do not reduce it).
-    const decoded = decodeResponse(application, value, request.path());
-    const document = renderDocument(application, held === null ? decoded : { ...decoded, shared: Context.withContext(decoded.shared, held) }, { embed: reply.embedsData() });
-    return new Response(pageStatus, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': cacheControl, Vary: environment.vary, ...reply.referrerPolicyHeaders() }, document);
+    const answer = step.answer;
+    if (answer.answer === 'no_page') throw new Error('hyper: the page of a request answered no page');
+    const json = answer.answer === 'json';
+    const body = answer.answer === 'json' ? answer.text : answer.html;
+    // HY-53: only a JSON response with status 200 has a tag, which the core computes from the body with the masked
+    // token replaced by the token of the session; the session is read for no other response.
+    const tagged = json && answer.status === 200;
+    const computed = rules().pageHeaders({
+      status: answer.status,
+      json,
+      body,
+      context: context !== null,
+      maskedToken: tagged ? masked : '',
+      token: tagged ? session.csrfToken() : '',
+      method: request.method,
+      cacheControl: reply.cacheControlValue(),
+      ifNoneMatch: request.header('If-None-Match'),
+      referrerPolicy: reply.referrerPolicyValue(),
+    });
+    return new Response(computed.status, computed.headers, computed.body ? body : '');
   }
 
-  // Converts the data that a loader returned into a map of the data model; another value fails. `source` names the
-  // data in the message.
-  private static loaderMap(value: unknown, source: string): MapValue {
-    const map = toValue(value);
-    if (!(map instanceof Map)) throw new TypeError(`hyper: ${source} is not a map`);
-    return map;
-  }
-
-  // Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17, HY-38).
-  private kept(request: Request, session: Session, data: Map<string, MapValue>): MapValue {
-    // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
-    const cookie = Page.decodedCookie(request.cookie(rules().keptCookieName(this.parts.https || request.https)));
-    const values: MapValue = new Map();
-    for (const [name, regionData] of data) {
-      const stored = session.kept(name);
-      const cookieValues = cookie instanceof Map ? cookie.get(name) : undefined;
-      const pairs: [string, Value][] = [];
-      for (const [path, kind] of Object.entries(keptPaths(this.parts.application.manifest, name))) {
-        const value = kind === 'server' ? stored.get(path) : kind === 'cookie' && cookieValues instanceof Map ? cookieValues.get(path) : undefined;
-        if (value !== undefined) pairs.push([path, value]);
-      }
-      const selected = Kept.select(regionData, pairs);
-      if (selected.size > 0) values.set(name, selected);
+  // Returns the result of a handler as the map that a step of the core takes (HY-44.4): a Map as it is, and a plain
+  // object as the map of its own entries; another value fails. The binding converts the values of the map and the core
+  // checks them (HY-44.12). `source` names the data in the message.
+  private static resultMap(value: unknown, source: string): ReadonlyMap<string, unknown> {
+    if (value instanceof Map) return value;
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      const prototype: unknown = Object.getPrototypeOf(value);
+      if (prototype === Object.prototype || prototype === null) return new Map(Object.entries(value));
     }
-    return values;
-  }
-
-  // Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or null for
-  // a cookie that is absent (HY-38.2, HY-38.11, HY-42).
-  private static decodedCookie(text: string | null): Value {
-    return text === null ? null : rules().pageKeptCookie(text);
+    throw new TypeError(`hyper: ${source} is not a map`);
   }
 }

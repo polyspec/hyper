@@ -2476,7 +2476,7 @@ fn the_read_paths_of_a_template() {
 
 #[test]
 fn the_read_paths_of_the_routes() {
-    // HY-73.18, HY-73.19, HY-73.23, HY-73.32
+    // HY-73.18, HY-73.19, HY-73.34, HY-73.32
     use polyspec_hyper::read_paths::route_reads;
     use polyspec_hyper::steps::route_reads as from_build;
     let file = cases("reads.json");
@@ -2492,7 +2492,7 @@ fn the_read_paths_of_the_routes() {
                     "{}",
                     case["id"]
                 );
-                // The pages read the value as the build writes it (HY-73.23).
+                // The pages read the value as the build writes it (HY-73.34).
                 if let Err(error) = from_build(&routes) {
                     panic!("{}: {error}", case["id"]);
                 }

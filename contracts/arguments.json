@@ -30,42 +30,7 @@
       "member": "app.open",
       "call": "missing",
       "parameter": "program",
-      "refused": true,
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-48.16"
-      }
-    },
-    {
-      "id": "app_open_without_build_is_refused",
-      "label": "`app.open` without `build` fails with the count error (HY-106.8)",
-      "member": "app.open",
-      "call": "missing",
-      "parameter": "build",
-      "refused": true,
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-48.11"
-      }
-    },
-    {
-      "id": "app_open_without_templates_is_refused",
-      "label": "`app.open` without `templates` fails with the count error (HY-106.8)",
-      "member": "app.open",
-      "call": "missing",
-      "parameter": "templates",
-      "refused": true,
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-48.11"
-      }
+      "refused": true
     },
     {
       "id": "app_open_with_its_required_arguments_runs",

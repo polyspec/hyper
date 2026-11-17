@@ -33,7 +33,7 @@ final class ReadsSteps
             throw new \LogicException("the template {$template} is not among the templates of {$case->id()}");
         }
         $directory = self::PROGRAMS . '/reads_' . $case->id();
-        // HY-73.23: the build wrote the read paths of the template of the case, the page region of the route `reads`
+        // HY-73.34: the build wrote the read paths of the template of the case, the page region of the route `reads`
         // of the application, to reads.json of the program that the renderer opens.
         $file = "{$directory}/program/reads.json";
         $json = file_get_contents($file);

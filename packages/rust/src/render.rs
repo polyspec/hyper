@@ -82,7 +82,7 @@ pub fn check_function_entry(name: &str, callable: bool) -> Result<(), Error> {
 
 impl Templates {
     /// The engine of the templates of an application, by their names relative to the template root, with the reserved
-    /// template of the embedded data (HY-31.3) and the functions of the application (HYC-24.2).
+    /// template of the embedded data (HY-31.3) and the functions of the application (HYC-24.9).
     ///
     /// # Errors
     /// `invalid_application` for a template of the application named `hyper/data.tpl`, which is reserved, and for a
@@ -116,7 +116,7 @@ impl Templates {
         Ok(templates)
     }
 
-    /// Registers a function of the application (HYC-24.2, template FUN-43).
+    /// Registers a function of the application (HYC-24.9, template FUN-43).
     ///
     /// # Errors
     /// `invalid_application` for a name that the template language refuses, such as the name of a built-in function,
@@ -151,7 +151,7 @@ pub struct Document<'a> {
     pub manifest: &'a Manifest,
     /// The route of the request.
     pub route: &'a Route,
-    /// The shared data after the read paths, with the context in its place (HY-10, HY-128.4).
+    /// The shared data after the read paths, with the context in its place (HY-10, HY-128.5).
     pub shared: &'a OrderedMap,
     /// The data that the loaders gave each region of the document, after the read paths, in the order of HY-18.
     pub regions: &'a [(String, Value)],

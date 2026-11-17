@@ -552,7 +552,9 @@
             5,
             7,
             8,
-            9
+            9,
+            11,
+            12
           ],
           "blocks": [
             {
@@ -581,12 +583,6 @@
                   "en": "One rule of the Rust core holds that check and gives every problem as a line that names the template, in this order: the `hx-*` attributes of each template other than the layout whose name ends with `.tpl`, in the byte order of the names and the order of their lines, then the placements of `{# title}`, `{# data}` and `{# build}`, of the manifest regions and of the page region in the layout, then the route regions of each route in manifest order.",
                   "ko": "Rust core의 규칙 하나가 그 검사를 가지며 모든 문제를 템플릿 이름을 밝힌 줄로 이 순서대로 준다: 이름이 `.tpl`로 끝나는 layout 외 템플릿의 `hx-*` 속성을 이름의 바이트 순서와 줄 순서로, 그다음 layout의 `{# title}`, `{# data}`, `{# build}`, manifest 영역, page 영역 배치를, 그다음 manifest 순서로 각 라우트의 라우트 영역을.",
                   "koSource": "a9cf95d9dbef17510d6324ba551d671f3f5a2cfd29cedcf88b121082298149ec"
-                },
-                {
-                  "id": "HY-48.12",
-                  "en": "Node: `App.open` fails when the template index is not a template index or does not hold a template of a route.",
-                  "ko": "Node: `App.open`은 template index가 template index가 아니거나 라우트의 template을 담고 있지 않을 때 실패한다.",
-                  "koSource": "90f0be619e5a62a55f2da3691e77ba373b0c9337731e6bc9cc2ffd4bb0207eb2"
                 }
               ]
             },
@@ -637,10 +633,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-48.11",
-                      "en": "Node: `App.open` reads the manifest, the template index, the template files and the build id file by absolute paths, the last from its option `build`, the absolute path of `client/build.json` of the build output (HY-125); a missing file fails with the error that names its path.",
-                      "ko": "Node: `App.open`은 매니페스트, 템플릿 index, 템플릿 파일, build id 파일을 절대 경로로 읽으며, 마지막은 build 출력의 `client/build.json`의 절대 경로인 option `build`로 받고(HY-125), 없는 파일은 그 경로를 밝히는 오류로 실패한다.",
-                      "koSource": "47df76ecfa398b4ade99239b0fae5ebca9ec2d578700ceaa4dac22f52e82458b"
+                      "id": "HY-48.17",
+                      "en": "Node: `App.open` reads the manifest by the absolute path of its option `manifest`; the program directory of its option `program`, an absolute path, holds `reads.json`, `build.json` and the directory `templates`, and `App.open` fails with a `HyperValueError` (HY-106) that names the absolute path of the first missing one.",
+                      "ko": "Node: `App.open`은 매니페스트를 option `manifest`의 절대 경로로 읽는다. 절대 경로인 option `program`의 프로그램 디렉터리는 `reads.json`, `build.json`, 디렉터리 `templates`를 담으며, `App.open`은 처음으로 없는 것의 절대 경로를 밝히는 `HyperValueError`(HY-106)로 실패한다.",
+                      "koSource": "b601eb87eda1dfea2dcf110bb237e2a7709f13b89b29382e12ccad6dbae82784"
                     }
                   ],
                   "blocks": []
@@ -1860,6 +1856,7 @@
           "kind": "rule",
           "id": "HY-128",
           "retired": [
+            4,
             6,
             7,
             8,
@@ -1889,12 +1886,6 @@
                   "ko": "`shared`의 member `context`는 JSON 응답에 없다. 브라우저 코드는 렌더하기 전에 context를 HY-10의 위치에 맞춰 `shared`에 넣는다. 응답에 `value`가 있으면 그 값이고, 없으면 보관한 context다.",
                   "koSource": "f71d6802c85bdc391c671e2f7c66527aa1112d3a38fd02aa3a9f83720187cee1",
                   "id": "HY-128.3"
-                },
-                {
-                  "en": "The Node server renders its documents with that same code (HY-54) from the context map, and puts the member `context` with `hash` and `value` into the value that it renders only for a document that embeds its data.",
-                  "ko": "Node 서버는 context map으로 같은 코드(HY-54)를 써서 문서를 렌더하며, `hash`와 `value`를 가진 member `context`는 데이터를 내장하는 문서에서만 렌더하는 값에 넣는다.",
-                  "koSource": "444d40acd8cc281d5438d7000b867053eb66a5ae6fbbb52d7c2ff13b2b6d29bc",
-                  "id": "HY-128.4"
                 },
                 {
                   "en": "A document that embeds its data (HY-31) embeds `build` and `context` with `value`.",
@@ -2398,6 +2389,7 @@
           "kind": "rule",
           "id": "HYC-24",
           "retired": [
+            2,
             3,
             4
           ],
@@ -2412,10 +2404,16 @@
                   "id": "HYC-24.1"
                 },
                 {
-                  "en": "The `App` of every server takes the same map as its option `functions` (HY-106) when the application opens, and the Node server registers it through `createApplication` of the browser code, so the server and the browser register the same names (template FUN-47); a registration that fails (template FUN-44) fails the open.",
-                  "ko": "모든 서버의 `App`은 애플리케이션을 열 때 같은 map을 option `functions`(HY-106)로 받고, Node 서버는 브라우저 코드의 `createApplication`으로 그것을 등록하므로, 서버와 브라우저는 같은 이름을 등록한다(template FUN-47). 등록이 실패하면(template FUN-44) 열기가 실패한다.",
-                  "koSource": "a9e5774cf33b564f7718a40f77e95a6763ea44110331e5ebac72c0bb9b2482c1",
-                  "id": "HYC-24.2"
+                  "id": "HYC-24.9",
+                  "en": "The `App` of every server takes a map from names to functions as its option `functions` (HY-106) when the application opens and registers each entry in its template engine; an application gives the server and the browser the same names (template FUN-47), and a registration that fails (template FUN-44) fails the open.",
+                  "ko": "모든 서버의 `App`은 애플리케이션을 열 때 이름에서 함수로 가는 map을 option `functions`(HY-106)로 받아 각 entry를 자기 template engine에 등록한다. 애플리케이션은 서버와 브라우저에 같은 이름을 주며(template FUN-47), 등록이 실패하면(template FUN-44) 열기가 실패한다.",
+                  "koSource": "f52f03d70ccb458257fdb398d71483e75c0c5422dc95107812ea2439805dbc14"
+                },
+                {
+                  "id": "HYC-24.10",
+                  "en": "A function of a server receives the list of its arguments and, as its second argument, the environment of the render, a value with `timezone` and `now`; a function of the browser receives that environment as the member `env` of its second argument while the browser renders with the JS engine.",
+                  "ko": "서버의 함수는 인자 목록과, 두 번째 인자로 렌더의 환경 곧 `timezone`과 `now`를 가진 값을 받는다. 브라우저의 함수는 브라우저가 JS engine으로 렌더하는 동안 그 환경을 두 번째 인자의 member `env`로 받는다.",
+                  "koSource": "b562307b2135702f1949e7838d63fad7f036bc19613192c53ac2000021744277"
                 },
                 {
                   "id": "HYC-24.5",
@@ -3352,6 +3350,7 @@
           "retired": [
             10,
             21,
+            23,
             24,
             26,
             27,
@@ -3532,10 +3531,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-73.23",
-                      "en": "The build writes the read paths of every route to `reads.json` of the server program (HY-48), and the Node server computes them with the browser package when the application opens.",
-                      "ko": "빌드는 모든 라우트의 읽기 경로를 서버 프로그램의 `reads.json`(HY-48)에 쓰고, Node 서버는 애플리케이션을 열 때 브라우저 패키지로 읽기 경로를 계산한다.",
-                      "koSource": "5eee8f6e4610f61c9d2dad5d662ce97c777b43fcafa943d2d2689b1980f9a2a3"
+                      "id": "HY-73.34",
+                      "en": "The build writes the read paths of every route to `reads.json` of the server program (HY-48).",
+                      "ko": "빌드는 모든 라우트의 읽기 경로를 서버 프로그램의 `reads.json`(HY-48)에 쓴다.",
+                      "koSource": "48f56062512b976a70f972d7057ecb844ed9c5dee50c3d7c63e01c7b8fd8a105"
                     },
                     {
                       "id": "HY-73.30",
@@ -4092,7 +4091,10 @@
         {
           "kind": "rule",
           "id": "HYC-12",
-          "retired": [],
+          "retired": [
+            6,
+            9
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -4128,10 +4130,10 @@
                   "koSource": "32c19530bc2e4ef2f411ab4aa5210baad7fa59f5d11493580284fe3e3f4afc1f"
                 },
                 {
-                  "id": "HYC-12.6",
-                  "en": "The browser never renders `hyper/data.tpl`, because a client-rendered document embeds no data (HY-31); the Node server, which renders it, checks that the index holds it.",
-                  "ko": "클라이언트 렌더 문서는 데이터를 내장하지 않으므로(HY-31) 브라우저는 `hyper/data.tpl`을 결코 렌더하지 않으며, 그것을 렌더하는 Node 서버가 색인에 그것이 있는지 확인한다.",
-                  "koSource": "b1cbd19c5ca3bf71e98a4a9dbe5e5fc6a6fb1ed208009c01b647b11d4d1a9f04"
+                  "id": "HYC-12.10",
+                  "en": "The browser never renders `hyper/data.tpl`, because a client-rendered document embeds no data (HY-31).",
+                  "ko": "클라이언트 렌더 문서는 데이터를 내장하지 않으므로(HY-31) 브라우저는 `hyper/data.tpl`을 결코 렌더하지 않는다.",
+                  "koSource": "60caec06dbf0fa06da4b784d1fc6e62dd292c5ab9d0cecd527428c5d09ccc7e6"
                 },
                 {
                   "id": "HYC-12.7",
@@ -4144,12 +4146,6 @@
                   "en": "Loaded templates stay loaded until the page unloads.",
                   "ko": "불러온 템플릿은 페이지가 unload될 때까지 유지된다.",
                   "koSource": "8135013d968f9c655ce53fa6c0d79c33409316e0212ff9ae75022a042dcbd6ee"
-                },
-                {
-                  "id": "HYC-12.9",
-                  "en": "The Node server, which renders every page, reads every template of the index when it opens.",
-                  "ko": "모든 페이지를 렌더하는 Node 서버는 열 때 색인의 모든 템플릿을 읽는다.",
-                  "koSource": "ac8da5b0cc3b913b60594c76c0aafe504aaecc1eb40523af2ed182274ca35b22"
                 }
               ]
             }
@@ -5191,6 +5187,7 @@
           "kind": "rule",
           "id": "HY-54",
           "retired": [
+            3,
             4,
             5,
             6,
@@ -5229,17 +5226,6 @@
               "kind": "list",
               "ordered": false,
               "items": [
-                {
-                  "statements": [
-                    {
-                      "id": "HY-54.3",
-                      "en": "It renders a document as the browser renders the document JSON value (HY-12, HY-31, HY-38), with the browser code and the template files of `hyper build` (HR-34), and embeds its data when the reply asks for it (HY-92).",
-                      "ko": "문서는 브라우저가 문서 JSON 값을 렌더하는 방식대로(HY-12, HY-31, HY-38) `hyper build`의 브라우저 코드와 템플릿 파일(HR-34)로 렌더하며, reply가 요청하면 그 데이터를 내장한다(HY-92).",
-                      "koSource": "4e1f6a30b454925a971e263f0b51a470aa0a2c9bcb2255a91a43d846c5ffb423"
-                    }
-                  ],
-                  "blocks": []
-                },
                 {
                   "statements": [
                     {
@@ -5792,7 +5778,9 @@
         {
           "kind": "rule",
           "id": "HY-132",
-          "retired": [],
+          "retired": [
+            8
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -5838,12 +5826,6 @@
                   "en": "The browser code (packages/client), which runs without a binding, raises every failure of hyper in its own class of the category of the failure, `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError` or `HyperInternalError`, which extends the base class of Node of that category (HY-132.2) and gives the kind and the status as the properties `kind` and `status`, so that a failure of its checks at open (`checkManifest`, `checkTemplateIndex`, `createApplication` and `routeReads`) is a `HyperValueError` of kind `invalid_application` (HY-106.21); a failure without a kind or in another class fails this rule.",
                   "ko": "binding 없이 실행되는 브라우저 코드(packages/client)는 hyper의 모든 실패를 그 실패의 category에 속한 자기 class `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`로 내며, 이 class는 그 category의 Node 기반 class(HY-132.2)를 상속하고 kind와 상태를 속성 `kind`와 `status`로 준다. 따라서 open 때 그 검사(`checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`)의 실패는 kind `invalid_application`의 `HyperValueError`이다(HY-106.21). kind가 없거나 다른 class인 실패는 이 규칙을 어긴다.",
                   "koSource": "2a9e1b4b3d83b48cfe34fb5fe83f2aa0e98b6566c56aab44d55ffb78aae529b3"
-                },
-                {
-                  "id": "HY-132.8",
-                  "en": "The Node server, which runs the checks of the browser code at open, raises a failure of them as the class of its binding of the same category with the same kind, status and message, so that its open fails with the `HyperValueError` of the binding of kind `invalid_application`, as the PHP and Python servers fail for the same input; an open that raises the class of the browser code, or an error without a kind, fails this rule.",
-                  "ko": "open 때 브라우저 코드의 검사를 실행하는 Node 서버는 그 검사의 실패를 같은 category의 binding class로, 같은 kind, 상태, message를 가지고 낸다. 따라서 그 open은 같은 입력에서 PHP와 Python 서버가 실패하듯 kind `invalid_application`의 binding `HyperValueError`로 실패한다. 브라우저 코드의 class나 kind 없는 오류를 내는 open은 이 규칙을 어긴다.",
-                  "koSource": "66dc94ac15907b6aa196a6877aba42d6f915f101b0838330e07e6d69e7274c63"
                 }
               ]
             },

@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 05e06ccb4d59e000511b2ec216890e664826974f1b695ab0b1ca074bc47ffed9 -->
+<!-- source-sha256: 2903defb6abbc603520030067e606c1dccabc7c662a249e6704e36edcc3a982a -->
 # 기능 상태
 
 [English](features.md).
@@ -20,8 +20,8 @@
 | node-core-rules | Node 서버 unit의 이름으로 주는 core의 규칙. `packages/ts/src/core/rules.ts`의 `coreRules`가 core의 Node binding module을 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고 core의 Node binding은 build되지 않았다. `tests/scripts/node-core.test.mts`는 binding module의 대역으로 그 호출을 적으며 시험 40개가 통과한다(H31.20, H31.7) | — |
 | python-core-rules | Python 서버 unit의 이름으로 주는 core의 규칙. `polyspec/hyper/app/_core_rules.py`의 `CoreRules`가 core의 Python binding module을 받는다(HY-132.2) | not implemented: 서버의 어떤 unit도 이것을 부르지 않고, record를 받는 member의 unit이 없으며, `tests/test_core_rules.py`는 실행되지 않았다(H31.24, H31.8) | — |
 | php-core-rules | PHP 서버 unit의 이름으로 주는 core의 규칙. `Polyspec\Hyper\CoreRules`가 core의 binding 함수들의 namespace를 받는다(HY-132.2) | not implemented: `CoreRules::shared()`가 extension `polyspec_hyper` 위에서 이것을 load하고, `Csrf`, `Context`, `RepresentationResponse`, `NativeSession::name`, `Page`, `App`, `Reply`, `Result::page`, `Build::read`가 이것을 부른다. `Request::currentPath`, `Result::redirect`, `Session::csrfToken`, session cookie, static shell, kept value는 아직 자기 코드를 갖고, 서버 시험은 extension과 함께 실행되지 않았으며, record를 받는 member의 unit이 없다(H31.25, H35.9-2) | — |
-| core-page-render | 세 서버가 hyper core의 page 렌더로 page를 렌더한다: `packages/rust/src/render.rs`의 `render_document`, `packages/rust/src/steps.rs`의 `Pages`와 `PageRequest`, `packages/rust/src/read_paths.rs`의 `route_reads`와 `template_reads`, 그리고 binding member `Pages`, `PageRequest.next`, `routeReads`, `templateReads` | not implemented: 어떤 서버도 core의 page 렌더를 부르지 않는다. Node 서버(`packages/ts/src/page/page.ts`, `packages/ts/src/app/app.ts`)는 `@polyspec/hyper-client`의 `createApplication`과 `renderDocument`를 거쳐 template의 JS render engine(`@polyspec/template/render`)으로 렌더하고, PHP 서버(`packages/php/src/Page/Renderer.php`)와 Python 서버(`packages/python/src/polyspec/hyper/page/_renderer.py`)는 template Rust core의 binding으로 렌더한다. 두 engine은 template 명세가 거부하는 입력에서 다르다. 분수 숫자 인덱스를 JS engine은 렌더하고 core는 `runtime_type`으로 실패시킨다(H35.32, H35.32-1) | core만 `make core-test` |
-| browser-core-template | browser 코드(`packages/client`)가 template Rust core의 wasm binding으로 렌더한다 | not implemented: browser 코드는 Node 서버처럼 template의 JS render engine(`@polyspec/template/render`)으로 렌더한다(H35.33) | — |
+| core-page-render | 세 서버가 hyper core의 page 렌더로 page를 렌더한다: `packages/rust/src/render.rs`의 `render_document`, `packages/rust/src/steps.rs`의 `Pages`와 `PageRequest`, `packages/rust/src/read_paths.rs`의 `route_reads`와 `template_reads`, 그리고 binding member `Pages`, `PageRequest.next`, `routeReads`, `templateReads` | partial: Node 서버는 build의 프로그램을 열고(`packages/ts/src/app/app.ts`의 `App.open`: 매니페스트, `reads.json`, `build.json`, `templates/`의 source, HY-48.17) `PageRequest.next`의 step으로 page에 답한다(`packages/ts/src/page/page.ts`의 `Page.respond`). 요청의 routing과 session 읽기는 아직 서버가 한다. `make hyper-test-node`는 handler가 orm package의 오류를 던지는 15개를 뺀 모든 case를 통과하며, CI의 전체 target 실행은 하지 않았다. PHP 서버(`packages/php/src/Page/Renderer.php`)와 Python 서버(`packages/python/src/polyspec/hyper/page/_renderer.py`)는 template Rust core의 binding으로 렌더하고 core의 page 렌더를 부르지 않는다. Node 서버와 browser는 두 engine으로 렌더하며, 두 engine은 template 명세가 거부하는 입력에서 다르다. 분수 숫자 인덱스를 JS engine은 렌더하고 core는 `runtime_type`으로 실패시킨다(H35.32, H35.32-1) | core는 `make core-test`, Node 서버는 `make hyper-test-node` |
+| browser-core-template | browser 코드(`packages/client`)가 template Rust core의 wasm binding으로 렌더한다 | not implemented: browser 코드는 template의 JS render engine(`@polyspec/template/render`)으로 렌더한다(H35.33) | — |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
@@ -45,7 +45,7 @@
 | referrer-policy | page와 JSON 응답의 `Referrer-Policy` header를 정하는 명명된 reply 메서드 `referrerPolicy`, Referrer-Policy 명세의 토큰만 받는다(HY-103) | implemented | `make test-php`, `make hyper-test-node`, `make test-python`, `make hyper-test-python-render`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/reply.json`의 case |
 | csrf | 모든 응답의 가린 CSRF 토큰, 세션 쿠키 `__Host-hy-session` 또는 `hy-session`, 액션의 세션 갱신, 페이지의 공유 캐시 금지(HY-24, HY-45, HY-52, HY-53, HY-72) | implemented | `make test-php`, `make hyper-test-node`, `make server-parity` |
 | browser | 세 server에서 request의 `browser()`: 세션 토큰의 소문자 16진 SHA-256 digest이며, 토큰이 갱신될 때까지 한 세션의 모든 요청에서 같고, 세션이 없는 요청에서는 없다(HY-24.10~HY-24.13, HY-106.12) | 진행 중: 세 server가 `contracts/csrf.json`의 case를 통과한다. 전체 실행은 아직 검증하지 않았다 | `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python` |
-| read-paths | 템플릿 AST로 계산한 라우트마다의 읽기 경로. PHP를 위해 `reads.json`에 쓰고 Node 서버는 열 때 계산한다. 두 서버는 공유 데이터와 영역 데이터에서 그 경로만 보낸다(HY-44, HY-73) | implemented | `make test-js`, `make test-php`, `make hyper-test-node`, `make server-parity` |
+| read-paths | 템플릿 AST로 계산한 라우트마다의 읽기 경로. 서버 프로그램의 `reads.json`에 쓰고 모든 서버가 열 때 읽는다. 서버는 공유 데이터와 영역 데이터에서 그 경로만 보낸다(HY-44, HY-73) | implemented | `make test-js`, `make test-php`, `make hyper-test-node`, `make server-parity` |
 | php-errors | PHP 요청의 경고, 알림, 폐기 예정 알림은 틀린 페이지 대신 상세 없는 500으로 요청을 실패시킨다(HY-74) | implemented | `make test-php` |
 | absent-route-regions | 로더가 null을 돌려주는 라우트 영역은 응답에 없다. 라우트 템플릿이 포함하거나 배치하는 템플릿도 라우트 영역을 배치할 수 있다. 브라우저는 모든 라우트 영역의 요소를 확인한다(HY-30, HY-75) | implemented | `make test-js`, `make test-php`, `make hyper-test-node`, `make templates-check`, `make server-parity` |
 | php-analysis | 레벨 `max`의 PHPStan이 기준선이나 무시하는 오류 없이 PHP 서버 패키지의 소스와 테스트를 검사한다 | implemented | `make analyse-php` |
@@ -112,7 +112,7 @@ Rust core(C-7)는 아직 모든 규칙을 갖지 않는다. 가질 때까지 세
 
 | 규칙 | core가 아직 갖지 않는 이유 | 기간 |
 |---|---|---|
-| template AST에서 read path를 계산하는 일(HY-73.1부터 HY-73.20) | build는 core로(`@polyspec/hyper/build`의 `readsFile`) 계산하고 Node server는 browser 패키지로 계산하며(HY-73.23), core는 그것으로 읽는 데이터를 보존한다 | template 언어의 compiler가 그것을 줄 때 |
+| template AST에서 read path를 계산하는 일(HY-73.1부터 HY-73.20) | build는 core로(`@polyspec/hyper/build`의 `readsFile`) 계산해 `reads.json`에 쓰며(HY-73.34), core는 그것으로 읽는 데이터를 보존한다 | template 언어의 compiler가 그것을 줄 때 |
 | client 렌더 selection 호출(HY-62.7부터 HY-62.11까지), 식별자로 session의 store 열기(HY-104), body 한도(HY-59.4, HY-131), handler가 반환한 값의 데이터 모델 변환(HY-44) | core는 요청을 라우팅하고, store interface로 session을 읽으며, token을 검사하고, page의 handler를 요청하며, page의 헤더를 준다. host는 selection을 부르고, session의 store를 열며, body를 읽는다 | S-4 |
 | 요청의 body(HY-56, HY-57, HY-113, HY-114, HY-131)와 요청의 cookie(HY-129.13) | http-form와 http-cookie 라이브러리가 가지며, 각 server가 binding으로 부른다 | S-4 |
 | hook, host 진입점, runtime(HY-43, HY-60, HY-66, HY-67, HY-74, HY-97, HY-99, HY-100, HY-105) | host 코드(L-3)이며 각 runtime에 남는다 | 없음: host 코드로 남는다 |

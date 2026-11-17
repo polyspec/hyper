@@ -300,7 +300,7 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	$(TSC) -p tests/package-install/tsconfig.json
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- --test-concurrency=1 package-install.test.ts
 
-# The program assembly of the command tool writes reads.json with the Rust core (HY-73.23), through the entry
+# The program assembly of the command tool writes reads.json with the Rust core (HY-73.34), through the entry
 # @polyspec/hyper/build of the Node package, so each target that writes a server program needs the dist of `packages`
 # and the Node addon of this platform (`node-addon`).
 server-fixtures: packages node-addon contract-programs ##Build the server program of the PHP test fixtures with the fixed build id of their build.json (HY-48, HY-125.21)
@@ -315,8 +315,8 @@ node-server: board node-addon ## Build the board Node server into examples/board
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --packages=external --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
-node-fixtures: packages contract-programs ## Build the template files of the PHP test fixtures for the Node server tests
-	$(NODE) scripts/build-templates.mts --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
+node-fixtures: packages contract-programs ## Build the server program of the PHP test fixtures for the Node server tests, with the fixed build id of their build.json (HY-48.17, HY-125.21)
+	$(NODE) scripts/fixture-program.mts --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build/program --php-namespace 'Polyspec\Hyper\Tests\Program' --id-file $(FIXTURES)/build.json
 
 # Shared gates read the declarations and runtime fixtures built by this checkout.
 lint-ts: packages

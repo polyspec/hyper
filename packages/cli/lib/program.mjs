@@ -60,7 +60,7 @@ export function programFiles({ manifest, templates, phpNamespace }) {
   }
   /** @type {[string, string][]} */
   const files = phpNamespace === undefined ? [] : phpFiles({ manifest, parsed, templates, phpNamespace });
-  // HY-73.23: the core computes the read paths from the manifest and the template sources and writes their text.
+  // HY-73.34: the core computes the read paths from the manifest and the template sources and writes their text.
   files.push(['reads.json', readsFile(Buffer.from(JSON.stringify(manifest)), sources)]);
   return { count: parsed.size, files };
 }

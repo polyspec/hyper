@@ -26,7 +26,7 @@ use crate::{values, Error};
 /// A map of the boundary of the bindings (binding T-2).
 pub type Map<T> = binding_core::OrderedMap<T>;
 
-/// The read paths of a route (HY-73.23): of its shared data and of each region of its documents.
+/// The read paths of a route (HY-73.34): of its shared data and of each region of its documents.
 pub struct RouteReads {
     /// The read paths of the shared data.
     pub shared: Read,
@@ -52,7 +52,7 @@ pub struct Application {
     pub declared: crate::front::Declared,
 }
 
-/// The read paths of every route from the value that the build gives (HY-73.23): a map from the name of a route to a
+/// The read paths of every route from the value that the build gives (HY-73.34): a map from the name of a route to a
 /// map with `shared`, the node of the shared data, and `regions`, the node of each region by name.
 ///
 /// # Errors
@@ -60,7 +60,7 @@ pub struct Application {
 pub fn route_reads(value: &Value) -> Result<Vec<(String, RouteReads)>, Error> {
     let invalid = || {
         Error::InvalidApplication(std::borrow::Cow::Borrowed(
-            "the read paths of the build have another form (HY-73.23)",
+            "the read paths of the build have another form (HY-73.34)",
         ))
     };
     let Value::Map(routes) = value else {
@@ -112,7 +112,7 @@ pub struct PagesOptions {
 pub type PageFunction =
     Box<dyn Fn(&[Value], &Environment) -> Result<Value, Failure<Error>> + Send + Sync>;
 
-/// The host function of the template language that calls a function of the contract (HYC-24.2, template FUN-46). A
+/// The host function of the template language that calls a function of the contract (HYC-24.9, template FUN-46). A
 /// failure of the data model is the binding failure of the returned value (VAL-19); another kind of hyper, an
 /// exception of language code and the error of Rust host code reach the caller of the render unchanged.
 pub fn host_function(function: PageFunction) -> HostFunction {
@@ -179,7 +179,7 @@ impl Pages {
         &self.app
     }
 
-    /// Registers a function of the application for its templates (HYC-24.2), before its first page request.
+    /// Registers a function of the application for its templates (HYC-24.9), before its first page request.
     ///
     /// # Errors
     /// `invalid_application` for a name that the template language refuses, with the message of the template language
@@ -837,7 +837,7 @@ impl PageRequest {
                 answer: Answer::Json { status, text },
             });
         }
-        // HY-124.7, HY-128.4: a document renders with the context in the shared data.
+        // HY-124.7, HY-128.5: a document renders with the context in the shared data.
         let shared = match &self.context {
             Some(context) => with_context(&shared, &Value::Map(Arc::new(context.clone())))
                 .map_err(Failure::Kind)?,

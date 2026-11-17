@@ -7,9 +7,9 @@ import type { SessionStore } from '../src/session/session-store.js';
 import { Cookies } from '../src/http/cookies.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
-// The template files of the fixtures, which `make hyper-test-node` builds with scripts/build-templates.mts.
-const BUILD = fileURLToPath(new URL('./build/', import.meta.url));
-export const TEMPLATES = { index: `${BUILD}templates.index.json`, root: BUILD };
+// The server program of the fixtures, which `make node-fixtures` builds with scripts/fixture-program.mts and the build
+// id of the fixtures (HY-48.17, HY-125.21).
+export const PROGRAM = fileURLToPath(new URL('./build/program', import.meta.url));
 export const JSON_REGION = { Accept: 'application/vnd.hyper+json', 'HX-Request': 'true' };
 
 export interface Counter {
@@ -68,8 +68,7 @@ export class Fixture {
   async app(options: Partial<AppOptions<Services>> = {}): Promise<App<Services>> {
     const app = await App.open<Services>({
       manifest: `${FIXTURES}app.json`,
-      build: `${FIXTURES}build.json`,
-      templates: TEMPLATES,
+      program: PROGRAM,
       handlers: handlers(),
       timezone: '+09:00',
       log: (message) => this.log.push(message),

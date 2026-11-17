@@ -75,7 +75,8 @@ type ActionOutcome =
   | { readonly outcome: 'page'; readonly status: number; readonly data: ReadonlyMap<string, CoreValue> }
   | { readonly outcome: 'revision_changed' | 'no_page' };
 
-type PageStepInput =
+/** @internal */
+export type PageStepInput =
   | { readonly input: 'start' | 'absent' | 'no_handler' }
   | { readonly input: 'action'; readonly outcome: ActionOutcome; readonly csrf?: string | null }
   | { readonly input: 'context'; readonly context: ReadonlyMap<string, CoreValue> }
@@ -158,8 +159,16 @@ interface KeepRequest {
   readonly formCsrf?: string | null;
 }
 
-// A host function of the templates as the binding calls it (HYC-24).
-type CoreHostFunction = (args: readonly CoreValue[], environment: unknown) => CoreValue;
+// The environment of a render, which a function of a template receives as its second argument (HYC-24.10): the time
+// zone of the server and the `now` of the response in seconds since the Unix epoch.
+interface Environment {
+  readonly timezone: string;
+  readonly now: number;
+}
+
+// A function of the templates as the binding calls it (HYC-24.10): the list of its arguments and the environment.
+export type HostFunction = (args: readonly CoreValue[], environment: Environment) => CoreValue;
+type CoreHostFunction = HostFunction;
 
 interface CorePageRequest {
   next(input: PageStepInput): Step;
@@ -174,7 +183,8 @@ interface DocumentParts {
 // The data of each region of a document, by the name of the region.
 type RegionsData = ReadonlyMap<string, ReadonlyMap<string, CoreValue>>;
 
-interface CorePagesInstance {
+/** @internal */
+export interface CorePagesInstance {
   register(name: string, hostFunction: CoreHostFunction): void;
   renderDocument(route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): string;
   renderParts(route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): DocumentParts;
@@ -216,6 +226,7 @@ export interface CoreBinding {
   templateReads(templates: ReadonlyMap<string, string>, name: string): CoreValue;
   reservedDataTemplate(): DataTemplate;
   validContextHeader(value: string | null): boolean;
+  checkFunctionEntry(name: string, callable: boolean): void;
   jsonRead(text: Uint8Array): JsonValue;
   jsonWrite(value: CoreValue): string;
   flashOf(stored: unknown): JsonValue;
@@ -246,7 +257,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl', 'keepsOutOfSharedCaches',
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
-  'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
+  'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'checkFunctionEntry', 'routeRequest', 'computePageHeaders', 'frameHeaders',
   'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
 
@@ -413,9 +424,12 @@ export interface CoreRules {
   readonly Application: {
     // Partial. App.open: `pages.open` checks the manifest, the templates, the read paths and the options of an
     // application (HY-2, HY-48, HY-59.1, HY-62.2) and `pages.register` registers a host function (HYC-24). The server
-    // still reads the files of `program/` (HY-48.11), checks the handlers against the manifest (HY-30, HY-118) and
+    // still reads the files of `program/` (HY-48.17), checks the handlers against the manifest (HY-30, HY-118) and
     // holds the limits of the body and of the response (HY-59, HY-66, HY-114, HY-131).
     open(manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions, functions: ReadonlyMap<string, CoreHostFunction>): CorePagesInstance;
+    // rules.check_function_entry fails an entry of `functions` that is no function with kind `invalid_application`
+    // (HYC-24.7); the server tells the core whether the entry is callable.
+    checkFunctionEntry(name: string, callable: boolean): void;
   };
 }
 
@@ -509,6 +523,9 @@ export function coreRules(module: object): CoreRules {
         const pages = new core.Pages(manifest, templates, reads, options);
         for (const [name, hostFunction] of functions) pages.register(name, hostFunction);
         return pages;
+      },
+      checkFunctionEntry: (name, callable) => {
+        core.checkFunctionEntry(name, callable);
       },
     },
   };
