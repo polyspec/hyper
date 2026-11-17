@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 587b3fcca001c2082debe9619fb18698db9f8a70f170d13f2d59770cc09a53fa -->
+<!-- source-sha256: e4c999640a766ea5f7b16f7ea4072250973511a56cbb085dff41d975c33056dd -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
