@@ -15,7 +15,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
 test('hyper-ext builds packages/php/native through the cargo of the link script into build/hyper-ext (H35.25)', () => {
   const lines = dryRun('hyper-ext').join('\n');
-  assert.match(lines, /link\.m[jt]s cargo \S+ build --locked -p polyspec-hyper-php-ext/u, lines);
+  assert.match(lines, /link\.m[jt]s cargo \S+ build --locked --offline -p polyspec-hyper-php-ext/u, lines);
   assert.match(lines, /publish\.mts directory build\/hyper-ext\.next-\S+ build\/hyper-ext$/mu, lines);
 });
 

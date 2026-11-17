@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4be6589b35f809802dfc2cc550b4c1fb415b19c8daae76ae45d0a081218a3c8f -->
+<!-- source-sha256: b75ca99fb9c7c0f3b44913cf33e348b79aa79cc66aed567efdf5994d340f8e3f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `Cargo.lock`의 crate를 가져오는 target이 없었다. cargo cache에 crate가 없는 기계에서 `make hyper-install-python`은 maturin에서 `can't checkout from 'https://github.com/polyspec/binding.git': you are in the offline mode (--offline)`로 실패했고, `make bindings`와 `make bindings-check`는 binding 생성기의 `cargo metadata --locked --offline`에서 실패했으며, `make core-test`는 검사 중에 crate를 다운로드했다. 이제 `make hyper-install-crates`가 `cargo fetch --locked`로 crate를 가져온다. `make hyper-install`이 이를 실행하고, 모든 CI group의 두 번째 setup step이다. 그 밖의 모든 recipe는 cargo를 `--offline`으로 시작한다: `core-test`, `core-lint`, `hyper-ext`, `node-addon`, `node-package`, `test-go`, `lint-bindings`, `test-bindings`. cargo, maturin, binding 생성기를 시작하는 각 target의 prerequisite인 `make crates-check`는 crate가 가져와지지 않았을 때 install target의 이름과 함께 실패한다(HR-89). `tests/scripts/ci-group-tools.test.mts`는 fetch 전에 이들을 시작하는 CI group과 `--offline` 없는 cargo 명령을 실패시킨다.
 
 - 세 서버는 file 제한을 두 번 검사한다. route 전에 `App`의 `dispatch`에서, 그리고 token 뒤에 action과 `/_hyper/keep`에 대해 `fileOver`로 검사한다. 이제 `docs/plans/execution/plan.md`는 세 서버의 행 번호와 함께 다음을 적는다. 둘째 검사는 첫째와 같은 요청, 같은 application의 제한을 읽고, route나 action은 자기 제한을 갖지 않으며(HY-114.1), `multipart/form-data`가 form 타입이 아닌 곳에서 파일을 가진 요청은 token 전에 415를 받으므로, 둘째 검사는 답하는 일이 없다. HY-114.7은 body를 읽는 동안의 검사 하나를 정하며 바뀌지 않는다. 세 서버에서 둘째 검사를 제거하는 것이 그 row의 남은 부분이다. `contracts/app.json`의 file 제한 case 둘은 제거 전과 후에 모두 통과한다(H35.36-6).
 - HY-59.4를 retire하고 HY-59.15가 대신한다. HY-59.4는 한도보다 큰 body에 "모든 요청에 대해 그리고 HY-42 전에" 상태 413을 주었고, HY-131.26은 잘못된 byte가 body 제한보다 먼저 오는 body에 413이 아니라 400을 준다. 조각 단위로 읽는 body에서 둘은 어긋났다. HY-59.15는 한 규칙을 정한다. 413은 경로, query, header, 한 값으로 보유한 body에 대한 HY-42의 검사보다 먼저 온다. 조각 단위로 읽는 body에서는 byte가 먼저 오는 실패가 답하므로, 한도 전의 잘못된 byte는 뒤의 byte가 한도를 넘어도 400을 받는다. 한도보다 큰 `Content-Length`는 byte가 무엇이든 413을 받는다. 서버는 이를 지키지 않는다. `RequestBody.feed`는 reader가 실패한 뒤에 true를 돌려주고, host는 계속 먹이며, 그 뒤 body 제한을 넘는 body는 413을 받는다. `docs/plans/execution/plan.md`는 그 row의 Red인 section `streamed`의 case와 chunked body의 host 테스트를 적는다. 둘 다 지금 실패하므로 추가하지 않는다. HY-59.4를 인용하던 statement, `contracts/interfaces.json`의 텍스트, 소스의 주석, 테스트 제목 셋은 HY-59.15를 인용한다(H35.36-5).
