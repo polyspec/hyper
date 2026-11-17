@@ -126,8 +126,8 @@ function recipes(): Map<string, string[]> {
 // that starts a PHP server with the extensions, the lint and the symbol extractor of kit, and Cargo for the crate of
 // the PHP extension, whose build script runs php and php-config.
 const STARTS_PHP = /(?:^|[\s;&|(])php(?:-config)? |\$\((?:PIE|COMPOSER_BIN|PHP_SERVER_ARGUMENTS|PHPUNIT_EXTENSIONS|PHP_SERVER_EXTENSIONS|PHP_EXT_CARGO|php_api_target)\)|\/(?:pint|phpstan|phpcs) |\/(?:lint-php|install-symbols)\.\$\(KIT_EXT\)|polyspec-hyper-php-ext|--php-autoload /u;
-// php-check is the check itself, and release-php-check judges the php of PATH before the release installs the wrapper.
-const NOT_CHECKED = ['php-check', 'release-php-check'];
+// php-check is the check itself.
+const NOT_CHECKED = ['php-check'];
 
 test('every target whose recipe starts PHP has php-check as a prerequisite (H35.16-4)', () => {
   const declared = (/^PHP_TARGETS := (.*)$/mu.exec(MAKEFILE)?.[1] ?? '').split(' ').filter(Boolean);

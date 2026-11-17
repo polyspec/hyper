@@ -9,7 +9,8 @@
 # entries (fail-fast: false), and the report is uploaded after a failed step (`if: ${{ !cancelled() }}`). The last job,
 # ci-passed, passes only when every other job of this workflow passed; a release takes the id of such a run and tags its
 # commit (HR-94, HR-95). Every other step of a job is a uses: step that provisions the runner or carries the report, the
-# jobs run on ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HR-90).
+# jobs run on ubuntu-26.04-arm, the actions are pinned by commit and no step has a time limit (HR-90). The job assets
+# calls assets.yml, the workflow that a release calls for its tag, and ci-passed needs it too.
 #
 # Each job checks hyper out at the workspace root with its history, which the document and owner checks read, and runs the
 # bootstrap right after the checkout (uses: ./.github/actions/bootstrap), which sets up the Node.js of mise.toml and installs
@@ -67,6 +68,11 @@ jobs:
           name: ci-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: var/ci/${{ matrix.name }}/
           if-no-files-found: error
+  # The assets of each platform of the bindings, built from the commit of the run with the jobs and the recipes of the
+  # release (assets.yml, binding GN-19i), so a job of the release that lacks a tool or does not build fails here, before a
+  # tag exists. Its jobs run on the runner of each platform.
+  assets:
+    uses: ./.github/workflows/assets.yml
   # The job that fails the run when any other job did not pass, so a release, which takes a successful run by its id,
   # holds every job (HR-95). It judges the results of the other jobs, so it exists only in CI, and its run step passes them
   # as the JSON of needs. It runs after every other job, also after a failed, skipped or cancelled one (if: always()), and
@@ -74,7 +80,7 @@ jobs:
   # is listed in needs. The bootstrap installs the kit package whose ci-passed utility make ci-passed runs.
   ci-passed:
     if: ${{ always() }}
-    needs: [check]
+    needs: [check, assets]
     runs-on: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
