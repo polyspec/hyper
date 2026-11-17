@@ -214,6 +214,20 @@ A selected run writes `var/recipe/results/<runner>.selected.txt`, whose first li
 
 `CASES` of `make e2e` is another variable of the same name: a pattern that Playwright matches against the titles of its cases.
 
+### A selection of test files
+
+`make hyper-test-php`, `make hyper-test-node` and `make hyper-test-python` take a selection of unit test files of their package in the make variables `PHP_TESTS`, `NODE_TESTS` and `PYTHON_TESTS`, as `make hyper-test-js` takes `JS_TESTS`. A value is one path or several paths that spaces separate, each below the package of the target:
+
+| Target | Variable | Example |
+| --- | --- | --- |
+| `make hyper-test-php` | `PHP_TESTS` | `make hyper-test-php PHP_TESTS="tests/CoreRulesTest.php"` |
+| `make hyper-test-node` | `NODE_TESTS` | `make hyper-test-node NODE_TESTS="tests/http.test.ts"` |
+| `make hyper-test-python` | `PYTHON_TESTS` | `make hyper-test-python PYTHON_TESTS="tests/test_core_rules.py"` |
+
+With a selection the recipe runs those files alone with the test runner of the target: PHPUnit and vitest take the paths, and unittest discovers each file by its name below its directory, one command per file. The type check of `hyper-test-node`, the package data tests of `hyper-test-python` and the other test files do not run. The prerequisites of the target are built as for a full run. Before the runner starts, the recipe fails when a path names no file of the package, for example `hyper-test-node: the selection NODE_TESTS="tests/no-such.test.ts" names no test file packages/ts/tests/no-such.test.ts (HR-84)`, and when `CASES` is set too, because a run selects cases or test files. A row of the checklist that a unit test file owns names such a command as its verification.
+
+A selected run does not write `var/recipe/results/<runner>.txt`, the file of a full run: a case runner among the selected files writes `var/recipe/results/<runner>.files.txt`. `make recipe-check` reads none of the three variables. A blank value is a full run.
+
 ## Servers of a run
 
 `make parity` and `make server-parity` start their own servers with `scripts/board-servers.mts`: every server listens on a port that the system assigns, and the check sends its requests to the address that the server reports in its output (`Development Server (http://127.0.0.1:<port>) started` of PHP, `board on http://127.0.0.1:<port>` of the board Node server, `edge http://127.0.0.1:<port>` of `scripts/serve-edge.mts`). A request therefore reaches a server of the same run, also while a run from another checkout or session runs. Starting a server is a step without a time limit: it prints its start, every output line of the server with the prefix `[<name>]` and its address with the elapsed time, and fails when the server exits first. The databases and the session directory of a run lie in a temporary directory, which `scripts/check-parity.mts` prints as `run directory: <path>` and removes.

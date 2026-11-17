@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 37ac8d3a8abdda54be504a89dfc1237c65c45f73c187ffd37de5a879dcd40a5a -->
+<!-- source-sha256: b9c1b462d7d351197b9ead551bea1e7b80979a9d9a89943d1476b04a3207f19a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`은 자기 package의 unit test 파일 하나를 target의 다른 모든 test와 함께만 실행할 수 있었고, 그래서 한 파일의 검사가 다른 변경의 case가 실패하는 동안 실패했다. 이제 세 target은 package 아래 test 파일의 경로인 `PHP_TESTS`, `NODE_TESTS`, `PYTHON_TESTS`를 받는다. recipe는 그 파일들만 실행하고, 경로가 파일을 가리키지 않거나(HR-84) `CASES`도 설정되어 있으면 runner를 시작하기 전에 실패하며, 전체 실행의 results 파일을 쓰지 않는다. `docs/operations/development.md`가 이 선택을 명시하고, `tests/scripts/test-selection.test.mts`가 dry run으로 recipe를 읽고 guard 줄을 실행한다.
 
 - Node binding의 생성된 시험 `packages/ts/native/generated/tests/generated.test.mjs`를 적는 target이 없었다. `packages/ts`의 vitest 실행이 이 파일과 WASM binding의 생성된 시험을 파일 이름으로 선택했고, node:test 파일인 둘에서 suite를 찾지 못해 `make hyper-test-node`가 둘 모두에서 실패했다. 이제 `make test-node-addon`이 `make node-addon` 뒤에 Node binding의 생성된 시험을 node --test로 실행하고, CI group core의 target인 `make test-bindings`가 이를 실행한다. `packages/ts/vitest.config.mts`는 `native/`를 제외한다. `make node-addon`은 `panic-test`만으로 build하던 addon을 `panic-test`, `fault-test`, `thread-test`, `thrown-count-test` feature로 build한다. 생성된 시험이 이 feature들의 member를 호출하기 때문이다. `make test-node-addon`은 실패한다. 생성된 시험 322개 가운데 272개가 통과하고 50개가 실패하며, 빈 manifest로 `Pages`를 만드는 시험이 모두 여기에 든다(H35.9-10).
 

@@ -335,6 +335,16 @@ board: packages node-addon ##Build the board with one run of hyper build: public
 # every case whatever CASES holds.
 cases_selected = RECIPE_CASES='$(strip $(CASES))' RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/$(1).selected.txt
 
+# A selection of unit test files (H35.9-14): PHP_TESTS, NODE_TESTS and PYTHON_TESTS of hyper-test-php, hyper-test-node
+# and hyper-test-python name test files by their paths below the package of the target, such as tests/http.test.ts,
+# as JS_TESTS does for hyper-test-js. With a selection the recipe runs those files alone with the test runner of the
+# target, without the type check and the other test runs; its prerequisites are built as for a full run. tests_guard
+# runs first: it fails the target when CASES is set too, since a run selects cases or files, and when a path names no
+# file of the package, so a selection that selects nothing fails before the runner starts (HR-84). A case runner among
+# the files writes <runner>.files.txt, so <runner>.txt holds a full run only, which recipe-check reads.
+tests_guard = @test -z '$(strip $(CASES))' || { echo "$@: CASES and $(1) are both set: a run selects cases or test files, not both"; exit 1; }; for file in $(strip $($(1))); do test -f $(2)/$$file || { echo "$@: the selection $(1)=\"$(strip $($(1)))\" names no test file $(2)/$$file (HR-84)"; exit 1; }; done; mkdir -p $(RECIPE_RESULTS_DIR)
+tests_selected = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/$(1).files.txt
+
 hyper-test-js: ## Run the browser code tests, including the browser case runner (HYR-7), and the type check; CASES="<file|file#section|id> ..." runs only those cases of the case runner
 ifeq ($(strip $(CASES)),)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
@@ -346,8 +356,11 @@ else
 	$(call cases_selected,browser) $(case_run_browser)
 endif
 
-hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests, including the case runner (HYR-7), and the type check; CASES="<file|file#section|id> ..." runs only those cases of the case runner
-ifeq ($(strip $(CASES)),)
+hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests, including the case runner (HYR-7), and the type check; CASES="<file|file#section|id> ..." runs only those cases of the case runner; NODE_TESTS="<path> ..." runs only those test files of the package
+ifneq ($(strip $(NODE_TESTS)),)
+	$(call tests_guard,NODE_TESTS,$(NODE_PACKAGE))
+	$(call tests_selected,node) node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE) -- $(strip $(NODE_TESTS))
+else ifeq ($(strip $(CASES)),)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,the tests of $(NODE_PACKAGE),RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE)) \
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
@@ -363,16 +376,22 @@ endif
 PHP_SERVER_EXTENSIONS = $(PHP_EXTENSIONS) $(abspath $(HYPER_EXT))
 PHP_SERVER_ARGUMENTS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--extension $(library))
 PHPUNIT_EXTENSIONS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--php-extension $(library))
-hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions; CASES="<file|file#section|id> ..." runs only those cases of the case runner
+hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions; CASES="<file|file#section|id> ..." runs only those cases of the case runner; PHP_TESTS="<path> ..." runs only those test files of the package
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-ifeq ($(strip $(CASES)),)
+ifneq ($(strip $(PHP_TESTS)),)
+	$(call tests_guard,PHP_TESTS,$(PHP_PACKAGE))
+	$(call tests_selected,php) COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS) -- $(strip $(PHP_TESTS))
+else ifeq ($(strip $(CASES)),)
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS)
 else
 	$(call cases_selected,php) $(case_run_php)
 endif
 
-hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7); CASES="<file|file#section|id> ..." runs only those cases of the case runner
-ifeq ($(strip $(CASES)),)
+hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7); CASES="<file|file#section|id> ..." runs only those cases of the case runner; PYTHON_TESTS="<path> ..." runs only those test files of the package
+ifneq ($(strip $(PYTHON_TESTS)),)
+	$(call tests_guard,PYTHON_TESTS,$(PYTHON_PACKAGE))
+	@failed=; $(foreach file,$(strip $(PYTHON_TESTS)),$(call check,$(file),$(call tests_selected,python) PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/$(patsubst %/,%,$(dir $(file))) -t $(PYTHON_PACKAGE) -p $(notdir $(file)))) $(checks_result)
+else ifeq ($(strip $(CASES)),)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,Python protocol unit tests,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p 'test_*.py') \
 	$(call check,Python package data tests,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s tests/python_package -p 'test_*.py') \
