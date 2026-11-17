@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-node-readme -->
-<!-- source-sha256: c9fcf51816eff4b0e08450e2c90875128ad17d70cc3d247bc072ac4df41859fc -->
+<!-- source-sha256: 9554f54eebe314ac1daa36956113d5f9674d63381e24a5a3dc56a7551df541f3 -->
 # @polyspec/hyper
 
 [English](README.md).
@@ -51,7 +51,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | 옵션 | 뜻 |
 |---|---|
 | `manifest` | `app.json`의 절대 경로(HY-1). |
-| `program` | `hyper build`가 쓰는 서버 프로그램 `<output>/program`의 절대 경로. `reads.json`, `build.json`, 디렉터리 `templates`를 담는 디렉터리다. 열기는 처음으로 없는 것의 경로와 함께 실패한다(HY-48.17). |
+| `program` | `hyper build`가 쓰는 서버 프로그램 `<output>/program`의 절대 경로. `reads.json`, `build.json`, 디렉터리 `templates`를 담는 디렉터리다. 열기는 처음으로 없는 것의 경로와 함께 실패한다(HY-48.19). |
 | `handlers` | `shared`, `regions`(페이지가 아닌 영역), `routes`(`load`, `post`, 라우트 영역의 `regions`). 라우트는 manifest가 `"post": true`를 선언할 때, 그리고 그때에만 `post`를 가진다. |
 | `timezone` | 렌더 환경의 time zone(HY-14). |
 | `basePath` | `/api` 같은 base path(HY-8). 기본값은 없음이다. |

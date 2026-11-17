@@ -16,7 +16,7 @@ _OUTPUTS = {
     "reads.json": False,
     "build.json": False,
     "templates": True,
-    # HY-48.14: the copy of the reserved template, which the server reads until it calls the core.
+    # HY-48.18: the copy of the reserved template, which the open of the server needs (HY-31.10).
     "legacy/hyper/data.tpl": False,
 }
 

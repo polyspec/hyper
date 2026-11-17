@@ -77,7 +77,7 @@ const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
 const app = await App.open<Services>({
   manifest: join(board, 'app', 'app.json'),
   // `make board` writes the server program, with its read paths, its build id and its templates, into build/program,
-  // which App.open reads (HY-48.17, HY-125).
+  // which App.open reads (HY-48.19, HY-125).
   program: join(board, 'build', 'program'),
   handlers,
   timezone: '+09:00',

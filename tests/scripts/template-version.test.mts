@@ -33,7 +33,11 @@ test('the npm manifests name the template tarballs of the release, and their dep
   for (const name of NPM_PACKAGES) {
     const tarball = `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`;
     assert.equal(member(root, 'dependencies', 'package.json')[name], tarball, `package.json dependencies ${name}`);
-    assert.equal(member(root, 'overrides', 'package.json')[name], `$${name}`, `package.json overrides ${name} through its direct dependency`);
+  }
+  // npm resolves the exact version that a workspace requires to the tarball that the root names (H35.8-2), so a manifest
+  // that names a tarball holds no `overrides`, which would state the pin a second time.
+  for (const manifest of ['package.json', 'tests/package-install/package.json']) {
+    assert.equal(json(manifest).overrides, undefined, `${manifest} holds no overrides`);
   }
   for (const manifest of ['packages/client/package.json', 'packages/ts/package.json', 'packages/cli/package.json']) {
     const dependencies = optionalMember(json(manifest), 'dependencies', manifest);

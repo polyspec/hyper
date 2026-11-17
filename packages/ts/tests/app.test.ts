@@ -34,7 +34,7 @@ describe('Node handlers', () => {
     expect(response.shared).toEqual({ title: 'Home' });
   });
 
-  it('requires an absolute path of the manifest (HY-48.17)', async () => {
+  it('requires an absolute path of the manifest (HY-48.19)', async () => {
     await expect(App.open({ manifest: 'app.json', program: PROGRAM, timezone: 'Z', handlers: {} })).rejects.toThrow('app.json is not an absolute path');
   });
 });

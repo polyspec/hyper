@@ -8,7 +8,7 @@ import { Cookies } from '../src/http/cookies.js';
 
 export const FIXTURES = fileURLToPath(new URL('../../php/tests/fixtures/', import.meta.url));
 // The server program of the fixtures, which `make node-fixtures` builds with scripts/fixture-program.mts and the build
-// id of the fixtures (HY-48.17, HY-125.21).
+// id of the fixtures (HY-48.19, HY-125.21).
 export const PROGRAM = fileURLToPath(new URL('./build/program', import.meta.url));
 export const JSON_REGION = { Accept: 'application/vnd.hyper+json', 'HX-Request': 'true' };
 

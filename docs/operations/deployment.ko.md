@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: d048e78d9496976bb296902b2e3c1850de89d01ce1bb0a4ed1b45d7f9e760836 -->
+<!-- source-sha256: c4a5d400a7647cd2516becfd7bd945bb8c5e6721a76cd71f82997257e8b67c1a -->
 # 배포
 
 [English](deployment.md).
@@ -37,7 +37,7 @@ build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을
 - 호출: 전과 같은 `--api`, `--static`, `--php-namespace`를 가진 `hyper build --app <디렉터리> --output <디렉터리>` 한 번의 실행. option `--build`는 없고, 매니페스트와 템플릿은 `--app`의 `app/app.json`과 `templates/`에서 읽는다.
 - 프로그램 디렉터리: 서버 build의 `--output` 디렉터리 대신 `<output>/program`, 그리고 `composer.json`의 생성된 프로그램 PSR-4 경로 `<output>/program/php/`.
 - 레이아웃의 매니페스트: `<output>/manifest.json` 대신 `<output>/client/manifest.json`. `hyper` 말고도 이름마다 각 에셋의 URL을 담는다.
-- Node 서버: `App.open`의 option `program`은 PHP 서버와 Python 서버가 받는 것처럼 `<output>/program`을 가리킨다. option `build`와 `templates`는 없다(HY-48.17).
+- Node 서버: `App.open`의 option `program`은 PHP 서버와 Python 서버가 받는 것처럼 `<output>/program`을 가리킨다. option `build`와 `templates`는 없다(HY-48.19).
 - 정적 셸: `<output>/csr/` 대신 `<output>/client/csr/`.
 - `--tailwind <source>=<output>`의 stylesheet나 애플리케이션이 build 뒤에 `public/assets` 아래에 쓰던 파일: `--tailwind <source>=<name>`이나 `--asset <name>=<path>`로 바꾸고, 레이아웃은 `client/manifest.json`의 `<name>` URL을 link한다. build 뒤에 바뀌는 출력은 없다(HR-77).
 

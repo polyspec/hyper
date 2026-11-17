@@ -27,6 +27,11 @@ dependencies = [
     "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.15/polyspec_php_serialization-0.0.15-cp314-abi3-macosx_11_0_arm64.whl#sha256=5d3e32006a7c56f3630c67baf714ea8aa724bc1bdca228cde4a9881229d0fe0c ; sys_platform == 'darwin' and platform_machine == 'arm64'",
     "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.15/polyspec_php_serialization-0.0.15-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=be9288f59e5677886c0b06d6d277a38eb4b27f1ee5848baec07bd70f0b5d25b3 ; sys_platform == 'linux' and platform_machine == 'aarch64'",
     "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.15/polyspec_php_serialization-0.0.15-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=d1b318297ab46fbfb86895ac01c3cd72e17e4f469b03064d2ea275eacce32b58 ; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    # The wheel assets of the json release v0.0.34, whose module polyspec.json the native module of the template binding
+    # 0.0.28 imports when it renders. That template package requires it at that exact version and no registry carries it.
+    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.34/polyspec_json-0.0.34-cp314-abi3-macosx_11_0_arm64.whl#sha256=ba29ddb049a60c499f2b8f2777f257c91fdabef826f22e2e229d8c916ae4a31e ; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.34/polyspec_json-0.0.34-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=e693c7599e7719624c33e3cad916fe1c5c024ef2c2825f5d2c017f531e5fe07b ; sys_platform == 'linux' and platform_machine == 'aarch64'",
+    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.34/polyspec_json-0.0.34-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=1584be32d8a6be67855bc6419fb9cae6bb0c55257a3a3a077ae1580b16346a6d ; sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
 
 # The client of the session tests against a real Redis server (HY-115); an application names its own client.

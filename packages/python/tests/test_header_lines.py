@@ -19,9 +19,10 @@ LINES = [
     ("User-Agent", "b"),
 ]
 JOINED = "application/x-www-form-urlencoded, text/plain"
-# What the request gives: the two headers, the media type of the body and the form values, of which a body of the
-# joined type has none.
-SEEN = [JOINED, JOINED, "a, b", []]
+# What the request gives: the two headers, the kind and the status of the failure of the read of the media type, because
+# the joined value is no media type (HY-42.14, HY-59.13), and the form values, of which a body of the joined type has
+# none.
+SEEN = [JOINED, ("malformed_content_type", 400), "a, b", []]
 
 
 def exchange(server, data: bytes) -> bytes:
@@ -57,9 +58,13 @@ class HeaderLinesTest(TransportCase):
     def seen(self) -> list:
         """Returns what the one request that reached the application gives of the lines of `LINES`."""
         [request] = self.app.requests
+        try:
+            media_type = request.media_type()
+        except ValueError as error:
+            media_type = (getattr(error, "kind", None), getattr(error, "status", None))
         return [
             request.header("Content-Type"),
-            request.media_type(),
+            media_type,
             request.header("User-Agent"),
             request.form(),
         ]

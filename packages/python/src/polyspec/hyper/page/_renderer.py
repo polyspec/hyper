@@ -3,7 +3,7 @@ HY-48). The server program that `hyper build` of `@polyspec/hyper-cli` built hol
 read paths; the Python server reads its `templates` directory and its `reads.json` and needs neither the directory
 `php` nor `program.json`, which the generated PHP program of the same templates uses. The directory `templates` holds
 no copy of the reserved template of the embedded data (HY-31.9), so a second engine reads the copy
-`legacy/hyper/data.tpl` of the program with a loader of the directory `legacy` (HY-31.10, HY-48.14); the reserved
+`legacy/hyper/data.tpl` of the program with a loader of the directory `legacy` (HY-31.10, HY-48.18); the reserved
 template includes no template and calls no function of the application, so that engine registers none. The caller binds each root of a
 document once with `bind`, and every render merges the bound roots, so the renders of a document check no value
 again (VAL-22)."""
@@ -45,7 +45,8 @@ class Renderer:
         templates = Path(program) / "templates"
         reads = Path(program) / "reads.json"
         build = Path(program) / "build.json"
-        # HY-48.14: the copy of the reserved template, which the server needs until it calls the core.
+        # HY-48.18: the open needs these outputs and names the first missing one, in this order; the last is the
+        # copy of the reserved template (HY-31.10).
         legacy = Path(program) / LEGACY
         outputs = (
             (reads, False),
@@ -127,10 +128,13 @@ class Renderer:
         self, template: str, assign, define: dict, engine: Engine | None = None
     ) -> str:
         """Renders one template with an assigned bound root and HTML definitions (HY-14), with the engine of the
-        directory `templates`, or with `engine`, the engine of the directory `legacy`, for the reserved template."""
-        return (self._program if engine is None else engine).render_bound(
+        directory `templates`, or with `engine`, the engine of the directory `legacy`, for the reserved template.
+        The `FsLoader` reads files, which the engine does only in `prepare` and `load` (RT-77), so the render is
+        prepared and then rendered."""
+        prepared = (self._program if engine is None else engine).prepare_bound(
             template,
             assign,
             define={name: DefineInput(**value) for name, value in define.items()},
             env=Environment(timezone=self.timezone, now=time.time()),
         )
+        return prepared.render()

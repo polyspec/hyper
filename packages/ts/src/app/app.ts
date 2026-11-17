@@ -80,7 +80,7 @@ export interface AppOptions<S extends object> {
   // The absolute path of the manifest (HY-1).
   manifest: string;
   // The absolute path of the server program that `hyper build` wrote, the directory that holds `reads.json`,
-  // `build.json` and the directory `templates` (HY-48.17).
+  // `build.json` and the directory `templates` (HY-48.19).
   program: string;
   handlers: Handlers<S>;
   timezone: string;
@@ -239,7 +239,7 @@ export class App<S extends object = Record<string, never>> {
   }
 
   // Creates an application from its manifest, the server program that `hyper build` wrote and the handlers that load
-  // data and run actions (HY-48.17). A missing output of the program fails here.
+  // data and run actions (HY-48.19). A missing output of the program fails here.
   static async open<S extends object = Record<string, never>>(options: AppOptions<S>): Promise<App<S>> {
     ArgumentCountError.between(arguments.length, 1, 1);
     ArgumentCountError.members(options, APP_REQUIRED, APP_OPTIONAL);
@@ -279,7 +279,7 @@ export class App<S extends object = Record<string, never>> {
     const manifestBytes = App.readBytes(options.manifest);
     rules().Application.open(manifestBytes, new Map(), new Map(), { ...pagesOptions, build: '0'.repeat(64) }, new Map());
     const program = options.program;
-    // HY-48.17, HY-48.2: the open names the first missing output of the program. HY-106.21: only a missing build file
+    // HY-48.19, HY-48.2: the open names the first missing output of the program. HY-106.21: only a missing build file
     // has the kind invalid_build.
     for (const name of ['reads.json', 'build.json', 'templates']) {
       const path = join(program, name);
@@ -336,7 +336,7 @@ export class App<S extends object = Record<string, never>> {
     });
   }
 
-  // Fails when a path option of `open` is not absolute (HY-48.17): the manifest and the program directory.
+  // Fails when a path option of `open` is not absolute (HY-48.19): the manifest and the program directory.
   private static absolutePaths<S extends object>(options: AppOptions<S>): void {
     for (const path of [options.manifest, options.program]) {
       if (typeof path !== 'string' || !isAbsolute(path)) throw rules().valueError(`${String(path)} is not an absolute path`, 'invalid_application');

@@ -130,9 +130,16 @@ class Reply:
 
     def status(self, status: int) -> "Reply":
         """Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in
-        place of the data that the request may not see; another status fails (HY-69). The core checks the status
-        (HY-132.2)."""
-        self.__status = core_rules().reply_status(status)
+        place of the data that the request may not see; another status fails (HY-69). A status that is no integer
+        of the data model fails with `invalid_number` before the core is called, because the binding refuses a value
+        of another type with `invalid_argument_type`; the core checks the status (HY-132.2)."""
+        code = Reply._integer(status)
+        if code is None:
+            raise core_rules().value_error(
+                "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
+                "invalid_number",
+            )
+        self.__status = core_rules().reply_status(code)
         return self
 
     def _status_value(self) -> int | None:

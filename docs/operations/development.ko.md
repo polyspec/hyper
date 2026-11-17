@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: f2c0319827f40478a779f6fe492b38ba71ecc0ad30b8b10d6f7052bde6514a1a -->
+<!-- source-sha256: b88f92ddc98b32643cf218c3da7aa3daa7f722b27a38d64b673f8626c173ea88 -->
 # 개발
 
 [English](development.md).
@@ -33,7 +33,7 @@
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) 테스트는 `NPM_BIN`으로 고정된 npm을 받으며 `tests/package-install/var/`에는 ignore된 기본 링크 상태를 저장한다. |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 그 `build.json`의 고정 build id로 빌드한다([빌드](#빌드) 참조) |
-| `make node-fixtures` | `scripts/fixture-program.mts`와 PHP test fixture의 `build.json`의 build id로 Node 서버 test에 쓸 그 fixture의 서버 프로그램을 빌드한다(HY-48.17, HY-125.21) |
+| `make node-fixtures` | `scripts/fixture-program.mts`와 PHP test fixture의 `build.json`의 build id로 Node 서버 test에 쓸 그 fixture의 서버 프로그램을 빌드한다(HY-48.19, HY-125.21) |
 | `make node-server` | board Node 서버를 타입 검사하고 `examples/board/build/node/server.mjs`로 bundle한다(아래 참조) |
 | `make board` | 설치된 소스 패키지로, 의존성을 설치하거나 링크를 다시 연결하지 않고 `hyper build` 한 번으로 board를 빌드한다: `public/assets`, CSR 셸을 담은 `examples/board/build/client`, 생성된 PHP 프로그램을 담은 `examples/board/build/program`([빌드](#빌드) 참조) |
 | `make test-js` | 라우터 적합성 사례를 포함한 브라우저 코드 테스트와 타입 검사를 실행한다 |
@@ -125,7 +125,7 @@ consumer는 자기 package manager로 archive를 설치해 릴리스를 확인�
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/cli`, `packages/ts`(HR-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언하고, 그 정확한 버전이 이 tarball로 풀리게 하는 `overrides`를 둔다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/php`와, dist가 template release zip을 URL과 sha1로 지정하는 그 release의 Composer repository `packages.json`에서 root `vendor`로 설치하고 `packages/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.27를 받는다(HR-70). 그 tag는 `make template-ext`가 package `polyspec/template-php-ext`를 build하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/cli`, `packages/ts`(HR-79)와, `@polyspec/template`과 `@polyspec/template-compiler`를 template release의 tarball URL로 선언한다. npm은 workspace가 요구하는 정확한 버전을 이 tarball로 해석하므로 manifest는 `overrides`를 두지 않는다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/php`와, dist가 template release zip을 URL과 sha1로 지정하는 그 release의 Composer repository `packages.json`에서 root `vendor`로 설치하고 `packages/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.27를 받는다(HR-70). 그 tag는 `make template-ext`가 package `polyspec/template-php-ext`를 build하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
 
 ### 릴리스 에셋 설치
 
@@ -169,7 +169,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
 | `board` | Node/npm, PHP/Composer, PIE, Python/uv | Root npm, root와 board Composer, Python uv lock | Browser parity, Node/Python server 비교, bundle 크기와 E2E |
 | `python` | Node/npm, Python/uv | Root npm과 Python uv lock | Python unit과 rendering |
-| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock과 `package-lock.json`의 binding generator(`make install-packages`) | Rust core 시험, clippy, format, contract 검사, 바인딩의 clippy와 시험, WASM과 Go의 생성된 시험(H35.2). kit의 `install-tools`에는 `test-bindings`가 시작하는 wasm-bindgen CLI의 selector가 없으므로, group의 setup은 `make release-recipes`로 `packages/release.mk`를 쓰고 그 target인 `make install-wasm-bindgen`을 실행한다. 이 target은 checkout의 mise로 그 CLI만 `mise.lock`의 digest에 맞춰 설치한다. `tests/scripts/ci-group-tools.test.mts`는 모든 group의 setup step과 target의 dry run을 읽고, group이 시작하는데 그 setup이 설치하지 않는 tool이 있으면 실패한다 |
+| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock과 `package-lock.json`의 binding generator(`make install-packages`) | Rust core 시험, clippy, format, contract 검사, 바인딩의 clippy와 시험, Node, WASM, Go의 생성된 시험(H35.2). `test-bindings`의 prerequisite인 `make test-node-addon`은 Node binding의 생성된 시험 `packages/ts/native/generated/tests/generated.test.mjs`를 node --test로 실행한다. 이 시험은 checkout의 생성된 entry와, `make node-addon`이 crate의 모든 test feature로 build한 addon을 쓴다. `packages/ts`의 vitest 실행은 `native/`를 제외한다(H35.9-10). kit의 `install-tools`에는 `test-bindings`가 시작하는 wasm-bindgen CLI의 selector가 없으므로, group의 setup은 `make release-recipes`로 `packages/release.mk`를 쓰고 그 target인 `make install-wasm-bindgen`을 실행한다. 이 target은 checkout의 mise로 그 CLI만 `mise.lock`의 digest에 맞춰 설치한다. `tests/scripts/ci-group-tools.test.mts`는 모든 group의 setup step과 target의 dry run을 읽고, group이 시작하는데 그 setup이 설치하지 않는 tool이 있으면 실패한다 |
 
 group의 local 실행은 그 job의 호출과 같은 `make ci-check NAME=<group>`이다. bootstrap action처럼 `make bootstrap`, `make install-tools TOOLS=npm`, `make install-packages`를 실행한 checkout에서 실행한다. 어떤 group도 가리키지 않는 `NAME`은 어떤 step보다 먼저 실패하고 group들을 적는다.
 
@@ -196,6 +196,24 @@ workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실�
 `node node_modules/@polyspec/kit/dist/run-tests.mjs <node|vitest|go|cargo|phpunit> [--cwd <directory>] [--php-extension <file>] [--] [<arguments>]`는 test 도구를 실행하고, `make test-js`, `make hyper-test-node`, `make test-php`, `make hyper-test-scripts`, `make package-check`는 이것으로 test를 실행한다. PHPUnit은 `COMPOSER_VENDOR_DIR`의 vendor 디렉터리의 것이며 `make test-php`가 이를 root `vendor`로 설정한다. 모든 test는 시작할 때 한 줄, 실행 중에는 5초마다 한 줄, 끝나면 결과와 경과 시간을 담은 한 줄을 출력하고, 실행은 개수와 경과 시간을 담은 줄로 끝난다. runner는 시간 제한을 두지 않는다. 도구를 실행하고 그 출력과 exit code를 그대로 전한다. `--php-extension`은 PHPUnit에 PHP extension을 불러온다. kit이 runner와 reporter를 시험한다.
 
 변경을 소유한 test만 실행하려면 그 파일이나 filter를 넘긴다. 예: `node node_modules/@polyspec/kit/dist/run-tests.mjs vitest --cwd packages/client tests/router.test.ts`, `COMPOSER_VENDOR_DIR=$PWD/vendor node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/php -- --filter RouterTest`.
+
+### Case 선택
+
+`make hyper-test-js`, `make hyper-test-node`, `make hyper-test-php`, `make hyper-test-python`은 make 변수 `CASES`를 받는다. 이 변수는 그 target의 case runner(HYR-7)가 실행할 case를 선택한다. 값은 이름 하나이거나 공백으로 나눈 여러 이름이며, 네 runner가 같은 문법으로 읽는다.
+
+| 이름 | 선택하는 것 | 예 |
+| --- | --- | --- |
+| `#`이 있는 이름: `<file>#<section>` | 그 case 파일의 그 section의 case | `app.json#opens` |
+| `.json`으로 끝나는 이름 | 그 case 파일의 case | `reads.json` |
+| 그 밖의 이름 | 모든 case 파일에서 그 id의 case | `a_missing_header_is_the_any_range` |
+
+runner는 이름이 선택한 case를 전체 실행의 순서대로 한 번씩 실행하며, 전체 실행에서 자기가 실행하는 case만 선택한다. `make hyper-test-js CASES="accept.json"`은 아무것도 선택하지 않는다. `accept.json`의 어떤 section도 browser runner를 적지 않기 때문이다. 어떤 이름이 runner의 case를 하나도 선택하지 않으면 실행은 case를 실행하기 전에 실패하고 결과 파일을 쓰지 않는다. 그 메시지는 선택과 그런 이름을 각각 밝힌다. 예: `the selection "reads.json no-such.json" of the php runner selects no case for no-such.json`(HR-84).
+
+선택이 있으면 target의 recipe는 명령 하나, 곧 case runner뿐이다. PHPUnit의 `CaseRunnerTest`, package의 `tests/case-runner.test.ts`, 또는 `test_case_runner.py`이다. target의 다른 test, `hyper-test-js`와 `hyper-test-node`의 type check, `hyper-test-python`의 package data test는 실행하지 않는다. target의 prerequisite은 전체 실행과 같이 build한다. 따라서 case가 소유하는 체크리스트 행은 그런 명령을 검증으로 적는다. 예: `make hyper-test-php CASES="reads.json"`.
+
+선택한 실행은 `var/recipe/results/<runner>.selected.txt`를 쓴다. 첫 줄은 `SELECTION <이름들>`이고 나머지 줄은 선택한 case의 결과 줄이다. 전체 실행의 파일이며 `make recipe-check`가 읽는 `var/recipe/results/<runner>.txt`는 쓰지 않는다. `make recipe-check`와 target `recipe-run-*`는 runner에 선택을 주지 않으므로 `CASES`의 값과 무관하게 모든 case를 실행한다. Makefile은 선택을 환경 변수 `RECIPE_CASES`로 runner에 준다. 빈 `CASES`는 전체 실행이다.
+
+`make e2e`의 `CASES`는 이름만 같은 다른 변수이다. Playwright가 case의 제목과 맞춰 보는 pattern이다.
 
 ## 한 실행의 서버
 

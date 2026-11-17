@@ -37,7 +37,6 @@ test('bundles the template render runtime of a client from the installed templat
 test('release declarations pin template tarballs while installed source packages keep their identity', () => {
   requireBuilt('hyper-install', ...PACKAGES.map((name) => `node_modules/${name}/package.json`));
   const dependencies = member('package.json', 'dependencies');
-  const overrides = member('package.json', 'overrides');
   const packages = member('package-lock.json', 'packages');
   const version = jsonString(member('packages/client/package.json', 'dependencies')['@polyspec/template'], 'packages/client/package.json @polyspec/template');
   assert.match(version, /^\d+\.\d+\.\d+$/, 'packages/client requires an exact template version');
@@ -52,7 +51,8 @@ test('release declarations pin template tarballs while installed source packages
     assert.match(jsonString(entry.integrity, `${name} integrity`), /^sha512-/, `${name} is pinned by its integrity`);
     assert.equal(read(`node_modules/${name}/package.json`).name, name, name);
   }
-  // The packages of the workspace require the exact version, which the root resolves to the same tarball.
-  for (const name of PACKAGES) assert.equal(overrides[name], `$${name}`, name);
+  // The packages of the workspace require the exact version, which npm resolves to the tarball that the root names, so
+  // the root holds no `overrides` (H35.8-2).
+  assert.equal(read('package.json').overrides, undefined, 'package.json holds no overrides');
   assert.match(readFileSync(join(repository, '.npmrc'), 'utf8'), /^allow-remote=root$/m);
 });

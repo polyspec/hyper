@@ -19,7 +19,7 @@ import type { Data } from '../data/values.js';
 // The state of the application that the page reads, the one argument of the constructor.
 /** @internal */
 export interface PageParts<S extends object> {
-  // The pages of the application that the core opened (HY-48.17).
+  // The pages of the application that the core opened (HY-48.19).
   pages: CorePagesInstance;
   manifest: Manifest;
   handlers: Handlers<S>;

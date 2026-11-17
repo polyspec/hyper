@@ -424,7 +424,7 @@ export interface CoreRules {
   readonly Application: {
     // Partial. App.open: `pages.open` checks the manifest, the templates, the read paths and the options of an
     // application (HY-2, HY-48, HY-59.1, HY-62.2) and `pages.register` registers a host function (HYC-24). The server
-    // still reads the files of `program/` (HY-48.17), checks the handlers against the manifest (HY-30, HY-118) and
+    // still reads the files of `program/` (HY-48.19), checks the handlers against the manifest (HY-30, HY-118) and
     // holds the limits of the body and of the response (HY-59, HY-66, HY-114, HY-131).
     open(manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions, functions: ReadonlyMap<string, CoreHostFunction>): CorePagesInstance;
     // rules.check_function_entry fails an entry of `functions` that is no function with kind `invalid_application`
