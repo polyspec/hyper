@@ -81,9 +81,12 @@ def cases(case) -> None:
         raise ValueError(f"the contract has no application {name}")
     application = applications[name]
     # Absent shared data declares no shared handler; present shared data must be a map.
+    kinds = case.input("valueKinds")
     shared = case.input("shared") if case.has("shared") else application.get("shared")
     if shared is not None and not isinstance(shared, dict):
         raise TypeError("the shared data of the case is not a map")
+    if shared is not None:
+        shared = _with_kinds(shared, kinds)
     context = (
         _string_field(case, "context")
         if case.has("context")
@@ -160,6 +163,47 @@ def cases(case) -> None:
     case.compare("contextCalls", calls.count("context"))
     case.compare("firstCalls", calls)
     case.compare("selection", selections)
+
+
+class _Callable:
+    """The value of the kind `callableObject`: an object whose class defines __call__."""
+
+    def __call__(self) -> int:
+        return 1
+
+    def method(self) -> int:
+        return 1
+
+
+def _function() -> int:
+    return 1
+
+
+# The values of the kinds of the fixture `valueKinds` that Python has, built anew for each case.
+_KINDS = {
+    "loneSurrogate": lambda: "\ud800",
+    "function": lambda: _function,
+    "method": lambda: _Callable().method,
+    "builtin": lambda: len,
+    "callableObject": _Callable,
+}
+
+
+def _with_kinds(value: object, kinds: dict) -> object:
+    """Returns the shared data of a case with each marker {"$": "kind", "name": <kind>} replaced by the value of that
+    kind of the fixture `valueKinds`, which JSON cannot state; a kind that Python has no value for fails the case."""
+    if isinstance(value, list):
+        return [_with_kinds(item, kinds) for item in value]
+    if not isinstance(value, dict):
+        return value
+    if value.get("$") == "kind":
+        name = value.get("name")
+        if name not in kinds:
+            raise LookupError(f"valueKinds does not hold the kind {name!r}")
+        if name not in _KINDS:
+            raise LookupError(f"the kind {name} has no value in Python")
+        return _KINDS[name]()
+    return {key: _with_kinds(item, kinds) for key, item in value.items()}
 
 
 def _member(body: str, name: str) -> dict:

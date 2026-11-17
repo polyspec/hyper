@@ -10,10 +10,14 @@ PROGRAMS = ROOT / "var" / "contract-programs"
 
 
 def function_of(kind: str):
-    """Maps a kind of the contract to a value of the runtime: `suffix` is a function, `not_a_function` is the string."""
+    """Maps a kind of the contract to a value of the runtime: `suffix` and `zone` are functions, `not_a_function` is
+    the string."""
     if kind == "suffix":
         # HostFunction receives the argument list and the function context (FUN-43).
         return lambda args, context: args[0] + "!"
+    if kind == "zone":
+        # HYC-24.10: the second argument is the environment of the render, with the time zone of the server.
+        return lambda args, environment: environment.timezone
     if kind == "not_a_function":
         return "x"
     raise KeyError(f"unknown function kind {kind!r}")
