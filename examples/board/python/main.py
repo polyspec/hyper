@@ -16,7 +16,15 @@ import re
 import time
 from pathlib import Path
 
-from polyspec.hyper import App, FileSessions, RedisSessions, create_server
+from polyspec.hyper import (
+    App,
+    FileSessions,
+    RedisSessions,
+    SettingCluster,
+    SettingSentinel,
+    SettingServer,
+    create_server,
+)
 
 from handlers import Services, handlers
 from posts import Posts
@@ -55,37 +63,25 @@ port = int(env("BOARD_PORT"))
 def session_store() -> FileSessions | RedisSessions:
     """Returns the sessions on the Redis Cluster of BOARD_CLUSTER, on the primary hyper of the Sentinels BOARD_SENTINEL, in
     the Redis server of the URL BOARD_REDIS,
-    or else in the directory BOARD_SESSIONS."""
+    or else in the directory BOARD_SESSIONS. The Redis store keeps its own connections; a lock expires after 30
+    seconds, longer than any request of the board."""
     nodes_of_cluster = os.environ.get("BOARD_CLUSTER") or ""
     if nodes_of_cluster != "":
-        from redis.cluster import ClusterNode, RedisCluster
-
-        startup = [
-            ClusterNode(host, int(port))
-            for host, port in (item.split(":") for item in nodes_of_cluster.split(","))
-        ]
-        cluster = RedisCluster(
-            startup_nodes=startup, socket_timeout=1, socket_connect_timeout=1
-        )
-        return RedisSessions(cluster.execute_command)
+        urls = [f"redis://{item}" for item in nodes_of_cluster.split(",")]
+        return RedisSessions(SettingCluster(urls=urls), lock_expire=30)
     sentinels = os.environ.get("BOARD_SENTINEL") or ""
     if sentinels != "":
-        from redis.sentinel import Sentinel
-
-        nodes = [
-            (host, int(port))
-            for host, port in (item.split(":") for item in sentinels.split(","))
-        ]
-        sentinel = Sentinel(nodes, socket_timeout=1, socket_connect_timeout=1)
-        primary = sentinel.master_for("hyper")
-        return RedisSessions(
-            primary.execute_command, setup=primary.connection_pool.get_master_address
+        setting = SettingSentinel(
+            urls=[f"redis://{item}" for item in sentinels.split(",")],
+            service="hyper",
+            tls=False,
+            user=None,
+            password=None,
         )
+        return RedisSessions(setting, lock_expire=30)
     url = os.environ.get("BOARD_REDIS") or ""
     if url != "":
-        import redis
-
-        return RedisSessions(redis.Redis.from_url(url).execute_command)
+        return RedisSessions(SettingServer(url=url), lock_expire=30)
     directory = Path(env("BOARD_SESSIONS"))
     directory.mkdir(parents=True, exist_ok=True)
     return FileSessions(str(directory))

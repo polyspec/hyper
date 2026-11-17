@@ -1,122 +1,59 @@
-"""Sessions in a Redis server, with the protocol of phpredis 6.3.0, for a server process (HY-115). A session is the key
-`PHPREDIS_SESSION:<id>`, whose bytes are the `php_serialize` record of its values and which expires after the lifetime,
-so the PHP, Node and Python servers that share the Redis server share its sessions. A request holds the lock
-`<key>_LOCK`, which SET NX PX takes, from its opening to its closing, so the requests of one session run one after
-another in every process. A lock expires, so a holder checks it before it writes and writes nothing when it lost it."""
+"""Sessions in a Redis server, a Redis Sentinel group or a Redis Cluster, in the form of phpredis 6.3.0, for a server
+process (HY-115): the Redis store of the session-store library, whose rule the storage of a session is. A session is
+the key `<prefix><id>`, whose bytes are the `php_serialize` record of its values and which expires after the
+lifetime, so the PHP, Node and Python servers that share the Redis server share its sessions. A request holds the
+lock `<key>_LOCK` from its opening to its closing, so the requests of one session run one after another in every
+process (HY-115.3); a holder that lost its lock writes nothing (HY-115.5). A failure of the library is an error of
+hyper of the same category with the kind of the library (HY-132.3)."""
 
 from __future__ import annotations
 
-import os
-import secrets
-import socket
-import time
-from typing import Callable, Optional
+from typing import Optional
 
+import polyspec.session_store as library
+
+from ._file_session import converted
 from ._redis_session import RedisSession
-from ._record_session import RecordSession
-from .session_lock_error import SessionLockError
 
-_RELEASE = (
-    'if redis.call("get",KEYS[1]) == ARGV[1] then return redis.call("del",KEYS[1]) '
-    "else return 0 end"
-)
-
-
-# One command of a Redis server: it takes the words and returns a bulk string as bytes, as `execute_command` of `redis.Redis`
-# does with `decode_responses=False`.
-_RedisCommand = Callable[..., object]
+# The connection settings of the store (HY-115.17, HY-115.29): `SettingServer(url=...)` with a URL `redis://` or
+# `rediss://` that may name an ACL user and its password, `SettingSentinel(urls=..., service=..., tls=..., user=...,
+# password=...)`, whose store asks the Sentinels for the primary of `service` before each request that has a session
+# (HY-115.26), or `SettingCluster(urls=...)`.
+RedisSetting = library.Setting
+SettingServer = library.SettingServer
+SettingSentinel = library.SettingSentinel
+SettingCluster = library.SettingCluster
 
 
 class RedisSessions:
-    """Opens one session store per request (HY-115). `lock_expire`, `lock_retries` and `lock_wait` have the meaning of
-    `redis.session.lock_expire`, `redis.session.lock_retries` and `redis.session.lock_wait_time` of phpredis, in seconds;
-    every server of one Redis server gives them the same values, and `lock_expire` is longer than any request. `setup`
-    runs before the first command of a request that has a session, so a client can find its server for that request."""
-
-    _command: _RedisCommand
-    _lifetime: int
+    """Opens one session store per request (HY-115). `lock_expire` is seconds with no default, because no value is
+    longer than every request of every application (HY-115.28); `lock_retries` and `lock_wait`, in microseconds, are
+    `redis.session.lock_retries` and `redis.session.lock_wait_time` of phpredis (HY-115.29). Every server of one Redis
+    server gives them the same values. A lifetime or a lock expiry of 0 fails with `invalid_lifetime` or
+    `invalid_lock_expire`, a lock whose tries end with `lock_timeout` and a lost lock with `lock_lost`."""
 
     def __init__(
         self,
-        command: _RedisCommand,
+        setting: RedisSetting,
+        *,
+        lock_expire: int,
         lifetime: int = 1440,
         prefix: str = "PHPREDIS_SESSION:",
-        lock_expire: int = 30,
         lock_retries: int = 100,
-        lock_wait: float = 0.02,
-        setup: Optional[Callable[[], object]] = None,
+        lock_wait: int = 20000,
     ):
-        # HY-115.21: positive integers; a boolean is an int of Python and neither of them.
-        if type(lifetime) is not int or lifetime <= 0:
-            raise ValueError("session lifetime must be a positive number of seconds")
-        if type(lock_expire) is not int or lock_expire <= 0:
-            raise ValueError("session lock_expire must be a positive number of seconds")
-        self._command = command
-        self._lifetime = lifetime
-        self.prefix = prefix
-        self.lock_expire = lock_expire
-        self.lock_retries = lock_retries
-        self.lock_wait = lock_wait
-        self.setup = setup
+        self._store = converted(
+            lambda: library.RedisSessions(
+                setting,
+                lock_expire=lock_expire,
+                lifetime=lifetime,
+                prefix=prefix,
+                lock_retries=lock_retries,
+                lock_wait=lock_wait,
+            )
+        )
 
-    def _prepare(self) -> None:
-        """Runs the setup of a request that is about to send its first command."""
-        if self.setup is not None:
-            self.setup()
-
-    def _open(self, cookie: Optional[str]) -> "RedisSession":
+    def _open(self, cookie: Optional[str]) -> RedisSession:
         """Returns the store of a request with the value of its session cookie; it holds the lock of the session until
         `close`. An identifier in another form or without a key names no session (HY-45)."""
-        identifier = RecordSession.accepted(cookie)
-        if identifier is None:
-            return RedisSession(self, None, None, None)
-        self._prepare()
-        key = self._key(identifier)
-        if not self._command("EXISTS", key):
-            return RedisSession(self, None, None, None)
-        secret = self._take_lock(key)
-        try:
-            record = RedisSessions._bulk_bytes(self._command("GET", key))
-            if record is None:
-                self._release(key, secret)
-                return RedisSession(self, None, None, None)
-        except BaseException:
-            self._release(key, secret)
-            raise
-        return RedisSession(self, identifier, secret, record)
-
-    def _key(self, identifier: str) -> str:
-        """Returns the key of the session of an identifier."""
-        return f"{self.prefix}{identifier}"
-
-    def _take_lock(self, key: str) -> str:
-        """Takes the lock of a session and returns its secret. Each lock has a secret of its own, so a thread of this
-        process cannot release the lock that another thread of it took after its own expired."""
-        secret = f"{socket.gethostname()}|{os.getpid()}|{secrets.token_hex(8)}"
-        for attempt in range(self.lock_retries + 1):
-            if self._command(
-                "SET", f"{key}_LOCK", secret, "NX", "PX", self.lock_expire * 1000
-            ):
-                return secret
-            if attempt < self.lock_retries:
-                time.sleep(self.lock_wait)
-        raise SessionLockError(f"the lock of the session {key} was not free")
-
-    def _holds(self, key: str, secret: str) -> bool:
-        """Returns True while the lock of a session is the lock with this secret."""
-        held = RedisSessions._bulk_bytes(self._command("GET", f"{key}_LOCK"))
-        return held == secret.encode()
-
-    def _release(self, key: str, secret: str) -> None:
-        """Releases the lock of a session unless another request holds it now."""
-        self._command("EVAL", _RELEASE, 1, f"{key}_LOCK", secret)
-
-    @staticmethod
-    def _bulk_bytes(reply: object) -> Optional[bytes]:
-        """Returns a reply of a bulk string as bytes, or None. A client that returns text would change the bytes of a
-        record."""
-        if reply is None or isinstance(reply, bytes):
-            return reply
-        raise TypeError(
-            "the Redis command must return bytes, as redis.Redis does with decode_responses=False"
-        )
+        return RedisSession(converted(lambda: self._store.open(cookie)))

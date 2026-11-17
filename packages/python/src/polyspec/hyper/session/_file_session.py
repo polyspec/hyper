@@ -31,7 +31,7 @@ def converted(call: Callable[[], T]) -> T:
 class FileSession(SessionStore):
     """The session store of one request (HY-24, HY-45, HY-72)."""
 
-    def __init__(self, session: library.FileSession) -> None:
+    def __init__(self, session: library.FileSession | library.RedisSession) -> None:
         self._session = session
         # The identifier that the close wrote for a new session, which the response sets as the session cookie.
         self._made: Optional[str] = None

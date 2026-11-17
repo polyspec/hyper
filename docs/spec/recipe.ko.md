@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: e4c999640a766ea5f7b16f7ea4072250973511a56cbb085dff41d975c33056dd -->
+<!-- source-sha256: 2d074fadf55d6634b4431ae95510b065c20d01d01bd4e720febee9157fd87311 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -235,7 +235,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `caseReaders.node`를 통해 읽으며, check는 다섯 runner의 결과를 모두 센다.
     `runners`는 `php`, `node`, `python`에 대해 step의 디렉터리(`steps`)와 runner의 registry(`registry`), 곧 각 section을
     그 step에 대응시키는 파일도 적는다.
-    case를 다른 library가 가진 case 파일 `fields.json`, `file-store-sessions.json`, `redis-sessions.json`은
+    case를 다른 library가 가진 case 파일 `fields.json`, `file-store-sessions.json`은
     `tests/legacy`에서 읽으며, 그 선언은 `tests/legacy/interfaces.json`에 있다.
   - **Steps.** 한 언어에서 section의 step은 그 언어의 `steps` 디렉터리 아래, case 파일의 words와 section의 이름이 정하는
     자리에 있는 함수 하나다: PHP는 `<Words>Steps.php`의 class `<Words>Steps`의 static method `<section>`, Node는

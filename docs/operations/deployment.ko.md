@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: eca1ebee98767d6bbe41b70efcd2a961e54c46696852a4297b11fa8f2d21106a -->
+<!-- source-sha256: 103279ddbe0ba232bc0803f0e74fb521d49fa1be1e0d7a35aa60653b6bf1c52e -->
 # 배포
 
 [English](deployment.md).
@@ -130,7 +130,17 @@ redis.session.lock_wait_time = 20000
 
 Persistent 연결은 PHP process가 살아 있는 동안 유지되고, phpredis 6.3.0은 scheme, host, port로 이를 재사용한다. 재사용할 때마다 AUTH를 다시 보내므로 잘못된 비밀번호는 실패하지만, TLS 인증서는 연결을 열 때만 검증한다. 따라서 바뀐 CA나 다른 stream 옵션은 새 연결에만 적용되므로, 이런 변경 뒤에는 php-fpm을 reload한다. Node나 Python 서버가 설정을 바꾸려고 재시작하는 것과 같다. 실행 중인 worker는 잘못된 CA를 알아채지 못하고, 새 연결을 열 때 실패가 드러난다. CA 변경은 reload 뒤에 확인한다.
 
-Node와 Python 서버는 `RedisSessions`에 client의 command 함수(Python은 `decode_responses=False`인 `redis.Redis(...).execute_command`)와 같은 값을 준다. `lockExpire` 30, `lockRetries` 100, `lockWait` 20밀리초다(Python은 `lock_expire`, `lock_retries`, `lock_wait` 0.02초). `lock_expire`는 어떤 요청보다 길어야 하고, 없으면 끝난 process가 `max_execution_time`까지, 그 값이 0이면 영원히 잠금을 잡는다. 재시도 허용보다 오래 기다린 요청은 실패하므로, 한 session의 요청이 잠금을 오래 잡으면 재시도 값을 올린다. 연결이 끊긴 동안 명령을 쌓아 두는 client는 다시 연결될 때까지 요청을 붙잡으므로, Node 서버는 node-redis를 `disableOfflineQueue: true`와 `error` listener로 만들고 Python 서버는 `redis.Redis`에 `socket_timeout`을 정한다. 그러면 Redis 서버가 돌아올 때까지 요청은 status 500으로 응답한다. 재시작으로 session이 끝나면 안 되면 append-only file로 보관한다. 공유 session의 값은 template data model의 값이며, `stdClass` 외의 class 객체를 담은 record는 Node와 Python 서버에서 요청을 실패시킨다.
+Node와 Python 서버는 `RedisSessions`에 session-store 라이브러리의 Redis store의 연결 설정과 같은 값을 준다. store는 자기 연결을 유지한다. 값은 기본값이 없는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이크로초다(Python은 `lock_expire`, `lock_retries`, `lock_wait`). 서버 하나의 설정은 그 URL이며, URL은 scheme `rediss`로 TLS를, user 정보로 ACL 사용자와 비밀번호를 나타낸다.
+
+```ts
+new RedisSessions({ setting: { kind: 'server', url: 'redis://redis:6379' }, lockExpire: 30 });
+```
+
+```python
+RedisSessions(SettingServer(url="redis://redis:6379"), lock_expire=30)
+```
+
+`lockExpire`는 어떤 요청보다 길어야 하고, 없으면 끝난 process가 `max_execution_time`까지, 그 값이 0이면 영원히 잠금을 잡는다. 재시도 허용보다 오래 기다린 요청은 kind `lock_timeout`으로 실패하므로, 한 session의 요청이 잠금을 오래 잡으면 재시도 값을 올린다. 연결이 끊긴 동안 명령이 실패한 요청은 Redis 서버가 돌아올 때까지 status 500으로 응답한다. 재시작으로 session이 끝나면 안 되면 append-only file로 보관한다. 공유 session의 값은 template data model의 값이며, `stdClass` 외의 class 객체를 담은 record는 Node와 Python 서버에서 요청을 실패시킨다.
 
 ### Replica가 있는 primary와 Sentinel
 
@@ -147,29 +157,27 @@ App::open(
 );
 ```
 
-Node와 Python 서버는 `RedisSessions`에 Sentinel client의 command 함수를 준다.
+Node와 Python 서버는 `RedisSessions`에 store의 Sentinel 설정을 준다.
 
 ```ts
-const sentinel = await createSentinel({
-  name: 'hyper',
-  sentinelRootNodes: [{ host: 'sentinel-1', port: 26379 }, { host: 'sentinel-2', port: 26379 }, { host: 'sentinel-3', port: 26379 }],
-  nodeClientOptions: { disableOfflineQueue: true },
-}).on('error', report).connect();
-const bytes = sentinel.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
-new RedisSessions({ command: (words) => bytes.sendCommand(false, words.map((word) => Buffer.from(word))) });
+const urls = ['redis://sentinel-1:26379', 'redis://sentinel-2:26379', 'redis://sentinel-3:26379'];
+new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: false, user: null, password: null }, lockExpire: 30 });
 ```
 
 ```python
-sentinel = Sentinel(
-    [("sentinel-1", 26379), ("sentinel-2", 26379), ("sentinel-3", 26379)],
-    socket_timeout=1,
-    socket_connect_timeout=1,
+RedisSessions(
+    SettingSentinel(
+        urls=["redis://sentinel-1:26379", "redis://sentinel-2:26379", "redis://sentinel-3:26379"],
+        service="hyper",
+        tls=False,
+        user=None,
+        password=None,
+    ),
+    lock_expire=30,
 )
-primary = sentinel.master_for("hyper")
-RedisSessions(primary.execute_command, setup=primary.connection_pool.get_master_address)
 ```
 
-redis-py의 connection은 연결할 때만 Sentinel에 묻는다. 그래서 pool에 있는 connection은 former primary에 남고, former primary는 승격 뒤 몇 초 동안 쓰기를 받는다. `setup`은 session이 있는 요청마다 첫 command 전에 Sentinel에 묻고, 답이 바뀌면 idle connection을 닫는다. PHP 서버의 `RedisSentinelSessions`와 같은 동작이며, session이 없는 요청은 아무것도 묻지 않는다. `setup`이 없으면 former primary를 쓰는 process와 새 primary를 쓰는 process가 former primary가 replica가 될 때까지 한 session을 나눠 갖는다.
+former primary로의 연결은 승격 뒤 몇 초 동안 쓰기를 받으므로, store는 session이 있는 요청마다 첫 command 전에 Sentinel에 primary를 묻는다(HY-115.26). PHP 서버의 `RedisSentinelSessions`와 같은 동작이며, session이 없는 요청은 아무것도 묻지 않는다.
 
 Primary가 실패한 때부터 Sentinel이 replica를 승격할 때까지 요청은 status 500으로 답하고, 그 뒤 session은 이어진다. 어떤 Sentinel도 primary를 알려 주지 못하면 요청은 실패한다. Sentinel은 서로 다른 장애 영역에 셋 이상 둔다.
 
@@ -188,36 +196,20 @@ App::open(
 
 Seed 다음 인자는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이크로초, `timeout` 1.0이고, TLS와 ACL 사용자를 쓰면 `auth`와 `context`다. Seed는 `tls://redis-1:6379`처럼 쓰고, 값은 `['hyper', 'secret']`와 `['cafile' => '/etc/redis/ca.pem']`이다. 연결은 persistent다.
 
-Node와 Python 서버는 `RedisSessions`에 cluster client의 command 함수를 준다. Protocol의 모든 명령은 key가 하나이므로 hash tag가 필요 없고, session과 잠금은 서로 다른 primary에 있어도 된다. node-redis는 첫 인자가 가리키는 key로 경로를 정한다.
+Node와 Python 서버는 `RedisSessions`에 store의 cluster 설정, 곧 seed의 URL을 준다. Protocol의 모든 명령은 key가 하나이므로 hash tag가 필요 없고, session과 잠금은 서로 다른 primary에 있어도 된다.
 
 ```ts
-const cluster = await createCluster({
-  rootNodes: [{ url: 'redis://redis-1:6379' }, { url: 'redis://redis-2:6379' }, { url: 'redis://redis-3:6379' }],
-  defaults: { disableOfflineQueue: true },
-}).on('error', report).connect();
-const bytes = cluster.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
-new RedisSessions({
-  command: (words) => {
-    const args = words.map((word) => Buffer.from(word));
-    return bytes.sendCommand(args[words[0] === 'EVAL' ? 3 : 1], false, args);
-  },
-});
+new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'] }, lockExpire: 30 });
 ```
 
 ```python
-cluster = RedisCluster(
-    startup_nodes=[
-        ClusterNode("redis-1", 6379),
-        ClusterNode("redis-2", 6379),
-        ClusterNode("redis-3", 6379),
-    ],
-    socket_timeout=1,
-    socket_connect_timeout=1,
+RedisSessions(
+    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"]),
+    lock_expire=30,
 )
-RedisSessions(cluster.execute_command)
 ```
 
-TLS와 ACL 사용자를 쓰면 Node 서버는 `defaults`에 `{ socket: { tls: true, ca }, username, password }`를 주고, Python 서버는 `ssl=True, ssl_ca_certs=..., username=..., password=...`를 준다. Slot이 이동해도 client의 redirection으로 요청은 계속 동작한다. 넘겨받는 replica는 받은 것을 유지하고, 받지 못한 것은 Sentinel처럼 잃는다. `tests/scripts/session-redis-cluster.test.mts`는 primary 셋의 실제 cluster에서 이를 확인한다.
+TLS와 ACL 사용자를 쓰면 각 seed URL은 scheme `rediss`와 user 정보의 사용자와 비밀번호를 가진다. Slot이 이동해도 client의 redirection으로 요청은 계속 동작한다. 넘겨받는 replica는 받은 것을 유지하고, 받지 못한 것은 Sentinel처럼 잃는다. `tests/scripts/session-redis-cluster.test.mts`는 primary 셋의 실제 cluster에서 이를 확인한다.
 
 ### TLS와 ACL 사용자
 
@@ -228,19 +220,13 @@ session.save_path = "tls://redis:6379?persistent=1&auth[]=hyper&auth[]=secret&st
 ```
 
 ```ts
-createClient({ socket: { host: 'redis', port: 6379, tls: true, ca: readFileSync('/etc/redis/ca.pem') }, username: 'hyper', password: 'secret', disableOfflineQueue: true });
+new RedisSessions({ setting: { kind: 'server', url: 'rediss://hyper:secret@redis:6379' }, lockExpire: 30 });
 ```
 
 ```python
-redis.Redis(
-    host="redis",
-    port=6379,
-    ssl=True,
-    ssl_ca_certs="/etc/redis/ca.pem",
-    username="hyper",
-    password="secret",
-    socket_timeout=1,
-)
+RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379"), lock_expire=30)
 ```
 
-Sentinel을 쓰면 각 Sentinel도 같은 보안을 요구하므로, 모든 client는 Sentinel과 primary 양쪽에 이를 지정한다. PHP 서버는 각 항목에 `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`를 주고, `RedisSentinelSessions`의 이름 다음 인자로 primary의 매개변수와 scheme `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`를 준다. Node 서버는 `{ socket: { tls: true, ca }, username, password }`를 `sentinelClientOptions`와 `nodeClientOptions`에 준다. Python 서버는 `ssl=True, ssl_ca_certs=..., username=..., password=...`를 `Sentinel`과 `sentinel_kwargs`에 준다. Redis 서버 하나의 용량은 [benchmark](benchmark.ko.md)에 있다.
+store의 설정은 certificate authority 파일을 받지 않으므로, Node와 Python 서버는 PHP 서버가 `stream[cafile]`로 주는 파일을 줄 수 없다.
+
+Sentinel을 쓰면 각 Sentinel도 같은 보안을 요구하므로, 모든 client는 Sentinel과 primary 양쪽에 이를 지정한다. PHP 서버는 각 항목에 `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`를 주고, `RedisSentinelSessions`의 이름 다음 인자로 primary의 매개변수와 scheme `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`를 준다. Node와 Python 서버는 Sentinel 설정의 `tls`, `user`, `password`를 주며, 이는 Sentinel과 primary에 적용된다. Redis 서버 하나의 용량은 [benchmark](benchmark.ko.md)에 있다.

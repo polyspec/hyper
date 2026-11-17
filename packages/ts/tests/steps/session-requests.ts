@@ -1,4 +1,4 @@
-// The requests of the cases of contracts/file-sessions.json and contracts/redis-sessions.json (HY-104, HY-115): each
+// The requests of the cases of contracts/file-sessions.json (HY-104): each
 // step of a case opens the store of one request, applies its calls and closes it.
 import type { SessionStore } from '../../src/session/session-store.js';
 import { parsed } from '../case-rules.js';

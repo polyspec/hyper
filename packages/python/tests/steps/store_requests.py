@@ -1,4 +1,4 @@
-# The requests of the cases of contracts/file-sessions.json and contracts/redis-sessions.json: each step of a case opens
+# The requests of the cases of contracts/file-sessions.json: each step of a case opens
 # the store of one request with its cookie, applies its calls and closes it, and the run records the results, the
 # created identifiers and the first failure of each step.
 import re

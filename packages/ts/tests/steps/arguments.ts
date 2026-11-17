@@ -466,8 +466,8 @@ function request(): Request {
   return new Request({ method: 'GET', path: '/', media: 'text/html' });
 }
 
-// A command function of a Redis store that no case calls.
-const command = (): Promise<unknown> => Promise.reject(new Error('a store of a case sent a command'));
+// The setting of a Redis store that no case connects: the store opens a connection only for a request.
+const setting = { kind: 'server', url: 'redis://127.0.0.1:1' } as const;
 
 // Returns the receiver of a method of a unit, a new object for each case, or null for a unit without one.
 async function receiverOf(unit: string): Promise<unknown> {
@@ -509,7 +509,7 @@ function argumentsOf(member: string, directory: string): unknown[] {
     case 'app.server':
     case 'app.listener':
       // A store that is made without waiting: the store of session files is made by a maker that waits.
-      return [new RedisSessions({ command }), {}];
+      return [new RedisSessions({ setting, lockExpire: 30 }), {}];
     case 'media-type.constructor':
       return [new Map(), 'application/json'];
     case 'media-type.etag':
@@ -624,7 +624,7 @@ function recordOf(member: string, directory: string, all: boolean): Record<strin
     case 'file-sessions.constructor':
       return { directory, ...(all ? { lifetime: 1440 } : {}) };
     case 'redis-sessions.constructor':
-      return { command, ...(all ? { lifetime: 1440, prefix: 'PHPREDIS_SESSION:', lockExpire: 30, lockRetries: 100, lockWait: 20 } : {}) };
+      return { setting, lockExpire: 30, ...(all ? { lifetime: 1440, prefix: 'PHPREDIS_SESSION:', lockRetries: 100, lockWait: 20000 } : {}) };
     default:
       throw new Error(`the member ${member} takes no options record`);
   }

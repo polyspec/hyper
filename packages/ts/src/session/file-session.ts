@@ -30,11 +30,11 @@ export async function awaited<T>(call: () => Promise<T>): Promise<T> {
 
 /** @internal */
 export class FileSession implements SessionStore {
-  private readonly session: library.FileSession;
+  private readonly session: library.FileSession | library.RedisSession;
   // The identifier that the close wrote for a new session, which the response sets as the session cookie.
   private made: string | null;
 
-  constructor(session: library.FileSession) {
+  constructor(session: library.FileSession | library.RedisSession) {
     this.session = session;
     this.made = null;
   }

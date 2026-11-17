@@ -9966,7 +9966,6 @@
       ],
       "cases": [
         "contracts/file-sessions.json",
-        "tests/legacy/redis-sessions.json",
         "tests/legacy/file-store-sessions.json"
       ],
       "units": [

@@ -21,7 +21,6 @@ from . import (
     manifest_steps,
     media_type_steps,
     reads_steps,
-    redis_sessions_steps,
     reply_steps,
     representations_steps,
     request_steps,
@@ -105,8 +104,6 @@ STEPS = {
     ("file-sessions.json", "storeFailures"): file_sessions_steps.store_failures,
     # The fixed copy of the store cases that the sessions library holds (tests/legacy), until S-4 removes it.
     ("file-store-sessions.json", "requests"): file_store_sessions_steps.requests,
-    ("redis-sessions.json", "cases"): redis_sessions_steps.cases,
-    ("redis-sessions.json", "open"): redis_sessions_steps.open,
     ("session.json", "token"): session_steps.token,
     ("session.json", "flash"): session_steps.flash,
     ("session.json", "kept"): session_steps.kept,

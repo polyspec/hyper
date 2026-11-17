@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-python-readme -->
-<!-- source-sha256: e8af1ddd6a8fd97b1d9a55207332263497a6676ed6b8ff5fdae2520d1a82b12d -->
+<!-- source-sha256: fbf961a5c7bf1ccdf84a5ece101ca2bbabbd2886d0f2111c1d438ac1af59fcb6 -->
 # polyspec-hyper
 
 [English](README.md).
@@ -64,7 +64,7 @@ response = app.handle(request, ArraySession())
   디렉터리 파일을 PHP built-in server가 document root를 서비스하듯이 서비스한다. `FileSessions`는 세션마다
   파일 `sess_<id>`에 PHP files handler의 형식으로 저장하고 그 파일에 `flock`을 잡으므로, 디렉터리를 공유하는 PHP, Node,
   Python 서버와 그 process들은 session을 공유하고 한 session의 요청을 차례로 실행한다(HY-104). `redis_sessions.RedisSessions`는 각 session을
-  byte를 돌려주는 애플리케이션 client의 command 함수로 phpredis의 프로토콜에 따라 Redis 서버에 저장한다(HY-115). `setup` 옵션은 session이 있는 요청의 첫 command 전에 실행되어 Sentinel client를 현재 primary에 둔다.
+  자기 연결을 유지하는 session-store 라이브러리의 Redis store를 통해 phpredis의 프로토콜에 따라 Redis 서버, Sentinel group, Cluster에 저장한다(HY-115): `RedisSessions(SettingServer(url=...), lock_expire=30)`이며, `SettingServer` 대신 `SettingSentinel`이나 `SettingCluster`를 준다. `lock_expire`는 기본값이 없고 `lock_wait`의 단위는 마이크로초다.
 
 ```python
 from polyspec.hyper import FileSessions, create_server

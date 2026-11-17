@@ -2230,11 +2230,11 @@
       }
     },
     {
-      "id": "redis_sessions_constructor_without_command_is_refused",
-      "label": "`redis-sessions.constructor` without `command` fails with the count error (HY-106.8)",
+      "id": "redis_sessions_constructor_without_setting_is_refused",
+      "label": "`redis-sessions.constructor` without `setting` fails with the count error (HY-106.8)",
       "member": "redis-sessions.constructor",
       "call": "missing",
-      "parameter": "command",
+      "parameter": "setting",
       "refused": true,
       "only": {
         "languages": [

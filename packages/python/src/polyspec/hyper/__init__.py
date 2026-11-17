@@ -17,10 +17,9 @@ from .result.bad_request import BadRequest
 from .result.forbidden import Forbidden
 from .result.not_found import NotFound
 from .result.redirect import Redirect
-from .session.redis_sessions import RedisSessions
+from .session.redis_sessions import RedisSessions, SettingCluster, SettingSentinel, SettingServer
 from .result.result import Result
 from .session.array_session import ArraySession
-from .session.session_lock_error import SessionLockError
 from .host.server import create_server
 from .session.session_store import SessionStore
 from .form.uploaded_file import UploadedFile
@@ -44,8 +43,10 @@ __all__ = [
     "Request",
     "Response",
     "Result",
-    "SessionLockError",
     "SessionStore",
+    "SettingCluster",
+    "SettingSentinel",
+    "SettingServer",
     "UploadedFile",
     "create_asgi",
     "create_server",

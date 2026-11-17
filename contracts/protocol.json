@@ -5802,7 +5802,7 @@
                   "en": "Every failure that hyper raises is an error with a kind that never changes, an HTTP status or none, and a category, and a caller tells failures apart by the kind and never by the class or the message.",
                   "ko": "hyper가 내는 모든 실패는 바뀌지 않는 kind, HTTP 상태나 없음, category를 가진 오류이며, 호출자는 실패를 class나 message가 아니라 kind로 구별한다.",
                   "koSource": "a0fb640afd5c5d1bf5216ee473aa03af7208163d300675cdb240037eac89b0e3",
-                  "unimplemented": "H35.38"
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-132.2",
@@ -5815,7 +5815,7 @@
                   "en": "The kinds of hyper are those of the table below, and an error of a library that hyper uses, such as http-form, http-negotiation, http-media-type, http-cookie, json, the template data model, the session-store library or the binding, reaches the caller with the kind, the status and the category of that library, in the class of that category of hyper.",
                   "ko": "hyper의 kind는 아래 표의 것이며, http-form, http-negotiation, http-media-type, http-cookie, json, template 데이터 모델, session-store 라이브러리, binding처럼 hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind, 상태, category를 가지고 hyper의 그 category class로 호출자에게 간다.",
                   "koSource": "a14248cc27a57ee2d6f96ff4ec12f334fd841ea9456451247b42222d4fbb4565",
-                  "unimplemented": "H35.38"
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-132.4",
