@@ -8,6 +8,23 @@ import { coreRules, sharedRules, type CoreBinding, type CoreRules, type PageInpu
 
 type Call = [string, unknown[]];
 
+const NO_MEMBER = 'hyper: the binding of the core has no member ';
+
+// The names of the members that coreRules requires of the module of the binding, read from the failure of coreRules
+// for a module without a member, which names each of them. The stand-in holds a member for each of these names, so a
+// member that core-rules.ts gains is a member of the stand-in without a change of this file.
+function requiredMembers(): string[] {
+  try {
+    coreRules({});
+  } catch (error) {
+    assert.ok(error instanceof Error && error.message.startsWith(NO_MEMBER), `coreRules({}) fails with the names of the members: ${String(error)}`);
+    return error.message.slice(NO_MEMBER.length).split(', ');
+  }
+  throw new Error('coreRules({}) did not fail: a module without a member is no binding of the core');
+}
+
+const REQUIRED = requiredMembers();
+
 // A stand-in of the binding module: every function member records its call and returns `results[name]`, or throws it
 // when it is an Error; the classes record their construction and the calls of their methods.
 function standIn(results: Record<string, unknown>): { core: Record<string, unknown>; calls: Call[] } {
@@ -18,13 +35,26 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
     if (result instanceof Error) throw result;
     return result;
   };
-  const names = [
-    'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl', 'keepsOutOfSharedCaches',
-    'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
-    'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
-    'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-    'keptValue', 'openPage', 'answerKeepRequest',
-  ];
+  class HyperValueError extends RangeError {
+    readonly kind: unknown;
+    readonly status: unknown;
+
+    constructor(...args: unknown[]) {
+      super(String(args[0]));
+      calls.push(['new HyperValueError', args]);
+      [, this.kind, this.status] = args;
+    }
+  }
+  class HyperTypeError extends TypeError {
+    readonly kind: unknown;
+    readonly status: unknown;
+
+    constructor(...args: unknown[]) {
+      super(String(args[0]));
+      calls.push(['new HyperTypeError', args]);
+      [, this.kind, this.status] = args;
+    }
+  }
   class Pages {
     constructor(...args: unknown[]) {
       calls.push(['new Pages', args]);
@@ -44,10 +74,18 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
       return results['PageRequest.next'];
     }
   }
-  const module: Record<string, unknown> = { Pages, PageRequest };
-  for (const name of names) module[name] = member(name);
+  const classes: Record<string, unknown> = { Pages, PageRequest, HyperValueError, HyperTypeError };
+  const module: Record<string, unknown> = {};
+  for (const name of REQUIRED) module[name] = classes[name] ?? member(name);
   return { core: module, calls };
 }
+
+// The members of the binding that a test of this file below calls by its own statement, outside the tables EXACT and
+// PARTIAL.
+const OWN_TEST = [
+  'representationTag', 'openPage', 'answerKeepRequest', 'routeRequest', 'frameHeaders', 'computePageHeaders', 'checkShellPath', 'shellText',
+  'jsonRead', 'acceptRanges', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+];
 
 function rulesOf(results: Record<string, unknown>): { rules: CoreRules; calls: Call[] } {
   const { core, calls } = standIn(results);
@@ -58,6 +96,10 @@ const TOKEN = 'a'.repeat(64);
 const MASK = 'b'.repeat(64);
 const PAGES = { pages: true };
 const STORE = { store: true };
+// A value that a session holds, and the values of the data model that the binding gives for a flash and for kept values.
+const STORED = { stored: true };
+const FLASH = new Map<string, unknown>([['values', new Map()], ['changed', []]]);
+const KEPT = new Map([['rows', new Map([['open', true]])]]);
 
 // The exact units: the name of the unit of the server, the member of the binding, the arguments of the call, the
 // arguments that the member must receive and the value that the member returns, which the unit returns as it is.
@@ -68,6 +110,10 @@ const EXACT: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[
   ['Csrf.browserOf of a request without a session (HY-24.12)', 'browser', (rules) => rules.csrfBrowserOf(''), [''], null],
   ['Context.hash (HY-125.12)', 'contextHash', (rules) => rules.contextHash('build', '{}'), ['build', '{}'], 'hash'],
   ['Context.validHeader (HY-127.2)', 'validContextHeader', (rules) => rules.contextValidHeader(null), [null], true],
+  ['JsonCodec.encode (HY-54.18)', 'jsonWrite', (rules) => rules.jsonCodecEncode(FLASH), [FLASH], '{"values":{},"changed":[]}'],
+  ['Session.flashOf (HY-25.2)', 'flashOf', (rules) => rules.sessionFlashOf(STORED), [STORED], FLASH],
+  ['Session.keptOf (HY-104.22)', 'keptOf', (rules) => rules.sessionKeptOf(STORED), [STORED], KEPT],
+  ['Page.keptCookie (HY-38.2)', 'keptCookie', (rules) => rules.pageKeptCookie('{"rows":{"open":true}}'), ['{"rows":{"open":true}}'], KEPT],
   ['RecordSession.cookieName (HY-45.1)', 'sessionName', (rules) => rules.sessionCookieName(true), [true], '__Host-hy-session'],
   ['Request.mediaType (HY-59.13)', 'mediaType', (rules) => rules.requestMediaType('text/plain; charset=UTF-8'), ['text/plain; charset=UTF-8'], 'text/plain'],
   ['Request.currentPath (HY-11.5)', 'currentPath', (rules) => rules.requestCurrentPath('http://a.test/b?c'), ['http://a.test/b?c'], '/b'],
@@ -98,7 +144,33 @@ test('a failure of the binding reaches the caller as the binding raised it (HY-1
 test('a module without a member of the binding fails with the name of the member', () => {
   const { core } = standIn({});
   const { csrfMask: _mask, Pages: _pages, ...rest } = core;
-  assert.throws(() => coreRules(rest), { message: 'hyper: the binding of the core has no member csrfMask, Pages' });
+  assert.throws(() => coreRules(rest), { message: `${NO_MEMBER}csrfMask, Pages` });
+  // A member that is no function is no member of the binding.
+  assert.throws(() => coreRules({ ...core, jsonRead: 'text' }), { message: `${NO_MEMBER}jsonRead` });
+});
+
+test('JsonCodec.decode gives json_read the UTF-8 bytes of the text and returns its value (HY-54.20)', () => {
+  const { rules, calls } = rulesOf({ jsonRead: KEPT });
+  assert.equal(rules.jsonCodecDecode('{"rows":{"open":true},"é":1}'), KEPT);
+  assert.deepEqual(calls, [['jsonRead', [new TextEncoder().encode('{"rows":{"open":true},"é":1}')]]]);
+});
+
+test('Accept.parse gives accept_ranges the value as one line, and no line for a request without Accept (HY-116.17)', () => {
+  const ranges = [{ type: 'text', subtype: 'html', parameters: [], weight: 1000 }];
+  const { rules, calls } = rulesOf({ acceptRanges: ranges });
+  assert.equal(rules.acceptParse('text/html'), ranges);
+  assert.equal(rules.acceptParse(null), ranges);
+  assert.deepEqual(calls, [['acceptRanges', [['text/html']]], ['acceptRanges', [[]]]]);
+});
+
+test('valueError and typeError give the errors of the classes of the binding with their kind and no status (HY-132.2)', () => {
+  const { rules, calls } = rulesOf({});
+  const value = rules.valueError('a value', 'invalid_value');
+  const type = rules.typeError('a type', 'invalid_type');
+  assert.ok(value instanceof RangeError && type instanceof TypeError);
+  assert.deepEqual([value.message, value.kind, value.status], ['a value', 'invalid_value', null]);
+  assert.deepEqual([type.message, type.kind, type.status], ['a type', 'invalid_type', null]);
+  assert.deepEqual(calls, [['new HyperValueError', ['a value', 'invalid_value', null]], ['new HyperTypeError', ['a type', 'invalid_type', null]]]);
 });
 
 function plain(status: number, body: string, more: Partial<Plain> = {}): Plain {
@@ -213,7 +285,13 @@ for (const [label, name, call, args, result] of [...EXACT, ...PARTIAL]) {
   });
 }
 
-const ADDON = `hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`;
+test('each member that coreRules requires has a test of the unit that calls it', () => {
+  const tested = new Set<string>([...OWN_TEST, ...[...EXACT, ...PARTIAL].map(([, name]) => name)]);
+  assert.deepEqual(REQUIRED.filter((name) => !tested.has(name)), [], 'core-rules.ts requires these members, which no test of this file calls');
+  assert.deepEqual([...tested].filter((name) => !REQUIRED.includes(name)), [], 'this file tests these members, which core-rules.ts does not require');
+});
+
+const ADDON =`hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`;
 
 test('a loader that throws fails each call with CoreBindingError naming the addon, and no rule answers (HY-132.2)', () => {
   let loads = 0;

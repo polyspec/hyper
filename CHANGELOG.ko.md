@@ -1,11 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ad523b9629efcae6005bce9f29e890030b9cd0f12f78a8a875b698cdc4cb7775 -->
+<!-- source-sha256: c7369ad034fe7ccc8ec0d03f699e837ba2286ba09ca558ae109ff9780ccccb2e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `tests/scripts/cargo-through-kit.test.mts`는 recipe 줄 `binding generate --cargo "$(CARGO)"`를 kit의 link script를 거치지 않는 cargo 명령으로 읽어 실패했다. 이제 테스트는 옵션 `--cargo "<명령>"`의 값을 cargo 명령과 구별해 읽는다. 값은 link script 명령이어야 하고 Makefile에서는 `$(CARGO)`여야 하며, cargo 명령은 이전과 같이 link script를 거쳐야 한다. cargo를 직접 시작하는 줄, 값이 다른 명령인 옵션, 값이 큰따옴표 안에 없는 옵션은 거부되며, 두 테스트가 이를 예로 서술한다(H35.31-4).
+- `tests/scripts/node-core.test.mts`: Node binding의 stand-in이 `jsonRead`, `jsonWrite`, `flashOf`, `keptOf`, `keptCookie`, `acceptRanges`, `HyperValueError`, `HyperTypeError`가 없는 고정 목록을 가지고 있어 `coreRules`가 stand-in을 거부했고, 43개 테스트 중 42개가 실패했다. 이제 stand-in은 `coreRules({})`의 실패가 이름을 밝히는 모든 member를 가지며, 필수 member 중 이 파일의 어떤 테스트도 호출하지 않는 member가 있으면 한 테스트가 그 이름과 함께 실패한다. `jsonCodecDecode`, `jsonCodecEncode`, `sessionFlashOf`, `sessionKeptOf`, `pageKeptCookie`, `acceptParse`, `valueError`, `typeError` 단위에 테스트가 있다(H35.31-6).
 - Node case runner에서 `restored`를 확인하는 step(HY-74.4)은 요청 뒤에 경고 `outside`를 내고 process가 처음 전달한 경고를 읽었다. `node:ffi`의 `ExperimentalWarning`처럼 process가 먼저 낸 경고가 아직 전달되지 않았으면 그 경고가 먼저 도착했고, 서버가 오류를 내지 않고 경고를 전달했는데도 `contracts/app.json`의 case `a_warning_of_the_runtime_during_a_request_fails_it_and_a_warning_outside_is_raised_as_before`가 `FIELD_DIFFERS restored`로 실패했다. 이제 step은 자신이 낸 경고를 기다리고 다른 경고는 지나친다. 경고를 내는 호출이 오류를 내면 false를 보고한다(H35.9-8).
 - `packages/ts/tests/http.test.ts`의 요청 field line 테스트는 `Content-Type: application/x-www-form-urlencoded`와 `Content-Type: text/plain` 두 줄을 가진 action `POST`에 대해 `mediaType()`이 이어진 값을 반환하고 서버가 415로 답한다고 기대했다. `mediaType()`은 이어진 값을 core의 규칙으로 읽으며, core는 그 값을 media type이 아닌 것으로 읽는다. 이제 테스트는 `mediaType()`이 kind `malformed_content_type`으로 실패하고 서버가 상태 400과 텍스트 `Bad Request`로 답한다고 기대한다(HY-42.14, HY-59.12, HY-59.13). `header('Content-Type')`과 `header('User-Agent')`는 그대로 줄들의 값을 `, `로 이은 값이다(HY-42.8, HY-42.9, H35.27-1-1).
 - PHP와 Python case runner는 `contracts/reads.json` case의 필드 `reads`를 입력으로만 받고 프로그램 `reads_<id>`의 `reads.json`이 있는지만 확인했으므로, build가 쓴 틀린 `reads.json`이 어떤 case도 실패시키지 않았다. 두 runner는 그 파일의 page region node를 `reads`와 비교하며(HY-73.23), 다른 파일은 `FIELD_DIFFERS reads`로 case를 실패시킨다(H35.34-1).
