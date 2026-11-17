@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5cf3e9cc6d3a39939d5a0b1b88e25000c08b9e3e078486d8bb4817920f1f3076 -->
+<!-- source-sha256: 27eac5e5a603a3a9c3dc1c003d3ccfe1cc648cc51169edb61246a37d7e6d54a9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- CI group `gates`는 setup에서 native module을 포함한 Python package를 빌드했고(`make hyper-install-python`), 그 때문에 maturin과 Rust를 설치하고 crate를 가져왔다. 그러나 그 target들의 dry run은 package의 Python, cargo, maturin, binding 생성기를 시작하지 않는다. `make lint-python`은 소스에 ruff와 vulture를 실행한다. 이제 `CI_SETUP_gates`는 `install-tools install-symbols hyper-install-php`이고, `CI_TOOLS_gates`는 `rust`와 `maturin`을 적지 않는다. `python`과 `uv`는 남는다. mise가 그것으로 vulture를 설치하기 때문이다. gate가 설치된 package를 읽는지는 이 group의 다음 CI 실행이 결정하며, 그 실행은 아직 없었다.
 
 - `tests/scripts/ci-group-tools.test.mts`는 cargo 명령이 `--offline`을 가진다는 규칙에서 `make hyper-install-crates`의 명령 줄만 제외했고, 그래서 CI group 안의 `make cargo-lock`의 `cargo update`는 finding이 되었을 것이다. 이제 이 규칙은 `$(ONLINE)`으로 offline 설정을 푸는 모든 명령 줄을 제외한다. 그런 줄은 목적상 다운로드하기 때문이다(HR-89).
 

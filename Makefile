@@ -778,9 +778,11 @@ CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse
 # whose targets are reports and belong to no check (make ci-bench).
 CI_GROUPS := gates docs php node board python core
 # hyper-install-python builds the native module with maturin of mise.toml and Cargo, so each group that runs it names
-# maturin and rust (install-tools of kit selects maturin since K1278).
-CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan rust maturin
-CI_SETUP_gates := install-tools hyper-install-crates install-symbols hyper-install-php hyper-install-python
+# maturin and rust (install-tools of kit selects maturin since K1278). The group gates does not run it: no gate
+# starts the Python package, cargo, maturin or the binding generator, so its setup builds no native module and
+# fetches no crate; python and uv stay, because mise installs vulture with them.
+CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan
+CI_SETUP_gates := install-tools install-symbols hyper-install-php
 CI_SYMBOLS_gates := php
 CI_TARGETS_gates := $(GATE_TARGETS)
 CI_TOOLS_docs := node php composer pie python uv rust maturin

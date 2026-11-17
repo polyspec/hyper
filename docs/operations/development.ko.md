@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: d63dd05d4201b1092ffd876f47451c26349574f372b1f542e7d1a754fd431328 -->
+<!-- source-sha256: 8c00d68c90c1c25ec4082f665617000ec5b4546e42ecdbd9826f90f8fbd8462f -->
 # 개발
 
 [English](development.md).
@@ -166,7 +166,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 
 | Group | Bootstrap 이후 선택 도구 | 잠긴 package 환경 | 검사 |
 |---|---|---|---|
-| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer, Python uv lock | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, 중복, suppression, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
+| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer lock. Python package와 crate는 없다. 어느 gate도 그것을 시작하지 않기 때문이다 | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, 중복, suppression, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
 | `docs` | Node/npm, PHP/Composer, PIE, Python/uv | Root와 board Composer lock | 타입 검사와 script 검사 |
 | `php` | Node/npm, PHP/Composer, PIE | Root와 board Composer lock | PHP 정책, benchmark smoke, formatting, analysis와 test |
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
@@ -178,7 +178,7 @@ group의 local 실행은 그 job의 호출과 같은 `make ci-check NAME=<group>
 
 recipe `ci-check`는 group의 setup step을 순서대로 각각 별도의 make로 실행하고 첫 실패에서 멈춘다. 뒤의 step과 target이 그 step이 설치하는 것을 읽기 때문이다. 첫 step은 `make install-tools TOOLS="<group의 CI_TOOLS>"`이다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. `make hyper-install-php`가 네이티브 template 확장을 build하는 `docs`, `php`, `board` group은 `pie`를 선택한다. npm은 별도 bootstrap을 사용하고 `gates` group은 `make lint-php`가 php-parser를 읽는 PHP symbol extractor를 `make install-symbols EXTRACTORS="php"`(`CI_SYMBOLS_gates`)로 설치한다. kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)는 그 target이 실행하는 `gates` group만 설치하고, `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
 
-`make hyper-install-crates`는 `Cargo.lock`이 고정한 crate, 곧 polyspec crate의 git tag와 crates.io의 crate를 lock의 모든 target에 대해 `cargo fetch --locked`로 가져온다. 모든 CI group의 두 번째 setup step이다. 각 group이 cargo, maturin, binding 생성기를 시작하고 이들은 crate를 offline으로 읽기 때문이다. 그 밖의 모든 recipe는 cargo를 `--offline`으로 시작하며, 그런 target 각각의 prerequisite인 `make crates-check`는 `crates-check: a crate that Cargo.lock pins is not fetched, or the lock does not match the manifests; run make hyper-install-crates`로 실패한다(HR-89). `make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). `make hyper-install-redis`는 `docs`를 위해 session test의 Redis server를 build하고, `make hyper-install-browser`는 `board`를 위해 Chromium을 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
+`make hyper-install-crates`는 `Cargo.lock`이 고정한 crate, 곧 polyspec crate의 git tag와 crates.io의 crate를 lock의 모든 target에 대해 `cargo fetch --locked`로 가져온다. `gates`를 뺀 모든 CI group의 두 번째 setup step이다. 그 group들이 각각 cargo, maturin, binding 생성기를 시작하고 이들은 crate를 offline으로 읽기 때문이다. 그 밖의 모든 recipe는 cargo를 `--offline`으로 시작하며, 그런 target 각각의 prerequisite인 `make crates-check`는 `crates-check: a crate that Cargo.lock pins is not fetched, or the lock does not match the manifests; run make hyper-install-crates`로 실패한다(HR-89). `make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). `make hyper-install-redis`는 `docs`를 위해 session test의 Redis server를 build하고, `make hyper-install-browser`는 `board`를 위해 Chromium을 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
 
 Build 선행 조건은 각 job의 검사가 소유한다. 언어 job은 다른 언어 job을 기다리거나 설치 환경 또는 build 산출물을 다운로드하지 않는다. 설치는 online이고 build와 검사는 offline 환경을 유지한다.
 

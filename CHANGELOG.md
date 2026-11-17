@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The CI group `gates` built the Python package with its native module in its setup (`make hyper-install-python`), and with it installed maturin and Rust and fetched the crates, although the dry runs of its targets start no Python of the package, no cargo, no maturin and no binding generator: `make lint-python` runs ruff and vulture on the sources. `CI_SETUP_gates` is now `install-tools install-symbols hyper-install-php`, and `CI_TOOLS_gates` names no `rust` and no `maturin`; `python` and `uv` stay, because mise installs vulture with them. Whether a gate reads the installed package is decided by the next CI run of the group, which has not happened.
+
 - `tests/scripts/ci-group-tools.test.mts` exempted only the command line of `make hyper-install-crates` from its rule that a cargo command carries `--offline`, so `cargo update` of `make cargo-lock` in a CI group would have been a finding. The rule now leaves out every command line that lifts the offline settings with `$(ONLINE)`, which downloads by its purpose (HR-89).
 
 - No target wrote `package-lock.json` of the root or of `tests/package-install`: after a change of a requirement, `npm install --package-lock-only` was a command run by hand in each. `make npm-lock` now runs it with `--ignore-scripts` for both, the second through `--prefix`, with the npm of the checkout by its absolute path through `$(ONLINE)`; it installs nothing. The root `package.json` names one package by a range, `ajv` `^8.20.0`, whose locked version npm keeps while the range allows it (H35.41).
