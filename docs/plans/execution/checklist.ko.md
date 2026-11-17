@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: f2d37e54350604887f41ec32225bcf8b2f8686a97a57e3e8ca652c7608c42cd6 -->
+<!-- source-sha256: 068fc7265d609afe374dde8683d819760cacfd73d8a3e21168a7a32226e95312 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -652,3 +652,4 @@
 | H34.5 | hyper-test-scripts 전체 set의 dry run을 호출한 make의 TESTS 없이 실행한다: make가 command-line 변수를 recipe의 environment로 export하므로 test-inputs.test.mts는 그 dry run에 TESTS=를 준다(HR-85, H35.55) | tests/scripts/test-inputs.test.mts | make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts | [o] |
 | H34.9 | assets.yml의 모든 job에서 cargo를 시작하기 전에 Cargo.lock의 crate를 fetch한다: 각 ci-assets-* recipe는 install-tools 뒤에 hyper-install-crates를 실행하고, ci-group-tools.test.mts는 check group의 규칙을 assets job에도 적용한다(HR-89) | Makefile, tests/scripts/ci-group-tools.test.mts | make hyper-test-scripts TESTS=tests/scripts/ci-group-tools.test.mts | [o] |
 | H34.10 | hyper-install-python이 Python native module을 build하기 전에 binding의 생성 source를 쓴다: 새 checkout에는 make bindings가 쓰는 packages/python/native/generated/lib.rs가 없다(HR-85) | Makefile, tests/scripts | make hyper-test-scripts TESTS=tests/scripts/hyper-install.test.mts | [o] |
+| H34.11 | CI group node에 uv를 설치한다: 그 target release-candidate-assets는 kit의 release candidate-assets를 실행하고, 이것은 process 안에서 uv workspace dir로 Python package의 environment를 찾는다. ci-group-tools.test.mts는 그 program을 적는다(HR-91) | Makefile, tests/scripts/ci-group-tools.test.mts | make hyper-test-scripts TESTS=tests/scripts/ci-group-tools.test.mts | [ ] |
