@@ -551,6 +551,19 @@
     },
     {
       "paths": [
+        "scripts/php-ext-verify.mts",
+        "config/php-ext-pins.json"
+      ],
+      "targets": [
+        "typecheck"
+      ],
+      "tests": [
+        "tests/scripts/php-ext-verify.test.mts",
+        "tests/scripts/template-pins.test.mts"
+      ]
+    },
+    {
+      "paths": [
         "scripts/publish.mts",
         "packages/cli/lib/publish.mjs",
         "scripts/tracked-files.mts"

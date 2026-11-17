@@ -97,6 +97,29 @@ test('Composer roots require the template extension from the Composer repository
   assert.doesNotMatch(readFileSync('packages/php/phpstan-max.neon', 'utf8'), /polyspec_template\.stub\.php/);
 });
 
+test('config/php-ext-pins.json pins a sha256 for every platform zip of the template, json and session-store versions (HR-80, H35.51)', () => {
+  // The versions that this repository pins: the extensions of the root platform and the session-store package of the server.
+  const SESSION_STORE_VERSION = jsonString(jsonObject(readObject('packages/ts/package.json').dependencies, 'packages/ts/package.json dependencies')['@polyspec/session-store'], 'packages/ts/package.json @polyspec/session-store');
+  const expected: [string, string, string][] = [
+    ['polyspec/template', VERSION, 'polyspec_template'],
+    ['polyspec/json', JSON_VERSION, 'polyspec_json'],
+    ['polyspec/session-store', SESSION_STORE_VERSION, 'polyspec_session_store'],
+  ];
+  const packages = jsonObject(readObject('config/php-ext-pins.json').packages, 'config/php-ext-pins.json packages');
+  for (const [name, version, extension] of expected) {
+    const pin = jsonObject(packages[name], `config/php-ext-pins.json ${name}`);
+    assert.equal(pin.version, version, `config/php-ext-pins.json ${name} pins the version that this repository uses`);
+    assert.equal(pin.extension, extension, `config/php-ext-pins.json ${name} extension`);
+    const zips = jsonObject(pin.zips, `config/php-ext-pins.json ${name} zips`);
+    assert.deepEqual(Object.keys(zips).sort(), ['8.4', '8.5'], `${name}: a pin for each PHP minor of the release`);
+    for (const minor of ['8.4', '8.5']) {
+      const platforms = jsonObject(zips[minor], `${name} ${minor}`);
+      assert.deepEqual(Object.keys(platforms).sort(), ['arm64-darwin-bsdlibc-nts', 'arm64-linux-glibc-nts', 'x86_64-linux-glibc-nts'], `${name} ${minor}: a pin for each platform`);
+      for (const [platform, sha256] of Object.entries(platforms)) assert.match(jsonString(sha256, `${name} ${minor} ${platform}`), /^[0-9a-f]{64}$/, `${name} ${minor} ${platform} has a sha256`);
+    }
+  }
+});
+
 test('both Composer roots require the json-schema fork from a release and their locks pin its tag', () => {
   // A branch of the fork moves, so each root requires the fork from a release, as its FORK.md states, and its lock records the
   // tag of that release (H27.82). The range starts at the release, because composer validate --strict fails an exact

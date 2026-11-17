@@ -208,7 +208,10 @@ lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language 
 # target PHP in PIE_WORKING_DIRECTORY and never undoes repository:add, so each run starts in an empty PIE_WORK.
 # scripts/pie-binary.mts prints the one library that PIE recorded there, which is published into build/ext with a rename
 # (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
-# PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs.
+# PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs. The Composer repository of the release
+# names no shasum, so scripts/php-ext-verify.mts compares each platform zip that PIE downloaded into PIE_WORK with the sha256
+# that config/php-ext-pins.json pins from the digest of its release asset, and fails before the library is published
+# (HR-80, H35.51); json-ext does the same.
 PIE := $(KIT_TOOLS)/mise/shims/pie
 PIE_WORK := $(CURDIR)/var/pie/polyspec/template
 .PHONY: template-ext
@@ -216,6 +219,7 @@ template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE fr
 	rm -rf $(PIE_WORK) && mkdir -p $(PIE_WORK)
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction
+	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/template $(PIE_WORK)
 	@binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template) || exit $$?; \
 	  mkdir -p build/ext.next-$$$$ && trap 'rm -rf build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
@@ -231,6 +235,7 @@ json-ext: ## Get the json extension polyspec_json of JSON_VERSION with PIE from 
 	rm -rf $(JSON_PIE_WORK) && mkdir -p $(JSON_PIE_WORK)
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) $(PIE) repository:add composer $(JSON_PACKAGES) --no-interaction
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) $(PIE) build polyspec/json:$(JSON_VERSION) --no-interaction
+	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/json $(JSON_PIE_WORK)
 	@binary=$$($(NODE) scripts/pie-binary.mts $(JSON_PIE_WORK) polyspec/json) || exit $$?; \
 	  mkdir -p build/json-ext.next-$$$$ && trap 'rm -rf build/json-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/json-ext.next-$$$$/polyspec_json.so && $(NODE) scripts/publish.mts directory build/json-ext.next-$$$$ build/json-ext
 

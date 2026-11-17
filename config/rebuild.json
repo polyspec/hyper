@@ -158,6 +158,10 @@
       "kind": "ecosystem",
       "tool": "node:fs reads the installed.json that PIE and Composer write for the package polyspec/template, and its pie-built-binary entries (H27.51)"
     },
+    "scripts/php-ext-verify.mts": {
+      "kind": "ecosystem",
+      "tool": "node:crypto computes the sha256 of each platform zip that PIE downloaded and node:fs reads the pins of config/php-ext-pins.json (HR-80, H35.51)"
+    },
     "scripts/publish.mts": {
       "kind": "ecosystem",
       "tool": "node:fs renames, through publish of packages/cli/lib/publish.mjs (HR-82)"

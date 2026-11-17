@@ -1,0 +1,56 @@
+{
+  "description": "The platform zips of the PHP extensions that PIE downloads from the GitHub Releases, each with the sha256 of the field digest of its release asset; scripts/php-ext-verify.mts compares each zip that PIE used with its pin (HR-80, H35.51)",
+  "packages": {
+    "polyspec/template": {
+      "repository": "polyspec/template",
+      "version": "0.0.29",
+      "extension": "polyspec_template",
+      "zips": {
+        "8.4": {
+          "arm64-darwin-bsdlibc-nts": "d50280b57d16eeca5c7bcde7c4ebefea0cb71a0e1e9a5bb608d94ab2befbfb1d",
+          "arm64-linux-glibc-nts": "a46794b18856c6d0b7a1aeb851ad00ad530bf34cc297515d19d05eeaf11587d6",
+          "x86_64-linux-glibc-nts": "e9248b7d500d0478a4e9868644ab7524d4e6b8ed8b135d7d368e2404fdd2c562"
+        },
+        "8.5": {
+          "arm64-darwin-bsdlibc-nts": "73b9816db304edb23923263d659447f5acd297b85dd8de7e8b12231397ebb898",
+          "arm64-linux-glibc-nts": "ec862987bc9cb5d3ad6806c4340f8755faf1d6842e86d860020743e253f79ea9",
+          "x86_64-linux-glibc-nts": "9771eb14ccfd0b38c2e72684248d5e1e19e21ddeb7271d5d6dea68f2889bf776"
+        }
+      }
+    },
+    "polyspec/json": {
+      "repository": "polyspec/json",
+      "version": "0.0.34",
+      "extension": "polyspec_json",
+      "zips": {
+        "8.4": {
+          "arm64-darwin-bsdlibc-nts": "ccc0e9d2288a5404ee8079cbec3697c8038a2268bb88c00710c0297520b9a0a4",
+          "arm64-linux-glibc-nts": "914ccab33a5acbfb05bba96462138869e9757ec3d03b19916575f538a2b27b22",
+          "x86_64-linux-glibc-nts": "d372af2df8bda80b9a61678b306b37f79a97301b5ea58fda47ae4233ddac4204"
+        },
+        "8.5": {
+          "arm64-darwin-bsdlibc-nts": "dd2025c1090d68525f6285262ce0f154a97c8ea56486f9b9fd51b0f8bea6f753",
+          "arm64-linux-glibc-nts": "94af42f4d32a0420c5b2daa238c1a5a499f61727eef42506aa01d3c3b048e271",
+          "x86_64-linux-glibc-nts": "1d36177c9a46ceaf3e860a1b88230bc068978f58c7dcfa41c6ac76bb539ebaa2"
+        }
+      }
+    },
+    "polyspec/session-store": {
+      "repository": "polyspec/session-store",
+      "version": "0.0.4",
+      "extension": "polyspec_session_store",
+      "zips": {
+        "8.4": {
+          "arm64-darwin-bsdlibc-nts": "826e1954c4a590337d9d61e73f57f94e349b327174d0ab69f550cbd4a03dcf88",
+          "arm64-linux-glibc-nts": "50dd8c0b173fdba32350c8b17206fd829a618965232a093fbb3c99849d9720b3",
+          "x86_64-linux-glibc-nts": "011863e363d6cb1f3bfd54f92f8e931f195079e6aff695c00e3a7cdcbd0ad3a0"
+        },
+        "8.5": {
+          "arm64-darwin-bsdlibc-nts": "5ea66d6859901b062b5f5d9d103a3870fa9fece5d4ef504b2956eccb8ecd7c2b",
+          "arm64-linux-glibc-nts": "6dd8dabf4340da546de16e33216dc6af0ce28ada57e135c36ef34491c845e7bf",
+          "x86_64-linux-glibc-nts": "8930745927009afa31ba415e6ecde00d71ea25f5d05e269338738da306460df2"
+        }
+      }
+    }
+  }
+}
