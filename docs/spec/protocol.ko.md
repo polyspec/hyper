@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: b6fc5e8314ee754189079efe9adba5810de020086a4f82ea964892f223994fea -->
+<!-- source-sha256: a8ab2260cd2af9cde574a91946da369c4497b4f00c8eaa63120ade6880daaca7 -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -318,6 +318,7 @@
 
 - **HY-54** <a id="HY-54.22"></a> `server`는 이 문서의 역할 이름이며 package 이름이 아니다: 각 언어의 서버 라이브러리는 주 spec의 package로서 저장소 이름을 가지며(Composer `polyspec/hyper`, PyPI `polyspec-hyper`, npm `@polyspec/hyper`, 그 Rust core의 crate `polyspec-hyper`), 브라우저 package는 `@polyspec/hyper-client`이다. <a id="HY-54.1"></a> Node 서버 패키지 `@polyspec/hyper`는 이 문서의 서버 규칙을 PHP 서버와 같은 방식으로 구현하며, 그 테스트는 PHP 서버 테스트의 case를 같은 fixture에 대해 실행한다. <a id="HY-54.2"></a> PHP 서버와의 차이는 다음뿐이다:
 
+  - <a id="HY-54.23"></a> 요청의 경로는 브라우저 코드의 router로 match하고, 매니페스트의 선언은 영역과 그 유지 경로를 포함해 브라우저 코드의 매니페스트 검사로 읽는다. 이는 core가 매니페스트를 받아들인 뒤이며(HY-2.7), core가 요청을 routing할 때까지다.
   - <a id="HY-54.18"></a> 모든 server는 polyspec의 유일한 JSON 직렬화기인 json의 직렬화기로 JSON 텍스트를 쓰고(RQ-011, RQ-034), 데이터 모델의 수는 template 데이터 모델의 VAL-9, 곧 RQ-030의 수 token으로 쓰므로, 한 값의 텍스트는 모든 runtime에서 같은 바이트다. <a id="HY-54.19"></a> 문자열은 json의 문자열 쓰기처럼(RQ-028) RFC 8259 7절이 escape를 요구하는 `"`, `\`, 제어 문자 U+0000부터 U+001F만 escape하고 다른 문자는 escape하지 않으므로, U+2028과 U+2029는 그대로 쓴다. <a id="HY-54.20"></a> server는 kept 값(HY-38, HY-40)이나 representation 요청의 body(HY-121) 같은 JSON 텍스트를 중첩 container가 256개를 넘는 텍스트를 거부하는(RQ-026, RQ-007, RQ-006, RQ-035) json의 `parse`로 읽고, 그 값을 template 데이터 모델의 VAL-12대로 데이터 모델로 바꾼다. 그래서 ±(2^53 − 1) 밖이거나 유한하지 않은 수(VAL-2), escape된 짝 없는 surrogate를 포함해 UTF-8 텍스트가 아닌 문자열, 64단계보다 깊은 값(VAL-20)은 데이터 모델의 오류로 실패한다. <a id="HY-54.21"></a> json이 거부하는 텍스트는 kind `malformed_json`으로 실패하며 그 원인은 kind와 byte offset을 가진 json의 거부다(RQ-004, RQ-005, RQ-033). 읽기 한도 256과 데이터 모델의 깊이 64는 kind가 다른 두 한도다. 256단계보다 깊은 텍스트는 값을 주기 전에 거부되기 때문이다.
   - <a id="HY-54.12"></a> JavaScript에서 데이터 모델의 값은 null, boolean, ±(2^53 − 1) 안의 number나 bigint, 문자열, 배열, 문자열 key의 `Map`, 또는 일반 객체다. <a id="HY-54.13"></a> 짝 없는 surrogate를 가진 문자열(UTF-8 형태가 없다)과 그 밖의 모든 값은 HY-43으로 실패한다.
   - <a id="HY-54.14"></a> loader와 action은 요청, reply(HY-52), 애플리케이션이 key로 바인딩한 서비스를 담은 context 인자 하나를 받는다.

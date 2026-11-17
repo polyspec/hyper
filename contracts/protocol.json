@@ -5226,6 +5226,17 @@
                 {
                   "statements": [
                     {
+                      "id": "HY-54.23",
+                      "en": "It matches the path of a request with the router of the browser code and reads the declarations of the manifest, its regions and their kept paths included, with the manifest check of the browser code, after the core accepted the manifest (HY-2.7), until the core routes a request.",
+                      "ko": "요청의 경로는 브라우저 코드의 router로 match하고, 매니페스트의 선언은 영역과 그 유지 경로를 포함해 브라우저 코드의 매니페스트 검사로 읽는다. 이는 core가 매니페스트를 받아들인 뒤이며(HY-2.7), core가 요청을 routing할 때까지다.",
+                      "koSource": "edd938f779491777be5ab155172a80b599822c7f2c38d611083fd33339354c91"
+                    }
+                  ],
+                  "blocks": []
+                },
+                {
+                  "statements": [
+                    {
                       "id": "HY-54.18",
                       "en": "Every server writes JSON text with the serializer of json, the one JSON serializer of polyspec (RQ-011, RQ-034), and writes each number of the data model as VAL-9 of the template data model states, which is the number token of RQ-030, so the text of a value is the same bytes in every runtime.",
                       "ko": "모든 server는 polyspec의 유일한 JSON 직렬화기인 json의 직렬화기로 JSON 텍스트를 쓰고(RQ-011, RQ-034), 데이터 모델의 수는 template 데이터 모델의 VAL-9, 곧 RQ-030의 수 token으로 쓰므로, 한 값의 텍스트는 모든 runtime에서 같은 바이트다.",
