@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 1df04be41a22ad624e8961ea1a2f114231a5ee73a2aed12fee3201a7f65658da -->
+<!-- source-sha256: c5a1175df3a075c1104a53cd2ec46ff4694c0f62de487c9315996cc6015bd7b8 -->
 # 개발
 
 [English](development.md).
@@ -27,7 +27,7 @@
 | `make hyper-install` | pin한 도구를 설치하고, `$(ONLINE)`을 거쳐 template release의 Composer repository에서 PIE로 네이티브 확장을 build하며(`make template-ext`; H14.1-7, H27.45), `make hyper-install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HR-70) |
 | `make hyper-install-python` | kit의 `python-venv` 유틸리티로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 새로 만들고, release의 template wheel을 포함한 의존성과 함께 package를 non-editable로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
 | `make hyper-php-install` | `packages/php`를 가리키는 symbolic link로 `polyspec/hyper`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
-| `make ext` | `make hyper-install`의 `make template-ext`가 template release의 Composer repository(`packages.json`)에서 PIE로 build한 네이티브 template 확장 `build/ext/polyspec_template.so`가 없으면 실패한다. offline으로 실행하며 아무것도 build하지 않는다(HY-48, H27.45) |
+| `make ext` | `make hyper-install-php`의 `make json-ext`와 `make template-ext`가 json과 template release의 Composer repository(`packages.json`)에서 PIE로 가져온 json 확장 `build/json-ext/polyspec_json.so`와 template 확장이 없으면 실패한다. 링크된 실행에서 template 확장은 `vendor/polyspec/template`이 링크하는 template checkout의 `target/release/libpolyspec_template`이다. offline으로 실행하며 아무것도 build하지 않는다(HY-48.15, H27.45) |
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) 테스트는 `NPM_BIN`으로 고정된 npm을 받으며 `tests/package-install/var/`에는 ignore된 기본 링크 상태를 저장한다. |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 그 `build.json`의 고정 build id로 빌드한다([빌드](#빌드) 참조) |
@@ -36,7 +36,7 @@
 | `make board` | 설치된 소스 패키지로, 의존성을 설치하거나 링크를 다시 연결하지 않고 `hyper build` 한 번으로 board를 빌드한다: `public/assets`, CSR 셸을 담은 `examples/board/build/client`, 생성된 PHP 프로그램을 담은 `examples/board/build/program`([빌드](#빌드) 참조) |
 | `make test-js` | 라우터 적합성 사례를 포함한 브라우저 코드 테스트와 타입 검사를 실행한다 |
 | `make hyper-test-node` | Node 서버 test를 실행한다. 같은 fixture로 PHP 서버 test의 사례, `contracts/json.json`의 JSON 사례, session, HTTP 서버, 타입 검사를 실행한다 |
-| `make test-php` | 라우터 적합성 사례를 포함한 서버 패키지 테스트를 generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
+| `make test-php` | 라우터 적합성 사례를 포함한 서버 패키지 테스트를 json 확장, template 확장, `polyspec_hyper`를 이 순서로 불러와 실행한다 |
 | `make lint` | PHP 형식을 검사한다 |
 | `make analyse-php` | `packages/php/phpstan-max.neon`으로 `packages/php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 cache를 `build/phpstan`에 쓴다. 메모리 제한은 `--memory-limit=256M`이다. 먼저 `make ext`를 실행한다 |
 | `make templates-check` | board에 `hyper check`를 실행한다: 매니페스트(HY-2), 레이아웃 템플릿만 `hx-` 속성을 가지는지(HC-6), 레이아웃이 `{# title}`과 `{# data}`를 한 번씩 배치하는지, 레이아웃과 각 라우트 템플릿의 모든 영역이 블록 인자 없이 `id`가 영역 이름인 요소 바로 안에 한 번씩 배치되는지(HY-3, HY-30) 검사한다 |
@@ -44,7 +44,7 @@
 | `make lint-ts` | kit의 oxlint(`.oxlintrc.json`, type-aware)로 TypeScript를 검사하고, knip(`knip.json`)으로 쓰이지 않는 파일, 의존성, export를 검사한다. `make check`와 CI 항목 `gates`의 target이다(H23.13) |
 | `make hyper-test-scripts` | 검사 스크립트의 테스트를 실행한다. 예: 잘못된 픽스처 애플리케이션으로 영역 배치 검사를 시험한다 |
 | `make virtiofs-check` | 출력이 virtiofs bind mount에 있는 Apple `container`에서 `hyper build`의 프로그램 조립과 출력 복사를 실행한다(HR-68). Darwin에서만 `make check`의 target이며(`DARWIN_TARGETS`), `container`가 없으면 실패한다. Darwin에서만 실행하는 이유는, 시험하는 virtiofs bind mount가 Apple `container`에만 있고 CI의 Linux target 중 이 증상을 검사하는 것이 없기 때문이다. 원인은 모든 platform에서 `tests/scripts/output-files.test.mts`가 시험한다 |
-| `make parity` | PHP 문서와, 문서 JSON과 영역 JSON의 브라우저 렌더 결과를 비교한다. generated 프로그램으로 한 번, 네이티브 확장으로 한 번 실행한다 |
+| `make parity` | PHP 문서와, 문서 JSON과 영역 JSON의 브라우저 렌더 결과를 json 확장과 template 확장을 불러와 비교한다 |
 | `make server-parity` | parity 단계를 PHP 서버와 board Node 서버에 실행해 모든 응답의 상태, header, body를 비교하고, `make parity`의 브라우저 비교도 수행한다(HR-55) |
 | `make bundle-size` | SSR 스크립트, CSR 셸, static 배포의 chunk 파일 합계, 가장 큰 템플릿의 크기를 `config/bundle-size.json`의 gzip 상한과 함께 출력한다. 상한을 넘는 크기는 `WARNING` 줄을, GitHub에서는 annotation `::warning::`과 CI 요약의 warning도 내고, target은 통과한다 |
 | `make e2e` | SSR, CSR, JavaScript 없는 흐름, 비교 흐름을 Chromium에서 실행한다(실행의 서버와 database에서, `scripts/run-e2e.mts`) |

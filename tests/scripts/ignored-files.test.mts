@@ -31,6 +31,7 @@ const OUTPUTS = [
   'examples/board/var/board.db',
   'build/ext/polyspec_template.so',
   'build/ext/polyspec_template.so.inputs.json',
+  'build/json-ext/polyspec_json.so',
   'build/phpstan/cache.php',
   'var/tools/bin/npm',
   'var/install.lock',

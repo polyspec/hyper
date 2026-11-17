@@ -128,6 +128,7 @@ hyper-install: ## Install the pinned tools and the npm packages, the sources tha
 
 .PHONY: hyper-install-php
 hyper-install-php: ## Install only the locked root and board Composer projects and their pinned PHP archives
+	$(MAKE) --no-print-directory json-ext
 	$(MAKE) --no-print-directory template-ext
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
@@ -179,6 +180,21 @@ template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE fr
 	@binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template-php-ext) || exit $$?; \
 	  mkdir -p build/ext.next-$$$$ && trap 'rm -rf build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
+# The template extension requires the json extension polyspec_json (ext-polyspec_json), which PHP loads before it. PIE gets
+# polyspec/json JSON_VERSION from the Composer repository JSON_PACKAGES of the json release, as template-ext gets the
+# template extension, and the library is published into build/json-ext with a rename (HR-82).
+JSON_VERSION := 0.0.34
+JSON_PACKAGES := https://github.com/polyspec/json/releases/download/v$(JSON_VERSION)/packages.json
+JSON_EXT := build/json-ext/polyspec_json.so
+JSON_PIE_WORK := $(CURDIR)/var/pie/polyspec/json
+.PHONY: json-ext
+json-ext: ## Get the json extension polyspec_json of JSON_VERSION with PIE from the Composer repository of the json release into build/json-ext (H35.31); ONLINE
+	rm -rf $(JSON_PIE_WORK) && mkdir -p $(JSON_PIE_WORK)
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) $(PIE) repository:add composer $(JSON_PACKAGES) --no-interaction
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) $(PIE) build polyspec/json:$(JSON_VERSION) --no-interaction
+	@binary=$$($(NODE) scripts/pie-binary.mts $(JSON_PIE_WORK) polyspec/json) || exit $$?; \
+	  mkdir -p build/json-ext.next-$$$$ && trap 'rm -rf build/json-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/json-ext.next-$$$$/polyspec_json.so && $(NODE) scripts/publish.mts directory build/json-ext.next-$$$$ build/json-ext
+
 # The session tests of HY-115 run against a real Redis server and the real phpredis extension, at these versions. PIE builds
 # phpredis as it builds the template extension; `pie build` installs nothing into the PHP, and the tests load the library
 # with -d extension.
@@ -195,9 +211,18 @@ hyper-install-redis: ## Build the Redis server and the phpredis extension of the
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PHPREDIS_WORK) $(PIE) build phpredis/phpredis:$(PHPREDIS_VERSION) --no-interaction
 	@binary=$$($(NODE) scripts/pie-binary.mts $(PHPREDIS_WORK) phpredis/phpredis) || exit $$?; cp "$$binary" $(REDIS_DIR)/redis.so
 
-# The checks load the library that `make hyper-install` built with PIE (template-ext); they run offline and build nothing.
-ext: ## Fail unless the native template extension of make template-ext is in build/ext (HY-48, H14.1-7, H27.45)
-	@test -f $(EXT) || { echo "ext: $(EXT) does not exist; run make hyper-install, which builds it with PIE (make template-ext)" >&2; exit 1; }
+# The template extension that the PHP checks load. In a linked run `make link` links vendor/polyspec/template to the
+# packages/php-ext of a template checkout, and the checks load the library that the checkout builds into its
+# target/release; otherwise they load the library of template-ext. PHP_EXTENSIONS lists the json extension before the
+# template extension, which requires it (HY-48.15).
+TEMPLATE_LINKED_EXT = $(wildcard $(realpath $(PHP_VENDOR)/polyspec/template)/../../target/release/libpolyspec_template.$(CDYLIB))
+PHP_TEMPLATE_EXT = $(or $(TEMPLATE_LINKED_EXT),$(abspath $(EXT)))
+PHP_EXTENSIONS = $(abspath $(JSON_EXT)) $(PHP_TEMPLATE_EXT)
+
+# The checks load the libraries that `make hyper-install` built with PIE (json-ext, template-ext) or the linked template
+# library; they run offline and build nothing.
+ext: ## Fail unless the json extension and the template extension that the PHP checks load exist (HY-48.15, H14.1-7, H27.45)
+	@for library in $(PHP_EXTENSIONS); do test -f "$$library" || { echo "ext: $$library does not exist; run make hyper-install-php, which builds it with PIE (make json-ext, make template-ext)" >&2; exit 1; }; done
 
 # The PHP extension polyspec_hyper of the server (HY-132.2) for development: packages/php/native, built through $(CARGO),
 # which applies the patches of .links, against the php and the php-config of the checkout, with the libclang and the
@@ -267,11 +292,11 @@ hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests,
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
 	$(checks_result)
 
-hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the generated program and with the native extension
-	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
-	$(call check,PHPUnit with the generated program,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(HYPER_EXT)) \
-	$(call check,PHPUnit with the native extension,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php-extension.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) --php-extension $(HYPER_EXT) --php-extension $(EXT)) \
-	$(checks_result)
+# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.15, HY-132.2).
+PHPUNIT_EXTENSIONS = $(foreach library,$(PHP_EXTENSIONS) $(abspath $(HYPER_EXT)),--php-extension $(library))
+hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS)
 
 hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
@@ -322,9 +347,9 @@ RECIPE_RESULTS_DIR := $(CURDIR)/var/recipe/results
 .PHONY: recipe-check recipe-candidates recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build
 # Each case runner writes one line per case to the file that RECIPE_RESULTS names (HYR-7); recipe-check runs the five
 # runners to their end, then the check, which reads their files, and fails when a runner or the check fails.
-recipe-run-php: server-fixtures ## Run the PHP case runner with its results file (HYR-7)
+recipe-run-php: server-fixtures ext hyper-ext ## Run the PHP case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) -- --filter CaseRunnerTest
+	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS) -- --filter CaseRunnerTest
 
 recipe-run-node: packages node-fixtures ## Run the Node case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
@@ -485,11 +510,8 @@ spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/prot
 spec-docs-check: ## Check contracts/protocol.json and the protocol documents against their generation (H2)
 	$(NODE) scripts/spec-docs.mts check
 
-parity: board ext ## Compare PHP documents (generated program and native extension) with browser renders of document and region JSON
-	@failed=; \
-	$(call check,parity with the generated program,node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json) \
-	$(call check,parity with the native extension,node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --extension $(EXT)) \
-	$(checks_result)
+parity: board ext ## Compare PHP documents, rendered with the template extension, with browser renders of document and region JSON
+	node scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json $(foreach library,$(PHP_EXTENSIONS),--extension $(library))
 
 server-parity: node-server board ## Compare the Node server responses with the PHP responses, with the browser comparison of parity (HR-55)
 	$(NODE) scripts/check-parity.mts --app $(BOARD) --requests $(BOARD)/tests/parity/requests.json --node
@@ -512,11 +534,8 @@ serve-demo: board ## Serve SSR on :8080, CSR on :8081 and the comparison page on
 serve-demo-unlock: ## Remove the lock of a demo whose process has ended
 	$(NODE) $(KIT)/holder-lock.$(KIT_EXT) clear $(SERVE_DEMO_LOCK)
 
-bench-server: board ext ## Measure PHP request handling and rendering cost per row count, with the generated program and with the native extension
-	@failed=; \
-	$(call check,the benchmark with the generated program,php benchmarks/server.php --app $(BOARD) --iterations 300) \
-	$(call check,the benchmark with the native extension,php -d extension=$(abspath $(EXT)) benchmarks/server.php --app $(BOARD) --iterations 300) \
-	$(checks_result)
+bench-server: board ext ## Measure PHP request handling and rendering cost per row count, with the template extension
+	php $(foreach library,$(PHP_EXTENSIONS),-d extension=$(library)) benchmarks/server.php --app $(BOARD) --iterations 300
 
 bench-browser: board ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	$(NODE) benchmarks/browser.mts --runs 15
@@ -527,8 +546,8 @@ bench-sessions: packages ## Measure the requests per second of the three servers
 bench-uploads: packages ## Measure the time, the processor time and the memory of an upload in the three servers and in the reader of PHP itself
 	$(NODE) benchmarks/uploads.mts --size 1073741824 --runs 3
 
-bench-server-smoke: board ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
-	php benchmarks/server.php --app $(BOARD) --iterations 1 > /dev/null
+bench-server-smoke: board ext ## Run the PHP benchmark once per measurement so that a change that breaks it fails make check
+	php $(foreach library,$(PHP_EXTENSIONS),-d extension=$(library)) benchmarks/server.php --app $(BOARD) --iterations 1 > /dev/null
 
 bench: bench-server bench-browser bench-uploads ## Run the measurements; results are reports, not pass or fail checks
 

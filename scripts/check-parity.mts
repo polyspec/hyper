@@ -23,7 +23,7 @@
 // within REQUEST_TIMEOUT_MS fails by the name of its step and ends the check.
 //
 // Usage: node scripts/check-parity.mts --app examples/board --requests examples/board/tests/parity/requests.json
-//          [--extension build/ext/polyspec_template.so] [--node] [--python]
+//          [--extension build/json-ext/polyspec_json.so --extension build/ext/polyspec_template.so] [--node] [--python]
 
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -68,9 +68,9 @@ type BrowserCode = Pick<typeof Client, 'checkManifest' | 'checkTemplateIndex' | 
 
 const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
-// --extension loads the native template extension into PHP, so the server renders with it instead of the
-// generated program (HY-48).
-const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, extension: { type: 'string' }, node: { type: 'boolean' }, python: { type: 'boolean' } } });
+// Each --extension loads a PHP extension in the given order: the json extension, then the template extension that
+// the PHP server renders with (HY-48.15).
+const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, extension: { type: 'string', multiple: true }, node: { type: 'boolean' }, python: { type: 'boolean' } } });
 if (!values.app || !values.requests) throw new Error('--app and --requests are required');
 const app = values.app;
 const requests = values.requests;
@@ -98,11 +98,11 @@ const application = browser.createApplication(
 );
 await application.templates.ensure(Object.keys(index));
 
-const extension = values.extension ? ['-d', `extension=${resolve(values.extension)}`] : [];
-// The renderer selects the native extension exactly when PHP has loaded it (RendererTest), so this proves the engine.
+const extensions = values.extension ?? [];
+const extension = extensions.flatMap((file) => ['-d', `extension=${resolve(file)}`]);
 const loaded = spawnSync('php', [...extension, '-r', "exit(extension_loaded('polyspec_template') ? 0 : 1);"]).status === 0;
-if (loaded !== Boolean(values.extension)) throw new Error(`PHP ${loaded ? 'loaded' : 'did not load'} the native template extension`);
-console.log(`template program: ${loaded ? 'native extension' : 'generated PHP'}`);
+if (!loaded) throw new Error(`PHP did not load the template extension with ${JSON.stringify(extensions)}`);
+console.log(`template extension: ${extensions.join(', ')}`);
 
 // The databases and the session directory of the run.
 const run = serverRun('hyper-parity-');
@@ -113,7 +113,7 @@ let python: ServerClient | null = null;
 let failures = 0;
 let compared = 0;
 try {
-  const phpServer = await startPhp({ name: 'php', app, port: 0, ...(values.extension === undefined ? {} : { extension: values.extension }), env: { BOARD_DB: join(run.directory, 'php.db'), BOARD_BASE_PATH: '', BOARD_TIME }, children });
+  const phpServer = await startPhp({ name: 'php', app, port: 0, extensions,env: { BOARD_DB: join(run.directory, 'php.db'), BOARD_BASE_PATH: '', BOARD_TIME }, children });
   const phpClient = client(phpServer.url);
   if (values.node) {
     const nodeServer = await startNode({ name: 'node', app, port: 0, env: { BOARD_DB: join(run.directory, 'node.db'), BOARD_SESSIONS: join(run.directory, 'sessions'), BOARD_BASE_PATH: '', BOARD_TIME }, children });
