@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 152ffe293e6fa2050fcf1720a3a45e246dfeb3aeba4b7eac9d93ef3946cd78e3 -->
+<!-- source-sha256: cf1811e1a82bed3fc3a37922f454cda3f080bd935b28a393de0d499b4c04ea5c -->
 # 개발
 
 [English](development.md).
@@ -226,7 +226,7 @@ runner는 이름이 선택한 case를 전체 실행의 순서대로 한 번씩 �
 명령 도구 `@polyspec/hyper-cli`의 `hyper build`(HR-96)는 애플리케이션 디렉터리 하나를 한 번의 실행으로 build한다. `make board`는 그것을 checkout에서 board의 `--static` 파일 넷과 함께 `node packages/cli/bin/hyper.mjs build --app examples/board --output examples/board/build --api /api --php-namespace 'Polyspec\Hyper\Examples\Board\Program'`로 실행한다. build는 무엇이든 쓰기 전에 모든 option, 매니페스트, 템플릿 규칙을 검사하고, 명령 도구가 요구하는 template package를 읽는다(HR-70). HR-34의 출력을 쓴다.
 
 1. `public/assets/` 아래, 이름에 내용의 해시가 들어간 파일. 더하기만 하고 지우지 않는다: `templates/`에 `templates/` 아래 템플릿마다 AST 파일 하나와 예약 템플릿 `hyper/data.tpl`의 파일 하나, 클라이언트 진입 파일 `hyper-<hash>.js`와 진입 파일이 `import()`로만 불러오는 코드마다 조각 파일 `hyper-chunk-<hash>.js` 하나(HYC-16), 그리고 `--asset <name>=<path>`와 `--tailwind <source>=<name>`의 각 에셋(HR-77). 진입 파일에는 htmx, hyper 브라우저 코드, template 렌더 런타임, `app/app.json`, 템플릿 색인이 들어 있고 템플릿은 없다.
-2. `<output>/client/manifest.json`: 레이아웃 코드가 읽는, `hyper`로 진입 파일의 URL과 이름마다 각 에셋의 URL(HYC-16.12). `<output>/client/assets.json`: 이 build가 쓴 모든 경로 `public/assets/...`. 다음 build가 이를 읽어 더 쓰지 않는 파일을 지운다(HR-34, HYC-16.15). 클라이언트 번들이 담는 템플릿 파일의 색인 `<output>/client/templates.index.json`.
+2. `<output>/client/manifest.json`: 레이아웃 코드가 읽는, `hyper`로 진입 파일의 URL과 이름마다 각 에셋의 URL(HYC-16.12). `<output>/client/assets.json`: 이 build가 쓴 모든 경로 `public/assets/...`. `<output>/client/assets.previous.json`: 그 앞에서 달랐던 마지막 build의 파일. 다음 build가 둘을 읽어 어느 목록도 남기지 않는 파일을 지운다(HR-34, HYC-16.18). 클라이언트 번들이 담는 템플릿 파일의 색인 `<output>/client/templates.index.json`.
 3. `client/main.ts`가 있고 `--api`가 주어지면 `<output>/client/csr/`: CSR 배포물. `index.html`은 `<meta name="hyper-api">`, `<meta name="hyper-build">`, 진입 파일의 URL을 담은 `<meta name="hyper-entry">`, 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HYC-15, HYC-16). `assets/`는 이 build의 파일 사본과 `--static`이 밝히는 `public/` 아래 파일을 그 경로에 담는다. 애플리케이션은 렌더한 레이아웃이 link하는 스타일시트를 밝히며, `make board`는 board 예제의 `public/assets/app.css`, `public/assets/reader.css`와 module script `public/assets/reader.js`, `public/assets/after-reader.js`를 밝힌다. 진입 파일에 `</script`가 들어 있으면 build는 실패하고, 인라인한 진입 파일의 해시를 담은 Content Security Policy를 출력한다.
 4. `<output>/program/`: 네이티브 확장과 Python 서버가 읽는, 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`을 담은 `templates/`. `@polyspec/hyper/build`의 `readsFile`이 Rust core로 계산해 쓰는 모든 라우트의 read path인 `reads.json`(HY-73). `build.json`. 그리고 `--php-namespace`가 있으면, compiler package `@polyspec/template-compiler`로(HR-70) 그 namespace에 class마다 파일 하나인 PSR-4 파일로 compile한 생성된 PHP 프로그램 `php/`와 namespace를 기록하는 `program.json`. 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 namespace를 이 디렉터리에 대응시키며, `examples/board/composer.json`은 `Polyspec\Hyper\Examples\Board\Program\`을 `build/program/php/`에 대응시키고, renderer는 Composer의 autoload로 class `GeneratedProgram`을 불러온다. 서버는 각 영역을 따로 렌더하므로 모든 템플릿은 target으로 렌더하고 모든 정의는 HTML이다.
 

@@ -6,6 +6,7 @@
 //   <app>/public/assets/<name>.<hash>.<extension>       each asset of --asset and --tailwind (HR-77, HYC-16.12)
 //   <output>/client/manifest.json                       the URL of the entry as hyper and of each asset by its name
 //   <output>/client/assets.json                         {"files": [...]}: the paths public/assets/... of this build
+//   <output>/client/assets.previous.json                the same form: the files of the last different build before it
 //   <output>/client/templates.index.json                template name -> file URL, the index of the client bundle
 //   <output>/client/csr/                                the static shell index.html with the copies of this build
 //                                                       below assets/ and the --static files, with client/main.ts
@@ -15,9 +16,10 @@
 // The checks of lib/options.mjs and lib/check.mjs and every input read pass before a file is written. The outputs are
 // made in staging directories of this process; the id hashes them; then public/assets gains its files, and client/ and
 // program/ are published file by file, the shell and build.json last, so a server never finds a file of its build
-// missing (HR-82). After the publish the build removes below public/assets the files that client/assets.json of the
-// build before it names and its own list does not, and reports each (HYC-16.15). Below --output the build owns
-// client/ and program/ only.
+// missing (HR-82). After the publish a build whose list of files differs from that of the build before it removes
+// below public/assets the files of the build two lists back, which client/assets.previous.json names and neither the
+// list before nor its own list does, and reports each (HYC-16.17 to HYC-16.22). Below --output the build owns client/
+// and program/ only.
 //
 // The template ASTs and the template render runtime of the bundle come from the template package `@polyspec/template`
 // that this package depends on, whatever template package the application installed (HR-70).
@@ -89,8 +91,11 @@ export async function runBuild(options) {
 
   const clientTarget = join(output, 'client');
   const programTarget = join(output, 'program');
-  // HYC-16.15: the list of the build before this one, read before this build writes a file.
-  const earlier = earlierAssets(join(clientTarget, 'assets.json'));
+  // HYC-16.17: the list of the build before this one and the list of the last different build before that, both read
+  // before this build writes a file (HYC-16.22).
+  const earlierFile = join(clientTarget, 'assets.previous.json');
+  const before = assetList(join(clientTarget, 'assets.json'));
+  const earlier = assetList(earlierFile);
   const clientNext = staging(clientTarget);
   const programNext = staging(programTarget);
   rmSync(clientNext, { recursive: true, force: true });
@@ -99,10 +104,19 @@ export async function runBuild(options) {
     const count = writeProgram({ manifest, templates: join(app, 'templates'), directory: programNext, phpNamespace: options.phpNamespace });
     const manifestText = `${JSON.stringify({ ...(entry === undefined ? {} : { hyper: entry.url }), ...sortedObject(manifestUrls) }, null, 2)}\n`;
     const assetPaths = assetFiles.map((file) => `public/assets/${file.name}`).sort(compareBytes);
-    const assetsText = `${JSON.stringify({ files: assetPaths }, null, 2)}\n`;
+    const listText = (files) => `${JSON.stringify({ files }, null, 2)}\n`;
+    const assetsText = listText(assetPaths);
     const indexText = `${JSON.stringify(templates.index, null, 2)}\n`;
+    // HYC-16.19: a build that writes the files of the build before it moves no list and removes nothing, so builds of
+    // unchanged sources do not make the files of the last different build removable any earlier.
+    const unchanged = before.length === assetPaths.length && assetPaths.every((path) => before.includes(path));
+    // HYC-16.21: every path that the two earlier lists and this list name. While this build runs, the published
+    // assets.previous.json holds it, so the lists of a build that ends early name every file that exists below
+    // public/assets by a build, and a later build removes what none of its two lists keeps.
+    const everyPath = unchanged ? earlier : [...new Set([...earlier, ...before, ...assetPaths])].sort(compareBytes);
     writeFileAtomic(join(clientNext, 'manifest.json'), manifestText);
     writeFileAtomic(join(clientNext, 'assets.json'), assetsText);
+    writeFileAtomic(join(clientNext, 'assets.previous.json'), listText(everyPath));
     writeFileAtomic(join(clientNext, 'templates.index.json'), indexText);
 
     // HY-125.15 to HY-125.17: the files that this build writes and that do not hold the id, by the paths of their places.
@@ -129,19 +143,25 @@ export async function runBuild(options) {
     // HY-125.23: the id is written into build.json of program/ only, where every server reads it.
     writeBuildFile(programNext, id);
 
+    // The order of a build whose list differs (HYC-16.21): first the list of every path into the published
+    // assets.previous.json, then the files below public/assets, then client/ and program/, then the removal, then the
+    // list of the build before into assets.previous.json. A build that ends at any point leaves lists that name every
+    // file that a build wrote, so no file stays without a list, and a file is removed only after the outputs that no
+    // longer name it are published, so no published list or page names a missing file.
+    if (!unchanged) writeFileAtomic(earlierFile, listText(everyPath));
     for (const file of assetFiles) writeFileAtomic(join(app, 'public', 'assets', file.name), file.bytes);
     publish(clientNext, clientTarget, { last: [join('csr', 'index.html')] });
     publish(programNext, programTarget, { last: PROGRAM_LAST });
 
-    // HYC-16.15: the files that the list of the build before names and the list of this build does not. The removal
-    // comes after the publish of both directories: a build that ends between the publish and the removal leaves only
-    // files that no list names, and never a published list that names a missing file.
+    // HYC-16.18: the files that assets.previous.json named and that neither the list of the build before nor the list
+    // of this build names. The files of the build before stay, for its pages that are still open.
     const removed = [];
-    for (const path of earlier) {
-      if (assetPaths.includes(path) || !existsSync(join(app, path))) continue;
+    for (const path of unchanged ? [] : earlier) {
+      if (before.includes(path) || assetPaths.includes(path) || !existsSync(join(app, path))) continue;
       rmSync(join(app, path));
       removed.push(path);
     }
+    if (!unchanged) writeFileAtomic(earlierFile, listText(before));
 
     const lines = [`build ${id}: ${count} templates, ${assetFiles.length} files below ${join(app, 'public', 'assets')}, ${clientTarget}, ${programTarget}`];
     for (const path of removed) lines.push(`removed ${path}`);
@@ -158,11 +178,12 @@ export async function runBuild(options) {
 }
 
 /**
- * The paths that `client/assets.json` of the build before this one lists (HYC-16.15), or none for an output directory
- * without that file. Each path is one that a build writes: below `public/assets/`, without an empty, `.` or `..`
- * segment. A file of another form fails the build before it writes, because the build removes what the list names.
+ * The paths that a list of an earlier build names, `client/assets.json` or `client/assets.previous.json` (HYC-16.17),
+ * or none for an output directory without that file. Each path is one that a build writes: below `public/assets/`,
+ * without an empty, `.` or `..` segment. A file of another form fails the build before it writes (HYC-16.22), because
+ * the build removes files that these lists name; the error names the file, what it refuses and the repair.
  */
-function earlierAssets(file) {
+function assetList(file) {
   let text;
   try {
     text = readFileSync(file, 'utf8');
@@ -170,18 +191,21 @@ function earlierAssets(file) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return [];
     throw error;
   }
-  const invalid = () => new Error(`${file} of the build before this one is not a list of the files below public/assets that it wrote`);
+  const refused = (what) =>
+    new Error(`${file} of an earlier build ${what}; the build removes files that this list names, so remove or correct ${file} and build again`);
   let parsed;
   try {
     parsed = JSON.parse(text);
   } catch {
-    throw invalid();
+    throw refused('is not JSON text');
   }
   const files = typeof parsed === 'object' && parsed !== null ? parsed.files : undefined;
-  if (!Array.isArray(files)) throw invalid();
+  if (!Array.isArray(files)) throw refused('holds no list `files`');
   for (const path of files) {
     const rest = typeof path === 'string' && path.startsWith('public/assets/') ? path.slice('public/assets/'.length) : '';
-    if (rest === '' || rest.split('/').some((segment) => segment === '' || segment === '.' || segment === '..')) throw invalid();
+    if (rest === '' || rest.split('/').some((segment) => segment === '' || segment === '.' || segment === '..')) {
+      throw refused(`names ${JSON.stringify(path)}, which is no path of a file below public/assets`);
+    }
   }
   return files;
 }

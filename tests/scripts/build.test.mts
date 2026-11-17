@@ -44,8 +44,9 @@ test('writes the outputs of HR-34 below public/assets, client/ and program/ and 
   build(app, '--api', '/api', '--php-namespace', 'Fixture\\Program');
   assert.deepEqual(readdirSync(output).sort(), ['app.json', 'client', 'program']);
   assert.equal(readFileSync(join(output, 'app.json'), 'utf8'), '{"own":true}');
-  // HY-125.23: the build id file is a file of program/ only.
-  assert.deepEqual(readdirSync(join(output, 'client')).sort(), ['assets.json', 'csr', 'manifest.json', 'templates.index.json']);
+  // HY-125.23: the build id file is a file of program/ only. HYC-16.17: client/ holds the two lists of files.
+  assert.deepEqual(readdirSync(join(output, 'client')).sort(), ['assets.json', 'assets.previous.json', 'csr', 'manifest.json', 'templates.index.json']);
+  assert.deepEqual(readJson(join(output, 'client', 'assets.previous.json')), { files: [] });
   // The intermediate files of the PHP compilation, graph/ and types.json, are not in the program.
   assert.deepEqual(readdirSync(join(output, 'program')).sort(), ['build.json', 'legacy', 'php', 'program.json', 'reads.json', 'templates']);
   assert.deepEqual(readJson(join(output, 'program', 'program.json')), { namespace: 'Fixture\\Program' });
@@ -94,20 +95,20 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
   assert.equal(shell.split(`<meta name="hyper-entry" content="/assets/${entry}">`).length - 1, 1, shell);
   assert.doesNotMatch(shell, /<style|<link/);
   assert.equal(readFileSync(join(client, 'csr', 'assets', chunk), 'utf8'), readFileSync(join(assets, chunk), 'utf8'));
-  // A build after a change of the chunk code and a template writes the new chunk, entry and template file and removes
-  // the files of the build before it that it no longer writes (HR-34, HYC-16.15); tests/scripts/build-old-assets.test.mts
-  // holds the cases of the removal.
+  // A build after a change of the chunk code and a template adds the new chunk and template file and keeps every
+  // file of the build before it, which an open page of that build still loads (HR-34, HYC-16.18);
+  // tests/scripts/build-old-assets.test.mts holds the cases of the removal one build later.
   const templateFiles = () => readdirSync(join(assets, 'templates')).sort();
   const firstTemplates = templateFiles();
   writeFileSync(join(app, 'client', 'forms.ts'), "export function bindForms(): void {\n  console.log('chunk: bind the forms again');\n}\n");
   writeFileSync(join(app, 'templates', 'home.tpl'), '<p>home again</p>\n');
   build(app, '--api', '/api');
-  assert.equal(scripts().length, 2);
-  assert.ok(!scripts().includes(chunk) && !scripts().includes(entry));
-  assert.equal(templateFiles().length, firstTemplates.length);
-  assert.notDeepEqual(templateFiles(), firstTemplates);
+  assert.equal(scripts().length, 4);
+  assert.ok(scripts().includes(chunk) && scripts().includes(entry));
+  for (const name of firstTemplates) assert.ok(templateFiles().includes(name), name);
+  assert.equal(templateFiles().length, firstTemplates.length + 1);
   // The static shell of the second build holds the chunk of that build only.
-  const secondChunk = scripts().find((name) => name.startsWith('hyper-chunk-'));
+  const secondChunk = scripts().find((name) => name.startsWith('hyper-chunk-') && name !== chunk);
   assert.deepEqual(readdirSync(join(client, 'csr', 'assets')).filter((name) => name.endsWith('.js')), [secondChunk]);
 });
 

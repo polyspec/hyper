@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 6a1722658f14260116232919bae25045e9db9ccd3e5f09de6884d9736977afda -->
+<!-- source-sha256: e38350b5f968da57cf2cfdfb3cbdf37b0fbe7498fc0f321eb74878e90a3c5435 -->
 # 배포
 
 [English](deployment.md).
@@ -28,7 +28,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 `make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. PHP는 템플릿 확장 `polyspec_template`으로 `build/program/templates/`를 렌더한다. 서버의 PHP 버전에 맞춰 빌드한 json 확장 `polyspec_json`과 그다음 템플릿 확장을 `php.ini`의 `extension` 설정으로 불러온다(HY-48.15).
 
-build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). 배포의 `public/assets`는 아직 열린 페이지가 불러오는 이전 build의 파일을 담으므로, 거기서 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다. build는 자기 애플리케이션 디렉터리의 `public/assets`에서 앞선 build의 파일 중 더 쓰지 않는 것을 지우므로(HR-34, HYC-16.15), 파일을 더하기만 하는 upload는 배포에 그 파일을 남긴다.
+build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). `public/assets`는 아직 열린 페이지가 불러오는 앞선 build의 파일을 담으므로, 배포에서 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다. build는 자기 애플리케이션 디렉터리에서 앞선 build의 파일을 남기고, 두 목록 전 build의 파일 중 더 새로운 두 목록이 모두 적지 않는 것을 지우므로(HR-34, HYC-16.18), 앞선 build의 페이지는 다른 build 하나 동안 거기서도 자기 파일을 찾는다.
 
 ### 애플리케이션이 바꾸는 경로
 

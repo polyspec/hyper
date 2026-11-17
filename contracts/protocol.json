@@ -1691,7 +1691,8 @@
             6,
             13,
             16,
-            18
+            18,
+            22
           ],
           "blocks": [
             {
@@ -1704,10 +1705,10 @@
                   "koSource": "62bd975e2927bc8b8069defc57f262d6a60204154a0d79ef0a98e2365977c86f"
                 },
                 {
-                  "id": "HY-125.22",
-                  "en": "It leaves out `program/build.json`, the static shell `csr/index.html`, which holds the id, and the copies below `csr/assets`, which hold the bytes of the files below `public/assets`.",
-                  "ko": "`program/build.json`, id를 담는 정적 셸 `csr/index.html`, 그리고 `public/assets` 아래 파일의 바이트를 담는 `csr/assets` 아래 사본은 빼고 계산한다.",
-                  "koSource": "0f08c1e8d383fee9195551de82126a27bbcc7ad1f1312934ea201a218f5304a8"
+                  "id": "HY-125.24",
+                  "en": "It leaves out `program/build.json`, the static shell `csr/index.html`, which holds the id, the copies below `csr/assets`, which hold the bytes of the files below `public/assets`, and `client/assets.previous.json`, which holds the files of earlier builds, so the id of a build does not depend on the builds before it.",
+                  "ko": "`program/build.json`, id를 담는 정적 셸 `csr/index.html`, `public/assets` 아래 파일의 바이트를 담는 `csr/assets` 아래 사본, 그리고 앞선 build의 파일을 담는 `client/assets.previous.json`은 빼고 계산하므로, build의 id는 앞선 build에 달려 있지 않다.",
+                  "koSource": "ae253888bfefb710dcae4cc441d6b980fd0927989e6af1fedbdb94002f8a35ca"
                 },
                 {
                   "id": "HY-125.17",
@@ -4155,7 +4156,9 @@
           "id": "HYC-16",
           "retired": [
             6,
-            7
+            7,
+            15,
+            16
           ],
           "blocks": [
             {
@@ -4216,16 +4219,40 @@
                   "koSource": "5f751e279f3cb08bda0ce8f52fcd4317b37a35c46852c90bbfa6eebb2b88f164"
                 },
                 {
-                  "id": "HYC-16.15",
-                  "en": "Before a build writes, it reads `client/assets.json` of the build before it; after it published its outputs, it removes below `public/assets` exactly the files that the earlier list names and its own list does not, and prints each file that it removed.",
-                  "ko": "build는 쓰기 전에 앞선 build의 `client/assets.json`을 읽고, 출력을 게시한 뒤 앞선 목록이 적고 자기 목록이 적지 않는 파일만 `public/assets` 아래에서 지우며, 지운 파일을 하나씩 출력한다.",
-                  "koSource": "33589554662fb3c37162dadb9109e9e140bb75056df03b4fe2ee5c20a90fb862"
+                  "id": "HYC-16.17",
+                  "en": "The build keeps two lists below `client/`: `assets.json`, the files below `public/assets` that it wrote, and `assets.previous.json`, the files of the last build before it whose list differed.",
+                  "ko": "build는 `client/` 아래에 두 목록을 둔다. 자기가 쓴 `public/assets` 아래 파일의 `assets.json`과, 목록이 달랐던 마지막 앞선 build의 파일의 `assets.previous.json`이다.",
+                  "koSource": "ee76565f688127fe34de09e51ce7d708f839c4bfbe6dd89eab68d4094fa40b4e"
                 },
                 {
-                  "id": "HYC-16.16",
-                  "en": "A build without an earlier list removes nothing, and no file is removed for the form of its name, so a file that the application placed below `public/assets` stays.",
-                  "ko": "앞선 목록이 없는 build는 아무것도 지우지 않고, 이름의 형태로는 어떤 파일도 지우지 않으므로 애플리케이션이 `public/assets` 아래에 둔 파일은 남는다.",
-                  "koSource": "b876bbe4c2cde598f75d6ffe2eebbe4d3b6272d5c871d04bc54445ed5dd007b5"
+                  "id": "HYC-16.18",
+                  "en": "After a build whose list differs from the list of the build before it published its outputs, it removes below `public/assets` exactly the files that `assets.previous.json` named and that neither the list of the build before nor its own list names, and prints each file that it removed, so a page of the build before, which is still open, keeps loading the files of that build.",
+                  "ko": "목록이 앞선 build의 목록과 다른 build는 출력을 게시한 뒤, `assets.previous.json`이 적었고 앞선 build의 목록도 자기 목록도 적지 않는 파일만 `public/assets` 아래에서 지우며 지운 파일을 하나씩 출력하므로, 아직 열려 있는 앞선 build의 페이지는 그 build의 파일을 계속 불러온다.",
+                  "koSource": "9b2b62a1cd31aad51665d391ec129e2611d383bf4d1154177ce1b2b7b63db5ef"
+                },
+                {
+                  "id": "HYC-16.19",
+                  "en": "A build whose list equals the list of the build before it removes nothing and leaves `assets.previous.json` as it is, so builds of unchanged sources do not shorten the time for which the files of the last different build stay.",
+                  "ko": "목록이 앞선 build의 목록과 같은 build는 아무것도 지우지 않고 `assets.previous.json`을 그대로 두므로, source가 바뀌지 않은 build는 마지막으로 달랐던 build의 파일이 남는 기간을 줄이지 않는다.",
+                  "koSource": "81bfff2dd9b1030f09119dcb42aebaf8ec3cff6faf4767e59e76e28e28a71c14"
+                },
+                {
+                  "id": "HYC-16.20",
+                  "en": "A build without a list of a build before it, or with that list alone, removes nothing, and no file is removed for the form of its name, so a file that the application placed below `public/assets` stays.",
+                  "ko": "앞선 build의 목록이 없거나 그 목록 하나만 있는 build는 아무것도 지우지 않고, 이름의 형태로는 어떤 파일도 지우지 않으므로 애플리케이션이 `public/assets` 아래에 둔 파일은 남는다.",
+                  "koSource": "9af422621040a85a80714bb43cc1992d4f26193115477495f12d409850018f04"
+                },
+                {
+                  "id": "HYC-16.21",
+                  "en": "Before a build whose list differs writes a file below `public/assets`, it writes into `assets.previous.json` every path that the two earlier lists and its own list name, and after the removal the list of the build before it, so a build that ends early leaves lists that name every file that the builds wrote.",
+                  "ko": "목록이 다른 build는 `public/assets` 아래에 파일을 쓰기 전에 앞선 두 목록과 자기 목록이 적는 모든 경로를 `assets.previous.json`에 쓰고, 지운 뒤에는 앞선 build의 목록을 쓰므로, 일찍 끝난 build는 build들이 쓴 모든 파일을 적는 목록을 남긴다.",
+                  "koSource": "3c5bafc2d0f2e0c92e60f1c95ab211205f247847672cfbe31b4b42c42b8b63e8"
+                },
+                {
+                  "id": "HYC-16.22",
+                  "en": "A list of an earlier build that is no list of paths of files below `public/assets` fails the build before it writes, with an error that names the file of the list, the path that it refuses and the repair, which is to remove or correct that file.",
+                  "ko": "앞선 build의 목록이 `public/assets` 아래 파일 경로의 목록이 아니면 build는 쓰기 전에 실패하며, 오류는 그 목록의 파일, 거부한 경로, 그리고 그 파일을 지우거나 고치라는 고치는 방법을 밝힌다.",
+                  "koSource": "a13fae724446a00a4b86d514d806ee63013cda107489f21cdef30313899afb43"
                 },
                 {
                   "id": "HYC-16.8",

@@ -12,10 +12,14 @@ use crate::Error;
 /// The places of the files that a build writes, as the prefixes of their paths (HY-125.17).
 const PLACES: [&str; 4] = ["public/assets/", "client/", "program/", "csr/"];
 
-/// The files that hold the id or a copy of another file, which the hash leaves out (HY-125.22).
-const LEFT_OUT: [&str; 2] = ["program/build.json", "csr/index.html"];
+/// The files that hold the id or the files of earlier builds, which the hash leaves out (HY-125.24).
+const LEFT_OUT: [&str; 3] = [
+    "program/build.json",
+    "csr/index.html",
+    "client/assets.previous.json",
+];
 
-/// The copies of the files below `public/assets` in the static shell (HY-125.22).
+/// The copies of the files below `public/assets` in the static shell (HY-125.24).
 const SHELL_ASSETS: &str = "csr/assets/";
 
 /// One file that a build writes: its path with the prefix of its place (HY-125.17) and its bytes.
@@ -28,7 +32,7 @@ pub struct Output {
 }
 
 /// The files of `outputs` that the build id hashes, in the order of their paths compared as bytes (HY-125.3,
-/// HY-125.15, HY-125.22).
+/// HY-125.15, HY-125.24).
 ///
 /// # Errors
 /// `invalid_build` with the path for a path without the prefix of a place, with nothing after its prefix or with a
@@ -142,7 +146,7 @@ pub fn read(bytes: &[u8]) -> Result<String, Error> {
     }
 }
 
-/// Whether the hash leaves out the file of `path` (HY-125.22).
+/// Whether the hash leaves out the file of `path` (HY-125.24).
 fn left_out(path: &str) -> bool {
     LEFT_OUT.contains(&path) || path.starts_with(SHELL_ASSETS)
 }

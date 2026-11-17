@@ -692,7 +692,7 @@ fn a_chosen_request_outside_the_data_base_path() -> Result<(), Error> {
 }
 
 mod build {
-    // HY-125.22, HY-125.17, HY-125.19: the files that the hash leaves out and the paths of the files of a build. The
+    // HY-125.24, HY-125.17, HY-125.19: the files that the hash leaves out and the paths of the files of a build. The
     // contract cases of the build id run on the build runner, which computes the hash of the files that it is given;
     // these rules move to the cases when the command tool calls the core for the build id (H-8).
     use binding_core::Kinds;
@@ -722,6 +722,7 @@ mod build {
         ];
         let mut all = hashed_files.to_vec();
         all.extend([
+            output("client/assets.previous.json", "{\"files\":[]}"),
             output("program/build.json", "{\"build\":\"x\"}"),
             output(
                 "csr/index.html",
