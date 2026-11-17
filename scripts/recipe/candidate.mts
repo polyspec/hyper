@@ -50,8 +50,9 @@ function specVisibility(visibility: Visibility, what: string): Member['visibilit
 
 /**
  * Derives the members of a unit from the sources of its files (HYR-5): the members of each file joined across languages
- * by their reader key. The neutral fields take placeholders; a kind, a visibility or an `only` that the languages do
- * not agree on is flagged.
+ * by their reader key. A member whose native symbol in some language is already a member of the unit is kept as the
+ * spec lists it; every other member is added. The neutral fields take placeholders; a kind, a visibility or an `only`
+ * that the languages do not agree on is flagged.
  */
 function deriveMembers(unit: Unit, sources: Record<Lang, Sources>, flag: (item: Member, what: string) => void): void {
   const byKey = new Map<string, Partial<Record<Lang, ReaderMember>>>();
@@ -65,10 +66,15 @@ function deriveMembers(unit: Unit, sources: Record<Lang, Sources>, flag: (item: 
       byKey.set(key, entry);
     }
   }
+  const listed = new Set(unit.members.flatMap((m) => LANGS.flatMap((lang) => {
+    const symbol = m.native[lang]?.symbol;
+    return symbol === undefined ? [] : [`${lang}:${symbol}`];
+  })));
   for (const [key, entry] of byKey) {
     const list = readOf(entry);
     const first = list[0];
     if (first === undefined) continue;
+    if (LANGS.some((lang) => entry[lang] !== undefined && listed.has(`${lang}:${entry[lang].symbol}`))) continue;
     const member: Member = {
       id: `${unit.id}.${camel(key)}`,
       kind: first.kind,
@@ -218,13 +224,11 @@ export function buildCandidate(root: string, phpAutoload: string, v: Validators)
         if (found === undefined) stale.push(`${ua}/native/${lang}`);
         else unit.native[lang] = { file: found.file, kind: found.kind, internal: found.internal };
       }
-      // A unit that the spec lists without members takes the members of its sources, with their neutral fields to write.
-      if (unit.members.length === 0) {
-        deriveMembers(unit, sources, (item, what) => {
-          const mi = unit.members.indexOf(item);
-          handWritten.push(`${ua}/members/${mi < 0 ? unit.members.length : mi}/${what}`);
-        });
-      }
+      // A unit takes each member of its sources that the spec does not list, with its neutral fields to write (H35.56).
+      deriveMembers(unit, sources, (item, what) => {
+        const mi = unit.members.indexOf(item);
+        handWritten.push(`${ua}/members/${mi < 0 ? unit.members.length : mi}/${what}`);
+      });
       unit.members.forEach((member, mi) => {
         const ma = `${ua}/members/${mi}`;
         handWritten.push(`${ma}/inputs`, `${ma}/output`, `${ma}/errors`, `${ma}/state`);
