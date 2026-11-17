@@ -456,15 +456,15 @@ core-fmt-check: ## Check the format of the Rust core
 	$(CARGO) fmt --check -p polyspec-hyper
 
 # Cargo.lock is written by cargo (HR-70): after a change of the tag of a crate in a Cargo.toml, cargo-lock runs
-# `cargo update -p <crate>` for the crates of CRATES through $(CARGO), which fetches the tag. In a checkout with a link
-# declaration the link script gives cargo its own copy of the lock under var/link/cargo and leaves the tracked lock as
-# it is (kit K1269), and it has no mode that writes the tracked lock, so the target fails there before it starts cargo:
-# it writes Cargo.lock only in the release state, a checkout without .links, where the link script runs cargo as given.
+# `cargo update -p <crate>` for the crates of CRATES, which fetches the tag. A linked run of the link script gives cargo
+# its own copy of the lock under var/link/cargo and leaves the tracked lock as it is (kit K1269), so the recipe starts
+# the link script with --tracked-lock (kit K1287): it runs cargo as given, with no patch and no copy of the lock, in a
+# checkout with .links too, where it holds the execution lock of a linked run. cargo then reads only the sources that
+# the manifests name, so a crate or a version that only a linked checkout provides fails in cargo with that cause.
 .PHONY: cargo-lock
-cargo-lock: ## Write Cargo.lock for the crates of CRATES with cargo update, in a checkout without .links; ONLINE
+cargo-lock: ## Write Cargo.lock for the crates of CRATES with cargo update, in a checkout with or without .links; ONLINE
 	@test -n "$(strip $(CRATES))" || { echo 'cargo-lock: CRATES is empty; name the crates whose pin changed: make cargo-lock CRATES="<crate> <crate>"' >&2; exit 2; }
-	@test ! -e $(CURDIR)/.links || { echo 'cargo-lock: $(CURDIR)/.links exists, so the link script of kit would update its copy of the lock under var/link/cargo and leave Cargo.lock as it is (kit K1269); run the target in a checkout without .links' >&2; exit 1; }
-	$(ONLINE) $(CARGO) update $(foreach crate,$(CRATES),-p $(crate))
+	$(ONLINE) $(NODE) $(KIT)/link.$(KIT_EXT) cargo --tracked-lock $(CURDIR) update $(foreach crate,$(CRATES),-p $(crate))
 
 # The bindings of the Rust core for the five targets of packages/rust/interface.json (binding design L-1, L-2, L-2a).
 # BINDING is the bin of the npm package @polyspec/binding, which package.json declares by its release asset and

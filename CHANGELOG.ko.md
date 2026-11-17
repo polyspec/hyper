@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a0ea8bd80126f316bac210ffc0c2d33393f77a61900a36f9d61cb6c053d22147 -->
+<!-- source-sha256: 1317100948721f9924f503a4e20b5e83f1ba140d0b8f516d1b448d35028030a2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make cargo-lock`은 `.links`가 있는 checkout에서 cargo를 시작하기 전에 실패했다. kit의 link script가 link된 cargo에 자기 lock 복사본을 주고 `Cargo.lock`은 그대로 두었기 때문이다. 이제 recipe는 kit 0.0.121의 `link.mjs cargo --tracked-lock`을 시작한다(kit K1287). 이것은 patch와 그 복사본 없이 cargo를 실행하므로, `make cargo-lock CRATES="<crate> ..."`는 `.links`가 있든 없든 tracked `Cargo.lock`을 쓰며, 거부는 없앴다(H35.8-5).
 - 릴리스는 job 하나로 실행되었고, 그 recipe `make ci-release`는 commit에 tag를 붙인 뒤 `make hyper-install`과 kit의 packer를 실행했으며, 어떤 CI job도 tag 뒤의 step을 실행하지 않아 거기서 실패한 step은 버전을 잃게 했다. 이제 `.github/workflows/release.yml`은 세 job을 가진다: `tag`(`make ci-release-tag`), tag와 `release: true`로 새 `.github/workflows/assets.yml`을 부르는 `assets`, 그리고 kit의 archive를 build하고 draft를 만들고 download된 각 platform의 asset을 폴더와 함께 더하고(`cp -R`) `release-go-module`과 `release-platform-assets`를 실행한 뒤 릴리스를 공개하는 `release`(`make ci-release-release`). `assets.yml`의 job `platform`, `php`, `npm`은 `make ci-assets-<job>`을 실행한다. 이 recipe는 Go와 그 job의 다른 도구를 설치하고, release recipe를 쓰고, build 전에 binding을 check한다: 릴리스에서는 `make release-binding-check`, CI에서는 `make bindings-check`. `ci.yml`의 모든 실행은 자기 commit으로 `assets.yml`을 부르고 `ci-passed`가 그것을 필요로 하며, CI group node는 tag 없이 commit된 HEAD에서 kit의 archive를 build하는 새 `make release-candidate-assets`를 실행한다. `make release-rehearsal VERSION=X.Y.Z`는 버전 커밋을 push하기 전에 깨끗한 clone에서 그 archive를 build한다. job `platform`과 `php`는 각 platform의 runner(`ubuntu-26.04`, `ubuntu-26.04-arm`, `macos-15`)에서 실행하며, 이것이 runner 규칙의 유일한 예외이다. `make ci-release`, `release-checkout`, `release-php-check`, `release-archive-tool`, `release-prepare`, `release-tools-path`는 없앴다. `tests/scripts/ci-workflow.test.mts`가 job, 호출, runner, 각 recipe의 순서를 검사한다(H35.35-1).
 - hyper는 kit 0.0.121을 채택한다. 그 link script는 `link.mjs cargo --tracked-lock <dir> <cargo args>`로 시작되면 patch와 lock의 사본 없이 cargo를 실행한다(kit K1287). `package.json`은 그 release asset을, `package-lock.json`은 그 integrity를 적는다(H35.35-5).
 - hyper는 kit 0.0.120을 채택한다. 그 `release candidate-assets`는 호출자가 버전을 적지 않으면 HEAD의 change log의 첫 section `## X.Y.Z`에서 candidate의 버전을 읽는다(kit K1286). `package.json`은 그 release asset을, `package-lock.json`은 그 integrity를 적는다(H35.35-5).
