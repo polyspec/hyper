@@ -1,0 +1,263 @@
+<!-- doc-id: core-page-render-execution -->
+# The page render of the core in the servers: design
+
+[한국어](core-page-render.ko.md).
+
+This document is the design of row H35.32-2 of [the execution checklist](checklist.md). It answers the eight questions that [the plan](plan.md) lists under the inputs of the design of H35.32, states the rules that the move adds, drafts the statements that change, and orders the rows. It is the input of rows H35.32-3 to H35.32-8, of H35.32-1 and of the specification change.
+
+## Scope and the state of the code
+
+The Node server renders a page in `Page.respond` (`packages/ts/src/page/page.ts:49-139`) with `decodeResponse` and `renderDocument` of the browser code (`page.ts:136-137`) over the JS render engine. The move replaces that with `PageRequest::next` of the core (`packages/rust/src/steps.rs:538`), which renders with `Templates::render_document` (`packages/rust/src/render.rs:361`).
+
+The core holds these parts for the move:
+
+- `Pages::open`, `Pages::register`, `PageRequest::new` and `PageRequest::next` (`steps.rs:145`, `:188`, `:465`, `:538`).
+- `data_model::check` (`packages/rust/src/data_model.rs:16-20`): `bind_value` and then `to_json_value` of the template library. `next` calls it for the context in the arm of `State::Context` (`steps.rs:563-570`), and `answer` calls it for the shared data and the data of each region before the read paths (`steps.rs:733-738`, before `keep` at `:740` and `:756`).
+- `check_function_entry` (`render.rs:73-81`, the member `rules.check_function_entry`, HYC-24.7), and `Templates::register`, which passes on the message of the template language unchanged (`render.rs:125-129`, HYC-24.8).
+- `Pages::render_document` and `Pages::render_parts` (`steps.rs:262-297`), which take a route, the shared data, the data of each region and `now`, with the record `DocumentParts` (`steps.rs:202-207`).
+
+The Node wrappers of the binding exist (`packages/ts/src/app/core-rules.ts:476-488`: `appRoute`, `pageTag`, `pageHeaders`, `pageOpen`, `pageRequest`, `pageDocument`, `pageParts`), and no file of `packages/ts/src` other than `core-rules.ts` calls them (search: `grep -rnE "appRoute|pageOpen|pageHeaders|pageRequest|routeReads"` over `packages/ts/src`, `packages/cli/lib`, `scripts`).
+
+The template library was read in the snapshot `template-pin-7ddb9554` of its repository (`packages/rust/src`, `packages/ts/generated`, `packages/ts/render`, `docs/spec`). `packages/rust/Cargo.toml:35` takes the crate by a branch, so the revision that a build takes is not stated in this tree; each fact from the snapshot is marked "snapshot".
+
+Each answer holds: the rule and its reason; the present code; what each server does today; the cases that observe the point and the number whose result changes; what the rule changes; and what stays unverified.
+
+## Question 1 — the token after an action renews the session (HY-72.3)
+
+Rule. The `PageRequest` is not built again. The input of the step after the action, `Input::Action`, gains an optional member `csrf`, the masked value of the new token, and `next` replaces `PageInput.csrf` with it before it asks for the next handler. The reason: the action is a step of the request (`steps.rs:542-544`), the core decides the order of the steps, and a second `PageRequest` would make the host repeat the selection of the regions (`steps.rs:477`).
+
+Present code. `PageRequest::new` clones the input (`steps.rs:484`). `shared_data` reads `self.input.csrf` only in the two arms of `State::Shared` (`steps.rs:574`, `:580`), which run after the arm of `State::Action` (`steps.rs:549-562`). `Input::Action` holds only `outcome` (`steps.rs:372`). The core has `session::renew` (`packages/rust/src/session.rs:379-382`), which the binding does not declare.
+
+The three servers today. Each renews after the action returns and gives the page a request with a new masked value: Node `packages/ts/src/app/app.ts:736-738`, PHP `packages/php/src/App/App.php:858-861`, Python `packages/python/src/polyspec/hyper/app/app.py:712-714`.
+
+Cases. 11 observe a renewal, 8 of `contracts/app.json` (`an_action_that_renews_the_session_replaces_the_token_and_renews_the_store_once`, `the_flash_values_of_a_redirect_stay_after_the_renewal`, `a_masked_value_of_the_token_before_a_renewal_is_refused`, `a_masked_value_of_the_token_after_a_renewal_is_accepted`, `a_route_loader_that_renews_the_session_fails_and_renews_nothing`, `the_page_of_an_action_that_renewed_the_session_carries_a_masked_value_of_the_new_token`, `a_renewed_session_has_another_tag_for_the_same_data`, `an_action_that_renews_the_session_reads_the_old_browser_and_the_shared_handler_after_it_the_new`) and 3 of `contracts/context.json` (`an_action_that_finds_another_revision_renders_the_page_with_409`, `a_loader_that_renews_the_session_fails_the_409_page`, `the_409_page_after_a_renewal_carries_the_new_token`). 0 change their result.
+
+Changes. H35.32-3 adds the member to `Input::Action` and to the variant `action` of `page_step_input` of `packages/rust/interface.json`. The host renews the session after the action, masks the new token with `csrfMask`, gives it in the action input, and keeps the pair of the new masked value and the new token for `computePageHeaders` (`PageResponse.masked_token` and `token`, `packages/rust/src/front.rs`). No statement changes.
+
+The stored kept values. `PageInput.stored` is given when the `PageRequest` is built (`steps.rs:327`, read at `:762`), before the action and the loaders. Node and PHP read the stored kept values after the loaders (`page.ts:116` with `:155`, `packages/php/src/Page/Page.php:118` with `:211`). The two orders give different results only when a handler of the request changes the stored kept values of the session. 0 cases fix the order (search: the cases of `contracts/app.json` and `contracts/keep.json` for a handler that writes a kept value; none found). Not verified: whether a handler has an interface that writes a kept value of the session; the kept endpoint is a separate request. A renewal keeps the kept values (HY-72.2), so the action input needs no member `stored`.
+
+## Question 2 — where HY-44 is judged
+
+Rule. A host holds no check of HY-44. Two places judge a value: the boundary of the generated binding converts a value of the language and fails a value that has no form in the data model, and `data_model::check` of the core judges the converted value. Both fail with the kind and the message of the template data model, which hyper passes on as they are (HY-44.9). The reason: the three servers then give one kind and one message for one value, and a value that the read paths remove is judged before they are applied.
+
+That HY-44.9 and the cases disagree is the defect. Three cases of `contracts/context.json` compare the message `a number outside ±(2^53 − 1) is not a value of the data model (HY-44)` (`a_context_value_outside_the_data_model_fails`, `a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_document`, `a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_region_request`, `contracts/context.json:1222`, `:1840`, `:1874`). That text is written by a table of each host (`FAILURES` of `packages/ts/src/data/data-model.ts:8-14`, of `packages/php/src/Data/DataModel.php:22-28` and of `packages/python/src/polyspec/hyper/data/_data_model.py`), not by the template data model, whose text is `number <n> is outside the safe range` (snapshot, `packages/rust/src/value/bind.rs:36-46`, `value/host.rs:86-106`). The three cases change to the text of the template data model, and the three tables are removed.
+
+Who refuses a value after the move. The boundary is `in_template_value` of the generated binding (`packages/ts/native/generated/lib.rs`, functions `describe`, `describe_object_value` and `map_entries`), which calls `value_in` of the template library (snapshot, `value/host.rs:78-141`). "Read" means verified by reading the named function; "run" means to verify by a run before the row starts.
+
+| Input of a handler | Refused or converted by | Kind | Message | Verified |
+| --- | --- | --- | --- | --- |
+| A plain object as the result of a handler | The boundary refuses it: `map_entries` takes only a `Map` | `invalid_argument_type` of the binding | of the binding | Read (`lib.rs`, `map_entries`); the Node host therefore turns the result into a `Map` first |
+| A plain object inside a result | The boundary converts it to a map (`describe_object_value`, `HostValue::PlainObject`; `host.rs:129`) | none | none | Read |
+| A `Map` | The boundary converts it (`HostValue::Map`) | none | none | Read |
+| A bigint within ±(2^53 − 1) | The boundary converts it to a number (`describe`, `HostValue::Int`; `host.rs:86-101`) | none | none | Read |
+| A bigint outside the range | The boundary | `data_number_range` | `number <n> is outside the safe range` | Read (`host.rs:88-106`); the text of `<n>` by a run |
+| A number that is not finite | The boundary (`check_number`) | `data_number_not_finite` | `number is not finite` | Read (`bind.rs:36-38`) |
+| A number outside the range | The boundary (`check_number`) | `data_number_range` | `number <n> is outside the safe range` | Read (`bind.rs:40-45`); the text of `<n>` by a run |
+| Lists and maps deeper than the limit | The core (`data_model::check`, `bind_value`); the boundary counts each value of a result from level 0 | `data_depth` | `lists and maps nest deeper than 64 levels` | Read (`bind.rs:51-57`); the boundary of the count by a run (see the depth rule) |
+| A string with a lone surrogate | The boundary (`text`, `String::from_utf16`) | `data_invalid_utf8` | `a string is not valid Unicode text: <cause>` | Run: the case `a_string_with_a_lone_surrogate_in_the_data_of_a_route_loader_fails_a_region_request` of `contracts/app.json` runs against the core before the row starts |
+| A `Date` | The boundary (`HostValue::Date`) | `data_unsupported_type` | `a date is not a template value` | Read (`host.rs:135`) |
+| A function | The boundary (`HostValue::Callable`) | `data_unsupported_type` | `a function is not a template value` | Read (`host.rs:136`) |
+| An application object | The boundary keeps it as a native object (`host.rs:133`); the core refuses it (`to_json_value`) | `data_unsupported_type` | `a native object has no JSON form` | Read (`bind.rs:231-235`, `data_model.rs:17-18`) |
+| A PHP `JsonSerializable` | HY-44.6 lets it pass. `value_in` keeps every object as a native object (`host.rs:133`), which the core refuses | — | — | Run, in H35.32-1: the PHP boundary was not read |
+
+Three consequences of the table.
+
+- The message of a number names the number as the language holds it. The context of the case is the JSON text `{"n":9007199254740993}`; a runner that reads it as a double gives `9007199254740992` and a runner that reads it as an integer gives `9007199254740993`. The cases need a number whose text is the same in the three runtimes, such as the float `1e20`, or the cases compare the kind and not the message. This is decided by a run of the three runners.
+- Once `toValue` of `packages/ts/src/data/values.ts:15-17` and `bindValue` of the JS engine (`data-model.ts:40`) leave the Node server, the boundary turns a nested plain object into a map and a bigint into a number. The one conversion that stays in the host is the result of a handler itself: HY-44.4 lets a Node handler return a plain object or a `Map`, and the boundary takes only a `Map`, so `Page.loaderMap` (`page.ts:143-147`) becomes `new Map(Object.entries(result))` for a plain object, with the check that the result is a map (HY-44.4, HY-44.5). That is a check of the form of a result, not of HY-44.
+- `JsonCodec.encode` of `page.ts:90` ends.
+
+The moment of the check. A value fails when its handler returns, before the server calls the next handler. The evidence: the boundary converts the result of a handler when the host gives it to `next`, so every refusal of the boundary in the table already happens at that moment; a native object, which only the core refuses, must fail at the same moment, or two values outside the data model fail at two moments. The tree checks the context in its arm (`steps.rs:566`) and the rest in `answer` (`steps.rs:735-738`); the check of the shared data and of the data of a loader and an action moves to the arm that receives it. Today Node checks at each return (`page.ts:143-147`) and PHP and Python after every loader (`Page.php:112`, `_page.py:136`). 0 cases observe the moment (search: a case whose handler returns a value outside the data model and whose expected calls name a later handler; none found). PHP and Python change with H35.32-1.
+
+The depth. The limit of 64 levels (VAL-20) counts from the map that a handler returns, which is level 1, for the context, the shared data and the data of each region alike. The evidence: `data_model::check` judges each map bare. Today the servers check wrapped values: `{shared, regions}` (`page.ts:90`, `Page.php:112`, `_page.py:136`) and `{context}` (`packages/ts/src/app/context.ts:20`, `packages/php/src/App/Context.php:28`, `packages/python/src/polyspec/hyper/app/_context.py:22`). So today a shared map or a context of 64 levels fails and one of 63 passes, and a region map of 63 or 64 levels fails and one of 62 passes; after the move 64 passes and 65 fails for each. 0 cases observe the depth (search: `depth` and `data_depth` in the cases of `contracts/app.json` and `contracts/context.json`). The count of today's servers is derived from the wrappers and is verified by a run. The JSON text has no depth limit of its own (`to_json_value` of the snapshot holds no level check), so a JSON response, whose value nests the region data three levels deep, does not fail where the document passes.
+
+Cases. 45 name HY-44 or a kind of the data model: 42 of `contracts/app.json` and 3 of `contracts/context.json`. 0 change their status; 3 change their message (above).
+
+Changes. Core (H35.32-4): the check in the arms; the rest is built. Hosts: the three `FAILURES` tables and the host checks end, in the Node server with the single change and in PHP and Python with H35.32-1. Statements: HY-44.10 and HY-44.11 (below). Cases: the three messages, one case for the depth and one for the moment.
+
+## Question 3 — the inputs of `App.open` of the Node server
+
+Rule. `App.open` of the Node server takes the absolute path of the manifest and the absolute path of the server program and reads `templates/`, `reads.json` and `build.json` of that directory, as the PHP and the Python server do. The options `templates` and `build` end. `Pages::open` takes the bytes of `reads.json`, as it takes the bytes of the manifest. The reason: three servers that read the same files fail for the same file, and a `reads.json` with a byte order mark, a cut text or bytes that are not UTF-8 is then judged once, in the core.
+
+Present code. Node reads the template index and the AST files and computes the read paths with the browser package (`app.ts:320-335`); its required options are `manifest`, `build`, `templates`, `handlers` and `timezone` (`APP_REQUIRED`, `app.ts:166`). PHP opens `{program}/templates`, `{program}/reads.json` and `{program}/build.json` (`App.php:81-83`, `packages/php/src/Page/Renderer.php:43-47`); Python the same (`packages/python/src/polyspec/hyper/page/_renderer.py:39-42`). `Pages::open` takes the manifest as bytes and the read paths as a value (`steps.rs:145-150`, `:156`, `:158`).
+
+Two rows come first.
+
+- H31.4-2. `Templates::new` refuses a source named `hyper/data.tpl` (`render.rs:96-100`), and the build writes that file into `program/templates/` today (`packages/cli/lib/program.mjs:35-36`). HY-31.9 and HY-31.10 state that the build writes no copy below `program/templates/` and writes `program/legacy/hyper/data.tpl` for a server that does not call the core; row H31.4-2 implements it (`docs/features.md`, row `legacy-data-template`). The Node server opens a program only after it.
+- H35.34. `reads.json` of a build holds the key `[object Object]` for 6 of the 39 contract programs (row H35.34 of the checklist); the Node server reads that file after the move, so it renders those programs wrongly until the CLI computes the read paths with the core.
+
+What changes, by name.
+
+- The `only` entries of the cases: 15. `contracts/app.json`, `opens`: `a_template_index_that_is_cut_fails_the_open` (Node, HY-48.11) is removed; `a_reads_json_that_starts_with_a_byte_order_mark_fails_the_open`, `a_reads_json_that_is_cut_fails_the_open`, `a_reads_json_that_is_not_utf8_fails_the_open` (PHP and Python, HY-73.23) and `an_open_without_reads_json_names_it_as_the_first_missing_output`, `an_open_without_build_json_names_it_as_the_first_missing_output`, `an_open_without_templates_names_it_as_the_first_missing_output` (PHP and Python, HY-48.10) lose their limit and run on the Node server. `contracts/arguments.json`, `counts`: `app_open_without_build_is_refused` and `app_open_without_templates_is_refused` (Node, HY-48.11) are removed, and `app_open_without_program_is_refused` (PHP and Python, HY-48.16) loses its limit. `contracts/app.json`, `cases`: the five cases of HY-54.3 below (PHP and Python) change with H35.32-1.
+- `contracts/interfaces.json`: 21 `only` entries name a retiring id. Under `concerns`: `app.absolutePaths`, `app.templateIndex`, `app.readJsonFile`, `app.readJsonText` (HY-48.11), `app.routeTemplates` (HY-48.12), and `manifest`, `region`, `router`, `reads`, `renderer` (HY-54.3). Under `types`: 3 of HY-48.11, 4 of HY-54.3 and 2 of HY-48.16. Under `caseFiles`: 1 of HY-73.23 and 1 of HY-54.3. The entry `appOptions` (`contracts/interfaces.json:15222`) changes its members `build`, `templates` and `program`.
+- The lines outside `contracts/protocol.json` and its documents that cite a retiring id, counted with `grep -c`: HY-54.3 in `contracts/app.json` (5), `contracts/interfaces.json` (10), `packages/ts/tests/steps/app.ts` (1), `packages/ts/tests/steps/manifest.ts` (1); HY-73.23 in `contracts/app.json` (3), `contracts/interfaces.json` (1), `packages/rust/src/reads.rs` (5), `steps.rs` (3), `read_paths.rs` (1), `packages/rust/tests/contracts.rs` (2), `docs/features.md` (1); HY-48.11 in `contracts/arguments.json` (2), `contracts/app.json` (1), `contracts/interfaces.json` (14), `app.ts` (1), `core-rules.ts` (1), `packages/ts/tests/build.test.ts` (2), `examples/board/node/main.ts` (1), `docs/operations/development.md` (1); HY-48.12 in `contracts/interfaces.json` (3), `app.ts` (2). The checklist, the plan and the changelog also cite them.
+- Callers of the options: `examples/board/node/main.ts:82`, `tests/scripts/fixtures/upload-server/server.mjs:125`, `scripts/contract-programs.mts:121` and `scripts/build-templates.mts:19` (they write `templates.index.json` for the Node server), `scripts/fixture-program.mts`, and the test steps `packages/ts/tests/steps/client.ts`, `arguments.ts` and `hooks.ts`. `index:` is passed in 8 test files: `app.test.ts`, `support.ts`, `steps/app.ts`, `steps/context.ts`, `steps/functions.ts`, `steps/redis-sessions.ts`, `steps/representations.ts`, `steps/session-requests.ts`.
+- HR-34 of `docs/operations/repository-rules.md:10` lists the outputs of a build; the AST file of `hyper/data.tpl` below `public/assets` has no reader after the move (the browser never renders it, HYC-12.6), so the rule and the build change with it.
+
+## Question 4 — the second argument of a function of a template
+
+Rule. The type of the option `functions` of every server is the form of the generated binding: a function receives the list of its arguments and the environment, a value with `timezone` and `now`, as its second argument. No host wraps a function. The reason: the binding gives that form in every target, and a wrapper in a host would be a second implementation of the form.
+
+Present code and the evidence of the form.
+
+- The template specification states both forms in one paragraph (snapshot, `docs/spec/functions.md:182`): its first sentence names a `HostFunction` and a `FunctionContext` whose `env` holds `timezone` and `now`, and PHP an array, which are the hand-written packages; the later part states that the Rust core takes a function in the form of its interface contract, which a generated binding gives, `Fn(&[Value], &Environment)`, where `Environment` holds `timezone` and `now`.
+- The generated declarations (snapshot): `packages/ts/generated/index.d.ts:168-171` (`Environment`), `:204` and `:487` (`(argument0: readonly unknown[], argument1: Environment) => unknown`); the wasm declarations `packages/ts/wasm/generated/index.d.ts:204`, `:474` in the same form; Python `packages/python/generated/python/polyspec/template/_native.pyi:42-43` (`Callable[[list[object], Environment], object]`); the PHP stub `packages/php-ext/generated/polyspec_template.stub.php:93` declares the class `Environment` and types a function as `\Closure` (`:266`), so the stub does not state the parameters of the closure.
+- The conformance case `a_host_function_by_its_name` of `engine.register` (snapshot, `contracts/core-cases.json:216`, FUN-43) gives the function the arguments `0`, a list, and `1`, `{"timezone": "Z", "now": 0}`.
+- The core of hyper has the same form: `PageFunction` (`steps.rs:112-113`), and `host_function` passes `context.env` (`steps.rs:118-120`).
+- The JS engine calls a function with `{env: {…}}` (snapshot, `packages/ts/render/chunk-6S74TFTF.mjs:1731`).
+
+(a) What changes in the Node server. The option is typed `Record<string, HostFunction>` with the `HostFunction` of `@polyspec/template/render` (`app.ts:7`, `:129`), whose second argument is `{env: {…}}`. It becomes the function type of the binding. What breaks: 0 of the 4 cases of `contracts/functions.json`; 0 functions of the tests and of the example, because none reads the second argument: `suffix` of Node (`packages/ts/tests/steps/functions.ts:14`), of PHP (`packages/php/tests/Support/Steps/FunctionsSteps.php:85`), of Python (`packages/python/tests/render/render_functions.py:16`, which declares the parameter and does not read it) and of the browser test (`packages/client/tests/functions.test.ts`); `examples/board` registers no function (search: `functions` in `examples/board/{src,node,python,app,client}`, 0 hits). 0 documents show the signature (search: `HostFunction` and `functions` in `docs/operations`, `docs/features.md` and the READMEs of the packages). A Node application outside this repository whose function reads `context.env` breaks; the changelog entry names it.
+
+(b) The browser. The browser code passes the functions to the JS engine unchanged (`packages/client/src/engine.ts:5-7`, `packages/client/src/hyper.ts:114`), so a browser function receives `{env: {…}}` while the browser renders with that engine, until H35.33 moves it to the wasm binding. During that time a function that reads the environment has two signatures. An application that registers one function in the server and in the browser and reads the environment writes it so that it accepts both: it reads `second.env ?? second`. A function that reads only its arguments is unchanged. The cost is that one line in each such function, and its removal after H35.33.
+
+(c) HYC-24.2 states that the server and the browser register the same names, not the same signature; its clause on `createApplication` is what changes. The new text is HYC-24.9 below, with HYC-24.10 for the form, both true during that time and after it.
+
+Not verified: what the PHP extension passes as the second argument of a closure (the stub does not state it), which H35.32-1 verifies by the same case.
+
+## Question 5 — `openPage`, `routeRequest` and `computePageHeaders`
+
+Rule. The single change of the Node server adopts `computePageHeaders` and `pageTag`, which take only values of the host (`front.rs`, `page_headers`; `PageResponse`). It does not adopt `openPage` and `routeRequest`; a later row adopts them after the release of session-store that gives the Node binding a `Store`. The reason: `open_page` reads the session through `&mut dyn Store` (`packages/rust/src/opening.rs:86-90`), and the sessions of the Node server are classes of the host (`packages/ts/src/session/`), so that adoption changes the session interface, which is another change than the render.
+
+The three servers today. Node routes with the browser router and negotiates in the host (`app.ts:555-600`) and builds the headers and the tag itself (`page.ts:119-133`, `createHash` at `:128`); PHP takes the tag from the core (`Page.php:155`).
+
+Until the later row the host builds `PageInput` from the values that it computes today: `csrf` (`app.ts:598`), `changed` (`RegionPlanner.changedTopics`, `page.ts:67`), `stored` (`session.kept`, `page.ts:155`), `keepCookie` (`page.ts:152`) and `heldHash`. `RegionPlanner.select` ends: `PageRequest::new` selects the regions (`steps.rs:477`).
+
+Cases. 0 change. The later row keeps the cases of `contracts/routes.json` (34), `contracts/rest.json` (12), `contracts/representations.json` (70) and `contracts/client.json` (63).
+
+## Question 6 — where the cases of the parts, the read paths and the context place run
+
+Rule. No member of the binding exists only for a test. The Node steps for the parts call `Pages.render_parts` and `Pages.render_document`, which the page render uses. `keepRead`, `withContext` and a render of one template are not added to the binding: the runner of the core owns those cases, and the Node steps for them are removed. The reason: after the move the Node server holds no implementation of the read paths or of the place of the context, so a Node step for them would test code of the core through a member that no server calls.
+
+The runner of the core (`packages/rust/tests/contracts.rs`): `a_document_holds_its_parts_rendered_alone` (`:973`) runs `parts` of `contracts/app.json`; `read_data_keeps_only_the_read_paths` (`:629`) and `the_read_paths_of_a_template` (`:1998`) run `cases` of `contracts/reads.json`; `the_read_paths_of_the_routes` (`:2020`) runs its `routes`; `the_context_hash_and_its_place` (`:860`) runs the place of the context. Not verified: that the last test reads every entry of `withContext` of `contracts/context.json`.
+
+Where each of the 40 cases runs (`runners` of `caseFiles` of `contracts/interfaces.json`, and the tests above):
+
+| Section | Cases | Before | After the single change |
+| --- | --- | --- | --- |
+| `app.json` `parts` | 3 | PHP, Node (browser code), Python, browser, core | PHP, Node (`render_parts`, `render_document`), Python, browser, core |
+| `reads.json` `cases` | 27 | PHP, Node (browser code), Python, browser, core | PHP, Python, browser, core |
+| `reads.json` `routes` | 3 | browser, core | browser, core |
+| `context.json` `withContext` | 7 | PHP, Node (host code), Python, browser, core | PHP, Python, browser, core |
+
+The Node runner runs 37 of the 40 before and 3 after; the core runs 40 before and after. H35.32-1 removes the PHP and the Python steps of the two sections in the same way. The Node files that end: `packages/ts/tests/steps/reads.ts`, `steps/reads-cases.ts` and `tests/parse-template.ts` for the Node runner (the browser step keeps what it imports), and the step `withContext` of `steps/context.ts:221-222`.
+
+The read paths of the browser package. `routeReads`, `templateReads` and `keepRead` of `packages/client/src/reads.ts:26`, `:33`, `:71` are called outside tests by the Node server (`app.ts:331`, `page.ts:92`, `:98`) and by the build (`packages/cli/lib/program.mjs:16`, `:41`), and by no code of the browser at run time (search over `packages/client/src`: only `reads.ts` and the export of `index.ts:14`). After H35.34 and the single change they have 0 callers outside tests and are a second implementation of HY-73 that nothing runs. The row that removes them:
+
+- H35.32-9: Remove `routeReads`, `templateReads` and `keepRead` from `@polyspec/hyper-client` (`packages/client/src/reads.ts`, the export of `index.ts`), with the browser steps of `reads.json` and the entry `browser` of the runners of its sections, because no code calls them after H35.34 and the single change, and the runner of the core owns the cases of HY-73. Depends on H35.34 and on the single change. Red: a test of `tests/scripts` that fails while the package exports one of the three names. Verification: `make hyper-test-scripts`.
+
+## Question 7 — `now`
+
+Rule. The `now` of a response is one whole number of seconds since the Unix epoch. The page input of the core and the members `render_document` and `render_parts` hold it as an integer of the interface, so a host cannot give a fraction, and the core gives every render of the response that value. The reason: a document is several renders, and the date function of the template language takes whole seconds.
+
+Present code and the evidence.
+
+- `PageInput.now` is an `f64` (`steps.rs:328`), and `answer` gives it to the one `Env` of the document (`steps.rs:822`); `render_document` and `render_parts` take `now: f64` (`steps.rs:266`, `:282`). The type changes to an integer.
+- The date function takes an integer number of seconds and fails a fraction with `runtime_type` (snapshot, `packages/rust/src/functions/date.rs:143-144`, `functions/helpers.rs:85-89`). So `{= date(now(), …)}` fails with a fractional `now`.
+- Both engines default to whole seconds: the Rust core `d.as_secs()` (snapshot, `packages/rust/src/render/engine.rs:98-101`) and the JS engine `Math.floor(Date.now() / 1e3)` (snapshot, `packages/ts/render/chunk-6S74TFTF.mjs:2258`).
+
+The three servers today. PHP gives `microtime(true)` in each render (`Renderer.php:169`) and Python `time.time()` in each render (`_renderer.py:114`): a fraction, which differs between the renders of one document. The Node server and the browser pass only the time zone (`packages/client/src/response.ts:165`, `:186`, `:212`), so the JS engine takes whole seconds for each render.
+
+Cases. 0 observe `now`. Search: `now(` in every file of `contracts/` gives 5 hits, 4 in `protocol.json` and 1 in `interfaces.json`, each the text `performance.now()`; 0 in a template of a case, and 0 in `examples/board/templates`. The date function is called with a stored time in `examples/board/templates/board/rows.tpl:24` and `board/show.tpl:6` and reads the time zone only. So 0 cases change their PHP or Python output. A PHP or Python application whose template calls `date(now(), …)` fails today and renders after H35.32-1.
+
+Changes. Core: the integer type in `PageInput` and in the two members. Hosts: each gives the whole seconds of its clock once per request. Statement: HY-14.3. Test: a case of the core that gives `now` as an input and a document whose title, two regions and layout call `now()`; the document holds that value in each place. No test reads the clock (HR-89).
+
+The browser. The browser passes no `now`, so the JS engine reads the clock of the browser in each render (`response.ts:165`, `:186`, `:212`). The JSON value of a response holds `env` with `timezone` only (`packages/rust/src/page.rs`, `json_value`, the first member), and `decodeResponse` reads `env.timezone` (`response.ts:59`). So for a template that calls `now()` the document of the server and the browser render of the document JSON differ, and HY-13.4 does not hold for it today. The options:
+
+- The server sends `now` in `env`. The browser gives it to its renders, and both produce the same bytes. A navigation renders with the `now` of its region response. Cost: the body of every JSON response changes each second, so the weak tag of HY-53, which is computed from the body (`packages/rust/src/etag.rs`, `page_tag`), changes each second and a 304 is no longer answered unless the tag leaves `env.now` out; 12 lines of the cases hold `"env"` (`contracts/app.json` 5, `contracts/context.json` 7) and every expected JSON body changes.
+- The browser reads its clock once per response and gives that value to every render of it. One response then holds one `now` in the browser as on the server; the two values differ, so the bytes differ for a template that calls `now()`. Cost: a change of `packages/client/src/response.ts` and no change on the wire.
+- No change: the bytes differ and the renders of one browser response may differ across a second.
+
+The facts decide for the second option: the first breaks the 304 of HY-53 for every page to serve templates that call `now()`, of which this repository has none. HY-13.4 then holds for the same environment, and the `now` of the environment is the clock of the renderer; the statement of HY-14.3 says so for the server, and a row of the browser states it for the browser.
+
+## Question 8 — the evidence of HY-13.4 with two engines
+
+Rule. Until the browser renders with the Rust core (H35.33), HY-13.4 rests on three things: the conformance cases of the template language, run against the JS engine and the Rust core by the release of template; `make parity`; and the condition that the npm package, the crate, the PHP extension and the wheel of template that this repository takes are one release. The reason: every server then renders with the Rust core and the browser with the JS engine, so the same bytes are the sameness of the two engines of one release and the sameness of the composition.
+
+Present code. `make parity` (`Makefile:530`) runs `scripts/check-parity.mts`: it requests the document of the PHP server, renders the document JSON with the browser code and requires equal bytes (`check-parity.mts:1-10`); `make server-parity` (`Makefile:533`) compares the responses of the Node and the Python server with the PHP responses (`check-parity.mts:12-16`).
+
+The condition does not hold today: `package.json:44` and `composer.json:33` take release 0.0.27, and `packages/rust/Cargo.toml:35` a branch. `tests/scripts/template-pins.test.mts` (`make hyper-test-scripts`) checks the npm package, the Composer package and the wheel against one version (`:4`, `:17-18`, `:66`); it does not read `Cargo.toml` (search: `Cargo` in the file, 0 hits). The pins by tag of the first release fix the crate, and the test gains the crate.
+
+Limits. `make parity` covers the templates of `examples/board`. The conformance cases cover the language and not the composition of hyper; the `parts` cases cover the composition, run by the browser step and by the core (question 6). The engines differ for an input that the template specification refuses, and for `now()` (question 7).
+
+Cases. 0 name HY-13.4; 0 change.
+
+## The statements
+
+A retired id enters the list `retired` of its rule, and a new statement takes the next number that is neither used nor retired. Computed from the statements and the lists `retired` of `contracts/protocol.json` of this tree: HY-54.23, HYC-24.9, HY-132.10, HY-48.17, HYC-12.10, HY-128.13, HY-73.34, HY-14.3, HY-44.10. HYC-24.7 and HYC-24.8 are in use, HY-128.6 to HY-128.12 and HY-44.8 are retired.
+
+### Statements that retire
+
+HY-54.3, present: "It renders a document as the browser renders the document JSON value (HY-12, HY-31, HY-38), with the browser code and the template files of `hyper build` (HR-34), and embeds its data when the reply asks for it (HY-92)." It retires without a successor. It stands under HY-54.2, "It differs from the PHP server only as follows", and after the move the document of the Node server differs in nothing that a request observes.
+
+HYC-24.2, present: "The `App` of every server takes the same map as its option `functions` (HY-106) when the application opens, and the Node server registers it through `createApplication` of the browser code, so the server and the browser register the same names (template FUN-47); a registration that fails (template FUN-44) fails the open."
+- HYC-24.9 (en): "The `App` of every server takes a map from names to functions as its option `functions` (HY-106) when the application opens and registers each entry in its template engine; an application gives the server and the browser the same names (template FUN-47), and a registration that fails (template FUN-44) fails the open."
+- HYC-24.9 (ko): "모든 서버의 `App`은 애플리케이션을 열 때 이름에서 함수로 가는 map을 option `functions`(HY-106)로 받아 각 entry를 자기 template engine에 등록한다. 애플리케이션은 서버와 브라우저에 같은 이름을 주며(template FUN-47), 등록이 실패하면(template FUN-44) 열기가 실패한다."
+- HYC-24.10 (en): "A function of a server receives the list of its arguments and, as its second argument, the environment of the render, a value with `timezone` and `now`; a function of the browser receives that environment as the member `env` of its second argument while the browser renders with the JS engine."
+- HYC-24.10 (ko): "서버의 함수는 인자 목록과, 두 번째 인자로 렌더의 환경 곧 `timezone`과 `now`를 가진 값을 받는다. 브라우저의 함수는 브라우저가 JS engine으로 렌더하는 동안 그 환경을 두 번째 인자의 member `env`로 받는다."
+
+HY-132.8, present: "The Node server, which runs the checks of the browser code at open, raises a failure of them as the class of its binding of the same category with the same kind, status and message, so that its open fails with the `HyperValueError` of the binding of kind `invalid_application`, as the PHP and Python servers fail for the same input; an open that raises the class of the browser code, or an error without a kind, fails this rule." It retires without a successor, in the single change. HY-132.2 states the class of an error of every server and HY-106.21 the kind of an open that fails, `invalid_build` for the build file included, so a successor would repeat them. The condition: the open calls `Pages.open` before any code of the browser package, so the core judges the manifest (`steps.rs:156`), and the browser router that the host keeps for the routing is built from a manifest that the core accepted. To verify by a run before the change: every manifest of `checks` of `contracts/manifest.json` that `checkManifest` refuses is refused by the core. If one is not, HY-132.8 and the conversion `App.bindingError` (`app.ts:255-259`) stay until the row of question 5.
+
+HY-48.11, present: "Node: `App.open` reads the manifest, the template index, the template files and the build id file by absolute paths, the last from its option `build`, the absolute path of `client/build.json` of the build output (HY-125); a missing file fails with the error that names its path."
+- HY-48.17 (en): "Node: `App.open` reads the manifest by the absolute path of its option `manifest`; the program directory of its option `program`, an absolute path, holds `reads.json`, `build.json` and the directory `templates`, and `App.open` fails with a `HyperValueError` (HY-106) that names the absolute path of the first missing one."
+- HY-48.17 (ko): "Node: `App.open`은 매니페스트를 option `manifest`의 절대 경로로 읽는다. 절대 경로인 option `program`의 프로그램 디렉터리는 `reads.json`, `build.json`, 디렉터리 `templates`를 담으며, `App.open`은 처음으로 없는 것의 절대 경로를 밝히는 `HyperValueError`(HY-106)로 실패한다."
+
+HY-48.12, present: "Node: `App.open` fails when the template index is not a template index or does not hold a template of a route." It retires without a successor. No server reads a template index after the move, and a program that `hyper build` wrote holds every template that its manifest names (HY-48.3). A check of the names in `Pages::open` would be a rule for the three servers; it is not part of this move, and PHP and Python do not have it today.
+
+HYC-12.6, present: "The browser never renders `hyper/data.tpl`, because a client-rendered document embeds no data (HY-31); the Node server, which renders it, checks that the index holds it."
+- HYC-12.10 (en): "The browser never renders `hyper/data.tpl`, because a client-rendered document embeds no data (HY-31)."
+- HYC-12.10 (ko): "클라이언트 렌더 문서는 데이터를 내장하지 않으므로(HY-31) 브라우저는 `hyper/data.tpl`을 결코 렌더하지 않는다."
+
+HYC-12.9, present: "The Node server, which renders every page, reads every template of the index when it opens." It retires without a successor: the Node server reads no index, and when a server parses a template is not observable for a program of a build, which holds no template that does not parse.
+
+HY-128.4, present: "The Node server renders its documents with that same code (HY-54) from the context map, and puts the member `context` with `hash` and `value` into the value that it renders only for a document that embeds its data." It retires without a successor: HY-124.7, HY-125.11 and HY-128.5 state the same for every server.
+
+HY-73.23, present: "The build writes the read paths of every route to `reads.json` of the server program (HY-48), and the Node server computes them with the browser package when the application opens."
+- HY-73.34 (en): "The build writes the read paths of every route to `reads.json` of the server program (HY-48)."
+- HY-73.34 (ko): "빌드는 모든 라우트의 읽기 경로를 서버 프로그램의 `reads.json`(HY-48)에 쓴다."
+- That a server reads them when the application opens is HY-73.30.
+
+### New statements
+
+- HY-14.3 (en): "The `now` of the environment of a response is one whole number of seconds since the Unix epoch, which the page input of the core holds, and every render of the response gives `now()` that value."
+- HY-14.3 (ko): "응답의 환경의 `now`는 core의 page 입력이 담는 Unix epoch 이후의 정수 초 하나이며, 그 응답의 모든 렌더는 `now()`에 그 값을 준다."
+- HY-44.10 (en): "The limit of 64 levels of lists and maps (VAL-20) counts from the map that a handler returns, which is level 1, for the context, the shared data and the data of each region alike."
+- HY-44.10 (ko): "list와 map의 64단계 한계(VAL-20)는 handler가 돌려준 map을 1단계로 하여 세며, context, 공유 데이터, 각 영역의 데이터에 똑같이 적용한다."
+- HY-44.11 (en): "A value outside the data model fails the request when its handler returns, before the server calls the next handler."
+- HY-44.11 (ko): "데이터 모델 밖의 값은 그 handler가 돌아올 때, 서버가 다음 handler를 호출하기 전에 요청을 실패시킨다."
+
+### Statements that keep their id
+
+HY-132.7 (the classes of the browser code) keeps its meaning: the browser code keeps `checkManifest`, `checkTemplateIndex` and `createApplication`, which the parity check calls (`check-parity.mts:68`). When H35.32-9 removes `routeReads`, its list of four checks names a function that no longer exists, and the statement is then replaced by one that lists three; that belongs to H35.32-9.
+
+HY-48.1 (a server renders "with the template engine of its runtime, from the outputs of the build") keeps its meaning: the move makes the Node server conform to its list of outputs.
+
+HY-13.4 ("the same bytes") keeps its meaning; its evidence and its limit for `now()` are in questions 7 and 8.
+
+HY-14.1 ("Server and browser render with the same environment") keeps its meaning for the time zone, which the server sends (HY-14.2). It does not hold for `now` today and does not after the move (question 7).
+
+HY-13.7 states how often the PHP and the Python server read a shared value: twice for a document, three times for a document that embeds its data, twice for a JSON response. The five cases of `contracts/app.json` fix those counts: `a_document_reads_a_shared_value_twice_whatever_the_number_of_its_renders` (2), `a_document_json_reads_a_shared_value_twice` (2), `a_region_json_reads_a_shared_value_twice` (2), `a_document_of_a_route_with_a_route_region_reads_a_shared_value_twice` (2), `a_document_that_embeds_its_data_reads_a_shared_value_three_times` (3). They are limited to PHP and Python under the sentence HY-54.3, which retires, so their `only` entry needs another sentence in the single change. With H35.32-1 the boundary reads a value once when it converts it, so the counts change, and HY-13.7 retires with a successor that states the new count; H35.32-1 measures it.
+
+## The order of the work
+
+H35.32-7 and H35.32-8 are one change: the Node server has no state in which it opens with one input and renders with the other engine.
+
+| Row | Depends on | Red: a test whose observed behaviour fails |
+| --- | --- | --- |
+| H35.32-3 | question 1 | A test of the Node binding (`tests/scripts/node-core.test.mts`): a `PageRequest` of a JSON request with an action receives the action input with `csrf` set to a second masked value, and the test asserts that `shared.csrf` of the JSON text of the answer is that value. Today the member is ignored and the answer holds the first value. |
+| H35.32-4 | question 2 | A case of the core: a shared handler returns an application object, and the next step that `next` gives must be the failure, not the call of the route loader. Today `next` asks for the loader and fails in `answer`. A second case: a shared map of 64 levels answers a document, and one of 65 fails with `data_depth`. |
+| H35.32-5 | none | Built: `check_function_entry`, HYC-24.7 and HYC-24.8. |
+| H35.32-6 | question 6 | Built: `render_document` and `render_parts`. What remains is the integer type of `now` (question 7): a test of the Node binding that gives `now` as `1.5` must fail with the kind of the binding for a value that is no integer; today the document renders. |
+| H35.32-7 and H35.32-8, one change | questions 1 to 7; H35.32-3, H35.32-4; H31.4-2; H35.34; the statements first | Three Reds that hold whatever the JS engine does. (1) The three cases of `contracts/context.json` with the message of the template data model fail on the Node server while its table writes the message. (2) The opens `an_open_without_reads_json_…`, `…_build_json_…`, `…_templates_…` and the three `a_reads_json_…` run on the Node server and fail while `App.open` takes an index. (3) A new function kind of `contracts/functions.json` that returns `timezone` of its second argument fails on the Node server, whose engine gives `{env: {…}}`. |
+| H35.32-9 | H35.34; the single change | A test of `tests/scripts` fails while `@polyspec/hyper-client` exports `routeReads`, `templateReads` or `keepRead`. |
+| H35.32-1 | H35.32-3, H35.32-4; questions 2, 4 and 7 | For PHP and Python: the case of the moment (a loader after a failing shared value is not called) fails while they check after every loader; the three messages of `contracts/context.json` fail while their tables write them; a case with `now` given by the test and `{= date(now(), 'Y')}` in a template fails with `runtime_type` while they give a fraction. For PHP: the cases `a_json_serializable_object_in_shared_data_passes_…` (3) must stay green through the core. |
+| Later row (question 5) | the release of session-store; the single change | The Node HTTP test of a POST with a form token that does not match records the calls of the session store; the order of the calls that `open_page` makes (the flash, then the token) differs from the order of the host today only if the host differs, so the Red is the case of `contracts/session.json` that fixes the order, run with a store that records. Not verified: that such a case exists; the row finds or adds it. |
+
+What the PHP and Python move adds. A `JsonSerializable` passes HY-44.6, and `DataModel::plain` replaces it by its value before the render today (`packages/php/src/Data/DataModel.php:43-56`, `Renderer.php:92-93`). `value_in` keeps every object as a native object (snapshot, `host.rs:133`), which the core refuses. The conversion belongs to the boundary of the PHP binding, which describes an object with a member `json_serializable` (the Node boundary sets it to `false`, `lib.rs`, `describe_object_value`); whether the PHP boundary replaces such an object by its value is verified by the three cases above before H35.32-1 starts. The move also ends `Renderer.php` and `_renderer.py`, the clock per render, the `FAILURES` tables and the steps of the two sections of question 6.
+
+## Risks and what stays unverified
+
+- The kept fallback. `render_document` runs the fallback after any failure when the document has kept values (`render.rs:365`); the browser code throws a missing template again (`packages/client/src/response.ts:106`, `:115`), because the browser loads it and renders again. On a server every source is loaded, so a missing template fails the last render (`render.rs:403`) with the same error; the request answers 500 in both.
+- Templates parse at the first render (`steps.rs:143-144`), as in PHP and Python today. A template of a build parses (HY-48.3).
+- `decodeResponse` (`page.ts:136`) also checked that the browser router selects the route of the server; the server no longer runs that check on itself.
+- The browser package keeps the routing of the Node server (`app.ts:573`), `stripBasePath` and the manifest type until the row of question 5; `keepRead`, `keptPaths`, `Context.withContext` and `Context.member` end for the page (`steps.rs:740`, `:756`, `:762`, `:778`, `:810`).
+- The two engines differ for an input that the template specification refuses; the Node server changes its answer for such a template, and the changelog entry of the single change names the input.
+- Unverified, each named where it is used: the text of a number in a message per runtime; the count of the depth of today's servers; the lone surrogate through the boundary; the PHP boundary for a `JsonSerializable` and for the second argument of a closure; whether the core refuses every manifest that `checkManifest` refuses; whether a handler can write a stored kept value; whether `the_context_hash_and_its_place` reads every `withContext` entry; the revision of the template crate that a build takes.

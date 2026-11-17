@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5a0dcda7b7c7cbd5769283f65958c485736110bbe74320d9888a3ad997e03190 -->
+<!-- source-sha256: 5da381f49424b00ba053798e18e20061ff431cd111e5213b0a90f0aa867fd987 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `docs/plans/execution/core-page-render.md`는 세 서버를 core의 page 렌더로 옮기는 일의 설계다(H35.32-2). 여덟 물음마다 답, 지금의 코드, 세 서버의 동작, 바뀌는 case와 인용, retire되는 statement와 그 뒤를 잇는 문장, 각 행의 Red, 행의 순서를 적는다. `docs/plans/execution/plan.md`는 접미 ` (HYC-24)`를 더 적지 않고, core에 만들어진 세 부분을 적는다(H35.32-2).
 - core가 `functions`의 entry를 판정한다. `rules.check_function_entry`는 entry의 이름과 그 값이 host 언어의 함수인지를 받고, 함수가 아닌 entry는 kind `invalid_application`과 메시지 `functions.<name> is not a function`으로 실패한다(HYC-24.5, HYC-24.7). `pages.register`는 함수만 받으므로 core에는 그런 entry를 받는 member가 없었고, 각 서버가 그 메시지를 썼다. built-in 이름 `upper`처럼 template 언어가 거부하는 등록은 template 언어의 메시지 그대로 실패한다(HYC-24.8). `Templates::register`는 그 메시지 뒤에 ` (HYC-24)`를 붙였고, `Templates::new`는 kind `invalid_application` 없이 template 언어의 오류를 주었다. 아직 어느 서버도 이 member를 부르지 않는다(H35.32-5).
 - core의 binding이 요청 전체보다 아래에서 문서를 렌더한다. binding은 모든 step이 끝난 뒤 `PageRequest.next`의 답으로만 문서를 주었으므로, 주어진 데이터로 문서나 그 부분을 렌더하는 호출이 없었다. `pages.render_document`는 shared 데이터와 각 region의 데이터로 kept 값과 embedded 데이터 없이 route의 문서를 주고(HY-12.1), `pages.render_parts`는 단독으로 렌더한 title과 각 region을 주며(HY-13.1~HY-13.3), 둘 다 pages의 time zone에서 시각 `now`로 렌더한다. manifest에 없는 route는 `internal`로 실패한다. 아직 어느 서버도 이 member를 부르지 않는다(H35.32-6).
 - core의 page 단계(`PageRequest.next`)는 어떤 template도 읽지 않는 값을 판정하지 않았다. 어떤 읽기 경로도 이름하지 않는 key 아래의 native object, 유한하지 않거나 ±(2^53 − 1) 밖인 수, 64단계보다 깊게 중첩된 값은 읽기 경로가 지웠고 page는 응답했으며, template이 쓰는 native object는 `runtime_stringify`로 실패했다. 이제 page는 읽기 경로를 적용하기 전에 template 데이터 모델의 kind(`data_unsupported_type`, `data_number_not_finite`, `data_number_range`, `data_depth`)로 실패한다(HY-44.3, HY-44.9). context는 그 handler가 값을 돌려준 때에, 나머지 데이터는 답 전에 판정한다. 아직 어느 서버도 이 단계를 부르지 않는다(H35.32-4).
