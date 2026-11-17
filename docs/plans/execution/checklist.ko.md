@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 477a9ea07165d82fe4ea48a480a8725938ffec6e10bd51cf5f61030402b43f37 -->
+<!-- source-sha256: 652f1007a96234e501d5d1c6752ff100a49518df1b12d1014e8185dfaa6d0a3b -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -650,3 +650,4 @@
 | H34.3 | server 시작이 실패해도 upload-servers의 gate listener를 닫는다: hostsOf가 server를 시작하기 전에 listener의 close를 등록하므로, 시작이 실패하면 파일은 그 원인과 함께 끝나고 run을 붙잡는 listener가 남지 않는다(HR-87) | tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [o] |
 | H34.4 | Node addon을 upload-servers의 입력으로 선언한다: run의 Node application이 그것을 load하므로 make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts가 그것을 build해야 한다(HR-85, H35.55) | tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [o] |
 | H34.5 | hyper-test-scripts 전체 set의 dry run을 호출한 make의 TESTS 없이 실행한다: make가 command-line 변수를 recipe의 environment로 export하므로 test-inputs.test.mts는 그 dry run에 TESTS=를 준다(HR-85, H35.55) | tests/scripts/test-inputs.test.mts | make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts | [o] |
+| H34.7 | CI group gates를 통과시킨다: rules-check는 Enforced by 줄의 backtick 안 용어를 모두 check로 읽으므로, 미구현 표시 규칙은 docs/features.md를 backtick 없이 이름한다. oxlint, tsc, phpcs 지적은 검사로 타입을 좁히고, 문자열 메서드와 비교 함수를 쓰고, 줄을 나누어 고친다. Rust test의 case reader, core test의 addon pages, pin test의 template release URL이 각각 한 module에 있으므로 duplication-check는 clone을 찾지 않는다 | AGENTS.md, AGENTS.ko.md, scripts/, tests/scripts/, packages/ts/tests/, packages/rust/tests/, packages/php/tests/, config/owner-checks.json, CHANGELOG.md | make rules-check; make duplication-check; make lint-ts; make lint-php | [ ] |
