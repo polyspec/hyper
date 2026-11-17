@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- Node case runner는 render의 environment를 두 번째 parameter로 적는 `suffix` function으로 `contracts/functions.json`의 application을 연다(HYC-24.10, H34.8). 입력: `a_document_renders_the_host_function`과 `a_built_in_name_fails_the_open`. 이전 동작: `packages/ts/tests/steps/functions.ts`의 fixture `suffix`는 parameter 하나만 적었고, binding은 호출하는 두 argument보다 length가 작은 host function을 거부하므로 open이 `Pages.register(): hostFunction takes 1 argument, and the binding calls it with 2 (list<template_value>, environment)`로 실패해 두 case가 실패했다. 기대 동작: open이 성공하고 두 case가 통과한다. `make hyper-test-node CASES=functions.json`으로 검증했다: case 5개가 모두 통과하며, 이전 전체 실행에서는 그중 2개가 실패했다.
+
 - `packages/ts/tests/core-values.test.ts`는 Node binding의 변환이 거부하는 값에 HY-44.12의 message를 기대한다(H34.8). 입력: 안전 범위 밖의 수, 유한하지 않은 수, Date, 함수, 짝 없는 surrogate 또는 65단계 깊이의 list를 담은 shared data. 이전 동작: binding 0.0.21부터 binding은 `data_number_range: number 9007199254740992 is outside the safe range`처럼 template 오류의 전체 text를 주는데, 여덟 case는 HY-44.12가 폐기한 형식 `data_number_range in  at 0:0: …`를 기대해 실패했다. 기대 동작: core 검사의 case가 이미 그랬듯 모든 case가 `kind: message`를 기대한다. `make hyper-test-node NODE_TESTS=tests/core-values.test.ts`로 검증했다: 이전에는 16개 중 8개가 실패했고, 이후에는 16개 모두 통과한다.
 
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
