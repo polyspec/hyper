@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 04e219cc11c0d5211977c82cde95eb056fbb5fc3b57ff17be7ef72533a302817 -->
+<!-- source-sha256: fbaf657940ae1c1297f6a30fc0e0327406f8e115789d26480ff2fdeaaf8a20ea -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -498,7 +498,7 @@
 | H35.9-7 | case runner는 인용된 statement가 기대하는 kind를 contracts/protocol.json의 HY-132 kind 표(HY-132.3, HY-132.9)에서 가져오며, 그 표의 열 규칙은 binding과 라이브러리의 kind를 포함해 각 kind를 정하는 statement를 적는다. 지금은 kind를 statement의 영어 text에서 pattern으로 읽는다. | contracts/protocol.json, docs/spec/protocol.md, docs/spec/recipe.md, packages/php/tests, packages/ts/tests, packages/python/tests | `make hyper-test-php`, `make hyper-test-node` | [ ] |
 | H35.9-8 | contracts/app.json의 case a_warning_of_the_runtime_during_a_request_fails_it_and_a_warning_outside_is_raised_as_before가 Node 서버에서 FIELD_DIFFERS restored로 실패한다. 원인은 바꾸기 전에 사본 run의 출력에서 읽는다. | packages/ts | `make hyper-test-node` | [ ] |
 | H35.9-9 | Node 서버는 packages/ts/src/session/flock.ts에서 `node:ffi`를 load하고, 그 첫 load는 runtime의 ExperimentalWarning을 낸다. 그 첫 load가 요청에 답하는 동안 일어나면 요청의 warnings guard(HY-74)가 그것을 500으로 바꿀 수 있다. 이 행은 runtime 자신의 경고가 요청을 실패시키는지를 HY-74에서 읽고, 첫 load가 요청 안에서 일어나게 하는 시험으로 그 순서를 보이며, 그 결과에 따라 서버나 statement를 고친다. | packages/ts, contracts/protocol.json | `make hyper-test-node` | [ ] |
-| H35.9-10 | 어떤 target도 이름하지 않는 Node binding의 생성 시험 packages/ts/native/generated/tests/generated.test.mjs를 한 target이 돌린다. 그 시험은 packages/ts의 vitest run이 고르기 때문에 돌 뿐이다. target은 시험에 필요한 것(`make node-addon`의 addon)을 requireBuilt로 이름하고, 한 CI 그룹이 그것을 돌린다. | Makefile, packages/ts, tests/scripts | `make hyper-test-node` | [ ] |
+| H35.9-10 | 어떤 target도 이름하지 않는 Node binding의 생성 시험 packages/ts/native/generated/tests/generated.test.mjs를 한 target이 돌린다. 그 시험은 packages/ts의 vitest run이 고르기 때문에 돌 뿐이다. target은 시험에 필요한 것(`make node-addon`의 addon)을 requireBuilt로 이름하고, 한 CI 그룹이 그것을 돌린다. | Makefile, packages/ts, tests/scripts | `make test-node-addon` | [ ] |
 | H35.9-11 | 세 서버와 browser의 case runner가 case의 선택을 돌린다. target의 변수가 계약 파일, section, case id를 이름하고(예: `make hyper-test-php CASES="reads.json"`), 아무것도 고르지 않는 선택은 실패하며(HR-84), 결과 파일이 그 선택을 적는다. 그러면 행의 Verification은 관계없는 case가 실패시키는 target 전체가 아니라 그 행이 맡은 명령, 곧 그 case들을 이름한다. | packages/ts/tests, packages/php/tests, packages/python/tests, packages/client/tests, Makefile | `make hyper-test-scripts TESTS=tests/scripts/case-selection.test.mts` | [v] |
 | H35.10 | 서버와 Rust core가 달랐고 `contracts/`의 live case가 답을 정하지 않은 입력마다, 먼저 live case를 쓰고(그것이 Red다) 그다음 core와 세 서버가 그 case의 답을 낸다(H35.9). | contracts, packages/rust, packages/php/src, packages/ts/src, packages/python/src, CHANGELOG.md와 한국어 짝 | `make recipe-check` | [ ] |
 | H35.10-1 | live case가 짝 없는 surrogate를 가진 값에 대한 `csrf.verify`의 답을 정하고, core와 세 서버가 그 답을 낸다(HY-24.4). | contracts, packages/rust | `make recipe-check` | [-] cause: 그런 값으로 `csrf.verify`에 닿는 요청은 없다. UTF-8이 아닌 form 값은 action 전에 bad request이기 때문이다(`contracts/app.json` `a_form_value_that_is_not_utf8_is_a_bad_request_before_the_action`). |

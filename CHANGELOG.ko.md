@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b7b2ffd50a73a056f4d8dfb4cb9236702b65a9acf0a5533fabc506ca415b4548 -->
+<!-- source-sha256: 37ac8d3a8abdda54be504a89dfc1237c65c45f73c187ffd37de5a879dcd40a5a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Node binding의 생성된 시험 `packages/ts/native/generated/tests/generated.test.mjs`를 적는 target이 없었다. `packages/ts`의 vitest 실행이 이 파일과 WASM binding의 생성된 시험을 파일 이름으로 선택했고, node:test 파일인 둘에서 suite를 찾지 못해 `make hyper-test-node`가 둘 모두에서 실패했다. 이제 `make test-node-addon`이 `make node-addon` 뒤에 Node binding의 생성된 시험을 node --test로 실행하고, CI group core의 target인 `make test-bindings`가 이를 실행한다. `packages/ts/vitest.config.mts`는 `native/`를 제외한다. `make node-addon`은 `panic-test`만으로 build하던 addon을 `panic-test`, `fault-test`, `thread-test`, `thrown-count-test` feature로 build한다. 생성된 시험이 이 feature들의 member를 호출하기 때문이다. `make test-node-addon`은 실패한다. 생성된 시험 322개 가운데 272개가 통과하고 50개가 실패하며, 빈 manifest로 `Pages`를 만드는 시험이 모두 여기에 든다(H35.9-10).
 
 - `CASES="reads.json"`을 준 `make hyper-test-js`, `make hyper-test-node`, `make hyper-test-php`, `make hyper-test-python`이 target의 모든 test와 case runner의 모든 case를 실행했다. 어떤 recipe도 그 변수를 읽지 않아서, 명령이 한 파일의 case를 지정할 수 없었다. 이제 `CASES`가 있으면 recipe는 case runner만 시작하고, runner는 이름이 선택한 case를 실행한다. 이름은 case 파일(`reads.json`), case 파일의 section(`app.json#opens`) 또는 case id이며, 여럿은 공백으로 나눈다. 어떤 이름이 runner의 case를 하나도 선택하지 않으면 실행은 case를 실행하기 전에 선택과 그 이름을 밝히며 실패한다. 선택한 실행은 `var/recipe/results/<runner>.selected.txt`를 쓰고 그 첫 줄은 `SELECTION <이름들>`이다. `make recipe-check`가 읽는 전체 실행의 `<runner>.txt`는 그대로 둔다. 문법은 `docs/operations/development.md`가 적는다(HR-84, H35.9-11).
 

@@ -573,7 +573,7 @@ lint-bindings: bindings ## Run clippy on the binding crates with every warning a
 	$(CARGO) clippy --locked $(foreach crate,$(BINDING_CRATES),-p $(crate)) --all-targets --features panic-test -- -D warnings
 	$(PHP_EXT_CARGO) clippy --locked -p polyspec-hyper-php-ext --all-targets --features panic-test -- -D warnings
 	$(CARGO) clippy --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test -- -D warnings
-test-bindings: lint-bindings test-wasm test-go ## Run the tests of the binding crates and the generated tests of WASM and Go
+test-bindings: lint-bindings test-node-addon test-wasm test-go ## Run the tests of the binding crates and the generated tests of Node, WASM and Go
 	$(CARGO) test --locked $(foreach crate,$(BINDING_CRATES),-p $(crate))
 	$(PHP_EXT_CARGO) test --locked -p polyspec-hyper-php-ext
 
@@ -599,9 +599,18 @@ NODE_VERSION := $(shell sed -n 's/^  "version": "\(.*\)",$$/\1/p' $(NODE_PACKAGE
 # The addon of the Node package in a checkout (binding T-2): the generated entry native/generated/index.cjs loads the
 # package of the platform or, in a checkout, the file hyper.<platform>.node beside it, so the build of the crate is
 # copied there and published with one rename (HR-82).
-.PHONY: node-addon
+# The addon is built with every test feature of the crate (NODE_ADDON_FEATURES), which the generated tests of the
+# binding call: __panicTest, __armFaults, __threadTest and __thrownCount. A feature compiles its member and changes no
+# other member, so the Node server tests and the packed platform package of node-package use the same build.
+# The generated tests of the Node binding (binding GN-3c) are a node:test file that imports the generated entry beside
+# it, so test-node-addon runs them in the checkout after node-addon, on the test runner of kit; the vitest run of
+# packages/ts excludes native/ (vitest.config.mts). test-bindings runs it with the generated tests of WASM and Go.
+NODE_ADDON_FEATURES := panic-test,fault-test,thread-test,thrown-count-test
+.PHONY: node-addon test-node-addon
+test-node-addon: node-addon ## Run the generated tests of the Node binding on node --test against the addon of the checkout
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- $(NODE_PACKAGE)/native/generated/tests/generated.test.mjs
 node-addon: bindings ## Build the Node addon of this platform and put it beside the generated entry of the Node package
-	$(CARGO) build --locked -p polyspec-hyper-node --features panic-test
+	$(CARGO) build --locked -p polyspec-hyper-node --features $(NODE_ADDON_FEATURES)
 	cp $(CARGO_TARGET)/debug/libpolyspec_hyper_node.$(CDYLIB) $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ && mv -f $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ $(NODE_PACKAGE)/native/generated/$(NODE_ADDON)
 
 node-package: bindings packages node-addon ## Build the WASM module and the Node addon, then pack and install the npm package into var/bindings/node
@@ -724,7 +733,7 @@ CI_TOOLS_python := node python uv rust maturin
 CI_SETUP_python := install-tools hyper-install-python
 CI_TARGETS_python := hyper-test-python hyper-test-python-render
 # The group core checks the Rust core and the bindings of its five targets with the binding generator of package.json (H35.2):
-# test-bindings runs lint-bindings, test-wasm and test-go first, so each runs once. Its tools build the PHP extension, the
+# test-bindings runs lint-bindings, test-node-addon, test-wasm and test-go first, so each runs once. Its tools build the PHP extension, the
 # Python module, the WASM module and the static library of Go. The wasm-bindgen CLI of mise.toml, which node-package runs
 # for test-wasm, has no selector of install-tools of kit: the setup writes packages/release.mk (release-recipes) and runs
 # its target install-wasm-bindgen, which installs that CLI alone with the mise of the checkout at the digest of

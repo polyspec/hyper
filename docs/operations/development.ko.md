@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 27954eb7786212c0d7d8034e459ab4596e1aad88f354063378dcefb2ec2f222b -->
+<!-- source-sha256: 431fd969670f88aaeb647db2ba04cd31344b934df5c8e60fe5275ed0c23a845a -->
 # 개발
 
 [English](development.md).
@@ -169,7 +169,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
 | `board` | Node/npm, PHP/Composer, PIE, Python/uv | Root npm, root와 board Composer, Python uv lock | Browser parity, Node/Python server 비교, bundle 크기와 E2E |
 | `python` | Node/npm, Python/uv | Root npm과 Python uv lock | Python unit과 rendering |
-| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock과 `package-lock.json`의 binding generator(`make install-packages`) | Rust core 시험, clippy, format, contract 검사, 바인딩의 clippy와 시험, WASM과 Go의 생성된 시험(H35.2). kit의 `install-tools`에는 `test-bindings`가 시작하는 wasm-bindgen CLI의 selector가 없으므로, group의 setup은 `make release-recipes`로 `packages/release.mk`를 쓰고 그 target인 `make install-wasm-bindgen`을 실행한다. 이 target은 checkout의 mise로 그 CLI만 `mise.lock`의 digest에 맞춰 설치한다. `tests/scripts/ci-group-tools.test.mts`는 모든 group의 setup step과 target의 dry run을 읽고, group이 시작하는데 그 setup이 설치하지 않는 tool이 있으면 실패한다 |
+| `core` | Node/npm, Rust, PHP, Python/uv, Go | Cargo lock과 `package-lock.json`의 binding generator(`make install-packages`) | Rust core 시험, clippy, format, contract 검사, 바인딩의 clippy와 시험, Node, WASM, Go의 생성된 시험(H35.2). `test-bindings`의 prerequisite인 `make test-node-addon`은 Node binding의 생성된 시험 `packages/ts/native/generated/tests/generated.test.mjs`를 node --test로 실행한다. 이 시험은 checkout의 생성된 entry와, `make node-addon`이 crate의 모든 test feature로 build한 addon을 쓴다. `packages/ts`의 vitest 실행은 `native/`를 제외한다(H35.9-10). kit의 `install-tools`에는 `test-bindings`가 시작하는 wasm-bindgen CLI의 selector가 없으므로, group의 setup은 `make release-recipes`로 `packages/release.mk`를 쓰고 그 target인 `make install-wasm-bindgen`을 실행한다. 이 target은 checkout의 mise로 그 CLI만 `mise.lock`의 digest에 맞춰 설치한다. `tests/scripts/ci-group-tools.test.mts`는 모든 group의 setup step과 target의 dry run을 읽고, group이 시작하는데 그 setup이 설치하지 않는 tool이 있으면 실패한다 |
 
 group의 local 실행은 그 job의 호출과 같은 `make ci-check NAME=<group>`이다. bootstrap action처럼 `make bootstrap`, `make install-tools TOOLS=npm`, `make install-packages`를 실행한 checkout에서 실행한다. 어떤 group도 가리키지 않는 `NAME`은 어떤 step보다 먼저 실패하고 group들을 적는다.
 
