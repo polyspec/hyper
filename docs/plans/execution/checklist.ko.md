@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 45c1e5847c6291768c44790442bf1d814b7c1d80a4022c943d6f5cdc38b9cbe6 -->
+<!-- source-sha256: 3623b33c5480dab1aef6d514108b014af34bed1a2b70717e5b720fa5936bb46a -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -669,4 +669,4 @@
 | H34.13 | store object를 거쳐서만 hyper에 오는 session-store의 행 16개에 through를 적고, opening_functions.open_page에 session_store.internal 대신 session_store.random을 arm하는 case를 준다(binding B2.487): session_store.internal point는 session-store package가 자기 binding_core로 만드는 store 안에서만 깨지므로, 생성된 B-4 test는 발동하지 않는 point를 arm하고 Missing expected rejection으로 실패했다. internal kind의 case는 core test만 읽는 file로 옮긴다 | packages/rust/interface.json, packages/rust/tests/cases/faults.json, packages/rust/tests/cases/core-faults.json, packages/rust/tests/contracts.rs | make test-node-addon; make core-test | [!] 원인: B2.513을 담은 binding 0.0.22가 release되지 않았다; 재시도: binding 0.0.22가 release된다 |
 | H34.14 | pages.register에 raise하지 않는 case를 주어 생성된 test가 그것으로 Pages instance를 만들게 한다(binding GN-13t): instance를 받는 Pages의 첫 member의 case가 없으면 B-5c test는 placeholder인 빈 manifest로 Pages를 만들었고, core는 test가 검사하는 poison 전에 the manifest is no JSON text (HY-2.9)로 그것을 거부했다 | packages/rust/interface.json, packages/rust/tests/cases/members.json | make test-node-addon | [!] 원인: B2.513을 담은 binding 0.0.22가 release되지 않았다; 재시도: binding 0.0.22가 release된다 |
 | H34.16 | tests/scripts/ci-workflow.test.mts의 H35.35-1 test가 make typecheck를 통과하게 한다: 그 test는 ci.yml의 job assets를 called?.text로 assert하는데 이것은 called를 좁히지 않으므로 다음 줄이 called.text를 읽고 tsc가 TS18048 called is possibly undefined로 실패한다. test는 먼저 job이 있음을 assert하고 그 다음에 text를 읽는다 | tests/scripts/ci-workflow.test.mts | make typecheck | [v] |
-| H35.56 | recipe candidate는 spec이 member와 함께 적은 unit에 그 source에 있고 spec에 없는 member를 더하고, 그 중립 field를 hand-written으로 표시하므로 spec의 unit을 candidate로 다시 쓸 수 있다. 이전에는 member가 없는 unit만 source의 member를 받았다 | scripts/recipe/candidate.mts, tests/scripts/recipe-check.test.mts | `make hyper-test-scripts TESTS=tests/scripts/recipe-check.test.mts` | [ ] |
+| H35.56 | recipe candidate는 spec이 member와 함께 적은 unit에 그 source에 있고 spec에 없는 member를 더하고, 그 중립 field를 hand-written으로 표시하므로 spec의 unit을 candidate로 다시 쓸 수 있다. 이전에는 member가 없는 unit만 source의 member를 받았다 | scripts/recipe/candidate.mts, tests/scripts/recipe-check.test.mts | `make hyper-test-scripts TESTS=tests/scripts/recipe-check.test.mts` | [v] |
