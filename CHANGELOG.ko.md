@@ -1,11 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fb09dfbe72491f8eb135ad3eb72133b3d9b19571a80a1f3bc5004a1fa5c91551 -->
+<!-- source-sha256: 9ecb526816b3594830ff3da50cad74fbe498cce7763262797b84bb614386903f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 서버와 Python 서버는 모든 loader 뒤에야 데이터 모델을 검사했으므로, application 객체를 돌려준 shared handler 뒤에도 loader가 실행된 뒤 요청이 실패했고, 데이터 모델 밖의 값에 자신의 message를 썼으므로, `contracts/context.json`의 세 숫자 case와 깊이 case, `contracts/app.json`의 `an_application_object_in_shared_data_fails_before_any_loader_runs`가 실패했다(CI run 44130032438). 두 서버는 이제 공유 데이터를 key `shared` 아래에서 어떤 loader보다 먼저 검사하고, 각 영역의 데이터를 그 loader가 돌려줄 때 `regions` 안의 그 이름 아래에서 검사하며(HY-44.10, HY-44.11), message를 kind, 콜론, template 데이터 모델의 text로 쓴다. 예: `data_depth: lists and maps nest deeper than 64 levels`(HY-44.12) (H35.32-1, H35.32-4).
+- PHP와 Python의 case runner에는 handler step `store`가 없었으므로 `contracts/app.json`의 `a_server_value_that_a_loader_of_the_request_stores_is_sent_in_kept`가 case 오류로 실패했다. 이제 그 step은 자신의 각 key를 요청의 session store에 쓴다(HY-38.20, H35.32-1, H35.32-10).
 - `make node-package`는 `package-lock.json`이 적는 `packages/ts`의 production dependency closure 전체를 pack한다(H34.12). 입력: npm cache에 `npm ci`가 받은 것만 있는 runner에서의 `make node-package`. 이전 동작: recipe는 `packages/ts`의 직접 dependency만 pack했으므로 `@polyspec/hyper-client`의 dependency인 `eventsource-parser`는 registry metadata로 resolve되었고, `npm ci`는 그 metadata를 cache에 넣지 않으므로 offline install이 `ENOTCACHED`로 실패했다. 기대 동작: `scripts/dependency-closure.mts`가 lock에서 closure를 나열하되 link된 workspace는 그 dependency까지 따라가고, 각 이름을 root install에서 pack한다. `make hyper-test-scripts TESTS=tests/scripts/node-package.test.mts`(이전 2개 중 1개 실패, 이후 3개 모두 통과)와 status 0으로 끝난 `make node-package`로 검증했다.
 - Node case runner는 render의 environment를 두 번째 parameter로 적는 `suffix` function으로 `contracts/functions.json`의 application을 연다(HYC-24.10, H34.8). 입력: `a_document_renders_the_host_function`과 `a_built_in_name_fails_the_open`. 이전 동작: `packages/ts/tests/steps/functions.ts`의 fixture `suffix`는 parameter 하나만 적었고, binding은 호출하는 두 argument보다 length가 작은 host function을 거부하므로 open이 `Pages.register(): hostFunction takes 1 argument, and the binding calls it with 2 (list<template_value>, environment)`로 실패해 두 case가 실패했다. 기대 동작: open이 성공하고 두 case가 통과한다. `make hyper-test-node CASES=functions.json`으로 검증했다: case 5개가 모두 통과하며, 이전 전체 실행에서는 그중 2개가 실패했다.
 - `packages/ts/tests/core-values.test.ts`는 Node binding의 변환이 거부하는 값에 HY-44.12의 message를 기대한다(H34.8). 입력: 안전 범위 밖의 수, 유한하지 않은 수, Date, 함수, 짝 없는 surrogate 또는 65단계 깊이의 list를 담은 shared data. 이전 동작: binding 0.0.21부터 binding은 `data_number_range: number 9007199254740992 is outside the safe range`처럼 template 오류의 전체 text를 주는데, 여덟 case는 HY-44.12가 폐기한 형식 `data_number_range in  at 0:0: …`를 기대해 실패했다. 기대 동작: core 검사의 case가 이미 그랬듯 모든 case가 `kind: message`를 기대한다. `make hyper-test-node NODE_TESTS=tests/core-values.test.ts`로 검증했다: 이전에는 16개 중 8개가 실패했고, 이후에는 16개 모두 통과한다.

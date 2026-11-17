@@ -76,6 +76,8 @@ final class Page
             }
             $shared = array_replace($shared, $returned);
         }
+        // HY-44.10, HY-44.11: the shared data is checked under the key `shared` before any loader runs.
+        DataModel::check(['shared' => $shared]);
 
         $changed = RegionPlanner::changedTopics($request, $flash, $basePath);
         $data = [];
@@ -87,6 +89,7 @@ final class Page
                     "the loader of route {$route['name']}",
                 ) : [];
                 $data[$selected->name] = array_replace($loaded, $invalid);
+                self::checkRegion($selected->name, $data[$selected->name]);
                 $templates[$selected->name] = $route['template'];
                 foreach ($route['regions'] as $routeRegion) {
                     $loader = $handler['regions'][$routeRegion->name] ?? null;
@@ -96,6 +99,7 @@ final class Page
                         continue;
                     }
                     $data[$routeRegion->name] = self::loaderMap($loaded, "the loader of region {$routeRegion->name}");
+                    self::checkRegion($routeRegion->name, $data[$routeRegion->name]);
                     $templates[$routeRegion->name] = (string) $routeRegion->template;
                 }
             } else {
@@ -104,12 +108,12 @@ final class Page
                     $this->container->call($loader, $provided),
                     "the loader of region {$selected->name}",
                 );
+                self::checkRegion($selected->name, $data[$selected->name]);
                 $templates[$selected->name] = (string) $selected->template;
             }
         }
 
-        // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
-        DataModel::check(['shared' => $shared, 'regions' => $data]);
+        // HY-44.3: each value that the handlers returned was checked above, also a value that no template reads.
         // HY-73: the page keeps only the paths that the templates of the route read.
         $shared = $this->reads->shared($route['name'], $shared);
         foreach ($data as $name => $regionData) {
@@ -174,6 +178,17 @@ final class Page
             $headers,
             $this->document($request, $route, $shared, $context, $data, $templates, $kept, $reply->embedsData()),
         );
+    }
+
+    /**
+     * Checks the data of a region when its loader returns it, before the next loader runs (HY-44.10), under its name
+     * in the map `regions` of one map, so the limit of 64 levels counts those two maps (HY-44.11).
+     *
+     * @param array<array-key, mixed> $data
+     */
+    private static function checkRegion(string $name, array $data): void
+    {
+        DataModel::check(['regions' => [$name => $data]]);
     }
 
     /**

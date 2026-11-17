@@ -333,15 +333,18 @@ final class AppSteps
         $name = Json::string($case->input('application'));
         $applications = Json::array($case->input('applications'));
         $directory = self::PROGRAMS . "/{$name}";
+        // The handlers write the store that the requests use with a step `store` (HY-38.20).
+        $store = new CountingStore();
 
         return [
             new AppRun(
                 Json::map($applications[$name] ?? null, "the application {$name}"),
                 $case->has('handlers') ? Json::map($case->input('handlers'), 'the handlers') : [],
                 $case->has('options') ? Json::map($case->input('options'), 'the options') : [],
+                $store,
             ),
             $directory,
-            new CountingStore(),
+            $store,
         ];
     }
 
