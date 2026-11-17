@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b7b2ffd50a73a056f4d8dfb4cb9236702b65a9acf0a5533fabc506ca415b4548 -->
+<!-- source-sha256: c8f7b05e8155a3d786e79b65330f91eeeead6b2726e587d4f2d50f74b5c26377 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make bench-sessions`는 PHP extension 인자 없이 `benchmarks/sessions.mts`를 시작했고, script는 자기 PHP 서버를 `polyspec_hyper`만으로 시작했다. 그래서 그 PHP에는 json extension도 template extension도 없었고, extension이 하나도 없는 실행도 결과를 출력했다. 이제 script는 `--extension <library>` 인자를 받아 그 순서대로 자기 PHP 서버에 load한다. recipe는 `PHP_SERVER_ARGUMENTS`(json, template, hyper)를 넘기고 prerequisite `ext`와 `hyper-ext`를 가진다. script는 Redis를 시작하기 전에, `polyspec_json`, `polyspec_template`, `polyspec_hyper` 가운데 자기 PHP가 load하지 않은 module의 이름을 밝히며 실패하고 결과를 출력하지 않는다. benchmark 자체는 실행하지 않았다(H35.31-5).
 - `CASES="reads.json"`을 준 `make hyper-test-js`, `make hyper-test-node`, `make hyper-test-php`, `make hyper-test-python`이 target의 모든 test와 case runner의 모든 case를 실행했다. 어떤 recipe도 그 변수를 읽지 않아서, 명령이 한 파일의 case를 지정할 수 없었다. 이제 `CASES`가 있으면 recipe는 case runner만 시작하고, runner는 이름이 선택한 case를 실행한다. 이름은 case 파일(`reads.json`), case 파일의 section(`app.json#opens`) 또는 case id이며, 여럿은 공백으로 나눈다. 어떤 이름이 runner의 case를 하나도 선택하지 않으면 실행은 case를 실행하기 전에 선택과 그 이름을 밝히며 실패한다. 선택한 실행은 `var/recipe/results/<runner>.selected.txt`를 쓰고 그 첫 줄은 `SELECTION <이름들>`이다. `make recipe-check`가 읽는 전체 실행의 `<runner>.txt`는 그대로 둔다. 문법은 `docs/operations/development.md`가 적는다(HR-84, H35.9-11).
 
 - `make recipe-check`는 case runner를 `make -k` 하나의 goal로 실행했다. 실패한 runner가 newline 없이 출력을 끝내면 그 마지막 줄이 다음 명령 줄과 붙었고, 비교 뒤의 어떤 줄도 실패한 runner를 밝히지 않았다. 이제 `recipe-check`는 다섯 runner와 비교의 명령을 `$(call check,...)`로 실행한다. 각 출력은 newline으로 끝나고, 마지막 줄은 실패한 것을 모두 적은 `failed checks:`이다. target은 runner의 prerequisite을 가지며 dry run은 아무것도 시작하지 않는다(HR-84, HR-86, H35.16-8).
