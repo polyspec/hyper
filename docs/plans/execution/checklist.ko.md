@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: c315ffe8d79a7d2696d082d883ddf63ca2b4bc3898c036a7c6b6325221875dbf -->
+<!-- source-sha256: 273608efcb8ff8965260081ed1089cec5bf0f2851e4494c23b58a238c4c74713 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -565,3 +565,5 @@
 | H35.31-1 | contracts/reads.json의 두 case a_number_key_with_a_fraction과 a_number_key_in_exponent_notation이 한 사본 run에서 세 서버 모두 통과한다. template 규칙은 세 binding 모두 분수 map key를 runtime_type으로 거부하므로, 먼저 HY-73.31과 case를 읽어 렌더되는 page를 말하는지 읽기 경로만 말하는지 정하고, 그다음 세 step을 읽어 PHP step이 렌더하는지 정하며, 두 근거의 줄을 이 행에 적는다. | contracts/reads.json, packages/php/tests | `make hyper-test-php` | [ ] |
 | H35.31-2 | contracts/request.json의 case a_negative_limit_fails가 PHP 서버에서 통과한다. 원인은 바꾸기 전에 사본 run의 출력에서 읽는다. | packages/php | `make hyper-test-php` | [ ] |
 | H35.31-3 | contracts/app.json의 case a_document_json_reads_a_shared_value_twice와 a_region_json_reads_a_shared_value_twice가 PHP 서버에서 통과한다. 원인은 바꾸기 전에 사본 run의 출력에서 읽는다. | packages/php | `make hyper-test-php` | [ ] |
+| H35.31-4 | tests/scripts/cargo-through-kit.test.mts는 H35.14-2의 recipe 줄 `binding generate --cargo "..."`를 pattern \bcargo\s로 cargo 직접 호출로 읽는다. 시험은 binding generator의 option 값과 cargo 명령을 구별하고, 그 recipe는 통과한다. | tests/scripts | `make hyper-test-scripts` | [ ] |
+| H35.31-5 | benchmarks/sessions.mts는 session-workers의 prefix로 hyper 확장만 load해 PHP를 띄우므로 그 PHP 서버는 template 확장으로 렌더하지 못한다. 8ca4a33f 이후 run의 다른 PHP 서버처럼 Makefile의 PHP_SERVER_EXTENSIONS를 순서대로 load한다. | benchmarks/sessions.mts, Makefile | `make hyper-test-scripts` | [ ] |
