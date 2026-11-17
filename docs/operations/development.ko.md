@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: b9568bccaa3e3303aa9f8239f5f74d03eebd044249149f818374a8d1c04e7949 -->
+<!-- source-sha256: ef54d36d5f05bd3d8a126c93fccc25787b00b08a97d3156df67d492eede79abc -->
 # 개발
 
 [English](development.md).
@@ -124,7 +124,7 @@ consumer는 자기 package manager로 archive를 설치해 릴리스를 확인�
 
 `.github/workflows/release.yml`은 `main`에서 완료된 `ci`의 `workflow_run`이 push 또는 수동 실행이고 결론이 `success`일 때, 또는 id `run`을 준 `workflow_dispatch`로 시작한다. job `tag`와 `release`는 `ubuntu-26.04-arm`에서 실행하고, `contents: write`와 `actions: read`를 가진 workflow의 token인 `GH_TOKEN`을 받는다. `assets.yml`의 job은 `contents: read`로 실행하며, job `platform`과 `php`는 자기 platform의 runner(`ubuntu-26.04`, `ubuntu-26.04-arm`, `macos-15`)에서 실행한다.
 
-`make release-tag`는 job `assets`와 `release`가 실행되기 전에 tag를 만들어 push하며, tag는 옮기지 않는다. 그 뒤의 step이 실패하면 공개된 GitHub Release 없이 tag `vX.Y.Z`가 remote에 남고, 수정은 그 tag가 담지 않는 새 commit이므로 버전 X.Y.Z를 잃는다. step의 어떤 순서도 이것을 막지 못한다. CI는 릴리스가 tag 뒤에 실행하는 것을 tag 없이 실행한다: `ci.yml`의 모든 실행이 자기 commit으로 `assets.yml`을 부르고, group `node`가 `make release-candidate-assets`를 실행한다. 이 target은 commit된 HEAD에서 `CHANGELOG.md`의 첫 section `## X.Y.Z`의 버전으로 kit의 archive를 `var/release-candidate/assets`에 build한다(kit K1286). kit는 변경된 경로나 untracked 경로가 있거나 밖에서 link된 의존성이 있는 checkout을 거부한다. 버전 커밋을 push하기 전에, 그 commit의 깨끗한 clone에서 `make release-rehearsal VERSION=X.Y.Z`가 kit의 `release-run prepare`로 그 버전의 같은 archive를 build한다. 표는 tag 뒤에 실행되는 것, CI에서 같게 실행되는 것, 릴리스만 보여 주는 것을 나열한다.
+`make release-tag`는 job `assets`와 `release`가 실행되기 전에 tag를 만들어 push하며, tag는 옮기지 않는다. 그 뒤의 step이 실패하면 공개된 GitHub Release 없이 tag `vX.Y.Z`가 remote에 남고, 수정은 그 tag가 담지 않는 새 commit이므로 버전 X.Y.Z를 잃는다. step의 어떤 순서도 이것을 막지 못한다. CI는 릴리스가 tag 뒤에 실행하는 것을 tag 없이 실행한다: `ci.yml`의 모든 실행이 자기 commit으로 `assets.yml`을 부르고, group `node`가 `make release-candidate-assets`를 실행한다. 이 target은 commit된 HEAD에서 `CHANGELOG.md`의 첫 section `## X.Y.Z`의 버전으로 kit의 archive를 `var/release-candidate/assets`에 build한다(kit K1286). kit는 변경된 경로나 untracked 경로가 있거나 밖에서 link된 의존성이 있는 checkout을 거부한다. 그래서 `.links` 선언이 있고 그 패키지가 link된 checkout은 릴리스의 candidate가 아니다. 전체 suite의 target인 `make release-candidate-assets`는 거기서 link를 적는 kit의 거부로 실패하고, 어떤 checkout에도 link가 없는 CI에서는 통과한다. 버전 커밋을 push하기 전에, 그 commit의 깨끗한 clone에서 `make release-rehearsal VERSION=X.Y.Z`가 kit의 `release-run prepare`로 그 버전의 같은 archive를 build한다. 표는 tag 뒤에 실행되는 것, CI에서 같게 실행되는 것, 릴리스만 보여 주는 것을 나열한다.
 
 | Job과 recipe | recipe가 순서대로 시작하는 make | 도구와 그것을 설치하는 것 | CI에서 같은 것 | 릴리스만 보여 주는 것 |
 |---|---|---|---|---|
