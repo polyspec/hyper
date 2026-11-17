@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9ecb526816b3594830ff3da50cad74fbe498cce7763262797b84bb614386903f -->
+<!-- source-sha256: dd25087df384257b3ea308c7419ff4ab3f391737acff24fddd407c6f5a969da9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 패키지가 0.0.40을 적는 동안 core crate와 binding crate는 버전 0.0.0을 적었고, 어떤 check도 둘을 비교하지 않았다. `make release-php-ext`는 PHP extension의 archive 이름을 그 crate의 버전으로 짓고 `make release-platform-assets`는 tag의 버전의 이름을 요구하므로, 릴리스는 tag 뒤에 거기서 실패했을 것이다. 이제 `packages/rust/Cargo.toml`은 0.0.40을 적고, binding crate와 `Cargo.lock`은 `make bindings-scaffold`와 `make cargo-lock`이 쓰는 대로 그것을 적으며, `tests/scripts/release-assets.test.mts`는 `config/release.json`이 나열하고 버전을 적는 모든 manifest가 `CHANGELOG.md`의 첫 section `## X.Y.Z`인 `package.json`의 버전을 적지 않으면 실패한다(H35.35-6).
 - PHP 서버와 Python 서버는 모든 loader 뒤에야 데이터 모델을 검사했으므로, application 객체를 돌려준 shared handler 뒤에도 loader가 실행된 뒤 요청이 실패했고, 데이터 모델 밖의 값에 자신의 message를 썼으므로, `contracts/context.json`의 세 숫자 case와 깊이 case, `contracts/app.json`의 `an_application_object_in_shared_data_fails_before_any_loader_runs`가 실패했다(CI run 44130032438). 두 서버는 이제 공유 데이터를 key `shared` 아래에서 어떤 loader보다 먼저 검사하고, 각 영역의 데이터를 그 loader가 돌려줄 때 `regions` 안의 그 이름 아래에서 검사하며(HY-44.10, HY-44.11), message를 kind, 콜론, template 데이터 모델의 text로 쓴다. 예: `data_depth: lists and maps nest deeper than 64 levels`(HY-44.12) (H35.32-1, H35.32-4).
 - PHP와 Python의 case runner에는 handler step `store`가 없었으므로 `contracts/app.json`의 `a_server_value_that_a_loader_of_the_request_stores_is_sent_in_kept`가 case 오류로 실패했다. 이제 그 step은 자신의 각 key를 요청의 session store에 쓴다(HY-38.20, H35.32-1, H35.32-10).
 - `make node-package`는 `package-lock.json`이 적는 `packages/ts`의 production dependency closure 전체를 pack한다(H34.12). 입력: npm cache에 `npm ci`가 받은 것만 있는 runner에서의 `make node-package`. 이전 동작: recipe는 `packages/ts`의 직접 dependency만 pack했으므로 `@polyspec/hyper-client`의 dependency인 `eventsource-parser`는 registry metadata로 resolve되었고, `npm ci`는 그 metadata를 cache에 넣지 않으므로 offline install이 `ENOTCACHED`로 실패했다. 기대 동작: `scripts/dependency-closure.mts`가 lock에서 closure를 나열하되 link된 workspace는 그 dependency까지 따라가고, 각 이름을 root install에서 pack한다. `make hyper-test-scripts TESTS=tests/scripts/node-package.test.mts`(이전 2개 중 1개 실패, 이후 3개 모두 통과)와 status 0으로 끝난 `make node-package`로 검증했다.
