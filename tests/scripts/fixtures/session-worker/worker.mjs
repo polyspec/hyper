@@ -26,7 +26,9 @@ const url = (item) => {
 const setting = nodes !== undefined
   ? { kind: 'cluster', urls: nodes.split(',').map(url), user: null, password: null, authorities }
   : sentinels !== undefined
-    ? { kind: 'sentinel', urls: sentinels.split(',').map((item) => `redis://127.0.0.1:${item}`), service: 'hyper', tls, user, password, authorities }
+    // The Sentinels of a test with an authority take TLS and the ACL user alone, as the Redis servers do, and a
+    // Sentinel takes them from its address (SR-6.1 of session-store).
+    ? { kind: 'sentinel', urls: sentinels.split(',').map(url), service: 'hyper', tls, user, password, authorities }
     : port !== undefined
       ? { kind: 'server', url: url(port), authorities }
       : null;

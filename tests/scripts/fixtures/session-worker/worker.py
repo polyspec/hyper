@@ -52,7 +52,9 @@ def stores(directory):
         )
     elif sentinels is not None:
         setting = SettingSentinel(
-            urls=[f"redis://127.0.0.1:{item}" for item in sentinels.split(",")],
+            # The Sentinels of a test with an authority take TLS and the ACL user alone, as the Redis servers do, and
+            # a Sentinel takes them from its address (SR-6.1 of session-store).
+            urls=[url(item) for item in sentinels.split(",")],
             service="hyper",
             tls=tls,
             user=user,
