@@ -4207,8 +4207,8 @@
     },
     {
       "id": "array-session",
-      "rule": "HY-104.30",
-      "reason": "HY-104.30, C-6: the store that keeps one session in memory belongs to the session-store library as MemoryStore, which hyper uses through the store interface",
+      "rule": "HY-104.37",
+      "reason": "HY-104.37, C-6: the store that keeps one session in memory belongs to the session-store library as MemoryStore, which hyper uses through the store interface",
       "symbol": "ArraySession",
       "from": {
         "php": "Polyspec\\Hyper\\ArraySession",

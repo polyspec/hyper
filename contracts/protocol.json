@@ -6861,6 +6861,7 @@
           "kind": "rule",
           "id": "HY-104",
           "retired": [
+            30,
             4,
             5,
             6,
@@ -6966,6 +6967,12 @@
                   "koSource": "37d4562f526b568faed620ee12887f5022afceb44862887c4c88303cd30171ce"
                 },
                 {
+                  "id": "HY-104.39",
+                  "en": "Negative zero is an integer for this rule and is written as the PHP integer 0, because a PHP integer has no negative zero and the data model tells no zero from another.",
+                  "ko": "음의 0은 이 규칙에서 정수이며 PHP 정수 0으로 쓰인다. PHP 정수에는 음의 0이 없고 데이터 모델은 0을 서로 구별하지 않기 때문이다.",
+                  "koSource": "4c74f6f66fd0efb1d59a11a1620ada38f36f9fd61ee22f0bf00961d43ffad660"
+                },
+                {
                   "id": "HY-104.15",
                   "en": "The removal of expired sessions skips a session whose lock a request holds.",
                   "ko": "만료된 session의 제거는 요청이 잡고 있는 lock의 session을 건너뛴다.",
@@ -7032,10 +7039,16 @@
                   "koSource": "96d379f7815dcdba15ecc8d474f3f35b3eec493a5e12739ee9552545842b660c"
                 },
                 {
-                  "id": "HY-104.30",
-                  "en": "A session store returns null for a key that holds no value, replaces the value of a key that is set again, and removes a key without failing when it holds none; a store that an application writes in its own language implements this interface, its locking and its sharing with other processes are the task of the application, and an exception that it raises reaches the caller of `App.handle` as it was raised.",
-                  "ko": "session 저장소는 값이 없는 key에 null을 반환하고, 다시 설정한 key의 값을 바꾸며, 값이 없는 key를 실패 없이 지운다. 애플리케이션이 자기 언어로 쓴 저장소는 이 interface를 구현하며, 그 잠금과 다른 process와의 공유는 애플리케이션의 일이고, 그것이 던진 예외는 던진 그대로 `App.handle`의 호출자에게 간다.",
-                  "koSource": "3934136cde12c4ebca7d44fe7c18249272c67da195de79bfd8e13506c205ec14"
+                  "id": "HY-104.37",
+                  "en": "A session store returns null for a key that holds no value, replaces the value of a key that is set again, and removes a key without failing when it holds none; a store that an application writes in its own language implements this interface, and its locking and its sharing with other processes are the task of the application; an exception that it raises is no error that HY-43 handles: the server answers the plain 500 of HY-60.15, and the write hook receives that 500 once (HY-60.17).",
+                  "ko": "session 저장소는 값이 없는 key에 null을 반환하고, 다시 설정한 key의 값을 바꾸며, 값이 없는 key를 실패 없이 지운다. 애플리케이션이 자기 언어로 쓴 저장소는 이 interface를 구현하며, 그 잠금과 다른 process와의 공유는 애플리케이션의 일이다. 그것이 던진 예외는 HY-43이 처리하는 오류가 아니다: 서버는 HY-60.15의 plain 500으로 응답하고, write hook은 그 500을 한 번 받는다(HY-60.17).",
+                  "koSource": "58b64d2d7f85053df23dc3cd0f3b685100d052b7e3fff575697a0df7835020e6"
+                },
+                {
+                  "id": "HY-104.38",
+                  "en": "A server opens the session of a request only for a request of a route that reads or writes the session, so a request of a route that uses no session takes no lock of a session and does not wait for a request that holds one.",
+                  "ko": "서버는 session을 읽거나 쓰는 route의 요청에 대해서만 그 요청의 session을 연다. 그래서 session을 쓰지 않는 route의 요청은 session의 lock을 잡지 않고, session을 잡고 있는 요청을 기다리지 않는다.",
+                  "koSource": "28b3dcd79eb44497102842068b5edb9793ed88dc8b44f4acc955b29591d14120"
                 }
               ]
             }
