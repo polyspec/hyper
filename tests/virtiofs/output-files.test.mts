@@ -34,7 +34,6 @@ function run(t: TestContext, args: string[], input?: string) {
   // from each resolved package entry with Git, and mount it read-only at the same path (HR-70, HR-78).
   const entries = [
     createRequire(join(root, 'packages/cli/package.json')).resolve('@polyspec/template'),
-    fileURLToPath(import.meta.resolve('@polyspec/template-compiler/compiler.mjs')),
   ];
   const sources = new Set([root]);
   for (const entry of entries) {
@@ -73,9 +72,9 @@ test('the program of hyper build writes its files on a virtiofs bind mount', { t
   const input = mkdtempSync(join(tmpdir(), 'hyper-virtiofs-input-'));
   t.after(() => rmSync(input, { recursive: true, force: true }));
   const manifest: unknown = JSON.parse(readFileSync(manifestFile, 'utf8'));
-  const computed = programFiles({ manifest, templates: writeProgramTemplates(templates, join(input, 'program')), phpNamespace: 'Polyspec\\Hyper\\Examples\\Board\\Program' });
+  const computed = programFiles({ manifest, templates: writeProgramTemplates(templates, join(input, 'program')) });
   const names = computed.files.map(([name]) => name);
-  assert.ok(names.includes('reads.json') && names.includes('program.json') && names.some((name) => name.startsWith('php/')), names.join(', '));
+  assert.deepEqual(names, ['reads.json']);
   writeFileSync(join(input, 'files.json'), JSON.stringify(computed.files));
   // The writes of the build (packages/cli/lib/program-files.mjs, which writeProgram calls), into the bind mount.
   const script = [

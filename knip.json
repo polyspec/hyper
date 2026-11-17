@@ -21,14 +21,14 @@
 // The ignored dependencies are packages that no import of their workspace reaches:
 //   - @polyspec/php-serialize, which the root names by the tarball URL of its release, which npm installs only from the root
 //     with allow-remote=root (H21.4); packages/ts requires it by its version;
-//   - @polyspec/json, which @polyspec/template requires by its version and the root names by the tarball URL of its
-//     release for the same reason (H35.22);
 //   - @polyspec/php-serialization, which the generated Node binding requires (packages/ts/native/generated, which
 //     knip does not read) and the root names by the tarball URL of its release for the same reason (H35.8-1);
 //   - @polyspec/session-store at the root, which names it by the tarball URL of its release for the same reason
 //     (H35.8-2); packages/ts imports it for the file sessions, so that workspace does not ignore it;
 //   - @polyspec/binding, whose dist/cli.js the Makefile starts by its path (BINDING), which knip does not read, because knip
 //     reads no Makefile and ignoreBinaries names only programs that a script starts by name;
+//   - @napi-rs/cli, whose bin node_modules/.bin/napi the target release-npm-platform of packages/release.mk starts by its
+//     path (NAPI), in a file that binding writes and knip does not read (H35.35-3);
 //   - tailwindcss of packages/cli: lib/build.mjs compiles the stylesheet of an app with @tailwindcss/node from
 //     the CSS text '@import "tailwindcss/theme.css"', which Tailwind CSS resolves from this package.
 {
@@ -50,7 +50,7 @@
     ]
   },
   "ignoreBinaries": ["container", "make", "openssl", "php", "php-fpm"],
-  "ignoreDependencies": ["@polyspec/binding", "@polyspec/json", "@polyspec/php-serialization", "@polyspec/php-serialize", "@polyspec/session-store"],
+  "ignoreDependencies": ["@napi-rs/cli", "@polyspec/binding", "@polyspec/json", "@polyspec/php-serialization", "@polyspec/php-serialize", "@polyspec/session-store"],
   "workspaces": {
     "packages/ts": {
       "entry": ["src/index.ts", "src/build.ts"],

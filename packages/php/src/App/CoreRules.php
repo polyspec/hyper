@@ -424,8 +424,8 @@ final class CoreRules
     }
 
     /**
-     * Partial. Build::read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18, HY-125.19).
-     * The server still reads the file and names the absolute path of the file in a failure (HY-125.18).
+     * Partial. Build::read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23, HY-125.19).
+     * The server still reads the file and names the absolute path of the file in a failure (HY-125.23).
      */
     public function buildRead(string $bytes): string
     {

@@ -18,8 +18,7 @@ interface Services {
 
 const app = await App.open<Services>({
   manifest: '/srv/board/app/app.json',
-  build: '/srv/board/build/client/build.json',
-  templates: { index: '/srv/board/build/client/templates.index.json', root: '/srv/board/public' },
+  program: '/srv/board/build/program',
   handlers: {
     shared: () => ({ site: 'Board' }),
     regions: { left: ({ request, services }) => ({ path: request.path(), count: services.get('posts').count() }) },
@@ -51,7 +50,7 @@ app.bind('posts', () => new Posts('/srv/board/var/board.db'));
 | Option | Meaning |
 |---|---|
 | `manifest` | Absolute path of `app.json` (HY-1). |
-| `templates` | `index`: absolute path of the template index that the asset build writes; `root`: the absolute directory that the file URLs of the index are relative to (HR-34). |
+| `program` | Absolute path of the server program that `hyper build` writes, `<output>/program`: the directory that holds `reads.json`, `build.json` and the directory `templates`. The open fails with the path of the first missing one (HY-48.19). |
 | `handlers` | `shared`, `regions` (non-page regions) and `routes` (`load`, `post`, `regions` for route regions). A route has `post` exactly when the manifest declares `"post": true`. |
 | `timezone` | The time zone of the rendering environment (HY-14). |
 | `basePath` | A base path such as `/api` (HY-8); the default is none. |

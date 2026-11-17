@@ -121,8 +121,7 @@ async function around(request, answer) {
 
 const app = await App.open({
   manifest: join(application, 'manifest.json'),
-  build: join(application, 'build.json'),
-  templates: { index: join(application, 'node/templates.index.json'), root: join(application, 'node') },
+  program: join(application, 'program'),
   handlers: {
     ...(log === undefined
       ? {}

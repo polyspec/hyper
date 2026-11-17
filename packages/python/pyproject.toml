@@ -12,26 +12,29 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
-    # The wheel asset of the template release v0.0.27 with the sha256 of that asset (H21.4, H23.5). uv.lock locks it with
-    # its dependencies, and `make hyper-install-python` installs that lock into the venv of the package (H23.15).
     # The wheel asset of the php-serialization release v0.0.6, published under the package name polyspec-php-serialize, with the sha256 of that asset (HY-104).
     "polyspec-php-serialize @ https://github.com/polyspec/php-serialization/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl#sha256=00d8022dd33432532dbbbd3bed072e33d9243784b5454ddc814f867be14bc716",
-    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.27/polyspec_template-0.0.27-py3-none-any.whl#sha256=f8c8f5de89095ae495ba398e4f4a3205ff1f48459ea9880dcb95a2858f3000d4",
-    # The wheel assets of the session-store release v0.0.5, whose module polyspec.session_store gives the store that the
+    # The wheel assets of the template release v0.0.30 with the sha256 of each asset (H21.4, H23.5, H31.5). A wheel holds
+    # the native module of the template binding, so each platform has its asset. uv.lock locks them with their
+    # dependencies, and `make hyper-install-python` installs that lock into the venv of the package (H23.15).
+    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-macosx_11_0_arm64.whl#sha256=c8fbe72eae0834928988fabba5846a9196ead06ac91b54c1038de709d4f3b66c ; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=f71fc94ed0c222f9678817c7fef0008485f5c73003eae577ad20bc6143e629ab ; sys_platform == 'linux' and platform_machine == 'aarch64'",
+    "polyspec-template @ https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=e7a2c3476d16c8e5006bee5e2ed7378ab931eb0ac04d54937329aeacaa57a067 ; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    # The wheel assets of the session-store release v0.0.7, whose module polyspec.session_store gives the store that the
     # binding of the core takes (HY-97). A wheel holds a native module, so each platform has its asset with its sha256.
-    "polyspec-session-store @ https://github.com/polyspec/session-store/releases/download/v0.0.5/polyspec_session_store-0.0.5-cp314-abi3-macosx_11_0_arm64.whl#sha256=769e19be504536a270bae84470e0f647a2687bcb4a85aa1a498e050ca8dbda01 ; sys_platform == 'darwin' and platform_machine == 'arm64'",
-    "polyspec-session-store @ https://github.com/polyspec/session-store/releases/download/v0.0.5/polyspec_session_store-0.0.5-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=9288328f404424d60d44f4408290c0fbd95687440569d470cb3de73f4ba82224 ; sys_platform == 'linux' and platform_machine == 'aarch64'",
-    "polyspec-session-store @ https://github.com/polyspec/session-store/releases/download/v0.0.5/polyspec_session_store-0.0.5-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=c7f14c61a4e451ca20e9f78c8a9012d110d300e76ac76e1efc9bfceacdf0d012 ; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    # The wheel assets of the php-serialization release v0.0.15, which the session-store wheel requires at that exact
+    "polyspec-session-store @ https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec_session_store-0.0.7-cp314-abi3-macosx_11_0_arm64.whl#sha256=913f5c347c95f624502eab4b2010f83a189acbc9cda13dbdcd7f9c0d0aaa749a ; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "polyspec-session-store @ https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec_session_store-0.0.7-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=3568348e4fc13f43b3634bf85728602b8d696763c34175d09a8bd4e936daf7b9 ; sys_platform == 'linux' and platform_machine == 'aarch64'",
+    "polyspec-session-store @ https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec_session_store-0.0.7-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=c2ae4a28947af8dada0ccd4ba127ba1e645e8bf014dc28a4bed0698b3964dc29 ; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    # The wheel assets of the php-serialization release v0.0.16, which the session-store wheel requires at that exact
     # version and no registry carries.
-    "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.15/polyspec_php_serialization-0.0.15-cp314-abi3-macosx_11_0_arm64.whl#sha256=5d3e32006a7c56f3630c67baf714ea8aa724bc1bdca228cde4a9881229d0fe0c ; sys_platform == 'darwin' and platform_machine == 'arm64'",
-    "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.15/polyspec_php_serialization-0.0.15-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=be9288f59e5677886c0b06d6d277a38eb4b27f1ee5848baec07bd70f0b5d25b3 ; sys_platform == 'linux' and platform_machine == 'aarch64'",
-    "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.15/polyspec_php_serialization-0.0.15-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=d1b318297ab46fbfb86895ac01c3cd72e17e4f469b03064d2ea275eacce32b58 ; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    # The wheel assets of the json release v0.0.34, whose module polyspec.json the native module of the template binding
-    # 0.0.28 imports when it renders. That template package requires it at that exact version and no registry carries it.
-    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.34/polyspec_json-0.0.34-cp314-abi3-macosx_11_0_arm64.whl#sha256=ba29ddb049a60c499f2b8f2777f257c91fdabef826f22e2e229d8c916ae4a31e ; sys_platform == 'darwin' and platform_machine == 'arm64'",
-    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.34/polyspec_json-0.0.34-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=e693c7599e7719624c33e3cad916fe1c5c024ef2c2825f5d2c017f531e5fe07b ; sys_platform == 'linux' and platform_machine == 'aarch64'",
-    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.34/polyspec_json-0.0.34-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=1584be32d8a6be67855bc6419fb9cae6bb0c55257a3a3a077ae1580b16346a6d ; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.16/polyspec_php_serialization-0.0.16-cp314-abi3-macosx_11_0_arm64.whl#sha256=3c23767e1e7eebe2fd6ba15c6974c58290a3160f016022dc540481fba231a51d ; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.16/polyspec_php_serialization-0.0.16-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=9a2bb8b6ab99e64db642275cf20f5faccf656192d295684e3ab26e2d360d7637 ; sys_platform == 'linux' and platform_machine == 'aarch64'",
+    "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.16/polyspec_php_serialization-0.0.16-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=003c6bb350e932f8f9a9769d47110d76f5c81ca1d0bbe2b3e83bf3b19ddf7e9c ; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    # The wheel assets of the json release v0.0.38, whose module polyspec.json the native module of the template binding
+    # 0.0.30 imports when it renders. That template package requires it at that exact version and no registry carries it.
+    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.38/polyspec_json-0.0.38-cp314-abi3-macosx_11_0_arm64.whl#sha256=222f9c2149c82bf7244aea81df4143454f343c0b75dd78cc1cdb5cfd8f6dc643 ; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.38/polyspec_json-0.0.38-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=a6f74f4b0dc428882dd44cab8786d6d232daf4a8c0400bf386b64b435e398bd0 ; sys_platform == 'linux' and platform_machine == 'aarch64'",
+    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.38/polyspec_json-0.0.38-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=73f83cd0df85a9c2cec6285d7291cefa8439d4807d3208836ce79d584cdbc2c7 ; sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
 
 # The client of the session tests against a real Redis server (HY-115); an application names its own client.

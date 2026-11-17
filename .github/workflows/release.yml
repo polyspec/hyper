@@ -1,14 +1,24 @@
-# The release of hyper (HR-95). The workflow starts by itself when a push run of the CI workflow ci succeeds on main: it checks
-# out the head_sha of that run, and release-tag with AUTO releases it only when it is the version commit of the top ## X.Y.Z of
-# its change log, which is the tip of its push; a commit whose top version is tagged elsewhere ends green with nothing to
-# release, and a top version that no run released fails and names its version commit. A concurrency group of the job runs one
-# release at a time. A dispatch of the workflow with the id of a successful CI run releases the commit of that run. The run is
-# the evidence; the release runs no test again. The job has one run step, make ci-release (HR-90), whose recipe runs the steps
-# in order and stops at the first failure: release-tag (AUTO for a workflow_run, read from GITHUB_EVENT_NAME), and when it
-# tagged a version, release-checkout, the bootstrap of the tagged commit, release-archive-tool, release-prepare,
-# release-tools, release-assets, release-publish and release-undraft. The other steps are uses: steps: the checkout, the
-# bootstrap and the PHP of .php-version. The job passes RUN, the id of the CI run, and GH_TOKEN from the event in its
-# environment. A failed step leaves the release a draft and fails the run.
+# The release of hyper (HR-95). The workflow starts by itself when a push run of the CI workflow ci succeeds on main, and a
+# dispatch of the workflow with the id of a successful CI run releases the commit of that run. The run is the evidence; the
+# release runs no test again. It has three jobs, each with one run step, a recipe of the Makefile (HR-90):
+#
+#   tag      make ci-release-tag checks out the head_sha of the CI run and runs release-tag, with AUTO for a workflow_run:
+#            it tags the commit only when it is the version commit of the top ## X.Y.Z of its change log, which is the tip
+#            of its push; a commit whose top version is tagged elsewhere ends green with nothing to release, and a top
+#            version that no run released fails and names its version commit. release-tag-output gives TAG and VERSION to
+#            the later jobs, which do not run when no tag was made.
+#   assets   calls assets.yml for the tree of the tag, with release true: its jobs build the assets of each platform on the
+#            runner of that platform, after the release check of binding. Every run of ci calls the same workflow for its
+#            commit, so each of these jobs ran with the same recipe and the same tools before the tag existed.
+#   release  make ci-release-release on the tag: release-tools, release-assets (the archives of kit and packages.json),
+#            release-publish (the draft), the downloaded assets of the job assets joined to var/release/assets with their
+#            folders, release-recipes, release-go-module, release-platform-assets and release-undraft.
+#
+# The tag exists before the jobs assets and release run, and a tag is never moved, so a step that fails after it loses the
+# version. No order keeps the tag safe: CI runs the steps of the jobs assets without a tag (assets.yml) and the archives of
+# kit without a tag (make release-candidate-assets), and the steps that need the tag and GitHub (release-tag,
+# release-publish, release-go-module, release-platform-assets, release-undraft) run only here. A concurrency group of the
+# job tag runs one release at a time, and a failed step leaves the release a draft and fails the run.
 name: release
 
 on:
@@ -28,7 +38,7 @@ permissions:
   actions: read
 
 jobs:
-  release:
+  tag:
     # A workflow_run starts the release for a successful push or dispatch run of CI alone. The concurrency group is the job's,
     # so a run whose job is skipped never replaces the pending release of a version commit.
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch')) }}
@@ -36,8 +46,10 @@ jobs:
       group: release-${{ github.repository }}
       cancel-in-progress: false
     runs-on: ubuntu-26.04-arm
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      version: ${{ steps.tag.outputs.version }}
     env:
-      RUN: ${{ inputs.run || github.event.workflow_run.id }}
       GH_TOKEN: ${{ github.token }}
     steps:
       # With the whole history and every branch, so origin/main is there for the ancestry check; a workflow_run checks out the
@@ -47,11 +59,41 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.workflow_run.head_sha }}
       - uses: ./.github/actions/bootstrap
-      # The PHP of .php-version for the Composer packages and the extension of the release, with no debugger or coverage
-      # driver, as the checks run.
-      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+      - id: tag
+        name: make ci-release-tag
+        run: make ci-release-tag RUN="${{ inputs.run || github.event.workflow_run.id }}" AUTO="${{ github.event_name == 'workflow_run' && '1' || '' }}"
+
+  # The assets of each platform, built from the tree of the tag with the release check of binding (binding GN-19i).
+  assets:
+    needs: tag
+    if: ${{ needs.tag.outputs.tag != '' }}
+    uses: ./.github/workflows/assets.yml
+    with:
+      ref: ${{ needs.tag.outputs.tag }}
+      release: true
+
+  release:
+    needs: [tag, assets]
+    if: ${{ needs.tag.outputs.tag != '' }}
+    concurrency:
+      group: release-${{ github.repository }}-publish
+      cancel-in-progress: false
+    runs-on: ubuntu-26.04-arm
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # The tree of the tag with its history, since release-go-module adds a commit to it and pushes the tag of the Go module.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          php-version-file: .php-version
-          coverage: none
-      - name: make ci-release
-        run: make ci-release
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.tag }}
+      - uses: ./.github/actions/bootstrap
+      # The assets of each platform that the job assets built, merged into var/release/downloaded, which
+      # ci-release-release joins to var/release/assets after release-assets wrote that folder.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: assets-*
+          path: var/release/downloaded
+          merge-multiple: true
+      - name: make ci-release-release
+        run: make ci-release-release TAG=${{ needs.tag.outputs.tag }} VERSION=${{ needs.tag.outputs.version }}

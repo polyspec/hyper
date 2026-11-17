@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 9b7184c73ba79a939b43801bed8090a34bdb2825a00d75dc626e9b91313e0b56 -->
+<!-- source-sha256: 9f909124a8ffa9be8474f6504232c69dc89c528c580a6e46da62147771415519 -->
 # 실행
 
 [English](plan.md).
@@ -227,7 +227,7 @@ Depends on: none. 새 checkout은 core를 부르지 않는 서버만 설치하�
 
 첫 릴리스는 template의 그 release를 기다린다. 서버들이 template의 두 engine으로 렌더하기 때문이다. Node 서버와 브라우저는 JS render engine으로, PHP와 Python 서버는 Rust core의 binding으로 렌더한다. 그 release가 없으면 Node 서버와 PHP·Python 서버는 한 template에 대해 다른 결과를 준다.
 
-H35.32 설계의 입력. Node 서버(`packages/ts/src/page/page.ts`, `packages/ts/src/app/app.ts`)와 browser 코드(`packages/client`)는 template의 JS render engine(`@polyspec/template/render`)으로 렌더하고, 서버는 `@polyspec/hyper-client`의 `createApplication`과 `renderDocument`를 거친다. PHP 서버(`packages/php/src/Page/Renderer.php`)와 Python 서버(`packages/python/src/polyspec/hyper/page/_renderer.py`)는 template Rust core의 binding으로 렌더한다. hyper core의 page 렌더(`packages/rust/src/render.rs`의 `render_document`, `packages/rust/src/steps.rs`의 `Pages`와 `PageRequest`, `packages/rust/src/read_paths.rs`의 `route_reads`와 `template_reads`. binding member는 `Pages`, `PageRequest.next`, `routeReads`, `templateReads`)는 어떤 서버도 부르지 않는다. 두 engine은 template 명세가 거부하는 입력에서 다르다. 분수 숫자 인덱스를 JS engine은 렌더하고 core는 `runtime_type`으로 실패시킨다. Node 서버를 core의 page 렌더로 옮기는 일은 한 행이 아니며 첫 릴리스에 들지 않는다. core에 다섯 부분이 없고, 이 이전이 `App.open`의 입력, page 응답, statement 아홉 개를 바꾸기 때문이다. H35.32-2의 설계 문서가 먼저이며, 그 문서는 아래 네 목록을 입력으로 받는다.
+H35.32 설계의 입력. Node 서버(`packages/ts/src/page/page.ts`, `packages/ts/src/app/app.ts`)와 browser 코드(`packages/client`)는 template의 JS render engine(`@polyspec/template/render`)으로 렌더하고, 서버는 `@polyspec/hyper-client`의 `createApplication`과 `renderDocument`를 거친다. PHP 서버(`packages/php/src/Page/Renderer.php`)와 Python 서버(`packages/python/src/polyspec/hyper/page/_renderer.py`)는 template Rust core의 binding으로 렌더한다. hyper core의 page 렌더(`packages/rust/src/render.rs`의 `render_document`, `packages/rust/src/steps.rs`의 `Pages`와 `PageRequest`, `packages/rust/src/read_paths.rs`의 `route_reads`와 `template_reads`. binding member는 `Pages`, `PageRequest.next`, `routeReads`, `templateReads`)는 어떤 서버도 부르지 않는다. 두 engine은 template 명세가 거부하는 입력에서 다르다. 분수 숫자 인덱스를 JS engine은 렌더하고 core는 `runtime_type`으로 실패시킨다. Node 서버를 core의 page 렌더로 옮기는 일은 한 행이 아니며 첫 릴리스에 들지 않는다. core에 두 부분이 없고 세 부분은 이 이전을 위해 만들었으며, 이 이전이 `App.open`의 입력, page 응답, statement 아홉 개를 바꾸기 때문이다. H35.32-2의 설계 문서가 먼저이며, 그 문서는 아래 네 목록을 입력으로 받는다.
 
 차이 목록은 세 서버가 page에 대해 하는 일을 `PageRequest.next`와 `render_document`가 하는 일과 비교한다.
 
@@ -237,16 +237,16 @@ H35.32 설계의 입력. Node 서버(`packages/ts/src/page/page.ts`, `packages/t
   - core는 read path를 값으로 받거나(`Pages`) source에서 계산하고(`routeReads`), Node 서버는 browser package로 AST 파일에서 계산한다.
   - `now`는 host가 `PageInput`으로 주는 요청당 한 값이고, PHP와 Python renderer는 렌더마다 시계를 읽는다.
   - host function의 둘째 인자는 binding에서 `{timezone, now}`이고 JS engine에서 `{env: {…}}`이다.
-  - 실패한 등록의 오류는 template 언어의 이유 뒤에 텍스트 ` (HYC-24)`를 가진다.
   - 문서에 kept 값이 있는데 template이 없으면 core는 kept 값 없는 렌더를 실행하고(HY-38.16), browser 코드는 오류를 다시 던진다.
   - 자기 영역 하나의 데이터가 없는 문서는 kind `internal`로 실패한다.
   - 분수 숫자 인덱스는 `runtime_type`으로 실패한다.
 - core에 없는 것:
   - action이 session을 갱신한 뒤의 token(HY-72.3). `PageInput.csrf`는 `PageRequest`를 만들 때 고정되고 action은 step 안에서 실행된다(H35.32-3).
-  - read path가 버리는 값과 native object에 대한, read path를 적용하기 전의 HY-44.3 검사(H35.32-4).
   - PHP `JsonSerializable`의 값(HY-44.6). binding은 그것을 native object로 두고, `packages/php/src/Data/DataModel.php`가 렌더 전에 바꾼다.
-  - `contracts/functions.json`의 메시지 `functions.<name> is not a function`(H35.32-5).
-  - binding member인, 요청 전체보다 작은 렌더(H35.32-6).
+- 이동을 위해 core에 만든 것:
+  - read path가 버리는 값과 native object에 대한, read path를 적용하기 전의 HY-44.3 검사(`packages/rust/src/data_model.rs`의 `data_model::check`, H35.32-4).
+  - `contracts/functions.json`의 메시지 `functions.<name> is not a function`(`rules.check_function_entry`, HYC-24.7, H35.32-5). template 언어가 거부한 등록은 그 메시지를 그대로 가진다(HYC-24.8).
+  - binding member인, 요청 전체보다 작은 렌더(`pages.render_document`와 `pages.render_parts`, H35.32-6).
 - host가 step이나 입력으로 주는 것: 모든 handler 호출(action, context handler, shared handler, loader), reply의 값(데이터를 내장하는지와 그 상태), `now`, mask된 token, cookie `hy-keep`의 텍스트, `Hyper-Context`의 held hash, 바뀐 topic, 저장된 kept 값, map인 loader 결과.
 - host에 남는 것: 파일 읽기, handler 검사, 닫힌 연결에 대한 step 사이의 중단(HY-67), 경고의 guard(HY-74), 결과와 ORM code를 action outcome으로 옮기는 일, 응답 header와 304, cookie, limit, logging, client rendering 선택, representation.
 

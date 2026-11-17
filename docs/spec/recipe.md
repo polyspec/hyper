@@ -351,8 +351,10 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - a result, a case reader, a step, a registry or a native test against HYR-7;
   - a `members` entry of a section against HYR-7, and a member that is not stated against HYR-5.
 
-  Each run first runs the readers' mutation cases, and fails when a reader passes a mutation. A run that passes prints
-  the three numbers of HYR-5.
+  A run reads only the repository, prints its progress to the standard error, and a run that passes prints the three
+  numbers of HYR-5. The readers' mutation cases are a test of the check and no part of a run:
+  `tests/scripts/recipe-check.test.mts` applies each mutation to a copy of its fixture and fails when the check passes
+  a mutation, or when the fixture states no mutation.
 
 - **HYR-9 Analyzers.** Each language also runs its own analyzers: `make analyse-php`, `make typecheck` and
   `make hyper-lint`.

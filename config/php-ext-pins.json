@@ -1,0 +1,59 @@
+{
+  "description": "The Composer repository packages.json and the platform zips of the PHP extensions that PIE downloads from the GitHub Releases, each with the sha256 of the field digest of its release asset; scripts/php-ext-requires.mts verifies each packages.json before PIE reads its copy, and scripts/php-ext-verify.mts compares each zip that PIE used with its pin (HR-80, H35.51, H35.54)",
+  "packages": {
+    "polyspec/template": {
+      "repository": "polyspec/template",
+      "version": "0.0.30",
+      "packages": "d40b7fe00febfa188e246d1b573f077b223d7527e4719b36bcf75220354174a3",
+      "extension": "polyspec_template",
+      "zips": {
+        "8.4": {
+          "arm64-darwin-bsdlibc-nts": "617ee3b7be565573d5cee5f595dff83f2656ebd5178fc170fec2189d31187eeb",
+          "arm64-linux-glibc-nts": "98ded643397bf56a8b9b7abc08a9e9d80f99f7bbce8eeef82b54a58277f4f62c",
+          "x86_64-linux-glibc-nts": "f36330bfbacb359af775398070a27866f07560f293865f4224a0f0b77233c55e"
+        },
+        "8.5": {
+          "arm64-darwin-bsdlibc-nts": "972f3fd9134ce3776346d1873249b4d28e8a7d84691f2bf908ef65de7dc5d02e",
+          "arm64-linux-glibc-nts": "144b2bb958345d28d7a1ca34abc0c797ba210d7066b70a467fd76fcb56f55460",
+          "x86_64-linux-glibc-nts": "182262623fa614c129488f510392dc2fea8f8af2802a4aed028ebe979e7ee869"
+        }
+      }
+    },
+    "polyspec/json": {
+      "repository": "polyspec/json",
+      "version": "0.0.38",
+      "packages": "5762c6b30fce5103b1d97f484194767672ae0bd643f7312eb835a3cbd34bd5b2",
+      "extension": "polyspec_json",
+      "zips": {
+        "8.4": {
+          "arm64-darwin-bsdlibc-nts": "924237eec738a28ad021eceb10eb31eede7de9e69a8d226f035bbd309b3c2f71",
+          "arm64-linux-glibc-nts": "4a5d496200e5337977e3121e130df6fa49b4aa54723c47a41779adcc7687840c",
+          "x86_64-linux-glibc-nts": "40e3015da9fb7dd80695b3c90e30085e42114baab907ef29d101ee7d6538a49d"
+        },
+        "8.5": {
+          "arm64-darwin-bsdlibc-nts": "03aad3d1fd917061a201a9fe0a31d612754e42f9546b36d415c64c28b9c81a03",
+          "arm64-linux-glibc-nts": "5bbb344a87444f050100881e508feeec9605a5d6d8d25f38dd4756cb478b7e83",
+          "x86_64-linux-glibc-nts": "75695b056c6e5c46872b1ddf1b7a9bc5c5c6b32277500cc4c2da8cdc30e0e977"
+        }
+      }
+    },
+    "polyspec/session-store": {
+      "repository": "polyspec/session-store",
+      "version": "0.0.7",
+      "packages": "bdc25f83cffd8cdc7dcfadb82d14925b21e3c0efd7a4177ec6f33b544a3295b8",
+      "extension": "polyspec_session_store",
+      "zips": {
+        "8.4": {
+          "arm64-darwin-bsdlibc-nts": "38e1d05d09478615548579da726ba2fad0ed9806342f96b38b12c2590c6f5508",
+          "arm64-linux-glibc-nts": "55505004e3f88db6d4f74b778d2c9b55f866ed49aace7f84bf4799dd74441978",
+          "x86_64-linux-glibc-nts": "636aa3425a5bf046a78eda8e356f60ec44135b4ca42359936f7352fa1f019efc"
+        },
+        "8.5": {
+          "arm64-darwin-bsdlibc-nts": "c14a743adf1508c8a1326012b12a31a5442641ba137932ca54aa212bb8c05683",
+          "arm64-linux-glibc-nts": "0b635c1f5082b9c0e4bf211ac70bdf00da942d741405b3d6482398dd75948676",
+          "x86_64-linux-glibc-nts": "103a965c7ee5859a84f1527c433387df1a245709adcd1408619961361aefdc6a"
+        }
+      }
+    }
+  }
+}

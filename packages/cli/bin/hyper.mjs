@@ -4,7 +4,7 @@
 // and 1 for every other failure, whose message goes to stderr.
 //
 // Usage: hyper build --app <directory> --output <directory> [--api <base path>] [--asset <name>=<path>]...
-//          [--tailwind <source>=<name>]... [--static <path below public/>]... [--php-namespace <namespace>]
+//          [--tailwind <source>=<name>]... [--static <path below public/>]...
 //        hyper check --app <directory>
 
 import { runBuild } from '../lib/build.mjs';
@@ -13,7 +13,7 @@ import { buildOptions, checkOptions, UsageError } from '../lib/options.mjs';
 
 const USAGE = [
   'usage: hyper build --app <directory> --output <directory> [--api <base path>] [--asset <name>=<path>]...',
-  '         [--tailwind <source>=<name>]... [--static <path below public/>]... [--php-namespace <namespace>]',
+  '         [--tailwind <source>=<name>]... [--static <path below public/>]...',
   '       hyper check --app <directory>',
 ].join('\n');
 

@@ -9,7 +9,7 @@ import { ArgumentCountError } from '../../src/app/argument-count-error.js';
 import { Container } from '../../src/app/container.js';
 import { App, ArraySession, BadRequest, Choice, ClientRendering, FileSessions, Forbidden, MediaType, NotFound, RedisSessions, Redirect, Reply, Representation, Request, Response, Result, UploadedFile } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
-import { client, Fixture, FIXTURES, handlers, TEMPLATES, type Services } from '../support.js';
+import { client, Fixture, FIXTURES, handlers, PROGRAM, type Services } from '../support.js';
 import { textOf } from '../inputs.js';
 
 // A member of the table: the number of its required parameters, read from the function, and its written call.
@@ -589,8 +589,7 @@ function recordOf(member: string, directory: string, all: boolean): Record<strin
     case 'app.open':
       return {
         manifest: `${FIXTURES}app.json`,
-        build: `${FIXTURES}build.json`,
-        templates: TEMPLATES,
+        program: PROGRAM,
         handlers: handlers(),
         timezone: '+09:00',
         ...(all

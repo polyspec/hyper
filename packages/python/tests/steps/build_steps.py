@@ -11,8 +11,6 @@ from ..case_rules import FAILURES, raises_of
 
 # The outputs of a server program in the order in which the step creates them, and whether each is a directory.
 _OUTPUTS = {
-    "php": True,
-    "program.json": False,
     "reads.json": False,
     "build.json": False,
     "templates": True,

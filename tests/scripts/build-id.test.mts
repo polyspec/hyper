@@ -13,7 +13,7 @@ import { buildId, buildStream, sortFiles } from '../../packages/cli/lib/build-id
 import dataTemplate from '../../packages/client/data-template.json' with { type: 'json' };
 import { templateProblems } from '../../packages/cli/lib/template-rules.mjs';
 import { CaseReader } from '../../packages/ts/tests/case-reader.ts';
-import { writeResults } from '../../packages/ts/tests/case-run.ts';
+import { failedCases, writeResults } from '../../packages/ts/tests/case-run.ts';
 import { mapsOf, plain, textMapOf, textOf } from '../../packages/ts/tests/inputs.ts';
 
 type BuildFile = { path: string; bytes: Buffer };
@@ -67,7 +67,7 @@ test('cases', () => {
     lines.push(reader.line());
   }
   const failed = writeResults(results, lines);
-  assert.equal(failed, 0, `${failed} of ${lines.length} cases fail; see ${results}`);
+  if (failed.length > 0) throw failedCases(failed, lines.length, results);
 });
 
 test('a duplicate path fails and names the path (HY-125)', () => {

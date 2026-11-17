@@ -12,6 +12,7 @@ pub mod client_rendering;
 pub mod context;
 pub mod cookies;
 pub mod csrf;
+pub mod data_model;
 pub mod error;
 pub mod etag;
 pub mod front;

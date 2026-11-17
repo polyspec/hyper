@@ -14,7 +14,7 @@ final class RendererTest extends TestCase
 
     public function testTheTemplatesOfTheProgramRenderWithoutTheGeneratedProgram(): void
     {
-        // HY-48.15: a program directory without php and program.json opens and renders from its templates.
+        // HY-48.15: a program directory opens and renders from its templates; it holds no generated program.
         $program = sys_get_temp_dir() . '/hyper-renderer-' . bin2hex(random_bytes(6));
         try {
             mkdir("{$program}/templates", 0o700, true);

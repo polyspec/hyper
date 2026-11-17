@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { Csrf } from '../../src/session/csrf.js';
 import { App, ArraySession, Choice, ClientRendering, Representation, Result, type AppOptions, type Handlers, type Loader, type RepresentationArgument, type RepresentationHandler, Request, type RouteHandlers } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
-import { FIXTURES, list, listAndItem, parsedBody, record, requestFrom, TEMPLATES, TOKEN, type Counter, type Services } from '../support.js';
+import { FIXTURES, list, listAndItem, parsedBody, record, requestFrom, PROGRAM, TOKEN, type Counter, type Services } from '../support.js';
 import { mapOf, plain, textOf, textsOf } from '../inputs.js';
 import { raisesOf } from '../case-rules.js';
 import { failureOf, Recorded, RecordingStore } from './recorded.js';
@@ -104,7 +104,7 @@ function declared(directory: string, handlers: Handlers<Services>, representatio
 // Opens the client fixture application with a client rendering, the manifest and the handlers of the case and further
 // options of `open`, and binds its counter. Both sections of the file open through it.
 async function clientApp(rendering: ClientRendering, counter: Counter, application: { manifest: string; handlers: Handlers<Services> }, options: Partial<AppOptions<Services>>): Promise<App<Services>> {
-  const app = await App.open<Services>({ manifest: application.manifest, build: `${FIXTURES}build.json`, templates: TEMPLATES, handlers: application.handlers, timezone: '+09:00', clientRendering: rendering, ...options });
+  const app = await App.open<Services>({ manifest: application.manifest, program: PROGRAM, handlers: application.handlers, timezone: '+09:00', clientRendering: rendering, ...options });
   app.bind('counter', () => counter);
   return app;
 }

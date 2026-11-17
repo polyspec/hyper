@@ -1,6 +1,6 @@
 // The steps of contracts/manifest.json (HY-1, HY-2, HY-37, HY-54): the manifests that the server reads or rejects. The
-// Node server has no manifest unit (HY-54.3), so the step opens an application whose template index does not exist: an
-// open that reaches the index has read the manifest.
+// Node server has no manifest unit, so the step opens an application whose program does not exist: the core judges
+// the manifest before the server reads the program, so an open that fails for the program has read the manifest.
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -28,21 +28,17 @@ export const steps = {
     const directory = mkdtempSync(join(tmpdir(), 'hyper-manifest-'));
     try {
       const manifest = join(directory, 'manifest.json');
-      const build = join(directory, 'build.json');
-      const index = join(directory, 'absent', 'templates.index.json');
+      // The program does not exist: an open that fails only for it has read the manifest (HY-2.7).
+      const program = join(directory, 'absent');
       writeFileSync(manifest, fileOf(reader));
-      writeFileSync(build, `{"build":"${'1'.repeat(64)}"}`);
       let failure: unknown;
       try {
-        await App.open({ manifest, build, templates: { index, root: join(directory, 'absent') }, handlers: {}, timezone: 'Z', log: () => {} });
+        await App.open({ manifest, program, handlers: {}, timezone: 'Z', log: () => {} });
       } catch (error) {
         failure = error;
       }
-      if (failure === undefined) throw new Error('the open read a template index that does not exist');
-      // The missing template index is read after the manifest, so the failure to read it, which the open raises as its
-      // value error of kind invalid_application with the message of the system error (HY-106.21), tells that the
-      // manifest was read.
-      const read = failure instanceof Error && 'kind' in failure && failure.kind === 'invalid_application' && failure.message.includes(index);
+      if (failure === undefined) throw new Error('the application opened without a program');
+      const read = failure instanceof Error && failure.message.startsWith(`${join(program, 'reads.json')} of the server program`);
       reader.compare('read', read ? true : null);
       reader.compare('raises', read ? null : raisesOf(failure));
     } finally {

@@ -11,13 +11,19 @@ function messageOf(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-// Writes the result lines to the results file by a rename and returns the number of failed lines.
-export function writeResults(results: string, lines: string[]): number {
+// Writes the result lines to the results file by a rename and returns the failed lines.
+export function writeResults(results: string, lines: string[]): string[] {
   const temporary = `${results}.tmp`;
   mkdirSync(dirname(results), { recursive: true });
   writeFileSync(temporary, `${lines.join('\n')}\n`);
   renameSync(temporary, results);
-  return lines.filter((line) => line.includes(' FAIL ')).length;
+  return lines.filter((line) => line.includes(' FAIL '));
+}
+
+// The error of a run with failed cases: their count, the results file, and each failed line indented on a line of its
+// own, which the first failure lines of a CI report take from the log (H35.46, HR-84).
+export function failedCases(failed: string[], count: number, results: string): Error {
+  return new Error(`${failed.length} of ${count} cases fail; see ${results}\n${failed.map((line) => `  ${line}`).join('\n')}`);
 }
 
 // The file, the section and the id of a case, by which a selection names it.
@@ -73,5 +79,5 @@ export async function runCases(runner: string, steps: Record<string, Step>): Pro
     lines.push(reader.line());
   }
   const failed = writeResults(results, selection === undefined ? lines : [`SELECTION ${selectionNames(selection).join(' ')}`, ...lines]);
-  if (failed > 0) throw new Error(`${failed} of ${lines.length} cases fail; see ${results}`);
+  if (failed.length > 0) throw failedCases(failed, lines.length, results);
 }
