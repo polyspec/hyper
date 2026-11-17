@@ -16122,6 +16122,7 @@
     },
     "context.json": {
       "fixtures": {
+        "valueKinds": "input",
         "applications": "input"
       },
       "sections": {
@@ -16262,7 +16263,8 @@
             "python"
           ],
           "uses": [
-            "applications"
+            "applications",
+            "valueKinds"
           ],
           "fields": {
             "id": {
