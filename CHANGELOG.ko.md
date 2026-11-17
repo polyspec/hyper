@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0cd8714b614b403868ac82ddfb0776dd40c087ab02b3fc8657ab69a0d67948dd -->
+<!-- source-sha256: 48898ea78fd97dfa453c97e97a41542eb3c3fbe3ede0a15b6449188314f6cea7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `hyper build --php-namespace <namespace>`는 템플릿을 생성된 PHP 프로그램 `program/php/`로 compile하고 `program/program.json`을 썼는데, 어떤 서버도 둘 중 어느 것도 읽지 않았다. 세 서버는 `program/templates/`의 템플릿을 렌더한다. 이제 `hyper build`는 생성된 PHP 프로그램을 쓰지 않으며, `program/`은 `templates/`, `legacy/`, `reads.json`, `build.json`을 담는다. HY-48.6은 retire되고 HY-48.19가 그 규칙을 적는다. option `--php-namespace`는 그것이 없어졌다고 밝히고 그 option과 값을 명령에서 빼라고 말하는 usage error로 실패한다. `packages/cli/lib/program.mjs`는 `@polyspec/template-compiler`를 import하지 않는다. 의존성 자체는 template release를 고정하는 변경에서 lock과 함께 manifest에서 빠진다. `scripts/fixture-program.mts`와 `scripts/contract-programs.mts`는 namespace를 받지도 쓰지도 않고, `make board`와 `make server-fixtures`는 namespace를 넘기지 않으며, 프로그램 namespace의 autoload mapping은 root `composer.json`과 `examples/board/composer.json`에서 빠진다. 그 option으로 build하던 애플리케이션은 네 가지를 바꾸며, `docs/operations/deployment.md`가 "애플리케이션이 바꾸는 경로" 아래에 그것을 나열한다: build 명령에서 그 option을, 프로그램 namespace의 `autoload.psr-4` 항목과 `program.json`의 읽기를, build의 check에서 출력 `program.json`과 `php/GeneratedProgram.php`를, compiler 패키지에 대한 의존성을 없앤다(H35.42).
 - 어떤 target도 root와 `tests/package-install`의 `package-lock.json`을 쓰지 않았다. 요구가 바뀐 뒤 `npm install --package-lock-only`는 각각에서 손으로 실행하는 명령이었다. 이제 `make npm-lock`이 둘 모두에 `--ignore-scripts`와 함께, 두 번째는 `--prefix`로, checkout의 npm을 절대 경로로 `$(ONLINE)`을 통해 실행한다. 아무것도 설치하지 않는다. root `package.json`은 패키지 하나를 range로 적는다: `ajv` `^8.20.0`이며, npm은 range가 허용하는 동안 그 lock된 버전을 그대로 둔다(H35.41).
 - 어떤 target도 `packages/python/uv.lock`, `composer.lock`, `examples/board/composer.lock`을 쓰지 않았다. 요구가 바뀐 뒤 `uv lock`과 `composer update`는 손으로 실행하는 명령이었다. 이제 `make python-lock`이 Python package에 `uv lock`을 실행하고, `make composer-lock PACKAGES="<vendor/package> ..."`가 private root와 board에서 적은 패키지에 `composer update --no-install`을 실행한다. 모든 패키지의 update는 실행 시점에 각 range를 해석하므로 `PACKAGES` 없이는 dry run에서도 실패한다. 각 target은 checkout의 도구를 절대 경로로 `$(ONLINE)`을 통해 시작하며, `composer-lock`은 Composer를 시작하는 모든 target처럼 checkout의 PHP를 먼저 검사한다(H35.41).
 - 세 서버는 file 제한을 두 번 검사한다. route 전에 `App`의 `dispatch`에서, 그리고 token 뒤에 action과 `/_hyper/keep`에 대해 `fileOver`로 검사한다. 이제 `docs/plans/execution/plan.md`는 세 서버의 행 번호와 함께 다음을 적는다. 둘째 검사는 첫째와 같은 요청, 같은 application의 제한을 읽고, route나 action은 자기 제한을 갖지 않으며(HY-114.1), `multipart/form-data`가 form 타입이 아닌 곳에서 파일을 가진 요청은 token 전에 415를 받으므로, 둘째 검사는 답하는 일이 없다. HY-114.7은 body를 읽는 동안의 검사 하나를 정하며 바뀌지 않는다. 세 서버에서 둘째 검사를 제거하는 것이 그 row의 남은 부분이다. `contracts/app.json`의 file 제한 case 둘은 제거 전과 후에 모두 통과한다(H35.36-6).

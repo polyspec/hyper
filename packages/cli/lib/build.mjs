@@ -93,7 +93,7 @@ export async function runBuild(options) {
   rmSync(clientNext, { recursive: true, force: true });
   rmSync(programNext, { recursive: true, force: true });
   try {
-    const count = writeProgram({ manifest, templates: join(app, 'templates'), directory: programNext, phpNamespace: options.phpNamespace });
+    const count = writeProgram({ manifest, templates: join(app, 'templates'), directory: programNext });
     const manifestText = `${JSON.stringify({ ...(entry === undefined ? {} : { hyper: entry.url }), ...sortedObject(manifestUrls) }, null, 2)}\n`;
     const assetPaths = assetFiles.map((file) => `public/assets/${file.name}`).sort(compareBytes);
     const assetsText = `${JSON.stringify({ files: assetPaths }, null, 2)}\n`;

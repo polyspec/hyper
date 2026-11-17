@@ -54,9 +54,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Polyspec\\Hyper\\Tests\\": "packages/php/tests/",
-            "Polyspec\\Hyper\\Tests\\Program\\": "packages/php/tests/build/server/php/",
-            "Polyspec\\Hyper\\Tests\\Contract\\": "var/contract-programs/"
+            "Polyspec\\Hyper\\Tests\\": "packages/php/tests/"
         },
         "files": [
             "packages/php/tests/Support/CoreStandIn/functions.php"

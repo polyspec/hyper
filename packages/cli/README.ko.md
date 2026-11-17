@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-cli-readme -->
-<!-- source-sha256: 0264014a2053e349deab5dc0b0677767ac3c31c9794f7f1d71f62ca222cb3ac0 -->
+<!-- source-sha256: 19d9639e9057e6287adbcbf714aca0462bfc8b60919e522980078725622033e4 -->
 # @polyspec/hyper-cli
 
 [English](README.md).
@@ -17,28 +17,16 @@ Node.js 26.12.0 이상. 패키지는 build 단계 없이 JavaScript module을 �
 ## hyper build
 
 ```sh
-hyper build --app . --output build --api /api --php-namespace 'App\Program' --tailwind styles.css=app --asset logo=images/logo.svg --static public/favicon.ico
+hyper build --app . --output build --api /api --tailwind styles.css=app --asset logo=images/logo.svg --static public/favicon.ico
 ```
 
 한 번의 실행은 무엇이든 쓰기 전에 option, 매니페스트, 템플릿 규칙을 검사하고, 모든 출력으로 build id를 한 번 계산한다(HY-125). 다음을 쓴다(HR-34).
 
 - `public/assets` 아래, 이름에 내용의 해시가 들어간 파일: 템플릿 파일, 클라이언트 진입 파일과 조각 파일, `--asset <name>=<path>`와 `--tailwind <source>=<name>`의 각 에셋(HR-77).
 - `<output>/client/`: 레이아웃 코드가 읽는, `hyper`로 진입 파일의 URL과 이름마다 각 에셋의 URL을 담은 `manifest.json`, 쓰이는 어떤 build도 적지 않은 파일을 지우기 위해 이 build가 `public/assets` 아래에 쓴 모든 경로를 담은 `assets.json`, Node 서버가 읽는 `templates.index.json`과 `build.json`, 그리고 `client/main.ts`가 있고 `--api`가 주어지면 정적 셸 `csr/`.
-- `<output>/program/`: 세 서버가 읽는 `templates/`, `reads.json`, `build.json`, 그리고 `--php-namespace`가 있으면 생성된 PHP 프로그램 `php/`와 `program.json`(HY-48).
+- `<output>/program/`: 세 서버가 읽는 `templates/`, `legacy/`, `reads.json`, `build.json`(HY-48). build는 생성된 PHP 프로그램을 쓰지 않으며, 이전 release의 option `--php-namespace`를 이름으로 거부한다(HY-48.19).
 
 에셋 이름은 `[a-z][a-z0-9-]*`에 맞고 `hyper`가 아니며 `hyper-`로 시작하지 않는다(HYC-16.13). build는 build id를 받지 않는다. `--output` 아래에서는 `client/`와 `program/`만 소유한다.
-
-PHP 애플리케이션은 `composer.json`의 `autoload.psr-4`에서 namespace를 프로그램에 대응시킨다.
-
-```json
-{
-    "autoload": {
-        "psr-4": {
-            "App\\Program\\": "build/program/php/"
-        }
-    }
-}
-```
 
 ## hyper check
 

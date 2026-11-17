@@ -15,7 +15,7 @@ const fixtures = resolve('packages/php/tests/fixtures');
 function program(output: string, idFile: string) {
   return spawnSync(process.execPath, [
     'scripts/fixture-program.mts', '--manifest', join(fixtures, 'app.json'), '--templates', join(fixtures, 'templates'),
-    '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Tests\\Program', '--id-file', idFile,
+    '--output', output, '--id-file', idFile,
   ], { encoding: 'utf8' });
 }
 
@@ -26,8 +26,8 @@ test('writes the program of the fixture with the build id of its build file (HY-
   const result = program(output, join(fixtures, 'build.json'));
   assert.equal(result.status, 0, result.stderr);
   assert.equal(readFileSync(join(output, 'build.json'), 'utf8'), readFileSync(join(fixtures, 'build.json'), 'utf8'));
-  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'legacy', 'php', 'program.json', 'reads.json', 'templates']);
-  assert.ok(existsSync(join(output, 'php', 'GeneratedProgram.php')));
+  // HY-48.19: the program holds no generated PHP program.
+  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'legacy', 'reads.json', 'templates']);
 });
 
 test('the program holds the reserved template below legacy/ and no copy of it below templates/ (HY-31.9, HY-31.10)', (t) => {
@@ -42,8 +42,6 @@ test('the program holds the reserved template below legacy/ and no copy of it be
   assert.deepEqual(readdirSync(join(output, 'legacy')), ['hyper']);
   assert.deepEqual(readdirSync(join(output, 'legacy', 'hyper')), ['data.tpl']);
   assert.equal(readFileSync(join(output, 'legacy', dataTemplate.name), 'utf8'), dataTemplate.source);
-  // The PHP compilation takes the reserved template as an input, so the generated program holds it.
-  assert.ok(readFileSync(join(output, 'php', 'GeneratedTemplates.php'), 'utf8').includes(`case '${dataTemplate.name}':`));
 });
 
 test('the program names the literal key of an index in reads.json by its text (HY-73.33)', (t) => {
@@ -60,7 +58,7 @@ test('the program names the literal key of an index in reads.json by its text (H
   const output = join(directory, 'program');
   const result = spawnSync(process.execPath, [
     'scripts/fixture-program.mts', '--manifest', manifest, '--templates', templates, '--output', output,
-    '--php-namespace', 'Polyspec\\Hyper\\Tests\\Program', '--id-file', join(fixtures, 'build.json'),
+    '--id-file', join(fixtures, 'build.json'),
   ], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   // HY-73.32: the keys follow the byte order of their text.

@@ -96,7 +96,7 @@
     },
     "packages/cli/lib/program.mjs": {
       "kind": "ecosystem",
-      "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
+      "tool": "readsFile of @polyspec/hyper/build, the Rust core, computes reads.json from the manifest and the template sources"
     },
     "packages/cli/lib/shell.mjs": {
       "kind": "policy",

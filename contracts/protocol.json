@@ -550,6 +550,7 @@
           "retired": [
             4,
             5,
+            6,
             7,
             8,
             9,
@@ -606,10 +607,10 @@
                       "koSource": "f6f557d92ac8514407a06b7d57b0471ba2360951502e421191118056dff60d82"
                     },
                     {
-                      "id": "HY-48.6",
-                      "en": "The build compiles the generated program into a PHP namespace that the application chooses and writes it into the directory `php` of the program directory as PSR-4 files, one class per file named after its class, so it declares no global name and the programs of several applications load in one PHP process.",
-                      "ko": "빌드는 generated 프로그램을 애플리케이션이 고른 PHP namespace로 컴파일하여, 클래스마다 그 이름을 딴 파일 하나인 PSR-4 파일로 프로그램 디렉터리의 디렉터리 `php`에 쓰며, 그래서 전역 이름을 선언하지 않고 여러 애플리케이션의 프로그램이 한 PHP 프로세스에서 불러와진다.",
-                      "koSource": "0f0ecfd732d18d556449b89efe24cacf5f1e0a61b0460b9b1dfa0d1d2cf0312d"
+                      "id": "HY-48.19",
+                      "en": "The build writes no generated PHP program and no `program.json`: the three servers render the templates of the directory `templates` of the program directory, and `hyper build` refuses the option `--php-namespace` with a usage error that names the option and says to remove it from the command.",
+                      "ko": "빌드는 generated PHP 프로그램도 `program.json`도 쓰지 않는다: 세 서버가 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 렌더하며, `hyper build`는 option `--php-namespace`를 그 option을 밝히고 명령에서 빼라고 말하는 usage error로 거부한다.",
+                      "koSource": "c096c0bf78b37e6a5c5d0dea327774b00cec6dbdc8d45948ebd22cfccccde00a"
                     },
                     {
                       "id": "HY-48.17",

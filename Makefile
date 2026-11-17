@@ -305,7 +305,7 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 # @polyspec/hyper/build of the Node package, so each target that writes a server program needs the dist of `packages`
 # and the Node addon of this platform (`node-addon`).
 server-fixtures: packages node-addon contract-programs ##Build the server program of the PHP test fixtures with the fixed build id of their build.json (HY-48, HY-125.21)
-	$(NODE) scripts/fixture-program.mts --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --id-file $(FIXTURES)/build.json
+	$(NODE) scripts/fixture-program.mts --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --id-file $(FIXTURES)/build.json
 
 contract-programs: packages node-addon ##Build the applications of contracts/context.json, contracts/functions.json, contracts/representations.json and contracts/app.json and one application per case of contracts/reads.json for the tests of the three servers (HY-73, HY-118, HY-124, HYC-24)
 	$(NODE) scripts/contract-programs.mts --contract $(abspath contracts/context.json) --contract $(abspath contracts/functions.json) --contract $(abspath contracts/representations.json) --contract $(abspath contracts/app.json) --reads $(abspath contracts/reads.json) --output $(abspath var/contract-programs)
@@ -322,8 +322,8 @@ node-fixtures: packages contract-programs ## Build the template files of the PHP
 # Shared gates read the declarations and runtime fixtures built by this checkout.
 lint-ts: packages
 
-board: packages node-addon ##Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program with the generated PHP program (HR-34, HY-48, HY-125)
-	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs build --app $(BOARD) --output $(BOARD)/build --api /api --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
+board: packages node-addon ##Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program (HR-34, HY-48, HY-125)
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs build --app $(BOARD) --output $(BOARD)/build --api /api --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
 
 # A selection of cases (H35.9-11): CASES="<name> ..." of hyper-test-js, hyper-test-node, hyper-test-php and
 # hyper-test-python names the cases that the case runner of the target runs, each name a case file (reads.json), a

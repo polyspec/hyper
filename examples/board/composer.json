@@ -22,8 +22,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Polyspec\\Hyper\\Examples\\Board\\": "src/Board/",
-            "Polyspec\\Hyper\\Examples\\Board\\Program\\": "build/program/php/"
+            "Polyspec\\Hyper\\Examples\\Board\\": "src/Board/"
         }
     },
     "config": {
