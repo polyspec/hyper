@@ -6,7 +6,7 @@
 // (HR-85).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'node:test';
@@ -36,7 +36,8 @@ function script(file: string, lines: string[]): void {
  * the questions of the recipes as that PHP would, with its php-config. The test removes the directory when it ends.
  */
 function tree(t: TestContext, php: Php | undefined): string {
-  const directory = mkdtempSync(path.join(tmpdir(), 'hyper-php-check-'));
+  // The real path, which make prints as $(CURDIR): on macOS tmpdir() is below /var, a link to /private/var (H35.50).
+  const directory = realpathSync(mkdtempSync(path.join(tmpdir(), 'hyper-php-check-')));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   for (const file of ['Makefile', '.php-version']) copyFileSync(path.join(ROOT, file), path.join(directory, file));
   if (php !== undefined) wrappers(directory, php);
