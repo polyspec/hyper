@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 658d599f367816994a5721ffc2c8b776c85bd3840e0fa2c3ad5ec1e3290a6743 -->
+<!-- source-sha256: 294d6c2791d850eb8d79062a8a54c35b3efcc9df0a9142d10c71e21de15c2f3b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Node와 browser case runner가 case 파일을 JSON으로 읽는다. `packages/ts/tests/case-rules.ts`의 reader `parsed`는 64단계 map을 가진 case가 있는 `contracts/context.json`(HY-44.11)을 template 데이터 모델의 JSON parser로 읽었고, 그 parser는 64단계보다 깊은 값을 거부하므로 파일 읽기가 `BindError: lists and maps nest deeper than 64 levels`로 실패해 case가 하나도 실행되지 않았다. 이제 reader는 `@polyspec/json`의 `parse`로 text를 읽는다. 그것은 object의 key 순서를 유지하고 데이터 모델의 제한이 없으며, object를 Map으로, ±(2^53 − 1) 밖의 정수 literal을 bigint로 준다. 데이터 모델 밖의 값은 검사 대상 서버에서 실패한다. 정수 9007199254740992를 가진 `contracts/context.json`의 세 case는, 거부된 변환의 message가 한 형태가 될 때까지, `failure`에 실패의 message가 시작하는 kind `data_number_range`를 적는다(HY-44.12). `packages/ts`의 vitest 실행은 `native/wasm/generated/tests/generated.test.mjs`를 고르지 않는다. 그 파일은 `make node-package`의 출력인 `hyper_wasm.js`를 import하는데 `make hyper-test-node`는 그것을 build하지 않으며, `make test-wasm`이 그 파일을 실행한다(H35.32-12).
 - checklist의 행 H35.32-1, H35.32-4, H35.32-8, H35.32-10은 각 서버가 그 행까지 실패하는 `contracts/context.json`과 `contracts/app.json`의 case를 코드의 원인과 함께 적는다(H35.32-4).
 - HY-38.20은 요청의 handler가 저장한 유지 값이 그 응답의 `kept`에 있다고 했으나, API로 유지 값을 저장하는 handler는 없다. 각 서버에서 `Session.keep`을 호출하는 곳은 kept endpoint뿐이다. HY-38.20은 이제 `kept`가 로더가 돌아온 뒤의 저장된 값을 담으며 handler가 실행되는 동안 저장된 값도 포함한다고 적는다(H35.32-10).
 - HY-44.9는 hyper가 template 데이터 모델 오류의 message를 그대로 넘긴다고 했으나 그것이 어느 text인지 적지 않았고, `contracts/context.json`의 세 case는 kind를 뺀 text를 적었다. HY-44.9는 retire되고, HY-44.12가 message는 binding이 주는 오류의 전체 text이며 kind로 시작한다고 적는다. `contracts/context.json`의 수 case 셋과 깊이 case는 이제 `data_number_range: number 9007199254740992 is outside the safe range`와 `data_depth: lists and maps nest deeper than 64 levels`를 적는다. `packages/ts/tests/core-values.test.ts`는 데이터 모델 밖의 값을 빌드된 Node addon의 `PageRequest.next`에 주고 class, kind, 전체 message를 단언한다. binding의 변환은 `kind in  at 0:0: text`를, core의 검사는 `kind: text`를 준다. Node case runner는 `contracts/context.json`을 읽다가 실패한다. 그 reader가 깊이 case를 거부하기 때문이다(H35.32-4).

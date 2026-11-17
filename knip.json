@@ -21,8 +21,6 @@
 // The ignored dependencies are packages that no import of their workspace reaches:
 //   - @polyspec/php-serialize, which the root names by the tarball URL of its release, which npm installs only from the root
 //     with allow-remote=root (H21.4); packages/ts requires it by its version;
-//   - @polyspec/json, which @polyspec/template requires by its version and the root names by the tarball URL of its
-//     release for the same reason (H35.22);
 //   - @polyspec/php-serialization, which the generated Node binding requires (packages/ts/native/generated, which
 //     knip does not read) and the root names by the tarball URL of its release for the same reason (H35.8-1);
 //   - @polyspec/binding, whose dist/cli.js the Makefile starts by its path (BINDING), which knip does not read, because knip
@@ -48,7 +46,7 @@
     ]
   },
   "ignoreBinaries": ["container", "make", "openssl", "php", "php-fpm"],
-  "ignoreDependencies": ["@polyspec/binding", "@polyspec/json", "@polyspec/php-serialization", "@polyspec/php-serialize"],
+  "ignoreDependencies": ["@polyspec/binding", "@polyspec/php-serialization", "@polyspec/php-serialize"],
   "workspaces": {
     "packages/ts": {
       "entry": ["src/index.ts", "src/build.ts"],

@@ -1199,7 +1199,7 @@
     },
     {
       "id": "a_context_value_outside_the_data_model_fails",
-      "label": "a context that holds an integer outside ±(2^53 − 1) fails with HY-43",
+      "label": "a context that holds an integer outside ±(2^53 − 1) fails with HY-43; failure holds the kind data_number_range, with which the message of the failure starts (HY-44.12)",
       "application": "with_context",
       "context": "{\"n\":9007199254740992}",
       "request": {
@@ -1219,7 +1219,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "data_number_range: number 9007199254740992 is outside the safe range",
+      "failure": "data_number_range",
       "requirements": [
         "HY-43",
         "HY-44",
@@ -1817,7 +1817,7 @@
     },
     {
       "id": "a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_document",
-      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a document with HY-43",
+      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a document with HY-43; failure holds the kind data_number_range, with which the message of the failure starts (HY-44.12)",
       "application": "without_context",
       "shared": {
         "big": 9007199254740992
@@ -1837,7 +1837,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "data_number_range: number 9007199254740992 is outside the safe range",
+      "failure": "data_number_range",
       "requirements": [
         "HY-43",
         "HY-44",
@@ -1848,7 +1848,7 @@
     },
     {
       "id": "a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_region_request",
-      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a region request with HY-43",
+      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a region request with HY-43; failure holds the kind data_number_range, with which the message of the failure starts (HY-44.12)",
       "application": "without_context",
       "shared": {
         "big": 9007199254740992
@@ -1871,7 +1871,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "data_number_range: number 9007199254740992 is outside the safe range",
+      "failure": "data_number_range",
       "requirements": [
         "HY-43",
         "HY-44",
