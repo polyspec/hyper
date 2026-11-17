@@ -238,7 +238,10 @@ interface Wanted {
 }
 
 /** The start of a scenario: the variables of the fixture servers and the settings of PHP that it adds. */
-interface Start { env?: Record<string, string>; ini?: string[]; servers?: readonly Name[]; gate?: boolean; files?: boolean }
+// `starting` runs where the servers start, so that a test can make that start fail.
+interface Start { env?: Record<string, string>; ini?: string[]; servers?: readonly Name[]; gate?: boolean; files?: boolean; starting?: () => void }
+// The gate listeners that are open; the close of a gate removes it.
+const gates = new Set<Server>();
 
 const FILLER = 6 * 1024 * 1024;
 const FORM = 'application/x-www-form-urlencoded';
@@ -474,6 +477,8 @@ async function hostsOf(t: TestContext, start: Start = {}): Promise<{ hosts: Host
     socket.on('data', read);
   });
   await new Promise<void>((resolve) => listener.listen(0, '127.0.0.1', () => resolve()));
+  gates.add(listener);
+  listener.on('close', () => gates.delete(listener));
   const address = listener.address();
   if (address === null || typeof address === 'string') throw new Error(`the gate listens on no TCP port: ${String(address)}`);
   const gate: Gate = {
@@ -486,6 +491,7 @@ async function hostsOf(t: TestContext, start: Start = {}): Promise<{ hosts: Host
       return first.socket;
     },
   };
+  start.starting?.();
   const { directory, children, environment } = await started(t);
   t.after(async () => {
     for (const socket of sockets) socket.destroy();
@@ -827,4 +833,15 @@ test('request-method-reaches-the-application-in-upper-case (HY-100.31, HY-27.2, 
       check.log(`${method} /`, KINDS, log);
     }
   });
+});
+
+test('the gate of a scenario closes when its servers do not start (HR-87, H34.3)', async (t) => {
+  const before = new Set(gates);
+  await t.test('a start that fails', async (failing) => {
+    await assert.rejects(hostsOf(failing, { starting: () => { throw new Error('the servers do not start'); } }), /the servers do not start/);
+  });
+  const open = [...gates].filter((gate) => !before.has(gate));
+  // A gate that stays open would keep the file from ending; the test closes it after it reports it.
+  for (const gate of open) gate.close();
+  assert.equal(open.length, 0, `${open.length} gate listener stays open after the test whose servers did not start`);
 });
