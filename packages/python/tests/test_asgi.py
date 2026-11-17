@@ -219,6 +219,31 @@ class AsgiTest(UploadCases, TransportCase):
         self.assertEqual([], self.app.requests)
         self.assertEqual([], around_calls)
 
+    def test_a_failed_stat_of_a_public_file_is_an_escape_answered_with_the_plain_failure(
+        self,
+    ) -> None:
+        # HY-60.14, HY-60.17: a stat of a file of the public directory that fails for another reason than a missing
+        # file is an escaped error: the plain 500, and one call of the write hook with the request as received.
+        files = Path(self.directory.name) / "public"
+        (files / "closed").mkdir(parents=True)
+        (files / "closed").chmod(0o000)
+        self.addCleanup((files / "closed").chmod, 0o700)
+        written = []
+        application = create_asgi(
+            self.app, self.sessions, files=str(files), written=record_status(written)
+        )
+        sends = Sends()
+        with contextlib.redirect_stderr(io.StringIO()):
+            run(
+                application,
+                scope(path="/closed/a.css", raw_path=b"/closed/a.css"),
+                sends,
+                Receives(b""),
+            )
+        self.assertEqual(500, sends.events[0]["status"])
+        self.assertEqual(b"Internal Server Error", sends.events[1]["body"])
+        self.assertEqual([("/closed/a.css", 500, True)], written)
+
     def test_a_failed_send_reports_and_disconnects(self) -> None:
         written = []
         application = create_asgi(

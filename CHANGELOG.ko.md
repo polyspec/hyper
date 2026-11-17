@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 26bb8b7b1561e876661fbc11e8c3c99a15b61fd6a10d5e6904be89bdb83faea2 -->
+<!-- source-sha256: 028cc98f432456ce7a420a43d7289c76ce117b3df8ef30b31da86d77b9b7842b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- public 디렉터리 파일의 stat 실패는 Node host와 Python host에서 plain 500과 write hook 한 번 호출을 받는 escaped error다(HY-60.14, HY-60.17, H35.36-9). 입력: public 디렉터리의 디렉터리 `closed`에 search 권한이 없어 stat이 `EACCES`로 실패하는 `GET /closed/a.css`. 이전 동작: Node host는 받은 그대로의 request를 만들기 전에 파일을 찾았으므로 plain 500으로 답하고 write hook을 부르지 않았다. Python host는 `Path.is_file`로 그 실패를 파일 없음으로 읽어 application으로 답했다. 기대 동작: 모든 host가 request를 먼저 만들고 plain 500으로 답하며 그 request로 write hook을 한 번 부른다. 없는 파일은 그대로 application에 가고, 제공된 파일은 그대로 hook을 부르지 않는다(HY-100.7). `make hyper-test-python PYTHON_TESTS="tests/test_asgi.py tests/test_wsgi.py"`(49개 test)와 `make hyper-test-node NODE_TESTS="tests/http.test.ts"`(12개 test)로 검증했다.
 - ASGI host는 닫힌 연결이 아닌 오류를 던지는 send를 log에 쓰고 그 실패와 함께 write hook에 알린다(HY-60.14, HY-60.21, HY-43, H35.36-8). 입력: `ValueError`를 던지는 `http.response.body`의 send. 이전 동작: `host/asgi.py`는 send의 모든 오류를 닫힌 연결로 읽어 log 줄을 쓰지 않고, write hook에 실패를 주지 않으며, disconnect hook을 불렀다. 기대 동작: `OSError`는 닫힌 연결로 남고, 다른 오류는 log 줄 `hyper: <class>: <message>`를 쓰며, write hook은 그 message와 끝나지 않은 write로 그것을 한 번 받고, disconnect hook은 실행되지 않으며, 오류는 전파된다. `make hyper-test-python PYTHON_TESTS="tests/test_asgi.py tests/test_wsgi.py"`로 검증했다: 49개 test 통과.
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 - `tests/scripts/upload-servers.test.mts`는 scenario의 server가 시작하지 않아도 끝난다(HR-87, H34.3). 입력: Node application을 build할 수 없을 때처럼 `started()`가 throw하는 scenario. 이전 동작: `hostsOf`가 gate listener의 close를 `started()` 뒤에야 등록했으므로, 모든 case가 실패한 뒤에도 listener가 열린 채 남아 파일이 끝나지 않았다. 기대 동작: listener가 listen한 직후 close를 등록하고, 파일은 실패와 함께 끝난다.

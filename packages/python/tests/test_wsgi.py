@@ -476,6 +476,26 @@ class WsgiTest(UploadCases, TransportCase):
         self.assertIsNotNone(calls[1][1])
         self.assertEqual([(500, True, "the server refuses the headers")], written)
 
+    def test_a_failed_stat_of_a_public_file_is_an_escape_answered_with_the_plain_failure(
+        self,
+    ) -> None:
+        # HY-60.14, HY-60.17: a stat of a file of the public directory that fails for another reason than a missing
+        # file is an escaped error: the plain 500, and one call of the write hook with the request as received.
+        files = Path(self.directory.name) / "public"
+        (files / "closed").mkdir(parents=True)
+        (files / "closed").chmod(0o000)
+        self.addCleanup((files / "closed").chmod, 0o700)
+        written = []
+        application = create_wsgi(
+            self.app, self.sessions, files=str(files), written=record_status(written)
+        )
+        with contextlib.redirect_stderr(io.StringIO()):
+            status, _, body = call(application, environ(RAW_URI="/closed/a.css"))
+        self.assertEqual(
+            ("500 Internal Server Error", b"Internal Server Error"), (status, body)
+        )
+        self.assertEqual([("/closed/a.css", 500, True)], written)
+
     def test_a_start_response_that_raises_is_an_escape_answered_through_start_response_again(
         self,
     ) -> None:

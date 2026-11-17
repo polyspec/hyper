@@ -1,5 +1,5 @@
 // The HTTP server of an application with sessions in files (HY-42, HY-43, HY-45, HY-52, HY-54).
-import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { createServer as createHttpServer, type Server } from 'node:http';
 import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -204,6 +204,30 @@ describe('the write hook and App.listener', () => {
     await new Promise((resolve) => plain.close(resolve));
     expect([response.status, text]).toEqual([500, 'Internal Server Error']);
     expect(calls).toEqual([]);
+  });
+
+  it('answers a failed stat of a file of the public directory with the plain 500 and one write hook call with its request (HY-60.14, HY-60.17)', async () => {
+    const app = await new Fixture().app();
+    const files = mkdtempSync(join(tmpdir(), 'hyper-public-'));
+    // A directory without the search permission: a stat of a file in it fails with EACCES, not with a missing file.
+    mkdirSync(join(files, 'closed'));
+    chmodSync(join(files, 'closed'), 0o000);
+    const calls: string[] = [];
+    const settled: Promise<void>[] = [];
+    const listener = app.listener(new FileSessions({ directory }), { files, written: (request) => void calls.push(request.path()) });
+    const plain = createHttpServer((incoming, outgoing) => void settled.push(listener(incoming, outgoing)));
+    const plainBase = await listen(plain);
+    try {
+      const response = await fetch(`${plainBase}/closed/a.css`);
+      const text = await response.text();
+      await Promise.all(settled);
+      expect([response.status, text]).toEqual([500, 'Internal Server Error']);
+      expect(calls).toEqual(['/closed/a.css']);
+    } finally {
+      await new Promise((resolve) => plain.close(resolve));
+      chmodSync(join(files, 'closed'), 0o700);
+      rmSync(files, { recursive: true, force: true });
+    }
   });
 
   it('settles the promise of the listener after the write hook and the disconnect hook (HY-100)', async () => {

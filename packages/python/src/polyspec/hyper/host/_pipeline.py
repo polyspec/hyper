@@ -6,6 +6,7 @@ request hook `around` (HY-97), the write hook `written` (HY-99), the plain 500 o
 from __future__ import annotations
 
 import re
+import stat
 import sys
 import traceback
 from pathlib import Path
@@ -77,14 +78,20 @@ def header_lines(response: Response) -> list[tuple[str, str]]:
 
 
 def public_file(files: str, method: str, target: str) -> Optional[Path]:
-    """Returns the file of a GET or HEAD request path in the public directory, or None."""
+    """Returns the file of a GET or HEAD request path in the public directory, or None. A stat that fails for another
+    reason than a missing file raises, so it is an escaped error answered with the plain 500 (HY-60.14), as the Node
+    host answers it; `Path.is_file` would read such a failure as no file."""
     if method not in ("GET", "HEAD"):
         return None
     path = Request.target_path(target)
     if _PUBLIC_PATH.fullmatch(path) is None:
         return None
     file = Path(files) / path.lstrip("/")
-    return file if file.is_file() else None
+    try:
+        mode = file.stat().st_mode
+    except (FileNotFoundError, NotADirectoryError):
+        return None
+    return file if stat.S_ISREG(mode) else None
 
 
 def served_file(

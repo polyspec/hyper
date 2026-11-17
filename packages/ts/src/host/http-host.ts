@@ -108,14 +108,16 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       // called (HY-99.12).
       const target = incoming.url;
       if (target === undefined) throw new Error('hyper: the request has no target (HY-100)');
+      // HY-42.9: every line of a name, which `headers` of node:http keeps only the first of for the names that it reads
+      // as one value; `requestOf` joins them (HY-42.8). The request as received exists before the public directory is
+      // read, so that a failed stat of its file is an escaped error that the write hook receives with it (HY-60.14,
+      // HY-60.17); a file that is served returns before the hooks (HY-100.7).
+      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, https });
       const file = files === undefined ? null : publicFile(files, incoming, target);
       if (file !== null) {
         serveFile(outgoing, incoming, file);
         return;
       }
-      // HY-42.9: every line of a name, which `headers` of node:http keeps only the first of for the names that it reads
-      // as one value; `requestOf` joins them (HY-42.8).
-      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, https });
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
       // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
       read = new RequestBody(request.header('Content-Type') ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'), app.valueLimit, app.partLimit, app.fileLimit);
