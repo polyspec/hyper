@@ -524,7 +524,7 @@ final class Request
 
         // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data request
         // here only when enable_post_data_reading is off, and holds what was read in a temporary file of its own.
-        $read = new BodyReader($headers['Content-Type'] ?? '', $limit, $stream, $valueLimit, $partLimit, $fileLimit);
+        $read = new BodyReader($headers['Content-Type'] ?? '', $limit, $stream, $valueLimit, $partLimit, $fileLimit, $headers['Content-Length'] ?? null);
         $input = fopen('php://input', 'rb');
         if ($input === false) {
             throw new \RuntimeException('hyper: cannot open php://input');

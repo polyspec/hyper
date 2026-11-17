@@ -162,6 +162,8 @@ def _answer(
         app._value_limit,
         app._part_limit,
         app.file_limit,
+        # WSGI gives an empty CONTENT_LENGTH for a request without the field (PEP 3333).
+        environ.get("CONTENT_LENGTH") or None,
     )
     if declared <= app.body_limit:
         # HY-100 and HY-59: a body over the limit is not read; its size is its Content-Length.

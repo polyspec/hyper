@@ -22,7 +22,10 @@ final class BodyReader
 
     /**
      * Starts the body of the content type with the four limits; `$stream` tells whether a multipart body is read in
-     * chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.1).
+     * chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.1). `$contentLength` is
+     * the value of the `Content-Length` field, or null without one: the core fails a value that is no number with
+     * `invalid_content_length` and a number above the body limit with `body_limit` before any byte is read
+     * (HY-131.29); that failure is the failure of the body, which then reads no chunk.
      */
     public function __construct(
         string $type,
@@ -31,12 +34,16 @@ final class BodyReader
         int $valueLimit,
         int $partLimit,
         int $fileLimit,
+        ?string $contentLength = null,
     ) {
-        $this->body = RequestBody::start(
-            $type === '' ? null : $type,
-            $stream,
-            new BodyLimits(limit: $limit, valueLimit: $valueLimit, partLimit: $partLimit, fileLimit: $fileLimit),
-        );
+        $limits = new BodyLimits(limit: $limit, valueLimit: $valueLimit, partLimit: $partLimit, fileLimit: $fileLimit);
+        $contentType = $type === '' ? null : $type;
+        try {
+            $this->body = RequestBody::start($contentType, $contentLength, $stream, $limits);
+        } catch (HyperValueError $error) {
+            $this->failure = $error;
+            $this->body = RequestBody::start($contentType, null, $stream, $limits);
+        }
     }
 
     /**

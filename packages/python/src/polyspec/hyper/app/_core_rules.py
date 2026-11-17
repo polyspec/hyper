@@ -161,11 +161,14 @@ class CoreRules:
             limit=limit, value_limit=value_limit, part_limit=part_limit, file_limit=file_limit
         )
 
-    def request_body_start(self, content_type: Optional[str], stream: bool, limits: Any) -> Any:
+    def request_body_start(
+        self, content_type: Optional[str], content_length: Optional[str], stream: bool, limits: Any
+    ) -> Any:
         """RequestBody: request_body.start of the core reads the chunks of a body under its four limits and in their
         order through http-form (F-9, F-24, F-25, HY-131.32); it starts the reader in chunks only for a
-        `multipart/form-data` type with a boundary (HY-113.24)."""
-        return self._core.RequestBody.start(content_type, stream, limits)
+        `multipart/form-data` type with a boundary (HY-113.24), and fails a `Content-Length` that is no number or is above
+        the body limit before any byte is read (HY-131.29)."""
+        return self._core.RequestBody.start(content_type, content_length, stream, limits)
 
     def read_held_body(self, content_type: Optional[str], body: bytes, limits: Any) -> Any:
         """Request: form_functions.read_held_body gives the form of a body held as one value, under its limits, and

@@ -352,7 +352,7 @@ export interface CoreRules {
   requestFileOver(sizes: readonly number[], limit: number): boolean;
   // Exact. formStart: request_body.start starts the body of a request with its four limits (F-24, F-25, HY-131.1);
   // its feed, finish and parts read the chunks under the limits in their order and give the form (HY-131.32).
-  formStart(contentType: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody>;
+  formStart(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody>;
   // Exact. formReadHeld: form_functions.read_held_body gives the form of a body held as one value under its limits
   // (F-21, F-22, F-25.2, HY-57).
   formReadHeld(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;
@@ -500,7 +500,7 @@ export function coreRules(module: object): CoreRules {
     representationEtag: (contentType, body) => core.representationTag(contentType, encoder.encode(body)),
     requestMediaType: (contentType) => core.mediaType(contentType),
     requestFileOver: (sizes, limit) => core.fileOver(sizes, limit),
-    formStart: (contentType, stream, limits) => core.RequestBody.start(contentType, stream, limits),
+    formStart: (contentType, contentLength, stream, limits) => core.RequestBody.start(contentType, contentLength, stream, limits),
     formReadHeld: (contentType, body, limits) => core.readHeldBody(contentType, body, limits),
     formParseUrlencoded: (text) => core.parseUrlencoded(text),
     requestCurrentPath: (header) => core.currentPath(header),

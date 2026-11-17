@@ -122,7 +122,10 @@ impl UploadedFile {
 pub struct RequestBody(polyspec_http_form::RequestBody);
 
 impl RequestBody {
-    /// Starts the body of the content type `content_type` with its limits. `stream` tells whether a multipart body is
+    /// Starts the body of the content type `content_type` with its limits. `content_length` is the value of the
+    /// `Content-Length` field as the host received it, or none without one: a value that is no number fails with
+    /// `invalid_content_length` and a number above the body limit with `body_limit`, before any byte is read (HY-131.29,
+    /// F-9, F-25.1). `stream` tells whether a multipart body is
     /// read in chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.1). The reader
     /// in chunks starts only for a `multipart/form-data` type with a boundary: any other content type, one that is no
     /// media type and a multipart type without a boundary or with an empty one included, is held as one value and
@@ -130,15 +133,17 @@ impl RequestBody {
     ///
     /// # Errors
     ///
-    /// A failure of the file system while the directory of the files is created, and `internal`.
+    /// `invalid_content_length`, `body_limit`, a failure of the file system while the directory of the files is
+    /// created, and `internal`.
     pub fn start(
         io: Io,
         content_type: Option<&[u8]>,
+        content_length: Option<&[u8]>,
         stream: bool,
         limits: &BodyLimits,
     ) -> Result<Self, Error> {
         let stream = stream && matches!(polyspec_http_form::multipart_boundary(content_type), Ok(Some(_)));
-        Ok(RequestBody(polyspec_http_form::RequestBody::start(io, content_type, None, stream, &limits.into())?))
+        Ok(RequestBody(polyspec_http_form::RequestBody::start(io, content_type, content_length, stream, &limits.into())?))
     }
 
     /// Reads the next chunk. The first failure of the body is its error and the error of every later call, and the

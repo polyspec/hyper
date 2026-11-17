@@ -4470,6 +4470,16 @@
             },
             {
               "name": [
+                "content",
+                "length"
+              ],
+              "type": {
+                "optional": "latin1"
+              },
+              "required": true
+            },
+            {
+              "name": [
                 "stream"
               ],
               "type": "bool",
@@ -4489,6 +4499,8 @@
             "unit": "request_body"
           },
           "raises": [
+            "polyspec_hyper::ErrorCode::Form/polyspec_http_form::Error::InvalidContentLength",
+            "polyspec_hyper::ErrorCode::Form/polyspec_http_form::Error::BodyLimit",
             "polyspec_hyper::ErrorCode::Form/polyspec_http_form::Error::Io",
             "polyspec_hyper::ErrorCode::Form/polyspec_http_form::Error::Internal"
           ],

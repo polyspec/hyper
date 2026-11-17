@@ -52,20 +52,30 @@ class RequestBody:
         value_limit: int,
         part_limit: int,
         file_limit: int,
+        content_length: Optional[str] = None,
     ):
         """Starts the body of the content type with its four limits; ``stream`` tells whether a multipart body is read
         in chunks, which it is when ``multipart/form-data`` is a form type of the application (HY-131.1). The core
         starts the reader in chunks only for a ``multipart/form-data`` type with a boundary (HY-113.24)."""
         rules = core_rules()
-        self.__body = rules.request_body_start(
-            content_type or None,
-            stream,
-            rules.body_limits(limit, value_limit, part_limit, file_limit),
-        )
+        limits = rules.body_limits(limit, value_limit, part_limit, file_limit)
         self.__over = False
         self.__failed = False
         self.__finished = False
         self.__failure: Optional[BaseException] = None
+        # HY-131.29: the core fails a Content-Length that is no number with invalid_content_length and a number above
+        # the body limit with body_limit before any byte is read; that failure is the failure of the body.
+        try:
+            self.__body = rules.request_body_start(content_type or None, content_length, stream, limits)
+        except Exception as error:
+            if _status(error) is None:
+                raise
+            self.__failure = error
+            if _status(error) == _PASSED:
+                self.__over = True
+            else:
+                self.__failed = True
+            self.__body = rules.request_body_start(content_type or None, None, stream, limits)
 
     def feed(self, chunk: bytes) -> bool:
         """Reads the next chunk, and returns False when the body passed a limit, after which it holds no bytes

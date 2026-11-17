@@ -122,6 +122,7 @@ def create_server(
                     application._value_limit,
                     application._part_limit,
                     application.file_limit,
+                    headers.get("content-length"),
                 )
                 # HY-59.10, HY-42.13: a body that the request sends in chunks is decoded, and one in another form, with
                 # another transfer coding or with a Content-Length that is not decimal digits, such as two lines joined,

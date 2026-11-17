@@ -113,9 +113,22 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
       // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
       // The core reads the chunks under the four limits in their order (F-25, HY-131.32).
-      const body = await rules().formStart(request.header('Content-Type') ?? null, app.formTypes.includes('multipart/form-data'), { limit: app.bodyLimit, valueLimit: app.valueLimit, partLimit: app.partLimit, fileLimit: app.fileLimit });
-      read = { core: body, failure: null };
-      const failure = await readBody(incoming, body, app.bodyLimit);
+      // HY-131.29: the core fails a Content-Length that is no number with invalid_content_length and a number above the
+      // body limit with body_limit before any byte is read; that failure is the failure of the body, which reads no chunk.
+      const contentType = request.header('Content-Type') ?? null;
+      const stream = app.formTypes.includes('multipart/form-data');
+      const limits = { limit: app.bodyLimit, valueLimit: app.valueLimit, partLimit: app.partLimit, fileLimit: app.fileLimit };
+      let body: CoreRequestBody;
+      let refused: string | null = null;
+      try {
+        body = await rules().formStart(contentType, request.header('Content-Length') ?? null, stream, limits);
+      } catch (error) {
+        refused = error instanceof Error && 'kind' in error && typeof error.kind === 'string' ? error.kind : null;
+        if (refused === null) throw error;
+        body = await rules().formStart(contentType, null, stream, limits);
+      }
+      read = { core: body, failure: refused };
+      const failure = refused ?? await readBody(incoming, body, app.bodyLimit);
       read = { core: body, failure };
       request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, body: body.held(), bodySize: failure === 'body_limit' ? Math.max(body.size(), app.bodyLimit + 1) : body.size(), https }, read);
       holder = request;
