@@ -56,14 +56,17 @@ final class RequestTest extends TestCase
         $server = $_SERVER;
         unset($_SERVER['REQUEST_URI']);
         $_SERVER['REQUEST_METHOD'] = 'GET';
+        // The failure of PHPUnit is a \RuntimeException too, so the assertion is made outside the catch.
+        $failure = null;
         try {
             Request::fromGlobals();
-            self::fail('a request without REQUEST_URI was read');
         } catch (\RuntimeException $error) {
-            self::assertStringContainsString('REQUEST_URI', $error->getMessage());
+            $failure = $error->getMessage();
         } finally {
             $_SERVER = $server;
         }
+        self::assertNotNull($failure, 'a request without REQUEST_URI was read');
+        self::assertStringContainsString('$_SERVER has no REQUEST_URI', $failure);
     }
 
     /** HY-42: `fromGlobals` takes the request target from `REQUEST_URI`. */
