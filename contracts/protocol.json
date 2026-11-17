@@ -6884,7 +6884,8 @@
                   "id": "HY-104.25",
                   "en": "The storage of a session, which is its identifier, its record bytes, its lock, its file or Redis key and its expiry, is the rule of the session-store library, and hyper uses its store interface; the session values that hyper keeps in a record, which are the token (HY-24), the flash values and the changed topics (HY-25), the kept values (HY-40), the conversion between a record and the data model (HY-104.13, HY-104.14) and the keys of HY-104.22 and HY-104.23, are rules of hyper.",
                   "ko": "session의 저장(식별자, record 바이트, 잠금, 파일이나 Redis key, 만료)은 session-store 라이브러리의 규칙이고 hyper는 그 저장소 interface를 쓴다. hyper가 record에 두는 session 값, 곧 token(HY-24), flash 값과 바뀐 topic(HY-25), kept 값(HY-40), record와 데이터 모델 사이의 변환(HY-104.13, HY-104.14), HY-104.22와 HY-104.23의 key는 hyper의 규칙이다.",
-                  "koSource": "ed407dc1f359937edf87dc67f8dc31ec49e94c4ae9f1a58bc9dbe3e6d6303aba"
+                  "koSource": "ed407dc1f359937edf87dc67f8dc31ec49e94c4ae9f1a58bc9dbe3e6d6303aba",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-104.2",
@@ -6902,13 +6903,15 @@
                   "id": "HY-104.26",
                   "en": "The PHP server keeps a session with the file store of the session-store library, as the Node and Python servers do, and not with the native session handler of PHP, with which it shares only the file name, the record form `php_serialize`, the file mode and `flock` with `LOCK_EX`.",
                   "ko": "PHP server는 Node와 Python server처럼 session-store 라이브러리의 파일 저장소로 session을 가지며 PHP의 native session handler를 쓰지 않는다. native handler와는 파일 이름, record 형식 `php_serialize`, 파일 mode, `LOCK_EX`의 `flock`만 같다.",
-                  "koSource": "eb1366b1ae934510b5c85fe91dd840dc6f522e59aecb7ed04580d4b04b845be8"
+                  "koSource": "eb1366b1ae934510b5c85fe91dd840dc6f522e59aecb7ed04580d4b04b845be8",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-104.27",
                   "en": "Every server waits for the lock of a session file in the core of the session-store library, which blocks on `flock` with `LOCK_EX` on a thread of its own for each waiting session, with no retry and no interval, so the operating system orders the waiting requests as it orders the native files handler of PHP.",
                   "ko": "모든 server는 session-store 라이브러리의 core에서 session 파일의 잠금을 기다리며, core는 기다리는 session마다 자기 스레드에서 `LOCK_EX`의 `flock`으로 블로킹하고 재시도와 간격을 두지 않는다. 그래서 운영체제가 PHP native files handler에서처럼 기다리는 요청의 순서를 정한다.",
-                  "koSource": "850dfd9cfa53b44788215fa683d5290400a5ad97c9a7f27f93e8c6666750751c"
+                  "koSource": "850dfd9cfa53b44788215fa683d5290400a5ad97c9a7f27f93e8c6666750751c",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-104.7",
@@ -7115,7 +7118,8 @@
                   "id": "HY-115.29",
                   "en": "Every server takes the connection settings of the Redis store, which are the addresses, TLS and the ACL user, and not a client of the application, and the options `lockExpire` in seconds, `lockRetries` and `lockWait` in microseconds, which are `redis.session.lock_expire`, `redis.session.lock_retries` and `redis.session.lock_wait_time` of phpredis; every server of one Redis server gives them the same values, and the expiry is longer than any request.",
                   "ko": "모든 server는 애플리케이션의 client가 아니라 Redis 저장소의 연결 설정(주소, TLS, ACL 사용자)과, phpredis의 `redis.session.lock_expire`, `redis.session.lock_retries`, `redis.session.lock_wait_time`인 option `lockExpire`(초), `lockRetries`, `lockWait`(마이크로초)를 받는다. 한 Redis server의 모든 server는 같은 값을 주고, 만료는 어떤 요청보다 길다.",
-                  "koSource": "762541508b4ddc88adf8975b1ebda70b88c5a44eaf851dbca46aa67713c5ef55"
+                  "koSource": "762541508b4ddc88adf8975b1ebda70b88c5a44eaf851dbca46aa67713c5ef55",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-115.11",
@@ -7175,7 +7179,8 @@
                   "id": "HY-115.28",
                   "en": "`lifetime` of the Redis store is an unsigned integer of seconds with the default 1440, and `lockExpire` is an unsigned integer of seconds that the caller states, with no default, because no value is longer than every request of every application; a lifetime or a lock expiry of 0 fails with the kind of the session-store library (`invalid_lifetime`, `invalid_lock_expire`).",
                   "ko": "Redis 저장소의 `lifetime`은 기본값 1440인 초 단위 부호 없는 정수이고, `lockExpire`는 호출자가 밝히는 초 단위 부호 없는 정수로 기본값이 없다. 어떤 값도 모든 애플리케이션의 모든 요청보다 길지 않기 때문이다. 0인 lifetime이나 lock expiry는 session-store 라이브러리의 kind(`invalid_lifetime`, `invalid_lock_expire`)로 실패한다.",
-                  "koSource": "0b072b82de3ff88e6627c2aba1855bd3de1c8bf8943d4c7e5fd30b0cb8fa7f96"
+                  "koSource": "0b072b82de3ff88e6627c2aba1855bd3de1c8bf8943d4c7e5fd30b0cb8fa7f96",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-115.22",

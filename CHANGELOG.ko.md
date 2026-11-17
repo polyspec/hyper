@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0b8f4b4a15683a3bc0f952e72e40d6fb326aaead744cb0ee312058873ba76d54 -->
+<!-- source-sha256: 8e8e9b31c9b8237a8a63b4689ecc535051e78231b10b3815ba840857625d2d85 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-104.25, HY-104.26, HY-104.27, HY-115.28, HY-115.29는 서버가 session을 session-store 라이브러리의 저장소에 둔다고 명시하는데, 어느 서버도 그렇게 하지 않는다. 이제 contract가 각 statement를 그 행과 함께 미구현으로 표시하고(`"unimplemented": "H35.37"`), `docs/spec/protocol.md`가 그 표시를 렌더링한다. `docs/features.md`의 행 `session-library-stores`는 정확히 이 다섯 statement를 적는다. 표시가 없는 HY-104.32는 더 이상 적지 않는다.
 
 - `docs/spec/protocol.md`가 어떤 코드도 따르지 않는 statement를 현재 동작으로 렌더했고, 유일한 표시는 `docs/features.md` 행의 상태 텍스트였다. 이제 id를 가진 `contracts/protocol.json`의 statement는 `"unimplemented": "<row>"`, 곧 그것을 구현하는 checklist의 행을 가질 수 있다. `make spec-docs`는 statement 뒤에 ` *(Not implemented: row <row>.)*`를, 한국어 문서에는 그 번역 뒤에 한국어 문구를 쓴다. `make spec-docs-check`는 id 없는 statement의 표시, checklist에 없는 행, 상태가 완료 또는 검증인 행, 상태가 `not implemented`인 `docs/features.md`의 어떤 행도 Feature cell에 이름하지 않는 표시된 statement, 그런 행이 이름하는데 표시가 없는 statement에 대해 실패한다. 표시를 가진 statement: HY-113.23, HY-113.24, HY-113.25, HY-131.28, HY-131.30(H35.11)과 HY-131.29(H35.36-2). `docs/features.md`의 행 `node-core-rules`, `python-core-rules`, `php-core-rules`는 상태 `partial`을 가진다. 각 서버의 unit들이 core의 규칙을 부르는데도 그 행들은 `not implemented`라고 적었다. Node 행은 존재하지 않는 파일 대신 `packages/ts/src/app/core-rules.ts`의 `rules`를 이름한다. release 절차는 release의 changelog section이 표시된 모든 statement를 이름한다고 적는다(H35.40).
 - `docs/features.md`에 세션의 저장을 session-store 라이브러리에 맡기는 statement(HY-104.25, HY-104.26, HY-104.27, HY-104.32, HY-115.28, HY-115.29)의 행이 없어, 문서가 서버들이 그것을 따르는 것처럼 읽혔다. Node 서버와 Python 서버는 파일 저장소와 Redis 저장소를 직접 구현하고, 그 Redis 저장소는 application의 command 함수를 받으며, PHP 서버는 PHP의 세션을 쓰고, 어느 서버도 core에 저장소를 주지 않는다. 새 행 `session-library-stores`가 이것을 not implemented로 적는다(H35.37).
