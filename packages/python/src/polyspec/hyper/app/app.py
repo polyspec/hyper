@@ -24,7 +24,7 @@ from ..representation._representation_entry import RepresentationEntry
 from ..representation._representation_response import RepresentationResponse
 from ..representation.media_type import MediaType
 from ..page._manifest import Manifest
-from ..page._page import Page
+from ..page._page import Page, PageAction
 from ..page._region import Region
 from ..http.reply import Reply
 from ..http.request import Request
@@ -99,6 +99,7 @@ class App:
         context: Optional[Callable],
         functions: Optional[dict],
         program: str,
+        manifest_bytes: bytes,
     ):
         self.manifest = manifest
         self.base_path = base_path
@@ -117,26 +118,118 @@ class App:
         self._shell = shell
         self._context_handler = context
         self.container = Container()
-        from ..page._renderer import Renderer
-
-        renderer = Renderer.open(program, timezone, functions)
-        # HY-125: the build id of the program directory, read when the application opens.
-        build = Build.read(str(Path(program) / "build.json"))
-        from ..page._reads import Reads
-
+        pages = App._open_pages(
+            manifest_bytes,
+            program,
+            functions,
+            {
+                "timezone": timezone,
+                "context": context is not None,
+                "base_path": base_path,
+                "form_types": list(form_types),
+                "data_base_path": None if client is None else client.base_path,
+            },
+        )
         self._page = Page(
+            pages,
             manifest,
             shared,
             region_loaders,
             self.container,
-            renderer,
-            Reads.open(program),
-            build,
-            timezone,
             https,
             context,
-            self._vary_header(),
         )
+
+    @staticmethod
+    def _open_pages(
+        manifest: bytes, program: str, functions: Optional[dict], options: dict
+    ):
+        """Opens the pages of the core (HY-48.19): the manifest bytes, the sources of the templates, the read paths of
+        `reads.json`, the options and the functions of the program. The open names the first missing output of the
+        program, and only a missing build file has the kind `invalid_build` (HY-48.2, HY-106.21)."""
+        from .._binding import _root as core
+
+        for name in ("reads.json", "build.json", "templates"):
+            path = Path(program) / name
+            if not (path.is_dir() if name == "templates" else path.is_file()):
+                raise core_rules().value_error(
+                    f"{path} of the server program {program} is missing; "
+                    "hyper build of @polyspec/hyper-cli builds it",
+                    "invalid_build" if name == "build.json" else "invalid_application",
+                )
+        # HYC-24.7: an entry of `functions` that is no function fails the open, as the core states it.
+        entries = dict(functions or {})
+        for name, entry in entries.items():
+            core.check_function_entry(name, callable(entry))
+        reads = App._route_reads(Path(program) / "reads.json")
+        # HY-125: the build id of the program directory, read when the application opens.
+        build = Build.read(str(Path(program) / "build.json"))
+        pages = core.Pages(
+            manifest,
+            App._template_sources(Path(program) / "templates"),
+            reads,
+            build=build,
+            **options,
+        )
+        # HYC-24.8: a name that the template language refuses fails the open with the message of the template
+        # language.
+        for name, entry in entries.items():
+            pages.register(name, entry)
+        return pages
+
+    @staticmethod
+    def _route_reads(path: Path) -> object:
+        """Reads the read paths of the routes from `reads.json` of the program (HY-73.34, HY-73.30) as the value that
+        the core takes: the member `routes` of its JSON text. A file that cannot be read, bytes that are not UTF-8 and
+        a text that json refuses fail the open (HY-106.21), and so does a text without the routes."""
+        data = App._read_bytes(path)
+        try:
+            value = core_rules().json_codec_decode(data.decode("utf-8"))
+        except (UnicodeDecodeError, ValueError, TypeError) as error:
+            if getattr(error, "kind", None) == "invalid_application":
+                raise
+            raise core_rules().value_error(
+                f"{path} is not valid JSON or UTF-8", "invalid_application"
+            ) from None
+        routes = value.get("routes") if isinstance(value, dict) else None
+        if not isinstance(routes, dict):
+            raise core_rules().value_error(
+                f"{path} has no routes", "invalid_application"
+            )
+        return routes
+
+    @staticmethod
+    def _template_sources(directory: Path) -> dict[str, str]:
+        """Reads the sources of the templates of the program by their names relative to the directory `templates`,
+        with `/` between the segments, in the byte order of the names. A file that is not UTF-8 fails the open
+        (HY-106.21)."""
+        names = sorted(
+            (
+                path.relative_to(directory).as_posix()
+                for path in directory.rglob("*")
+                if path.is_file()
+            ),
+            key=lambda name: name.encode("utf-8"),
+        )
+        sources: dict[str, str] = {}
+        for name in names:
+            path = directory / name
+            try:
+                sources[name] = App._read_bytes(path).decode("utf-8")
+            except UnicodeDecodeError:
+                raise core_rules().value_error(
+                    f"{path} is not valid UTF-8", "invalid_application"
+                ) from None
+        return sources
+
+    @staticmethod
+    def _read_bytes(path: Path) -> bytes:
+        """Reads the bytes of a file of an application. A file that cannot be read fails the open with kind
+        `invalid_application` and the message of the system error (HY-106.21)."""
+        try:
+            return path.read_bytes()
+        except OSError as error:
+            raise core_rules().value_error(str(error), "invalid_application") from None
 
     @staticmethod
     def open(
@@ -253,6 +346,7 @@ class App:
             context,
             functions,
             program,
+            App._read_bytes(Path(manifest)),
         )
 
     @staticmethod
@@ -709,8 +803,7 @@ class App:
                         handler,
                         session,
                         flash,
-                        200,
-                        {},
+                        None,
                         reply,
                         base_path,
                     ),
@@ -730,19 +823,21 @@ class App:
                 # no data of its own; a loader that raises it fails below (HY-43).
                 if App._orm_code(error) != "REVISION_CHANGED":
                     raise
-                result = Result.page(409, {})
-            if not isinstance(result, Result):
+                result = None
+            if result is not None and not isinstance(result, Result):
                 raise TypeError(
                     f"POST action of route {route['name']} did not return a Result"
                 )
+            # The masked value of the token before the action, which the page input holds (HY-72.3).
+            masked = request.csrf_token()
             # HY-72: the action renews the session after it returns, and a page that it renders carries the new
-            # token.
+            # token, which the action step gives the core.
             if reply._take_renewal():
                 session.renew()
                 request = request._with_session(
                     flash, Csrf.masked(session.csrf_token())
                 )
-            if result._is_redirect():
+            if result is not None and result._is_redirect():
                 return self._redirect_response(request, session, result, base_path)
             # HY-72.4: a loader that renews the session fails, also while the 409 page renders.
             return App._without_renewal(
@@ -753,8 +848,7 @@ class App:
                     handler,
                     session,
                     flash,
-                    result.status,
-                    result.data,
+                    PageAction(result, masked),
                     reply,
                     base_path,
                 ),

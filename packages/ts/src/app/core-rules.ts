@@ -464,8 +464,7 @@ export interface CoreRules {
     routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): CoreValue;
     // Partial. The read paths of one template: rules.template_reads (HY-73).
     reads(templates: ReadonlyMap<string, string>, name: string): CoreValue;
-    // Partial. The reserved template of the embedded data: rules.reserved_data_template (HY-31.3). The build still
-    // writes its copy for a server that does not call the core (HY-31.10).
+    // Partial. The reserved template of the embedded data: rules.reserved_data_template (HY-31.3).
     reserved(): DataTemplate;
   };
   readonly Application: {

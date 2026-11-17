@@ -40,7 +40,3 @@ class Region:
     def kept_paths(self, kinds: list[str]) -> list[str]:
         """Returns the kept paths of the given kinds."""
         return [path for path, kind in self.keep.items() if kind in kinds]
-
-    def uses_any(self, topics: list[str]) -> bool:
-        """Returns True when this region uses one of the topics."""
-        return any(topic in self.uses for topic in topics)

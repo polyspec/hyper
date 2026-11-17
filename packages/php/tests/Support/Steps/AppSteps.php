@@ -6,7 +6,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\Renderer;
+use Polyspec\Hyper\Program;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Session;
@@ -247,67 +247,47 @@ final class AppSteps
         if ($route === null) {
             throw new \UnexpectedValueException("the manifest has no route {$wanted}");
         }
-        $renderer = Renderer::open("{$directory}/program", Json::string($application['timezone'] ?? '+09:00'));
-        $shared = $renderer->bind(Json::map($case->input('shared'), 'the shared data'));
-        $bound = [];
+        // The renders of a page of the PHP server: `render_parts` and `render_document` of the core (HY-13).
+        $pages = Program::pages(
+            "{$directory}/manifest.json",
+            "{$directory}/program",
+            Json::string($application['timezone'] ?? '+09:00'),
+            false,
+            '',
+            ['application/x-www-form-urlencoded'],
+            null,
+            [],
+        );
+        $shared = Json::map($case->input('shared'), 'the shared data');
+        $regions = [];
         foreach (Json::map($case->input('regions'), 'the regions') as $region => $data) {
-            $bound[(string) $region] = $renderer->bind(Json::map($data, "the data of the region {$region}"));
+            $regions[(string) $region] = Json::map($data, "the data of the region {$region}");
         }
-        $routeRegions = [];
-        foreach (Json::arrays($route['regions'] ?? []) as $region) {
-            $regionName = Json::string($region['name'] ?? null);
-            if (array_key_exists($regionName, $bound)) {
-                $routeRegions[$regionName] = [
-                    'template' => Json::string($region['template'] ?? null),
-                    'data' => $bound[$regionName],
-                ];
-            }
-        }
-        $title = $renderer->alone(Json::string($manifest['title'] ?? null), $shared, $renderer->bind([]));
-        $manifestRegions = [];
+        $rendered = $pages->renderParts($wanted, $shared, $regions, 0.0);
+        /** @var array<string, string> $parts */
+        $parts = (array) $rendered->regions;
+        /** @var string $title The type that the extension declares for the member (T-1a). */
+        $title = $rendered->title;
+        $frame = self::placed($pages->renderDocument($wanted, $shared, $regions, 0.0), $title, 'title');
         $page = '';
-        $parts = [];
         foreach (Json::arrays($manifest['regions'] ?? null) as $region) {
             $regionName = Json::string($region['name'] ?? null);
-            $isPage = ($region['page'] ?? false) === true;
-            $page = $isPage ? $regionName : $page;
-            $manifestRegions[$regionName] = [
-                'template' => Json::string($isPage ? ($route['template'] ?? null) : ($region['template'] ?? null)),
-                'data' => $bound[$regionName]
-                    ?? throw new \UnexpectedValueException("the case has no data of {$regionName}"),
-            ];
-            $parts[$regionName] = $renderer->alone(
-                $manifestRegions[$regionName]['template'],
-                $shared,
-                $manifestRegions[$regionName]['data'],
-                $isPage ? $routeRegions : [],
-            );
-        }
-        $pageFrame = $parts[$page] ?? throw new \UnexpectedValueException('the manifest has no page region');
-        $frame = self::placed(
-            $renderer->document(
-                Json::string($manifest['layout'] ?? null),
-                Json::string($manifest['title'] ?? null),
-                $shared,
-                $manifestRegions,
-                $page,
-                $routeRegions,
-                null,
-                Json::string($application['build'] ?? null),
-            ),
-            $title,
-            'title',
-        );
-        foreach (array_keys($manifestRegions) as $regionName) {
-            $frame = self::placed($frame, $parts[$regionName], $regionName);
-        }
-        foreach ($routeRegions as $regionName => $region) {
-            $parts[$regionName] = $renderer->alone($region['template'], $shared, $region['data']);
-            $pageFrame = self::placed($pageFrame, $parts[$regionName], $regionName);
+            $page = ($region['page'] ?? false) === true ? $regionName : $page;
+            $frame = self::placed($frame, $parts[$regionName] ?? '', $regionName);
         }
         $case->compare('title', $title);
         $case->compare('parts', $parts);
         $case->compare('frame', $frame);
+        if (!$case->has('pageFrame')) {
+            return;
+        }
+        $pageFrame = $parts[$page] ?? throw new \UnexpectedValueException('the page region is not rendered alone');
+        foreach (Json::arrays($route['regions'] ?? []) as $region) {
+            $regionName = Json::string($region['name'] ?? null);
+            if (array_key_exists($regionName, $regions)) {
+                $pageFrame = self::placed($pageFrame, $parts[$regionName] ?? '', $regionName);
+            }
+        }
         $case->compare('pageFrame', $pageFrame);
     }
 
@@ -333,15 +313,18 @@ final class AppSteps
         $name = Json::string($case->input('application'));
         $applications = Json::array($case->input('applications'));
         $directory = self::PROGRAMS . "/{$name}";
+        // The handlers write the store that the requests use with a step `store` (HY-38.20).
+        $store = new CountingStore();
 
         return [
             new AppRun(
                 Json::map($applications[$name] ?? null, "the application {$name}"),
                 $case->has('handlers') ? Json::map($case->input('handlers'), 'the handlers') : [],
                 $case->has('options') ? Json::map($case->input('options'), 'the options') : [],
+                $store,
             ),
             $directory,
-            new CountingStore(),
+            $store,
         ];
     }
 

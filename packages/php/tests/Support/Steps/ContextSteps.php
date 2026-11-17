@@ -7,7 +7,6 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Context;
 use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\HyperValueError;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\CaseInput;
 use Polyspec\Hyper\Tests\Support\ContextRun;
@@ -36,54 +35,36 @@ final class ContextSteps
         }
     }
 
-    /** The shared data whose keys the case lists, with the context in its place (HY-10, HY-128). */
-    public static function withContext(CaseReader $case): void
-    {
-        $shared = [];
-        foreach (self::stringList($case, 'shared') as $name) {
-            $shared[$name] = $name;
-        }
-        $keys = null;
-        $context = null;
-        $raises = null;
-        try {
-            $placed = Context::withContext($shared, ['name' => 'Board']);
-            $keys = array_keys($placed);
-            $context = $placed['context'];
-        } catch (HyperValueError $error) {
-            // HY-132.2: HyperValueError is the class of the category value.
-            $raises = [
-                'kind' => $error->kind(),
-                'status' => $error->status(),
-                'category' => 'value',
-                'message' => $error->getMessage(),
-            ];
-        }
-        $case->compare('keys', $keys);
-        $case->compare('context', $context);
-        $case->compare('raises', $raises);
-    }
-
     /**
-     * Returns a field of a case that is a list of strings, and fails for any other value.
+     * Returns the shared data of a case with each marker `{"$": "kind", "name": <kind>}` replaced by the value of that
+     * kind of the fixture `valueKinds`, which JSON cannot state; a kind that PHP has no value for fails the case.
      *
-     * @return list<string>
+     * @param array<array-key, mixed> $value
+     * @param array<array-key, mixed> $kinds
+     *
+     * @return array<array-key, mixed>
      */
-    private static function stringList(CaseReader $case, string $name): array
+    private static function withKinds(array $value, array $kinds): array
     {
-        $value = $case->input($name);
-        if (!is_array($value) || !array_is_list($value)) {
-            throw new \UnexpectedValueException("the case field {$name} is not a list of strings");
-        }
-        $strings = [];
-        foreach ($value as $item) {
-            if (!is_string($item)) {
-                throw new \UnexpectedValueException("the case field {$name} is not a list of strings");
+        $resolved = [];
+        foreach ($value as $key => $item) {
+            if (is_array($item) && ($item['$'] ?? null) === 'kind') {
+                $kind = Json::string($item['name'] ?? null);
+                if (!array_key_exists($kind, $kinds)) {
+                    throw new \UnexpectedValueException("valueKinds does not hold the kind {$kind}");
+                }
+                $resolved[$key] = match ($kind) {
+                    // The three bytes ED A0 80, the UTF-8 form of U+D800, which is no UTF-8 text.
+                    'loneSurrogate' => "\xED\xA0\x80",
+                    'resource' => fopen('php://memory', 'r'),
+                    default => throw new \UnexpectedValueException("the kind {$kind} has no value in PHP"),
+                };
+                continue;
             }
-            $strings[] = $item;
+            $resolved[$key] = is_array($item) ? self::withKinds($item, $kinds) : $item;
         }
 
-        return $strings;
+        return $resolved;
     }
 
     /** Returns a string field of a case, and fails for any other value. */
@@ -109,8 +90,9 @@ final class ContextSteps
             throw new \UnexpectedValueException("the contract has no application {$name}");
         }
         $run = new ContextRun($name, $applications[$name], self::PROGRAMS);
+        $kinds = Json::map($case->input('valueKinds'), 'valueKinds');
         $app = $run->open(
-            $case->has('shared') ? CaseInput::map($case, 'shared') : null,
+            $case->has('shared') ? self::withKinds(CaseInput::map($case, 'shared'), $kinds) : null,
             context: $case->has('context') ? self::stringField($case, 'context') : null,
         );
         $session = new ArraySession();

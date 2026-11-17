@@ -23,7 +23,7 @@ One run checks the options, the manifest and the template rules before it writes
 
 - below `public/assets`, files whose names hold a hash of their content: the template files, the client entry and its chunks, and each asset of `--asset <name>=<path>` and `--tailwind <source>=<name>` (HR-77);
 - `<output>/client/`: `manifest.json` with the URL of the entry as `hyper` and the URL of each asset by its name, which the layout code reads; `assets.json` with every path that this build wrote below `public/assets`, and `assets.previous.json` with the files of the last different build before it, which the next build reads: it keeps the files of the build before it and removes the files that neither list names; `templates.index.json`, the index of the template files that the client bundle holds; and the static shell `csr/` when `client/main.ts` exists and `--api` is given;
-- `<output>/program/`: `templates/`, `legacy/`, `reads.json` and `build.json`, which the three servers read (HY-48). The build writes no generated PHP program, and it refuses the option `--php-namespace` of earlier releases by its name (HY-48.20).
+- `<output>/program/`: `templates/`, `reads.json` and `build.json`, which the three servers read (HY-48.21). The build writes no generated PHP program, and it refuses the option `--php-namespace` of earlier releases by its name (HY-48.20).
 
 An asset name matches `[a-z][a-z0-9-]*` and is neither `hyper` nor starts with `hyper-` (HYC-16.13). The build takes no build id. Below `--output` it owns only `client/` and `program/`.
 

@@ -198,3 +198,8 @@ function fileOver(mixed ...$arguments): mixed
 {
     return Calls::record('fileOver', array_values($arguments));
 }
+
+function checkFunctionEntry(mixed ...$arguments): mixed
+{
+    return Calls::record('checkFunctionEntry', array_values($arguments));
+}

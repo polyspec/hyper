@@ -2,8 +2,6 @@
 // (HR-34), and writes its build id. `hyper build` passes the id that it computed from its outputs (HY-125.21); a test
 // that needs a fixed id builds its program with the same functions and that id, so the rules of the assembly exist once.
 //   templates/    every template of the application, and no copy of the reserved template hyper/data.tpl (HY-31.9)
-//   legacy/       hyper/data.tpl, the copy of the reserved template for a server that does not call the core
-//                 (HY-31.10)
 //   reads.json    the read paths of every route, by which the server keeps data (HY-73), as readsFile of the core
 //                 writes them (@polyspec/hyper/build)
 //   build.json    {"build":"<id>"}, written by writeBuildFile (HY-125.23)

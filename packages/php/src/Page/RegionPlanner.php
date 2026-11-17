@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * Selects the regions that a response contains (HY-18, HY-19).
+ * The changed topics of a request (HY-11, HY-19), from which the core selects the regions of a response (HY-18).
  *
  * @internal
  */
@@ -28,27 +28,5 @@ final class RegionPlanner
         }
 
         return array_values(array_unique($topics));
-    }
-
-    /**
-     * Returns every region in manifest order for a document, and the page region followed by the
-     * regions that use a changed topic for a region request.
-     *
-     * @param list<string> $changed
-     * @return list<Region>
-     */
-    public static function select(Manifest $manifest, bool $document, array $changed): array
-    {
-        if ($document) {
-            return $manifest->regions;
-        }
-        $regions = [$manifest->page];
-        foreach ($manifest->regions as $region) {
-            if (!$region->page && $region->usesAny($changed)) {
-                $regions[] = $region;
-            }
-        }
-
-        return $regions;
     }
 }
