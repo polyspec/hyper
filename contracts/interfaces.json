@@ -18835,6 +18835,49 @@
             "record-session.cookieHeader",
             "record-session.cookieName"
           ]
+        },
+        "storeFailures": {
+          "runners": [
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "files": {
+              "role": "input",
+              "optional": true
+            },
+            "directory": {
+              "role": "input",
+              "optional": true
+            },
+            "lifetime": {
+              "role": "input",
+              "optional": true
+            },
+            "cookie": {
+              "role": "input",
+              "optional": true
+            },
+            "raises": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-132.3",
+              "state": "The step makes a store of session files with `lifetime`, or its default, over a temporary directory of the case that holds the session files `files`, or over what `directory` names in place of it: `missing` a path below it that does not exist, `file` the path of a file below it and `relative` a relative path. With `cookie` it opens the session of that cookie value, reads the key `a` and closes the session. `raises` is the first failure of these calls, compared through the call of the store by the runner, because the answer of a server to a failed session open is the plain 500 of HY-60.14, which carries no class and no kind: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null."
+            }
+          },
+          "members": [
+            "file-sessions.constructor",
+            "file-sessions.open",
+            "record-session.close",
+            "record-session.get"
+          ]
         }
       }
     },

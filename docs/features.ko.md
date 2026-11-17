@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: c99f875634b83338f44453e1022f234f79860cd0a13e23f5116bde27ad024782 -->
+<!-- source-sha256: 5c01803df523b200b5730684a140d1360c9464e65ef9043b7438c50d5a440ab2 -->
 # 기능 상태
 
 [English](features.md).
@@ -54,6 +54,7 @@
 | hyper-node | server protocol의 Node.js 구현 `@polyspec/hyper`, 파일 session(HY-104), PHP 구현과 같은 바이트의 JSON, board 예제 서버(HY-54) | implemented | `make hyper-test-node`, `make node-server` |
 | python-request-hook | Python 서버 `create_server`의 요청 hook `around`. 요청과 `answer`를 받고, `Request.with_header`로 요청을 바꾸거나 응답을 바꾸며, session과 애플리케이션의 hook 없이 혼자 응답할 수 있다 (HY-97) | implemented | `make test-python`, `make hyper-test-python-render` |
 | hyper-python | server protocol의 Python 구현 `polyspec-hyper`. template Python package로 렌더하고 file session(HY-104)과 `http.server` 서버, body iterable이 자기 `close()`에서 write hook과 disconnect hook을 실행하는 WSGI application callable(H19.1, H34.1), ASGI application callable(H19.2), board 예제 서버를 둔다 (H15.3) | implemented | `make test-python`, `make hyper-test-python-render`, `make server-parity-python` |
+| session-failure-kinds | 서버의 session 저장 실패는 session-store 라이브러리가 그 실패에 주는 kind, 상태, category를 가진 hyper의 해당 category class의 오류다(HY-132.1, HY-132.3, HY-104.32) | not implemented: Node와 Python 서버의 store는 kind 없는 일반 `Error`, `ValueError`, `SessionLockError`를 발생시키고, PHP 서버는 kind 없는 `SessionOpenError`를 발생시킨다. `contracts/file-sessions.json`의 section `storeFailures`가 그 kind를 서술하며, 서버가 그것을 발생시킬 때까지 실패한다 | `make hyper-test-node CASES="file-sessions.json#storeFailures"`, `make hyper-test-python CASES="file-sessions.json#storeFailures"` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
 | region-data | 라우트 영역의 내장 데이터, 요청 없이 라우트 영역에서 동작하는 `data`, `render`, `set`, `hy-set`, 데이터 공개 규칙(HYC-10 ~ HYC-11, HYC-5, HY-71) | implemented | `make test-js`, `make e2e` |
 | kept-data | 서버 세션, 쿠키, localStorage, sessionStorage의 유지 경로(HY-37 ~ HY-40) | implemented | `make test-php`, `make test-js`, `make parity`, `make e2e` |

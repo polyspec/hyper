@@ -204,5 +204,85 @@
       "name": "__Host-hy-session",
       "header": "__Host-hy-session=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; Path=/; Secure; HttpOnly; SameSite=Lax"
     }
+  ],
+  "storeFailures": [
+    {
+      "id": "a_session_file_that_holds_no_array_fails_with_record_not_array",
+      "label": "a session file that holds no array fails with the kind record_not_array of the session-store library (HY-104.20, HY-132.3)",
+      "files": [
+        {
+          "identifier": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "bytes": "i:1;"
+        }
+      ],
+      "cookie": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "raises": {
+        "kind": "record_not_array",
+        "status": 500,
+        "category": "store",
+        "message": null
+      }
+    },
+    {
+      "id": "a_session_file_that_is_no_php_serialize_text_fails_with_record",
+      "label": "a session file that is no php_serialize text fails with the kind record of the session-store library (HY-104.8, HY-132.3)",
+      "files": [
+        {
+          "identifier": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "bytes": "no record"
+        }
+      ],
+      "cookie": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "raises": {
+        "kind": "record",
+        "status": 500,
+        "category": "store",
+        "message": null
+      }
+    },
+    {
+      "id": "a_store_of_a_directory_that_does_not_exist_fails_with_invalid_directory",
+      "label": "making a store with a directory that does not exist fails with the kind invalid_directory (HY-104.32, HY-132.3)",
+      "directory": "missing",
+      "raises": {
+        "kind": "invalid_directory",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    },
+    {
+      "id": "a_store_of_a_path_that_is_a_file_fails_with_invalid_directory",
+      "label": "making a store with the path of a file fails with the kind invalid_directory (HY-104.32, HY-132.3)",
+      "directory": "file",
+      "raises": {
+        "kind": "invalid_directory",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    },
+    {
+      "id": "a_store_of_a_relative_directory_fails_with_invalid_directory",
+      "label": "making a store with a relative path fails with the kind invalid_directory (HY-104.32, HY-132.3)",
+      "directory": "relative",
+      "raises": {
+        "kind": "invalid_directory",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    },
+    {
+      "id": "a_store_with_a_lifetime_of_0_fails_with_invalid_lifetime",
+      "label": "making a store with a lifetime of 0 fails with the kind invalid_lifetime (HY-104.32, HY-132.3)",
+      "lifetime": 0,
+      "raises": {
+        "kind": "invalid_lifetime",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    }
   ]
 }
