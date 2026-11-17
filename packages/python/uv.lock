@@ -23,9 +23,9 @@ dependencies = [
     { name = "polyspec-session-store", version = "0.0.7", source = { url = "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec_session_store-0.0.7-cp314-abi3-macosx_11_0_arm64.whl" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
     { name = "polyspec-session-store", version = "0.0.7", source = { url = "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec_session_store-0.0.7-cp314-abi3-manylinux_2_34_aarch64.whl" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
     { name = "polyspec-session-store", version = "0.0.7", source = { url = "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec_session_store-0.0.7-cp314-abi3-manylinux_2_34_x86_64.whl" }, marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
-    { name = "polyspec-template", version = "0.0.30", source = { url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-macosx_11_0_arm64.whl" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
-    { name = "polyspec-template", version = "0.0.30", source = { url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_aarch64.whl" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
-    { name = "polyspec-template", version = "0.0.30", source = { url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_x86_64.whl" }, marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
+    { name = "polyspec-template", version = "0.0.31", source = { url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-macosx_11_0_arm64.whl" }, marker = "platform_machine == 'arm64' and sys_platform == 'darwin'" },
+    { name = "polyspec-template", version = "0.0.31", source = { url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-manylinux_2_34_aarch64.whl" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
+    { name = "polyspec-template", version = "0.0.31", source = { url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-manylinux_2_34_x86_64.whl" }, marker = "platform_machine == 'x86_64' and sys_platform == 'linux'" },
 ]
 
 [package.dev-dependencies]
@@ -45,9 +45,9 @@ requires-dist = [
     { name = "polyspec-session-store", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'", url = "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec_session_store-0.0.7-cp314-abi3-macosx_11_0_arm64.whl" },
     { name = "polyspec-session-store", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", url = "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec_session_store-0.0.7-cp314-abi3-manylinux_2_34_aarch64.whl" },
     { name = "polyspec-session-store", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'", url = "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec_session_store-0.0.7-cp314-abi3-manylinux_2_34_x86_64.whl" },
-    { name = "polyspec-template", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'", url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-macosx_11_0_arm64.whl" },
-    { name = "polyspec-template", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_aarch64.whl" },
-    { name = "polyspec-template", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'", url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_x86_64.whl" },
+    { name = "polyspec-template", marker = "platform_machine == 'arm64' and sys_platform == 'darwin'", url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-macosx_11_0_arm64.whl" },
+    { name = "polyspec-template", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-manylinux_2_34_aarch64.whl" },
+    { name = "polyspec-template", marker = "platform_machine == 'x86_64' and sys_platform == 'linux'", url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-manylinux_2_34_x86_64.whl" },
 ]
 
 [package.metadata.requires-dev]
@@ -180,8 +180,8 @@ requires-dist = [{ name = "polyspec-php-serialization", specifier = "==0.0.16" }
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.30"
-source = { url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-macosx_11_0_arm64.whl" }
+version = "0.0.31"
+source = { url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-macosx_11_0_arm64.whl" }
 resolution-markers = [
     "platform_machine == 'arm64' and sys_platform == 'darwin'",
 ]
@@ -189,7 +189,7 @@ dependencies = [
     { name = "polyspec-json", version = "0.0.38", source = { url = "https://github.com/polyspec/json/releases/download/v0.0.38/polyspec_json-0.0.38-cp314-abi3-macosx_11_0_arm64.whl" } },
 ]
 wheels = [
-    { url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-macosx_11_0_arm64.whl", hash = "sha256:c8fbe72eae0834928988fabba5846a9196ead06ac91b54c1038de709d4f3b66c" },
+    { url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-macosx_11_0_arm64.whl", hash = "sha256:a5c16122d824eba46cfa5347ca12ba174242d82cd9bbb27ad38067e1aeff1ff6" },
 ]
 
 [package.metadata]
@@ -197,8 +197,8 @@ requires-dist = [{ name = "polyspec-json", specifier = "==0.0.38" }]
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.30"
-source = { url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_aarch64.whl" }
+version = "0.0.31"
+source = { url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-manylinux_2_34_aarch64.whl" }
 resolution-markers = [
     "platform_machine == 'aarch64' and sys_platform == 'linux'",
 ]
@@ -206,7 +206,7 @@ dependencies = [
     { name = "polyspec-json", version = "0.0.38", source = { url = "https://github.com/polyspec/json/releases/download/v0.0.38/polyspec_json-0.0.38-cp314-abi3-manylinux_2_34_aarch64.whl" } },
 ]
 wheels = [
-    { url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_aarch64.whl", hash = "sha256:f71fc94ed0c222f9678817c7fef0008485f5c73003eae577ad20bc6143e629ab" },
+    { url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-manylinux_2_34_aarch64.whl", hash = "sha256:35f9d270e5f78e46798a0f8a895ac7924e58c279fbb6b98c93a7de143c0571d1" },
 ]
 
 [package.metadata]
@@ -214,8 +214,8 @@ requires-dist = [{ name = "polyspec-json", specifier = "==0.0.38" }]
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.30"
-source = { url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_x86_64.whl" }
+version = "0.0.31"
+source = { url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-manylinux_2_34_x86_64.whl" }
 resolution-markers = [
     "platform_machine == 'x86_64' and sys_platform == 'linux'",
 ]
@@ -223,7 +223,7 @@ dependencies = [
     { name = "polyspec-json", version = "0.0.38", source = { url = "https://github.com/polyspec/json/releases/download/v0.0.38/polyspec_json-0.0.38-cp314-abi3-manylinux_2_34_x86_64.whl" } },
 ]
 wheels = [
-    { url = "https://github.com/polyspec/template/releases/download/v0.0.30/polyspec_template-0.0.30-cp314-abi3-manylinux_2_34_x86_64.whl", hash = "sha256:e7a2c3476d16c8e5006bee5e2ed7378ab931eb0ac04d54937329aeacaa57a067" },
+    { url = "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec_template-0.0.31-cp314-abi3-manylinux_2_34_x86_64.whl", hash = "sha256:39bc2a16b41b54377c55462a0f3d104fb8d91e30f211d612b8dcd16b71960f8d" },
 ]
 
 [package.metadata]

@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5df8afd580d210035552bbbfb29a9b929b8016eb8228da2adce3394cc06b3cf2 -->
+<!-- source-sha256: 2a05d2d0d8ac50320d171812e30ab5ca83d11159b8f92da4d5bd3416eef45faf -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- hyper의 PHP, npm, Python package가 template 0.0.31을 받는다(H34.15). 입력: `TEMPLATE_VERSION`, Composer root와 `packages/php/composer.json`, npm manifest, `packages/python/pyproject.toml`, `config/php-ext-pins.json`. 이전 동작: 이들은 php-ext package가 확장의 class의 PHP stub을 담지 않는 template 0.0.30을 적었다. 기대 동작: 이들은 0.0.31을 적는다. `make npm-lock`, `make python-lock`, `make composer-lock PACKAGES=polyspec/hyper`가 lock을 썼고, `config/php-ext-pins.json`의 pin은 download한 release asset 18개의 sha256으로 각각 그 asset의 field `digest`와 같으며, npm integrity 네 개는 download한 tarball의 sha512와 같다. Rust core, binding crate, Go module, `packages/php/native/composer.json`은 아직 0.0.30을 적는다. `make hyper-test-scripts TESTS="tests/scripts/template-version.test.mts tests/scripts/template-pins.test.mts"`(12개 모두 통과)와, `arm64-darwin`의 PHP 8.4에서 0.0.31의 `packages.json`과 zip을 확인한 `make template-ext`로 검증했다.
 
 - `hyper build`는 `program/legacy/hyper/data.tpl`을 쓰지 않는다(H35.32-1-5, HY-48.21). 입력: 모든 build. 이전 동작: build는 core를 부르지 않는 서버를 위해 예약 템플릿의 사본을 썼으나, PHP와 Python 서버가 core로 렌더한 뒤로는 어느 서버도 그것을 읽지 않는다. 지금 동작: `program/`은 `templates/`, `reads.json`, `build.json`을 담는다. 파일이 지워진 `contracts/interfaces.json`의 unit `reads`와 `renderer`는 사라진다. PHP와 Python runner는 core가 실행하는 `contracts/context.json`의 section `withContext`를 더 실행하지 않으며, `Context::withContext`, `Context.with_context`, `ContextTest.php`도 함께 사라진다. Python render test는 예약 템플릿의 빈 사본을 쓰지 않는다.
 - PHP 서버(H35.32-1-2)와 Python 서버(H35.32-1-3)가 모두 core로 렌더하고, 공유 값을 한 번 읽고, `reads.json`, `build.json`, `templates`의 프로그램 디렉터리를 열므로, HY-13.8과 HY-48.21은 구현되지 않음 표시를 잃는다.
