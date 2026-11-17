@@ -44,8 +44,8 @@ final class RequestBody
     }
 
     /**
-     * Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4,
-     * HY-131.11).
+     * Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.15,
+     * HY-131.32).
      */
     public function feed(string $chunk): bool
     {
@@ -67,7 +67,7 @@ final class RequestBody
 
     /**
      * Returns true when the body passed the body limit, the value limit, the part limit or the file limit
-     * (HY-131.11).
+     * (HY-131.32).
      */
     public function exceeded(): bool
     {

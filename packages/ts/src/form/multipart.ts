@@ -82,7 +82,7 @@ export class Multipart extends MultipartReader {
     return this.closed() ? [new Fields(this.names, this.values), new Files(this.fileNames, this.files)] : null;
   }
 
-  // Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11).
+  // Returns true when the body passed the value limit, the part limit or the file limit (HY-131.32).
   exceeded(): boolean {
     return this.over;
   }

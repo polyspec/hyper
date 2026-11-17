@@ -336,7 +336,7 @@ export interface CoreRules {
   appShellText(path: string, bytes: Uint8Array): string;
   // Partial. appDispatch: front_functions.route_request gives the route of a request (HY-62.16 to HY-62.23, HY-27,
   // HY-116, HY-127, HY-59.12). The server still reads the request (HY-42, HY-56, HY-57), answers the limits of the
-  // body (HY-59.4, HY-131.11) before this call, calls the selection of client rendering (HY-62.9) and reads the media
+  // body (HY-59.15, HY-131.32) before this call, calls the selection of client rendering (HY-62.9) and reads the media
   // type of the body (HY-59.13).
   appRoute(pages: CorePages, chosen: boolean, front: Front): Route;
   // Partial. The text responses of appDispatch: a plain answer of the core as the parts of a response (HY-58,

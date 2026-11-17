@@ -785,6 +785,12 @@
                   "en": "The type of a body is read from its `Content-Type` by F-12 of http-form, and a parameter that its type does not define changes nothing (F-12.4): a `charset` or another parameter of an `application/x-www-form-urlencoded` body fails nothing, and the body is read as UTF-8.",
                   "ko": "body의 type은 http-form의 F-12가 `Content-Type`에서 읽고, 그 type이 정의하지 않는 매개변수는 아무것도 바꾸지 않는다(F-12.4). `application/x-www-form-urlencoded` body의 `charset`이나 다른 매개변수는 실패를 만들지 않으며 body는 UTF-8로 읽는다.",
                   "koSource": "875cd9b72bf25e9c62d3992f7fde93069085d35bc743ea97478dea4c252ea0f6"
+                },
+                {
+                  "id": "HY-57.15",
+                  "en": "The bytes of a body are read under the limits before the route is decided, for every request (HY-131.31), and they are read as a form there only when the `Content-Type` reads as `application/x-www-form-urlencoded` or as `multipart/form-data`, whose reader of http-form starts only with a boundary (HY-113.24); a `Content-Type` that is no media type, such as `application/x-www-form-urlencoded` followed by a line feed, which is no whitespace of a media type (MT-1.3 of http-media-type), is no failure of that reading: its body is held as bytes and gives no form value and no file, a request to an unknown path receives 404 whatever its `Content-Type`, and the `Content-Type` is judged after the route, for an action and `/_hyper/keep` by HY-59.12 and for a representation by HY-121.11.",
+                  "ko": "body의 byte는 모든 요청에서 route가 정해지기 전에 제한 아래에서 읽는다(HY-131.31). 거기서 form으로 읽는 것은 `Content-Type`이 `application/x-www-form-urlencoded`나 `multipart/form-data`로 읽힐 때뿐이며, `multipart/form-data`에 대한 http-form의 reader는 boundary가 있을 때만 시작한다(HY-113.24). media type이 아닌 `Content-Type`, 예를 들어 line feed가 뒤따르는 `application/x-www-form-urlencoded`(line feed는 media type의 공백이 아니다, http-media-type의 MT-1.3)는 그 읽기의 실패가 아니다. 그 body는 byte로 보유되어 폼 값도 파일도 주지 않고, 알 수 없는 경로로의 요청은 `Content-Type`이 무엇이든 404를 받으며, `Content-Type`은 route 뒤에 판정한다. action과 `/_hyper/keep`은 HY-59.12로, representation은 HY-121.11로 판정한다.",
+                  "koSource": "3cf381b23b9aa0663109354d239b4f40f3fcc85e86fd16cafeead3132e593d30"
                 }
               ]
             }
@@ -811,7 +817,8 @@
             17,
             18,
             19,
-            20
+            20,
+            22
           ],
           "blocks": [
             {
@@ -824,10 +831,22 @@
                   "koSource": "853b0caf7e03fbc1471e73bc4cd3d53cb0a930bca10f5b95df67c9162d18ed6d"
                 },
                 {
-                  "id": "HY-113.22",
-                  "en": "The header lines and the parameters of a part are read as F-23, F-6 and F-16 of http-form state, and its boundary as F-12.3 and F-7 state; a part that fails with kind `invalid`, `header_limit` or `no_boundary` of http-form fails the whole body (F-23.3) with status 400 as HY-42 does.",
-                  "ko": "part의 header 줄과 매개변수는 http-form의 F-23, F-6, F-16대로, boundary는 F-12.3과 F-7대로 읽으며, http-form의 kind `invalid`, `header_limit`, `no_boundary`로 실패하는 part는 body 전체를 실패시키고(F-23.3) HY-42처럼 상태 400을 받는다.",
-                  "koSource": "e94dd0e72a15adba0033fc06fef9d25edee642e89d4f68a7421093bedeab290a"
+                  "id": "HY-113.23",
+                  "en": "The header lines of a part are read as F-23 of http-form states and the parameters of its `Content-Disposition` as F-6 states, and every part is a `form-data` part with a `name` parameter as F-16 states, so a part of another disposition type, also of a type that only starts with `form-data`, a part without a `name` parameter, a part without header lines, a part whose `Content-Disposition` follows a lone carriage return and so starts no line, a part whose `name` parameter follows a no-break space, a part that gives a parameter such as `name` twice and a part whose quoted parameter value has no end fail with kind `invalid` of http-form, and header lines of a part longer than 8192 bytes fail with kind `header_limit` (F-23.4).",
+                  "ko": "part의 header 줄은 http-form의 F-23대로, 그 `Content-Disposition`의 매개변수는 F-6대로 읽고, 모든 part는 F-16대로 `name` 매개변수를 가진 `form-data` part다. 그래서 다른 disposition type의 part(`form-data`로 시작하기만 하는 type 포함), `name` 매개변수가 없는 part, header 줄이 없는 part, `Content-Disposition`이 홀로 있는 carriage return 뒤에 와서 줄을 시작하지 못하는 part, `name` 매개변수가 no-break space 뒤에 오는 part, `name` 같은 매개변수를 두 번 주는 part, 인용된 매개변수 값이 끝나지 않는 part는 http-form의 kind `invalid`로 실패하고, 8192 byte보다 긴 part의 header 줄은 kind `header_limit`로 실패한다(F-23.4).",
+                  "koSource": "51a5b420e5d40796d6d4d673a21ae363ef4bae0f51fb1ffe9880d200b58d981c"
+                },
+                {
+                  "id": "HY-113.24",
+                  "en": "A boundary is a parameter of the `Content-Type` and no byte of the body, so a `multipart/form-data` content type without a `boundary` parameter, or with an empty one such as `boundary=\"\"`, is no failure of the reading: the reader does not start, the body is held as bytes and gives no form value and no file (HY-57.15), a request to an unknown path receives 404, and after the route a `POST` to an action or to `/_hyper/keep` of an application whose form types include `multipart/form-data` receives status 400 with the text `Bad Request` and kind `malformed_content_type`, at the place of HY-59.12 and after its 415 for a type that is no form type, while a representation answers such a type by HY-121.11.",
+                  "ko": "boundary는 `Content-Type`의 매개변수이고 body의 byte가 아니다. 그래서 `boundary` 매개변수가 없거나 `boundary=\"\"`처럼 비어 있는 `multipart/form-data` content type은 읽기의 실패가 아니다. reader는 시작하지 않고, body는 byte로 보유되어 폼 값도 파일도 주지 않으며(HY-57.15), 알 수 없는 경로로의 요청은 404를 받는다. route 뒤에, form 타입에 `multipart/form-data`가 있는 application의 action이나 `/_hyper/keep`으로의 `POST`는 HY-59.12의 자리에서, form 타입이 아닌 type에 대한 그 415 뒤에 상태 400과 텍스트 `Bad Request`, kind `malformed_content_type`을 받고, representation은 그런 type에 HY-121.11로 답한다.",
+                  "koSource": "2ee076a2801e00947a868b58c3fd13e314a80687510393b22424ac7880a741ed"
+                },
+                {
+                  "id": "HY-113.25",
+                  "en": "A body whose bytes fail with kind `invalid` or `header_limit` of http-form fails as a whole, so that it gives no form value and no file (F-23.3), and its request receives status 400 as HY-42 does while the body is read, before the route is decided (HY-131.31), so that no loader and no action runs.",
+                  "ko": "byte가 http-form의 kind `invalid`나 `header_limit`로 실패하는 body는 전체가 실패하여 폼 값도 파일도 주지 않고(F-23.3), 그 요청은 body를 읽는 동안, route가 정해지기 전에 HY-42처럼 상태 400을 받아(HY-131.31) loader도 action도 실행되지 않는다.",
+                  "koSource": "fac01f7c3d66c643f23b5469eab0b43482eba3f19096bb77959ab71ca30f760d"
                 },
                 {
                   "id": "HY-113.2",
@@ -896,9 +915,9 @@
                 },
                 {
                   "id": "HY-114.7",
-                  "en": "The server checks the bytes of each file part while it reads the body (HY-131.11): a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59.4 does and at its place in the order of HY-59.3, and no action runs.",
-                  "ko": "server는 body를 읽는 동안 각 file part의 byte를 검사한다(HY-131.11). byte가 file 제한보다 많은 file은 HY-59.4처럼, 그리고 HY-59.3의 순서에서 그 자리에서 text `Content Too Large`와 함께 status 413으로 요청을 실패시키며 action은 실행되지 않는다.",
-                  "koSource": "7a8dfddda65cfcb63c198a3df174b76dfa49a482a0c3e1436ed1b8b8ef687bb5"
+                  "en": "The server checks the bytes of each file part while it reads the body (HY-131.32): a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59.15 does and at its place in the order of HY-59.3, and no action runs.",
+                  "ko": "server는 body를 읽는 동안 각 file part의 byte를 검사한다(HY-131.32). byte가 file 제한보다 많은 file은 HY-59.15처럼, 그리고 HY-59.3의 순서에서 그 자리에서 text `Content Too Large`와 함께 status 413으로 요청을 실패시키며 action은 실행되지 않는다.",
+                  "koSource": "d16720d58cefb21c0ee4c73d2583dc1f3971d5d3f992002993a9c76816f15f33"
                 },
                 {
                   "id": "HY-114.12",
@@ -921,16 +940,19 @@
             5,
             6,
             7,
+            11,
             12,
             13,
             15,
             16,
             17,
+            18,
             20,
             21,
             22,
             23,
-            24
+            24,
+            25
           ],
           "blocks": [
             {
@@ -967,10 +989,16 @@
                   "koSource": "a6e622e8111c913f532db2c614982ecc879cd1023751c20649d171a7f1ba13e1"
                 },
                 {
-                  "id": "HY-131.11",
-                  "en": "A body that passes the body limit, the value limit, the part limit or the file limit (HY-114) receives status 413 with the text `Content Too Large`, and every server stops reading the body when it passes a limit.",
-                  "ko": "body 제한, value 제한, part 제한, file 제한(HY-114)을 넘는 body는 text `Content Too Large`와 함께 status 413을 받고, 모든 server는 제한을 넘는 순간 body 읽기를 멈춘다.",
-                  "koSource": "a6721f7d4392a75b4f1522caf1b9d5f2638c263b2b6e552331479952ee6d83d3"
+                  "id": "HY-131.32",
+                  "en": "A body that passes the body limit, the value limit, the part limit or the file limit (HY-114) receives status 413 with the text `Content Too Large`, and after the limit is passed no server parses or stores the remaining bytes: the host discards them, by reading them or by leaving them unread, and the file that was open is closed.",
+                  "ko": "body 제한, value 제한, part 제한, file 제한(HY-114)을 넘는 body는 text `Content Too Large`와 함께 status 413을 받고, 제한을 넘은 뒤에는 어떤 server도 남은 byte를 parse하거나 저장하지 않는다. host는 그것을 읽어서든 읽지 않고 두어서든 버리고, 열려 있던 file은 닫는다.",
+                  "koSource": "d5583505da86ba05b830bc82d2a2b41ed76cfcb0e2ed6bb4eb06becd8c3aee17"
+                },
+                {
+                  "id": "HY-131.30",
+                  "en": "A body that passes a limit fails with the kind of that limit of http-form, each of status 413: `body_limit` for the body limit (F-25.1), `value_limit` for the value limit (F-25.2), `part_limit` for the part limit, which counts every part of the body (F-25.3), and `file_limit` for the file limit (F-25.4).",
+                  "ko": "제한을 넘는 body는 http-form의 그 제한의 kind로 실패하며 각각 상태 413이다. body 제한은 `body_limit`(F-25.1), value 제한은 `value_limit`(F-25.2), body의 모든 part를 세는 part 제한은 `part_limit`(F-25.3), file 제한은 `file_limit`(F-25.4)이다.",
+                  "koSource": "26cd54f5e9339a55c8be50bc87a74dae3da947ab3fe39ac2ab754cc7625f74e6"
                 },
                 {
                   "id": "HY-131.28",
@@ -985,10 +1013,10 @@
                   "koSource": "2475b53711b855c615fbe14abc7bd013bbf94ffd874a7e8ee35483becda15f5e"
                 },
                 {
-                  "id": "HY-131.18",
-                  "en": "The checks keep the order of HY-59.3: a `Content-Length` larger than the body limit receives 413 before the body is read; the limits of this rule and the failures of HY-42 answer while the body is read; then routing, the form type (HY-59.12) and the CSRF token (HY-59.8) answer, and a request that they refuse leaves no temporary file.",
-                  "ko": "검사는 HY-59.3의 순서를 유지하여, body 제한보다 큰 `Content-Length`는 body를 읽기 전에 413을 받고, 이 rule의 제한과 HY-42의 실패는 body를 읽는 동안 답하며, 그 뒤에 routing, form type(HY-59.12), CSRF token(HY-59.8)이 답하고 그것들이 거부한 요청은 임시 file을 남기지 않는다.",
-                  "koSource": "bef3f82895ba609fb184a4fc92acbd8f87e57a52efd52ce14b1cea4fa4004f7e"
+                  "id": "HY-131.31",
+                  "en": "The checks keep the order of HY-59.3: a request whose `Content-Length` is larger than the body limit receives 413, and no byte of its body is parsed or stored, whether the host leaves the body unread or reads it to discard it; the limits of this rule and the failures of HY-42 answer while the body is read; then routing, the form type (HY-59.12) and the CSRF token (HY-59.8) answer, and a request that they refuse leaves no temporary file.",
+                  "ko": "검사는 HY-59.3의 순서를 유지한다. `Content-Length`가 body 제한보다 큰 요청은 413을 받고, host가 body를 읽지 않고 두든 버리려고 읽든 그 body의 어떤 byte도 parse하거나 저장하지 않는다. 이 rule의 제한과 HY-42의 실패는 body를 읽는 동안 답하며, 그 뒤에 routing, form type(HY-59.12), CSRF token(HY-59.8)이 답하고 그것들이 거부한 요청은 임시 file을 남기지 않는다.",
+                  "koSource": "3bc05a656061e45ee311cabed7379e5687985c1e086b219479ec0b254fde199a"
                 },
                 {
                   "id": "HY-131.29",
@@ -1003,10 +1031,10 @@
                   "koSource": "2701dc599b0bb82fe04770389b2c17678cde1759bef816c6aed0efb58672d2e7"
                 },
                 {
-                  "id": "HY-131.25",
-                  "en": "The Node host reads a body in paused mode: on each `'readable'` event it takes the bytes that `request.read()` gives as one buffer, awaits `feed` of that buffer and reads again only after it settled, and it joins no chunks, because joining would pass the bound of HY-131.26 and delay the check of a limit; the PHP and Python servers feed a chunk before they read the next one.",
-                  "ko": "Node host는 body를 paused mode로 읽는다. `'readable'` event마다 `request.read()`가 주는 byte를 buffer 하나로 받아 그 buffer의 `feed`를 기다리고, 그것이 끝난 뒤에만 다시 읽으며, 조각을 모으지 않는다. 모으면 HY-131.26의 한도를 넘고 제한의 판정이 늦어지기 때문이다. PHP와 Python server는 조각 하나를 넘긴 뒤에 다음 조각을 읽는다.",
-                  "koSource": "4301d8857b9500c8cbc4caf206f617a95a44b18d03bda6b99a347401b173eefb"
+                  "id": "HY-131.33",
+                  "en": "The Node host gives a body to `feed` one chunk at a time, as `node:http` delivers it, and takes the next chunk only after the files of the body took the bytes of the last one, and it joins no chunks, because joining would pass the bound of HY-131.26 and delay the check of a limit; the PHP and Python servers feed a chunk before they read the next one.",
+                  "ko": "Node host는 `node:http`가 주는 대로 body를 조각 하나씩 `feed`에 주고, body의 file이 앞 조각의 byte를 받은 뒤에만 다음 조각을 받으며, 조각을 모으지 않는다. 모으면 HY-131.26의 한도를 넘고 제한의 판정이 늦어지기 때문이다. PHP와 Python server는 조각 하나를 넘긴 뒤에 다음 조각을 읽는다.",
+                  "koSource": "293a65dbc8859dfa43251e1231398a7e72e466ab3b81f248e3c9d0333f4b9444"
                 }
               ]
             }
@@ -2523,9 +2551,9 @@
                     },
                     {
                       "id": "HY-62.9",
-                      "en": "The server calls the selection once per request, after HY-59.4 and HY-42 and before routing, with the request without its `Cookie` header: the choice decides the shell response and the path of a representation, and neither varies by `Cookie` (HY-117).",
-                      "ko": "서버는 요청마다 HY-59.4와 HY-42 뒤, 라우팅 전에 `Cookie` header를 뺀 요청으로 선택을 한 번 호출한다. choice가 셸 응답과 representation의 경로를 정하고, 둘 다 `Cookie`에 따라 달라지지 않기 때문이다(HY-117).",
-                      "koSource": "74af890ff305d3d1635a44f4cb4edf08491ddafc25dd05cf6b249cc7f7fcc92d"
+                      "en": "The server calls the selection once per request, after HY-59.15 and HY-42 and before routing, with the request without its `Cookie` header: the choice decides the shell response and the path of a representation, and neither varies by `Cookie` (HY-117).",
+                      "ko": "서버는 요청마다 HY-59.15와 HY-42 뒤, 라우팅 전에 `Cookie` header를 뺀 요청으로 선택을 한 번 호출한다. choice가 셸 응답과 representation의 경로를 정하고, 둘 다 `Cookie`에 따라 달라지지 않기 때문이다(HY-117).",
+                      "koSource": "fcc6716fb3d8ed721ebc9e3f4c1dffbed5b57f6221055ff47af8508313defba5"
                     },
                     {
                       "id": "HY-62.10",
@@ -2694,9 +2722,9 @@
                 },
                 {
                   "id": "HY-62.38",
-                  "en": "A request that HY-59.4 or HY-42 refuses calls no selection.",
-                  "ko": "HY-59.4나 HY-42가 거절하는 요청은 selection을 호출하지 않는다.",
-                  "koSource": "e0347e9943aac6bbea1d7fc6d5e6ff29fe1139f2abf6bf553b74f0049718fe21"
+                  "en": "A request that HY-59.15 or HY-42 refuses calls no selection.",
+                  "ko": "HY-59.15나 HY-42가 거절하는 요청은 selection을 호출하지 않는다.",
+                  "koSource": "cf996945086865aedbc15bbfe00a75b994c7d2e17655eeb71d465a0539de1203"
                 }
               ]
             }
@@ -6218,16 +6246,16 @@
                     "ko": "`malformed_content_type`"
                   },
                   {
-                    "en": "none",
-                    "ko": "없음"
+                    "en": "400",
+                    "ko": "400"
                   },
                   {
                     "en": "`value`",
                     "ko": "`value`"
                   },
                   {
-                    "en": "HY-59.12, HY-59.13",
-                    "ko": "HY-59.12, HY-59.13"
+                    "en": "HY-59.12, HY-59.13, HY-113.24",
+                    "ko": "HY-59.12, HY-59.13, HY-113.24"
                   }
                 ],
                 [
@@ -6293,9 +6321,14 @@
                 [{ "en": "`invalid_accept`", "ko": "`invalid_accept`" }, { "en": "http-negotiation", "ko": "http-negotiation" }, { "en": "HY-116.18", "ko": "HY-116.18" }],
                 [{ "en": "`invalid_weight`", "ko": "`invalid_weight`" }, { "en": "http-negotiation", "ko": "http-negotiation" }, { "en": "HY-116.18", "ko": "HY-116.18" }],
                 [{ "en": "`invalid_content_length`", "ko": "`invalid_content_length`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.29", "ko": "HY-131.29" }],
-                [{ "en": "`invalid`", "ko": "`invalid`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
-                [{ "en": "`header_limit`", "ko": "`header_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
-                [{ "en": "`no_boundary`", "ko": "`no_boundary`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
+                [{ "en": "`invalid`", "ko": "`invalid`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.23, HY-113.25", "ko": "HY-113.23, HY-113.25" }],
+                [{ "en": "`header_limit`", "ko": "`header_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.23, HY-113.25", "ko": "HY-113.23, HY-113.25" }],
+                [{ "en": "`body_limit`", "ko": "`body_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`value_limit`", "ko": "`value_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`part_limit`", "ko": "`part_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`file_limit`", "ko": "`file_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`exists`", "ko": "`exists`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
+                [{ "en": "`moved`", "ko": "`moved`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
                 [{ "en": "`no_rows`", "ko": "`no_rows`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.8", "ko": "HY-107.8" }],
                 [{ "en": "`revision_changed`", "ko": "`revision_changed`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.9", "ko": "HY-107.9" }]
               ]
@@ -7253,6 +7286,8 @@
           "kind": "rule",
           "id": "HY-59",
           "retired": [
+            4,
+            6,
             7,
             11
           ],
@@ -7287,10 +7322,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-59.4",
-                      "en": "A body larger than the limit receives status 413 with the text `Content Too Large`, for every request and before HY-42.",
-                      "ko": "한도보다 큰 body는 모든 요청에 대해 그리고 HY-42 전에 상태 413과 텍스트 `Content Too Large`를 받는다.",
-                      "koSource": "91762af08192cdeac0ce2a0cbdf0d1cbfd840faa09e04091c515a3e499559306"
+                      "id": "HY-59.15",
+                      "en": "A body larger than the limit receives status 413 with the text `Content Too Large`, for every request and before the checks of HY-42 on the path, the query, the headers and a body held as one value, while in a body read in chunks the failure whose byte comes first answers (HY-131.26), so that an invalid byte before the limit receives 400 also when later bytes pass the limit, and a `Content-Length` larger than the limit receives 413 whatever the bytes of the body are (HY-131.31).",
+                      "ko": "한도보다 큰 body는 모든 요청에 대해, 그리고 경로, query, header, 한 값으로 보유한 body에 대한 HY-42의 검사 전에 상태 413과 텍스트 `Content Too Large`를 받는다. 조각 단위로 읽는 body에서는 byte가 먼저 오는 실패가 답하므로(HY-131.26), 한도 전의 잘못된 byte는 뒤의 byte가 한도를 넘어도 400을 받고, 한도보다 큰 `Content-Length`는 body의 byte가 무엇이든 413을 받는다(HY-131.31).",
+                      "koSource": "b633f32e62779145f0de99c07c922eed788f8b618d0450558ec6610d2e0bbc77"
                     },
                     {
                       "id": "HY-59.5",
@@ -7299,10 +7334,10 @@
                       "koSource": "6a73ad23221920ade4c23d83af3e8324f10a2edb83b8b28434e4a53be18768db"
                     },
                     {
-                      "id": "HY-59.6",
-                      "en": "Every server stops reading a body when it passes the body limit or another limit of HY-131.11.",
-                      "ko": "모든 server는 body가 body 제한이나 HY-131.11의 다른 제한을 넘으면 body 읽기를 멈춘다.",
-                      "koSource": "d54a0efd7ef78af68e9aff9d9c4721e7c0249c28938c1cf0100c271e1048ffa5"
+                      "id": "HY-59.14",
+                      "en": "After a body passes the body limit or another limit of HY-131.32, and for a body whose `Content-Length` is larger than the body limit (HY-131.31), no server parses or stores the remaining bytes, which the host discards.",
+                      "ko": "body가 body 제한이나 HY-131.32의 다른 제한을 넘은 뒤, 그리고 `Content-Length`가 body 제한보다 큰 body(HY-131.31)에 대해, 어떤 server도 남은 byte를 parse하거나 저장하지 않으며 host는 그것을 버린다.",
+                      "koSource": "e6b36c70231a64a8785a7ddd6ee4d4d61fef15d5a60acf0671ae5eda02b6f522"
                     }
                   ],
                   "blocks": []

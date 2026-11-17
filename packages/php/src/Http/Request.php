@@ -75,7 +75,7 @@ final class Request
     }
 
     /**
-     * Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11): as its host
+     * Returns true when the body passed the value limit, the part limit or the file limit (HY-131.32): as its host
      * read it, or for a body that is one value by its size, and by its parts and files when `$streams` tells that the
      * application reads a multipart body in chunks.
      *

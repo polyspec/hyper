@@ -1164,8 +1164,8 @@
               "tests": [
                 "packages/ts/tests/http.test.ts::the write hook and App.listener > App.listener returns the request listener of the application (HY-100): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
                 "packages/ts/tests/http.test.ts::the write hook and App.listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.25), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.25), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
               ]
             }
           ]
@@ -4635,7 +4635,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11).",
+              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::exceeded",
@@ -7442,7 +7442,7 @@
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11).",
+              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/Multipart.php::Polyspec\\Hyper\\Multipart::exceeded",
@@ -7490,7 +7490,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Counts the part and reads its name, its filename and its content type from its header lines, opens the file of a file part in the directory, and returns false when the part limit or the value limit is passed or when one of the texts is not UTF-8 (HY-113.5, HY-113.18, HY-131.11, HY-131.13).",
+              "state": "Counts the part and reads its name, its filename and its content type from its header lines, opens the file of a file part in the directory, and returns false when the part limit or the value limit is passed or when one of the texts is not UTF-8 (HY-113.5, HY-113.18, HY-131.32, HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/Multipart.php::Polyspec\\Hyper\\Multipart::partStarted",
@@ -7515,7 +7515,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Keeps the bytes of the content of a value, and writes those of a file part to its file when the reader has a directory; returns false when the value limit or the file limit is passed (HY-131.11, HY-131.13).",
+              "state": "Keeps the bytes of the content of a value, and writes those of a file part to its file when the reader has a directory; returns false when the value limit or the file limit is passed (HY-131.32, HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/Multipart.php::Polyspec\\Hyper\\Multipart::partData",
@@ -7538,7 +7538,7 @@
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Records that the body passed a limit, and fails the body (HY-131.11).",
+              "state": "Records that the body passed a limit, and fails the body (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/Multipart.php::Polyspec\\Hyper\\Multipart::limitPassed",
@@ -7711,7 +7711,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when the bytes given to the files are written and the ended files are closed, and rejects with the first error of a write (HY-131.25).",
+              "state": "Resolves when the bytes given to the files are written and the ended files are closed, and rejects with the first error of a write (HY-131.33).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/form/multipart.ts::Multipart.written",
@@ -7722,7 +7722,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.25"
+                "sentence": "HY-131.33"
               }
             },
             {
@@ -7732,7 +7732,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when every file that was ended or released is closed, so that its directory can be removed (HY-131.25).",
+              "state": "Resolves when every file that was ended or released is closed, so that its directory can be removed (HY-131.33).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/form/multipart.ts::Multipart.settled",
@@ -7743,7 +7743,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.25"
+                "sentence": "HY-131.33"
               }
             },
             {
@@ -7756,7 +7756,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Ends the stream of a file, or destroys it, and keeps the promise of its close (HY-131.25).",
+              "state": "Ends the stream of a file, or destroys it, and keeps the promise of its close (HY-131.33).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/form/multipart.ts::Multipart.finish",
@@ -7767,7 +7767,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.25"
+                "sentence": "HY-131.33"
               }
             }
           ]
@@ -8094,7 +8094,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4, HY-131.11).",
+              "state": "Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.15, HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/RequestBody.php::Polyspec\\Hyper\\RequestBody::feed",
@@ -8117,7 +8117,7 @@
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Returns true when the body passed the body limit, the value limit, the part limit or the file limit (HY-131.11).",
+              "state": "Returns true when the body passed the body limit, the value limit, the part limit or the file limit (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/RequestBody.php::Polyspec\\Hyper\\RequestBody::exceeded",
@@ -8140,7 +8140,7 @@
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Records that the body passed a limit and drops what it holds (HY-131.11).",
+              "state": "Records that the body passed a limit and drops what it holds (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/RequestBody.php::Polyspec\\Hyper\\RequestBody::bodyPassed",
@@ -8278,7 +8278,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Removes the directory of the files with the files that were not moved, in Node after the files are closed (HY-131.14, HY-131.25).",
+              "state": "Removes the directory of the files with the files that were not moved, in Node after the files are closed (HY-131.14, HY-131.33).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/RequestBody.php::Polyspec\\Hyper\\RequestBody::remove",
@@ -8324,7 +8324,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when the bytes given to the files are written (HY-131.25).",
+              "state": "Resolves when the bytes given to the files are written (HY-131.33).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/form/request-body.ts::RequestBody.written",
@@ -8335,7 +8335,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.25"
+                "sentence": "HY-131.33"
               }
             }
           ]

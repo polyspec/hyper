@@ -120,13 +120,13 @@
             "stopped": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-131.11",
+              "sentence": "HY-131.32",
               "state": "`stopped` is true when the body `body`, a text whose characters are its bytes, given in chunks of `chunk` bytes, passed a limit, after which no chunk is given."
             },
             "exceeded": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-131.11",
+              "sentence": "HY-131.32",
               "state": "`exceeded` is true when the body passed the body limit `limit`, the value limit `valueLimit`, the part limit `partLimit` or the file limit `fileLimit`."
             },
             "held": {

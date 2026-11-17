@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: bab69634b1ddfbcace91902be56a0e2a4a241e47dbc8115dc48246f8e9209222 -->
+<!-- source-sha256: 804decb59195c2f15434aaca43cadfaffa7b8c2efd8d90e86509f807347f53bd -->
 # 의존성
 
 [English](dependencies.md).
@@ -51,4 +51,35 @@ Template PHP archive 0.0.27은 PHP >=8.4를 요구하며 SHA-256은 `a9394a9a678
 | Node | `packages/ts/src/multipart.ts`의 `read`, `fields.ts`와 `files.ts`가 호출한다 | `busboy` 1.6.0(MIT), 최신 릴리스 | 유지. HY-57, HY-113, HY-42와 다섯 단계가 다르다. `filename*`이 `filename`보다 우선한다(`lib/types/multipart.js`, 316행부터 319행까지). `preservePath`가 없으면 filename을 basename으로 자른다(321행부터 322행까지). filename이 없고 타입이 `application/octet-stream`인 part를 file로 본다(337행). HY-57은 이를 값으로 본다. part의 내용을 `Content-Transfer-Encoding`으로 디코딩한다(335행과 363행). field 값을 잘못된 UTF-8을 대체하는 `TextDecoder`로 디코딩하므로(`lib/utils.js`, 465행부터 468행까지), HY-42가 요구하는 거절을 하지 않는다. | filename과 part의 내용을 있는 그대로 유지하고, field 값의 잘못된 UTF-8을 거절하는 버전. |
 
 PHP 8.4의 기본 `request_parse_body()`도 검토했으나 채택하지 않았다. `$_POST`처럼 괄호 이름을 중첩하므로 HY-57이 거절한다.
+
+## release의 plain 파일 고정
+
+구현되지 않음: 이 절은 H35.11의 설계이며, 그 파일, target, 테스트는 아직 없다. case runner는 고정 사본 `tests/legacy/fields.json`을 읽는다.
+
+패키지 관리자는 패키지를 lock으로 고정한다. http-form의 case 파일 `fields.json`과 `forms.json`처럼 release가 asset으로 내는 plain 파일에는 패키지 관리자가 없으므로, 저장소가 release tag와 파일의 sha256으로 직접 고정한다(HR-80).
+
+- **추적하는 항목.** `config/release-files.json`은 라이브러리마다 항목 하나를 가진다. 항목은 저장소, release tag, 그리고 파일마다 그 저장소 안의 경로, asset의 URL, sha256을 적는다. `files` 객체는 그 release의 asset `files.json`의 `files` 객체를 그대로 옮긴 것이므로, 읽는 사람은 두 파일을 읽어 고정과 release를 비교한다.
+
+  ```json
+  {
+    "schema": 1,
+    "releases": {
+      "http-form": {
+        "repository": "https://github.com/polyspec/http-form",
+        "tag": "vX.Y.Z",
+        "files": {
+          "contracts/fields.json": { "url": "https://github.com/polyspec/http-form/releases/download/vX.Y.Z/fields.json", "sha256": "<16진수 64자리>" },
+          "contracts/forms.json": { "url": "https://github.com/polyspec/http-form/releases/download/vX.Y.Z/forms.json", "sha256": "<16진수 64자리>" }
+        }
+      }
+    }
+  }
+  ```
+
+  tag는 `packages/rust/Cargo.toml`에서 `polyspec-http-form`의 의존성 줄의 tag이므로 case와 crate는 한 release의 것이다. 새 release는 의존성 줄, `Cargo.lock`, 이 항목을 바꾸는 commit 하나다. 항목은 tag를 적고 branch나 commit은 적지 않는다(AGENTS.md, 다른 polyspec 저장소에 대한 의존성). `config/owner-checks.json`은 이 파일의 owner 규칙을 얻는다(HR-88).
+- **설치 target.** `make hyper-install-release-files`는 `$(ONLINE)`으로 `scripts/install-release-files.mts`를 실행하고, `make hyper-install`이 그것을 실행한다. script는 각 항목의 파일마다 URL을 자기 process의 staging 파일로 내려받고 byte의 sha256을 계산하며, digest가 고정된 것일 때만 rename 한 번으로 파일을 낸다(`writeFileAtomic`, HR-82). 다른 digest는 URL, 고정된 digest, 계산한 digest를 밝히며 실패하고 아무것도 쓰지 않는다. 고정된 digest로 이미 있는 파일은 다시 내려받지 않으므로 target은 멱등이다. script는 `files.json`도 release의 목록도 읽지 않는다. 검사나 설치는 release가 무엇을 가졌는지 live service에 묻지 않기 때문이다(HR-89). `npm ci`가 lock이 고정한 것을 내려받듯 고정된 URL만 내려받는다.
+- **파일의 자리.** `var/release-files/<library>/<tag>/<path>`, 예를 들어 `var/release-files/http-form/vX.Y.Z/contracts/fields.json`이다. `/var/`는 ignore되어 있고, 경로의 tag는 고정이 옮겨진 뒤에 이전 고정의 파일이 읽히지 않게 한다.
+- **고정의 테스트.** `tests/scripts/template-pins.test.mts`의 형태를 따르는 `tests/scripts/release-file-pins.test.mts`다. 항목의 tag는 `v`와 정확한 version이며 그 라이브러리의 Cargo 의존성 줄의 tag와 같다. 각 URL은 `<repository>/releases/download/<tag>/<경로의 base name>`이다. 각 sha256은 소문자 16진수 64자리다. 설치 target의 recipe는 `$(ONLINE)`으로 내려받으며, 이는 dry run에서 읽는다(`tests/scripts/make-dry-run.mts`의 `dryRun`, HR-83). 그리고 `requireBuilt('hyper-install-release-files', <설치된 경로>)` 뒤에, 설치된 각 파일의 sha256은 고정된 것이다. 테스트는 요청을 하지 않는다.
+- **case runner가 파일을 찾는 방법.** `contracts/interfaces.json`의 `caseFiles`는 `tests/legacy/interfaces.json`의 선언 대신 `fields.json`과 `forms.json`을 `release: "http-form"`으로 선언하고, 각 언어의 case reader(`packages/ts/tests/case-rules.ts`의 `caseFileUrl`과 PHP, Python의 같은 것)는 그런 파일을 `config/release-files.json`의 tag와 경로로 위의 경로에 대응시킨다. 파일을 찾지 못한 reader는 그 경로와 그것을 쓰는 target `make hyper-install-release-files`를 밝히며 실패하고 아무것도 내려받지 않는다. 어떤 검사도 처음 쓸 때 설치하지 않기 때문이다(HR-81, HR-85). 그 파일을 읽는 script 테스트는 `requireBuilt`와 그 target으로 파일을 지명한다. case runner를 실행하는 CI group은 설치에 그 target을 적는다.
+- **경로 밖에서 바뀌는 것.** http-form의 case는 binding의 case 형태다. body와 text는 `{"hex": …}`, content type은 `content_type`, 제한은 record `limits`, 실패는 kind, 상태, category를 가진 `raises`다. 고정 사본은 text, `type`, 제한 field 넷, null 결과를 가진다. 그래서 section의 선언과 세 runner의 step이 고정과 함께 바뀌고, runner는 http-form의 `packages/rust/interface.json`이 연결한 group과 scenario group `streamed`, `body`를 읽는다.
 

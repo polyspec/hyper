@@ -82,7 +82,7 @@ const app = await App.open<Services>({
   templates: { index: join(board, 'build', 'client', 'templates.index.json'), root: join(board, 'public') },
   handlers,
   timezone: '+09:00',
-  // The form of a new post is multipart, because it holds a file (HY-59.6, HY-131).
+  // The form of a new post is multipart, because it holds a file (HY-59.1, HY-131).
   formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'],
   basePath: process.env.BOARD_BASE_PATH ?? '',
   https: process.env.BOARD_HTTPS === '1',

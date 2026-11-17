@@ -413,7 +413,7 @@ class App:
         self, request: Request, store: SessionStore, reply: Reply
     ) -> Response:
         """Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60)."""
-        # HY-131.11: a body that passed the value limit, the part limit or the file limit is answered as a body over
+        # HY-131.32: a body that passed the value limit, the part limit or the file limit is answered as a body over
         # the body limit.
         if request.body_size() > self.body_limit or request._exceeded(
             self._value_limit,
