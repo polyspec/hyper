@@ -92,7 +92,7 @@ test('template-ext and json-ext give PIE a cache in its working directory and ve
     const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line) && line.includes(`PIE_WORKING_DIRECTORY=${work} `));
     assert.equal(pie.length, commands, lines.join('\n'));
     for (const line of pie) assert.ok(line.includes(` COMPOSER_CACHE_DIR=${work}/cache `), line);
-    const build = lines.findIndex((line) => line.includes(` build ${name}:`) && / --no-interaction && \\$/.test(line));
+    const build = lines.findIndex((line) => line.includes(` build ${name}:`) && line.endsWith(' --no-interaction && \\'));
     const check = lines.findIndex((line) => line.includes(`scripts/php-ext-verify.mts config/php-ext-pins.json ${name} ${work}`));
     assert.ok(build >= 0 && check > build, `${target}: the verification follows pie build\n${lines.join('\n')}`);
     const publish = lines.findIndex((line) => line.includes(`scripts/publish.mts directory ${output}.next-`));

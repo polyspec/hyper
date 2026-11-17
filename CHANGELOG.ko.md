@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 13f19b8a248b5a76e35abb5635448b0411748e13139de12d9f872de7cbd6995a -->
+<!-- source-sha256: 2d3278117f74660e98433615e4d052268389d627c82571f54e6152bd08b2b26f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- CI group gates가 rules-check, duplication-check, lint-ts, lint-php를 통과한다(H34.7). 입력: group gates의 CI run. 이전 동작: rules-check는 AGENTS.md의 미구현 표시 규칙의 Enforced by 줄에서 backtick 안의 용어 `docs/features.md`를 어떤 recipe도 이름하지 않는 check로 읽었다. oxlint는 문자열 메서드가 맞는 곳의 정규식, 타입 단언, 문자열로 바뀌는 unknown, 비교 함수 없는 sort를 보고했고, tsc는 `ci-workflow.test.mts`에서 undefined일 수 있는 job을 보고했고, phpcs는 120자를 넘는 두 줄을 보고했으며, duplication-check는 `contracts.rs`와 `register.rs`의 case reader, `core-renewal.test.ts`와 `core-values.test.ts`의 addon pages, `template-pins.test.mts`와 `template-version.test.mts`의 template release URL을 중복으로 찾았다. 기대 동작: 규칙은 그 파일을 backtick 없이 이름한다. 코드는 검사로 타입을 좁힌다. 공유 부분은 `packages/rust/tests/contract_cases/mod.rs`, `packages/ts/tests/core-addon.ts`, `tests/scripts/template-release.mts`에 있다.
 
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 

@@ -61,8 +61,8 @@ it('runs only the selected cases and states the selection in the first line of t
   vi.stubEnv('RECIPE_CASES', 'keep.json');
   // The runner has no step here, so every selected case fails with STEP_UNKNOWN and the run fails with their count.
   const error: unknown = await runCases('node', {}).then(() => undefined, (thrown: unknown) => thrown);
-  expect(error).toBeInstanceOf(Error);
-  const message = (error as Error).message.split('\n');
+  if (!(error instanceof Error)) throw new Error('runCases resolved or threw no Error', { cause: error });
+  const message = error.message.split('\n');
   expect(message[0]).toMatch(/^(\d+) of \1 cases fail; see /u);
   const lines = readFileSync(join(directory, 'node.selected.txt'), 'utf8').trimEnd().split('\n');
   expect(lines[0]).toBe('SELECTION keep.json');

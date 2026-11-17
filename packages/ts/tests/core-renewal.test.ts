@@ -2,50 +2,10 @@
 // core. The test drives the built addon of `native/generated`, not a stand-in: the page input holds the masked value
 // of the token of before the action, the input of the action step holds the masked value of the new token, and the
 // shared data of the answer holds the new one.
-import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
+import { addon, pages as routePages, type Step } from './core-addon.ts';
 
-interface Step {
-  readonly step: string;
-  readonly call?: { readonly call: string };
-  readonly answer?: { readonly answer: string; readonly status?: number; readonly text?: string; readonly html?: string };
-}
-
-interface Addon {
-  readonly Pages: new (manifest: Uint8Array, templates: Map<string, string>, reads: unknown, options: object) => object;
-  readonly PageRequest: new (pages: object, input: object) => { next(input: object): Step };
-}
-
-function isAddon(module: unknown): module is Addon {
-  return typeof module === 'object' && module !== null && typeof Reflect.get(module, 'Pages') === 'function' && typeof Reflect.get(module, 'PageRequest') === 'function';
-}
-
-function builtAddon(): Addon {
-  const module: unknown = createRequire(import.meta.url)('../native/generated/index.cjs');
-  if (!isAddon(module)) throw new Error('the addon of native/generated has no class Pages or PageRequest; run make node-addon');
-  return module;
-}
-
-const addon = builtAddon();
-
-const MANIFEST = {
-  layout: 'layout.tpl',
-  title: 'title.tpl',
-  regions: [{ name: 'content', page: true }],
-  routes: [{ name: 'home', path: '/', title: 'Home', template: 'page.tpl' }],
-};
-
-const TEMPLATES = new Map([
-  ['layout.tpl', '<title>{# title}</title>{# build}\n<main id="content">{# content}</main>\n{# data}\n'],
-  ['title.tpl', '{= title} - Site'],
-  ['page.tpl', '<p>token={= csrf}</p>\n'],
-]);
-
-function pages(): object {
-  const reads = new Map([['home', new Map<string, unknown>([['shared', true], ['regions', new Map([['content', true]])]])]]);
-  const options = { build: '1'.repeat(64), timezone: 'Z', context: false, basePath: '', formTypes: ['application/x-www-form-urlencoded'] };
-  return new addon.Pages(new TextEncoder().encode(JSON.stringify(MANIFEST)), TEMPLATES, reads, options);
-}
+const pages = (): object => routePages('<p>token={= csrf}</p>\n', new Map([['content', true]]));
 
 // The answer of a POST of the route `home` whose action returns the page; `renewed` is the member `csrf` of the
 // input of the action step, or absent for an action that did not renew the session.

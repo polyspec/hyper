@@ -2,6 +2,8 @@
 //! of the application in the form of the interface contract, the arguments and the environment of the call borrowed,
 //! and a template value or a failure whose kind is an error of hyper.
 
+mod contract_cases;
+
 use binding_core::Failure;
 use polyspec_hyper::steps::Pages;
 use polyspec_hyper::Error;
@@ -104,26 +106,13 @@ mod entries {
     //! language refuses.
 
     use std::collections::HashMap;
-    use std::path::PathBuf;
 
+    use crate::contract_cases::cases;
     use binding_core::Kinds;
     use polyspec_hyper::render::{check_function_entry, Templates};
     use polyspec_hyper::Error;
     use polyspec_template::{AstProgram, EngineOptions, HostFunction, Value};
     use serde_json::Value as Json;
-
-    fn cases() -> Json {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let path = root.join("../../contracts/functions.json");
-        let text = match std::fs::read_to_string(&path) {
-            Ok(text) => text,
-            Err(error) => panic!("{}: {error}", path.display()),
-        };
-        match serde_json::from_str(&text) {
-            Ok(value) => value,
-            Err(error) => panic!("{}: {error}", path.display()),
-        }
-    }
 
     /// The function kind `suffix` of the cases: its first argument, a string, followed by "!".
     fn suffix() -> HostFunction {
@@ -171,7 +160,7 @@ mod entries {
 
     #[test]
     fn the_cases_whose_open_fails_fail_with_invalid_application_and_their_message() {
-        let file = cases();
+        let file = cases("functions.json");
         let mut ran = Vec::new();
         for case in file["cases"].as_array().into_iter().flatten() {
             if case["openFails"] != Json::Bool(true) {

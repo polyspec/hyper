@@ -2,27 +2,16 @@
 //! decides before the core runs (`invalid_argument_type`, and `invalid_number` of a value that is no integer) is the
 //! binding's and is left to the generated tests (binding design G-5).
 
+mod contract_cases;
+
 use std::fs;
 use std::path::PathBuf;
 
 use binding_core::Kinds;
+use contract_cases::cases;
 use polyspec_hyper::media::{accept_ranges, select, Selected, Selection, Served};
 use polyspec_hyper::{csrf, etag, location, reply, Error};
 use serde_json::Value;
-
-fn cases(file: &str) -> Value {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../contracts")
-        .join(file);
-    let text = match fs::read_to_string(&path) {
-        Ok(text) => text,
-        Err(error) => panic!("{}: {error}", path.display()),
-    };
-    match serde_json::from_str(&text) {
-        Ok(value) => value,
-        Err(error) => panic!("{}: {error}", path.display()),
-    }
-}
 
 fn group<'a>(value: &'a Value, name: &str) -> &'a Vec<Value> {
     match value.get(name).and_then(Value::as_array) {
