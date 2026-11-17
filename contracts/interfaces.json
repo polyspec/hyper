@@ -15571,7 +15571,7 @@
                 "php",
                 "python"
               ],
-              "sentence": "HY-48.17"
+              "sentence": "HY-48.21"
             }
           }
         },
@@ -19261,13 +19261,13 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-13.7",
+              "sentence": "HY-13.8",
               "only": {
                 "languages": [
                   "php",
                   "python"
                 ],
-                "sentence": "HY-13.7"
+                "sentence": "HY-13.8"
               },
               "state": "`valueReads` is how many times the server enumerated, during the request, the entries of the values of the kind `countingMap` that the handlers of the request returned."
             },
