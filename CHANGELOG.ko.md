@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5cfe2b1ca3d79a14d670dab5955d555015eb1cdbddf7f6a70d26ff9dd8d4da2c -->
+<!-- source-sha256: f11f9887d38412bdcd8ca407a25433a24e276487c0401fa8e03b72288f90cc5a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `contracts/interfaces.json`은 Node 서버의 `PageParts`, `AppParts`, `AppOptions` 선언을 서버가 core로 열기 전의 모습으로 담았다. 세 선언은 이제 `packages/ts/src/page/page.ts`와 `packages/ts/src/app/app.ts`의 현재 source text이며 바이트 단위로 비교했다. 언어별 `pageParts`와 `appParts`의 field 목록은 아직 비교하지 않았다. `make recipe-compare`를 실행하지 않았다(H35.32-8).
 - `contracts/interfaces.json`은 열 줄에서 retire한 statement를 인용했다. concern `browser-code`의 unit `reads`와 `renderer`는 HY-48.1을 인용한다. 이 statement는 서버가 자기 런타임의 template engine으로 `reads.json`을 포함한 build의 출력에서 렌더한다고 적는다. `pageParts`와 `appParts`의 field `application`은 HY-48.19 아래의 field `pages`가 되고, Node 서버의 `AppParts`가 더 갖지 않는 `appParts`의 field `reads`와 `build`는 지우며, `entries`는 HY-118.1을 인용한다. `contracts/functions.json`의 field `openFails`는 HYC-24.9를, `page.respond`의 state는 HY-128.5를, `contracts/reads.json`의 field `reads`의 state는 HY-73.34를 인용하고 읽기 경로를 계산하는 쪽에서 Node 서버를 뺀다. changelog, retired 목록, plan 밖의 어떤 파일도 HY-54.3, HY-132.8, HY-48.11, HY-48.12, HYC-12.6, HYC-12.9, HY-128.4, HYC-24.2, HY-73.23을 인용하지 않는다. `make recipe-compare`는 실행하지 않았다(H35.32-8).
 - `make recipe-compare`와 `make recipe-check`는 저장소를 읽기 전에 reader의 mutation case를 실행했다. `scripts/recipe/check.mts`가 `tests/scripts/fixtures/recipe/mutations.json`의 mutation 123개를 각각 fixture의 사본에 적용하고 mutation마다 reader 셋을 시작했으므로, 저장소의 모든 검사가 process를 369개 이상 더 시작하고 그동안 아무것도 출력하지 않았다. `tests/scripts/recipe-check.test.mts`는 이미 각 mutation을 자기 test로 실행한다. 이제 검사는 저장소만 읽고 표준 오류로 진행 한 줄을 출력한다. `scripts/recipe/selftest.mts`와 option `--no-selftest`는 지웠고, test는 fixture에 mutation이 없으면 실패하며(HR-84), `docs/spec/recipe.md`의 HYR-8은 mutation case가 검사의 test라고 적는다. 이 변경은 type 검사만 했고 실행하지 않았다(H35.16-9).
 - `packages/cli/lib/build.mjs`의 주석과 `packages/cli/README.md`는 Node 서버가 `client/templates.index.json`과 `client/build.json`을 읽는다고 적었다. Node 서버는 core로 열게 된 뒤로 `program/`을 읽는다. 이제 그 색인은 클라이언트 번들의 색인이고 `client/build.json`은 어떤 서버도 읽지 않는다고 적는다. 행 H35.32-1은 PHP 서버와 Python 서버만 읽는 `program/legacy/hyper/data.tpl`을 거기서 지운다고 적는다(H35.32-8).
