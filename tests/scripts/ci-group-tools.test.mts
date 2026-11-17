@@ -55,6 +55,9 @@ const STARTED: readonly { program: string; pattern: RegExp; tools: readonly stri
   // binding release-go-module proves the module with go; both start the go of PATH inside their process.
   { program: 'go of binding', pattern: /\/binding\/dist\/cli\.js (?:check|release-go-module) /u, tools: ['go'] },
   { program: 'wasm-bindgen', pattern: /\/mise\/shims\/wasm-bindgen\b/u, tools: ['wasm-bindgen'] },
+  // release candidate-assets of kit checks that no link leaves the checkout, and finds the environment of a Python project
+  // that declares a polyspec package with `uv workspace dir` inside its process (link.mjs, H34.11).
+  { program: 'uv of kit release', pattern: /\/release\.m[jt]s candidate-assets\b/u, tools: ['uv'] },
   { program: 'uv', pattern: /\/mise\/shims\/uv\b|\/uv-install\.m[jt]s /u, tools: ['uv'] },
   // The virtual environment of a Python package is made by the python of mise, and the Python test runner starts it.
   { program: 'python', pattern: /\/mise\/shims\/python3?\b|\/python-venv\.m[jt]s |\/run-tests\.m[jt]s python /u, tools: ['python'] },
