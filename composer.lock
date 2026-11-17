@@ -207,10 +207,11 @@
             "dist": {
                 "type": "path",
                 "url": "packages/php",
-                "reference": "f384379d72f8606b9a479fe5c2b845da13ab0ba4"
+                "reference": "85452177538bb9f2bdc688d58975ca6497952c1a"
             },
             "require": {
                 "ext-polyspec_hyper": "*",
+                "ext-polyspec_json": "*",
                 "php": ">=8.4",
                 "polyspec/template": "0.0.27"
             },

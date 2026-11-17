@@ -7,6 +7,7 @@
     "require": {
         "php": ">=8.4",
         "ext-polyspec_hyper": "*",
+        "ext-polyspec_json": "*",
         "polyspec/template": "0.0.27"
     },
     "require-dev": {
