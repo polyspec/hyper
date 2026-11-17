@@ -182,8 +182,9 @@ function extensionTree(t: TestContext): { directory: string; run: (...words: str
   const variables = [`CARGO=${path.join(directory, 'cargo')}`, `NODE=${process.execPath}`, 'LLVM_MAJOR=1', `LLVM_ROOT=${path.join(directory, 'llvm')}`];
   const run = (...words: string[]): CargoStart[] => {
     rmSync(log, { force: true });
-    // -o keeps make from the recipes of the prerequisites, which write the sources of the bindings and run their tests.
-    const result = make(directory, '-o', 'bindings', '-o', 'test-node-addon', '-o', 'test-wasm', '-o', 'test-go', ...words, ...variables);
+    // -o keeps make from the recipes of the prerequisites, which write the sources of the bindings, read the crates of
+    // the lock (crates-check) and run their tests.
+    const result = make(directory, '-o', 'bindings', '-o', 'crates-check', '-o', 'test-node-addon', '-o', 'test-wasm', '-o', 'test-go', ...words, ...variables);
     assert.equal(result.status, 0, `make ${words.join(' ')}:\n${result.stdout}\n${result.stderr}`);
     const starts = readFileSync(log, 'utf8').split('\n').filter(Boolean).map((line) => /^target=(\S*) php=(\S*) config=(\S*) args=(.*)$/u.exec(line));
     return starts.map((start) => ({ target: start?.[1] ?? '', php: start?.[2] ?? '', config: start?.[3] ?? '', args: start?.[4] ?? '' }));
@@ -201,7 +202,7 @@ test('hyper-ext builds the extension of each API of PHP in a target directory of
     assert.equal(starts.length, 1, 'the recipe of hyper-ext starts cargo once');
     const start = starts[0];
     assert.ok(start !== undefined, 'the recipe of hyper-ext starts cargo');
-    assert.equal(start.args, 'build --locked -p polyspec-hyper-php-ext');
+    assert.equal(start.args, 'build --locked --offline -p polyspec-hyper-php-ext');
     // The paths that the build script of ext-php-rs reads are those of the wrappers, which do not change with the PHP.
     assert.equal(start.php, path.join(directory, 'var/tools/bin/php'));
     assert.equal(start.config, path.join(directory, 'var/tools/bin/php-config'));
@@ -229,7 +230,7 @@ test('hyper-ext does not publish a library that the PHP of the checkout does not
   // A library of another API in the directory of this API, which only a build outside the recipe leaves there.
   writeFileSync(path.join(directory, 'cargo'), '#!/bin/sh\nexit 0\n');
   for (const extension of ['so', 'dylib']) writeFileSync(path.join(directory, `target/php-80427-nts/debug/libpolyspec_hyper.${extension}`), '80510-nts');
-  const result = make(directory, '-o', 'bindings', 'hyper-ext', `CARGO=${path.join(directory, 'cargo')}`, `NODE=${process.execPath}`, 'LLVM_MAJOR=1', `LLVM_ROOT=${path.join(directory, 'llvm')}`);
+  const result = make(directory, '-o', 'bindings', '-o', 'crates-check', 'hyper-ext', `CARGO=${path.join(directory, 'cargo')}`, `NODE=${process.execPath}`, 'LLVM_MAJOR=1', `LLVM_ROOT=${path.join(directory, 'llvm')}`);
   assert.notEqual(result.status, 0, result.stdout);
   assert.equal(readFileSync(path.join(directory, 'build/hyper-ext/polyspec_hyper.so'), 'utf8'), '80427-nts', 'build/hyper-ext keeps the library that loaded');
 });

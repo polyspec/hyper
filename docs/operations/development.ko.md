@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 7328227ff7f1607a2d9a86168e7041d4ed4b388856df87f195edb308930969eb -->
+<!-- source-sha256: 8c00d68c90c1c25ec4082f665617000ec5b4546e42ecdbd9826f90f8fbd8462f -->
 # 개발
 
 [English](development.md).
@@ -27,6 +27,9 @@
 | `make layout-check` | `config/layout.kit.yml`을 extend하는 `config/layout.yml`에 대해 `var/tools`의 alint로 폴더 배치를 검사한다 |
 | `make hyper-install` | pin한 도구를 설치하고, `$(ONLINE)`을 거쳐 template release의 Composer repository에서 PIE로 네이티브 확장을 build하며(`make template-ext`; H14.1-7, H27.45), `make hyper-install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HR-70) |
 | `make hyper-install-python` | kit의 `python-venv` 유틸리티로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 새로 만들고, release의 template wheel을 포함한 의존성과 함께 package를 non-editable로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
+| `make npm-lock` | 요구가 바뀐 뒤, checkout의 npm의 `npm install --package-lock-only --ignore-scripts`로 `$(ONLINE)`을 통해 root와 `tests/package-install`의 `package-lock.json`을 그 manifest에서 쓴다. 아무것도 설치하지 않는다. 이 실행은 실행 시점에 range를 해석하지 않는다. manifest는 모든 polyspec 패키지를 release asset의 URL이나 정확한 버전으로, 다른 모든 패키지를 정확한 버전으로 적으며, npm은 manifest가 여전히 허용하는 lock된 버전을 그대로 둔다. range는 root의 `ajv` `^8.20.0` 하나이며, 그 lock된 버전은 manifest가 배제할 때까지 남는다(H35.41) |
+| `make python-lock` | Python package의 요구가 바뀐 뒤, checkout의 uv의 `uv lock`으로 `$(ONLINE)`을 통해 `pyproject.toml`에서 `packages/python/uv.lock`을 쓴다. uv는 manifest가 여전히 허용하는 lock된 버전을 그대로 둔다(H35.41) |
+| `make composer-lock PACKAGES="<vendor/package> ..."` | manifest에서 pin이 바뀐 뒤, checkout의 Composer의 `composer update --no-install`로 `$(ONLINE)`을 통해 적은 패키지에 대해서만 `composer.lock`과 `examples/board/composer.lock`을 쓴다. 모든 패키지의 update는 실행 시점에 각 range를 해석하므로 `PACKAGES` 없이는 실패한다(HR-89, H35.41) |
 | `make hyper-php-install` | `packages/php`를 가리키는 symbolic link로 `polyspec/hyper`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
 | `make ext` | `make hyper-install-php`의 `make json-ext`와 `make template-ext`가 json과 template release의 Composer repository(`packages.json`)에서 PIE로 가져온 json 확장 `build/json-ext/polyspec_json.so`와 template 확장이 없으면 실패한다. 링크된 실행에서 template 확장은 `vendor/polyspec/template`이 링크하는 template checkout의 `target/release/libpolyspec_template`이다. offline으로 실행하며 아무것도 build하지 않는다(HY-48.15, H27.45) |
 | `make hyper-ext` | `packages/php/native`의 PHP 확장 `polyspec_hyper`를 checkout의 php와 php-config에 대해 Cargo로 build하고, 그 PHP가 확장을 load하는지 확인한 뒤 `build/hyper-ext`에 publish한다. PHP는 build의 입력이고, `PHP`와 `PHP_CONFIG`에 주는 wrapper의 경로는 그 뒤의 PHP가 바뀌어도 같으므로, 출력이 자기 입력을 이름으로 밝힌다(HR-80). Cargo는 확장의 crate를 그 PHP의 API가 정하는 target 디렉터리 `target/php-<headers><build>`에서 build한다. `<headers>`는 header의 release(`php-config --vernum`)이고 `<build>`는 `release-php-ext`가 PHP의 build를 쓰는 형식인 `-nts`, `-zts`, `-debug-nts`, `-debug-zts` 중 하나다. 예를 들면 `target/php-80427-nts`이다. recipe는 그 디렉터리를 `CARGO_TARGET_DIR`로 Cargo에 주고, `make lint-bindings`와 `make test-bindings`도 그 crate의 clippy와 test를 같은 디렉터리에서 실행한다. 다른 PHP는 다른 디렉터리에서 build하므로 다른 API의 library가 복사되는 일이 없고, 어떤 recipe도 target 디렉터리를 지우지 않는다. checkout이 더 이상 build하지 않는 API의 디렉터리는 손으로 지운다. `build/hyper-ext`는 마지막 build의 library를 담는다. `hyper-ext`는 그것을 load하는 모든 target의 선행 조건이므로, 각 실행은 library를 load하기 전에 checkout의 PHP에 맞는 library를 publish한다(HY-132.2) |
@@ -106,7 +109,7 @@ git push origin main
 
 ## Tag 릴리스
 
-릴리스는 `main`에서 `.github/workflows/ci.yml`의 실행이 성공한 commit에 붙인 tag `vX.Y.Z`이다(HR-95, 절차는 `AGENTS.md`). `.github/workflows/release.yml`은 맨 끝 commit이 버전 올림 commit인 push의 CI 실행이 성공하면 스스로 시작하고(kit K987), maintainer는 그 실행의 id만으로 그것을 다시 시작할 수 있으며(`gh workflow run release.yml -f run=<id>`), 버전은 그 실행의 commit에 있는 `CHANGELOG.md`의 첫 section `## X.Y.Z`이며(kit K924), tag의 push는 그것을 시작하지 않는다. 그 step은 다음 순서로 `config/release.json`으로 설정한 `@polyspec/kit`의 `release`를 실행하고 첫 실패에서 멈춘다.
+릴리스는 `main`에서 `.github/workflows/ci.yml`의 실행이 성공한 commit에 붙인 tag `vX.Y.Z`이다(HR-95, 절차는 `AGENTS.md`). `.github/workflows/release.yml`은 맨 끝 commit이 버전 올림 commit인 push의 CI 실행이 성공하면 스스로 시작하고(kit K987), maintainer는 그 실행의 id만으로 그것을 다시 시작할 수 있으며(`gh workflow run release.yml -f run=<id>`), 버전은 그 실행의 commit에 있는 `CHANGELOG.md`의 첫 section `## X.Y.Z`이며(kit K924), tag의 push는 그것을 시작하지 않는다. release의 section `## X.Y.Z`는 버전 올림 commit에서 표시 `unimplemented`를 가진 `contracts/protocol.json`의 모든 statement를 id로, 그것을 구현하는 행과 함께 이름한다. 그래서 release를 읽는 사람이 그 release가 명세의 어떤 statement를 따르지 않는지 안다. 그 section을 표시와 비교하는 검사는 없다. 그 step은 다음 순서로 `config/release.json`으로 설정한 `@polyspec/kit`의 `release`를 실행하고 첫 실패에서 멈춘다.
 
 ```sh
 make release-tag
@@ -163,7 +166,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 
 | Group | Bootstrap 이후 선택 도구 | 잠긴 package 환경 | 검사 |
 |---|---|---|---|
-| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer, Python uv lock | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, 중복, suppression, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
+| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer lock. Python package와 crate는 없다. 어느 gate도 그것을 시작하지 않기 때문이다 | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, 중복, suppression, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
 | `docs` | Node/npm, PHP/Composer, PIE, Python/uv | Root와 board Composer lock | 타입 검사와 script 검사 |
 | `php` | Node/npm, PHP/Composer, PIE | Root와 board Composer lock | PHP 정책, benchmark smoke, formatting, analysis와 test |
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
@@ -175,7 +178,7 @@ group의 local 실행은 그 job의 호출과 같은 `make ci-check NAME=<group>
 
 recipe `ci-check`는 group의 setup step을 순서대로 각각 별도의 make로 실행하고 첫 실패에서 멈춘다. 뒤의 step과 target이 그 step이 설치하는 것을 읽기 때문이다. 첫 step은 `make install-tools TOOLS="<group의 CI_TOOLS>"`이다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. `make hyper-install-php`가 네이티브 template 확장을 build하는 `docs`, `php`, `board` group은 `pie`를 선택한다. npm은 별도 bootstrap을 사용하고 `gates` group은 `make lint-php`가 php-parser를 읽는 PHP symbol extractor를 `make install-symbols EXTRACTORS="php"`(`CI_SYMBOLS_gates`)로 설치한다. kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)는 그 target이 실행하는 `gates` group만 설치하고, `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
 
-`make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). `make hyper-install-redis`는 `docs`를 위해 session test의 Redis server를 build하고, `make hyper-install-browser`는 `board`를 위해 Chromium을 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
+`make hyper-install-crates`는 `Cargo.lock`이 고정한 crate, 곧 polyspec crate의 git tag와 crates.io의 crate를 lock의 모든 target에 대해 `cargo fetch --locked`로 가져온다. `gates`를 뺀 모든 CI group의 두 번째 setup step이다. 그 group들이 각각 cargo, maturin, binding 생성기를 시작하고 이들은 crate를 offline으로 읽기 때문이다. 그 밖의 모든 recipe는 cargo를 `--offline`으로 시작하며, 그런 target 각각의 prerequisite인 `make crates-check`는 `crates-check: a crate that Cargo.lock pins is not fetched, or the lock does not match the manifests; run make hyper-install-crates`로 실패한다(HR-89). `make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). `make hyper-install-redis`는 `docs`를 위해 session test의 Redis server를 build하고, `make hyper-install-browser`는 `board`를 위해 Chromium을 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
 
 Build 선행 조건은 각 job의 검사가 소유한다. 언어 job은 다른 언어 job을 기다리거나 설치 환경 또는 build 산출물을 다운로드하지 않는다. 설치는 online이고 build와 검사는 offline 환경을 유지한다.
 

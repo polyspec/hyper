@@ -9,9 +9,33 @@ import path from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { dryRun } from './make-dry-run.mts';
 import { requireBuilt } from './requires.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+// The command tool `hyper` imports the built modules of the two npm packages, which Git ignores: lib/check.mjs reads
+// @polyspec/hyper-client and lib/build.mjs reads @polyspec/hyper/build. A target of the full suite that starts it
+// therefore builds both with `make packages` first, in its own recipe or a prerequisite, so that it does not depend on
+// a target that happened to run before it (H35.39): a CI group runs its targets on a tree without any dist.
+test('every target of the full suite that starts the command tool builds the two npm packages before it (H35.39)', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  const words = (name: string): string[] => (new RegExp(`^${name} := (.*)$`, 'm').exec(makefile)?.[1] ?? '').split(' ').filter(Boolean).flatMap((word) => (/^\$\(\w+\)$/u.test(word) ? words(word.slice(2, -1)) : [word]));
+  const starting: string[] = [];
+  const unbuilt: string[] = [];
+  for (const target of words('CHECK_TARGETS')) {
+    const lines = dryRun(target);
+    const start = lines.findIndex((line) => /packages\/cli\/bin\/hyper\.mjs /u.test(line));
+    if (start < 0) continue;
+    starting.push(target);
+    for (const directory of ['packages/client', 'packages/ts']) {
+      const built = lines.findIndex((line) => line.startsWith(`cd ${directory} && `) && line.includes(' run --silent build '));
+      if (built < 0 || built > start) unbuilt.push(`make ${target} starts the command tool before it builds ${directory} (make packages): ${(lines[start] ?? '').slice(0, 160)}`);
+    }
+  }
+  assert.ok(starting.includes('templates-check'), `the targets that start the command tool: ${starting.join(' ')}`);
+  assert.deepEqual(unbuilt, []);
+});
 
 function temporary(t: TestContext) {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-check-recipes-'));

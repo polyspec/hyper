@@ -10,7 +10,7 @@ import { dryRun } from './make-dry-run.mts';
 
 test('node-addon puts the addon beside the generated entry of the Node package (H35.9-1)', () => {
   const lines = dryRun('node-addon').join('\n');
-  assert.match(lines, /cargo \S+ build --locked -p polyspec-hyper-node/u, lines);
+  assert.match(lines, /cargo \S+ build --locked --offline -p polyspec-hyper-node/u, lines);
   assert.match(lines, /mv -f \S+ packages\/ts\/native\/generated\/hyper\.[a-z0-9-]+\.node$/mu, lines);
 });
 
@@ -34,7 +34,7 @@ const GENERATED_TESTS = 'node -- packages/ts/native/generated/tests/generated.te
 
 test('test-node-addon builds the addon with the test features and runs the generated tests of the Node binding (H35.9-10)', () => {
   const lines = dryRun('test-node-addon');
-  const build = lines.findIndex((line) => /cargo \S+ build --locked -p polyspec-hyper-node --features panic-test,fault-test,thread-test,thrown-count-test$/u.test(line));
+  const build = lines.findIndex((line) => /cargo \S+ build --locked --offline -p polyspec-hyper-node --features panic-test,fault-test,thread-test,thrown-count-test$/u.test(line));
   const put = lines.findIndex((line) => /mv -f \S+ packages\/ts\/native\/generated\/hyper\.[a-z0-9-]+\.node$/u.test(line));
   const run = lines.findIndex((line) => line.endsWith(GENERATED_TESTS) && /\/run-tests\.m[jt]s /u.test(line));
   assert.ok(build >= 0 && build < put && put < run, `the addon is built, put beside the entry and tested, in that order:\n${lines.join('\n')}`);

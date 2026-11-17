@@ -40,8 +40,13 @@ final class ReadsSteps
         if ($json === false) {
             throw new \RuntimeException("{$file} cannot be read");
         }
-        $built = json_decode($json, false, 512, JSON_THROW_ON_ERROR);
-        $case->compare('reads', $built->routes->reads->regions->content ?? null);
+        // The read paths are the member routes.reads.regions.content of the file; a member that is missing, or whose
+        // holder is no object, gives null, which the comparison reports.
+        $paths = json_decode($json, false, 512, JSON_THROW_ON_ERROR);
+        foreach (['routes', 'reads', 'regions', 'content'] as $member) {
+            $paths = $paths instanceof \stdClass ? ($paths->{$member} ?? null) : null;
+        }
+        $case->compare('reads', $paths);
         $renderer = Renderer::open("{$directory}/program", 'Z');
         $shared = $renderer->bind([]);
         $text = $renderer->alone($template, $shared, $renderer->bind($data));

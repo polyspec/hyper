@@ -122,7 +122,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 # (HR-83). hyper-install is no such target: its first step writes the wrapper.
 # A target that starts PHP is named here, and tests/scripts/php-check.test.mts fails for a PHP recipe that is not.
 CHECKOUT_PHP := $(KIT_TOOLS)/bin/php
-PHP_TARGETS := hyper-install-php template-ext json-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
+PHP_TARGETS := hyper-install-php composer-lock template-ext json-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
 .PHONY: php-check php-check-installed
 $(PHP_TARGETS): php-check
 php_check = want="$$(tr -d '[:space:]' < .php-version)"; \
@@ -147,11 +147,29 @@ hyper-install: ## Install the pinned tools and the npm packages, the sources tha
 	$(MAKE) --no-print-directory install-packages
 	$(MAKE) --no-print-directory install-tools
 	$(MAKE) --no-print-directory install-symbols EXTRACTORS=php
+	$(MAKE) --no-print-directory hyper-install-crates
 	$(MAKE) --no-print-directory bindings
 	$(MAKE) --no-print-directory node-addon
 	$(MAKE) --no-print-directory hyper-ext
 	$(MAKE) --no-print-directory hyper-install-php
 	$(MAKE) --no-print-directory hyper-install-python
+
+# The crates of Cargo.lock (HR-89): hyper-install-crates is the one target that downloads them, the git tags of the
+# polyspec crates and the crates of crates.io, with `cargo fetch --locked` through the link script, which fetches for
+# every target of the lock, wasm32 among them. Every other recipe starts cargo with --offline, as maturin of
+# hyper-install-python and the binding generator do, so no check downloads a crate in one run and not in another.
+# crates-check is a prerequisite of each target of CRATE_TARGETS, the targets whose recipes start cargo, maturin or the
+# binding generator: it reads the packages of the lock offline, as the binding generator does, and fails with the name
+# of the install target when one is not fetched, so the failure is not the advice of cargo to leave the offline mode.
+# A target that starts cargo is named here and in the setup of its CI group, and tests/scripts/ci-group-tools.test.mts
+# fails for a group that starts one of them before hyper-install-crates.
+CRATE_TARGETS := hyper-install-python hyper-ext core-test core-lint bindings bindings-check lint-bindings test-bindings node-addon node-package test-go
+.PHONY: hyper-install-crates crates-check
+$(CRATE_TARGETS): crates-check
+hyper-install-crates: ## Fetch the crates that Cargo.lock pins, which every other recipe reads offline (HR-89); ONLINE
+	$(ONLINE) $(CARGO) fetch --locked
+crates-check: ## Fail unless every crate that Cargo.lock pins is fetched, naming make hyper-install-crates (HR-89)
+	@$(CARGO) metadata --locked --offline --format-version 1 > /dev/null || { echo "crates-check: a crate that Cargo.lock pins is not fetched, or the lock does not match the manifests; run make hyper-install-crates" >&2; exit 1; }
 
 .PHONY: hyper-install-php
 hyper-install-php: ## Install only the locked root and board Composer projects and their pinned PHP archives
@@ -275,7 +293,7 @@ PHP_EXT_CARGO = $(php_api_target) && CARGO_TARGET_DIR="$$target" $(CARGO)
 hyper-ext: bindings ## Build the PHP extension polyspec_hyper of packages/php/native into build/hyper-ext (HY-132.2, H35.25)
 	@test -n "$(LLVM_MAJOR)" || { echo 'hyper-ext: LLVM_MAJOR is empty, since packages/release.mk, which make release-recipes writes, is missing' >&2; exit 2; }
 	@test -x "$(LLVM_ROOT)/bin/clang" && ls "$(LLVM_ROOT)/lib" 2>/dev/null | grep -q '^libclang' || { echo 'hyper-ext: the bindgen of ext-php-rs needs the libclang and the clang of LLVM $(LLVM_MAJOR) (config/toolchain.json) in $(LLVM_ROOT)' >&2; exit 2; }
-	$(php_api_target) && PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang CARGO_TARGET_DIR="$$target" $(CARGO) build --locked -p polyspec-hyper-php-ext
+	$(php_api_target) && PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang CARGO_TARGET_DIR="$$target" $(CARGO) build --locked --offline -p polyspec-hyper-php-ext
 	$(php_api_target) && mkdir -p build/hyper-ext.next-$$$$ && trap 'rm -rf build/hyper-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$target/debug/libpolyspec_hyper.$(CDYLIB)" build/hyper-ext.next-$$$$/polyspec_hyper.so && php -n -d extension=$(CURDIR)/build/hyper-ext.next-$$$$/polyspec_hyper.so -r 'exit(extension_loaded("polyspec_hyper") ? 0 : 1);' && $(NODE) scripts/publish.mts directory build/hyper-ext.next-$$$$ build/hyper-ext
 
 # A build that fails or is interrupted leaves no staging directory: the shell of each line removes its own when it ends
@@ -412,10 +430,15 @@ hyper-lint: ## Check PHP formatting
 	$(call check,Pint of $(BOARD),cd $(BOARD) && vendor/bin/pint --test app src public) \
 	$(checks_result)
 
-analyse-php: ext ## Run PHPStan at level max on the source and the tests of the server package
+# PHPStan reads the classes and the functions of the extension polyspec_hyper from the declarations that the binding
+# generator writes (packages/php/native/generated/polyspec_hyper.stub.php, scanFiles of phpstan-max.neon), which Git
+# ignores, so analyse-php writes them first.
+analyse-php: ext bindings ## Run PHPStan at level max on the source and the tests of the server package
 	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
-templates-check: ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
+# The command tool imports the built modules of the two npm packages (packages/cli/lib/check.mjs reads
+# @polyspec/hyper-client, and build.mjs @polyspec/hyper/build), so a target that starts it builds them first.
+templates-check: packages ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs check --app $(BOARD)
 
 # The TypeScript of scripts/, tests/ and benchmarks/ (tsconfig.json), which Node runs by type stripping and so never checks
@@ -509,9 +532,9 @@ CORE := packages/rust
 # the polyspec crates to the providers that .links names and otherwise runs cargo as given, so no .cargo file is needed (H35.14-1).
 CARGO := $(NODE) $(KIT)/link.$(KIT_EXT) cargo $(CURDIR)
 core-test: ## Run the tests of the Rust core, which run the cases of contracts/ that it decides (HY-132)
-	$(CARGO) test --locked -p polyspec-hyper
+	$(CARGO) test --locked --offline -p polyspec-hyper
 core-lint: ## Run clippy on the Rust core and its tests with every warning an error (plan R-1)
-	$(CARGO) clippy --locked -p polyspec-hyper --all-targets -- -D warnings
+	$(CARGO) clippy --locked --offline -p polyspec-hyper --all-targets -- -D warnings
 core-fmt-check: ## Check the format of the Rust core
 	$(CARGO) fmt --check -p polyspec-hyper
 
@@ -525,6 +548,29 @@ cargo-lock: ## Write Cargo.lock for the crates of CRATES with cargo update, in a
 	@test -n "$(strip $(CRATES))" || { echo 'cargo-lock: CRATES is empty; name the crates whose pin changed: make cargo-lock CRATES="<crate> <crate>"' >&2; exit 2; }
 	@test ! -e $(CURDIR)/.links || { echo 'cargo-lock: $(CURDIR)/.links exists, so the link script of kit would update its copy of the lock under var/link/cargo and leave Cargo.lock as it is (kit K1269); run the target in a checkout without .links' >&2; exit 1; }
 	$(ONLINE) $(CARGO) update $(foreach crate,$(CRATES),-p $(crate))
+
+# The locks of uv and of Composer are written by their tools too (HR-70), after a change of a requirement of their
+# manifests. python-lock runs `uv lock` for the Python package, which keeps every locked version that pyproject.toml
+# still allows and resolves only what the change needs. composer-lock runs `composer update --no-install` for the
+# packages of PACKAGES alone, in the private root and in the board, whose manifests pin the polyspec packages by their
+# exact versions; it fails without PACKAGES, in a dry run too, because an update of every package resolves each range
+# at the time of the run (HR-89). Neither reads a link: `make link` changes no manifest and no lock of uv or Composer.
+# npm-lock runs `npm install --package-lock-only --ignore-scripts`, which writes the lock and installs nothing, for the
+# root and for tests/package-install, whose own .npmrc npm reads through --prefix. A lock records each polyspec package by
+# the URL of its release asset with its integrity and every other package by the exact version that its manifest names,
+# and npm keeps a locked version that its manifest still allows, so the run resolves no range anew.
+.PHONY: npm-lock python-lock composer-lock
+npm-lock: ## Write package-lock.json of the root and of tests/package-install from their manifests with npm install --package-lock-only; ONLINE
+	$(ONLINE) $(NPM) install --package-lock-only --ignore-scripts
+	$(ONLINE) $(NPM) install --package-lock-only --ignore-scripts --prefix tests/package-install
+
+python-lock: ## Write packages/python/uv.lock from pyproject.toml with uv lock; ONLINE
+	$(ONLINE) $(UV) lock --project $(PYTHON_PACKAGE)
+
+composer-lock: ## Write composer.lock and examples/board/composer.lock for the packages of PACKAGES with composer update; ONLINE
+	$(if $(strip $(PACKAGES)),,$(error composer-lock: PACKAGES is empty; name the packages whose pin changed: make composer-lock PACKAGES="<vendor/package> <vendor/package>"))
+	$(ONLINE) $(COMPOSER_BIN) update --no-install --no-interaction $(PACKAGES)
+	$(ONLINE) $(COMPOSER_BIN) update --no-install --no-interaction --working-dir=$(BOARD) $(PACKAGES)
 
 # The bindings of the Rust core for the five targets of packages/rust/interface.json (binding design L-1, L-2, L-2a).
 # BINDING is the bin of the npm package @polyspec/binding, which package.json declares by its release asset and
@@ -589,12 +635,12 @@ endif
 BINDING_CRATES := polyspec-hyper-python polyspec-hyper-node polyspec-hyper-go
 WASM_MANIFEST := packages/ts/native/wasm/Cargo.toml
 lint-bindings: bindings ## Run clippy on the binding crates with every warning an error, after make bindings
-	$(CARGO) clippy --locked $(foreach crate,$(BINDING_CRATES),-p $(crate)) --all-targets --features panic-test -- -D warnings
-	$(PHP_EXT_CARGO) clippy --locked -p polyspec-hyper-php-ext --all-targets --features panic-test -- -D warnings
-	$(CARGO) clippy --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test -- -D warnings
+	$(CARGO) clippy --locked --offline $(foreach crate,$(BINDING_CRATES),-p $(crate)) --all-targets --features panic-test -- -D warnings
+	$(PHP_EXT_CARGO) clippy --locked --offline -p polyspec-hyper-php-ext --all-targets --features panic-test -- -D warnings
+	$(CARGO) clippy --locked --offline --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test -- -D warnings
 test-bindings: lint-bindings test-node-addon test-wasm test-go ## Run the tests of the binding crates and the generated tests of Node, WASM and Go
-	$(CARGO) test --locked $(foreach crate,$(BINDING_CRATES),-p $(crate))
-	$(PHP_EXT_CARGO) test --locked -p polyspec-hyper-php-ext
+	$(CARGO) test --locked --offline $(foreach crate,$(BINDING_CRATES),-p $(crate))
+	$(PHP_EXT_CARGO) test --locked --offline -p polyspec-hyper-php-ext
 
 # The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
 # the WASM crate (binding GN-15, GN-18), which mise.toml pins and make install-tools installs into var/tools (HR-81);
@@ -629,12 +675,12 @@ NODE_ADDON_FEATURES := panic-test,fault-test,thread-test,thrown-count-test
 test-node-addon: node-addon ## Run the generated tests of the Node binding on node --test against the addon of the checkout
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- $(NODE_PACKAGE)/native/generated/tests/generated.test.mjs
 node-addon: bindings ## Build the Node addon of this platform and put it beside the generated entry of the Node package
-	$(CARGO) build --locked -p polyspec-hyper-node --features $(NODE_ADDON_FEATURES)
+	$(CARGO) build --locked --offline -p polyspec-hyper-node --features $(NODE_ADDON_FEATURES)
 	cp $(CARGO_TARGET)/debug/libpolyspec_hyper_node.$(CDYLIB) $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ && mv -f $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ $(NODE_PACKAGE)/native/generated/$(NODE_ADDON)
 
 node-package: bindings packages node-addon ## Build the WASM module and the Node addon, then pack and install the npm package into var/bindings/node
 	test "$$($(WASM_BINDGEN) --version)" = "wasm-bindgen $(WASM_BINDGEN_RELEASE)"
-	$(CARGO) build --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test
+	$(CARGO) build --locked --offline --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test
 	$(WASM_BINDGEN) --target web --out-dir $(NODE_PACKAGE)/native/wasm/generated --out-name hyper_wasm \
 		$(CARGO_TARGET)/wasm32-unknown-unknown/debug/polyspec_hyper_wasm.wasm
 	mkdir -p $(BINDINGS_VAR)/node $(BINDINGS_VAR)/node-platform
@@ -650,11 +696,12 @@ node-package: bindings packages node-addon ## Build the WASM module and the Node
 	echo '{ "private": true }' > $(BINDINGS_VAR)/node/package.json
 	cd $(BINDINGS_VAR)/node && $(NPM) install --no-audit --no-fund --omit=optional ./deps/*.tgz ./polyspec-hyper-$(NODE_VERSION).tgz ./polyspec-hyper-$(NODE_PLATFORM)-$(NODE_VERSION).tgz
 
-# The generated tests of the WASM binding through the subpath ./wasm of the installed package (binding P-5);
-# --expose-gc serves the generated tests that collect instances (binding GN-18a).
-test-wasm: node-package ## Run the generated tests of the WASM binding on node --test against the installed package
-	cp $(NODE_PACKAGE)/native/wasm/generated/tests/generated.test.mjs $(BINDINGS_VAR)/node/generated.wasm.test.mjs
-	cd $(BINDINGS_VAR)/node && $(NODE) --expose-gc --test generated.wasm.test.mjs
+# The generated tests of the WASM binding are a node:test file that imports the generated entry ../index.mjs, which
+# loads the module hyper_wasm.js that node-package writes beside it, so test-wasm runs them where the generator writes
+# them, as test-node-addon does; a copy in another directory does not find the entry. --expose-gc serves the generated
+# tests that collect instances (binding GN-18a).
+test-wasm: node-package ## Run the generated tests of the WASM binding on node --test against the WASM module of the checkout
+	$(NODE) --expose-gc --test $(NODE_PACKAGE)/native/wasm/generated/tests/generated.test.mjs
 
 # The static library with the test features (binding GN-13b), which Go links through CGO_LDFLAGS; gofmt and go vet,
 # then the generated tests on go test. GOTOOLCHAIN=local: a go of another release than the go directive fails instead
@@ -663,7 +710,7 @@ GO_RELEASE := $(shell sed -n 's/^go \(.*\)$$/\1/p' packages/go/go.mod)
 GO_ENV := GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET)/debug GOFLAGS=-tags=polyspec_panic_test,polyspec_codec_test
 test-go: bindings ## Build the static library of the Go binding, run gofmt and go vet, then the generated tests on go test
 	test "$$($(GO_ENV) $(GO) env GOVERSION)" = "go$(GO_RELEASE)"
-	$(CARGO) build --locked -p polyspec-hyper-go --features panic-test,codec-test
+	$(CARGO) build --locked --offline -p polyspec-hyper-go --features panic-test,codec-test
 	test -z "$$(cd packages/go && $(GOFMT) -l .)"
 	cd packages/go && $(GO_ENV) $(GO) vet ./...
 	cd packages/go && $(GO_ENV) $(GO) test -count=1 -v ./...
@@ -731,25 +778,27 @@ CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse
 # whose targets are reports and belong to no check (make ci-bench).
 CI_GROUPS := gates docs php node board python core
 # hyper-install-python builds the native module with maturin of mise.toml and Cargo, so each group that runs it names
-# maturin and rust (install-tools of kit selects maturin since K1278).
-CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan rust maturin
-CI_SETUP_gates := install-tools install-symbols hyper-install-php hyper-install-python
+# maturin and rust (install-tools of kit selects maturin since K1278). The group gates does not run it: no gate
+# starts the Python package, cargo, maturin or the binding generator, so its setup builds no native module and
+# fetches no crate; python and uv stay, because mise installs vulture with them.
+CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan
+CI_SETUP_gates := install-tools install-symbols hyper-install-php
 CI_SYMBOLS_gates := php
 CI_TARGETS_gates := $(GATE_TARGETS)
 CI_TOOLS_docs := node php composer pie python uv rust maturin
-CI_SETUP_docs := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-ext
+CI_SETUP_docs := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-redis hyper-ext
 CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check recipe-check
 CI_TOOLS_php := node php composer pie rust
-CI_SETUP_php := install-tools hyper-install-php
+CI_SETUP_php := install-tools hyper-install-crates hyper-install-php
 CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php
 CI_TOOLS_node := node rust
-CI_SETUP_node := install-tools
+CI_SETUP_node := install-tools hyper-install-crates
 CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check
 CI_TOOLS_board := node php composer pie python uv rust maturin
-CI_SETUP_board := install-tools hyper-install-php hyper-install-python hyper-install-browser hyper-ext
+CI_SETUP_board := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-browser hyper-ext
 CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
 CI_TOOLS_python := node python uv rust maturin
-CI_SETUP_python := install-tools hyper-install-python
+CI_SETUP_python := install-tools hyper-install-crates hyper-install-python
 CI_TARGETS_python := hyper-test-python hyper-test-python-render
 # The group core checks the Rust core and the bindings of its five targets with the binding generator of package.json (H35.2):
 # test-bindings runs lint-bindings, test-node-addon, test-wasm and test-go first, so each runs once. Its tools build the PHP extension, the
@@ -758,10 +807,10 @@ CI_TARGETS_python := hyper-test-python hyper-test-python-render
 # its target install-wasm-bindgen, which installs that CLI alone with the mise of the checkout at the digest of
 # mise.lock. tests/scripts/ci-group-tools.test.mts fails for a group that starts a tool that its setup does not install.
 CI_TOOLS_core := node rust php python uv go
-CI_SETUP_core := install-tools release-recipes install-wasm-bindgen
+CI_SETUP_core := install-tools hyper-install-crates release-recipes install-wasm-bindgen
 CI_TARGETS_core := core-test core-lint core-fmt-check bindings-check test-bindings
 CI_TOOLS_bench := node php composer pie python uv rust maturin
-CI_SETUP_bench := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser hyper-ext
+CI_SETUP_bench := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser hyper-ext
 CI_TARGETS_bench := bench bench-sessions
 
 # The targets of the full suite that exist on one platform only. Apple `container`, whose bind mounts are virtiofs,

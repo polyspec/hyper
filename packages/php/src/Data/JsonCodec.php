@@ -84,6 +84,8 @@ final class JsonCodec
     /**
      * Returns true when a value that the core gives is a list: an array with sequence keys, the empty array
      * included. The core gives a list as such an array (HY-54.20).
+     *
+     * @phpstan-assert-if-true list<mixed> $value
      */
     public static function isList(mixed $value): bool
     {
