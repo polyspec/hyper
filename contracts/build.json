@@ -256,7 +256,7 @@
     },
     {
       "id": "a_program_without_the_copy_of_the_reserved_template_fails_the_open_with_its_path",
-      "label": "a program directory without `legacy/hyper/data.tpl` fails the open with the absolute path of that file (HY-48.2, HY-48.14)",
+      "label": "a program directory without `legacy/hyper/data.tpl` fails the open with the absolute path of that file (HY-48.2, HY-48.17, HY-48.14)",
       "missing": [
         "legacy/hyper/data.tpl"
       ],

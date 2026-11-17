@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1c9bed4f9256eb3049b4e9b6d7fb610c65b1cad04f0c2b76af259d64bbebc8b5 -->
+<!-- source-sha256: 619367614f2f26ffb0dd905c4d387ff8ab539a975f89a9153a44786ccbce5e9f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- HY-48.16을 폐기하고 HY-48.17이 그것을 대신한다. HY-48.16은 PHP 서버의 `App::open`이 필요로 하는 출력으로 `reads.json`, `build.json`, 디렉터리 `templates`를 밝혔으나, open은 예약 템플릿의 사본 `legacy/hyper/data.tpl`(HY-31.10)도 요구한다. HY-48.17은 네 출력을 open이 처음 없는 것을 보고하는 순서로 밝힌다. `contracts/interfaces.json`과 `contracts/arguments.json`의 open 매개변수 `program`, `contracts/build.json`의 사본이 없는 case, `Renderer::open`의 주석, `docs/features.md`의 행 `legacy-data-template`은 HY-48.17을 인용한다. 동작은 바뀌지 않는다(H31.4-2).
 - root `package.json`과 `tests/package-install/package.json`이 `@polyspec/session-store`와 그 platform package 셋의 `overrides`를 가졌다. npm은 이것 없이도 `packages/ts`의 요구 `0.0.4`를 root가 적은 release asset URL로 해석하고 같은 lock을 쓰므로 그 항목을 지웠다. `make lint-ts`는 knip에서 `package.json`과 `packages/ts/package.json`의 쓰이지 않는 의존 `@polyspec/session-store`로 실패했는데, knip이 읽지 않는 생성된 Node binding만 이를 요구하기 때문이다. 이제 `knip.json`이 두 곳에서 이를 무시한다(H35.8-2).
 - CI group core는 wasm-bindgen CLI를 시작하는 `make test-bindings`를 실행했지만, group의 어떤 setup step도 그것을 설치하지 않았다. 이제 group의 setup은 `make release-recipes`로 `packages/release.mk`를 쓰고 그 target인 `make install-wasm-bindgen`을 실행한다. `tests/scripts/ci-group-tools.test.mts`는 모든 CI group의 setup step과 target의 dry run을 읽고, group이 시작하는데 그 setup이 설치하지 않는 tool이 있으면 group, target, tool을 밝히며 실패한다(HR-91, H35.16-6).
 - `make hyper-ext`는 모든 PHP의 확장을 `target/debug`에서 build했고, PHP wrapper의 경로는 그 뒤의 PHP가 바뀌어도 같으므로 Cargo가 다른 PHP의 library를 그대로 둘 수 있었다. 이제 `make hyper-ext`, `make lint-bindings`, `make test-bindings`는 확장의 crate를 header의 release(`php-config --vernum`)와 PHP의 debug build, thread safety가 정하는 `target/php-<headers><build>`(예: `target/php-80427-nts`)에서 compile하므로 다른 PHP는 다른 디렉터리에서 build한다. recipe는 더 이상 `EXT_PHP_RS_ALLOWED_BINDINGS`를 설정하지 않는다(H35.16-5).

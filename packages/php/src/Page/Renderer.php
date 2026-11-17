@@ -46,7 +46,7 @@ final class Renderer
      */
     public static function open(string $program, string $timezone, array $functions = []): self
     {
-        // HY-48.16: a missing build fails here and names the first missing output.
+        // HY-48.17: a missing build fails here and names the first missing output, in this order.
         $required = [
             "{$program}/reads.json" => is_file(...),
             "{$program}/build.json" => is_file(...),
