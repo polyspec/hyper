@@ -1,5 +1,7 @@
 // The advisory lock of an open file: flock(2), which PHP holds on a session file. Node has no such function of its own,
 // so this calls the C library through node:ffi of the Node version that the package requires (HY-104).
+import { WarningsGuard } from '../app/warnings-guard.js';
+
 const LOCK_EX = 2;
 const LOCK_NB = 4;
 
@@ -23,7 +25,11 @@ const PLATFORMS: Partial<Record<NodeJS.Platform, { errno: string; busy: number }
 export function exclusiveLock(): (descriptor: number) => boolean {
   const platform = PLATFORMS[process.platform];
   if (platform === undefined) throw new Error(`hyper: file sessions need flock, which the platform ${process.platform} does not name`);
-  const ffi: unknown = process.getBuiltinModule('node:ffi');
+  // The first load of node:ffi in a process emits an ExperimentalWarning. The load is the server's own, and only an
+  // application that constructs FileSessions causes it, so it runs outside of the warnings guard of a request (HY-74):
+  // an application that constructs its first FileSessions while a request is answered gets the warning as at any other
+  // time, and the request is answered.
+  const ffi: unknown = WarningsGuard.outside(() => process.getBuiltinModule('node:ffi'));
   if (!isFfi(ffi)) throw new Error('hyper: file sessions need node:ffi, which this Node process does not allow');
   const { functions } = ffi.dlopen(null, {
     flock: { arguments: ['int32', 'int32'], return: 'int32' },

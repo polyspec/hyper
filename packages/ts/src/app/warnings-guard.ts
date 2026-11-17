@@ -21,4 +21,12 @@ export class WarningsGuard {
     }
     return answering.run(true, work);
   }
+
+  // Runs `work` of the server's own code with the handling of the time outside of the requests, also when a request
+  // called it: a warning that the runtime emits for a module that the server itself loads on its first use is no
+  // warning of the answer, so it is emitted as before and does not fail the request. The work is synchronous, so
+  // nothing of the application runs in it.
+  static outside<T>(work: () => T): T {
+    return answering.exit(work);
+  }
 }

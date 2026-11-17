@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1a907814815fd943485b085c2595e251b5df2935879538b6a60c37bff5d3bb80 -->
+<!-- source-sha256: c0df079fb88e724f0df971a53c64c4a25248414bcfa5e42cb03441a0fa1381e8 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 요청에 응답하는 동안, 예를 들어 handler 안에서 첫 `FileSessions`를 생성한 Node 서버의 애플리케이션은 그 요청에 상태 500과 log 줄 `hyper: Error: FFI is an experimental feature and might change at any time`을 받았고, 다음 요청은 200으로 응답했다. 생성자는 `process.getBuiltinModule`로 `node:ffi`를 load하고, process 내 첫 load는 ExperimentalWarning을 내며, 그 load가 서버 자신의 것인데도 요청의 warnings guard가 그 경고를 던졌다(HY-74.7). 이제 그 load는 `WarningsGuard.outside`를 통해 실행되며, 이 함수는 그 동기 호출 동안 guard를 벗어난다. 그래서 경고는 요청 밖에서처럼 전달되고 요청은 응답된다. 애플리케이션이 요청 안에서 내는 경고는 여전히 그 요청을 실패시킨다. module은 여전히 `FileSessions`의 생성으로만 load된다. package의 import는 `flock.ts`를 load하고 `node:ffi`는 load하지 않으므로, Redis session을 쓰는 애플리케이션은 경고를 받지 않는다. `packages/ts/tests/ffi-load.test.ts`에 이 경우가 추가되었다. 이 변경과 그 test는 작성만 했고 실행하지 않았다(H35.9-9).
 - Node 서버가 `node:ffi`를 언제 load하는지 보이는 test가 없었다. 이 module의 process 내 첫 load는 ExperimentalWarning을 내고, 요청의 warnings guard는 그 경고를 던진다(HY-74.7). `packages/ts/tests/ffi-load.test.ts`는 별도의 Node process를 시작하고, 그 process는 `FileSessions`를 생성하고 `App.server`를 시작한 뒤, cookie가 기존 session 파일을 가리키는 요청을 보낸다. 경고는 서버가 listen하기 전에 전달되고, 그 파일을 lock하는 요청은 200으로 응답한다. `FileSessions`는 생성자에서 module을 load하므로 source는 바뀌지 않는다. 첫 `FileSessions`를 handler 안에서 생성하는 애플리케이션은 그 요청에 상태 500을 받으며, 이는 HY-74.1이 런타임의 경고에 대해 서술하는 바와 같다. 이 경우에는 test도 변경도 없다(H35.9-9).
 - `tests/scripts/session-redis-server.mts`의 `until()`은 check를 끝없이 반복했다. check가 묻는 Redis 서버나 check가 lock을 읽는 holder가 끝난 뒤에는 check가 매번 실패했고, 그 step은 test의 시간 제한까지 이어졌으며 그 제한은 어떤 process도 밝히지 않았다. 이제 `until(check, ...needed)`는 조건이 필요로 하는 process를 각각 이름과 함께 받는다. 그 가운데 하나가 먼저 끝나면, 또는 이미 끝나 있으면 첫 check 전에, `<name> ended with <status or signal> while a step waited for a condition that needs it`로 reject하고, 끝날 때 자기 listener를 제거한다. `tests/scripts/session-redis-cluster.test.mts`의 일곱 wait는 cluster의 node를 지정하고, 만료된 lock을 기다리는 wait는 holder도 지정한다. `tests/scripts/session-redis-failover.test.mts`의 wait는 아직 process를 지정하지 않으며 이전처럼 기다린다(HR-84, H35.19-2).
 - `tests/scripts/session-shared-redis.test.mts`의 세 test `the <name> server waits for the lock that a request of another server holds`는 기다리는 요청을 시작하고 그 요청의 끝을 200밀리초 timer와 경쟁시켰다. 그 시간 안에 아직 lock을 요청하지 않은 요청도 기다리는 것으로 통과했고, 결과가 기계의 부하에 달려 있었다. 이제 test는 Redis 서버의 명령을 `MONITOR`로 읽고 lock key의 두 번째 `SET`을 기다린다. 이는 Redis가 lock을 거절했고 요청이 다시 요청했음을 보인다. 그 전에 끝나는 요청은 test를 실패시킨다. 그 뒤 test는 holder를 풀기 전에 holder의 lock 값과 바뀌지 않은 session record를 기대한다. `tests/scripts/session-waits.test.mts`는 `tests/scripts/session-*.mts` 파일의 `setTimeout(` 호출에 대해 파일과 줄을 밝히며 실패한다(HR-89, H35.19-1).
