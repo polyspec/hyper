@@ -997,7 +997,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Fails for a path of the options that is not absolute: the manifest, the template index, the template root and the build file (HY-48.11).",
+              "state": "Fails for a path of the options that is not absolute: the manifest and the program directory (HY-48.19).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.absolutePaths",
@@ -1008,15 +1008,14 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-48.11"
+                "sentence": "HY-48.19"
               },
               "tests": [
-                "packages/ts/tests/app.test.ts::Node handlers > requires absolute paths and a template for every route (HR-34, HY-54): Only the Node server takes the manifest, the template index, the template root and the build file as separate paths (HY-48.11), and checks that the index holds a template of every route (HY-48.12).",
-                "packages/ts/tests/build.test.ts::App.open takes the build file by an absolute path (HY-48.11) > fails with the path of a build file whose option is relative: Only the Node server takes the build file as an option of its own (HY-48.11)."
+                "packages/ts/tests/app.test.ts::Node handlers > requires an absolute path of the manifest (HY-48.19): The Node server takes the manifest and the program directory by absolute paths and fails a path that is not absolute (HY-48.19)."
               ]
             },
             {
-              "id": "app.templateIndex",
+              "id": "app.readBytes",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
@@ -1024,46 +1023,25 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Reads and checks the template index of the build (HY-48.11).",
+              "state": "Reads the bytes of the manifest or of a file of the program directory by its absolute path (HY-48.19).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.templateIndex",
-                  "signature": "private static templateIndex(path: string): TemplateIndex"
+                  "symbol": "packages/ts/src/app/app.ts::App.readBytes",
+                  "signature": "private static readBytes(path: string): Buffer"
                 }
               },
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-48.11"
-              }
-            },
-            {
-              "id": "app.routeTemplates",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value",
-                "manifest"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Fails when a template of a route or the template of the embedded data is not in the template index (HY-48.12).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.routeTemplates",
-                  "signature": "private static routeTemplates(index: TemplateIndex, manifest: Manifest): void"
-                }
+                "sentence": "HY-48.19"
               },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-48.12"
-              }
+              "tests": [
+                "packages/ts/tests/app.test.ts::App > opens only when every output of the build exists and names the first missing one (HY-48): The Node server reads the manifest by the absolute path of its option and names the first missing output of the program directory (HY-48.19); the test asserts that the error of a missing program names its reads.json, that the error of a missing manifest names its path, and that a program path that is not absolute fails."
+              ]
             },
             {
-              "id": "app.readJsonFile",
+              "id": "app.routeReads",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
@@ -1071,44 +1049,41 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Reads and decodes a JSON file of the build by its absolute path (HY-48.11).",
+              "state": "Reads the routes of `reads.json` of the program directory as the value that the core takes (HY-48.19).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.readJsonFile",
-                  "signature": "private static readJsonFile(path: string): unknown"
+                  "symbol": "packages/ts/src/app/app.ts::App.routeReads",
+                  "signature": "private static routeReads(path: string): Value"
                 }
               },
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-48.11"
-              },
-              "tests": [
-                "packages/ts/tests/app.test.ts::App > opens only when every output of the build exists and names the first missing one (HY-48): Only Node opens with the manifest and the template index by absolute paths (HY-48.11); the test asserts that the error of a missing template index and of a missing manifest names its path, and that a template index path that is not absolute fails."
-              ]
+                "sentence": "HY-48.19"
+              }
             },
             {
-              "id": "app.readJsonText",
+              "id": "app.templateSources",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
                 "string"
               ],
-              "output": "string",
+              "output": "map<string>",
               "errors": [],
-              "state": "Reads the text of a file of the build by its absolute path (HY-48.11).",
+              "state": "Reads the sources of the templates of the directory `templates` of the program directory by their names (HY-48.19).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.readJsonText",
-                  "signature": "private static readJsonText(path: string): string"
+                  "symbol": "packages/ts/src/app/app.ts::App.templateSources",
+                  "signature": "private static templateSources(directory: string): Map<string, string>"
                 }
               },
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-48.11"
+                "sentence": "HY-48.19"
               }
             },
             {
@@ -19310,7 +19285,7 @@
                   "php",
                   "python"
                 ],
-                "sentence": "HY-54.3"
+                "sentence": "HY-13.7"
               },
               "state": "`valueReads` is how many times the server enumerated, during the request, the entries of the values of the kind `countingMap` that the handlers of the request returned."
             },

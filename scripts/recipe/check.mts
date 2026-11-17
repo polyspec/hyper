@@ -38,13 +38,18 @@ function main(): number {
   const phpAutoload = argumentOf('--php-autoload');
   if (phpAutoload === undefined) throw new Error('--php-autoload <autoload.php> is required');
   const v = validators();
+  // HR-89: the progress goes to the standard error, so the standard output holds the findings alone.
+  const progress = (line: string): void => {
+    process.stderr.write(`${line}\n`);
+  };
 
   if (!process.argv.includes('--no-selftest')) {
-    const failures = selfTest(fixture, v);
+    const failures = selfTest(fixture, v, progress);
     for (const line of failures) process.stdout.write(`${line}\n`);
     if (failures.length > 0) return 1;
   }
 
+  progress(`recipe-check: the three readers read ${root} and the check compares them with contracts/interfaces.json`);
   const counts: Counts = { direct: 0, internal: 0, private: 0 };
   const findings = runChecks(root, v, resultArguments(), path.resolve(phpAutoload), counts);
   for (const f of findings) process.stdout.write(`${f.code} ${f.message}\n`);

@@ -16,15 +16,20 @@ function fixtureResults(root: string): Results {
   return out;
 }
 
-/** Runs every mutation of the fixture; returns one line per mutation the check does not catch (empty when all are caught). */
-export function selfTest(fixture: string, v: Validators): string[] {
+/**
+ * Runs every mutation of the fixture; returns one line per mutation the check does not catch (empty when all are caught).
+ * Each mutation starts the three readers on a copy of the fixture, so `progress`, when given, receives one line before
+ * each mutation: the run prints what it does while it runs (HR-89).
+ */
+export function selfTest(fixture: string, v: Validators, progress?: (line: string) => void): string[] {
   const doc: unknown = JSON.parse(readFileSync(path.join(fixture, 'mutations.json'), 'utf8'));
   if (!Array.isArray(doc)) return ['MUTATIONS_INVALID mutations.json is not a list'];
   const entries: unknown[] = doc;
   const mutations = entries.filter(isMutation);
   if (mutations.length !== entries.length) return ['MUTATIONS_INVALID mutations.json has an entry without id, file or code'];
   const failures: string[] = [];
-  for (const m of mutations) {
+  for (const [index, m] of mutations.entries()) {
+    progress?.(`recipe-check: mutation ${index + 1} of ${mutations.length}: ${m.id}`);
     const root = mkdtempSync(path.join(tmpdir(), 'recipe-selftest-'));
     try {
       cpSync(fixture, root, { recursive: true });
