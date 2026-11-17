@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fce74a9aa7d144656a1e7018ff8a292227bff12146a3626138bada620d6b335d -->
+<!-- source-sha256: 7c30ad40394bf4b2d03fb19294d189653b36b28ef805f77c12fb82810947d149 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make hyper-test-scripts TESTS=<files>`는 선택한 파일이 읽는 입력만 build한다(HR-85, H35.55). 입력: build된 입력을 읽지 않는 test인 `make hyper-test-scripts TESTS=tests/scripts/php-ext-requires.test.mts`. 이전 동작: target이 `packages`, `board`, `node-server`, `ext`, `hyper-ext`를 고정 prerequisite로 두었고 `hyper-ext`는 `bindings`에 의존하므로, 그 선택이 cargo와 Rust build를 시작했다. 기대 동작이자 현재 동작: 선택은 그 파일들과 그것이 import하는 module이 `requireBuilt`나 `phpServerExtensions`로 지정한 target만 build하며, `scripts/test-inputs.mts`가 그것을 읽는다. 그 선택의 dry run에는 cargo 줄이 없고, 전체 실행은 전과 같이 모든 입력을 build한다.
 - `make template-ext`와 `make json-ext`는 각 release의 `packages.json`을 고정한 sha256으로 확인하고 확인된 그 사본을 PIE에 준다(HR-80, H35.54). 입력: template 0.0.29와 json 0.0.34의 Composer repository. 이전 동작: PIE가 각 `packages.json`을 URL에서 읽었고 어떤 추적 파일도 그 digest를 고정하지 않았으므로, 바뀐 파일이 다른 zip이나 version을 지정할 수 있었고, `scripts/php-ext-requires.mts`는 아무것도 확인하지 않은 파일의 version을 읽었다. 기대 동작이자 현재 동작: `config/php-ext-pins.json`이 각 `packages.json`의 sha256을 release asset의 field `digest`에서 고정하고, `scripts/php-ext-requires.mts`가 그것을 PIE 작업 디렉터리의 `repository/<package>/packages.json`에 download해 다르면 파일, 기대 sha256과 실제 sha256을 적고 실패하며, 그 뒤에만 version을 읽는다. PIE는 그 local 사본을 repository로 더하고, recipe의 trap이 그것을 지운다.
 - `make template-ext`는 template package가 요구하는 Composer library `polyspec/json`을 해석하고 그 version을 먼저 확인한다(H35.52). 입력: `packages.json`이 `polyspec/json` 0.0.34를 요구하는 template 0.0.29의 `make template-ext`. 이전 동작: template의 PIE project가 template release의 repository만 가져서 Composer가 `ERROR_DEPENDENCY_RESOLUTION_FAILED`로 실패했다. 기대 동작이자 현재 동작: project는 `JSON_VERSION`이 고정한 json release의 repository `JSON_PACKAGES`도 더하고, `scripts/php-ext-requires.mts`는 PIE 전에 template release의 `packages.json`을 읽어 그 `polyspec/json`이나 `ext-polyspec_json`이 `JSON_VERSION`이 아니면 두 version을 적고 실패한다. PHP는 json library를 하나만 읽기 때문이다.
 - `make hyper-install-redis`는 실행이 끝날 때 phpredis의 PIE 작업 디렉터리를 지우고, PIE 실행의 trap은 한 번 정의된다(HR-87, H35.53). 입력: `make hyper-install-redis`의 실행. 이전 동작: recipe가 `var/pie/phpredis`를 시작할 때만 지웠으므로, 뒤의 어떤 target도 읽지 않는데도 PIE의 Composer project와 build된 library가 실행보다 오래 남았다. 기대 동작이자 현재 동작: `$(call pie_run,WORK,STAGING)`이 작업 디렉터리를 비우고 끝, 실패, SIGINT와 SIGTERM에서 그것과 staging을 지우는 trap을 두며, `template-ext`, `json-ext`, `hyper-install-redis`는 그것으로 하나의 shell을 시작한다.

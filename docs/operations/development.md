@@ -253,6 +253,8 @@ A selected run writes `var/recipe/results/<runner>.selected.txt`, whose first li
 
 With a selection the recipe runs those files alone with the test runner of the target: PHPUnit and vitest take the paths, and unittest discovers each file by its name below its directory, one command per file. The type check of `hyper-test-node`, the package data tests of `hyper-test-python` and the other test files do not run. The prerequisites of the target are built as for a full run. Before the runner starts, the recipe fails when a path names no file of the package, for example `hyper-test-node: the selection NODE_TESTS="tests/no-such.test.ts" names no test file packages/ts/tests/no-such.test.ts (HR-84)`, and when `CASES` is set too, because a run selects cases or test files. A row of the checklist that a unit test file owns names such a command as its verification.
 
+`make hyper-test-scripts` takes a selection of files of `tests/scripts` in `TESTS`, for example `make hyper-test-scripts TESTS=tests/scripts/php-ext-requires.test.mts`. Its full set first builds `packages`, `board`, `node-server`, `ext` and `hyper-ext`; a selection builds only those of them that its files, and the modules that they import by a relative path, name with `requireBuilt` (or `phpServerExtensions`, which names `ext` and `hyper-ext`), as `scripts/test-inputs.mts` reads them, so a selection that reads no built input builds nothing (HR-85, H35.55).
+
 A selected run does not write `var/recipe/results/<runner>.txt`, the file of a full run: a case runner among the selected files writes `var/recipe/results/<runner>.files.txt`. `make recipe-check` reads none of the three variables. A blank value is a full run.
 
 ## Servers of a run

@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: ac542f09426c14c33dca761976371b5fd953901dcd5b3a19a3d0fa54a9d74825 -->
+<!-- source-sha256: d6b9c6764044e71a046f7377cc1f93cae6fba27edf14841e3eed8143e0aefc2d -->
 # 개발
 
 [English](development.md).
@@ -253,6 +253,8 @@ runner는 이름이 선택한 case를 전체 실행의 순서대로 한 번씩 �
 | `make hyper-test-python` | `PYTHON_TESTS` | `make hyper-test-python PYTHON_TESTS="tests/test_core_rules.py"` |
 
 선택이 있으면 recipe는 그 파일들만 target의 test runner로 실행한다. PHPUnit과 vitest는 경로를 받고, unittest는 각 파일을 그 디렉터리 아래에서 이름으로 찾으며 파일마다 명령 하나를 실행한다. `hyper-test-node`의 type check, `hyper-test-python`의 package data test, 그 밖의 test 파일은 실행하지 않는다. target의 prerequisite는 전체 실행과 같이 빌드한다. recipe는 runner를 시작하기 전에, 경로가 package의 파일을 가리키지 않으면 실패하고(예: `hyper-test-node: the selection NODE_TESTS="tests/no-such.test.ts" names no test file packages/ts/tests/no-such.test.ts (HR-84)`), `CASES`도 설정되어 있으면 실패한다. 한 실행은 case나 test 파일 중 하나를 선택하기 때문이다. unit test 파일이 소유하는 checklist 행은 이런 명령을 검증으로 적는다.
+
+`make hyper-test-scripts`는 `tests/scripts`의 파일 선택을 `TESTS`로 받는다. 예: `make hyper-test-scripts TESTS=tests/scripts/php-ext-requires.test.mts`. 전체 실행은 먼저 `packages`, `board`, `node-server`, `ext`, `hyper-ext`를 build한다. 선택은 그중에서 그 파일들과 그것이 상대 경로로 import하는 module이 `requireBuilt`(또는 `ext`와 `hyper-ext`를 지정하는 `phpServerExtensions`)로 지정한 것만, `scripts/test-inputs.mts`가 읽는 대로 build하므로, build된 입력을 읽지 않는 선택은 아무것도 build하지 않는다(HR-85, H35.55).
 
 선택 실행은 전체 실행의 파일인 `var/recipe/results/<runner>.txt`를 쓰지 않는다. 선택한 파일에 case runner가 있으면 `var/recipe/results/<runner>.files.txt`를 쓴다. `make recipe-check`는 세 변수 중 어느 것도 읽지 않는다. 빈 값은 전체 실행이다.
 

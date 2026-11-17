@@ -160,7 +160,11 @@
     },
     "scripts/php-ext-requires.mts": {
       "kind": "ecosystem",
-      "tool": "fetch reads the packages.json of the template release, whose require of polyspec/json the script compares with JSON_VERSION (H35.52)"
+      "tool": "fetch downloads the packages.json of each release and node:crypto compares its sha256 with config/php-ext-pins.json before the script compares the require of polyspec/json with the pinned json version (H35.52, H35.54)"
+    },
+    "scripts/test-inputs.mts": {
+      "kind": "ecosystem",
+      "tool": "node:fs reads the selected script tests and the modules that they import, whose requireBuilt calls name the make targets that a selection of hyper-test-scripts builds (HR-85, H35.55)"
     },
     "scripts/php-ext-verify.mts": {
       "kind": "ecosystem",
