@@ -615,6 +615,12 @@
                       "koSource": "5bb769bc3938c65712ffa63ed8b6e9d3ac3e5952eb5aded3ebc35b7009da17b2"
                     },
                     {
+                      "id": "HY-48.24",
+                      "en": "PHP loads the template extension because the binding of the core takes its class `Polyspec\\Template\\Environment` for the second argument of a host function (HYC-24.10), so a render that calls a function of the application fails without it.",
+                      "ko": "core의 바인딩이 host 함수의 두 번째 인자로 템플릿 확장의 class `Polyspec\\Template\\Environment`를 받으므로 PHP는 템플릿 확장을 불러오며, 그것이 없으면 애플리케이션의 함수를 부르는 렌더는 실패한다(HYC-24.10).",
+                      "koSource": "09758da5cd8518c2bf439f005d0da2c989207bf84c89dea7b6e36660d742ca74"
+                    },
+                    {
                       "id": "HY-48.20",
                       "en": "The build writes no generated PHP program and no `program.json`: the three servers render the templates of the directory `templates` of the program directory, and `hyper build` refuses the option `--php-namespace` with a usage error that names the option and says to remove it from the command.",
                       "ko": "빌드는 generated PHP 프로그램도 `program.json`도 쓰지 않는다: 세 서버가 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 렌더하며, `hyper build`는 option `--php-namespace`를 그 option을 밝히고 명령에서 빼라고 말하는 usage error로 거부한다.",
@@ -2451,6 +2457,12 @@
                   "en": "A function of a server receives the list of its arguments and, as its second argument, the environment of the render, a value with `timezone` and `now`; a function of the browser receives that environment as the member `env` of its second argument while the browser renders with the JS engine.",
                   "ko": "서버의 함수는 인자 목록과, 두 번째 인자로 렌더의 환경 곧 `timezone`과 `now`를 가진 값을 받는다. 브라우저의 함수는 브라우저가 JS engine으로 렌더하는 동안 그 환경을 두 번째 인자의 member `env`로 받는다.",
                   "koSource": "b562307b2135702f1949e7838d63fad7f036bc19613192c53ac2000021744277"
+                },
+                {
+                  "id": "HYC-24.11",
+                  "en": "PHP: the binding of the core calls a function with two arguments, so `App::open` fails with a `HyperTypeError` of kind `invalid_callback` whose message names the function, the number of its parameters and the two arguments, for a closure that takes fewer than two parameters.",
+                  "ko": "PHP: core의 바인딩은 함수를 두 인자로 부르므로, 매개변수가 둘보다 적은 closure에 대해 `App::open`은 그 함수, 그 매개변수의 수, 두 인자를 밝히는 message를 가진 kind `invalid_callback`의 `HyperTypeError`로 실패한다.",
+                  "koSource": "aa14adadb5eade6802fb1f75a1e27f662be874bbb819311ffc73dd05bd45447c"
                 },
                 {
                   "id": "HYC-24.5",
