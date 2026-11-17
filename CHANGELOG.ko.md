@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0c1527e5c02cae474039526eefa34d8c2865c2cb93db114196226bdddfce9f1e -->
+<!-- source-sha256: 1d78965e6362e549ee692a1daa4daf8b7ace2e9d33cf080acfbd15a4af23e85c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `docs/features.md`에 세션의 저장을 session-store 라이브러리에 맡기는 statement(HY-104.25, HY-104.26, HY-104.27, HY-104.32, HY-115.28, HY-115.29)의 행이 없어, 문서가 서버들이 그것을 따르는 것처럼 읽혔다. Node 서버와 Python 서버는 파일 저장소와 Redis 저장소를 직접 구현하고, 그 Redis 저장소는 application의 command 함수를 받으며, PHP 서버는 PHP의 세션을 쓰고, 어느 서버도 core에 저장소를 주지 않는다. 새 행 `session-library-stores`가 이것을 not implemented로 적는다(H35.37).
 - `make duplication-check`가 두 번 존재하는 코드 네 조각을 보고했다. 셋을 없앴다: `packages/ts/tests/steps/result.ts`의 step `outsideStores`와 `types`가 함수 `stores` 하나를 부른다. `tests/scripts/ci-group-tools.test.mts`와 `tests/scripts/hyper-ext.test.mts`가 Makefile과 `binding release-recipes`가 읽는 파일들의 복사본을 새 파일 `tests/scripts/release-recipes-tree.mts`의 `treeWithoutReleaseRecipes`에서 받는다. `tests/scripts/fixture-program.test.mts`의 두 시험이 함수 `written` 하나를 부른다. 넷째인 `packages/php/tests/CaseSelectionTest.php`와 `packages/php/tests/Support/CaseSelection.php`의 첫 줄들은 열려 있다. 조각들은 한 번의 실행 출력에서 읽은 것이며, target이나 바뀐 시험의 실행으로 수정을 확인하지 않았다(H35.9-15).
 - `make analyse-php`가 오류 249개를 보고했고, 그중 204개가 확장 `polyspec_hyper`의 class(`HyperValueError`, `HyperTypeError`, `AcceptRange`)를 알 수 없다고 했다. `packages/php/phpstan-max.neon`이 확장의 class와 함수를 선언하는 파일을 이름하지 않았고, 어떤 PHP 소스도 그것들을 선언하지 않는다. 이제 그 파일은 `make bindings`가 쓰는 선언 `native/generated/polyspec_hyper.stub.php`를 `scanFiles`에 이름하고, Git이 그 파일을 무시하므로 `analyse-php`가 `bindings`를 선행 target으로 가진다. template 확장의 class 또는 함수를 이름하는 32개와 mixed 형식의 값을 보고하는 13개는 열려 있다. 개수는 한 번의 실행 출력에서 읽은 것이며, target의 실행으로 수정을 확인하지 않았다(H35.9-14).
 - `make test-wasm`이 WASM binding의 생성된 시험을 `var/bindings/node/generated.wasm.test.mjs`로 복사해 그 복사본을 실행했다. 시험은 `../index.mjs`를 import하는데, 복사본에서는 그것이 `var/bindings/index.mjs`이고 어떤 recipe도 그 파일을 쓰지 않으므로, import가 생성된 entry를 찾지 못한다. 이제 recipe는 `packages/ts/native/wasm/generated/tests/generated.test.mjs`를 생성기가 쓰는 자리, 곧 entry와 `make node-package`가 거기에 쓰는 모듈 옆에서 실행한다. 실패와 수정은 recipe와 시험을 읽어 안 것이며, target의 실행으로 확인하지 않았다(H35.9-13).
