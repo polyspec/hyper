@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9fee90dc63e0059a7db9ab43026bbca0f6906b25ac5ea901145a8a7008fa3408 -->
+<!-- source-sha256: 8d9d1d5197c575d328b0bad14828513f3edf84b33f40b96637921e1070d4d5b0 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 행 H35.38은 모든 생태계가 고정한 session-store 0.0.7과, Node와 Python 서버가 충족하는 HY-104.38을 적는다. Green 전에 항목 하나가 남는다: `contracts/interfaces.json`에서 제거된 session 코드의 unit으로, 새 source의 member를 쓰는 recipe 도구가 없어서 `make recipe-candidates`는 그 member를 둔 채 native 항목 54개를 stale로 표시한다.
 - Node와 Python 서버는 manifest 항목이 `"session": false`를 가진 route의 요청에 session을 열지 않는다(HY-104.38, H35.38). 입력: 같은 session의 다른 요청이 lock을 잡고 있는 동안 그런 route로 session cookie를 가진 요청. 이전 동작: host가 application이 답하기 전에 모든 요청의 session을 열어서, 그 요청은 lock을 기다렸다. 기대 동작: 그 route는 빈 session을 읽고, lock을 잡지 않고, cookie를 설정하지 않는다. `packages/client`의 `checkManifest`와 Python 서버의 manifest는 그 field를 읽고 boolean이 아닌 값을 거부한다. `App.respond`와 `App._respond`는 session을 여는 call을 받아 session을 쓰는 route와 kept endpoint에서만 부른다. fixture program이 가지지 않은 route는 render할 수 없으므로 두 test는 fixture의 route `item`을 표시한다. Red: Node 0 passed, 1 failed; Python 0 passed, 1 failed. Green: 각각 1 passed. PHP 서버는 표시가 남는다(행 H35.37).
 - Redis Cluster setting은 `user`와 `password`를 적는다(H35.38). 입력: `Setting`의 case `cluster`가 두 field를 요구하는 session-store 0.0.7로 `make hyper-test-scripts`. 이전 동작: `examples/board/node`의 `tsc`가 `{ kind: 'cluster', urls, authorities: null }`에서 TS2322로 실패했고, `tests/scripts`의 session worker와 Python board 예제는 두 field 없는 setting을 주었다. 기대 동작: URL이 자격 증명을 담으므로 board 예제, session worker와 `docs/operations/deployment.md`는 `user`와 `password`를 null(Python `None`)로 준다.
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
