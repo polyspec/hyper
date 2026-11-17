@@ -1,11 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5da381f49424b00ba053798e18e20061ff431cd111e5213b0a90f0aa867fd987 -->
+<!-- source-sha256: 7ebf748d62f1957e70b6062bd30452f8a1c19172b5b963e35a3380cd4f0ad4bb -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- core는 요청의 page를 만들 때, 곧 action과 로더보다 먼저 세션의 저장된 유지 값을 받았으므로, 요청 중에 저장된 유지 값이 그 응답의 `kept`에 없었다. 이제 page는 모든 로더가 돌아온 뒤 reply와 함께 그 값을 받는다: `stored`는 page 입력이 아니라 reply 입력의 member이며, `open_page`는 그 값을 읽지 않는다(HY-38.20). `contracts/app.json`의 case `a_server_value_that_a_loader_of_the_request_stores_is_sent_in_kept`는 handler의 새 step `store`를 쓰는데, 세 서버의 case runner는 아직 그 step을 갖지 않는다(H35.32-10).
+- `contracts/context.json`의 세 case는 ±(2^53 − 1) 밖의 수를 주고 각 서버가 직접 쓴 message를 기대했다. 이제 9007199254740992를 주고 hyper가 그대로 넘기는 template 데이터 모델의 message `number 9007199254740992 is outside the safe range`를 기대하며(HY-44.9), core가 이 case들을 실행한다. 세 서버는 자기 message를 지울 때까지 이 case들에서 실패한다(H35.32-4).
+- 공유 데이터 핸들러, 로더, action, context handler가 데이터 모델 밖의 값을 돌려준 page에서 core는 이후의 모든 handler를 요청한 뒤 응답 단계에서 실패했고, list와 map이 64단계인 반환 map은 서버가 거부하는데도 core에서는 통과했다. 이제 core는 값을 받은 단계에서 실패하여 이후 handler를 요청하지 않으며, 값을 담는 map을 포함해 깊이를 센다: context나 공유 데이터의 map은 63단계까지, 영역 데이터는 62단계까지 통과한다(HY-44.10, HY-44.11, H35.32-4).
 - `docs/plans/execution/core-page-render.md`는 세 서버를 core의 page 렌더로 옮기는 일의 설계다(H35.32-2). 여덟 물음마다 답, 지금의 코드, 세 서버의 동작, 바뀌는 case와 인용, retire되는 statement와 그 뒤를 잇는 문장, 각 행의 Red, 행의 순서를 적는다. `docs/plans/execution/plan.md`는 접미 ` (HYC-24)`를 더 적지 않고, core에 만들어진 세 부분을 적는다(H35.32-2).
 - core가 `functions`의 entry를 판정한다. `rules.check_function_entry`는 entry의 이름과 그 값이 host 언어의 함수인지를 받고, 함수가 아닌 entry는 kind `invalid_application`과 메시지 `functions.<name> is not a function`으로 실패한다(HYC-24.5, HYC-24.7). `pages.register`는 함수만 받으므로 core에는 그런 entry를 받는 member가 없었고, 각 서버가 그 메시지를 썼다. built-in 이름 `upper`처럼 template 언어가 거부하는 등록은 template 언어의 메시지 그대로 실패한다(HYC-24.8). `Templates::register`는 그 메시지 뒤에 ` (HYC-24)`를 붙였고, `Templates::new`는 kind `invalid_application` 없이 template 언어의 오류를 주었다. 아직 어느 서버도 이 member를 부르지 않는다(H35.32-5).
 - core의 binding이 요청 전체보다 아래에서 문서를 렌더한다. binding은 모든 step이 끝난 뒤 `PageRequest.next`의 답으로만 문서를 주었으므로, 주어진 데이터로 문서나 그 부분을 렌더하는 호출이 없었다. `pages.render_document`는 shared 데이터와 각 region의 데이터로 kept 값과 embedded 데이터 없이 route의 문서를 주고(HY-12.1), `pages.render_parts`는 단독으로 렌더한 title과 각 region을 주며(HY-13.1~HY-13.3), 둘 다 pages의 time zone에서 시각 `now`로 렌더한다. manifest에 없는 route는 `internal`로 실패한다. 아직 어느 서버도 이 member를 부르지 않는다(H35.32-6).

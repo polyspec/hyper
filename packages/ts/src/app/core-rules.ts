@@ -62,7 +62,6 @@ export interface PageInput {
   readonly action: boolean;
   readonly csrf: string;
   readonly changed: Iterable<string>;
-  readonly stored: ReadonlyMap<string, ReadonlyMap<string, CoreValue>>;
   readonly now: number;
   readonly keepCookie?: string | null;
   readonly heldHash?: string | null;
@@ -82,7 +81,7 @@ type PageStepInput =
   | { readonly input: 'context'; readonly context: ReadonlyMap<string, CoreValue> }
   | { readonly input: 'shared'; readonly shared: ReadonlyMap<string, CoreValue> }
   | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, CoreValue> }
-  | { readonly input: 'reply'; readonly embeds: boolean; readonly status?: number | null };
+  | { readonly input: 'reply'; readonly embeds: boolean; readonly stored: ReadonlyMap<string, ReadonlyMap<string, CoreValue>>; readonly status?: number | null };
 
 type Answer =
   | { readonly answer: 'document'; readonly status: number; readonly html: string }

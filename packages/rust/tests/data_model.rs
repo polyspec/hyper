@@ -1,7 +1,7 @@
-//! The data model check of a page (HY-44.3, HY-44.6, HY-44.9): the steps of a page judge every value that the context
-//! handler, the shared handler and the loaders return before the read paths remove the values that no template reads
-//! (HY-73.29), so a value outside the data model fails the page also when no template reads it, with the kind of the
-//! template data model.
+//! The data model check of a page (HY-44.3, HY-44.6, HY-44.9 to HY-44.11): the steps of a page check every value that
+//! the context handler, the shared handler, the loaders and the action return in the step that receives it, before
+//! the read paths remove the values that no template reads (HY-73.29), so a value outside the data model fails the
+//! page also when no template reads it, with the kind of the template data model, and no later handler is asked for.
 
 use binding_core::{Failure, Kinds};
 use polyspec_hyper::steps::{
@@ -77,7 +77,6 @@ fn input(kind: PageKind, action: bool) -> PageInput {
         action,
         csrf: "t".to_owned(),
         changed: Vec::new(),
-        stored: Map::new(),
         now: 0.0,
         keep_cookie: None,
         held_hash: None,
@@ -100,10 +99,14 @@ fn deep() -> Value {
     value
 }
 
-const REPLY: Input = Input::Reply {
-    embeds: false,
-    status: None,
-};
+/// The reply of a page that embeds no data, with a session that stored no kept value.
+fn reply() -> Input {
+    Input::Reply {
+        embeds: false,
+        stored: Map::new(),
+        status: None,
+    }
+}
 
 /// Runs the steps of a page with the results of its calls in order: the calls that the page made and its answer or
 /// its failure.
@@ -141,6 +144,176 @@ fn kind(label: &str, result: Result<Answer, Failure<Error>>) -> &'static str {
         Err(failure) => panic!("{label}: {failure:?}"),
         Ok(answer) => panic!("{label}: the page answered {answer:?}"),
     }
+}
+
+/// A map of a number of levels of maps: the innermost is empty, and every other holds the next under `m`.
+fn nested(levels: usize) -> Value {
+    let mut value = Value::map(OrderedMap::new());
+    for _ in 1..levels {
+        let mut map = OrderedMap::new();
+        map.insert("m".to_owned(), value);
+        value = Value::map(map);
+    }
+    value
+}
+
+/// The map that a handler returns, of a number of levels of maps, the returned map being level 1.
+fn returned(levels: usize) -> Map<Value> {
+    entry("m", nested(levels - 1))
+}
+
+#[test]
+fn a_value_outside_the_data_model_fails_the_step_that_receives_it() {
+    // HY-44.10: the step that receives the value fails, so the page asks for no later handler.
+    let app = pages(false);
+    let native = || entry("unread", Value::object(Clock));
+    let (calls, result) = run(
+        &app,
+        &input(PageKind::Html, false),
+        vec![
+            Input::Shared { shared: native() },
+            Input::NoHandler,
+            Input::NoHandler,
+            reply(),
+        ],
+    );
+    assert_eq!(calls, [Call::Shared], "shared");
+    assert_eq!(kind("shared", result), "data_unsupported_type");
+    let (calls, result) = run(
+        &app,
+        &input(PageKind::Html, false),
+        vec![
+            Input::NoHandler,
+            Input::Loaded { data: native() },
+            Input::NoHandler,
+            reply(),
+        ],
+    );
+    assert_eq!(
+        calls,
+        [
+            Call::Shared,
+            Call::RegionLoader {
+                region: "side".to_owned()
+            }
+        ],
+        "region"
+    );
+    assert_eq!(kind("region", result), "data_unsupported_type");
+    let (calls, result) = run(
+        &app,
+        &input(PageKind::Html, true),
+        vec![
+            Input::Action {
+                outcome: ActionOutcome::Page {
+                    status: 422,
+                    data: native(),
+                },
+            },
+            Input::NoHandler,
+            Input::NoHandler,
+            Input::NoHandler,
+            reply(),
+        ],
+    );
+    assert_eq!(calls, [Call::Action], "action");
+    assert_eq!(kind("action", result), "data_unsupported_type");
+}
+
+#[test]
+fn the_depth_of_a_value_counts_with_the_maps_that_hold_it() {
+    // HY-44.11: the shared data and the context are one map below the counted root and the data of a region two, so
+    // their maps nest 63 and 62 levels at most.
+    let shared = |levels: usize| {
+        run(
+            &pages(false),
+            &input(PageKind::DocumentJson, false),
+            vec![
+                Input::Shared {
+                    shared: returned(levels),
+                },
+                Input::NoHandler,
+                Input::NoHandler,
+                reply(),
+            ],
+        )
+        .1
+    };
+    assert!(shared(63).is_ok(), "shared 63");
+    assert_eq!(kind("shared 64", shared(64)), "data_depth");
+    let context = |levels: usize| {
+        run(
+            &pages(true),
+            &input(PageKind::DocumentJson, false),
+            vec![
+                Input::Context {
+                    context: returned(levels),
+                },
+                Input::NoHandler,
+                Input::NoHandler,
+                Input::NoHandler,
+                reply(),
+            ],
+        )
+        .1
+    };
+    assert!(context(63).is_ok(), "context 63");
+    assert_eq!(kind("context 64", context(64)), "data_depth");
+    let region = |levels: usize| {
+        run(
+            &pages(false),
+            &input(PageKind::DocumentJson, false),
+            vec![
+                Input::NoHandler,
+                Input::Loaded {
+                    data: returned(levels),
+                },
+                Input::NoHandler,
+                reply(),
+            ],
+        )
+        .1
+    };
+    assert!(region(62).is_ok(), "region 62");
+    assert_eq!(kind("region 63", region(63)), "data_depth");
+    let route = |levels: usize| {
+        run(
+            &pages(false),
+            &input(PageKind::DocumentJson, false),
+            vec![
+                Input::NoHandler,
+                Input::NoHandler,
+                Input::Loaded {
+                    data: returned(levels),
+                },
+                reply(),
+            ],
+        )
+        .1
+    };
+    assert!(route(62).is_ok(), "route 62");
+    assert_eq!(kind("route 63", route(63)), "data_depth");
+    let action = |levels: usize| {
+        run(
+            &pages(false),
+            &input(PageKind::DocumentJson, true),
+            vec![
+                Input::Action {
+                    outcome: ActionOutcome::Page {
+                        status: 422,
+                        data: returned(levels),
+                    },
+                },
+                Input::NoHandler,
+                Input::NoHandler,
+                Input::NoHandler,
+                reply(),
+            ],
+        )
+        .1
+    };
+    assert!(action(62).is_ok(), "action 62");
+    assert_eq!(kind("action 63", action(63)), "data_depth");
 }
 
 #[test]
@@ -181,10 +354,10 @@ fn a_shared_value_that_no_template_reads_is_judged() {
                     },
                     Input::NoHandler,
                     Input::NoHandler,
-                    REPLY,
+                    reply(),
                 ],
             );
-            assert_eq!(calls.last(), Some(&Call::Reply), "{label}");
+            assert_eq!(calls, [Call::Shared], "{label}");
             assert_eq!(kind(label, result), expected, "{label} {page:?}");
         }
     }
@@ -200,7 +373,7 @@ fn the_data_of_a_loader_that_no_template_reads_is_judged() {
     let (_, result) = run(
         &app,
         &input(PageKind::Html, false),
-        vec![Input::NoHandler, native(), Input::NoHandler, REPLY],
+        vec![Input::NoHandler, native(), Input::NoHandler, reply()],
     );
     assert_eq!(kind("region", result), "data_unsupported_type");
     let (_, result) = run(
@@ -212,7 +385,7 @@ fn the_data_of_a_loader_that_no_template_reads_is_judged() {
             Input::Loaded {
                 data: entry("unread", Value::Number(f64::NEG_INFINITY)),
             },
-            REPLY,
+            reply(),
         ],
     );
     assert_eq!(kind("route", result), "data_number_not_finite");
@@ -235,7 +408,7 @@ fn the_data_of_an_action_that_no_template_reads_is_judged() {
             Input::NoHandler,
             Input::NoHandler,
             Input::NoHandler,
-            REPLY,
+            reply(),
         ],
     );
     assert_eq!(calls.first(), Some(&Call::Action));
@@ -255,7 +428,7 @@ fn a_native_object_that_a_template_reads_is_judged() {
             Input::Loaded {
                 data: entry("name", Value::object(Clock)),
             },
-            REPLY,
+            reply(),
         ],
     );
     assert_eq!(kind("read", result), "data_unsupported_type");
@@ -307,7 +480,7 @@ fn a_page_of_values_of_the_data_model_answers() {
             Input::Loaded {
                 data: entry("name", Value::text("n")),
             },
-            REPLY,
+            reply(),
         ],
     );
     match result {

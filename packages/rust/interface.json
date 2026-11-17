@@ -2745,17 +2745,6 @@
         },
         {
           "name": [
-            "stored"
-          ],
-          "type": {
-            "map": {
-              "map": "template_value"
-            }
-          },
-          "required": true
-        },
-        {
-          "name": [
             "now"
           ],
           "type": "float",
@@ -2987,6 +2976,17 @@
                 "embeds"
               ],
               "type": "bool",
+              "required": true
+            },
+            {
+              "name": [
+                "stored"
+              ],
+              "type": {
+                "map": {
+                  "map": "template_value"
+                }
+              },
               "required": true
             },
             {

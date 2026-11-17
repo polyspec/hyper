@@ -322,8 +322,6 @@ pub struct PageInput {
     pub csrf: String,
     /// The changed topics of the request (HY-19).
     pub changed: Vec<String>,
-    /// The kept server values of the session, by region and path (HY-40).
-    pub stored: Map<Map<Value>>,
     /// The current time of the render, in seconds since the Unix epoch, which the host reads.
     pub now: f64,
     /// The value of the cookie `hy-keep` of the request (HY-38.10), or `None`.
@@ -380,8 +378,14 @@ pub enum Input {
     Absent,
     /// The application declares no such handler.
     NoHandler,
-    /// The reply: whether it embeds the data (HY-92) and the status that it states for a page with status 200 (HY-69).
-    Reply { embeds: bool, status: Option<u16> },
+    /// The reply: whether it embeds the data (HY-92), the kept server values of the session by region and path
+    /// (HY-40), which the host reads after every loader returned (HY-38.20), and the status that it states for a page
+    /// with status 200 (HY-69).
+    Reply {
+        embeds: bool,
+        stored: Map<Map<Value>>,
+        status: Option<u16>,
+    },
 }
 
 /// The answer of a page.
@@ -426,7 +430,6 @@ pub struct PageRequest {
     route: usize,
     input: PageInput,
     params: Vec<(String, String)>,
-    stored: Vec<(String, OrderedMap)>,
     state: State,
     status: u16,
     invalid: OrderedMap,
@@ -487,11 +490,6 @@ impl PageRequest {
                 .iter()
                 .map(|(name, value)| (name.to_owned(), value.clone()))
                 .collect(),
-            stored: input
-                .stored
-                .iter()
-                .map(|(region, paths)| (region.to_owned(), data_map(paths)))
-                .collect(),
             state: State::Start,
             status: 200,
             invalid: OrderedMap::new(),
@@ -548,8 +546,12 @@ impl PageRequest {
             }
             (State::Action, Input::Action { outcome }) => match outcome {
                 ActionOutcome::Page { status, data } => {
+                    // HY-44.10, HY-26.2: the data of the action is data of the page region.
+                    let invalid = data_map(data);
+                    let page = self.manifest().page().map_err(Failure::Kind)?;
+                    crate::data_model::check_region(page, &invalid).map_err(Failure::Kind)?;
                     self.status = *status;
-                    self.invalid = data_map(data);
+                    self.invalid = invalid;
                     Ok(self.after_action())
                 }
                 ActionOutcome::RevisionChanged => {
@@ -561,16 +563,16 @@ impl PageRequest {
                 }),
             },
             (State::Context, Input::Context { context }) => {
-                // HY-44.3: the context is judged when its handler returns, before another handler runs.
-                let context = Arc::new(data_map(context));
-                crate::data_model::check(&Value::Map(Arc::clone(&context)))
-                    .map_err(Failure::Kind)?;
-                self.context = Some(Arc::unwrap_or_clone(context));
+                // HY-44.10: a value is checked in the step that receives it, before another handler runs.
+                let context = data_map(context);
+                crate::data_model::check_context(&context).map_err(Failure::Kind)?;
+                self.context = Some(context);
                 self.state = State::Shared;
                 Ok(call(Call::Shared))
             }
             (State::Shared, Input::Shared { shared }) => {
                 let returned = data_map(shared);
+                crate::data_model::check_shared(&returned).map_err(Failure::Kind)?;
                 let shared = shared_data(&self.route()?.title, &self.input.csrf, Some(&returned))
                     .map_err(Failure::Kind)?;
                 self.shared = Some(shared);
@@ -589,7 +591,14 @@ impl PageRequest {
                 },
                 input,
             ) => self.loaded(region, route_region, input),
-            (State::Reply, Input::Reply { embeds, status }) => self.answer(*embeds, *status),
+            (
+                State::Reply,
+                Input::Reply {
+                    embeds,
+                    stored,
+                    status,
+                },
+            ) => self.answer(*embeds, stored, *status),
             (_, _) => Err(unexpected()),
         }
     }
@@ -657,6 +666,10 @@ impl PageRequest {
             return Err(internal("a loader of a region that the page does not hold"));
         };
         let map = PageRequest::loaded_map(input)?;
+        if let Some(map) = &map {
+            // HY-44.10: the data of a loader is checked before the next loader runs.
+            crate::data_model::check_region(&name, map).map_err(Failure::Kind)?;
+        }
         match route_region {
             None => {
                 let Some(mut map) = map else {
@@ -714,7 +727,12 @@ impl PageRequest {
     }
 
     /// The answer after the handlers (HY-17, HY-31, HY-38, HY-73, HY-128, HY-69).
-    fn answer(&mut self, embeds: bool, reply_status: Option<u16>) -> Result<Step, Failure<Error>> {
+    fn answer(
+        &mut self,
+        embeds: bool,
+        stored: &Map<Map<Value>>,
+        reply_status: Option<u16>,
+    ) -> Result<Step, Failure<Error>> {
         let app = Arc::clone(&self.pages.app);
         let route = self.route()?.clone();
         let Some(route_reads) = app
@@ -729,14 +747,9 @@ impl PageRequest {
         let Some(shared) = self.shared.take().filter(|_| !crate::fault::broken()) else {
             return Err(internal("a page without its shared data"));
         };
-        // HY-44.3: every value that the shared handler, the loaders and the action returned is judged before the read
-        // paths remove a value, so a value outside the data model fails also when no template reads it.
         let shared = Value::Map(Arc::new(shared));
-        crate::data_model::check(&shared).map_err(Failure::Kind)?;
-        for (_, value) in &self.data {
-            crate::data_model::check(value).map_err(Failure::Kind)?;
-        }
-        // HY-73.29: the page keeps only the paths that the templates of the route read.
+        // HY-73.29: the page keeps only the paths that the templates of the route read. Every value was checked in
+        // the step that received it (HY-44.3, HY-44.10), so a value that the read paths remove was checked too.
         let shared = match values::map(&keep(&shared, &route_reads.shared))
             .filter(|_| !crate::fault::broken())
         {
@@ -759,7 +772,12 @@ impl PageRequest {
             Some(text) => cookie_values(text),
             None => Vec::new(),
         };
-        let kept = kept_values(&app.manifest, &data, &self.stored, &cookie);
+        // HY-38.20: the stored kept values are those that the session holds after every loader returned.
+        let stored: Vec<(String, OrderedMap)> = stored
+            .iter()
+            .map(|(region, paths)| (region.to_owned(), data_map(paths)))
+            .collect();
+        let kept = kept_values(&app.manifest, &data, &stored, &cookie);
         // HY-69: the reply gives a page with status 200 its status.
         let status = match (self.status, reply_status) {
             (200, Some(status)) => status,

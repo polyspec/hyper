@@ -1288,6 +1288,62 @@
       ]
     },
     {
+      "id": "a_server_value_that_a_loader_of_the_request_stores_is_sent_in_kept",
+      "label": "a conforming value that the loader of the route region stores for a server path, in the session store of the request, is sent in kept of the document JSON of that request (HY-38.20)",
+      "application": "a_board",
+      "handlers": {
+        "routes": {
+          "list": {
+            "regions": {
+              "rows": [
+                {
+                  "store": {
+                    "_hyper_keep": {
+                      "rows": {
+                        "open": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "return": {
+                    "items": [
+                      "a"
+                    ],
+                    "open": false,
+                    "mode": "a",
+                    "view": "x",
+                    "filter": {
+                      "a": 1
+                    },
+                    "tags": []
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/list",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 200,
+      "members": {
+        "kept": {
+          "rows": {
+            "open": true
+          }
+        }
+      },
+      "requirements": [
+        "HY-38"
+      ]
+    },
+    {
       "id": "a_keep_request_with_a_wrong_token_is_refused",
       "label": "a POST to the keep endpoint whose token does not match is answered with 403",
       "application": "a_board",
@@ -2728,6 +2784,36 @@
         }
       },
       "status": 500,
+      "requirements": [
+        "HY-44",
+        "HY-43"
+      ]
+    },
+    {
+      "id": "an_application_object_in_shared_data_fails_before_any_loader_runs",
+      "label": "an application object in shared data fails a document when the shared handler returns, so the loader of the region side and the loader of the route are not called (HY-44.10)",
+      "application": "a_board",
+      "handlers": {
+        "shared": [
+          {
+            "return": {
+              "value": {
+                "$": "kind",
+                "name": "applicationObject"
+              }
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {}
+      },
+      "status": 500,
+      "handlerCalls": [
+        "shared"
+      ],
       "requirements": [
         "HY-44",
         "HY-43"

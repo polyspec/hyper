@@ -199,7 +199,7 @@ test('Page.document and Page.parts give the pages the route, the shared data, th
 });
 
 test('Page.open and Page.request give the core the pages, the store and the input of a page (HY-120.6, HY-15)', () => {
-  const input: PageInput = { route: 'list', params: new Map(), kind: 'html', action: false, csrf: 'masked', changed: [], stored: new Map(), now: 0 };
+  const input: PageInput = { route: 'list', params: new Map(), kind: 'html', action: false, csrf: 'masked', changed: [], now: 0 };
   const opened = { opened: 'page', input, flash: new Map(), token: TOKEN };
   const step = { step: 'call', call: { call: 'shared' } };
   const { rules, calls } = rulesOf({ openPage: opened, 'PageRequest.next': step });
