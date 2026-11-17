@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: b3e1a72c6f6a810cd9daa8cf2d965f1615d7f15393260062dae69d4223152393 -->
+<!-- source-sha256: fcdcb590dbc4fff353d06c3f497d08d04992b3b93668829a02d45f646f351240 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -570,6 +570,9 @@
 | H35.31 | PHP 서버는 Node(H35.26)와 Python(H35.28) 서버처럼, legacy PHP package(`Polyspec\Template\Program`, `PreparedRender`, `PreparedExecution`, `BoundMap`, `InternalBoundary`, `TemplateError`, `Render\*`, `Value\*`) 대신 `make link`가 이제 `vendor/polyspec/template`으로 연결하는 template 0.0.28의 PHP 확장 API로 렌더링한다. `make hyper-test-php`는 `polyspec_hyper` 곁에 json 확장을, 이어서 template 확장을 load하고, `composer.json`은 template 0.0.28이 release되면 그 tag로 template을 요구한다. hyper에는 template 확장이 요구하는(`ext-polyspec_json`) json 확장의 설치 target이 없다: `make hyper-install-php`는 template 확장을 받듯 json v0.0.34의 Composer 저장소(그 release의 `packages.json`과 PIE package)에서 PIE로 그것을 받고, `composer.json`은 그 저장소와 `ext-polyspec_json`을 적는다. 연결된 run은 template snapshot이 빌드한 template 확장을 load한다. | packages/php/src, packages/php/tests, Makefile, composer.json, composer.lock | `make hyper-test-php` | [ ] |
 | H35.31-1 | contracts/reads.json의 두 case a_number_key_with_a_fraction과 a_number_key_in_exponent_notation이 한 사본 run에서 세 서버 모두 통과한다. template 규칙은 세 binding 모두 분수 map key를 runtime_type으로 거부하므로, 먼저 HY-73.31과 case를 읽어 렌더되는 page를 말하는지 읽기 경로만 말하는지 정하고, 그다음 세 step을 읽어 PHP step이 렌더하는지 정하며, 두 근거의 줄을 이 행에 적는다. | contracts/reads.json, packages/php/tests | `make hyper-test-php` | [ ] |
 | H35.31-2 | contracts/request.json의 case a_negative_limit_fails가 PHP 서버에서 통과한다. 원인은 바꾸기 전에 사본 run의 출력에서 읽는다. | packages/php | `make hyper-test-php` | [ ] |
+| H35.31-2-1 | 파일 limit의 검사(HY-114.12: unsigned integer가 아닌 limit은 파일을 비교하기 전에 kind invalid_number로 실패)는 세 서버가 부르는 core의 규칙이다. Node와 Python 서버에는 검사가 없고, 08a94f24의 PHP 검사는 그 호출이 된다. | packages/rust, packages/php, packages/ts, packages/python | `make hyper-test-node` | [ ] |
 | H35.31-3 | contracts/app.json의 case a_document_json_reads_a_shared_value_twice와 a_region_json_reads_a_shared_value_twice가 PHP 서버에서 통과한다. 원인은 바꾸기 전에 사본 run의 출력에서 읽는다. | packages/php | `make hyper-test-php` | [ ] |
 | H35.31-4 | tests/scripts/cargo-through-kit.test.mts는 H35.14-2의 recipe 줄 `binding generate --cargo "..."`를 pattern \bcargo\s로 cargo 직접 호출로 읽는다. 시험은 binding generator의 option 값과 cargo 명령을 구별하고, 그 recipe는 통과한다. | tests/scripts | `make hyper-test-scripts` | [ ] |
 | H35.31-5 | benchmarks/sessions.mts는 session-workers의 prefix로 hyper 확장만 load해 PHP를 띄우므로 그 PHP 서버는 template 확장으로 렌더하지 못한다. 8ca4a33f 이후 run의 다른 PHP 서버처럼 Makefile의 PHP_SERVER_EXTENSIONS를 순서대로 load한다. | benchmarks/sessions.mts, Makefile | `make hyper-test-scripts` | [ ] |
+| H35.32 | Node 서버는 PHP 서버(H35.31)와 Python 서버(H35.28)처럼 template Rust core의 napi binding으로 렌더한다. `@polyspec/template/render`의 JS render engine은 core와 다르므로(분수 숫자 인덱스를 core는 runtime_type으로 실패시키는데 그 engine은 렌더한다) 그것을 쓰지 않고, 세 서버는 한 template을 한 결과로 렌더한다. 범위는 구현 전에 서버가 JS engine에서 쓰는 이름의 읽기 전용 조사로 확정한다. | packages/ts | `make hyper-test-node` | [ ] |
+| H35.33 | browser client(packages/client)가 JS render engine 대신 template Rust core의 wasm binding으로 렌더할 때를 잰다: 지금의 bundle 크기와 wasm binding을 쓸 때의 크기, 그리고 그것을 load하며 바뀌는 것. 옮기는 일은 이 측정이 정하는 뒤의 행이다. | packages/client | `make bundle-size` | [ ] |
