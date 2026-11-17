@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8876a80afc1a024e0ecc34302c8945ee29ec523112f1c270a2aeafb6c27ab65c -->
+<!-- source-sha256: bcc817345f9c44c1d5dbdd2ca4a7039542490f4e2566b8c335de72bfa63af032 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- checklist는 한 변경에 row 둘을 가졌다. 각 서버가 http-form과 http-cookie의 바인딩으로 요청의 body와 cookie를 읽는 H31.11, 그리고 http-form의 case를 따르는 form 읽기인 H35.11이다. 이제 H35.11이 둘을 가진다. core는 http-form의 crate에 의존해 form과 `Cookie` field를 읽고, 서버는 hyper의 바인딩을 부르며 자기 reader를 제거하고, case runner는 http-form의 case를 그 release asset에서 pin과 digest로 읽으며, `tests/legacy/fields.json`은 지운다. H31.11은 H35.11을 원인으로 철회했다. `docs/plans/execution/plan.md`는 그 row의 입력을 얻었다. form 읽기의 객체 표(이에 따라 `UploadedFile`은 core의 파일 위에 둔 hyper의 클래스로 남고 http-form의 언어 패키지는 의존성이 아니다), core가 http-cookie로 `Set-Cookie`를 쓰지만 `Cookie`는 그것으로 읽지 않는다는 확인, 답이 바뀌는 case 열넷이다. recipe에는 아직 어떤 runner도 통과하지 못하는 case의 형태가 없으므로 case는 `contracts/`에 추가하지 않고 거기에 적었다(H35.11).
 
 - `docs/operations/dependencies.md`는 절 "release의 plain 파일 고정"을 얻었다. http-form의 case 파일처럼 release가 asset으로 내고 패키지 관리자가 설치하지 않는 파일을 이 저장소가 고정하는 설계다. 파일마다 tag, URL, sha256을 적는 추적 항목 `config/release-files.json`, `$(ONLINE)`으로 내려받고 고정된 digest일 때만 파일을 내는 설치 target `make hyper-install-release-files`, 자리 `var/release-files/<library>/<tag>/<path>`, 테스트 `tests/scripts/release-file-pins.test.mts`, 그리고 case reader가 파일을 찾고 없을 때 실패하는 방법을 정한다. 이 절은 구현되지 않음으로 표시되어 있다. 그 파일, target, 테스트는 아직 없다(H35.11).
 

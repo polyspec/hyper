@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 8289ecc0bc00a685323d3a23499d9c64a3a9540b42c5d4518392e7ec4ddbd772 -->
+<!-- source-sha256: cbf7a31e9f094744fba83c162d7dd6d0b75aa764ede1e0fa196f591887a70fe4 -->
 # 실행
 
 [English](plan.md).
@@ -264,3 +264,48 @@ H35.32 설계의 입력. Node 서버(`packages/ts/src/page/page.ts`, `packages/t
 8. 서버가 Rust engine으로, 브라우저가 JS engine으로 렌더하는 동안 어떤 근거가 HY-13.4를 지탱하는가?
 
 JS engine이나 browser 코드의 `Application`에 의존하는 Node 테스트: `packages/ts/tests/steps/app.ts`의 part와 open, `packages/ts/tests/steps/reads.ts`와 `packages/ts/tests/steps/reads-cases.ts`, `packages/ts/tests/parse-template.ts`, `packages/ts/tests/steps/context-place.ts`, `packages/ts/tests/steps/functions.ts`, `packages/ts/tests/support.ts`의 option `templates`.
+
+H35.11의 입력. H35.11은 H31.11의 산출물을 가지므로, 한 row가 세 서버의 form 읽기와 cookie 읽기를 core로 옮긴다. core는 form을 읽지 않는다. `packages/rust/src/front.rs`의 `front::media_type`은 `polyspec_http_media_type::parse`를 부르고 core의 variant `Error::MalformedContentType`(상태 400)을 내며, `front::file_over`는 서버가 주는 크기를 비교한다. core는 http-cookie의 `set_cookie`로 `Set-Cookie`를 쓰고(`packages/rust/src/cookies.rs`, `packages/rust/src/reply.rs`) `Cookie` field는 읽지 않는다. `cookies::find`는 host가 주는 쌍을 받고, 각 서버는 `packages/ts/src/http/cookies.ts` 같은 자기 코드로 그 field를 읽는다. 그래서 http-cookie의 `parse`로 읽는 HY-129.13의 cookie 읽기는 되어 있지 않으며 H35.11의 일부다.
+
+form 읽기의 객체. http-form 열은 http-form 저장소의 `packages/rust/interface.json`의 unit과 그 줄 번호를, hyper 열은 `contracts/interfaces.json`의 concern `form-values`와 unit `request`를 가리킨다.
+
+| 객체 | 가진 쪽 | hyper의 클래스와 member | http-form의 unit과 member | 차이 | 결론 |
+|---|---|---|---|---|---|
+| `UploadedFile` | 애플리케이션. `Request.file(name)`과 `Request.files()`가 돌려주고(HY-113.2), constructor가 공개이므로 애플리케이션이나 테스트가 byte로 파일을 만든다. `packages/ts/src/index.ts`와 `polyspec/hyper/__init__.py`가 export하며 PHP 클래스는 `Polyspec\Hyper\UploadedFile`이다 | constructor `(name, filename, contentType, content)`; 바로 돌아오는 method `name()`, `filename()`, `contentType()`(Python은 `content_type()`), `size()`, `content()`, `moveTo(path)`(Python은 `move_to`)(HY-113.8, HY-131.28); internal `stored`와 private `createdFile`, `linkedFile` | `uploaded_file`(1196행부터 1410행): constructor `new(name, filename, content_type, content)`(1208); property `name`(1254), `filename`(1269), `content_type`(1284), `size`(1300); method `content`(1315, WASM은 1345)와 `move_to(path)`(1369), 둘 다 wait `blocking_io` | 네 부분이 http-form에서는 property이고 hyper에서는 method다(HY-113.8). 클래스의 이름과 패키지가 다르다(`Polyspec\HttpForm`, `@polyspec/http-form`, `polyspec.http_form`). 실패가 `HttpFormValueError`와 `HttpFormIoError`인데, HY-132.2와 HY-132.3은 라이브러리의 실패를 그 category의 hyper 클래스로 준다. 인자 오류가 HY-106.8과 HY-106.16의 것이 아니다. `content`와 `move_to`는 blocking I/O를 기다린다 | core의 값 위에 둔 hyper의 타입: 각 서버의 클래스는 이름과 member를 유지하고, hyper 바인딩의 member로 core의 파일을 읽는다. http-form의 언어 패키지는 의존성이 아니다 |
+| `Request`의 `form()`, `formString()`, `files()`, `file()`, `fileOver()` | 애플리케이션. hyper의 `Request`의 member다 | `request.form`, `request.formString`, `request.files`, `request.file`, `request.fileOver`; 값은 이름과 그 값들의 쌍 목록이다(HY-56.7) | `fields`와 `files`를 가진 record `form`(842부터 887), 그리고 `forms`의 함수(469부터 840): `parse_urlencoded`, `read_body`, `read_held_body`, `fields_from_body`, `files_from_body`, `file_over` | 둘 다 쌍 목록을 준다. hyper는 이름의 마지막 값과 마지막 파일을 더한다 | core의 값 위에 둔 hyper의 member. 목록은 plain 값이고 http-form의 객체는 애플리케이션에 닿지 않는다 |
+| `RequestBody` | 서버. 세 서버에서 internal unit이고 host가 먹인다(`pipeline.readBody`, `asgi.readBody`, `http-host.readBody`) | `Content-Length`를 받지 않는 constructor `(type, limit, stream, valueLimit, partLimit, fileLimit)`; 읽기가 계속되는지를 돌려주는 `feed`, `exceeded`, `size`, `held`, `streamed`, `parts`, `directory`, `remove`, `written` | `request_body`(934부터 1194): static `start(content_type, content_length, stream, limits)`(957), `feed`(1018), `finish`(1053), `parts`(1079), `held`(1108), `size`(1124), `streamed`(1140), `directory`(1156), `remove`(1175); constructor가 없다(`constructible: false`) | constructor 대신 static start; 실패는 `exceeded()`와 null 결과 대신 kind와 상태를 가진 오류; `finish()`가 body를 끝낸다 | 서버 안에 남는다: core의 body 위에 둔 hyper 바인딩의 member이고 host가 먹인다 |
+| 한도 | 애플리케이션이 option으로 네 수를 선언하고(`appOptions`의 `bodyLimit`, `valueLimit`, `partLimit`, `fileLimit`) 서버가 가진다 | option의 수, HY-59.1, HY-114.3, HY-131.8, HY-131.10의 기본값과 open 검사 | `limit`, `value_limit`, `part_limit`, `file_limit`를 가진 record `body_limits`(889부터 932) | 형태의 차이 없음 | 서버 안에 남는다: core가 option에서 record를 만든다 |
+| `Fields`, `Files`, `Multipart`, `MultipartReader`, `NamedValues` | 서버. internal unit이다 | 각 서버가 가진 reader | crate의 reader(F-20부터 F-24), contract의 unit이 아니다 | 비교하지 않음 | core가 form을 읽을 때 제거한다 |
+| 실패 | 애플리케이션은 `moveTo`와 `content`의 실패를 받고, 서버는 body의 실패에 400이나 413으로 답한다 | kind 없는 `InvalidArgumentException`, `ValueError`, `RangeError`, `TypeError`, 메시지는 `(HY-131)`로 끝난다 | `errors.kinds`의 kind(110부터 191), 그리고 property `removal_kind`와 `removal_errno`를 가진 error unit `partial_target_error`(414부터 466) | HY-131.28은 kind `exists`와 `moved`를 정하는데 서버는 kind를 내지 않는다. http-form의 메시지는 `(F-11)`로 끝난다 | kind의 category의 hyper 오류(HY-132.3). http-cookie의 행처럼 `packages/rust/interface.json`의 `errors.kinds`에 라이브러리를 적은 행으로 넘긴다. `errors.wrapped`는 `partial_target_error`의 두 property 각각에 행 하나를 얻고, session-store의 `record_error` 행처럼 hyper의 error unit으로 넘긴다(binding CK-11) |
+
+그래서 hyper는 http-form을 http-cookie의 형태대로 core의 Cargo 의존성으로 받고, http-form의 npm 패키지, wheel, PHP extension은 필요하지 않다. row를 시작할 때 한 가지를 확인한다. binding의 generator 규칙 GN-3e는 `errors.kinds`의 행이 오류를 넘기는 라이브러리마다 Python 패키지의 manifest가 그 패키지를 적는다고 하는데, contract가 그렇게 오류를 넘기는 http-cookie의 패키지를 `packages/python/pyproject.toml`은 적지 않는다.
+
+답이 바뀌는 case. HY-113.23, HY-113.24, HY-113.25, HY-57.15, HY-131.30은 http-form의 `contracts/fields.json`의 case가 적는 답을 정하고, 세 case runner가 읽는 `tests/legacy/fields.json`은 그중 열넷에 다른 답을 적는다. recipe에는 명세되었으나 아직 어떤 runner도 통과하지 못하는 case의 형태가 없다(HYR-6은 차이를 요구하는 statement로만 case를 언어에 한정한다). 그래서 이 case들은 `contracts/`에 추가하지 않는다. 명세된 답을 적은 case는 core가 form을 읽을 때까지 세 runner에서 실패하기 때문이다. H35.11이 코드와 함께 추가한다. runner는 http-form의 case를 그 release asset에서 읽고, `contracts/request.json`은 section `values`에 열한 입력 각각에 대해 case `a_multipart_value_that_is_not_utf8_is_invalid_input`의 형태로 `valid: false`(HY-42.3)인 case 하나를 얻는다.
+
+group `multipart`의 열한 case. 행이 달리 적지 않으면 content type은 `multipart/form-data; boundary=XyZ`이고 body는 `--XyZ`와 `--XyZ--` 사이에 내용 `1`을 가진 part 하나다. 행은 그 part의 header 줄을 적는다.
+
+| http-form의 case(고정 사본의 이름이 다르면 그 이름) | 입력 | 고정 사본의 답 | 명세된 답 | Statement |
+|---|---|---|---|---|
+| `a_multipart_type_without_a_boundary_fails`(`a_multipart_type_without_a_boundary_has_no_values`) | content type `multipart/form-data` | 폼 값도 파일도 없음 | `no_boundary`, 400 | HY-113.24 |
+| `a_quoted_boundary_of_no_character_is_no_boundary` | content type `multipart/form-data; boundary=""`, delimiter는 `--""`와 `--""--` | 폼 값도 파일도 없음 | `no_boundary`, 400 | HY-113.24 |
+| `a_disposition_of_another_type_fails_the_body`(`a_disposition_of_another_type_is_neither_a_value_nor_a_file`) | `Content-Disposition: attachment; name="a"` | 폼 값도 파일도 없음 | `invalid`, 400 | HY-113.23 |
+| `a_disposition_that_only_starts_with_form_data_is_another_disposition` | `Content-Disposition: form-dataX; name="a"` | 폼 값도 파일도 없음 | `invalid`, 400 | HY-113.23 |
+| `a_part_without_a_name_fails_the_body`(`a_part_without_a_name_is_neither_a_value_nor_a_file`) | `Content-Disposition: form-data; filename="x.txt"`, 내용 `X` | 폼 값도 파일도 없음 | `invalid`, 400 | HY-113.23 |
+| `a_part_without_header_lines_fails_the_body`(`a_part_without_header_lines_is_neither_a_value_nor_a_file`) | header 줄이 없고 내용이 `alone`인 첫 part, 그다음 내용 `1`의 part `Content-Disposition: form-data; name="a"` | 폼 값 `a` = `1` | `invalid`, 400 | HY-113.23 |
+| `a_lone_carriage_return_does_not_end_a_header_line` | `X-Note: a`, line feed 없는 carriage return, 그다음 `Content-Disposition: form-data; name="b"` | 폼 값도 파일도 없음 | `invalid`, 400 | HY-113.23 |
+| `a_no_break_space_before_a_parameter_separates_nothing` | `Content-Disposition: form-data;`, byte C2 A0, 그다음 `name="a"` | 폼 값도 파일도 없음 | `invalid`, 400 | HY-113.23 |
+| `a_name_given_twice_fails_the_body`(`the_first_parameter_of_a_name_counts`) | `Content-Disposition: form-data; name="a"; name="b"; filename*=x` | 폼 값 `a` = `1` | `invalid`, 400 | HY-113.23 |
+| `a_quoted_string_without_its_end_fails_the_body`(`a_quoted_string_without_its_end_is_the_rest_of_the_text`) | 닫는 따옴표가 없는 `Content-Disposition: form-data; name="a; x` | 폼 값 `a; x` = `1` | `invalid`, 400 | HY-113.23 |
+| `an_urlencoded_type_followed_by_a_line_feed_is_no_media_type`(`an_urlencoded_type_followed_by_a_line_feed_is_another_type`) | line feed가 뒤따르는 content type `application/x-www-form-urlencoded`, body `a=1` | 폼 값도 파일도 없음 | `malformed_content_type`, 400 | HY-57.15 |
+
+group `streamed`의 세 case. body는 5 byte 조각으로 읽는 part 셋이다. 내용 `1`의 `name="a"`, 내용 `x`의 `name="n"`, 내용 `z`의 `name="f"; filename="y"`. 고정 사본에서 둘째 part는 `Content-Disposition: attachment; name="n"`인데 HY-113.23이 이를 실패시키므로, http-form은 그 part를 `form-data`로 적은 case를 가지며 body는 186 byte가 아니라 185 byte다.
+
+| Case | 제한 | 고정 사본의 답 | 명세된 답 | Statement |
+|---|---|---|---|---|
+| `a_body_of_exactly_the_part_limit_is_read` | part 제한 3, 조각 단위로 읽음 | 폼 값 `a` = `1`, 파일 `f`, 디렉터리에 파일 하나 | 폼 값 `a` = `1`과 `n` = `x`, 파일 `f`, 디렉터리에 파일 하나 | HY-131.9, HY-113.23 |
+| `a_third_part_more_than_the_part_limit_stops_the_reading_and_leaves_no_file` | part 제한 2, 조각 단위로 읽음 | 읽기가 멈추고 제한을 넘었으며 kind는 없음 | `part_limit`, 413. 읽기는 셋째 part의 delimiter 뒤 line feed에서, 그 파일 전에 멈추고 디렉터리에는 파일이 없다 | HY-131.30, HY-131.26 |
+| `a_multipart_body_that_is_one_value_has_the_value_limit_and_no_part_limit` | 한 값으로 보유, value 제한 185(고정 사본은 186), part 제한 1, file 제한 1 | 폼 값 `a` = `1`, 파일 `f` | 폼 값 `a` = `1`과 `n` = `x`, 파일 `f`. 정확히 value 제한만큼인 body는 읽힌다 | HY-131.27, HY-113.23 |
+
+두 파일의 다른 차이. 상태는 바꾸지 않는다. 파일을 옮기는 `streamed`의 다섯 case는 http-form에서 메시지 `the file was moved (F-11)`, `the path exists (F-11)`, `a path is not a string (F-11)`을 적고 고정 사본에서는 같은 텍스트를 `(HY-131)`로 적는다. hyper의 어떤 규칙도 이 실패의 메시지를 정하지 않으므로(HY-132.4), statement가 그것을 정할지는 H35.11이 결정한다. 이름이나 값이 UTF-8이 아닌 `urlencoded`의 세 case는 http-form에서 상태 400의 `invalid`를, 고정 사본에서 null 결과를 적으며 둘 다 HY-42.3의 400이다. http-form은 또 `multipart`의 `a_malformed_content_type_fails`, `fields.json`의 group `uploaded_file.move_to`, `uploaded_file.content`, `uploaded_file.move_to.stored`, `uploaded_file.content.stored`, `request_body.remove`, 그리고 `forms.json`을 가지며 고정 사본에는 이것들이 없다.
+
+HY-57.15가 case 밖에서 바꾸는 것. `Content-Type`이 media type이 아닌 요청은 body를 읽는 동안, 라우팅 전에 400을 받는다(HY-131.18). action으로의 `POST`가 아닌 요청도 그렇다. HY-59.12는 그 400을 라우팅 뒤로 정한다. HY-59.12의 첫 절이 순서에서 자리를 지키는지는 H35.11이 코드와 함께 결정한다. 그때 kind `malformed_content_type`은 http-form의 kind가 된다. `front::media_type`이 http-form의 `media_type`을 부르면 core의 variant `Error::MalformedContentType`과 HY-132.3 표의 행은 없어지고, HY-59.12와 HY-59.13은 HY-132.9 표의 행에 들어간다.
