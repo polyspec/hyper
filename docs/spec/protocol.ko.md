@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 1e152b3a972f8edc0c83d1520bbcc84dc003d326c124e8585b0022d519043625 -->
+<!-- source-sha256: 057f4794851b3e63639465ef2bb8b32bb4b73df9102c0fb2d017a3e92ed5d0da -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -172,7 +172,7 @@
 
 - **HYC-23** <a id="HYC-23.1"></a> 브라우저는 가장 마지막 영역 요청의 응답만 렌더한다. 나중 복원이 이전 복원을 취소하듯(HYC-3), 이전 영역 요청의 응답은 렌더하지 않는다. <a id="HYC-23.2"></a> 복원(HYC-3, HYC-8)은 이 규칙에서 영역 요청으로 센다. HYC-7의 문서 요청은 세지 않는다. HYC-7은 다른 응답이 보관 데이터를 교체했을 때 자기 응답을 버리기 때문이다. <a id="HYC-23.3"></a> 렌더하지 않은 응답은 실패가 아니다(HYC-14).
 
-- **HYC-24** <a id="HYC-24.1"></a> 브라우저 코드의 `HyperOptions`는 이름에서 함수로 가는 map인 `functions`를 받아 template engine에 등록한다(template FUN-43). <a id="HYC-24.2"></a> 모든 서버의 `App`은 애플리케이션을 열 때 같은 map을 option `functions`(HY-106)로 받고, Node 서버는 브라우저 코드의 `createApplication`으로 그것을 등록하므로, 서버와 브라우저는 같은 이름을 등록한다(template FUN-47). 등록이 실패하면(template FUN-44) 열기가 실패한다. <a id="HYC-24.5"></a> 함수가 아닌 entry는 template RT-5의 인자 오류로 open을 실패시킨다. <a id="HYC-24.6"></a> built-in이 아니고 등록되지도 않은 이름을 호출하는 render는 HY-43으로 실패한다.
+- **HYC-24** <a id="HYC-24.1"></a> 브라우저 코드의 `HyperOptions`는 이름에서 함수로 가는 map인 `functions`를 받아 template engine에 등록한다(template FUN-43). <a id="HYC-24.2"></a> 모든 서버의 `App`은 애플리케이션을 열 때 같은 map을 option `functions`(HY-106)로 받고, Node 서버는 브라우저 코드의 `createApplication`으로 그것을 등록하므로, 서버와 브라우저는 같은 이름을 등록한다(template FUN-47). 등록이 실패하면(template FUN-44) 열기가 실패한다. <a id="HYC-24.5"></a> 함수가 아닌 entry는 template RT-5의 인자 오류로 open을 실패시킨다. <a id="HYC-24.6"></a> built-in이 아니고 등록되지도 않은 이름을 호출하는 render는 HY-43으로 실패한다. <a id="HYC-24.7"></a> core가 `functions`의 entry를 판정한다: core의 규칙 `rules.check_function_entry`는 entry의 이름과 그 값이 host 언어의 함수인지를 받고, 함수가 아닌 entry를 kind `invalid_application`과 메시지 `functions.<name> is not a function`으로 실패시킨다. <a id="HYC-24.8"></a> template 언어가 거부하는 등록은 kind `invalid_application`과 template 언어의 메시지 그대로 실패한다.
 
 ## 서버의 클라이언트 렌더
 

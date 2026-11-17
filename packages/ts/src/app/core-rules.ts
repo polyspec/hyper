@@ -166,8 +166,19 @@ interface CorePageRequest {
   next(input: PageStepInput): Step;
 }
 
+// The title and the regions of a document, each rendered alone (HY-13.1 to HY-13.3).
+interface DocumentParts {
+  readonly title: string;
+  readonly regions: ReadonlyMap<string, string>;
+}
+
+// The data of each region of a document, by the name of the region.
+type RegionsData = ReadonlyMap<string, ReadonlyMap<string, CoreValue>>;
+
 interface CorePagesInstance {
   register(name: string, hostFunction: CoreHostFunction): void;
+  renderDocument(route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): string;
+  renderParts(route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): DocumentParts;
 }
 
 // The members of the Node binding of the core that the server calls, under the names that the binding gives the
@@ -359,6 +370,13 @@ export interface CoreRules {
   // HY-73, HY-75, HY-124). The server still calls each handler that a step names and gives its result to the next
   // step (HY-30, HY-54), and answers the stops of a handler (HY-50, HY-51, HY-107).
   pageRequest(pages: CorePages, input: PageInput): CorePageRequest;
+  // pageDocument: `pages.render_document` gives the document of a route from the shared data and the data of each
+  // region, with no kept value and no embedded data, at the time `now` (HY-12.1). It renders below a request: no
+  // handler is called and no step is run.
+  pageDocument(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): string;
+  // pageParts: `pages.render_parts` gives the title and each region of the given data rendered alone, the texts
+  // that the document of the same data holds in their places (HY-13.1 to HY-13.3).
+  pageParts(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): DocumentParts;
   // Partial. sessionCsrfToken: rules.stored_token checks the value that the session holds in the place of the
   // token (HY-24.14). The server still reads the store and creates the token of a session that holds none (HY-24.1),
   // which opening_functions.open_page does once the server gives the core its store.
@@ -394,7 +412,7 @@ export interface CoreRules {
     // application (HY-2, HY-48, HY-59.1, HY-62.2) and `pages.register` registers a host function (HYC-24). The server
     // still reads the files of `program/` (HY-48.11), checks the handlers against the manifest (HY-30, HY-118) and
     // holds the limits of the body and of the response (HY-59, HY-66, HY-114, HY-131).
-    open(manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions, functions: ReadonlyMap<string, CoreHostFunction>): CorePages;
+    open(manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions, functions: ReadonlyMap<string, CoreHostFunction>): CorePagesInstance;
   };
 }
 
@@ -466,6 +484,8 @@ export function coreRules(module: object): CoreRules {
     },
     pageOpen: (pages, store, opening) => core.openPage(pages, store, opening),
     pageRequest: (pages, input) => new core.PageRequest(pages, input),
+    pageDocument: (pages, route, shared, regions, now) => pages.renderDocument(route, shared, regions, now),
+    pageParts: (pages, route, shared, regions, now) => pages.renderParts(route, shared, regions, now),
     sessionStoredToken: (stored) => core.storedToken(stored),
     keptCookieName: (secure) => core.keepName(secure),
     buildRead: (bytes) => core.readBuild(bytes),

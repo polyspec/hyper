@@ -2428,6 +2428,18 @@
                   "en": "A render that calls a name that is neither built in nor registered fails with HY-43.",
                   "ko": "built-in이 아니고 등록되지도 않은 이름을 호출하는 render는 HY-43으로 실패한다.",
                   "koSource": "be1b66131962cfe97a15fc9e8068bff013eb6b8cfdc2ed341a75d2babc867584"
+                },
+                {
+                  "id": "HYC-24.7",
+                  "en": "The core judges an entry of `functions`: its rule `rules.check_function_entry` takes the name of the entry and whether its value is a function of the host language, and fails an entry that is not one with kind `invalid_application` and the message `functions.<name> is not a function`.",
+                  "ko": "core가 `functions`의 entry를 판정한다: core의 규칙 `rules.check_function_entry`는 entry의 이름과 그 값이 host 언어의 함수인지를 받고, 함수가 아닌 entry를 kind `invalid_application`과 메시지 `functions.<name> is not a function`으로 실패시킨다.",
+                  "koSource": "17999d8d629cdc8ebe2d7a84b9723fb211c3e1c3c031f759007e820f44de0087"
+                },
+                {
+                  "id": "HYC-24.8",
+                  "en": "A registration that the template language refuses fails with kind `invalid_application` and the message of the template language, unchanged.",
+                  "ko": "template 언어가 거부하는 등록은 kind `invalid_application`과 template 언어의 메시지 그대로 실패한다.",
+                  "koSource": "c4b529e0edb4ca8130663897ab8a2ce7dd6ab46e9d67411a9567a7b73baa7b8f"
                 }
               ]
             }

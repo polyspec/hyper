@@ -33,6 +33,16 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
     register(...args: unknown[]): void {
       calls.push(['Pages.register', args]);
     }
+
+    renderDocument(...args: unknown[]): unknown {
+      calls.push(['Pages.renderDocument', args]);
+      return results['Pages.renderDocument'];
+    }
+
+    renderParts(...args: unknown[]): unknown {
+      calls.push(['Pages.renderParts', args]);
+      return results['Pages.renderParts'];
+    }
   }
   class PageRequest {
     constructor(...args: unknown[]) {
@@ -175,6 +185,17 @@ test('Application.open opens the pages and registers each host function in its o
   const pages = rules.Application.open(manifest, templates, new Map(), options, new Map([['b', first], ['a', second]]));
   assert.equal(pages.constructor.name, 'Pages');
   assert.deepEqual(calls, [['new Pages', [manifest, templates, new Map(), options]], ['Pages.register', ['b', first]], ['Pages.register', ['a', second]]]);
+});
+
+test('Page.document and Page.parts give the pages the route, the shared data, the data of each region and the time (HY-12.1, HY-13)', () => {
+  const parts = { title: 'T - Site', regions: new Map([['content', '<p>T</p>\n']]) };
+  const { rules, calls } = rulesOf({ 'Pages.renderDocument': '<title>T - Site</title>', 'Pages.renderParts': parts });
+  const pages = rules.Application.open(new TextEncoder().encode('{}'), new Map(), new Map(), { build: '1'.repeat(64), timezone: 'Z', context: false, basePath: '', formTypes: [] }, new Map());
+  const shared = new Map([['title', 'T']]);
+  const regions = new Map([['content', new Map<string, unknown>()]]);
+  assert.equal(rules.pageDocument(pages, 'home', shared, regions, 0), '<title>T - Site</title>');
+  assert.equal(rules.pageParts(pages, 'home', shared, regions, 0), parts);
+  assert.deepEqual(calls.slice(1), [['Pages.renderDocument', ['home', shared, regions, 0]], ['Pages.renderParts', ['home', shared, regions, 0]]]);
 });
 
 test('Page.open and Page.request give the core the pages, the store and the input of a page (HY-120.6, HY-15)', () => {

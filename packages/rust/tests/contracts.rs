@@ -1041,6 +1041,96 @@ fn a_document_holds_its_parts_rendered_alone() {
     assert!(ran > 0);
 }
 
+/// The text with the first text equal to `part` replaced by the place of its name; a part that is empty or not in
+/// the text fails.
+fn placed(text: &str, part: &str, place: &str, id: &Value) -> String {
+    assert!(!part.is_empty(), "{id}: {place} rendered alone is empty");
+    assert!(text.contains(part), "{id}: {place} is not in its place");
+    text.replacen(part, &format!("{{# {place}}}"), 1)
+}
+
+#[test]
+fn the_pages_render_a_document_and_its_parts_alone() -> Result<(), Error> {
+    // HY-12.1, HY-13.1, HY-13.2, HY-13.3: the members `pages.render_parts` and `pages.render_document` of the
+    // contract give every field that a case of the group parts compares, from the inputs of the case alone.
+    use polyspec_hyper::steps::{Map, Pages, PagesOptions};
+    let file = cases("app.json");
+    let mut ran = 0;
+    for case in group(&file, "parts") {
+        let id = &case["id"];
+        let fixture = &file["applications"][text(case, "application")];
+        let pages = Pages::open(
+            fixture["manifest"].to_string().as_bytes(),
+            &templates_of(fixture, "templates"),
+            &data_value("{}")?,
+            &PagesOptions {
+                build: text(fixture, "build").to_owned(),
+                timezone: text(fixture, "timezone").to_owned(),
+                context: false,
+                base_path: String::new(),
+                form_types: Vec::new(),
+                data_base_path: None,
+            },
+        )?;
+        let route = text(case, "route");
+        let shared = map(&case["shared"].to_string());
+        let mut regions = Map::new();
+        for (region, data) in case["regions"].as_object().into_iter().flatten() {
+            regions.insert(region.clone(), map(&data.to_string()));
+        }
+        let parts = match pages.render_parts(route, &shared, &regions, 0.0) {
+            Ok(parts) => parts,
+            Err(error) => panic!("{id}: {error}"),
+        };
+        let document = match pages.render_document(route, &shared, &regions, 0.0) {
+            Ok(document) => document,
+            Err(error) => panic!("{id}: {error}"),
+        };
+        assert_eq!(parts.title, text(case, "title"), "{id}");
+        let alone: serde_json::Map<String, Value> = parts
+            .regions
+            .iter()
+            .map(|(region, html)| (region.to_owned(), Value::from(html.clone())))
+            .collect();
+        assert_eq!(Value::Object(alone), case["parts"], "{id}");
+        let part = |region: &str| match parts.regions.get(region) {
+            Some(html) => html.as_str(),
+            None => panic!("{id}: the region {region} is not rendered alone"),
+        };
+        let manifest = &fixture["manifest"];
+        let mut frame = placed(&document, &parts.title, "title", id);
+        let mut page = None;
+        for region in manifest["regions"].as_array().into_iter().flatten() {
+            let name = text(region, "name");
+            frame = placed(&frame, part(name), name, id);
+            if region["page"] == Value::Bool(true) {
+                page = Some(name);
+            }
+        }
+        assert_eq!(frame, text(case, "frame"), "{id}");
+        if let Some(expected) = case.get("pageFrame") {
+            let Some(page) = page else {
+                panic!("{id}: the manifest has no page region");
+            };
+            let mut page_frame = part(page).to_owned();
+            let routes = manifest["routes"].as_array().into_iter().flatten();
+            let route_regions = routes
+                .filter(|item| item["name"] == case["route"])
+                .flat_map(|item| item["regions"].as_array().into_iter().flatten());
+            for region in route_regions {
+                let name = text(region, "name");
+                if case["regions"].get(name).is_some() {
+                    page_frame = placed(&page_frame, part(name), name, id);
+                }
+            }
+            assert_eq!(page_frame, text_of(expected), "{id}");
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+    Ok(())
+}
+
 #[test]
 fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
     // HY-38.16, HY-38.17, HY-38.18, HY-31.2, HY-31.3

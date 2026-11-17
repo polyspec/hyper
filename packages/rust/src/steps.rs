@@ -182,8 +182,9 @@ impl Pages {
     /// Registers a function of the application for its templates (HYC-24.2), before its first page request.
     ///
     /// # Errors
-    /// `invalid_application` for a name that the template language refuses (HYC-24.5), and `internal` once a page
-    /// request holds the application.
+    /// `invalid_application` for a name that the template language refuses, with the message of the template language
+    /// (HYC-24.8), and `internal` once a page request holds the application. An entry that is no function does not
+    /// reach this member: `render::check_function_entry` judges it (HYC-24.7).
     pub fn register(&mut self, name: &str, host_function: PageFunction) -> Result<(), Error> {
         match Arc::get_mut(&mut self.app) {
             Some(app) => app
@@ -193,6 +194,105 @@ impl Pages {
                 "a function is registered after the first page request",
             )),
         }
+    }
+}
+
+/// The title and the regions of a document, each rendered alone (HY-13.1 to HY-13.3).
+#[derive(Debug, Clone, PartialEq)]
+pub struct DocumentParts {
+    /// The title rendered alone (HY-13.3).
+    pub title: String,
+    /// Each region of the given data rendered alone, by name (HY-13.1, HY-13.2).
+    pub regions: Map<String>,
+}
+
+impl Pages {
+    /// Renders with the document of a route from given data: the shared data and the data of each region as the
+    /// render receives them, with no kept value and no embedded data, at the time `now` in the time zone of the
+    /// server.
+    fn with_document<T>(
+        &self,
+        route: &str,
+        shared: &Map<Value>,
+        regions: &Map<Map<Value>>,
+        now: f64,
+        render: impl FnOnce(&Templates, &Document<'_>) -> Result<T, Failure<Error>>,
+    ) -> Result<T, Failure<Error>> {
+        let app = &self.app;
+        let Some(route) = app
+            .manifest
+            .routes
+            .iter()
+            .find(|item| item.name == route)
+            .filter(|_| !crate::fault::broken())
+        else {
+            return Err(internal(
+                "the document of a route that the manifest does not hold",
+            ));
+        };
+        let regions: Vec<(String, Value)> = regions
+            .iter()
+            .map(|(name, data)| (name.to_owned(), Value::Map(Arc::new(data_map(data)))))
+            .collect();
+        render(
+            &app.templates,
+            &Document {
+                manifest: &app.manifest,
+                route,
+                shared: &data_map(shared),
+                regions: &regions,
+                kept: &OrderedMap::new(),
+                env: Env {
+                    timezone: app.timezone.clone(),
+                    now,
+                },
+                build: &app.build,
+                embed: None,
+            },
+        )
+    }
+
+    /// The document of a route from given data (HY-12.1): the layout with the shared data and the title, the build
+    /// id and each manifest region rendered alone, with no kept value and no embedded data. A page request renders
+    /// its document with the same render after its steps; this member renders below a request, from the data alone.
+    ///
+    /// # Errors
+    /// The failure of the template language with its kind, the exception of a function of a template unchanged, and
+    /// `internal` for a route that the manifest does not hold or a region of the document without data or template.
+    pub fn render_document(
+        &self,
+        route: &str,
+        shared: &Map<Value>,
+        regions: &Map<Map<Value>>,
+        now: f64,
+    ) -> Result<String, Failure<Error>> {
+        self.with_document(route, shared, regions, now, Templates::render_document)
+    }
+
+    /// The title and each region of the given data rendered alone (HY-13.1 to HY-13.3), which are the texts that
+    /// `render_document` places in the document of the same data.
+    ///
+    /// # Errors
+    /// The failure of the template language with its kind, the exception of a function of a template unchanged, and
+    /// `internal` for a route that the manifest does not hold or a region without a template.
+    pub fn render_parts(
+        &self,
+        route: &str,
+        shared: &Map<Value>,
+        regions: &Map<Map<Value>>,
+        now: f64,
+    ) -> Result<DocumentParts, Failure<Error>> {
+        self.with_document(route, shared, regions, now, |templates, document| {
+            let alone = templates.render_parts(document)?;
+            let mut regions = Map::new();
+            for (name, html) in alone.regions {
+                regions.insert(name, html);
+            }
+            Ok(DocumentParts {
+                title: alone.title,
+                regions,
+            })
+        })
     }
 }
 
@@ -461,7 +561,11 @@ impl PageRequest {
                 }),
             },
             (State::Context, Input::Context { context }) => {
-                self.context = Some(data_map(context));
+                // HY-44.3: the context is judged when its handler returns, before another handler runs.
+                let context = Arc::new(data_map(context));
+                crate::data_model::check(&Value::Map(Arc::clone(&context)))
+                    .map_err(Failure::Kind)?;
+                self.context = Some(Arc::unwrap_or_clone(context));
                 self.state = State::Shared;
                 Ok(call(Call::Shared))
             }
@@ -625,8 +729,15 @@ impl PageRequest {
         let Some(shared) = self.shared.take().filter(|_| !crate::fault::broken()) else {
             return Err(internal("a page without its shared data"));
         };
+        // HY-44.3: every value that the shared handler, the loaders and the action returned is judged before the read
+        // paths remove a value, so a value outside the data model fails also when no template reads it.
+        let shared = Value::Map(Arc::new(shared));
+        crate::data_model::check(&shared).map_err(Failure::Kind)?;
+        for (_, value) in &self.data {
+            crate::data_model::check(value).map_err(Failure::Kind)?;
+        }
         // HY-73.29: the page keeps only the paths that the templates of the route read.
-        let shared = match values::map(&keep(&Value::Map(Arc::new(shared)), &route_reads.shared))
+        let shared = match values::map(&keep(&shared, &route_reads.shared))
             .filter(|_| !crate::fault::broken())
         {
             Some(map) => (**map).clone(),

@@ -63,13 +63,30 @@ fn from_template(error: TemplateError) -> RenderFailure {
     Failure::Kind(Error::Template(error))
 }
 
+/// Judges an entry of the functions of the application (HYC-24.5, HYC-24.7): its name, and whether its value is a
+/// function of the host language. A binding gives the core only a function (binding GN-6z), so the host states what
+/// its language holds and the core decides the failure and writes its message.
+///
+/// # Errors
+/// `invalid_application` for an entry that is not a function, with the message `functions.<name> is not a function`
+/// of template RT-5.
+pub fn check_function_entry(name: &str, callable: bool) -> Result<(), Error> {
+    if callable {
+        Ok(())
+    } else {
+        Err(Error::InvalidApplication(std::borrow::Cow::Owned(format!(
+            "functions.{name} is not a function"
+        ))))
+    }
+}
+
 impl Templates {
     /// The engine of the templates of an application, by their names relative to the template root, with the reserved
     /// template of the embedded data (HY-31.3) and the functions of the application (HYC-24.2).
     ///
     /// # Errors
-    /// `invalid_application` for a template of the application named `hyper/data.tpl`, which is reserved, and the
-    /// error of the template language for a function that it does not register (HYC-24.5).
+    /// `invalid_application` for a template of the application named `hyper/data.tpl`, which is reserved, and for a
+    /// function that the template language does not register, as `register` fails it (HYC-24.8).
     pub fn new(
         sources: &[(String, String)],
         functions: HashMap<String, HostFunction>,
@@ -84,7 +101,7 @@ impl Templates {
             loader.set(name, source);
         }
         loader.set(DATA_TEMPLATE, DATA_SOURCE);
-        let mut program = AstProgram::new(EngineOptions {
+        let program = AstProgram::new(EngineOptions {
             loader: Some(Box::new(loader)),
             ..EngineOptions::default()
         })
@@ -92,20 +109,22 @@ impl Templates {
         // The functions of the options of AstProgram::new are functions of the interface contract of template, which a
         // generated binding gives; a function of the application is a host function of the engine, which register
         // adds as the options add theirs (template RT-5, FUN-43).
+        let mut templates = Templates { program };
         for (name, function) in functions {
-            program.register(&name, function).map_err(Error::Template)?;
+            templates.register(&name, function)?;
         }
-        Ok(Templates { program })
+        Ok(templates)
     }
 
     /// Registers a function of the application (HYC-24.2, template FUN-43).
     ///
     /// # Errors
-    /// `invalid_application` for a name that the template language refuses, such as the name of a built-in function
-    /// (HYC-24.5).
+    /// `invalid_application` for a name that the template language refuses, such as the name of a built-in function,
+    /// with the message of the template language unchanged (HYC-24.8), so that every server that registers through
+    /// the core and every engine of the template language state one message for one name.
     pub fn register(&mut self, name: &str, function: HostFunction) -> Result<(), Error> {
         self.program.register(name, function).map_err(|reason| {
-            Error::InvalidApplication(std::borrow::Cow::Owned(format!("{reason} (HYC-24)")))
+            Error::InvalidApplication(std::borrow::Cow::Owned(reason.to_string()))
         })
     }
 
@@ -340,14 +359,7 @@ impl Templates {
     /// The failure of the template language with its kind, the exception of a function of the application, and
     /// `internal` for a document whose parts break the order of the page.
     pub fn render_document(&self, document: &Document<'_>) -> Result<String, RenderFailure> {
-        let shared = bind(document.shared).map_err(from_template)?;
-        let mut regions = Vec::with_capacity(document.regions.len());
-        for (name, data) in document.regions {
-            let applied = apply(data, &pairs_of(document.kept, name));
-            let bound_data = bound(&applied)?;
-            regions.push((name.clone(), applied, bound_data));
-        }
-        let mut parts = Parts { shared, regions };
+        let mut parts = Parts::of(document)?;
         let mut kept = document.kept.clone();
         let first = self.render_layout(document, &parts, &kept);
         if first.is_ok() || kept.is_empty() {
@@ -389,5 +401,54 @@ impl Templates {
             kept = rest;
         }
         self.render_layout(document, &parts, &kept)
+    }
+}
+
+impl Parts {
+    /// The shared data and the data of each region of a document, bound once (HY-13.5), each region with its kept
+    /// values applied (HY-38.12).
+    fn of(document: &Document<'_>) -> Result<Parts, RenderFailure> {
+        let shared = bind(document.shared).map_err(from_template)?;
+        let mut regions = Vec::with_capacity(document.regions.len());
+        for (name, data) in document.regions {
+            let applied = apply(data, &pairs_of(document.kept, name));
+            let bound_data = bound(&applied)?;
+            regions.push((name.clone(), applied, bound_data));
+        }
+        Ok(Parts { shared, regions })
+    }
+}
+
+/// The title and the regions of a document, each rendered alone (HY-13.1 to HY-13.3).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Alone {
+    /// The title rendered alone (HY-13.3).
+    pub title: String,
+    /// Each region of the document rendered alone, by name, in the order of the data of the document.
+    pub regions: Vec<(String, String)>,
+}
+
+impl Templates {
+    /// Renders the title and each region of a document alone (HY-13.1 to HY-13.3): the title template with the shared
+    /// data, and the template of each region that the document holds data for with `merge(shared, region data)`,
+    /// where the page region receives each present route region rendered alone as an `html` definition. These are
+    /// the texts that `render_document` places in the layout and in the page region.
+    ///
+    /// # Errors
+    /// The failure of the template language with its kind, the exception of a function of the application, and
+    /// `internal` for a region that has no template.
+    pub fn render_parts(&self, document: &Document<'_>) -> Result<Alone, RenderFailure> {
+        let parts = Parts::of(document)?;
+        let title = self.render(
+            &document.manifest.title,
+            &parts.shared,
+            Definitions::new(),
+            &document.env,
+        )?;
+        let mut regions = Vec::with_capacity(parts.regions.len());
+        for (name, _, _) in &parts.regions {
+            regions.push((name.clone(), self.render_region(document, &parts, name)?));
+        }
+        Ok(Alone { title, regions })
     }
 }
