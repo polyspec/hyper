@@ -7,7 +7,6 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Context;
 use Polyspec\Hyper\Csrf;
-use Polyspec\Hyper\HyperValueError;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\CaseInput;
 use Polyspec\Hyper\Tests\Support\ContextRun;
@@ -34,56 +33,6 @@ final class ContextSteps
             $context = Json::map($reordered['context'], 'the member context of reorderedText');
             $case->compare('reorderedHash', Context::hash($build, Context::text($context)));
         }
-    }
-
-    /** The shared data whose keys the case lists, with the context in its place (HY-10, HY-128). */
-    public static function withContext(CaseReader $case): void
-    {
-        $shared = [];
-        foreach (self::stringList($case, 'shared') as $name) {
-            $shared[$name] = $name;
-        }
-        $keys = null;
-        $context = null;
-        $raises = null;
-        try {
-            $placed = Context::withContext($shared, ['name' => 'Board']);
-            $keys = array_keys($placed);
-            $context = $placed['context'];
-        } catch (HyperValueError $error) {
-            // HY-132.2: HyperValueError is the class of the category value.
-            $raises = [
-                'kind' => $error->kind(),
-                'status' => $error->status(),
-                'category' => 'value',
-                'message' => $error->getMessage(),
-            ];
-        }
-        $case->compare('keys', $keys);
-        $case->compare('context', $context);
-        $case->compare('raises', $raises);
-    }
-
-    /**
-     * Returns a field of a case that is a list of strings, and fails for any other value.
-     *
-     * @return list<string>
-     */
-    private static function stringList(CaseReader $case, string $name): array
-    {
-        $value = $case->input($name);
-        if (!is_array($value) || !array_is_list($value)) {
-            throw new \UnexpectedValueException("the case field {$name} is not a list of strings");
-        }
-        $strings = [];
-        foreach ($value as $item) {
-            if (!is_string($item)) {
-                throw new \UnexpectedValueException("the case field {$name} is not a list of strings");
-            }
-            $strings[] = $item;
-        }
-
-        return $strings;
     }
 
     /**

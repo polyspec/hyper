@@ -10,7 +10,6 @@ from polyspec.hyper.session._csrf import Csrf
 from polyspec.hyper.http.request import Request
 from polyspec.hyper.session.array_session import ArraySession
 
-from ..case_rules import FAILURES, raises_of
 from .context_application import open_application, program_of
 from .recorded import decoded
 
@@ -29,30 +28,6 @@ def contexts(case) -> None:
             raise ValueError("reorderedText has no member context")
         context = _map_of(reordered["context"], "the member context of reorderedText")
         case.compare("reorderedHash", Context.hash(build, Context.text(context)))
-
-
-def with_context(case) -> None:
-    shared = {name: name for name in _string_list(case, "shared")}
-    keys = None
-    context = None
-    raises = None
-    try:
-        placed = Context.with_context(shared, {"name": "Board"})
-        keys = list(placed)
-        context = placed["context"]
-    except FAILURES as error:
-        raises = raises_of(error)
-    case.compare("keys", keys)
-    case.compare("context", context)
-    case.compare("raises", raises)
-
-
-def _string_list(case, name: str) -> list[str]:
-    """Returns a field of a case that is a list of strings, and fails for any other value."""
-    value = case.input(name)
-    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
-        raise TypeError(f"the case field {name} is not a list of strings")
-    return value
 
 
 def _string_field(case, name: str) -> str:

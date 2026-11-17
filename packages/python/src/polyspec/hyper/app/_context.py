@@ -1,6 +1,6 @@
 """The context of an application (HY-124 to HY-128): the map that its handler returns, its JSON text (HY-54), its
-hash with the build (HY-125), the check of the `Hyper-Context` header and
-the place of the context in the shared data of a document (HY-10)."""
+hash with the build (HY-125) and the check of the `Hyper-Context` header (HY-127); the core places the context in
+the shared data of a document (HY-10)."""
 
 from __future__ import annotations
 
@@ -36,24 +36,3 @@ class Context:
         """Returns True for a request without `Hyper-Context` or with a context hash, 64 lowercase hexadecimal
         (HY-127); the core checks it (HY-132.2)."""
         return core_rules().context_valid_header(value)
-
-    @staticmethod
-    def with_context(shared: dict, map: dict) -> dict:
-        """Returns the shared data of a document with the context in its place (HY-10): after `csrf`, and when HY-73
-        removed `csrf`, right after `title`; and first when they removed both. Shared data that already holds a
-        member `context` fails with the kind `shared_holds_context` (HY-124.8, HY-132), because the context has one
-        place and one source (HY-124, HY-128)."""
-        if "context" in shared:
-            raise core_rules().value_error(
-                "the shared data already holds the member context (HY-128)",
-                "shared_holds_context",
-            )
-        anchor = "csrf" if "csrf" in shared else "title"
-        placed: dict = {}
-        found = False
-        for name, value in shared.items():
-            placed[name] = value
-            if name == anchor:
-                placed["context"] = map
-                found = True
-        return placed if found else {"context": map, **placed}

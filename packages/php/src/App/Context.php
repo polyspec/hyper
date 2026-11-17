@@ -6,8 +6,8 @@ namespace Polyspec\Hyper;
 
 /**
  * The context of an application (HY-124 to HY-128): the map that its handler returns, its JSON text (HY-54), its hash
- * with the build (HY-125), the member `context` of a JSON response, the check of the `Hyper-Context` header and the
- * place of the context in the shared data of a document (HY-10).
+ * with the build (HY-125) and the check of the `Hyper-Context` header (HY-127); the core places the context in the
+ * shared data of a document (HY-10) and writes the member `context` of a JSON response (HY-128).
  *
  * @internal
  */
@@ -52,38 +52,5 @@ final class Context
     public static function validHeader(?string $value): bool
     {
         return CoreRules::shared()->contextValidHeader($value);
-    }
-
-    /**
-     * Returns the shared data of a document with the context in its place (HY-10): after `csrf`, and when HY-73
-     * removed `csrf`, right after `title`; and first when they removed both. Shared data that already holds a member
-     * `context` fails with the kind `shared_holds_context` (HY-124.8, HY-132), because the context has one place and
-     * one source (HY-124, HY-128).
-     *
-     * @param array<array-key, mixed> $shared
-     * @param array<array-key, mixed> $map
-     * @return array<array-key, mixed>
-     */
-    public static function withContext(array $shared, array $map): array
-    {
-        if (array_key_exists('context', $shared)) {
-            throw new HyperValueError(
-                'the shared data already holds the member context (HY-128)',
-                'shared_holds_context',
-            );
-        }
-        $anchor = array_key_exists('csrf', $shared) ? 'csrf' : 'title';
-        $placed = [];
-        $found = false;
-        foreach ($shared as $name => $value) {
-            $placed[$name] = $value;
-            if ($name === $anchor) {
-                $placed['context'] = $map;
-                $found = true;
-            }
-        }
-
-        // The union keeps the integer keys of the shared data, which a spread would number again.
-        return $found ? $placed : ['context' => $map] + $placed;
     }
 }
