@@ -145,8 +145,8 @@ def handlers() -> dict:
 def fixture_app(counter: Counter, base_path: str = "", **options) -> App:
     """Opens the fixture application with `counter` as its service; `options` are further arguments of `App.open`."""
     options.setdefault("handlers", handlers())
+    options.setdefault("manifest", str(FIXTURES / "app.json"))
     application = App.open(
-        manifest=str(FIXTURES / "app.json"),
         program=str(PROGRAM),
         timezone="+09:00",
         base_path=base_path,

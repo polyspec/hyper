@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d8f6f63f1b0a166fff1c97ab9df5199e1f3c202bf81c4aeb12cc353b35ffa8c6 -->
+<!-- source-sha256: a0071cce066fe5809fffb5ffbe133ee7584a6eb62594800cd2bd3a678d60ca19 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-104.38은 route가 session을 쓰지 않는 방법을 정한다: manifest의 route가 `"session": false`를 가진다. 서버는 그 요청에 session을 열지 않으므로, 그 요청은 lock을 잡지 않고 session cookie를 설정하지 않는다. Node와 Python 서버는 그 field를 읽지 않으며, 새 test `packages/ts/tests/session-routes.test.ts`와 `packages/python/tests/test_session_routes.py`는 그때까지 실패한다. 각 test는 같은 cookie로 두 요청을 보낸다. 첫 요청은 test가 놓아 주는 event로 잡혀 있고, 둘째 요청은 test가 쓴 manifest의 route `plain`으로 간다. session을 두 번째로 열면 첫 요청이 풀리므로, 실패는 기다림이 아니라 응답 순서로 드러난다. Python test의 `fixture_app`은 `manifest`를 받는다. 작성만 했고 실행하지 않았다.
 
 - HY-132.1, HY-132.3, HY-104.38은 이제 행 H35.38의 표시를 가지고, HY-104.32는 행 H35.37의 표시를 가진다. Node와 Python 서버는 session 실패를 라이브러리의 kind 없이 발생시키고, cookie를 가진 모든 요청의 session을 연다. PHP 서버는 자체 file store를 유지한다. 기능 상태에 행 `session-route-open`이 추가되었다. 작성만 했고 실행하지 않았다.
 
