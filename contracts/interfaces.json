@@ -11791,7 +11791,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Binds a value, fails when it is not a value of the data model, and returns the bound value.",
+              "state": "Fails when a value is not a value of the data model, and returns the value.",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::check",
@@ -13325,7 +13325,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Page/Renderer.php::Polyspec\\Hyper\\Renderer::__construct",
-                  "signature": "private function __construct(Polyspec\\Template\\Program $program, string $timezone)"
+                  "signature": "private function __construct(Polyspec\\Template\\Engine $program, string $timezone)"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/page/_renderer.py::Renderer.__init__",

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Measures the CPU time of the PHP server without network, with the template program that PHP selects (HY-48):
+// Measures the CPU time of the PHP server without network, with the template extension (HY-48.15):
 // App::handle per request kind, and the template, data model and JSON costs as the number of rows grows. It uses its
 // own database file, which it recreates on every run.
 //
@@ -17,7 +17,8 @@ use Polyspec\Hyper\Build;
 use Polyspec\Hyper\JsonCodec;
 use Polyspec\Hyper\Renderer;
 use Polyspec\Hyper\Request;
-use Polyspec\Template\Value\Bind;
+
+use function Polyspec\Template\bind;
 
 $options = getopt('', ['app:', 'iterations:']);
 if (!isset($options['app'], $options['iterations'])) {
@@ -126,7 +127,7 @@ $renderer = Renderer::open("{$app}/build/program", '+09:00');
 $build = Build::read("{$app}/build/program/build.json");
 $shared = ['title' => '게시판', 'csrf' => $token];
 echo "\n## Scaling with rows (board/rows.tpl)\n\n";
-echo "| Rows | render ms | Bind::value ms | json_encode ms | HTML bytes | JSON bytes |\n";
+echo "| Rows | render ms | bind ms | json_encode ms | HTML bytes | JSON bytes |\n";
 echo "|---:|---:|---:|---:|---:|---:|\n";
 foreach ([10, 100, 1000] as $count) {
     $rows = [];
@@ -148,7 +149,7 @@ foreach ([10, 100, 1000] as $count) {
         fn (): int => strlen($renderer->alone('board/rows.tpl', $boundShared, $boundData)),
     );
     $bind = $measure(max(20, intdiv($iterations, 10)), function () use ($value): int {
-        Bind::value($value);
+        bind($value);
 
         return 0;
     });
@@ -164,9 +165,9 @@ foreach ([10, 100, 1000] as $count) {
     );
 }
 printf(
-    "\nPHP %s, generated PHP template program, template extension %s, %d iterations per request, %s\n",
+    "\nPHP %s, template extension %s, %d iterations per request, %s\n",
     PHP_VERSION,
-    extension_loaded('polyspec_template') ? 'loaded' : 'not loaded',
+    (string) phpversion('polyspec_template'),
     $iterations,
     php_uname('s') . ' ' . php_uname('m'),
 );

@@ -51,8 +51,6 @@ final class BuildSteps
 
     /** The outputs of a program in the order in which the open needs them; true for a directory. */
     private const OUTPUTS = [
-        'php' => true,
-        'program.json' => false,
         'reads.json' => false,
         'build.json' => false,
         'templates' => true,

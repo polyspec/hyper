@@ -33,9 +33,7 @@ final class AppSteps
         'manifest' => 'manifest.json',
         'reads.json' => 'program/reads.json',
         'build.json' => 'program/build.json',
-        'program.json' => 'program/program.json',
         'templates' => 'program/templates',
-        'php' => 'program/php',
     ];
 
     public static function cases(CaseReader $case): void

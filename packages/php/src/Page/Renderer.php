@@ -5,13 +5,18 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 use Polyspec\Template\BoundMap;
-use Polyspec\Template\Program;
-use Polyspec\Template\Render\RuntimeEnvironment;
+use Polyspec\Template\DefineInput;
+use Polyspec\Template\Engine;
+use Polyspec\Template\Environment;
+use Polyspec\Template\FsLoader;
+
+use function Polyspec\Template\bind;
+use function Polyspec\Template\merge;
 
 /**
- * Renders documents and single regions with the generated PHP program of the application, through the API of the
- * template package that the template extension registers under the same names (HY-12, HY-13, HY-30, HY-31,
- * HY-48).
+ * Renders documents and single regions with the template extension `polyspec_template` (HY-12, HY-13, HY-30, HY-31,
+ * HY-48.15): its `Engine` reads the directory `templates` of the server program that `hyper build` of
+ * `@polyspec/hyper-cli` built with an `FsLoader`, as the Node and the Python servers render the same templates.
  * The caller binds each root of a document once with `bind`, and every render merges the bound roots, so the
  * renders of a document check no value again (HY-13, VAL-22).
  *
@@ -22,22 +27,20 @@ final class Renderer
     public const DATA_NAME = 'hyper/data.tpl';
 
     private function __construct(
-        private readonly Program $program,
+        private readonly Engine $program,
         private readonly string $timezone,
     ) {
     }
 
     /**
-     * Opens the program that `hyper build` of `@polyspec/hyper-cli` wrote to a directory.
+     * Opens the server program that `hyper build` of `@polyspec/hyper-cli` wrote to a directory.
      *
-     * @param array<string, callable(): mixed> $functions the host functions of the application (HYC-24)
+     * @param array<string, mixed> $functions the host functions of the application (HYC-24)
      */
     public static function open(string $program, string $timezone, array $functions = []): self
     {
-        // A missing build fails here and names the missing file (HY-48).
+        // HY-48.16: a missing build fails here and names the first missing output.
         $required = [
-            "{$program}/php" => is_dir(...),
-            "{$program}/program.json" => is_file(...),
             "{$program}/reads.json" => is_file(...),
             "{$program}/build.json" => is_file(...),
             "{$program}/templates" => is_dir(...),
@@ -52,72 +55,62 @@ final class Renderer
                 );
             }
         }
-        return new self(self::program($program, $functions), $timezone);
-    }
-
-    /**
-     * Loads the generated program of a program directory (HY-48.7): the PSR-4 files of the namespace that the build
-     * chose, in the directory php, which the autoload of Composer loads through autoload.psr-4 of the application. A
-     * class that the autoload does not load fails with the class and the directory php (HY-48.9).
-     *
-     * @param array<string, callable(): mixed> $functions the host functions of the application (HYC-24)
-     */
-    private static function program(string $program, array $functions): Program
-    {
-        $declaration = json_decode((string) file_get_contents("{$program}/program.json"), true);
-        // HY-106.21: a program file that is not JSON fails the open.
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new HyperValueError(
-                "{$program}/program.json is not valid JSON or UTF-8",
-                'invalid_application',
-            );
+        // HYC-24, RT-5: the engine registers the host functions of the application and fails the open of a name that
+        // is built in or an entry that is not a function, with kind `invalid_application` and the message of the
+        // engine (HYC-24.2, HYC-24.5, HY-106.21).
+        // The extension takes a Closure for each entry, so a callable becomes one and any other entry fails as RT-5
+        // states it.
+        $closures = [];
+        foreach ($functions as $name => $function) {
+            if (!is_callable($function)) {
+                throw new HyperValueError("functions.{$name} is not a function", 'invalid_application');
+            }
+            $closures[$name] = \Closure::fromCallable($function);
         }
-        $namespace = is_array($declaration) ? $declaration['namespace'] ?? null : null;
-        if (!is_string($namespace)) {
-            throw new HyperValueError("{$program}/program.json names no namespace", 'invalid_application');
-        }
-        $class = "{$namespace}\\GeneratedProgram";
-        if (!class_exists($class)) {
-            throw new HyperValueError(
-                "the autoload loads no class {$class} of the server program {$program}; "
-                . "map the namespace {$namespace} to {$program}/php in autoload.psr-4 of composer.json",
-                'invalid_application',
-            );
-        }
-        // HYC-24, RT-5: the host functions of the application are registered by the engine, which fails the open of a
-        // name that is built in or an entry that is not a function, with kind `invalid_application` and the message of
-        // the engine (HYC-24.2, HYC-24.5, HY-106.21).
-        // The class of the binding takes no previous error, so the message of the engine is its message.
         $refused = null;
-        $generated = null;
+        $engine = null;
         try {
-            $generated = new $class(new RuntimeEnvironment(hostFunctions: $functions));
-        } catch (HyperValueError $error) {
-            throw $error;
-        } catch (\InvalidArgumentException $error) {
+            $engine = new Engine(new FsLoader("{$program}/templates"), $closures);
+        } catch (\InvalidArgumentException | \TypeError $error) {
             $refused = $error->getMessage();
         }
-        if ($refused !== null) {
-            throw new HyperValueError($refused, 'invalid_application');
-        }
-        if (!$generated instanceof Program) {
-            throw new HyperValueError(
-                "{$class} of the server program {$program} is not a template program",
-                'invalid_application',
-            );
+        if ($engine === null) {
+            throw new HyperValueError((string) $refused, 'invalid_application');
         }
 
-        return $generated;
+        return new self($engine, $timezone);
     }
 
     /**
-     * Binds a root of the data of a document once, with the bound map of the template package (VAL-22).
+     * Binds a root of the data of a document once, with the bound map of the template extension (VAL-22).
      *
      * @param array<array-key, mixed>|\stdClass $value
      */
     public function bind(array|\stdClass $value): BoundMap
     {
-        return BoundMap::bind($value);
+        // An empty PHP array is a list for the extension; a root is a map, so the empty root binds as an empty object.
+        $plain = self::plain($value);
+
+        return bind($plain === [] ? new \stdClass() : $plain);
+    }
+
+    /**
+     * The value with each `JsonSerializable` replaced by its value, which the binding of the extension keeps as a
+     * native object (HY-44.6); every other value is kept.
+     */
+    private static function plain(mixed $value): mixed
+    {
+        if ($value instanceof \JsonSerializable) {
+            return self::plain($value->jsonSerialize());
+        }
+        if (is_array($value)) {
+            return array_map(self::plain(...), $value);
+        }
+        if ($value instanceof \stdClass) {
+            return (object) array_map(self::plain(...), get_object_vars($value));
+        }
+
+        return $value;
     }
 
     /**
@@ -143,19 +136,17 @@ final class Renderer
         string $build,
     ): string {
         $define = [
-            'build' => ['html' => '<meta name="hyper-build" content="' . $build . '">'],
-            'title' => ['html' => $this->render($title, $shared, [])],
-            'data' => ['html' => $data === null ? '' : $this->render(self::DATA_NAME, $data, [])],
+            'build' => '<meta name="hyper-build" content="' . $build . '">',
+            'title' => $this->render($title, $shared, []),
+            'data' => $data === null ? '' : $this->render(self::DATA_NAME, $data, []),
         ];
         foreach ($regions as $name => $region) {
-            $define[$name] = [
-                'html' => $this->alone(
-                    $region['template'],
-                    $shared,
-                    $region['data'],
-                    $name === $page ? $routeRegions : [],
-                ),
-            ];
+            $define[$name] = $this->alone(
+                $region['template'],
+                $shared,
+                $region['data'],
+                $name === $page ? $routeRegions : [],
+            );
         }
 
         return $this->render($layout, $shared, $define);
@@ -175,20 +166,25 @@ final class Renderer
     ): string {
         $define = [];
         foreach ($routeRegions as $name => $region) {
-            $define[$name] = ['html' => $this->alone($region['template'], $shared, $region['data'])];
+            $define[$name] = $this->alone($region['template'], $shared, $region['data']);
         }
 
-        return $this->render($template, BoundMap::merge($shared, $data), $define);
+        return $this->render($template, merge($shared, $data), $define);
     }
 
-    /** @param array<string, array{html: string}> $define */
+    /**
+     * Renders one template with an assigned bound root and HTML definitions (HY-14). The `FsLoader` reads files, which
+     * the engine does only in `prepare` and `load` (RT-77), so the render is prepared and then rendered.
+     *
+     * @param array<string, string> $define
+     */
     private function render(string $template, BoundMap $assign, array $define): string
     {
-        $options = ['env' => ['timezone' => $this->timezone]];
-        if ($define !== []) {
-            $options['define'] = $define;
-        }
-
-        return $this->program->render($template, $assign, $options);
+        return $this->program->prepareBound(
+            $template,
+            $assign,
+            array_map(static fn (string $html): DefineInput => new DefineInput(null, null, null, $html), $define),
+            new Environment($this->timezone, microtime(true)),
+        )->render();
     }
 }

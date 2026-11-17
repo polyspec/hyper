@@ -248,8 +248,6 @@
       "id": "a_directory_without_any_output_fails_the_open",
       "label": "a directory that holds no output of the build fails the open (HY-48.2)",
       "missing": [
-        "php",
-        "program.json",
         "reads.json",
         "build.json",
         "templates"

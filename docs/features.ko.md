@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 0b614b9a784706935ca919890c9634c6a08c482587ee11a057e2f76ca6673706 -->
+<!-- source-sha256: 2ea2e949077560c59743ff3ba6bb7b4c7610f9c0deb88be9d7f1070406b0e5b1 -->
 # 기능 상태
 
 [English](features.md).
@@ -91,7 +91,7 @@
 | representations | route의 representation: `Accept`로 `text/html`, `application/vnd.hyper+json`, 선언된 type 중에서 고르는 선택, 매니페스트 검사와 열기 검사, session 없는 handler, `Allow`가 있는 405, `HEAD`, 406, 415, 400, handler 응답의 검사, strong `ETag`와 304, `etag(body)`(HY-116부터 HY-122까지) | 진행 중: 세 server가 답하고 모든 case를 통과한다. 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`의 `contracts/representations.json`과 `contracts/client.json` |
 | head | body의 `Content-Length`와 함께 body 없이 그 `GET`으로 답하는 `HEAD` 요청, 그리고 모든 405의 `Allow`(HY-27.4부터 HY-27.6까지) | 진행 중: 세 server와 그 host가 답한다. 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python`의 `contracts/client.json`, `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts` |
 | request-boundary | UTF-8 검사, 상세 없는 500 오류, 데이터 모델 검사, 강화한 세션 쿠키, 리다이렉트 검사, 실패 표시(HY-42 ~ HYC-14) | implemented | `make test-php`, `make test-js`, `make e2e` |
-| benchmark | 서버와 브라우저 성능 측정: 요청 비용, generated 프로그램과 확장 상태 보고, 행 수별 렌더, 첫 화면, `hy-set` 메인 스레드 부하, 이동 중 메모리 | implemented | `make bench`, [성능 측정](operations/benchmark.ko.md) |
+| benchmark | 서버와 브라우저 성능 측정: 요청 비용, 템플릿 확장의 버전, 행 수별 렌더, 첫 화면, `hy-set` 메인 스레드 부하, 이동 중 메모리 | implemented | `make bench`, [성능 측정](operations/benchmark.ko.md) |
 | server-program | json 확장이 필요한 템플릿 확장의 `Engine`과 `FsLoader`로 하는 프로그램 디렉터리 템플릿의 PHP 렌더(HY-48.15) | in progress | `make test-php`, `make parity` |
 | embedded-data | 문서는 reply가 요청할 때만 데이터를 내장하고, 브라우저는 내장 데이터가 없는 페이지의 데이터를 처음 필요할 때 문서 요청 하나로 얻는다(HY-31, HY-92, HYC-7) | implemented | `make test-php`, `make hyper-test-node`, `make test-js` |
 | cdn-deployment | 서버와 CDN 배포(권장)와 정적 셸 배포 | 문서화, 배포 안 함 | [배포](operations/deployment.ko.md) |

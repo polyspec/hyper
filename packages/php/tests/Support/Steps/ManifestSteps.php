@@ -49,7 +49,7 @@ final class ManifestSteps
             }
             rmdir($directory);
         }
-        $read = str_starts_with($raises['message'], "{$program}/php of the server program");
+        $read = str_starts_with($raises['message'], "{$program}/reads.json of the server program");
         $case->compare('read', $read ? true : null);
         $case->compare('raises', $read ? null : $raises);
     }

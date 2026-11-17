@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 25b8748d0d833a683acc51a004ec3cc0eff141bc335647665c1fd6a2d3cad933 -->
+<!-- source-sha256: 608c044e6be119860ceda0bb4d1df193a93faa1c5f881fbdc2099792a3efa819 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 서버는 링크된 template이 더 이상 제공하지 않는 legacy PHP package 대신 template 확장 0.0.28로 렌더한다. `Renderer`는 `templates/`의 `FsLoader` 위에 `Engine`을 열고, engine은 `prepare`와 `load`에서만 파일을 읽으므로(RT-77) 렌더마다 `prepareBound`로 준비하며, HTML 정의는 `DefineInput`으로, 시간대와 시각은 `Environment`로 넘기고, `bind`와 `merge`로 bind한다. 확장이 list로 거부하는 빈 root는 빈 map으로 bind하고, 확장이 native object로 두는 `JsonSerializable`은 bind 전에 그 값으로 바꾼다(HY-44.6). 호출할 수 없는 host function은 `functions.<name> is not a function`으로 open을 실패시킨다. `DataModel`은 `Value\Bind`와 `MapValue` 순회 대신 Python 서버처럼 값을 직접 검사한다. open은 더 이상 `php/`와 `program.json`이 필요 없으므로(HY-48.16), case runner는 open이 `reads.json`에서 실패하면 manifest를 읽은 것으로 보고, `build.json`의 case `a_directory_without_any_output_fails_the_open`은 세 출력을 적으며, `RendererTest`는 generated 프로그램 없는 프로그램 디렉터리를 렌더한다. `benchmarks/server.php`는 `bind`를 잰다(H35.31).
 - `make hyper-install-php`는 template 확장이 요구하는 json 확장 `polyspec_json` 0.0.34를 json release의 Composer repository에서 PIE로 `build/json-ext`에 가져오고(`make json-ext`), `composer.json`은 그 repository와 `ext-polyspec_json`을 적는다. `make hyper-test-php`, `make recipe-run-php`, `make parity`, `make bench-server`, `make bench-server-smoke`는 json 확장, 그다음 template 확장을, PHP 테스트는 그다음 `polyspec_hyper`를 불러온다. template 확장은 링크된 실행에서 `vendor/polyspec/template`이 링크하는 template checkout의 `target/release/libpolyspec_template`이고, 그 밖에는 `build/ext/polyspec_template.so`이다. PHP 서버는 template 확장 없이 렌더하지 않으므로 이 target은 각각 한 번 실행한다. `scripts/check-parity.mts`의 `--extension`과 `startPhp`의 `extensions`는 여러 library를 순서대로 받는다(H35.31).
 - HY-48.4, HY-48.5, HY-48.7, HY-48.8, HY-48.9를 폐기한다. PHP 서버는 Node와 Python 서버처럼 템플릿 확장의 `Engine`과 `FsLoader`로 디렉터리 `templates`를 렌더하므로, autoload로 generated 프로그램 클래스를 불러오지 않고 `php/`도 `program.json`도 읽지 않는다. HY-48.15는 json 확장을 템플릿 확장보다 먼저 불러오는 그 렌더를, HY-48.16은 PHP의 `App::open`이 필요로 하는 출력 `reads.json`, `build.json`, `templates`를 말한다. byte order mark로 시작하거나 잘리거나 UTF-8이 아닌 `program.json`의 PHP case(`app.json`), 없는 `php`나 `program.json`의 case(`build.json`), member `renderer.program`(`interfaces.json`)은 제거하고, `App::open`의 parameter `program`은 HY-48.16을 인용한다(H35.31).
 - 새 statement HY-25.8은 문자열인 flash 이름이나 바뀐 topic이 세 server에서 실패 없이 받아들여진다고 말하며, `result.json`의 case `a_flash_name_that_is_a_string_is_taken`과 `a_changed_topic_that_is_a_string_is_taken`이 이를 인용한다. HY-25.7은 문자열이 아닌 값의 실패만 말하므로 두 case의 `raises: null`에는 근거가 없었다(H35.10-8).
