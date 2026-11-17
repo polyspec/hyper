@@ -5759,7 +5759,8 @@
                       "id": "HY-100.28",
                       "en": "Node: `listener(app, sessions, options)` of the Node server returns the `node:http` request listener that `server` installs.",
                       "ko": "Node: Node 서버의 `listener(app, sessions, options)`는 `server`가 설치하는 `node:http` 요청 listener를 돌려준다.",
-                      "koSource": "7af7bec8316b5885f6a4c64b52f1b3cfd35a773eeadbfc25706475e871f23829"
+                      "koSource": "7af7bec8316b5885f6a4c64b52f1b3cfd35a773eeadbfc25706475e871f23829",
+                      "unimplemented": "H35.44-1"
                     },
                     {
                       "id": "HY-100.29",
@@ -6698,7 +6699,8 @@
                   "id": "HY-106.20",
                   "en": "A host entry of HY-100 is a function of the host code of its server that takes the application as its first argument, `listener(app, sessions, options)` and `server(app, sessions, options)` in Node, `run($app, ...)` in PHP and `create_server(app, ...)`, `create_wsgi(app, ...)` and `create_asgi(app, ...)` in Python, and no member of `App`, because the host code is written by hand in each runtime and `App` is generated from the interface contract.",
                   "ko": "HY-100의 host 진입점은 애플리케이션을 첫 인자로 받는 그 server의 host 코드 함수이며(Node `listener(app, sessions, options)`와 `server(app, sessions, options)`, PHP `run($app, ...)`, Python `create_server(app, ...)`, `create_wsgi(app, ...)`, `create_asgi(app, ...)`), `App`의 member가 아니다. host 코드는 runtime마다 손으로 쓰고 `App`은 interface 계약에서 생성하기 때문이다.",
-                  "koSource": "8935e00202f745c48430a44e97142d2f4cebf2a8907896bd0341e4c95fa975e0"
+                  "koSource": "8935e00202f745c48430a44e97142d2f4cebf2a8907896bd0341e4c95fa975e0",
+                  "unimplemented": "H35.44-1"
                 },
                 {
                   "id": "HY-106.18",

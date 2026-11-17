@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: f84d00802c81b0eeafb7380c0ac49bbc92184295706b123594cbead1f5bf476c -->
+<!-- source-sha256: 4ae637e58d6a7049c4293dff1d885c9ea4d2423287b60875c34b7e5da5e5544c -->
 # 기능 상태
 
 [English](features.md).
@@ -23,6 +23,7 @@
 | core-page-render | 세 서버가 hyper core의 page 렌더로 page를 렌더한다: `packages/rust/src/render.rs`의 `render_document`, `packages/rust/src/steps.rs`의 `Pages`와 `PageRequest`, `packages/rust/src/read_paths.rs`의 `route_reads`와 `template_reads`, 그리고 binding member `Pages`, `PageRequest.next`, `routeReads`, `templateReads` | not implemented: 어떤 서버도 core의 page 렌더를 부르지 않는다. Node 서버(`packages/ts/src/page/page.ts`, `packages/ts/src/app/app.ts`)는 `@polyspec/hyper-client`의 `createApplication`과 `renderDocument`를 거쳐 template의 JS render engine(`@polyspec/template/render`)으로 렌더하고, PHP 서버(`packages/php/src/Page/Renderer.php`)와 Python 서버(`packages/python/src/polyspec/hyper/page/_renderer.py`)는 template Rust core의 binding으로 렌더한다. 두 engine은 template 명세가 거부하는 입력에서 다르다. 분수 숫자 인덱스를 JS engine은 렌더하고 core는 `runtime_type`으로 실패시킨다(H35.32, H35.32-1) | core만 `make core-test` |
 | browser-core-template | browser 코드(`packages/client`)가 template Rust core의 wasm binding으로 렌더한다 | not implemented: browser 코드는 Node 서버처럼 template의 JS render engine(`@polyspec/template/render`)으로 렌더한다(H35.33) | — |
 | session-library-stores | 세 서버가 파일, Redis, Redis Sentinel, Redis Cluster의 세션을 session-store 라이브러리의 저장소에 두고, 그 저장소의 설정을 받으며, 요청의 저장소를 core에 준다(HY-104.25, HY-104.26, HY-104.27, HY-115.28, HY-115.29) | not implemented: Node 서버(`packages/ts/src/session/file-sessions.ts`, `redis-sessions.ts`)와 Python 서버(`polyspec/hyper/session/file_sessions.py`, `redis_sessions.py`)는 파일 저장소와 Redis 저장소를 직접 구현하고, 잠시 쉰 뒤 다시 시도하는 lock을 쓰며, 그 Redis 저장소는 application의 command 함수를 받는다. PHP 서버는 PHP의 세션을 쓴다(`packages/php/src/Session`의 `NativeSession`, `RedisClusterSessions`, `RedisSentinelSessions`). 어느 서버도 저장소와 함께 core의 `opening_functions.open_page`나 `opening_functions.answer_keep_request`를 부르지 않는다(H35.37) | — |
+| host-entry-functions | host 진입점은 애플리케이션을 첫 인자로 받는 host 코드의 함수다: Node `listener(app, sessions, options)`와 `server(app, sessions, options)`, PHP `run($app, ...)`(HY-100.28, HY-106.20) | not implemented: Node 진입점은 `App`의 member `listener`와 `server`(`packages/ts/src/app/app.ts`)이고 PHP 진입점은 `App`의 member `run`(`packages/php/src/App/App.php`)이며, `packages/rust/interface.json`의 host-listener와 host-run 행이 이를 기록한다(H35.44-1) | — |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |
