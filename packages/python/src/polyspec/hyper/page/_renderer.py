@@ -66,7 +66,7 @@ class Renderer:
         try:
             engine = Engine(loader=FsLoader(str(templates)), functions=functions or {})
         except (ValueError, TypeError) as error:
-            # HYC-24.2, HYC-24.5, HY-106.21: a registration that the engine refuses fails the open with kind
+            # HYC-24.9, HYC-24.5, HY-106.21: a registration that the engine refuses fails the open with kind
             # `invalid_application` and the message of the engine.
             raise core_rules().value_error(str(error), "invalid_application") from error
         return Renderer(engine, Engine(loader=FsLoader(str(legacy))), timezone)

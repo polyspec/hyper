@@ -1,5 +1,5 @@
 //! The read data (HY-73.29, HY-73.22): the server keeps of the shared data and of each region's data only the paths
-//! that the templates read. The read paths come from the build (HY-73.23) as a tree whose node is `true` for a path
+//! that the templates read. The read paths come from the build (HY-73.34) as a tree whose node is `true` for a path
 //! read whole and otherwise holds `keys` and `each` (HY-73.3, HY-73.4).
 
 use std::sync::Arc;
@@ -21,7 +21,7 @@ pub enum Read {
 }
 
 impl Read {
-    /// Reads a tree of the read paths of the build (HY-73.23).
+    /// Reads a tree of the read paths of the build (HY-73.34).
     ///
     /// # Errors
     /// `invalid_application` for a node that is neither `true` nor a map of `keys` and `each`.
@@ -41,7 +41,7 @@ impl Read {
                         ("each", child) => each = Some(Box::new(Read::from_value(child)?)),
                         _ => {
                             return Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
-                                "a node of the read paths is not allowed (HY-73.23)",
+                                "a node of the read paths is not allowed (HY-73.34)",
                             )))
                         }
                     }
@@ -55,7 +55,7 @@ impl Read {
             | Value::Safe(_)
             | Value::List(_)
             | Value::Object(_) => Err(Error::InvalidApplication(std::borrow::Cow::Borrowed(
-                "a node of the read paths is not allowed (HY-73.23)",
+                "a node of the read paths is not allowed (HY-73.34)",
             ))),
         }
     }
@@ -151,7 +151,7 @@ pub fn keep(value: &Value, read: &Read) -> Value {
 }
 
 impl Read {
-    /// The value of a node as the build writes it (HY-73.23, HY-73.32): `true` for a path read whole, and otherwise a
+    /// The value of a node as the build writes it (HY-73.34, HY-73.32): `true` for a path read whole, and otherwise a
     /// map with `keys`, when a key is read, in the byte order of the keys, and then `each`, when every entry is read.
     #[must_use]
     pub fn to_value(&self) -> Value {

@@ -570,7 +570,7 @@ fn manifest_checks() {
 
 #[test]
 fn json_text_is_written_and_read() {
-    // HY-54.18 to HY-54.21, HY-44.9: the cases run through the members `rules.json_read` and `rules.json_write`
+    // HY-54.18 to HY-54.21, HY-44.12: the cases run through the members `rules.json_read` and `rules.json_write`
     // of the interface contract, by the core paths that it names.
     use polyspec_hyper::json::{json_read as read, json_write as write};
     let interface: Value = match fs::read_to_string(
@@ -1041,6 +1041,96 @@ fn a_document_holds_its_parts_rendered_alone() {
     assert!(ran > 0);
 }
 
+/// The text with the first text equal to `part` replaced by the place of its name; a part that is empty or not in
+/// the text fails.
+fn placed(text: &str, part: &str, place: &str, id: &Value) -> String {
+    assert!(!part.is_empty(), "{id}: {place} rendered alone is empty");
+    assert!(text.contains(part), "{id}: {place} is not in its place");
+    text.replacen(part, &format!("{{# {place}}}"), 1)
+}
+
+#[test]
+fn the_pages_render_a_document_and_its_parts_alone() -> Result<(), Error> {
+    // HY-12.1, HY-13.1, HY-13.2, HY-13.3: the members `pages.render_parts` and `pages.render_document` of the
+    // contract give every field that a case of the group parts compares, from the inputs of the case alone.
+    use polyspec_hyper::steps::{Map, Pages, PagesOptions};
+    let file = cases("app.json");
+    let mut ran = 0;
+    for case in group(&file, "parts") {
+        let id = &case["id"];
+        let fixture = &file["applications"][text(case, "application")];
+        let pages = Pages::open(
+            fixture["manifest"].to_string().as_bytes(),
+            &templates_of(fixture, "templates"),
+            &data_value("{}")?,
+            &PagesOptions {
+                build: text(fixture, "build").to_owned(),
+                timezone: text(fixture, "timezone").to_owned(),
+                context: false,
+                base_path: String::new(),
+                form_types: Vec::new(),
+                data_base_path: None,
+            },
+        )?;
+        let route = text(case, "route");
+        let shared = map(&case["shared"].to_string());
+        let mut regions = Map::new();
+        for (region, data) in case["regions"].as_object().into_iter().flatten() {
+            regions.insert(region.clone(), map(&data.to_string()));
+        }
+        let parts = match pages.render_parts(route, &shared, &regions, 0.0) {
+            Ok(parts) => parts,
+            Err(error) => panic!("{id}: {error}"),
+        };
+        let document = match pages.render_document(route, &shared, &regions, 0.0) {
+            Ok(document) => document,
+            Err(error) => panic!("{id}: {error}"),
+        };
+        assert_eq!(parts.title, text(case, "title"), "{id}");
+        let alone: serde_json::Map<String, Value> = parts
+            .regions
+            .iter()
+            .map(|(region, html)| (region.to_owned(), Value::from(html.clone())))
+            .collect();
+        assert_eq!(Value::Object(alone), case["parts"], "{id}");
+        let part = |region: &str| match parts.regions.get(region) {
+            Some(html) => html.as_str(),
+            None => panic!("{id}: the region {region} is not rendered alone"),
+        };
+        let manifest = &fixture["manifest"];
+        let mut frame = placed(&document, &parts.title, "title", id);
+        let mut page = None;
+        for region in manifest["regions"].as_array().into_iter().flatten() {
+            let name = text(region, "name");
+            frame = placed(&frame, part(name), name, id);
+            if region["page"] == Value::Bool(true) {
+                page = Some(name);
+            }
+        }
+        assert_eq!(frame, text(case, "frame"), "{id}");
+        if let Some(expected) = case.get("pageFrame") {
+            let Some(page) = page else {
+                panic!("{id}: the manifest has no page region");
+            };
+            let mut page_frame = part(page).to_owned();
+            let routes = manifest["routes"].as_array().into_iter().flatten();
+            let route_regions = routes
+                .filter(|item| item["name"] == case["route"])
+                .flat_map(|item| item["regions"].as_array().into_iter().flatten());
+            for region in route_regions {
+                let name = text(region, "name");
+                if case["regions"].get(name).is_some() {
+                    page_frame = placed(&page_frame, part(name), name, id);
+                }
+            }
+            assert_eq!(page_frame, text_of(expected), "{id}");
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+    Ok(())
+}
+
 #[test]
 fn a_region_that_fails_with_its_kept_values_renders_with_its_loader_data() {
     // HY-38.16, HY-38.17, HY-38.18, HY-31.2, HY-31.3
@@ -1130,11 +1220,21 @@ fn board(context: bool) -> polyspec_hyper::steps::Pages {
 
 /// The application `a_board` under a base path, with client rendering under `/_props` and urlencoded forms.
 fn board_under(context: bool, base_path: &str) -> polyspec_hyper::steps::Pages {
+    pages_of(&cases("app.json"), "a_board", context, base_path)
+}
+
+/// An application of the fixture `applications` of a case file as the steps of a page hold it, every path read whole;
+/// an application without a time zone has `+09:00`, as the runners of the servers give it.
+fn pages_of(
+    file: &Value,
+    name: &str,
+    context: bool,
+    base_path: &str,
+) -> polyspec_hyper::steps::Pages {
     use polyspec_hyper::reads::Read;
     use polyspec_hyper::steps::{Application, Pages, RouteReads};
-    let file = cases("app.json");
-    let (templates, manifest) = application(&file, "a_board");
-    let fixture = &file["applications"]["a_board"];
+    let (templates, manifest) = application(file, name);
+    let fixture = &file["applications"][name];
     let names: Vec<String> = manifest
         .regions
         .iter()
@@ -1167,7 +1267,10 @@ fn board_under(context: bool, base_path: &str) -> polyspec_hyper::steps::Pages {
         templates,
         reads,
         build: text(fixture, "build").to_owned(),
-        timezone: text(fixture, "timezone").to_owned(),
+        timezone: match fixture["timezone"].as_str() {
+            Some(timezone) => timezone.to_owned(),
+            None => "+09:00".to_owned(),
+        },
         context,
         declared: polyspec_hyper::front::Declared {
             base_path: base_path.to_owned(),
@@ -1234,7 +1337,6 @@ fn page_input(
         action,
         csrf: "t".to_owned(),
         changed: Vec::new(),
-        stored: polyspec_hyper::steps::Map::new(),
         keep_cookie: None,
         held_hash: None,
         now: 0.0,
@@ -1260,6 +1362,7 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
             },
             Input::Reply {
                 embeds: false,
+                stored: polyspec_hyper::steps::Map::new(),
                 status: None,
             },
         ],
@@ -1299,6 +1402,7 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
             Input::Absent,
             Input::Reply {
                 embeds: true,
+                stored: polyspec_hyper::steps::Map::new(),
                 status: Some(403),
             },
         ],
@@ -1323,6 +1427,7 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
         page_input("add", PageKind::Html, true),
         vec![Input::Action {
             outcome: ActionOutcome::NoPage,
+            csrf: None,
         }],
     );
     assert_eq!(calls, [Call::Action]);
@@ -1339,6 +1444,7 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
                     status: 422,
                     data: map(r#"{"error":"e"}"#),
                 },
+                csrf: None,
             },
             Input::Context {
                 context: map(r#"{"name":"Board"}"#),
@@ -1349,6 +1455,7 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
             },
             Input::Reply {
                 embeds: false,
+                stored: polyspec_hyper::steps::Map::new(),
                 status: Some(403),
             },
         ],
@@ -1378,6 +1485,451 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
         }
         other => panic!("{other:?}"),
     }
+}
+
+/// The answer of a `POST` of the route `add` whose action returns the page, with the member `csrf` of the action
+/// input; the page input holds the masked value `t`.
+fn answer_after_action(
+    kind: polyspec_hyper::steps::PageKind,
+    outcome: polyspec_hyper::steps::ActionOutcome,
+    csrf: Option<&str>,
+) -> polyspec_hyper::steps::Answer {
+    use polyspec_hyper::steps::Input;
+    let (_, answer) = run_page(
+        &board(false),
+        page_input("add", kind, true),
+        vec![
+            Input::Action {
+                outcome,
+                csrf: csrf.map(str::to_owned),
+            },
+            Input::NoHandler,
+            Input::NoHandler,
+            Input::NoHandler,
+            Input::Reply {
+                embeds: true,
+                stored: polyspec_hyper::steps::Map::new(),
+                status: None,
+            },
+        ],
+    );
+    answer
+}
+
+#[test]
+fn the_page_of_an_action_that_renewed_the_session_holds_the_new_masked_token() {
+    // HY-72.3
+    use polyspec_hyper::steps::{ActionOutcome, Answer, PageKind};
+    let page = || ActionOutcome::Page {
+        status: 422,
+        data: polyspec_hyper::steps::Map::new(),
+    };
+    let json = |outcome, csrf| match answer_after_action(PageKind::DocumentJson, outcome, csrf) {
+        Answer::Json { text, .. } => text,
+        other => panic!("{other:?}"),
+    };
+    // The masked value of the action input replaces that of the page input in the shared data.
+    let text = json(page(), Some("renewed"));
+    assert!(text.contains(r#""csrf":"renewed""#), "{text}");
+    assert!(!text.contains(r#""csrf":"t""#), "{text}");
+    // An action that lets REVISION_CHANGED escape after it renewed the session renders the 409 page with it.
+    let text = json(ActionOutcome::RevisionChanged, Some("renewed"));
+    assert!(text.contains(r#""csrf":"renewed""#), "{text}");
+    // An action that did not renew the session keeps the masked value of the page input.
+    let text = json(page(), None);
+    assert!(text.contains(r#""csrf":"t""#), "{text}");
+    // The form of a document holds the same value.
+    match answer_after_action(PageKind::Html, page(), Some("renewed")) {
+        Answer::Document { html, .. } => {
+            assert!(
+                html.contains(r#"<input type="hidden" name="_csrf" value="renewed">"#),
+                "{html}"
+            );
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
+/// A value of a case as a host gives it to a step, without the check of the data model: a number is its double.
+fn host_value(json: &Value) -> polyspec_template::Value {
+    use polyspec_template::Value as Data;
+    match json {
+        Value::Null => Data::Null,
+        Value::Bool(flag) => Data::Bool(*flag),
+        Value::Number(number) => match number.as_f64() {
+            Some(double) => Data::Number(double),
+            None => panic!("{number} has no double"),
+        },
+        Value::String(text) => Data::text(text.as_str()),
+        Value::Array(items) => Data::list(items.iter().map(host_value).collect()),
+        Value::Object(members) => {
+            let mut map = polyspec_template::OrderedMap::new();
+            for (key, member) in members {
+                map.insert(key.clone(), host_value(member));
+            }
+            Data::map(map)
+        }
+    }
+}
+
+/// The map that a handler of a case returns, as a host gives it to a step.
+fn host_map(json: &Value) -> polyspec_hyper::steps::Map<polyspec_template::Value> {
+    let mut map = polyspec_hyper::steps::Map::new();
+    for (key, member) in json.as_object().into_iter().flatten() {
+        map.insert(key.clone(), host_value(member));
+    }
+    map
+}
+
+/// The kind of the page of the request of a case (HY-15), by its headers `Accept` and `HX-Request`.
+fn case_kind(case: &Value) -> polyspec_hyper::steps::PageKind {
+    use polyspec_hyper::steps::PageKind;
+    let headers = &case["request"]["headers"];
+    let json = headers["Accept"]
+        .as_str()
+        .is_some_and(|accept| accept.contains("application/vnd.hyper+json"));
+    match (json, headers["HX-Request"].as_str()) {
+        (false, _) => PageKind::Html,
+        (true, Some("true")) => PageKind::RegionJson,
+        (true, _) => PageKind::DocumentJson,
+    }
+}
+
+/// The name of the route of the fixture whose path is the target of the request of a case.
+fn case_route(file: &Value, case: &Value) -> String {
+    let application = &file["applications"][text(case, "application")];
+    let target = text(&case["request"], "target");
+    let routes = application["manifest"]["routes"].as_array();
+    match routes
+        .into_iter()
+        .flatten()
+        .find(|route| route["path"] == target)
+    {
+        Some(route) => text(route, "name").to_owned(),
+        None => panic!("{}: no route has the path {target}", case["id"]),
+    }
+}
+
+#[test]
+fn the_data_model_cases_of_the_context_file_run_as_the_steps_of_a_page() {
+    // HY-44.2, HY-44.3, HY-44.11, HY-44.12: every case of `cases` of context.json that names HY-44. The context handler
+    // returns the context of the case or of its application, the shared handler the member `shared` of the case or of
+    // its application, and each loader the entry of `loaders` of its route or region. A case with status 500 fails
+    // with a failure that contains its `failure`, and a case with status 200 answers.
+    use binding_core::Failure;
+    use polyspec_hyper::steps::{Answer, Call, Input, PageRequest, Step};
+    let file = cases("context.json");
+    let mut ran = 0;
+    for case in group(&file, "cases") {
+        let names = case["requirements"].as_array().into_iter().flatten();
+        if !names.into_iter().any(|name| name == "HY-44") {
+            continue;
+        }
+        let id = &case["id"];
+        let fixture = &file["applications"][text(case, "application")];
+        let route = case_route(&file, case);
+        let pages = pages_of(
+            &file,
+            text(case, "application"),
+            fixture.get("context").is_some(),
+            "",
+        );
+        let mut page = match PageRequest::new(&pages, &page_input(&route, case_kind(case), false)) {
+            Ok(page) => page,
+            Err(error) => panic!("{id}: {error}"),
+        };
+        let given = |key: &str| case.get(key).or_else(|| fixture.get(key));
+        let loaded = |name: &str| match fixture["loaders"].get(name) {
+            Some(data) => Input::Loaded {
+                data: host_map(data),
+            },
+            None => Input::NoHandler,
+        };
+        let mut input = Input::Start;
+        let result = loop {
+            match page.next(&input) {
+                Ok(Step::Call { call }) => {
+                    input = match call {
+                        Call::Context => {
+                            let context: Value = match given("context")
+                                .map(|context| serde_json::from_str(text_of(context)))
+                            {
+                                Some(Ok(context)) => context,
+                                other => panic!("{id}: {other:?}"),
+                            };
+                            Input::Context {
+                                context: host_map(&context),
+                            }
+                        }
+                        Call::Shared => match given("shared") {
+                            Some(shared) => Input::Shared {
+                                shared: host_map(shared),
+                            },
+                            None => Input::NoHandler,
+                        },
+                        Call::RouteLoader => loaded(&route),
+                        Call::RouteRegionLoader { region } | Call::RegionLoader { region } => {
+                            loaded(&region)
+                        }
+                        Call::Reply => Input::Reply {
+                            embeds: false,
+                            stored: polyspec_hyper::steps::Map::new(),
+                            status: None,
+                        },
+                        Call::Action => panic!("{id}: the case has no action"),
+                    };
+                }
+                Ok(Step::Answer { answer }) => break Ok(answer),
+                Err(failure) => break Err(failure),
+            }
+        };
+        match (&case["status"], result) {
+            (status, Err(Failure::Kind(error))) if *status == 500 => {
+                let failure = text(case, "failure");
+                assert!(
+                    error.to_string().contains(failure),
+                    "{id}: the failure `{error}` does not contain `{failure}`"
+                );
+            }
+            (
+                status,
+                Ok(Answer::Document { status: found, .. } | Answer::Json { status: found, .. }),
+            ) if *status == 200 => assert_eq!(found, 200, "{id}"),
+            (status, other) => panic!("{id}: status {status}, and the page gave {other:?}"),
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
+}
+
+#[test]
+fn a_kept_value_that_a_loader_stores_is_in_kept_of_its_response() {
+    // HY-38.20: the session holds no kept value when the request starts, and the loader of the route region `rows`
+    // stores `open` while it runs. The host gives the stored kept values where the page takes them, with its reply.
+    use polyspec_hyper::steps::{Answer, Call, Input, Map, PageKind, PageRequest, Step};
+    let app = board(false);
+    let session = std::cell::RefCell::new(Map::new());
+    let given = page_input("list", PageKind::DocumentJson, false);
+    let mut page = match PageRequest::new(&app, &given) {
+        Ok(page) => page,
+        Err(error) => panic!("{error}"),
+    };
+    let mut input = Input::Start;
+    let answer = loop {
+        match page.next(&input) {
+            Ok(Step::Call { call }) => {
+                input = match call {
+                    Call::RouteRegionLoader { .. } => {
+                        session
+                            .borrow_mut()
+                            .insert("rows".to_owned(), map(r#"{"open":true}"#));
+                        Input::Loaded {
+                            data: map(r#"{"items":[],"open":false,"tags":[]}"#),
+                        }
+                    }
+                    Call::Reply => Input::Reply {
+                        embeds: false,
+                        stored: session.borrow().clone(),
+                        status: None,
+                    },
+                    _ => Input::NoHandler,
+                };
+            }
+            Ok(Step::Answer { answer }) => break answer,
+            Err(error) => panic!("{error}"),
+        }
+    };
+    match answer {
+        Answer::Json { text, .. } => {
+            assert!(text.contains(r#""kept":{"rows":{"open":true}}"#), "{text}");
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
+/// The value kind `applicationObject` of app.json, which a host gives as a native object (VAL-19).
+#[derive(Debug)]
+struct ApplicationObject;
+
+impl polyspec_template::TemplateObject for ApplicationObject {
+    fn member(
+        &self,
+        _key: &str,
+    ) -> Result<Option<polyspec_template::Value>, polyspec_template::HostError> {
+        Ok(None)
+    }
+
+    fn call(
+        &self,
+        _method: &str,
+        _args: &[polyspec_template::Value],
+    ) -> Option<Result<polyspec_template::Value, polyspec_template::HostError>> {
+        None
+    }
+}
+
+/// The value of a step `return` of a handler of app.json: the kind `applicationObject` is a native object, and every
+/// other reference `$`, which reads a service, a flash value or the request of a server, is null.
+fn returned_value(json: &Value) -> polyspec_template::Value {
+    use polyspec_template::Value as Data;
+    match json {
+        Value::Object(members) if members.contains_key("$") => {
+            if members.get("$") == Some(&Value::from("kind"))
+                && members.get("name") == Some(&Value::from("applicationObject"))
+            {
+                Data::object(ApplicationObject)
+            } else {
+                Data::Null
+            }
+        }
+        Value::Object(members) => {
+            let mut map = polyspec_template::OrderedMap::new();
+            for (key, member) in members {
+                map.insert(key.clone(), returned_value(member));
+            }
+            Data::map(map)
+        }
+        Value::Array(items) => Data::list(items.iter().map(returned_value).collect()),
+        other => host_value(other),
+    }
+}
+
+/// Whether a handler of a case holds a step of a word.
+fn has_step(handlers: &Value, word: &str) -> bool {
+    match handlers {
+        Value::Array(steps) => steps.iter().any(|step| step.get(word).is_some()),
+        Value::Object(members) => members.values().any(|member| has_step(member, word)),
+        _ => false,
+    }
+}
+
+/// The result of a handler of app.json for a step of a page: the map of its step `return`, or no handler. A step
+/// `store` before it sets each of its keys in the session store of the request, as the field `stored` of a case
+/// gives them.
+fn handler_result(
+    steps: Option<&Value>,
+    session: &mut serde_json::Map<String, Value>,
+) -> polyspec_hyper::steps::Input {
+    use polyspec_hyper::steps::{Input, Map};
+    let steps = steps.and_then(Value::as_array);
+    for step in steps.into_iter().flatten() {
+        for (key, value) in step["store"].as_object().into_iter().flatten() {
+            session.insert(key.clone(), value.clone());
+        }
+    }
+    let returned = steps.and_then(|steps| steps.iter().find_map(|step| step.get("return")));
+    let Some(returned) = returned else {
+        return Input::NoHandler;
+    };
+    let mut data = Map::new();
+    for (key, member) in returned.as_object().into_iter().flatten() {
+        data.insert(key.clone(), returned_value(member));
+    }
+    Input::Loaded { data }
+}
+
+#[test]
+fn the_cases_of_the_app_file_that_the_steps_of_a_page_decide() {
+    // HY-44.10, HY-38.20: every case of `cases` of app.json that names HY-44 and states `handlerCalls`, and every
+    // case with a handler that holds a step `store`. A handler of the case replaces the handler of its application.
+    // The calls that the page asks for, written as `firstCalls` writes them, are the `handlerCalls` of the case, and
+    // the host gives the kept values that the session store holds under `_hyper_keep` when the page asks for its
+    // reply, so the member `kept` of the answer is that of `members`.
+    use polyspec_hyper::steps::{Answer, Call, Input, Map, PageRequest, Step};
+    let file = cases("app.json");
+    let mut ran = 0;
+    for case in group(&file, "cases") {
+        let mut names = case["requirements"].as_array().into_iter().flatten();
+        let moment = case.get("handlerCalls").is_some() && names.any(|name| name == "HY-44");
+        if !moment && !has_step(&case["handlers"], "store") {
+            continue;
+        }
+        let id = &case["id"];
+        let mut session = match case["stored"].as_object() {
+            Some(stored) => stored.clone(),
+            None => serde_json::Map::new(),
+        };
+        let name = text(case, "application");
+        let fixture = &file["applications"][name];
+        let route = case_route(&file, case);
+        let handler = |path: &[&str]| {
+            let find = |handlers: &Value| {
+                path.iter()
+                    .try_fold(handlers, |holder, key| holder.get(*key))
+                    .cloned()
+            };
+            find(&case["handlers"]).or_else(|| find(&fixture["handlers"]))
+        };
+        let pages = pages_of(&file, name, fixture.get("context").is_some(), "");
+        let mut page = match PageRequest::new(&pages, &page_input(&route, case_kind(case), false)) {
+            Ok(page) => page,
+            Err(error) => panic!("{id}: {error}"),
+        };
+        let mut calls = Vec::new();
+        let mut input = Input::Start;
+        let result = loop {
+            match page.next(&input) {
+                Ok(Step::Call { call }) => {
+                    let path: Vec<&str> = match &call {
+                        Call::Shared => {
+                            calls.push("shared".to_owned());
+                            vec!["shared"]
+                        }
+                        Call::RouteLoader => {
+                            calls.push(format!("load:{route}"));
+                            vec!["routes", &route, "load"]
+                        }
+                        Call::RouteRegionLoader { region } => {
+                            calls.push(format!("region:{region}"));
+                            vec!["routes", &route, "regions", region]
+                        }
+                        Call::RegionLoader { region } => {
+                            calls.push(format!("region:{region}"));
+                            vec!["regions", region]
+                        }
+                        Call::Reply => Vec::new(),
+                        Call::Action | Call::Context => {
+                            panic!("{id}: the case has no action and no context")
+                        }
+                    };
+                    input = match (&call, handler_result(handler(&path).as_ref(), &mut session)) {
+                        (Call::Reply, _) => {
+                            let mut stored = Map::new();
+                            let kept = session.get("_hyper_keep").and_then(Value::as_object);
+                            for (region, paths) in kept.into_iter().flatten() {
+                                stored.insert(region.clone(), host_map(paths));
+                            }
+                            Input::Reply {
+                                embeds: false,
+                                stored,
+                                status: None,
+                            }
+                        }
+                        (Call::Shared, Input::Loaded { data }) => Input::Shared { shared: data },
+                        (_, result) => result,
+                    };
+                }
+                Ok(Step::Answer { answer }) => break Ok(answer),
+                Err(failure) => break Err(failure),
+            }
+        };
+        if let Some(expected) = case.get("handlerCalls") {
+            assert_eq!(&Value::from(calls), expected, "{id}: the handler calls");
+        }
+        match (&case["status"], result) {
+            (status, Err(_)) if *status == 500 => {}
+            (status, Ok(Answer::Json { status: 200, text })) if *status == 200 => {
+                let body: Value = match serde_json::from_str(&text) {
+                    Ok(body) => body,
+                    Err(error) => panic!("{id}: {error}"),
+                };
+                assert_eq!(body["kept"], case["members"]["kept"], "{id}: kept");
+            }
+            (status, other) => panic!("{id}: status {status}, and the page gave {other:?}"),
+        }
+        ran += 1;
+    }
+    assert!(ran > 0);
 }
 
 #[test]
@@ -1700,10 +2252,6 @@ fn the_session_of_a_page_and_of_the_kept_endpoint() -> Result<(), binding_core::
         polyspec_hyper::csrf::mask(&first, &mask).map_err(binding_core::Failure::Kind)?
     );
     assert_eq!(input.changed, ["count", "path"]);
-    assert!(input
-        .stored
-        .get("rows")
-        .is_some_and(|paths| paths.is_empty()));
     assert!(flash.get("note").is_some());
     // The flash data belongs to the next request alone, and the token stays (HY-25.2, HY-24.1).
     let Opened::Page {
@@ -1791,7 +2339,7 @@ fn hex_bytes(text: &str) -> Vec<u8> {
 
 #[test]
 fn the_build_id_of_the_files_of_a_build() {
-    // HY-125.3, HY-125.15, HY-125.17, HY-125.18
+    // HY-125.3, HY-125.15, HY-125.17, HY-125.23
     use polyspec_hyper::build::{file_text, hashed, id, stream, Output};
     let file = cases("context.json");
     let mut ran = 0;
@@ -1845,7 +2393,7 @@ fn the_build_id_of_the_files_of_a_build() {
 
 #[test]
 fn a_build_file_holds_a_build_id() {
-    // HY-125.18, HY-125.19
+    // HY-125.23, HY-125.19
     use polyspec_hyper::build::read;
     let file = cases("build.json");
     let mut ran = 0;
@@ -1928,7 +2476,7 @@ fn the_read_paths_of_a_template() {
 
 #[test]
 fn the_read_paths_of_the_routes() {
-    // HY-73.18, HY-73.19, HY-73.23, HY-73.32
+    // HY-73.18, HY-73.19, HY-73.34, HY-73.32
     use polyspec_hyper::read_paths::route_reads;
     use polyspec_hyper::steps::route_reads as from_build;
     let file = cases("reads.json");
@@ -1944,7 +2492,7 @@ fn the_read_paths_of_the_routes() {
                     "{}",
                     case["id"]
                 );
-                // The pages read the value as the build writes it (HY-73.23).
+                // The pages read the value as the build writes it (HY-73.34).
                 if let Err(error) = from_build(&routes) {
                     panic!("{}: {error}", case["id"]);
                 }

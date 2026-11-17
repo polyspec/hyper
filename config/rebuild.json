@@ -122,10 +122,6 @@
       "kind": "ecosystem",
       "tool": "node:child_process starts the servers of a run and node:fs and node:os give each run its temporary directory (HR-87, HR-89)"
     },
-    "scripts/build-templates.mts": {
-      "kind": "ecosystem",
-      "tool": "@polyspec/template parses the templates, through writeTemplateFiles of packages/cli/lib/template-files.mjs"
-    },
     "scripts/check-bundle-size.mts": {
       "kind": "ecosystem",
       "tool": "node:zlib measures the gzip and brotli sizes against the limits of config/bundle-size.json"
@@ -255,10 +251,6 @@
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },
     "scripts/recipe/run.mts": {
-      "kind": "policy",
-      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
-    },
-    "scripts/recipe/selftest.mts": {
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },

@@ -22,7 +22,7 @@ const OUTPUTS = [
   'packages/client/dist.next-12345/index.js',
   'packages/ts/dist/index.js',
   'packages/php/tests/build/server/php/GeneratedProgram.php',
-  'packages/ts/tests/build/templates.index.json',
+  'packages/ts/tests/build/program/reads.json',
   'examples/board/build/program/php/GeneratedProgram.php',
   'examples/board/build/client.next-12345/csr/index.html',
   'examples/board/public/assets/hyper-ABC123.js',

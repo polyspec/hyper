@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: eca1ebee98767d6bbe41b70efcd2a961e54c46696852a4297b11fa8f2d21106a -->
+<!-- source-sha256: e38350b5f968da57cf2cfdfb3cbdf37b0fbe7498fc0f321eb74878e90a3c5435 -->
 # 배포
 
 [English](deployment.md).
@@ -28,7 +28,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 `make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. PHP는 템플릿 확장 `polyspec_template`으로 `build/program/templates/`를 렌더한다. 서버의 PHP 버전에 맞춰 빌드한 json 확장 `polyspec_json`과 그다음 템플릿 확장을 `php.ini`의 `extension` 설정으로 불러온다(HY-48.15).
 
-build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). `public/assets`는 아직 열린 페이지가 불러오는 이전 build의 파일을 담으므로, 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다(HR-34).
+build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). `public/assets`는 아직 열린 페이지가 불러오는 앞선 build의 파일을 담으므로, 배포에서 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다. build는 자기 애플리케이션 디렉터리에서 앞선 build의 파일을 남기고, 두 목록 전 build의 파일 중 더 새로운 두 목록이 모두 적지 않는 것을 지우므로(HR-34, HYC-16.18), 앞선 build의 페이지는 다른 build 하나 동안 거기서도 자기 파일을 찾는다.
 
 ### 애플리케이션이 바꾸는 경로
 
@@ -37,7 +37,7 @@ build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을
 - 호출: 전과 같은 `--api`, `--static`, `--php-namespace`를 가진 `hyper build --app <디렉터리> --output <디렉터리>` 한 번의 실행. option `--build`는 없고, 매니페스트와 템플릿은 `--app`의 `app/app.json`과 `templates/`에서 읽는다.
 - 프로그램 디렉터리: 서버 build의 `--output` 디렉터리 대신 `<output>/program`, 그리고 `composer.json`의 생성된 프로그램 PSR-4 경로 `<output>/program/php/`.
 - 레이아웃의 매니페스트: `<output>/manifest.json` 대신 `<output>/client/manifest.json`. `hyper` 말고도 이름마다 각 에셋의 URL을 담는다.
-- Node 서버: `App.open`의 option `build`는 `<output>/client/build.json`을, `templates.index`는 `<output>/client/templates.index.json`을 가리킨다.
+- Node 서버: `App.open`의 option `program`은 PHP 서버와 Python 서버가 받는 것처럼 `<output>/program`을 가리킨다. option `build`와 `templates`는 없다(HY-48.19).
 - 정적 셸: `<output>/csr/` 대신 `<output>/client/csr/`.
 - `--tailwind <source>=<output>`의 stylesheet나 애플리케이션이 build 뒤에 `public/assets` 아래에 쓰던 파일: `--tailwind <source>=<name>`이나 `--asset <name>=<path>`로 바꾸고, 레이아웃은 `client/manifest.json`의 `<name>` URL을 link한다. build 뒤에 바뀌는 출력은 없다(HR-77).
 

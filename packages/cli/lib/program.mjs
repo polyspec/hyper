@@ -9,7 +9,7 @@
 //   php/          with a PHP namespace: the generated PHP program of the same templates, compiled with the compiler
 //                 package @polyspec/template-compiler into that namespace as PSR-4 files, one class per file
 //   program.json  with a PHP namespace: the namespace of the generated program
-//   build.json    {"build":"<id>"}, written by writeBuildFile (HY-125.18)
+//   build.json    {"build":"<id>"}, written by writeBuildFile (HY-125.23)
 // The intermediate files of the compilation, the type manifest and the AST graph, lie in a temporary directory that
 // the assembly removes, not in the program.
 // The assembly has two parts. This module computes the content of the files with the template library, the compiler
@@ -60,7 +60,7 @@ export function programFiles({ manifest, templates, phpNamespace }) {
   }
   /** @type {[string, string][]} */
   const files = phpNamespace === undefined ? [] : phpFiles({ manifest, parsed, templates, phpNamespace });
-  // HY-73.23: the core computes the read paths from the manifest and the template sources and writes their text.
+  // HY-73.34: the core computes the read paths from the manifest and the template sources and writes their text.
   files.push(['reads.json', readsFile(Buffer.from(JSON.stringify(manifest)), sources)]);
   return { count: parsed.size, files };
 }
