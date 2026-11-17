@@ -532,7 +532,15 @@ cargo-lock: ## Write Cargo.lock for the crates of CRATES with cargo update, in a
 # packages of PACKAGES alone, in the private root and in the board, whose manifests pin the polyspec packages by their
 # exact versions; it fails without PACKAGES, in a dry run too, because an update of every package resolves each range
 # at the time of the run (HR-89). Neither reads a link: `make link` changes no manifest and no lock of uv or Composer.
-.PHONY: python-lock composer-lock
+# npm-lock runs `npm install --package-lock-only --ignore-scripts`, which writes the lock and installs nothing, for the
+# root and for tests/package-install, whose own .npmrc npm reads through --prefix. A lock records each polyspec package by
+# the URL of its release asset with its integrity and every other package by the exact version that its manifest names,
+# and npm keeps a locked version that its manifest still allows, so the run resolves no range anew.
+.PHONY: npm-lock python-lock composer-lock
+npm-lock: ## Write package-lock.json of the root and of tests/package-install from their manifests with npm install --package-lock-only; ONLINE
+	$(ONLINE) $(NPM) install --package-lock-only --ignore-scripts
+	$(ONLINE) $(NPM) install --package-lock-only --ignore-scripts --prefix tests/package-install
+
 python-lock: ## Write packages/python/uv.lock from pyproject.toml with uv lock; ONLINE
 	$(ONLINE) $(UV) lock --project $(PYTHON_PACKAGE)
 

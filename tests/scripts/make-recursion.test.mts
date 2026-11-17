@@ -98,6 +98,17 @@ test('a dry run of bindings-scaffold prints binding scaffold with the cargo of t
 // path with the offline settings lifted, since the tool downloads what it locks.
 const ONLINE = 'env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK';
 
+test('a dry run of npm-lock prints npm install of the lock alone for the root and for tests/package-install by the absolute path of the npm of the checkout (H35.41)', () => {
+  const npm = path.join(ROOT, 'var/tools/bin/npm');
+  const lines = dryRun('npm-lock');
+  // --package-lock-only installs nothing, and --ignore-scripts runs no script of a package; --prefix names the second
+  // project, whose .npmrc npm then reads, as make install-packages names the project of the recipe reader.
+  assert.deepEqual(lines.slice(-2), [
+    `${ONLINE} ${npm} install --package-lock-only --ignore-scripts`,
+    `${ONLINE} ${npm} install --package-lock-only --ignore-scripts --prefix tests/package-install`,
+  ], lines.join('\n'));
+});
+
 test('a dry run of python-lock prints uv lock of the Python package by the absolute path of the uv of the checkout (H35.41)', () => {
   const lines = dryRun('python-lock');
   assert.equal(lines.at(-1), `${ONLINE} ${path.join(ROOT, 'var/tools/mise/shims/uv')} lock --project packages/python`, lines.join('\n'));

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c8158a1ebb571ed8708aeb3bb9d6f800f2a9abc684a914f7ccf45dca3c572904 -->
+<!-- source-sha256: 0cd8714b614b403868ac82ddfb0776dd40c087ab02b3fc8657ab69a0d67948dd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 어떤 target도 root와 `tests/package-install`의 `package-lock.json`을 쓰지 않았다. 요구가 바뀐 뒤 `npm install --package-lock-only`는 각각에서 손으로 실행하는 명령이었다. 이제 `make npm-lock`이 둘 모두에 `--ignore-scripts`와 함께, 두 번째는 `--prefix`로, checkout의 npm을 절대 경로로 `$(ONLINE)`을 통해 실행한다. 아무것도 설치하지 않는다. root `package.json`은 패키지 하나를 range로 적는다: `ajv` `^8.20.0`이며, npm은 range가 허용하는 동안 그 lock된 버전을 그대로 둔다(H35.41).
 - 어떤 target도 `packages/python/uv.lock`, `composer.lock`, `examples/board/composer.lock`을 쓰지 않았다. 요구가 바뀐 뒤 `uv lock`과 `composer update`는 손으로 실행하는 명령이었다. 이제 `make python-lock`이 Python package에 `uv lock`을 실행하고, `make composer-lock PACKAGES="<vendor/package> ..."`가 private root와 board에서 적은 패키지에 `composer update --no-install`을 실행한다. 모든 패키지의 update는 실행 시점에 각 range를 해석하므로 `PACKAGES` 없이는 dry run에서도 실패한다. 각 target은 checkout의 도구를 절대 경로로 `$(ONLINE)`을 통해 시작하며, `composer-lock`은 Composer를 시작하는 모든 target처럼 checkout의 PHP를 먼저 검사한다(H35.41).
 - 세 서버는 file 제한을 두 번 검사한다. route 전에 `App`의 `dispatch`에서, 그리고 token 뒤에 action과 `/_hyper/keep`에 대해 `fileOver`로 검사한다. 이제 `docs/plans/execution/plan.md`는 세 서버의 행 번호와 함께 다음을 적는다. 둘째 검사는 첫째와 같은 요청, 같은 application의 제한을 읽고, route나 action은 자기 제한을 갖지 않으며(HY-114.1), `multipart/form-data`가 form 타입이 아닌 곳에서 파일을 가진 요청은 token 전에 415를 받으므로, 둘째 검사는 답하는 일이 없다. HY-114.7은 body를 읽는 동안의 검사 하나를 정하며 바뀌지 않는다. 세 서버에서 둘째 검사를 제거하는 것이 그 row의 남은 부분이다. `contracts/app.json`의 file 제한 case 둘은 제거 전과 후에 모두 통과한다(H35.36-6).
 - HY-59.4를 retire하고 HY-59.15가 대신한다. HY-59.4는 한도보다 큰 body에 "모든 요청에 대해 그리고 HY-42 전에" 상태 413을 주었고, HY-131.26은 잘못된 byte가 body 제한보다 먼저 오는 body에 413이 아니라 400을 준다. 조각 단위로 읽는 body에서 둘은 어긋났다. HY-59.15는 한 규칙을 정한다. 413은 경로, query, header, 한 값으로 보유한 body에 대한 HY-42의 검사보다 먼저 온다. 조각 단위로 읽는 body에서는 byte가 먼저 오는 실패가 답하므로, 한도 전의 잘못된 byte는 뒤의 byte가 한도를 넘어도 400을 받는다. 한도보다 큰 `Content-Length`는 byte가 무엇이든 413을 받는다. 서버는 이를 지키지 않는다. `RequestBody.feed`는 reader가 실패한 뒤에 true를 돌려주고, host는 계속 먹이며, 그 뒤 body 제한을 넘는 body는 413을 받는다. `docs/plans/execution/plan.md`는 그 row의 Red인 section `streamed`의 case와 chunked body의 host 테스트를 적는다. 둘 다 지금 실패하므로 추가하지 않는다. HY-59.4를 인용하던 statement, `contracts/interfaces.json`의 텍스트, 소스의 주석, 테스트 제목 셋은 HY-59.15를 인용한다(H35.36-5).

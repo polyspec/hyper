@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 096ee507e7f130965820a1f9b9052e23e735b538e3dba91fe80a4dd61c60b5d6 -->
+<!-- source-sha256: 57041eddaba46db087b940d2cbd4915e16fe8b75859ec4be51ecb9b6e65f578c -->
 # 개발
 
 [English](development.md).
@@ -27,6 +27,7 @@
 | `make layout-check` | `config/layout.kit.yml`을 extend하는 `config/layout.yml`에 대해 `var/tools`의 alint로 폴더 배치를 검사한다 |
 | `make hyper-install` | pin한 도구를 설치하고, `$(ONLINE)`을 거쳐 template release의 Composer repository에서 PIE로 네이티브 확장을 build하며(`make template-ext`; H14.1-7, H27.45), `make hyper-install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HR-70) |
 | `make hyper-install-python` | kit의 `python-venv` 유틸리티로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 새로 만들고, release의 template wheel을 포함한 의존성과 함께 package를 non-editable로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
+| `make npm-lock` | 요구가 바뀐 뒤, checkout의 npm의 `npm install --package-lock-only --ignore-scripts`로 `$(ONLINE)`을 통해 root와 `tests/package-install`의 `package-lock.json`을 그 manifest에서 쓴다. 아무것도 설치하지 않는다. 이 실행은 실행 시점에 range를 해석하지 않는다. manifest는 모든 polyspec 패키지를 release asset의 URL이나 정확한 버전으로, 다른 모든 패키지를 정확한 버전으로 적으며, npm은 manifest가 여전히 허용하는 lock된 버전을 그대로 둔다. range는 root의 `ajv` `^8.20.0` 하나이며, 그 lock된 버전은 manifest가 배제할 때까지 남는다(H35.41) |
 | `make python-lock` | Python package의 요구가 바뀐 뒤, checkout의 uv의 `uv lock`으로 `$(ONLINE)`을 통해 `pyproject.toml`에서 `packages/python/uv.lock`을 쓴다. uv는 manifest가 여전히 허용하는 lock된 버전을 그대로 둔다(H35.41) |
 | `make composer-lock PACKAGES="<vendor/package> ..."` | manifest에서 pin이 바뀐 뒤, checkout의 Composer의 `composer update --no-install`로 `$(ONLINE)`을 통해 적은 패키지에 대해서만 `composer.lock`과 `examples/board/composer.lock`을 쓴다. 모든 패키지의 update는 실행 시점에 각 range를 해석하므로 `PACKAGES` 없이는 실패한다(HR-89, H35.41) |
 | `make hyper-php-install` | `packages/php`를 가리키는 symbolic link로 `polyspec/hyper`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
