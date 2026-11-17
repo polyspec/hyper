@@ -235,34 +235,6 @@
       "message": "{program}/templates"
     },
     {
-      "id": "a_program_without_php_fails_the_open_with_its_path",
-      "label": "a program directory without `php` fails the open with the absolute path of `php` (HY-48.2)",
-      "missing": [
-        "php"
-      ],
-      "message": "{program}/php",
-      "only": {
-        "languages": [
-          "php"
-        ],
-        "sentence": "HY-48.8"
-      }
-    },
-    {
-      "id": "a_program_without_program_json_fails_the_open_with_its_path",
-      "label": "a program directory without `program.json` fails the open with the absolute path of `program.json` (HY-48.2)",
-      "missing": [
-        "program.json"
-      ],
-      "message": "{program}/program.json",
-      "only": {
-        "languages": [
-          "php"
-        ],
-        "sentence": "HY-48.8"
-      }
-    },
-    {
       "id": "the_first_missing_output_is_named",
       "label": "a program directory without reads.json, build.json and templates fails the open with the path of reads.json, the first of them (HY-48.2)",
       "missing": [

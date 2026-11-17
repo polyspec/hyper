@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 4cf38722d04efb048991a38cc7d034d9892462e5f2d75cc9fe45d31e106c82ec -->
+<!-- source-sha256: eca1ebee98767d6bbe41b70efcd2a961e54c46696852a4297b11fa8f2d21106a -->
 # 배포
 
 [English](deployment.md).
@@ -26,7 +26,7 @@
 
 PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request, HX-Current-URL`이 붙는다.
 
-`make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. 가장 빠르게 렌더하려면 서버의 PHP 버전에 맞춰 `make ext`로 네이티브 템플릿 확장을 빌드하고, `php.ini`의 `extension` 설정으로 불러온다. 확장이 없으면 PHP는 `build/program/php/`의 generated 프로그램으로 렌더하며, 애플리케이션은 Composer의 autoload가 그것을 불러오도록 `composer.json`의 `autoload.psr-4`에서 그 네임스페이스를 그 디렉터리에 연결한다(HY-48).
+`make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. PHP는 템플릿 확장 `polyspec_template`으로 `build/program/templates/`를 렌더한다. 서버의 PHP 버전에 맞춰 빌드한 json 확장 `polyspec_json`과 그다음 템플릿 확장을 `php.ini`의 `extension` 설정으로 불러온다(HY-48.15).
 
 build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). `public/assets`는 아직 열린 페이지가 불러오는 이전 build의 파일을 담으므로, 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다(HR-34).
 

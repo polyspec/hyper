@@ -215,7 +215,7 @@ The build id is computed once over the files of HY-125.15 to HY-125.17 and writt
 
 The test fixtures that need a fixed build id are built with the same assembly: `make server-fixtures` runs `scripts/fixture-program.mts`, which calls `writeProgram` and `writeBuildFile` of `packages/cli/lib/program.mjs` with the id of `packages/php/tests/fixtures/build.json` and writes the program into `packages/php/tests/build/server`, which the root `composer.json` maps for the namespace of the test fixtures; `make contract-programs` builds the contract applications in the same way.
 
-PHP renders with the native extension when it has loaded `polyspec_template`, and otherwise with the generated program of `php/`. Both outputs are built from the same sources, so a server can switch by loading or not loading the extension.
+PHP renders `templates/` with the `Engine` and the `FsLoader` of the template extension `polyspec_template`, as the Node and the Python servers do, and loads the json extension `polyspec_json` before it (HY-48.15). The PHP server reads neither `php/` nor `program.json`.
 
 ## Node server
 

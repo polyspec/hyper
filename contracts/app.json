@@ -10197,57 +10197,6 @@
       }
     },
     {
-      "id": "a_program_json_that_starts_with_a_byte_order_mark_fails_the_open",
-      "label": "opening fails with the open error for a program.json that is valid JSON and starts with U+FEFF",
-      "application": "b_board",
-      "files": {
-        "program.json": "ï»¿{\"namespace\":\"Hyper\"}"
-      },
-      "requirements": [
-        "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "php"
-        ],
-        "sentence": "HY-48.7"
-      }
-    },
-    {
-      "id": "a_program_json_that_is_cut_fails_the_open",
-      "label": "opening fails with the open error for a program.json whose JSON text is cut",
-      "application": "b_board",
-      "files": {
-        "program.json": "{\"layout\":"
-      },
-      "requirements": [
-        "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "php"
-        ],
-        "sentence": "HY-48.7"
-      }
-    },
-    {
-      "id": "a_program_json_that_is_not_utf8_fails_the_open",
-      "label": "opening fails with the open error for a program.json with a byte that is not UTF-8",
-      "application": "b_board",
-      "files": {
-        "program.json": "{\"layout\":\"ÿ\"}"
-      },
-      "requirements": [
-        "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "php"
-        ],
-        "sentence": "HY-48.7"
-      }
-    },
-    {
       "id": "a_template_index_that_is_cut_fails_the_open",
       "label": "opening fails with the open error for a template index whose JSON text is cut",
       "application": "b_board",

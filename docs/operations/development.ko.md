@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: e06372e00cdabf80cba960c2ee69637b85b3798d1a1e7650926efa46913ad3bf -->
+<!-- source-sha256: 1df04be41a22ad624e8961ea1a2f114231a5ee73a2aed12fee3201a7f65658da -->
 # 개발
 
 [English](development.md).
@@ -216,7 +216,7 @@ build id는 HY-125.15~HY-125.17의 파일로 한 번 계산하고 두 `build.jso
 
 고정 build id가 필요한 test fixture는 같은 조립으로 만든다: `make server-fixtures`는 `scripts/fixture-program.mts`를 실행하고, 그것은 `packages/php/tests/fixtures/build.json`의 id로 `packages/cli/lib/program.mjs`의 `writeProgram`과 `writeBuildFile`을 불러 root `composer.json`이 test fixture의 namespace에 대응시키는 `packages/php/tests/build/server`에 프로그램을 쓴다. `make contract-programs`도 같은 방법으로 계약 애플리케이션을 만든다.
 
-PHP가 `polyspec_template`을 불러왔으면 네이티브 확장으로, 그렇지 않으면 `php/`의 생성된 프로그램으로 렌더한다. 두 출력은 같은 원본에서 만들어지므로, 서버는 확장을 불러오는지 여부로 바꿀 수 있다.
+PHP는 Node와 Python 서버처럼 템플릿 확장 `polyspec_template`의 `Engine`과 `FsLoader`로 `templates/`를 렌더하며, 그보다 먼저 json 확장 `polyspec_json`을 불러온다(HY-48.15). PHP 서버는 `php/`도 `program.json`도 읽지 않는다.
 
 ## Node 서버
 

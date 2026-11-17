@@ -21,7 +21,7 @@ The server tells the two kinds of requests apart by their headers (HY-15). A dir
 
 PHP runs without a base path. Responses carry `Vary: Accept, HX-Request, HX-Current-URL`.
 
-Deploy `build/program`, which `make board` writes with `hyper build`, next to the PHP code; the application opens it with `App::open(program: ...)`. For the fastest rendering, build the native template extension with `make ext` for the PHP version of the server and load it with the `extension` setting of `php.ini`. Without the extension, PHP renders with the generated program in `build/program/php/`, whose namespace the application maps to that directory in `autoload.psr-4` of its `composer.json`, so that the autoload of Composer loads it (HY-48).
+Deploy `build/program`, which `make board` writes with `hyper build`, next to the PHP code; the application opens it with `App::open(program: ...)`. PHP renders `build/program/templates/` with the template extension `polyspec_template`: load the json extension `polyspec_json` and then the template extension with the `extension` setting of `php.ini`, both built for the PHP version of the server (HY-48.15).
 
 One build is deployed as one set: upload the new files of `public/assets` first, then replace `client/` and `program/` on every server, because a page of the new build names files of `public/assets` that must exist before a server sends it. Every server of one deployment reads the outputs of the same build, also servers of several runtimes that share sessions (HY-125.20). `public/assets` keeps the files of earlier builds, which a page that is still open loads; remove a file only when no `client/assets.json` of a build in use lists it (HR-34).
 

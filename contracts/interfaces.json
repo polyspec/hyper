@@ -13357,34 +13357,6 @@
               }
             },
             {
-              "id": "renderer.program",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "string",
-                "map<value>"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Loads the generated program of the namespace that program.json names through the autoload, and fails with the class and the directory php when the namespace is not mapped (HY-48.7, HY-48.9).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Renderer.php::Polyspec\\Hyper\\Renderer::program",
-                  "signature": "private static function program(string $program, array $functions): Polyspec\\Template\\Program"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-48.7"
-              },
-              "tests": [
-                "packages/php/tests/RendererTest.php::RendererTest::testTheGeneratedProgramIsLoadedThroughTheAutoload: Only the PHP server loads the generated program as a class through the autoload of Composer (HY-48.7).",
-                "packages/php/tests/RendererTest.php::RendererTest::testAProgramWhoseNamespaceIsNotMappedFailsWithTheClassAndTheDirectory: Only the PHP server fails for a namespace that the autoload does not map, with the class and the directory php (HY-48.9)."
-              ]
-            },
-            {
               "id": "renderer.bind",
               "kind": "method",
               "visibility": "internal",
@@ -15278,7 +15250,7 @@
                 "php",
                 "python"
               ],
-              "sentence": "HY-48.8"
+              "sentence": "HY-48.16"
             }
           },
           "handlers": "handlers",
@@ -15669,7 +15641,7 @@
                 "php",
                 "python"
               ],
-              "sentence": "HY-48.8"
+              "sentence": "HY-48.16"
             }
           }
         },
