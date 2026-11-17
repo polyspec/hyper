@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a176ccb4645975d5d561c32b242d32dcebaabbd8146f80d34052a5eb8cd12613 -->
+<!-- source-sha256: 1c9bed4f9256eb3049b4e9b6d7fb610c65b1cad04f0c2b76af259d64bbebc8b5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- root `package.json`과 `tests/package-install/package.json`이 `@polyspec/session-store`와 그 platform package 셋의 `overrides`를 가졌다. npm은 이것 없이도 `packages/ts`의 요구 `0.0.4`를 root가 적은 release asset URL로 해석하고 같은 lock을 쓰므로 그 항목을 지웠다. `make lint-ts`는 knip에서 `package.json`과 `packages/ts/package.json`의 쓰이지 않는 의존 `@polyspec/session-store`로 실패했는데, knip이 읽지 않는 생성된 Node binding만 이를 요구하기 때문이다. 이제 `knip.json`이 두 곳에서 이를 무시한다(H35.8-2).
 - CI group core는 wasm-bindgen CLI를 시작하는 `make test-bindings`를 실행했지만, group의 어떤 setup step도 그것을 설치하지 않았다. 이제 group의 setup은 `make release-recipes`로 `packages/release.mk`를 쓰고 그 target인 `make install-wasm-bindgen`을 실행한다. `tests/scripts/ci-group-tools.test.mts`는 모든 CI group의 setup step과 target의 dry run을 읽고, group이 시작하는데 그 setup이 설치하지 않는 tool이 있으면 group, target, tool을 밝히며 실패한다(HR-91, H35.16-6).
 - `make hyper-ext`는 모든 PHP의 확장을 `target/debug`에서 build했고, PHP wrapper의 경로는 그 뒤의 PHP가 바뀌어도 같으므로 Cargo가 다른 PHP의 library를 그대로 둘 수 있었다. 이제 `make hyper-ext`, `make lint-bindings`, `make test-bindings`는 확장의 crate를 header의 release(`php-config --vernum`)와 PHP의 debug build, thread safety가 정하는 `target/php-<headers><build>`(예: `target/php-80427-nts`)에서 compile하므로 다른 PHP는 다른 디렉터리에서 build한다. recipe는 더 이상 `EXT_PHP_RS_ALLOWED_BINDINGS`를 설정하지 않는다(H35.16-5).
 - `make -n recipe-check`는 case runner의 wrapper와 recipe 검사를 실제로 시작했다. recipe 줄이 `$(MAKE)`를 다른 명령과 함께 적었고, make는 그런 줄을 dry run에서도 실행하기 때문이다. 이제 `recipe-check`는 다섯 case runner와 새 target `recipe-compare`를 한 줄의 `$(MAKE) -k -j1` 하나의 goal로 실행하고, `make install-tools`는 PHP 검사를 wrapper가 있다는 조건을 가진 `make php-check-installed`로 실행한다. 두 target의 dry run은 명령을 출력하고 아무것도 시작하지 않는다(HR-83, H35.16-7).

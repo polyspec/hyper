@@ -29,10 +29,6 @@
     "@polyspec/php-serialization-linux-arm64-gnu": "$@polyspec/php-serialization-linux-arm64-gnu",
     "@polyspec/php-serialization-linux-x64-gnu": "$@polyspec/php-serialization-linux-x64-gnu",
     "@polyspec/php-serialize": "$@polyspec/php-serialize",
-    "@polyspec/session-store": "$@polyspec/session-store",
-    "@polyspec/session-store-darwin-arm64": "$@polyspec/session-store-darwin-arm64",
-    "@polyspec/session-store-linux-arm64-gnu": "$@polyspec/session-store-linux-arm64-gnu",
-    "@polyspec/session-store-linux-x64-gnu": "$@polyspec/session-store-linux-x64-gnu",
     "@polyspec/template": "$@polyspec/template"
   }
 }
