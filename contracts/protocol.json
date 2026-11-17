@@ -6330,7 +6330,14 @@
                 [{ "en": "`exists`", "ko": "`exists`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
                 [{ "en": "`moved`", "ko": "`moved`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
                 [{ "en": "`no_rows`", "ko": "`no_rows`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.8", "ko": "HY-107.8" }],
-                [{ "en": "`revision_changed`", "ko": "`revision_changed`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.9", "ko": "HY-107.9" }]
+                [{ "en": "`revision_changed`", "ko": "`revision_changed`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.9", "ko": "HY-107.9" }],
+                [{ "en": "`record`", "ko": "`record`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-104.8", "ko": "HY-104.8" }],
+                [{ "en": "`record_not_array`", "ko": "`record_not_array`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-104.20", "ko": "HY-104.20" }],
+                [{ "en": "`invalid_directory`", "ko": "`invalid_directory`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-104.32", "ko": "HY-104.32" }],
+                [{ "en": "`invalid_lifetime`", "ko": "`invalid_lifetime`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-104.32, HY-115.28", "ko": "HY-104.32, HY-115.28" }],
+                [{ "en": "`invalid_lock_expire`", "ko": "`invalid_lock_expire`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-115.28", "ko": "HY-115.28" }],
+                [{ "en": "`lock_timeout`", "ko": "`lock_timeout`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-115.3", "ko": "HY-115.3" }],
+                [{ "en": "`lock_lost`", "ko": "`lock_lost`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-115.5", "ko": "HY-115.5" }]
               ]
             }
           ]

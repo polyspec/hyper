@@ -387,6 +387,13 @@ An application sends with every JSON response values that change only with its c
   | `moved` | http-form | HY-131.28 |
   | `no_rows` | orm | HY-107.8 |
   | `revision_changed` | orm | HY-107.9 |
+  | `record` | session-store | HY-104.8 |
+  | `record_not_array` | session-store | HY-104.20 |
+  | `invalid_directory` | session-store | HY-104.32 |
+  | `invalid_lifetime` | session-store | HY-104.32, HY-115.28 |
+  | `invalid_lock_expire` | session-store | HY-115.28 |
+  | `lock_timeout` | session-store | HY-115.3 |
+  | `lock_lost` | session-store | HY-115.5 |
 
 - **HY-27** <a id="HY-27.1"></a> A path without a route, or a loader that reports a missing resource, responds with status 404. <a id="HY-27.2"></a> A method other than `GET`, `HEAD` or a declared `POST` responds with status 405; a representation checks the method of HY-121 instead. <a id="HY-27.3"></a> A loader or an action reports a missing resource with the not-found stop, whose message is `not found`; the forbidden stop of HY-51 has the message `forbidden` and the bad-request stop of HY-58 the message `bad request`. <a id="HY-27.4"></a> The server answers a `HEAD` request as the `GET` request of the same target (RFC 9110, section 9.3.2): every step runs with the request method `GET`, so a handler reads `GET`, and `App.handle` returns the `GET` response with its body, which the response hook (HY-60), the response limit (HY-66) and `around` (HY-97) receive with the request as the host gave it. <a id="HY-27.5"></a> The host writes the status and the headers of the response to a `HEAD` request, with the `Content-Length` of its body unless the status is 204 or 304, and no body. <a id="HY-27.6"></a> Every 405 has the header `Allow` (RFC 9110, section 15.5.6): `GET, HEAD` for a route, `GET, HEAD, POST` for a route that declares `post`, `GET, HEAD` for the 405 of HY-62.23, `POST` for `/_hyper/keep` (HY-40), and the methods of HY-121.6 for a representation.
 
