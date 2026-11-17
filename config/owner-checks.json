@@ -568,7 +568,8 @@
         "config/php-ext-pins.json",
         "scripts/test-inputs.mts",
         "scripts/python-install-stamp.mts",
-        "scripts/php-ext-pins.mts"
+        "scripts/php-ext-pins.mts",
+        "tests/scripts/fixtures/php-ext-pins/**"
       ],
       "targets": [
         "typecheck"
