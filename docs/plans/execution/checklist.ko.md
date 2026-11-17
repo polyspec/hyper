@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 477a9ea07165d82fe4ea48a480a8725938ffec6e10bd51cf5f61030402b43f37 -->
+<!-- source-sha256: 3dec28cd940be637e7f923a48c2bc207134aba114462d04760ee4e326c1ab409 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -650,3 +650,4 @@
 | H34.3 | server 시작이 실패해도 upload-servers의 gate listener를 닫는다: hostsOf가 server를 시작하기 전에 listener의 close를 등록하므로, 시작이 실패하면 파일은 그 원인과 함께 끝나고 run을 붙잡는 listener가 남지 않는다(HR-87) | tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [o] |
 | H34.4 | Node addon을 upload-servers의 입력으로 선언한다: run의 Node application이 그것을 load하므로 make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts가 그것을 build해야 한다(HR-85, H35.55) | tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [o] |
 | H34.5 | hyper-test-scripts 전체 set의 dry run을 호출한 make의 TESTS 없이 실행한다: make가 command-line 변수를 recipe의 environment로 export하므로 test-inputs.test.mts는 그 dry run에 TESTS=를 준다(HR-85, H35.55) | tests/scripts/test-inputs.test.mts | make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts | [o] |
+| H34.8 | Node binding 변환의 거부에서 HY-44.12의 message를 기대한다: binding 0.0.21부터 변환은 HY-44.12가 정한 대로 template 오류의 전체 text인 kind: message를 주는데, core-values.test.ts는 HY-44.12가 폐기한 kind in  at 0:0: message 형식을 여전히 기대해 변환 case 여덟 개가 실패했다 | packages/ts/tests/core-values.test.ts | make hyper-test-node NODE_TESTS=tests/core-values.test.ts | [ ] |
