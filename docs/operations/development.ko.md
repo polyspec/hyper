@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 730588c0168deae4e8f8966c1905040eb36798dfc4903cbcb5a98be3774a6a0c -->
+<!-- source-sha256: af469245115a9b118970763a59b49cda0d772f7113b2d244b3849fd5c265cd12 -->
 # 개발
 
 [English](development.md).
@@ -122,6 +122,40 @@ make release-undraft
 공개되는 manifest는 tree의 manifest이고, `make release-assets`는 그것을 바꾸지 않고 pack한다(HR-95). 공개되는 manifest는 모든 polyspec 패키지를 정확한 버전으로 적는다. `packages/client/package.json`, `packages/ts/package.json`, `packages/cli/package.json`은 `@polyspec/template`을(`packages/cli/package.json`은 `@polyspec/template-compiler`도) template release의 버전으로, `@polyspec/hyper-client`를 릴리스의 버전으로 요구하고, `packages/php/composer.json`은 `version`을 선언하고 `polyspec/template`을 template release의 버전으로 요구하며 `repositories`가 없다.
 
 consumer는 자기 package manager로 archive를 설치해 릴리스를 확인하며, 릴리스의 어떤 step도 archive를 설치하지 않는다.
+
+### 릴리스만 실행하는 step
+
+`.github/workflows/release.yml`의 job `release`는 `main`에서 완료된 `ci`의 `workflow_run`이 push 또는 수동 실행이고 결론이 `success`일 때, 또는 id `run`을 준 `workflow_dispatch`로 시작한다. job은 `ubuntu-26.04-arm`에서 실행하고, CI 실행의 id인 `RUN`과, `contents: write`와 `actions: read`를 가진 workflow의 token인 `GH_TOKEN`을 받는다. 그 `uses:` step은 CI 실행의 `head_sha`를 전체 history와 함께 받는 checkout, bootstrap action, `.php-version`을 읽는 setup-php이다. run step은 `make ci-release` 하나이며, 이 recipe는 `release-tag`를 실행한 다음 Makefile의 `RELEASE_STEPS`를 순서대로 실행하고 첫 실패에서 멈춘다.
+
+`make release-tag`는 다른 모든 step보다 먼저 tag를 만들어 push한다. 그 뒤의 step이 실패하면 GitHub Release 없이 tag `vX.Y.Z`가 remote에 남고, 수정은 그 tag가 담지 않는 새 commit이므로 버전 X.Y.Z를 잃는다. 어떤 CI job도 실행하지 않는 step은 릴리스에서만 동작이 확인된다. 표는 step을 순서대로 나열하며, CI 열은 같은 target 또는 같은 명령을 실행하는 CI group을 적는다.
+
+| Step | 시작하는 명령 | 도구와 그것을 설치하는 것 | CI | 릴리스만 보여 주는 것 |
+|---|---|---|---|---|
+| `release-tag` (`workflow_run`이면 `AUTO=1`) | kit의 `release-run tag`: `gh api`가 실행, 그 workflow, tag의 릴리스를 읽고, `origin/main`의 `git fetch`, `git merge-base`, `CHANGELOG.md`의 `git show`, `git tag -a`, `git push origin refs/tags/vX.Y.Z`를 실행한다. `TAG`와 `VERSION`을 `var/release/tag.env`에 쓴다 | Node.js와 kit: bootstrap action. `gh`와 `git`: runner image | 없음 | token이 실행을 읽고 tag를 push하는지, recipe가 `var/release/tag.env`에서 `TAG`를 읽는지 |
+| `release-checkout` | `git checkout --quiet "$TAG"` | `git`: runner image | 없음 | 더 없음: tag는 job이 checkout한 commit이다 |
+| `release-php-check` | PATH의 PHP의 `php -r`을 `.php-version`과 비교 | PHP: setup-php step | 없음. PHP를 가진 group에서 `php-check`가 wrapper `var/tools/bin/php`를 비교한다 | setup-php가 이 job에 주는 PHP: 이 step은 `ci.yml`의 step이 정하는 `extensions: pdo_sqlite`와 `tools: none`을 정하지 않는다 |
+| `bootstrap`, `install-tools TOOLS=npm`, `install-packages` | bootstrap action의 호출을 tag에서 다시 실행 | Node.js: bootstrap action의 setup-node | 모든 job | 없음 |
+| `release-archive-tool` | `command -v zip` | Info-ZIP: runner image. 어떤 step도 설치하지 않는다 | 없음 | image에 `zip`이 있는지. `release-assets`는 `generated` 파일을 가진 패키지에만 `zip`을 시작하며, `config/release.json`은 그런 패키지를 선언하지 않는다 |
+| `release-prepare` | `make hyper-install`: selector 없는 `install-tools`, `install-symbols EXTRACTORS=php`, `bindings`, `node-addon`, `hyper-ext`, `hyper-install-php`(`json-ext`, `template-ext`, 두 번의 `composer install`), `hyper-install-python` | `mise.toml`의 모든 도구, `rust-toolchain.toml`의 Rust toolchain, PHP wrapper: recipe의 `install-tools` 줄이 설치하며, 이 줄은 그것들을 시작하는 줄보다 앞에 있다. LLVM 21의 clang과 libclang: runner image(`/usr/lib/llvm-21`) | 어떤 job도 `hyper-install`을 실행하지 않는다. 그 target은 각각 group에서 실행된다: `install-symbols`는 `gates`, `bindings`와 `node-addon`은 `node`, `board`, `core`에서 prerequisite로, `hyper-ext`는 `docs`와 `board`, `hyper-install-php`는 `gates`, `docs`, `php`, `board`, `hyper-install-python`은 `gates`, `docs`, `board`, `python` | 한 job에서 모든 도구를 설치하는 것, 그리고 설치가 `release-assets`가 거부하는 변경된 경로나 untracked 경로를 남기는지 |
+| `release-tools` | kit의 `release-tools`. `config/release.json`에 Composer 패키지와 wheel이 있으므로 selector 없이 kit의 `install-tools`를 실행한다 | `release-prepare`와 같다 | 없음 | 더 없음: `release-prepare`가 설치한 것을 다시 설치한다 |
+| `release-recipes` | `binding release-recipes`가 `packages/release.mk`를 쓴다 | Node.js와 binding generator: bootstrap action | `core` (setup) | 없음 |
+| `release-assets` | `make packages`(`packages/client`와 `packages/ts`의 `npm run build`), 그다음 kit의 `release assets`: `git rev-parse`, `git diff`, `git ls-files`, `git show`; `packages/client`, `packages/ts`, `packages/cli`의 `npm pack`; `packages/php`의 `git archive --format=zip`; `packages/python`의 `git archive`, `tar`, `uv build --wheel`, `python3 -m pip install --dry-run --report`; `tar`와 `unzip`이 pack된 manifest를 읽는다. `packages.json`을 쓴다 | npm: bootstrap action. uv, Python, 그리고 build backend가 시작하는 Cargo: `release-prepare`의 `install-tools`. `git`, `tar`, `unzip`: runner image | `make packages`는 `node`. `release assets`는 없음 | 릴리스의 archive: 그 이름, 그 내용, wheel의 build |
+| `release-publish` | kit의 `release publish`: `gh api`가 이전 실행의 draft를 지우고, `CHANGELOG.md`의 section을 notes로 하여 draft 릴리스를 만들고, 각 archive를 label과 함께 upload한다. `var/release/vX.Y.Z.json`을 쓴다 | `gh`: runner image | 없음 | archive의 upload와 notes |
+| `release-undraft` | kit의 `release undraft`: `gh api`가 draft를 공개한다 | `gh`: runner image | 없음 | 공개된 릴리스 |
+
+`make ci-release`는 어떤 릴리스에서도 실행된 적이 없다. 릴리스 0.0.40은 job이 한 recipe가 되기 전에 이 target들을 workflow의 step으로 실행했다.
+
+`packages/release.mk`는 `release-binding-check`, `release-go-static`, `release-wheel`, `release-php-ext`, `release-npm-platform`, `release-npm`, `release-go-module`, `release-platform-assets`와 세 `release-assets-*` target을 정의한다. 릴리스의 어떤 step도, 어떤 CI job도 이것들을 실행하지 않으며, 그 파일의 `install-wasm-bindgen`만 group `core`의 setup에서 실행된다. 그래서 어떤 job도 `binding check --release`를 실행하지 않는다. 그 규칙 CK-70은 `Cargo.toml`의 개발 형태 의존성을 보고하는데, core와 각 binding crate의 `Cargo.toml`은 `polyspec-template`을 branch `v1/rust-core`로 받고, `packages/go/go.mod`는 template module을 `v0.0.0`으로 require한다. `binding check`는 `--release`가 있든 없든 `go mod download`를 불러, 다른 module의 release를 require하는 `packages/go/go.mod`의 `go.sum`을 계산한다. group `core`의 `make bindings-check`가 그 호출을 하며, 그 group은 Go를 설치한다(`CI_TOOLS_core`). 릴리스 job은 그런 호출을 하지 않는다. `make bindings`는 `go.sum`을 계산하지 않는 `binding generate`를 실행하며, job은 다른 모든 도구와 함께 Go를 설치한다.
+
+`tests/scripts/ci-group-tools.test.mts`는 릴리스 job의 make 호출, 곧 bootstrap action의 호출, `release-tag`, `RELEASE_STEPS`의 dry run을 읽고, 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패한다. 같은 test는 CI group 또는 릴리스의 cargo 명령 줄이 `rust-toolchain.toml`의 `targets`에 없는 Rust target을 적으면 실패한다. `install-tools`는 그 target들의 표준 라이브러리만 설치하기 때문이며, `make lint-bindings`와 `make node-package`는 `wasm32-unknown-unknown`으로 build한다. kit의 utility가 자기 process 안에서 시작하는 것, 곧 `npm pack`, `git archive`, `uv build`, `gh`는 어떤 dry run에도 없고 어떤 test도 판정하지 않는다.
+
+kit의 `release assets`는 패키지 가운데 셋이 더는 갖지 않는 형태로 패키지를 pack한다.
+
+- Wheel. kit는 kind `wheel`인 패키지를 그 디렉터리의 `git archive`만으로 build하고 archive `polyspec_hyper-X.Y.Z-py3-none-any.whl`을 요구한다. `packages/python/pyproject.toml`의 build backend는 `native/Cargo.toml`을 build하는 maturin이다. 그 crate는 core를 경로 `../../rust`로, lint를 workspace에서 받는데 `packages/python`의 archive에는 둘 다 없으며, 그 생성된 source는 ignore된 파일이다. 그 backend의 wheel은 platform으로 이름이 정해진다(`cp314-abi3-<platform>`). 그래서 `release-assets`는 tag가 생긴 뒤 wheel에서 실패한다.
+- npm 패키지 `@polyspec/hyper`. `packages/ts`의 `npm pack`은 `native/generated/*.node`를 pack하는데, `release-prepare`의 `make node-addon`이 거기에 runner의 platform의 addon을 둔다. 이 addon은 feature `panic-test`를 가진 debug build이다. `release-npm-platform`과 `release-npm`이 build하는 platform 패키지와 WASM module은 어떤 step도 build하지 않는다.
+- Composer 패키지 `polyspec/hyper`. 이 패키지는 `ext-polyspec_hyper`를 require하는데, `release-php-ext`가 build하는 extension archive는 어떤 step도 build하지 않는다. `config/toolchain.json`은 `release-platform-assets`가 요구하는 `phpExtension.minors`를 적지 않는다.
+
+`packages/go`의 Go module은 릴리스되지 않는다. `config/release.json`은 그 `go.mod`를 `notReleased`에 나열하고, 어떤 step도 `release-go-module`을 실행하지 않는다.
 
 ### 개발 구성
 

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c0dafc1d458490436b07a22dac6c3f20a8fafd8c265f06c0437c9e89d6d972d8 -->
+<!-- source-sha256: 40af63e8d3241929376b104f82f6f1fe0fba69bdd564294a533d70c487478c58 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `docs/operations/development.md`는 릴리스의 step 가운데 어떤 CI job도 실행하지 않는 것을 적지 않았다. 그 section "릴리스만 실행하는 step"은 `make ci-release`의 각 step을 순서대로, 그것이 시작하는 명령, 도구와 그것을 설치하는 것, 같은 target을 실행하는 CI group, 릴리스만 보여 주는 것과 함께 나열한다. 이 section은 `make release-tag`가 다른 모든 step보다 먼저 tag를 push한다는 것, 어떤 job도 `binding check --release`와 `install-wasm-bindgen` 외의 `packages/release.mk`의 target을 실행하지 않는다는 것, kit의 `release assets`가 wheel, npm 패키지 `@polyspec/hyper`, Composer 패키지 `polyspec/hyper`를 이 패키지들이 더는 갖지 않는 형태로 pack한다는 것을 적는다. checklist의 행 H35.35는 dry run이 검증하는 것과 릴리스만 보여 주는 것을 적는다(H35.35).
 - `rust-toolchain.toml`은 target을 적지 않아 `make install-tools`가 host의 표준 라이브러리만 설치했는데, CI group core의 `make test-bindings`가 실행하는 `make lint-bindings`와 `make node-package`는 WASM crate를 `wasm32-unknown-unknown`으로 build한다. 이제 `rust-toolchain.toml`이 그 target을 적는다. `tests/scripts/ci-group-tools.test.mts`는 CI group 또는 release job의 cargo 명령 줄이 그 파일에 없는 Rust target을 적으면 실패한다. 이 test는 release job의 make 호출, 곧 bootstrap action의 호출, `release-tag`, `RELEASE_STEPS`도 CI group처럼 판정하여, 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패한다(H35.35).
 - `make recipe-check`는 case runner를 `make -k` 하나의 goal로 실행했다. 실패한 runner가 newline 없이 출력을 끝내면 그 마지막 줄이 다음 명령 줄과 붙었고, 비교 뒤의 어떤 줄도 실패한 runner를 밝히지 않았다. 이제 `recipe-check`는 다섯 runner와 비교의 명령을 `$(call check,...)`로 실행한다. 각 출력은 newline으로 끝나고, 마지막 줄은 실패한 것을 모두 적은 `failed checks:`이다. target은 runner의 prerequisite을 가지며 dry run은 아무것도 시작하지 않는다(HR-84, HR-86, H35.16-8).
 - `Cargo.lock`과 tracked binding package를 쓰는 target이 없었다. crate의 새 tag 뒤에 `cargo update`와 `binding scaffold`를 손으로 실행했다. 이제 `make cargo-lock CRATES="<crate> ..."`가 적은 crate에 `cargo update -p`를 link script로 실행하고, `make bindings-scaffold`가 `binding scaffold`를 실행해 `packages/go/go.mod`와 `go.sum`을 포함한 binding의 manifest를 쓴다. `.links`가 있는 checkout에서는 link script가 자기 lock 사본을 갱신하고 `Cargo.lock`은 그대로 두므로, `cargo-lock`은 cargo를 시작하기 전에 그 원인을 밝히며 실패한다(H35.8-3).
