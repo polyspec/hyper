@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7c1423e364d346670d46924f9c5095ceb3dc3baf143d6cb2c75218d224b0a494 -->
+<!-- source-sha256: 79a630cb5afc62324a83cb7c691544be71a07d11296c10200d4842f6cf30c586 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- hyper는 kit K1290의 maturin을 위해 kit 0.0.121 대신 0.0.122를 채택한다. `package.json`은 그 release asset을, `package-lock.json`은 `make npm-lock`이 쓴 그 integrity를 적고, `make install-packages`가 lock에서 설치했다(H35.48).
 - macOS에서 `tmpdir()`는 `/private/var`로 가는 symbolic link인 `/var` 아래에 있고 make는 `$(CURDIR)`를 실제 경로로 출력하므로, `tests/scripts/php-check.test.mts`(85, 207, 244행)와 `tests/scripts/ci-group-tools.test.mts`의 `install-wasm-bindgen`은 `/var/...`를 `/private/var/...`와 비교해 거기서 실패했다. Linux runner에는 그런 link가 없다. `php-check.test.mts`의 tree와 `tests/scripts/release-recipes-tree.mts`의 tree는 디렉터리를 `realpathSync`로 받는다. `tests/scripts`의 다른 `mkdtempSync` 사용은 make가 출력한 경로를 비교하지 않으므로 바꾸지 않았다. PHP 8.4를 PATH 앞에 두고 `node --test`로 돌린 진단: 전에는 php-check 9개 중 3개, ci-group-tools 6개 중 3개가 실패했고, 뒤에는 php-check가 9개 모두 통과하며 ci-group-tools는 6개 중 2개가 실패한다. 둘 다 binding 0.0.21이 가져오는(H35.49) `No rule to make target 'release-go-module-push'`이다(H35.50).
 - `docs/operations/development.md`는 link된 개발 checkout에서 `make release-candidate-assets`가 어떻게 되는지 적지 않았다. 이제 `.links` 선언이 있고 그 패키지가 link된 checkout은 릴리스의 candidate가 아니므로, 전체 suite가 실행하는 그 target은 거기서 kit의 거부로 실패하고 어떤 checkout에도 link가 없는 CI에서는 통과한다고 적는다(H35.35-1).
 - `assets.yml`의 job `platform`이 CI와 릴리스에서 실행하는 `make release-go-static`은 Linux host의 musl target으로 build하고 toolchain의 `llvm-strip`으로 library를 strip하는데, `rust-toolchain.toml`은 musl target도 component `llvm-tools`도 적지 않아 `make install-tools`가 둘 다 설치하지 않았다. 이제 `rust-toolchain.toml`은 `x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl`, `llvm-tools`를 적는다. `tests/scripts/ci-group-tools.test.mts`는 recipe `ci-assets-platform`, `ci-assets-php`, `ci-assets-npm`을 `RELEASE=true`가 있을 때와 없을 때 모두 CI group처럼 판정한다. 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패하며(`binding check`와 `binding release-go-module`은 Go를 시작하는 것으로 센다), 명령 줄이 `rust-toolchain.toml`에 없는 Rust target이나 component를 필요로 하면 실패한다(H35.35-5).
