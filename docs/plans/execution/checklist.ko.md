@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 3dec28cd940be637e7f923a48c2bc207134aba114462d04760ee4e326c1ab409 -->
+<!-- source-sha256: 9278fdd25d8af891adbd47c7c43a50221514efce02c5a672bd3ec000a5803605 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -651,3 +651,4 @@
 | H34.4 | Node addon을 upload-servers의 입력으로 선언한다: run의 Node application이 그것을 load하므로 make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts가 그것을 build해야 한다(HR-85, H35.55) | tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [o] |
 | H34.5 | hyper-test-scripts 전체 set의 dry run을 호출한 make의 TESTS 없이 실행한다: make가 command-line 변수를 recipe의 environment로 export하므로 test-inputs.test.mts는 그 dry run에 TESTS=를 준다(HR-85, H35.55) | tests/scripts/test-inputs.test.mts | make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts | [o] |
 | H34.8 | Node binding 변환의 거부에서 HY-44.12의 message를 기대한다: binding 0.0.21부터 변환은 HY-44.12가 정한 대로 template 오류의 전체 text인 kind: message를 주는데, core-values.test.ts는 HY-44.12가 폐기한 kind in  at 0:0: message 형식을 여전히 기대해 변환 case 여덟 개가 실패했다 | packages/ts/tests/core-values.test.ts | make hyper-test-node NODE_TESTS=tests/core-values.test.ts | [ ] |
+| H34.12 | node-package가 packed package를 offline으로 설치하기 전에 packages/ts의 직접 dependency만이 아니라 package-lock.json이 적는 production dependency closure 전체를 pack한다: @polyspec/hyper-client의 dependency인 eventsource-parser가 pack되지 않아 npm이 registry에 그 metadata를 요청했고, npm ci는 그것을 cache에 넣지 않으므로 node-package가 ENOTCACHED로 실패했다 | Makefile, tests/scripts/node-package.test.mts | make hyper-test-scripts TESTS=tests/scripts/node-package.test.mts | [ ] |
