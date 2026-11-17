@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e2b857408f2d3f150c95724e97147592edf80a14adfa16738f89d62fd72d8a43 -->
+<!-- source-sha256: 89540c32ebca42881f976d9ca25170cf8667e708db053b756485a604075461cd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `make go-release-build`는 checkout의 go를 절대 경로로 시작한다(HR-81, H35.35-7). 입력: `make -n go-release-build`. 이전 동작: `packages/release.mk`가 `GO ?= go`를 정하고 Makefile은 그 파일의 include 뒤에야 `GO`를 정의했으므로, recipe가 `PATH`의 go인 맨 `go`를 실행했다. 기대 동작: Makefile이 include 앞에서 `GO`, `GOFMT`, `WASM_BINDGEN`을 정의하고, recipe가 `var/tools/mise/shims/go`를 실행한다.
 
 - 설치는 json 0.0.38과 template 0.0.30을 받는다(H35.49). 입력: manifest가 json 0.0.34와 template 0.0.29를 적었고, template 0.0.29의 npm tarball에는 그 `exports`가 지정하는 `render/`가 없어 `@polyspec/template/render`를 해석하는 script가 `MODULE_NOT_FOUND`로 실패했다. 기대 동작이자 현재 동작: `package.json`, `tests/package-install/package.json`, workspace manifest, `packages/python/pyproject.toml`, Composer root, `packages/php/composer.json`, Makefile의 `TEMPLATE_VERSION`과 `JSON_VERSION`이 json 0.0.38과 template 0.0.30을 적으며, template 0.0.30의 tarball은 `render/`를 담는다. template package는 npm, Python, Composer에서 json 0.0.38을 요구하고, `scripts/php-ext-requires.mts`가 두 release의 확인된 `packages.json`으로 이를 검사했다. `make npm-lock`, `make python-lock`, `make composer-lock`이 lock을 썼고, `config/php-ext-pins.json`이 release asset에서 platform zip 열두 개와 `packages.json` 두 개를 고정한다.
 - Node, Python, PHP 설치는 php-serialization 0.0.16과 session-store 0.0.7을 받는다(H35.49). 입력: `package.json`, `tests/package-install/package.json`, `packages/ts/package.json`, `packages/python/pyproject.toml`이 php-serialization 0.0.15와 session-store 0.0.4를 적었고, `config/php-ext-pins.json`이 session-store 0.0.4의 zip을 고정했다. 이전 동작: session-store 0.0.7 위의 core binding이 session-store 0.0.4의 package 옆에 설치되었다. 기대 동작이자 현재 동작: manifest가 서로를 그 version으로 요구하는 php-serialization 0.0.16과 session-store 0.0.7의 release asset을 각 wheel의 sha256과 함께 적는다. `make npm-lock`과 `make python-lock`이 각 asset의 integrity로 lock을 썼고, `config/php-ext-pins.json`이 session-store 0.0.7의 platform zip 여섯 개와 그 `packages.json`의 sha256을 고정한다. `docs/operations/dependencies.md`가 이 pin과 앞 변경의 Go와 Rust pin을 기록한다.

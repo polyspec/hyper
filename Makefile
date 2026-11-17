@@ -647,6 +647,13 @@ ifneq ($(wildcard $(BINDING)),)
 $(CURDIR)/packages/release.mk:
 	$(write-release-recipes)
 endif
+# The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
+# the WASM crate (binding GN-15, GN-18), which mise.toml pins and make install-tools installs into var/tools (HR-81);
+# test-go and node-package compare both releases before they use them. They are defined before the include, because
+# packages/release.mk sets GO to the go of PATH when the Makefile has not defined it (binding GN-19h).
+GO ?= $(KIT_TOOLS)/mise/shims/go
+GOFMT ?= $(KIT_TOOLS)/mise/shims/gofmt
+WASM_BINDGEN ?= $(KIT_TOOLS)/mise/shims/wasm-bindgen
 -include $(CURDIR)/packages/release.mk
 
 # The binding crates of the workspace. The WASM crate is not in the tree (Cargo.toml): its lint and its build name the
@@ -664,12 +671,6 @@ test-bindings: lint-bindings test-node-addon test-wasm test-go go-release-build 
 	$(CARGO) test --locked --offline $(foreach crate,$(BINDING_CRATES),-p $(crate))
 	$(PHP_EXT_CARGO) test --locked --offline -p polyspec-hyper-php-ext
 
-# The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
-# the WASM crate (binding GN-15, GN-18), which mise.toml pins and make install-tools installs into var/tools (HR-81);
-# test-go and node-package compare both releases before they use them.
-GO ?= $(KIT_TOOLS)/mise/shims/go
-GOFMT ?= $(KIT_TOOLS)/mise/shims/gofmt
-WASM_BINDGEN ?= $(KIT_TOOLS)/mise/shims/wasm-bindgen
 # The file name extension of a library that Cargo builds as a cdylib: dylib on macOS, so on Linux.
 CDYLIB := $(if $(filter Darwin,$(shell uname -s)),dylib,so)
 CARGO_TARGET := $(CURDIR)/target
