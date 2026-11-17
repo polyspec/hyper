@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 073a5773ea5c01c8c228c21246fe37c5dacb514d7104872fc66ff3d0b5b908fc -->
+<!-- source-sha256: 994de4b6dd4d60aa33d0ae21e99ac9069b31849cf7566a41166951d6e828c9c5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-131.25를 retire하고 HY-131.33이 대신한다. HY-131.25는 Node host가 body를 paused mode로, `'readable'` event마다 `request.read()`로 읽는다고 적었다. `packages/ts/src/host/http-host.ts`의 `readBody`는 `'data'` event로 읽고, body의 파일이 조각의 byte를 받을 때까지 요청을 멈춘다. HY-131.33은 두 형태가 모두 주고 테스트가 관찰할 수 있는 것을 정한다. host는 body를 조각 하나씩 `feed`에 주고, 파일이 앞 조각의 byte를 받은 뒤에만 다음 조각을 받으며, 조각을 모으지 않는다. 코드는 바뀌지 않는다. HY-131.25를 인용하던 `contracts/interfaces.json`의 텍스트는 HY-131.33을 인용한다(H35.36-1).
 
 - HY-131.11과 HY-59.6을 retire하고 HY-131.32와 HY-59.14가 대신한다. 둘은 모든 서버가 제한을 넘으면 body 읽기를 멈춘다고 적었다. 멈추는 것은 PHP뿐이다. Node host와 세 Python host는 응답을 보낼 수 있도록 body의 나머지를 읽어 버린다. 새 statement는 모든 host에서 성립하는 것을 정한다. body는 413을 받고, 제한을 넘은 뒤에는 어떤 서버도 남은 byte를 parse하거나 저장하지 않으며, host는 그것을 읽어서든 읽지 않고 두어서든 버리고, 열려 있던 파일은 닫는다. body를 읽는 동안 넘는 제한에 대해 다섯 host는 이를 지킨다. retire된 id를 인용하던 `contracts/interfaces.json`과 `tests/legacy/interfaces.json`의 sentence, 소스의 주석, 테스트 제목 둘은 새 id를 인용하고, board 예제의 multipart form에 대한 주석은 HY-59.1을 인용한다. 아래 HY-113.24의 항목은 이제 답이 403에서 400으로 바뀜을 적는다(H35.36-4).
 

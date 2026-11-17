@@ -951,7 +951,8 @@
             21,
             22,
             23,
-            24
+            24,
+            25
           ],
           "blocks": [
             {
@@ -1030,10 +1031,10 @@
                   "koSource": "2701dc599b0bb82fe04770389b2c17678cde1759bef816c6aed0efb58672d2e7"
                 },
                 {
-                  "id": "HY-131.25",
-                  "en": "The Node host reads a body in paused mode: on each `'readable'` event it takes the bytes that `request.read()` gives as one buffer, awaits `feed` of that buffer and reads again only after it settled, and it joins no chunks, because joining would pass the bound of HY-131.26 and delay the check of a limit; the PHP and Python servers feed a chunk before they read the next one.",
-                  "ko": "Node host는 body를 paused mode로 읽는다. `'readable'` event마다 `request.read()`가 주는 byte를 buffer 하나로 받아 그 buffer의 `feed`를 기다리고, 그것이 끝난 뒤에만 다시 읽으며, 조각을 모으지 않는다. 모으면 HY-131.26의 한도를 넘고 제한의 판정이 늦어지기 때문이다. PHP와 Python server는 조각 하나를 넘긴 뒤에 다음 조각을 읽는다.",
-                  "koSource": "4301d8857b9500c8cbc4caf206f617a95a44b18d03bda6b99a347401b173eefb"
+                  "id": "HY-131.33",
+                  "en": "The Node host gives a body to `feed` one chunk at a time, as `node:http` delivers it, and takes the next chunk only after the files of the body took the bytes of the last one, and it joins no chunks, because joining would pass the bound of HY-131.26 and delay the check of a limit; the PHP and Python servers feed a chunk before they read the next one.",
+                  "ko": "Node host는 `node:http`가 주는 대로 body를 조각 하나씩 `feed`에 주고, body의 file이 앞 조각의 byte를 받은 뒤에만 다음 조각을 받으며, 조각을 모으지 않는다. 모으면 HY-131.26의 한도를 넘고 제한의 판정이 늦어지기 때문이다. PHP와 Python server는 조각 하나를 넘긴 뒤에 다음 조각을 읽는다.",
+                  "koSource": "293a65dbc8859dfa43251e1231398a7e72e466ab3b81f248e3c9d0333f4b9444"
                 }
               ]
             }

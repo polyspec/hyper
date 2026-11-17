@@ -1164,8 +1164,8 @@
               "tests": [
                 "packages/ts/tests/http.test.ts::the write hook and App.listener > App.listener returns the request listener of the application (HY-100): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
                 "packages/ts/tests/http.test.ts::the write hook and App.listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.25), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.25), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
               ]
             }
           ]
@@ -7711,7 +7711,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when the bytes given to the files are written and the ended files are closed, and rejects with the first error of a write (HY-131.25).",
+              "state": "Resolves when the bytes given to the files are written and the ended files are closed, and rejects with the first error of a write (HY-131.33).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/form/multipart.ts::Multipart.written",
@@ -7722,7 +7722,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.25"
+                "sentence": "HY-131.33"
               }
             },
             {
@@ -7732,7 +7732,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when every file that was ended or released is closed, so that its directory can be removed (HY-131.25).",
+              "state": "Resolves when every file that was ended or released is closed, so that its directory can be removed (HY-131.33).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/form/multipart.ts::Multipart.settled",
@@ -7743,7 +7743,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.25"
+                "sentence": "HY-131.33"
               }
             },
             {
@@ -7756,7 +7756,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Ends the stream of a file, or destroys it, and keeps the promise of its close (HY-131.25).",
+              "state": "Ends the stream of a file, or destroys it, and keeps the promise of its close (HY-131.33).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/form/multipart.ts::Multipart.finish",
@@ -7767,7 +7767,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.25"
+                "sentence": "HY-131.33"
               }
             }
           ]
@@ -8278,7 +8278,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Removes the directory of the files with the files that were not moved, in Node after the files are closed (HY-131.14, HY-131.25).",
+              "state": "Removes the directory of the files with the files that were not moved, in Node after the files are closed (HY-131.14, HY-131.33).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/RequestBody.php::Polyspec\\Hyper\\RequestBody::remove",
@@ -8324,7 +8324,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Resolves when the bytes given to the files are written (HY-131.25).",
+              "state": "Resolves when the bytes given to the files are written (HY-131.33).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/form/request-body.ts::RequestBody.written",
@@ -8335,7 +8335,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-131.25"
+                "sentence": "HY-131.33"
               }
             }
           ]
