@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 7328227ff7f1607a2d9a86168e7041d4ed4b388856df87f195edb308930969eb -->
+<!-- source-sha256: 096ee507e7f130965820a1f9b9052e23e735b538e3dba91fe80a4dd61c60b5d6 -->
 # 개발
 
 [English](development.md).
@@ -27,6 +27,8 @@
 | `make layout-check` | `config/layout.kit.yml`을 extend하는 `config/layout.yml`에 대해 `var/tools`의 alint로 폴더 배치를 검사한다 |
 | `make hyper-install` | pin한 도구를 설치하고, `$(ONLINE)`을 거쳐 template release의 Composer repository에서 PIE로 네이티브 확장을 build하며(`make template-ext`; H14.1-7, H27.45), `make hyper-install-python`을 실행하고, template release의 template package를 포함한 Composer 의존성을 설치한다(HR-70) |
 | `make hyper-install-python` | kit의 `python-venv` 유틸리티로 `mise.toml`의 Python에서 Python 서버 package의 venv `.venv`를 새로 만들고, release의 template wheel을 포함한 의존성과 함께 package를 non-editable로 설치한다. Python test와 board Python 서버는 그 Python을 실행하며 source 경로를 읽지 않는다(S5) |
+| `make python-lock` | Python package의 요구가 바뀐 뒤, checkout의 uv의 `uv lock`으로 `$(ONLINE)`을 통해 `pyproject.toml`에서 `packages/python/uv.lock`을 쓴다. uv는 manifest가 여전히 허용하는 lock된 버전을 그대로 둔다(H35.41) |
+| `make composer-lock PACKAGES="<vendor/package> ..."` | manifest에서 pin이 바뀐 뒤, checkout의 Composer의 `composer update --no-install`로 `$(ONLINE)`을 통해 적은 패키지에 대해서만 `composer.lock`과 `examples/board/composer.lock`을 쓴다. 모든 패키지의 update는 실행 시점에 각 range를 해석하므로 `PACKAGES` 없이는 실패한다(HR-89, H35.41) |
 | `make hyper-php-install` | `packages/php`를 가리키는 symbolic link로 `polyspec/hyper`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
 | `make ext` | `make hyper-install-php`의 `make json-ext`와 `make template-ext`가 json과 template release의 Composer repository(`packages.json`)에서 PIE로 가져온 json 확장 `build/json-ext/polyspec_json.so`와 template 확장이 없으면 실패한다. 링크된 실행에서 template 확장은 `vendor/polyspec/template`이 링크하는 template checkout의 `target/release/libpolyspec_template`이다. offline으로 실행하며 아무것도 build하지 않는다(HY-48.15, H27.45) |
 | `make hyper-ext` | `packages/php/native`의 PHP 확장 `polyspec_hyper`를 checkout의 php와 php-config에 대해 Cargo로 build하고, 그 PHP가 확장을 load하는지 확인한 뒤 `build/hyper-ext`에 publish한다. PHP는 build의 입력이고, `PHP`와 `PHP_CONFIG`에 주는 wrapper의 경로는 그 뒤의 PHP가 바뀌어도 같으므로, 출력이 자기 입력을 이름으로 밝힌다(HR-80). Cargo는 확장의 crate를 그 PHP의 API가 정하는 target 디렉터리 `target/php-<headers><build>`에서 build한다. `<headers>`는 header의 release(`php-config --vernum`)이고 `<build>`는 `release-php-ext`가 PHP의 build를 쓰는 형식인 `-nts`, `-zts`, `-debug-nts`, `-debug-zts` 중 하나다. 예를 들면 `target/php-80427-nts`이다. recipe는 그 디렉터리를 `CARGO_TARGET_DIR`로 Cargo에 주고, `make lint-bindings`와 `make test-bindings`도 그 crate의 clippy와 test를 같은 디렉터리에서 실행한다. 다른 PHP는 다른 디렉터리에서 build하므로 다른 API의 library가 복사되는 일이 없고, 어떤 recipe도 target 디렉터리를 지우지 않는다. checkout이 더 이상 build하지 않는 API의 디렉터리는 손으로 지운다. `build/hyper-ext`는 마지막 build의 library를 담는다. `hyper-ext`는 그것을 load하는 모든 target의 선행 조건이므로, 각 실행은 library를 load하기 전에 checkout의 PHP에 맞는 library를 publish한다(HY-132.2) |

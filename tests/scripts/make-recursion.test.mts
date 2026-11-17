@@ -94,6 +94,32 @@ test('a dry run of bindings-scaffold prints binding scaffold with the cargo of t
   assert.equal(started(), '', 'make -n bindings-scaffold started a command of its recipe');
 });
 
+// The locks of uv and of Composer have their targets too (H35.41): each starts the tool of the checkout by its absolute
+// path with the offline settings lifted, since the tool downloads what it locks.
+const ONLINE = 'env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK';
+
+test('a dry run of python-lock prints uv lock of the Python package by the absolute path of the uv of the checkout (H35.41)', () => {
+  const lines = dryRun('python-lock');
+  assert.equal(lines.at(-1), `${ONLINE} ${path.join(ROOT, 'var/tools/mise/shims/uv')} lock --project packages/python`, lines.join('\n'));
+});
+
+test('a dry run of composer-lock prints composer update of the named packages alone for both Composer roots, and fails without PACKAGES (H35.41)', () => {
+  const composer = path.join(ROOT, 'var/tools/mise/shims/composer');
+  const lines = dryRun('composer-lock', { variables: ['PACKAGES=vendor/one vendor/two'] });
+  // Only the named packages move, with no install: an update of every package would resolve ranges at the time of the run (HR-89).
+  assert.deepEqual(lines.slice(-2), [
+    `${ONLINE} ${composer} update --no-install --no-interaction vendor/one vendor/two`,
+    `${ONLINE} ${composer} update --no-install --no-interaction --working-dir=examples/board vendor/one vendor/two`,
+  ], lines.join('\n'));
+  // Without PACKAGES the recipe stops before it prints or starts a command, in a dry run too.
+  for (const variables of [[], ['PACKAGES=']]) {
+    const empty = spawnSync('make', ['--no-print-directory', '-n', 'composer-lock', ...variables], { cwd: ROOT, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))) });
+    assert.notEqual(empty.status, 0, empty.stdout + empty.stderr);
+    assert.match(empty.stderr, /composer-lock: PACKAGES is empty; name the packages whose pin changed: make composer-lock PACKAGES="<vendor\/package> <vendor\/package>"/u);
+    assert.doesNotMatch(empty.stdout, /composer update/u);
+  }
+});
+
 /** The recipe lines of the Makefile, each with its continuation lines. */
 function recipeLines(): string[] {
   const found: string[] = [];
