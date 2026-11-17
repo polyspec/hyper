@@ -429,10 +429,12 @@ const MEMBERS: Record<string, Member> = {
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
     call: (_receiver, args) => new ArraySession(...args),
   },
+  // The store of session files of Node is made by its maker, which waits; the member has the name of the constructor
+  // of the other servers.
   'file-sessions.constructor': {
-    required: FileSessions.length,
+    required: FileSessions.inDirectory.length,
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
-    call: (_receiver, args) => new FileSessions(...args),
+    call: (_receiver, args) => FileSessions.inDirectory(...args),
   },
   'redis-sessions.constructor': {
     required: RedisSessions.length,
@@ -506,7 +508,8 @@ function argumentsOf(member: string, directory: string): unknown[] {
       return [request(), new ArraySession(), 0];
     case 'app.server':
     case 'app.listener':
-      return [new FileSessions({ directory }), {}];
+      // A store that is made without waiting: the store of session files is made by a maker that waits.
+      return [new RedisSessions({ command }), {}];
     case 'media-type.constructor':
       return [new Map(), 'application/json'];
     case 'media-type.etag':

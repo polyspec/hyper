@@ -194,7 +194,7 @@ class BrokenSessions extends FileSessions {
   }
 }
 const sessions = process.env.UPLOAD_SESSIONS_OPEN === 'throws' ? BrokenSessions : FileSessions;
-const server = app.server(new sessions({ directory: process.env.UPLOAD_SESSIONS }), {
+const server = app.server(await sessions.inDirectory({ directory: process.env.UPLOAD_SESSIONS }), {
   ...(mode === 'none' ? {} : { around }),
   ...(log === undefined ? {} : { written: (request, response, ended, time, failure) => line(`written ${response === null ? 'null' : response.status} ${ended} ${mark(request)} elapsed=${elapsed(time)} failure=${JSON.stringify(failure)}`) }),
   ...(process.env.UPLOAD_FILES === undefined ? {} : { files: process.env.UPLOAD_FILES }),

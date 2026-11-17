@@ -261,7 +261,6 @@
         "packages/php/src/Session/NativeSession.php",
         "packages/python/src/polyspec/hyper/session/file_sessions.py",
         "packages/ts/src/session/file-sessions.ts",
-        "packages/ts/src/session/flock.ts",
         "packages/python/src/polyspec/hyper/session/_record_session.py",
         "packages/python/src/polyspec/hyper/session/_file_session.py",
         "packages/python/src/polyspec/hyper/session/_redis_session.py",

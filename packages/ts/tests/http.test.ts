@@ -21,7 +21,7 @@ async function start(options: { https?: boolean; bodyLimit?: number } = {}): Pro
     ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }),
     onResponse: (request, response, elapsed, reply) => reports.push([request === null ? null : `${request.method} ${request.path()}`, response.status, elapsed, reply.notes().length]),
   });
-  server = app.server(new FileSessions({ directory }));
+  server = app.server(await FileSessions.inDirectory({ directory }));
   base = await listen(server);
 }
 
@@ -111,7 +111,7 @@ describe('App.server', () => {
         throw new Error('hook boom');
       },
     });
-    server = app.server(new FileSessions({ directory }));
+    server = app.server(await FileSessions.inDirectory({ directory }));
     // The write events of the node:http response are the write hook of the Node server (HY-99): a listener that runs
     // before the server's own listener receives the end of the write of the 500 with its request.
     const writes: Promise<string>[] = [];
@@ -140,7 +140,7 @@ describe('the field lines of a request', () => {
   it('reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.8, HY-42.9, HY-42.14, HY-59.13)', async () => {
     const seen: unknown[] = [];
     const app = await new Fixture().app();
-    const listener = app.listener(new FileSessions({ directory }), {
+    const listener = app.listener(await FileSessions.inDirectory({ directory }), {
       around: (request) => {
         seen.push(request.header('Content-Type'), request.header('User-Agent'));
         // The read of the media type reads the joined value, which the core reads as no media type.
@@ -177,7 +177,7 @@ describe('the field lines of a request', () => {
 describe('the write hook and App.listener', () => {
   it('App.listener returns the request listener of the application (HY-100)', async () => {
     const app = await new Fixture().app();
-    const listener = app.listener(new FileSessions({ directory }));
+    const listener = app.listener(await FileSessions.inDirectory({ directory }));
     expect(typeof listener).toBe('function');
     // A node:http server that installs only this listener answers the application.
     const plain = createHttpServer(listener);
@@ -190,7 +190,7 @@ describe('the write hook and App.listener', () => {
   it('settles the promise of the listener after the write hook and the disconnect hook (HY-100)', async () => {
     const events: string[] = [];
     const { app, running, release } = await waitingApp(events);
-    const sessions = new FileSessions({ directory });
+    const sessions = await FileSessions.inDirectory({ directory });
     const listener = app.listener(sessions, {
       written: (request, response, ended) => events.push(`written ${request.method} ${request.path()} ${response === null ? 'null' : response.status} ${ended}`),
     });
@@ -221,7 +221,7 @@ describe('a multipart body read in chunks', () => {
       // The end of the listener of the request, which follows the removal of the directory.
       let handled: Promise<void> = Promise.resolve();
       const app = await new Fixture().app({ formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'], bodyLimit: 4 * 1024 * 1024 });
-      const listener = app.listener(new FileSessions({ directory }), {
+      const listener = app.listener(await FileSessions.inDirectory({ directory }), {
         around: (request) => {
           const file = request.file('f');
           seen.push(request.validInput(), request.form(), file?.filename() ?? null, file?.size() ?? null, readdirSync(uploads).length);

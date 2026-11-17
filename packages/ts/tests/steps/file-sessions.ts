@@ -3,7 +3,6 @@
 import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { UnserializeError } from '@polyspec/php-serialize';
 import { FileSessions } from '../../src/session/file-sessions.js';
 import { RecordSession } from '../../src/session/record-session.js';
 import type { CaseReader } from '../case-reader.js';
@@ -50,22 +49,26 @@ export async function sessionFileRequests(reader: CaseReader): Promise<void> {
       utimesSync(path, time, time);
       aged.set(`${PREFIX}${identifier}`, age);
     }
-    const sessions = new FileSessions({ directory });
+    const sessions = await FileSessions.inDirectory({ directory });
     const records: [string, string][][] = [];
     const touched: string[][] = [];
     const outcome = await requests(reader.input('steps'), {
       open: (cookie) => sessions.open(cookie),
+      // The names that the case files give the two failures of a record, by the kind of the error of hyper: a record
+      // that cannot be decoded (kind `record`) is `unserialize`, and a record that holds no array (kind
+      // `record_not_array`) is `record`.
       failure: (error) => {
-        if (error instanceof UnserializeError) return 'unserialize';
-        return error instanceof Error && error.constructor === Error ? 'record' : null;
+        const kind: unknown = error instanceof Error ? Reflect.get(error, 'kind') : undefined;
+        if (kind === 'record') return 'unserialize';
+        return kind === 'record_not_array' ? 'record' : null;
       },
       call: (method, _args, made) => {
         if (method !== 'directory') throw new Error(`the method ${method} of the case is unknown`);
         return names(directory, made);
       },
-      other: (step) => {
+      other: async (step) => {
         if (step.get('collect') !== true) throw new Error('a step of the case is neither a request nor a collection');
-        return [sessions.collect()];
+        return [await sessions.collect()];
       },
       identifiers,
       after: (made) => {
@@ -115,7 +118,7 @@ export const steps = {
       // The first failure counts: the session is closed also after a read that failed.
       let failure: unknown = null;
       try {
-        const sessions = new FileSessions(typeof lifetime === 'number' ? { directory, lifetime } : { directory });
+        const sessions = await FileSessions.inDirectory(typeof lifetime === 'number' ? { directory, lifetime } : { directory });
         if (cookie !== null) {
           const store = await sessions.open(cookie);
           try {

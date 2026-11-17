@@ -50,7 +50,7 @@ const cluster = async () => {
 const connection = nodes !== undefined ? await cluster() : sentinels !== undefined ? await sentinel() : port !== undefined ? await direct() : null;
 const client = connection?.client ?? null;
 const sessions = connection === null
-  ? new FileSessions({ directory })
+  ? await FileSessions.inDirectory({ directory })
   : new RedisSessions({
       command: connection.command,
       lockRetries: Number(process.env.HYPER_SESSION_RETRIES ?? 1_000_000),

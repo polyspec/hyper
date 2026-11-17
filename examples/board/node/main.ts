@@ -63,7 +63,7 @@ const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
   if (url === undefined || url === '') {
     const directory = env('BOARD_SESSIONS');
     mkdirSync(directory, { recursive: true, mode: 0o700 });
-    return new FileSessions({ directory });
+    return FileSessions.inDirectory({ directory });
   }
   const { createClient, RESP_TYPES } = await import('redis');
   const client = createClient({ url, disableOfflineQueue: true }).on('error', (error: unknown) => {

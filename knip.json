@@ -25,8 +25,8 @@
 //     release for the same reason (H35.22);
 //   - @polyspec/php-serialization, which the generated Node binding requires (packages/ts/native/generated, which
 //     knip does not read) and the root names by the tarball URL of its release for the same reason (H35.8-1);
-//   - @polyspec/session-store, whose Store the generated Node binding takes (packages/ts/native/generated, which knip
-//     does not read) and which the root names by the tarball URL of its release for the same reason (H35.8-2);
+//   - @polyspec/session-store at the root, which names it by the tarball URL of its release for the same reason
+//     (H35.8-2); packages/ts imports it for the file sessions, so that workspace does not ignore it;
 //   - @polyspec/binding, whose dist/cli.js the Makefile starts by its path (BINDING), which knip does not read, because knip
 //     reads no Makefile and ignoreBinaries names only programs that a script starts by name;
 //   - tailwindcss of packages/cli: lib/build.mjs compiles the stylesheet of an app with @tailwindcss/node from
@@ -54,7 +54,7 @@
   "workspaces": {
     "packages/ts": {
       "entry": ["src/index.ts", "src/build.ts"],
-      "ignoreDependencies": ["@polyspec/php-serialization", "@polyspec/session-store"]
+      "ignoreDependencies": ["@polyspec/php-serialization"]
     },
     "packages/cli": {
       "ignoreDependencies": ["tailwindcss"]

@@ -9,9 +9,9 @@ import { present } from './support.js';
 
 let directory: string;
 let sessions: FileSessions;
-beforeEach(() => {
+beforeEach(async () => {
   directory = mkdtempSync(join(tmpdir(), 'hyper-sessions-'));
-  sessions = new FileSessions({ directory });
+  sessions = await FileSessions.inDirectory({ directory });
 });
 afterEach(() => {
   rmSync(directory, { recursive: true, force: true });

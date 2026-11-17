@@ -11,9 +11,9 @@ import { sessionFileRequests } from './file-sessions.js';
 
 // Returns the message of the open error of a call, an error of exactly the class Error (HY-106.6); a call that returns
 // fails the step, and an error of another class is an error of the step.
-function openError(open: () => unknown): string {
+async function openError(open: () => Promise<unknown>): Promise<string> {
   try {
-    open();
+    await open();
   } catch (error) {
     if (!(error instanceof Error) || error.constructor !== Error) throw error;
     return error.message;
@@ -26,21 +26,20 @@ export const steps = {
     await sessionFileRequests(reader);
   },
 
-  open(reader: CaseReader): void {
+  async open(reader: CaseReader): Promise<void> {
     const given = textOf(reader.input('directory'), 'the directory of the case');
     const temporary = given === 'temporary' ? mkdtempSync(join(tmpdir(), 'hyper-file-sessions-')) : null;
     const directory = temporary ?? given;
     try {
       const message = reader.has('lifetime')
-        ? openError(
-            () =>
-              new FileSessions({
-                directory,
-                // @ts-expect-error -- a case gives the lifetime as a JSON value of any type, which the store checks (HY-104.19)
-                lifetime: reader.input('lifetime'),
-              }),
+        ? await openError(() =>
+            FileSessions.inDirectory({
+              directory,
+              // @ts-expect-error -- a case gives the lifetime as a JSON value of any type, which the store checks (HY-104.19)
+              lifetime: reader.input('lifetime'),
+            }),
           )
-        : openError(() => new FileSessions({ directory }));
+        : await openError(() => FileSessions.inDirectory({ directory }));
       reader.compare('error', message);
     } finally {
       if (temporary !== null) rmSync(temporary, { recursive: true, force: true });
