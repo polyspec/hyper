@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7b2099edd626d772c525a7fd43ea62806b402be495f886bec3722332dcbd4499 -->
+<!-- source-sha256: e0047c8bd85e40209cbe9ad5cec4c6be3e1bd729fa278d990ecd5fb9d736f6fd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `docs/operations/deployment.md`는 TLS와 ACL 사용자를 쓰는 Node와 Python server의 Sentinel 설정을 주소 `rediss://<user>:<password>@<host>:<port>`로 준다(H35.38-2). 입력: TLS와 ACL 사용자 절. 이전 동작: 설정의 `tls`, `user`, `password`만 적어서, Sentinel 예제의 `redis://` 주소를 그대로 둔 application은 연결에 실패했다. session-store 0.0.7은 Sentinel의 TLS와 사용자를 그 주소에서 읽기 때문이다(SR-6.1). 기대 동작: 절이 그 규칙을 server마다 예제와 함께 적는다. `make docs-check`가 통과한다.
 - 행 H35.38을 우회한다: `scripts/recipe/candidate.mts`는 unit에 member가 하나도 없을 때만 source에서 member를 끌어낸다(222행). 그래서 source가 session-store library로 옮겨 간 `contracts/interfaces.json`의 unit은 예전 member를 stale 항목으로 유지하고 새 member는 하나도 얻지 못한다. 이를 고치는 lane/recipe-candidate의 행이 merge되면 이 행을 다시 진행한다.
 - `hyper build`는 `program/legacy/hyper/data.tpl`을 쓰지 않는다(H35.32-1-5, HY-48.21). 입력: 모든 build. 이전 동작: build는 core를 부르지 않는 서버를 위해 예약 템플릿의 사본을 썼으나, PHP와 Python 서버가 core로 렌더한 뒤로는 어느 서버도 그것을 읽지 않는다. 지금 동작: `program/`은 `templates/`, `reads.json`, `build.json`을 담는다. 파일이 지워진 `contracts/interfaces.json`의 unit `reads`와 `renderer`는 사라진다. PHP와 Python runner는 core가 실행하는 `contracts/context.json`의 section `withContext`를 더 실행하지 않으며, `Context::withContext`, `Context.with_context`, `ContextTest.php`도 함께 사라진다. Python render test는 예약 템플릿의 빈 사본을 쓰지 않는다.
 - PHP 서버(H35.32-1-2)와 Python 서버(H35.32-1-3)가 모두 core로 렌더하고, 공유 값을 한 번 읽고, `reads.json`, `build.json`, `templates`의 프로그램 디렉터리를 열므로, HY-13.8과 HY-48.21은 구현되지 않음 표시를 잃는다.

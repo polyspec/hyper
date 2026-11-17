@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: f7d6830dd92cfaa13696ad3edcc72cb4b66a7a273b55477188eb6e1722078a05 -->
+<!-- source-sha256: 959daab6db74e73b2456fef553e01821b49c234c59f8685250137d427e2eb731 -->
 # 배포
 
 [English](deployment.md).
@@ -237,4 +237,25 @@ RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379", authorities=
 
 `authorities`는 store가 단독으로 신뢰하는 기관의 파일이며, PHP 서버의 `stream[cafile]`에 해당한다. null이면 machine의 trust store를 쓴다.
 
-Sentinel을 쓰면 각 Sentinel도 같은 보안을 요구하므로, 모든 client는 Sentinel과 primary 양쪽에 이를 지정한다. PHP 서버는 각 항목에 `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`를 주고, `RedisSentinelSessions`의 이름 다음 인자로 primary의 매개변수와 scheme `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`를 준다. Node와 Python 서버는 Sentinel 설정의 `tls`, `user`, `password`를 주며, 이는 Sentinel과 primary에 적용된다. Redis 서버 하나의 용량은 [benchmark](benchmark.ko.md)에 있다.
+Sentinel을 쓰면 각 Sentinel도 같은 보안을 요구하므로, 모든 client는 Sentinel과 primary 양쪽에 이를 지정한다. PHP 서버는 각 항목에 `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`를 주고, `RedisSentinelSessions`의 이름 다음 인자로 primary의 매개변수와 scheme `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`를 준다. Node와 Python 서버는 각 Sentinel을 user 정보에 사용자와 비밀번호를 담은 scheme `rediss`의 주소로 주고, Sentinel 설정에 같은 `tls`, `user`, `password`를 주며, 이는 Sentinel과 primary에 적용된다. store는 Sentinel의 TLS와 사용자를 그 주소에서 읽으므로(session-store 0.0.7의 SR-6.1), `tls: true`와 `redis://` 주소는 연결에 실패한다.
+
+```ts
+const urls = ['rediss://hyper:secret@sentinel-1:26379', 'rediss://hyper:secret@sentinel-2:26379', 'rediss://hyper:secret@sentinel-3:26379'];
+new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: true, user: 'hyper', password: 'secret', authorities: '/etc/redis/ca.pem' }, lockExpire: 30 });
+```
+
+```python
+RedisSessions(
+    SettingSentinel(
+        urls=["rediss://hyper:secret@sentinel-1:26379", "rediss://hyper:secret@sentinel-2:26379", "rediss://hyper:secret@sentinel-3:26379"],
+        service="hyper",
+        tls=True,
+        user="hyper",
+        password="secret",
+        authorities="/etc/redis/ca.pem",
+    ),
+    lock_expire=30,
+)
+```
+
+Redis 서버 하나의 용량은 [benchmark](benchmark.ko.md)에 있다.

@@ -225,4 +225,25 @@ RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379", authorities=
 
 `authorities` is the file of the authorities that the store trusts alone, as `stream[cafile]` of the PHP server; null uses the trust store of the machine.
 
-With Sentinel, each Sentinel takes the same security, so every client states it for both the Sentinels and the primary. The PHP server gives each entry `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`, and the parameters and scheme of the primary as the arguments of `RedisSentinelSessions` after the name: `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`. The Node and Python servers give `tls`, `user` and `password` of the Sentinel setting, which apply to the Sentinels and to the primary. The capacity of one Redis server is in [the benchmark](benchmark.md).
+With Sentinel, each Sentinel takes the same security, so every client states it for both the Sentinels and the primary. The PHP server gives each entry `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`, and the parameters and scheme of the primary as the arguments of `RedisSentinelSessions` after the name: `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`. The Node and Python servers give each Sentinel as an address of the scheme `rediss` with the user and its password in its user information, and the same `tls`, `user` and `password` in the Sentinel setting, which apply to the Sentinels and to the primary. The store takes the TLS and the user of a Sentinel from its address (SR-6.1 of session-store 0.0.7), so an address `redis://` with `tls: true` fails the connection:
+
+```ts
+const urls = ['rediss://hyper:secret@sentinel-1:26379', 'rediss://hyper:secret@sentinel-2:26379', 'rediss://hyper:secret@sentinel-3:26379'];
+new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: true, user: 'hyper', password: 'secret', authorities: '/etc/redis/ca.pem' }, lockExpire: 30 });
+```
+
+```python
+RedisSessions(
+    SettingSentinel(
+        urls=["rediss://hyper:secret@sentinel-1:26379", "rediss://hyper:secret@sentinel-2:26379", "rediss://hyper:secret@sentinel-3:26379"],
+        service="hyper",
+        tls=True,
+        user="hyper",
+        password="secret",
+        authorities="/etc/redis/ca.pem",
+    ),
+    lock_expire=30,
+)
+```
+
+The capacity of one Redis server is in [the benchmark](benchmark.md).
