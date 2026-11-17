@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: b4ba47e5d83541c9144cad26ea00fbd961e892cef4c3e07e4e35b9441bc0b93c -->
+<!-- source-sha256: f2d37e54350604887f41ec32225bcf8b2f8686a97a57e3e8ca652c7608c42cd6 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -650,5 +650,5 @@
 | H34.3 | server 시작이 실패해도 upload-servers의 gate listener를 닫는다: hostsOf가 server를 시작하기 전에 listener의 close를 등록하므로, 시작이 실패하면 파일은 그 원인과 함께 끝나고 run을 붙잡는 listener가 남지 않는다(HR-87) | tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [o] |
 | H34.4 | Node addon을 upload-servers의 입력으로 선언한다: run의 Node application이 그것을 load하므로 make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts가 그것을 build해야 한다(HR-85, H35.55) | tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [o] |
 | H34.5 | hyper-test-scripts 전체 set의 dry run을 호출한 make의 TESTS 없이 실행한다: make가 command-line 변수를 recipe의 environment로 export하므로 test-inputs.test.mts는 그 dry run에 TESTS=를 준다(HR-85, H35.55) | tests/scripts/test-inputs.test.mts | make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts | [o] |
-| H34.9 | assets.yml의 모든 job에서 cargo를 시작하기 전에 Cargo.lock의 crate를 fetch한다: 각 ci-assets-* recipe는 install-tools 뒤에 hyper-install-crates를 실행하고, ci-group-tools.test.mts는 check group의 규칙을 assets job에도 적용한다(HR-89) | Makefile, tests/scripts/ci-group-tools.test.mts | make hyper-test-scripts TESTS=tests/scripts/ci-group-tools.test.mts | [ ] |
-| H34.10 | hyper-install-python이 Python native module을 build하기 전에 binding의 생성 source를 쓴다: 새 checkout에는 make bindings가 쓰는 packages/python/native/generated/lib.rs가 없다(HR-85) | Makefile, tests/scripts | make hyper-test-scripts TESTS=tests/scripts/hyper-install.test.mts | [ ] |
+| H34.9 | assets.yml의 모든 job에서 cargo를 시작하기 전에 Cargo.lock의 crate를 fetch한다: 각 ci-assets-* recipe는 install-tools 뒤에 hyper-install-crates를 실행하고, ci-group-tools.test.mts는 check group의 규칙을 assets job에도 적용한다(HR-89) | Makefile, tests/scripts/ci-group-tools.test.mts | make hyper-test-scripts TESTS=tests/scripts/ci-group-tools.test.mts | [o] |
+| H34.10 | hyper-install-python이 Python native module을 build하기 전에 binding의 생성 source를 쓴다: 새 checkout에는 make bindings가 쓰는 packages/python/native/generated/lib.rs가 없다(HR-85) | Makefile, tests/scripts | make hyper-test-scripts TESTS=tests/scripts/hyper-install.test.mts | [o] |
