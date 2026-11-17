@@ -318,10 +318,10 @@ final class CaseRules
 
     /**
      * HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites.
-     * A statement that names kinds, such as HY-106.21 with `invalid_application` and `invalid_build` or HY-42.7 with
-     * `invalid_text`, accepts an error of hyper of one of them (`statedKinds`); the creation of a server fails with an
-     * error of hyper whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; a statement
-     * that names no kind is an open failure and expects the open error (HY-106.21).
+     * A statement to which the kind tables of HY-132 give kinds, such as HY-106.21 with `invalid_application` and
+     * `invalid_build` or HY-42.7 with `invalid_text`, accepts an error of one of them (`statedKinds`); the creation of
+     * a server fails with an error of hyper whose kind HY-97.7 does not state, so that only its class is checked until
+     * H35.29-6; a statement that the tables do not name is an open failure and expects the open error (HY-106.21).
      */
     public static function outcomeError(mixed $sentence, mixed $observed): bool
     {
@@ -338,35 +338,84 @@ final class CaseRules
     }
 
     /**
-     * The kinds that a statement of contracts/protocol.json names in its English text, each as "kind `name`", in their
-     * order; none for a statement that names no kind or that the file does not hold.
+     * The kinds that the kind tables of HY-132 give to a statement, in their order; none for a statement they do not
+     * name.
      *
      * @return list<string>
      */
     private static function statedKinds(string $sentence): array
     {
-        /** @var array<string, string>|null $texts */
-        static $texts = null;
-        $texts ??= self::statementTexts(Json::file(self::CONTRACTS . 'protocol.json'));
-        preg_match_all('/\bkind `([a-z_]+)`/', $texts[$sentence] ?? '', $found);
+        /** @var array<string, list<string>>|null $table */
+        static $table = null;
+        $table ??= self::kindsByStatement();
 
-        return array_values(array_unique($found[1]));
+        return $table[$sentence] ?? [];
     }
 
-    /** @return array<string, string> the English text of every statement under a value, by its id */
-    private static function statementTexts(mixed $value): array
+    /**
+     * The kinds that each statement states, by its id, from the kind tables of HY-132 (HY-132.3, HY-132.9): the first
+     * cell of a row is the kind in backticks, and its last cell the ids of the statements that state it, separated by
+     * ", ".
+     *
+     * @return array<string, list<string>>
+     */
+    private static function kindsByStatement(): array
     {
-        if (!is_array($value)) {
-            return [];
+        $rule = self::ruleOf(Json::file(self::CONTRACTS . 'protocol.json'), 'HY-132');
+        $blocks = is_array($rule['blocks'] ?? null) ? $rule['blocks'] : [];
+        $tables = array_filter(
+            $blocks,
+            static fn (mixed $block): bool => is_array($block) && ($block['kind'] ?? null) === 'table',
+        );
+        if ($tables === []) {
+            throw new \LogicException('contracts/protocol.json holds no kind table of HY-132');
         }
-        $texts = isset($value['id'], $value['en']) && is_string($value['id']) && is_string($value['en'])
-            ? [$value['id'] => $value['en']]
-            : [];
-        foreach ($value as $child) {
-            $texts += self::statementTexts($child);
+        $table = [];
+        foreach ($tables as $block) {
+            foreach (is_array($block['rows'] ?? null) ? $block['rows'] : [] as $row) {
+                if (!is_array($row) || count($row) < 2) {
+                    throw new \LogicException(
+                        'a row of the kind tables of HY-132 has no kind and rule: ' . json_encode($row),
+                    );
+                }
+                $cells = array_values($row);
+                $kind = str_replace('`', '', self::cellText($cells[0]));
+                foreach (explode(', ', self::cellText($cells[count($cells) - 1])) as $id) {
+                    $table[$id][] = $kind;
+                }
+            }
         }
 
-        return $texts;
+        return $table;
+    }
+
+    /** @return array<mixed>|null the rule of contracts/protocol.json with an id under a value */
+    private static function ruleOf(mixed $value, string $id): ?array
+    {
+        if (!is_array($value)) {
+            return null;
+        }
+        if (($value['kind'] ?? null) === 'rule' && ($value['id'] ?? null) === $id) {
+            return $value;
+        }
+        foreach ($value as $child) {
+            $found = self::ruleOf($child, $id);
+            if ($found !== null) {
+                return $found;
+            }
+        }
+
+        return null;
+    }
+
+    /** The English text of a cell of a table of contracts/protocol.json. */
+    private static function cellText(mixed $cell): string
+    {
+        if (!is_array($cell) || !is_string($cell['en'] ?? null)) {
+            throw new \LogicException('a cell of the kind tables of HY-132 has no English text: ' . json_encode($cell));
+        }
+
+        return $cell['en'];
     }
 
     /** @return list<string> */

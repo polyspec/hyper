@@ -214,10 +214,10 @@ export function openError(observed: unknown): boolean {
 
 /**
  * HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites. A
- * statement that names kinds, such as HY-106.21 with `invalid_application` and `invalid_build` or HY-42.7 with
- * `invalid_text`, accepts an error of hyper of one of them (`statedKinds`); the creation of a server fails with an error
- * of hyper whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; a statement that names
- * no kind is an open failure and expects the open error (HY-106.21).
+ * statement to which the kind tables of HY-132 give kinds, such as HY-106.21 with `invalid_application` and
+ * `invalid_build` or HY-42.7 with `invalid_text`, accepts an error of one of them (`statedKinds`); the creation of a server fails with an error
+ * of hyper whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; a statement that the
+ * tables do not name is an open failure and expects the open error (HY-106.21).
  */
 export function outcomeError(sentence: unknown, observed: unknown): boolean {
   const kinds = typeof sentence === 'string' ? statedKinds(sentence) : [];
@@ -227,27 +227,55 @@ export function outcomeError(sentence: unknown, observed: unknown): boolean {
   return sentence === 'HY-97.7' || (typeof raises.kind === 'string' && kinds.includes(raises.kind));
 }
 
-let statements: Map<string, string> | undefined;
+let kindTable: Map<string, string[]> | undefined;
 
-/** The English text of every statement under a value, by its id. */
-function statementTexts(value: unknown, texts: Map<string, string>): Map<string, string> {
+/** The rule of contracts/protocol.json with an id under a value, or undefined. */
+function ruleOf(value: unknown, id: string): Record<string, unknown> | undefined {
   if (Array.isArray(value)) {
-    for (const child of value) statementTexts(child, texts);
+    for (const child of value) {
+      const found = ruleOf(child, id);
+      if (found !== undefined) return found;
+    }
   } else if (isObject(value)) {
-    if (typeof value.id === 'string' && typeof value.en === 'string' && !texts.has(value.id)) texts.set(value.id, value.en);
-    for (const child of Object.values(value)) statementTexts(child, texts);
+    if (value.kind === 'rule' && value.id === id) return value;
+    for (const child of Object.values(value)) {
+      const found = ruleOf(child, id);
+      if (found !== undefined) return found;
+    }
   }
-  return texts;
+  return undefined;
+}
+
+/** The English text of a cell of a table of contracts/protocol.json. */
+function cellText(cell: unknown): string {
+  if (!isObject(cell) || typeof cell.en !== 'string') throw new Error(`a cell of the kind tables of HY-132 has no English text: ${JSON.stringify(cell)}`);
+  return cell.en;
 }
 
 /**
- * The kinds that a statement of contracts/protocol.json names in its English text, each as "kind `name`", in their
- * order; none for a statement that names no kind or that the file does not hold.
+ * The kinds that each statement states, by its id, from the kind tables of HY-132 (HY-132.3, HY-132.9): the first cell
+ * of a row is the kind in backticks, and its last cell the ids of the statements that state it, separated by ", ".
  */
+function kindsByStatement(): Map<string, string[]> {
+  const rule = ruleOf(JSON.parse(readFileSync(new URL('protocol.json', CONTRACTS), 'utf8')), 'HY-132');
+  const blocks: unknown[] = Array.isArray(rule?.blocks) ? rule.blocks : [];
+  const tables = blocks.filter((block): block is Record<string, unknown> => isObject(block) && block.kind === 'table');
+  if (tables.length === 0) throw new Error('contracts/protocol.json holds no kind table of HY-132');
+  const table = new Map<string, string[]>();
+  for (const block of tables) {
+    for (const row of Array.isArray(block.rows) ? block.rows : []) {
+      if (!Array.isArray(row) || row.length < 2) throw new Error(`a row of the kind tables of HY-132 has no kind and rule: ${JSON.stringify(row)}`);
+      const kind = cellText(row[0]).replaceAll('`', '');
+      for (const id of cellText(row.at(-1)).split(', ')) table.set(id, [...(table.get(id) ?? []), kind]);
+    }
+  }
+  return table;
+}
+
+/** The kinds that the kind tables of HY-132 give to a statement, in their order; none for a statement they do not name. */
 function statedKinds(sentence: string): string[] {
-  statements ??= statementTexts(JSON.parse(readFileSync(new URL('protocol.json', CONTRACTS), 'utf8')), new Map());
-  const text = statements.get(sentence) ?? '';
-  return [...new Set(Array.from(text.matchAll(/\bkind `([a-z_]+)`/gu), (match) => match[1] ?? ''))];
+  kindTable ??= kindsByStatement();
+  return kindTable.get(sentence) ?? [];
 }
 
 /** The result of a call, or null and the failure of hyper with which it fails; any other error is thrown again. */

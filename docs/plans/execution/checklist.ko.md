@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: e98b516e995e1a4d62fe3473f780be0c0e4f85a8af056448fa3de578230bee1f -->
+<!-- source-sha256: b4918e8bf76bf781969226d9a05260b5cc64d67a8e280b6e5d442dcdb9941279 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -493,6 +493,7 @@
 | H35.9-4 | 세 case runner의 step은 살아 있는 section의 field(`raises`, `read`)를 읽고, 지운 사본의 field는 읽지 않는다. | packages/php/tests, packages/ts/tests, packages/python/tests, CHANGELOG.md와 한국어 짝 | `make recipe-check` | [ ] |
 | H35.9-5 | Node case runner는 contracts/request.json case의 field `names`를 case가 적은 대로 읽으며, 지금은 "the case field names is not a list of strings"로 거부한다(1 case). | packages/ts/tests | `make hyper-test-node` | [ ] |
 | H35.9-6 | case runner는 `raises` outcome이 잡은 오류의 kind를 outcome이 인용한 statement가 적은 kind들과 비교하며(docs/spec/recipe.md), 그래서 statement가 두 kind를 적는 outcome, 예컨대 build 파일이 없을 때 `invalid_build`, 그 밖에는 `invalid_application`을 적는 HY-106.21의 outcome은 둘 중 어느 것도 받는다. 지금은 모든 outcome에 `invalid_application`을 기대한다. | packages/php/tests, packages/ts/tests, packages/python/tests | `make hyper-test-php`, `make hyper-test-node` | [ ] |
+| H35.9-7 | case runner는 인용된 statement가 기대하는 kind를 contracts/protocol.json의 HY-132 kind 표(HY-132.3, HY-132.9)에서 가져오며, 그 표의 열 규칙은 binding과 라이브러리의 kind를 포함해 각 kind를 정하는 statement를 적는다. 지금은 kind를 statement의 영어 text에서 pattern으로 읽는다. | contracts/protocol.json, docs/spec/protocol.md, docs/spec/recipe.md, packages/php/tests, packages/ts/tests, packages/python/tests | `make hyper-test-php`, `make hyper-test-node` | [ ] |
 | H35.10 | 서버와 Rust core가 달랐고 `contracts/`의 live case가 답을 정하지 않은 입력마다, 먼저 live case를 쓰고(그것이 Red다) 그다음 core와 세 서버가 그 case의 답을 낸다(H35.9). | contracts, packages/rust, packages/php/src, packages/ts/src, packages/python/src, CHANGELOG.md와 한국어 짝 | `make recipe-check` | [ ] |
 | H35.10-1 | live case가 짝 없는 surrogate를 가진 값에 대한 `csrf.verify`의 답을 정하고, core와 세 서버가 그 답을 낸다(HY-24.4). | contracts, packages/rust | `make recipe-check` | [-] cause: 그런 값으로 `csrf.verify`에 닿는 요청은 없다. UTF-8이 아닌 form 값은 action 전에 bad request이기 때문이다(`contracts/app.json` `a_form_value_that_is_not_utf8_is_a_bad_request_before_the_action`). |
 | H35.10-2 | live case가 U+00FF 위의 글자를 가진 값에 대한 context header 검사의 답을 정한다(HY-127.2). | contracts, packages/rust | `make recipe-check` | [-] cause: U+00FF 위의 header 값을 가진 요청은 context 검사 전에 실패한다(HY-42.7, `contracts/request.json` `a_header_value_with_a_character_above_u_00ff_fails`). |

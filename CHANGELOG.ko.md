@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6d8652f1fd8ded4ded773ccca8c12f7972128f977fa09ae97278ce90aa1a4883 -->
+<!-- source-sha256: 020682704865ffe9df55997189cb82e345175c53fd638497f4a46540af62c4a2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- case runner는 `raises` outcome이 기대하는 kind를 인용된 statement의 영어 text에서 pattern ``kind `name` ``으로 읽었으므로, "`a` 또는 `b`"로 적힌 두 번째 kind를 놓치고 statement가 언급만 하는 kind를 가져왔다. 이제 runner는 kind를 `contracts/protocol.json`의 HY-132 kind 표에서 읽으며, 그 표의 열 규칙은 각 kind를 정하는 statement를 적는다. HY-132.9는 hyper의 규칙이 정하는 binding과 라이브러리의 kind 표를 더한다(HY-42.7의 `invalid_text` 포함). HY-132.3의 표에는 `malformed_content_type`(HY-59.12, HY-59.13)이 더해지고, 그 규칙 칸은 statement id의 list가 된다(H35.9-7).
 - 세 서버의 case runner는 `contracts/request.json`의 case가 `names`를 적을 때만 그 파일을 비교한다. 실패하는 limit의 case는 파일을 적지 않는데(HY-114.12), Node runner는 그 case를 "the case field names is not a list of strings"로 거부했다(H35.9-5).
 - PHP 서버는 링크된 template이 더 이상 제공하지 않는 legacy PHP package 대신 template 확장 0.0.28로 렌더한다. `Renderer`는 `templates/`의 `FsLoader` 위에 `Engine`을 열고, engine은 `prepare`와 `load`에서만 파일을 읽으므로(RT-77) 렌더마다 `prepareBound`로 준비하며, HTML 정의는 `DefineInput`으로, 시간대와 시각은 `Environment`로 넘기고, `bind`와 `merge`로 bind한다. 확장이 list로 거부하는 빈 root는 빈 map으로 bind하고, 확장이 native object로 두는 `JsonSerializable`은 bind 전에 그 값으로 바꾼다(HY-44.6). 호출할 수 없는 host function은 `functions.<name> is not a function`으로 open을 실패시킨다. `DataModel`은 `Value\Bind`와 `MapValue` 순회 대신 Python 서버처럼 값을 직접 검사한다. open은 더 이상 `php/`와 `program.json`이 필요 없으므로(HY-48.16), case runner는 open이 `reads.json`에서 실패하면 manifest를 읽은 것으로 보고, `build.json`의 case `a_directory_without_any_output_fails_the_open`은 세 출력을 적으며, `RendererTest`는 generated 프로그램 없는 프로그램 디렉터리를 렌더한다. `benchmarks/server.php`는 `bind`를 잰다(H35.31).
 - `make hyper-install-php`는 template 확장이 요구하는 json 확장 `polyspec_json` 0.0.34를 json release의 Composer repository에서 PIE로 `build/json-ext`에 가져오고(`make json-ext`), `composer.json`은 그 repository와 `ext-polyspec_json`을 적는다. `make hyper-test-php`, `make recipe-run-php`, `make parity`, `make bench-server`, `make bench-server-smoke`는 json 확장, 그다음 template 확장을, PHP 테스트는 그다음 `polyspec_hyper`를 불러온다. template 확장은 링크된 실행에서 `vendor/polyspec/template`이 링크하는 template checkout의 `target/release/libpolyspec_template`이고, 그 밖에는 `build/ext/polyspec_template.so`이다. PHP 서버는 template 확장 없이 렌더하지 않으므로 이 target은 각각 한 번 실행한다. `scripts/check-parity.mts`의 `--extension`과 `startPhp`의 `extensions`는 여러 library를 순서대로 받는다(H35.31).

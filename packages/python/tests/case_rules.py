@@ -157,10 +157,10 @@ def open_error(observed: BaseException | None) -> bool:
 
 def outcome_error(sentence: str | None, observed: BaseException | None) -> bool:
     """HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites.
-    A statement that names kinds, such as HY-106.21 with `invalid_application` and `invalid_build` or HY-42.7 with
-    `invalid_text`, accepts an error of hyper of one of them (stated_kinds); the creation of a server fails with an
-    error of hyper whose kind HY-97.7 does not state, so that only its class is checked until H35.29-6; a statement that
-    names no kind is an open failure and expects the open error (HY-106.21)."""
+    A statement to which the kind tables of HY-132 give kinds, such as HY-106.21 with `invalid_application` and
+    `invalid_build` or HY-42.7 with `invalid_text`, accepts an error of one of them (stated_kinds); the creation of a
+    server fails with an error of hyper whose kind HY-97.7 does not state, so that only its class is checked until
+    H35.29-6; a statement that the tables do not name is an open failure and expects the open error (HY-106.21)."""
     kinds = stated_kinds(sentence) if isinstance(sentence, str) else []
     if not kinds and sentence != "HY-97.7":
         return open_error(observed)
@@ -170,30 +170,65 @@ def outcome_error(sentence: str | None, observed: BaseException | None) -> bool:
     return sentence == "HY-97.7" or raises["kind"] in kinds
 
 
-def _statement_texts(value: Any, texts: dict[str, str]) -> dict[str, str]:
-    """The English text of every statement under a value, by its id."""
-    if isinstance(value, list):
-        for child in value:
-            _statement_texts(child, texts)
-    elif isinstance(value, dict):
-        if isinstance(value.get("id"), str) and isinstance(value.get("en"), str):
-            texts.setdefault(value["id"], value["en"])
-        for child in value.values():
-            _statement_texts(child, texts)
-    return texts
+def _rule_of(value: Any, rule_id: str) -> dict[str, Any] | None:
+    """The rule of contracts/protocol.json with an id under a value, or None."""
+    children: list[Any] = []
+    if isinstance(value, dict):
+        if value.get("kind") == "rule" and value.get("id") == rule_id:
+            return value
+        children = list(value.values())
+    elif isinstance(value, list):
+        children = value
+    for child in children:
+        found = _rule_of(child, rule_id)
+        if found is not None:
+            return found
+    return None
 
 
-_STATEMENTS: dict[str, str] = {}
+def _cell_text(cell: Any) -> str:
+    """The English text of a cell of a table of contracts/protocol.json."""
+    if not isinstance(cell, dict) or not isinstance(cell.get("en"), str):
+        raise LookupError(
+            f"a cell of the kind tables of HY-132 has no English text: {cell!r}"
+        )
+    return cell["en"]
+
+
+def _kinds_by_statement() -> dict[str, list[str]]:
+    """The kinds that each statement states, by its id, from the kind tables of HY-132 (HY-132.3, HY-132.9): the first
+    cell of a row is the kind in backticks, and its last cell the ids of the statements that state it, separated by
+    ", "."""
+    rule = _rule_of(contract("protocol.json"), "HY-132") or {}
+    tables = [
+        block
+        for block in rule.get("blocks", [])
+        if isinstance(block, dict) and block.get("kind") == "table"
+    ]
+    if not tables:
+        raise LookupError("contracts/protocol.json holds no kind table of HY-132")
+    table: dict[str, list[str]] = {}
+    for block in tables:
+        for row in block.get("rows", []):
+            if not isinstance(row, list) or len(row) < 2:
+                raise LookupError(
+                    f"a row of the kind tables of HY-132 has no kind and rule: {row!r}"
+                )
+            kind = _cell_text(row[0]).replace("`", "")
+            for statement in _cell_text(row[-1]).split(", "):
+                table.setdefault(statement, []).append(kind)
+    return table
+
+
+_KINDS: dict[str, list[str]] = {}
 
 
 def stated_kinds(sentence: str) -> list[str]:
-    """The kinds that a statement of contracts/protocol.json names in its English text, each as "kind `name`", in
-    their order; none for a statement that names no kind or that the file does not hold."""
-    if not _STATEMENTS:
-        _statement_texts(contract("protocol.json"), _STATEMENTS)
-    return list(
-        dict.fromkeys(re.findall(r"\bkind `([a-z_]+)`", _STATEMENTS.get(sentence, "")))
-    )
+    """The kinds that the kind tables of HY-132 give to a statement, in their order; none for a statement they do not
+    name."""
+    if not _KINDS:
+        _KINDS.update(_kinds_by_statement())
+    return _KINDS.get(sentence, [])
 
 
 def stated_message(name: str, expected: Any, observed: Any) -> Any:

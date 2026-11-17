@@ -362,9 +362,26 @@ An application sends with every JSON response values that change only with its c
   | `invalid_session_token` | none | `store` | HY-24.14 |
   | `invalid_session_record` | none | `store` | HY-104.23 |
   | `shared_holds_context` | none | `value` | HY-124.8 |
-  | `invalid_representation` | none | `value` | HY-122.2 to HY-122.8 |
+  | `invalid_representation` | none | `value` | HY-122.2, HY-122.3, HY-122.4, HY-122.5, HY-122.6, HY-122.7, HY-122.8 |
+  | `malformed_content_type` | none | `value` | HY-59.12, HY-59.13 |
   | `integer_range` | none | `value` | HY-52.19, HY-69.10 |
   | `internal` | none | `internal` | HY-132.6 |
+
+  <a id="HY-132.9"></a> The kinds of the binding and of the libraries that a rule of hyper states are those of the table below, and a case that cites a statement for a failure expects a kind that this table or the table of HY-132.3 gives to that statement in its column Rule.
+
+  | Kind | Source | Rule |
+  | --- | --- | --- |
+  | `invalid_text` | binding | HY-42.7, HY-122.14 |
+  | `invalid_number` | binding | HY-52.19, HY-69.10, HY-114.12 |
+  | `invalid_argument_type` | binding | HY-25.7, HY-52.15, HY-60.32, HY-103.9 |
+  | `invalid_accept` | http-negotiation | HY-116.18 |
+  | `invalid_weight` | http-negotiation | HY-116.18 |
+  | `invalid_content_length` | http-form | HY-131.29 |
+  | `invalid` | http-form | HY-113.22 |
+  | `header_limit` | http-form | HY-113.22 |
+  | `no_boundary` | http-form | HY-113.22 |
+  | `no_rows` | orm | HY-107.8 |
+  | `revision_changed` | orm | HY-107.9 |
 
 - **HY-27** <a id="HY-27.1"></a> A path without a route, or a loader that reports a missing resource, responds with status 404. <a id="HY-27.2"></a> A method other than `GET`, `HEAD` or a declared `POST` responds with status 405; a representation checks the method of HY-121 instead. <a id="HY-27.3"></a> A loader or an action reports a missing resource with the not-found stop, whose message is `not found`; the forbidden stop of HY-51 has the message `forbidden` and the bad-request stop of HY-58 the message `bad request`. <a id="HY-27.4"></a> The server answers a `HEAD` request as the `GET` request of the same target (RFC 9110, section 9.3.2): every step runs with the request method `GET`, so a handler reads `GET`, and `App.handle` returns the `GET` response with its body, which the response hook (HY-60), the response limit (HY-66) and `around` (HY-97) receive with the request as the host gave it. <a id="HY-27.5"></a> The host writes the status and the headers of the response to a `HEAD` request, with the `Content-Length` of its body unless the status is 204 or 304, and no body. <a id="HY-27.6"></a> Every 405 has the header `Allow` (RFC 9110, section 15.5.6): `GET, HEAD` for a route, `GET, HEAD, POST` for a route that declares `post`, `GET, HEAD` for the 405 of HY-62.23, `POST` for `/_hyper/keep` (HY-40), and the methods of HY-121.6 for a representation.
 
