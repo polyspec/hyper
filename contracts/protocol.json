@@ -1012,6 +1012,13 @@
                   "unimplemented": "H35.11"
                 },
                 {
+                  "id": "HY-131.34",
+                  "en": "In Node, `moveTo(path)` and `content()` of `UploadedFile` return a promise that the action awaits, because the core reads and moves a file off the event loop, while PHP and Python return the result itself.",
+                  "ko": "Node에서 `UploadedFile`의 `moveTo(path)`와 `content()`는 action이 기다리는 promise를 돌려준다. core가 event loop 밖에서 파일을 읽고 옮기기 때문이다. PHP와 Python은 결과 자체를 돌려준다.",
+                  "koSource": "48f0b686751599f439611ceac5959abacf0ae90475863d59c57201b1607d9cc2",
+                  "unimplemented": "H35.11"
+                },
+                {
                   "id": "HY-131.14",
                   "en": "It removes the directory after the response hook (HY-60) or the disconnect hook (HY-67) of the request returned, also for a request that fails; a file that the application moved is not in it.",
                   "ko": "server는 요청의 response hook(HY-60)이나 disconnect hook(HY-67)이 반환한 뒤에 그 directory를 지우며 실패한 요청도 그렇고, application이 옮긴 file은 그 안에 없다.",
