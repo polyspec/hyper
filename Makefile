@@ -218,10 +218,14 @@ lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language 
 # that config/php-ext-pins.json pins from the digest of its release asset, and fails before the library is published
 # (HR-80, H35.51); json-ext does the same.
 PIE := $(KIT_TOOLS)/mise/shims/pie
+# $(call pie_run,WORK,STAGING) starts the one shell of a PIE recipe: it empties WORK and sets the trap that removes WORK
+# and STAGING at the end, the failure and SIGINT and SIGTERM of the run (HR-87, H35.53). template-ext, json-ext and
+# hyper-install-redis use it; each goes on with `&& \`.
+pie_run = rm -rf $(1) && mkdir -p $(1) && trap 'rm -rf $(strip $(1) $(2))' EXIT && trap 'exit 130' INT TERM
 PIE_WORK := $(CURDIR)/var/pie/polyspec/template
 .PHONY: template-ext
 template-ext: json-ext ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, H27.51); ONLINE
-	rm -rf $(PIE_WORK) && mkdir -p $(PIE_WORK)/ini && trap 'rm -rf $(PIE_WORK) build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && \
+	$(call pie_run,$(PIE_WORK),build/ext.next-$$$$) && mkdir -p $(PIE_WORK)/ini && \
 	printf 'extension=%s\n' '$(CURDIR)/$(JSON_EXT)' > $(PIE_WORK)/ini/polyspec_json.ini && \
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction && \
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction && \
@@ -238,7 +242,7 @@ JSON_EXT := build/json-ext/polyspec_json.so
 JSON_PIE_WORK := $(CURDIR)/var/pie/polyspec/json
 .PHONY: json-ext
 json-ext: ## Get the json extension polyspec_json of JSON_VERSION with PIE from the Composer repository of the json release into build/json-ext (H35.31); ONLINE
-	rm -rf $(JSON_PIE_WORK) && mkdir -p $(JSON_PIE_WORK) && trap 'rm -rf $(JSON_PIE_WORK) build/json-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && \
+	$(call pie_run,$(JSON_PIE_WORK),build/json-ext.next-$$$$) && \
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) repository:add composer $(JSON_PACKAGES) --no-interaction && \
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) build polyspec/json:$(JSON_VERSION) --no-interaction && \
 	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/json $(JSON_PIE_WORK) && \
@@ -257,9 +261,10 @@ PHPREDIS_WORK := $(CURDIR)/var/pie/phpredis
 hyper-install-redis: ## Build the Redis server and the phpredis extension of the session tests into var/redis (HY-115); ONLINE
 	mkdir -p $(REDIS_DIR)
 	$(ONLINE) $(NODE) scripts/install-redis.mts $(REDIS_VERSION) $(REDIS_SHA256) $(REDIS_DIR)
-	rm -rf $(PHPREDIS_WORK) && mkdir -p $(PHPREDIS_WORK)
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PHPREDIS_WORK) $(PIE) build phpredis/phpredis:$(PHPREDIS_VERSION) --no-interaction
-	@binary=$$($(NODE) scripts/pie-binary.mts $(PHPREDIS_WORK) phpredis/phpredis) || exit $$?; cp "$$binary" $(REDIS_DIR)/redis.so
+	$(call pie_run,$(PHPREDIS_WORK),) && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PHPREDIS_WORK) $(PIE) build phpredis/phpredis:$(PHPREDIS_VERSION) --no-interaction && \
+	binary=$$($(NODE) scripts/pie-binary.mts $(PHPREDIS_WORK) phpredis/phpredis) && \
+	cp "$$binary" $(REDIS_DIR)/redis.so
 
 # The template extension that the PHP checks load. In a linked run `make link` links vendor/polyspec/template to the
 # packages/php-ext of a template checkout, and the checks load the library that the checkout builds into its

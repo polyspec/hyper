@@ -35,6 +35,23 @@ test('PHP_INI_SCAN_DIR is set only in the env of the two PIE commands of templat
   for (const line of found) assert.match(line, /^template-ext: \$\(ONLINE\) env PIE_WORKING_DIRECTORY=\$\(PIE_WORK\) COMPOSER_CACHE_DIR=\$\(PIE_WORK\)\/cache PHP_INI_SCAN_DIR=:\$\(PIE_WORK\)\/ini \$\(PIE\) /, line);
 });
 
+test('template-ext, json-ext and hyper-install-redis start their one shell with pie_run, whose trap removes the PIE working directory (HR-87, H35.53)', () => {
+  const escape = (value: string) => value.replaceAll(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+  // The data base of make holds the recipes unexpanded: the first line of each of the three is the call of the one definition.
+  const base = dryRun('template-ext', { variables: ['-p'] });
+  for (const [target, call] of [['template-ext', '$(call pie_run,$(PIE_WORK),build/ext.next-$$$$)'], ['json-ext', '$(call pie_run,$(JSON_PIE_WORK),build/json-ext.next-$$$$)'], ['hyper-install-redis', '$(call pie_run,$(PHPREDIS_WORK),)']] as const) {
+    const at = base.findIndex((line) => line.startsWith(`${target}:`) && !line.startsWith(`${target}:=`));
+    const recipe = base.slice(at + 1).find((line) => line.includes('pie_run'));
+    assert.ok(recipe?.trim().startsWith(call), `${target}: ${recipe}`);
+  }
+  // Expanded, each trap removes the working directory and the staging of its run.
+  for (const [target, work, staging] of [['template-ext', 'polyspec/template', ' build/ext.next-$$'], ['json-ext', 'polyspec/json', ' build/json-ext.next-$$'], ['hyper-install-redis', 'phpredis', '']] as const) {
+    const directory = `${ROOT}/var/pie/${work}`;
+    const text = dryRun(target).join('\n');
+    assert.match(text, new RegExp(`rm -rf ${escape(directory)} && mkdir -p ${escape(directory)} && trap 'rm -rf ${escape(directory)}${escape(staging)}' EXIT && trap 'exit 130' INT TERM && `), text);
+  }
+});
+
 test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in an empty folder from the Composer repository of the release (H27.45, H27.51)', () => {
   const version = variable('TEMPLATE_VERSION');
   const lines = dryRun('template-ext');
@@ -64,7 +81,7 @@ test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in
   const json = lines.findIndex((line) => line.includes(' build polyspec/json:'));
   const ini = lines.findIndex((line) => line.includes(`printf 'extension=%s\\n' '${ROOT}/build/json-ext/polyspec_json.so' > ${work}/ini/polyspec_json.ini`));
   assert.ok(json >= 0 && ini > json && ini < lines.indexOf(pie[0] ?? ''), text);
-  assert.match(text, new RegExp(`mkdir -p ${escape(work)}/ini && trap 'rm -rf ${escape(work)} `), text);
+  assert.match(text, new RegExp(`trap 'exit 130' INT TERM && mkdir -p ${escape(work)}/ini && `), text);
   // pie install writes into the PHP of the machine, and kit has no pie-build any more (kit K931).
   assert.deepEqual(lines.filter((line) => /\/pie-build\.|\bpie install\b|mise install/.test(line)), [], text);
   // The recipe takes the one library that PIE recorded with scripts/pie-binary.mts, fails with its status and publishes a file.
