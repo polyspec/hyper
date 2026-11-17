@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: c39673b67a77d2527c45f97bd22b3e8fd01677de18f845e8e2269041271ddb85 -->
+<!-- source-sha256: 6608029e0bc55d73dde8392b157c03b18d56872bea8d651df14959336751bf35 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -649,3 +649,4 @@
 | H34.2 | PHP의 session cookie를 HY-45.8의 field 값으로 쓴다: NativeSession은 소문자 path=/와 secure를 쓰는 PHP setcookie의 값이 아니라 CoreRules::sessionCookieHeader의 값을 보낸다 | packages/php/src/Session/NativeSession.php, packages/php/tests/SessionCookieTest.php, tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [ ] |
 | H34.3 | server 시작이 실패해도 upload-servers의 gate listener를 닫는다: hostsOf가 server를 시작하기 전에 listener의 close를 등록하므로, 시작이 실패하면 파일은 그 원인과 함께 끝나고 run을 붙잡는 listener가 남지 않는다(HR-87) | tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [ ] |
 | H34.4 | Node addon을 upload-servers의 입력으로 선언한다: run의 Node application이 그것을 load하므로 make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts가 그것을 build해야 한다(HR-85, H35.55) | tests/scripts/upload-servers.test.mts | make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts | [ ] |
+| H34.5 | hyper-test-scripts 전체 set의 dry run을 호출한 make의 TESTS 없이 실행한다: make가 command-line 변수를 recipe의 environment로 export하므로 test-inputs.test.mts는 그 dry run에 TESTS=를 준다(HR-85, H35.55) | tests/scripts/test-inputs.test.mts | make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts | [ ] |
