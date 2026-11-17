@@ -13268,7 +13268,7 @@
               "php",
               "python"
             ],
-            "sentence": "HY-54.3"
+            "sentence": "HY-48.1"
           }
         },
         {
@@ -13433,7 +13433,7 @@
               "php",
               "python"
             ],
-            "sentence": "HY-54.3"
+            "sentence": "HY-48.1"
           }
         }
       ]
@@ -13513,7 +13513,7 @@
               ],
               "output": "response",
               "errors": [],
-              "state": "Runs the context handler, the shared handler and the loaders of the selected regions and returns the document or the JSON of the page (HY-12.1, HY-75.1, HY-128.4).",
+              "state": "Runs the context handler, the shared handler and the loaders of the selected regions and returns the document or the JSON of the page (HY-12.1, HY-75.1, HY-128.5).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::respond",
@@ -15361,13 +15361,13 @@
               "sentence": "HY-48.1"
             }
           },
-          "application": {
+          "pages": {
             "term": "value",
             "only": {
               "languages": [
                 "node"
               ],
-              "sentence": "HY-54.3"
+              "sentence": "HY-48.19"
             }
           },
           "handlers": {
@@ -15476,13 +15476,13 @@
               "sentence": "HY-48.1"
             }
           },
-          "application": {
+          "pages": {
             "term": "value",
             "only": {
               "languages": [
                 "node"
               ],
-              "sentence": "HY-54.3"
+              "sentence": "HY-48.19"
             }
           },
           "handlers": {
@@ -15544,24 +15544,6 @@
             }
           },
           "shell": "string",
-          "reads": {
-            "term": "value",
-            "only": {
-              "languages": [
-                "node"
-              ],
-              "sentence": "HY-54.3"
-            }
-          },
-          "build": {
-            "term": "string",
-            "only": {
-              "languages": [
-                "node"
-              ],
-              "sentence": "HY-48.11"
-            }
-          },
           "context": "optional<contextHandler>",
           "entries": {
             "term": "map<list<representation-entry>>",
@@ -15569,7 +15551,7 @@
               "languages": [
                 "node"
               ],
-              "sentence": "HY-54.3"
+              "sentence": "HY-118.1"
             }
           },
           "functions": {
@@ -16652,7 +16634,7 @@
               "role": "expected",
               "optional": true,
               "compare": "raises",
-              "sentence": "HYC-24.2",
+              "sentence": "HYC-24.9",
               "state": "`openFails` true states an application whose open fails with the functions `functions`, written as kinds of `functionKinds`."
             },
             "openError": {
@@ -16846,7 +16828,7 @@
               "role": "input",
               "compare": "exact",
               "sentence": "HY-73.2",
-              "state": "`reads` is the read paths of the template `template` among the templates `templates`, a tree whose node is true for a path read whole and otherwise holds `keys` or `each`. The Node server and the browser compute it, and the PHP and the Python server read it as the node of the page region in `reads.json` of the program that the build wrote for the case (HY-73.23)."
+              "state": "`reads` is the read paths of the template `template` among the templates `templates`, a tree whose node is true for a path read whole and otherwise holds `keys` or `each`. The browser computes it, and the PHP and the Python server read it as the node of the page region in `reads.json` of the program that the build wrote for the case (HY-73.34)."
             },
             "kept": {
               "role": "expected",
