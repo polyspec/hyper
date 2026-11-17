@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 755ca78017534c77a0bdcb3c74dadc2dbdc300c98de93e3cb13d4dbe62586d63 -->
+<!-- source-sha256: 74b7e81612e920058349a9d7bfe0227ab04305f9925f8b51eafad63998367061 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-113.22를 retire하고 HY-113.23, HY-113.24, HY-113.25가 대신하며, HY-57.15를 추가했다. HY-113.22는 part의 header 줄, 매개변수, boundary에 대한 http-form의 규칙을 가리키고 모든 실패를 part의 실패라 불렀다. 어떤 part가 실패하는지는 정하지 않았고, media type이 아닌 content type에 대해서는 아무것도 정하지 않았다. HY-113.23은 `invalid`로 실패하는 part를 정한다. 다른 disposition type의 part, `name`이 없는 part, header 줄이 없는 part, 홀로 있는 carriage return 뒤의 part, 매개변수 앞에 no-break space가 있는 part, 매개변수를 두 번 주는 part, 인용된 값이 끝나지 않는 part다. HY-113.24는 boundary가 없거나 빈 `multipart/form-data` type에 `no_boundary`를 정한다. HY-113.25는 그런 body가 전체로 상태 400으로 실패함을 정한다. HY-57.15는 line feed가 뒤따르는 urlencoded type처럼 `Content-Type`이 media type이 아닌 body에 상태 400의 `malformed_content_type`을 정한다. HY-132.9의 표는 새 statement를 인용하고 http-form의 `malformed_content_type` 행을 얻었다. 어떤 서버도 이 답을 내지 않는다. `docs/features.md`는 행 `form-failures`를 not implemented로 얻었고, 행 `form-values`는 HY-113.22를 더 인용하지 않는다(H35.11).
 
 - HY-132.9의 표에는 규칙이 정하거나 전제하는 http-form의 kind 여섯이 없었다. HY-131.28이 정하는 `exists`와 `moved`, 그리고 어떤 statement도 이름을 적지 않은 네 제한의 kind다. HY-131.30을 추가해 제한을 넘는 body가 http-form의 `body_limit`, `value_limit`, `part_limit`, `file_limit`로 실패하며 각각 상태 413임을 정했고, 표는 여섯 행을 얻었다. HY-132.3의 표에서 `malformed_content_type` 행은 상태를 적지 않았는데, HY-59.13은 상태 400을 정하고 core의 variant `Error::MalformedContentType`은 400을 준다. 그 행은 이제 400을 적는다. `front::media_type`이 core 자신의 variant를 내므로 이 kind는 그 표에서 hyper의 kind로 남는다. 어떤 case도 HY-131.28이나 HY-131.30으로 실패를 비교하지 않으므로, 각 행의 첫 cell과 마지막 cell을 읽는 case runner는 전과 같은 결과를 낸다. `docs/features.md`는 행 `form-kinds`를 not implemented로 얻었다. 서버는 이 kind의 오류를 내지 않는다(H35.11).
 

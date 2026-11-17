@@ -785,6 +785,12 @@
                   "en": "The type of a body is read from its `Content-Type` by F-12 of http-form, and a parameter that its type does not define changes nothing (F-12.4): a `charset` or another parameter of an `application/x-www-form-urlencoded` body fails nothing, and the body is read as UTF-8.",
                   "ko": "body의 type은 http-form의 F-12가 `Content-Type`에서 읽고, 그 type이 정의하지 않는 매개변수는 아무것도 바꾸지 않는다(F-12.4). `application/x-www-form-urlencoded` body의 `charset`이나 다른 매개변수는 실패를 만들지 않으며 body는 UTF-8로 읽는다.",
                   "koSource": "875cd9b72bf25e9c62d3992f7fde93069085d35bc743ea97478dea4c252ea0f6"
+                },
+                {
+                  "id": "HY-57.15",
+                  "en": "A body whose `Content-Type` is no media type, such as `application/x-www-form-urlencoded` followed by a line feed, which is no whitespace of a media type (MT-1.3 of http-media-type), gives no form value and no file, because reading it fails with kind `malformed_content_type` of http-form (F-12), and its request receives status 400 as HY-42 does.",
+                  "ko": "`Content-Type`이 media type이 아닌 body, 예를 들어 line feed가 뒤따르는 `application/x-www-form-urlencoded`(line feed는 media type의 공백이 아니다, http-media-type의 MT-1.3)는 폼 값도 파일도 주지 않는다. 그것을 읽으면 http-form의 kind `malformed_content_type`으로 실패하기 때문이며(F-12), 그 요청은 HY-42처럼 상태 400을 받는다.",
+                  "koSource": "64d13a0487464dffc8dfc8104d1565a1068ab9306a87214781c1289eb0bafb6f"
                 }
               ]
             }
@@ -811,7 +817,8 @@
             17,
             18,
             19,
-            20
+            20,
+            22
           ],
           "blocks": [
             {
@@ -824,10 +831,22 @@
                   "koSource": "853b0caf7e03fbc1471e73bc4cd3d53cb0a930bca10f5b95df67c9162d18ed6d"
                 },
                 {
-                  "id": "HY-113.22",
-                  "en": "The header lines and the parameters of a part are read as F-23, F-6 and F-16 of http-form state, and its boundary as F-12.3 and F-7 state; a part that fails with kind `invalid`, `header_limit` or `no_boundary` of http-form fails the whole body (F-23.3) with status 400 as HY-42 does.",
-                  "ko": "part의 header 줄과 매개변수는 http-form의 F-23, F-6, F-16대로, boundary는 F-12.3과 F-7대로 읽으며, http-form의 kind `invalid`, `header_limit`, `no_boundary`로 실패하는 part는 body 전체를 실패시키고(F-23.3) HY-42처럼 상태 400을 받는다.",
-                  "koSource": "e94dd0e72a15adba0033fc06fef9d25edee642e89d4f68a7421093bedeab290a"
+                  "id": "HY-113.23",
+                  "en": "The header lines of a part are read as F-23 of http-form states and the parameters of its `Content-Disposition` as F-6 states, and every part is a `form-data` part with a `name` parameter as F-16 states, so a part of another disposition type, also of a type that only starts with `form-data`, a part without a `name` parameter, a part without header lines, a part whose `Content-Disposition` follows a lone carriage return and so starts no line, a part whose `name` parameter follows a no-break space, a part that gives a parameter such as `name` twice and a part whose quoted parameter value has no end fail with kind `invalid` of http-form, and header lines of a part longer than 8192 bytes fail with kind `header_limit` (F-23.4).",
+                  "ko": "part의 header 줄은 http-form의 F-23대로, 그 `Content-Disposition`의 매개변수는 F-6대로 읽고, 모든 part는 F-16대로 `name` 매개변수를 가진 `form-data` part다. 그래서 다른 disposition type의 part(`form-data`로 시작하기만 하는 type 포함), `name` 매개변수가 없는 part, header 줄이 없는 part, `Content-Disposition`이 홀로 있는 carriage return 뒤에 와서 줄을 시작하지 못하는 part, `name` 매개변수가 no-break space 뒤에 오는 part, `name` 같은 매개변수를 두 번 주는 part, 인용된 매개변수 값이 끝나지 않는 part는 http-form의 kind `invalid`로 실패하고, 8192 byte보다 긴 part의 header 줄은 kind `header_limit`로 실패한다(F-23.4).",
+                  "koSource": "51a5b420e5d40796d6d4d673a21ae363ef4bae0f51fb1ffe9880d200b58d981c"
+                },
+                {
+                  "id": "HY-113.24",
+                  "en": "A `multipart/form-data` content type without a `boundary` parameter, or with an empty one such as `boundary=\"\"`, fails with kind `no_boundary` of http-form (F-7, F-12.3), and its body is not read as a body of another type.",
+                  "ko": "`boundary` 매개변수가 없거나 `boundary=\"\"`처럼 비어 있는 `multipart/form-data` content type은 http-form의 kind `no_boundary`로 실패하고(F-7, F-12.3), 그 body는 다른 type의 body로 읽지 않는다.",
+                  "koSource": "96afc3689eff3614afdd1a9da0285750a7e55afe79a4b674b406fce7a9f6f2f4"
+                },
+                {
+                  "id": "HY-113.25",
+                  "en": "A body that fails with kind `invalid`, `header_limit` or `no_boundary` of http-form fails as a whole, so that it gives no form value and no file (F-23.3), and its request receives status 400 as HY-42 does, before any loader or action runs.",
+                  "ko": "http-form의 kind `invalid`, `header_limit`, `no_boundary`로 실패하는 body는 전체가 실패하여 폼 값도 파일도 주지 않고(F-23.3), 그 요청은 loader나 action이 실행되기 전에 HY-42처럼 상태 400을 받는다.",
+                  "koSource": "fbd486b047a56fc5e38724ef05ab01acde18b092db67ac6465c88ad8abd174af"
                 },
                 {
                   "id": "HY-113.2",
@@ -6299,9 +6318,10 @@
                 [{ "en": "`invalid_accept`", "ko": "`invalid_accept`" }, { "en": "http-negotiation", "ko": "http-negotiation" }, { "en": "HY-116.18", "ko": "HY-116.18" }],
                 [{ "en": "`invalid_weight`", "ko": "`invalid_weight`" }, { "en": "http-negotiation", "ko": "http-negotiation" }, { "en": "HY-116.18", "ko": "HY-116.18" }],
                 [{ "en": "`invalid_content_length`", "ko": "`invalid_content_length`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.29", "ko": "HY-131.29" }],
-                [{ "en": "`invalid`", "ko": "`invalid`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
-                [{ "en": "`header_limit`", "ko": "`header_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
-                [{ "en": "`no_boundary`", "ko": "`no_boundary`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
+                [{ "en": "`invalid`", "ko": "`invalid`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.23, HY-113.25", "ko": "HY-113.23, HY-113.25" }],
+                [{ "en": "`header_limit`", "ko": "`header_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.23, HY-113.25", "ko": "HY-113.23, HY-113.25" }],
+                [{ "en": "`no_boundary`", "ko": "`no_boundary`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.24, HY-113.25", "ko": "HY-113.24, HY-113.25" }],
+                [{ "en": "`malformed_content_type`", "ko": "`malformed_content_type`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-57.15", "ko": "HY-57.15" }],
                 [{ "en": "`body_limit`", "ko": "`body_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
                 [{ "en": "`value_limit`", "ko": "`value_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
                 [{ "en": "`part_limit`", "ko": "`part_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
