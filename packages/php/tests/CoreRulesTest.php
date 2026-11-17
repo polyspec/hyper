@@ -142,9 +142,9 @@ final class CoreRulesTest extends TestCase
         self::assertSame([[$function, $arguments]], Calls::$calls);
     }
 
-    public function testThereAreNineteenExactUnits(): void
+    public function testThereAreTwentyOneExactUnits(): void
     {
-        self::assertCount(19, self::exactUnits());
+        self::assertCount(21, self::exactUnits());
     }
 
     public function testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields(): void

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 375eba731673992c274c44c3058506b51e58382d2f99981fd5211d3dec2c9a38 -->
+<!-- source-sha256: 36e9f13bcf864023fefbc0d7704bf402177e9b4ff3300b31db43ee58db3299f3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `CoreRulesTest`는 CoreRules의 exact unit을 19개로 기대했으나 지금은 21개이고, `RequestTest`는 SAPI가 이은 두 `Content-Type` 줄의 media type을 `application/x-www-form-urlencoded, text/plain`으로 기대했다. 이제 테스트는 unit 21개를 세고, `mediaType()`이 `malformed_content_type`과 상태 400으로 실패하기를 기대한다(HY-42.14, H35.31).
 - case runner는 `raises` outcome이 기대하는 kind를 인용된 statement의 영어 text에서 pattern ``kind `name` ``으로 읽었으므로, "`a` 또는 `b`"로 적힌 두 번째 kind를 놓치고 statement가 언급만 하는 kind를 가져왔다. 이제 runner는 kind를 `contracts/protocol.json`의 HY-132 kind 표에서 읽으며, 그 표의 열 규칙은 각 kind를 정하는 statement를 적는다. HY-132.9는 hyper의 규칙이 정하는 binding과 라이브러리의 kind 표를 더한다(HY-42.7의 `invalid_text` 포함). HY-132.3의 표에는 `malformed_content_type`(HY-59.12, HY-59.13)이 더해지고, 그 규칙 칸은 statement id의 list가 된다(H35.9-7).
 - 세 서버의 case runner는 `contracts/request.json`의 case가 `names`를 적을 때만 그 파일을 비교한다. 실패하는 limit의 case는 파일을 적지 않는데(HY-114.12), Node runner는 그 case를 "the case field names is not a list of strings"로 거부했다(H35.9-5).
 - PHP 서버는 링크된 template이 더 이상 제공하지 않는 legacy PHP package 대신 template 확장 0.0.28로 렌더한다. `Renderer`는 `templates/`의 `FsLoader` 위에 `Engine`을 열고, engine은 `prepare`와 `load`에서만 파일을 읽으므로(RT-77) 렌더마다 `prepareBound`로 준비하며, HTML 정의는 `DefineInput`으로, 시간대와 시각은 `Environment`로 넘기고, `bind`와 `merge`로 bind한다. 확장이 list로 거부하는 빈 root는 빈 map으로 bind하고, 확장이 native object로 두는 `JsonSerializable`은 bind 전에 그 값으로 바꾼다(HY-44.6). 호출할 수 없는 host function은 `functions.<name> is not a function`으로 open을 실패시킨다. `DataModel`은 `Value\Bind`와 `MapValue` 순회 대신 Python 서버처럼 값을 직접 검사한다. open은 더 이상 `php/`와 `program.json`이 필요 없으므로(HY-48.16), case runner는 open이 `reads.json`에서 실패하면 manifest를 읽은 것으로 보고, `build.json`의 case `a_directory_without_any_output_fails_the_open`은 세 출력을 적으며, `RendererTest`는 generated 프로그램 없는 프로그램 디렉터리를 렌더한다. `benchmarks/server.php`는 `bind`를 잰다(H35.31).

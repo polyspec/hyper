@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Polyspec\Hyper\HyperValueError;
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\Request;
 
@@ -96,7 +97,8 @@ final class RequestTest extends TestCase
 
     /**
      * HY-42.10, HY-42.11: `fromGlobals` takes a field whose lines the SAPI joined as given, as the PHP built-in server
-     * and nginx write two `Content-Type` and two `User-Agent` lines, and the media type of the body is that value.
+     * and nginx write two `Content-Type` and two `User-Agent` lines. HY-42.14: the joined `Content-Type` is no media
+     * type, so `mediaType` fails with kind `malformed_content_type` and status 400 (HY-59.13).
      */
     public function testFromGlobalsTakesTheLinesThatTheSapiJoinedAsGiven(): void
     {
@@ -111,7 +113,15 @@ final class RequestTest extends TestCase
             $_SERVER = $server;
         }
         self::assertSame('application/x-www-form-urlencoded, text/plain', $request->header('Content-Type'));
-        self::assertSame('application/x-www-form-urlencoded, text/plain', $request->mediaType());
         self::assertSame('a, b', $request->header('User-Agent'));
+        try {
+            $request->mediaType();
+        } catch (HyperValueError $error) {
+            self::assertSame('malformed_content_type', $error->kind());
+            self::assertSame(400, $error->status());
+
+            return;
+        }
+        self::fail('mediaType returned a media type for two joined Content-Type lines');
     }
 }
