@@ -1,9 +1,10 @@
 {
-  "description": "The platform zips of the PHP extensions that PIE downloads from the GitHub Releases, each with the sha256 of the field digest of its release asset; scripts/php-ext-verify.mts compares each zip that PIE used with its pin (HR-80, H35.51)",
+  "description": "The Composer repository packages.json and the platform zips of the PHP extensions that PIE downloads from the GitHub Releases, each with the sha256 of the field digest of its release asset; scripts/php-ext-requires.mts verifies each packages.json before PIE reads its copy, and scripts/php-ext-verify.mts compares each zip that PIE used with its pin (HR-80, H35.51, H35.54)",
   "packages": {
     "polyspec/template": {
       "repository": "polyspec/template",
       "version": "0.0.29",
+      "packages": "6ebbb0690c4f312f79b4ba3e970849c2151fc17c8588275adaddd2ec247692b2",
       "extension": "polyspec_template",
       "zips": {
         "8.4": {
@@ -21,6 +22,7 @@
     "polyspec/json": {
       "repository": "polyspec/json",
       "version": "0.0.34",
+      "packages": "fb3f9d43245d8c51e366bc70f49e3e9679ec76836b971245b41ea2f493af7d86",
       "extension": "polyspec_json",
       "zips": {
         "8.4": {

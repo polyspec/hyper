@@ -71,11 +71,13 @@ test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in
     // Each command of the one shell of the recipe goes on only when the one before it passed.
     assert.match(line, / --no-interaction && \\$/, line);
   }
-  assert.match(pie[0] ?? '', new RegExp(` repository:add composer ${escape(packages)} --no-interaction && \\\\$`));
+  // PIE reads the copy of the packages.json of the release that scripts/php-ext-requires.mts verified, not the URL
+  // (HR-80, H35.54).
+  assert.ok(!text.includes(` repository:add composer ${packages}`), text);
+  assert.match(pie[0] ?? '', new RegExp(` repository:add composer ${escape(`${work}/repository/polyspec/template/packages.json`)} --no-interaction && \\\\$`));
   // The template package requires the Composer library polyspec/json, which only the repository of the json release holds,
   // so the PIE project of the template adds it after the repository of the template release (H35.52).
-  const jsonVersion = variable('JSON_VERSION');
-  assert.match(pie[1] ?? '', new RegExp(` repository:add composer ${escape(`https://github.com/polyspec/json/releases/download/v${jsonVersion}/packages.json`)} --no-interaction && \\\\$`));
+  assert.match(pie[1] ?? '', new RegExp(` repository:add composer ${escape(`${work}/repository/polyspec/json/packages.json`)} --no-interaction && \\\\$`));
   assert.match(pie[2] ?? '', new RegExp(` build polyspec/template:${escape(version)} --no-interaction && \\\\$`));
   // The trap of that shell removes the working directory with its Composer cache at the end, the failure and a signal of
   // the run, because no later target reads it (HR-87).

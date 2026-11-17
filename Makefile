@@ -210,9 +210,11 @@ lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language 
 # and both PIE commands set PHP_INI_SCAN_DIR to a leading colon, which keeps the scan directory of the PHP, and
 # PIE_WORK/ini, whose one ini loads JSON_EXT; no other PHP run of the checkout loads it (H35.52). The package also requires
 # the Composer library polyspec/json, which only the Composer repository JSON_PACKAGES of the json release holds, so the
-# PIE project of the template adds that repository after TEMPLATE_PACKAGES. Before PIE, scripts/php-ext-requires.mts reads
-# the packages.json of the template release and fails unless the json version that it requires is JSON_VERSION, the
-# version of json-ext, because PHP loads one json library.
+# PIE project of the template adds that repository after the one of the template. Before PIE, scripts/php-ext-requires.mts
+# downloads the packages.json of both releases into PIE_WORK/repository, fails unless each has the sha256 that
+# config/php-ext-pins.json pins from the digest of its release asset, and fails unless the json version that the template
+# requires is the pinned json version of json-ext, because PHP loads one json library; PIE adds those verified copies as
+# its repositories, not the URLs, and the trap removes them with PIE_WORK (HR-80, H35.54). json-ext does the same.
 # scripts/pie-binary.mts prints the one library that PIE recorded there, which is published into build/ext with a rename
 # (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
 # PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs. The Composer repository of the release
@@ -230,10 +232,10 @@ PIE_WORK := $(CURDIR)/var/pie/polyspec/template
 .PHONY: template-ext
 template-ext: json-ext ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, H27.51); ONLINE
 	$(call pie_run,$(PIE_WORK),build/ext.next-$$$$) && mkdir -p $(PIE_WORK)/ini && \
-	$(ONLINE) $(NODE) scripts/php-ext-requires.mts $(TEMPLATE_PACKAGES) polyspec/template $(TEMPLATE_VERSION) $(JSON_VERSION) && \
+	$(ONLINE) $(NODE) scripts/php-ext-requires.mts config/php-ext-pins.json polyspec/template $(PIE_WORK) polyspec/json && \
 	printf 'extension=%s\n' '$(CURDIR)/$(JSON_EXT)' > $(PIE_WORK)/ini/polyspec_json.ini && \
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction && \
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) repository:add composer $(JSON_PACKAGES) --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) repository:add composer $(PIE_WORK)/repository/polyspec/template/packages.json --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) repository:add composer $(PIE_WORK)/repository/polyspec/json/packages.json --no-interaction && \
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction && \
 	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/template $(PIE_WORK) && \
 	binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template) && \
@@ -249,7 +251,8 @@ JSON_PIE_WORK := $(CURDIR)/var/pie/polyspec/json
 .PHONY: json-ext
 json-ext: ## Get the json extension polyspec_json of JSON_VERSION with PIE from the Composer repository of the json release into build/json-ext (H35.31); ONLINE
 	$(call pie_run,$(JSON_PIE_WORK),build/json-ext.next-$$$$) && \
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) repository:add composer $(JSON_PACKAGES) --no-interaction && \
+	$(ONLINE) $(NODE) scripts/php-ext-requires.mts config/php-ext-pins.json polyspec/json $(JSON_PIE_WORK) && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) repository:add composer $(JSON_PIE_WORK)/repository/polyspec/json/packages.json --no-interaction && \
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) build polyspec/json:$(JSON_VERSION) --no-interaction && \
 	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/json $(JSON_PIE_WORK) && \
 	binary=$$($(NODE) scripts/pie-binary.mts $(JSON_PIE_WORK) polyspec/json) && \

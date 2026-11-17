@@ -73,8 +73,8 @@ test('the Composer roots name the Composer repository of the release and declare
 
 test('make template-ext builds the php-ext package of the release from its Composer repository (H21.4, H27.45, H27.51)', () => {
   const lines = dryRun('template-ext');
-  // PIE adds the Composer repository of the release and builds the package at its version (H27.51).
-  assert.ok(lines.some((line) => line.endsWith(` repository:add composer ${RELEASE}/packages.json --no-interaction && \\`)), lines.join('\n'));
+  // PIE adds the verified copy of the Composer repository of the release and builds the package at its version (H27.51, H35.54).
+  assert.ok(lines.some((line) => / repository:add composer \S+\/var\/pie\/polyspec\/template\/repository\/polyspec\/template\/packages\.json --no-interaction && \\$/.test(line)), lines.join('\n'));
   assert.ok(lines.some((line) => line.endsWith(` build polyspec/template:${VERSION} --no-interaction && \\`)), lines.join('\n'));
 });
 
