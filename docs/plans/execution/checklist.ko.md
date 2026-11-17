@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 3b6306fb6b9c5fd372220c7cb138510ea9d6acc0e065ee7c7ccd485f9e3990f4 -->
+<!-- source-sha256: 2559bfe6158c29be1e6571944a964ca90df608671f1f388d39cc6c735be0b6a4 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -659,3 +659,4 @@
 | H34.8 | Node binding 변환의 거부에서 HY-44.12의 message를 기대한다: binding 0.0.21부터 변환은 HY-44.12가 정한 대로 template 오류의 전체 text인 kind: message를 주는데, core-values.test.ts는 HY-44.12가 폐기한 kind in  at 0:0: message 형식을 여전히 기대해 변환 case 여덟 개가 실패했다 | packages/ts/tests/core-values.test.ts | make hyper-test-node NODE_TESTS=tests/core-values.test.ts | [v] |
 | H34.12 | node-package가 packed package를 offline으로 설치하기 전에 packages/ts의 직접 dependency만이 아니라 package-lock.json이 적는 production dependency closure 전체를 pack한다: @polyspec/hyper-client의 dependency인 eventsource-parser가 pack되지 않아 npm이 registry에 그 metadata를 요청했고, npm ci는 그것을 cache에 넣지 않으므로 node-package가 ENOTCACHED로 실패했다 | Makefile, tests/scripts/node-package.test.mts | make hyper-test-scripts TESTS=tests/scripts/node-package.test.mts | [v] |
 | H34.17 | 설치된 Python package를 hyper-test-python의 입력으로 적는다: venv는 polyspec-hyper를 non-editable로 갖으므로(kit K788) target은 hyper-install-python을 prerequisite로 갖거나, 설치된 package가 source보다 오래되면 그것을 적으며 실패한다. merge가 packages/python/src를 바꾼 뒤에도 이전 tree의 package를 test했다(HR-85) | Makefile, tests/scripts | make hyper-test-scripts TESTS=tests/scripts/hyper-install.test.mts | [ ] |
+| H34.18 | template 0.0.32를 pin한다. 이 release는 binding row B2.475로 binding 0.0.22를 pin하므로, Python case contracts/functions.json a_value_that_is_not_a_function_fails_the_open이 template RT-5의 argument error "functions.shout is not a function"을 낸다. template 0.0.30의 Python binding은 binding이 generate/python.ts:443-444에서 쓰는 text "Engine(): functions is not an instance of a callable"을 낸다. template 0.0.31은 H34.15를 위해 먼저 따로 pin하고, 0.0.32는 그 뒤에 pin한다 | package.json, package-lock.json, packages/python/pyproject.toml, packages/python/uv.lock, composer.json, composer.lock, examples/board/composer.json, examples/board/composer.lock, config/php-ext-pins.json, Cargo.toml, Cargo.lock | make hyper-test-python CASES="functions.json" | [!] 원인: template 0.0.32가 release되지 않았다; 재시도: template 0.0.32가 release된다 |
