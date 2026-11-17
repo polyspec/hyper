@@ -95,7 +95,7 @@ def _application() -> App:
 
 
 # The setting of a Redis store that no case connects: the store opens a connection only for a request.
-_SETTING = SettingServer(url="redis://127.0.0.1:1")
+_SETTING = SettingServer(url="redis://127.0.0.1:1", authorities=None)
 
 
 def _not_chosen(request: Request) -> Choice:

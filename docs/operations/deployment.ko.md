@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 103279ddbe0ba232bc0803f0e74fb521d49fa1be1e0d7a35aa60653b6bf1c52e -->
+<!-- source-sha256: 282923df6a3dc019062b81be590566c089c8e212e229466fe2fe32fb21d0ac12 -->
 # 배포
 
 [English](deployment.md).
@@ -133,11 +133,11 @@ Persistent 연결은 PHP process가 살아 있는 동안 유지되고, phpredis 
 Node와 Python 서버는 `RedisSessions`에 session-store 라이브러리의 Redis store의 연결 설정과 같은 값을 준다. store는 자기 연결을 유지한다. 값은 기본값이 없는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이크로초다(Python은 `lock_expire`, `lock_retries`, `lock_wait`). 서버 하나의 설정은 그 URL이며, URL은 scheme `rediss`로 TLS를, user 정보로 ACL 사용자와 비밀번호를 나타낸다.
 
 ```ts
-new RedisSessions({ setting: { kind: 'server', url: 'redis://redis:6379' }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'server', url: 'redis://redis:6379', authorities: null }, lockExpire: 30 });
 ```
 
 ```python
-RedisSessions(SettingServer(url="redis://redis:6379"), lock_expire=30)
+RedisSessions(SettingServer(url="redis://redis:6379", authorities=None), lock_expire=30)
 ```
 
 `lockExpire`는 어떤 요청보다 길어야 하고, 없으면 끝난 process가 `max_execution_time`까지, 그 값이 0이면 영원히 잠금을 잡는다. 재시도 허용보다 오래 기다린 요청은 kind `lock_timeout`으로 실패하므로, 한 session의 요청이 잠금을 오래 잡으면 재시도 값을 올린다. 연결이 끊긴 동안 명령이 실패한 요청은 Redis 서버가 돌아올 때까지 status 500으로 응답한다. 재시작으로 session이 끝나면 안 되면 append-only file로 보관한다. 공유 session의 값은 template data model의 값이며, `stdClass` 외의 class 객체를 담은 record는 Node와 Python 서버에서 요청을 실패시킨다.
@@ -161,7 +161,7 @@ Node와 Python 서버는 `RedisSessions`에 store의 Sentinel 설정을 준다.
 
 ```ts
 const urls = ['redis://sentinel-1:26379', 'redis://sentinel-2:26379', 'redis://sentinel-3:26379'];
-new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: false, user: null, password: null }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: false, user: null, password: null, authorities: null }, lockExpire: 30 });
 ```
 
 ```python
@@ -172,6 +172,7 @@ RedisSessions(
         tls=False,
         user=None,
         password=None,
+        authorities=None,
     ),
     lock_expire=30,
 )
@@ -199,12 +200,12 @@ Seed 다음 인자는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이
 Node와 Python 서버는 `RedisSessions`에 store의 cluster 설정, 곧 seed의 URL을 준다. Protocol의 모든 명령은 key가 하나이므로 hash tag가 필요 없고, session과 잠금은 서로 다른 primary에 있어도 된다.
 
 ```ts
-new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'] }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'], authorities: null }, lockExpire: 30 });
 ```
 
 ```python
 RedisSessions(
-    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"]),
+    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"], authorities=None),
     lock_expire=30,
 )
 ```
@@ -220,13 +221,13 @@ session.save_path = "tls://redis:6379?persistent=1&auth[]=hyper&auth[]=secret&st
 ```
 
 ```ts
-new RedisSessions({ setting: { kind: 'server', url: 'rediss://hyper:secret@redis:6379' }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'server', url: 'rediss://hyper:secret@redis:6379', authorities: '/etc/redis/ca.pem' }, lockExpire: 30 });
 ```
 
 ```python
-RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379"), lock_expire=30)
+RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379", authorities="/etc/redis/ca.pem"), lock_expire=30)
 ```
 
-store의 설정은 certificate authority 파일을 받지 않으므로, Node와 Python 서버는 PHP 서버가 `stream[cafile]`로 주는 파일을 줄 수 없다.
+`authorities`는 store가 단독으로 신뢰하는 기관의 파일이며, PHP 서버의 `stream[cafile]`에 해당한다. null이면 machine의 trust store를 쓴다.
 
 Sentinel을 쓰면 각 Sentinel도 같은 보안을 요구하므로, 모든 client는 Sentinel과 primary 양쪽에 이를 지정한다. PHP 서버는 각 항목에 `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`를 주고, `RedisSentinelSessions`의 이름 다음 인자로 primary의 매개변수와 scheme `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`를 준다. Node와 Python 서버는 Sentinel 설정의 `tls`, `user`, `password`를 주며, 이는 Sentinel과 primary에 적용된다. Redis 서버 하나의 용량은 [benchmark](benchmark.ko.md)에 있다.

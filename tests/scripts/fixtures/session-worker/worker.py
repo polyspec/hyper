@@ -22,13 +22,15 @@ from polyspec.hyper import (
 
 def stores(directory):
     """Returns the session stores of the process. The Redis store of the session-store library keeps its own
-    connections; HYPER_SESSION_TLS_CA turns TLS on."""
+    connections; HYPER_SESSION_TLS_CA turns TLS on and is the file of the authorities that the store trusts."""
     port = os.environ.get("HYPER_SESSION_REDIS")
     sentinels = os.environ.get("HYPER_SESSION_SENTINEL")
     nodes = os.environ.get("HYPER_SESSION_CLUSTER")
     if port is None and sentinels is None and nodes is None:
         return FileSessions(directory)
-    tls = os.environ.get("HYPER_SESSION_TLS_CA") is not None
+    # The file of the authority of the test, which the store trusts alone (SR-6.7 of session-store), or None.
+    authorities = os.environ.get("HYPER_SESSION_TLS_CA")
+    tls = authorities is not None
     user = os.environ.get("HYPER_SESSION_USER")
     password = os.environ.get("HYPER_SESSION_PASSWORD")
 
@@ -42,7 +44,9 @@ def stores(directory):
         return f"{'rediss' if tls else 'redis'}://{credentials}127.0.0.1:{item}"
 
     if nodes is not None:
-        setting = SettingCluster(urls=[url(item) for item in nodes.split(",")])
+        setting = SettingCluster(
+            urls=[url(item) for item in nodes.split(",")], authorities=authorities
+        )
     elif sentinels is not None:
         setting = SettingSentinel(
             urls=[f"redis://127.0.0.1:{item}" for item in sentinels.split(",")],
@@ -50,9 +54,10 @@ def stores(directory):
             tls=tls,
             user=user,
             password=password,
+            authorities=authorities,
         )
     else:
-        setting = SettingServer(url=url(port))
+        setting = SettingServer(url=url(port), authorities=authorities)
     return RedisSessions(
         setting,
         lock_retries=int(os.environ.get("HYPER_SESSION_RETRIES", "1000000")),

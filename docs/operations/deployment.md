@@ -121,11 +121,11 @@ A persistent connection lasts as long as its PHP process, and phpredis 6.3.0 reu
 The Node and Python servers give `RedisSessions` the connection setting of the Redis store of the session-store library, which keeps its own connections, and the same values: `lockExpire` 30, which has no default, `lockRetries` 100 and `lockWait` 20000 microseconds (Python `lock_expire`, `lock_retries`, `lock_wait`). The setting of one server is its URL, and the URL names TLS by the scheme `rediss` and the ACL user and its password in its user information:
 
 ```ts
-new RedisSessions({ setting: { kind: 'server', url: 'redis://redis:6379' }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'server', url: 'redis://redis:6379', authorities: null }, lockExpire: 30 });
 ```
 
 ```python
-RedisSessions(SettingServer(url="redis://redis:6379"), lock_expire=30)
+RedisSessions(SettingServer(url="redis://redis:6379", authorities=None), lock_expire=30)
 ```
 
 `lockExpire` must be longer than any request, and without it a process that ended holds its lock until `max_execution_time`, or for ever when that is 0. A request that waits longer than the retries allow fails with the kind `lock_timeout`, so raise them for requests of one session that hold the lock long. A request whose command fails while the connection is down answers status 500 until the Redis server is back. Keep the sessions with the append-only file when a restart must not end them. The values of a shared session are values of the template data model; a record that holds an object of a class other than `stdClass` fails the request in the Node and Python servers.
@@ -149,7 +149,7 @@ The Node and Python servers give `RedisSessions` the Sentinel setting of the sto
 
 ```ts
 const urls = ['redis://sentinel-1:26379', 'redis://sentinel-2:26379', 'redis://sentinel-3:26379'];
-new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: false, user: null, password: null }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: false, user: null, password: null, authorities: null }, lockExpire: 30 });
 ```
 
 ```python
@@ -160,6 +160,7 @@ RedisSessions(
         tls=False,
         user=None,
         password=None,
+        authorities=None,
     ),
     lock_expire=30,
 )
@@ -187,12 +188,12 @@ The arguments after the seeds are `lockExpire` 30, `lockRetries` 100, `lockWait`
 The Node and Python servers give `RedisSessions` the cluster setting of the store, the URLs of its seeds. Every command of the protocol has one key, so no hash tag is needed, and the session and its lock can live on different primaries:
 
 ```ts
-new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'] }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'], authorities: null }, lockExpire: 30 });
 ```
 
 ```python
 RedisSessions(
-    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"]),
+    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"], authorities=None),
     lock_expire=30,
 )
 ```
@@ -208,13 +209,13 @@ session.save_path = "tls://redis:6379?persistent=1&auth[]=hyper&auth[]=secret&st
 ```
 
 ```ts
-new RedisSessions({ setting: { kind: 'server', url: 'rediss://hyper:secret@redis:6379' }, lockExpire: 30 });
+new RedisSessions({ setting: { kind: 'server', url: 'rediss://hyper:secret@redis:6379', authorities: '/etc/redis/ca.pem' }, lockExpire: 30 });
 ```
 
 ```python
-RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379"), lock_expire=30)
+RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379", authorities="/etc/redis/ca.pem"), lock_expire=30)
 ```
 
-The setting of the store names no certificate authority file, so the Node and Python servers cannot give the file that the PHP server gives as `stream[cafile]`.
+`authorities` is the file of the authorities that the store trusts alone, as `stream[cafile]` of the PHP server; null uses the trust store of the machine.
 
 With Sentinel, each Sentinel takes the same security, so every client states it for both the Sentinels and the primary. The PHP server gives each entry `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`, and the parameters and scheme of the primary as the arguments of `RedisSentinelSessions` after the name: `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`. The Node and Python servers give `tls`, `user` and `password` of the Sentinel setting, which apply to the Sentinels and to the primary. The capacity of one Redis server is in [the benchmark](benchmark.md).

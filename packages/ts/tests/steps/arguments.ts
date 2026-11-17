@@ -467,7 +467,7 @@ function request(): Request {
 }
 
 // The setting of a Redis store that no case connects: the store opens a connection only for a request.
-const setting = { kind: 'server', url: 'redis://127.0.0.1:1' } as const;
+const setting = { kind: 'server', url: 'redis://127.0.0.1:1', authorities: null } as const;
 
 // Returns the receiver of a method of a unit, a new object for each case, or null for a unit without one.
 async function receiverOf(unit: string): Promise<unknown> {

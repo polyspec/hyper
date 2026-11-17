@@ -18,7 +18,8 @@ from ._redis_session import RedisSession
 # The connection settings of the store (HY-115.17, HY-115.29): `SettingServer(url=...)` with a URL `redis://` or
 # `rediss://` that may name an ACL user and its password, `SettingSentinel(urls=..., service=..., tls=..., user=...,
 # password=...)`, whose store asks the Sentinels for the primary of `service` before each request that has a session
-# (HY-115.26), or `SettingCluster(urls=...)`.
+# (HY-115.26), or `SettingCluster(urls=...)`. Each takes `authorities`, the path of a PEM file whose authorities alone
+# verify the servers of TLS, or None for the trust store of the machine.
 RedisSetting = library.Setting
 SettingServer = library.SettingServer
 SettingSentinel = library.SettingSentinel

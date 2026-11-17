@@ -28,12 +28,12 @@ const port = Number(env('BOARD_PORT'));
 const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
   const nodes = process.env.BOARD_CLUSTER;
   if (nodes !== undefined && nodes !== '') {
-    return new RedisSessions({ setting: { kind: 'cluster', urls: nodes.split(',').map((item) => `redis://${item}`) }, lockExpire: 30 });
+    return new RedisSessions({ setting: { kind: 'cluster', urls: nodes.split(',').map((item) => `redis://${item}`), authorities: null }, lockExpire: 30 });
   }
   const sentinels = process.env.BOARD_SENTINEL;
   if (sentinels !== undefined && sentinels !== '') {
     const urls = sentinels.split(',').map((item) => `redis://${item}`);
-    return new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: false, user: null, password: null }, lockExpire: 30 });
+    return new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: false, user: null, password: null, authorities: null }, lockExpire: 30 });
   }
   const url = process.env.BOARD_REDIS;
   if (url === undefined || url === '') {
@@ -41,7 +41,7 @@ const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     return FileSessions.inDirectory({ directory });
   }
-  return new RedisSessions({ setting: { kind: 'server', url }, lockExpire: 30 });
+  return new RedisSessions({ setting: { kind: 'server', url, authorities: null }, lockExpire: 30 });
 };
 
 const app = await App.open<Services>({
