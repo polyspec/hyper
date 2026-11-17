@@ -997,6 +997,7 @@ ci_step_args = $(if $(filter install-tools,$(2)), TOOLS="$(CI_TOOLS_$(1))")$(if 
 ci_run = steps=; status=0; \
 	$(foreach step,$(CI_SETUP_$(1)),if test $$status -ne 0; then outcome=skipped; elif $(MAKE) --no-print-directory $(step)$(call ci_step_args,$(1),$(step)); then outcome=success; else outcome=failure; status=1; fi; steps="$$steps$${steps:+,}\"$(step)\":{\"outcome\":\"$$outcome\"}";) \
 	test $$status -ne 0 || env -u GITHUB_STEP_SUMMARY $(MAKE) --no-print-directory ci-targets TARGETS="$(CI_TARGETS_$(1))" CI_REPORT=var/ci/$(1) || status=1; \
+	$(MAKE) --no-print-directory ci-results CI_REPORT=var/ci/$(1) || status=1; \
 	CI_STEPS="{$$steps}" $(MAKE) --no-print-directory ci-summary CI_REPORT=var/ci/$(1) || status=1; \
 	exit $$status
 
@@ -1008,10 +1009,17 @@ ci-check: ## Run the CI group NAME as its job of ci.yml does: its setup, its tar
 ci-bench: ## Run the job of bench.yml: the setup of the group bench, make bench and make bench-sessions, and the report var/ci/bench; ONLINE
 	$(call ci_run,bench)
 
-.PHONY: ci-targets ci-summary ci-passed
+.PHONY: ci-targets ci-results ci-summary ci-passed
 CI_REPORT ?= var/report/ci-targets
 ci-targets: ## Run TARGETS past failures and write CI_REPORT (logs, record.json, summary.md)
 	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) -k $(CI_REPORT) $(TARGETS)
+
+# A recipe runner fails with the count of its failed cases and the path of its results file, whose lines name each case
+# (HYR-7); the report that a job uploads holds those files in recipe-results/, so a failed case is named in the report
+# and not only on the runner (HR-84). A group whose targets run no runner has no results file, and its report has none.
+# The make that ci_run starts expands the wildcard after the targets of the group ended.
+ci-results: ## Copy the case results of the recipe runners, RECIPE_RESULTS_DIR/*.txt, into CI_REPORT/recipe-results
+	$(if $(wildcard $(RECIPE_RESULTS_DIR)/*.txt),mkdir -p $(CI_REPORT)/recipe-results && cp $(wildcard $(RECIPE_RESULTS_DIR)/*.txt) $(CI_REPORT)/recipe-results/,@:)
 
 ci-summary: ## Write summary.md of CI_REPORT again from its record, also for a run that stopped
 	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) --summary $(CI_REPORT)

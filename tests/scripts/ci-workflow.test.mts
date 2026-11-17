@@ -10,7 +10,8 @@
 // JSON of `needs`.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -288,6 +289,8 @@ function ciRunProblems(goal: string, group: string, makefile: string): string[] 
   const expected = [
     ...groupWords(makefile, 'CI_SETUP', group).map((step) => ` ${step}${argumentsOf[step] ?? ''};`),
     ` ci-targets TARGETS="${groupWords(makefile, 'CI_TARGETS', group).join(' ')}" CI_REPORT=var/ci/${group} `,
+    // H35.46: the report holds the case results of the recipe runners, which name each failed case (HR-84).
+    ` ci-results CI_REPORT=var/ci/${group} `,
     ` ci-summary CI_REPORT=var/ci/${group} `,
   ];
   const found: string[] = [];
@@ -320,6 +323,28 @@ test('H33.1 make ci-check NAME=<group> and make ci-bench run the setup, the targ
   const unknown = spawnSync('make', ['--no-print-directory', '-n', 'ci-check', 'NAME=nope'], { cwd: ROOT, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))) });
   assert.notEqual(unknown.status, 0, unknown.stdout);
   assert.match(unknown.stderr, new RegExp(`NAME=nope names no CI group of CI_GROUPS: ${groups.join(' ')}`));
+});
+
+test('H35.46 make ci-results copies the case results of the recipe runners into the report, and passes without them (HR-84, HR-91)', (t) => {
+  const work = mkdtempSync(path.join(tmpdir(), 'hyper-ci-results-'));
+  t.after(() => rmSync(work, { recursive: true, force: true }));
+  const results = path.join(work, 'results');
+  const report = path.join(work, 'report');
+  mkdirSync(report);
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name)));
+  const run = () => spawnSync('make', ['--no-print-directory', 'ci-results', `RECIPE_RESULTS_DIR=${results}`, `CI_REPORT=${report}`], { cwd: ROOT, encoding: 'utf8', env });
+  // A group whose targets run no recipe runner writes no results; its report is complete without them.
+  const none = run();
+  assert.equal(none.status, 0, `${none.stdout}${none.stderr}`);
+  assert.deepEqual(readdirSync(report), []);
+  mkdirSync(results);
+  const failed = 'CASE browser.json render r1 FAIL expected <p>, got <div>\n';
+  writeFileSync(path.join(results, 'browser.txt'), failed);
+  writeFileSync(path.join(results, 'node.txt'), 'CASE node.json reads r1 PASS\n');
+  const copied = run();
+  assert.equal(copied.status, 0, `${copied.stdout}${copied.stderr}`);
+  assert.deepEqual(readdirSync(path.join(report, 'recipe-results')).sort(), ['browser.txt', 'node.txt']);
+  assert.equal(readFileSync(path.join(report, 'recipe-results', 'browser.txt'), 'utf8'), failed);
 });
 
 /** Each broken rule of the job ci-passed of a workflow text. */

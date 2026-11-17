@@ -59,10 +59,15 @@ afterEach(() => {
 it('runs only the selected cases and states the selection in the first line of the results file', async () => {
   vi.stubEnv('RECIPE_CASES', 'reads.json');
   // The runner has no step here, so every selected case fails with STEP_UNKNOWN and the run fails with their count.
-  await expect(runCases('node', {})).rejects.toThrow(/^(\d+) of \1 cases fail/u);
+  const error: unknown = await runCases('node', {}).then(() => undefined, (thrown: unknown) => thrown);
+  expect(error).toBeInstanceOf(Error);
+  const message = (error as Error).message.split('\n');
+  expect(message[0]).toMatch(/^(\d+) of \1 cases fail; see /u);
   const lines = readFileSync(join(directory, 'node.selected.txt'), 'utf8').trimEnd().split('\n');
   expect(lines[0]).toBe('SELECTION reads.json');
   expect(lines.length).toBeGreaterThan(1);
+  // H35.46: the message names each failed case on an indented line of its own, which a CI report takes (HR-84).
+  expect(message.slice(1)).toEqual(lines.slice(1).map((line) => `  ${line}`));
   expect(lines.slice(1).filter((line) => !line.startsWith('CASE reads.json '))).toEqual([]);
 });
 
