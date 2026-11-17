@@ -838,15 +838,15 @@
                 },
                 {
                   "id": "HY-113.24",
-                  "en": "A `multipart/form-data` content type without a `boundary` parameter, or with an empty one such as `boundary=\"\"`, fails with kind `no_boundary` of http-form (F-7, F-12.3), and its body is not read as a body of another type.",
-                  "ko": "`boundary` 매개변수가 없거나 `boundary=\"\"`처럼 비어 있는 `multipart/form-data` content type은 http-form의 kind `no_boundary`로 실패하고(F-7, F-12.3), 그 body는 다른 type의 body로 읽지 않는다.",
-                  "koSource": "96afc3689eff3614afdd1a9da0285750a7e55afe79a4b674b406fce7a9f6f2f4"
+                  "en": "A boundary is a parameter of the `Content-Type` and no byte of the body, so a `multipart/form-data` content type without a `boundary` parameter, or with an empty one such as `boundary=\"\"`, is no failure of the reading: the reader does not start, the body is held as bytes and gives no form value and no file (HY-57.15), a request to an unknown path receives 404, and after the route a `POST` to an action or to `/_hyper/keep` of an application whose form types include `multipart/form-data` receives status 400 with the text `Bad Request` and kind `malformed_content_type`, at the place of HY-59.12 and after its 415 for a type that is no form type, while a representation answers such a type by HY-121.11.",
+                  "ko": "boundary는 `Content-Type`의 매개변수이고 body의 byte가 아니다. 그래서 `boundary` 매개변수가 없거나 `boundary=\"\"`처럼 비어 있는 `multipart/form-data` content type은 읽기의 실패가 아니다. reader는 시작하지 않고, body는 byte로 보유되어 폼 값도 파일도 주지 않으며(HY-57.15), 알 수 없는 경로로의 요청은 404를 받는다. route 뒤에, form 타입에 `multipart/form-data`가 있는 application의 action이나 `/_hyper/keep`으로의 `POST`는 HY-59.12의 자리에서, form 타입이 아닌 type에 대한 그 415 뒤에 상태 400과 텍스트 `Bad Request`, kind `malformed_content_type`을 받고, representation은 그런 type에 HY-121.11로 답한다.",
+                  "koSource": "2ee076a2801e00947a868b58c3fd13e314a80687510393b22424ac7880a741ed"
                 },
                 {
                   "id": "HY-113.25",
-                  "en": "A body that fails with kind `invalid`, `header_limit` or `no_boundary` of http-form fails as a whole, so that it gives no form value and no file (F-23.3), and its request receives status 400 as HY-42 does while the body is read, before the route is decided (HY-131.18), so that no loader and no action runs.",
-                  "ko": "http-form의 kind `invalid`, `header_limit`, `no_boundary`로 실패하는 body는 전체가 실패하여 폼 값도 파일도 주지 않고(F-23.3), 그 요청은 body를 읽는 동안, route가 정해지기 전에 HY-42처럼 상태 400을 받아(HY-131.18) loader도 action도 실행되지 않는다.",
-                  "koSource": "0af4b85d02e9a29f3c558cdcaf731d10ea407d198805c327e24d5c67e6684c2e"
+                  "en": "A body whose bytes fail with kind `invalid` or `header_limit` of http-form fails as a whole, so that it gives no form value and no file (F-23.3), and its request receives status 400 as HY-42 does while the body is read, before the route is decided (HY-131.18), so that no loader and no action runs.",
+                  "ko": "byte가 http-form의 kind `invalid`나 `header_limit`로 실패하는 body는 전체가 실패하여 폼 값도 파일도 주지 않고(F-23.3), 그 요청은 body를 읽는 동안, route가 정해지기 전에 HY-42처럼 상태 400을 받아(HY-131.18) loader도 action도 실행되지 않는다.",
+                  "koSource": "218404b7b881075e2d7ac6a3f33f8fea176959758f49aa20016ee47564a01c30"
                 },
                 {
                   "id": "HY-113.2",
@@ -6251,8 +6251,8 @@
                     "ko": "`value`"
                   },
                   {
-                    "en": "HY-59.12, HY-59.13",
-                    "ko": "HY-59.12, HY-59.13"
+                    "en": "HY-59.12, HY-59.13, HY-113.24",
+                    "ko": "HY-59.12, HY-59.13, HY-113.24"
                   }
                 ],
                 [
@@ -6320,7 +6320,6 @@
                 [{ "en": "`invalid_content_length`", "ko": "`invalid_content_length`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.29", "ko": "HY-131.29" }],
                 [{ "en": "`invalid`", "ko": "`invalid`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.23, HY-113.25", "ko": "HY-113.23, HY-113.25" }],
                 [{ "en": "`header_limit`", "ko": "`header_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.23, HY-113.25", "ko": "HY-113.23, HY-113.25" }],
-                [{ "en": "`no_boundary`", "ko": "`no_boundary`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.24, HY-113.25", "ko": "HY-113.24, HY-113.25" }],
                 [{ "en": "`body_limit`", "ko": "`body_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
                 [{ "en": "`value_limit`", "ko": "`value_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
                 [{ "en": "`part_limit`", "ko": "`part_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
