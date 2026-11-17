@@ -4,5 +4,5 @@ github.com/polyspec/php-serialization/packages/go v0.0.16 h1:GNcQNiMSEISYbS6cFjv
 github.com/polyspec/php-serialization/packages/go v0.0.16/go.mod h1:SXutrswTyVJJRX80WkTTiMfadrsJL6ah3IDwr2cRadQ=
 github.com/polyspec/session-store/packages/go v0.0.7 h1:odn1GjD6B1sR5NUhzoVDQ4Ip4vWlRK1uqjGyjPcHGEU=
 github.com/polyspec/session-store/packages/go v0.0.7/go.mod h1:HAgj06scmS5e7BTzvcH0OvVBV+wl8EleTvTdM3DX8OY=
-github.com/polyspec/template/packages/go v0.0.30 h1:3golorOF/1IA1Hm+ZBS+gAQ/R6gafiwKb/SjfMiKZdw=
-github.com/polyspec/template/packages/go v0.0.30/go.mod h1:17QbczSWdxYcxeAki7MH6OEonw3b3S5gPKTKA0f3wvA=
+github.com/polyspec/template/packages/go v0.0.31 h1:qCeeU4xLKfqbZLqecrDxsHqF/NrTJx1xWLQLPXPJvAo=
+github.com/polyspec/template/packages/go v0.0.31/go.mod h1:17QbczSWdxYcxeAki7MH6OEonw3b3S5gPKTKA0f3wvA=

@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 11f83e5fab9e8e39d6924d4352ec700e9dab4e6f3124f5214313c1d8bc612b86 -->
+<!-- source-sha256: 91e79bdaf95bfeba5f4503cd24a2d60a50810eb99d8a64c76514f7bff69ef59b -->
 # 개발
 
 [English](development.md).
@@ -137,7 +137,7 @@ consumer는 자기 package manager로 archive를 설치해 릴리스를 확인�
 | `assets.yml`의 `npm`: `ci-assets-npm RELEASE=true` | `install-tools TOOLS="rust go"`, `release-recipes`, `binding-cases`, `release-binding-check`, `packages`, `release-assets-npm`(`install-wasm-bindgen`, `release-npm`) | Rust와 Go: `install-tools` 줄. wasm-bindgen: `install-wasm-bindgen` | `platform`과 같다 | `release-binding-check`의 결과 |
 | `release`: `ci-release-release` | `release-tools`, `release-assets`, `release-publish`, `cp -R var/release/downloaded/. var/release/assets/`, `release-recipes`, `binding-cases`, `release-go-module`, `release-go-module-push`, `release-platform-assets`, `release-undraft` | checkout의 모든 도구: `release-tools`. `gh`, `git`, `tar`, `unzip`: runner image | group `node`의 `release-candidate-assets`가 `release-assets`의 packer를 실행한다. 다른 make는 어떤 job도 실행하지 않는다 | artifact의 download, draft와 그 notes, `GITHUB_ACTOR`의 identity로 하는 Go module의 commit과 tag, 하나라도 없으면 실패하는 platform asset의 upload, 공개된 릴리스 |
 
-binding의 두 check는 모두 `go mod download`로 `packages/go/go.mod`의 `go.sum`을 계산하므로, 각 recipe는 check 전에 Go를 설치한다. check의 도구가 없는 job은 CI에서 실패한다. release check는 `Cargo.toml`의 개발 형태 의존성을 보고하는 규칙 CK-70을 더한다. 개발 형태는 branch나 Go version `v0.0.0` 같은 것이다. core와 각 binding crate의 `Cargo.toml`은 `polyspec-template`을 tag `v0.0.30`으로 받고, `packages/go/go.mod`는 template module을 `v0.0.30`으로 require하므로(H31.5), template의 의존성 중 개발 형태인 것은 없다. CI는 release check를 릴리스의 `assets.yml`에서 tag 뒤에만 실행하므로, checkout에서 `make release-binding-check`를 실행하면 릴리스 전에 그 결과가 보인다.
+binding의 두 check는 모두 `go mod download`로 `packages/go/go.mod`의 `go.sum`을 계산하므로, 각 recipe는 check 전에 Go를 설치한다. check의 도구가 없는 job은 CI에서 실패한다. release check는 `Cargo.toml`의 개발 형태 의존성을 보고하는 규칙 CK-70을 더한다. 개발 형태는 branch나 Go version `v0.0.0` 같은 것이다. core와 각 binding crate의 `Cargo.toml`은 `polyspec-template`을 tag `v0.0.31`으로 받고, `packages/go/go.mod`는 template module을 `v0.0.31`으로 require하므로(H31.5), template의 의존성 중 개발 형태인 것은 없다. CI는 release check를 릴리스의 `assets.yml`에서 tag 뒤에만 실행하므로, checkout에서 `make release-binding-check`를 실행하면 릴리스 전에 그 결과가 보인다.
 
 `tests/scripts/ci-workflow.test.mts`는 `release.yml`의 세 job, `ci.yml`과 `release.yml`의 `assets.yml` 호출, 각 platform의 runner, 각 recipe의 make의 순서를 검사한다. `tests/scripts/ci-group-tools.test.mts`는 job `release`와 `assets.yml`의 각 job의 make의 dry run을 `RELEASE=true`가 있을 때와 없을 때 모두 읽고, 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패한다. `binding check`와 `binding release-go-module`은 Go를 시작하는 것으로 센다. 이 test는 CI group, `assets.yml`의 job 또는 릴리스의 명령 줄이 `rust-toolchain.toml`에 없는 Rust target이나 Rust component를 필요로 하면 실패한다. 곧 WASM target, `release-go-static`의 musl target, 그리고 그 target이 `llvm-strip`을 시작하는 component `llvm-tools`이다. kit의 utility가 자기 process 안에서 시작하는 것, 곧 `npm pack`, `git archive`, `gh`는 어떤 dry run에도 없고 어떤 test도 판정하지 않는다.
 
