@@ -7,7 +7,6 @@ from pathlib import Path
 
 from polyspec.hyper.session._record_session import RecordSession
 from polyspec.hyper.session.file_sessions import FileSessions
-from polyspec.php_serialize import UnserializeError
 
 from ..case_rules import raises_of
 from .store_requests import StoreRequests
@@ -120,9 +119,13 @@ def cookie(case) -> None:
 
 
 def _failure_class(error: Exception) -> str | None:
-    if isinstance(error, UnserializeError):
+    """The names that the case files give the two failures of a record, by the kind of the error of hyper: a record
+    that cannot be decoded (kind `record`) is `unserialize`, and a record that holds no array (kind
+    `record_not_array`) is `record`."""
+    kind = getattr(error, "kind", None)
+    if kind == "record":
         return "unserialize"
-    return "record" if type(error) is ValueError else None
+    return "record" if kind == "record_not_array" else None
 
 
 def _names(directory: str, identifiers: list) -> dict[str, str]:
