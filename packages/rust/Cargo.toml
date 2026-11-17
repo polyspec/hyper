@@ -35,7 +35,7 @@ polyspec-json = { git = "https://github.com/polyspec/json.git", tag = "v0.0.34" 
 polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core" }
 # The store interface of a session and its values (SE-2, SE-7; HY-104.25, HY-104.30), which the host entries take.
 # The stores of files and Redis are features of the library that the bindings build; the core needs the interface only.
-polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", branch = "v1/rust-core", default-features = false }
+polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.4", default-features = false }
 # The values of a session record (RQ-001 to RQ-012; HY-104.13, HY-104.14).
 polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", tag = "v0.0.15" }
 # The digests of HY-24.10, HY-53 and HY-122.10.
@@ -50,7 +50,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 # http-negotiation, of session-store and of template, as a generated binding test does (binding design G-5).
 polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag = "v0.0.17", features = ["construct", "fault-test"] }
 # The file store of session-store with its fault injection points, which a case of opening_functions.open_page gives.
-polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", branch = "v1/rust-core", default-features = false, features = ["file", "fault-test"] }
+polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.4", default-features = false, features = ["file", "fault-test"] }
 polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.3", features = ["fault-test"] }
 polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core", features = ["fault-test"] }
 

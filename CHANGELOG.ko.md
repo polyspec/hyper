@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f06cfab846505d3c03206fe9a699751e969a98ebb524af9722b386e43a4f669c -->
+<!-- source-sha256: 77e03c733a0b4aac2e34f8699ced342c2285ca835f3a4ddd03c29bbe703b845b -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 모든 `Cargo.toml`이 `polyspec-session-store`를 branch `v1/rust-core`로 받았고, `packages/ts/package.json`, `packages/python/pyproject.toml`, `packages/go/go.mod`는 session-store의 release를 적지 않아서 `make bindings-check`가 `packages/ts/package.json`, `packages/go/go.mod`, `packages/go/go.sum`에 CK-19를 보고했다. 이제 crate들은 tag `v0.0.4`를 받고 `Cargo.lock`이 그 commit을 고정한다. `packages/ts`는 `@polyspec/session-store` `0.0.4`를 요구하고, root와 `tests/package-install`은 그 release의 tarball과 platform package에서 설치한다. `packages/python/pyproject.toml`은 session-store 0.0.4의 wheel과, 그 wheel이 요구하는 php-serialization 0.0.15의 wheel을 macOS arm64, Linux aarch64, Linux x86_64별로 sha256과 함께 적는다. `packages/go/go.mod`는 session-store의 Go module을 `v0.0.4`로, php-serialization의 Go module을 `v0.0.15`로 요구하고 그 sum은 `packages/go/go.sum`에 있다. `Cargo.lock`은 template branch와 http-cookie, http-media-type, http-negotiation에서 오는 `polyspec-binding-core` 0.0.1과 0.0.10을 아직 가지므로 CK-20은 남는다(H35.8-2).
 - `make virtiofs-check`는 Node만 있고 native addon이 없는 Linux container 안에서 `writeProgram`을 실행했다. template library의 import와 core의 읽기 경로 계산은 각각 platform의 addon을 올리므로 test는 `MODULE_NOT_FOUND`로 실패했다. 이 test가 증명하는 것은 virtiofs bind mount에 출력 파일을 만드는 것(HR-68)이고 그 내용이 아니다. 프로그램 조립은 이제 계산 부분(`packages/cli/lib/program.mjs`의 `programFiles`)과 addon을 올리지 않는 쓰기 부분(`packages/cli/lib/program-files.mjs`)으로 나뉘고 `writeProgram`이 둘을 합성한다. test는 host에서 `programFiles`로 내용을 계산하고 container는 쓰기 부분으로 그 내용을 쓴다. 고정 image가 설치되어 있지 않아 `make virtiofs-check`는 실행하지 않았다(H35.34-5).
 - `make hyper-ext`는 Cargo에 wrapper `var/tools/bin/php`와 `php-config`의 경로를 주었고, 이 경로는 그 뒤의 PHP가 바뀌어도 같다. wrapper가 PHP 8.5에서 8.4로 바뀐 뒤 Cargo는 module API 20250925로 build한 library를 그대로 두었고 PHP 8.4는 그것을 load하지 않았다. 이제 recipe는 runtime의 release, thread safety, debug build 여부와 header의 release를 ext-php-rs의 build script가 Cargo에 선언하는 변수 `EXT_PHP_RS_ALLOWED_BINDINGS`에 적으므로, Cargo는 다른 PHP에 대해 확장을 다시 build한다(H35.16-5).
 - `make install-tools`는 PATH에서 처음 나오는 php를 `var/tools/bin/php`로 wrap하고 이미 있는 wrapper는 그대로 둔다. wrapper가 PHP 8.5이고 `.php-version`이 8.4일 때 recipe는 PHP 8.5를 실행했고, PHP가 8.4용으로 build한 확장을 거부하는 나중 단계에서 실패했다. 이제 `make php-check`는 wrapper가 `.php-version`의 minor release를 실행하지 않으면 두 release와 wrapper를 바꾸는 절차를 적어 실패한다. recipe가 PHP를 시작하는 모든 target(`PHP_TARGETS`)의 선행 조건이며, `make install-tools`는 설치 후 이 검사를 실행한다(H35.16-4).
