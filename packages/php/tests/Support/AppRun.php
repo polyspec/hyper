@@ -240,10 +240,6 @@ final class AppRun
             if ($word === null || $result !== ($index === count($steps) - 1)) {
                 throw new \UnexpectedValueException("the handler {$name} is not steps that end with one result");
             }
-            $thrown = is_array($step['throw'] ?? null) ? $step['throw']['class'] ?? null : null;
-            if ($thrown === 'OrmValueError' || $thrown === 'OrmStoreError') {
-                CaseRules::ormThrown("the handler {$name}");
-            }
         }
         if ($steps === []) {
             throw new \UnexpectedValueException("the handler {$name} has no result");
@@ -324,6 +320,7 @@ final class AppRun
                 $thrown = Json::map($step['throw'], 'the member throw');
                 throw match ($thrown['class'] ?? null) {
                     'Error' => new \RuntimeException(Json::string($thrown['message'] ?? null)),
+                    'OrmValueError', 'OrmStoreError' => CaseRules::ormError($thrown, "the handler {$name}"),
                     default => new \UnexpectedValueException("the handler {$name} throws an unknown class"),
                 };
             } elseif (array_key_exists('redirect', $step) || array_key_exists('outside', $step)) {

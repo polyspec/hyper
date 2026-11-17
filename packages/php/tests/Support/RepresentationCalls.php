@@ -28,14 +28,21 @@ final class RepresentationCalls
 
     /**
      * Returns a handler that answers the response of a case, which has `status`, `body` and `headers`; a response with
-     * `throw` fails the case (HY-107.7); without a response the handler fails, because the case states no call. A
+     * `throw` gives a handler that throws the error of the orm package that it names (HY-107.7); without a response the handler fails, because the case states no call. A
      * response with `service` gives a handler that takes the service of that name between the media type and the
      * request (HY-105.4).
      */
     public function handler(mixed $response): \Closure
     {
         if (is_array($response) && isset($response['throw'])) {
-            CaseRules::ormThrown('the representation handler');
+            $error = CaseRules::ormError($response['throw'], 'the representation handler');
+
+            return function (Request $request, MediaType $media) use ($error): Representation {
+                $this->handled++;
+                $this->request = $request;
+                $this->parameters = $media->parameters();
+                throw $error;
+            };
         }
         return match (is_array($response) ? $response['service'] ?? null : null) {
             null => fn (Request $request, MediaType $media): Representation => $this->answer(

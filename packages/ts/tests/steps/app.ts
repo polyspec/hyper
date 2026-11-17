@@ -13,7 +13,7 @@ import { App, ArraySession, BadRequest, Forbidden, NotFound, Redirect, Result, t
 import { Session } from '../../src/session/session.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
-import { bytesOf, ormThrown, requestFrom } from '../support.js';
+import { bytesOf, ormError, requestFrom } from '../support.js';
 import { listOf, mapOf, textOf } from '../inputs.js';
 import { comparesParts } from './parts-cases.js';
 import { comparesOpen, failureOf, Recorded, RecordingStore } from './recorded.js';
@@ -167,11 +167,6 @@ function stepsOf(value: unknown, name: string): Map<string, unknown>[] {
   const steps = listOf(value, `the handler ${name}`).map((step) => mapOf(step, `a step of the handler ${name}`));
   const last = steps.at(-1);
   if (last === undefined || !RESULTS.some((word) => last.has(word))) throw new Error(`the handler ${name} has no result step`);
-  for (const step of steps) {
-    if (!step.has('throw')) continue;
-    const thrown = mapOf(step.get('throw'), 'the throw of a handler').get('class');
-    if (thrown === 'OrmValueError' || thrown === 'OrmStoreError') ormThrown(`the handler ${name}`);
-  }
   return steps;
 }
 
@@ -204,7 +199,7 @@ function performed(name: string, steps: Map<string, unknown>[], run: Run, argume
     } else if (step.has('throw')) {
       const thrown = mapOf(step.get('throw'), 'the throw of a handler');
       if (thrown.get('class') === 'Error') throw new Error(textOf(thrown.get('message'), 'the message of a throw'));
-      throw new Error(`the case throws the unknown class ${String(thrown.get('class'))}`);
+      throw ormError(thrown, `the handler ${name}`);
     } else if (step.has('redirect') || step.has('outside')) {
       return redirectOf(step, argument);
     } else if (step.has('page')) {

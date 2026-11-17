@@ -821,7 +821,7 @@
               }
             },
             {
-              "id": "app.ormCode",
+              "id": "app.ormKind",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
@@ -829,19 +829,19 @@
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Returns the code of an ORM error, or null for another error (HY-107.7).",
+              "state": "Returns the kind of an error of the class OrmValueError of the orm package, or null for another error (HY-107.7).",
               "native": {
                 "php": {
-                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::ormCode",
-                  "signature": "private static function ormCode(Throwable $error): ?string"
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::ormKind",
+                  "signature": "private static function ormKind(Throwable $error): ?string"
                 },
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.ormCode",
-                  "signature": "private static ormCode(error: unknown): string | undefined"
+                  "symbol": "packages/ts/src/app/app.ts::App.ormKind",
+                  "signature": "private static ormKind(error: unknown): string | undefined"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._orm_code",
-                  "signature": "def _orm_code(error: Exception) -> str | None"
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._orm_kind",
+                  "signature": "def _orm_kind(error: Exception) -> str | None"
                 }
               }
             },

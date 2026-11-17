@@ -28,14 +28,21 @@ final class CaseRules
     ];
 
     /**
-     * Fails the case whose handler throws an error class of the orm package (HY-107.7) when the case is set up: hyper
-     * does not depend on the orm package, so the runner has no such class to throw and the case is not run.
+     * Returns the error of the orm package that a member `throw` of a case names by its `class` and its `kind`
+     * (HY-107.7): an instance of that class of the extension `polyspec_orm`, which judges the kind. A class that the
+     * orm package does not give fails the case.
      */
-    public static function ormThrown(string $what): never
+    public static function ormError(mixed $thrown, string $what): \Throwable
     {
-        throw new \UnexpectedValueException(
-            "{$what} throws an error of the orm package: the orm package is not a dependency of hyper yet (HY-107.7)",
-        );
+        $thrown = Json::map($thrown, "the member throw of {$what}");
+        $kind = Json::string($thrown['kind'] ?? null);
+        $message = "{$kind}: raised by {$what}";
+
+        return match ($thrown['class'] ?? null) {
+            'OrmValueError' => new \Polyspec\Orm\OrmValueError($message, $kind),
+            'OrmStoreError' => new \Polyspec\Orm\OrmStoreError($message, $kind),
+            default => new \UnexpectedValueException("{$what} throws a class that the orm package does not give"),
+        };
     }
 
     /** @return array<string, array<array-key, mixed>> the `caseFiles` of contracts/interfaces.json and of tests/legacy/interfaces.json */

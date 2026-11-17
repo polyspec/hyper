@@ -5,8 +5,8 @@ import io
 import json
 import tempfile
 from pathlib import Path
-from typing import NoReturn
 
+from polyspec.orm import ORMStoreError, ORMValueError
 from polyspec.hyper.session._session import _TOKEN_KEY
 from polyspec.hyper.app.app import App
 from polyspec.hyper.representation.media_type import MediaType
@@ -21,12 +21,20 @@ from .container_steps import SERVICES
 from .recorded import decoded
 
 
-def orm_thrown(what: str) -> NoReturn:
-    """Fails the case whose handler throws an error class of the orm package (HY-107.7) when the case is set up:
-    hyper does not depend on the orm package, so the runner has no such class to throw and the case is not run."""
+def orm_error(thrown: object, what: str) -> Exception:
+    """Returns the error of the orm package that a member `throw` of a case names by its `class` and its `kind`
+    (HY-107.7): an instance of that class of polyspec.orm, which judges the kind. A class that the orm package does
+    not give fails the case."""
+    if not isinstance(thrown, dict) or not isinstance(thrown.get("kind"), str):
+        raise LookupError(f"the throw of {what} has no kind")
+    kind = thrown["kind"]
+    message = f"{kind}: raised by {what}"
+    if thrown.get("class") == "OrmValueError":
+        return ORMValueError(message, kind)
+    if thrown.get("class") == "OrmStoreError":
+        return ORMStoreError(message, kind)
     raise LookupError(
-        f"{what} throws an error of the orm package: "
-        "the orm package is not a dependency of hyper yet (HY-107.7)"
+        f"{what} throws the class {thrown.get('class')}, which the orm package does not give"
     )
 
 
@@ -205,11 +213,10 @@ def _factory(name: str, created: dict):
 def _handler(spec: dict | None, calls: list):
     """Returns the representation handler of the case; with `service` it takes the service of that name between the
     media type and the request, each parameter named by its class (HY-105.4)."""
-    if spec is not None and "throw" in spec:
-        orm_thrown("the representation handler")
-
     def answer(request: Request, media: MediaType, received: dict) -> Representation:
         calls.append({**_observed(request, media), **received})
+        if spec is not None and "throw" in spec:
+            raise orm_error(spec["throw"], "the representation handler")
         if spec is None:
             raise AssertionError(
                 "a case without a handler calls a representation handler"

@@ -9,7 +9,7 @@ import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
 import { mapOf, plain, stringsOf, textOf, textsOf } from '../inputs.js';
-import { list, ormThrown, parsedBody, record, requestFrom } from '../support.js';
+import { list, ormError, parsedBody, record, requestFrom } from '../support.js';
 import { failureOf, messageStart } from './recorded.js';
 
 const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));
@@ -44,13 +44,13 @@ const rejected: RepresentationHandler<Services> = () => {
 };
 
 // Returns the representation handler of a case: it records what it received, with the service that `handler.service`
-// names (HY-105), and answers what the case states; a handler with `throw` fails the case (HY-107.7).
+// names (HY-105), and answers what the case states; a handler with `throw` throws the error of the orm package that it names (HY-107.7).
 function handlerOf(spec: Map<string, unknown> | null, calls: Observed[]): RepresentationHandler<Services> {
   const service = spec?.has('service') === true ? serviceName(spec.get('service')) : null;
-  if (spec?.has('throw') === true) ormThrown('the representation handler');
   return (argument: RepresentationArgument<Services>) => {
     const { request, media, services } = argument;
     calls.push({ method: request.method, parameters: media.parameters(), request, body: request.json(), params: request.params(), service: service === null ? null : services.get(service) });
+    if (spec?.has('throw') === true) throw ormError(spec.get('throw'), 'the representation handler');
     if (spec === null) throw new Error('a case without a handler calls a representation handler');
     const status = spec.get('status');
     if (typeof status !== 'number') throw new Error('the status of the handler of the case is not a number');

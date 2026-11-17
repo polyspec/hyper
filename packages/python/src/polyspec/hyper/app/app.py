@@ -9,6 +9,8 @@ from pathlib import Path
 from collections.abc import Sequence
 from typing import Callable, Optional, Union
 
+from polyspec.orm import ORMValueError
+
 from ..representation._accept import Accept
 from ..page.choice import Choice
 from ..page.client_rendering import ClientRendering
@@ -620,10 +622,10 @@ class App:
                 {Request: given, MediaType: media, "request": given, "media": media},
             )
         except Exception as error:
-            code = App._orm_code(error)
-            if code == "NO_ROWS":
+            kind = App._orm_kind(error)
+            if kind == "no_rows":
                 return Response.text(404, "Not Found").with_header("Vary", vary)
-            if code == "REVISION_CHANGED":
+            if kind == "revision_changed":
                 return Response.text(412, "Precondition Failed").with_header(
                     "Vary", vary
                 )
@@ -699,7 +701,7 @@ class App:
             except Exception as error:
                 # HY-107.4: only the action that raises REVISION_CHANGED is answered as the page with status 409 and
                 # no data of its own; a loader that raises it fails below (HY-43).
-                if App._orm_code(error) != "REVISION_CHANGED":
+                if App._orm_kind(error) != "revision_changed":
                     raise
                 result = Result.page(409, {})
             if not isinstance(result, Result):
@@ -741,18 +743,18 @@ class App:
         except Exception as error:
             # HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43),
             # also REVISION_CHANGED of a loader (HY-107.4).
-            if App._orm_code(error) == "NO_ROWS":
+            if App._orm_kind(error) == "no_rows":
                 return Response.text(404, "Not Found")
             raise
 
     @staticmethod
-    def _orm_code(error: Exception) -> str | None:
-        """The code of an error of the ORM, which hyper knows by the name of its class and by its attribute `code`, because
-        it does not depend on the ORM (HY-107), or None for every other error."""
-        code = getattr(error, "code", None)
-        if type(error).__name__ != "OrmError" or not isinstance(code, str):
+    def _orm_kind(error: Exception) -> str | None:
+        """The kind of an error of the ORM: the attribute `kind` of an instance of the class `ORMValueError` of the orm
+        package, which holds the kinds `no_rows` and `revision_changed` (HY-107.7), or None for every other error, so
+        that an error of another class of the orm package and an error of another library escape (HY-107.5)."""
+        if not isinstance(error, ORMValueError):
             return None
-        return code
+        return error.kind
 
     @staticmethod
     def _without_renewal(reply: Reply, response: Response) -> Response:

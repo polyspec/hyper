@@ -1,6 +1,7 @@
 // The fixture application of the PHP server tests, served by the Node server.
 import type { Server } from 'node:http';
 import { readFileSync } from 'node:fs';
+import { OrmStoreError, OrmValueError } from '@polyspec/orm';
 import { fileURLToPath } from 'node:url';
 import { App, ArraySession, Choice, ClientRendering, Request, Result, type AppOptions, type Container, type Handlers, type RequestInit, type Response, type RouteHandlers } from '../src/index.js';
 import type { SessionStore } from '../src/session/session-store.js';
@@ -53,11 +54,19 @@ export function handlers(): Handlers<Services> {
 
 // A fixture application with one session and one counter, as the PHP AppTest sets them up.
 /**
- * Fails the case whose handler throws an error class of the orm package (HY-107.7) when the case is set up: hyper does
- * not depend on the orm package, so the runner has no such class to throw and the case is not run.
+ * Returns the error of the orm package that a member `throw` of a case names by its `class` and its `kind` (HY-107.7):
+ * an instance of that class of `@polyspec/orm`, which judges the kind. A class that the orm package does not give fails
+ * the case.
  */
-export function ormThrown(what: string): never {
-  throw new Error(`${what} throws an error of the orm package: the orm package is not a dependency of hyper yet (HY-107.7)`);
+export function ormError(thrown: unknown, what: string): Error {
+  const field = (name: string): unknown => (thrown instanceof Map ? thrown.get(name) : typeof thrown === 'object' && thrown !== null ? (thrown as Record<string, unknown>)[name] : undefined);
+  const kind = field('kind');
+  if (typeof kind !== 'string') throw new Error(`the kind of the throw of ${what} is not a string`);
+  const message = `${kind}: raised by ${what}`;
+  const name = field('class');
+  if (name === 'OrmValueError') return new OrmValueError(message, kind);
+  if (name === 'OrmStoreError') return new OrmStoreError(message, kind);
+  throw new Error(`${what} throws the class ${String(name)}, which the orm package does not give`);
 }
 
 export class Fixture {

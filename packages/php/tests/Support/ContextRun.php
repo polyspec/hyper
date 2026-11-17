@@ -261,7 +261,11 @@ final class ContextRun
             };
         }
         if (array_key_exists('throw', $spec)) {
-            CaseRules::ormThrown("the loader {$name}");
+            $error = CaseRules::ormError($spec['throw'], "the loader {$name}");
+
+            return static function () use ($error): array {
+                throw $error;
+            };
         }
         if (($spec['renew'] ?? null) === true) {
             // HY-72.4: the loader calls renewSession of its reply and returns an empty map.
@@ -286,10 +290,9 @@ final class ContextRun
     /** @param array<array-key, mixed> $spec */
     private function action(string $route, array $spec): \Closure
     {
-        if (array_key_exists('throw', $spec)) {
-            CaseRules::ormThrown("the action of {$route}");
-        }
-        return function (Reply $reply) use ($route, $spec): Result {
+        $error = array_key_exists('throw', $spec) ? CaseRules::ormError($spec['throw'], "the action of {$route}") : null;
+
+        return function (Reply $reply) use ($route, $spec, $error): Result {
             $this->calls[] = "action:{$route}";
             if (array_key_exists('renew', $spec)) {
                 if ($spec['renew'] !== true) {
@@ -297,6 +300,10 @@ final class ContextRun
                 }
                 // HY-72.1: the action calls renewSession of its reply first.
                 $reply->renewSession();
+            }
+            // HY-107.7: the action lets the error of the orm package that the case names escape, after its renewal.
+            if ($error !== null) {
+                throw $error;
             }
             if (array_key_exists('redirect', $spec)) {
                 return Result::redirect(self::string($spec['redirect'], "the redirect of {$route}"));

@@ -10,12 +10,14 @@ import { decoded } from './session-requests.js';
 import { App, ArraySession, NotFound, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
-import { ormThrown, parsedBody, record, requestFrom } from '../support.js';
+import { ormError, parsedBody, record, requestFrom } from '../support.js';
 
 // An action of an application of a case: it renews the session when `renew` is true, and then redirects, redirects to
 // an outside location when `outside` is true (HY-133), or returns a page with its data.
 interface Action {
   renew: boolean;
+  // The error of the orm package that the action lets escape after its renewal (HY-107.7), or null.
+  error: Error | null;
   redirect: string | null;
   outside: boolean;
   page: number;
@@ -77,24 +79,26 @@ function applicationOf(value: unknown, name: string): Application {
     });
   })();
   const loaders = new Map([...mapIn(application.get('loaders'), 'the loaders')].map(([loader, data]): [string, Map<string, unknown>] => [loader, hostMap(data, `the loader ${loader}`)]));
-  for (const [loader, spec] of loaders) if (spec.has('throw')) ormThrown(`the loader ${loader}`);
   const actions = new Map<string, Action>();
   if (application.has('actions')) {
     for (const [route, item] of mapIn(application.get('actions'), 'the actions')) {
       const action = mapIn(item, `the action of ${route}`);
       const renew = action.has('renew') && action.get('renew') === true;
-      if (action.has('throw')) ormThrown(`the action of ${route}`);
+      if (action.has('throw')) {
+        actions.set(route, { renew, error: ormError(action.get('throw'), `the action of ${route}`), redirect: null, outside: false, page: 0, data: new Map() });
+        continue;
+      }
       if (action.has('redirect')) {
-        actions.set(route, { renew, redirect: stringIn(action.get('redirect'), `the redirect of ${route}`), outside: false, page: 0, data: new Map() });
+        actions.set(route, { renew, error: null, redirect: stringIn(action.get('redirect'), `the redirect of ${route}`), outside: false, page: 0, data: new Map() });
         continue;
       }
       if (action.has('outside')) {
-        actions.set(route, { renew, redirect: stringIn(action.get('outside'), `the outside redirect of ${route}`), outside: true, page: 0, data: new Map() });
+        actions.set(route, { renew, error: null, redirect: stringIn(action.get('outside'), `the outside redirect of ${route}`), outside: true, page: 0, data: new Map() });
         continue;
       }
       const page = action.get('page');
       if (typeof page !== 'number' || !Number.isInteger(page)) throw new Error(`the action of ${route} has no throw, no redirect and no integer page`);
-      actions.set(route, { renew, redirect: null, outside: false, page, data: hostMap(action.get('data'), `the data of the action of ${route}`) });
+      actions.set(route, { renew, error: null, redirect: null, outside: false, page, data: hostMap(action.get('data'), `the data of the action of ${route}`) });
     }
   }
   return {
@@ -110,6 +114,8 @@ function applicationOf(value: unknown, name: string): Application {
 // Returns what a loader of a case returns: it calls renewSession of its reply and returns an empty map for
 // `renew: true` (HY-72.4), and returns its stated data otherwise.
 function loaded(spec: Map<string, unknown>, reply: Reply): Map<string, unknown> {
+  // HY-107.7: a loader with `throw` lets the error of the orm package that it names escape.
+  if (spec.has('throw')) throw ormError(spec.get('throw'), 'a loader');
   if (spec.get('renew') === true) {
     reply.renewSession();
     return new Map();
@@ -149,6 +155,7 @@ function handlersOf(application: Application, shared: Map<string, unknown> | nul
       handler.post = ({ reply }) => {
         calls.push(`action:${route.name}`);
         if (action.renew) reply.renewSession();
+        if (action.error !== null) throw action.error;
         if (action.redirect === null) return Result.page(action.page, action.data);
         return action.outside ? Result.outside(action.redirect) : Result.redirect(action.redirect);
       };

@@ -4,6 +4,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
 import { checkManifest, keptPaths, Router, stripBasePath, type Manifest, type RouteDeclaration } from '@polyspec/hyper-client';
+import { OrmValueError } from '@polyspec/orm';
 import { Choice } from '../page/choice.js';
 import type { ClientRendering } from '../page/client-rendering.js';
 import { Disconnected } from './disconnected.js';
@@ -663,10 +664,10 @@ export class App<S extends object = Record<string, never>> {
     try {
       returned = await handle({ request: request.asRepresentation(value), media: new MediaType(values, contentType), services: this.services });
     } catch (error) {
-      // HY-107: an error of the ORM is known by its class name and code.
-      const code = App.ormCode(error);
-      if (code === 'NO_ROWS') return Response.text(404, 'Not Found').withHeader('Vary', vary);
-      if (code === 'REVISION_CHANGED') return Response.text(412, 'Precondition Failed').withHeader('Vary', vary);
+      // HY-107.7: an error of the ORM is known by its error class and its kind.
+      const kind = App.ormKind(error);
+      if (kind === 'no_rows') return Response.text(404, 'Not Found').withHeader('Vary', vary);
+      if (kind === 'revision_changed') return Response.text(412, 'Precondition Failed').withHeader('Vary', vary);
       throw error;
     }
     const response = RepresentationResponse.of(returned, contentType, vary, request.header('Authorization') !== null, basePath);
@@ -709,7 +710,7 @@ export class App<S extends object = Record<string, never>> {
         if (!(returned instanceof Result)) throw new Error(`hyper: POST action of route ${route.name} did not return a Result`);
         result = returned;
       } catch (error) {
-        if (App.ormCode(error) !== 'REVISION_CHANGED') throw error;
+        if (App.ormKind(error) !== 'revision_changed') throw error;
       }
       // HY-72: the action renews the session after it ends, and a page that its request renders carries the new token.
       if (reply.takeRenewal()) {
@@ -727,7 +728,7 @@ export class App<S extends object = Record<string, never>> {
       if (error instanceof BadRequest) return Response.text(400, 'Bad Request');
       // HY-107: an error of the ORM is answered as the stop of its meaning; every other error, also the REVISION_CHANGED
       // of a loader (HY-107.4), escapes (HY-43).
-      if (App.ormCode(error) === 'NO_ROWS') return Response.text(404, 'Not Found');
+      if (App.ormKind(error) === 'no_rows') return Response.text(404, 'Not Found');
       throw error;
     }
     // HY-107.4, HY-58: the 409 page of the action, whose loaders stop nothing; a loader that renews the session fails
@@ -735,11 +736,11 @@ export class App<S extends object = Record<string, never>> {
     return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, { result: null, masked: request.csrfToken() }, reply, basePath));
   }
 
-  // The code of an error of the ORM, which hyper knows by the name of its class and by its property `code`, because it does not
-  // depend on the ORM (HY-107), or undefined for every other error.
-  private static ormCode(error: unknown): string | undefined {
-    if (!(error instanceof Error) || error.name !== 'OrmError' || !('code' in error)) return undefined;
-    return typeof error.code === 'string' ? error.code : undefined;
+  // The kind of an error of the ORM: the property `kind` of an instance of the class `OrmValueError` of the orm package,
+  // which holds the kinds `no_rows` and `revision_changed` (HY-107.7), or undefined for every other error, so that an error
+  // of another class of the orm package and an error of another library escape (HY-107.5).
+  private static ormKind(error: unknown): string | undefined {
+    return error instanceof OrmValueError ? error.kind : undefined;
   }
 
   // Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72).

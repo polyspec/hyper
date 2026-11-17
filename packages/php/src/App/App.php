@@ -764,10 +764,10 @@ final class App
                 MediaType::class => new MediaType($values, $contentType),
             ]);
         } catch (\Throwable $error) {
-            // HY-107: an error of the ORM is known by its class name and code.
-            return match (self::ormCode($error)) {
-                'NO_ROWS' => Response::text(404, 'Not Found')->withHeader('Vary', $vary),
-                'REVISION_CHANGED' => Response::text(412, 'Precondition Failed')->withHeader('Vary', $vary),
+            // HY-107.7: an error of the ORM is known by its error class and its kind.
+            return match (self::ormKind($error)) {
+                'no_rows' => Response::text(404, 'Not Found')->withHeader('Vary', $vary),
+                'revision_changed' => Response::text(412, 'Precondition Failed')->withHeader('Vary', $vary),
                 default => throw $error,
             };
         }
@@ -847,7 +847,7 @@ final class App
             } catch (\Throwable $error) {
                 // HY-107.4: only an action that raises REVISION_CHANGED is answered as the page with status 409;
                 // the loaders of that page are loaders, so their renewal (HY-72.4) and their REVISION_CHANGED fail.
-                if (self::ormCode($error) !== 'REVISION_CHANGED') {
+                if (self::ormKind($error) !== 'revision_changed') {
                     throw $error;
                 }
                 $result = Result::page(409, []);
@@ -889,26 +889,21 @@ final class App
         } catch (\Throwable $error) {
             // HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43).
             // HY-107.4: a loader that raises REVISION_CHANGED escapes; the action's one is answered above.
-            return match (self::ormCode($error)) {
-                'NO_ROWS' => Response::text(404, 'Not Found'),
+            return match (self::ormKind($error)) {
+                'no_rows' => Response::text(404, 'Not Found'),
                 default => throw $error,
             };
         }
     }
 
     /**
-     * The code of an error of the ORM, which hyper knows by the name of its class and by its property `code_`,
-     * because it does not depend on the ORM (HY-107), or null for every other error.
+     * The kind of an error of the ORM: the method `kind()` of an instance of the class `OrmValueError` of the extension
+     * `polyspec_orm`, which holds the kinds `no_rows` and `revision_changed` (HY-107.7), or null for every other error,
+     * so that an error of another class of the orm package and an error of another library escape (HY-107.5).
      */
-    private static function ormCode(\Throwable $error): ?string
+    private static function ormKind(\Throwable $error): ?string
     {
-        $class = new \ReflectionClass($error);
-        if ($class->getShortName() !== 'OrmException' || !$class->hasProperty('code_')) {
-            return null;
-        }
-        $code = $class->getProperty('code_')->getValue($error);
-
-        return is_string($code) ? $code : null;
+        return $error instanceof \Polyspec\Orm\OrmValueError ? $error->kind() : null;
     }
 
     /** Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72). */

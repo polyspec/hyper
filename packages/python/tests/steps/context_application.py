@@ -10,7 +10,7 @@ from polyspec.hyper.result.not_found import NotFound
 from polyspec.hyper.result.result import Result
 
 from .recorded import decoded
-from .representations_steps import orm_thrown
+from .representations_steps import orm_error
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -60,14 +60,13 @@ def open_application(
     actions = application.get("actions", {})
     if not isinstance(actions, dict):
         raise ValueError("the actions are not a map")
-    for name, spec in [*loaders.items(), *actions.items()]:
-        if isinstance(spec, dict) and "throw" in spec:
-            orm_thrown(f"handler {name}")
-
     def loader(route: str, data: dict):
         def load(request: Request, reply: Reply) -> dict:
             if route in embed:
                 reply.embed_data()
+            # HY-107.7: a loader with `throw` lets the error of the orm package that it names escape.
+            if "throw" in data:
+                raise orm_error(data["throw"], f"the loader {route}")
             if "stop" in data:
                 if data["stop"] != "NotFound":
                     raise ValueError(
@@ -90,6 +89,9 @@ def open_application(
                 if spec["renew"] is not True:
                     raise ValueError(f"the renew of action {route} is not true")
                 reply.renew_session()
+            # HY-107.7: the action lets the error of the orm package that the case names escape, after its renewal.
+            if "throw" in spec:
+                raise orm_error(spec["throw"], f"the action of {route}")
             if "redirect" in spec:
                 if not isinstance(spec["redirect"], str):
                     raise ValueError(f"the redirect of {route} is not a string")

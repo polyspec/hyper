@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- server는 ORM의 오류를 orm 패키지의 class `OrmValueError`와 그 kind로 알아본다(HY-107.7, H35.45). 입력: `no_rows` kind의 `OrmValueError`처럼 orm 패키지의 오류를 내보내는 loader, action, representation handler. 이전 동작: server는 ORM의 오류를 class 이름(Node와 Python은 `OrmError`, PHP는 `OrmException`)과 대문자 `code`로 알아봤는데, 0.0.34의 orm 패키지는 그것을 더 주지 않으므로 그 오류는 HY-43으로 실패했다. case runner는 handler가 그런 오류를 던지는 15개 case를 orm 패키지가 hyper의 의존성이 아니라는 case 오류로 실패시켰다. 기대 동작: 각 server의 `App`의 `ormKind`는 `OrmValueError`(Python은 `ORMValueError`, PHP는 `kind()`)의 `kind`를 돌려주고, `no_rows`와 `revision_changed`의 stop이 그것을 따르며, case runner는 case가 지정한 orm 패키지의 `OrmValueError`나 `OrmStoreError`를 던진다. 코드는 아직 manifest가 지정하지 않은 orm 패키지를 import한다. orm 0.0.34의 pin이 이 row를 마치며, 그때까지 server는 build되지 않는다.
+
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 
 - `tests/scripts/upload-servers.test.mts`는 scenario의 server가 시작하지 않아도 끝난다(HR-87, H34.3). 입력: Node application을 build할 수 없을 때처럼 `started()`가 throw하는 scenario. 이전 동작: `hostsOf`가 gate listener의 close를 `started()` 뒤에야 등록했으므로, 모든 case가 실패한 뒤에도 listener가 열린 채 남아 파일이 끝나지 않았다. 기대 동작: listener가 listen한 직후 close를 등록하고, 파일은 실패와 함께 끝난다.
