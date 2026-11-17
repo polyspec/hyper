@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- The mark `unimplemented` of a statement in `contracts/protocol.json` takes a second form: a list of `{ "row", "servers" }`, which marks a statement only for the servers that do not meet it (H35.40-2). `scripts/schema/protocol.schema.json` takes the list. `scripts/spec-docs.mts` renders it, for example `*(Not implemented in Node and Python: row H35.38; in PHP: row H35.37.)*`, checks every row against the checklist and fails a server that two rows name. HY-104.25, HY-104.26, HY-104.27, HY-104.32, HY-115.28, HY-115.29, HY-132.1 and HY-132.3 are now marked for PHP only. HY-104.38 is marked for Node and Python with row H35.38 and for PHP with row H35.37. `make spec-docs` and `make spec-docs-check` passed; the tests of `tests/scripts/spec-docs.test.mts` were not run.
+
 - `tests/scripts/spec-docs.test.mts` states the per-server form of the mark `unimplemented` (H35.40-2). The mark is a list of rows, each with the servers that do not meet the statement, and each document renders the servers with their rows. A row that the checklist does not hold fails, and so does a server that two rows name. Red: the schema takes only a string today. Written, not run.
 
 - Row H35.38 now names what stays open before its Green. The units of the removed session code in `contracts/interfaces.json` are written again by the recipe tool. Binding names that no generated file holds yet are matched after `make bindings`. The certificate authority of the Redis store waits for session-store 0.0.5 `authorities`. Row H35.38-1 is new: the host calls of the store move behind core members, and the hand conversion is removed after binding B2.489. Row H35.40-2 is new: a per-server form of the mark `unimplemented` in the protocol schema.

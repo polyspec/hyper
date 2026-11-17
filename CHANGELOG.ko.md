@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 34c0998fe1d36ad2e55361baedfdada1787537b087f49b900a16aa99fe8565ca -->
+<!-- source-sha256: 124b90dab2053d49aa3b8b704545a5885f2dad3f4607d97ebee1e415d7c2e021 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `contracts/protocol.json`에서 statement의 표시 `unimplemented`가 두 번째 형태를 받는다: `{ "row", "servers" }`의 목록이며, statement를 지키지 않는 서버에 대해서만 표시한다(H35.40-2). `scripts/schema/protocol.schema.json`이 그 목록을 받는다. `scripts/spec-docs.mts`는 그것을 렌더링하고(예: `*(구현되지 않음: Node와 Python은 행 H35.38, PHP는 행 H35.37.)*`), 모든 행을 checklist와 대조하며, 두 행이 같은 서버를 적으면 실패한다. HY-104.25, HY-104.26, HY-104.27, HY-104.32, HY-115.28, HY-115.29, HY-132.1, HY-132.3은 이제 PHP에 대해서만 표시된다. HY-104.38은 Node와 Python에 대해 행 H35.38로, PHP에 대해 행 H35.37로 표시된다. `make spec-docs`와 `make spec-docs-check`는 통과했고, `tests/scripts/spec-docs.test.mts`의 test는 실행하지 않았다.
 
 - `tests/scripts/spec-docs.test.mts`는 표시 `unimplemented`의 서버별 형태를 서술한다(H35.40-2). 표시는 행의 목록이고, 각 행은 statement를 지키지 않는 서버를 가지며, 각 문서는 서버를 그 행과 함께 렌더링한다. checklist에 없는 행은 실패하고, 두 행이 같은 서버를 적어도 실패한다. Red: 지금 schema는 문자열만 받는다. 작성만 했고 실행하지 않았다.
 
