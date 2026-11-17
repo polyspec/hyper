@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 3f5096d9cd58fbefc567832f64f2f58060eca8598d95c4308c927cf511f3a8cb -->
+<!-- source-sha256: b2b5e63d1dfbdc4b580a19bea498b4c81b0094952f4ead4663056c6b6b8ee3a5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 세 서버는 file 제한을 두 번 검사한다. route 전에 `App`의 `dispatch`에서, 그리고 token 뒤에 action과 `/_hyper/keep`에 대해 `fileOver`로 검사한다. 이제 `docs/plans/execution/plan.md`는 세 서버의 행 번호와 함께 다음을 적는다. 둘째 검사는 첫째와 같은 요청, 같은 application의 제한을 읽고, route나 action은 자기 제한을 갖지 않으며(HY-114.1), `multipart/form-data`가 form 타입이 아닌 곳에서 파일을 가진 요청은 token 전에 415를 받으므로, 둘째 검사는 답하는 일이 없다. HY-114.7은 body를 읽는 동안의 검사 하나를 정하며 바뀌지 않는다. 세 서버에서 둘째 검사를 제거하는 것이 그 row의 남은 부분이다. `contracts/app.json`의 file 제한 case 둘은 제거 전과 후에 모두 통과한다(H35.36-6).
 
 - HY-59.4를 retire하고 HY-59.15가 대신한다. HY-59.4는 한도보다 큰 body에 "모든 요청에 대해 그리고 HY-42 전에" 상태 413을 주었고, HY-131.26은 잘못된 byte가 body 제한보다 먼저 오는 body에 413이 아니라 400을 준다. 조각 단위로 읽는 body에서 둘은 어긋났다. HY-59.15는 한 규칙을 정한다. 413은 경로, query, header, 한 값으로 보유한 body에 대한 HY-42의 검사보다 먼저 온다. 조각 단위로 읽는 body에서는 byte가 먼저 오는 실패가 답하므로, 한도 전의 잘못된 byte는 뒤의 byte가 한도를 넘어도 400을 받는다. 한도보다 큰 `Content-Length`는 byte가 무엇이든 413을 받는다. 서버는 이를 지키지 않는다. `RequestBody.feed`는 reader가 실패한 뒤에 true를 돌려주고, host는 계속 먹이며, 그 뒤 body 제한을 넘는 body는 413을 받는다. `docs/plans/execution/plan.md`는 그 row의 Red인 section `streamed`의 case와 chunked body의 host 테스트를 적는다. 둘 다 지금 실패하므로 추가하지 않는다. HY-59.4를 인용하던 statement, `contracts/interfaces.json`의 텍스트, 소스의 주석, 테스트 제목 셋은 HY-59.15를 인용한다(H35.36-5).
 
