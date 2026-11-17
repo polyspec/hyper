@@ -107,6 +107,24 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 
 .DEFAULT_GOAL := help
 
+# The PHP of the checkout is var/tools/bin/php, the wrapper that make install-tools writes for the php that is first on
+# PATH at that time and that a later install keeps (kit K1271), so the wrapper can run another minor release than
+# .php-version pins (HR-81). php-check compares the two before a recipe starts PHP: PHP_TARGETS are the targets whose
+# recipes start PHP, Composer, PIE, PHPUnit, PHPStan, phpcs, Pint, a PHP server or a build against the headers of PHP,
+# and php-check is a prerequisite of each, so no such recipe runs on another PHP; make orders the prerequisites of the
+# rule that holds the recipe first, so a prerequisite that starts no PHP may run before the check. make install-tools runs
+# the same check after it wrote or kept the wrapper. hyper-install is no such target: its first step writes the wrapper.
+# A target that starts PHP is named here, and tests/scripts/php-check.test.mts fails for a PHP recipe that is not.
+CHECKOUT_PHP := $(KIT_TOOLS)/bin/php
+PHP_TARGETS := hyper-install-php template-ext json-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
+.PHONY: php-check
+$(PHP_TARGETS): php-check
+php-check: ## Fail unless var/tools/bin/php, the PHP of the checkout, is the minor release that .php-version names (HR-81)
+	@want="$$(tr -d '[:space:]' < .php-version)"; \
+	test -x $(CHECKOUT_PHP) || { echo "php-check: $(CHECKOUT_PHP), the PHP of the checkout, does not exist; put the php of PHP $$want first on PATH (Homebrew: php@$$want) and run make install-tools" >&2; exit 1; }; \
+	have="$$($(CHECKOUT_PHP) -n -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;')" || { echo "php-check: $(CHECKOUT_PHP) does not run; remove it, put the php of PHP $$want first on PATH (Homebrew: php@$$want) and run make install-tools" >&2; exit 1; }; \
+	test "$$have" = "$$want" || { echo "php-check: $(CHECKOUT_PHP) runs PHP $$have ($$($(CHECKOUT_PHP) -n -r 'echo PHP_VERSION, " at ", PHP_BINARY;')), and .php-version names PHP $$want. make install-tools keeps an existing wrapper: put the php of PHP $$want first on PATH (Homebrew: php@$$want), remove $(CHECKOUT_PHP) and run make install-tools, then make hyper-install-php and make hyper-ext, which build the extensions for that PHP" >&2; exit 1; }
+
 .PHONY: bench-sessions bench-uploads help hyper-install hyper-install-python hyper-install-browser hyper-install-virtiofs hyper-test-node hyper-test-python-render hyper-test-scripts check typecheck hyper-php-install ext packages package-check board server-fixtures contract-programs node-server node-fixtures hyper-test-js hyper-test-php hyper-test-python hyper-lint analyse-php templates-check virtiofs-check parity server-parity server-parity-python bundle-size e2e serve-demo bench-server bench-server-smoke bench-browser bench serve-demo-unlock
 
 help: ## List the targets
@@ -229,12 +247,21 @@ ext: ## Fail unless the json extension and the template extension that the PHP c
 # clang of the LLVM of config/toolchain.json (LLVM_ROOT of packages/release.mk), as release-php-ext builds it for a
 # release. The library is checked to load into that PHP without a php.ini and published into build/hyper-ext with one
 # rename (HR-82); the PHP tests and the session holders load it with -d extension.
+# The PHP is an input of the build: the build script of ext-php-rs writes the bindings and the module API of the headers
+# that php-config names into the library, and Cargo runs it again only when a variable that it declares with
+# rerun-if-env-changed changes (PHP, PHP_CONFIG, PATH, EXT_PHP_RS_ALLOWED_BINDINGS, EXT_PHP_RS_STATIC_EXT). PHP and
+# PHP_CONFIG name the wrappers of var/tools/bin, whose paths stay when the PHP behind them changes, so the recipe states
+# that PHP in EXT_PHP_RS_ALLOWED_BINDINGS: the release, the thread safety and the debug build of the runtime and the
+# release of the headers. The value is one more name of the allow list of bindgen, which matches no declaration of PHP and
+# so adds no binding; Cargo records it with the build, and a build for another PHP runs the build script and compiles
+# the extension again. No recipe removes a target directory for it.
 HYPER_EXT := build/hyper-ext/polyspec_hyper.so
+PHP_BUILD_INPUT = polyspec_build_input_php_$${runtime}_headers_$${headers}
 .PHONY: hyper-ext
 hyper-ext: bindings ## Build the PHP extension polyspec_hyper of packages/php/native into build/hyper-ext (HY-132.2, H35.25)
 	@test -n "$(LLVM_MAJOR)" || { echo 'hyper-ext: LLVM_MAJOR is empty, since packages/release.mk, which make release-recipes writes, is missing' >&2; exit 2; }
 	@test -x "$(LLVM_ROOT)/bin/clang" && ls "$(LLVM_ROOT)/lib" 2>/dev/null | grep -q '^libclang' || { echo 'hyper-ext: the bindgen of ext-php-rs needs the libclang and the clang of LLVM $(LLVM_MAJOR) (config/toolchain.json) in $(LLVM_ROOT)' >&2; exit 2; }
-	PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang $(CARGO) build --locked -p polyspec-hyper-php-ext
+	runtime="$$(php -n -r 'echo PHP_VERSION_ID, PHP_ZTS ? "_zts" : "_nts", PHP_DEBUG ? "_debug" : "";')" && headers="$$(php-config --vernum)" && PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" EXT_PHP_RS_ALLOWED_BINDINGS="$(PHP_BUILD_INPUT)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang $(CARGO) build --locked -p polyspec-hyper-php-ext
 	mkdir -p build/hyper-ext.next-$$$$ && trap 'rm -rf build/hyper-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp $(CARGO_TARGET)/debug/libpolyspec_hyper.$(CDYLIB) build/hyper-ext.next-$$$$/polyspec_hyper.so && php -n -d extension=$(CURDIR)/build/hyper-ext.next-$$$$/polyspec_hyper.so -r 'exit(extension_loaded("polyspec_hyper") ? 0 : 1);' && $(NODE) scripts/publish.mts directory build/hyper-ext.next-$$$$ build/hyper-ext
 
 # A build that fails or is interrupted leaves no staging directory: the shell of each line removes its own when it ends
@@ -583,7 +610,7 @@ CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse
 # ci-targets runs (CI_TARGETS); the targets of the groups together are every target of CHECK_TARGETS once
 # (tests/scripts/ci-workflow.test.mts). A group gathers the targets that need the same setup: docs Node.js, PHP, Python
 # and Redis for the case runners of recipe-check and the session tests, php PHP and the template build, node Node.js
-# alone, board also Python and Chromium, python only the Python of its pins. The group bench is the job of bench.yml,
+# and the Rust toolchain that builds the native addon, board also Python and Chromium, python only the Python of its pins. The group bench is the job of bench.yml,
 # whose targets are reports and belong to no check (make ci-bench).
 CI_GROUPS := gates docs php node board python core
 # hyper-install-python builds the native module with maturin of mise.toml and Cargo, so each group that runs it names
@@ -598,7 +625,7 @@ CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check recipe-check
 CI_TOOLS_php := node php composer pie rust
 CI_SETUP_php := install-tools hyper-install-php
 CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php
-CI_TOOLS_node := node
+CI_TOOLS_node := node rust
 CI_SETUP_node := install-tools
 CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check
 CI_TOOLS_board := node php composer pie python uv rust maturin
@@ -648,6 +675,7 @@ ifeq ($(TOOLS),npm)
 	$(ONLINE) $(BOOTSTRAP_NODE) $(KIT)/bootstrap/bootstrap.$(KIT_EXT)
 else
 	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-tools.$(KIT_EXT) --no-self-update $(TOOLS)
+	@test ! -e $(CHECKOUT_PHP) || $(MAKE) --no-print-directory php-check
 endif
 
 install-packages: ## Install the packages of package-lock.json, @polyspec/kit included, and the pinned TypeScript of the recipe reader (scripts/recipe/typescript), with the npm of var/tools; ONLINE

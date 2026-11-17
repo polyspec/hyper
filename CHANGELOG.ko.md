@@ -1,11 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d6996b6a10baf8f9fa941c19ddace076955c67bb240ec0db8dc761108fab3cf3 -->
+<!-- source-sha256: 2f4c32a66ce7d6bd2711498a8f887ad76d81feba2ae33fe95106541d7b35ecd7 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make hyper-ext`는 Cargo에 wrapper `var/tools/bin/php`와 `php-config`의 경로를 주었고, 이 경로는 그 뒤의 PHP가 바뀌어도 같다. wrapper가 PHP 8.5에서 8.4로 바뀐 뒤 Cargo는 module API 20250925로 build한 library를 그대로 두었고 PHP 8.4는 그것을 load하지 않았다. 이제 recipe는 runtime의 release, thread safety, debug build 여부와 header의 release를 ext-php-rs의 build script가 Cargo에 선언하는 변수 `EXT_PHP_RS_ALLOWED_BINDINGS`에 적으므로, Cargo는 다른 PHP에 대해 확장을 다시 build한다(H35.16-5).
+- `make install-tools`는 PATH에서 처음 나오는 php를 `var/tools/bin/php`로 wrap하고 이미 있는 wrapper는 그대로 둔다. wrapper가 PHP 8.5이고 `.php-version`이 8.4일 때 recipe는 PHP 8.5를 실행했고, PHP가 8.4용으로 build한 확장을 거부하는 나중 단계에서 실패했다. 이제 `make php-check`는 wrapper가 `.php-version`의 minor release를 실행하지 않으면 두 release와 wrapper를 바꾸는 절차를 적어 실패한다. recipe가 PHP를 시작하는 모든 target(`PHP_TARGETS`)의 선행 조건이며, `make install-tools`는 설치 후 이 검사를 실행한다(H35.16-4).
+- `make hyper-test-node`와 `make package-check`는 Cargo로 Node addon을 build하는데, CI 그룹 node는 Node.js만 설치하여 그 job에 cargo가 없었다. `CI_TOOLS_node`는 이제 rust를 적는다(H35.34).
 - `AGENTS.md`의 버전 올림 commit 규칙은 `@polyspec/hyper-client`와 `polyspec/hyper` 요구만 적었다. `packages/cli/package.json`도 `@polyspec/hyper`를 그 버전으로 요구하고, 두 Composer root는 `config.platform`에 `ext-polyspec_hyper`를 그 버전으로 적으며, lock 네 개와 `docs/operations/dependencies.md`의 행이 그 버전을 기록한다. 규칙은 이제 이 파일을 모두 적는다(H35.34).
 - 부호 없는 정수가 아닌 limit(예: -1)로 `Request.fileOver(limit)`를 호출하면, Node 서버와 Python 서버는 파일을 limit와 비교해 boolean을 반환했고, PHP 서버는 자체 검사로 limit를 거절했다. 이제 각 서버는 body의 각 파일 byte 수와 limit로 Rust core의 member `rules.file_over`를 호출하므로, 호출은 파일을 비교하기 전에 binding의 kind `invalid_number`로 실패하고, 비교는 core가 한다(HY-114.12, HY-132.2, H35.31-2-1).
 - `tests/scripts/cargo-through-kit.test.mts`는 recipe 줄 `binding generate --cargo "$(CARGO)"`를 kit의 link script를 거치지 않는 cargo 명령으로 읽어 실패했다. 이제 테스트는 옵션 `--cargo "<명령>"`의 값을 cargo 명령과 구별해 읽는다. 값은 link script 명령이어야 하고 Makefile에서는 `$(CARGO)`여야 하며, cargo 명령은 이전과 같이 link script를 거쳐야 한다. cargo를 직접 시작하는 줄, 값이 다른 명령인 옵션, 값이 큰따옴표 안에 없는 옵션은 거부되며, 두 테스트가 이를 예로 서술한다(H35.31-4).
