@@ -306,6 +306,18 @@
     },
     {
       "paths": [
+        "tests/scripts/release-recipes-tree.mts"
+      ],
+      "tests": [
+        "tests/scripts/hyper-ext.test.mts",
+        "tests/scripts/ci-group-tools.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "scripts/binding-cases.mts",
         "config/binding-cases.json",
         "tests/scripts/binding-cases.test.mts",

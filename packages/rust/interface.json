@@ -4188,6 +4188,26 @@
       "group": "session"
     },
     {
+      "member": "front_functions.route_request",
+      "file": "packages/rust/tests/cases/members.json",
+      "group": "route"
+    },
+    {
+      "member": "front_functions.kept_value",
+      "file": "packages/rust/tests/cases/members.json",
+      "group": "kept"
+    },
+    {
+      "member": "opening_functions.answer_keep_request",
+      "file": "packages/rust/tests/cases/members.json",
+      "group": "keep"
+    },
+    {
+      "member": "page_request.new",
+      "file": "packages/rust/tests/cases/members.json",
+      "group": "request"
+    },
+    {
       "member": "rules.csrf_mask",
       "file": "var/binding-cases/csrf.json",
       "group": "mask"

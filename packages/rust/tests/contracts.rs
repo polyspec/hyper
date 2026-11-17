@@ -2026,7 +2026,7 @@ fn the_fault_cases_raise_their_kind_where_their_points_break() -> Result<(), Err
         let request = Front {
             method: text(front, "method").to_owned(),
             path: text(front, "path").to_owned(),
-            accept: accept.map(|line| from_hex(text(line, "hex"))).collect(),
+            accept: accept.map(|line| latin1(text_of(line))).collect(),
             hx_request: front["hx_request"] == Value::Bool(true),
             context_header: front["context_header"].as_str().map(latin1),
             content_type: front["content_type"].as_str().map(latin1),
@@ -2096,28 +2096,53 @@ fn the_fault_cases_of_the_template_raise_internal_where_the_parser_breaks() -> R
     Ok(())
 }
 
-/// The store of a case of opening_functions.open_page, given as an instance value (binding GN-13f): a memory store with
-/// the values that its calls of `memory_store.set` give as PHP serialization, or the session of a file store that
-/// `file_sessions.open` opens without a cookie.
-fn case_store(case: &Value) -> Box<dyn polyspec_session_store::Store> {
-    use polyspec_session_store::{FileSessions, MemoryStore, Store};
+/// The directory of a case, as a generated binding test gives it (binding GN-6y, GN-13i): a new directory of this
+/// process and of the case, which holds the files of `@files` of the case, and which is removed when the value is
+/// dropped, also when the test fails.
+struct CaseDirectory(PathBuf);
+
+impl CaseDirectory {
+    fn new(case: &Value) -> Self {
+        let name = format!(
+            "hyper-contracts-{}-{}",
+            std::process::id(),
+            text(case, "id")
+        );
+        let directory = std::env::temp_dir().join(name);
+        if let Err(error) = fs::create_dir(&directory) {
+            panic!("{}: {error}", directory.display());
+        }
+        let made = Self(directory);
+        for (path, content) in case["@files"].as_object().into_iter().flatten() {
+            let file = made.0.join(path);
+            if let Err(error) = fs::write(&file, text_of(content)) {
+                panic!("{}: {error}", file.display());
+            }
+        }
+        made
+    }
+}
+
+impl Drop for CaseDirectory {
+    fn drop(&mut self) {
+        // A failure of the removal fails the test, unless the test fails already: a drop that panics then ends the
+        // process without the message of the first failure.
+        if let Err(error) = fs::remove_dir_all(&self.0) {
+            assert!(std::thread::panicking(), "{}: {error}", self.0.display());
+        }
+    }
+}
+
+/// The store of a case of opening_functions.open_page, given as an instance value (binding GN-13f): a memory store
+/// without values, or the session of a file store of a relative directory of the case, which `file_sessions.open`
+/// opens with the cookie of the case or without one.
+fn case_store(case: &Value, directory: &CaseDirectory) -> Box<dyn polyspec_session_store::Store> {
+    use polyspec_session_store::{FileSessions, MemoryStore};
     let store = &case["store"];
     match text(store, "new") {
         "memory_store.new" => {
-            let mut memory = MemoryStore::new();
-            for call in store["then"].as_array().into_iter().flatten() {
-                assert_eq!(text(call, "call"), "memory_store.set", "{}", case["id"]);
-                let args = &call["args"];
-                let value =
-                    match polyspec_php_serialization::unserialize(text(args, "value").as_bytes()) {
-                        Ok(value) => value,
-                        Err(error) => panic!("{}: {error}", case["id"]),
-                    };
-                if let Err(error) = memory.set(text(args, "key"), &value) {
-                    panic!("{}: {error}", case["id"]);
-                }
-            }
-            Box::new(memory)
+            assert_eq!(store["then"], Value::Array(Vec::new()), "{}", case["id"]);
+            Box::new(MemoryStore::new())
         }
         "file_sessions.open" => {
             let receiver = &store["receiver"];
@@ -2127,17 +2152,18 @@ fn case_store(case: &Value) -> Box<dyn polyspec_session_store::Store> {
                 "{}",
                 case["id"]
             );
-            assert_eq!(store["args"]["cookie"], Value::Null, "{}", case["id"]);
             let args = &receiver["args"];
             let sessions = match FileSessions::in_directory(
                 binding_core::Io::for_generated_call(),
-                std::path::Path::new(text(args, "directory")),
+                &directory.0.join(text(args, "directory")),
                 args["lifetime"].as_u64(),
             ) {
                 Ok(sessions) => sessions,
                 Err(error) => panic!("{}: {error}", case["id"]),
             };
-            match sessions.open(binding_core::ProcessWait::for_generated_call(), None, None) {
+            let cookie = store["args"]["cookie"].as_str().map(latin1);
+            let wait = binding_core::ProcessWait::for_generated_call();
+            match sessions.open(wait, cookie.as_deref(), None) {
                 Ok(session) => Box::new(session),
                 Err(error) => panic!("{}: {error}", case["id"]),
             }
@@ -2189,13 +2215,14 @@ fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
     // that arms session_store.internal for opening_functions.open_page opens a page with a file session that found
     // no record, whose first get starts the record session, and raises internal; the same call without the arming
     // opens the page with a new token, because the start of the session leaves it started. Its other cases raise the
-    // kinds that their stored values or their mask give.
+    // kinds that the stored values of their session file or their mask give.
     use binding_core::Failure;
     use polyspec_hyper::opening::{open_page, Opened, Opening};
     use polyspec_hyper::steps::PageKind;
     let file = fault_cases();
     let mut ran = 0;
     for case in group(&file, "session") {
+        let directory = CaseDirectory::new(case);
         let pages = case_pages(case)?;
         let given = &case["opening"];
         assert_eq!(text(given, "kind"), "html", "{}", case["id"]);
@@ -2222,16 +2249,16 @@ fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
             Err(other) => panic!("{}: {other:?}", case["id"]),
         };
         if case.get("faults").is_none() {
-            let mut store = case_store(case);
+            let mut store = case_store(case, &directory);
             raised(open_page(&pages, store.as_mut(), &opening));
             ran += 1;
             continue;
         }
-        let mut store = case_store(case);
+        let mut store = case_store(case, &directory);
         raised(armed(case, "opening_functions.open_page", || {
             open_page(&pages, store.as_mut(), &opening)
         }));
-        let mut store = case_store(case);
+        let mut store = case_store(case, &directory);
         match open_page(&pages, store.as_mut(), &opening) {
             Ok(Opened::Page { token, .. }) => assert_eq!(token.len(), 64, "{}", case["id"]),
             other => panic!("{}: {other:?}", case["id"]),

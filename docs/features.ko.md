@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: c99f875634b83338f44453e1022f234f79860cd0a13e23f5116bde27ad024782 -->
+<!-- source-sha256: ddce16bb088f9414819ae007198683de6bf8190c6dad8bfa66c9d4be4a98e19b -->
 # 기능 상태
 
 [English](features.md).
@@ -22,6 +22,7 @@
 | php-core-rules | PHP 서버 unit의 이름으로 주는 core의 규칙. `Polyspec\Hyper\CoreRules`가 core의 binding 함수들의 namespace를 받는다(HY-132.2) | not implemented: `CoreRules::shared()`가 extension `polyspec_hyper` 위에서 이것을 load하고, `Csrf`, `Context`, `RepresentationResponse`, `NativeSession::name`, `Page`, `App`, `Reply`, `Result::page`, `Build::read`가 이것을 부른다. `Request::currentPath`, `Result::redirect`, `Session::csrfToken`, session cookie, static shell, kept value는 아직 자기 코드를 갖고, 서버 시험은 extension과 함께 실행되지 않았으며, record를 받는 member의 unit이 없다(H31.25, H35.9-2) | — |
 | core-page-render | 세 서버가 hyper core의 page 렌더로 page를 렌더한다: `packages/rust/src/render.rs`의 `render_document`, `packages/rust/src/steps.rs`의 `Pages`와 `PageRequest`, `packages/rust/src/read_paths.rs`의 `route_reads`와 `template_reads`, 그리고 binding member `Pages`, `PageRequest.next`, `routeReads`, `templateReads` | not implemented: 어떤 서버도 core의 page 렌더를 부르지 않는다. Node 서버(`packages/ts/src/page/page.ts`, `packages/ts/src/app/app.ts`)는 `@polyspec/hyper-client`의 `createApplication`과 `renderDocument`를 거쳐 template의 JS render engine(`@polyspec/template/render`)으로 렌더하고, PHP 서버(`packages/php/src/Page/Renderer.php`)와 Python 서버(`packages/python/src/polyspec/hyper/page/_renderer.py`)는 template Rust core의 binding으로 렌더한다. 두 engine은 template 명세가 거부하는 입력에서 다르다. 분수 숫자 인덱스를 JS engine은 렌더하고 core는 `runtime_type`으로 실패시킨다(H35.32, H35.32-1) | core만 `make core-test` |
 | browser-core-template | browser 코드(`packages/client`)가 template Rust core의 wasm binding으로 렌더한다 | not implemented: browser 코드는 Node 서버처럼 template의 JS render engine(`@polyspec/template/render`)으로 렌더한다(H35.33) | — |
+| session-library-stores | 세 서버가 파일, Redis, Redis Sentinel, Redis Cluster의 세션을 session-store 라이브러리의 저장소에 두고, 그 저장소의 설정을 받으며, 요청의 저장소를 core에 준다(HY-104.25, HY-104.26, HY-104.27, HY-104.32, HY-115.28, HY-115.29) | not implemented: Node 서버(`packages/ts/src/session/file-sessions.ts`, `redis-sessions.ts`)와 Python 서버(`polyspec/hyper/session/file_sessions.py`, `redis_sessions.py`)는 파일 저장소와 Redis 저장소를 직접 구현하고, 잠시 쉰 뒤 다시 시도하는 lock을 쓰며, 그 Redis 저장소는 application의 command 함수를 받는다. PHP 서버는 PHP의 세션을 쓴다(`packages/php/src/Session`의 `NativeSession`, `RedisClusterSessions`, `RedisSentinelSessions`). 어느 서버도 저장소와 함께 core의 `opening_functions.open_page`나 `opening_functions.answer_keep_request`를 부르지 않는다(H35.37) | — |
 | composition | 애플리케이션 작성 규칙(HC-1 ~ HC-7)과 HC-6에 대한 HY-48 템플릿 검사 | documented; template check implemented | [화면 구성](operations/composition.ko.md), `make templates-check` |
 | manifest | PHP와 브라우저가 읽는 애플리케이션 매니페스트 | implemented | `make test-php`, `make test-js` |
 | router | 적합성 사례를 공유하는 PHP 라우터와 브라우저 라우터 | implemented | `make test-php`, `make test-js` |

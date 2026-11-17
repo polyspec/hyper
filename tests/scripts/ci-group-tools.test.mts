@@ -18,13 +18,12 @@
 // check run `cargo metadata --locked --offline`. A group that starts one of them before a setup step fetched the
 // crates fails here, and so does a cargo command line without --offline, which would download in a check.
 import assert from 'node:assert/strict';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { dryRun } from './make-dry-run.mts';
-import { requireBuilt } from './requires.mts';
+import { treeWithoutReleaseRecipes } from './release-recipes-tree.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const MAKEFILE = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
@@ -166,15 +165,7 @@ test('each CI group installs every tool that its setup steps and its targets sta
 });
 
 test('install-wasm-bindgen of a tree without packages/release.mk writes the file first and installs the wasm-bindgen CLI with the mise of the checkout (H35.16-6)', (t) => {
-  requireBuilt('install-packages', 'node_modules/@polyspec/binding/dist/cli.js');
-  requireBuilt('install-tools', 'var/tools/bin/node');
-  const tree = mkdtempSync(path.join(tmpdir(), 'hyper-install-wasm-bindgen-'));
-  t.after(() => rmSync(tree, { recursive: true, force: true }));
-  for (const file of ['Makefile', 'config/toolchain.json', 'packages/rust/interface.json', 'packages/ts/package.json', 'packages/go/go.mod']) {
-    mkdirSync(path.dirname(path.join(tree, file)), { recursive: true });
-    copyFileSync(path.join(ROOT, file), path.join(tree, file));
-  }
-  const variables = [`NODE=${path.join(ROOT, 'var/tools/bin/node')}`, `BINDING=${path.join(ROOT, 'node_modules/@polyspec/binding/dist/cli.js')}`];
+  const { tree, variables } = treeWithoutReleaseRecipes(t, 'hyper-install-wasm-bindgen-');
   const lines = dryRun('install-wasm-bindgen', { cwd: tree, variables });
   assert.ok(existsSync(path.join(tree, 'packages/release.mk')), `make wrote packages/release.mk before it read install-wasm-bindgen:\n${lines.join('\n')}`);
   // The line downloads, so it lifts the offline settings of the Makefile ($(ONLINE)), and names the mise of the tree.
