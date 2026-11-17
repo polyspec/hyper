@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- hyper adopts kit 0.0.119, which orders the cargo output that kit 0.0.118 printed out of order (kit K1283): `package.json` names its release asset and `package-lock.json` its integrity (H35.16-2).
 - The script tests expected a relative path of the hyper extension, read the options after `--` of a recipe as options of the script, expected the footer of the generated PHP program in the server benchmark and expected only the template repository in the Composer roots; they now expect the absolute path, ignore the options of the command after `--`, expect the template extension version and expect the json release repository (H35.31).
 - The board example and the released package `polyspec/hyper` did not require `ext-polyspec_json`, which the template extension needs; the board now declares the json release repository, requires the extension and sets it in its platform, and the released package requires the extension (H35.31).
 - The PHP servers of `make serve-demo`, `make e2e`, the server parities, the benchmarks and the script tests started PHP without the json, the template and the hyper extension, so `App::open` failed with "the PHP extension polyspec_hyper is not loaded"; every one of them now loads `PHP_SERVER_EXTENSIONS` of the Makefile in that order (H35.31).
