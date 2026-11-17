@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-// Verifies the platform zips of a PHP extension that PIE downloaded (HR-80, H35.51). `pie build` of a php-ext package takes
-// the platform zip php_<extension>-v<version>_php<minor>-<platform>.zip of the GitHub Release, whose Composer repository
-// names no shasum, so config/php-ext-pins.json pins the sha256 of each zip from the digest of its release asset. The
-// script finds every zip of the extension under WORK, the PIE_WORKING_DIRECTORY of the recipe, and fails unless there is at
-// least one and each has the pinned version, a pinned PHP minor and platform, and the pinned sha256.
+// Verifies the platform zips of a PHP extension that PIE downloaded (HR-80, H35.51). `pie build` of a php-ext package
+// takes the platform zip php_<extension>-v<version>_php<minor>-<platform>.zip of the GitHub Release, whose Composer
+// repository names no shasum, so config/php-ext-pins.json pins the sha256 of each zip from the digest of its release
+// asset. Composer, inside PIE, downloads the zip into its cache as files/<package>/<sha1 of the URL>.zip and extracts it;
+// the recipes set COMPOSER_CACHE_DIR to WORK/cache, so every zip of a run is under WORK/cache/files/<package>. The script
+// fails unless that directory holds at least one zip and each is the zip of a pinned PHP minor and platform with the
+// pinned sha256.
 //
 // Usage: node scripts/php-ext-verify.mts PINS PACKAGE WORK
 import { createHash } from 'node:crypto';
@@ -39,45 +41,38 @@ export function readPin(file: string, name: string): Pin {
   return { repository: entry.repository, version: entry.version, extension: entry.extension, zips };
 }
 
-/** The file name of the release asset of `pin` for the PHP minor `minor` and the platform `platform`. */
-export const zipName = (pin: Pin, minor: string, platform: string): string => `php_${pin.extension}-v${pin.version}_php${minor}-${platform}.zip`;
+/** The URL of the release asset of `pin` for the PHP minor `minor` and the platform `platform`. */
+export const zipUrl = (pin: Pin, minor: string, platform: string): string =>
+  `https://github.com/${pin.repository}/releases/download/v${pin.version}/php_${pin.extension}-v${pin.version}_php${minor}-${platform}.zip`;
 
-// Every file under `directory` whose name starts with `prefix` and ends with .zip.
-function zipsUnder(directory: string, prefix: string): string[] {
-  if (!existsSync(directory)) return [];
-  const found: string[] = [];
-  for (const entry of readdirSync(directory, { withFileTypes: true })) {
-    const file = path.join(directory, entry.name);
-    if (entry.isDirectory()) found.push(...zipsUnder(file, prefix));
-    else if (entry.isFile() && entry.name.startsWith(prefix) && entry.name.endsWith('.zip')) found.push(file);
+/** The file name that the Composer cache gives the download of `url`: the sha1 of the URL. */
+export const cacheName = (url: string): string => `${createHash('sha1').update(url).digest('hex')}.zip`;
+
+/** The directory of the Composer cache under `work` that holds the downloads of the package `name`. */
+export const cacheDirectory = (work: string, name: string): string => path.join(work, 'cache', 'files', ...name.split('/'));
+
+/** The problems of the zips of the package `name` with the pin `pin` under `work`: none when at least one zip is found and each matches its pin. */
+export function verify(name: string, pin: Pin, work: string): string[] {
+  const directory = cacheDirectory(work, name);
+  const files = existsSync(directory) ? readdirSync(directory).filter((file) => file.endsWith('.zip')) : [];
+  if (files.length === 0) return [`no zip under ${directory}; PIE downloaded none, so nothing was verified`];
+  const pinned = new Map<string, { url: string; sha256: string }>();
+  for (const [minor, platforms] of Object.entries(pin.zips)) {
+    for (const [platform, sha256] of Object.entries(platforms)) {
+      const url = zipUrl(pin, minor, platform);
+      pinned.set(cacheName(url), { url, sha256 });
+    }
   }
-  return found;
-}
-
-/** The problems of the zips of `pin` under `work`: none when at least one zip is found and each matches its pin. */
-export function verify(pin: Pin, work: string): string[] {
-  const zips = zipsUnder(work, `php_${pin.extension}-`);
-  if (zips.length === 0) return [`no zip php_${pin.extension}-*.zip under ${work}; PIE downloaded none, so nothing was verified`];
   const problems: string[] = [];
-  for (const file of zips) {
-    const name = path.basename(file);
-    const match = /^php_.+-v(\d+\.\d+\.\d+)_php(\d+\.\d+)-(.+)\.zip$/.exec(name);
-    const [, version, minor, platform] = match ?? [];
-    if (version === undefined || minor === undefined || platform === undefined) {
-      problems.push(`${file}: the name is not php_${pin.extension}-v<version>_php<minor>-<platform>.zip`);
-      continue;
-    }
-    if (version !== pin.version) {
-      problems.push(`${file}: version ${version}, expected ${pin.version}`);
-      continue;
-    }
-    const expected = pin.zips[minor]?.[platform];
+  for (const file of files) {
+    const full = path.join(directory, file);
+    const expected = pinned.get(file);
     if (expected === undefined) {
-      problems.push(`${file}: no pinned sha256 for PHP ${minor} on ${platform}`);
+      problems.push(`${full}: the download of no pinned zip of ${name} ${pin.version}`);
       continue;
     }
-    const actual = createHash('sha256').update(readFileSync(file)).digest('hex');
-    if (actual !== expected) problems.push(`${file}: sha256 ${actual}, expected ${expected}`);
+    const actual = createHash('sha256').update(readFileSync(full)).digest('hex');
+    if (actual !== expected.sha256) problems.push(`${full} (${expected.url}): sha256 ${actual}, expected ${expected.sha256}`);
   }
   return problems;
 }
@@ -90,11 +85,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   let problems: string[];
   try {
-    problems = verify(readPin(pins, name), work);
+    problems = verify(name, readPin(pins, name), work);
   } catch (error) {
     process.stderr.write(`php-ext-verify: ${error instanceof Error ? error.message : String(error)}\n`);
     process.exit(1);
   }
   for (const problem of problems) process.stderr.write(`php-ext-verify: ${problem}\n`);
   if (problems.length > 0) process.exit(1);
+  const count = readdirSync(cacheDirectory(work, name)).filter((file) => file.endsWith('.zip')).length;
+  process.stdout.write(`php-ext-verify: ${count} zip of ${name} under ${cacheDirectory(work, name)} match config/php-ext-pins.json\n`);
 }

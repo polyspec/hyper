@@ -32,7 +32,7 @@ test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in
   const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line));
   assert.equal(pie.length, 2, text);
   for (const line of pie) {
-    assert.match(line, new RegExp(`^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK env PIE_WORKING_DIRECTORY=${escape(work)} \\S+/var/tools/mise/shims/pie `), line);
+    assert.match(line, new RegExp(`^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK env PIE_WORKING_DIRECTORY=${escape(work)} COMPOSER_CACHE_DIR=${escape(work)}/cache \\S+/var/tools/mise/shims/pie `), line);
     assert.match(line, / --no-interaction$/, line);
   }
   assert.match(pie[0] ?? '', new RegExp(` repository:add composer ${escape(packages)} --no-interaction$`));
