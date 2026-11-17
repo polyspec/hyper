@@ -566,7 +566,8 @@
         "scripts/php-ext-verify.mts",
         "scripts/php-ext-requires.mts",
         "config/php-ext-pins.json",
-        "scripts/test-inputs.mts"
+        "scripts/test-inputs.mts",
+        "scripts/python-install-stamp.mts"
       ],
       "targets": [
         "typecheck"

@@ -188,6 +188,7 @@ hyper-install-python: bindings ## Make the venv of the Python server package ane
 	$(NODE) $(KIT)/python-venv.$(KIT_EXT) $(PYTHON_VENV)
 	UV_SYNC='--locked --quiet --no-editable --no-install-project --project $(PYTHON_PACKAGE)' $(ONLINE) $(NODE) $(KIT)/uv-install.$(KIT_EXT) .
 	wheels=$(CURDIR)/var/python-wheel.next-$$$$ && trap 'rm -rf '"$$wheels" EXIT && trap 'exit 130' INT TERM && MATURIN=$(MATURIN) $(NODE) $(KIT)/link.$(KIT_EXT) maturin $(CURDIR)/$(PYTHON_PACKAGE) build --locked --offline --out "$$wheels" && $(UV) pip install --offline --python $(PYTHON_VENV)/bin/python --no-deps --reinstall "$$wheels"/*.whl
+	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts write $(PYTHON_VENV)
 
 hyper-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HR-91)
 	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
@@ -427,14 +428,17 @@ endif
 
 hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7); CASES="<file|file#section|id> ..." runs only those cases of the case runner; PYTHON_TESTS="<path> ..." runs only those test files of the package
 ifneq ($(strip $(PYTHON_TESTS)),)
+	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts check $(PYTHON_VENV)
 	$(call tests_guard,PYTHON_TESTS,$(PYTHON_PACKAGE))
 	@failed=; $(foreach file,$(strip $(PYTHON_TESTS)),$(call check,$(file),$(call tests_selected,python) PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/$(patsubst %/,%,$(dir $(file))) -t $(PYTHON_PACKAGE) -p $(notdir $(file)))) $(checks_result)
 else ifeq ($(strip $(CASES)),)
+	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts check $(PYTHON_VENV)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,Python protocol unit tests,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p 'test_*.py') \
 	$(call check,Python package data tests,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s tests/python_package -p 'test_*.py') \
 	$(checks_result)
 else
+	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts check $(PYTHON_VENV)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	$(call cases_selected,python) $(case_run_python)
 endif
