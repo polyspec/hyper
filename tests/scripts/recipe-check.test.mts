@@ -34,10 +34,10 @@ function resultArguments(root: string): string[] {
   return ['php', 'node', 'python', 'browser', 'build'].flatMap((lang) => ['--results', `${lang}=${path.join(root, 'results', `${lang}.txt`)}`]);
 }
 
-/** Runs the check over a tree without its self test, after it made every file of the tree a tracked one. */
+/** Runs the check over a tree, after it made every file of the tree a tracked one. */
 function checkOf(root: string): { status: number | null; output: string } {
   track(root);
-  const result = spawnSync(process.execPath, [check, '--root', root, '--php-autoload', phpAutoload(root), '--no-selftest', ...resultArguments(root)], { encoding: 'utf8' });
+  const result = spawnSync(process.execPath, [check, '--root', root, '--php-autoload', phpAutoload(root), ...resultArguments(root)], { encoding: 'utf8' });
   return { status: result.status, output: result.stdout + result.stderr };
 }
 
@@ -102,9 +102,16 @@ function keysAt(doc: unknown, ...steps: (string | number)[]): string[] {
 
 const readJson = (file: string): unknown => JSON.parse(readFileSync(file, 'utf8'));
 
-test('the fixture passes the recipe check, with its mutation cases first', () => {
+test('the fixture passes the recipe check and the check states its progress on the standard error', () => {
   const result = spawnSync(process.execPath, [check, '--root', fixture, '--php-autoload', phpAutoload(fixture), ...resultArguments(fixture)], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stdout + result.stderr);
+  // HR-89: the progress is a line of the standard error, and the standard output holds the three numbers alone.
+  assert.match(result.stderr, /^recipe-check: the three readers read /mu);
+  assert.match(result.stdout, /^recipe-check: 3 languages agree with the spec; /u);
+});
+
+test('the fixture states mutations, each of which is a test of this file (HR-84)', () => {
+  assert.ok(mutations.length > 0, 'mutations.json of the fixture states no mutation, so no test proves the readers');
 });
 
 test('a sentence may cite a statement of an HYC rule of protocol.json', () => {

@@ -8,9 +8,9 @@ import { test } from 'node:test';
 import { Router, stripBasePath } from '@polyspec/hyper-client';
 import { App, Forbidden, ArraySession, Request, Result, type Handlers, type Reply, type Response } from '@polyspec/hyper';
 
-// The fixtures of the server tests: the manifest and the template files that `make node-fixtures` builds.
+// The fixtures of the server tests: the manifest and the server program that `make node-fixtures` builds.
 const FIXTURES = fileURLToPath(new URL('../../packages/php/tests/fixtures/', import.meta.url));
-const BUILD = fileURLToPath(new URL('../../packages/ts/tests/build/', import.meta.url));
+const PROGRAM = fileURLToPath(new URL('../../packages/ts/tests/build/program', import.meta.url));
 
 // The exports of each package; the browser package also exports the declaration of the template index, which an
 // application build resolves to the index of its own asset build (HR-34), and the source of the reserved template
@@ -99,8 +99,7 @@ test('the server package answers requests and reports the reply of each one', as
   };
   const app = await App.open({
     manifest: `${FIXTURES}app.json`,
-    build: `${FIXTURES}build.json`,
-    templates: { index: `${BUILD}templates.index.json`, root: BUILD },
+    program: PROGRAM,
     handlers,
     timezone: 'Z',
     onResponse: (_request: Request | null, response: Response, _elapsed: number, reply: Reply) => {

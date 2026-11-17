@@ -61,18 +61,10 @@ test('hyper build builds the browser outputs and the server program from another
   mkdirSync(cwd);
   const result = spawnSync(process.execPath, [
     join(build, 'bin', 'hyper.mjs'), 'build', '--app', app, '--output', join(app, 'out'), '--api', '/api',
-    '--php-namespace', 'Polyspec\\Hyper\\Examples\\Board\\Program',
   ], { cwd, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
-  // HY-48: the generated program is the PSR-4 files of the namespace in the directory php, which the autoload of
-  // Composer loads, and program.json names the namespace.
-  const program = join(app, 'out', 'program');
-  const php = readdirSync(join(program, 'php')).sort();
-  assert.ok(php.includes('GeneratedProgram.php') && php.includes('GeneratedTemplates.php'), `program/php holds ${php.join(', ')}`);
-  assert.ok(php.every((file) => file.endsWith('.php')), `program/php holds ${php.join(', ')}`);
-  assert.ok(!existsSync(join(program, 'program.php')), 'the build writes program.php');
-  const declaration = parseJsonObject(readFileSync(join(program, 'program.json'), 'utf8'), 'program/program.json');
-  assert.equal(declaration.namespace, 'Polyspec\\Hyper\\Examples\\Board\\Program');
+  // HY-48, HY-48.20: the program is what the three servers read, and no generated PHP program.
+  assert.deepEqual(readdirSync(join(app, 'out', 'program')).sort(), ['build.json', 'legacy', 'reads.json', 'templates']);
   assert.ok(existsSync(join(app, 'out', 'client', 'csr', 'index.html')));
   assert.deepEqual(readdirSync(cwd), []);
 });

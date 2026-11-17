@@ -1,7 +1,6 @@
 """Renders documents and single regions with the template package `polyspec-template` (HY-12, HY-13, HY-30, HY-31,
 HY-48). The server program that `hyper build` of `@polyspec/hyper-cli` built holds the templates and the
-read paths; the Python server reads its `templates` directory and its `reads.json` and needs neither the directory
-`php` nor `program.json`, which the generated PHP program of the same templates uses. The directory `templates` holds
+read paths; the Python server reads its `templates` directory and its `reads.json`. The directory `templates` holds
 no copy of the reserved template of the embedded data (HY-31.9), so a second engine reads the copy
 `legacy/hyper/data.tpl` of the program with a loader of the directory `legacy` (HY-31.10, HY-48.18); the reserved
 template includes no template and calls no function of the application, so that engine registers none. The caller binds each root of a
@@ -66,7 +65,7 @@ class Renderer:
         try:
             engine = Engine(loader=FsLoader(str(templates)), functions=functions or {})
         except (ValueError, TypeError) as error:
-            # HYC-24.2, HYC-24.5, HY-106.21: a registration that the engine refuses fails the open with kind
+            # HYC-24.9, HYC-24.5, HY-106.21: a registration that the engine refuses fails the open with kind
             # `invalid_application` and the message of the engine.
             raise core_rules().value_error(str(error), "invalid_application") from error
         return Renderer(engine, Engine(loader=FsLoader(str(legacy))), timezone)

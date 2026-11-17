@@ -63,7 +63,7 @@ final class NativeSession implements SessionStore
 
     /**
      * Sends the session cookie of HY-45 when the session identifier differs from the one that the client holds, with
-     * the attributes of `options()`. A session whose identifier the server kept sends nothing.
+     * the field value of HY-45.8. A session whose identifier the server kept sends nothing.
      */
     private function sendCookie(): void
     {
@@ -74,18 +74,12 @@ final class NativeSession implements SessionStore
         if ($id === $this->clientId) {
             return;
         }
-        $https = $this->secure();
-        $options = self::options($https);
-        $sent = setcookie(self::name($https), $id, [
-            'path' => $options['cookie_path'],
-            'domain' => $options['cookie_domain'],
-            'secure' => $options['cookie_secure'],
-            'httponly' => $options['cookie_httponly'],
-            'samesite' => $options['cookie_samesite'],
-        ]);
-        if (!$sent) {
+        // The field value of the core, which http-cookie writes (HY-45.8): setcookie of PHP writes path and secure in
+        // lower case, so its bytes would differ from those of the other servers.
+        if (headers_sent()) {
             throw new \RuntimeException('hyper: the session cookie could not be sent');
         }
+        header('Set-Cookie: ' . CoreRules::shared()->sessionCookieHeader($id, $this->secure()), false);
         $this->clientId = $id;
     }
 
@@ -160,7 +154,11 @@ final class NativeSession implements SessionStore
     {
         ArgumentCount::most(\func_num_args(), 0);
         $this->start();
-        session_regenerate_id(true);
+        // PHP keeps the identifier when the headers are sent, so the client would keep an identifier that the renewal
+        // was to replace; the cookie of a new identifier cannot be sent then (HY-129).
+        if (headers_sent() || !session_regenerate_id(true)) {
+            throw new \RuntimeException('hyper: the session cookie could not be sent');
+        }
         $this->sendCookie();
     }
 }

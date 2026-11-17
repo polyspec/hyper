@@ -1,6 +1,6 @@
 // Tests that the asset build, the template build and the server build read the template packages that
-// @polyspec/hyper-cli requires, @polyspec/template and @polyspec/template-compiler, by their package names (HR-70): npm
-// installs them from the tarballs of the template release that the root package.json names by their URLs and
+// @polyspec/hyper-cli requires, @polyspec/template, by its package name (HR-70): npm installs it and its platform
+// packages from the tarballs of the template release that the root package.json names by their URLs and
 // package-lock.json pins by their integrity, and no build takes a template directory.
 import assert from 'node:assert/strict';
 import { readFileSync, realpathSync } from 'node:fs';
@@ -13,7 +13,7 @@ import { type JsonObject, jsonObject, jsonString, parseJsonObject } from '../../
 import { requireBuilt } from './requires.mts';
 
 const repository = resolve('.');
-const PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
+const PACKAGES = ['@polyspec/template'];
 const read = (file: string): JsonObject => parseJsonObject(readFileSync(join(repository, file), 'utf8'), file);
 // The object `key` of the JSON object of `file`.
 const member = (file: string, key: string): JsonObject => jsonObject(read(file)[key], `${file} ${key}`);

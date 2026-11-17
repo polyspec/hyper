@@ -96,7 +96,7 @@
     },
     "packages/cli/lib/program.mjs": {
       "kind": "ecosystem",
-      "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
+      "tool": "readsFile of @polyspec/hyper/build, the Rust core, computes reads.json from the manifest and the template sources"
     },
     "packages/cli/lib/shell.mjs": {
       "kind": "policy",
@@ -121,10 +121,6 @@
     "scripts/board-servers.mts": {
       "kind": "ecosystem",
       "tool": "node:child_process starts the servers of a run and node:fs and node:os give each run its temporary directory (HR-87, HR-89)"
-    },
-    "scripts/build-templates.mts": {
-      "kind": "ecosystem",
-      "tool": "@polyspec/template parses the templates, through writeTemplateFiles of packages/cli/lib/template-files.mjs"
     },
     "scripts/check-bundle-size.mts": {
       "kind": "ecosystem",
@@ -160,7 +156,19 @@
     },
     "scripts/pie-binary.mts": {
       "kind": "ecosystem",
-      "tool": "node:fs reads the installed.json that PIE and Composer write for the package polyspec/template-php-ext, and its pie-built-binary entries (H27.51)"
+      "tool": "node:fs reads the installed.json that PIE and Composer write for the package polyspec/template, and its pie-built-binary entries (H27.51)"
+    },
+    "scripts/php-ext-requires.mts": {
+      "kind": "ecosystem",
+      "tool": "fetch downloads the packages.json of each release and node:crypto compares its sha256 with config/php-ext-pins.json before the script compares the require of polyspec/json with the pinned json version (H35.52, H35.54)"
+    },
+    "scripts/test-inputs.mts": {
+      "kind": "ecosystem",
+      "tool": "node:fs reads the selected script tests and the modules that they import, whose requireBuilt calls name the make targets that a selection of hyper-test-scripts builds (HR-85, H35.55)"
+    },
+    "scripts/php-ext-verify.mts": {
+      "kind": "ecosystem",
+      "tool": "node:crypto computes the sha256 of each platform zip that PIE downloaded and node:fs reads the pins of config/php-ext-pins.json (HR-80, H35.51)"
     },
     "scripts/publish.mts": {
       "kind": "ecosystem",
@@ -255,10 +263,6 @@
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },
     "scripts/recipe/run.mts": {
-      "kind": "policy",
-      "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
-    },
-    "scripts/recipe/selftest.mts": {
       "kind": "policy",
       "reason": "a part of the recipe check of docs/spec/recipe.md (HYR-7, HYR-8, HYR-10), which compares the development spec with the readers' output and the case results; no ecosystem tool performs this comparison"
     },

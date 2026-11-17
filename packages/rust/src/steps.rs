@@ -26,7 +26,7 @@ use crate::{values, Error};
 /// A map of the boundary of the bindings (binding T-2).
 pub type Map<T> = binding_core::OrderedMap<T>;
 
-/// The read paths of a route (HY-73.23): of its shared data and of each region of its documents.
+/// The read paths of a route (HY-73.34): of its shared data and of each region of its documents.
 pub struct RouteReads {
     /// The read paths of the shared data.
     pub shared: Read,
@@ -52,7 +52,7 @@ pub struct Application {
     pub declared: crate::front::Declared,
 }
 
-/// The read paths of every route from the value that the build gives (HY-73.23): a map from the name of a route to a
+/// The read paths of every route from the value that the build gives (HY-73.34): a map from the name of a route to a
 /// map with `shared`, the node of the shared data, and `regions`, the node of each region by name.
 ///
 /// # Errors
@@ -60,7 +60,7 @@ pub struct Application {
 pub fn route_reads(value: &Value) -> Result<Vec<(String, RouteReads)>, Error> {
     let invalid = || {
         Error::InvalidApplication(std::borrow::Cow::Borrowed(
-            "the read paths of the build have another form (HY-73.23)",
+            "the read paths of the build have another form (HY-73.34)",
         ))
     };
     let Value::Map(routes) = value else {
@@ -112,7 +112,7 @@ pub struct PagesOptions {
 pub type PageFunction =
     Box<dyn Fn(&[Value], &Environment) -> Result<Value, Failure<Error>> + Send + Sync>;
 
-/// The host function of the template language that calls a function of the contract (HYC-24.2, template FUN-46). A
+/// The host function of the template language that calls a function of the contract (HYC-24.9, template FUN-46). A
 /// failure of the data model is the binding failure of the returned value (VAL-19); another kind of hyper, an
 /// exception of language code and the error of Rust host code reach the caller of the render unchanged.
 pub fn host_function(function: PageFunction) -> HostFunction {
@@ -179,11 +179,12 @@ impl Pages {
         &self.app
     }
 
-    /// Registers a function of the application for its templates (HYC-24.2), before its first page request.
+    /// Registers a function of the application for its templates (HYC-24.9), before its first page request.
     ///
     /// # Errors
-    /// `invalid_application` for a name that the template language refuses (HYC-24.5), and `internal` once a page
-    /// request holds the application.
+    /// `invalid_application` for a name that the template language refuses, with the message of the template language
+    /// (HYC-24.8), and `internal` once a page request holds the application. An entry that is no function does not
+    /// reach this member: `render::check_function_entry` judges it (HYC-24.7).
     pub fn register(&mut self, name: &str, host_function: PageFunction) -> Result<(), Error> {
         match Arc::get_mut(&mut self.app) {
             Some(app) => app
@@ -193,6 +194,105 @@ impl Pages {
                 "a function is registered after the first page request",
             )),
         }
+    }
+}
+
+/// The title and the regions of a document, each rendered alone (HY-13.1 to HY-13.3).
+#[derive(Debug, Clone, PartialEq)]
+pub struct DocumentParts {
+    /// The title rendered alone (HY-13.3).
+    pub title: String,
+    /// Each region of the given data rendered alone, by name (HY-13.1, HY-13.2).
+    pub regions: Map<String>,
+}
+
+impl Pages {
+    /// Renders with the document of a route from given data: the shared data and the data of each region as the
+    /// render receives them, with no kept value and no embedded data, at the time `now` in the time zone of the
+    /// server.
+    fn with_document<T>(
+        &self,
+        route: &str,
+        shared: &Map<Value>,
+        regions: &Map<Map<Value>>,
+        now: f64,
+        render: impl FnOnce(&Templates, &Document<'_>) -> Result<T, Failure<Error>>,
+    ) -> Result<T, Failure<Error>> {
+        let app = &self.app;
+        let Some(route) = app
+            .manifest
+            .routes
+            .iter()
+            .find(|item| item.name == route)
+            .filter(|_| !crate::fault::broken())
+        else {
+            return Err(internal(
+                "the document of a route that the manifest does not hold",
+            ));
+        };
+        let regions: Vec<(String, Value)> = regions
+            .iter()
+            .map(|(name, data)| (name.to_owned(), Value::Map(Arc::new(data_map(data)))))
+            .collect();
+        render(
+            &app.templates,
+            &Document {
+                manifest: &app.manifest,
+                route,
+                shared: &data_map(shared),
+                regions: &regions,
+                kept: &OrderedMap::new(),
+                env: Env {
+                    timezone: app.timezone.clone(),
+                    now,
+                },
+                build: &app.build,
+                embed: None,
+            },
+        )
+    }
+
+    /// The document of a route from given data (HY-12.1): the layout with the shared data and the title, the build
+    /// id and each manifest region rendered alone, with no kept value and no embedded data. A page request renders
+    /// its document with the same render after its steps; this member renders below a request, from the data alone.
+    ///
+    /// # Errors
+    /// The failure of the template language with its kind, the exception of a function of a template unchanged, and
+    /// `internal` for a route that the manifest does not hold or a region of the document without data or template.
+    pub fn render_document(
+        &self,
+        route: &str,
+        shared: &Map<Value>,
+        regions: &Map<Map<Value>>,
+        now: f64,
+    ) -> Result<String, Failure<Error>> {
+        self.with_document(route, shared, regions, now, Templates::render_document)
+    }
+
+    /// The title and each region of the given data rendered alone (HY-13.1 to HY-13.3), which are the texts that
+    /// `render_document` places in the document of the same data.
+    ///
+    /// # Errors
+    /// The failure of the template language with its kind, the exception of a function of a template unchanged, and
+    /// `internal` for a route that the manifest does not hold or a region without a template.
+    pub fn render_parts(
+        &self,
+        route: &str,
+        shared: &Map<Value>,
+        regions: &Map<Map<Value>>,
+        now: f64,
+    ) -> Result<DocumentParts, Failure<Error>> {
+        self.with_document(route, shared, regions, now, |templates, document| {
+            let alone = templates.render_parts(document)?;
+            let mut regions = Map::new();
+            for (name, html) in alone.regions {
+                regions.insert(name, html);
+            }
+            Ok(DocumentParts {
+                title: alone.title,
+                regions,
+            })
+        })
     }
 }
 
@@ -222,8 +322,6 @@ pub struct PageInput {
     pub csrf: String,
     /// The changed topics of the request (HY-19).
     pub changed: Vec<String>,
-    /// The kept server values of the session, by region and path (HY-40).
-    pub stored: Map<Map<Value>>,
     /// The current time of the render, in seconds since the Unix epoch, which the host reads.
     pub now: f64,
     /// The value of the cookie `hy-keep` of the request (HY-38.10), or `None`.
@@ -268,8 +366,12 @@ pub enum ActionOutcome {
 pub enum Input {
     /// The first `next` of a request.
     Start,
-    /// The outcome of the action.
-    Action { outcome: ActionOutcome },
+    /// The outcome of the action, and the masked value of the new token of an action that renewed the session
+    /// (HY-72.3), which replaces `PageInput.csrf` for the steps after the action; `None` for an action that did not.
+    Action {
+        outcome: ActionOutcome,
+        csrf: Option<String>,
+    },
     /// The context map, which the binding converted to the data model (HY-125.9).
     Context { context: Map<Value> },
     /// The map of the shared handler.
@@ -280,8 +382,14 @@ pub enum Input {
     Absent,
     /// The application declares no such handler.
     NoHandler,
-    /// The reply: whether it embeds the data (HY-92) and the status that it states for a page with status 200 (HY-69).
-    Reply { embeds: bool, status: Option<u16> },
+    /// The reply: whether it embeds the data (HY-92), the kept server values of the session by region and path
+    /// (HY-40), which the host reads after every loader returned (HY-38.20), and the status that it states for a page
+    /// with status 200 (HY-69).
+    Reply {
+        embeds: bool,
+        stored: Map<Map<Value>>,
+        status: Option<u16>,
+    },
 }
 
 /// The answer of a page.
@@ -326,7 +434,6 @@ pub struct PageRequest {
     route: usize,
     input: PageInput,
     params: Vec<(String, String)>,
-    stored: Vec<(String, OrderedMap)>,
     state: State,
     status: u16,
     invalid: OrderedMap,
@@ -387,11 +494,6 @@ impl PageRequest {
                 .iter()
                 .map(|(name, value)| (name.to_owned(), value.clone()))
                 .collect(),
-            stored: input
-                .stored
-                .iter()
-                .map(|(region, paths)| (region.to_owned(), data_map(paths)))
-                .collect(),
             state: State::Start,
             status: 200,
             invalid: OrderedMap::new(),
@@ -446,13 +548,19 @@ impl PageRequest {
                     Ok(self.after_action())
                 }
             }
-            (State::Action, Input::Action { outcome }) => match outcome {
+            (State::Action, Input::Action { outcome, csrf }) => match outcome {
                 ActionOutcome::Page { status, data } => {
+                    self.renewed(csrf.as_deref());
+                    // HY-44.10, HY-26.2: the data of the action is data of the page region.
+                    let invalid = data_map(data);
+                    let page = self.manifest().page().map_err(Failure::Kind)?;
+                    crate::data_model::check_region(page, &invalid).map_err(Failure::Kind)?;
                     self.status = *status;
-                    self.invalid = data_map(data);
+                    self.invalid = invalid;
                     Ok(self.after_action())
                 }
                 ActionOutcome::RevisionChanged => {
+                    self.renewed(csrf.as_deref());
                     self.status = 409;
                     Ok(self.after_action())
                 }
@@ -461,12 +569,16 @@ impl PageRequest {
                 }),
             },
             (State::Context, Input::Context { context }) => {
-                self.context = Some(data_map(context));
+                // HY-44.10: a value is checked in the step that receives it, before another handler runs.
+                let context = data_map(context);
+                crate::data_model::check_context(&context).map_err(Failure::Kind)?;
+                self.context = Some(context);
                 self.state = State::Shared;
                 Ok(call(Call::Shared))
             }
             (State::Shared, Input::Shared { shared }) => {
                 let returned = data_map(shared);
+                crate::data_model::check_shared(&returned).map_err(Failure::Kind)?;
                 let shared = shared_data(&self.route()?.title, &self.input.csrf, Some(&returned))
                     .map_err(Failure::Kind)?;
                 self.shared = Some(shared);
@@ -485,8 +597,23 @@ impl PageRequest {
                 },
                 input,
             ) => self.loaded(region, route_region, input),
-            (State::Reply, Input::Reply { embeds, status }) => self.answer(*embeds, *status),
+            (
+                State::Reply,
+                Input::Reply {
+                    embeds,
+                    stored,
+                    status,
+                },
+            ) => self.answer(*embeds, stored, *status),
             (_, _) => Err(unexpected()),
+        }
+    }
+
+    /// HY-72.3: the page of an action that renewed the session carries the masked value of the new token, which the
+    /// shared data of the steps after the action reads.
+    fn renewed(&mut self, csrf: Option<&str>) {
+        if let Some(csrf) = csrf {
+            csrf.clone_into(&mut self.input.csrf);
         }
     }
 
@@ -553,6 +680,10 @@ impl PageRequest {
             return Err(internal("a loader of a region that the page does not hold"));
         };
         let map = PageRequest::loaded_map(input)?;
+        if let Some(map) = &map {
+            // HY-44.10: the data of a loader is checked before the next loader runs.
+            crate::data_model::check_region(&name, map).map_err(Failure::Kind)?;
+        }
         match route_region {
             None => {
                 let Some(mut map) = map else {
@@ -610,7 +741,12 @@ impl PageRequest {
     }
 
     /// The answer after the handlers (HY-17, HY-31, HY-38, HY-73, HY-128, HY-69).
-    fn answer(&mut self, embeds: bool, reply_status: Option<u16>) -> Result<Step, Failure<Error>> {
+    fn answer(
+        &mut self,
+        embeds: bool,
+        stored: &Map<Map<Value>>,
+        reply_status: Option<u16>,
+    ) -> Result<Step, Failure<Error>> {
         let app = Arc::clone(&self.pages.app);
         let route = self.route()?.clone();
         let Some(route_reads) = app
@@ -625,8 +761,10 @@ impl PageRequest {
         let Some(shared) = self.shared.take().filter(|_| !crate::fault::broken()) else {
             return Err(internal("a page without its shared data"));
         };
-        // HY-73.29: the page keeps only the paths that the templates of the route read.
-        let shared = match values::map(&keep(&Value::Map(Arc::new(shared)), &route_reads.shared))
+        let shared = Value::Map(Arc::new(shared));
+        // HY-73.29: the page keeps only the paths that the templates of the route read. Every value was checked in
+        // the step that received it (HY-44.3, HY-44.10), so a value that the read paths remove was checked too.
+        let shared = match values::map(&keep(&shared, &route_reads.shared))
             .filter(|_| !crate::fault::broken())
         {
             Some(map) => (**map).clone(),
@@ -648,7 +786,12 @@ impl PageRequest {
             Some(text) => cookie_values(text),
             None => Vec::new(),
         };
-        let kept = kept_values(&app.manifest, &data, &self.stored, &cookie);
+        // HY-38.20: the stored kept values are those that the session holds after every loader returned.
+        let stored: Vec<(String, OrderedMap)> = stored
+            .iter()
+            .map(|(region, paths)| (region.to_owned(), data_map(paths)))
+            .collect();
+        let kept = kept_values(&app.manifest, &data, &stored, &cookie);
         // HY-69: the reply gives a page with status 200 its status.
         let status = match (self.status, reply_status) {
             (200, Some(status)) => status,
@@ -694,7 +837,7 @@ impl PageRequest {
                 answer: Answer::Json { status, text },
             });
         }
-        // HY-124.7, HY-128.4: a document renders with the context in the shared data.
+        // HY-124.7, HY-128.5: a document renders with the context in the shared data.
         let shared = match &self.context {
             Some(context) => with_context(&shared, &Value::Map(Arc::new(context.clone())))
                 .map_err(Failure::Kind)?,

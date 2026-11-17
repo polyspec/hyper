@@ -55,7 +55,7 @@ pub enum Error {
     InvalidRepresentation(&'static str),
     /// A JSON text that json refuses (HY-54.21), with that rejection as its source.
     MalformedJson(polyspec_json::Error),
-    /// A value outside the data model, with the kind of the template data model (HY-44.9).
+    /// A value outside the data model, with the kind of the template data model (HY-44.12).
     DataModel(polyspec_template::BindError),
     /// A failure of the template language while a template renders, with its kind (HY-43, HY-38.18).
     Template(polyspec_template::TemplateError),
@@ -131,7 +131,7 @@ pub enum ErrorCode<'a> {
     Internal,
     /// A broken invariant of a record that php-serialize reports (HY-132.6).
     RecordValue,
-    /// A code of the template language, of its data model (HY-44.9) or of a render (HY-43, HY-38.18).
+    /// A code of the template language, of its data model (HY-44.12) or of a render (HY-43, HY-38.18).
     Template(polyspec_template::ErrorCode),
     /// A failure of the session-store library (HY-104.25).
     Sessions(&'a polyspec_session_store::Error),

@@ -25,7 +25,7 @@ export type Mutation = {
 };
 
 /** True for an entry that names its id, its file and its code. */
-export function isMutation(x: unknown): x is Mutation {
+function isMutation(x: unknown): x is Mutation {
   return typeof x === 'object' && x !== null && 'id' in x && 'file' in x && 'code' in x && typeof x.id === 'string' && typeof x.file === 'string' && typeof x.code === 'string';
 }
 

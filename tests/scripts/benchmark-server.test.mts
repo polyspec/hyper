@@ -1,4 +1,4 @@
-// The server benchmark reports the generated PHP program and extension state without PHP warnings (HY-48, HR-84).
+// The server benchmark reports the extension state without PHP warnings (HY-48, HR-84).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -11,7 +11,7 @@ import { phpServerExtensions, requireBuilt } from './requires.mts';
 
 /** A copy of the board with what the benchmark reads, removed after the test. */
 function boardCopy(t: TestContext): string {
-  requireBuilt('board', 'examples/board/build/client/manifest.json', 'examples/board/build/program/program.json');
+  requireBuilt('board', 'examples/board/build/client/manifest.json', 'examples/board/build/program/reads.json');
   requireBuilt('hyper-install', 'examples/board/vendor/autoload.php');
   const app = mkdtempSync(join(tmpdir(), 'hyper-benchmark-'));
   t.after(() => rmSync(app, { recursive: true, force: true }));

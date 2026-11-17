@@ -6,7 +6,7 @@
   "require": {
     "php": ">=8.4",
     "ext-polyspec_template": "*",
-    "polyspec/template": "*"
+    "polyspec/template": "0.0.30"
   },
   "php-ext": {
     "extension-name": "polyspec_hyper",

@@ -5,8 +5,7 @@
 // into <output>/<application>/:
 //   manifest.json, templates/ and build.json   the inputs that the case states
 //   program/                                   the server program of packages/cli/lib/program.mjs with the build id of
-//                                              the application (HY-125.21), which PHP and Python open
-//   node/templates.index.json, node/templates/ the template files that the Node server opens (HR-34)
+//                                              the application (HY-125.21), which the three servers open
 //
 // The application of a case of reads.json is named reads_<id>: its templates are the templates of the case, with the
 // layout and the title that the template rules require, so that its program renders the template of the case.
@@ -18,9 +17,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { parse, resolvePath } from '@polyspec/template';
-import { writeFileAtomic } from '../packages/cli/lib/output-files.mjs';
 import { publish, staging } from '../packages/cli/lib/publish.mjs';
-import { writeTemplateFiles } from '../packages/cli/lib/template-files.mjs';
 import { buildId } from '../packages/cli/lib/build-id.mjs';
 import { writeBuildFile, writeProgram } from '../packages/cli/lib/program.mjs';
 import { templateProblems } from '../packages/cli/lib/template-rules.mjs';
@@ -80,13 +77,6 @@ for (const entry of cases) {
 
 const failures: string[] = [];
 for (const [key, { application }] of applications) {
-  // The PHP program of the application <key> is written to <output>/<key>/program/php, and its namespace repeats that
-  // path below the prefix Polyspec\Hyper\Tests\Contract\, which a PSR-4 entry maps to the output directory. The name
-  // of an application is therefore a segment of a PHP namespace.
-  if (!/^[a-z_][a-z0-9_]*$/u.test(key)) {
-    failures.push(`the application ${key} has a name that is no segment of a PHP namespace`);
-    continue;
-  }
   // HR-82: the application is built in a staging directory of this process and published file by file, so that a test
   // that reads the application while another run builds it finds no file missing.
   const target = join(values.output, key);
@@ -101,7 +91,6 @@ for (const [key, { application }] of applications) {
     const manifest = join(directory, 'manifest.json');
     writeFileSync(manifest, JSON.stringify(application.manifest));
     writeFileSync(join(directory, 'build.json'), JSON.stringify({ build: application.build }));
-    const namespace = `Polyspec\\Hyper\\Tests\\Contract\\${key}\\program\\php`;
     // HY-48.3: the template rules of hyper build pass before the program is written.
     const { problems } = templateProblems({ manifest: application.manifest, templatesDir: templates, parse, resolvePath });
     if (problems.length > 0) {
@@ -110,17 +99,14 @@ for (const [key, { application }] of applications) {
     }
     try {
       const program = join(directory, 'program');
-      writeProgram({ manifest: application.manifest, templates, directory: program, phpNamespace: namespace });
+      writeProgram({ manifest: application.manifest, templates, directory: program });
       writeBuildFile(program, application.build);
     } catch (error) {
       failures.push(`building the application ${key} failed: ${error instanceof Error ? error.message : String(error)}`);
       continue;
     }
-    const node = join(directory, 'node');
-    const { index } = await writeTemplateFiles({ templates, output: join(node, 'templates'), urlPrefix: '/templates' });
-    writeFileAtomic(join(node, 'templates.index.json'), `${JSON.stringify(index, null, 2)}\n`);
     publish(directory, target);
-    process.stdout.write(`built ${key} into ${join(target, 'program')} and ${join(target, 'node')}\n`);
+    process.stdout.write(`built ${key} into ${join(target, 'program')}\n`);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

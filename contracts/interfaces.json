@@ -997,7 +997,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Fails for a path of the options that is not absolute: the manifest, the template index, the template root and the build file (HY-48.11).",
+              "state": "Fails for a path of the options that is not absolute: the manifest and the program directory (HY-48.19).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.absolutePaths",
@@ -1008,15 +1008,14 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-48.11"
+                "sentence": "HY-48.19"
               },
               "tests": [
-                "packages/ts/tests/app.test.ts::Node handlers > requires absolute paths and a template for every route (HR-34, HY-54): Only the Node server takes the manifest, the template index, the template root and the build file as separate paths (HY-48.11), and checks that the index holds a template of every route (HY-48.12).",
-                "packages/ts/tests/build.test.ts::App.open takes the build file by an absolute path (HY-48.11) > fails with the path of a build file whose option is relative: Only the Node server takes the build file as an option of its own (HY-48.11)."
+                "packages/ts/tests/app.test.ts::Node handlers > requires an absolute path of the manifest (HY-48.19): The Node server takes the manifest and the program directory by absolute paths and fails a path that is not absolute (HY-48.19)."
               ]
             },
             {
-              "id": "app.templateIndex",
+              "id": "app.readBytes",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
@@ -1024,46 +1023,25 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Reads and checks the template index of the build (HY-48.11).",
+              "state": "Reads the bytes of the manifest or of a file of the program directory by its absolute path (HY-48.19).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.templateIndex",
-                  "signature": "private static templateIndex(path: string): TemplateIndex"
+                  "symbol": "packages/ts/src/app/app.ts::App.readBytes",
+                  "signature": "private static readBytes(path: string): Buffer"
                 }
               },
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-48.11"
-              }
-            },
-            {
-              "id": "app.routeTemplates",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value",
-                "manifest"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Fails when a template of a route or the template of the embedded data is not in the template index (HY-48.12).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.routeTemplates",
-                  "signature": "private static routeTemplates(index: TemplateIndex, manifest: Manifest): void"
-                }
+                "sentence": "HY-48.19"
               },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-48.12"
-              }
+              "tests": [
+                "packages/ts/tests/app.test.ts::App > opens only when every output of the build exists and names the first missing one (HY-48): The Node server reads the manifest by the absolute path of its option and names the first missing output of the program directory (HY-48.19); the test asserts that the error of a missing program names its reads.json, that the error of a missing manifest names its path, and that a program path that is not absolute fails."
+              ]
             },
             {
-              "id": "app.readJsonFile",
+              "id": "app.routeReads",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
@@ -1071,44 +1049,41 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Reads and decodes a JSON file of the build by its absolute path (HY-48.11).",
+              "state": "Reads the routes of `reads.json` of the program directory as the value that the core takes (HY-48.19).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.readJsonFile",
-                  "signature": "private static readJsonFile(path: string): unknown"
+                  "symbol": "packages/ts/src/app/app.ts::App.routeReads",
+                  "signature": "private static routeReads(path: string): Value"
                 }
               },
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-48.11"
-              },
-              "tests": [
-                "packages/ts/tests/app.test.ts::App > opens only when every output of the build exists and names the first missing one (HY-48): Only Node opens with the manifest and the template index by absolute paths (HY-48.11); the test asserts that the error of a missing template index and of a missing manifest names its path, and that a template index path that is not absolute fails."
-              ]
+                "sentence": "HY-48.19"
+              }
             },
             {
-              "id": "app.readJsonText",
+              "id": "app.templateSources",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
                 "string"
               ],
-              "output": "string",
+              "output": "map<string>",
               "errors": [],
-              "state": "Reads the text of a file of the build by its absolute path (HY-48.11).",
+              "state": "Reads the sources of the templates of the directory `templates` of the program directory by their names (HY-48.19).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.readJsonText",
-                  "signature": "private static readJsonText(path: string): string"
+                  "symbol": "packages/ts/src/app/app.ts::App.templateSources",
+                  "signature": "private static templateSources(directory: string): Map<string, string>"
                 }
               },
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-48.11"
+                "sentence": "HY-48.19"
               }
             },
             {
@@ -2057,7 +2032,7 @@
               ],
               "output": "string",
               "errors": [],
-              "state": "Build.read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18, HY-125.19). The server still reads the file and names the absolute path of the file in a failure (HY-125.18).",
+              "state": "Build.read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23, HY-125.19). The server still reads the file and names the absolute path of the file in a failure (HY-125.23).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::buildRead",
@@ -12671,7 +12646,7 @@
               "php",
               "python"
             ],
-            "sentence": "HY-54.3"
+            "sentence": "HY-54.23"
           }
         },
         {
@@ -12857,7 +12832,7 @@
               "php",
               "python"
             ],
-            "sentence": "HY-54.3"
+            "sentence": "HY-54.23"
           }
         },
         {
@@ -13009,7 +12984,7 @@
               "php",
               "python"
             ],
-            "sentence": "HY-54.3"
+            "sentence": "HY-54.23"
           }
         },
         {
@@ -13293,7 +13268,7 @@
               "php",
               "python"
             ],
-            "sentence": "HY-54.3"
+            "sentence": "HY-48.1"
           }
         },
         {
@@ -13458,7 +13433,7 @@
               "php",
               "python"
             ],
-            "sentence": "HY-54.3"
+            "sentence": "HY-48.1"
           }
         }
       ]
@@ -13538,7 +13513,7 @@
               ],
               "output": "response",
               "errors": [],
-              "state": "Runs the context handler, the shared handler and the loaders of the selected regions and returns the document or the JSON of the page (HY-12.1, HY-75.1, HY-128.4).",
+              "state": "Runs the context handler, the shared handler and the loaders of the selected regions and returns the document or the JSON of the page (HY-12.1, HY-75.1, HY-128.5).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::respond",
@@ -15225,34 +15200,7 @@
       "shape": {
         "fields": {
           "manifest": "string",
-          "build": {
-            "term": "string",
-            "only": {
-              "languages": [
-                "node"
-              ],
-              "sentence": "HY-48.11"
-            }
-          },
-          "templates": {
-            "term": "map<string>",
-            "only": {
-              "languages": [
-                "node"
-              ],
-              "sentence": "HY-48.11"
-            }
-          },
-          "program": {
-            "term": "string",
-            "only": {
-              "languages": [
-                "php",
-                "python"
-              ],
-              "sentence": "HY-48.17"
-            }
-          },
+          "program": "string",
           "handlers": "handlers",
           "timezone": "string",
           "basePath": "string",
@@ -15333,7 +15281,7 @@
       "native": {
         "node": {
           "symbol": "packages/ts/src/app/app.ts::AppOptions",
-          "declaration": "export interface AppOptions<S extends object> {\n  // The absolute path of the manifest (HY-1).\n  manifest: string;\n  // The absolute path of the `build.json` of the asset output, which holds the build id (HY-125, HY-48).\n  build: string;\n  // The template index that the asset build writes, and the absolute directory that its file URLs are relative to\n  // (HR-34). The server renders with these template files, as the browser does.\n  templates: { index: string; root: string };\n  handlers: Handlers<S>;\n  timezone: string;\n  basePath?: string;\n  // Declares that the application is served over HTTPS, for example behind a TLS-terminating proxy (HY-45).\n  https?: boolean;\n  frameAncestors?: string;\n  // The largest request body in bytes; a larger body receives 413. The default is 8 MiB, PHP's post_max_size (HY-59).\n  bodyLimit?: number;\n  // The largest file in bytes of a request body, a file part of it (HY-113): a larger file receives 413 before the\n  // action or the kept value runs. The default is the smaller of 8 MiB and the body limit, so that the body limit refuses first.\n  fileLimit?: number;\n  // The largest bytes that the server holds as one value: a body that is not read in chunks, and the names and the\n  // contents of the text values of a multipart body together; more receives 413. The default is the smaller of 8 MiB\n  // and the body limit (HY-131).\n  valueLimit?: number;\n  // The largest number of parts of a multipart body; more receives 413. The default is 1000 (HY-131).\n  partLimit?: number;\n  // The media types of the request bodies that actions and /_hyper/keep accept: application/x-www-form-urlencoded\n  // and multipart/form-data. The default is application/x-www-form-urlencoded (HY-59).\n  formTypes?: string[];\n  // The largest response body in bytes that the server sends; a larger body gives a plain 500. The default is\n  // 8 MiB (HY-66).\n  responseLimit?: number;\n  // Called once for every response with the request, the response, the elapsed milliseconds, the reply of the\n  // request and the failure of a 500 of HY-43 or HY-66, also for the responses that hyper answers itself (HY-60). The\n  // request is null only for a request whose request line node:http could not read. The reply is the reply of the\n  // loaders and actions of the request, or an empty reply when the server answered before routing. The failure is\n  // the message of the error or the response limit line without its prefix, and null for every other response.\n  onResponse?: (request: Request | null, response: Response, elapsed: number, reply: Reply, failure: string | null) => void;\n  // Called once with the request, the elapsed milliseconds and the reply of a request whose client closed the\n  // connection before the server wrote its response; the server stops the request and writes no response (HY-67).\n  onDisconnect?: (request: Request, elapsed: number, reply: Reply) => void;\n  // Receives the log line of an unhandled error (HY-43); the default writes it to the standard error.\n  log?: (message: string) => void;\n  // The client-rendered pages, which receive the static shell for HTML requests and JSON under the data base path\n  // (HY-62).\n  clientRendering?: ClientRendering;\n  // The context handler (HY-124, HY-106): a function of the selection value that returns a Map, or a promise of one.\n  context?: ContextHandler;\n  // The host functions of the templates (HYC-24, HY-106): a map from names to functions that the template engine registers when\n  // the application opens; a registration that fails fails the open (template FUN-44, RT-5).\n  functions?: Record<string, HostFunction>;\n}"
+          "declaration": "export interface AppOptions<S extends object> {\n  // The absolute path of the manifest (HY-1).\n  manifest: string;\n  // The absolute path of the server program that `hyper build` wrote, the directory that holds `reads.json`,\n  // `build.json` and the directory `templates` (HY-48.19).\n  program: string;\n  handlers: Handlers<S>;\n  timezone: string;\n  basePath?: string;\n  // Declares that the application is served over HTTPS, for example behind a TLS-terminating proxy (HY-45).\n  https?: boolean;\n  frameAncestors?: string;\n  // The largest request body in bytes; a larger body receives 413. The default is 8 MiB, PHP's post_max_size (HY-59).\n  bodyLimit?: number;\n  // The largest file in bytes of a request body, a file part of it (HY-113): a larger file receives 413 before the\n  // action or the kept value runs. The default is the smaller of 8 MiB and the body limit, so that the body limit refuses first.\n  fileLimit?: number;\n  // The largest bytes that the server holds as one value: a body that is not read in chunks, and the names and the\n  // contents of the text values of a multipart body together; more receives 413. The default is the smaller of 8 MiB\n  // and the body limit (HY-131).\n  valueLimit?: number;\n  // The largest number of parts of a multipart body; more receives 413. The default is 1000 (HY-131).\n  partLimit?: number;\n  // The media types of the request bodies that actions and /_hyper/keep accept: application/x-www-form-urlencoded\n  // and multipart/form-data. The default is application/x-www-form-urlencoded (HY-59).\n  formTypes?: string[];\n  // The largest response body in bytes that the server sends; a larger body gives a plain 500. The default is\n  // 8 MiB (HY-66).\n  responseLimit?: number;\n  // Called once for every response with the request, the response, the elapsed milliseconds, the reply of the\n  // request and the failure of a 500 of HY-43 or HY-66, also for the responses that hyper answers itself (HY-60). The\n  // request is null only for a request whose request line node:http could not read. The reply is the reply of the\n  // loaders and actions of the request, or an empty reply when the server answered before routing. The failure is\n  // the message of the error or the response limit line without its prefix, and null for every other response.\n  onResponse?: (request: Request | null, response: Response, elapsed: number, reply: Reply, failure: string | null) => void;\n  // Called once with the request, the elapsed milliseconds and the reply of a request whose client closed the\n  // connection before the server wrote its response; the server stops the request and writes no response (HY-67).\n  onDisconnect?: (request: Request, elapsed: number, reply: Reply) => void;\n  // Receives the log line of an unhandled error (HY-43); the default writes it to the standard error.\n  log?: (message: string) => void;\n  // The client-rendered pages, which receive the static shell for HTML requests and JSON under the data base path\n  // (HY-62).\n  clientRendering?: ClientRendering;\n  // The context handler (HY-124, HY-106): a function of the selection value that returns a Map, or a promise of one.\n  context?: ContextHandler;\n  // The functions of the templates (HYC-24, HY-106): a map from names to functions that the template engine registers\n  // when the application opens; a registration that fails fails the open (template FUN-44, RT-5). A function receives\n  // the list of its arguments and the environment of the render, a value with `timezone` and `now` (HYC-24.10).\n  functions?: Record<string, HostFunction>;\n}"
         }
       }
     },
@@ -15413,13 +15361,13 @@
               "sentence": "HY-48.1"
             }
           },
-          "application": {
+          "pages": {
             "term": "value",
             "only": {
               "languages": [
                 "node"
               ],
-              "sentence": "HY-54.3"
+              "sentence": "HY-48.19"
             }
           },
           "handlers": {
@@ -15458,7 +15406,7 @@
       "native": {
         "node": {
           "symbol": "packages/ts/src/page/page.ts::PageParts",
-          "declaration": "export interface PageParts<S extends object> {\n  application: Application;\n  handlers: Handlers<S>;\n  services: Container<S>;\n  timezone: string;\n  https: boolean;\n  // The read paths of every route, by the route name (HY-73).\n  reads: Record<string, RouteReads>;\n  // The build id of the asset output (HY-125), which every JSON response holds after its params (HY-128).\n  build: string;\n  // The context handler of the application (HY-124), or null for an application without a context.\n  context: ContextHandler | null;\n  // The Vary of the application's html and JSON responses (HY-117).\n  vary: string;\n}"
+          "declaration": "export interface PageParts<S extends object> {\n  // The pages of the application that the core opened (HY-48.19).\n  pages: CorePagesInstance;\n  manifest: Manifest;\n  handlers: Handlers<S>;\n  services: Container<S>;\n  https: boolean;\n  // The context handler of the application (HY-124), or null for an application without a context.\n  context: ContextHandler | null;\n}"
         }
       }
     },
@@ -15528,13 +15476,13 @@
               "sentence": "HY-48.1"
             }
           },
-          "application": {
+          "pages": {
             "term": "value",
             "only": {
               "languages": [
                 "node"
               ],
-              "sentence": "HY-54.3"
+              "sentence": "HY-48.19"
             }
           },
           "handlers": {
@@ -15596,24 +15544,6 @@
             }
           },
           "shell": "string",
-          "reads": {
-            "term": "value",
-            "only": {
-              "languages": [
-                "node"
-              ],
-              "sentence": "HY-54.3"
-            }
-          },
-          "build": {
-            "term": "string",
-            "only": {
-              "languages": [
-                "node"
-              ],
-              "sentence": "HY-48.11"
-            }
-          },
           "context": "optional<contextHandler>",
           "entries": {
             "term": "map<list<representation-entry>>",
@@ -15621,7 +15551,7 @@
               "languages": [
                 "node"
               ],
-              "sentence": "HY-54.3"
+              "sentence": "HY-118.1"
             }
           },
           "functions": {
@@ -15656,7 +15586,7 @@
       "native": {
         "node": {
           "symbol": "packages/ts/src/app/app.ts::AppParts",
-          "declaration": "export interface AppParts<S extends object> {\n  application: Application;\n  handlers: Handlers<S>;\n  timezone: string;\n  basePath: string;\n  https: boolean;\n  frameAncestors: string;\n  bodyLimit: number;\n  fileLimit: number;\n  valueLimit: number;\n  partLimit: number;\n  responseLimit: number;\n  formTypes: readonly string[];\n  onResponse: AppOptions<S>['onResponse'];\n  onDisconnect: AppOptions<S>['onDisconnect'];\n  log: (message: string) => void;\n  client: ClientRendering | null;\n  shell: string;\n  reads: PageParts<S>['reads'];\n  build: string;\n  context: ContextHandler | null;\n  entries: Map<string, RepresentationEntry[]>;\n}"
+          "declaration": "export interface AppParts<S extends object> {\n  // The pages of the application that the core opened, and the manifest that the core accepted.\n  pages: CorePagesInstance;\n  manifest: Manifest;\n  handlers: Handlers<S>;\n  timezone: string;\n  basePath: string;\n  https: boolean;\n  frameAncestors: string;\n  bodyLimit: number;\n  fileLimit: number;\n  valueLimit: number;\n  partLimit: number;\n  responseLimit: number;\n  formTypes: readonly string[];\n  onResponse: AppOptions<S>['onResponse'];\n  onDisconnect: AppOptions<S>['onDisconnect'];\n  log: (message: string) => void;\n  client: ClientRendering | null;\n  shell: string;\n  context: ContextHandler | null;\n  entries: Map<string, RepresentationEntry[]>;\n}"
         }
       }
     },
@@ -16213,7 +16143,7 @@
             "excluded": {
               "role": "input",
               "compare": "exact",
-              "sentence": "HY-125.18",
+              "sentence": "HY-125.23",
               "state": "`excluded` lists the outputs that the hash leaves out, the `build.json` whose content is `{\"build\":\"<build id>\"}` with the build id of `files`."
             },
             "sortedPaths": {
@@ -16288,7 +16218,6 @@
         "withContext": {
           "runners": [
             "php",
-            "node",
             "python",
             "browser"
           ],
@@ -16705,7 +16634,7 @@
               "role": "expected",
               "optional": true,
               "compare": "raises",
-              "sentence": "HYC-24.2",
+              "sentence": "HYC-24.9",
               "state": "`openFails` true states an application whose open fails with the functions `functions`, written as kinds of `functionKinds`."
             },
             "openError": {
@@ -16875,7 +16804,6 @@
         "cases": {
           "runners": [
             "php",
-            "node",
             "python",
             "browser"
           ],
@@ -16900,7 +16828,7 @@
               "role": "input",
               "compare": "exact",
               "sentence": "HY-73.2",
-              "state": "`reads` is the read paths of the template `template` among the templates `templates`, a tree whose node is true for a path read whole and otherwise holds `keys` or `each`. The Node server and the browser compute it, and the PHP and the Python server read it as the node of the page region in `reads.json` of the program that the build wrote for the case (HY-73.23)."
+              "state": "`reads` is the read paths of the template `template` among the templates `templates`, a tree whose node is true for a path read whole and otherwise holds `keys` or `each`. The browser computes it, and the PHP and the Python server read it as the node of the page region in `reads.json` of the program that the build wrote for the case (HY-73.34)."
             },
             "kept": {
               "role": "expected",
@@ -17405,7 +17333,7 @@
             "build": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-125.18",
+              "sentence": "HY-125.23",
               "state": "`build` is the build id that a `build.json` with the text `text` gives, or null when the file fails; a null `text` is a missing file.",
               "optional": true
             },
@@ -17413,7 +17341,7 @@
               "role": "expected",
               "optional": true,
               "compare": "contains",
-              "sentence": "HY-125.18",
+              "sentence": "HY-125.23",
               "state": "`message` is a text that the message of the failure of the file contains after its path."
             },
             "raises": {
@@ -19339,7 +19267,7 @@
                   "php",
                   "python"
                 ],
-                "sentence": "HY-54.3"
+                "sentence": "HY-13.7"
               },
               "state": "`valueReads` is how many times the server enumerated, during the request, the entries of the values of the kind `countingMap` that the handlers of the request returned."
             },

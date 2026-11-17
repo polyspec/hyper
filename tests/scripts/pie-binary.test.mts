@@ -9,7 +9,7 @@ import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const NAME = 'polyspec/template-php-ext';
+const NAME = 'polyspec/template';
 
 function work(t: TestContext): string {
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-pie-binary-'));
@@ -45,7 +45,7 @@ test('pie-binary fails when no entry of the package carries a pie-built-binary (
   const result = pieBinary(root);
   assert.equal(result.status, 1);
   assert.equal(result.stdout, '');
-  assert.match(result.stderr, /0 builds of polyspec\/template-php-ext/);
+  assert.match(result.stderr, /0 builds of polyspec\/template in/);
 });
 
 test('pie-binary fails when two targets recorded a build of the package (H27.51)', (t) => {
@@ -55,7 +55,7 @@ test('pie-binary fails when two targets recorded a build of the package (H27.51)
   const result = pieBinary(root);
   assert.equal(result.status, 1);
   assert.equal(result.stdout, '');
-  assert.match(result.stderr, /2 builds of polyspec\/template-php-ext/);
+  assert.match(result.stderr, /2 builds of polyspec\/template in/);
 });
 
 test('pie-binary refuses a name that is not a Composer package name and a missing argument (H27.51)', (t) => {
