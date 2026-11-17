@@ -70,6 +70,11 @@ export class CaseReader {
     return String(member(this.item, 'id'));
   }
 
+  // The file, the section and the id of the case, by which a selection of the runner names it.
+  name(): { file: string; section: string; id: string } {
+    return { file: this.file, section: this.sectionName, id: this.id() };
+  }
+
   // Whether the case states a field, with dotted names for the fields of a nested field.
   has(name: string): boolean {
     return lookup(this.item, name) !== undefined;

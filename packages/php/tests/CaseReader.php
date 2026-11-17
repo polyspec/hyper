@@ -86,6 +86,12 @@ final class CaseReader
         return $readers;
     }
 
+    /** The case file of the case, by which a selection of the runner names it with its section and its id. */
+    public function file(): string
+    {
+        return $this->file;
+    }
+
     public function section(): string
     {
         return $this->section;

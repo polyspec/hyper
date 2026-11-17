@@ -325,17 +325,37 @@ lint-ts: packages
 board: packages node-addon ##Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program with the generated PHP program (HR-34, HY-48, HY-125)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs build --app $(BOARD) --output $(BOARD)/build --api /api --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
 
-hyper-test-js: ## Run the browser code tests, including the browser case runner (HYR-7), and the type check
+# A selection of cases (H35.9-11): CASES="<name> ..." of hyper-test-js, hyper-test-node, hyper-test-php and
+# hyper-test-python names the cases that the case runner of the target runs, each name a case file (reads.json), a
+# section of a case file (app.json#opens) or a case id. With a selection the recipe of the target is one command, the
+# case runner alone (case_run_*), so no other test and no type check of the target runs; its prerequisites are built
+# as for a full run. The runner reads the selection from RECIPE_CASES and writes <runner>.selected.txt, whose first
+# line states the selection, so <runner>.txt holds a full run only, which recipe-check reads. A name that selects no
+# case of the runner fails the run (HR-84). recipe-check and the targets recipe-run-* set no RECIPE_CASES, so they run
+# every case whatever CASES holds.
+cases_selected = RECIPE_CASES='$(strip $(CASES))' RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/$(1).selected.txt
+
+hyper-test-js: ## Run the browser code tests, including the browser case runner (HYR-7), and the type check; CASES="<file|file#section|id> ..." runs only those cases of the case runner
+ifeq ($(strip $(CASES)),)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,the tests of $(JS_PACKAGE),RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/browser.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE)$(if $(JS_TESTS), -- $(JS_TESTS))) \
 	$(call check,the type check of $(JS_PACKAGE),$(TSC) --noEmit -p $(JS_PACKAGE)/tsconfig.json) \
 	$(checks_result)
+else
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	$(call cases_selected,browser) $(case_run_browser)
+endif
 
-hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests, including the case runner (HYR-7), and the type check
+hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests, including the case runner (HYR-7), and the type check; CASES="<file|file#section|id> ..." runs only those cases of the case runner
+ifeq ($(strip $(CASES)),)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,the tests of $(NODE_PACKAGE),RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE)) \
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
 	$(checks_result)
+else
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	$(call cases_selected,node) $(case_run_node)
+endif
 
 # PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.15, HY-132.2). Every PHP server
 # of a check, a test and the demo loads PHP_SERVER_EXTENSIONS: scripts take them as --extension arguments, and the tests
@@ -343,15 +363,24 @@ hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests,
 PHP_SERVER_EXTENSIONS = $(PHP_EXTENSIONS) $(abspath $(HYPER_EXT))
 PHP_SERVER_ARGUMENTS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--extension $(library))
 PHPUNIT_EXTENSIONS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--php-extension $(library))
-hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions
+hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions; CASES="<file|file#section|id> ..." runs only those cases of the case runner
 	@mkdir -p $(RECIPE_RESULTS_DIR)
+ifeq ($(strip $(CASES)),)
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS)
+else
+	$(call cases_selected,php) $(case_run_php)
+endif
 
-hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7)
+hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7); CASES="<file|file#section|id> ..." runs only those cases of the case runner
+ifeq ($(strip $(CASES)),)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,Python protocol unit tests,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p 'test_*.py') \
 	$(call check,Python package data tests,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s tests/python_package -p 'test_*.py') \
 	$(checks_result)
+else
+	@mkdir -p $(RECIPE_RESULTS_DIR)
+	$(call cases_selected,python) $(case_run_python)
+endif
 
 # The rendering tests need the template Python package (H15.3-3), the wheel of the template release that the venv of make
 # install holds, and `make server-fixtures` writes the server program they open.
@@ -402,10 +431,16 @@ RECIPE_RESULTS_DIR := $(CURDIR)/var/recipe/results
 # it is, so a runner that ends without a newline joins the next line (HR-84), and make names a failed goal only where
 # it failed and not after the last one. recipe-check therefore has the prerequisites of the five runners, which are
 # built before its first check, and its dry run prints one accumulating command and runs none.
-recipe_run_php = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS) -- --filter CaseRunnerTest
-recipe_run_node = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE) -- tests/case-runner.test.ts
-recipe_run_python = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p test_case_runner.py
-recipe_run_browser = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/browser.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE) -- tests/case-runner.test.ts
+# case_run_* start the case runner of a language alone, without a results file; recipe_run_* name the results file of
+# a full run, and a selected run of a hyper-test target names its own (cases_selected).
+case_run_php = COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS) -- --filter CaseRunnerTest
+case_run_node = node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE) -- tests/case-runner.test.ts
+case_run_python = PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p test_case_runner.py
+case_run_browser = node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(JS_PACKAGE) -- tests/case-runner.test.ts
+recipe_run_php = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt $(case_run_php)
+recipe_run_node = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt $(case_run_node)
+recipe_run_python = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt $(case_run_python)
+recipe_run_browser = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/browser.txt $(case_run_browser)
 recipe_run_build = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/build-id.test.mts
 recipe_compare = $(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --results php=$(RECIPE_RESULTS_DIR)/php.txt --results node=$(RECIPE_RESULTS_DIR)/node.txt --results python=$(RECIPE_RESULTS_DIR)/python.txt --results browser=$(RECIPE_RESULTS_DIR)/browser.txt --results build=$(RECIPE_RESULTS_DIR)/build.txt
 recipe-run-php: server-fixtures ext hyper-ext ## Run the PHP case runner with its results file (HYR-7)

@@ -44,6 +44,10 @@ class CaseReader:
                     readers.append(CaseReader(file, name, case, data, spec, failure))
         return readers
 
+    def file(self) -> str:
+        """The case file of the case, by which a selection of the runner names it with its section and its id."""
+        return self._file
+
     def section(self) -> str:
         return self._section_name
 

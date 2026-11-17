@@ -196,6 +196,24 @@ The workflow `.github/workflows/bench.yml` runs the benchmarks on a manual run: 
 
 To run the tests that own a change, pass their files or a filter, for example `node node_modules/@polyspec/kit/dist/run-tests.mjs vitest --cwd packages/client tests/router.test.ts` or `COMPOSER_VENDOR_DIR=$PWD/vendor node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/php -- --filter RouterTest`.
 
+### A selection of cases
+
+`make hyper-test-js`, `make hyper-test-node`, `make hyper-test-php` and `make hyper-test-python` take the make variable `CASES`, which selects cases of the case runner of the target (HYR-7). Its value is one name or several names that spaces separate, and the four runners read it by the same grammar:
+
+| Name | Selects | Example |
+| --- | --- | --- |
+| A name that holds `#`: `<file>#<section>` | The cases of that section of that case file | `app.json#opens` |
+| A name that ends with `.json` | The cases of that case file | `reads.json` |
+| Any other name | The cases of that id, in every case file | `a_missing_header_is_the_any_range` |
+
+A runner runs each case that a name selects once, in the order of a full run, and only the cases that it runs in a full run: `make hyper-test-js CASES="accept.json"` selects nothing, because no section of `accept.json` names the browser runner. The run fails before a case runs, and writes no results file, when a name selects no case of the runner; its message states the selection and each such name, for example `the selection "reads.json no-such.json" of the php runner selects no case for no-such.json` (HR-84).
+
+With a selection the recipe of the target is one command, the case runner alone: `CaseRunnerTest` of PHPUnit, `tests/case-runner.test.ts` of the package, or `test_case_runner.py`. The other tests of the target, the type check of `hyper-test-js` and `hyper-test-node` and the package data tests of `hyper-test-python` do not run. The prerequisites of the target are built as for a full run. A row of the checklist whose cases own it therefore names such a command as its verification, for example `make hyper-test-php CASES="reads.json"`.
+
+A selected run writes `var/recipe/results/<runner>.selected.txt`, whose first line is `SELECTION <names>` and whose other lines are the result lines of the selected cases. It does not write `var/recipe/results/<runner>.txt`, the file of a full run, which `make recipe-check` reads. `make recipe-check` and the targets `recipe-run-*` give their runners no selection and run every case, whatever `CASES` holds. The Makefile gives the selection to the runner in the environment variable `RECIPE_CASES`; a blank `CASES` is a full run.
+
+`CASES` of `make e2e` is another variable of the same name: a pattern that Playwright matches against the titles of its cases.
+
 ## Servers of a run
 
 `make parity` and `make server-parity` start their own servers with `scripts/board-servers.mts`: every server listens on a port that the system assigns, and the check sends its requests to the address that the server reports in its output (`Development Server (http://127.0.0.1:<port>) started` of PHP, `board on http://127.0.0.1:<port>` of the board Node server, `edge http://127.0.0.1:<port>` of `scripts/serve-edge.mts`). A request therefore reaches a server of the same run, also while a run from another checkout or session runs. Starting a server is a step without a time limit: it prints its start, every output line of the server with the prefix `[<name>]` and its address with the elapsed time, and fails when the server exits first. The databases and the session directory of a run lie in a temporary directory, which `scripts/check-parity.mts` prints as `run directory: <path>` and removes.

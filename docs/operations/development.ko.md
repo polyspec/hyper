@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 730588c0168deae4e8f8966c1905040eb36798dfc4903cbcb5a98be3774a6a0c -->
+<!-- source-sha256: 27954eb7786212c0d7d8034e459ab4596e1aad88f354063378dcefb2ec2f222b -->
 # 개발
 
 [English](development.md).
@@ -196,6 +196,24 @@ workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실�
 `node node_modules/@polyspec/kit/dist/run-tests.mjs <node|vitest|go|cargo|phpunit> [--cwd <directory>] [--php-extension <file>] [--] [<arguments>]`는 test 도구를 실행하고, `make test-js`, `make hyper-test-node`, `make test-php`, `make hyper-test-scripts`, `make package-check`는 이것으로 test를 실행한다. PHPUnit은 `COMPOSER_VENDOR_DIR`의 vendor 디렉터리의 것이며 `make test-php`가 이를 root `vendor`로 설정한다. 모든 test는 시작할 때 한 줄, 실행 중에는 5초마다 한 줄, 끝나면 결과와 경과 시간을 담은 한 줄을 출력하고, 실행은 개수와 경과 시간을 담은 줄로 끝난다. runner는 시간 제한을 두지 않는다. 도구를 실행하고 그 출력과 exit code를 그대로 전한다. `--php-extension`은 PHPUnit에 PHP extension을 불러온다. kit이 runner와 reporter를 시험한다.
 
 변경을 소유한 test만 실행하려면 그 파일이나 filter를 넘긴다. 예: `node node_modules/@polyspec/kit/dist/run-tests.mjs vitest --cwd packages/client tests/router.test.ts`, `COMPOSER_VENDOR_DIR=$PWD/vendor node node_modules/@polyspec/kit/dist/run-tests.mjs phpunit --cwd packages/php -- --filter RouterTest`.
+
+### Case 선택
+
+`make hyper-test-js`, `make hyper-test-node`, `make hyper-test-php`, `make hyper-test-python`은 make 변수 `CASES`를 받는다. 이 변수는 그 target의 case runner(HYR-7)가 실행할 case를 선택한다. 값은 이름 하나이거나 공백으로 나눈 여러 이름이며, 네 runner가 같은 문법으로 읽는다.
+
+| 이름 | 선택하는 것 | 예 |
+| --- | --- | --- |
+| `#`이 있는 이름: `<file>#<section>` | 그 case 파일의 그 section의 case | `app.json#opens` |
+| `.json`으로 끝나는 이름 | 그 case 파일의 case | `reads.json` |
+| 그 밖의 이름 | 모든 case 파일에서 그 id의 case | `a_missing_header_is_the_any_range` |
+
+runner는 이름이 선택한 case를 전체 실행의 순서대로 한 번씩 실행하며, 전체 실행에서 자기가 실행하는 case만 선택한다. `make hyper-test-js CASES="accept.json"`은 아무것도 선택하지 않는다. `accept.json`의 어떤 section도 browser runner를 적지 않기 때문이다. 어떤 이름이 runner의 case를 하나도 선택하지 않으면 실행은 case를 실행하기 전에 실패하고 결과 파일을 쓰지 않는다. 그 메시지는 선택과 그런 이름을 각각 밝힌다. 예: `the selection "reads.json no-such.json" of the php runner selects no case for no-such.json`(HR-84).
+
+선택이 있으면 target의 recipe는 명령 하나, 곧 case runner뿐이다. PHPUnit의 `CaseRunnerTest`, package의 `tests/case-runner.test.ts`, 또는 `test_case_runner.py`이다. target의 다른 test, `hyper-test-js`와 `hyper-test-node`의 type check, `hyper-test-python`의 package data test는 실행하지 않는다. target의 prerequisite은 전체 실행과 같이 build한다. 따라서 case가 소유하는 체크리스트 행은 그런 명령을 검증으로 적는다. 예: `make hyper-test-php CASES="reads.json"`.
+
+선택한 실행은 `var/recipe/results/<runner>.selected.txt`를 쓴다. 첫 줄은 `SELECTION <이름들>`이고 나머지 줄은 선택한 case의 결과 줄이다. 전체 실행의 파일이며 `make recipe-check`가 읽는 `var/recipe/results/<runner>.txt`는 쓰지 않는다. `make recipe-check`와 target `recipe-run-*`는 runner에 선택을 주지 않으므로 `CASES`의 값과 무관하게 모든 case를 실행한다. Makefile은 선택을 환경 변수 `RECIPE_CASES`로 runner에 준다. 빈 `CASES`는 전체 실행이다.
+
+`make e2e`의 `CASES`는 이름만 같은 다른 변수이다. Playwright가 case의 제목과 맞춰 보는 pattern이다.
 
 ## 한 실행의 서버
 
