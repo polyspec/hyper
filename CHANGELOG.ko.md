@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 994de4b6dd4d60aa33d0ae21e99ac9069b31849cf7566a41166951d6e828c9c5 -->
+<!-- source-sha256: 64ad3d17b6da1ed56aa969caf8f89fa36ccb10177bc5190fa74e380ea36f8de8 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-131.29는 수가 아닌 `Content-Length`에 http-form의 kind `invalid_content_length`의 상태 400을 정하는데, `docs/features.md`는 어떤 서버도 이를 내지 않는다는 것을 적지 않았다. 그 파일은 행 `content-length-kind`를 not implemented로 얻었다. 어떤 서버도 core도 그 kind를 갖지 않고, `node:http`와 Python `http.server` host는 그런 요청을 자기 400으로 거절하며, WSGI host, ASGI host, PHP는 그런 값을 0으로 읽어 WSGI host는 body를 읽지 않는다. `docs/plans/execution/plan.md`는 그 row의 Red인 case와 WSGI host 테스트를 얻었다. 그 case는 세 runner에서 실패하므로 `contracts/`에 추가하지 않는다. 그 kind는 core가 http-form을 부를 때 온다(H35.11, H35.36-2).
 
 - HY-131.25를 retire하고 HY-131.33이 대신한다. HY-131.25는 Node host가 body를 paused mode로, `'readable'` event마다 `request.read()`로 읽는다고 적었다. `packages/ts/src/host/http-host.ts`의 `readBody`는 `'data'` event로 읽고, body의 파일이 조각의 byte를 받을 때까지 요청을 멈춘다. HY-131.33은 두 형태가 모두 주고 테스트가 관찰할 수 있는 것을 정한다. host는 body를 조각 하나씩 `feed`에 주고, 파일이 앞 조각의 byte를 받은 뒤에만 다음 조각을 받으며, 조각을 모으지 않는다. 코드는 바뀌지 않는다. HY-131.25를 인용하던 `contracts/interfaces.json`의 텍스트는 HY-131.33을 인용한다(H35.36-1).
 

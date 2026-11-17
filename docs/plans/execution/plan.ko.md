@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 4797ba8e19c3a01c8999b22078b69ac0ac6e7caa57357dc946f6fe9ecba22653 -->
+<!-- source-sha256: 082cc50498294406d9cadf8c030ba9605ac1f44bce9508996bc2cb2b8ef7d746 -->
 # 실행
 
 [English](plan.md).
@@ -313,3 +313,7 @@ body와 route의 순서. body의 byte는 모든 요청에서 route가 정해지�
 boundary가 없거나 빈 `multipart/form-data` type도 같은 방식으로 판정한다(HY-113.24). boundary는 `Content-Type`의 매개변수이므로 reader는 시작하지 않고, body는 byte로 보유되며, type은 route 뒤에 판정한다. 이것은 media type이므로 지금의 HY-59.12는 `multipart/form-data`가 form 타입이 아닌 곳에서 415를 주고, form 타입인 곳에서는 거절하지 않는다. HY-113.24는 둘째 경우에 HY-59.12의 자리에서, 그 415 뒤에 400을 더하며, kind는 HY-132.3의 표가 HY-113.24에 주는 hyper의 `malformed_content_type`이다. 어떤 statement도 http-form의 kind `no_boundary`를 주지 않는다. 이는 서버의 답을 바꾸며, 이 점에 대한 H35.11의 Red다. `packages/ts/src/app/app.ts`의 `refusedMedia`(789행부터 794행)와 PHP, Python의 같은 것은 `multipart/form-data`가 form 타입인 곳에서 그런 type을 거절하지 않으므로, action으로의 `POST`는 token 검사로 넘어가 403을 받는다. token이 폼 값 `_csrf`이고(809행) body가 폼 값을 주지 않기 때문이다. 명세된 답은 400이다. case는 form 타입에 `multipart/form-data`가 있는 application의 action으로 `Content-Type: multipart/form-data`와 `Content-Type: multipart/form-data; boundary=""`를 보내는 `POST`이며, `contracts/app.json`에서 텍스트 `Bad Request`의 400을 기대한다. 세 runner에서 실패하므로 지금은 추가하지 않는다.
 
 body를 route 뒤에만 읽는 것은 두 조건에서 다시 검토한다. CSRF token이 header로 옮겨져 body를 읽기 전에 판정되는 경우, 또는 core의 구조가 reader의 호출을 route 뒤에만 허용하는 경우다. 지금 하지 않는 이유는 셋이다. token이 폼 값이므로 action으로의 요청의 body는 어느 순서에서든 token을 판정하기 전에 읽히고, 그래서 유효한 token이 없는 요청이 서버에 읽게 하는 byte는 줄지 않는다. `around`와 hook은 route 전에 폼 값을 읽은 요청을 받는다. body를 읽지 않고 답하는 host는 답을 보내기 전에 연결의 읽지 않은 byte를 버려야 한다.
+
+H35.36의 입력. 아래 case는 아직 어떤 runner도 내지 않는 명세된 답을 적으므로, 위 H35.11의 case처럼 `contracts/`에 추가하지 않는다. 각각은 그 row의 Red이며, row의 host 코드와 함께 case `a_content_length_over_the_body_limit_is_refused_without_a_body`의 형태로 `contracts/app.json`에 들어간다.
+
+H35.36-2, 수가 아닌 `Content-Length`(HY-131.29). case `a_content_length_that_is_no_number_is_refused`: application `a_board`, header `Content-Type: application/x-www-form-urlencoded`와 `Content-Length: abc`, body `name=a`를 가진 `/add`로의 `POST`. 기대하는 상태는 400이고 `actions`는 0이다. 지금 세 서버는 그런 값의 선언된 크기를 0으로 읽고 token 검사로 넘어간다. WSGI host의 Red는 host 테스트다. `CONTENT_LENGTH`가 `abc`이고 `wsgi.input`에 body가 있는 environ은 400을 기대하는데, host는 body를 읽지 않고 body 없는 요청으로 답한다(`packages/python/src/polyspec/hyper/host/_pipeline.py`의 `declared_length`, 173행부터 175행, 그리고 `wsgi.py`의 166행부터 168행).
