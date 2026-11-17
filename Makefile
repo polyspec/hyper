@@ -232,6 +232,7 @@ ext: ## Fail unless the json extension and the template extension that the PHP c
 HYPER_EXT := build/hyper-ext/polyspec_hyper.so
 .PHONY: hyper-ext
 hyper-ext: bindings ## Build the PHP extension polyspec_hyper of packages/php/native into build/hyper-ext (HY-132.2, H35.25)
+	@test -n "$(LLVM_MAJOR)" || { echo 'hyper-ext: LLVM_MAJOR is empty, since packages/release.mk, which make release-recipes writes, is missing' >&2; exit 2; }
 	@test -x "$(LLVM_ROOT)/bin/clang" && ls "$(LLVM_ROOT)/lib" 2>/dev/null | grep -q '^libclang' || { echo 'hyper-ext: the bindgen of ext-php-rs needs the libclang and the clang of LLVM $(LLVM_MAJOR) (config/toolchain.json) in $(LLVM_ROOT)' >&2; exit 2; }
 	PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang $(CARGO) build --locked -p polyspec-hyper-php-ext
 	mkdir -p build/hyper-ext.next-$$$$ && trap 'rm -rf build/hyper-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp $(CARGO_TARGET)/debug/libpolyspec_hyper.$(CDYLIB) build/hyper-ext.next-$$$$/polyspec_hyper.so && php -n -d extension=$(CURDIR)/build/hyper-ext.next-$$$$/polyspec_hyper.so -r 'exit(extension_loaded("polyspec_hyper") ? 0 : 1);' && $(NODE) scripts/publish.mts directory build/hyper-ext.next-$$$$ build/hyper-ext
@@ -427,12 +428,24 @@ bindings-check: binding-cases ## Check the interface contract and the tracked bi
 # binding generator, and BINDING_DEP, its install target, which is empty, since make install-packages of every checkout
 # installs the generator; -include lets a checkout without the file run every other
 # target. No rule of this Makefile has a recipe for one of its targets.
+# The file also defines LLVM_MAJOR and LLVM_ROOT, which hyper-ext reads. Once make install-packages installed the
+# generator, the file has a rule: a make that does not find it writes it with the recipe of release-recipes, which
+# renames the whole file into place (HR-82), and then reads the Makefile again with it, also in a dry run, so every
+# target, the first make of a fresh checkout included, reads the values of that one source. Before the install the
+# rule does not exist and the file stays absent.
 .PHONY: release-recipes
 BINDING_RUN := $(NODE) $(BINDING)
 BINDING_DEP :=
-release-recipes: ## Write packages/release.mk, the release recipes of the bindings, with binding release-recipes (HR-99)
+define write-release-recipes
 	@test -f $(BINDING) || { echo "release-recipes: the binding cli $(BINDING) is missing: run make install-packages"; exit 1; }
 	$(BINDING_RUN) release-recipes --root $(CURDIR) --out $(CURDIR)
+endef
+release-recipes: ## Write packages/release.mk, the release recipes of the bindings, with binding release-recipes (HR-99)
+	$(write-release-recipes)
+ifneq ($(wildcard $(BINDING)),)
+$(CURDIR)/packages/release.mk:
+	$(write-release-recipes)
+endif
 -include $(CURDIR)/packages/release.mk
 
 # The binding crates of the workspace. The WASM crate is not in the tree (Cargo.toml): its lint and its build name the

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8faaa9a71510b2c24cb7a8ef2b43e6235bc9d4acb2597b699358e579f3e2ad12 -->
+<!-- source-sha256: accc26aafce495f69767e101c359475c14d5585c0cd20c0fc83457796355165c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/release.mk`가 없는 checkout에서 `make hyper-install`은 `hyper-ext`에서 LLVM release와 LLVM 디렉터리가 빈 채로 실패했다. `LLVM_MAJOR`와 `LLVM_ROOT`는 그 생성 파일에만 정의되어 있고, 그 파일은 `make release-recipes`만 썼기 때문이다. 이제 `make install-packages`가 binding generator를 설치한 뒤에는 `packages/release.mk`가 `release-recipes`의 recipe를 가진 target이다. 그 파일을 찾지 못한 make는 그것을 쓰고 Makefile을 다시 읽으므로, `hyper-ext`는 `config/toolchain.json`의 LLVM으로 build한다. `LLVM_MAJOR`가 비어 있으면 `hyper-ext`는 없는 파일의 이름을 말하며 실패한다(H35.16-3).
 - HY-73.33이 HY-73.31을 대체한다. HY-73.31은 `{= a[1.5]}`나 `{= a[0.0000001]}`처럼 키가 분수 값의 숫자 리터럴인 인덱스가 읽기 경로에 자기 숫자 텍스트(`1.5`, `1e-7`)를 붙인다고 했고, `contracts/reads.json`의 case `a_number_key_with_a_fraction`과 `a_number_key_in_exponent_notation`은 렌더된 page를 기대했으나, 렌더는 `runtime_type` "a map key is a string or an integer, not a fractional number"로 실패한다(template의 EXP-19). HY-73.33은 문자열 리터럴과 정수 값의 숫자 리터럴(`1e+21`, `123456789012345680` 등)에 대해서만 키를 정하고, 분수 숫자 리터럴 인덱스는 렌더를 실패시킨다고 정한다. case `a_number_key_in_exponent_notation`은 키 `1e+21`을 가진 `{= a[1e21]}`만 남기고, case `a_number_key_with_a_fraction`은 삭제한다. `reads.json`의 case는 렌더된 page를 비교하며 렌더 오류를 기대하는 field가 없기 때문이다(H35.31-1).
 - PHP 서버: shared data에 `JsonSerializable`이 있는 `Accept: application/vnd.hyper+json` GET 요청은 JSON 텍스트를 쓰지 못했다. core의 `rules.json_write`가 `JsonSerializable`을 받지 않기 때문이다. 이제 문서와 리전 응답은 그 값을 쓰며, 값은 검사에서 한 번, JSON 텍스트에서 한 번 읽힌다(HY-44.6, H35.31-3).
 - PHP 서버: multipart 본문 요청의 `fileOver(-1)`은 파일을 비교해 false를 돌려주었다. 이제 파일 비교 전에 kind `invalid_number`로 실패한다(HY-114.12, H35.31-2).

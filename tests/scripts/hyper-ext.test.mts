@@ -2,9 +2,16 @@
 // (HY-132.2), so a development checkout builds it from packages/php/native through the cargo of the link script and the
 // PHP tests and the session workers load it from build/hyper-ext.
 import assert from 'node:assert/strict';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { dryRun } from './make-dry-run.mts';
+import { requireBuilt } from './requires.mts';
 import { COMMANDS, HYPER_EXT } from './session-workers.mts';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 test('hyper-ext builds packages/php/native through the cargo of the link script into build/hyper-ext (H35.25)', () => {
   const lines = dryRun('hyper-ext').join('\n');
@@ -26,6 +33,23 @@ test('hyper-install builds the extension after it writes the sources of the bind
     .map((line) => /--no-print-directory (\S+)/u.exec(line)?.[1])
     .filter((step) => step !== undefined);
   assert.ok(steps.indexOf('bindings') < steps.indexOf('hyper-ext'), `bindings runs before hyper-ext: ${steps.join(' ')}`);
+});
+
+test('hyper-ext of a tree without packages/release.mk writes it first and reads LLVM_MAJOR and LLVM_ROOT from it (H35.16-3)', (t) => {
+  requireBuilt('install-packages', 'node_modules/@polyspec/binding/dist/cli.js');
+  requireBuilt('install-tools', 'var/tools/bin/node');
+  const tree = mkdtempSync(path.join(tmpdir(), 'hyper-ext-'));
+  t.after(() => rmSync(tree, { recursive: true, force: true }));
+  for (const file of ['Makefile', 'config/toolchain.json', 'packages/rust/interface.json', 'packages/ts/package.json', 'packages/go/go.mod']) {
+    mkdirSync(path.dirname(path.join(tree, file)), { recursive: true });
+    copyFileSync(path.join(ROOT, file), path.join(tree, file));
+  }
+  const variables = [`NODE=${path.join(ROOT, 'var/tools/bin/node')}`, `BINDING=${path.join(ROOT, 'node_modules/@polyspec/binding/dist/cli.js')}`];
+  const lines = dryRun('hyper-ext', { cwd: tree, variables }).join('\n');
+  assert.ok(existsSync(path.join(tree, 'packages/release.mk')), `make wrote packages/release.mk before it read hyper-ext:\n${lines}`);
+  const major = /"llvm": \{[^}]*"version": "(\d+)"/u.exec(readFileSync(path.join(ROOT, 'config/toolchain.json'), 'utf8'))?.[1];
+  assert.ok(major !== undefined, 'config/toolchain.json pins llvm.version');
+  assert.match(lines, new RegExp(`LIBCLANG_PATH=\\S*llvm[@-]${major}/lib CLANG_PATH=\\S*llvm[@-]${major}/bin/clang `, 'u'), lines);
 });
 
 test('the PHP session worker loads the extension (H35.25)', () => {
