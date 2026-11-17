@@ -438,6 +438,7 @@
     },
     {
       "paths": [
+        "packages/cli/lib/program-files.mjs",
         "packages/cli/lib/program.mjs",
         "packages/cli/lib/shell.mjs",
         "scripts/fixture-program.mts"

@@ -90,6 +90,10 @@
       "kind": "ecosystem",
       "tool": "parseArgs of node:util reads the options, and node:path checks that each input path lies inside the application"
     },
+    "packages/cli/lib/program-files.mjs": {
+      "kind": "ecosystem",
+      "tool": "node:fs writes the files of the program, and copyDirectory of packages/cli/lib/output-files.mjs copies its templates"
+    },
     "packages/cli/lib/program.mjs": {
       "kind": "ecosystem",
       "tool": "@polyspec/template-compiler compiles the templates into the PHP program and the type manifest"
