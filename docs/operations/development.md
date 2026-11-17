@@ -159,6 +159,8 @@ With Composer, the consumer declares the Composer repositories of both releases,
 
 T.T.T is the version of `@polyspec/template` that `packages/client/package.json` of the release requires. A consumer that builds its application installs `@polyspec/hyper-cli` as a devDependency and runs `hyper build` from a `package.json` script or with `npm exec --package=@polyspec/hyper-cli -- hyper build` (HR-96, [Build](#build)); `npx hyper` without an install runs the unrelated public npm package `hyper`.
 
+A release of hyper publishes no Go module, 0.0.41 included: `config/release.json` declares no Go module (`"goModules": {}`), and `packages/go` is not a complete module, because the row go-wasm-bindings of `docs/features.md` is partial: the binding generator writes no Go source for a class unit. A consumer therefore cannot require `github.com/polyspec/hyper/packages/go` at a tag of hyper. hyper releases the Go module once the row go-wasm-bindings is complete and `config/release.json` declares the module in `goModules`; the release then runs `make release-go-module` and `make release-go-module-push`, which H35.49 adds.
+
 ## CI
 
 The workflow `.github/workflows/ci.yml` runs the full suite for the push of `main` and every manual run (`workflow_dispatch`) (HR-91, see [Publishing main](#publishing-main)). Its job `check` has one matrix entry per CI group, with `fail-fast: false`; the entries name `CI_GROUPS` of the Makefile, and each entry has one run step, `make ci-check NAME=<group>` (HR-90). The Makefile declares each group: the tools that it installs (`CI_TOOLS_<group>`), its setup steps in their order (`CI_SETUP_<group>`) and the targets that it runs (`CI_TARGETS_<group>`):

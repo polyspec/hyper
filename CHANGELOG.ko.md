@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 3ff50787cdfc91cebe9dcbd5679fabf03502c5c70bf7b5647a71580ee1903958 -->
+<!-- source-sha256: 971fa6149c7eaa15c5380d39ac8d5d246178b7737dd475a6fdf410ec52eb1e2d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 릴리스 0.0.41은 Go module을 게시하지 않는다. `config/release.json`이 Go module을 선언하지 않고(`"goModules": {}`), `docs/features.md`의 행 go-wasm-bindings가 partial이어서(binding generator가 class unit에 대해 Go 소스를 쓰지 않는다) `packages/go`가 완전한 module이 아니기 때문이다. consumer는 릴리스의 npm tarball과 Composer package를 설치하고 `github.com/polyspec/hyper/packages/go`를 요구하지 않는다. hyper는 그 행이 완료되고 `goModules`가 그 module을 선언하면 H35.49의 `make release-go-module`과 `make release-go-module-push`로 Go module을 릴리스한다. `docs/operations/development.md`가 릴리스 asset 설치 아래에 이를 적는다(H35.49).
 - hyper는 kit 0.0.119 대신 0.0.121을 채택한다. kit 0.0.120은 release candidate의 version을 changelog에서 읽고, kit 0.0.121의 link script는 `link.mjs cargo --tracked-lock <dir> <cargo args>`로 시작하면 patch와 lock 사본 없이 cargo를 실행한다(kit K1287). `package.json`은 그 release asset을, `package-lock.json`은 `make npm-lock`이 쓴 그 integrity를 적고, `make install-packages`가 lock에서 설치했다(H35.48).
 - case가 실패한 case runner는 `<n> of <m> cases fail; see var/recipe/results/<runner>.txt`로 실패했고, CI job이 upload하는 보고서 `var/ci/<name>/`는 그 파일을 담지 않아 어느 보고서도 실패한 case를 밝히지 않았다. 이제 `make ci-check`는 target 뒤, 요약 앞에 `make ci-results CI_REPORT=var/ci/<name>`을 실행하며, 이것이 `var/recipe/results/*.txt`를 보고서의 `recipe-results/`로 복사한다. runner를 실행하지 않은 group에는 없다. runner는 수 뒤에 실패한 각 case 줄을 한 줄씩 들여써서 실패하므로 보고서의 첫 실패 줄이 실패한 case를 밝히며(`packages/ts/tests/case-run.ts`의 `failedCases`), build case test도 같은 오류를 쓴다. HR-91이 이를 적는다. `tests/scripts/ci-workflow.test.mts`: `node --test`로 Red와 Green을 관찰했다. `tests/scripts/build-id.test.mts`는 통과했다. `packages/ts/tests/case-selection.test.ts`의 새 assertion에는 닿지 않았다. 그 runCases case 둘이 `contracts/interfaces.json`이 node runner를 선언하지 않는 `reads.json`을 골랐기 때문이며, H35.47이 이를 고친다(H35.46).
 - `packages/ts/tests/case-selection.test.ts`의 runCases case 둘은 node runner에 `reads.json`을 골랐는데, `contracts/interfaces.json`은 이제 그 파일의 어떤 section에도 node runner를 선언하지 않는다. 그래서 첫째는 고른 case를 실행하는 대신 "selects no case for reads.json"으로 실패했고, 둘째는 `no-such-file.json` 옆에 `reads.json`도 밝혔다. 둘은 section이 node runner를 선언하는 `keep.json`을 고르고 각 기대를 유지한다. 첫째는 줄 `SELECTION keep.json`을 처음에 두고 고른 case를 실행하며, 둘째는 `no-such-file.json`만 밝히며 실패한다. make target 밖에서 그 파일에 진단으로 돌린 vitest는 H35.46의 assertion과 함께 8개 중 8개 통과했다(H35.47).

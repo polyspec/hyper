@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 835d2911316349c738cd2b0c46b2fbe8c06ab67e49c88a5578d85c0a3371261b -->
+<!-- source-sha256: aa6a96fc63fae272072eede94bb6828d2e54e0501a8d98bdcb7ca1c231717711 -->
 # 개발
 
 [English](development.md).
@@ -159,6 +159,8 @@ Composer에서는 두 release의 Composer repository, 곧 각 release가 archive
 ```
 
 T.T.T는 그 릴리스의 `packages/client/package.json`이 요구하는 `@polyspec/template`의 버전이다. 애플리케이션을 빌드하는 consumer는 `@polyspec/hyper-cli`를 devDependency로 설치하고 `hyper build`를 `package.json` script나 `npm exec --package=@polyspec/hyper-cli -- hyper build`로 실행한다(HR-96, [빌드](#빌드)). 설치 없는 `npx hyper`는 npm의 무관한 공개 package `hyper`를 실행한다.
+
+hyper의 릴리스는 0.0.41을 포함해 Go module을 게시하지 않는다. `config/release.json`이 Go module을 선언하지 않고(`"goModules": {}`), `docs/features.md`의 행 go-wasm-bindings가 partial이어서 `packages/go`가 완전한 module이 아니기 때문이다. binding generator가 class unit에 대해 Go 소스를 쓰지 않는다. 그래서 consumer는 hyper의 tag에서 `github.com/polyspec/hyper/packages/go`를 요구할 수 없다. hyper는 행 go-wasm-bindings가 완료되고 `config/release.json`이 `goModules`에 그 module을 선언하면 Go module을 릴리스한다. 그때 릴리스는 H35.49가 더하는 `make release-go-module`과 `make release-go-module-push`를 실행한다.
 
 ## CI
 
