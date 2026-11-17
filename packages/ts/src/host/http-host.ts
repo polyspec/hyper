@@ -103,19 +103,24 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     // The request that holds `read`, which releases the files of the body (HY-131.14).
     let holder: Request | null = null;
     try {
-      const file = files === undefined ? null : publicFile(files, incoming);
+      // HY-100.2: a request whose target node:http does not give is answered with the plain 500 and not as the request
+      // of the path `/`, which would be the answer to another request; no request exists then, so no write hook is
+      // called (HY-99.12).
+      const target = incoming.url;
+      if (target === undefined) throw new Error('hyper: the request has no target (HY-100)');
+      const file = files === undefined ? null : publicFile(files, incoming, target);
       if (file !== null) {
         serveFile(outgoing, incoming, file);
         return;
       }
       // HY-42.9: every line of a name, which `headers` of node:http keeps only the first of for the names that it reads
       // as one value; `requestOf` joins them (HY-42.8).
-      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, https });
+      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, https });
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
       // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
       read = new RequestBody(request.header('Content-Type') ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'), app.valueLimit, app.partLimit, app.fileLimit);
       await readBody(incoming, read, app.bodyLimit);
-      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, body: read.held(), bodySize: read.size(), https }, read);
+      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, body: read.held(), bodySize: read.size(), https }, read);
       holder = request;
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
       const last: { request?: Request; reply?: Reply } = {};
@@ -234,10 +239,10 @@ function serveFile(outgoing: ServerResponse, incoming: IncomingMessage, file: st
   else createReadStream(file).pipe(outgoing);
 }
 
-// Returns the file of a GET or HEAD request path in the public directory, or null.
-function publicFile(files: string, incoming: IncomingMessage): string | null {
+// Returns the file of a GET or HEAD request path in the public directory, or null; `target` is the target of the request.
+function publicFile(files: string, incoming: IncomingMessage, target: string): string | null {
   if (incoming.method !== 'GET' && incoming.method !== 'HEAD') return null;
-  const path = Request.targetPath(incoming.url ?? '/');
+  const path = Request.targetPath(target);
   if (!/^(\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$/.test(path)) return null;
   const file = join(files, path);
   try {

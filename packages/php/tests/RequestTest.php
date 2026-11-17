@@ -47,6 +47,25 @@ final class RequestTest extends TestCase
         self::assertSame('__Host-hy-session', NativeSession::options(true)['name']);
     }
 
+    /**
+     * HY-100.2: a request without a target fails, so that `run` answers it with the plain 500 of HY-60; it is not read
+     * as the request of the path `/`.
+     */
+    public function testFromGlobalsFailsWithoutARequestUri(): void
+    {
+        $server = $_SERVER;
+        unset($_SERVER['REQUEST_URI']);
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        try {
+            Request::fromGlobals();
+            self::fail('a request without REQUEST_URI was read');
+        } catch (\RuntimeException $error) {
+            self::assertStringContainsString('REQUEST_URI', $error->getMessage());
+        } finally {
+            $_SERVER = $server;
+        }
+    }
+
     /** HY-42: `fromGlobals` takes the request target from `REQUEST_URI`. */
     public function testFromGlobalsTakesTheTargetFromTheRequestUri(): void
     {

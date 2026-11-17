@@ -522,8 +522,15 @@ final class Request
         // HY-100.31: the host passes the method in upper case.
         $method = $_SERVER['REQUEST_METHOD'] ?? null;
         $method = is_string($method) ? strtoupper($method) : $method;
+        // HY-100.2: a request whose target the SAPI does not give is answered with the plain 500 and not as the
+        // request of the path `/`, which would be the answer to another request. The error escapes `run` before a
+        // request exists, so no write hook is called for it (HY-99.12).
         $target = $_SERVER['REQUEST_URI'] ?? null;
-        $target = is_string($target) ? $target : '/';
+        if (!is_string($target)) {
+            throw new \RuntimeException(
+                'hyper: $_SERVER has no REQUEST_URI, so the request target is unknown (HY-100)',
+            );
+        }
 
         // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data request
         // here only when enable_post_data_reading is off, and holds what was read in a temporary file of its own.

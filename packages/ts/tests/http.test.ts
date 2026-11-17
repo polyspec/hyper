@@ -187,6 +187,25 @@ describe('the write hook and App.listener', () => {
     expect(response.status).toBe(200);
   });
 
+  it('answers a request without a target with the plain 500 and calls no write hook (HY-100.2, HY-99.12)', async () => {
+    const app = await new Fixture().app();
+    const calls: string[] = [];
+    const listener = app.listener(new FileSessions({ directory }), { written: (request) => void calls.push(request.path()) });
+    const settled: Promise<void>[] = [];
+    // The listener receives the request of node:http without its target, which a transport may leave out.
+    const plain = createHttpServer((incoming, outgoing) => {
+      incoming.url = undefined;
+      settled.push(listener(incoming, outgoing));
+    });
+    const plainBase = await listen(plain);
+    const response = await fetch(`${plainBase}/notes`);
+    const text = await response.text();
+    await Promise.all(settled);
+    await new Promise((resolve) => plain.close(resolve));
+    expect([response.status, text]).toEqual([500, 'Internal Server Error']);
+    expect(calls).toEqual([]);
+  });
+
   it('settles the promise of the listener after the write hook and the disconnect hook (HY-100)', async () => {
     const events: string[] = [];
     const { app, running, release } = await waitingApp(events);

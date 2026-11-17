@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ad5e408039e51cae3b3a429c647329ac537559ce4c69d76a64cabe12f8306f61 -->
+<!-- source-sha256: e65f88fe7d8fc8c6cb26bfd3d0506dee190c3605e2000ce0df5e81c3d2dcd06a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- target이 없는 요청에 PHP 서버(`REQUEST_URI`가 없는 `$_SERVER`, `Request::fromGlobals`)와 Node host(`node:http` 요청의 `url`이 undefined)가 경로 `/`의 요청으로 응답했는데, 그것은 다른 요청에 대한 응답이다. HY-100.2는 host가 target을 줄 수 없는 요청에 HY-60의 평문 500을 적으며, Python host들이 그렇게 응답한다. 이제 `Request::fromGlobals`는 `REQUEST_URI`를 이름하는 오류로 실패하고 `run`이 그것에 평문 500으로 응답하며, Node listener는 public 파일을 찾기 전에 실패한다. 그때는 요청이 없으므로 write hook이 불리지 않는다(HY-99.12). `packages/php/tests/RequestTest.php`의 시험 하나와 `packages/ts/tests/http.test.ts`의 시험 하나가 이것을 적는다. 쓰였을 뿐 실행되지 않았다(H35.44).
 - WSGI host가 인코딩할 수 없는 status, header, body의 평문 500을 그 오류의 예외 정보 없이 `start_response`에 넘겼고, public 디렉터리의 파일에 대해 예외를 던진 `start_response`는 잡히지 않고 callable을 빠져나갔다. HY-100.9는 두 오류의 평문 500에 예외 정보를 적으며, PEP 3333은 잡은 오류를 보고하는 application에 그 인자를 준다. 이제 host는 인코딩 오류에 그것을 넘기고, public 파일에 대해 예외를 던지는 `start_response`에는 예외 정보와 함께 다시 `start_response`로 평문 500을 응답한다. write hook은 그 500을 실패와 함께 받는다. `tests/test_wsgi.py`의 시험 둘이 이것을 적는다. 쓰였을 뿐 실행되지 않았다(H35.44).
 - ASGI host가 body를 받지 못했거나 수신이 취소된 요청에 대해 write hook에 raw query가 빈 요청을 주었다. 받은 그대로의 요청이 query를 담지 않는 `raw_path`로 만들어졌기 때문이다. 이제 그 요청의 raw query는 body를 읽은 요청과 같이 `scope['query_string']`을 latin-1로 decode한 것이다(HY-100.24). `tests/test_asgi.py`가 body 읽기 실패의 시험에서 그것을 기대한다. 이 변경은 쓰였을 뿐 실행되지 않았다(H35.44).
 - HY-100.6, HY-100.18, HY-100.27을 폐기하고 HY-100.37, HY-100.38, HY-100.39가 대체한다. HY-100.6과 HY-100.18은 WSGI host와 ASGI host의 disconnect hook의 요청으로 callable이 `around`에 넘긴 요청을 이름했다. host는 HY-97.5가 적는 대로 마지막 `answer` 호출의 요청을 주며, 새 statement가 그렇게 적는다. HY-100.27은 `raw_path`가 없는 scope의 평문 500의 send가 실패하면 `written`을 부른다고 적었다. 그때는 요청이 없어 HY-99.12가 적는 대로 hook을 부르지 않으며, HY-100.39가 그렇게 적는다. 폐기된 id를 인용하던 `contracts/interfaces.json`의 member 둘은 HY-100.38과 HY-100.9를 인용한다. 코드는 바뀌지 않는다(H35.44).
