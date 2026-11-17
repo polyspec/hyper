@@ -458,6 +458,8 @@ class _Session:
         self.reports = Reports()
         self.session = ArraySession()
         self.store = RecordingStore(self.session)
+        # The handlers write the store that the requests use with a step `store` (HY-38.20).
+        self.calls.session = self.session
         self.earlier: dict[str, _Answered] = {}
         manifest, program = program_of(self._application.name)
         self._app = self._application.open(manifest, program, self.calls, self.reports)

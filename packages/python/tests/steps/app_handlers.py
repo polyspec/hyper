@@ -12,12 +12,13 @@ from polyspec.hyper.result.redirect import Redirect
 from polyspec.hyper.http.reply import Reply
 from polyspec.hyper.http.request import Request
 from polyspec.hyper.result.result import Result
+from polyspec.hyper.session.array_session import ArraySession
 
 from .recorded import decoded
 from . import reply_steps
 from .representations_steps import orm_thrown
 
-_STEPS = ("calls", "observe", "add", "warn")
+_STEPS = ("calls", "observe", "add", "warn", "store")
 _RESULTS = ("return", "stop", "throw", "redirect", "outside", "page")
 _STOPS = {"NotFound": NotFound, "Forbidden": Forbidden, "BadRequest": BadRequest}
 
@@ -70,6 +71,8 @@ class Calls:
         self.observed: list[list] = []
         self.kinds: set[str] = set()
         self.reads = 0
+        # The session store of the requests, which a step `store` writes (HY-38.20); None outside a request run.
+        self.session: ArraySession | None = None
 
     def discard(self) -> None:
         self.started.clear()
@@ -210,6 +213,13 @@ class _Run:
             service, member, amount = step["add"]
             record = self._records[service]
             setattr(record, member, getattr(record, member) + amount)
+        elif "store" in step:
+            # HY-38.20: the step writes each key in the session store of the request, as the application does through
+            # its hold on that store, so the page reads the value after the handler returned.
+            if self._calls.session is None:
+                raise LookupError(f"the handler {self._name} stores outside a request run")
+            for key, value in step["store"].items():
+                self._calls.session.set(key, value)
         else:
             warnings.warn(step["warn"], RuntimeWarning, stacklevel=1)
 
