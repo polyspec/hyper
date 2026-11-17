@@ -18,7 +18,7 @@ path = "src/lib.rs"
 [features]
 # G-5, X-1: compiles the arming of the fault injection points of `fault`; a generated binding crate turns it on for its
 # tests only, and a release build never does (binding design 3.6).
-fault-test = ["polyspec-binding-core/fault-test"]
+fault-test = ["polyspec-binding-core/fault-test", "polyspec-http-form/fault-test"]
 # The body reader of http-form, whose files, paths and blocking I/O every target but WASM builds (F-28); the generated
 # WASM crate builds the core without it, as `core.features.wasm` of packages/rust/interface.json states.
 default = ["fs"]
