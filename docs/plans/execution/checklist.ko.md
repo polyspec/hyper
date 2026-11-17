@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 90847e87aabb5566ef2bc0c2d7d46010104bc8b37243b5f1a3de21b9a03af43e -->
+<!-- source-sha256: cd7819e3bfe1497e4c3136fd665afb8bfd1b043aef7baccd5fc5d2d436c27e5c -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -578,3 +578,4 @@
 | H35.32-1 | PHP와 Python 서버는 H35.32 뒤의 Node 서버처럼 hyper core의 page 렌더(render_document, route_reads, Pages)로 page를 렌더한다. template binding 위의 자기 renderer(Renderer.php, _renderer.py)를 쓰지 않는다. | packages/php, packages/python | `make hyper-test-php` | [ ] |
 | H35.33 | browser client(packages/client)를 JS render engine에서 template Rust core의 wasm binding으로 옮길지를 잰 비용으로 정한다. template의 wasm은 1,232,105 byte(gzip 357,063)이고 json의 wasm(246,724 byte, gzip 81,731)을 import해, gzip 약 40 kB(그중 render runtime 12.7 kB)인 entry에 gzip 약 450 kB가 더해진다. wasm entry는 top-level await와 import.meta.url의 fetch로 load되고, packages/cli의 esbuild 설정은 .wasm asset을 내지 않는다. 옮기는 일은 뒤의 행이다. | packages/client | `make bundle-size` | [ ] |
 | H35.34 | `hyper build`는 키가 문자열이나 숫자 리터럴인 인덱스에 대해 reads.json에 key "[object Object]"를 쓴다(contract program 39개 중 6개). packages/cli/lib/program.mjs가 template binding의 AST를 packages/client의 JS walker routeReads에 넘기는데 그 walker는 다른 AST 형태를 읽기 때문이다. PHP와 Python 서버는 그 파일을 읽고 그런 key의 값을 kept data에 담지 못한다. CLI는 hyper core의 routeReads로 읽기 경로를 계산해 경로의 구현이 하나가 된다. Red: literal key가 있는 template의 build가 쓴 reads.json을 읽는 시험. 왜 이전에 어떤 시험도 실패하지 않았는지 이 행에 적는다. | packages/cli, tests/scripts | `make hyper-test-scripts` | [ ] |
+| H35.35 | 버전 커밋 전에, release workflow의 단계 가운데 CI가 돌지 않는 것을 찾아 release가 주는 입력으로 dry run한다. 이 행은 그런 단계마다 그것이 부르는 도구, 그 job이 그 도구를 설치하는지, 그리고 어떤 CI job도 돌지 않는 단계가 무엇인지 적는다. release는 assets job보다 먼저 tag를 만들므로 거기서만 실패하는 단계는 버전 번호를 잃게 한다: assets job의 `binding check --release`는 생성된 go.mod가 다른 polyspec Go module의 release를 require하면 `go mod download`를 부르는데, 그 job은 Go를 설치하지 않았다. | .github/workflows/release.yml, Makefile, docs/operations/development.md | `make hyper-test-scripts` | [ ] |
