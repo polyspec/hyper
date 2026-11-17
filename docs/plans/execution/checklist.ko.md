@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 9450d090709ad15abaa891dc048025556cbb66ce5a544cec6b5e721215aa8190 -->
+<!-- source-sha256: 8a126689b937fec7c4a1bcfab15eae144be48a3240f59b3be03a1d6877428c61 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -521,6 +521,7 @@
 | H35.16 | kit 0.0.116(kit K1266~K1273)을 채택한다. `package.json`이 그 release asset을, `package-lock.json`이 그 integrity를 적는다. | package.json, package-lock.json, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.16-1 | kit 0.0.118을 채택한다. `package.json`이 그 release asset을, `package-lock.json`이 그 integrity를 적고, `make hyper-install-python`을 실행하는 각 CI group은 그 release부터 maturin을 고르는 install-tools로 maturin을 설치한다. 그 link는 provider의 maturin python-source를 읽고 설치된 배포판만 연결하며, H35.28이 이를 필요로 한다. | package.json, package-lock.json, Makefile, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.16-2 | kit 0.0.119(K1283, cargo 출력의 순서)를 쓴다. `package.json`은 그 release asset을, `package-lock.json`은 그 integrity를 적는다. 이 checkout의 run은 설치된 그 release를 쓰고, .links는 kit checkout을 적지 않는다. | package.json, package-lock.json | `make hyper-test-scripts` | [ ] |
+| H35.16-3 | 새 checkout에서 AGENTS.md의 순서(bootstrap, install-tools, install-packages, hyper-install)대로 하면 `make hyper-install`이 hyper-ext에서 "needs the libclang and the clang of LLVM"로 실패한다. LLVM_MAJOR와 LLVM_ROOT는 ignored 파일 packages/release.mk에서 오는데, 그것은 `make release-recipes`만 쓰고 hyper-install은 그것을 먼저 부르지 않기 때문이다. hyper-ext는 그 값을 쓰는 target을 prerequisite로 가져 값의 출처가 하나로 남는다. Red: 그 순서의 새 checkout에서 hyper-install이 실패한다. | Makefile | 새 checkout에서 `make hyper-install` | [ ] |
 | H35.17 | script 시험의 빠진 입력은 그것을 쓰는 target을 이름하고, install target을 돌리지 않는 `make hyper-test-scripts` 전에 그것을 돌리라고 말한다(HR-85, HR-89). | tests/scripts/requires.mts, tests/scripts/requires.test.mts, config/owner-checks.json | `make hyper-test-scripts` | [ ] |
 | H35.18 | 실패하는 test는 그 실패로 실행을 끝내고 process와 임시 directory를 남기지 않는다(HR-84, HR-87). worker가 실패한 session test는 시작한 process를 모두 멈추고 그 directory를 지운다. | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.19 | script 시험의 모든 기다림은 timer나 test runner의 시간 제한이 아니라 사건으로 끝난다(HR-89, HR-84). | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
