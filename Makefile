@@ -56,7 +56,7 @@ export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # package.json names (HR-70). The Composer package polyspec/template of TEMPLATE_PACKAGES, the Composer repository of the
 # release (packages.json), is the native template extension, a php-ext package with a pre-packaged binary for each
 # platform; PIE builds it (H27.45, H31.5), and the PHP manifests require ext-polyspec_template.
-TEMPLATE_VERSION := 0.0.29
+TEMPLATE_VERSION := 0.0.30
 TEMPLATE_TAG := v$(TEMPLATE_VERSION)
 TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
@@ -244,7 +244,7 @@ template-ext: json-ext ## Build the native template extension of TEMPLATE_TAG wi
 # The template extension requires the json extension polyspec_json (ext-polyspec_json), which PHP loads before it. PIE gets
 # polyspec/json JSON_VERSION from the Composer repository JSON_PACKAGES of the json release, as template-ext gets the
 # template extension, and the library is published into build/json-ext with a rename (HR-82).
-JSON_VERSION := 0.0.34
+JSON_VERSION := 0.0.38
 JSON_PACKAGES := https://github.com/polyspec/json/releases/download/v$(JSON_VERSION)/packages.json
 JSON_EXT := build/json-ext/polyspec_json.so
 JSON_PIE_WORK := $(CURDIR)/var/pie/polyspec/json

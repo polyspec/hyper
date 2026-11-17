@@ -3,37 +3,37 @@
   "packages": {
     "polyspec/template": {
       "repository": "polyspec/template",
-      "version": "0.0.29",
-      "packages": "6ebbb0690c4f312f79b4ba3e970849c2151fc17c8588275adaddd2ec247692b2",
+      "version": "0.0.30",
+      "packages": "d40b7fe00febfa188e246d1b573f077b223d7527e4719b36bcf75220354174a3",
       "extension": "polyspec_template",
       "zips": {
         "8.4": {
-          "arm64-darwin-bsdlibc-nts": "d50280b57d16eeca5c7bcde7c4ebefea0cb71a0e1e9a5bb608d94ab2befbfb1d",
-          "arm64-linux-glibc-nts": "a46794b18856c6d0b7a1aeb851ad00ad530bf34cc297515d19d05eeaf11587d6",
-          "x86_64-linux-glibc-nts": "e9248b7d500d0478a4e9868644ab7524d4e6b8ed8b135d7d368e2404fdd2c562"
+          "arm64-darwin-bsdlibc-nts": "617ee3b7be565573d5cee5f595dff83f2656ebd5178fc170fec2189d31187eeb",
+          "arm64-linux-glibc-nts": "98ded643397bf56a8b9b7abc08a9e9d80f99f7bbce8eeef82b54a58277f4f62c",
+          "x86_64-linux-glibc-nts": "f36330bfbacb359af775398070a27866f07560f293865f4224a0f0b77233c55e"
         },
         "8.5": {
-          "arm64-darwin-bsdlibc-nts": "73b9816db304edb23923263d659447f5acd297b85dd8de7e8b12231397ebb898",
-          "arm64-linux-glibc-nts": "ec862987bc9cb5d3ad6806c4340f8755faf1d6842e86d860020743e253f79ea9",
-          "x86_64-linux-glibc-nts": "9771eb14ccfd0b38c2e72684248d5e1e19e21ddeb7271d5d6dea68f2889bf776"
+          "arm64-darwin-bsdlibc-nts": "972f3fd9134ce3776346d1873249b4d28e8a7d84691f2bf908ef65de7dc5d02e",
+          "arm64-linux-glibc-nts": "144b2bb958345d28d7a1ca34abc0c797ba210d7066b70a467fd76fcb56f55460",
+          "x86_64-linux-glibc-nts": "182262623fa614c129488f510392dc2fea8f8af2802a4aed028ebe979e7ee869"
         }
       }
     },
     "polyspec/json": {
       "repository": "polyspec/json",
-      "version": "0.0.34",
-      "packages": "fb3f9d43245d8c51e366bc70f49e3e9679ec76836b971245b41ea2f493af7d86",
+      "version": "0.0.38",
+      "packages": "5762c6b30fce5103b1d97f484194767672ae0bd643f7312eb835a3cbd34bd5b2",
       "extension": "polyspec_json",
       "zips": {
         "8.4": {
-          "arm64-darwin-bsdlibc-nts": "ccc0e9d2288a5404ee8079cbec3697c8038a2268bb88c00710c0297520b9a0a4",
-          "arm64-linux-glibc-nts": "914ccab33a5acbfb05bba96462138869e9757ec3d03b19916575f538a2b27b22",
-          "x86_64-linux-glibc-nts": "d372af2df8bda80b9a61678b306b37f79a97301b5ea58fda47ae4233ddac4204"
+          "arm64-darwin-bsdlibc-nts": "924237eec738a28ad021eceb10eb31eede7de9e69a8d226f035bbd309b3c2f71",
+          "arm64-linux-glibc-nts": "4a5d496200e5337977e3121e130df6fa49b4aa54723c47a41779adcc7687840c",
+          "x86_64-linux-glibc-nts": "40e3015da9fb7dd80695b3c90e30085e42114baab907ef29d101ee7d6538a49d"
         },
         "8.5": {
-          "arm64-darwin-bsdlibc-nts": "dd2025c1090d68525f6285262ce0f154a97c8ea56486f9b9fd51b0f8bea6f753",
-          "arm64-linux-glibc-nts": "94af42f4d32a0420c5b2daa238c1a5a499f61727eef42506aa01d3c3b048e271",
-          "x86_64-linux-glibc-nts": "1d36177c9a46ceaf3e860a1b88230bc068978f58c7dcfa41c6ac76bb539ebaa2"
+          "arm64-darwin-bsdlibc-nts": "03aad3d1fd917061a201a9fe0a31d612754e42f9546b36d415c64c28b9c81a03",
+          "arm64-linux-glibc-nts": "5bbb344a87444f050100881e508feeec9605a5d6d8d25f38dd4756cb478b7e83",
+          "x86_64-linux-glibc-nts": "75695b056c6e5c46872b1ddf1b7a9bc5c5c6b32277500cc4c2da8cdc30e0e977"
         }
       }
     },

@@ -37,7 +37,7 @@
     "@polyspec/php-serialization": "0.0.16",
     "@polyspec/php-serialize": "0.0.6",
     "@polyspec/session-store": "0.0.7",
-    "@polyspec/template": "0.0.29"
+    "@polyspec/template": "0.0.30"
   },
   "napi": {
     "binaryName": "hyper",

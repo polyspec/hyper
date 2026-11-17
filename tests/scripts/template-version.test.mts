@@ -1,4 +1,4 @@
-// Tests that hyper depends on one template release, 0.0.29 (H21.4, H23.23, H23.25, H23.28, H31.5): the npm packages and
+// Tests that hyper depends on one template release, 0.0.30 (H21.4, H23.23, H23.25, H23.28, H31.5): the npm packages and
 // their locks, the Composer roots and the php-ext package that PIE builds, and the Python package of packages/python name
 // that release and no other, and no check or release step reads a template checkout. A mixed version fails here before
 // any install runs.
@@ -18,7 +18,7 @@ const member = (object: JsonObject, key: string, where: string): JsonObject => j
 const optionalMember = (object: JsonObject, key: string, where: string): JsonObject => (object[key] === undefined ? {} : member(object, key, where));
 
 // The template release that hyper depends on (H21.4, H23.23). Every pin below names this version.
-const VERSION = '0.0.29';
+const VERSION = '0.0.30';
 const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
 // The json release that the platform of the root composer.json declares for ext-polyspec_json.
