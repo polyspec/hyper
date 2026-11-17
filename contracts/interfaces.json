@@ -2032,7 +2032,7 @@
               ],
               "output": "string",
               "errors": [],
-              "state": "Build.read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18, HY-125.19). The server still reads the file and names the absolute path of the file in a failure (HY-125.18).",
+              "state": "Build.read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23, HY-125.19). The server still reads the file and names the absolute path of the file in a failure (HY-125.23).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::buildRead",
@@ -16143,7 +16143,7 @@
             "excluded": {
               "role": "input",
               "compare": "exact",
-              "sentence": "HY-125.18",
+              "sentence": "HY-125.23",
               "state": "`excluded` lists the outputs that the hash leaves out, the `build.json` whose content is `{\"build\":\"<build id>\"}` with the build id of `files`."
             },
             "sortedPaths": {
@@ -17333,7 +17333,7 @@
             "build": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-125.18",
+              "sentence": "HY-125.23",
               "state": "`build` is the build id that a `build.json` with the text `text` gives, or null when the file fails; a null `text` is a missing file.",
               "optional": true
             },
@@ -17341,7 +17341,7 @@
               "role": "expected",
               "optional": true,
               "compare": "contains",
-              "sentence": "HY-125.18",
+              "sentence": "HY-125.23",
               "state": "`message` is a text that the message of the failure of the file contains after its path."
             },
             "raises": {

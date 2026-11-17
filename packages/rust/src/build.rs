@@ -12,10 +12,10 @@ use crate::Error;
 /// The places of the files that a build writes, as the prefixes of their paths (HY-125.17).
 const PLACES: [&str; 4] = ["public/assets/", "client/", "program/", "csr/"];
 
-/// The files that hold the id or a copy of another file, which the hash leaves out (HY-125.16).
+/// The files that hold the id or a copy of another file, which the hash leaves out (HY-125.22).
 const LEFT_OUT: [&str; 3] = ["client/build.json", "program/build.json", "csr/index.html"];
 
-/// The copies of the files below `public/assets` in the static shell (HY-125.16).
+/// The copies of the files below `public/assets` in the static shell (HY-125.22).
 const SHELL_ASSETS: &str = "csr/assets/";
 
 /// One file that a build writes: its path with the prefix of its place (HY-125.17) and its bytes.
@@ -28,7 +28,7 @@ pub struct Output {
 }
 
 /// The files of `outputs` that the build id hashes, in the order of their paths compared as bytes (HY-125.3,
-/// HY-125.15, HY-125.16).
+/// HY-125.15, HY-125.22).
 ///
 /// # Errors
 /// `invalid_build` with the path for a path without the prefix of a place, with nothing after its prefix or with a
@@ -106,7 +106,7 @@ pub fn check_id(text: &str) -> Result<(), Error> {
     }
 }
 
-/// The text of `build.json` with the build id `id` (HY-125.18).
+/// The text of `build.json` with the build id `id` (HY-125.23).
 ///
 /// # Errors
 /// `invalid_build` for an id of another form (HY-125.19).
@@ -115,7 +115,7 @@ pub fn file_text(id: &str) -> Result<String, Error> {
     Ok(format!("{{\"build\":\"{id}\"}}"))
 }
 
-/// The build id of the bytes of a `build.json` (HY-125.18): a JSON text that holds exactly the key `build` with a
+/// The build id of the bytes of a `build.json` (HY-125.23): a JSON text that holds exactly the key `build` with a
 /// build id.
 ///
 /// # Errors
@@ -123,7 +123,7 @@ pub fn file_text(id: &str) -> Result<String, Error> {
 pub fn read(bytes: &[u8]) -> Result<String, Error> {
     let not_build = || {
         Error::InvalidBuild(Cow::Borrowed(
-            "build.json does not hold exactly the key build with a build id (HY-125.18)",
+            "build.json does not hold exactly the key build with a build id (HY-125.23)",
         ))
     };
     let value = match crate::json::read(bytes) {
@@ -142,7 +142,7 @@ pub fn read(bytes: &[u8]) -> Result<String, Error> {
     }
 }
 
-/// Whether the hash leaves out the file of `path` (HY-125.16).
+/// Whether the hash leaves out the file of `path` (HY-125.22).
 fn left_out(path: &str) -> bool {
     LEFT_OUT.contains(&path) || path.starts_with(SHELL_ASSETS)
 }

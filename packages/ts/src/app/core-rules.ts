@@ -398,15 +398,15 @@ export interface CoreRules {
   // Partial. The name of the cookie of the kept values: rules.keep_name (HYC-13.6). The server still reads the cookie
   // from the request (HY-129).
   keptCookieName(secure: boolean): string;
-  // Partial. buildRead: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18, HY-125.19).
-  // The server still reads the file and names the absolute path of the file in a failure (HY-125.18).
+  // Partial. buildRead: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23, HY-125.19).
+  // The server still reads the file and names the absolute path of the file in a failure (HY-125.23).
   buildRead(bytes: Uint8Array): string;
   // Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text.
   buildCheckId(text: string): void;
   // Partial. The build id of the command tool: rules.build_id (HY-125.15 to HY-125.17). The command tool still
   // collects the files that one build writes and gives each its path with the prefix of its place.
   buildId(outputs: Iterable<BuildOutput>): string;
-  // Partial. The text of `build.json`: rules.build_file_text (HY-125.18). The command tool still writes the file.
+  // Partial. The text of `build.json`: rules.build_file_text (HY-125.23). The command tool still writes the file.
   buildFileText(id: string): string;
   readonly Templates: {
     // Partial. The template check of the command tool: rules.template_problems (HY-48.3, HY-2, HY-3, HY-30). The

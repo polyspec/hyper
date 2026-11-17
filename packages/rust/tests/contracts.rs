@@ -2339,7 +2339,7 @@ fn hex_bytes(text: &str) -> Vec<u8> {
 
 #[test]
 fn the_build_id_of_the_files_of_a_build() {
-    // HY-125.3, HY-125.15, HY-125.17, HY-125.18
+    // HY-125.3, HY-125.15, HY-125.17, HY-125.23
     use polyspec_hyper::build::{file_text, hashed, id, stream, Output};
     let file = cases("context.json");
     let mut ran = 0;
@@ -2393,7 +2393,7 @@ fn the_build_id_of_the_files_of_a_build() {
 
 #[test]
 fn a_build_file_holds_a_build_id() {
-    // HY-125.18, HY-125.19
+    // HY-125.23, HY-125.19
     use polyspec_hyper::build::read;
     let file = cases("build.json");
     let mut ran = 0;

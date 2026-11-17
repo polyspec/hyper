@@ -9,7 +9,7 @@
 //   php/          with a PHP namespace: the generated PHP program of the same templates, compiled with the compiler
 //                 package @polyspec/template-compiler into that namespace as PSR-4 files, one class per file
 //   program.json  with a PHP namespace: the namespace of the generated program
-//   build.json    {"build":"<id>"}, written by writeBuildFile (HY-125.18)
+//   build.json    {"build":"<id>"}, written by writeBuildFile (HY-125.23)
 // The intermediate files of the compilation, the type manifest and the AST graph, lie in a temporary directory that
 // the assembly removes, not in the program.
 // The assembly has two parts. This module computes the content of the files with the template library, the compiler

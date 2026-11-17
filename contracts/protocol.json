@@ -1689,7 +1689,9 @@
             4,
             5,
             6,
-            13
+            13,
+            16,
+            18
           ],
           "blocks": [
             {
@@ -1702,10 +1704,10 @@
                   "koSource": "62bd975e2927bc8b8069defc57f262d6a60204154a0d79ef0a98e2365977c86f"
                 },
                 {
-                  "id": "HY-125.16",
-                  "en": "It leaves out `client/build.json` and `program/build.json`, the static shell `csr/index.html`, which holds the id, and the copies below `csr/assets`, which hold the bytes of the files below `public/assets`.",
-                  "ko": "`client/build.json`과 `program/build.json`, id를 담는 정적 셸 `csr/index.html`, 그리고 `public/assets` 아래 파일의 바이트를 담는 `csr/assets` 아래 사본은 빼고 계산한다.",
-                  "koSource": "50b07dbd0cad8e9c5db8690e0b1faca453f2dfb71d160c9641ae84463de9e4e8"
+                  "id": "HY-125.22",
+                  "en": "It leaves out `program/build.json`, the static shell `csr/index.html`, which holds the id, and the copies below `csr/assets`, which hold the bytes of the files below `public/assets`.",
+                  "ko": "`program/build.json`, id를 담는 정적 셸 `csr/index.html`, 그리고 `public/assets` 아래 파일의 바이트를 담는 `csr/assets` 아래 사본은 빼고 계산한다.",
+                  "koSource": "0f08c1e8d383fee9195551de82126a27bbcc7ad1f1312934ea201a218f5304a8"
                 },
                 {
                   "id": "HY-125.17",
@@ -1720,10 +1722,10 @@
                   "id": "HY-125.3"
                 },
                 {
-                  "id": "HY-125.18",
-                  "en": "It writes the id as `{\"build\":\"<build id>\"}` into `build.json` of `program/` and of `client/`, and every server reads the id when the application opens; `open` fails with the absolute path of a `build.json` that is missing or that does not hold exactly the key `build` with a build id.",
-                  "ko": "build는 id를 `{\"build\":\"<build id>\"}`로 `program/`과 `client/`의 `build.json`에 쓰고, 모든 서버는 애플리케이션을 열 때 id를 읽는다. `open`은 `build.json`이 없거나 build id를 가진 key `build` 하나만 담고 있지 않으면 그 절대 경로로 실패한다.",
-                  "koSource": "a6e034be3abc9a02262ce34ec4e1b936676c438b1b31b96e3fb35404ec260250"
+                  "id": "HY-125.23",
+                  "en": "It writes the id as `{\"build\":\"<build id>\"}` into `build.json` of `program/` only, and every server reads the id there when the application opens; `open` fails with the absolute path of a `build.json` that is missing or that does not hold exactly the key `build` with a build id.",
+                  "ko": "build는 id를 `{\"build\":\"<build id>\"}`로 `program/`의 `build.json`에만 쓰고, 모든 서버는 애플리케이션을 열 때 거기서 id를 읽는다. `open`은 `build.json`이 없거나 build id를 가진 key `build` 하나만 담고 있지 않으면 그 절대 경로로 실패한다.",
+                  "koSource": "8254d267962bdab8dde6d757185e3dc8f5765ee7f21fc68d966d663d147a9dd0"
                 },
                 {
                   "id": "HY-125.19",
