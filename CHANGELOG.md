@@ -5,7 +5,7 @@
 
 ## Unreleased
 
-- The PHP case runner reports the error of a failed open in a `contracts/functions.json` case that states no `openFails` (HYC-24, H34.6). Input: `a_document_renders_the_host_function`, whose `App::open` with the host function `shout` fails. Behaviour before: `FunctionsSteps` compared the absent fields `openFails` and `openError` and returned, so the case reported `CASE_EMPTY` without the error. Now: the case reports `CASE_ERROR` with the message of the error.
+- The PHP case runner reports the error of a failed open in a `contracts/functions.json` case that states no `openFails` (HYC-24, H34.6). Input: `a_document_renders_the_host_function`, whose `App::open` with the host function `shout` fails. Behaviour before: `FunctionsSteps` compared the absent fields `openFails` and `openError` and returned, so the case reported `CASE_EMPTY` without the error. Now: the case reports `CASE_ERROR` with the message of the error. The function of the kind `suffix` takes the environment of the render as its second parameter (HYC-24.10), because the template binding of 0.0.30 refuses a host function that takes fewer than its two arguments.
 
 - The test of the full set in `tests/scripts/test-inputs.test.mts` passes under a selection (HR-85, H34.5). Input: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. Behaviour before: make exports a command-line variable to the environment of a recipe, so the dry run of the full set read that `TESTS`, built only its inputs and held no cargo line, and the test failed. Expected: the dry run of the full set passes `TESTS=` and holds the cargo builds.
 

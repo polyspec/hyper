@@ -87,8 +87,11 @@ final class FunctionsSteps
                 throw new \LogicException("the kind {$kind} is not a functionKinds of the contract");
             }
             $functions[$name] = match ($kind) {
-                // FUN-43: a host function receives the argument list as host values.
-                'suffix' => static fn (array $arguments): string => Json::string($arguments[0] ?? null) . '!',
+                // FUN-43, HYC-24.10: a host function receives the argument list as host values and, as its second
+                // argument, the environment of the render; the template binding refuses a function that takes fewer.
+                'suffix' => static fn (array $arguments, mixed $environment): string => Json::string(
+                    $arguments[0] ?? null,
+                ) . '!',
                 'not_a_function' => 'x',
                 default => throw new \LogicException("the kind {$kind} of the contract is unknown"),
             };
