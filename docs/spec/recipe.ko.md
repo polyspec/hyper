@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 587b3fcca001c2082debe9619fb18698db9f8a70f170d13f2d59770cc09a53fa -->
+<!-- source-sha256: b480448ed1e6e1cb04ae393789490c438cea56d2d71a7f40abf392e94aa6e844 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -320,8 +320,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - HYR-7에 어긋나는 결과, case reader, step, registry, native test;
   - HYR-7에 어긋나는 section의 `members` 항목, 그리고 HYR-5에 따라 말해지지 않은 member.
 
-  실행할 때마다 먼저 reader의 mutation case를 실행하며, reader가 mutation을 통과시키면 실패한다. 통과한 실행은 HYR-5의
-  세 수를 출력한다.
+  실행은 저장소만 읽고 진행 상황을 표준 오류로 출력하며, 통과한 실행은 HYR-5의 세 수를 출력한다. reader의 mutation
+  case는 검사의 test이며 실행의 일부가 아니다. `tests/scripts/recipe-check.test.mts`가 각 mutation을 fixture의 사본에
+  적용하고, 검사가 mutation을 통과시키거나 fixture에 mutation이 없으면 실패한다.
 
 - **HYR-9 Analyzers.** 각 언어는 자기 analyzer도 실행한다: `make analyse-php`, `make typecheck`, `make hyper-lint`.
 

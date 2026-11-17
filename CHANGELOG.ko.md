@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 9ce8deea05f873ac64ff32605a928d563040f6dfcfa101b4fbe03bc33852c473 -->
+<!-- source-sha256: 6a09359177300bd69bdc7cee925d4ee02efda1a8ffb2609a9b58fa3bd7fcc891 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make recipe-compare`와 `make recipe-check`는 저장소를 읽기 전에 reader의 mutation case를 실행했다. `scripts/recipe/check.mts`가 `tests/scripts/fixtures/recipe/mutations.json`의 mutation 123개를 각각 fixture의 사본에 적용하고 mutation마다 reader 셋을 시작했으므로, 저장소의 모든 검사가 process를 369개 이상 더 시작하고 그동안 아무것도 출력하지 않았다. `tests/scripts/recipe-check.test.mts`는 이미 각 mutation을 자기 test로 실행한다. 이제 검사는 저장소만 읽고 표준 오류로 진행 한 줄을 출력한다. `scripts/recipe/selftest.mts`와 option `--no-selftest`는 지웠고, test는 fixture에 mutation이 없으면 실패하며(HR-84), `docs/spec/recipe.md`의 HYR-8은 mutation case가 검사의 test라고 적는다. 이 변경은 type 검사만 했고 실행하지 않았다(H35.16-9).
 - `packages/cli/lib/build.mjs`의 주석과 `packages/cli/README.md`는 Node 서버가 `client/templates.index.json`과 `client/build.json`을 읽는다고 적었다. Node 서버는 core로 열게 된 뒤로 `program/`을 읽는다. 이제 그 색인은 클라이언트 번들의 색인이고 `client/build.json`은 어떤 서버도 읽지 않는다고 적는다. 행 H35.32-1은 PHP 서버와 Python 서버만 읽는 `program/legacy/hyper/data.tpl`을 거기서 지운다고 적는다(H35.32-8).
 - HY-54.3을 retire하면서, 아직 성립하는 Node 서버의 차이 하나를 적는 statement가 없어졌다. `packages/ts/src/app/app.ts`의 `App`은 요청의 경로를 브라우저 코드의 `Router`로 match하고 매니페스트의 선언을 브라우저 코드의 `checkManifest`와 `keptPaths`로 읽는다. HY-54.23이 core가 요청을 routing할 때까지의 이 차이를 적는다. PHP와 Python만 가진 `contracts/interfaces.json`의 concern `browser-code`의 unit `manifest`, `region`, `router`는 HY-54.3 대신 이것을 인용한다. unit `reads`와 `renderer`는 아직 HY-54.3을 인용한다. PHP 서버와 Python 서버는 template library의 `Engine`과 `FsLoader`로 `program/templates`와 `program/legacy`를 렌더하고 읽기 경로를 직접 유지하는데, Node 서버가 core를 부르는 동안 두 서버가 이 unit을 가진다고 적는 statement는 없다. `make spec-docs`, `make spec-docs-check`, `make docs-check` 말고는 실행하지 않았다(H35.32-8).
 - `scripts/recipe/check.mts`는 끝날 때까지 아무것도 출력하지 않았다. 그 self test는 `tests/scripts/fixtures/recipe/mutations.json`의 mutation 123개를 각각 fixture의 사본에 적용하고, 저장소를 읽기 전에 mutation마다 PHP, Node, Python reader를 process 하나씩 차례로 시작하므로, `make recipe-compare`는 한 줄도 없이 3분 넘게 실행됐다. 이제 각 mutation 전과 reader가 저장소를 읽기 전에 표준 오류로 한 줄을 출력하며, 표준 출력은 여전히 finding만 담는다(HR-89). 이 변경은 type 검사만 했고 실행하지 않았다(H35.32-8).

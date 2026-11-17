@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 5be5afbc67cfbd2849a9120e87cfc87cca8aac4be0e3180d0546d12da459ed43 -->
+<!-- source-sha256: 63587be248975ccb5e6727fac7de8b442156fdac2e771b9363f00e2c98af406b -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -533,6 +533,7 @@
 | H35.16-6 | 각 CI 그룹은 그 job이 시작하는 도구를 설치한다. tests/scripts/ci-group-tools.test.mts는 그룹마다 setup 단계와 target을 dry run해, 그룹이 설치하지 않는 도구가 있으면 그룹, target, 도구를 대며 실패한다. 그룹 node는 rust를 적는다(0cc7bd09). 그룹 core의 `test-bindings`는 wasm-bindgen을 시작하는데 install-tools의 어떤 selector도 그것을 설치하지 않는다. 그 그룹의 setup은 `make release-recipes`로 packages/release.mk를 쓰고 그 안의 target install-wasm-bindgen을 부르며(binding generator가 그 release를 pin한다), 시험은 그 단계를 설치로 본다. 그룹 core가 지금 CI에서 어떻게 도는지는 lane의 다음 push가 보인다. | Makefile, tests/scripts | `make hyper-test-scripts` | [ ] |
 | H35.16-7 | `make -n recipe-check`는 실제 명령을 돌린다. 그 recipe 줄에 `$(MAKE)`와 `$(NODE) scripts/recipe/check.mts`가 함께 있고, make는 `$(MAKE)`를 이름하는 줄을 -n에서도 실행하므로, dry run으로 그 target을 읽는 시험이 check를 시작한다. recipe는 `$(MAKE)`를 자기 줄에만 두어, dry run이 다른 명령을 출력만 하고 돌리지 않는다. | Makefile, tests/scripts | `make hyper-test-scripts` | [ ] |
 | H35.16-8 | `make recipe-check`는 마지막 newline 없이 끝난 case runner의 출력을 newline으로 끝내고, 마지막 줄에 실패한 runner를 모두 이름한다(HR-84, HR-86). 그 check는 6d5c817c가 만든 한 make의 goal이 아니라 `$(call check,...)`를 거치는 runner와 비교의 명령이다. | Makefile, tests/scripts | `make hyper-test-scripts TESTS="tests/scripts/check-recipes.test.mts tests/scripts/make-recursion.test.mts"` | [ ] |
+| H35.16-9 | `make recipe-compare`와 `make recipe-check`는 저장소를 읽기 전에 reader의 mutation case를 실행한다. scripts/recipe/check.mts의 `selfTest`가 tests/scripts/fixtures/recipe/mutations.json의 mutation 123개를 각각 fixture의 사본에 적용하고 mutation마다 PHP, Node, Python reader를 시작하므로(process 369개 이상), 저장소의 모든 검사가 reader의 증명 비용을 치르고 그동안 아무것도 출력하지 않는다. tests/scripts/recipe-check.test.mts는 이미 각 mutation을 자기 test로 실행한다. 검사는 저장소만 읽고, mutation case는 그 test에서만 실행하며, 그 test는 파일에 mutation이 없으면 실패하고(HR-84), HYR-8이 이를 적는다. | scripts/recipe, tests/scripts, docs/spec/recipe.md | `make hyper-test-scripts TESTS="tests/scripts/recipe-check.test.mts"` | [ ] |
 | H35.17 | script 시험의 빠진 입력은 그것을 쓰는 target을 이름하고, install target을 돌리지 않는 `make hyper-test-scripts` 전에 그것을 돌리라고 말한다(HR-85, HR-89). | tests/scripts/requires.mts, tests/scripts/requires.test.mts, config/owner-checks.json | `make hyper-test-scripts` | [ ] |
 | H35.18 | 실패하는 test는 그 실패로 실행을 끝내고 process와 임시 directory를 남기지 않는다(HR-84, HR-87). worker가 실패한 session test는 시작한 process를 모두 멈추고 그 directory를 지운다. | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.19 | script 시험의 모든 기다림은 timer나 test runner의 시간 제한이 아니라 사건으로 끝난다(HR-89, HR-84). | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
