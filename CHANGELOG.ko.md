@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: bcc817345f9c44c1d5dbdd2ca4a7039542490f4e2566b8c335de72bfa63af032 -->
+<!-- source-sha256: e8c568362952b77d66e9a6bfc0be2541f82735a56a402b9457054d27891008d3 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-57.15는 `Content-Type`이 media type이 아닌 모든 요청에 상태 400을 주었고, HY-113.25는 실패하는 body를 가진 모든 요청에 loader가 실행되기 전에 그것을 주었다. HY-59.12는 content type의 400을 라우팅 뒤에, action이나 `/_hyper/keep`으로의 `POST`에 정한다. 이제 두 statement는 서버가 body를 읽는 요청을 말한다. http-form의 reader는 route가 정해진 뒤에만, action, `/_hyper/keep`, representation으로의 `POST`에 부르고, media type이 아닌 content type의 400은 HY-59.12의 400이며, 알 수 없는 경로로의 요청은 `Content-Type`이 무엇이든 404를 받고, `GET`은 `Content-Type`이나 body로 판정하지 않는다. row H35.11, `docs/plans/execution/plan.md`의 그 row의 입력, `docs/features.md`의 행 `form-failures`도 같은 것을 적으며, plan은 HY-59.12의 자리를 더는 열어 두지 않는다(H35.11).
 
 - checklist는 한 변경에 row 둘을 가졌다. 각 서버가 http-form과 http-cookie의 바인딩으로 요청의 body와 cookie를 읽는 H31.11, 그리고 http-form의 case를 따르는 form 읽기인 H35.11이다. 이제 H35.11이 둘을 가진다. core는 http-form의 crate에 의존해 form과 `Cookie` field를 읽고, 서버는 hyper의 바인딩을 부르며 자기 reader를 제거하고, case runner는 http-form의 case를 그 release asset에서 pin과 digest로 읽으며, `tests/legacy/fields.json`은 지운다. H31.11은 H35.11을 원인으로 철회했다. `docs/plans/execution/plan.md`는 그 row의 입력을 얻었다. form 읽기의 객체 표(이에 따라 `UploadedFile`은 core의 파일 위에 둔 hyper의 클래스로 남고 http-form의 언어 패키지는 의존성이 아니다), core가 http-cookie로 `Set-Cookie`를 쓰지만 `Cookie`는 그것으로 읽지 않는다는 확인, 답이 바뀌는 case 열넷이다. recipe에는 아직 어떤 runner도 통과하지 못하는 case의 형태가 없으므로 case는 `contracts/`에 추가하지 않고 거기에 적었다(H35.11).
 

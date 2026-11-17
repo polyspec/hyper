@@ -788,9 +788,9 @@
                 },
                 {
                   "id": "HY-57.15",
-                  "en": "A body whose `Content-Type` is no media type, such as `application/x-www-form-urlencoded` followed by a line feed, which is no whitespace of a media type (MT-1.3 of http-media-type), gives no form value and no file, because reading it fails with kind `malformed_content_type` of http-form (F-12), and its request receives status 400 as HY-42 does.",
-                  "ko": "`Content-Type`이 media type이 아닌 body, 예를 들어 line feed가 뒤따르는 `application/x-www-form-urlencoded`(line feed는 media type의 공백이 아니다, http-media-type의 MT-1.3)는 폼 값도 파일도 주지 않는다. 그것을 읽으면 http-form의 kind `malformed_content_type`으로 실패하기 때문이며(F-12), 그 요청은 HY-42처럼 상태 400을 받는다.",
-                  "koSource": "64d13a0487464dffc8dfc8104d1565a1068ab9306a87214781c1289eb0bafb6f"
+                  "en": "The server calls the reader of http-form for a body only after the route is decided and only where it reads the body, for a `POST` to an action, to `/_hyper/keep` or to a representation, and there a `Content-Type` that is no media type, such as `application/x-www-form-urlencoded` followed by a line feed, which is no whitespace of a media type (MT-1.3 of http-media-type), fails the reading with kind `malformed_content_type` of http-form (F-12) and is the status 400 of HY-59.12, so a request to an unknown path receives 404 whatever its `Content-Type`, and a `GET`, whose body is not read, is not judged by its `Content-Type`.",
+                  "ko": "서버는 route가 정해진 뒤에만, 그리고 body를 읽는 곳에서만 body에 http-form의 reader를 부른다. action, `/_hyper/keep`, representation으로의 `POST`가 그곳이다. 거기서 media type이 아닌 `Content-Type`, 예를 들어 line feed가 뒤따르는 `application/x-www-form-urlencoded`(line feed는 media type의 공백이 아니다, http-media-type의 MT-1.3)는 http-form의 kind `malformed_content_type`으로 읽기를 실패시키며(F-12) 이것이 HY-59.12의 상태 400이다. 그래서 알 수 없는 경로로의 요청은 `Content-Type`이 무엇이든 404를 받고, body를 읽지 않는 `GET`은 `Content-Type`으로 판정하지 않는다.",
+                  "koSource": "23e7292a2ebb8013cf2a9866835c636ceb3ee61800f47c41afd6a10486001de1"
                 }
               ]
             }
@@ -844,9 +844,9 @@
                 },
                 {
                   "id": "HY-113.25",
-                  "en": "A body that fails with kind `invalid`, `header_limit` or `no_boundary` of http-form fails as a whole, so that it gives no form value and no file (F-23.3), and its request receives status 400 as HY-42 does, before any loader or action runs.",
-                  "ko": "http-form의 kind `invalid`, `header_limit`, `no_boundary`로 실패하는 body는 전체가 실패하여 폼 값도 파일도 주지 않고(F-23.3), 그 요청은 loader나 action이 실행되기 전에 HY-42처럼 상태 400을 받는다.",
-                  "koSource": "fbd486b047a56fc5e38724ef05ab01acde18b092db67ac6465c88ad8abd174af"
+                  "en": "A body that fails with kind `invalid`, `header_limit` or `no_boundary` of http-form fails as a whole, so that it gives no form value and no file (F-23.3), and a request whose body the server reads (HY-57.15) then receives status 400 as HY-42 does and runs no action, while a request whose body is not read is not judged by its body.",
+                  "ko": "http-form의 kind `invalid`, `header_limit`, `no_boundary`로 실패하는 body는 전체가 실패하여 폼 값도 파일도 주지 않고(F-23.3), 서버가 body를 읽는 요청(HY-57.15)은 그때 HY-42처럼 상태 400을 받고 action을 실행하지 않으며, body를 읽지 않는 요청은 body로 판정하지 않는다.",
+                  "koSource": "44c1f3bb03a7c7f9c354e39f35cc84e3a001420f9196de14689cf201f42387ec"
                 },
                 {
                   "id": "HY-113.2",

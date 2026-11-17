@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: cbf7a31e9f094744fba83c162d7dd6d0b75aa764ede1e0fa196f591887a70fe4 -->
+<!-- source-sha256: f8b6c82c8b5042585a867edb7f60991b53a0a9c0a04b2e5eb6162e685bd081fa -->
 # 실행
 
 [English](plan.md).
@@ -280,7 +280,7 @@ form 읽기의 객체. http-form 열은 http-form 저장소의 `packages/rust/in
 
 그래서 hyper는 http-form을 http-cookie의 형태대로 core의 Cargo 의존성으로 받고, http-form의 npm 패키지, wheel, PHP extension은 필요하지 않다. row를 시작할 때 한 가지를 확인한다. binding의 generator 규칙 GN-3e는 `errors.kinds`의 행이 오류를 넘기는 라이브러리마다 Python 패키지의 manifest가 그 패키지를 적는다고 하는데, contract가 그렇게 오류를 넘기는 http-cookie의 패키지를 `packages/python/pyproject.toml`은 적지 않는다.
 
-답이 바뀌는 case. HY-113.23, HY-113.24, HY-113.25, HY-57.15, HY-131.30은 http-form의 `contracts/fields.json`의 case가 적는 답을 정하고, 세 case runner가 읽는 `tests/legacy/fields.json`은 그중 열넷에 다른 답을 적는다. recipe에는 명세되었으나 아직 어떤 runner도 통과하지 못하는 case의 형태가 없다(HYR-6은 차이를 요구하는 statement로만 case를 언어에 한정한다). 그래서 이 case들은 `contracts/`에 추가하지 않는다. 명세된 답을 적은 case는 core가 form을 읽을 때까지 세 runner에서 실패하기 때문이다. H35.11이 코드와 함께 추가한다. runner는 http-form의 case를 그 release asset에서 읽고, `contracts/request.json`은 section `values`에 열한 입력 각각에 대해 case `a_multipart_value_that_is_not_utf8_is_invalid_input`의 형태로 `valid: false`(HY-42.3)인 case 하나를 얻는다.
+답이 바뀌는 case. HY-113.23, HY-113.24, HY-113.25, HY-57.15, HY-131.30은 http-form의 `contracts/fields.json`의 case가 적는 답을 정하고, 세 case runner가 읽는 `tests/legacy/fields.json`은 그중 열넷에 다른 답을 적는다. recipe에는 명세되었으나 아직 어떤 runner도 통과하지 못하는 case의 형태가 없다(HYR-6은 차이를 요구하는 statement로만 case를 언어에 한정한다). 그래서 이 case들은 `contracts/`에 추가하지 않는다. 명세된 답을 적은 case는 core가 form을 읽을 때까지 세 runner에서 실패하기 때문이다. H35.11이 코드와 함께 추가한다. runner는 http-form의 case를 그 release asset에서 읽고, `contracts/request.json`은 section `values`에 `invalid`나 `no_boundary`로 실패하는 열 입력 각각에 대해 case `a_multipart_value_that_is_not_utf8_is_invalid_input`의 형태로 `valid: false`(HY-42.3)인 case 하나를 얻는다.
 
 group `multipart`의 열한 case. 행이 달리 적지 않으면 content type은 `multipart/form-data; boundary=XyZ`이고 body는 `--XyZ`와 `--XyZ--` 사이에 내용 `1`을 가진 part 하나다. 행은 그 part의 header 줄을 적는다.
 
@@ -308,4 +308,4 @@ group `streamed`의 세 case. body는 5 byte 조각으로 읽는 part 셋이다.
 
 두 파일의 다른 차이. 상태는 바꾸지 않는다. 파일을 옮기는 `streamed`의 다섯 case는 http-form에서 메시지 `the file was moved (F-11)`, `the path exists (F-11)`, `a path is not a string (F-11)`을 적고 고정 사본에서는 같은 텍스트를 `(HY-131)`로 적는다. hyper의 어떤 규칙도 이 실패의 메시지를 정하지 않으므로(HY-132.4), statement가 그것을 정할지는 H35.11이 결정한다. 이름이나 값이 UTF-8이 아닌 `urlencoded`의 세 case는 http-form에서 상태 400의 `invalid`를, 고정 사본에서 null 결과를 적으며 둘 다 HY-42.3의 400이다. http-form은 또 `multipart`의 `a_malformed_content_type_fails`, `fields.json`의 group `uploaded_file.move_to`, `uploaded_file.content`, `uploaded_file.move_to.stored`, `uploaded_file.content.stored`, `request_body.remove`, 그리고 `forms.json`을 가지며 고정 사본에는 이것들이 없다.
 
-HY-57.15가 case 밖에서 바꾸는 것. `Content-Type`이 media type이 아닌 요청은 body를 읽는 동안, 라우팅 전에 400을 받는다(HY-131.18). action으로의 `POST`가 아닌 요청도 그렇다. HY-59.12는 그 400을 라우팅 뒤로 정한다. HY-59.12의 첫 절이 순서에서 자리를 지키는지는 H35.11이 코드와 함께 결정한다. 그때 kind `malformed_content_type`은 http-form의 kind가 된다. `front::media_type`이 http-form의 `media_type`을 부르면 core의 variant `Error::MalformedContentType`과 HY-132.3 표의 행은 없어지고, HY-59.12와 HY-59.13은 HY-132.9 표의 행에 들어간다.
+http-form의 reader를 부르는 곳. HY-59.12는 그대로다. 요청은 먼저 라우팅되고, 서버는 body를 읽는 곳에서만 body에 reader를 부른다. action, `/_hyper/keep`, representation으로의 `POST`가 그곳이다(HY-57.15). media type이 아닌 `Content-Type`은 거기서만 HY-59.12의 400이다. 알 수 없는 경로로의 요청은 `Content-Type`이 무엇이든 404를 받고, body를 읽지 않는 `GET`은 `Content-Type`이나 body로 판정하지 않는다(HY-113.25). 그래서 line feed가 뒤따르는 urlencoded type의 case는 `valid: false`의 `contracts/request.json`이 아니라, 400을 받는 action으로의 `POST`로 `contracts/app.json`에 들어간다. 그때 kind `malformed_content_type`은 http-form의 kind가 된다. `front::media_type`이 http-form의 `media_type`을 부르면 core의 variant `Error::MalformedContentType`과 HY-132.3 표의 행은 없어지고, HY-59.12와 HY-59.13은 HY-132.9 표의 행에 들어간다.
