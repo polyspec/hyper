@@ -54,6 +54,7 @@ _MEMBERS = (
     "kept_of",
     "kept_cookie",
     "accept_ranges",
+    "file_over",
 )
 
 
@@ -142,6 +143,12 @@ class CoreRules:
         """Request.media_type: rules.media_type of the value of Content-Type (HY-59.13), which raises the kind
         `malformed_content_type` (status 400) for a value that is no media type."""
         return self._core.media_type(content_type)
+
+    def request_file_over(self, sizes: list[int], limit: int) -> bool:
+        """Request.file_over: rules.file_over of the bytes of each file of the body and the limit (HY-114.12). The
+        binding raises the kind `invalid_number` for a limit that is no unsigned integer, before the core compares
+        the files."""
+        return self._core.file_over(sizes, limit)
 
     def request_current_path(self, header: Optional[str]) -> Optional[str]:
         """Request.current_path: rules.current_path of the value of HX-Current-URL (HY-11.5)."""

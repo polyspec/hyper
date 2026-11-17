@@ -19,8 +19,13 @@ export class Files extends NamedValues<UploadedFile> {
     return Multipart.read(body, boundary)?.[1] ?? null;
   }
 
+  // Returns the size in bytes of each file, in the order of the pairs (HY-114).
+  sizes(): number[] {
+    return this.pairs().flatMap(([, files]) => files.map((file) => file.size()));
+  }
+
   // Returns the size in bytes of the largest file, or 0 when there is none (HY-114).
   largest(): number {
-    return Math.max(0, ...this.pairs().flatMap(([, files]) => files.map((file) => file.size())));
+    return Math.max(0, ...this.sizes());
   }
 }

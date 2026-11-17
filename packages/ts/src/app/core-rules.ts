@@ -212,6 +212,7 @@ export interface CoreBinding {
   keptOf(stored: unknown): JsonValue;
   keptCookie(text: string): JsonValue;
   acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];
+  fileOver(sizes: Iterable<number>, limit: number): boolean;
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
   computePageHeaders(response: PageResponse): PageHeaders;
   frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];
@@ -236,7 +237,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
 
 // A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
@@ -301,6 +302,9 @@ export interface CoreRules {
   // requestMediaType: rules.media_type of the value of Content-Type (HY-59.13), which throws the kind
   // `malformed_content_type` (status 400) for a value that is no media type.
   requestMediaType(contentType: string): string;
+  // requestFileOver: rules.file_over of the bytes of each file of the body and the limit (HY-114.12). The binding
+  // throws the kind `invalid_number` for a limit that is no unsigned integer, before the core compares the files.
+  requestFileOver(sizes: readonly number[], limit: number): boolean;
   // requestCurrentPath: rules.current_path of the value of HX-Current-URL (HY-11.5).
   requestCurrentPath(header: string | null): string | null;
   // replyCacheControl: rules.cache_control gives the value that the reply keeps (HY-52.6).
@@ -441,6 +445,7 @@ export function coreRules(module: object): CoreRules {
     sessionCookieHeader: (id, secure) => core.sessionCookie(id, secure),
     representationEtag: (contentType, body) => core.representationTag(contentType, encoder.encode(body)),
     requestMediaType: (contentType) => core.mediaType(contentType),
+    requestFileOver: (sizes, limit) => core.fileOver(sizes, limit),
     requestCurrentPath: (header) => core.currentPath(header),
     replyCacheControl: (value) => core.cacheControl(value),
     replyReferrerPolicy: (value) => core.referrerPolicy(value),

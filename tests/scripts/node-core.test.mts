@@ -111,6 +111,7 @@ const EXACT: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[
   ['Context.hash (HY-125.12)', 'contextHash', (rules) => rules.contextHash('build', '{}'), ['build', '{}'], 'hash'],
   ['Context.validHeader (HY-127.2)', 'validContextHeader', (rules) => rules.contextValidHeader(null), [null], true],
   ['JsonCodec.encode (HY-54.18)', 'jsonWrite', (rules) => rules.jsonCodecEncode(FLASH), [FLASH], '{"values":{},"changed":[]}'],
+  ['Request.fileOver (HY-114.12)', 'fileOver', (rules) => rules.requestFileOver([3, 9], 8), [[3, 9], 8], true],
   ['Session.flashOf (HY-25.2)', 'flashOf', (rules) => rules.sessionFlashOf(STORED), [STORED], FLASH],
   ['Session.keptOf (HY-104.22)', 'keptOf', (rules) => rules.sessionKeptOf(STORED), [STORED], KEPT],
   ['Page.keptCookie (HY-38.2)', 'keptCookie', (rules) => rules.pageKeptCookie('{"rows":{"open":true}}'), ['{"rows":{"open":true}}'], KEPT],

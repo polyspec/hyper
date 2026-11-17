@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: c7369ad034fe7ccc8ec0d03f699e837ba2286ba09ca558ae109ff9780ccccb2e -->
+<!-- source-sha256: 01fe5bce9e0e23d3849fb36ddf192ce8e3b756fd2863ffc7c54fd32293927181 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 부호 없는 정수가 아닌 limit(예: -1)로 `Request.fileOver(limit)`를 호출하면, Node 서버와 Python 서버는 파일을 limit와 비교해 boolean을 반환했고, PHP 서버는 자체 검사로 limit를 거절했다. 이제 각 서버는 body의 각 파일 byte 수와 limit로 Rust core의 member `rules.file_over`를 호출하므로, 호출은 파일을 비교하기 전에 binding의 kind `invalid_number`로 실패하고, 비교는 core가 한다(HY-114.12, HY-132.2, H35.31-2-1).
 - `tests/scripts/cargo-through-kit.test.mts`는 recipe 줄 `binding generate --cargo "$(CARGO)"`를 kit의 link script를 거치지 않는 cargo 명령으로 읽어 실패했다. 이제 테스트는 옵션 `--cargo "<명령>"`의 값을 cargo 명령과 구별해 읽는다. 값은 link script 명령이어야 하고 Makefile에서는 `$(CARGO)`여야 하며, cargo 명령은 이전과 같이 link script를 거쳐야 한다. cargo를 직접 시작하는 줄, 값이 다른 명령인 옵션, 값이 큰따옴표 안에 없는 옵션은 거부되며, 두 테스트가 이를 예로 서술한다(H35.31-4).
 - `tests/scripts/node-core.test.mts`: Node binding의 stand-in이 `jsonRead`, `jsonWrite`, `flashOf`, `keptOf`, `keptCookie`, `acceptRanges`, `HyperValueError`, `HyperTypeError`가 없는 고정 목록을 가지고 있어 `coreRules`가 stand-in을 거부했고, 43개 테스트 중 42개가 실패했다. 이제 stand-in은 `coreRules({})`의 실패가 이름을 밝히는 모든 member를 가지며, 필수 member 중 이 파일의 어떤 테스트도 호출하지 않는 member가 있으면 한 테스트가 그 이름과 함께 실패한다. `jsonCodecDecode`, `jsonCodecEncode`, `sessionFlashOf`, `sessionKeptOf`, `pageKeptCookie`, `acceptParse`, `valueError`, `typeError` 단위에 테스트가 있다(H35.31-6).
 - Node case runner에서 `restored`를 확인하는 step(HY-74.4)은 요청 뒤에 경고 `outside`를 내고 process가 처음 전달한 경고를 읽었다. `node:ffi`의 `ExperimentalWarning`처럼 process가 먼저 낸 경고가 아직 전달되지 않았으면 그 경고가 먼저 도착했고, 서버가 오류를 내지 않고 경고를 전달했는데도 `contracts/app.json`의 case `a_warning_of_the_runtime_during_a_request_fails_it_and_a_warning_outside_is_raised_as_before`가 `FIELD_DIFFERS restored`로 실패했다. 이제 step은 자신이 낸 경고를 기다리고 다른 경고는 지나친다. 경고를 내는 호출이 오류를 내면 false를 보고한다(H35.9-8).

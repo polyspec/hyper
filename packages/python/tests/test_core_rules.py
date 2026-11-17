@@ -134,6 +134,13 @@ EXACT = [
         "text/plain",
     ),
     (
+        "Request.file_over (HY-114.12)",
+        "file_over",
+        lambda rules: rules.request_file_over([3, 9], 8),
+        ([3, 9], 8),
+        True,
+    ),
+    (
         "Request.current_path (HY-11.5)",
         "current_path",
         lambda rules: rules.request_current_path("http://a.test/b?c"),
@@ -274,8 +281,8 @@ class CoreRulesTest(unittest.TestCase):
                 self.assertEqual(call(CoreRules(core)), result)
                 self.assertEqual(calls, [(name, args)])
 
-    def test_there_are_nineteen_exact_units(self):
-        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 19)
+    def test_there_are_twenty_exact_units(self):
+        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 20)
 
     def test_the_frame_headers_are_a_record_in_the_order_of_the_core(self):
         # HY-45.5, HY-65.1
