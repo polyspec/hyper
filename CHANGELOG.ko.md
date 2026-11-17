@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: e8eeecd4d74c4fac3893cb28c752fdb8f8ec5f0676cb943ae6cb18d63450639b -->
+<!-- source-sha256: 277e44b526ab2a406c87148342bfeb5731a8cccd56fc46aff596cf5df4b49b6a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- 행 H35.38은 이제 Green 전에 남은 것을 적는다. `contracts/interfaces.json`에서 제거된 session 코드의 unit은 recipe 도구로 다시 쓴다. 아직 어떤 생성 파일에도 없는 binding 이름은 `make bindings` 뒤에 대조한다. Redis store의 certificate authority는 session-store 0.0.5의 `authorities`를 기다린다. 행 H35.38-1을 새로 추가한다: store의 host 호출을 core member 뒤로 옮기고, 손 변환은 binding B2.489 뒤에 제거한다. 행 H35.40-2를 새로 추가한다: protocol schema에서 표시 `unimplemented`의 서버별 형태다.
 
 - Node와 Python의 `RedisSessions`는 session을 session-store 라이브러리 0.0.4의 Redis store에 둔다. 이 store는 자기 연결을 유지한다(HY-115.3, HY-115.5, HY-115.17, HY-115.26). 애플리케이션은 호출을 바꾼다. client의 command 함수는 없어졌고, store는 연결 설정을 받는다: 서버 URL(`redis://` 또는 `rediss://`, user 정보에 ACL 사용자), Sentinel(`urls`, `service`, `tls`, `user`, `password`), cluster(`urls`). Node는 `{ setting, lockExpire, lifetime?, prefix?, lockRetries?, lockWait? }`를 받는다. Python은 `RedisSessions(SettingServer(url=...), lock_expire=...)`를 받고, `SettingServer` 대신 `SettingSentinel`이나 `SettingCluster`를 줄 수 있으며, 셋 모두 `polyspec.hyper`가 export한다. `lockExpire`는 기본값이 없는 필수 값이다(HY-115.28). `lockWait`는 phpredis처럼 마이크로초 단위이고 기본값은 20000이다. 전에는 Node에서 밀리초, Python에서 초였다(HY-115.29). store가 session이 있는 요청마다 Sentinel에 primary를 묻으므로 Python option `setup`은 없어졌다. Node와 Python에서 `SessionLockError`도 없어졌다. 시도가 끝난 lock은 kind `lock_timeout`으로, 잃은 lock은 `lock_lost`로, busy category의 hyper 오류로 실패한다. 값은 core의 변환으로 쓰므로 음의 0은 `i:0`이고(HY-104.39), record는 php-serialization으로 읽고 쓴다(HY-104.2). 설정은 certificate authority 파일을 받지 않으므로, 사설 기관이 인증서에 서명한 Redis 서버에는 Node와 Python이 닿을 수 없다. 메모리 안의 Redis 서버에 대해 실행되던 `tests/legacy/redis-sessions.json`과 그 step은 `packages/python/tests/test_redis_sessions.py`와 함께 폐기한다. 그 case는 라이브러리가 가진다. `tests/scripts`의 session worker, board 예제, `docs/operations/deployment.md`, Python README, arguments case가 새 형태를 따른다. 이제 PHP 서버만 session 실패를 kind 없이 발생시키므로, HY-132.1과 HY-132.3은 행 H35.37의 표시를 가진다. 작성만 했고 실행하지 않았다.
 
