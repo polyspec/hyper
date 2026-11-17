@@ -1,5 +1,5 @@
 <!-- doc-id: protocol -->
-<!-- source-sha256: 0a9e03d3d49a2362296cac7a72849eefaf6e9e52cc688746f6322bbee5d085d7 -->
+<!-- source-sha256: 20f33d3dc59473019898f39b5b88a6182d930914117d666bd9222acd084da9cf -->
 # 영역 프로토콜
 
 <!-- contracts/protocol.json에서 생성됨. 직접 수정하지 않는다. -->
@@ -296,11 +296,11 @@
 
 - **HY-43** <a id="HY-43.1"></a> 애플리케이션이 처리하지 않은 예외는 텍스트 `Internal Server Error`와 함께 상태 500을 만든다. <a id="HY-43.2"></a> 응답에는 예외 메시지, 파일 경로, 스택 트레이스가 없으며, 서버는 그것을 로그에 쓴다. <a id="HY-43.3"></a> PHP 설정 `display_errors`는 PHP가 요청을 시작하기 전에 꺼져 있어야 하는데, PHP는 애플리케이션이 실행되기 전에 시작 경고(예: `max_input_vars`)를 쓰기 때문이다. <a id="HY-43.4"></a> 로그는 PHP 서버에서 `error_log`, Python 서버에서 표준 오류이고, Node 서버에서는 `App.open`의 함수 `log`이며 애플리케이션이 주지 않으면 표준 오류에 쓴다. <a id="HY-43.5"></a> 처리되지 않은 오류에 대해 서버가 로그에 주는 text는 `hyper: `로 시작하고 그 오류의 message를 포함한다. 줄의 나머지는 런타임의 형식이다. <a id="HY-43.6"></a> `Exception`이 아닌 Python 예외(`SystemExit`, `KeyboardInterrupt`, `GeneratorExit` 등)는 프로세스나 task를 끝내며 애플리케이션의 오류가 아니다. Python 서버는 요청의 session을 닫고 그 예외를 호출자에게 그대로 넘기며, 그 예외에 대해 응답도 로그 줄도 쓰지 않고 어떤 hook도 호출하지 않는다.
 
-- **HY-74** <a id="HY-74.1"></a> 서버가 요청에 응답하는 동안 그 서버의 런타임이 발생시키는 경고는 오류가 되며, 그 요청은 HY-43으로 실패한다. <a id="HY-74.2"></a> 그렇지 않으면 런타임은 계속 실행되고, 메시지는 로그나 출력에만 전달되는 반면 서버는 잘못된 page를 상태 200으로 보내게 된다. <a id="HY-74.3"></a> 표현식이 억제한 오류는 억제된 상태로 남는다. <a id="HY-74.4"></a> 서버는 자기 처리를 요청에 대해서만 설치하고, 그 뒤에 이전 처리를 복원한다.
+- **HY-74** <a id="HY-74.8"></a> 서버가 요청에 응답하는 동안 그 서버의 런타임이 발생시키는 경고는 오류가 되며, 그 요청은 HY-43으로 실패한다; 유일한 예외는 HY-74.9의 load다. <a id="HY-74.9"></a> 서버가 자기 module을 load하는 호출은 이 처리 밖에서 실행되므로, 런타임이 그 load에 대해 한 번 발생시키는 경고는 어떤 요청도 실패시키지 않는다; 요청의 그 밖의 어떤 것도 이 처리 밖에서 실행되지 않는다. <a id="HY-74.2"></a> 그렇지 않으면 런타임은 계속 실행되고, 메시지는 로그나 출력에만 전달되는 반면 서버는 잘못된 page를 상태 200으로 보내게 된다. <a id="HY-74.3"></a> 표현식이 억제한 오류는 억제된 상태로 남는다. <a id="HY-74.4"></a> 서버는 자기 처리를 요청에 대해서만 설치하고, 그 뒤에 이전 처리를 복원한다.
 
   - <a id="HY-74.5"></a> PHP: 정의되지 않은 변수, 정의되지 않은 배열 키, 잘못된 인자처럼 PHP가 발생시키는 모든 경고, 알림, 폐기 예정 알림은 오류 handler를 통해 예외가 된다; `@`가 억제한 오류는 `error_reporting()`에 들어 있지 않고 억제된 상태로 남는다.
   - <a id="HY-74.6"></a> Python: 요청에 응답하는 동안 발생하는 `warnings` 모듈의 모든 경고(예: `DeprecationWarning`, `RuntimeWarning`)는 예외로 발생한다: 요청이 진행되는 동안 필터 `error`가 설정된다.
-  - <a id="HY-74.7"></a> Node: 요청에 응답하는 동안 `process.emitWarning`으로 발생한 경고는 호출한 곳에서 그 오류를 던진다.
+  - <a id="HY-74.10"></a> Node: 요청에 응답하는 동안 `process.emitWarning`으로 발생한 경고는 호출한 곳에서 그 오류를 던진다; file session이 `node:ffi`를 load하는 것은 HY-74.9의 호출이며, 그 ExperimentalWarning은 요청 밖에서처럼 전달된다.
 
 - **HY-44** <a id="HY-44.1"></a> 공유 데이터와 영역 데이터는 template 데이터 모델의 값이다. <a id="HY-44.2"></a> ±(2^53 − 1) 밖의 수는 정수든 아니든 HY-43으로 실패하며, 문서든 JSON이든 마찬가지다. <a id="HY-44.3"></a> 서버는 템플릿이 읽지 않는 값을 제거(HY-73)하기 전에 context handler(HY-124), 공유 데이터 핸들러, 모든 로더가 돌려준 모든 값을 검사하므로, 데이터 모델 밖의 값은 어떤 템플릿도 읽지 않아도 실패한다. <a id="HY-44.4"></a> context handler(HY-124), 공유 데이터 핸들러, 모든 로더는 맵을 돌려준다: PHP에서는 비어 있거나 목록이 아닌 배열이고, Python에서는 `dict`이며, Node에서는 context handler가 `Map`이고 공유 데이터 핸들러와 모든 로더는 일반 객체나 `Map`이다. <a id="HY-44.5"></a> 목록 같은 다른 값은 HY-43으로 실패한다. <a id="HY-44.6"></a> 검사는 template 데이터 모델의 host binding(VAL-13, VAL-14)에 이어, 바인딩된 값에 native object가 없는지 확인하는 것(VAL-19)이다: binding이 데이터 모델의 값으로 바꾸는 값(예: PHP `stdClass`나 `JsonSerializable`, Node 일반 객체)은 통과하고, binding이 native object로 두는 애플리케이션 객체(예: PHP `DateTimeImmutable`, Node `Date`, Python `datetime`)는 모든 서버에서 HY-43으로 실패한다. <a id="HY-44.7"></a> JSON 응답은 요청의 매개변수만 다시 검사하는데, 이 검사가 공유 데이터와 영역 데이터를 이미 다뤘고 kept 값은 데이터 모델의 값일 때만 응답에 들어가기 때문이다(HY-38). <a id="HY-44.9"></a> 데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며, hyper는 그 kind(`data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`, `data_unsupported_type` 등)와 message를 그대로 넘긴다(VAL-2, VAL-3, VAL-13, VAL-20).
 

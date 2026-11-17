@@ -26,7 +26,7 @@ export function exclusiveLock(): (descriptor: number) => boolean {
   const platform = PLATFORMS[process.platform];
   if (platform === undefined) throw new Error(`hyper: file sessions need flock, which the platform ${process.platform} does not name`);
   // The first load of node:ffi in a process emits an ExperimentalWarning. The load is the server's own, and only an
-  // application that constructs FileSessions causes it, so it runs outside of the warnings guard of a request (HY-74):
+  // application that constructs FileSessions causes it, so it runs outside of the warnings guard of a request (HY-74.9):
   // an application that constructs its first FileSessions while a request is answered gets the warning as at any other
   // time, and the request is answered.
   const ffi: unknown = WarningsGuard.outside(() => process.getBuiltinModule('node:ffi'));

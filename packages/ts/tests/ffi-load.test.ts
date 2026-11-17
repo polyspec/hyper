@@ -4,15 +4,16 @@
 // load is the server's own, so it runs outside of the guard also when the application constructs its first
 // FileSessions while a request is answered.
 import { execFile } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, expect, it } from 'vitest';
 import { FIXTURES, TEMPLATES } from './support.js';
 
 const DIST = fileURLToPath(new URL('../dist/index.js', import.meta.url));
+const SOURCES = fileURLToPath(new URL('../src/', import.meta.url));
 const IDENTIFIER = 'a'.repeat(32);
 
 // A server process of its own: the warning is emitted once per process, so the process of the test runner, in which
@@ -96,10 +97,22 @@ it('loads node:ffi before the server answers, so the first request that locks a 
   expect(JSON.parse(stdout)).toEqual(['ExperimentalWarning: FFI is an experimental feature and might change at any time', 'listening', 'answered 200']);
 });
 
+it('runs nothing but the load of node:ffi outside of the warnings guard (HY-74.9)', () => {
+  // Every call of WarningsGuard.outside in the sources of the package, as its file and its line text.
+  const calls = readdirSync(SOURCES, { recursive: true, encoding: 'utf8' })
+    .filter((file) => file.endsWith('.ts'))
+    .sort()
+    .flatMap((file) => readFileSync(join(SOURCES, file), 'utf8').split('\n').filter((line) => /\bWarningsGuard\s*\.\s*outside\b/.test(line)).map((line) => [file.split(sep).join('/'), line.trim()]));
+  expect(calls).toEqual([['session/flock.ts', "const ffi: unknown = WarningsGuard.outside(() => process.getBuiltinModule('node:ffi'));"]]);
+  // The guard is no interface of an application: the entry of the package does not export it.
+  expect(readFileSync(join(SOURCES, 'index.ts'), 'utf8')).not.toMatch(/warnings-guard|WarningsGuard/);
+});
+
 it('answers the request in which the application constructs its first FileSessions, and still fails a request for a warning of the application (HY-74, HY-104)', async () => {
   const { stdout } = await promisify(execFile)(process.execPath, ['--input-type=module', '-e', HANDLER, directory, `${FIXTURES}app.json`, `${FIXTURES}build.json`, TEMPLATES.index, TEMPLATES.root]);
   // The warning of the server's own load of node:ffi is delivered as a warning and the request is answered; the
-  // warning that the application emits in the third request is thrown at its call and the request fails (HY-74.7).
+  // warning that the application emits in the third request is thrown at its call and the request fails (HY-74.9,
+  // HY-74.10).
   expect(JSON.parse(stdout)).toEqual([
     'listening',
     'ExperimentalWarning: FFI is an experimental feature and might change at any time',

@@ -4784,16 +4784,25 @@
         {
           "kind": "rule",
           "id": "HY-74",
-          "retired": [],
+          "retired": [
+            1,
+            7
+          ],
           "blocks": [
             {
               "kind": "paragraph",
               "statements": [
                 {
-                  "id": "HY-74.1",
-                  "en": "While a server answers a request, a warning that its runtime raises becomes an error, and the request fails with HY-43.",
-                  "ko": "서버가 요청에 응답하는 동안 그 서버의 런타임이 발생시키는 경고는 오류가 되며, 그 요청은 HY-43으로 실패한다.",
-                  "koSource": "c839b8b5ea04ac5119fdacf7561d9c15b69e601ad527b1b9523d2d31a50649d5"
+                  "id": "HY-74.8",
+                  "en": "While a server answers a request, a warning that its runtime raises becomes an error, and the request fails with HY-43; the one exception is the load of HY-74.9.",
+                  "ko": "서버가 요청에 응답하는 동안 그 서버의 런타임이 발생시키는 경고는 오류가 되며, 그 요청은 HY-43으로 실패한다; 유일한 예외는 HY-74.9의 load다.",
+                  "koSource": "55cbccf6e5805afe20b5f1d18441d85c4cbd056721a4586ee6bc0b3385285370"
+                },
+                {
+                  "id": "HY-74.9",
+                  "en": "The call by which a server loads a module of its own runs outside of this handling, so the warning that the runtime raises once for that load fails no request; nothing else of a request runs outside of it.",
+                  "ko": "서버가 자기 module을 load하는 호출은 이 처리 밖에서 실행되므로, 런타임이 그 load에 대해 한 번 발생시키는 경고는 어떤 요청도 실패시키지 않는다; 요청의 그 밖의 어떤 것도 이 처리 밖에서 실행되지 않는다.",
+                  "koSource": "2e90c826da80567b9e6f1fc56035bfe192851d4f35b4887a106ad19f864cd850"
                 },
                 {
                   "id": "HY-74.2",
@@ -4844,10 +4853,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-74.7",
-                      "en": "Node: a warning that is emitted with `process.emitWarning` while a request is answered throws its error at the call.",
-                      "ko": "Node: 요청에 응답하는 동안 `process.emitWarning`으로 발생한 경고는 호출한 곳에서 그 오류를 던진다.",
-                      "koSource": "af5b7170cb6e4331c1a4ce2e8e7f65aebfcb14fce62d2eecdd6c2d3defb48f31"
+                      "id": "HY-74.10",
+                      "en": "Node: a warning that is emitted with `process.emitWarning` while a request is answered throws its error at the call; the load of `node:ffi` by the file sessions is the call of HY-74.9, whose ExperimentalWarning is emitted as outside of a request.",
+                      "ko": "Node: 요청에 응답하는 동안 `process.emitWarning`으로 발생한 경고는 호출한 곳에서 그 오류를 던진다; file session이 `node:ffi`를 load하는 것은 HY-74.9의 호출이며, 그 ExperimentalWarning은 요청 밖에서처럼 전달된다.",
+                      "koSource": "ed255f92249a087689fc6a61cd02a3ad97b43d3bbad4f0a3f254fd1204fb5f47"
                     }
                   ],
                   "blocks": []

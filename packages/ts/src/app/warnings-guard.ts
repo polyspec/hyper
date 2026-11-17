@@ -24,8 +24,9 @@ export class WarningsGuard {
 
   // Runs `work` of the server's own code with the handling of the time outside of the requests, also when a request
   // called it: a warning that the runtime emits for a module that the server itself loads on its first use is no
-  // warning of the answer, so it is emitted as before and does not fail the request. The work is synchronous, so
-  // nothing of the application runs in it.
+  // warning of the answer, so it is emitted as before and does not fail the request (HY-74.9). The work is
+  // synchronous, so nothing of the application runs in it. Its one caller is the load of node:ffi of the file
+  // sessions (HY-74.10), which packages/ts/tests/ffi-load.test.ts checks.
   static outside<T>(work: () => T): T {
     return answering.exit(work);
   }
