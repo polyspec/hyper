@@ -60,7 +60,7 @@ export function checkOptions(args) {
 /**
  * The options of `hyper build`: the application, the output directory, the data base path of the static shell, the
  * assets of --asset and --tailwind by their names (HYC-16.13) and the files of --static. The option --php-namespace of
- * earlier releases is refused by its name with the repair (HY-48.19), since an unknown option alone does not say that
+ * earlier releases is refused by its name with the repair (HY-48.20), since an unknown option alone does not say that
  * its value is to be removed with it.
  */
 export function buildOptions(args) {

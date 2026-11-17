@@ -1216,6 +1216,38 @@
           "core": "polyspec_hyper::client_rendering::check_shell_path"
         },
         {
+          "id": "rules.check_function_entry",
+          "name": [
+            "check",
+            "function",
+            "entry"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "name"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "callable"
+              ],
+              "type": "bool",
+              "required": true
+            }
+          ],
+          "returns": "none",
+          "raises": [
+            "polyspec_hyper::ErrorCode::InvalidApplication"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::render::check_function_entry"
+        },
+        {
           "id": "rules.shell_text",
           "name": [
             "shell",
@@ -2314,6 +2346,36 @@
       ]
     },
     {
+      "id": "document_parts",
+      "name": [
+        "document",
+        "parts"
+      ],
+      "module": "",
+      "kind": "record",
+      "visibility": "internal",
+      "origin": "generated",
+      "core_type": "polyspec_hyper::steps::DocumentParts",
+      "fields": [
+        {
+          "name": [
+            "title"
+          ],
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": [
+            "regions"
+          ],
+          "type": {
+            "map": "text"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
       "id": "pages",
       "name": [
         "pages"
@@ -2425,6 +2487,196 @@
             "path": "polyspec_hyper::steps::Pages::register",
             "receiver": "&mut self"
           }
+        },
+        {
+          "id": "pages.render_document",
+          "name": [
+            "render",
+            "document"
+          ],
+          "kind": "method",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "route"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "shared"
+              ],
+              "type": {
+                "map": "template_value"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "regions"
+              ],
+              "type": {
+                "map": {
+                  "map": "template_value"
+                }
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "now"
+              ],
+              "type": "float",
+              "required": true
+            }
+          ],
+          "returns": "text",
+          "raises": [
+            "polyspec_hyper::ErrorCode::Internal",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LexInvalidUtf8",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnterminatedTag",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnterminatedComment",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnterminatedString",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnexpectedToken",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidNumber",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidEscape",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnexpectedClose",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnclosedBlock",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseElseOutsideBlock",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseDuplicateElse",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseElseifAfterElse",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseElseifNotInIf",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseReservedName",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidPath",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidBlockTag",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidWrapper",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidDirective",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadNotFound",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadCycle",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadOutsideRoot",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberRange",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberNotFinite",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataInvalidUtf8",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataUnsupportedType",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataDepth",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeType",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeCompare",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeDivZero",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeStringify",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeUnknownFunction",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeArity",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeHostFunction",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeUnknownLoop",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeBlockUndefined",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeBlockRedefined",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeDepth",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeLimit",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::Internal"
+          ],
+          "wait": "none",
+          "core": {
+            "path": "polyspec_hyper::steps::Pages::render_document",
+            "receiver": "&self",
+            "failure": true
+          }
+        },
+        {
+          "id": "pages.render_parts",
+          "name": [
+            "render",
+            "parts"
+          ],
+          "kind": "method",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "route"
+              ],
+              "type": "text",
+              "required": true
+            },
+            {
+              "name": [
+                "shared"
+              ],
+              "type": {
+                "map": "template_value"
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "regions"
+              ],
+              "type": {
+                "map": {
+                  "map": "template_value"
+                }
+              },
+              "required": true
+            },
+            {
+              "name": [
+                "now"
+              ],
+              "type": "float",
+              "required": true
+            }
+          ],
+          "returns": {
+            "unit": "document_parts"
+          },
+          "raises": [
+            "polyspec_hyper::ErrorCode::Internal",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LexInvalidUtf8",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnterminatedTag",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnterminatedComment",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnterminatedString",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnexpectedToken",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidNumber",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidEscape",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnexpectedClose",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseUnclosedBlock",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseElseOutsideBlock",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseDuplicateElse",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseElseifAfterElse",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseElseifNotInIf",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseReservedName",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidPath",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidBlockTag",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidWrapper",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::ParseInvalidDirective",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadNotFound",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadCycle",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::LoadOutsideRoot",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberRange",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberNotFinite",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataInvalidUtf8",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataUnsupportedType",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataDepth",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeType",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeCompare",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeDivZero",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeStringify",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeUnknownFunction",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeArity",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeHostFunction",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeUnknownLoop",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeBlockUndefined",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeBlockRedefined",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeDepth",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::RuntimeLimit",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::Internal"
+          ],
+          "wait": "none",
+          "core": {
+            "path": "polyspec_hyper::steps::Pages::render_parts",
+            "receiver": "&self",
+            "failure": true
+          }
         }
       ]
     },
@@ -2519,17 +2771,6 @@
           ],
           "type": {
             "list": "text"
-          },
-          "required": true
-        },
-        {
-          "name": [
-            "stored"
-          ],
-          "type": {
-            "map": {
-              "map": "template_value"
-            }
           },
           "required": true
         },
@@ -2705,6 +2946,18 @@
                 "unit": "action_outcome"
               },
               "required": true
+            },
+            {
+              "name": [
+                "csrf"
+              ],
+              "type": {
+                "optional": "text"
+              },
+              "default": {
+                "literal": null
+              },
+              "reason": "HY-72.3"
             }
           ]
         },
@@ -2766,6 +3019,17 @@
                 "embeds"
               ],
               "type": "bool",
+              "required": true
+            },
+            {
+              "name": [
+                "stored"
+              ],
+              "type": {
+                "map": {
+                  "map": "template_value"
+                }
+              },
               "required": true
             },
             {
@@ -4186,6 +4450,26 @@
       "member": "opening_functions.open_page",
       "file": "packages/rust/tests/cases/faults.json",
       "group": "session"
+    },
+    {
+      "member": "front_functions.route_request",
+      "file": "packages/rust/tests/cases/members.json",
+      "group": "route"
+    },
+    {
+      "member": "front_functions.kept_value",
+      "file": "packages/rust/tests/cases/members.json",
+      "group": "kept"
+    },
+    {
+      "member": "opening_functions.answer_keep_request",
+      "file": "packages/rust/tests/cases/members.json",
+      "group": "keep"
+    },
+    {
+      "member": "page_request.new",
+      "file": "packages/rust/tests/cases/members.json",
+      "group": "request"
     },
     {
       "member": "rules.csrf_mask",

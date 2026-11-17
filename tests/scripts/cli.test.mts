@@ -45,7 +45,7 @@ test('an unknown option, an argument without an option and a missing required op
   }
 });
 
-test('hyper build refuses the removed option --php-namespace by its name and says how to repair the command (HY-48.19, HR-96)', (t) => {
+test('hyper build refuses the removed option --php-namespace by its name and says how to repair the command (HY-48.20, HR-96)', (t) => {
   const app = fixture('chunks', t);
   const output = join(app, 'out');
   for (const option of [['--php-namespace', 'Fixture\\Program'], ['--php-namespace=Fixture\\Program']]) {

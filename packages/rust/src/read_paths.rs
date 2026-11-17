@@ -1,6 +1,6 @@
 //! The read paths of the templates of an application (HY-73.2 to HY-73.20): what each template reads of its data,
 //! computed from the template ASTs before any request, and the read paths of the shared data and of every region of
-//! each route, which the build writes to `reads.json` (HY-73.23).
+//! each route, which the build writes to `reads.json` (HY-73.34).
 
 use std::borrow::Cow;
 use std::collections::HashMap;

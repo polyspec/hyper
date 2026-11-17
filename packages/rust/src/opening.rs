@@ -9,7 +9,7 @@ use polyspec_template::Value;
 use crate::csrf::{mask, verify};
 use crate::front::{kept_value, Plain};
 use crate::page::{changed_topics, current_path};
-use crate::session::{keep, kept, take_flash, token, SessionFailure};
+use crate::session::{keep, take_flash, token, SessionFailure};
 use crate::steps::{Map, PageInput, PageKind, Pages};
 use binding_core::Failure;
 
@@ -77,14 +77,16 @@ fn token_matches(session_token: &str, form_csrf: Option<&str>) -> Result<bool, S
 }
 
 /// Opens the session of a page (HY-120.6, HY-24, HY-59.8): it takes the flash data, then reads the token, which it sets
-/// when the session holds none, checks the form token of a `POST`, and reads the kept server values of every region
-/// that keeps a value by `server` (HY-40).
+/// when the session holds none, and checks the form token of a `POST`. It does not read the kept server values
+/// (HY-40): the host reads them after every loader returned and gives them with the reply of the page (HY-38.20).
+/// It reads nothing of the pages; the parameter stays because the member `opening_functions.open_page` of the
+/// interface contract declares it.
 ///
 /// # Errors
 /// `invalid_session_token`, `invalid_session_record`, `invalid_csrf_form` for a mask that is not 64 lowercase
 /// hexadecimal digits, and a failure of the store.
 pub fn open_page(
-    pages: &Pages,
+    _pages: &Pages,
     store: &mut dyn Store,
     opening: &Opening,
 ) -> Result<Opened, SessionFailure> {
@@ -103,27 +105,6 @@ pub fn open_page(
         &opening.path,
         &opening.base_path,
     );
-    let manifest = &pages.application().manifest;
-    let mut stored = Map::new();
-    for region in manifest.regions.iter().chain(
-        manifest
-            .routes
-            .iter()
-            .flat_map(|route| route.regions.iter()),
-    ) {
-        let keeps_server = region
-            .keep
-            .iter()
-            .any(|(_, kind)| *kind == crate::manifest::KeepKind::Server);
-        if !keeps_server {
-            continue;
-        }
-        let mut paths = Map::new();
-        for (path, value) in kept(store, &region.name)?.iter() {
-            paths.insert(path.clone(), value.clone());
-        }
-        stored.insert(region.name.clone(), paths);
-    }
     let mut params = Map::new();
     for (name, value) in &opening.params {
         params.insert(name.clone(), value.clone());
@@ -140,7 +121,6 @@ pub fn open_page(
             action: opening.action,
             csrf,
             changed,
-            stored,
             keep_cookie: opening.keep_cookie.clone(),
             held_hash: opening.held_hash.clone(),
             now: opening.now,

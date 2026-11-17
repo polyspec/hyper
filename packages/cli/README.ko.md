@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-cli-readme -->
-<!-- source-sha256: 19d9639e9057e6287adbcbf714aca0462bfc8b60919e522980078725622033e4 -->
+<!-- source-sha256: 513484bdb79584b88f70dccdf70c1fad7310b2fa84c6b0168923da9eb6b76373 -->
 # @polyspec/hyper-cli
 
 [English](README.md).
@@ -23,8 +23,8 @@ hyper build --app . --output build --api /api --tailwind styles.css=app --asset 
 한 번의 실행은 무엇이든 쓰기 전에 option, 매니페스트, 템플릿 규칙을 검사하고, 모든 출력으로 build id를 한 번 계산한다(HY-125). 다음을 쓴다(HR-34).
 
 - `public/assets` 아래, 이름에 내용의 해시가 들어간 파일: 템플릿 파일, 클라이언트 진입 파일과 조각 파일, `--asset <name>=<path>`와 `--tailwind <source>=<name>`의 각 에셋(HR-77).
-- `<output>/client/`: 레이아웃 코드가 읽는, `hyper`로 진입 파일의 URL과 이름마다 각 에셋의 URL을 담은 `manifest.json`, 쓰이는 어떤 build도 적지 않은 파일을 지우기 위해 이 build가 `public/assets` 아래에 쓴 모든 경로를 담은 `assets.json`, Node 서버가 읽는 `templates.index.json`과 `build.json`, 그리고 `client/main.ts`가 있고 `--api`가 주어지면 정적 셸 `csr/`.
-- `<output>/program/`: 세 서버가 읽는 `templates/`, `legacy/`, `reads.json`, `build.json`(HY-48). build는 생성된 PHP 프로그램을 쓰지 않으며, 이전 release의 option `--php-namespace`를 이름으로 거부한다(HY-48.19).
+- `<output>/client/`: 레이아웃 코드가 읽는, `hyper`로 진입 파일의 URL과 이름마다 각 에셋의 URL을 담은 `manifest.json`, 이 build가 `public/assets` 아래에 쓴 모든 경로를 담은 `assets.json`과 그 앞에서 달랐던 마지막 build의 파일을 담은 `assets.previous.json`(다음 build가 둘을 읽어 앞선 build의 파일은 남기고 어느 목록도 적지 않는 파일을 지운다), 클라이언트 번들이 담는 템플릿 파일의 색인 `templates.index.json`, 그리고 `client/main.ts`가 있고 `--api`가 주어지면 정적 셸 `csr/`.
+- `<output>/program/`: 세 서버가 읽는 `templates/`, `legacy/`, `reads.json`, `build.json`(HY-48). build는 생성된 PHP 프로그램을 쓰지 않으며, 이전 release의 option `--php-namespace`를 이름으로 거부한다(HY-48.20).
 
 에셋 이름은 `[a-z][a-z0-9-]*`에 맞고 `hyper`가 아니며 `hyper-`로 시작하지 않는다(HYC-16.13). build는 build id를 받지 않는다. `--output` 아래에서는 `client/`와 `program/`만 소유한다.
 

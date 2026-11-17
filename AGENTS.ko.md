@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 6419dab33dc0ac30513b603b0e044a8df22d4635347225a309ed6993930c4eed -->
+<!-- source-sha256: 1ef286d5374e1c7de994f411c506a803285f57d7b8762d922d102935e58f4f9b -->
 # 개발
 
 [English](AGENTS.md).
@@ -14,8 +14,8 @@
   Enforced by: none, 문장이 규칙과 그 이유를 적는지, 지시를 옮기는지는 판단이다.
 - Own: 주제마다 권위 있는 문서는 하나다. 프로토콜 계약은 `contracts/protocol.json`에 있고 `docs/spec/protocol*.md`가 그것을 보여 준다. 다른 명세는 `docs/spec/`에 있다. 구현과 검증 상태는 `docs/features.md`에 있다. 계획된 task, 그 검증 명령과 완료는 `docs/plans/execution/checklist.md`에 있다. 현재 절차는 `docs/operations/`에 있다. 실제 변경과 그 검증 결과는 `CHANGELOG.md`에 있다.
   Enforced by: none, 어느 문서가 주제를 맡는지는 판단이다.
-- Refines P4: 문서는 현재 동작을 설명한다. 방향이 바뀌면 명세(`docs/spec/`)를 먼저 바꾸고, 구현되지 않은 부분을 표시한다.
-  Enforced by: none, 문서가 현재 동작을 설명하는지는 판단이다.
+- Refines P4: 문서는 현재 동작을 설명한다. 방향이 바뀌면 명세(`docs/spec/`)를 먼저 바꾸고, 구현되지 않은 부분을 표시한다. 어떤 코드도 따르지 않는 `contracts/protocol.json`의 statement는 `"unimplemented": "<row>"`, 곧 그것을 구현하는 checklist의 행을 가진다. 그렇지 않으면 protocol 문서를 읽는 사람이 그 statement를 현재 동작으로 읽기 때문이다. 문서는 그 statement에 표시를 보인다. 이 사실의 원천은 계약이다: 상태가 `not implemented`인 `docs/features.md`의 행은 그런 statement를 Feature cell에 id로 이름하고, 거기에 다른 statement를 이름하지 않는다. 표시는 그 statement를 참으로 만드는 변경에서 제거되고, release의 changelog section은 아직 표시를 가진 모든 statement를 이름한다.
+  Enforced by: `make spec-docs-check`, checklist에 없거나 완료된 행을 이름하는 표시, 그리고 표시와 그 상태의 `docs/features.md` 행이 이름하는 statement 사이의 차이에 대해 실패한다. 표시가 없는 statement가 현재 동작을 설명하는지는 판단이다.
 - Own: 동작 변경, 그 문서, `docs/features.md`의 기능 상태 행과 `CHANGELOG.md`의 항목은 한 변경이다.
   Enforced by: none, 네 가지가 한 변경에 있는지는 어떤 도구도 보지 않는다.
 - Own: `make docs-check`는 `config/documents.json`이 선언한 대로 각 문서를 따로 읽어 링크, anchor, fence, checklist를 검증한다. 영어 파일과 한국어 짝은 같은 표지 `doc-id`를 가지고, 한국어 파일은 영어 파일의 sha256인 `source-sha256`을 가지며, `make documents-stamp`가 번역을 검토한 뒤에 그 값을 쓴다. 생성된 짝은 생성기가 그 표지를 쓴다. 두 짝을 비교하는 검사는 없다(kit K809). 다만 프로토콜 짝은 `make spec-docs-check`가 문장마다 비교한다. 내용의 정확성은 코드와 test를 읽어 검증한다.
@@ -42,7 +42,7 @@
 - Own: PHP 개발, test와 release 검증은 PHP 8.4.27을 기준으로 한다. Windows는 8.4.27-1 package rebuild를 쓰며 runtime version은 8.4.27이다. `.php-version`은 native tool 탐색을 위해 8.4 minor를 선택한다. 검증 결과에는 실제 runtime version을 기록하며 이전 patch의 결과를 이 기준에서의 검증으로 취급하지 않는다.
   Enforced by: none, 검증 근거를 검토할 때 기준과 기록된 runtime을 확인한다.
 
-- Own: 어떤 결과도 live service나 시간에 의존하지 않는다(HR-89). 결과가 시간에 따라 달라지는 registry 조회, 예컨대 latest 조회, version 범위의 해석, outdated package나 새 release의 조회를 하는 검사는 없으며, 다른 live service를 조회하는 검사도 없다. lock이 정확한 version과 integrity로 고정한 package의 다운로드는 설치이므로 허용한다. `npm ci`와 `composer install`이 그렇게 한다. 설치는 audit 없이 lock을 따른다. Test는 사건을 사건이나 주입된 clock으로 정렬하며, 경쟁하는 timer로 정렬하지 않는다. 실행의 server는 시스템이 배정하고 알리는 port에서 듣는다. 모든 recipe는 npm과 Composer를 오프라인으로 실행한다(Makefile의 `npm_config_offline`과 `COMPOSER_DISABLE_NETWORK`). 기본 소스 helper를 포함한 명시적 설치 target, `make bootstrap`, `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-php`, `make hyper-install-browser`, `make hyper-install-virtiofs`, 그리고 lock이나 tracked binding package를 그 도구로 쓰는 target인 `make cargo-lock`, `make bindings-scaffold`, `make npm-lock`, `make python-lock`, `make composer-lock`만 `$(ONLINE)`으로 다운로드하며, 빠진 다운로드는 그것을 만드는 설치 target과 함께 실패하고, 도구에게 온라인으로 다시 시도하라는 안내로 실패하지 않는다. server 시작처럼 오래 걸리는 작업은 시간 제한 없이 기다리며 진행을 출력한다.
+- Own: 어떤 결과도 live service나 시간에 의존하지 않는다(HR-89). 결과가 시간에 따라 달라지는 registry 조회, 예컨대 latest 조회, version 범위의 해석, outdated package나 새 release의 조회를 하는 검사는 없으며, 다른 live service를 조회하는 검사도 없다. lock이 정확한 version과 integrity로 고정한 package의 다운로드는 설치이므로 허용한다. `npm ci`와 `composer install`이 그렇게 한다. 설치는 audit 없이 lock을 따른다. Test는 사건을 사건이나 주입된 clock으로 정렬하며, 경쟁하는 timer로 정렬하지 않는다. 실행의 server는 시스템이 배정하고 알리는 port에서 듣는다. 모든 recipe는 npm과 Composer를 오프라인으로 실행한다(Makefile의 `npm_config_offline`과 `COMPOSER_DISABLE_NETWORK`). cargo는 `--offline`으로 시작한다. `make hyper-install-crates`가 `Cargo.lock`의 crate를 가져오고, cargo, maturin, binding 생성기를 시작하는 각 target의 prerequisite인 `make crates-check`는 crate가 가져와지지 않았을 때 그 이름과 함께 실패한다. 기본 소스 helper를 포함한 명시적 설치 target, `make bootstrap`, `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-crates`, `make hyper-install-php`, `make hyper-install-browser`, `make hyper-install-virtiofs`, 그리고 lock이나 tracked binding package를 그 도구로 쓰는 target인 `make cargo-lock`, `make bindings-scaffold`, `make npm-lock`, `make python-lock`, `make composer-lock`만 `$(ONLINE)`으로 다운로드하며, 빠진 다운로드는 그것을 만드는 설치 target과 함께 실패하고, 도구에게 온라인으로 다시 시도하라는 안내로 실패하지 않는다. server 시작처럼 오래 걸리는 작업은 시간 제한 없이 기다리며 진행을 출력한다.
   Enforced by: `make hyper-test-scripts`
 - Own: 성능은 측정하고 보고하며 검사를 실패시키지 않는다. 크기나 시간이 한도를 넘으면 값과 한도를 적은 `WARNING` 줄을 출력하고, GitHub에서는 `::warning::` annotation과 CI 요약의 경고를 남기며, 검사는 통과한다(`make bundle-size`, `make bench`). 측정 script는 사용법 오류나 빠진 입력에서만 실패한다.
   Enforced by: `make hyper-test-scripts`

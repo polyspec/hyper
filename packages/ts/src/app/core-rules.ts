@@ -62,7 +62,6 @@ export interface PageInput {
   readonly action: boolean;
   readonly csrf: string;
   readonly changed: Iterable<string>;
-  readonly stored: ReadonlyMap<string, ReadonlyMap<string, CoreValue>>;
   readonly now: number;
   readonly keepCookie?: string | null;
   readonly heldHash?: string | null;
@@ -76,13 +75,14 @@ type ActionOutcome =
   | { readonly outcome: 'page'; readonly status: number; readonly data: ReadonlyMap<string, CoreValue> }
   | { readonly outcome: 'revision_changed' | 'no_page' };
 
-type PageStepInput =
+/** @internal */
+export type PageStepInput =
   | { readonly input: 'start' | 'absent' | 'no_handler' }
-  | { readonly input: 'action'; readonly outcome: ActionOutcome }
+  | { readonly input: 'action'; readonly outcome: ActionOutcome; readonly csrf?: string | null }
   | { readonly input: 'context'; readonly context: ReadonlyMap<string, CoreValue> }
   | { readonly input: 'shared'; readonly shared: ReadonlyMap<string, CoreValue> }
   | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, CoreValue> }
-  | { readonly input: 'reply'; readonly embeds: boolean; readonly status?: number | null };
+  | { readonly input: 'reply'; readonly embeds: boolean; readonly stored: ReadonlyMap<string, ReadonlyMap<string, CoreValue>>; readonly status?: number | null };
 
 type Answer =
   | { readonly answer: 'document'; readonly status: number; readonly html: string }
@@ -159,15 +159,35 @@ interface KeepRequest {
   readonly formCsrf?: string | null;
 }
 
-// A host function of the templates as the binding calls it (HYC-24).
-type CoreHostFunction = (args: readonly CoreValue[], environment: unknown) => CoreValue;
+// The environment of a render, which a function of a template receives as its second argument (HYC-24.10): the time
+// zone of the server and the `now` of the response in seconds since the Unix epoch.
+interface Environment {
+  readonly timezone: string;
+  readonly now: number;
+}
+
+// A function of the templates as the binding calls it (HYC-24.10): the list of its arguments and the environment.
+export type HostFunction = (args: readonly CoreValue[], environment: Environment) => CoreValue;
+type CoreHostFunction = HostFunction;
 
 interface CorePageRequest {
   next(input: PageStepInput): Step;
 }
 
-interface CorePagesInstance {
+// The title and the regions of a document, each rendered alone (HY-13.1 to HY-13.3).
+interface DocumentParts {
+  readonly title: string;
+  readonly regions: ReadonlyMap<string, string>;
+}
+
+// The data of each region of a document, by the name of the region.
+type RegionsData = ReadonlyMap<string, ReadonlyMap<string, CoreValue>>;
+
+/** @internal */
+export interface CorePagesInstance {
   register(name: string, hostFunction: CoreHostFunction): void;
+  renderDocument(route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): string;
+  renderParts(route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): DocumentParts;
 }
 
 // The members of the Node binding of the core that the server calls, under the names that the binding gives the
@@ -206,6 +226,7 @@ export interface CoreBinding {
   templateReads(templates: ReadonlyMap<string, string>, name: string): CoreValue;
   reservedDataTemplate(): DataTemplate;
   validContextHeader(value: string | null): boolean;
+  checkFunctionEntry(name: string, callable: boolean): void;
   jsonRead(text: Uint8Array): JsonValue;
   jsonWrite(value: CoreValue): string;
   flashOf(stored: unknown): JsonValue;
@@ -236,7 +257,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl', 'keepsOutOfSharedCaches',
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
-  'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'routeRequest', 'computePageHeaders', 'frameHeaders',
+  'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'checkFunctionEntry', 'routeRequest', 'computePageHeaders', 'frameHeaders',
   'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
 
@@ -363,6 +384,13 @@ export interface CoreRules {
   // HY-73, HY-75, HY-124). The server still calls each handler that a step names and gives its result to the next
   // step (HY-30, HY-54), and answers the stops of a handler (HY-50, HY-51, HY-107).
   pageRequest(pages: CorePages, input: PageInput): CorePageRequest;
+  // pageDocument: `pages.render_document` gives the document of a route from the shared data and the data of each
+  // region, with no kept value and no embedded data, at the time `now` (HY-12.1). It renders below a request: no
+  // handler is called and no step is run.
+  pageDocument(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): string;
+  // pageParts: `pages.render_parts` gives the title and each region of the given data rendered alone, the texts
+  // that the document of the same data holds in their places (HY-13.1 to HY-13.3).
+  pageParts(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): DocumentParts;
   // Partial. sessionCsrfToken: rules.stored_token checks the value that the session holds in the place of the
   // token (HY-24.14). The server still reads the store and creates the token of a session that holds none (HY-24.1),
   // which opening_functions.open_page does once the server gives the core its store.
@@ -370,15 +398,15 @@ export interface CoreRules {
   // Partial. The name of the cookie of the kept values: rules.keep_name (HYC-13.6). The server still reads the cookie
   // from the request (HY-129).
   keptCookieName(secure: boolean): string;
-  // Partial. buildRead: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18, HY-125.19).
-  // The server still reads the file and names the absolute path of the file in a failure (HY-125.18).
+  // Partial. buildRead: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23, HY-125.19).
+  // The server still reads the file and names the absolute path of the file in a failure (HY-125.23).
   buildRead(bytes: Uint8Array): string;
   // Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text.
   buildCheckId(text: string): void;
   // Partial. The build id of the command tool: rules.build_id (HY-125.15 to HY-125.17). The command tool still
   // collects the files that one build writes and gives each its path with the prefix of its place.
   buildId(outputs: Iterable<BuildOutput>): string;
-  // Partial. The text of `build.json`: rules.build_file_text (HY-125.18). The command tool still writes the file.
+  // Partial. The text of `build.json`: rules.build_file_text (HY-125.23). The command tool still writes the file.
   buildFileText(id: string): string;
   readonly Templates: {
     // Partial. The template check of the command tool: rules.template_problems (HY-48.3, HY-2, HY-3, HY-30). The
@@ -396,9 +424,12 @@ export interface CoreRules {
   readonly Application: {
     // Partial. App.open: `pages.open` checks the manifest, the templates, the read paths and the options of an
     // application (HY-2, HY-48, HY-59.1, HY-62.2) and `pages.register` registers a host function (HYC-24). The server
-    // still reads the files of `program/` (HY-48.11), checks the handlers against the manifest (HY-30, HY-118) and
+    // still reads the files of `program/` (HY-48.19), checks the handlers against the manifest (HY-30, HY-118) and
     // holds the limits of the body and of the response (HY-59, HY-66, HY-114, HY-131).
-    open(manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions, functions: ReadonlyMap<string, CoreHostFunction>): CorePages;
+    open(manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions, functions: ReadonlyMap<string, CoreHostFunction>): CorePagesInstance;
+    // rules.check_function_entry fails an entry of `functions` that is no function with kind `invalid_application`
+    // (HYC-24.7); the server tells the core whether the entry is callable.
+    checkFunctionEntry(name: string, callable: boolean): void;
   };
 }
 
@@ -471,6 +502,8 @@ export function coreRules(module: object): CoreRules {
     },
     pageOpen: (pages, store, opening) => core.openPage(pages, store, opening),
     pageRequest: (pages, input) => new core.PageRequest(pages, input),
+    pageDocument: (pages, route, shared, regions, now) => pages.renderDocument(route, shared, regions, now),
+    pageParts: (pages, route, shared, regions, now) => pages.renderParts(route, shared, regions, now),
     sessionStoredToken: (stored) => core.storedToken(stored),
     keptCookieName: (secure) => core.keepName(secure),
     buildRead: (bytes) => core.readBuild(bytes),
@@ -490,6 +523,9 @@ export function coreRules(module: object): CoreRules {
         const pages = new core.Pages(manifest, templates, reads, options);
         for (const [name, hostFunction] of functions) pages.register(name, hostFunction);
         return pages;
+      },
+      checkFunctionEntry: (name, callable) => {
+        core.checkFunctionEntry(name, callable);
       },
     },
   };

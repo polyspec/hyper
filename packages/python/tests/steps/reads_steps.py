@@ -22,7 +22,7 @@ def cases(case) -> None:
             f"the template {template} is not among the templates of {case.id()}"
         )
     program = PROGRAMS / f"reads_{case.id()}" / "program"
-    # HY-73.23: the build wrote the read paths of the template of the case, the page region of the route `reads` of
+    # HY-73.34: the build wrote the read paths of the template of the case, the page region of the route `reads` of
     # the application, to reads.json of the program that the renderer opens.
     built = json.loads((program / "reads.json").read_text(encoding="utf-8"))
     case.compare("reads", built["routes"]["reads"]["regions"]["content"])

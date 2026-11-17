@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 1e793b7f348c7bc6049df6e4511fd55be5e54ccf6f5e57ae3759a4a63c0cc2ac -->
+<!-- source-sha256: e77c4827e568baa6af9289ec94d8200c68974ba3156e93b5564357999a28802b -->
 # 배포
 
 [English](deployment.md).
@@ -28,7 +28,7 @@ PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request
 
 `make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. PHP는 템플릿 확장 `polyspec_template`으로 `build/program/templates/`를 렌더한다. 서버의 PHP 버전에 맞춰 빌드한 json 확장 `polyspec_json`과 그다음 템플릿 확장을 `php.ini`의 `extension` 설정으로 불러온다(HY-48.15).
 
-build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). `public/assets`는 아직 열린 페이지가 불러오는 이전 build의 파일을 담으므로, 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다(HR-34).
+build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). `public/assets`는 아직 열린 페이지가 불러오는 앞선 build의 파일을 담으므로, 배포에서 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다. build는 자기 애플리케이션 디렉터리에서 앞선 build의 파일을 남기고, 두 목록 전 build의 파일 중 더 새로운 두 목록이 모두 적지 않는 것을 지우므로(HR-34, HYC-16.18), 앞선 build의 페이지는 다른 build 하나 동안 거기서도 자기 파일을 찾는다.
 
 ### 애플리케이션이 바꾸는 경로
 
@@ -37,11 +37,11 @@ build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을
 - 호출: 전과 같은 `--api`, `--static`을 가진 `hyper build --app <디렉터리> --output <디렉터리>` 한 번의 실행. option `--build`는 없고, 매니페스트와 템플릿은 `--app`의 `app/app.json`과 `templates/`에서 읽는다.
 - 프로그램 디렉터리: 서버 build의 `--output` 디렉터리 대신 `<output>/program`.
 - 레이아웃의 매니페스트: `<output>/manifest.json` 대신 `<output>/client/manifest.json`. `hyper` 말고도 이름마다 각 에셋의 URL을 담는다.
-- Node 서버: `App.open`의 option `build`는 `<output>/client/build.json`을, `templates.index`는 `<output>/client/templates.index.json`을 가리킨다.
+- Node 서버: `App.open`의 option `program`은 PHP 서버와 Python 서버가 받는 것처럼 `<output>/program`을 가리킨다. option `build`와 `templates`는 없다(HY-48.19).
 - 정적 셸: `<output>/csr/` 대신 `<output>/client/csr/`.
 - `--tailwind <source>=<output>`의 stylesheet나 애플리케이션이 build 뒤에 `public/assets` 아래에 쓰던 파일: `--tailwind <source>=<name>`이나 `--asset <name>=<path>`로 바꾸고, 레이아웃은 `client/manifest.json`의 `<name>` URL을 link한다. build 뒤에 바뀌는 출력은 없다(HR-77).
 
-`hyper build`는 생성된 PHP 프로그램을 쓰지 않는다(HY-48.19). 세 서버가 `program/templates/`의 템플릿을 렌더하며, 어떤 서버도 `program/php/`나 `program/program.json`을 읽지 않았다. `--php-namespace`로 build하던 애플리케이션은 다음을 바꾼다.
+`hyper build`는 생성된 PHP 프로그램을 쓰지 않는다(HY-48.20). 세 서버가 `program/templates/`의 템플릿을 렌더하며, 어떤 서버도 `program/php/`나 `program/program.json`을 읽지 않았다. `--php-namespace`로 build하던 애플리케이션은 다음을 바꾼다.
 
 - 호출: build 명령에서 `--php-namespace`와 그 값을 뺀다. 명령에 그 option이 있는 동안 `hyper build`는 그 option을 밝히는 usage error로 실패한다.
 - autoload: `composer.json`의 `autoload.psr-4`에서 프로그램의 namespace를 `<output>/program/php/`에 대응시키는 항목과, 그 namespace를 위해 `<output>/program/program.json`을 읽는 코드를 없앤다.

@@ -6,8 +6,8 @@
 //                 (HY-31.10)
 //   reads.json    the read paths of every route, by which the server keeps data (HY-73), as readsFile of the core
 //                 writes them (@polyspec/hyper/build)
-//   build.json    {"build":"<id>"}, written by writeBuildFile (HY-125.18)
-// The program holds no generated PHP program (HY-48.19): the three servers render the templates of templates/.
+//   build.json    {"build":"<id>"}, written by writeBuildFile (HY-125.23)
+// The program holds no generated PHP program (HY-48.20): the three servers render the templates of templates/.
 // The assembly has two parts. This module computes the content of the files with the core, which loads the native
 // addon of the platform. lib/program-files.mjs writes the files and loads no addon. writeProgram composes them: the
 // templates are written, the other files are computed from the written templates (programFiles) and then written.
@@ -41,7 +41,7 @@ export function writeProgram({ manifest, templates, directory }) {
 export function programFiles({ manifest, templates }) {
   const sources = new Map();
   for (const name of listTemplates(templates)) sources.set(name, readFileSync(join(templates, name)).toString('utf8'));
-  // HY-73.23: the core computes the read paths from the manifest and the template sources and writes their text.
+  // HY-73.34: the core computes the read paths from the manifest and the template sources and writes their text.
   /** @type {[string, string][]} */
   const files = [['reads.json', readsFile(Buffer.from(JSON.stringify(manifest)), sources)]];
   return { count: sources.size, files };

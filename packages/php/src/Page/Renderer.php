@@ -66,7 +66,7 @@ final class Renderer
         }
         // HYC-24, RT-5: the engine registers the host functions of the application and fails the open of a name that
         // is built in or an entry that is not a function, with kind `invalid_application` and the message of the
-        // engine (HYC-24.2, HYC-24.5, HY-106.21).
+        // engine (HYC-24.9, HYC-24.5, HY-106.21).
         // The extension takes a Closure for each entry, so a callable becomes one and any other entry fails as RT-5
         // states it.
         $closures = [];

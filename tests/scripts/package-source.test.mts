@@ -63,7 +63,7 @@ test('hyper build builds the browser outputs and the server program from another
     join(build, 'bin', 'hyper.mjs'), 'build', '--app', app, '--output', join(app, 'out'), '--api', '/api',
   ], { cwd, encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
-  // HY-48, HY-48.19: the program is what the three servers read, and no generated PHP program.
+  // HY-48, HY-48.20: the program is what the three servers read, and no generated PHP program.
   assert.deepEqual(readdirSync(join(app, 'out', 'program')).sort(), ['build.json', 'legacy', 'reads.json', 'templates']);
   assert.ok(existsSync(join(app, 'out', 'client', 'csr', 'index.html')));
   assert.deepEqual(readdirSync(cwd), []);

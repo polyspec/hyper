@@ -1,10 +1,9 @@
 // Answers requests with documents, JSON, action redirects and the static shell (HY-8, HY-10 to HY-19, HY-24 to HY-27,
 // HY-40, HY-42 to HY-46, HY-50 to HY-54, HY-58 to HY-60, HY-62).
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Server } from 'node:http';
-import { checkManifest, checkTemplateIndex, createApplication, DATA_TEMPLATE_NAME, HyperTypeError as ClientTypeError, HyperValueError as ClientValueError, keptPaths, routeReads, routeTemplates, stripBasePath, type Application, type Manifest, type RouteDeclaration, type TemplateIndex } from '@polyspec/hyper-client';
-import { decodeTemplate, resolvePath, type HostFunction, type Template } from '@polyspec/template/render';
+import { checkManifest, keptPaths, Router, stripBasePath, type Manifest, type RouteDeclaration } from '@polyspec/hyper-client';
 import { Choice } from '../page/choice.js';
 import type { ClientRendering } from '../page/client-rendering.js';
 import { Disconnected } from './disconnected.js';
@@ -16,7 +15,7 @@ import { createListener, createServer, type Listener, type ServerOptions } from 
 import { Build } from './build.js';
 import { JsonCodec } from '../data/json-codec.js';
 import { WarningsGuard } from './warnings-guard.js';
-import { Page, type PageParts } from '../page/page.js';
+import { Page } from '../page/page.js';
 import { Context, type ContextHandler } from './context.js';
 import { Reply } from '../http/reply.js';
 import { MediaSelection } from '../representation/media-selection.js';
@@ -38,7 +37,7 @@ import { Session } from '../session/session.js';
 import type { SessionStore } from '../session/session-store.js';
 import type { Data, Value } from '../data/values.js';
 import { ArgumentCountError } from './argument-count-error.js';
-import { rules } from './core-rules.js';
+import { rules, type CorePagesInstance, type HostFunction } from './core-rules.js';
 
 // The one argument of every loader and action: the request, the reply of the request and the services that the
 // application binds by key.
@@ -80,11 +79,9 @@ export interface Handlers<S extends object> {
 export interface AppOptions<S extends object> {
   // The absolute path of the manifest (HY-1).
   manifest: string;
-  // The absolute path of the `build.json` of the asset output, which holds the build id (HY-125, HY-48).
-  build: string;
-  // The template index that the asset build writes, and the absolute directory that its file URLs are relative to
-  // (HR-34). The server renders with these template files, as the browser does.
-  templates: { index: string; root: string };
+  // The absolute path of the server program that `hyper build` wrote, the directory that holds `reads.json`,
+  // `build.json` and the directory `templates` (HY-48.19).
+  program: string;
   handlers: Handlers<S>;
   timezone: string;
   basePath?: string;
@@ -124,15 +121,18 @@ export interface AppOptions<S extends object> {
   clientRendering?: ClientRendering;
   // The context handler (HY-124, HY-106): a function of the selection value that returns a Map, or a promise of one.
   context?: ContextHandler;
-  // The host functions of the templates (HYC-24, HY-106): a map from names to functions that the template engine registers when
-  // the application opens; a registration that fails fails the open (template FUN-44, RT-5).
+  // The functions of the templates (HYC-24, HY-106): a map from names to functions that the template engine registers
+  // when the application opens; a registration that fails fails the open (template FUN-44, RT-5). A function receives
+  // the list of its arguments and the environment of the render, a value with `timezone` and `now` (HYC-24.10).
   functions?: Record<string, HostFunction>;
 }
 
 // The parts of an application that `open` checked and read, the one argument of the constructor.
 /** @internal */
 export interface AppParts<S extends object> {
-  application: Application;
+  // The pages of the application that the core opened, and the manifest that the core accepted.
+  pages: CorePagesInstance;
+  manifest: Manifest;
   handlers: Handlers<S>;
   timezone: string;
   basePath: string;
@@ -149,8 +149,6 @@ export interface AppParts<S extends object> {
   log: (message: string) => void;
   client: ClientRendering | null;
   shell: string;
-  reads: PageParts<S>['reads'];
-  build: string;
   context: ContextHandler | null;
   entries: Map<string, RepresentationEntry[]>;
 }
@@ -163,7 +161,7 @@ export interface AppParts<S extends object> {
 export type Answer = { stopped: false; response: Response; reply: Reply } | { stopped: true; reply: Reply };
 
 // The names of the options of `open` and of a server, the members of their options records (HY-106.9).
-const APP_REQUIRED = ['manifest', 'build', 'templates', 'handlers', 'timezone'];
+const APP_REQUIRED = ['manifest', 'program', 'handlers', 'timezone'];
 const APP_OPTIONAL = ['basePath', 'https', 'frameAncestors', 'bodyLimit', 'formTypes', 'fileLimit', 'responseLimit', 'valueLimit', 'partLimit', 'onResponse', 'clientRendering', 'onDisconnect', 'log', 'context', 'functions'];
 const SERVER_REQUIRED: string[] = [];
 const SERVER_OPTIONAL = ['files', 'written', 'around'];
@@ -179,7 +177,9 @@ export class App<S extends object = Record<string, never>> {
   /** @internal */
   readonly services = new Container<S>();
   private readonly routes: Map<string, RouteDeclaration>;
-  private readonly application: Application;
+  private readonly manifest: Manifest;
+  // The router of the manifest, which the server keeps for the routing until the core routes a request.
+  private readonly router: Router;
   private readonly handlers: Handlers<S>;
   /** @internal */
   readonly timezone: string;
@@ -213,12 +213,13 @@ export class App<S extends object = Record<string, never>> {
   private readonly page: Page<S>;
 
   private constructor(parts: AppParts<S>) {
-    const { application, handlers, timezone, basePath, https, frameAncestors, bodyLimit, fileLimit, valueLimit, partLimit, responseLimit, formTypes, onResponse, onDisconnect, log, client, shell, reads, build, context, entries } = parts;
+    const { pages, manifest, handlers, timezone, basePath, https, frameAncestors, bodyLimit, fileLimit, valueLimit, partLimit, responseLimit, formTypes, onResponse, onDisconnect, log, client, shell, context, entries } = parts;
     this.entries = entries;
     this.context = context;
     this.client = client;
     this.shellText = shell;
-    this.application = application;
+    this.manifest = manifest;
+    this.router = new Router(manifest.routes);
     this.handlers = handlers;
     this.timezone = timezone;
     this.basePath = basePath;
@@ -233,45 +234,19 @@ export class App<S extends object = Record<string, never>> {
     this.onResponse = onResponse;
     this.onDisconnect = onDisconnect;
     this.log = log;
-    this.routes = new Map(application.manifest.routes.map((route) => [route.name, route]));
-    this.page = new Page({ application, handlers, services: this.services, timezone, https, reads, build, context, vary: this.varyHeader() });
+    this.routes = new Map(manifest.routes.map((route) => [route.name, route]));
+    this.page = new Page({ pages, manifest, handlers, services: this.services, https, context });
   }
 
-  // Creates an application from its manifest, the template files of the asset build and the handlers that load
-  // data and run actions. It loads every template that a route needs, so a missing template fails here.
+  // Creates an application from its manifest, the server program that `hyper build` wrote and the handlers that load
+  // data and run actions (HY-48.19). A missing output of the program fails here.
   static async open<S extends object = Record<string, never>>(options: AppOptions<S>): Promise<App<S>> {
     ArgumentCountError.between(arguments.length, 1, 1);
     ArgumentCountError.members(options, APP_REQUIRED, APP_OPTIONAL);
-    try {
-      return await App.opened(options);
-    } catch (error) {
-      throw App.bindingError(error);
-    }
+    return App.opened(options);
   }
 
-  // HY-132.8: a failure of a check of the browser code at open is raised as the class of the binding of its category,
-  // with its kind and message; every other error is raised as it is. The binding gives the status null, which is the
-  // status of every kind that these checks raise.
-  private static bindingError(error: unknown): unknown {
-    if (error instanceof ClientValueError) return rules().valueError(error.message, error.kind);
-    if (error instanceof ClientTypeError) return rules().typeError(error.message, error.kind);
-    return error;
-  }
-
-  // HYC-24.2, HYC-24.5: a registration of the host functions that the template engine refuses, a built-in name (template
-  // FUN-44) or an entry that is no function (template RT-5), fails the open with kind `invalid_application` and the
-  // message of the template engine (HY-106.21); an error of the browser code keeps its kind (HY-132.8).
-  private static registered<T>(create: () => T): T {
-    try {
-      return create();
-    } catch (error) {
-      if (error instanceof ClientValueError || error instanceof ClientTypeError) throw App.bindingError(error);
-      if (error instanceof Error) throw rules().valueError(error.message, 'invalid_application');
-      throw error;
-    }
-  }
-
-  private static async opened<S extends object>(options: AppOptions<S>): Promise<App<S>> {
+  private static opened<S extends object>(options: AppOptions<S>): App<S> {
     const basePath = options.basePath ?? '';
     if (basePath !== '' && (!basePath.startsWith('/') || basePath.endsWith('/'))) {
       throw rules().valueError(`base path ${basePath} must start with / and must not end with /`, 'invalid_application');
@@ -295,21 +270,39 @@ export class App<S extends object = Record<string, never>> {
       throw rules().valueError('form types must be distinct values of application/x-www-form-urlencoded and multipart/form-data', 'invalid_application');
     }
     App.absolutePaths(options);
-    const build = Build.read(options.build);
     if (options.context !== undefined && typeof options.context !== 'function') throw rules().valueError('the context must be a function (HY-106)', 'invalid_application');
     if (options.onDisconnect !== undefined && typeof options.onDisconnect !== 'function') throw rules().valueError('the disconnect hook is not callable (HY-67)', 'invalid_application');
-    const manifest = checkManifest(App.readJsonFile(options.manifest));
+    const pagesOptions = { timezone: options.timezone, context: options.context !== undefined, basePath, formTypes: [...formTypes], dataBasePath: options.clientRendering?.basePath ?? null };
+    // The core judges the manifest before the server reads the program, so that a manifest that the core refuses
+    // fails the open whatever the program holds, as the PHP and the Python server fail: the pages of the manifest alone,
+    // without a template and without a read path, open exactly when the core accepts the manifest (HY-2.7, HY-2.9).
+    const manifestBytes = App.readBytes(options.manifest);
+    rules().Application.open(manifestBytes, new Map(), new Map(), { ...pagesOptions, build: '0'.repeat(64) }, new Map());
+    const program = options.program;
+    // HY-48.19, HY-48.2: the open names the first missing output of the program. HY-106.21: only a missing build file
+    // has the kind invalid_build.
+    for (const name of ['reads.json', 'build.json', 'templates']) {
+      const path = join(program, name);
+      const found = statSync(path, { throwIfNoEntry: false });
+      if (found === undefined || found.isDirectory() !== (name === 'templates')) throw rules().valueError(`${path} of the server program ${program} is missing; hyper build of @polyspec/hyper-cli builds it`, name === 'build.json' ? 'invalid_build' : 'invalid_application');
+    }
+    // HYC-24.7: an entry of `functions` that is no function fails the open, as the core states it.
+    const functions = new Map<string, HostFunction>();
+    for (const [name, entry] of Object.entries(options.functions ?? {})) {
+      rules().Application.checkFunctionEntry(name, typeof entry === 'function');
+      functions.set(name, entry);
+    }
+    const reads = App.routeReads(join(program, 'reads.json'));
+    const build = Build.read(join(program, 'build.json'));
+    // HYC-24.8: a name that the template language refuses fails the open with the message of the template language.
+    const pages = rules().Application.open(manifestBytes, App.templateSources(join(program, 'templates')), reads, { ...pagesOptions, build }, functions);
+    // The manifest as the server reads it for the routing and the handlers, which the core accepted above.
+    const manifestText = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(manifestBytes);
+    const manifest = checkManifest(JSON.parse(manifestText));
     // HY-118: the representations of each route, by the route name. The manifest is decoded with maps for objects,
     // because the parameters of an entry keep the order of the manifest, which a plain object does not keep for a name
     // that is an integer.
-    let decoded: Value;
-    try {
-      decoded = JsonCodec.decode(App.readJsonText(options.manifest));
-    } catch (error) {
-      // The core raises a text that json refuses and a value outside the data model as its value error (HY-54.21).
-      if (!(error instanceof RangeError)) throw error;
-      throw rules().valueError(`${options.manifest} is not valid JSON`, 'invalid_application');
-    }
+    const decoded = JsonCodec.decode(manifestText);
     const entries = new Map<string, RepresentationEntry[]>();
     const routes = decoded instanceof Map ? decoded.get('routes') : undefined;
     for (const route of Array.isArray(routes) ? routes : []) {
@@ -317,24 +310,11 @@ export class App<S extends object = Record<string, never>> {
       const name = route.get('name');
       if (typeof name === 'string') entries.set(name, RepresentationEntries.declare(name, route.get('representations')));
     }
-    const index = App.templateIndex(options.templates.index);
-    const fetcher = async (url: string): Promise<Template> => decodeTemplate(App.readJsonFile(join(options.templates.root, url)));
-    const application = App.registered(() => createApplication(manifest, index, fetcher, options.functions));
     App.checkHandlers({ ...manifest, entries }, options.handlers);
     const shell = options.clientRendering === undefined ? '' : App.checkedShell(options.clientRendering, manifest);
-    App.routeTemplates(index, manifest);
-    // The server renders every page, so it reads every template of the index (HYC-12).
-    await application.templates.ensure(Object.keys(index));
-    // HY-73: the read paths of every route, from the templates that the asset build wrote.
-    const parsed = new Map<string, Template>();
-    for (const [name, entry] of Object.entries(index)) parsed.set(name, await fetcher(entry.url));
-    const reads = routeReads(manifest, (name) => {
-      const template = parsed.get(name);
-      if (template === undefined) throw rules().valueError(`template ${name} is not in the template index`, 'invalid_application');
-      return template;
-    }, resolvePath);
     return new App({
-      application,
+      pages,
+      manifest,
       handlers: options.handlers,
       timezone: options.timezone,
       basePath,
@@ -351,66 +331,65 @@ export class App<S extends object = Record<string, never>> {
       log: options.log ?? ((message) => process.stderr.write(`${message}\n`)),
       client: options.clientRendering ?? null,
       shell,
-      reads,
-      build,
       context: options.context ?? null,
       entries,
     });
   }
 
-  // Fails when a path option of `open` is not absolute (HY-48.11): the manifest, the template index and its root, and
-  // the build file.
+  // Fails when a path option of `open` is not absolute (HY-48.19): the manifest and the program directory.
   private static absolutePaths<S extends object>(options: AppOptions<S>): void {
-    for (const path of [options.manifest, options.templates.index, options.templates.root]) {
-      if (!isAbsolute(path)) throw rules().valueError(`${path} is not an absolute path`, 'invalid_application');
-    }
-    if (typeof options.build !== 'string' || !isAbsolute(options.build)) throw rules().valueError(`the build file ${String(options.build)} is not an absolute path`, 'invalid_application');
-  }
-
-  // Reads the template index that the asset build wrote and fails when it is not a template index (HY-48.12).
-  private static templateIndex(path: string): TemplateIndex {
-    return checkTemplateIndex(App.readJsonFile(path), `the template index ${path}`);
-  }
-
-  // Fails when the template index does not hold an entry template of a route or the template of the embedded data
-  // (HY-48.12, HY-31, HR-34).
-  private static routeTemplates(index: TemplateIndex, manifest: Manifest): void {
-    for (const route of manifest.routes) {
-      for (const name of [...routeTemplates(manifest, route), DATA_TEMPLATE_NAME]) {
-        if (typeof index[name]?.url !== 'string') throw rules().valueError(`template ${name} is not in the template index`, 'invalid_application');
-      }
+    for (const path of [options.manifest, options.program]) {
+      if (typeof path !== 'string' || !isAbsolute(path)) throw rules().valueError(`${String(path)} is not an absolute path`, 'invalid_application');
     }
   }
 
-  // Reads a JSON file of an application as strict UTF-8 JSON. A file that cannot be read, is not valid UTF-8 or is not
-  // valid JSON fails the open with kind invalid_application (HY-106.21).
-  private static readJsonFile(path: string): unknown {
-    const text = App.readJsonText(path);
+  // Reads the bytes of a file of an application. A file that cannot be read fails the open with kind
+  // invalid_application and the message of the system error (HY-106.21).
+  private static readBytes(path: string): Buffer {
     try {
-      return JSON.parse(text);
-    } catch (error) {
-      if (!(error instanceof SyntaxError)) throw error;
-      throw rules().valueError(`${path} is not valid JSON`, 'invalid_application');
-    }
-  }
-
-  // Reads the text of a JSON file of an application as strict UTF-8.
-  // A file that cannot be read fails the open with kind invalid_application and the message of the system error
-  // (HY-106.21).
-  private static readJsonText(path: string): string {
-    let bytes: Buffer;
-    try {
-      bytes = readFileSync(path);
+      return readFileSync(path);
     } catch (error) {
       throw rules().valueError(error instanceof Error ? error.message : String(error), 'invalid_application');
     }
+  }
+
+  // Reads the read paths of the routes from `reads.json` of the program (HY-73.34, HY-73.30) as the value that the
+  // core takes: the member `routes` of its JSON text. Bytes that are not UTF-8, a leading U+FEFF and a text that json
+  // refuses fail the open (HY-106.21), and so does a text without the routes.
+  private static routeReads(path: string): Value {
+    let value: Value;
     try {
-      // ignoreBOM keeps a leading U+FEFF, so that a file that starts with it is not valid JSON, as in PHP and Python.
-      return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+      value = JsonCodec.decode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(App.readBytes(path)));
     } catch (error) {
-      if (!(error instanceof TypeError)) throw error;
-      throw rules().valueError(`${path} is not valid UTF-8`, 'invalid_application');
+      // The decoder raises bytes that are not UTF-8 as a TypeError, and the core a text that json refuses and a value
+      // outside the data model as its value error (HY-54.21).
+      if (!(error instanceof RangeError) && !(error instanceof TypeError)) throw error;
+      if (Reflect.get(error, 'kind') === 'invalid_application') throw error;
+      throw rules().valueError(`${path} is not valid JSON or UTF-8`, 'invalid_application');
     }
+    const routes = value instanceof Map ? value.get('routes') : undefined;
+    if (!(routes instanceof Map)) throw rules().valueError(`${path} has no routes`, 'invalid_application');
+    return routes;
+  }
+
+  // Reads the sources of the templates of the program by their names relative to the directory `templates`, with `/`
+  // between the segments, in the byte order of the names. A file that is not UTF-8 fails the open (HY-106.21).
+  private static templateSources(directory: string): Map<string, string> {
+    const sources = new Map<string, string>();
+    const names = readdirSync(directory, { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => join(entry.parentPath, entry.name).slice(directory.length + 1).replaceAll('\\', '/'))
+      .sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+    for (const name of names) {
+      const path = join(directory, name);
+      try {
+        sources.set(name, new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(App.readBytes(path)));
+      } catch (error) {
+        if (!(error instanceof TypeError)) throw error;
+        throw rules().valueError(`${path} is not valid UTF-8`, 'invalid_application');
+      }
+    }
+    return sources;
   }
 
   // Returns the text of the static shell after checking the declaration of the client rendering against the manifest
@@ -569,7 +548,7 @@ export class App<S extends object = Record<string, never>> {
     const path = stripBasePath(request.path(), basePath);
     if (client !== null && path === null) return this.shellResponse(request);
     if (path === '/_hyper/keep') return this.storeKept(request, store);
-    const match = path === null ? null : this.application.router.match(path);
+    const match = path === null ? null : this.router.match(path);
     if (match === null || path === null) return Response.text(404, 'Not Found');
     const route = this.routes.get(match.name);
     if (route === undefined) throw new Error(`hyper: route ${match.name} is not declared`);
@@ -614,7 +593,7 @@ export class App<S extends object = Record<string, never>> {
   // Answers a client-rendered request outside the data base path: the static shell for a page (HY-62). The path is
   // routed and the method checked before the media type is selected (HY-62 step 3).
   private shellResponse(request: Request): Response {
-    const match = this.application.router.match(request.path());
+    const match = this.router.match(request.path());
     if (match === null) return Response.text(404, 'Not Found');
     if (request.method !== 'GET') return App.notAllowed('GET, HEAD');
     // The representations of the route take part in the selection, so that a request that selects one of them is not
@@ -716,7 +695,7 @@ export class App<S extends object = Record<string, never>> {
     // The request of the page, which holds the new token after the action renewed the session (HY-72).
     let rendered = request;
     try {
-      if (request.method === 'GET') return App.withoutRenewal(reply, await this.page.respond(request, route, handler, session, flash, 200, {}, reply, basePath));
+      if (request.method === 'GET') return App.withoutRenewal(reply, await this.page.respond(request, route, handler, session, flash, null, reply, basePath));
       if (request.method !== 'POST' || handler.post === undefined) return App.notAllowed(handler.post === undefined ? 'GET, HEAD' : 'GET, HEAD, POST');
       const refused = this.refusedForm(request, session);
       if (refused !== null) return refused;
@@ -739,7 +718,7 @@ export class App<S extends object = Record<string, never>> {
       }
       if (result !== null) {
         if (result.isRedirect()) return this.redirectResponse(rendered, session, result, basePath);
-        return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, result.status, result.data, reply, basePath));
+        return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, { result: { status: result.status, data: result.data }, masked: request.csrfToken() }, reply, basePath));
       }
     } catch (error) {
       if (error instanceof NotFound) return Response.text(404, 'Not Found');
@@ -753,7 +732,7 @@ export class App<S extends object = Record<string, never>> {
     }
     // HY-107.4, HY-58: the 409 page of the action, whose loaders stop nothing; a loader that renews the session fails
     // it (HY-72.4).
-    return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, 409, {}, reply, basePath));
+    return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, { result: null, masked: request.csrfToken() }, reply, basePath));
   }
 
   // The code of an error of the ORM, which hyper knows by the name of its class and by its property `code`, because it does not
@@ -822,7 +801,7 @@ export class App<S extends object = Record<string, never>> {
     if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
     const name = request.formString('region');
     const path = request.formString('path');
-    if (!Object.hasOwn(keptPaths(this.application.manifest, name), path) || keptPaths(this.application.manifest, name)[path] !== 'server') {
+    if (!Object.hasOwn(keptPaths(this.manifest, name), path) || keptPaths(this.manifest, name)[path] !== 'server') {
       return Response.text(400, 'Bad Request');
     }
     const text = request.formString('value');

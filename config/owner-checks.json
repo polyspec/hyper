@@ -211,7 +211,8 @@
         "tests/scripts/fixtures/{chunks,invalid-manifest}/**"
       ],
       "tests": [
-        "tests/scripts/build.test.mts"
+        "tests/scripts/build.test.mts",
+        "tests/scripts/build-old-assets.test.mts"
       ]
     },
     {
@@ -299,6 +300,18 @@
         "tests/scripts/check-recipes.test.mts",
         "tests/scripts/toolchain.test.mts",
         "tests/scripts/template-pins.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/release-recipes-tree.mts"
+      ],
+      "tests": [
+        "tests/scripts/hyper-ext.test.mts",
+        "tests/scripts/ci-group-tools.test.mts"
       ],
       "targets": [
         "typecheck"
@@ -399,8 +412,7 @@
     },
     {
       "paths": [
-        "packages/cli/lib/template-files.mjs",
-        "scripts/build-templates.mts"
+        "packages/cli/lib/template-files.mjs"
       ],
       "targets": [
         "bundle-size",
@@ -442,6 +454,7 @@
         "tests/scripts/cli.test.mts",
         "tests/scripts/build-inputs.test.mts",
         "tests/scripts/build.test.mts",
+        "tests/scripts/build-old-assets.test.mts",
         "tests/scripts/check-templates.test.mts",
         "tests/scripts/package-source.test.mts"
       ]

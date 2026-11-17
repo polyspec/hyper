@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: c1e530d57ffa3d1a02a20887b150394c0fdebb233acdcae136f30088a7d6a61e -->
+<!-- source-sha256: 835d2911316349c738cd2b0c46b2fbe8c06ab67e49c88a5578d85c0a3371261b -->
 # 개발
 
 [English](development.md).
@@ -36,7 +36,7 @@
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) 테스트는 `NPM_BIN`으로 고정된 npm을 받으며 `tests/package-install/var/`에는 ignore된 기본 링크 상태를 저장한다. |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 그 `build.json`의 고정 build id로 빌드한다([빌드](#빌드) 참조) |
-| `make node-fixtures` | `scripts/build-templates.mts`와 설치한 template package로 Node 서버 test에 쓸 PHP test fixture의 템플릿 파일을 빌드한다(HR-70) |
+| `make node-fixtures` | `scripts/fixture-program.mts`와 PHP test fixture의 `build.json`의 build id로 Node 서버 test에 쓸 그 fixture의 서버 프로그램을 빌드한다(HY-48.19, HY-125.21) |
 | `make node-server` | board Node 서버를 타입 검사하고 `examples/board/build/node/server.mjs`로 bundle한다(아래 참조) |
 | `make board` | 설치된 소스 패키지로, 의존성을 설치하거나 링크를 다시 연결하지 않고 `hyper build` 한 번으로 board를 빌드한다: `public/assets`, CSR 셸을 담은 `examples/board/build/client`, `examples/board/build/program`([빌드](#빌드) 참조) |
 | `make test-js` | 라우터 적합성 사례를 포함한 브라우저 코드 테스트와 타입 검사를 실행한다 |
@@ -109,7 +109,7 @@ git push origin main
 
 ## Tag 릴리스
 
-릴리스는 `main`에서 `.github/workflows/ci.yml`의 실행이 성공한 commit에 붙인 tag `vX.Y.Z`이다(HR-95, 절차는 `AGENTS.md`). `.github/workflows/release.yml`은 맨 끝 commit이 버전 올림 commit인 push의 CI 실행이 성공하면 스스로 시작하고(kit K987), maintainer는 그 실행의 id만으로 그것을 다시 시작할 수 있으며(`gh workflow run release.yml -f run=<id>`), 버전은 그 실행의 commit에 있는 `CHANGELOG.md`의 첫 section `## X.Y.Z`이며(kit K924), tag의 push는 그것을 시작하지 않는다. 그 step은 다음 순서로 `config/release.json`으로 설정한 `@polyspec/kit`의 `release`를 실행하고 첫 실패에서 멈춘다.
+릴리스는 `main`에서 `.github/workflows/ci.yml`의 실행이 성공한 commit에 붙인 tag `vX.Y.Z`이다(HR-95, 절차는 `AGENTS.md`). `.github/workflows/release.yml`은 맨 끝 commit이 버전 올림 commit인 push의 CI 실행이 성공하면 스스로 시작하고(kit K987), maintainer는 그 실행의 id만으로 그것을 다시 시작할 수 있으며(`gh workflow run release.yml -f run=<id>`), 버전은 그 실행의 commit에 있는 `CHANGELOG.md`의 첫 section `## X.Y.Z`이며(kit K924), tag의 push는 그것을 시작하지 않는다. release의 section `## X.Y.Z`는 버전 올림 commit에서 표시 `unimplemented`를 가진 `contracts/protocol.json`의 모든 statement를 id로, 그것을 구현하는 행과 함께 이름한다. 그래서 release를 읽는 사람이 그 release가 명세의 어떤 statement를 따르지 않는지 안다. 그 section을 표시와 비교하는 검사는 없다. 그 step은 다음 순서로 `config/release.json`으로 설정한 `@polyspec/kit`의 `release`를 실행하고 첫 실패에서 멈춘다.
 
 ```sh
 make release-tag
@@ -166,7 +166,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 
 | Group | Bootstrap 이후 선택 도구 | 잠긴 package 환경 | 검사 |
 |---|---|---|---|
-| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer, Python uv lock | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, 중복, suppression, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
+| `gates` | Node/npm, PHP/Composer, PIE, Python/uv, ruff, vulture, alint, phpcs, phpstan | Root npm, root와 board Composer lock. Python package와 crate는 없다. 어느 gate도 그것을 시작하지 않기 때문이다 | kit의 검사기: 설정, 배치, 문서, owner, rebuild 분류, 언어, 중복, suppression, TypeScript, PHP, Python 린트(`GATE_TARGETS`) |
 | `docs` | Node/npm, PHP/Composer, PIE, Python/uv | Root와 board Composer lock | 타입 검사와 script 검사 |
 | `php` | Node/npm, PHP/Composer, PIE | Root와 board Composer lock | PHP 정책, benchmark smoke, formatting, analysis와 test |
 | `node` | Node/npm | Root npm lock | Template, browser unit, Node server와 npm consumer |
@@ -178,7 +178,7 @@ group의 local 실행은 그 job의 호출과 같은 `make ci-check NAME=<group>
 
 recipe `ci-check`는 group의 setup step을 순서대로 각각 별도의 make로 실행하고 첫 실패에서 멈춘다. 뒤의 step과 target이 그 step이 설치하는 것을 읽기 때문이다. 첫 step은 `make install-tools TOOLS="<group의 CI_TOOLS>"`이다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. `make hyper-install-php`가 네이티브 template 확장을 build하는 `docs`, `php`, `board` group은 `pie`를 선택한다. npm은 별도 bootstrap을 사용하고 `gates` group은 `make lint-php`가 php-parser를 읽는 PHP symbol extractor를 `make install-symbols EXTRACTORS="php"`(`CI_SYMBOLS_gates`)로 설치한다. kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)는 그 target이 실행하는 `gates` group만 설치하고, `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
 
-`make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). `make hyper-install-redis`는 `docs`를 위해 session test의 Redis server를 build하고, `make hyper-install-browser`는 `board`를 위해 Chromium을 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
+`make hyper-install-crates`는 `Cargo.lock`이 고정한 crate, 곧 polyspec crate의 git tag와 crates.io의 crate를 lock의 모든 target에 대해 `cargo fetch --locked`로 가져온다. `gates`를 뺀 모든 CI group의 두 번째 setup step이다. 그 group들이 각각 cargo, maturin, binding 생성기를 시작하고 이들은 crate를 offline으로 읽기 때문이다. 그 밖의 모든 recipe는 cargo를 `--offline`으로 시작하며, 그런 target 각각의 prerequisite인 `make crates-check`는 `crates-check: a crate that Cargo.lock pins is not fetched, or the lock does not match the manifests; run make hyper-install-crates`로 실패한다(HR-89). `make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). `make hyper-install-redis`는 `docs`를 위해 session test의 Redis server를 build하고, `make hyper-install-browser`는 `board`를 위해 Chromium을 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
 
 Build 선행 조건은 각 job의 검사가 소유한다. 언어 job은 다른 언어 job을 기다리거나 설치 환경 또는 build 산출물을 다운로드하지 않는다. 설치는 online이고 build와 검사는 offline 환경을 유지한다.
 
@@ -243,13 +243,13 @@ runner는 이름이 선택한 case를 전체 실행의 순서대로 한 번씩 �
 명령 도구 `@polyspec/hyper-cli`의 `hyper build`(HR-96)는 애플리케이션 디렉터리 하나를 한 번의 실행으로 build한다. `make board`는 그것을 checkout에서 board의 `--static` 파일 넷과 함께 `node packages/cli/bin/hyper.mjs build --app examples/board --output examples/board/build --api /api`로 실행한다. build는 무엇이든 쓰기 전에 모든 option, 매니페스트, 템플릿 규칙을 검사하고, 명령 도구가 요구하는 template package를 읽는다(HR-70). HR-34의 출력을 쓴다.
 
 1. `public/assets/` 아래, 이름에 내용의 해시가 들어간 파일. 더하기만 하고 지우지 않는다: `templates/`에 `templates/` 아래 템플릿마다 AST 파일 하나와 예약 템플릿 `hyper/data.tpl`의 파일 하나, 클라이언트 진입 파일 `hyper-<hash>.js`와 진입 파일이 `import()`로만 불러오는 코드마다 조각 파일 `hyper-chunk-<hash>.js` 하나(HYC-16), 그리고 `--asset <name>=<path>`와 `--tailwind <source>=<name>`의 각 에셋(HR-77). 진입 파일에는 htmx, hyper 브라우저 코드, template 렌더 런타임, `app/app.json`, 템플릿 색인이 들어 있고 템플릿은 없다.
-2. `<output>/client/manifest.json`: 레이아웃 코드가 읽는, `hyper`로 진입 파일의 URL과 이름마다 각 에셋의 URL(HYC-16.12). `<output>/client/assets.json`: 쓰이는 어떤 build도 적지 않은 파일을 지우기 위한, 이 build가 쓴 모든 경로 `public/assets/...`(HR-34). Node 서버가 읽는 `<output>/client/templates.index.json`과 `<output>/client/build.json`(HY-48.11).
+2. `<output>/client/manifest.json`: 레이아웃 코드가 읽는, `hyper`로 진입 파일의 URL과 이름마다 각 에셋의 URL(HYC-16.12). `<output>/client/assets.json`: 이 build가 쓴 모든 경로 `public/assets/...`. `<output>/client/assets.previous.json`: 그 앞에서 달랐던 마지막 build의 파일. 다음 build가 둘을 읽어 어느 목록도 남기지 않는 파일을 지운다(HR-34, HYC-16.18). 클라이언트 번들이 담는 템플릿 파일의 색인 `<output>/client/templates.index.json`.
 3. `client/main.ts`가 있고 `--api`가 주어지면 `<output>/client/csr/`: CSR 배포물. `index.html`은 `<meta name="hyper-api">`, `<meta name="hyper-build">`, 진입 파일의 URL을 담은 `<meta name="hyper-entry">`, 인라인한 진입 파일을 담고 스타일시트는 담지 않는다. 브라우저가 렌더한 레이아웃의 스타일시트 링크를 적용하기 때문이다(HYC-15, HYC-16). `assets/`는 이 build의 파일 사본과 `--static`이 밝히는 `public/` 아래 파일을 그 경로에 담는다. 애플리케이션은 렌더한 레이아웃이 link하는 스타일시트를 밝히며, `make board`는 board 예제의 `public/assets/app.css`, `public/assets/reader.css`와 module script `public/assets/reader.js`, `public/assets/after-reader.js`를 밝힌다. 진입 파일에 `</script`가 들어 있으면 build는 실패하고, 인라인한 진입 파일의 해시를 담은 Content Security Policy를 출력한다.
-4. `<output>/program/`: 네이티브 확장과 Python 서버가 읽는, 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`을 담은 `templates/`. `@polyspec/hyper/build`의 `readsFile`이 Rust core로 계산해 쓰는 모든 라우트의 read path인 `reads.json`(HY-73). 그리고 `build.json`. 프로그램은 생성된 PHP 프로그램을 담지 않으므로 `php/`도 `program.json`도 없다(HY-48.19). 세 서버가 `templates/`의 템플릿을 렌더한다.
+4. `<output>/program/`: 네이티브 확장과 Python 서버가 읽는, 애플리케이션의 모든 템플릿과 예약 템플릿 `hyper/data.tpl`을 담은 `templates/`. `@polyspec/hyper/build`의 `readsFile`이 Rust core로 계산해 쓰는 모든 라우트의 read path인 `reads.json`(HY-73). 그리고 `build.json`. 프로그램은 생성된 PHP 프로그램을 담지 않으므로 `php/`도 `program.json`도 없다(HY-48.20). 세 서버가 `templates/`의 템플릿을 렌더한다.
 
 Tailwind CSS는 `@polyspec/hyper-cli`의 의존성이므로, npm 12.2.0으로 기본값 `allow-remote=none`에서 lock을 쓰는 애플리케이션은 [Tag 릴리스](#tag-릴리스)의 npm 결함을 만난다. npm 릴리스가 수정을 담을 때까지 npm은 `@tailwindcss/oxide-wasm32-wasi`의 tarball을 `EALLOWREMOTE`로 거부한다([npm/cli#9818](https://github.com/npm/cli/pull/9818)).
 
-build id는 HY-125.15~HY-125.17의 파일로 한 번 계산하고 두 `build.json`과 셸에 쓴다. build는 build id를 받지 않는다(HY-125.21). 출력은 실행의 staging 디렉터리에서 만들고 `public/assets`, `client/`, `program/` 순서로 각 `build.json`을 마지막에 게시한다(HR-82). `--output` 아래에서 build는 `client/`와 `program/`만 소유한다. 출력은 커밋하지 않는다.
+build id는 HY-125.15~HY-125.17의 파일로 한 번 계산하고 `program/build.json`과 셸에 쓴다(HY-125.23). build는 build id를 받지 않는다(HY-125.21). 출력은 실행의 staging 디렉터리에서 만들고 `public/assets`, `client/`, `program/` 순서로 셸과 `build.json`을 마지막에 게시한다(HR-82). `--output` 아래에서 build는 `client/`와 `program/`만 소유한다. 출력은 커밋하지 않는다.
 
 고정 build id가 필요한 test fixture는 같은 조립으로 만든다: `make server-fixtures`는 `scripts/fixture-program.mts`를 실행하고, 그것은 `packages/php/tests/fixtures/build.json`의 id로 `packages/cli/lib/program.mjs`의 `writeProgram`과 `writeBuildFile`을 불러 root `composer.json`이 test fixture의 namespace에 대응시키는 `packages/php/tests/build/server`에 프로그램을 쓴다. `make contract-programs`도 같은 방법으로 계약 애플리케이션을 만든다.
 

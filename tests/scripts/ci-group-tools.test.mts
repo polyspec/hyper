@@ -11,14 +11,19 @@
 // is not in STARTED is not judged: Node.js and npm, which the bootstrap of the job installs, the programs of the runner
 // (cp, test, a C compiler, the libclang of hyper-ext), and what a setup step of the group installs for itself (Chromium,
 // Redis, the packages of Composer and uv).
+//
+// The crates of Cargo.lock are an install of the same kind (HR-89, H35.39): `make hyper-install-crates` is the one
+// target that downloads them, with `cargo fetch --locked`, and every other command line starts cargo offline. CRATES
+// are the programs that read the fetched crates: cargo itself, maturin, and the binding generator, whose generate and
+// check run `cargo metadata --locked --offline`. A group that starts one of them before a setup step fetched the
+// crates fails here, and so does a cargo command line without --offline, which would download in a check.
 import assert from 'node:assert/strict';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { dryRun } from './make-dry-run.mts';
-import { requireBuilt } from './requires.mts';
+import { treeWithoutReleaseRecipes } from './release-recipes-tree.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const MAKEFILE = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
@@ -52,6 +57,24 @@ const STARTED: readonly { program: string; pattern: RegExp; tools: readonly stri
   { program: 'ruff and vulture', pattern: /\/lint-python\.m[jt]s\b/u, tools: ['ruff', 'vulture'] },
 ];
 
+// The command line of hyper-install-crates, which downloads the crates of Cargo.lock.
+const FETCH = /\/link\.m[jt]s cargo \S+ fetch --locked$/u;
+// A cargo command line with its subcommand; the value of the option --cargo of the binding generator ends the line or
+// its quotes, so it is no such line.
+const CARGO_COMMAND = /\/link\.m[jt]s cargo \S+ ([a-z]+) /u;
+// The programs that read the crates which hyper-install-crates fetched.
+const CRATES: readonly { program: string; pattern: RegExp }[] = [
+  { program: 'cargo', pattern: CARGO_COMMAND },
+  { program: 'maturin', pattern: /\/link\.m[jt]s maturin /u },
+  { program: 'the binding generator', pattern: /\/@polyspec\/binding\/dist\/cli\.js (?:generate|check) /u },
+];
+// The cargo subcommands that read no crate of the lock from the network, so they carry no --offline.
+const NO_CRATES = ['fmt'];
+// A command line of an install target or of a target that writes a lock lifts the offline settings with $(ONLINE):
+// it downloads by its purpose (HR-89), as cargo update of cargo-lock does, so the rule of the fetched crates and of
+// --offline does not read it.
+const ONLINE = /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK /u;
+
 // The line of php-check-installed, which install-tools runs: it starts the PHP wrapper only in a checkout that holds
 // one, which an install that selects no PHP tool does not write, so the line starts no tool that the group lacks.
 const WHERE_INSTALLED = /^test ! -e \S+\/var\/tools\/bin\/php \|\| /u;
@@ -84,13 +107,25 @@ test('each CI group installs every tool that its setup steps and its targets sta
   const found: string[] = [];
   const matched = new Set<string>();
   const installing = new Set<string>();
+  const reading = new Set<string>();
+  const fetching = new Set<string>();
   let judged = 0;
   let conditional = 0;
   for (const group of groups) {
     const installed = new Set<string>();
+    let fetched = false;
     /** Adds a finding for each tool that the lines of `target` start and the steps so far did not install. */
     const judge = (target: string, lines: string[]): void => {
       judged += 1;
+      for (const line of lines.filter((text) => !ONLINE.test(text))) {
+        const subcommand = CARGO_COMMAND.exec(line)?.[1];
+        if (subcommand !== undefined && NO_CRATES.includes(subcommand)) continue;
+        const reader = CRATES.find((entry) => entry.pattern.test(line));
+        if (reader === undefined) continue;
+        reading.add(reader.program);
+        if (!fetched) found.push(`${group}: make ${target} starts ${reader.program} before a setup step of the group fetched the crates of Cargo.lock (hyper-install-crates in CI_SETUP_${group}): ${line.trim().slice(0, 200)}`);
+        if (subcommand !== undefined && !line.includes(' --offline')) found.push(`${group}: make ${target} starts cargo ${subcommand} without --offline, so a check may download a crate outside an install target (HR-89): ${line.trim().slice(0, 200)}`);
+      }
       conditional += lines.filter((line) => WHERE_INSTALLED.test(line)).length;
       const started = lines.filter((line) => !WHERE_INSTALLED.test(line));
       for (const entry of STARTED) {
@@ -115,6 +150,10 @@ test('each CI group installs every tool that its setup steps and its targets sta
         }
       }
       judge(step, lines);
+      if (lines.some((line) => FETCH.test(line))) {
+        fetched = true;
+        fetching.add(group);
+      }
     }
     assert.deepEqual([...installed].filter((tool) => tool !== 'wasm-bindgen').sort(), makeWords(`CI_TOOLS_${group}`).sort(), `the setup of the group ${group} installs CI_TOOLS_${group} with install-tools`);
     for (const target of makeWords(`CI_TARGETS_${group}`)) judge(target, commands(target));
@@ -123,20 +162,14 @@ test('each CI group installs every tool that its setup steps and its targets sta
   // A row that no command line matches judges nothing (HR-84).
   assert.deepEqual(STARTED.map((entry) => entry.program).filter((program) => !matched.has(program)), [], 'a row of STARTED matches no command line of any CI group');
   assert.ok(conditional > 0, 'no setup step prints the check of the PHP wrapper with its condition');
+  assert.deepEqual(CRATES.map((entry) => entry.program).filter((program) => !reading.has(program)), [], 'a row of CRATES matches no command line of any CI group');
+  assert.ok(fetching.size > 0, 'no setup step of any CI group prints the command line of hyper-install-crates');
   assert.deepEqual(found, []);
   assert.deepEqual(INSTALLS.map((install) => install.name).filter((name) => !installing.has(name)), [], 'a row of INSTALLS matches no command line of any setup step');
 });
 
 test('install-wasm-bindgen of a tree without packages/release.mk writes the file first and installs the wasm-bindgen CLI with the mise of the checkout (H35.16-6)', (t) => {
-  requireBuilt('install-packages', 'node_modules/@polyspec/binding/dist/cli.js');
-  requireBuilt('install-tools', 'var/tools/bin/node');
-  const tree = mkdtempSync(path.join(tmpdir(), 'hyper-install-wasm-bindgen-'));
-  t.after(() => rmSync(tree, { recursive: true, force: true }));
-  for (const file of ['Makefile', 'config/toolchain.json', 'packages/rust/interface.json', 'packages/ts/package.json', 'packages/go/go.mod']) {
-    mkdirSync(path.dirname(path.join(tree, file)), { recursive: true });
-    copyFileSync(path.join(ROOT, file), path.join(tree, file));
-  }
-  const variables = [`NODE=${path.join(ROOT, 'var/tools/bin/node')}`, `BINDING=${path.join(ROOT, 'node_modules/@polyspec/binding/dist/cli.js')}`];
+  const { tree, variables } = treeWithoutReleaseRecipes(t, 'hyper-install-wasm-bindgen-');
   const lines = dryRun('install-wasm-bindgen', { cwd: tree, variables });
   assert.ok(existsSync(path.join(tree, 'packages/release.mk')), `make wrote packages/release.mk before it read install-wasm-bindgen:\n${lines.join('\n')}`);
   // The line downloads, so it lifts the offline settings of the Makefile ($(ONLINE)), and names the mise of the tree.
@@ -146,5 +179,5 @@ test('install-wasm-bindgen of a tree without packages/release.mk writes the file
 test('the group core is the one CI group that starts wasm-bindgen, and its setup writes the release recipes and installs it after install-tools (H35.16-6)', () => {
   const starting = makeWords('CI_GROUPS').filter((group) => makeWords(`CI_TARGETS_${group}`).some((target) => commands(target).some((line) => /\/mise\/shims\/wasm-bindgen\b/u.test(line))));
   assert.deepEqual(starting, ['core']);
-  assert.deepEqual(makeWords('CI_SETUP_core'), ['install-tools', 'release-recipes', 'install-wasm-bindgen']);
+  assert.deepEqual(makeWords('CI_SETUP_core'), ['install-tools', 'hyper-install-crates', 'release-recipes', 'install-wasm-bindgen']);
 });

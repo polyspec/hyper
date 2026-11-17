@@ -33,15 +33,20 @@ final class ReadsSteps
             throw new \LogicException("the template {$template} is not among the templates of {$case->id()}");
         }
         $directory = self::PROGRAMS . '/reads_' . $case->id();
-        // HY-73.23: the build wrote the read paths of the template of the case, the page region of the route `reads`
+        // HY-73.34: the build wrote the read paths of the template of the case, the page region of the route `reads`
         // of the application, to reads.json of the program that the renderer opens.
         $file = "{$directory}/program/reads.json";
         $json = file_get_contents($file);
         if ($json === false) {
             throw new \RuntimeException("{$file} cannot be read");
         }
-        $built = json_decode($json, false, 512, JSON_THROW_ON_ERROR);
-        $case->compare('reads', $built->routes->reads->regions->content ?? null);
+        // The read paths are the member routes.reads.regions.content of the file; a member that is missing, or whose
+        // holder is no object, gives null, which the comparison reports.
+        $paths = json_decode($json, false, 512, JSON_THROW_ON_ERROR);
+        foreach (['routes', 'reads', 'regions', 'content'] as $member) {
+            $paths = $paths instanceof \stdClass ? ($paths->{$member} ?? null) : null;
+        }
+        $case->compare('reads', $paths);
         $renderer = Renderer::open("{$directory}/program", 'Z');
         $shared = $renderer->bind([]);
         $text = $renderer->alone($template, $shared, $renderer->bind($data));
