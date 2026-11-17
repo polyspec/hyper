@@ -559,7 +559,7 @@ test('handler-error-is-the-plain-500-and-is-reported (HY-43.1, HY-43.2, HY-43.4,
   await eachHost(t, hosts, async (host, check) => {
     // The error is handled (HY-43): the response hook receives the 500 with the message and the notes of the reply, and
     // the write hook receives no failure, which is the message of an escaped error only (HY-99.2).
-    check.response('GET /', await ask(host, requestBytes('GET', '/')), { ...PLAIN_500, absent: [], cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); path=/; HttpOnly; SameSite=Lax$`) });
+    check.response('GET /', await ask(host, requestBytes('GET', '/')), { ...PLAIN_500, absent: [], cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); Path=/; HttpOnly; SameSite=Lax$`) });
     check.log('GET /', HOOKS, ['load shared mark=-', 'load home mark=-', responseLine(500, 'GET /', '-', '"handler boom"'), writtenLine(500, true, 'GET /')]);
     check.errors('GET /', 'handler boom');
   });
@@ -591,7 +591,7 @@ test('escaped-500-keeps-the-headers-of-the-caller (HY-60.24 to HY-60.27, HY-99.2
 test('around-answers-a-changed-copy-and-changes-the-response (HY-97.2, HY-97.3, HY-97.4, HY-45.1, HY-45.3, HY-99.2, HY-104.9)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'mark' } });
   await eachHost(t, hosts, async (host, check) => {
-    const identifier = check.response('GET /', await ask(host, requestBytes('GET', '/')), { status: 200, bodyContains: '<p>upload</p>', headers: { 'x-around': 'yes' }, cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); path=/; HttpOnly; SameSite=Lax$`) });
+    const identifier = check.response('GET /', await ask(host, requestBytes('GET', '/')), { status: 200, bodyContains: '<p>upload</p>', headers: { 'x-around': 'yes' }, cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); Path=/; HttpOnly; SameSite=Lax$`) });
     check.same('GET /, the entries of the session directory', sessionsOf(host), [`sess_${identifier}`]);
     // The handlers and the response hook read the header of the copy; the write hook receives the request that the
     // server gave to around (HY-99.2).
@@ -691,7 +691,7 @@ test('session-cookie-of-a-new-session (HY-45.1, HY-45.3, HY-45.4, HY-24.2, HY-24
   await eachHost(t, hosts, async (host, check) => {
     const accept = { Accept: 'application/vnd.hyper+json' };
     const first = await ask(host, requestBytes('GET', '/list', accept));
-    const identifier = check.response('the first GET /list', first, { status: 200, cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); path=/; HttpOnly; SameSite=Lax$`) });
+    const identifier = check.response('the first GET /list', first, { status: 200, cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); Path=/; HttpOnly; SameSite=Lax$`) });
     check.same('the first GET /list, whether shared.csrf has 128 hexadecimal digits', /^[0-9a-f]{128}$/.test(csrfOf(first)), true);
     check.same('the first GET /list, the entries of the session directory', sessionsOf(host), [`sess_${identifier}`]);
     const second = await ask(host, requestBytes('GET', '/list', { ...accept, Cookie: `hy-session=${identifier}` }));
@@ -716,7 +716,7 @@ test('no-session-for-a-path-without-a-route (HY-45.4, HY-27.1, HY-60.2, HY-60.8,
 test('session-cookie-is-secure-when-the-application-declares-https (HY-45.1, HY-45.3, HY-45.6)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_HTTPS: '1' } });
   await eachHost(t, hosts, async (host, check) => {
-    check.response('GET /', await ask(host, requestBytes('GET', '/')), { status: 200, cookie: new RegExp(`^__Host-hy-session=(${SESSION[host.name]}); path=/; secure; HttpOnly; SameSite=Lax$`) });
+    check.response('GET /', await ask(host, requestBytes('GET', '/')), { status: 200, cookie: new RegExp(`^__Host-hy-session=(${SESSION[host.name]}); Path=/; Secure; HttpOnly; SameSite=Lax$`) });
   });
 });
 
