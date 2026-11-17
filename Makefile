@@ -711,10 +711,11 @@ node-package: bindings packages node-addon ## Build the WASM module and the Node
 	$(NODE) -e 'require("fs").writeFileSync("$(BINDINGS_VAR)/node-platform/package.json", JSON.stringify({ name: "@polyspec/hyper-$(NODE_PLATFORM)", version: "$(NODE_VERSION)", os: [process.platform], cpu: [process.arch], main: "$(NODE_ADDON)", files: ["$(NODE_ADDON)"] }, null, 2) + "\n")'
 	cd $(BINDINGS_VAR)/node-platform && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node
 	cd $(NODE_PACKAGE) && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node
-	# The dependencies of the package are packed from the root install, which installed them from the lock, since an
-	# offline install of the packed package finds no registry for them (@polyspec/hyper-client is in no registry).
+	# The production closure of the package that the lock names is packed from the root install, which installed it from
+	# the lock, since an offline install of the packed package finds no registry for a dependency that is not packed
+	# (@polyspec/hyper-client is in no registry, and npm ci caches no metadata of eventsource-parser, H34.12).
 	mkdir -p $(BINDINGS_VAR)/node/deps
-	for dependency in $$($(NODE) -p 'Object.keys(require("./$(NODE_PACKAGE)/package.json").dependencies ?? {}).join(" ")'); do \
+	for dependency in $$($(NODE) scripts/dependency-closure.mts --lock package-lock.json --workspace $(NODE_PACKAGE)); do \
 		(cd $(CURDIR)/node_modules/$$dependency && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node/deps) || exit 1; done
 	echo '{ "private": true }' > $(BINDINGS_VAR)/node/package.json
 	cd $(BINDINGS_VAR)/node && $(NPM) install --no-audit --no-fund --omit=optional ./deps/*.tgz ./polyspec-hyper-$(NODE_VERSION).tgz ./polyspec-hyper-$(NODE_PLATFORM)-$(NODE_VERSION).tgz
