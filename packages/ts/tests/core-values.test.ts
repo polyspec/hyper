@@ -4,50 +4,10 @@
 // form in the data model; its message has the form `kind in  at 0:0: text`, the text of an error of the template
 // language that names no template and no place. The check of the core refuses a converted value; its message has the
 // form `kind: text`. Each row states the class, the kind and the whole message of the error that the caller receives.
-import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
+import { addon, pages as routePages, type Step } from './core-addon.ts';
 
-interface Step {
-  readonly step: string;
-  readonly call?: { readonly call: string };
-  readonly answer?: { readonly answer: string; readonly status?: number };
-}
-
-interface Addon {
-  readonly Pages: new (manifest: Uint8Array, templates: Map<string, string>, reads: unknown, options: object) => object;
-  readonly PageRequest: new (pages: object, input: object) => { next(input: object): Step };
-}
-
-function isAddon(module: unknown): module is Addon {
-  return typeof module === 'object' && module !== null && typeof Reflect.get(module, 'Pages') === 'function' && typeof Reflect.get(module, 'PageRequest') === 'function';
-}
-
-function builtAddon(): Addon {
-  const module: unknown = createRequire(import.meta.url)('../native/generated/index.cjs');
-  if (!isAddon(module)) throw new Error('the addon of native/generated has no class Pages or PageRequest; run make node-addon');
-  return module;
-}
-
-const addon = builtAddon();
-
-const MANIFEST = {
-  layout: 'layout.tpl',
-  title: 'title.tpl',
-  regions: [{ name: 'content', page: true }],
-  routes: [{ name: 'home', path: '/', title: 'Home', template: 'page.tpl' }],
-};
-
-const TEMPLATES = new Map([
-  ['layout.tpl', '<title>{# title}</title>{# build}\n<main id="content">{# content}</main>\n{# data}\n'],
-  ['title.tpl', '{= title} - Site'],
-  ['page.tpl', '<p>{= title}</p>\n'],
-]);
-
-function pages(): object {
-  const reads = new Map([['home', new Map<string, unknown>([['shared', true], ['regions', new Map()]])]]);
-  const options = { build: '1'.repeat(64), timezone: 'Z', context: false, basePath: '', formTypes: ['application/x-www-form-urlencoded'] };
-  return new addon.Pages(new TextEncoder().encode(JSON.stringify(MANIFEST)), TEMPLATES, reads, options);
-}
+const pages = (): object => routePages('<p>{= title}</p>\n', new Map());
 
 // The request of a region JSON response of the route `home`, at the step that asks for the shared data.
 function atShared(): { next(input: object): Step } {

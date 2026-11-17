@@ -307,6 +307,18 @@
     },
     {
       "paths": [
+        "tests/scripts/template-release.mts"
+      ],
+      "tests": [
+        "tests/scripts/template-pins.test.mts",
+        "tests/scripts/template-version.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "tests/scripts/release-recipes-tree.mts"
       ],
       "tests": [

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a9c746964723162420411c238fe9469b64cbbe1295e3738ed3aa65e25036a713 -->
+<!-- source-sha256: 0c646c533e5949360d26fbf8c7933b65925c0d67ae184d13d694cb27d1a7c5b5 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- CI group gates가 rules-check, duplication-check, lint-ts, lint-php를 통과한다(H34.7). 입력: group gates의 CI run. 이전 동작: rules-check는 AGENTS.md의 미구현 표시 규칙의 Enforced by 줄에서 backtick 안의 용어 `docs/features.md`를 어떤 recipe도 이름하지 않는 check로 읽었다. oxlint는 문자열 메서드가 맞는 곳의 정규식, 타입 단언, 문자열로 바뀌는 unknown, 비교 함수 없는 sort를 보고했고, tsc는 `ci-workflow.test.mts`에서 undefined일 수 있는 job을 보고했고, phpcs는 120자를 넘는 두 줄을 보고했으며, duplication-check는 `contracts.rs`와 `register.rs`의 case reader, `core-renewal.test.ts`와 `core-values.test.ts`의 addon pages, `template-pins.test.mts`와 `template-version.test.mts`의 template release URL을 중복으로 찾았다. 기대 동작: 규칙은 그 파일을 backtick 없이 이름한다. 코드는 검사로 타입을 좁힌다. 공유 부분은 `packages/rust/tests/contract_cases/mod.rs`, `packages/ts/tests/core-addon.ts`, `tests/scripts/template-release.mts`에 있다.
 - PHP case runner는 `openFails`를 적지 않은 `contracts/functions.json` case에서 실패한 open의 오류를 보고한다(HYC-24, H34.6). 입력: host function `shout`으로 여는 `App::open`이 실패하는 `a_document_renders_the_host_function`. 이전 동작: `FunctionsSteps`는 없는 field `openFails`와 `openError`를 비교하고 반환했으므로 case는 오류 없이 `CASE_EMPTY`를 보고했다. 이제: case는 오류의 메시지와 함께 `CASE_ERROR`를 보고한다. kind `suffix`의 function은 render의 environment를 두 번째 parameter로 받는다(HYC-24.10). template 0.0.30의 binding은 두 argument보다 적게 받는 host function을 거부하기 때문이다.
 - CI group node는 `make release-candidate-assets`에 필요한 uv를 설치한다(HR-91, H34.11). 입력: CI run 44130032438의 check (node). 이전 동작: group이 node와 rust만 설치했고, kit의 release candidate-assets는 uv로 `packages/python`의 environment를 찾으므로 "uv workspace dir could not start: spawnSync uv ENOENT"로 실패했다. `ci-group-tools.test.mts`는 command line만 읽어 그 uv를 보지 못했다. 기대 동작: `CI_TOOLS_node`에 uv가 있고, test가 kit이 시작하는 uv를 적는다.
 - `make hyper-install-python`은 Python native module을 build하기 전에 binding의 생성 source를 쓴다(HR-85, H34.10). 입력: CI group python, board, docs의 setup step이 `make hyper-install` 없이 실행하는 새 checkout. 이전 동작: maturin이 `make bindings`만 쓰는 "packages/python/native/generated/lib.rs"를 찾지 못해 실패했다. 기대 동작: `hyper-install-python`은 `bindings`를 prerequisite로 갖는다.

@@ -21,19 +21,18 @@ export function inputs(files: string[]): Set<string> {
   const targets = new Set<string>();
   const seen = new Set<string>();
   const queue = files.map((file) => path.resolve(file));
-  while (queue.length > 0) {
-    const file = queue.pop() as string;
+  for (let file = queue.pop(); file !== undefined; file = queue.pop()) {
     if (seen.has(file)) continue;
     seen.add(file);
     if (!existsSync(file)) throw new Error(`${file}: no such file`);
     // requires.mts defines requireBuilt and phpServerExtensions; a call of either names its targets where it is made.
     if (file === REQUIRES) continue;
     const text = readFileSync(file, 'utf8');
-    for (const match of text.matchAll(REQUIRE)) for (const target of (match[1] as string).split(/\s+/)) if (target !== '') targets.add(target);
+    for (const match of text.matchAll(REQUIRE)) for (const target of (match[1] ?? '').split(/\s+/)) if (target !== '') targets.add(target);
     if (EXTENSIONS.test(text)) for (const target of ['ext', 'hyper-ext']) targets.add(target);
     for (const match of text.matchAll(IMPORT)) {
-      const specifier = (match[1] ?? match[2]) as string;
-      if (!/\.m?[tj]s$/.test(specifier)) continue;
+      const specifier = match[1] ?? match[2];
+      if (specifier === undefined || !/\.m?[tj]s$/.test(specifier)) continue;
       queue.push(path.resolve(path.dirname(file), specifier));
     }
   }

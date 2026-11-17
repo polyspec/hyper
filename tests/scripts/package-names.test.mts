@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
-import { jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
+import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 
 const repository = resolve('.');
 type Kind = 'npm' | 'composer' | 'python';
@@ -27,7 +27,7 @@ const PACKAGES: { directory: string; kind: Kind; name: string; product: string; 
   { directory: 'packages/python', kind: 'python', name: 'polyspec-hyper', product: 'hyper', runtime: 'python', binding: true },
   { directory: 'packages/cli', kind: 'npm', name: '@polyspec/hyper-cli', product: 'hyper-cli', runtime: 'ts' },
 ];
-const manifests = parseJsonObject(readFileSync(join(repository, 'config/release.json'), 'utf8'), 'config/release.json').manifests as Record<string, string>;
+const manifests = jsonObject(parseJsonObject(readFileSync(join(repository, 'config/release.json'), 'utf8'), 'config/release.json').manifests, 'config/release.json manifests');
 
 // The Composer package of the PHP extension of the server library, which binding scaffold writes (binding L-2a). The
 // host packages take their native modules with the bindings, and config/release.json releases it then.

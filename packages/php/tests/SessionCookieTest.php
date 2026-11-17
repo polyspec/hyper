@@ -157,7 +157,10 @@ final class SessionCookieTest extends TestCase
         [$setCookies, $body] = $this->request('mode=sent');
 
         self::assertCount(1, $setCookies);
-        self::assertMatchesRegularExpression('/^Set-Cookie: hy-session=[A-Za-z0-9,-]{22,128}; Path=\/; HttpOnly; SameSite=Lax$/D', $setCookies[0]);
+        self::assertMatchesRegularExpression(
+            '/^Set-Cookie: hy-session=[A-Za-z0-9,-]{22,128}; Path=\/; HttpOnly; SameSite=Lax$/D',
+            $setCookies[0],
+        );
         self::assertSame('body hyper: the session cookie could not be sent', $body);
     }
 

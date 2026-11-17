@@ -9,15 +9,25 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { isJsonObject, jsonArray, jsonObject, jsonObjects, type JsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const read = (file: string): string => readFileSync(path.join(ROOT, file), 'utf8');
 
-interface ReleasePackage { kind: string; directory: string; name: string; product: string; runtime: string }
-interface ReleaseConfig { packages: ReleasePackage[]; manifests: Record<string, string>; notReleased: Record<string, string> }
+// The JSON object of the tracked file `file`.
+const readObject = (file: string): JsonObject => parseJsonObject(read(file), file);
 
-const config = JSON.parse(read('config/release.json')) as ReleaseConfig;
+interface ReleasePackage { kind: string; directory: string; name: string; runtime: string }
+
+const release = readObject('config/release.json');
+const config: { packages: ReleasePackage[]; manifests: JsonObject } = {
+  packages: jsonObjects(release.packages, 'config/release.json packages').map((item, index) => {
+    const where = `config/release.json packages[${index}]`;
+    return { kind: jsonString(item.kind, `${where} kind`), directory: jsonString(item.directory, `${where} directory`), name: jsonString(item.name, `${where} name`), runtime: jsonString(item.runtime, `${where} runtime`) };
+  }),
+  manifests: jsonObject(release.manifests, 'config/release.json manifests'),
+};
 
 // The makes that the recipe of a job of assets.yml starts, and the command lines of the build that it ends with.
 const started = (recipe: string, variables: string[] = []): string[] => dryRun(recipe, { variables }).map((line) => / --no-print-directory ([a-z][\w-]*)/.exec(line)?.[1]).filter((target) => target !== undefined);
@@ -40,7 +50,9 @@ test('H35.35-3 no npm package of kit packs a native file of the checkout, and th
   // `npm pack` of kit packs the files of the checkout that `files` names. An addon or a WASM module there is what the
   // checkout happens to hold: the debug addon of the runner that make node-addon builds, and no module of another platform.
   const native = config.packages.filter((item) => item.kind === 'npm').flatMap((item) => {
-    const files = (JSON.parse(read(`${item.directory}/package.json`)) as { files?: string[] }).files ?? [];
+    const where = `${item.directory}/package.json`;
+    const listed = readObject(where).files;
+    const files = listed === undefined ? [] : jsonArray(listed, `${where} files`).map((file, index) => jsonString(file, `${where} files[${index}]`));
     return files.filter((file) => /\.(?:node|wasm)$/.test(file)).map((file) => `${item.directory}: config/release.json names an npm package of kit, and its files hold ${file}, a native file that npm pack takes from the checkout`);
   });
   assert.deepEqual(native, []);
@@ -54,14 +66,17 @@ test('H35.35-3 no npm package of kit packs a native file of the checkout, and th
   const platform = dryRun('release-assets-platform').join('\n');
   // The napi CLI that release-npm-platform starts is the bin of a devDependency, pinned by its exact version (HR-70).
   assert.match(platform, /\/node_modules\/\.bin\/napi build --platform --release /, platform);
-  const napi = (JSON.parse(read('package.json')) as { devDependencies?: Record<string, string> }).devDependencies?.['@napi-rs/cli'];
+  const development = readObject('package.json').devDependencies;
+  const pin = isJsonObject(development) ? development['@napi-rs/cli'] : undefined;
+  const napi = typeof pin === 'string' ? pin : undefined;
   assert.ok(napi !== undefined, 'package.json holds no devDependency @napi-rs/cli');
   assert.match(napi ?? '', /^\d+\.\d+\.\d+$/, `package.json pins no @napi-rs/cli, whose bin make release-npm-platform starts: ${napi}`);
 });
 
 test('H35.35-4 the job php builds the extension for each PHP minor of config/toolchain.json on each platform, and kit packs its Composer package', () => {
   // release-platform-assets requires one extension archive for each platform and each minor of phpExtension.minors.
-  const minors = (JSON.parse(read('config/toolchain.json')) as { phpExtension?: { minors?: unknown } }).phpExtension?.minors;
+  const extension = readObject('config/toolchain.json').phpExtension;
+  const minors = isJsonObject(extension) ? extension.minors : undefined;
   assert.ok(Array.isArray(minors) && minors.length > 0 && minors.every((minor) => typeof minor === 'string' && /^\d+\.\d+$/.test(minor)), `config/toolchain.json names no PHP minor of the extension in phpExtension.minors: ${JSON.stringify(minors)}`);
   assert.ok(minors.includes(read('.php-version').trim()), `phpExtension.minors lacks the PHP of .php-version: ${minors.join(' ')}`);
   // The matrix of the job php of assets.yml: one entry for each platform and each minor, and no other.
@@ -73,10 +88,10 @@ test('H35.35-4 the job php builds the extension for each PHP minor of config/too
   assert.match(dryRun('release-assets-php', { variables: ['EXPECTED_PHP_MINOR=8.4'] }).join('\n'), / release-php-ext PHP=php EXPECTED_PHP_MINOR=8\.4$/m);
   // The Composer package of the extension is the package of the crate that release-php-ext builds: kit packs its source
   // zip and names it in packages.json, from which PIE finds the archive of a platform.
-  const extensions = config.packages.filter((item) => item.kind === 'composer').filter((item) => (JSON.parse(read(`${item.directory}/composer.json`)) as { type?: string }).type === 'php-ext');
+  const extensions = config.packages.filter((item) => item.kind === 'composer').filter((item) => readObject(`${item.directory}/composer.json`).type === 'php-ext');
   assert.deepEqual(extensions.map((item) => [item.directory, item.runtime]), [['packages/php/native', 'php-ext']], 'config/release.json names no Composer package of the PHP extension of packages/php/native');
-  const [extension] = extensions;
-  assert.ok(extension !== undefined);
-  assert.equal((JSON.parse(read('packages/php/native/composer.json')) as { name?: string }).name, extension.name);
+  const [native] = extensions;
+  assert.ok(native !== undefined);
+  assert.equal(readObject('packages/php/native/composer.json').name, native.name);
   assert.equal(config.manifests['packages/php/native/composer.json'], 'archive');
 });

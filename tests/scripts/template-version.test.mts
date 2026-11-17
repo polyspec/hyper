@@ -6,8 +6,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
-import { type JsonObject, jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
+import { type JsonObject, jsonObject, jsonObjects, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
+import { JSON_PACKAGES, NPM_PACKAGE, NPM_PLATFORMS, releaseOf, tarballOf } from './template-release.mts';
 
 const repository = resolve('.');
 const read = (file: string) => readFileSync(join(repository, file), 'utf8');
@@ -19,14 +20,8 @@ const optionalMember = (object: JsonObject, key: string, where: string): JsonObj
 
 // The template release that hyper depends on (H21.4, H23.23). Every pin below names this version.
 const VERSION = '0.0.30';
-const TAG = `v${VERSION}`;
-const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
-// The json release that the platform of the root composer.json declares for ext-polyspec_json.
-const JSON_VERSION = jsonString(member(member(json('composer.json'), 'config', 'composer.json'), 'platform', 'composer.json config')['ext-polyspec_json'], 'composer.json platform ext-polyspec_json');
-const JSON_PACKAGES = `https://github.com/polyspec/json/releases/download/v${JSON_VERSION}/packages.json`;
-const NPM_PACKAGE = '@polyspec/template';
-const NPM_PLATFORMS = ['@polyspec/template-darwin-arm64', '@polyspec/template-linux-arm64-gnu', '@polyspec/template-linux-x64-gnu'];
-const tarball = (name: string) => `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`;
+const RELEASE = releaseOf(VERSION);
+const tarball = (name: string) => tarballOf(VERSION, name);
 
 test('the npm manifests name the template tarballs of the release, and their dependencies name its version (H21.4)', () => {
   const root = json('package.json');

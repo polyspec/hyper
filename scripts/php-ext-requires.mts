@@ -20,6 +20,8 @@ import { fileURLToPath } from 'node:url';
 import { readPin, type Pin } from './php-ext-verify.mts';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
+// A requirement as a message names it: a string as it is, any other JSON value in its JSON form.
+const requirementText = (value: unknown): string => (typeof value === 'string' ? value : JSON.stringify(value));
 
 /** The URL of the release asset packages.json of `pin`. */
 export const packagesUrl = (pin: Pin): string => `https://github.com/${pin.repository}/releases/download/v${pin.version}/packages.json`;
@@ -51,10 +53,10 @@ export function jsonProblems(repository: unknown, name: string, version: string,
   const problems: string[] = [];
   const library = require['polyspec/json'];
   if (library === undefined) problems.push(`${name} ${version} requires no polyspec/json, so its json version is not known`);
-  else if (library !== jsonVersion) problems.push(`${name} ${version} requires polyspec/json ${String(library)}, and json-ext installs ${jsonVersion}`);
+  else if (library !== jsonVersion) problems.push(`${name} ${version} requires polyspec/json ${requirementText(library)}, and json-ext installs ${jsonVersion}`);
   const extension = require['ext-polyspec_json'];
   if (extension !== undefined && extension !== '*' && extension !== jsonVersion) {
-    problems.push(`${name} ${version} requires ext-polyspec_json ${String(extension)}, and json-ext installs ${jsonVersion}`);
+    problems.push(`${name} ${version} requires ext-polyspec_json ${requirementText(extension)}, and json-ext installs ${jsonVersion}`);
   }
   return problems;
 }

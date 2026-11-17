@@ -27,6 +27,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
 import { treeWithoutReleaseRecipes } from './release-recipes-tree.mts';
 
@@ -226,7 +227,8 @@ test('each CI group installs every tool that its setup steps and its targets sta
 });
 
 test('the job of release.yml installs every tool that its steps start, before the command line that starts it (HR-95, H35.35)', () => {
-  const kinds = (JSON.parse(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8')) as { packages: { kind: string }[] }).packages.map((item) => item.kind);
+  const release = parseJsonObject(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8'), 'config/release.json');
+  const kinds = jsonObjects(release.packages, 'config/release.json packages').map((item, index) => jsonString(item.kind, `config/release.json packages[${index}] kind`));
   assert.ok(kinds.includes('composer') || kinds.includes('wheel'), 'config/release.json holds no Composer package and no wheel, so release-tools of kit installs no tool');
   const judged = jobToolProblems('release', releaseCalls(), []);
   // release-go-module generates the Go binding with cargo; a dry run that does not name it judged nothing (HR-84).
