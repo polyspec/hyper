@@ -55,6 +55,8 @@ function send(url: string, method: string, headers: Record<string, string>, body
 // are, its children, which the end of the test stops before it removes the directory, and the environment of a server
 // with directories of its own.
 async function started(t: TestContext): Promise<{ directory: string; children: ChildProcess[]; environment: (server: string) => Record<string, string> }> {
+  // contract-programs builds the Node application with the Node package, which loads the addon of this platform.
+  requireBuilt('node-addon', `packages/ts/native/generated/hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`);
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-upload-servers-'));
   const children: ChildProcess[] = [];
   t.after(async () => {

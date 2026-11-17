@@ -475,7 +475,7 @@ toolchain-policy-test: ## Verify the declared toolchain and offline recipe polic
 # input of a test and is not run. The full set builds every input of SCRIPT_TEST_INPUTS first; a selection of TESTS builds
 # only the ones that its files, and the modules that they import, name with requireBuilt (scripts/test-inputs.mts,
 # HR-85, H35.55), so a selection that reads none of them builds nothing and starts no cargo.
-SCRIPT_TEST_INPUTS := packages board node-server ext hyper-ext
+SCRIPT_TEST_INPUTS := packages board node-addon node-server ext hyper-ext
 hyper-test-scripts: $(if $(TESTS),$(shell $(NODE) scripts/test-inputs.mts '$(SCRIPT_TEST_INPUTS)' $(TESTS)),$(SCRIPT_TEST_INPUTS)) ## Run the tests of the check scripts, the build case runner included (HYR-7), or only the files of TESTS
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt HYPER_PHP_EXTENSIONS='$(PHP_SERVER_EXTENSIONS)' $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),$(wildcard tests/scripts/*.test.mts))

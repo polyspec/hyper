@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7177cf37685ffa2deb312692c10119ae685df7f6d340897a17b9b0ccae39898f -->
+<!-- source-sha256: 4d4a6f30a46f05acf5ed46aefceda2683ecc9fb3639a9b35c6e4850e752c5661 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts`는 test가 load하는 Node addon을 build한다(HR-85, H34.4). 입력: `make bindings`가 addon 없이 `packages/ts/native/generated/`를 다시 쓴 checkout. 이전 동작: test가 addon을 선언하지 않았고 `SCRIPT_TEST_INPUTS`에 `node-addon`이 없었으므로 선택은 `packages ext hyper-ext`를 build했고, 모든 case가 `Cannot find module './hyper.darwin-arm64.node'`로 실패했다. `TESTS` 선택은 `fixture-program.test.mts`가 선언한 `node-addon`도 빠뜨렸다. 기대 동작: `started()`가 platform의 addon과 함께 `node-addon`을 선언하고, 선택이 그것을 build한다.
 
 - PHP server는 session cookie를 HY-45.8의 field 값으로 쓴다(H34.2). 입력: session을 만드는 request. 이전 동작: `NativeSession`이 PHP의 `setcookie`로 `hy-session=<id>; path=/; HttpOnly; SameSite=Lax`를, HTTPS에서는 `path=/; secure`를 보냈고, Node와 Python server는 `Path=/`와 `Secure`를 썼다. 기대 동작: 모든 server가 `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`를 쓰고 `Secure`는 HTTPS에서만 있으며, `NativeSession`은 http-cookie가 쓰는 core의 값을 보낸다. header가 보내진 뒤의 renew는 PHP가 그때 identifier를 다시 만들지 않으므로 오류 없이 이전 identifier를 유지했다. 이제 renew는 `hyper: the session cookie could not be sent`를 던진다(HY-129).
 
