@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 97a2030c7d28f45ba951652b6669a4de33af5a58bc6b6ce895c424a529a94a23 -->
+<!-- source-sha256: 26bb8b7b1561e876661fbc11e8c3c99a15b61fd6a10d5e6904be89bdb83faea2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- ASGI host는 닫힌 연결이 아닌 오류를 던지는 send를 log에 쓰고 그 실패와 함께 write hook에 알린다(HY-60.14, HY-60.21, HY-43, H35.36-8). 입력: `ValueError`를 던지는 `http.response.body`의 send. 이전 동작: `host/asgi.py`는 send의 모든 오류를 닫힌 연결로 읽어 log 줄을 쓰지 않고, write hook에 실패를 주지 않으며, disconnect hook을 불렀다. 기대 동작: `OSError`는 닫힌 연결로 남고, 다른 오류는 log 줄 `hyper: <class>: <message>`를 쓰며, write hook은 그 message와 끝나지 않은 write로 그것을 한 번 받고, disconnect hook은 실행되지 않으며, 오류는 전파된다. `make hyper-test-python PYTHON_TESTS="tests/test_asgi.py tests/test_wsgi.py"`로 검증했다: 49개 test 통과.
 - `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 - `tests/scripts/upload-servers.test.mts`는 scenario의 server가 시작하지 않아도 끝난다(HR-87, H34.3). 입력: Node application을 build할 수 없을 때처럼 `started()`가 throw하는 scenario. 이전 동작: `hostsOf`가 gate listener의 close를 `started()` 뒤에야 등록했으므로, 모든 case가 실패한 뒤에도 listener가 열린 채 남아 파일이 끝나지 않았다. 기대 동작: listener가 listen한 직후 close를 등록하고, 파일은 실패와 함께 끝난다.
 - `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts`는 test가 load하는 Node addon을 build한다(HR-85, H34.4). 입력: `make bindings`가 addon 없이 `packages/ts/native/generated/`를 다시 쓴 checkout. 이전 동작: test가 addon을 선언하지 않았고 `SCRIPT_TEST_INPUTS`에 `node-addon`이 없었으므로 선택은 `packages ext hyper-ext`를 build했고, 모든 case가 `Cannot find module './hyper.darwin-arm64.node'`로 실패했다. `TESTS` 선택은 `fixture-program.test.mts`가 선언한 `node-addon`도 빠뜨렸다. 기대 동작: `started()`가 platform의 addon과 함께 `node-addon`을 선언하고, 선택이 그것을 build한다.

@@ -230,6 +230,39 @@ class AsgiTest(UploadCases, TransportCase):
             run(application, scope(), Sends(broken=True), Receives(b""))
         self.assert_disconnected(written)
 
+    def test_a_send_that_fails_for_another_reason_is_logged_and_reported_with_its_failure(
+        self,
+    ) -> None:
+        # HY-60.14, HY-60.21, HY-43: a send that raises an error that is no closed connection is a failed write of the
+        # response: it is logged, the write hook receives it once with its failure, the error propagates, and no
+        # disconnect hook runs, because the client did not close the connection.
+        written = []
+        application = create_asgi(
+            self.app,
+            self.sessions,
+            written=lambda request, response, ended, elapsed, failure: written.append(
+                (request.path(), response.status, ended, failure)
+            ),
+        )
+
+        class FailingSends(Sends):
+            async def __call__(self, event: dict) -> None:
+                if event["type"] == "http.response.body":
+                    raise ValueError("the body event is refused")
+                self.events.append(event)
+
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(ValueError):
+            run(
+                application,
+                scope(path="/list", raw_path=b"/list"),
+                FailingSends(),
+                Receives(b""),
+            )
+        self.assertIn("hyper: ValueError: the body event is refused", stderr.getvalue())
+        self.assertEqual([("/list", 200, False, "the body event is refused")], written)
+        self.assertEqual([], self.app.disconnected_calls)
+
     def test_around_answers_without_the_application(self) -> None:
         written = []
         captured = []
