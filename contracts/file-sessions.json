@@ -144,8 +144,43 @@
       ]
     },
     {
-      "id": "the_message_of_a_session_file_that_holds_no_array_starts_with_hyper",
-      "label": "the message of a session file that holds no array starts with hyper: in the Node server (HY-106.19)",
+      "id": "a_session_file_of_an_identifier_of_200_characters_is_read",
+      "label": "a session file whose identifier has 200 characters names a session, as an identifier of 22 to 256 characters does (HY-104.31)",
+      "files": [
+        {
+          "identifier": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "bytes": "a:1:{s:1:\"k\";i:1;}"
+        }
+      ],
+      "steps": [
+        {
+          "cookie": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "calls": [
+            [
+              "get",
+              [
+                "\"k\""
+              ]
+            ]
+          ]
+        }
+      ],
+      "results": [
+        [
+          1
+        ]
+      ],
+      "created": [
+        null
+      ],
+      "errors": [
+        null
+      ]
+    },
+    {
+      "id": "a_session_file_that_holds_no_array_fails_the_first_read_with_the_message_of_the_library",
+      "label": "a session file that holds no array fails the first read of the session, not its open, with the message of the session-store library (HY-104.20)",
+      "message": "the session of eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee holds no array of values",
       "files": [
         {
           "identifier": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -270,6 +305,39 @@
         "kind": "invalid_directory",
         "status": null,
         "category": "value",
+        "message": null
+      }
+    },
+    {
+      "id": "a_store_with_a_negative_lifetime_fails_with_invalid_number",
+      "label": "making a store with a negative lifetime fails with the kind invalid_number of the binding of the library, not with invalid_lifetime (HY-104.32, HY-132.3)",
+      "lifetime": -1,
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    },
+    {
+      "id": "a_store_with_a_fractional_lifetime_fails_with_invalid_number",
+      "label": "making a store with a fractional lifetime fails with the kind invalid_number (HY-104.32, HY-132.3)",
+      "lifetime": 1.5,
+      "raises": {
+        "kind": "invalid_number",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    },
+    {
+      "id": "a_store_with_a_lifetime_that_is_no_number_fails_with_invalid_argument_type",
+      "label": "making a store with a lifetime that is a text fails with the kind invalid_argument_type (HY-104.32, HY-132.3)",
+      "lifetime": "1440",
+      "raises": {
+        "kind": "invalid_argument_type",
+        "status": null,
+        "category": "type",
         "message": null
       }
     },

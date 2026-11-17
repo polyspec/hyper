@@ -18827,7 +18827,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-104.8",
-              "state": "`errors` holds for each step null, or the pair of where the first failure happened (`open`, `call` or `close`) and its class: `unserialize` for the `UnserializeError` of the php-serialize package and `record` for the `Error` of Node and the `ValueError` of Python."
+              "state": "`errors` holds for each step null, or the pair of where the first failure happened (`open`, `call` or `close`) and its name: `unserialize` for an error of hyper of the kind `record`, a record that cannot be decoded, and `record` for an error of hyper of the kind `record_not_array`, a record that holds no array (HY-132.3)."
             },
             "message": {
               "role": "expected",

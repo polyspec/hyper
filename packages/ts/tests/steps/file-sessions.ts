@@ -118,7 +118,8 @@ export const steps = {
       // The first failure counts: the session is closed also after a read that failed.
       let failure: unknown = null;
       try {
-        const sessions = await FileSessions.inDirectory(typeof lifetime === 'number' ? { directory, lifetime } : { directory });
+        // @ts-expect-error -- a case gives the lifetime as a JSON value of any type, which the maker refuses (HY-104.32)
+        const sessions = await FileSessions.inDirectory(lifetime === undefined ? { directory } : { directory, lifetime });
         if (cookie !== null) {
           const store = await sessions.open(cookie);
           try {
