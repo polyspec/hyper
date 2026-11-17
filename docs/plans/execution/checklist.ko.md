@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 9278fdd25d8af891adbd47c7c43a50221514efce02c5a672bd3ec000a5803605 -->
+<!-- source-sha256: 0443be7c314cd03b8fef59112aebe7b3140c90152fc4d8c20597e5826095561d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -652,3 +652,5 @@
 | H34.5 | hyper-test-scripts 전체 set의 dry run을 호출한 make의 TESTS 없이 실행한다: make가 command-line 변수를 recipe의 environment로 export하므로 test-inputs.test.mts는 그 dry run에 TESTS=를 준다(HR-85, H35.55) | tests/scripts/test-inputs.test.mts | make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts | [o] |
 | H34.8 | Node binding 변환의 거부에서 HY-44.12의 message를 기대한다: binding 0.0.21부터 변환은 HY-44.12가 정한 대로 template 오류의 전체 text인 kind: message를 주는데, core-values.test.ts는 HY-44.12가 폐기한 kind in  at 0:0: message 형식을 여전히 기대해 변환 case 여덟 개가 실패했다 | packages/ts/tests/core-values.test.ts | make hyper-test-node NODE_TESTS=tests/core-values.test.ts | [ ] |
 | H34.12 | node-package가 packed package를 offline으로 설치하기 전에 packages/ts의 직접 dependency만이 아니라 package-lock.json이 적는 production dependency closure 전체를 pack한다: @polyspec/hyper-client의 dependency인 eventsource-parser가 pack되지 않아 npm이 registry에 그 metadata를 요청했고, npm ci는 그것을 cache에 넣지 않으므로 node-package가 ENOTCACHED로 실패했다 | Makefile, tests/scripts/node-package.test.mts | make hyper-test-scripts TESTS=tests/scripts/node-package.test.mts | [ ] |
+| H34.13 | store object를 거쳐서만 hyper에 오는 session-store의 행 16개에 through를 적고, opening_functions.open_page에 session_store.internal 대신 session_store.random을 arm하는 case를 준다(binding B2.487): session_store.internal point는 session-store package가 자기 binding_core로 만드는 store 안에서만 깨지므로, 생성된 B-4 test는 발동하지 않는 point를 arm하고 Missing expected rejection으로 실패했다. internal kind의 case는 core test만 읽는 file로 옮긴다 | packages/rust/interface.json, packages/rust/tests/cases/faults.json, packages/rust/tests/cases/core-faults.json, packages/rust/tests/contracts.rs | make test-node-addon; make core-test | [ ] |
+| H34.14 | pages.register에 raise하지 않는 case를 주어 생성된 test가 그것으로 Pages instance를 만들게 한다(binding GN-13t): instance를 받는 Pages의 첫 member의 case가 없으면 B-5c test는 placeholder인 빈 manifest로 Pages를 만들었고, core는 test가 검사하는 poison 전에 the manifest is no JSON text (HY-2.9)로 그것을 거부했다 | packages/rust/interface.json, packages/rust/tests/cases/members.json | make test-node-addon | [ ] |
