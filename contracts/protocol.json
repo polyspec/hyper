@@ -6728,7 +6728,8 @@
                   "id": "HY-107.7",
                   "en": "The server recognizes an error of the ORM by the error classes of the orm package and by its kind, so hyper depends on the orm package, and the kinds `no_rows` and `revision_changed` are kinds that the orm library states.",
                   "ko": "server는 ORM의 오류를 orm 패키지의 오류 class와 그 kind로 알아보므로 hyper는 orm 패키지에 의존하며, kind `no_rows`와 `revision_changed`는 orm 라이브러리가 정한 kind다.",
-                  "koSource": "0e78a81022ef8184bde36a5a8f7c952578cf48fe09b2284336de2af03fd18160"
+                  "koSource": "0e78a81022ef8184bde36a5a8f7c952578cf48fe09b2284336de2af03fd18160",
+                  "unimplemented": "H35.44"
                 },
                 {
                   "id": "HY-107.8",

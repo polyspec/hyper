@@ -5,6 +5,8 @@
 
 ## Unreleased
 
+- HY-107.7 states that the servers recognize an error of the ORM by the error classes of the orm package, and hyper does not depend on that package: 15 cases whose handler raises such an error fail with a case error in the Node server that renders its page through the core. The contract marks HY-107.7 as not implemented with row H35.44, which names the 15 cases, and `docs/features.md` gains the row `orm-error-classes`. Ran `make spec-docs`, `make spec-docs-check` and `make docs-check`.
+
 - The CI group `gates` built the Python package with its native module in its setup (`make hyper-install-python`), and with it installed maturin and Rust and fetched the crates, although the dry runs of its targets start no Python of the package, no cargo, no maturin and no binding generator: `make lint-python` runs ruff and vulture on the sources. `CI_SETUP_gates` is now `install-tools install-symbols hyper-install-php`, and `CI_TOOLS_gates` names no `rust` and no `maturin`; `python` and `uv` stay, because mise installs vulture with them. Whether a gate reads the installed package is decided by the next CI run of the group, which has not happened.
 
 - `tests/scripts/ci-group-tools.test.mts` exempted only the command line of `make hyper-install-crates` from its rule that a cargo command carries `--offline`, so `cargo update` of `make cargo-lock` in a CI group would have been a finding. The rule now leaves out every command line that lifts the offline settings with `$(ONLINE)`, which downloads by its purpose (HR-89).

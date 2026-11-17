@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 27eac5e5a603a3a9c3dc1c003d3ccfe1cc648cc51169edb61246a37d7e6d54a9 -->
+<!-- source-sha256: 49b79e1d759a60a6869744b0257c41e7f9990d0a2f7e6028bb97f2cc52d66be0 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-107.7은 server가 ORM의 오류를 orm 패키지의 오류 class로 알아본다고 정하는데, hyper는 그 패키지에 의존하지 않는다: handler가 그런 오류를 던지는 15개 case가 core로 page를 render하는 Node server에서 case 오류로 실패한다. 계약은 HY-107.7을 15개 case를 적은 row H35.44로 미구현 표시하고, `docs/features.md`에 row `orm-error-classes`가 생긴다. `make spec-docs`, `make spec-docs-check`, `make docs-check`를 실행했다.
 
 - CI group `gates`는 setup에서 native module을 포함한 Python package를 빌드했고(`make hyper-install-python`), 그 때문에 maturin과 Rust를 설치하고 crate를 가져왔다. 그러나 그 target들의 dry run은 package의 Python, cargo, maturin, binding 생성기를 시작하지 않는다. `make lint-python`은 소스에 ruff와 vulture를 실행한다. 이제 `CI_SETUP_gates`는 `install-tools install-symbols hyper-install-php`이고, `CI_TOOLS_gates`는 `rust`와 `maturin`을 적지 않는다. `python`과 `uv`는 남는다. mise가 그것으로 vulture를 설치하기 때문이다. gate가 설치된 package를 읽는지는 이 group의 다음 CI 실행이 결정하며, 그 실행은 아직 없었다.
 
