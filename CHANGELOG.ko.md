@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5a638ee4f7d81632fe5bf93bc55f54ed98ab34f652161d21cb4d05906f542d5a -->
+<!-- source-sha256: 7177cf37685ffa2deb312692c10119ae685df7f6d340897a17b9b0ccae39898f -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- PHP server는 session cookie를 HY-45.8의 field 값으로 쓴다(H34.2). 입력: session을 만드는 request. 이전 동작: `NativeSession`이 PHP의 `setcookie`로 `hy-session=<id>; path=/; HttpOnly; SameSite=Lax`를, HTTPS에서는 `path=/; secure`를 보냈고, Node와 Python server는 `Path=/`와 `Secure`를 썼다. 기대 동작: 모든 server가 `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`를 쓰고 `Secure`는 HTTPS에서만 있으며, `NativeSession`은 http-cookie가 쓰는 core의 값을 보낸다. header가 보내진 뒤의 renew는 PHP가 그때 identifier를 다시 만들지 않으므로 오류 없이 이전 identifier를 유지했다. 이제 renew는 `hyper: the session cookie could not be sent`를 던진다(HY-129).
 
 - `package-names.test.mts`와 HR-98은 `@polyspec/hyper`와 `polyspec-hyper`를 binding의 recipe가 release한다고 적는다(HR-98, H35.35-2, H35.35-3). 입력: `config/release.json`. 두 package가 `release-npm`과 `release-wheel`로 옮겨진 뒤로 이 파일에는 두 package의 entry가 없고, 그 manifest를 `version`으로 적는다. 이전 동작: test가 두 package마다 kit entry를 요구했고, 두 test가 실패했다. 기대 동작: test가 두 package에는 kit entry가 없고 `version` manifest가 있기를 요구하며, 다른 모든 package에는 kit의 entry를 요구한다.
 
