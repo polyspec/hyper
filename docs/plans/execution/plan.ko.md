@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 03557f7c7011bf01f5a3402b9ca22b32f5d78c7dd4533b1d4289a0f4f8bfb5ab -->
+<!-- source-sha256: 4797ba8e19c3a01c8999b22078b69ac0ac6e7caa57357dc946f6fe9ecba22653 -->
 # 실행
 
 [English](plan.md).
@@ -186,7 +186,7 @@ core를 부르지 않는 서버와 core는 모두 `contracts/`의 case를 실행
 - session cookie의 field 값은 `<name>=<id>; Path=/; Secure; HttpOnly; SameSite=Lax`다(HY-45.8). Node와 Python 서버는 `path=/; secure`를 쓴다.
 - `POST`의 form type은 session을 열기 전에 검사한다(HY-120.2, HY-120.3). 서버는 session을 먼저 연다.
 - media type이 아닌 `Content-Type`은 400을 받는다(HY-59.12). 서버는 415로 답한다.
-- file limit은 body를 읽는 동안, route와 session과 token 전에 413으로 답한다(HY-114.7, HY-120.2, HY-131.18). 서버는 token 뒤에 file을 다시 검사하고, core의 주석 두 곳이 그 순서를 적었다(H31.19).
+- file limit은 body를 읽는 동안, route와 session과 token 전에 413으로 답한다(HY-114.7, HY-120.2, HY-131.31). 서버는 token 뒤에 file을 다시 검사하고, core의 주석 두 곳이 그 순서를 적었다(H31.19).
 - page 응답과 JSON 응답, 그 304는 reply의 `Referrer-Policy`를 가진다(HY-103.5). core가 주는 page의 header에는 그것이 없었다(H31.19).
 - 중첩된 container가 256개를 넘는 JSON text는 거부된다(HY-54.20). Python과 PHP 서버는 더 깊은 text를 읽는다.
 - 자기 자리의 prefix가 없는 build 출력 경로는 build를 `invalid_build`로 실패시킨다(HY-125.17). command tool의 build id는 core에서 build id를 받을 때까지(H31.4-3) 경로를 검사하지 않는다.
@@ -308,7 +308,7 @@ group `streamed`의 세 case. body는 5 byte 조각으로 읽는 part 셋이다.
 
 두 파일의 다른 차이. 상태는 바꾸지 않는다. 파일을 옮기는 `streamed`의 다섯 case는 http-form에서 메시지 `the file was moved (F-11)`, `the path exists (F-11)`, `a path is not a string (F-11)`을 적고 고정 사본에서는 같은 텍스트를 `(HY-131)`로 적는다. hyper의 어떤 규칙도 이 실패의 메시지를 정하지 않으므로(HY-132.4), statement가 그것을 정할지는 H35.11이 결정한다. 이름이나 값이 UTF-8이 아닌 `urlencoded`의 세 case는 http-form에서 상태 400의 `invalid`를, 고정 사본에서 null 결과를 적으며 둘 다 HY-42.3의 400이다. http-form은 또 `multipart`의 `a_malformed_content_type_fails`, `fields.json`의 group `uploaded_file.move_to`, `uploaded_file.content`, `uploaded_file.move_to.stored`, `uploaded_file.content.stored`, `request_body.remove`, 그리고 `forms.json`을 가지며 고정 사본에는 이것들이 없다.
 
-body와 route의 순서. body의 byte는 모든 요청에서 route가 정해지기 전에 제한 아래에서 읽는다. 제한의 413과 실패하는 body의 400은 route 전에 답한다(HY-59.4, HY-131.18, HY-113.25). 세 host와 `packages/rust/src/pipeline.rs`의 `ORDER`가 그렇게 하며, 그 step `DeclaredLength`와 `Body`는 `Route` 앞에 온다. `Content-Type`은 route 뒤에 판정한다. action과 `/_hyper/keep`은 HY-59.12로(step `MediaType`과 `FormType`), representation은 HY-121.11로 판정한다. route 전에 body를 form으로 읽는 것은 `application/x-www-form-urlencoded`나 `multipart/form-data`로 읽히는 type뿐이고, 조각 단위 body에 대한 http-form의 reader는 지금 `packages/ts/src/form/multipart.ts`의 `Multipart.boundary`가 정하듯 boundary를 가진 `multipart/form-data`에만 시작한다. 다른 type의 body와 media type이 아닌 `Content-Type`의 body는 byte로 보유한다. 그래서 media type이 아닌 `Content-Type`은 읽기를 실패시키지 않고, 알 수 없는 경로로의 요청은 `Content-Type`이 무엇이든 404를 받으며(HY-57.15), `malformed_content_type`은 HY-132.3의 표에서 HY-59.12와 HY-59.13의 hyper의 kind로 남는다. hyper는 그런 `Content-Type`을 그 kind로 실패하는 http-form의 함수에 주지 않는다.
+body와 route의 순서. body의 byte는 모든 요청에서 route가 정해지기 전에 제한 아래에서 읽는다. 제한의 413과 실패하는 body의 400은 route 전에 답한다(HY-59.4, HY-131.31, HY-113.25). 세 host와 `packages/rust/src/pipeline.rs`의 `ORDER`가 그렇게 하며, 그 step `DeclaredLength`와 `Body`는 `Route` 앞에 온다. `Content-Type`은 route 뒤에 판정한다. action과 `/_hyper/keep`은 HY-59.12로(step `MediaType`과 `FormType`), representation은 HY-121.11로 판정한다. route 전에 body를 form으로 읽는 것은 `application/x-www-form-urlencoded`나 `multipart/form-data`로 읽히는 type뿐이고, 조각 단위 body에 대한 http-form의 reader는 지금 `packages/ts/src/form/multipart.ts`의 `Multipart.boundary`가 정하듯 boundary를 가진 `multipart/form-data`에만 시작한다. 다른 type의 body와 media type이 아닌 `Content-Type`의 body는 byte로 보유한다. 그래서 media type이 아닌 `Content-Type`은 읽기를 실패시키지 않고, 알 수 없는 경로로의 요청은 `Content-Type`이 무엇이든 404를 받으며(HY-57.15), `malformed_content_type`은 HY-132.3의 표에서 HY-59.12와 HY-59.13의 hyper의 kind로 남는다. hyper는 그런 `Content-Type`을 그 kind로 실패하는 http-form의 함수에 주지 않는다.
 
 boundary가 없거나 빈 `multipart/form-data` type도 같은 방식으로 판정한다(HY-113.24). boundary는 `Content-Type`의 매개변수이므로 reader는 시작하지 않고, body는 byte로 보유되며, type은 route 뒤에 판정한다. 이것은 media type이므로 지금의 HY-59.12는 `multipart/form-data`가 form 타입이 아닌 곳에서 415를 주고, form 타입인 곳에서는 거절하지 않는다. HY-113.24는 둘째 경우에 HY-59.12의 자리에서, 그 415 뒤에 400을 더하며, kind는 HY-132.3의 표가 HY-113.24에 주는 hyper의 `malformed_content_type`이다. 어떤 statement도 http-form의 kind `no_boundary`를 주지 않는다. 이는 서버의 답을 바꾸며, 이 점에 대한 H35.11의 Red다. `packages/ts/src/app/app.ts`의 `refusedMedia`(789행부터 794행)와 PHP, Python의 같은 것은 `multipart/form-data`가 form 타입인 곳에서 그런 type을 거절하지 않으므로, action으로의 `POST`는 token 검사로 넘어가 403을 받는다. token이 폼 값 `_csrf`이고(809행) body가 폼 값을 주지 않기 때문이다. 명세된 답은 400이다. case는 form 타입에 `multipart/form-data`가 있는 application의 action으로 `Content-Type: multipart/form-data`와 `Content-Type: multipart/form-data; boundary=""`를 보내는 `POST`이며, `contracts/app.json`에서 텍스트 `Bad Request`의 400을 기대한다. 세 runner에서 실패하므로 지금은 추가하지 않는다.
 

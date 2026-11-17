@@ -1,4 +1,4 @@
-//! The order of the steps of a request (HY-59.3, HY-116.1, HY-120, HY-131.18): which check answers first, and which
+//! The order of the steps of a request (HY-59.3, HY-116.1, HY-120, HY-131.31): which check answers first, and which
 //! request opens a session.
 
 use crate::media::Selected;
@@ -8,9 +8,9 @@ use crate::media::Selected;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Step {
     /// A `Content-Length` that is no number (400) or larger than the body limit (413), before the body is read
-    /// (HY-131.29, HY-131.18).
+    /// (HY-131.29, HY-131.31).
     DeclaredLength,
-    /// The limits of the body and the failures of HY-42 while the body is read (HY-131.18).
+    /// The limits of the body and the failures of HY-42 while the body is read (HY-131.31).
     Body,
     /// The selection of HY-62 and the removal of the data base path (HY-62.19).
     ClientRendering,

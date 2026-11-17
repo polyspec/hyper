@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 0dabc3769958371467054d0f9d3c4b614bff56935625eb3025b610fd2fe1dbed -->
+<!-- source-sha256: 5cdd51de733115205592ca8ab19d75c187bb87a02a4d355fe76e8b7f4a509c94 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- HY-131.18을 retire하고 HY-131.31이 대신한다. HY-131.18은 body 제한보다 큰 `Content-Length`가 body를 읽기 전에 413을 받는다고 적었다. 그런 body를 전혀 읽지 않는 것은 WSGI host뿐이다. Node host는 버리려고 읽고, Python `http.server` host, ASGI host, PHP는 body 제한까지 자기 reader에 먹인다. HY-131.31은 모든 host에서 성립해야 하는 것을 정한다. 요청은 413을 받고, host가 body를 읽지 않고 두든 버리려고 읽든 그 body의 어떤 byte도 parse하거나 저장하지 않는다. 그런 body를 먹이는 세 host는 이를 지키지 않으며, row H35.36-3이 그 변경과 Red를 적는다. HY-131.18을 인용하던 statement와 `packages/rust/src/pipeline.rs`의 주석은 HY-131.31을 인용한다(H35.36-3).
 
 - HY-113.24는 boundary 없는 `multipart/form-data` content type이 http-form의 kind `no_boundary`로 실패한다고 적었고, HY-113.25는 그런 body에 route 전에 상태 400을 주었다. boundary는 `Content-Type`의 매개변수이고 body의 byte가 아니므로, 이제 HY-113.24는 그런 type이 읽기를 실패시키지 않는다고 정한다. reader는 시작하지 않고, body는 byte로 보유되며, 알 수 없는 경로로의 요청은 404를 받고, route 뒤에 form 타입에 `multipart/form-data`가 있는 application의 action이나 `/_hyper/keep`으로의 `POST`는 HY-59.12의 자리에서, 그 415 뒤에 hyper의 kind `malformed_content_type`의 400을 받는다. representation은 HY-121.11로 답한다. HY-59.12의 텍스트는 그대로다. `multipart/form-data`가 form 타입이 아닌 곳에서는 415를 주고, form 타입인 곳에서는 아무것도 거절하지 않았다. HY-113.25는 byte의 실패인 `invalid`와 `header_limit`만 적는다. `no_boundary` 행은 HY-132.9의 표에서 빠졌고, HY-132.3 표의 `malformed_content_type` 행은 HY-113.24를 인용한다. 서버는 그 400을 내지 않는다. 그런 `POST`에 token에서 403으로 답하며, `docs/features.md`, row H35.11, `docs/plans/execution/plan.md`가 이를 그 Red인 case와 함께 적는다. plan은 답이 바뀌는 case를 열하나로 센다(H35.11).
 - checklist는 H35.36과 H35.36-1부터 H35.36-6을 얻었다. body 읽기의 statement와 host 코드 사이의 여섯 차이 각각에 row 하나다(H35.36).
