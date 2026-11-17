@@ -38,7 +38,7 @@ after(() => {
 });
 
 /** A fresh root with the fixture contract, and the expected documents in docs/spec when `docs` is set. */
-function makeRoot(options: { docs?: boolean; contract?: (edit: Edit) => void } = {}): string {
+function makeRoot(options: { docs?: boolean; contract?: (edit: Edit) => void; files?: Record<string, string> } = {}): string {
   const root = mkdtempSync(path.join(tmpdir(), 'spec-docs-'));
   roots.push(root);
   mkdirSync(path.join(root, 'contracts'));
@@ -48,6 +48,10 @@ function makeRoot(options: { docs?: boolean; contract?: (edit: Edit) => void } =
     const json: unknown = JSON.parse(readFileSync(file, 'utf8'));
     options.contract((at, value) => { setAt(json, at, value); });
     writeFileSync(file, JSON.stringify(json, null, 2) + '\n');
+  }
+  for (const [name, text] of Object.entries(options.files ?? {})) {
+    mkdirSync(path.dirname(path.join(root, name)), { recursive: true });
+    writeFileSync(path.join(root, name), text);
   }
   if (options.docs) {
     mkdirSync(path.join(root, 'docs', 'spec'), { recursive: true });
@@ -172,6 +176,65 @@ test('an English statement of two sentences fails', () => {
     contract: (edit) => { edit(['sections', 1, 'blocks', 1, 'blocks', 0, 'statements', 0, 'en'], 'The second rule has one statement. It has two.'); },
   });
   assertFails(run('write', root), ['HY-2.1 is 2 sentences']);
+});
+
+// The mark of a statement that no code follows (H35.40): the statement HY-2.1 of the fixture holds the row of the
+// checklist that implements it, and a row of the feature status names the statement as not implemented.
+const HY_2_1 = ['sections', 1, 'blocks', 1, 'blocks', 0, 'statements', 0];
+const CHECKLIST = 'docs/plans/execution/checklist.md';
+const FEATURES = 'docs/features.md';
+const checklist = (state: string): string => `# Checklist\n\n| ID | Task | Deliverables | Verification | State |\n|---|---|---|---|---|\n| H9.1 | A task | — | \`make x\` | ${state} |\n`;
+const features = (status: string): string => `# Feature status\n\n| ID | Feature | Status | Evidence |\n|---|---|---|---|\n| second-rule | The second rule (HY-2.1) | ${status} | — |\n`;
+const marked = (row: string) => (edit: Edit): void => { edit([...HY_2_1, 'unimplemented'], row); };
+
+test('a marked statement renders with the phrase of each language and its row (H35.40)', () => {
+  const root = makeRoot({ contract: marked('H9.1'), files: { [CHECKLIST]: checklist('[ ]'), [FEATURES]: features('not implemented: no code follows it (H9.1)') } });
+  const result = run('write', root);
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(docBytes(root, 'protocol.md').includes('<a id="HY-2.1"></a> The second rule has one statement. *(Not implemented: row H9.1.)*'), docBytes(root, 'protocol.md'));
+  assert.ok(docBytes(root, 'protocol.ko.md').includes(' *(구현되지 않음: 행 H9.1.)*'), docBytes(root, 'protocol.ko.md'));
+  assert.equal(run('check', root).status, 0);
+});
+
+test('a mark that names a row which the checklist does not hold fails (H35.40)', () => {
+  const root = makeRoot({ contract: marked('H9.2'), files: { [CHECKLIST]: checklist('[ ]'), [FEATURES]: features('not implemented: no code follows it (H9.2)') } });
+  assertFails(run('write', root), ['HY-2.1: the row H9.2 of its mark is no row of docs/plans/execution/checklist.md']);
+});
+
+test('a mark whose row is done or verified fails, so that the mark goes with the row (H35.40)', () => {
+  for (const state of ['[o]', '[v]']) {
+    const root = makeRoot({ contract: marked('H9.1'), files: { [CHECKLIST]: checklist(state), [FEATURES]: features('not implemented: no code follows it (H9.1)') } });
+    assertFails(run('write', root), [`HY-2.1: the row H9.1 of its mark has the state ${state}; remove the mark`]);
+  }
+});
+
+test('a row of the feature status that names a statement as not implemented fails without the mark of the statement (H35.40)', () => {
+  const root = makeRoot({ files: { [CHECKLIST]: checklist('[ ]'), [FEATURES]: features('not implemented: no code follows it (H9.1)') } });
+  assertFails(run('check', root), ['docs/features.md: the row second-rule names HY-2.1 as not implemented, and the statement holds no mark']);
+});
+
+test('a marked statement that no row of the feature status names as not implemented fails (H35.40)', () => {
+  const root = makeRoot({ contract: marked('H9.1'), files: { [CHECKLIST]: checklist('[ ]'), [FEATURES]: features('implemented') } });
+  assertFails(run('write', root), ['HY-2.1 holds a mark, and no row of docs/features.md with the status not implemented names it']);
+});
+
+test('a mark on a statement without an id fails (H35.40)', () => {
+  const root = makeRoot({
+    contract: (edit) => { edit(['intro', 0, 'statements', 0, 'unimplemented'], 'H9.1'); },
+    files: { [CHECKLIST]: checklist('[ ]'), [FEATURES]: features('implemented') },
+  });
+  assertFails(run('write', root), ['holds a mark and no id']);
+});
+
+test('a mark on a retired number fails as a number that is used and retired (H35.40)', () => {
+  const root = makeRoot({
+    contract: (edit) => {
+      edit([...HY_2_1, 'unimplemented'], 'H9.1');
+      edit(['sections', 1, 'blocks', 1, 'retired'], [1]);
+    },
+    files: { [CHECKLIST]: checklist('[ ]'), [FEATURES]: features('not implemented: no code follows it (H9.1)') },
+  });
+  assertFails(run('write', root), ['statement id HY-2.1 is used and retired']);
 });
 
 test('write leaves the documents untouched when the contract is broken', () => {
