@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fed929c2a9cf734796bc606c99cb9abc3d09f091ff759231bf0a3815f5768426 -->
+<!-- source-sha256: 9c3d49c3c705805b55ade4db4abcd18b9daaaafd5a06ac2c554d1fe06a225365 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make core-test`가 `the_fault_cases_raise_their_kind_where_their_points_break`에서 실패했다. case `a_broken_index_of_the_weights_is_internal`이 point `http_negotiation.internal`을 걸었으나 발동하지 않았다. `Cargo.lock`이 `polyspec-binding-core` 셋을 가졌고, http-negotiation v0.0.3은 point를 0.0.10에 대해 compile했는데 시험은 0.0.17에서 걸었기 때문이다. 이제 모든 `Cargo.toml`이 http-cookie와 http-media-type을 tag `v0.0.8`로, http-negotiation을 tag `v0.0.5`로 받으며, 이들은 binding 0.0.17에 의존하고 `Cargo.lock`이 그 commit을 고정한다. `polyspec-binding-core` 0.0.1과 0.0.10은 template의 branch와 그것이 요구하는 json의 branch를 통해 lock에 남으므로 `make bindings-check`는 여전히 CK-20을 보고한다(H35.8-4).
 - HY-48.10과 HY-48.14를 폐기하고 HY-48.18이 그것들을 대신한다. HY-48.10은 Python 서버의 `App.open`이 필요로 하는 출력으로 `reads.json`, `build.json`, 디렉터리 `templates`를 밝혔고, HY-48.14는 예약 템플릿의 사본 `legacy/hyper/data.tpl`을 순서 안의 자리 없이 더했다. 둘 다 class를 `ValueError`로 밝혔고, 오류가 절대 경로를 밝힌다는 것은 어느 쪽도 말하지 않았다. HY-48.18은 네 출력을 open이 처음 없는 것을 보고하는 순서로 밝히고, 오류가 밝히는 절대 경로와 그 class `HyperValueError`를 밝힌다. core를 부르지 않는 서버가 있는 동안 사본이 있다는 것은 HY-31.10이 말하므로 반복하지 않는다. `contracts/app.json`의 출력이 없는 세 case, `contracts/build.json`의 사본이 없는 case, Python renderer와 그 테스트의 주석, `docs/features.md`의 행 `legacy-data-template`은 HY-48.18을 인용한다. 동작은 바뀌지 않는다(H31.4-2).
 - Python 서버의 field line unit test 셋은 `Content-Type` 두 줄의 결합 값을 `media_type()`이 반환한다고 기대했으나 그 값은 `malformed_content_type`과 status 400으로 실패한다(HY-42.14). test 하나는 exact unit이 22개인데 20개로 세었고, test 하나는 binding package가 여전히 가진 module `_root`만 `sys.modules`에서 지웠다. test는 그 실패를 기대하고, 22개를 세고, 두 이름을 모두 지운다(H35.8-2).
 - Python 서버의 `MediaType.etag`는 content type `text/é`에 대해 `é`의 UTF-8 두 byte를 digest했고 `text/Ā`에는 tag를 반환했다. HY-122.14는 U+00FF까지의 문자는 한 byte로, 그 위의 문자는 `invalid_text`로 정한다. tag는 core의 `rules.representation_tag`가 계산한다(H35.8-2).

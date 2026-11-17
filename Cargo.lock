@@ -1081,7 +1081,6 @@ source = "git+https://github.com/polyspec/binding.git?tag=v0.0.10#e38c4a2b3c7ceb
 dependencies = [
  "indexmap",
  "libc",
- "serde_json",
  "tokio-util",
 ]
 
@@ -1099,26 +1098,26 @@ dependencies = [
 
 [[package]]
 name = "polyspec-http-cookie"
-version = "0.0.6"
-source = "git+https://github.com/polyspec/http-cookie.git?tag=v0.0.6#d80cd2b4423beaaec8f81613c76e87c6cb47cc89"
+version = "0.0.8"
+source = "git+https://github.com/polyspec/http-cookie.git?tag=v0.0.8#304f1c04b7e154e321e48228b9dd84c666643c77"
 dependencies = [
- "polyspec-binding-core 0.0.10",
+ "polyspec-binding-core 0.0.17",
 ]
 
 [[package]]
 name = "polyspec-http-media-type"
-version = "0.0.6"
-source = "git+https://github.com/polyspec/http-media-type.git?tag=v0.0.6#07c1efc9afd9e0f3b981bfda8b11f1a16b121f6d"
+version = "0.0.8"
+source = "git+https://github.com/polyspec/http-media-type.git?tag=v0.0.8#d311d2acccc81845dd9ba935ac3e768713cea86f"
 dependencies = [
- "polyspec-binding-core 0.0.10",
+ "polyspec-binding-core 0.0.17",
 ]
 
 [[package]]
 name = "polyspec-http-negotiation"
-version = "0.0.3"
-source = "git+https://github.com/polyspec/http-negotiation.git?tag=v0.0.3#acd0d684afceb87fd295f765f89ffab23cdc384b"
+version = "0.0.5"
+source = "git+https://github.com/polyspec/http-negotiation.git?tag=v0.0.5#9685ba1f8de653d6989918904c2f34111034071d"
 dependencies = [
- "polyspec-binding-core 0.0.10",
+ "polyspec-binding-core 0.0.17",
  "polyspec-http-media-type",
 ]
 
