@@ -1,12 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cbd9ac88bdf36a4812625a83e5e916d148a33088c53dcbfedc196c1cdb5657c2 -->
+<!-- source-sha256: 4a01a1de602884ffc552e82dbf95510453db6c0359aea7eb672a2943c1a577c4 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
-- `make php-ext-pins`가 `config/php-ext-pins.json`을 쓴다(H35.58). 입력: 이 파일이 pin하는 PHP 확장의 새 version. 이전 동작: 어떤 target도 이 파일을 쓰지 않았으므로 각 sha256을 download한 asset의 shasum에서 손으로 복사했다. 기대 동작: target이 `$(ONLINE)` 아래에서 `scripts/php-ext-pins.mts`를 실행한다. 이것은 GitHub releases API에서 pin한 각 release의 asset을 읽고, `packages.json`과 모든 platform zip을 download하며, asset의 digest와 download의 sha256이 다르면 asset, digest, sha256을 밝히며 실패하고, 그 다음 각 asset의 field `digest`로 파일을 rename 한 번으로 쓴다. `make hyper-test-scripts TESTS=tests/scripts/php-ext-pins.test.mts`(이전에는 test가 실행되지 않음, 이후 3개 모두 통과)와, template 0.0.31, json 0.0.38, session-store 0.0.7에 대해 commit된 파일과 차이 없이 파일을 쓴 `make php-ext-pins`로 검증했다.
+- `make php-ext-pins`가 `config/php-ext-pins.json`을 쓴다(H35.58). 입력: 이 파일이 pin하는 PHP 확장의 새 version. 이전 동작: 어떤 target도 이 파일을 쓰지 않았으므로 각 sha256을 download한 asset의 shasum에서 손으로 복사했다. 기대 동작: target이 `$(ONLINE)` 아래에서 `scripts/php-ext-pins.mts`를 실행한다. 이것은 GitHub releases API에서 pin한 각 release의 asset 목록을 읽고, `packages.json`과 각 platform zip의 field `digest`로 파일을 rename 한 번으로 쓴다. 그 파일의 asset에 sha256 digest가 없으면 멈춘다. `make template-ext`와 `make json-ext`가 각 download를 그 pin으로 확인하므로 어떤 asset도 download하지 않는다. `tests/scripts/fixtures/php-ext-pins`의 기록된 응답으로 offline 실행되는 `make hyper-test-scripts TESTS=tests/scripts/php-ext-pins.test.mts`(이전에는 test가 실행되지 않음, 이후 3개 모두 통과)와, template 0.0.31, json 0.0.38, session-store 0.0.7에 대해 commit된 파일과 차이 없이 파일을 쓴 `make php-ext-pins`로 검증했다.
 
 - template을 적는 모든 추적 manifest와 lock이 template 0.0.31을 적는다(H35.57). 입력: `packages/rust/Cargo.toml`, 각 binding crate의 `Cargo.toml`, `Cargo.lock`, `packages/go/go.mod`, `packages/go/go.sum`, `packages/php/native/composer.json`. 이전 동작: PHP, npm, Python package가 0.0.31을 적는 동안 이들은 template 0.0.30을 적었고 어떤 test도 이들을 읽지 않았으므로 tree가 두 template release에 의존했다. 기대 동작: `tests/scripts/template-pins.test.mts`의 test가 추적하는 모든 `Cargo.toml`, `Cargo.lock`, `go.mod`, `go.sum`, `composer.json`, `composer.lock`, `package.json`, `package-lock.json`, `pyproject.toml`, `uv.lock`을 git으로 나열하고 다른 release의 각 위치를 밝힌다. core는 `v0.0.31`을 적고, `make bindings-scaffold`가 binding package, `go.mod`, `go.sum`을 썼으며, `make cargo-lock`이 `Cargo.lock`에서 template 0.0.30을 지웠다. `make hyper-test-scripts TESTS=tests/scripts/template-pins.test.mts`(이전 8개 중 7개, 13개 위치를 밝힘. 이후 8개 모두 통과)로 검증했다. build는 실행하지 않았다.
 

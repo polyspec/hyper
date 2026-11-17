@@ -1,124 +1,78 @@
 #!/usr/bin/env node
-// Writes config/php-ext-pins.json (HR-80, H35.58): for each package that the file pins, the script reads the assets of
-// the GitHub Release v<version> of its repository through the releases API, downloads the asset packages.json and each
-// platform zip php_<extension>-v<version>_php<minor>-<platform>.zip, and fails, naming the asset, its digest and the
-// sha256 of the download, unless each download has the sha256 of the field digest of its asset. Only then does it write
-// the file with one rename (HR-82): the version, the repository and the extension of each package stay as the file has
-// them, and the sha256 of packages.json and of every platform zip come from the release. The make target php-ext-pins
-// runs it under $(ONLINE); no check runs it (HR-89).
+// Writes config/php-ext-pins.json (HR-80, H35.58): for each package that the file pins, the script reads the response of
+// releases/tags/v<version> of its repository from the GitHub releases API and writes the sha256 of the asset
+// packages.json and of each platform zip php_<extension>-v<version>_php<minor>-<platform>.zip from the field digest of
+// the asset; an asset of those files without a sha256 digest stops the script before it writes. The version, the
+// repository and the extension of each package stay as the file has them. The script only writes, with one rename
+// (HR-82): it downloads no asset, because the install that downloads one verifies it by its pin (scripts/php-ext-verify.mts,
+// scripts/php-ext-requires.mts). The make target php-ext-pins runs it under $(ONLINE); no check runs it (HR-89).
 //
 // Usage: node scripts/php-ext-pins.mts write PINS
-import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { writeFileAtomic } from '../packages/cli/lib/output-files.mjs';
 
-/** An asset of a GitHub Release: its name, its field digest `sha256:<hex>` and its download URL. */
-export interface ReleaseAsset {
-  name: string;
-  digest: string;
-  url: string;
-}
-
-/** The fields of a pin that the file states and the release does not. */
-export interface PinSource {
-  repository: string;
-  version: string;
-  extension: string;
-}
-
-/** The pin of a package as config/php-ext-pins.json holds it. */
-export interface Pin extends PinSource {
-  packages: string;
-  zips: Record<string, Record<string, string>>;
-}
+/** The response of releases/tags/v`version` of `repository`. */
+export type ReleaseOf = (repository: string, version: string) => unknown;
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+const byName = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 
-/** The hex sha256 of the field digest of `asset`; a digest of another form throws. */
-function digestOf(asset: ReleaseAsset): string {
-  const match = /^sha256:([0-9a-f]{64})$/u.exec(asset.digest);
-  if (match?.[1] === undefined) throw new Error(`${asset.name}: the release gives no sha256 digest (${asset.digest})`);
+/** The hex sha256 of the field digest of the asset `name` of `release`; an asset without one throws. */
+function digestOf(where: string, name: string, digest: unknown): string {
+  const match = typeof digest === 'string' ? /^sha256:([0-9a-f]{64})$/u.exec(digest) : null;
+  if (match?.[1] === undefined) throw new Error(`${where}: the asset ${name} has no sha256 digest (${JSON.stringify(digest)})`);
   return match[1];
 }
 
-/** The pin of `source` from the assets of its release: the digest of packages.json and of each platform zip. */
-export function pinFromRelease(source: PinSource, assets: ReleaseAsset[]): Pin {
-  const packages = assets.find((asset) => asset.name === 'packages.json');
-  if (packages === undefined) throw new Error(`${source.repository} v${source.version}: the release has no packages.json`);
-  const zip = new RegExp(`^php_${escape(source.extension)}-v${escape(source.version)}_php(\\d+\\.\\d+)-(.+)\\.zip$`, 'u');
+/** The pin of one package from the response `release` of its release. */
+function pinOf(name: string, entry: Record<string, unknown>, release: unknown): Record<string, unknown> {
+  const { repository, version, extension } = entry;
+  if (typeof repository !== 'string' || typeof version !== 'string' || typeof extension !== 'string') {
+    throw new Error(`${name} names no repository, version and extension`);
+  }
+  const where = `${repository} v${version}`;
+  const assets = isRecord(release) && Array.isArray(release.assets) ? release.assets.filter(isRecord) : [];
+  const names = (asset: Record<string, unknown>): string => (typeof asset.name === 'string' ? asset.name : '');
+  const packages = assets.find((asset) => names(asset) === 'packages.json');
+  if (packages === undefined) throw new Error(`${where}: the release has no packages.json`);
+  const zip = new RegExp(`^php_${escape(extension)}-v${escape(version)}_php(\\d+\\.\\d+)-(.+)\\.zip$`, 'u');
   const zips: Record<string, Record<string, string>> = {};
-  for (const asset of [...assets].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
-    const match = zip.exec(asset.name);
+  for (const asset of [...assets].sort((a, b) => byName(names(a), names(b)))) {
+    const match = zip.exec(names(asset));
     if (match?.[1] === undefined || match[2] === undefined) continue;
-    zips[match[1]] = { ...zips[match[1]], [match[2]]: digestOf(asset) };
+    zips[match[1]] = { ...zips[match[1]], [match[2]]: digestOf(where, names(asset), asset.digest) };
   }
-  if (Object.keys(zips).length === 0) throw new Error(`${source.repository} v${source.version}: the release has no platform zip of ${source.extension}`);
-  return { repository: source.repository, version: source.version, packages: digestOf(packages), extension: source.extension, zips };
+  if (Object.keys(zips).length === 0) throw new Error(`${where}: the release has no platform zip of ${extension}`);
+  return { repository, version, packages: digestOf(where, 'packages.json', packages.digest), extension, zips };
 }
 
-/** The problems of the downloads `files`, by asset name, against the digests of `assets`: one for each mismatch or missing file. */
-export function downloadProblems(assets: ReleaseAsset[], files: Map<string, Uint8Array>): string[] {
-  const problems: string[] = [];
-  for (const asset of assets) {
-    const bytes = files.get(asset.name);
-    if (bytes === undefined) {
-      problems.push(`${asset.name}: not downloaded`);
-      continue;
-    }
-    const expected = digestOf(asset);
-    const actual = createHash('sha256').update(bytes).digest('hex');
-    if (actual !== expected) problems.push(`${asset.name}: the release digest is ${expected}, the download has sha256 ${actual}`);
-  }
-  return problems;
-}
-
-/** The assets of the release v`version` of `repository`, read from the GitHub releases API. */
-async function releaseAssets(repository: string, version: string): Promise<ReleaseAsset[]> {
-  const url = `https://api.github.com/repos/${repository}/releases/tags/v${version}`;
-  const response = await fetch(url, { headers: { accept: 'application/vnd.github+json' } });
-  if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
-  const release: unknown = await response.json();
-  const assets = isRecord(release) && Array.isArray(release.assets) ? release.assets : [];
-  return assets.flatMap((asset: unknown) =>
-    isRecord(asset) && typeof asset.name === 'string' && typeof asset.digest === 'string' && typeof asset.browser_download_url === 'string'
-      ? [{ name: asset.name, digest: asset.digest, url: asset.browser_download_url }]
-      : [],
-  );
-}
-
-/** Downloads `asset`. */
-async function download(asset: ReleaseAsset): Promise<Uint8Array> {
-  const response = await fetch(asset.url);
-  if (!response.ok) throw new Error(`${asset.url}: HTTP ${response.status}`);
-  return new Uint8Array(await response.arrayBuffer());
-}
-
-/** Writes the pin file `file` from the releases of the packages that it pins. */
-async function write(file: string): Promise<void> {
-  const pins: unknown = JSON.parse(readFileSync(file, 'utf8'));
-  if (!isRecord(pins) || !isRecord(pins.packages)) throw new Error(`${file}: no member packages`);
-  const packages: Record<string, Pin> = {};
+/** The text of the pin file `text` written again from the release responses that `release` gives. */
+export function pinsText(text: string, release: ReleaseOf): string {
+  const pins: unknown = JSON.parse(text);
+  if (!isRecord(pins) || !isRecord(pins.packages)) throw new Error('the pin file has no member packages');
+  const packages: Record<string, unknown> = {};
   for (const [name, entry] of Object.entries(pins.packages)) {
-    if (!isRecord(entry) || typeof entry.repository !== 'string' || typeof entry.version !== 'string' || typeof entry.extension !== 'string') {
-      throw new Error(`${file}: ${name} names no repository, version and extension`);
-    }
-    const source = { repository: entry.repository, version: entry.version, extension: entry.extension };
-    const assets = await releaseAssets(source.repository, source.version);
-    const pin = pinFromRelease(source, assets);
-    const pinned = assets.filter((asset) => asset.name === 'packages.json' || asset.name.startsWith(`php_${source.extension}-v${source.version}_php`));
-    const files = new Map<string, Uint8Array>();
-    for (const asset of pinned) {
-      process.stdout.write(`php-ext-pins: ${name}: downloading ${asset.name}\n`);
-      files.set(asset.name, await download(asset));
-    }
-    const problems = downloadProblems(pinned, files);
-    if (problems.length > 0) throw new Error(`${name} v${source.version}:\n  ${problems.join('\n  ')}`);
-    packages[name] = pin;
+    if (!isRecord(entry)) throw new Error(`${name} is no object`);
+    packages[name] = pinOf(name, entry, release(String(entry.repository), String(entry.version)));
   }
-  writeFileAtomic(file, `${JSON.stringify({ ...pins, packages }, null, 2)}\n`);
-  process.stdout.write(`php-ext-pins: wrote ${file} for ${Object.keys(packages).join(', ')}\n`);
+  return `${JSON.stringify({ ...pins, packages }, null, 2)}\n`;
+}
+
+/** Reads the release responses of the packages of `text` from the GitHub releases API. */
+async function releases(text: string): Promise<ReleaseOf> {
+  const pins: unknown = JSON.parse(text);
+  const entries = isRecord(pins) && isRecord(pins.packages) ? Object.values(pins.packages).filter(isRecord) : [];
+  const responses = new Map<string, unknown>();
+  for (const entry of entries) {
+    const key = `${String(entry.repository)} ${String(entry.version)}`;
+    const url = `https://api.github.com/repos/${String(entry.repository)}/releases/tags/v${String(entry.version)}`;
+    const response = await fetch(url, { headers: { accept: 'application/vnd.github+json' } });
+    if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
+    responses.set(key, await response.json());
+  }
+  return (repository, version) => responses.get(`${repository} ${version}`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
@@ -127,8 +81,14 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.stderr.write('Usage: node scripts/php-ext-pins.mts write PINS\n');
     process.exit(2);
   }
-  write(file).catch((error: unknown) => {
-    process.stderr.write(`php-ext-pins: ${error instanceof Error ? error.message : String(error)}\n`);
-    process.exit(1);
-  });
+  const text = readFileSync(file, 'utf8');
+  releases(text)
+    .then((release) => {
+      writeFileAtomic(file, pinsText(text, release));
+      process.stdout.write(`php-ext-pins: wrote ${file}\n`);
+    })
+    .catch((error: unknown) => {
+      process.stderr.write(`php-ext-pins: ${error instanceof Error ? error.message : String(error)}\n`);
+      process.exit(1);
+    });
 }

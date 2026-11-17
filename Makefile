@@ -227,7 +227,8 @@ lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language 
 # (HR-80, H35.51); json-ext does the same.
 PIE := $(KIT_TOOLS)/mise/shims/pie
 # php-ext-pins writes config/php-ext-pins.json from the releases of the versions that it pins: the sha256 of each
-# packages.json and platform zip is the field digest of its release asset, after each download has that sha256 (H35.58).
+# packages.json and platform zip is the field digest of its release asset; it downloads no asset, since template-ext and
+# json-ext verify each download by that pin (H35.58).
 .PHONY: php-ext-pins
 php-ext-pins: ## Write config/php-ext-pins.json from the digests of the release assets of the pinned PHP extensions; ONLINE
 	$(ONLINE) $(NODE) $(CURDIR)/scripts/php-ext-pins.mts write config/php-ext-pins.json
