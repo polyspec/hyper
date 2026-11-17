@@ -2,3 +2,7 @@
 channel = "1.99.0"
 profile = "minimal"
 components = ["rustfmt", "clippy"]
+# wasm32-unknown-unknown is the target of the WASM crate of packages/ts/native/wasm, which make lint-bindings and make
+# node-package build (binding GN-18). The install of the toolchain installs it, so a job that builds it needs no step of
+# its own.
+targets = ["wasm32-unknown-unknown"]

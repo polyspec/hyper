@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6b74d54f78f88ab9617ebe3463cc9c3eaee8e0819e864ffc4d20fea6e8d6c5ef -->
+<!-- source-sha256: c0dafc1d458490436b07a22dac6c3f20a8fafd8c265f06c0437c9e89d6d972d8 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `rust-toolchain.toml`은 target을 적지 않아 `make install-tools`가 host의 표준 라이브러리만 설치했는데, CI group core의 `make test-bindings`가 실행하는 `make lint-bindings`와 `make node-package`는 WASM crate를 `wasm32-unknown-unknown`으로 build한다. 이제 `rust-toolchain.toml`이 그 target을 적는다. `tests/scripts/ci-group-tools.test.mts`는 CI group 또는 release job의 cargo 명령 줄이 그 파일에 없는 Rust target을 적으면 실패한다. 이 test는 release job의 make 호출, 곧 bootstrap action의 호출, `release-tag`, `RELEASE_STEPS`도 CI group처럼 판정하여, 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패한다(H35.35).
 - `make recipe-check`는 case runner를 `make -k` 하나의 goal로 실행했다. 실패한 runner가 newline 없이 출력을 끝내면 그 마지막 줄이 다음 명령 줄과 붙었고, 비교 뒤의 어떤 줄도 실패한 runner를 밝히지 않았다. 이제 `recipe-check`는 다섯 runner와 비교의 명령을 `$(call check,...)`로 실행한다. 각 출력은 newline으로 끝나고, 마지막 줄은 실패한 것을 모두 적은 `failed checks:`이다. target은 runner의 prerequisite을 가지며 dry run은 아무것도 시작하지 않는다(HR-84, HR-86, H35.16-8).
 - `Cargo.lock`과 tracked binding package를 쓰는 target이 없었다. crate의 새 tag 뒤에 `cargo update`와 `binding scaffold`를 손으로 실행했다. 이제 `make cargo-lock CRATES="<crate> ..."`가 적은 crate에 `cargo update -p`를 link script로 실행하고, `make bindings-scaffold`가 `binding scaffold`를 실행해 `packages/go/go.mod`와 `go.sum`을 포함한 binding의 manifest를 쓴다. `.links`가 있는 checkout에서는 link script가 자기 lock 사본을 갱신하고 `Cargo.lock`은 그대로 두므로, `cargo-lock`은 cargo를 시작하기 전에 그 원인을 밝히며 실패한다(H35.8-3).
 - root `package.json`과 `tests/package-install/package.json`이 `@polyspec/json`, `@polyspec/php-serialization`과 그 platform package, `@polyspec/php-serialize`, `@polyspec/template`, `@polyspec/template-compiler`의 `overrides`를 가졌다. 한 family의 overrides를 지우고 그 family가 없는 lock에서 `npm install --package-lock-only`를 실행하면 tree의 lock과 같은 lock이 쓰인다. npm이 workspace가 요구하는 정확한 version을 root의 tarball URL로 해석하기 때문이다. 그 항목을 지웠고, `tests/scripts/template-version.test.mts`는 `overrides`를 가진 manifest에서 실패한다. `docs/operations/dependencies.md`에 `packages/python/pyproject.toml`의 `polyspec-json` wheel 행을 더했고, http crate의 tag `v0.0.8`과 `v0.0.5`를 적었다(H35.8-2).

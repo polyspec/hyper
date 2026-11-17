@@ -11,6 +11,13 @@
 // is not in STARTED is not judged: Node.js and npm, which the bootstrap of the job installs, the programs of the runner
 // (cp, test, a C compiler, the libclang of hyper-ext), and what a setup step of the group installs for itself (Chromium,
 // Redis, the packages of Composer and uv).
+//
+// The job of release.yml is judged in the same way (HR-95): its make calls are those of the bootstrap action,
+// release-tag and RELEASE_STEPS, and a tool counts as installed for the command lines after the line that installs
+// every tool, since make release-prepare installs and builds in one step. A cargo command line that names a Rust
+// target needs the standard library of that target, which install-tools installs only for the targets of
+// rust-toolchain.toml. What a utility of kit starts inside its process (npm pack, git archive, uv build, gh) is in no
+// dry run and is not judged here.
 import assert from 'node:assert/strict';
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -79,6 +86,32 @@ function commands(target: string, variables: string[] = []): string[] {
   return lines;
 }
 
+/** The variables that the call of the job gives the setup step `step` of the group `group` (ci_step_args of the Makefile). */
+function setupVariables(group: string, step: string): string[] {
+  if (step === 'install-tools') return [`TOOLS=${makeWords(`CI_TOOLS_${group}`).join(' ')}`];
+  if (step !== 'install-symbols') return [];
+  return [`EXTRACTORS=${new RegExp(`^CI_SYMBOLS_${group} := `, 'm').test(MAKEFILE) ? makeWords(`CI_SYMBOLS_${group}`).join(' ') : ''}`];
+}
+
+/**
+ * The make calls of the job of release.yml in their order (HR-95): the run steps of the bootstrap action, release-tag,
+ * then RELEASE_STEPS as make ci-release starts them, install-tools with TOOLS=npm.
+ */
+function releaseCalls(): { target: string; variables: string[] }[] {
+  const action = readFileSync(path.join(ROOT, '.github/actions/bootstrap/action.yml'), 'utf8');
+  const bootstrap = [...action.matchAll(/^\s+run: make (\S+)((?: \S+=\S+)*)$/gmu)].map((call) => ({ target: call[1] ?? '', variables: (call[2] ?? '').split(' ').filter(Boolean) }));
+  assert.ok(bootstrap.length > 0, 'the bootstrap action runs no make target');
+  const steps = makeWords('RELEASE_STEPS').map((step) => ({ target: step, variables: step === 'install-tools' ? ['TOOLS=npm'] : [] }));
+  return [...bootstrap, { target: 'release-tag', variables: [] }, ...steps];
+}
+
+// A command line that installs every tool of the checkout: install-tools of kit without a selector, which make
+// hyper-install runs, and release-tools of kit, which runs it for a configuration that holds a Composer package or a wheel.
+const INSTALLS_ALL = /\/install-tools\.m[jt]s --no-self-update\s*$|\/release-tools\.m[jt]s\s*$/u;
+
+// The Rust target that a cargo command line builds for, when it names one by its triple.
+const CARGO_TARGET = /\/link\.m[jt]s cargo .* --target ([a-z0-9_]+(?:-[a-z0-9_]+)+)/u;
+
 test('each CI group installs every tool that its setup steps and its targets start (HR-91, H35.16-6)', () => {
   const groups = [...makeWords('CI_GROUPS'), 'bench'];
   const found: string[] = [];
@@ -104,10 +137,8 @@ test('each CI group installs every tool that its setup steps and its targets sta
     };
     // The setup steps run in their order with the variables that the call of the job gives them (ci_step_args), and a
     // step may start what it installs itself: install-tools checks the PHP wrapper that it wrote.
-    const symbols = new RegExp(`^CI_SYMBOLS_${group} := `, 'm').test(MAKEFILE) ? makeWords(`CI_SYMBOLS_${group}`).join(' ') : '';
-    const given: Record<string, string[]> = { 'install-tools': [`TOOLS=${makeWords(`CI_TOOLS_${group}`).join(' ')}`], 'install-symbols': [`EXTRACTORS=${symbols}`] };
     for (const step of makeWords(`CI_SETUP_${group}`)) {
-      const lines = commands(step, given[step]);
+      const lines = commands(step, setupVariables(group, step));
       for (const install of INSTALLS) {
         for (const tool of lines.flatMap(install.tools)) {
           installed.add(tool);
@@ -125,6 +156,57 @@ test('each CI group installs every tool that its setup steps and its targets sta
   assert.ok(conditional > 0, 'no setup step prints the check of the PHP wrapper with its condition');
   assert.deepEqual(found, []);
   assert.deepEqual(INSTALLS.map((install) => install.name).filter((name) => !installing.has(name)), [], 'a row of INSTALLS matches no command line of any setup step');
+});
+
+test('the job of release.yml installs every tool that its steps start, before the command line that starts it (HR-95, H35.35)', () => {
+  const kinds = (JSON.parse(readFileSync(path.join(ROOT, 'config/release.json'), 'utf8')) as { packages: { kind: string }[] }).packages.map((item) => item.kind);
+  assert.ok(kinds.includes('composer') || kinds.includes('wheel'), 'config/release.json holds no Composer package and no wheel, so release-tools of kit installs no tool');
+  const every = new Set(STARTED.flatMap((entry) => entry.tools));
+  const installed = new Set<string>();
+  const matched = new Set<string>();
+  const found: string[] = [];
+  let installs = 0;
+  // The command lines run in their order, those of the makes that a recipe starts included, so a tool counts as
+  // installed only for the lines after the line that installs it.
+  for (const call of releaseCalls()) {
+    for (const line of commands(call.target, call.variables)) {
+      if (WHERE_INSTALLED.test(line)) continue;
+      for (const entry of STARTED) {
+        if (!entry.pattern.test(line)) continue;
+        matched.add(entry.program);
+        for (const tool of entry.tools) {
+          if (!installed.has(tool)) found.push(`release: make ${call.target} starts ${entry.program}, and no command line of the job before it installs ${tool}: ${line.trim().slice(0, 200)}`);
+        }
+      }
+      if (!INSTALLS_ALL.test(line)) continue;
+      installs += 1;
+      for (const tool of every) installed.add(tool);
+    }
+  }
+  // The steps that build start these programs; a dry run that names none of them judged nothing (HR-84).
+  assert.deepEqual(['cargo', 'composer', 'maturin', 'php', 'pie', 'python', 'uv'].filter((program) => !matched.has(program)), [], 'no command line of the release starts a program that its steps build with');
+  assert.ok(installs >= 2, `${installs} command lines of the release install the tools: install-tools of make hyper-install and release-tools`);
+  assert.deepEqual(found, []);
+});
+
+test('rust-toolchain.toml names every Rust target that a cargo command line of a CI group or of the release builds for (HR-81, H35.35)', () => {
+  // install-tools of kit passes the targets of rust-toolchain.toml to rustup with the toolchain, and no other step adds one.
+  const list = /^targets = \[(.*)\]$/mu.exec(readFileSync(path.join(ROOT, 'rust-toolchain.toml'), 'utf8'))?.[1] ?? '';
+  const declared = [...list.matchAll(/"([^"]+)"/gu)].map((target) => target[1] ?? '');
+  const named = new Map<string, string>();
+  const read = (where: string, lines: string[]): void => {
+    for (const line of lines) {
+      const target = CARGO_TARGET.exec(line)?.[1];
+      if (target !== undefined && !named.has(target)) named.set(target, where);
+    }
+  };
+  for (const group of [...makeWords('CI_GROUPS'), 'bench']) {
+    for (const step of makeWords(`CI_SETUP_${group}`)) read(`${group}: make ${step}`, commands(step, setupVariables(group, step)));
+    for (const target of makeWords(`CI_TARGETS_${group}`)) read(`${group}: make ${target}`, commands(target));
+  }
+  for (const call of releaseCalls()) read(`release: make ${call.target}`, commands(call.target, call.variables));
+  assert.ok(named.size > 0, 'no cargo command line of a CI group or of the release names a Rust target');
+  assert.deepEqual([...named].filter(([target]) => !declared.includes(target)).map(([target, where]) => `${where} builds for the Rust target ${target}, which rust-toolchain.toml does not name in targets, so install-tools installs no standard library of it`), []);
 });
 
 test('install-wasm-bindgen of a tree without packages/release.mk writes the file first and installs the wasm-bindgen CLI with the mise of the checkout (H35.16-6)', (t) => {
