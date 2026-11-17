@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 63b344a8cdafbdfb67181d5f5fad40dd27b6893986f40d023e42c5c7f635bab4 -->
+<!-- source-sha256: 15edb22279d066d92fdd863e439fe29ef8aec31898882295f36f9d11ff2a9f68 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -653,3 +653,5 @@
 | H34.9 | assets.yml의 모든 job에서 cargo를 시작하기 전에 Cargo.lock의 crate를 fetch한다: 각 ci-assets-* recipe는 install-tools 뒤에 hyper-install-crates를 실행하고, ci-group-tools.test.mts는 check group의 규칙을 assets job에도 적용한다(HR-89) | Makefile, tests/scripts/ci-group-tools.test.mts | make hyper-test-scripts TESTS=tests/scripts/ci-group-tools.test.mts | [o] |
 | H34.10 | hyper-install-python이 Python native module을 build하기 전에 binding의 생성 source를 쓴다: 새 checkout에는 make bindings가 쓰는 packages/python/native/generated/lib.rs가 없다(HR-85) | Makefile, tests/scripts | make hyper-test-scripts TESTS=tests/scripts/hyper-install.test.mts | [o] |
 | H34.11 | CI group node에 uv를 설치한다: 그 target release-candidate-assets는 kit의 release candidate-assets를 실행하고, 이것은 process 안에서 uv workspace dir로 Python package의 environment를 찾는다. ci-group-tools.test.mts는 그 program을 적는다(HR-91) | Makefile, tests/scripts/ci-group-tools.test.mts | make hyper-test-scripts TESTS=tests/scripts/ci-group-tools.test.mts | [v] |
+| H34.6 | PHP case runner의 functions step은 case가 openFails를 적지 않을 때 App::open의 오류로 case를 실패시킨다. 입력: host function shout으로 여는 open이 실패하는 contracts/functions.json a_document_renders_the_host_function. 동작: FunctionsSteps는 case가 갖지 않은 openFails와 openError를 비교하고 반환했으므로 case는 아무것도 비교하지 않았고 오류 없이 CASE_EMPTY를 보고했다. 기대: case는 오류의 메시지와 함께 CASE_ERROR를 보고하므로 실패한 open의 원인이 results file에 있다. kind suffix의 function은 render의 environment를 두 번째 parameter로 받는다(HYC-24.10): 그 function은 argument list만 받았고, template 0.0.30의 binding은 두 argument보다 적게 받는 host function을 거부한다. Node runner도 같은 case에서 그것을 보고한다 | packages/php/tests/Support/Steps/FunctionsSteps.php | make hyper-test-php | [ ] |
+| H34.15 | PHPStan은 template extension polyspec_template의 선언을 그 stub에서 읽으며, phpstan.dist.neon과 packages/php/phpstan-max.neon의 scanFiles는 packages/php/phpstan-max.neon이 native/generated/polyspec_hyper.stub.php를 적듯이 그 stub을 적는다. 원인: template 0.0.30 release는 extension class의 stub을 싣지 않으므로 make analyse-php는 Engine, BoundMap, FsLoader, Environment, DefineInput, bind, merge를 하나도 찾지 못한다. 이름은 0.0.30에서 바뀌지 않았다. stub을 싣는 template release(template row T28.141, release 0.0.31)까지 막혀 있다 | phpstan.dist.neon, packages/php/phpstan-max.neon, Makefile, docs/operations/dependencies.md | make analyse-php | [ ] |
