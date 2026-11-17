@@ -120,7 +120,7 @@ final class Multipart extends MultipartReader
             : null;
     }
 
-    /** Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11). */
+    /** Returns true when the body passed the value limit, the part limit or the file limit (HY-131.32). */
     public function exceeded(): bool
     {
         return $this->over;

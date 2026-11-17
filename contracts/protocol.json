@@ -915,9 +915,9 @@
                 },
                 {
                   "id": "HY-114.7",
-                  "en": "The server checks the bytes of each file part while it reads the body (HY-131.11): a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59.4 does and at its place in the order of HY-59.3, and no action runs.",
-                  "ko": "server는 body를 읽는 동안 각 file part의 byte를 검사한다(HY-131.11). byte가 file 제한보다 많은 file은 HY-59.4처럼, 그리고 HY-59.3의 순서에서 그 자리에서 text `Content Too Large`와 함께 status 413으로 요청을 실패시키며 action은 실행되지 않는다.",
-                  "koSource": "7a8dfddda65cfcb63c198a3df174b76dfa49a482a0c3e1436ed1b8b8ef687bb5"
+                  "en": "The server checks the bytes of each file part while it reads the body (HY-131.32): a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59.4 does and at its place in the order of HY-59.3, and no action runs.",
+                  "ko": "server는 body를 읽는 동안 각 file part의 byte를 검사한다(HY-131.32). byte가 file 제한보다 많은 file은 HY-59.4처럼, 그리고 HY-59.3의 순서에서 그 자리에서 text `Content Too Large`와 함께 status 413으로 요청을 실패시키며 action은 실행되지 않는다.",
+                  "koSource": "c0a9874e6cbb07114020f749a8307717e3e7fb6fb0d55cddb5ac99bd730b0e70"
                 },
                 {
                   "id": "HY-114.12",
@@ -940,6 +940,7 @@
             5,
             6,
             7,
+            11,
             12,
             13,
             15,
@@ -987,10 +988,10 @@
                   "koSource": "a6e622e8111c913f532db2c614982ecc879cd1023751c20649d171a7f1ba13e1"
                 },
                 {
-                  "id": "HY-131.11",
-                  "en": "A body that passes the body limit, the value limit, the part limit or the file limit (HY-114) receives status 413 with the text `Content Too Large`, and every server stops reading the body when it passes a limit.",
-                  "ko": "body 제한, value 제한, part 제한, file 제한(HY-114)을 넘는 body는 text `Content Too Large`와 함께 status 413을 받고, 모든 server는 제한을 넘는 순간 body 읽기를 멈춘다.",
-                  "koSource": "a6721f7d4392a75b4f1522caf1b9d5f2638c263b2b6e552331479952ee6d83d3"
+                  "id": "HY-131.32",
+                  "en": "A body that passes the body limit, the value limit, the part limit or the file limit (HY-114) receives status 413 with the text `Content Too Large`, and after the limit is passed no server parses or stores the remaining bytes: the host discards them, by reading them or by leaving them unread, and the file that was open is closed.",
+                  "ko": "body 제한, value 제한, part 제한, file 제한(HY-114)을 넘는 body는 text `Content Too Large`와 함께 status 413을 받고, 제한을 넘은 뒤에는 어떤 server도 남은 byte를 parse하거나 저장하지 않는다. host는 그것을 읽어서든 읽지 않고 두어서든 버리고, 열려 있던 file은 닫는다.",
+                  "koSource": "d5583505da86ba05b830bc82d2a2b41ed76cfcb0e2ed6bb4eb06becd8c3aee17"
                 },
                 {
                   "id": "HY-131.30",
@@ -7284,6 +7285,7 @@
           "kind": "rule",
           "id": "HY-59",
           "retired": [
+            6,
             7,
             11
           ],
@@ -7330,10 +7332,10 @@
                       "koSource": "6a73ad23221920ade4c23d83af3e8324f10a2edb83b8b28434e4a53be18768db"
                     },
                     {
-                      "id": "HY-59.6",
-                      "en": "Every server stops reading a body when it passes the body limit or another limit of HY-131.11.",
-                      "ko": "모든 server는 body가 body 제한이나 HY-131.11의 다른 제한을 넘으면 body 읽기를 멈춘다.",
-                      "koSource": "d54a0efd7ef78af68e9aff9d9c4721e7c0249c28938c1cf0100c271e1048ffa5"
+                      "id": "HY-59.14",
+                      "en": "After a body passes the body limit or another limit of HY-131.32, and for a body whose `Content-Length` is larger than the body limit (HY-131.31), no server parses or stores the remaining bytes, which the host discards.",
+                      "ko": "body가 body 제한이나 HY-131.32의 다른 제한을 넘은 뒤, 그리고 `Content-Length`가 body 제한보다 큰 body(HY-131.31)에 대해, 어떤 server도 남은 byte를 parse하거나 저장하지 않으며 host는 그것을 버린다.",
+                      "koSource": "e6b36c70231a64a8785a7ddd6ee4d4d61fef15d5a60acf0671ae5eda02b6f522"
                     }
                   ],
                   "blocks": []

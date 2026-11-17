@@ -4635,7 +4635,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11).",
+              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::exceeded",
@@ -7442,7 +7442,7 @@
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.11).",
+              "state": "Returns true when the body passed the value limit, the part limit or the file limit (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/Multipart.php::Polyspec\\Hyper\\Multipart::exceeded",
@@ -7490,7 +7490,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Counts the part and reads its name, its filename and its content type from its header lines, opens the file of a file part in the directory, and returns false when the part limit or the value limit is passed or when one of the texts is not UTF-8 (HY-113.5, HY-113.18, HY-131.11, HY-131.13).",
+              "state": "Counts the part and reads its name, its filename and its content type from its header lines, opens the file of a file part in the directory, and returns false when the part limit or the value limit is passed or when one of the texts is not UTF-8 (HY-113.5, HY-113.18, HY-131.32, HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/Multipart.php::Polyspec\\Hyper\\Multipart::partStarted",
@@ -7515,7 +7515,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Keeps the bytes of the content of a value, and writes those of a file part to its file when the reader has a directory; returns false when the value limit or the file limit is passed (HY-131.11, HY-131.13).",
+              "state": "Keeps the bytes of the content of a value, and writes those of a file part to its file when the reader has a directory; returns false when the value limit or the file limit is passed (HY-131.32, HY-131.13).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/Multipart.php::Polyspec\\Hyper\\Multipart::partData",
@@ -7538,7 +7538,7 @@
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Records that the body passed a limit, and fails the body (HY-131.11).",
+              "state": "Records that the body passed a limit, and fails the body (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/Multipart.php::Polyspec\\Hyper\\Multipart::limitPassed",
@@ -8094,7 +8094,7 @@
               ],
               "output": "boolean",
               "errors": [],
-              "state": "Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4, HY-131.11).",
+              "state": "Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4, HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/RequestBody.php::Polyspec\\Hyper\\RequestBody::feed",
@@ -8117,7 +8117,7 @@
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Returns true when the body passed the body limit, the value limit, the part limit or the file limit (HY-131.11).",
+              "state": "Returns true when the body passed the body limit, the value limit, the part limit or the file limit (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/RequestBody.php::Polyspec\\Hyper\\RequestBody::exceeded",
@@ -8140,7 +8140,7 @@
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Records that the body passed a limit and drops what it holds (HY-131.11).",
+              "state": "Records that the body passed a limit and drops what it holds (HY-131.32).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/RequestBody.php::Polyspec\\Hyper\\RequestBody::bodyPassed",

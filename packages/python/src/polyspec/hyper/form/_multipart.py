@@ -77,7 +77,7 @@ class Multipart(MultipartReader):
         )
 
     def exceeded(self) -> bool:
-        """Returns True when the body passed the value limit, the part limit or the file limit (HY-131.11)."""
+        """Returns True when the body passed the value limit, the part limit or the file limit (HY-131.32)."""
         return self.__over
 
     def count(self) -> int:

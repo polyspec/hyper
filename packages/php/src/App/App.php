@@ -528,7 +528,7 @@ final class App
     /** Answers a request; the loaders and actions of a routed request receive `$reply` (HY-52, HY-60). */
     private function dispatch(Request $request, SessionStore $store, Reply $reply): Response
     {
-        // HY-131.11: a body that passed the value limit, the part limit or the file limit is answered as a body over
+        // HY-131.32: a body that passed the value limit, the part limit or the file limit is answered as a body over
         // the body limit.
         $streams = in_array('multipart/form-data', $this->formTypes, true);
         if (

@@ -105,7 +105,7 @@ def served_file(
 
 def read_body(read: Callable[[int], bytes], body: RequestBody, length: int) -> None:
     """Gives a request body of `length` bytes to `body` in chunks of at most 65536 bytes. A body that passes the
-    limit is read to its end and discarded, so that the response can be sent (HY-59, HY-131.11)."""
+    limit is read to its end and discarded, so that the response can be sent (HY-59, HY-131.32)."""
     size = 0
     reading = True
     while size < length:

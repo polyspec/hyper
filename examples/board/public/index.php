@@ -54,7 +54,7 @@ $app = App::open(
     program: __DIR__ . '/../build/program',
     handlers: require __DIR__ . '/../app/handlers.php',
     timezone: '+09:00',
-    // The form of a new post is multipart, because it holds a file (HY-59.6, HY-131).
+    // The form of a new post is multipart, because it holds a file (HY-59.1, HY-131).
     formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'],
     basePath: is_string($basePath) ? $basePath : '',
     https: getenv('BOARD_HTTPS') === '1',

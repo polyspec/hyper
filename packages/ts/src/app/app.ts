@@ -553,7 +553,7 @@ export class App<S extends object = Record<string, never>> {
 
   // Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60).
   private async dispatch(received: Request, store: SessionStore, reply: Reply): Promise<Response> {
-    // HY-131.11: a body that passed the value limit, the part limit or the file limit is answered as a body over the
+    // HY-131.32: a body that passed the value limit, the part limit or the file limit is answered as a body over the
     // body limit.
     if (received.bodySize() > this.bodyLimit || received.exceeded(this.valueLimit, this.partLimit, this.fileLimit, this.formTypes.includes('multipart/form-data'))) {
       return Response.text(413, 'Content Too Large');

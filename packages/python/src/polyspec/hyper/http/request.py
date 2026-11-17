@@ -103,7 +103,7 @@ class Request:
     def _exceeded(
         self, value_limit: int, part_limit: int, file_limit: int, streams: bool
     ) -> bool:
-        """Returns True when the body passed the value limit, the part limit or the file limit (HY-131.11): as its
+        """Returns True when the body passed the value limit, the part limit or the file limit (HY-131.32): as its
         host read it, or for a body that is one value by its size, and by its parts and files when ``streams`` tells
         that the application reads a multipart body in chunks."""
         read = self._read
