@@ -19,6 +19,22 @@ const variable = (name: string): string => {
   return value;
 };
 
+test('PHP_INI_SCAN_DIR is set only in the env of the two PIE commands of template-ext, in no other recipe line (H35.52)', () => {
+  // The data base of make (-p) prints each rule with its recipe lines unexpanded, after the line "# Make data base".
+  const lines = dryRun('template-ext', { variables: ['-p'] });
+  const start = lines.findIndex((line) => line.startsWith('# Make data base'));
+  assert.ok(start >= 0, 'make -p prints its data base');
+  const found: string[] = [];
+  let target = '';
+  for (const line of lines.slice(start)) {
+    const rule = /^([^\s#][^=]*?):(?!=)/.exec(line);
+    if (rule) target = rule[1] ?? '';
+    else if (line.startsWith('\t') && line.includes('PHP_INI_SCAN_DIR')) found.push(`${target}: ${line.trim()}`);
+  }
+  assert.equal(found.length, 2, found.join('\n'));
+  for (const line of found) assert.match(line, /^template-ext: \$\(ONLINE\) env PIE_WORKING_DIRECTORY=\$\(PIE_WORK\) COMPOSER_CACHE_DIR=\$\(PIE_WORK\)\/cache PHP_INI_SCAN_DIR=:\$\(PIE_WORK\)\/ini \$\(PIE\) /, line);
+});
+
 test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in an empty folder from the Composer repository of the release (H27.45, H27.51)', () => {
   const version = variable('TEMPLATE_VERSION');
   const lines = dryRun('template-ext');
@@ -29,11 +45,12 @@ test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in
   // PIE keeps one Composer project per target PHP in its working directory and never undoes repository:add, so each run
   // starts in an empty folder of the package and names it as PIE_WORKING_DIRECTORY of both PIE commands.
   assert.match(text, new RegExp(`rm -rf ${escape(work)} && mkdir -p ${escape(work)}`), text);
-  const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line));
+  // The dry run holds json-ext first, a prerequisite (H35.52); these are the PIE commands of the template.
+  const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line) && line.includes(`PIE_WORKING_DIRECTORY=${work} `));
   assert.equal(pie.length, 2, text);
   for (const line of pie) {
     // make 3.81 keeps the tab of a continued recipe line in its dry run, and make 4 removes it.
-    assert.match(line, new RegExp(`^\\t?env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK env PIE_WORKING_DIRECTORY=${escape(work)} COMPOSER_CACHE_DIR=${escape(work)}/cache \\S+/var/tools/mise/shims/pie `), line);
+    assert.match(line, new RegExp(`^\\t?env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK env PIE_WORKING_DIRECTORY=${escape(work)} COMPOSER_CACHE_DIR=${escape(work)}/cache PHP_INI_SCAN_DIR=:${escape(work)}/ini \\S+/var/tools/mise/shims/pie `), line);
     // Each command of the one shell of the recipe goes on only when the one before it passed.
     assert.match(line, / --no-interaction && \\$/, line);
   }
@@ -42,6 +59,12 @@ test('make template-ext builds polyspec/template of TEMPLATE_VERSION with PIE in
   // The trap of that shell removes the working directory with its Composer cache at the end, the failure and a signal of
   // the run, because no later target reads it (HR-87).
   assert.match(text, new RegExp(`trap 'rm -rf ${escape(work)} build/ext\\.next-\\$\\$' EXIT && trap 'exit 130' INT TERM`), text);
+  // The template package requires ext-polyspec_json, so template-ext runs after json-ext, and PIE, which lists the extensions
+  // of its target PHP by running it, reads the one ini of the run that loads the json library (H35.52).
+  const json = lines.findIndex((line) => line.includes(' build polyspec/json:'));
+  const ini = lines.findIndex((line) => line.includes(`printf 'extension=%s\\n' '${ROOT}/build/json-ext/polyspec_json.so' > ${work}/ini/polyspec_json.ini`));
+  assert.ok(json >= 0 && ini > json && ini < lines.indexOf(pie[0] ?? ''), text);
+  assert.match(text, new RegExp(`mkdir -p ${escape(work)}/ini && trap 'rm -rf ${escape(work)} `), text);
   // pie install writes into the PHP of the machine, and kit has no pie-build any more (kit K931).
   assert.deepEqual(lines.filter((line) => /\/pie-build\.|\bpie install\b|mise install/.test(line)), [], text);
   // The recipe takes the one library that PIE recorded with scripts/pie-binary.mts, fails with its status and publishes a file.

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b3d98de0dafdc4f77fe35ad2f6e6a4950d9641f600448764381cbac7d5c0df19 -->
+<!-- source-sha256: 3ed2cfc2ae1bc7f7c522ede0889af61254d13f55ff7374c0c983740139229692 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make template-ext`는 template package가 요구하는 json 확장을 PIE에 준다(H35.52). 입력: php-ext package가 `ext-polyspec_json`을 요구하는 template 0.0.29의 `make template-ext`. 이전 동작: PIE는 대상 PHP의 확장을 그 php를 실행해 나열하는데, 그 php가 json library를 읽지 않아 `pie build`가 "requires ext-polyspec_json * which is missing from your platform"으로 멈췄다. 기대 동작이자 현재 동작: `template-ext`는 `json-ext`에 의존하고, 그 두 PIE 명령은 `PHP_INI_SCAN_DIR`를 PHP의 scan 디렉터리를 유지하는 앞 콜론과, 하나의 ini가 `build/json-ext/polyspec_json.so`를 읽는 실행의 디렉터리 `ini`로 둔다. recipe의 trap이 그 디렉터리를 지우며, checkout의 다른 어떤 PHP 실행도 그 library를 읽지 않는다.
 - `make template-ext`와 `make json-ext`는 실행이 끝날 때 PIE 작업 디렉터리를 그 Composer cache와 함께 지운다(HR-87). 입력: 두 target 중 하나의 실행. 이전 동작: recipe는 `var/pie/polyspec/<package>`를 시작할 때만 지웠으므로, 뒤의 어떤 target도 읽지 않는데도 PIE의 Composer project, 풀린 library, download한 zip이 실행보다 오래 남았다. 기대 동작이자 현재 동작: 각 recipe는 하나의 shell이며, 그 trap이 library를 `build/ext`나 `build/json-ext`에 게시한 뒤 실행의 끝, 실패, SIGINT와 SIGTERM에서 그 디렉터리와 library의 staging 디렉터리를 지운다.
 - `scripts/php-ext-verify.mts`는 PIE가 zip을 두는 곳에서 읽는다(H35.51). 입력: `make json-ext`. 이전 동작: script는 PIE가 아무것도 남기지 않는 PIE 작업 디렉터리에서 `php_<extension>-*.zip`을 찾고 "no zip"으로 실패했다. PIE 안의 Composer는 zip을 기기의 Composer cache `files/polyspec/json/<URL의 sha1>.zip`에서 가져왔다. 기대 동작이자 현재 동작: `make template-ext`와 `make json-ext`의 두 PIE 명령은 `COMPOSER_CACHE_DIR`를 빈 작업 디렉터리의 `cache`로 두고, script는 고정한 각 URL의 sha1로 `cache/files/<package>`의 zip을 읽는다. `make json-ext`의 실행이 json 0.0.34의 zip을 확인했다. template 0.0.29의 `make template-ext`는 PIE가 대상 PHP에서 `ext-polyspec_json`을 찾지 못해 download 전에 멈춘다.
 - `make template-ext`와 `make json-ext`는 PIE가 download하는 PHP 확장의 각 platform zip을 확인한다(HR-80, H35.51). 입력: Composer repository가 zip을 shasum 없이 지정하는 php-ext package의 `pie build`. 이전 동작: 어떤 추적 파일도 zip의 digest를 적지 않아 PIE가 설치하는 것을 아무것도 확인하지 않았다. 기대 동작이자 현재 동작: `config/php-ext-pins.json`이 `polyspec_template` 0.0.29, `polyspec_json` 0.0.34, `polyspec_session_store` 0.0.4의 각 platform zip의 sha256을 PHP minor와 platform별로, 그 release asset의 field `digest`에서 고정하고, `scripts/php-ext-verify.mts`는 sha256이 다른 zip에 대해 파일, 실제 sha256과 기대 sha256을 적고 library를 게시하기 전에 실패하며, zip이 없는 작업 디렉터리에 대해서도 실패한다. `tests/scripts/php-ext-verify.test.mts`가 바뀐 byte의 경우를 담고, `tests/scripts/template-pins.test.mts`가 고정한 version의 모든 zip에 pin을 요구한다. `pie build`가 작업 디렉터리에 zip을 남기는지는 아직 실행으로 보이지 않았다.

@@ -84,16 +84,17 @@ test('the command exits 1 naming the file and both digests, 0 for a match and 2 
 });
 
 test('template-ext and json-ext give PIE a cache in its working directory and verify it after pie build', () => {
-  for (const [target, name] of [['template-ext', 'polyspec/template'], ['json-ext', 'polyspec/json']] as const) {
+  for (const [target, name, output] of [['template-ext', 'polyspec/template', 'build/ext'], ['json-ext', 'polyspec/json', 'build/json-ext']] as const) {
+    // The dry run of template-ext holds json-ext first, its prerequisite (H35.52), so the lines are those of `work`.
     const lines = dryRun(target);
     const work = `${ROOT}/var/pie/${name}`;
-    const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line));
+    const pie = lines.filter((line) => /\/mise\/shims\/pie /.test(line) && line.includes(`PIE_WORKING_DIRECTORY=${work} `));
     assert.equal(pie.length, 2, lines.join('\n'));
     for (const line of pie) assert.ok(line.includes(` COMPOSER_CACHE_DIR=${work}/cache `), line);
-    const build = lines.findIndex((line) => / build polyspec\/(template|json):\S+ --no-interaction && \\$/.test(line));
+    const build = lines.findIndex((line) => line.includes(` build ${name}:`) && / --no-interaction && \\$/.test(line));
     const check = lines.findIndex((line) => line.includes(`scripts/php-ext-verify.mts config/php-ext-pins.json ${name} ${work}`));
     assert.ok(build >= 0 && check > build, `${target}: the verification follows pie build\n${lines.join('\n')}`);
-    const publish = lines.findIndex((line) => line.includes('scripts/publish.mts'));
+    const publish = lines.findIndex((line) => line.includes(`scripts/publish.mts directory ${output}.next-`));
     assert.ok(publish > check, `${target}: the verification comes before the library is published\n${lines.join('\n')}`);
   }
 });

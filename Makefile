@@ -172,7 +172,6 @@ crates-check: ## Fail unless every crate that Cargo.lock pins is fetched, naming
 
 .PHONY: hyper-install-php
 hyper-install-php: ## Install only the locked root and board Composer projects and their pinned PHP archives
-	$(MAKE) --no-print-directory json-ext
 	$(MAKE) --no-print-directory template-ext
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
@@ -206,7 +205,10 @@ lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language 
 # PIE resolves polyspec/template TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES and builds it for the PHP
 # of PATH (H27.51). PIE keeps one Composer project per target PHP in PIE_WORKING_DIRECTORY and never undoes repository:add,
 # so each run starts in an empty PIE_WORK, and the recipe is one shell whose trap removes PIE_WORK with its Composer cache at
-# its end, its failure and SIGINT and SIGTERM, because no later target reads it (HR-87).
+# its end, its failure and SIGINT and SIGTERM, because no later target reads it (HR-87). The template package requires
+# ext-polyspec_json, and PIE reads the extensions of its target PHP by running that php, so template-ext runs after json-ext
+# and both PIE commands set PHP_INI_SCAN_DIR to a leading colon, which keeps the scan directory of the PHP, and
+# PIE_WORK/ini, whose one ini loads JSON_EXT; no other PHP run of the checkout loads it (H35.52).
 # scripts/pie-binary.mts prints the one library that PIE recorded there, which is published into build/ext with a rename
 # (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
 # PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs. The Composer repository of the release
@@ -218,10 +220,11 @@ lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language 
 PIE := $(KIT_TOOLS)/mise/shims/pie
 PIE_WORK := $(CURDIR)/var/pie/polyspec/template
 .PHONY: template-ext
-template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, H27.51); ONLINE
-	rm -rf $(PIE_WORK) && mkdir -p $(PIE_WORK) && trap 'rm -rf $(PIE_WORK) build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && \
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction && \
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction && \
+template-ext: json-ext ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, H27.51); ONLINE
+	rm -rf $(PIE_WORK) && mkdir -p $(PIE_WORK)/ini && trap 'rm -rf $(PIE_WORK) build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && \
+	printf 'extension=%s\n' '$(CURDIR)/$(JSON_EXT)' > $(PIE_WORK)/ini/polyspec_json.ini && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction && \
 	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/template $(PIE_WORK) && \
 	binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template) && \
 	mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
