@@ -122,7 +122,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 # (HR-83). hyper-install is no such target: its first step writes the wrapper.
 # A target that starts PHP is named here, and tests/scripts/php-check.test.mts fails for a PHP recipe that is not.
 CHECKOUT_PHP := $(KIT_TOOLS)/bin/php
-PHP_TARGETS := hyper-install-php template-ext json-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
+PHP_TARGETS := hyper-install-php composer-lock template-ext json-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
 .PHONY: php-check php-check-installed
 $(PHP_TARGETS): php-check
 php_check = want="$$(tr -d '[:space:]' < .php-version)"; \
@@ -548,6 +548,29 @@ cargo-lock: ## Write Cargo.lock for the crates of CRATES with cargo update, in a
 	@test -n "$(strip $(CRATES))" || { echo 'cargo-lock: CRATES is empty; name the crates whose pin changed: make cargo-lock CRATES="<crate> <crate>"' >&2; exit 2; }
 	@test ! -e $(CURDIR)/.links || { echo 'cargo-lock: $(CURDIR)/.links exists, so the link script of kit would update its copy of the lock under var/link/cargo and leave Cargo.lock as it is (kit K1269); run the target in a checkout without .links' >&2; exit 1; }
 	$(ONLINE) $(CARGO) update $(foreach crate,$(CRATES),-p $(crate))
+
+# The locks of uv and of Composer are written by their tools too (HR-70), after a change of a requirement of their
+# manifests. python-lock runs `uv lock` for the Python package, which keeps every locked version that pyproject.toml
+# still allows and resolves only what the change needs. composer-lock runs `composer update --no-install` for the
+# packages of PACKAGES alone, in the private root and in the board, whose manifests pin the polyspec packages by their
+# exact versions; it fails without PACKAGES, in a dry run too, because an update of every package resolves each range
+# at the time of the run (HR-89). Neither reads a link: `make link` changes no manifest and no lock of uv or Composer.
+# npm-lock runs `npm install --package-lock-only --ignore-scripts`, which writes the lock and installs nothing, for the
+# root and for tests/package-install, whose own .npmrc npm reads through --prefix. A lock records each polyspec package by
+# the URL of its release asset with its integrity and every other package by the exact version that its manifest names,
+# and npm keeps a locked version that its manifest still allows, so the run resolves no range anew.
+.PHONY: npm-lock python-lock composer-lock
+npm-lock: ## Write package-lock.json of the root and of tests/package-install from their manifests with npm install --package-lock-only; ONLINE
+	$(ONLINE) $(NPM) install --package-lock-only --ignore-scripts
+	$(ONLINE) $(NPM) install --package-lock-only --ignore-scripts --prefix tests/package-install
+
+python-lock: ## Write packages/python/uv.lock from pyproject.toml with uv lock; ONLINE
+	$(ONLINE) $(UV) lock --project $(PYTHON_PACKAGE)
+
+composer-lock: ## Write composer.lock and examples/board/composer.lock for the packages of PACKAGES with composer update; ONLINE
+	$(if $(strip $(PACKAGES)),,$(error composer-lock: PACKAGES is empty; name the packages whose pin changed: make composer-lock PACKAGES="<vendor/package> <vendor/package>"))
+	$(ONLINE) $(COMPOSER_BIN) update --no-install --no-interaction $(PACKAGES)
+	$(ONLINE) $(COMPOSER_BIN) update --no-install --no-interaction --working-dir=$(BOARD) $(PACKAGES)
 
 # The bindings of the Rust core for the five targets of packages/rust/interface.json (binding design L-1, L-2, L-2a).
 # BINDING is the bin of the npm package @polyspec/binding, which package.json declares by its release asset and
