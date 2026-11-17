@@ -2946,6 +2946,18 @@
                 "unit": "action_outcome"
               },
               "required": true
+            },
+            {
+              "name": [
+                "csrf"
+              ],
+              "type": {
+                "optional": "text"
+              },
+              "default": {
+                "literal": null
+              },
+              "reason": "HY-72.3"
             }
           ]
         },

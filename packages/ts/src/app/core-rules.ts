@@ -77,7 +77,7 @@ type ActionOutcome =
 
 type PageStepInput =
   | { readonly input: 'start' | 'absent' | 'no_handler' }
-  | { readonly input: 'action'; readonly outcome: ActionOutcome }
+  | { readonly input: 'action'; readonly outcome: ActionOutcome; readonly csrf?: string | null }
   | { readonly input: 'context'; readonly context: ReadonlyMap<string, CoreValue> }
   | { readonly input: 'shared'; readonly shared: ReadonlyMap<string, CoreValue> }
   | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, CoreValue> }

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 61ba570e2e7786ab11f448dfcdff16776905ffa1e23a363d513473b66c8fd6ec -->
+<!-- source-sha256: 6a52fedeb31cda2dd6a5b8e522c3d91449c1d095450c3e869012f64edf5a71e0 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- action이 session을 갱신한 core의 page는 공유 데이터의 `csrf`에 갱신 전 token의 mask된 값을 담았다. `PageRequest::new`가 `PageInput.csrf`를 복사하고 action은 그 뒤에 실행되기 때문이다. 이제 action step의 입력, 곧 `packages/rust/src/steps.rs`의 `Input::Action`과 `packages/rust/interface.json`의 `page_step_input`의 case `action`이 선택 member `csrf`(새 token의 mask된 값)를 담으며, 이 값은 action 뒤의 step에서 page 입력의 값을 대신한다. page를 돌려주는 action과 `REVISION_CHANGED`를 내보내는 action 모두에 적용되고, 이 member가 없는 action step은 page 입력의 값을 유지한다(HY-72.3). `packages/ts/tests/core-renewal.test.ts`는 build된 Node addon을 구동한다. 변경 전에는 답의 JSON text와 문서가 page 입력의 값을 담았다. `make core-test`는 이 변경이 건드리지 않는 case 하나, `packages/rust/tests/cases/faults.json`의 `a_broken_index_of_the_weights_is_internal`에서 실패하며, 그 fault `http_negotiation.internal`이 발생하지 않는다. 이 변경 전의 tree에서도 똑같이 실패한다(H35.32-3).
 - root `package.json`과 `tests/package-install/package.json`이 `@polyspec/session-store`와 그 platform package 셋의 `overrides`를 가졌다. npm은 이것 없이도 `packages/ts`의 요구 `0.0.4`를 root가 적은 release asset URL로 해석하고 같은 lock을 쓰므로 그 항목을 지웠다. `make lint-ts`는 knip에서 `package.json`과 `packages/ts/package.json`의 쓰이지 않는 의존 `@polyspec/session-store`로 실패했는데, knip이 읽지 않는 생성된 Node binding만 이를 요구하기 때문이다. 이제 `knip.json`이 두 곳에서 이를 무시한다(H35.8-2).
 - CI group core는 wasm-bindgen CLI를 시작하는 `make test-bindings`를 실행했지만, group의 어떤 setup step도 그것을 설치하지 않았다. 이제 group의 setup은 `make release-recipes`로 `packages/release.mk`를 쓰고 그 target인 `make install-wasm-bindgen`을 실행한다. `tests/scripts/ci-group-tools.test.mts`는 모든 CI group의 setup step과 target의 dry run을 읽고, group이 시작하는데 그 setup이 설치하지 않는 tool이 있으면 group, target, tool을 밝히며 실패한다(HR-91, H35.16-6).
 - `make hyper-ext`는 모든 PHP의 확장을 `target/debug`에서 build했고, PHP wrapper의 경로는 그 뒤의 PHP가 바뀌어도 같으므로 Cargo가 다른 PHP의 library를 그대로 둘 수 있었다. 이제 `make hyper-ext`, `make lint-bindings`, `make test-bindings`는 확장의 crate를 header의 release(`php-config --vernum`)와 PHP의 debug build, thread safety가 정하는 `target/php-<headers><build>`(예: `target/php-80427-nts`)에서 compile하므로 다른 PHP는 다른 디렉터리에서 build한다. recipe는 더 이상 `EXT_PHP_RS_ALLOWED_BINDINGS`를 설정하지 않는다(H35.16-5).

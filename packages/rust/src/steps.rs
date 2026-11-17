@@ -366,8 +366,12 @@ pub enum ActionOutcome {
 pub enum Input {
     /// The first `next` of a request.
     Start,
-    /// The outcome of the action.
-    Action { outcome: ActionOutcome },
+    /// The outcome of the action, and the masked value of the new token of an action that renewed the session
+    /// (HY-72.3), which replaces `PageInput.csrf` for the steps after the action; `None` for an action that did not.
+    Action {
+        outcome: ActionOutcome,
+        csrf: Option<String>,
+    },
     /// The context map, which the binding converted to the data model (HY-125.9).
     Context { context: Map<Value> },
     /// The map of the shared handler.
@@ -544,8 +548,9 @@ impl PageRequest {
                     Ok(self.after_action())
                 }
             }
-            (State::Action, Input::Action { outcome }) => match outcome {
+            (State::Action, Input::Action { outcome, csrf }) => match outcome {
                 ActionOutcome::Page { status, data } => {
+                    self.renewed(csrf.as_deref());
                     // HY-44.10, HY-26.2: the data of the action is data of the page region.
                     let invalid = data_map(data);
                     let page = self.manifest().page().map_err(Failure::Kind)?;
@@ -555,6 +560,7 @@ impl PageRequest {
                     Ok(self.after_action())
                 }
                 ActionOutcome::RevisionChanged => {
+                    self.renewed(csrf.as_deref());
                     self.status = 409;
                     Ok(self.after_action())
                 }
@@ -600,6 +606,14 @@ impl PageRequest {
                 },
             ) => self.answer(*embeds, stored, *status),
             (_, _) => Err(unexpected()),
+        }
+    }
+
+    /// HY-72.3: the page of an action that renewed the session carries the masked value of the new token, which the
+    /// shared data of the steps after the action reads.
+    fn renewed(&mut self, csrf: Option<&str>) {
+        if let Some(csrf) = csrf {
+            csrf.clone_into(&mut self.input.csrf);
         }
     }
 

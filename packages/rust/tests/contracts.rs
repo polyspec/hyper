@@ -1427,6 +1427,7 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
         page_input("add", PageKind::Html, true),
         vec![Input::Action {
             outcome: ActionOutcome::NoPage,
+            csrf: None,
         }],
     );
     assert_eq!(calls, [Call::Action]);
@@ -1443,6 +1444,7 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
                     status: 422,
                     data: map(r#"{"error":"e"}"#),
                 },
+                csrf: None,
             },
             Input::Context {
                 context: map(r#"{"name":"Board"}"#),
@@ -1479,6 +1481,69 @@ fn the_steps_of_a_page_ask_the_host_for_each_handler() {
             assert!(
                 text.contains(r#""regions":{"content":{"name":"n","error":"e"}}"#),
                 "{text}"
+            );
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
+/// The answer of a `POST` of the route `add` whose action returns the page, with the member `csrf` of the action
+/// input; the page input holds the masked value `t`.
+fn answer_after_action(
+    kind: polyspec_hyper::steps::PageKind,
+    outcome: polyspec_hyper::steps::ActionOutcome,
+    csrf: Option<&str>,
+) -> polyspec_hyper::steps::Answer {
+    use polyspec_hyper::steps::Input;
+    let (_, answer) = run_page(
+        &board(false),
+        page_input("add", kind, true),
+        vec![
+            Input::Action {
+                outcome,
+                csrf: csrf.map(str::to_owned),
+            },
+            Input::NoHandler,
+            Input::NoHandler,
+            Input::NoHandler,
+            Input::Reply {
+                embeds: true,
+                stored: polyspec_hyper::steps::Map::new(),
+                status: None,
+            },
+        ],
+    );
+    answer
+}
+
+#[test]
+fn the_page_of_an_action_that_renewed_the_session_holds_the_new_masked_token() {
+    // HY-72.3
+    use polyspec_hyper::steps::{ActionOutcome, Answer, PageKind};
+    let page = || ActionOutcome::Page {
+        status: 422,
+        data: polyspec_hyper::steps::Map::new(),
+    };
+    let json = |outcome, csrf| match answer_after_action(PageKind::DocumentJson, outcome, csrf) {
+        Answer::Json { text, .. } => text,
+        other => panic!("{other:?}"),
+    };
+    // The masked value of the action input replaces that of the page input in the shared data.
+    let text = json(page(), Some("renewed"));
+    assert!(text.contains(r#""csrf":"renewed""#), "{text}");
+    assert!(!text.contains(r#""csrf":"t""#), "{text}");
+    // An action that lets REVISION_CHANGED escape after it renewed the session renders the 409 page with it.
+    let text = json(ActionOutcome::RevisionChanged, Some("renewed"));
+    assert!(text.contains(r#""csrf":"renewed""#), "{text}");
+    // An action that did not renew the session keeps the masked value of the page input.
+    let text = json(page(), None);
+    assert!(text.contains(r#""csrf":"t""#), "{text}");
+    // The form of a document holds the same value.
+    match answer_after_action(PageKind::Html, page(), Some("renewed")) {
+        Answer::Document { html, .. } => {
+            assert!(
+                html.contains(r#"<input type="hidden" name="_csrf" value="renewed">"#),
+                "{html}"
             );
         }
         other => panic!("{other:?}"),
