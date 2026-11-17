@@ -165,6 +165,13 @@ describe('the field lines of a request', () => {
     expect(response.endsWith('\r\n\r\nBad Request')).toBe(true);
   });
 
+  it('answers a declared length above the body limit with 413 and discards the body unread by the core (HY-131.29, HY-131.31)', async () => {
+    await start({ bodyLimit: 16 });
+    // The core refuses the start of the body; the host reads the bytes that follow to discard them and answers.
+    const response = await raw(Buffer.from(`POST /add HTTP/1.1\r\nHost: x\r\nContent-Length: 1000\r\nConnection: close\r\n\r\na=1`));
+    expect(response.startsWith('HTTP/1.1 413 ')).toBe(true);
+  });
+
   it('leaves a request with two Content-Length lines to the 400 of node:http (HY-42.13, HY-60.7)', async () => {
     await start();
     const response = await raw(Buffer.from('POST /add HTTP/1.1\r\nHost: x\r\nContent-Length: 3\r\nContent-Length: 3\r\nConnection: close\r\n\r\na=1'));

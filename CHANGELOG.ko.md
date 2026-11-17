@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 3e15f66d05d0c8b2647bed8f2122104ab859dfade939b2ae7179ec8d514d3112 -->
+<!-- source-sha256: bfa2a31ecf00fc4e5a772cfd84b222e3a64c2be0fe02cb01a80d0ddc65716e73 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- Node host는 core가 start를 거절한 요청의 body를 읽지 않았으므로, 그 body의 byte가 연결에 읽히지 않은 채 남았다. 이제 선언한 길이가 body 제한보다 클 때처럼, 어떤 byte도 parse하거나 저장하지 않고 버리려고 읽는다(HY-131.31). `packages/ts/tests/http.test.ts`는 그런 요청을 보내고 413을 기대한다(H35.11). 실행하지 않은 것: 그 테스트.
 
 - 서버는 core에 `Content-Length`를 주지 않았으므로, 숫자가 아닌 값이 `invalid_content_length`로 거절되지 않았다(HY-131.29). 이제 core의 `RequestBody::start`가 그 field 값을 받고 PHP, Node, Python host가 그것을 넘긴다. start의 실패는 body의 실패이며, 그 body는 조각을 읽지 않는다. `packages/rust/tests/form_chunks.rs`는 전에 서버의 reader가 가졌던, multipart body의 결과가 조각 나눔에 달려 있지 않다는 테스트를 유지한다(HY-131.26). 같은 body를 통째로, 모든 위치에서 둘로 나누어, byte 하나씩 주어도 같은 field, 파일, 실패를 준다. `docs/features.md`의 행 `form-failures`는 HY-113.24가 unimplemented로 남는 이유를 적는다. 그 400은 route 뒤에 나온다(H35.11). 실행하지 않은 것: build와 이 테스트들.
 

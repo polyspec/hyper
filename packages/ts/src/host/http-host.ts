@@ -126,6 +126,9 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
         refused = error instanceof Error && 'kind' in error && typeof error.kind === 'string' ? error.kind : null;
         if (refused === null) throw error;
         body = await rules().formStart(contentType, null, stream, limits);
+        // HY-131.31: no byte of a refused body is parsed or stored; the host reads the rest of it to discard it, as it
+        // does for a declared length above the limit, so that the response is sent and the connection can be reused.
+        incoming.resume();
       }
       read = { core: body, failure: refused };
       const failure = refused ?? await readBody(incoming, body, app.bodyLimit);
