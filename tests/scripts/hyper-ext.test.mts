@@ -17,7 +17,8 @@ test('hyper-test-php builds the extension and loads it in both PHPUnit runs (H35
   assert.match(lines, /polyspec-hyper-php-ext/u, lines);
   const runs = lines.split('\n').filter((line) => line.includes('phpunit --cwd'));
   assert.ok(runs.length > 0, lines);
-  for (const run of runs) assert.ok(run.includes(`--php-extension ${HYPER_EXT}`), run);
+  // The recipe names the absolute path of the library, as every extension that PHP loads (PHP_SERVER_EXTENSIONS).
+  for (const run of runs) assert.match(run, new RegExp(`--php-extension /\\S*/${HYPER_EXT.replaceAll('.', '\\.')}( |$)`, 'u'), run);
 });
 
 test('hyper-install builds the extension after it writes the sources of the bindings (H35.25)', () => {

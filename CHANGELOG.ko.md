@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 506b1fc888579e290d44c1e905d950e05da1fc59158b0cd0bbd33c899ba7dd34 -->
+<!-- source-sha256: 32063f3d164a4110fdc76d4bd7e21877b2b87c8dc9ec946e812043cbf985ae58 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- script test는 hyper extension의 상대 경로를 기대했고, recipe의 `--` 뒤 옵션을 script의 옵션으로 읽었으며, server benchmark에서 generated PHP program의 footer를, Composer root에서 template repository만을 기대했다. 이제 absolute path를 기대하고, `--` 뒤 명령의 옵션은 무시하며, template extension 버전과 json release repository를 기대한다(H35.31).
 - board 예제와 공개 패키지 `polyspec/hyper`는 template extension이 요구하는 `ext-polyspec_json`을 요구하지 않았다. 이제 board는 json release repository를 선언하고 그 extension을 요구하며 platform에 둔다. 공개 패키지는 그 extension을 요구한다(H35.31).
 - `make serve-demo`, `make e2e`, server parity, benchmark, script test의 PHP 서버는 json, template, hyper extension 없이 PHP를 띄워서 `App::open`이 "the PHP extension polyspec_hyper is not loaded"로 실패했다. 이제 그 모두가 Makefile의 `PHP_SERVER_EXTENSIONS`를 그 순서대로 load한다(H35.31).
 - `CoreRulesTest`는 CoreRules의 exact unit을 19개로 기대했으나 지금은 21개이고, `RequestTest`는 SAPI가 이은 두 `Content-Type` 줄의 media type을 `application/x-www-form-urlencoded, text/plain`으로 기대했다. 이제 테스트는 unit 21개를 세고, `mediaType()`이 `malformed_content_type`과 상태 400으로 실패하기를 기대한다(HY-42.14, H35.31).

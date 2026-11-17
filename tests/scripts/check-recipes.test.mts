@@ -94,7 +94,9 @@ test('every option that a recipe passes to a script of scripts/ is declared by t
     const source = readFileSync(path.join(ROOT, 'scripts', script), 'utf8');
     if (!source.includes('parseArgs(')) continue;
     const declared = new Set([...source.matchAll(/['"]?([a-z][\w-]*)['"]?:\s*\{\s*type:/g)].map((match) => match[1]));
-    for (const [, option] of rest.matchAll(/(?:^|\s)--([\w-]+)/g)) {
+    // The options after `--` belong to the command that the script runs, not to the script.
+    const own = rest.split(' -- ')[0] ?? rest;
+    for (const [, option] of own.matchAll(/(?:^|\s)--([\w-]+)/g)) {
       checked += 1;
       if (!declared.has(option)) found.push(`scripts/${script} does not declare --${option}; it declares ${[...declared].map((name) => `--${name}`).join(', ')}`);
     }

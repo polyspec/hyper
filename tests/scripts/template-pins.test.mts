@@ -17,7 +17,11 @@ const readObject = (file: string) => parseJsonObject(readFileSync(file, 'utf8'),
 // The template release: the exact version that the private root composer.json requires; every pin below names it.
 const VERSION = jsonString(jsonObject(readObject('composer.json').require, 'composer.json require')['polyspec/template'], 'composer.json require polyspec/template');
 const RELEASE = `https://github.com/polyspec/template/releases/download/v${VERSION}`;
-const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
+// The json release whose extension the template extension requires (HY-48.15): the version that the platform of the
+// root composer.json declares for ext-polyspec_json, whose Composer repository both Composer roots declare.
+const JSON_VERSION = jsonString(jsonObject(jsonObject(readObject('composer.json').config, 'composer.json config').platform, 'composer.json platform')['ext-polyspec_json'], 'composer.json platform ext-polyspec_json');
+const JSON_PACKAGES = `https://github.com/polyspec/json/releases/download/v${JSON_VERSION}/packages.json`;
+const NPM_PACKAGES =['@polyspec/template', '@polyspec/template-compiler'];
 // The tarball asset of the npm package `name` of the release.
 const tarball = (name: string) => `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`;
 const WHEEL = `${RELEASE}/polyspec_template-${VERSION}-py3-none-any.whl`;
@@ -68,7 +72,7 @@ test('Composer release declarations name the Composer repository of the release 
     // Beside the Composer repository of the release, each root declares the VCS repository of the opis/json-schema fork, which
     // the template decoder needs and which a library such as polyspec/template cannot declare for its consumer (H27.58).
     const declared = jsonObjects(repositories, `${manifest} repositories`).filter((item) => item.type !== 'path');
-    assert.deepEqual(declared, [{ type: 'composer', url: `${RELEASE}/packages.json` }, { type: 'vcs', url: 'https://github.com/min-0-max/json-schema', 'no-api': true }], `${manifest}: the template comes from the Composer repository of the release`);
+    assert.deepEqual(declared, [{ type: 'composer', url: `${RELEASE}/packages.json` }, { type: 'composer', url: JSON_PACKAGES }, { type: 'vcs', url: 'https://github.com/min-0-max/json-schema', 'no-api': true }], `${manifest}: the template comes from the Composer repository of the release`);
     const lockFile = manifest.replace(/\.json$/, '.lock');
     const entry = jsonObjects(readObject(lockFile).packages, `${lockFile} packages`).find(({ name }) => name === 'polyspec/template');
     assert.ok(entry !== undefined, `${manifest}: the lock has no polyspec/template`);

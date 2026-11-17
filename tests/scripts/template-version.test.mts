@@ -23,7 +23,10 @@ const composerPackage = (lock: string, name: string): JsonObject | undefined => 
 const VERSION = '0.0.27';
 const TAG = `v${VERSION}`;
 const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
-const NPM_PACKAGES = ['@polyspec/template', '@polyspec/template-compiler'];
+// The json release that the platform of the root composer.json declares for ext-polyspec_json.
+const JSON_VERSION = jsonString(member(member(json('composer.json'), 'config', 'composer.json'), 'platform', 'composer.json config')['ext-polyspec_json'], 'composer.json platform ext-polyspec_json');
+const JSON_PACKAGES = `https://github.com/polyspec/json/releases/download/v${JSON_VERSION}/packages.json`;
+const NPM_PACKAGES =['@polyspec/template', '@polyspec/template-compiler'];
 
 test('the npm manifests name the template tarballs of the release, and their dependencies name its version (H21.4)', () => {
   const root = json('package.json');
@@ -63,7 +66,8 @@ test('the Composer manifests name the Composer repository of the release and the
     const require = member(json(manifest), 'require', manifest);
     if (require['polyspec/template']) assert.equal(require['polyspec/template'], VERSION, `${manifest} require`);
     const urls = jsonObjects(json(manifest).repositories, `${manifest} repositories`).filter(({ type }) => type === 'composer').map(({ url }) => url);
-    assert.deepEqual(urls, [`${RELEASE}/packages.json`], `${manifest} Composer repository`);
+    // Beside the template release, each root declares the Composer repository of the json release (HY-48.15).
+    assert.deepEqual(urls, [`${RELEASE}/packages.json`, JSON_PACKAGES], `${manifest} Composer repository`);
   }
   for (const lock of ['composer.lock', 'examples/board/composer.lock']) {
     const entry = composerPackage(lock, 'polyspec/template');
