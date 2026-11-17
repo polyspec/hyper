@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: a029b8b39b3c314b4c1dc549fba35313dab80e263ae8a4abc9c15c3d0f342072 -->
+<!-- source-sha256: 98eb67bf9703cbb155b9da39434dec4579fc242b05dab353ff12d8880c1ee07d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -658,3 +658,4 @@
 | H34.7 | CI group gates를 통과시킨다: rules-check는 Enforced by 줄의 backtick 안 용어를 모두 check로 읽으므로, 미구현 표시 규칙은 docs/features.md를 backtick 없이 이름한다. oxlint, tsc, phpcs 지적은 검사로 타입을 좁히고, 문자열 메서드와 비교 함수를 쓰고, 줄을 나누어 고친다. Rust test의 case reader, core test의 addon pages, pin test의 template release URL이 각각 한 module에 있으므로 duplication-check는 clone을 찾지 않는다 | AGENTS.md, AGENTS.ko.md, scripts/, tests/scripts/, packages/ts/tests/, packages/rust/tests/, packages/php/tests/, config/owner-checks.json, CHANGELOG.md | make rules-check; make duplication-check; make lint-ts; make lint-php | [v] |
 | H34.8 | Node binding 변환의 거부에서 HY-44.12의 message를 기대한다: binding 0.0.21부터 변환은 HY-44.12가 정한 대로 template 오류의 전체 text인 kind: message를 주는데, core-values.test.ts는 HY-44.12가 폐기한 kind in  at 0:0: message 형식을 여전히 기대해 변환 case 여덟 개가 실패했다 | packages/ts/tests/core-values.test.ts | make hyper-test-node NODE_TESTS=tests/core-values.test.ts | [v] |
 | H34.12 | node-package가 packed package를 offline으로 설치하기 전에 packages/ts의 직접 dependency만이 아니라 package-lock.json이 적는 production dependency closure 전체를 pack한다: @polyspec/hyper-client의 dependency인 eventsource-parser가 pack되지 않아 npm이 registry에 그 metadata를 요청했고, npm ci는 그것을 cache에 넣지 않으므로 node-package가 ENOTCACHED로 실패했다 | Makefile, tests/scripts/node-package.test.mts | make hyper-test-scripts TESTS=tests/scripts/node-package.test.mts | [v] |
+| H34.17 | 설치된 Python package를 hyper-test-python의 입력으로 적는다: venv는 polyspec-hyper를 non-editable로 갖으므로(kit K788) target은 hyper-install-python을 prerequisite로 갖거나, 설치된 package가 source보다 오래되면 그것을 적으며 실패한다. merge가 packages/python/src를 바꾼 뒤에도 이전 tree의 package를 test했다(HR-85) | Makefile, tests/scripts | make hyper-test-scripts TESTS=tests/scripts/hyper-install.test.mts | [ ] |
