@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 67fc946c334fe76e223c36337fa3a663e1322d1619eb5de55b4d8ef0df9bb98c -->
+<!-- source-sha256: 13f19b8a248b5a76e35abb5635448b0411748e13139de12d9f872de7cbd6995a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `tests/scripts/test-inputs.test.mts`의 전체 set test는 선택 아래에서도 통과한다(HR-85, H34.5). 입력: `make hyper-test-scripts TESTS=tests/scripts/test-inputs.test.mts`. 이전 동작: make는 command-line 변수를 recipe의 environment로 export하므로 전체 set의 dry run이 그 `TESTS`를 읽어 그 입력만 build했고 cargo 줄이 없어 test가 실패했다. 기대 동작: 전체 set의 dry run은 `TESTS=`를 주고 cargo build를 담는다.
 
 - `tests/scripts/upload-servers.test.mts`는 scenario의 server가 시작하지 않아도 끝난다(HR-87, H34.3). 입력: Node application을 build할 수 없을 때처럼 `started()`가 throw하는 scenario. 이전 동작: `hostsOf`가 gate listener의 close를 `started()` 뒤에야 등록했으므로, 모든 case가 실패한 뒤에도 listener가 열린 채 남아 파일이 끝나지 않았다. 기대 동작: listener가 listen한 직후 close를 등록하고, 파일은 실패와 함께 끝난다.
 

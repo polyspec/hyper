@@ -37,5 +37,6 @@ test('a selection of upload-servers builds the Node addon that its application l
 
 test('a selection builds the inputs that its files name, and the full set builds every input', () => {
   assert.deepEqual([...inputs([path.join(ROOT, 'tests/scripts/session-shared.test.mts')])].filter((target) => ['packages', 'board', 'node-server', 'ext', 'hyper-ext'].includes(target)).sort(), ['hyper-ext', 'packages']);
-  assert.ok(dryRun('hyper-test-scripts').some((line) => /\bcargo\b/.test(line)));
+  // make exports the TESTS of the make that runs this file to the environment of its recipe, so the full set clears it.
+  assert.ok(dryRun('hyper-test-scripts', { variables: ['TESTS='] }).some((line) => /\bcargo\b/.test(line)));
 });
