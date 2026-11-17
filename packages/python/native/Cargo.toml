@@ -25,7 +25,7 @@ polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", ta
 polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.5" }
 polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", tag = "v0.0.15" }
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.4", default-features = false }
-polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core" }
+polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.29" }
 pyo3 = { version = "=0.30.1", features = ["abi3-py314", "extension-module"] }
 
 [lints]

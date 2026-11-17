@@ -52,11 +52,11 @@ UV := $(KIT_TOOLS)/mise/shims/uv
 # The Python of that venv, which scripts/board-servers.mts starts the board Python server with.
 export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # TEMPLATE_VERSION is the one declaration of the template release that hyper uses; every pin of the manifests and their locks
-# names it (H21.4). npm installs @polyspec/template and @polyspec/template-compiler from the tarballs of that release that
-# package.json names (HR-70). Composer installs polyspec/template from TEMPLATE_PACKAGES, the Composer repository of the
-# release (packages.json), which composer.json and examples/board/composer.json declare and whose dist carries the sha1 of the
-# php zip; PIE builds the native template extension polyspec/template-php-ext from the same repository (H27.45).
-TEMPLATE_VERSION := 0.0.27
+# names it (H21.4). npm installs @polyspec/template and its platform packages from the tarballs of that release that
+# package.json names (HR-70). The Composer package polyspec/template of TEMPLATE_PACKAGES, the Composer repository of the
+# release (packages.json), is the native template extension, a php-ext package with a pre-packaged binary for each
+# platform; PIE builds it (H27.45, H31.5), and the PHP manifests require ext-polyspec_template.
+TEMPLATE_VERSION := 0.0.29
 TEMPLATE_TAG := v$(TEMPLATE_VERSION)
 TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
@@ -203,20 +203,20 @@ test: hyper-test-js hyper-test-node hyper-test-php hyper-test-python hyper-test-
 
 lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language of the checkout
 
-# PIE resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1
+# PIE resolves polyspec/template TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1
 # of its zip, and builds it with phpize and the php-config of the PHP of PATH (H27.51). PIE keeps one Composer project per
 # target PHP in PIE_WORKING_DIRECTORY and never undoes repository:add, so each run starts in an empty PIE_WORK.
 # scripts/pie-binary.mts prints the one library that PIE recorded there, which is published into build/ext with a rename
 # (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
 # PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs.
 PIE := $(KIT_TOOLS)/mise/shims/pie
-PIE_WORK := $(CURDIR)/var/pie/polyspec/template-php-ext
+PIE_WORK := $(CURDIR)/var/pie/polyspec/template
 .PHONY: template-ext
 template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, H27.51); ONLINE
 	rm -rf $(PIE_WORK) && mkdir -p $(PIE_WORK)
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) build polyspec/template-php-ext:$(TEMPLATE_VERSION) --no-interaction
-	@binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template-php-ext) || exit $$?; \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction
+	@binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template) || exit $$?; \
 	  mkdir -p build/ext.next-$$$$ && trap 'rm -rf build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
 # The template extension requires the json extension polyspec_json (ext-polyspec_json), which PHP loads before it. PIE gets

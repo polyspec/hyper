@@ -6,5 +6,5 @@ go 1.27.3
 require (
 	github.com/polyspec/php-serialization/packages/go v0.0.15
 	github.com/polyspec/session-store/packages/go v0.0.4
-	github.com/polyspec/template/packages/go v0.0.0
+	github.com/polyspec/template/packages/go v0.0.29
 )

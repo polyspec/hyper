@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 79a630cb5afc62324a83cb7c691544be71a07d11296c10200d4842f6cf30c586 -->
+<!-- source-sha256: 6ed90a59f4356f7e82dc5f0491c69eb2d2b462843486f08f4ba1e61722291afd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- hyper는 branch `v1/rust-core`와 release 0.0.27 대신 template 0.0.29를 고정한다(H31.5). core와 binding crate 다섯 개는 `polyspec-template`을 tag `v0.0.29`로 받고, `make cargo-lock CRATES="polyspec-template"` 뒤 `Cargo.lock`에는 `polyspec-binding-core` 하나(0.0.17)와 `polyspec-json` 하나(0.0.34)가 남았다. `make bindings-scaffold`가 `github.com/polyspec/template/packages/go v0.0.29`와 그 sum으로 `packages/go/go.mod`를, `packages/php/native/composer.json`의 요구 `polyspec/template` 0.0.29를 썼다. npm은 `@polyspec/template` 0.0.29와 platform package 세 개를 설치하며, script와 test가 napi root를 import하므로 platform package는 root의 `optionalDependencies`이다. `@polyspec/template-compiler`는 root와 `packages/cli`에서 지웠다(H35.42). Composer manifest는 library `polyspec/template` 대신 확장 `ext-polyspec_template`을 `config.platform`의 version 0.0.29와 함께 요구하고, lock은 template package를 담지 않으며, `packages/php/composer.json`은 `Tests\Program`과 `Tests\Contract`를 연결하지 않는다. `make template-ext`는 php-ext package `polyspec/template`을 build한다. `packages/python/pyproject.toml`은 platform wheel 세 개를 그 sha256과 함께 적고, `uv.lock`에는 `jsonschema`가 없다. template pin과 version test가 이를 따른다. release의 Composer repository는 php-ext zip과 그 binary를 shasum 없이 지정하므로 PIE가 download하는 것은 확인되지 않는다(HR-80, 구현되지 않음).
 - hyper는 kit K1290의 maturin을 위해 kit 0.0.121 대신 0.0.122를 채택한다. `package.json`은 그 release asset을, `package-lock.json`은 `make npm-lock`이 쓴 그 integrity를 적고, `make install-packages`가 lock에서 설치했다(H35.48).
 - macOS에서 `tmpdir()`는 `/private/var`로 가는 symbolic link인 `/var` 아래에 있고 make는 `$(CURDIR)`를 실제 경로로 출력하므로, `tests/scripts/php-check.test.mts`(85, 207, 244행)와 `tests/scripts/ci-group-tools.test.mts`의 `install-wasm-bindgen`은 `/var/...`를 `/private/var/...`와 비교해 거기서 실패했다. Linux runner에는 그런 link가 없다. `php-check.test.mts`의 tree와 `tests/scripts/release-recipes-tree.mts`의 tree는 디렉터리를 `realpathSync`로 받는다. `tests/scripts`의 다른 `mkdtempSync` 사용은 make가 출력한 경로를 비교하지 않으므로 바꾸지 않았다. PHP 8.4를 PATH 앞에 두고 `node --test`로 돌린 진단: 전에는 php-check 9개 중 3개, ci-group-tools 6개 중 3개가 실패했고, 뒤에는 php-check가 9개 모두 통과하며 ci-group-tools는 6개 중 2개가 실패한다. 둘 다 binding 0.0.21이 가져오는(H35.49) `No rule to make target 'release-go-module-push'`이다(H35.50).
 - `docs/operations/development.md`는 link된 개발 checkout에서 `make release-candidate-assets`가 어떻게 되는지 적지 않았다. 이제 `.links` 선언이 있고 그 패키지가 link된 checkout은 릴리스의 candidate가 아니므로, 전체 suite가 실행하는 그 target은 거기서 kit의 거부로 실패하고 어떤 checkout에도 link가 없는 CI에서는 통과한다고 적는다(H35.35-1).

@@ -156,7 +156,7 @@
     },
     "scripts/pie-binary.mts": {
       "kind": "ecosystem",
-      "tool": "node:fs reads the installed.json that PIE and Composer write for the package polyspec/template-php-ext, and its pie-built-binary entries (H27.51)"
+      "tool": "node:fs reads the installed.json that PIE and Composer write for the package polyspec/template, and its pie-built-binary entries (H27.51)"
     },
     "scripts/publish.mts": {
       "kind": "ecosystem",

@@ -32,7 +32,7 @@ polyspec-http-media-type = { git = "https://github.com/polyspec/http-media-type.
 # The JSON text of HY-54.18 to HY-54.21 (RQ-006, RQ-011, RQ-028, RQ-030).
 polyspec-json = { git = "https://github.com/polyspec/json.git", tag = "v0.0.34" }
 # The values of the data model and their JSON form (VAL-2, VAL-12, VAL-20; HY-44, HY-54.20).
-polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core" }
+polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.29" }
 # The store interface of a session and its values (SE-2, SE-7; HY-104.25, HY-104.30), which the host entries take.
 # The stores of files and Redis are features of the library that the bindings build; the core needs the interface only.
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.4", default-features = false }
@@ -52,7 +52,7 @@ polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag =
 # The file store of session-store with its fault injection points, which a case of opening_functions.open_page gives.
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.4", default-features = false, features = ["file", "fault-test"] }
 polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.5", features = ["fault-test"] }
-polyspec-template = { git = "https://github.com/polyspec/template.git", branch = "v1/rust-core", features = ["fault-test"] }
+polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.29", features = ["fault-test"] }
 
 [lints]
 workspace = true

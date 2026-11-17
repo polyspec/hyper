@@ -3,7 +3,7 @@
 
 [한국어](README.ko.md).
 
-The command tool `hyper` of the region protocol (HR-96), with the subcommands `hyper build` and `hyper check`. The package reads the browser package `@polyspec/hyper-client` and the template packages `@polyspec/template` and `@polyspec/template-compiler` at the exact versions that it requires (HR-70).
+The command tool `hyper` of the region protocol (HR-96), with the subcommands `hyper build` and `hyper check`. The package reads the browser package `@polyspec/hyper-client` and the template package `@polyspec/template` at the exact versions that it requires (HR-70).
 
 Node.js 26.12.0 or later. The package publishes its JavaScript modules as they are, without a build step. hyper is released as GitHub Release archives only, so an application installs `polyspec-hyper-cli-X.Y.Z.tgz` of the release as a devDependency and runs the bin from a `package.json` script or with `npm exec --package=@polyspec/hyper-cli -- hyper build`. `npx hyper` and `npm exec hyper` without an install run the unrelated public npm package `hyper`, so they are not used.
 

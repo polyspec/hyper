@@ -8,7 +8,7 @@
         "php": ">=8.4",
         "ext-polyspec_hyper": "*",
         "ext-polyspec_json": "*",
-        "polyspec/template": "0.0.27"
+        "ext-polyspec_template": "*"
     },
     "require-dev": {
         "laravel/pint": "^1.32.1",
@@ -32,9 +32,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Polyspec\\Hyper\\Tests\\": "tests/",
-            "Polyspec\\Hyper\\Tests\\Program\\": "tests/build/server/php/",
-            "Polyspec\\Hyper\\Tests\\Contract\\": "../../var/contract-programs/"
+            "Polyspec\\Hyper\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -43,7 +41,8 @@
     },
     "config": {
         "platform": {
-            "php": "8.4.1"
+            "php": "8.4.1",
+            "ext-polyspec_template": "0.0.29"
         },
         "sort-packages": true
     }

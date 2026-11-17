@@ -1,4 +1,7 @@
+github.com/polyspec/json/packages/go v0.0.34/go.mod h1:LKpskKEB7fS5dyNZyExoC6Js1KpFH4uYg1zcyIzZtbQ=
 github.com/polyspec/php-serialization/packages/go v0.0.15 h1:6XCAEtRNvQ+0fJYVfme2cU6K4GlESg7kZJAa/JEi2HY=
 github.com/polyspec/php-serialization/packages/go v0.0.15/go.mod h1:SXutrswTyVJJRX80WkTTiMfadrsJL6ah3IDwr2cRadQ=
 github.com/polyspec/session-store/packages/go v0.0.4 h1:X6vQDGSUGcIVP17Y+dCqZEBNqgICh6R+q7HIfAIz1Wk=
 github.com/polyspec/session-store/packages/go v0.0.4/go.mod h1:41TOrwZIgxNzwn0bTmZI3Zq63wJSNmIGAgB3u9bOLFU=
+github.com/polyspec/template/packages/go v0.0.29 h1:n1bOX4IcnItY3VmIaN0NYAUFKHDLMCU05FbqBLXcMf4=
+github.com/polyspec/template/packages/go v0.0.29/go.mod h1:7Y2Nc8cz56qVi2hpxeYSMn/qQfW3F2fxKklhnmtRPyE=

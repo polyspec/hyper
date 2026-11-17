@@ -13,7 +13,7 @@
         },
         {
             "type": "composer",
-            "url": "https://github.com/polyspec/template/releases/download/v0.0.27/packages.json"
+            "url": "https://github.com/polyspec/template/releases/download/v0.0.29/packages.json"
         },
         {
             "type": "composer",
@@ -28,9 +28,9 @@
     "require": {
         "php": ">=8.4",
         "ext-polyspec_json": "*",
+        "ext-polyspec_template": "*",
         "min-0-max/json-schema": "^2.6.0-p2",
-        "polyspec/hyper": "0.0.40",
-        "polyspec/template": "0.0.27"
+        "polyspec/hyper": "0.0.40"
     },
     "require-dev": {
         "laravel/pint": "^1.32.1",
@@ -64,7 +64,8 @@
         "platform": {
             "php": "8.4.1",
             "ext-polyspec_hyper": "0.0.40",
-            "ext-polyspec_json": "0.0.34"
+            "ext-polyspec_json": "0.0.34",
+            "ext-polyspec_template": "0.0.29"
         },
         "sort-packages": true
     }
