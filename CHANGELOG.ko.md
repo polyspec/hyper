@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: da70422cdbcfc8c0292a4d32bc29ea9ff6d4577f03dc3a15b419530439788f6d -->
+<!-- source-sha256: 85f2c65a49bef673022e877418ffe619b70ab38b8bde95db90f52f7f40af7c34 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- session-store 0.0.5 고정의 `Cargo.lock`은 처음에 `.links`를 옮겨 둔 checkout에서 쓰였고, 그래서 `make cargo-lock`의 guard(kit K1269)를 우회했다. 이제 `.links`가 없는 분리된 worktree에서 확인했다. 고정 이전 commit의 lock에서 시작해 `make cargo-lock CRATES=polyspec-session-store`는 종료 0으로 끝나고, commit된 lock과 byte 단위로 같은 lock을 쓴다. 행 H35.38이 이 실행을 기록한다.
 
 - Node와 Python package는 session-store 0.0.5를 요구한다. 그 Redis 설정은 `authorities`를 받는다: TLS Redis 서버를 단독으로 검증하는 기관의 PEM 파일 경로, 또는 machine의 trust store를 쓰는 null이다. 모든 Redis 설정이 이를 준다. `tests/scripts`의 session worker는 `HYPER_SESSION_TLS_CA`의 test 기관을 넘긴다. `package-lock.json`, `tests/package-install/package-lock.json`, `packages/python/uv.lock`은 `make npm-lock`과 `make python-lock`이 쓴다. workspace의 Rust crate 여섯 개는 tag `v0.0.5`를 적고, `make cargo-lock CRATES=polyspec-session-store`가 `Cargo.lock`을 쓴다. 그 안에서는 `polyspec-session-store`, `-core`, `-file`만 각각 한 version 0.0.5로 바뀐다. 작성만 했고 실행하지 않았다.
 
