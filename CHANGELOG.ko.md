@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 6908d8be7d452ff6e1a6ec91928db4913c21e19097bb75c852dd3bf3b379ed0a -->
+<!-- source-sha256: 996b92d36737d8c8df609ecc8d0ef0e291664035b020fbff0d410fd0f60096b2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 행 H35.38은 세 서버의 각 실패를 kind로 바꾸는 변환을 적었다. 이제 이 행은 Node와 Python 서버가 session-store 라이브러리의 `FileSessions`로 file session을 가지고 라이브러리의 오류를 일반 변환 하나로 같은 category의 hyper class로 발생시킨다는 것, Redis session과 PHP 서버의 session은 그대로 남는다는 것, 그리고 어떤 실패가 hyper의 것으로 남고, 교체와 함께 끝나고, 라이브러리의 kind가 없는지를 서술한다. `docs/plans/execution/plan.md`에 H35.38 아래 설계가 추가된다: Node와 Python에 설치된 라이브러리의 API, 현재 host와 hyper의 공개 class가 하는 일, 교체가 가져오는 동작 차이 아홉 가지, 함께 없어지는 것, 변환이 놓일 수 있는 곳, 열린 질문 셋. source와 동작은 바뀌지 않는다(H35.38).
 - session 저장 실패의 class와 kind를 서술하는 case가 없었다. `contracts/file-sessions.json`에 Node와 Python case runner용 section `storeFailures`가 여섯 case와 함께 추가된다. `i:1;`을 담은 session 파일은 kind `record_not_array`, 상태 500, category `store`를 기대한다. `php_serialize` 텍스트가 아닌 session 파일은 `record`, 500, `store`를 기대한다. 존재하지 않는 디렉터리, 파일의 경로, 상대 경로로 만든 store는 `invalid_directory`, 상태 없음, category `value`를 기대한다. 0인 lifetime은 `invalid_lifetime`, 상태 없음, `value`를 기대한다. 각 case는 store가 runner에게 발생시키는 오류를 비교한다. 실패한 session open에 대한 서버의 응답은 kind를 담지 않는 plain 500(HY-60.14)이기 때문이다. `docs/features.md`에 not implemented인 행 `session-failure-kinds`가 추가된다. case와 그 step은 작성만 했고 실행하지 않았다. 서버는 현재 kind 없는 오류를 발생시키므로 case는 실패할 것으로 예상한다. PHP 서버에는 session 파일 store가 없으므로 이 section은 PHP runner를 지정하지 않는다(H35.38).
 - 라이브러리의 각 kind에 그것을 서술하는 statement를 주는 HY-132.9의 표에는 session-store 라이브러리의 kind가 없었다. HY-104.32와 HY-115.28은 `invalid_directory`, `invalid_lifetime`, `invalid_lock_expire`를 적고, HY-104.8, HY-104.20, HY-115.3, HY-115.5는 decode할 수 없는 record, array를 담지 않은 record, 계속 잡혀 있는 lock, 잃은 lock의 실패를 서술하는데도 그랬다. 표에 `record`(HY-104.8), `record_not_array`(HY-104.20), `invalid_directory`(HY-104.32), `invalid_lifetime`(HY-104.32, HY-115.28), `invalid_lock_expire`(HY-115.28), `lock_timeout`(HY-115.3), `lock_lost`(HY-115.5) 행이 추가된다. statement도 서버도 바뀌지 않는다. 서버는 아직 이 kind를 발생시키지 않는다(H35.38).
 - 세 서버는 file 제한을 두 번 검사한다. route 전에 `App`의 `dispatch`에서, 그리고 token 뒤에 action과 `/_hyper/keep`에 대해 `fileOver`로 검사한다. 이제 `docs/plans/execution/plan.md`는 세 서버의 행 번호와 함께 다음을 적는다. 둘째 검사는 첫째와 같은 요청, 같은 application의 제한을 읽고, route나 action은 자기 제한을 갖지 않으며(HY-114.1), `multipart/form-data`가 form 타입이 아닌 곳에서 파일을 가진 요청은 token 전에 415를 받으므로, 둘째 검사는 답하는 일이 없다. HY-114.7은 body를 읽는 동안의 검사 하나를 정하며 바뀌지 않는다. 세 서버에서 둘째 검사를 제거하는 것이 그 row의 남은 부분이다. `contracts/app.json`의 file 제한 case 둘은 제거 전과 후에 모두 통과한다(H35.36-6).
