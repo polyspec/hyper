@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: ecc15952be8b1b71112118509c3e3e6e11214cd92cb4c5e0c38aca42fc7c6048 -->
+<!-- source-sha256: 8faaa9a71510b2c24cb7a8ef2b43e6235bc9d4acb2597b699358e579f3e2ad12 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- HY-73.33이 HY-73.31을 대체한다. HY-73.31은 `{= a[1.5]}`나 `{= a[0.0000001]}`처럼 키가 분수 값의 숫자 리터럴인 인덱스가 읽기 경로에 자기 숫자 텍스트(`1.5`, `1e-7`)를 붙인다고 했고, `contracts/reads.json`의 case `a_number_key_with_a_fraction`과 `a_number_key_in_exponent_notation`은 렌더된 page를 기대했으나, 렌더는 `runtime_type` "a map key is a string or an integer, not a fractional number"로 실패한다(template의 EXP-19). HY-73.33은 문자열 리터럴과 정수 값의 숫자 리터럴(`1e+21`, `123456789012345680` 등)에 대해서만 키를 정하고, 분수 숫자 리터럴 인덱스는 렌더를 실패시킨다고 정한다. case `a_number_key_in_exponent_notation`은 키 `1e+21`을 가진 `{= a[1e21]}`만 남기고, case `a_number_key_with_a_fraction`은 삭제한다. `reads.json`의 case는 렌더된 page를 비교하며 렌더 오류를 기대하는 field가 없기 때문이다(H35.31-1).
 - PHP 서버: shared data에 `JsonSerializable`이 있는 `Accept: application/vnd.hyper+json` GET 요청은 JSON 텍스트를 쓰지 못했다. core의 `rules.json_write`가 `JsonSerializable`을 받지 않기 때문이다. 이제 문서와 리전 응답은 그 값을 쓰며, 값은 검사에서 한 번, JSON 텍스트에서 한 번 읽힌다(HY-44.6, H35.31-3).
 - PHP 서버: multipart 본문 요청의 `fileOver(-1)`은 파일을 비교해 false를 돌려주었다. 이제 파일 비교 전에 kind `invalid_number`로 실패한다(HY-114.12, H35.31-2).
 - hyper는 kit 0.0.118이 순서 없이 내던 cargo 출력을 순서대로 내는 kit 0.0.119를 쓴다(kit K1283). `package.json`은 그 release asset을, `package-lock.json`은 그 integrity를 적는다(H35.16-2).

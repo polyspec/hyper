@@ -301,7 +301,7 @@ impl Reads<'_, '_> {
     }
 
     /// The paths of an expression; it reads whole the paths of the values that it uses (HY-73.9, HY-73.11 to HY-73.13,
-    /// HY-73.31).
+    /// HY-73.33).
     fn expr(&mut self, expr: &Expr, scope: &Scope) -> Vec<Path> {
         match expr {
             Expr::Var { name, .. } => variable(name, scope),
@@ -478,7 +478,7 @@ fn resolve(from: &str, path: &str) -> Result<String, Error> {
     }
 }
 
-/// The key of a number literal of an index (HY-73.31): the number text of json, as ECMAScript `Number::toString` writes
+/// The key of a number literal of an index (HY-73.33): the number text of json, as ECMAScript `Number::toString` writes
 /// it (RQ-030 of json), the one float-to-text function of polyspec. A template literal is always finite.
 fn number_text(number: f64) -> Result<String, Error> {
     match polyspec_json::number_text(number) {
