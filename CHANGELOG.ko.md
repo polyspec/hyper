@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 67186a54bbeae4b309663c9fb0734612047c1009de703671b8aec89e0b1f387b -->
+<!-- source-sha256: 3c3e45d386eff781a7aba3432b2f555754cfddc8d10b3f4f1986ea1d80fd6630 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Node와 Python 서버에는 라이브러리의 오류를 그 category의 hyper class로 발생시킬 방법이 없었다. core rules의 `valueError`와 `typeError`는 각각 class 하나를 지정하고 hyper의 kind를 받는다. `CoreRules.libraryError`(Node)와 `CoreRules.library_error`(Python)는 오류와 그 라이브러리의 package를 받아, 같은 역할의 hyper binding class, 곧 같은 이름의 class나 라이브러리의 prefix 자리에 `Hyper`를 가진 category class의 오류를 그 오류의 message, kind, 상태, errno로 돌려준다. kind도 category도 나열하지 않으며, 다른 class의 오류는 그대로 돌려준다(HY-132.3). `CoreRules.sessionValue`와 `sessionRecord`는 core의 `rules.session_value`와 `rules.session_record`를 부른다. 아직 어떤 호출자도 이것들을 쓰지 않는다. 작성만 했고 실행하지 않았다. 두 함수를 가진 binding은 여기에서 생성되지 않으며, `_core_rules.py`의 `python -m py_compile`만 실행했다(H35.38).
 - core는 session record의 PHP 값과 데이터 모델 사이를 `session::from_record`와 `session::to_record`에서 변환하는데(HY-104.13, HY-104.14), 어떤 binding도 이 두 함수를 서버에 주지 않아 각 서버가 자기 변환을 가지고 있었다. `packages/rust/interface.json`이 php-serialization 라이브러리의 type `php_value`를 지정하고, PHP 값에서 데이터 모델의 값으로 가는 내부 함수 `rules.session_value`와 데이터 모델의 값에서 PHP 값으로 가는 `rules.session_record`를 얻는다. 각각 core가 발생시키는 kind를 가진다: 읽기에는 데이터 모델의 `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`, 쓰기에는 `data_unsupported_type`, 그리고 `internal`. Rust source는 바뀌지 않는다. 이 행들은 작성만 했고 실행하지 않았다. 여기에서 binding을 생성하지 않았다(H35.38).
 - 행 H35.38은 세 서버의 각 실패를 kind로 바꾸는 변환을 적었다. 이제 이 행은 Node와 Python 서버가 session-store 라이브러리의 `FileSessions`로 file session을 가지고 라이브러리의 오류를 일반 변환 하나로 같은 category의 hyper class로 발생시킨다는 것, Redis session과 PHP 서버의 session은 그대로 남는다는 것, 그리고 어떤 실패가 hyper의 것으로 남고, 교체와 함께 끝나고, 라이브러리의 kind가 없는지를 서술한다. `docs/plans/execution/plan.md`에 H35.38 아래 설계가 추가된다: Node와 Python에 설치된 라이브러리의 API, 현재 host와 hyper의 공개 class가 하는 일, 교체가 가져오는 동작 차이 아홉 가지, 함께 없어지는 것, 변환이 놓일 수 있는 곳, 열린 질문 셋. source와 동작은 바뀌지 않는다(H35.38).
 - session 저장 실패의 class와 kind를 서술하는 case가 없었다. `contracts/file-sessions.json`에 Node와 Python case runner용 section `storeFailures`가 여섯 case와 함께 추가된다. `i:1;`을 담은 session 파일은 kind `record_not_array`, 상태 500, category `store`를 기대한다. `php_serialize` 텍스트가 아닌 session 파일은 `record`, 500, `store`를 기대한다. 존재하지 않는 디렉터리, 파일의 경로, 상대 경로로 만든 store는 `invalid_directory`, 상태 없음, category `value`를 기대한다. 0인 lifetime은 `invalid_lifetime`, 상태 없음, `value`를 기대한다. 각 case는 store가 runner에게 발생시키는 오류를 비교한다. 실패한 session open에 대한 서버의 응답은 kind를 담지 않는 plain 500(HY-60.14)이기 때문이다. `docs/features.md`에 not implemented인 행 `session-failure-kinds`가 추가된다. case와 그 step은 작성만 했고 실행하지 않았다. 서버는 현재 kind 없는 오류를 발생시키므로 case는 실패할 것으로 예상한다. PHP 서버에는 session 파일 store가 없으므로 이 section은 PHP runner를 지정하지 않는다(H35.38).

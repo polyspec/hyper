@@ -235,6 +235,47 @@ class CoreRules:
 
         return HyperTypeError(message, kind)
 
+    def library_error(self, library: object, prefix: str, error: BaseException) -> BaseException:
+        """The error of hyper for an error of a library that hyper uses (HY-132.3), or the error as it is. An error
+        of a library is an instance of a class that the error module of the library, `library`, defines. The class of
+        hyper is the class of the binding of hyper of the same role: the class of the same name, such as
+        `RecordError`, or the category class, whose name has `Hyper` where the category class of the library has
+        `prefix`. The error of hyper has the message, the kind, the status and the errno of the error of the library,
+        so no kind and no category is listed here; a class of the library without a class of hyper of its role is
+        tried by its parent class, and an error that the class of hyper refuses, because the contract of hyper does
+        not list its kind, stays as it is."""
+        from .._binding import _errors as own
+
+        for cls in type(error).__mro__:
+            name = cls.__name__
+            if getattr(library, name, None) is not cls:
+                continue
+            role = getattr(own, f"Hyper{name[len(prefix):]}" if name.startswith(prefix) else name, None)
+            if not isinstance(role, type):
+                continue
+            try:
+                converted = role(
+                    str(error),
+                    getattr(error, "kind", None),
+                    getattr(error, "status", None),
+                    getattr(error, "errno", None),
+                )
+            except (TypeError, ValueError):
+                return error
+            converted.__cause__ = error
+            return converted
+        return error
+
+    def session_value(self, record: object) -> object:
+        """rules.session_value gives the value of the data model of a PHP value of a session record (HY-104.13), and
+        fails with the kind of the data model for a value outside it."""
+        return self._core.session_value(record)
+
+    def session_record(self, value: object) -> object:
+        """rules.session_record gives the PHP value of a session record of a value of the data model (HY-104.14),
+        and fails with ``data_unsupported_type`` for a native object."""
+        return self._core.session_record(value)
+
     def build_read(self, data: bytes) -> str:
         """Partial. Build.read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18,
         HY-125.19). The server still reads the file and names the absolute path of the file in a failure

@@ -1533,6 +1533,71 @@
               }
             },
             {
+              "id": "core-rules.libraryError",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "string",
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the error of hyper for an error of a library that hyper uses, by the class of the binding of hyper of the same role as the class of the error, with its message, kind, status and errno, and any other value as it is (HY-132.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.libraryError",
+                  "signature": "libraryError(library: object, prefix: string, error: unknown): unknown"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.library_error",
+                  "signature": "def library_error(self, library: object, prefix: str, error: BaseException) -> BaseException"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sessionValue",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "rules.session_value gives the value of the data model of a PHP value of a session record, and fails with the kind of the data model for a value outside it (HY-104.13).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionValue",
+                  "signature": "sessionValue(record: unknown): CoreValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_value",
+                  "signature": "def session_value(self, record: object) -> object"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sessionRecord",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "rules.session_record gives the PHP value of a session record of a value of the data model, and fails with data_unsupported_type for a native object (HY-104.14).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionRecord",
+                  "signature": "sessionRecord(value: unknown): unknown"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_record",
+                  "signature": "def session_record(self, value: object) -> object"
+                }
+              }
+            },
+            {
               "id": "core-rules.pageKeptCookie",
               "kind": "method",
               "visibility": "internal",
