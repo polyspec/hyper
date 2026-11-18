@@ -12,6 +12,7 @@ use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\Support\PhpSessionIdentifier;
 use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
 use Polyspec\SessionStore\SessionStoreIoError;
+use Polyspec\SessionStore\SessionStoreValueError;
 
 /** HY-45, HY-72, HY-104, HY-129: the PHP session starts only when a request reads or writes session data, under the name that hyper sets. */
 final class NativeSessionTest extends TestCase
@@ -121,11 +122,61 @@ final class NativeSessionTest extends TestCase
         $directory = self::sessionDirectory();
         try {
             chmod($directory, 0000);
+            clearstatcache();
+            self::assertFalse(is_readable($directory), "the test needs a directory that it cannot read, and {$directory} with mode 0000 is readable to this user");
             ini_set('session.save_path', $directory);
             ini_set('session.gc_maxlifetime', '60');
 
-            $this->expectException(SessionStoreIoError::class);
-            NativeSession::collect();
+            try {
+                NativeSession::collect();
+                self::fail('collect read a directory that it cannot read');
+            } catch (SessionStoreIoError $error) {
+                self::assertSame('permission_denied', $error->kind());
+            }
+        } finally {
+            self::removeDirectory($directory);
+        }
+    }
+
+    /**
+     * HY-104.33, SF-1.2: a save path `N;/path` with a depth above 0 keeps the files in subdirectories, which the store
+     * of session-store does not walk, so `collect` fails with `invalid_directory` and names the save path instead of
+     * removing nothing. The depth is read as the native files handler reads it.
+     */
+    #[RunInSeparateProcess]
+    public function testCollectFailsForASavePathWithSubdirectories(): void
+    {
+        $directory = self::sessionDirectory();
+        try {
+            ini_set('session.save_path', "2;{$directory}");
+            ini_set('session.gc_maxlifetime', '60');
+
+            try {
+                NativeSession::collect();
+                self::fail('collect accepted a save path with a depth of 2');
+            } catch (SessionStoreValueError $error) {
+                self::assertSame('invalid_directory', $error->kind());
+                self::assertStringContainsString("2;{$directory}", $error->getMessage());
+            }
+        } finally {
+            self::removeDirectory($directory);
+        }
+    }
+
+    /** HY-104.33: a save path `0;MODE;/path` keeps the files in `/path` itself, so `collect` removes them there. */
+    #[RunInSeparateProcess]
+    public function testCollectReadsThePathOfASavePathWithDepthZeroAndAMode(): void
+    {
+        $directory = self::sessionDirectory();
+        try {
+            $expired = $directory . '/sess_' . str_repeat('c', 26);
+            file_put_contents($expired, 'a:0:{}');
+            touch($expired, time() - 3600);
+            ini_set('session.save_path', "0;600;{$directory}");
+            ini_set('session.gc_maxlifetime', '60');
+
+            self::assertSame(1, NativeSession::collect());
+            self::assertFileDoesNotExist($expired);
         } finally {
             self::removeDirectory($directory);
         }
