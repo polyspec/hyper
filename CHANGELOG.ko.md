@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `benchmarks/server.php`는 core의 page render를 `App`으로 측정한다(H35.61). 행 section은 10, 100, 1,000행을 돌려주는 region `rows`의 loader로 board를 열고 `GET /board`의 문서와 region JSON에 대한 `App::handle`을 측정한다. 입력: `make bench-server-smoke`. 동작: page render가 core로 옮겨질 때(H35.32) 4ed11336이 `packages/php/src/Page/Renderer.php`를 지웠으므로 benchmark가 125행에서 `Class "Polyspec\Hyper\Renderer" not found`로 실패했고 `tests/scripts/benchmark-server.test.mts`가 실패했다. 기대 동작이자 현재 동작: benchmark가 두 section을 모두 출력한다. 검증: `make hyper-test-scripts TESTS=tests/scripts/benchmark-server.test.mts`, 3개 통과.
+
 - `make hyper-test-scripts`의 선택 `TESTS`는 테스트가 시작하는 make에 들어가지 않는다(H35.60). Makefile은 `TESTS`를 unexport하며, recipe는 이를 `$(TESTS)`로만 읽는다. 입력: `make hyper-test-scripts TESTS=tests/scripts/make-recursion.test.mts`. 동작: make가 명령줄의 `TESTS`를 테스트의 환경으로 넘겼고, 내부 make가 `scripts/test-inputs.mts`를 부르는 Makefile 줄에서 `hyper-test-scripts`의 prerequisite를 테스트의 가짜 node로 실행해 10개 case 중 6개가 실패했다. 기대 동작이자 현재 동작: 선택이 없을 때처럼 선택이 있을 때도 10개가 통과한다. 검증: `make hyper-test-scripts TESTS=tests/scripts/make-recursion.test.mts`와 `make hyper-test-scripts`.
 
 - `contracts/context.json`의 data model case를 실행하는 core test는 host runner가 자기 language를 적지 않은 case를 건너뛰듯 `only`가 있는 case를 건너뛴다(HYR-6, H35.32-1-6-1). 입력: `make core-test`. 이전 동작: `packages/rust/tests/contracts.rs`의 `the_data_model_cases_of_the_context_file_run_as_the_steps_of_a_page`는 `only`를 읽지 않았으므로 core runner가 host 값을 null로 주는 H35.32-1-6의 case 여덟 개를 실행했고, PHP로 한정된 `a_shared_text_that_is_not_utf8_fails_with_the_cause_of_the_bytes`가 500을 기대하는 곳에서 status 200으로 실패했다. 기대 동작: test는 `only`가 있는 각 case를 건너뛴다. `make core-test`로 검증했다. `contracts`는 이전 38개 중 37개, 이후 38개 모두 통과했고 모든 suite가 통과한다.

@@ -1,5 +1,5 @@
 <!-- doc-id: benchmark -->
-<!-- source-sha256: 51306f3f5703f1e74e76e68a71115f1ab13d9aab688b3a7e118d97e969e57779 -->
+<!-- source-sha256: ddcabe259b4f052af89391119d42328c0c26480ad87c82043ab77483810b894d -->
 # 성능 측정
 
 [English](benchmark.md).
@@ -8,7 +8,7 @@
 
 | 타깃 | 스크립트 | 측정 대상 |
 |---|---|---|
-| `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | 네트워크 없이 요청 종류별 `App::handle`, 그리고 10, 100, 1,000행에서 `board/rows.tpl` 렌더, 템플릿 확장의 `bind`, `json_encode` 비용. 템플릿 확장으로 실행한다(HY-48.23) |
+| `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | 네트워크 없이 요청 종류별 `App::handle`, 그리고 region `rows`가 10, 100, 1,000행일 때 core의 page render가 렌더하는 `GET /board`의 문서와 region JSON에 대한 `App::handle`. 템플릿 확장으로 실행한다(HY-48.23) |
 | `make bench-browser` | `benchmarks/browser.mts --ssr <port> --edge <port> --api <port> --runs <n>` | 첫 화면, 영역 이동, 10, 100, 1,000행에서 `hy-set` 변경 1회(시간, 단계, 메인 스레드 부하, 긴 작업), 반복 이동 중 메모리와 두 힙 스냅샷 사이의 증가, 템플릿 로드, 전송 바이트 |
 | `make bench-sessions` | `benchmarks/sessions.mts --requests <n>` | Redis 서버 하나에서 process 하나와 넷으로 측정한 PHP, Node, Python 서버의 초당 요청 수와 Redis CPU 1초당 요청 수 |
 | `make bench-uploads` | `benchmarks/uploads.mts --size <bytes> --runs <n>` | PHP, Node, Python server와 PHP 자체 reader에서 upload의 요청 시간, server의 processor 시간, 최대 메모리 |
