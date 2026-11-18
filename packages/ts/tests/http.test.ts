@@ -1,11 +1,11 @@
 // The HTTP server of an application with sessions in files (HY-42, HY-43, HY-45, HY-52, HY-54).
-import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { createServer as createHttpServer, type Server } from 'node:http';
 import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FileSessions, Response } from '../src/index.js';
+import { FileSessions, listener as hostListener, Response, server as hostServer } from '../src/index.js';
 import { Fixture, handlers, port, present } from './support.js';
 
 let directory: string;
@@ -21,7 +21,7 @@ async function start(options: { https?: boolean; bodyLimit?: number } = {}): Pro
     ...(options.bodyLimit === undefined ? {} : { bodyLimit: options.bodyLimit }),
     onResponse: (request, response, elapsed, reply) => reports.push([request === null ? null : `${request.method} ${request.path()}`, response.status, elapsed, reply.notes().length]),
   });
-  server = app.server(await FileSessions.inDirectory({ directory }));
+  server = hostServer(app, await FileSessions.inDirectory({ directory }));
   base = await listen(server);
 }
 
@@ -86,7 +86,7 @@ function raw(bytes: Buffer): Promise<string> {
   });
 }
 
-describe('App.server', () => {
+describe('server', () => {
   it('answers a request target with a byte outside ASCII with a plain 400 (HY-42)', async () => {
     await start();
     const response = await raw(Buffer.concat([Buffer.from('GET /items/'), Buffer.from('한'), Buffer.from(' HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n')]));
@@ -111,7 +111,7 @@ describe('App.server', () => {
         throw new Error('hook boom');
       },
     });
-    server = app.server(await FileSessions.inDirectory({ directory }));
+    server = hostServer(app, await FileSessions.inDirectory({ directory }));
     // The write events of the node:http response are the write hook of the Node server (HY-99): a listener that runs
     // before the server's own listener receives the end of the write of the 500 with its request.
     const writes: Promise<string>[] = [];
@@ -140,7 +140,7 @@ describe('the field lines of a request', () => {
   it('reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.8, HY-42.9, HY-42.14, HY-59.13)', async () => {
     const seen: unknown[] = [];
     const app = await new Fixture().app();
-    const listener = app.listener(await FileSessions.inDirectory({ directory }), {
+    const listener = hostListener(app, await FileSessions.inDirectory({ directory }), {
       around: (request) => {
         seen.push(request.header('Content-Type'), request.header('User-Agent'));
         // The read of the media type reads the joined value, which the core reads as no media type.
@@ -173,11 +173,11 @@ describe('the field lines of a request', () => {
   });
 });
 
-// The write hook of the Node server (HY-99) and the listener that App.listener returns (HY-100).
-describe('the write hook and App.listener', () => {
-  it('App.listener returns the request listener of the application (HY-100)', async () => {
+// The write hook of the Node server (HY-99) and the listener that the host function `listener` returns (HY-100).
+describe('the write hook and listener', () => {
+  it('listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20)', async () => {
     const app = await new Fixture().app();
-    const listener = app.listener(await FileSessions.inDirectory({ directory }));
+    const listener = hostListener(app, await FileSessions.inDirectory({ directory }));
     expect(typeof listener).toBe('function');
     // A node:http server that installs only this listener answers the application.
     const plain = createHttpServer(listener);
@@ -187,11 +187,54 @@ describe('the write hook and App.listener', () => {
     expect(response.status).toBe(200);
   });
 
+  it('answers a request without a target with the plain 500 and calls no write hook (HY-100.2, HY-99.12)', async () => {
+    const app = await new Fixture().app();
+    const calls: string[] = [];
+    const listener = hostListener(app, await FileSessions.inDirectory({ directory }), { written: (request) => void calls.push(request.path()) });
+    const settled: Promise<void>[] = [];
+    // The listener receives the request of node:http without its target, which a transport may leave out.
+    const plain = createHttpServer((incoming, outgoing) => {
+      incoming.url = undefined;
+      settled.push(listener(incoming, outgoing));
+    });
+    const plainBase = await listen(plain);
+    const response = await fetch(`${plainBase}/notes`);
+    const text = await response.text();
+    await Promise.all(settled);
+    await new Promise((resolve) => plain.close(resolve));
+    expect([response.status, text]).toEqual([500, 'Internal Server Error']);
+    expect(calls).toEqual([]);
+  });
+
+  it('answers a failed stat of a file of the public directory with the plain 500 and one write hook call with its request (HY-60.14, HY-60.17)', async () => {
+    const app = await new Fixture().app();
+    const files = mkdtempSync(join(tmpdir(), 'hyper-public-'));
+    // A directory without the search permission: a stat of a file in it fails with EACCES, not with a missing file.
+    mkdirSync(join(files, 'closed'));
+    chmodSync(join(files, 'closed'), 0o000);
+    const calls: string[] = [];
+    const settled: Promise<void>[] = [];
+    const listener = hostListener(app, await FileSessions.inDirectory({ directory }), { files, written: (request) => void calls.push(request.path()) });
+    const plain = createHttpServer((incoming, outgoing) => void settled.push(listener(incoming, outgoing)));
+    const plainBase = await listen(plain);
+    try {
+      const response = await fetch(`${plainBase}/closed/a.css`);
+      const text = await response.text();
+      await Promise.all(settled);
+      expect([response.status, text]).toEqual([500, 'Internal Server Error']);
+      expect(calls).toEqual(['/closed/a.css']);
+    } finally {
+      await new Promise((resolve) => plain.close(resolve));
+      chmodSync(join(files, 'closed'), 0o700);
+      rmSync(files, { recursive: true, force: true });
+    }
+  });
+
   it('settles the promise of the listener after the write hook and the disconnect hook (HY-100)', async () => {
     const events: string[] = [];
     const { app, running, release } = await waitingApp(events);
     const sessions = await FileSessions.inDirectory({ directory });
-    const listener = app.listener(sessions, {
+    const listener = hostListener(app, sessions, {
       written: (request, response, ended) => events.push(`written ${request.method} ${request.path()} ${response === null ? 'null' : response.status} ${ended}`),
     });
     const settled: Promise<void>[] = [];
@@ -221,7 +264,7 @@ describe('a multipart body read in chunks', () => {
       // The end of the listener of the request, which follows the removal of the directory.
       let handled: Promise<void> = Promise.resolve();
       const app = await new Fixture().app({ formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'], bodyLimit: 4 * 1024 * 1024 });
-      const listener = app.listener(await FileSessions.inDirectory({ directory }), {
+      const listener = hostListener(app, await FileSessions.inDirectory({ directory }), {
         around: (request) => {
           const file = request.file('f');
           seen.push(request.validInput(), request.form(), file?.filename() ?? null, file?.size() ?? null, readdirSync(uploads).length);

@@ -24,7 +24,7 @@ import { appendFileSync, createReadStream, readdirSync, unlinkSync } from 'node:
 import { connect } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { App, FileSessions, Representation, Response, Result } from '@polyspec/hyper';
+import { App, FileSessions, Representation, Response, Result, server as hostServer } from '@polyspec/hyper';
 
 const application = process.env.UPLOAD_APP;
 const moved = process.env.UPLOAD_MOVED;
@@ -193,7 +193,7 @@ class BrokenSessions extends FileSessions {
   }
 }
 const sessions = process.env.UPLOAD_SESSIONS_OPEN === 'throws' ? BrokenSessions : FileSessions;
-const server = app.server(await sessions.inDirectory({ directory: process.env.UPLOAD_SESSIONS }), {
+const server = hostServer(app, await sessions.inDirectory({ directory: process.env.UPLOAD_SESSIONS }), {
   ...(mode === 'none' ? {} : { around }),
   ...(log === undefined ? {} : { written: (request, response, ended, time, failure) => line(`written ${response === null ? 'null' : response.status} ${ended} ${mark(request)} elapsed=${elapsed(time)} failure=${JSON.stringify(failure)}`) }),
   ...(process.env.UPLOAD_FILES === undefined ? {} : { files: process.env.UPLOAD_FILES }),

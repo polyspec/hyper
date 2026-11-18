@@ -5,7 +5,7 @@ import type { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, expect, it } from 'vitest';
-import { FileSessions } from '../src/index.js';
+import { FileSessions, server as hostServer } from '../src/index.js';
 import { FIXTURES, Fixture, handlers, port } from './support.js';
 
 const COOKIE = `hy-session=${'a'.repeat(32)}`;
@@ -74,7 +74,7 @@ it('a request of a route without a session answers while the session is held (HY
     }
     return open(cookie);
   };
-  server = app.server(store);
+  server = hostServer(app, store);
   await new Promise<void>((resolve) => server?.listen(0, '127.0.0.1', resolve));
   const url = `http://127.0.0.1:${port(server)}`;
 

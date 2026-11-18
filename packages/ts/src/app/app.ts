@@ -2,16 +2,12 @@
 // HY-40, HY-42 to HY-46, HY-50 to HY-54, HY-58 to HY-60, HY-62).
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
-import type { Server } from 'node:http';
 import { checkManifest, keptPaths, Router, stripBasePath, type Manifest, type RouteDeclaration } from '@polyspec/hyper-client';
 import { Choice } from '../page/choice.js';
 import type { ClientRendering } from '../page/client-rendering.js';
 import { Disconnected } from './disconnected.js';
 import { Accept } from '../representation/accept.js';
 import { Csrf } from '../session/csrf.js';
-import type { FileSessions } from '../session/file-sessions.js';
-import type { RedisSessions } from '../session/redis-sessions.js';
-import { createListener, createServer, type Listener, type ServerOptions } from '../host/http-host.js';
 import { Build } from './build.js';
 import { JsonCodec } from '../data/json-codec.js';
 import { WarningsGuard } from './warnings-guard.js';
@@ -174,11 +170,9 @@ class SessionOpenFailure extends Error {
   }
 }
 
-// The names of the options of `open` and of a server, the members of their options records (HY-106.9).
+// The names of the options of `open`, the members of its options record (HY-106.9).
 const APP_REQUIRED = ['manifest', 'program', 'handlers', 'timezone'];
 const APP_OPTIONAL = ['basePath', 'https', 'frameAncestors', 'bodyLimit', 'formTypes', 'fileLimit', 'responseLimit', 'valueLimit', 'partLimit', 'onResponse', 'clientRendering', 'onDisconnect', 'log', 'context', 'functions'];
-const SERVER_REQUIRED: string[] = [];
-const SERVER_OPTIONAL = ['files', 'written', 'around'];
 
 // The media types of the request bodies that an application may accept (HY-59).
 const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
@@ -459,20 +453,6 @@ export class App<S extends object = Record<string, never>> {
   bind<K extends keyof S>(key: K, factory: () => S[K]): void {
     ArgumentCountError.between(arguments.length, 2, 2);
     this.services.bind(key, factory);
-  }
-
-  // Returns an HTTP server that answers every request with this application and its sessions.
-  server(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server {
-    ArgumentCountError.between(arguments.length, 1, 2);
-    ArgumentCountError.members(options, SERVER_REQUIRED, SERVER_OPTIONAL);
-    return createServer(this, sessions, options);
-  }
-
-  // Returns the node:http request listener that `server` installs (HY-100).
-  listener(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener {
-    ArgumentCountError.between(arguments.length, 1, 2);
-    ArgumentCountError.members(options, SERVER_REQUIRED, SERVER_OPTIONAL);
-    return createListener(this, sessions, options);
   }
 
   // Answers one request; an unhandled error and a body larger than the response limit give a plain 500 and are

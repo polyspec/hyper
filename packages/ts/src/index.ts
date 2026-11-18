@@ -4,7 +4,7 @@ export { ClientRendering } from './page/client-rendering.js';
 export { type ContextHandler } from './app/context.js';
 export { FileSessions, type FileSessionsOptions } from './session/file-sessions.js';
 export { RedisSessions, type RedisSessionsOptions, type RedisSetting } from './session/redis-sessions.js';
-export { type AroundHook, type Listener, type ServerOptions, type WriteHook } from './host/http-host.js';
+export { listener, server, type AroundHook, type Listener, type ServerOptions, type WriteHook } from './host/http-host.js';
 export { Reply } from './http/reply.js';
 export { Request, type RequestInit } from './http/request.js';
 export { UploadedFile } from './form/uploaded-file.js';

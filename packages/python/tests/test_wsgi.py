@@ -423,6 +423,7 @@ class WsgiTest(UploadCases, TransportCase):
         # HY-60, HY-99: a header value that PEP 3333 cannot write as latin-1 is an escape, and no other header reaches
         # start_response.
         heads = []
+        infos = []
         app = Application()
         app._respond = lambda request, session, started: (
             Response(200, {"X-Euro": "a\u20ac"}, "x"),
@@ -432,12 +433,68 @@ class WsgiTest(UploadCases, TransportCase):
 
         def start(status, headers, exc_info=None):
             heads.append((status, headers))
+            infos.append(exc_info)
 
         with contextlib.redirect_stderr(io.StringIO()):
             b"".join(application(environ(RAW_URI="/"), start))
         self.assertEqual(1, len(heads))
         self.assertEqual("500 Internal Server Error", heads[0][0])
         self.assertNotIn("X-Euro", [name for name, _ in heads[0][1]])
+        # HY-100.9: the plain 500 of a header that cannot be encoded carries the exception information of the error.
+        self.assertIsNotNone(infos[0])
+        self.assertIsInstance(infos[0][1], UnicodeError)
+
+    def test_a_start_response_that_raises_for_a_public_file_is_an_escape_answered_with_the_plain_failure(
+        self,
+    ) -> None:
+        # HY-100.9, HY-60: a start_response that raises is an escape also for a file of the public directory; the
+        # callable passes the plain 500 to start_response with the exception information, and the write hook
+        # receives the failure once.
+        files = Path(self.directory.name) / "public"
+        files.mkdir()
+        (files / "a.css").write_text("body{}", encoding="utf-8")
+        written = []
+        calls = []
+
+        def start(status, headers, exc_info=None):
+            calls.append((status, exc_info))
+            if len(calls) == 1:
+                raise ValueError("the server refuses the headers")
+
+        application = create_wsgi(
+            self.app,
+            self.sessions,
+            files=str(files),
+            written=record_failure(written),
+        )
+        with contextlib.redirect_stderr(io.StringIO()):
+            body = consume(application(environ(RAW_URI="/a.css"), start))
+        self.assertEqual(b"Internal Server Error", body)
+        self.assertEqual(
+            ["200 OK", "500 Internal Server Error"], [status for status, _ in calls]
+        )
+        self.assertIsNotNone(calls[1][1])
+        self.assertEqual([(500, True, "the server refuses the headers")], written)
+
+    def test_a_failed_stat_of_a_public_file_is_an_escape_answered_with_the_plain_failure(
+        self,
+    ) -> None:
+        # HY-60.14, HY-60.17: a stat of a file of the public directory that fails for another reason than a missing
+        # file is an escaped error: the plain 500, and one call of the write hook with the request as received.
+        files = Path(self.directory.name) / "public"
+        (files / "closed").mkdir(parents=True)
+        (files / "closed").chmod(0o000)
+        self.addCleanup((files / "closed").chmod, 0o700)
+        written = []
+        application = create_wsgi(
+            self.app, self.sessions, files=str(files), written=record_status(written)
+        )
+        with contextlib.redirect_stderr(io.StringIO()):
+            status, _, body = call(application, environ(RAW_URI="/closed/a.css"))
+        self.assertEqual(
+            ("500 Internal Server Error", b"Internal Server Error"), (status, body)
+        )
+        self.assertEqual([("/closed/a.css", 500, True)], written)
 
     def test_a_start_response_that_raises_is_an_escape_answered_through_start_response_again(
         self,
