@@ -32,6 +32,8 @@ function nativeKey(lang: Lang, symbol: string): string {
   const rest = symbol.slice(at + 2);
   if (lang === 'php') {
     const [fqcn = '', name = ''] = rest.split('::');
+    // A namespace function has no second `::`: its whole symbol is the name after the last backslash, with no class.
+    if (name === '') return memberKey(file, '', fqcn.slice(fqcn.lastIndexOf('\\') + 1));
     return memberKey(file, fqcn.slice(fqcn.lastIndexOf('\\') + 1), name);
   }
   const dot = rest.indexOf('.');
