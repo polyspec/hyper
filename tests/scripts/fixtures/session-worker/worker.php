@@ -32,7 +32,7 @@ if ($cluster !== false) {
             explode(',', $cluster),
         ),
         (int) (getenv('HYPER_SESSION_EXPIRE') ?: 30),
-        (int) (getenv('HYPER_SESSION_RETRIES') ?: -1),
+        (int) (getenv('HYPER_SESSION_RETRIES') ?: 1000000),
         2000,
         1.0,
         $user === false ? null : [$user, (string) $password],
@@ -49,7 +49,7 @@ if ($cluster !== false) {
     ini_set('session.save_path', ($ca === false ? 'tcp' : 'tls') . "://127.0.0.1:{$port}{$query}");
     ini_set('redis.session.locking_enabled', '1');
     ini_set('redis.session.lock_expire', getenv('HYPER_SESSION_EXPIRE') ?: '30');
-    ini_set('redis.session.lock_retries', getenv('HYPER_SESSION_RETRIES') ?: '-1');
+    ini_set('redis.session.lock_retries', getenv('HYPER_SESSION_RETRIES') ?: '1000000');
     ini_set('redis.session.lock_wait_time', '2000');
     if ($sentinels !== false) {
         $setup = (new RedisSentinelSessions(array_map(
