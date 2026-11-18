@@ -127,6 +127,26 @@ function ownMethods(ReflectionClass $class): array
     ));
 }
 
+/**
+ * Whether a method is an empty private constructor without parameters (HYR-6): it only stops the construction of a
+ * class of static methods, a runtime idiom that no rule names, so it is no member. The body is read from the lines of
+ * the file that Reflection names, because Reflection does not tell an empty body.
+ */
+function isConstructionGuard(ReflectionMethod $method): bool
+{
+    if ($method->getName() !== '__construct' || !$method->isPrivate() || $method->getNumberOfParameters() !== 0) {
+        return false;
+    }
+    $file = $method->getFileName();
+    $start = $method->getStartLine();
+    $end = $method->getEndLine();
+    if ($file === false || $start === false || $end === false) {
+        return false;
+    }
+    $lines = array_slice(file($file), $start - 1, $end - $start + 1);
+    return preg_match('/__construct\s*\(\s*\)\s*\{\s*\}\s*$/', implode('', $lines)) === 1;
+}
+
 /** @return list<ReflectionProperty> the properties a class declares itself, not the ones its traits declare */
 function ownProperties(ReflectionClass $class): array
 {

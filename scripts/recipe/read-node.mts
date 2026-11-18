@@ -169,6 +169,10 @@ function isExposed(visibility: Visibility): boolean {
 
 function readClassMember(file: string, sf: ts.SourceFile, cls: string, classInternal: boolean, m: ts.ClassElement): void {
   if (ts.isConstructorDeclaration(m)) {
+    // HYR-6: an empty private constructor without parameters only stops the construction of a class of static
+    // methods, a runtime idiom that no rule names, so it is no member.
+    const empty = m.parameters.length === 0 && (m.body?.statements.length ?? 0) === 0;
+    if (empty && modifiers(m).some((mod) => mod.kind === ts.SyntaxKind.PrivateKeyword)) return;
     out.members.push({
       file,
       unit: cls,
