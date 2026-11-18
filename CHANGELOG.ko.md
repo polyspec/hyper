@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 386de453baaf39572196be6144814089cc2836cbfcb5f910a6ec87191d9941cb -->
+<!-- source-sha256: 889b904142506b7779ab9f68d76af848e0fff363d86ee7391c6afa7065817818 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- recipe candidate는 spec이 member와 함께 적은 unit에 그 source에 있고 spec에 없는 각 member를 더하고, 그 중립 field를 hand-written으로 적는다(H35.56). 입력: source의 두 member 중 하나를 적는 `contracts/interfaces.json`의 unit으로 실행한 `make recipe-candidates`. 이전 동작: `scripts/recipe/candidate.mts`의 `buildCandidate`는 member가 없는 unit에만 source의 member를 유도했으므로 candidate는 적힌 member만 담았고 unit을 그것으로 다시 쓸 수 없었다. 기대 동작: `deriveMembers`가 모든 unit에서 실행되고 unit이 이미 적은 native symbol의 member는 건너뛴다. `make hyper-test-scripts TESTS=tests/scripts/recipe-check.test.mts`(이전 170개 중 169개, 이후 170개 모두 통과)로 검증했다. `make recipe-candidates`는 spec의 member 520개에 185개를 더한다.
 - `packages/release.mk`는 binding 생성기에 의존하므로, 설치된 생성기보다 오래되면 make가 다시 쓴다(HR-99). 입력: 앞선 binding 릴리스가 `packages/release.mk`를 쓴 checkout에서 더 새 릴리스를 `make install-packages`한다. 이전 동작: Makefile은 파일이 없을 때만 그것을 썼으므로, 오래된 파일은 `release-go-module-push`를 정의하지 않았고 `ci-group-tools.test.mts`와 `release-assets.test.mts`가 `No rule to make target`으로 test 5개에서 실패했다. 기대 동작: rule은 `$(BINDING)`을 선행 조건으로 적는다. `ci-group-tools.test.mts`의 새 test는 tree에 1970년의 `packages/release.mk`를 주고 dry run이 그것을 다시 쓰기를 요구한다. `make hyper-test-scripts TESTS="tests/scripts/ci-group-tools.test.mts tests/scripts/release-assets.test.mts"`로 검증했다(이전 6개 통과 5개 실패, 이후 11개 중 11개).
 - `tests/scripts/fixtures/upload-server/server.mjs`의 Node upload 서버는 host entry 함수 `server(app, sessions, options)`로 시작한다(H35.44-1). 입력: `make hyper-test-scripts`. 이전 동작: fixture는 H35.44-1이 지운 `app.server`를 불렀으므로, `upload-servers.test.mts`와 `benchmark-uploads.test.mts`의 모든 Node 서버가 주소를 알리기 전에 `TypeError: app.server is not a function`으로 끝났다(test 28개 실패). 기대 동작: fixture는 `@polyspec/hyper`의 `server`를 import하고, 두 파일은 96개 중 96개 통과한다.
 - `tests/scripts/node-package.test.mts`는 production closure를 실행의 staging 디렉터리에 pack하고 `var/bindings/node/deps`로 게시하는 `make node-package`의 recipe를 검사한다(H35.68-1). 입력: `make hyper-test-scripts`. 이전 동작: test는 recipe가 더는 쓰지 않는 `--pack-destination …/node/deps`를 기대했으므로 실패했다. 기대 동작: test는 staging 디렉터리 `deps.next-<pid>`, `"$staging"`으로의 pack, 그리고 `scripts/publish.mts`가 `"$staging"`을 `deps`로 게시하는 것을 요구한다. `make hyper-test-scripts`로 검증했다(이전 1개 실패, 이후의 수는 row에 적는다).
