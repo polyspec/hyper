@@ -5939,9 +5939,9 @@
                 },
                 {
                   "id": "HY-132.14",
-                  "en": "Kind `invalid_session_handler` of category `value` and no status is the failure of `collect` of the PHP server under a session handler that is not its files handler (HY-104.44), and the Node and Python servers never raise it, because their stores have no setting that picks a handler.",
-                  "ko": "category `value`이고 상태가 없는 kind `invalid_session_handler`는 PHP server의 `collect`가 files handler가 아닌 session handler 아래에서 실패하는 것이며(HY-104.44), Node와 Python server는 이것을 내지 않는다. 그 저장소에는 handler를 고르는 설정이 없기 때문이다.",
-                  "koSource": "6e84c3159c32308745b58dfa78f9b16cedbc40740af0a39f14fb59d376433fc3"
+                  "en": "Kind `invalid_session_handler` of category `value` and no status is the failure of `collect` of the PHP server under a session handler that is not its files handler (HY-104.44), and only the PHP server raises it, because only PHP lets an application pick a save handler, such as `redis` or a handler of its own, and the Node and Python stores have no such setting.",
+                  "ko": "category `value`이고 상태가 없는 kind `invalid_session_handler`는 PHP server의 `collect`가 files handler가 아닌 session handler 아래에서 실패하는 것이며(HY-104.44), PHP만 애플리케이션이 `redis`나 자기 handler 같은 save handler를 고르게 하고 Node와 Python 저장소에는 그런 설정이 없으므로 PHP server만 이것을 낸다.",
+                  "koSource": "a33af6e7c1923bfc62a95cb79121ef7fb7c9872da69e0ee2dd46cff4fb421621"
                 },
                 {
                   "id": "HY-132.7",
