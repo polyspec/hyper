@@ -1,11 +1,12 @@
-// The check of the released statement ids (scripts/spec-docs.mts released, H35.98) over a Git repository of its own:
-// the fixture released.json is committed and tagged v0.0.1, and a variant of the contract is the tree. A released id that
-// is missing and not retired fails, a released id whose section, rule or words changed (the topic) fails, a wording edit
-// and a retired id pass, and a released text that moved to another id is printed without a failure. The baseline of
-// config/spec-baseline.json must name the newest version of CHANGELOG.md that has a tag.
+// The check of the released statement ids (scripts/spec-docs.mts released, H35.98) over a Git repository of its own.
+// The baseline is the newest tag vX.Y.Z reachable from HEAD that does not point at HEAD: at a release commit it is the
+// previous release, and at a later commit the latest one. The fixture released.json is committed and tagged v0.0.1,
+// and a variant of the contract is committed after it. A released id that is missing and not retired fails, a released
+// id whose section, rule or words changed (the topic) fails, a wording edit and a retired id pass, and a released text
+// that moved to another id is printed without a failure.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,27 +31,26 @@ function git(root: string, ...args: string[]): void {
   assert.equal(result.status, 0, `git ${args.join(' ')}: ${result.stderr}`);
 }
 
-const changelog = (versions: string[]): string => `# Changelog\n\n## Unreleased\n\n${versions.map((v) => `## ${v}\n\n- A change.\n`).join('\n')}`;
+/** Commits `contract` of the fixture as contracts/protocol.json, and tags the commit with `tag` when it is given. */
+function commit(root: string, contract: string, tag?: string): void {
+  cpSync(path.join(fixture, contract), path.join(root, 'contracts', 'protocol.json'));
+  git(root, 'add', '.');
+  git(root, 'commit', '-q', '--allow-empty', '-m', contract);
+  if (tag !== undefined) git(root, 'tag', '-a', tag, '-m', tag);
+}
 
-/**
- * A repository whose commit tagged v0.0.1 holds released.json as its contract, with `variant` as the contract of the
- * tree, the baseline `baseline` and the change log of `versions`; `tags` are tagged at that commit too.
- */
-function makeRoot(variant: string, options: { baseline?: string; versions?: string[]; tags?: string[] } = {}): string {
+/** A repository with the commits `[contract, tag?]` in their order; the last one is HEAD. */
+function makeRepository(commits: [string, string?][]): string {
   const root = mkdtempSync(path.join(tmpdir(), 'spec-released-'));
   roots.push(root);
   mkdirSync(path.join(root, 'contracts'));
-  mkdirSync(path.join(root, 'config'));
   git(root, 'init', '-q');
-  cpSync(path.join(fixture, 'released.json'), path.join(root, 'contracts', 'protocol.json'));
-  git(root, 'add', '.');
-  git(root, 'commit', '-q', '-m', 'released');
-  for (const tag of ['v0.0.1', ...(options.tags ?? [])]) git(root, 'tag', tag);
-  cpSync(path.join(fixture, variant), path.join(root, 'contracts', 'protocol.json'));
-  writeFileSync(path.join(root, 'config', 'spec-baseline.json'), `${JSON.stringify({ version: options.baseline ?? '0.0.1' }, null, 2)}\n`);
-  writeFileSync(path.join(root, 'CHANGELOG.md'), changelog(options.versions ?? ['0.0.1']));
+  for (const [contract, tag] of commits) commit(root, contract, tag);
   return root;
 }
+
+/** The released contract tagged v0.0.1, and `variant` committed after it as HEAD. */
+const makeRoot = (variant: string): string => makeRepository([['released.json', 'v0.0.1'], [variant]]);
 
 function run(root: string): ScriptResult {
   return runScript(script, ['released', '--root', root], GIT_ENV);
@@ -82,15 +82,19 @@ test('a released id reused for another topic fails, and its moved text is printe
   assert.ok(result.stdout.includes('the text of HY-1.1 of v0.0.1 is now HY-3.1'), result.stdout);
 });
 
-test('a baseline whose tag is missing fails and names the tag', () => {
-  assertFails(run(makeRoot('released.json', { baseline: '0.0.9', versions: ['0.0.9'] })), ['the tag v0.0.9 of config/spec-baseline.json is missing']);
-});
-
-test('at a version-bump commit the baseline is the version below the new section, which has no tag yet', () => {
-  const result = run(makeRoot('released.json', { versions: ['0.0.2', '0.0.1'] }));
+test('a commit after a tag compares with that tag', () => {
+  const root = makeRepository([['released.json', 'v0.0.1'], ['wording.json', 'v0.0.2'], ['wording.json']]);
+  const result = run(root);
   assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /released statement ids of v0\.0\.2/u);
 });
 
-test('a baseline below the newest tagged version of the change log is stale and fails', () => {
-  assertFails(run(makeRoot('released.json', { versions: ['0.0.2', '0.0.1'], tags: ['v0.0.2'] })), ['config/spec-baseline.json names 0.0.1; the newest version of CHANGELOG.md with a tag is 0.0.2']);
+test('a tagged release commit compares with the previous tag, not with its own', () => {
+  const root = makeRepository([['released.json', 'v0.0.1'], ['reuse.json', 'v0.0.2']]);
+  assertFails(run(root), ['HY-1.1 of v0.0.1 changed its topic']);
+});
+
+test('a repository with no release tag reachable from HEAD fails and says why', () => {
+  const root = makeRepository([['released.json']]);
+  assertFails(run(root), ['no tag vX.Y.Z is reachable from HEAD']);
 });
