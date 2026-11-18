@@ -59,7 +59,6 @@ A development checkout links its polyspec providers (kit, template) only through
 | `make hooks` | Declares the merge drivers of the changelogs and the checklists (see [Hooks](#hooks)) |
 | `make hooks-check` | Fails while the merge drivers of `make hooks` are not declared |
 | `make ci-check` | Runs the CI group `NAME` as its job of `ci.yml` does: its setup, its targets to their ends and its report `var/ci/<name>` (see [CI](#ci)) |
-| `make ci-bench` | Runs the job of `bench.yml`: the setup of the group `bench`, `make bench`, `make bench-sessions` and the report `var/ci/bench` (see [CI](#ci)) |
 | `make ci-targets` | Runs the make targets `TARGETS` to their ends and writes the report `CI_REPORT` (see [CI](#ci)) |
 | `make ci-summary` | Writes the summary of the report `CI_REPORT` and the job summary (see [CI](#ci)) |
 | `make ci-passed` | Fails unless every job of `RESULTS`, the JSON of `needs`, has the result `success` (see [CI](#ci)) |
@@ -213,9 +212,9 @@ Every other step of a job is a `uses:` step: the checkout of hyper at the worksp
 - `record.json`: the same as data, written before and after each target, so a runner that stopped leaves the target that was running;
 - `targets/<target>.log`: the command and the full output of each target and how make ended.
 
-The last job `ci-passed` runs after every other job and runs `make ci-passed RESULTS='<JSON of needs>'`, which prints the result of every needed job and fails unless each one is `success`. It judges the results of the other jobs, so it exists only in CI. A job added to `ci.yml` is listed in `needs`; `tests/scripts/ci-workflow.test.mts` fails when `ci-passed` is missing, is not the last job, lacks `if: ${{ always() }}`, does not need every other job, runs on another runner or runs another step, and when a job of `ci.yml` or `bench.yml` has another run step than one `make ci-<job>` with make variables.
+The last job `ci-passed` runs after every other job and runs `make ci-passed RESULTS='<JSON of needs>'`, which prints the result of every needed job and fails unless each one is `success`. It judges the results of the other jobs, so it exists only in CI. A job added to `ci.yml` is listed in `needs`; `tests/scripts/ci-workflow.test.mts` fails when `ci-passed` is missing, is not the last job, lacks `if: ${{ always() }}`, does not need every other job, runs on another runner or runs another step, and when a job of `ci.yml` has another run step than one `make ci-<job>` with make variables.
 
-The workflow `.github/workflows/bench.yml` runs the benchmarks on a manual run: its one job runs `make ci-bench`, which runs the setup of the group `bench` of the Makefile, then `make bench` and `make bench-sessions` with `make ci-targets` into `var/ci/bench`, and the summary, and the job uploads the report. A local run is the same `make ci-bench`. Its results pass or fail no check, and neither `ci-passed` nor a release reads it (see [Benchmark](benchmark.md)).
+The group `bench` of `ci.yml` runs the benchmarks on every run: `make ci-check NAME=bench` runs its setup, which installs Redis, then `make bench` and `make bench-sessions` with `make ci-targets` into `var/ci/bench`, and the summary, and the job uploads the report. A measure over its limit prints a `WARNING` line and passes, so the job fails only when a benchmark cannot run (see [Benchmark](benchmark.md)).
 
 ## Test runs
 

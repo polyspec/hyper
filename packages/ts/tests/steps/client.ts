@@ -258,7 +258,8 @@ export const steps = {
       reader.compare('json.params', json.params);
       reader.compare('json.regions', record(json.regions));
     }
-    reader.compare('session', inner.get('_hyper_csrf') !== undefined);
+    // A store gives null for a key that holds no value (HY-104.37).
+    reader.compare('session', inner.get('_hyper_csrf') !== null);
     reader.compare('actions', counter.actions);
     reader.compare('handled', calls.handled);
     reader.compare('selections', selections);

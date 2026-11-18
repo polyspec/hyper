@@ -9,7 +9,10 @@ use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\RecordError;
 use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Tests\Support\PhpSessionIdentifier;
 use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
+use Polyspec\SessionStore\SessionStoreIoError;
+use Polyspec\SessionStore\SessionStoreValueError;
 
 /** HY-45, HY-72, HY-104, HY-129: the PHP session starts only when a request reads or writes session data, under the name that hyper sets. */
 final class NativeSessionTest extends TestCase
@@ -18,6 +21,37 @@ final class NativeSessionTest extends TestCase
     private static function request(array $cookies = [], bool $https = false): Request
     {
         return new Request('GET', '/', cookies: $cookies, https: $https);
+    }
+
+    /**
+     * HY-104.42, HY-104.43: a new and a regenerated identifier are those of the PHP runtime, of the length and the
+     * alphabet of its settings, within the 22 to 256 characters that every server accepts; files handler of PHP.
+     */
+    #[RunInSeparateProcess]
+    public function testCreatesTheIdentifiersOfThePhpRuntime(): void
+    {
+        ini_set('session.save_path', sys_get_temp_dir());
+        $form = '/^' . PhpSessionIdentifier::pattern() . '$/D';
+        $store = new NativeSession(false, self::request());
+        $store->set('a', 1);
+        self::assertMatchesRegularExpression($form, (string) session_id());
+        $store->renew();
+        self::assertMatchesRegularExpression($form, (string) session_id());
+    }
+
+    /**
+     * HY-45, HY-104.43: the strict mode of PHP refuses an identifier that the store does not hold, and the identifier
+     * that replaces it is one of the PHP runtime; files handler of PHP.
+     */
+    #[RunInSeparateProcess]
+    public function testReplacesAnUnknownIdentifierWithOneOfThePhpRuntime(): void
+    {
+        ini_set('session.save_path', sys_get_temp_dir());
+        $unknown = str_repeat('b', 64);
+        $store = new NativeSession(false, self::request(['hy-session' => $unknown]));
+        $store->set('a', 1);
+        self::assertNotSame($unknown, session_id());
+        self::assertMatchesRegularExpression('/^' . PhpSessionIdentifier::pattern() . '$/D', (string) session_id());
     }
 
     /** HY-104.41: a record that holds an object of a class other than stdClass fails, at any depth, as in the other servers. */
@@ -35,6 +69,134 @@ final class NativeSessionTest extends TestCase
             } catch (RecordError $failure) {
                 self::assertSame('record', $failure->kind());
             }
+        }
+    }
+
+    /** Makes an empty directory of session files, which `removeDirectory` removes. */
+    private static function sessionDirectory(): string
+    {
+        $directory = sys_get_temp_dir() . '/hyper-collect-' . bin2hex(random_bytes(8));
+        self::assertTrue(mkdir($directory, 0700));
+
+        return $directory;
+    }
+
+    private static function removeDirectory(string $directory): void
+    {
+        chmod($directory, 0700);
+        foreach (glob($directory . '/*') ?: [] as $file) {
+            unlink($file);
+        }
+        rmdir($directory);
+    }
+
+    /**
+     * HY-104.33, SF-5: `collect` removes the session files of the save path whose lifetime has passed, keeps a file
+     * within its lifetime, and returns how many it removed.
+     */
+    #[RunInSeparateProcess]
+    public function testCollectRemovesTheExpiredSessionsOfTheSavePath(): void
+    {
+        $directory = self::sessionDirectory();
+        try {
+            $expired = $directory . '/sess_' . str_repeat('a', 26);
+            $current = $directory . '/sess_' . str_repeat('b', 26);
+            file_put_contents($expired, 'a:0:{}');
+            file_put_contents($current, 'a:0:{}');
+            touch($expired, time() - 3600);
+            ini_set('session.save_path', $directory);
+            ini_set('session.gc_maxlifetime', '60');
+
+            self::assertSame(1, NativeSession::collect());
+            self::assertFileDoesNotExist($expired);
+            self::assertFileExists($current);
+        } finally {
+            self::removeDirectory($directory);
+        }
+    }
+
+    /** HY-104.33, SF-9.2: a save path that cannot be read fails `collect` with the Io error of session-store. */
+    #[RunInSeparateProcess]
+    public function testCollectFailsWithTheIoErrorForAnUnreadableSavePath(): void
+    {
+        $directory = self::sessionDirectory();
+        try {
+            chmod($directory, 0000);
+            clearstatcache();
+            self::assertFalse(is_readable($directory), "the test needs a directory that it cannot read, and {$directory} with mode 0000 is readable to this user");
+            ini_set('session.save_path', $directory);
+            ini_set('session.gc_maxlifetime', '60');
+
+            try {
+                NativeSession::collect();
+                self::fail('collect read a directory that it cannot read');
+            } catch (SessionStoreIoError $error) {
+                self::assertSame('permission_denied', $error->kind());
+            }
+        } finally {
+            self::removeDirectory($directory);
+        }
+    }
+
+    /**
+     * HY-104.33, SF-1.2: a save path `N;/path` with a depth above 0 keeps the files in subdirectories, which the store
+     * of session-store does not walk, so `collect` fails with `invalid_directory` and names the save path instead of
+     * removing nothing. The depth is read as the native files handler reads it.
+     */
+    #[RunInSeparateProcess]
+    public function testCollectFailsForASavePathWithSubdirectories(): void
+    {
+        $directory = self::sessionDirectory();
+        try {
+            ini_set('session.save_path', "2;{$directory}");
+            ini_set('session.gc_maxlifetime', '60');
+
+            try {
+                NativeSession::collect();
+                self::fail('collect accepted a save path with a depth of 2');
+            } catch (SessionStoreValueError $error) {
+                self::assertSame('invalid_directory', $error->kind());
+                self::assertStringContainsString("2;{$directory}", $error->getMessage());
+            }
+        } finally {
+            self::removeDirectory($directory);
+        }
+    }
+
+    /** HY-104.33: a save path `0;MODE;/path` keeps the files in `/path` itself, so `collect` removes them there. */
+    #[RunInSeparateProcess]
+    public function testCollectReadsThePathOfASavePathWithDepthZeroAndAMode(): void
+    {
+        $directory = self::sessionDirectory();
+        try {
+            $expired = $directory . '/sess_' . str_repeat('c', 26);
+            file_put_contents($expired, 'a:0:{}');
+            touch($expired, time() - 3600);
+            ini_set('session.save_path', "0;600;{$directory}");
+            ini_set('session.gc_maxlifetime', '60');
+
+            self::assertSame(1, NativeSession::collect());
+            self::assertFileDoesNotExist($expired);
+        } finally {
+            self::removeDirectory($directory);
+        }
+    }
+
+    /**
+     * HY-104.44, HY-132.14: under the handler `user`, which a store of the application sets, `collect` removes nothing
+     * and fails with kind `invalid_session_handler` and a message that names the handler.
+     */
+    #[RunInSeparateProcess]
+    public function testCollectFailsUnderTheUserHandler(): void
+    {
+        session_set_save_handler(new RefusingSessionHandler(true));
+        self::assertSame('user', ini_get('session.save_handler'));
+        try {
+            NativeSession::collect();
+            self::fail('collect ran under the handler user');
+        } catch (\Polyspec\Hyper\HyperValueError $error) {
+            self::assertSame('invalid_session_handler', $error->kind());
+            self::assertStringContainsString('user', $error->getMessage());
         }
     }
 

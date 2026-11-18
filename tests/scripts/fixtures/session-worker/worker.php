@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 // One PHP server process over one session (tests/scripts/session-workers.mts): the arguments are the session directory,
-// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, `renew`, or `hold`
+// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, `renew`, `collect`, or `hold`
 // or `stale`, which reads or writes a value and closes after a line of its input. With HYPER_SESSION_REDIS, the port
 // of a Redis server, it keeps the session there through phpredis; HYPER_SESSION_SENTINEL names the ports of Sentinels
 // instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection;
@@ -122,6 +122,15 @@ if ($command === 'count') {
 
         return (string) session_id();
     });
+} elseif ($command === 'collect') {
+    // HY-104.44: collect outside a request, under the handler of the settings above; prints the handler, then the
+    // count or the kind and the message of the failure, as JSON.
+    $handler = (string) ini_get('session.save_handler');
+    try {
+        echo json_encode(['handler' => $handler, 'count' => NativeSession::collect()], JSON_THROW_ON_ERROR);
+    } catch (\Polyspec\Hyper\HyperValueError $failure) {
+        echo json_encode(['handler' => $handler, 'kind' => $failure->kind(), 'message' => $failure->getMessage()], JSON_THROW_ON_ERROR);
+    }
 } elseif ($command === 'read') {
     $names = json_decode($first, true, 512, JSON_THROW_ON_ERROR);
     echo json_encode($request(static fn (NativeSession $store): array => array_map(

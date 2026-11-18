@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Polyspec\Hyper\Tests\Support\PhpSessionIdentifier;
 
 /**
  * HY-45, HY-129: the session cookie that the server sends over HTTP, through the PHP built-in server. PHP sends no
@@ -104,7 +105,8 @@ final class SessionCookieTest extends TestCase
 
         self::assertCount(1, $setCookies);
         self::assertSame("Set-Cookie: hy-session={$id}; Path=/; HttpOnly; SameSite=Lax", $setCookies[0]);
-        self::assertMatchesRegularExpression('/^[A-Za-z0-9,-]{22,128}$/D', $id);
+        // HY-104.43: the identifier of the PHP runtime, of the length and the alphabet of its settings.
+        self::assertMatchesRegularExpression('/^' . PhpSessionIdentifier::pattern() . '$/D', $id);
     }
 
     public function testSendsTheHostPrefixedCookieWithSecureOverHttps(): void
@@ -158,7 +160,7 @@ final class SessionCookieTest extends TestCase
 
         self::assertCount(1, $setCookies);
         self::assertMatchesRegularExpression(
-            '/^Set-Cookie: hy-session=[A-Za-z0-9,-]{22,128}; Path=\/; HttpOnly; SameSite=Lax$/D',
+            '/^Set-Cookie: hy-session=' . PhpSessionIdentifier::pattern() . '; Path=\/; HttpOnly; SameSite=Lax$/D',
             $setCookies[0],
         );
         self::assertSame('body hyper: the session cookie could not be sent', $body);

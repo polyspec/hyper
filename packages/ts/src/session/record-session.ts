@@ -5,7 +5,7 @@ import { PhpFloat, Reference, serialize, StdClass, unserialize } from '@polyspec
 import { rules } from '../app/core-rules.js';
 import type { SessionStore } from './session-store.js';
 
-// The identifiers that PHP and the session-store library accept (HY-104.31).
+// The identifiers that PHP and the session-store library accept (HY-104.42).
 const IDENTIFIER = /^[A-Za-z0-9,-]{22,256}$/;
 
 // A value that a record holds, as unserialize of @polyspec/php-serialization gives it and serialize takes it; the

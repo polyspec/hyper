@@ -4,7 +4,7 @@
 
 [English](benchmark.md).
 
-`make bench`는 게시판 예제를 서버와 브라우저에서 측정한다. 결과는 보고용이며 통과나 실패를 판정하지 않는다. 아래 기록은 `.github/workflows/bench.yml`의 수동 실행(`gh workflow run bench.yml`)에서 얻는다. 이 workflow는 전용 runner에서 `make bench`와 `make bench-sessions`를 차례로 실행하고 각 target의 report를 upload한다. 개발 기계는 다른 작업을 함께 실행하며, 다른 바쁜 프로세스는 중앙값보다 평균과 p95를 더 크게 바꾼다. runner는 공유 가상 기계이므로 기록에 두 번 실행한 편차를 적고, 같은 runner image의 기록끼리만 비교한다.
+`make bench`는 게시판 예제를 서버와 브라우저에서 측정한다. 결과는 보고용이며 통과나 실패를 판정하지 않는다. `.github/workflows/ci.yml`의 job `check (bench)`는 `main`의 모든 push와 모든 수동 실행에서 전용 runner로 `make bench`와 `make bench-sessions`를 차례로 실행하고 각 target의 report를 upload한다. 한도를 넘는 측정은 `WARNING` 줄과 annotation `::warning::`을 출력하고 통과한다. 아래 기록은 이전에 그 group을 실행한 workflow `.github/workflows/bench.yml`의 실행에서 얻었다. 개발 기계는 다른 작업을 함께 실행하며, 다른 바쁜 프로세스는 중앙값보다 평균과 p95를 더 크게 바꾼다. runner는 공유 가상 기계이므로 기록에 두 번 실행한 편차를 적고, 같은 runner image의 기록끼리만 비교한다.
 
 | 타깃 | 스크립트 | 측정 대상 |
 |---|---|---|

@@ -35,7 +35,7 @@ final class NativeSession implements SessionStore
         $name = self::name($https);
         $this->clientId = $this->request->cookie($name);
         // An identifier that is not of HY-45 starts no session, the same as no identifier; PHP and the session-store
-        // library accept 22 to 256 characters (HY-104.31).
+        // library accept 22 to 256 characters (HY-104.42).
         $id = $this->clientId;
         if ($id !== null && preg_match('/^[A-Za-z0-9,-]{22,256}$/D', $id) !== 1) {
             $id = null;
@@ -104,11 +104,11 @@ final class NativeSession implements SessionStore
      * Returns the session options: the cookie name of HY-45 with `Path=/` and no `Domain`, HttpOnly, SameSite=Lax,
      * Secure on HTTPS, only identifiers that the server created, no cookie from PHP (`use_cookies`, HY-129), no caching
      * headers, because the application sets Cache-Control (HY-52), and the record form that the other servers read
-     * (HY-104).
+     * (HY-104), and no removal of expired sessions during a request (`gc_probability` 0, HY-104.33).
      *
      * @return array{name: string, cookie_path: '/', cookie_domain: '', cookie_httponly: true, cookie_samesite: 'Lax',
      *     cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, use_cookies: false, cache_limiter: '',
-     *     serialize_handler: 'php_serialize'}
+     *     serialize_handler: 'php_serialize', gc_probability: 0}
      *
      * @internal
      */
@@ -126,7 +126,47 @@ final class NativeSession implements SessionStore
             'use_cookies' => false,
             'cache_limiter' => '',
             'serialize_handler' => 'php_serialize',
+            'gc_probability' => 0,
         ];
+    }
+
+    /**
+     * Removes the session files of `session.save_path` whose lifetime of `session.gc_maxlifetime` has passed, skips a
+     * file whose lock a request holds, and returns how many it removed (HY-104.33, SF-5). An empty save path is the
+     * temporary directory, as for the native files handler. No request calls it: the application calls it when it
+     * chooses, such as from a scheduled task, because the options turn the removal during a request off. A directory
+     * that cannot be read fails with `SessionStoreIoError` (SF-9.2). A `session.save_handler` other than `files` fails
+     * with kind `invalid_session_handler` and names the handler, because its store removes ended sessions itself
+     * (HY-104.44).
+     *
+     * The save path is read as the native files handler reads it (ext/session/mod_files.c of PHP 8.4): up to two
+     * fields before the path, separated by `;`, are the depth of the subdirectories and the mode of the files. A depth
+     * of 0 keeps the files in the path itself, so the path is collected. Another depth keeps them in subdirectories,
+     * which the store does not walk, so the whole save path goes to the store, which fails with `invalid_directory`
+     * and names it (SF-1.2).
+     */
+    public static function collect(): int
+    {
+        ArgumentCount::most(\func_num_args(), 0);
+        // HY-104.44: another handler, such as redis or a handler of the application, keeps no files of this store.
+        $handler = (string) ini_get('session.save_handler');
+        if ($handler !== 'files') {
+            throw new HyperValueError(
+                "collect removes the files of the handler files, and session.save_handler is {$handler}, whose store removes ended sessions itself (HY-115.2)",
+                'invalid_session_handler',
+            );
+        }
+        $directory = (string) ini_get('session.save_path');
+        if ($directory === '') {
+            $directory = sys_get_temp_dir();
+        }
+        $fields = explode(';', $directory, 3);
+        if (\count($fields) > 1 && (int) $fields[0] === 0) {
+            $directory = $fields[\count($fields) - 1];
+        }
+
+        return \Polyspec\SessionStore\FileSessions::inDirectory($directory, (int) ini_get('session.gc_maxlifetime'))
+            ->collect();
     }
 
     public function get(string $key): mixed

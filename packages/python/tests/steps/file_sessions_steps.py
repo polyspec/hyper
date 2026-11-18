@@ -40,7 +40,7 @@ def requests(case) -> None:
         touched = []
         for step in case.input("steps"):
             if step.get("collect") is True:
-                run.collected(store._collect())
+                run.collected(store.collect())
             else:
                 run.request(step)
             names = _names(directory, run.identifiers)
