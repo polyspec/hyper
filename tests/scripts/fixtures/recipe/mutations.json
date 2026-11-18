@@ -891,5 +891,13 @@
     "from": "\"\"\"The session group of the package (HYR-4).\"\"\"\n",
     "to": "\"\"\"The session group of the package (HYR-4).\"\"\"\n\nfrom ._csrf import Csrf\n",
     "code": "GROUP_INIT"
+  },
+  {
+    "id": "barrel-unit-class-missing",
+    "file": "packages/ts/src/representation/media-type.ts",
+    "from": "export class MediaType {",
+    "to": "export class OtherType {",
+    "code": "UNIT_CLASS_MISSING",
+    "detail": "node unit media-type is public, and packages/ts/src/representation/media-type.ts declares no class of its name, so the barrel check cannot name its export"
   }
 ]
