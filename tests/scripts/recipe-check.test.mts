@@ -922,3 +922,10 @@ test('the PSR-4 list of each composer.json is the directory of each group that h
   assert.deepEqual(psr4('packages/php/composer.json'), directories);
   assert.deepEqual(psr4('composer.json'), directories.map((d) => `packages/php/${d}`));
 });
+
+test('a member called on the result of a const declared with a function type is read with that type as its receiver (HYR-5)', () => {
+  // The fixture declares rules as `() => CoreRules` with a call initializer, as packages/ts/src/app/core-rules.ts does.
+  const out = readCopy('node', path.join(fixture, 'readers', 'node-declared-rules'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'Csrf.mask');
+  assert.deepEqual(scope?.uses, [{ kind: 'member', of: { kind: 'class', file: 'src/core-rules.ts', name: 'CoreRules' }, name: 'csrfMask', call: true }]);
+});
