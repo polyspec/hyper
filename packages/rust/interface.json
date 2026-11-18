@@ -175,6 +175,10 @@
         "category": "store"
       },
       {
+        "variant": "polyspec_hyper::ErrorCode::InvalidSessionHandler",
+        "category": "value"
+      },
+      {
         "variant": "polyspec_hyper::ErrorCode::SharedHoldsContext",
         "category": "value"
       },

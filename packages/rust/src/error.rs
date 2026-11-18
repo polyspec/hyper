@@ -40,6 +40,8 @@ pub enum Error {
     InvalidSessionToken,
     /// A stored flash value or kept value of another form (HY-104.23).
     InvalidSessionRecord,
+    /// A `collect` of the PHP server under a session handler that is not its files handler (HY-104.44, HY-132.14).
+    InvalidSessionHandler,
     /// Shared data that already holds the member `context` (HY-124.8).
     SharedHoldsContext,
     /// A question that only a request with a selected media type answers (HY-116.21).
@@ -110,6 +112,8 @@ pub enum ErrorCode<'a> {
     InvalidSessionToken,
     /// A stored flash value or kept value of another form (HY-104.23).
     InvalidSessionRecord,
+    /// A `collect` of the PHP server under a session handler that is not its files handler (HY-132.14).
+    InvalidSessionHandler,
     /// Shared data that already holds the member `context` (HY-124.8).
     SharedHoldsContext,
     /// A question that only a request with a selected media type answers (HY-116.21).
@@ -178,6 +182,7 @@ impl Error {
             Error::InvalidCsrfForm => Part::Own("invalid_csrf_form", Category::Value),
             Error::InvalidSessionToken => Part::Own("invalid_session_token", Category::Store),
             Error::InvalidSessionRecord => Part::Own("invalid_session_record", Category::Store),
+            Error::InvalidSessionHandler => Part::Own("invalid_session_handler", Category::Value),
             Error::SharedHoldsContext => Part::Own("shared_holds_context", Category::Value),
             Error::NotSelected => Part::Own("not_selected", Category::Type),
             Error::MalformedContentType => Part::Own("malformed_content_type", Category::Value),
@@ -215,6 +220,7 @@ impl Error {
             Error::InvalidCsrfForm => ErrorCode::InvalidCsrfForm,
             Error::InvalidSessionToken => ErrorCode::InvalidSessionToken,
             Error::InvalidSessionRecord => ErrorCode::InvalidSessionRecord,
+            Error::InvalidSessionHandler => ErrorCode::InvalidSessionHandler,
             Error::SharedHoldsContext => ErrorCode::SharedHoldsContext,
             Error::NotSelected => ErrorCode::NotSelected,
             Error::MalformedContentType => ErrorCode::MalformedContentType,
@@ -333,6 +339,9 @@ impl fmt::Display for Error {
             Error::InvalidSessionToken => f.write_str("the session holds a token of another form (HY-24)"),
             Error::InvalidSessionRecord => {
                 f.write_str("the session holds a flash value or a kept value of another form (HY-104)")
+            }
+            Error::InvalidSessionHandler => {
+                f.write_str("collect removes the files of the handler files, and the session handler is another (HY-104)")
             }
             Error::SharedHoldsContext => f.write_str("the shared handler returned the key context (HY-124)"),
             Error::NotSelected => f.write_str("the request holds no selected media type (HY-116)"),
