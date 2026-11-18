@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- `make lint-php`가 통과한다(H35.89). 입력: checkout의 PHP 파일. 이전 동작: phpcs가 `packages/php/tests/Support/escape.php`의 class `FailingInput`(namespace가 없고, side effect가 있는 파일의 두 번째 symbol), 그 네 `stream_*` method, 120자를 넘는 네 줄에서 실패했다. 기대: 지적이 없다. `FailingInput`은 자기 파일에 있는 test support namespace의 class이고, PHP의 stream wrapper prototype이 이름을 정하므로 각 `stream_*` method에는 `PSR1.Methods.CamelCapsMethodName.NotCamelCaps`의 `phpcs:ignore` 하나가 있다.
 - H35.83의 escape test의 session handler는 `packages/php/tests/Support`의 자기 파일에 있는 class `FailingWriteSessionHandler`다(H35.83). 입력: `make lint-php`. 이전 동작: phpcs가 `escape.php`의 namespace 없는 두 번째 class와 120자를 넘는 두 줄에서 실패했다. 기대: H35.83의 줄에 phpcs의 지적이 없다.
 - 세 서버는 22자에서 256자의 session identifier를 받는다(H35.85, HY-104.31). 입력: PHP가 `session.sid_length` 200으로 만드는 `A-Za-z0-9,-` 200자의 session cookie. 이전 동작: 각 서버는 22자에서 128자를 받았고, 그 cookie에 새 session을 시작했다. 기대: PHP와 session-store 라이브러리가 22자에서 256자를 받듯이, 서버는 그 session을 이어 간다.
 - PHP 서버의 `NativeSession`은 어느 깊이에 있든 `stdClass`가 아닌 class의 저장된 객체에 `RecordError`와 kind `record`로 실패한다(H35.84, HY-104.41). 입력: session 값 `new ArrayObject()`나 `["x" => [new DateTimeImmutable()]]`. 이전 동작: `get`이 그 객체를 돌려주었다. 기대: Node와 Python 서버가 session-store 라이브러리로 주는 것과 같은 실패.
