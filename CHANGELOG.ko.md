@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- `packages/rust/tests/contracts.rs`는 rustfmt가 쓰는 형식이다(H35.65). 입력: `make core-fmt-check`. 이전 동작: session fault case를 도는 loop가 rustfmt의 너비보다 긴 한 행에 있어 2777행에서 실패했다. 기대 동작: chain은 호출마다 한 행에 선다. 0으로 끝나는 `make core-fmt-check`로 검증했다.
 - `contracts/functions.json`의 browser runner가 function kind `zone`을 실행한다(H35.64, HYC-24.10). 입력: `make hyper-test-js`. 이전 동작: HYC-24.10의 case가 더 이상 Node로 한정되지 않으므로 `packages/client/tests/functions.test.ts`가 `functions.json names the kind zone, which the runner does not map`로 실패했다. 기대 동작: runner는 `zone`을 두 번째 인자인 environment의 `timezone`으로 매핑하고, case의 응답은 PHP와 Python runner가 여는 것처럼 time zone `+09:00`을 준다. `make hyper-test-js`(189개 모두 통과)로 검증했다.
 - `make lint-ts`가 통과한다(H35.63). 입력: `make lint-ts`. 이전 동작: oxlint가 오류 4개, 즉 `tests/scripts/php-ext-pins.test.mts:23`의 prefer-string-starts-ends-with와 `scripts/dependency-closure.mts:43`, `tests/scripts/php-ext-pins.test.mts:36`, `tests/scripts/release-assets.test.mts:102`의 no-unsafe-type-assertion을 보고했다. 기대 동작: dry run 행은 `endsWith`로 맞추고, lock, 기록된 release, manifest version은 suppression 없이 `scripts/json.mts`의 확인으로 읽는다. 0으로 끝나는 `make lint-ts`와, `node-package`, `php-ext-pins`, `release-assets`에 대한 `make hyper-test-scripts`(10개 모두 통과)로 검증했다.
 - `config/rebuild.json`이 `scripts/dependency-closure.mts`를 ecosystem tool로 분류한다(H35.62). 입력: `make rebuild-check`. 이전 동작: `scripts/dependency-closure.mts: the tool has no class in config/rebuild.json`로 실패했다. 기대 동작: node:fs로 `package-lock.json`의 packages map을 읽는 이 script가 분류를 가진다. 0으로 끝나는 `make rebuild-check`로 검증했다.

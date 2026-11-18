@@ -2777,7 +2777,10 @@ fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
     let file = fault_cases();
     let core_file = core_fault_cases();
     let mut ran = 0;
-    for case in group(&file, "session").iter().chain(group(&core_file, "session")) {
+    for case in group(&file, "session")
+        .iter()
+        .chain(group(&core_file, "session"))
+    {
         let directory = CaseDirectory::new(case);
         let pages = case_pages(case)?;
         let given = &case["opening"];
