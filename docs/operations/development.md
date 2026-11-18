@@ -68,6 +68,7 @@ A development checkout links its polyspec providers (kit, template) only through
 | `make bench-server-smoke` | Runs the PHP benchmark once per measurement; `make check` includes it so that a change that breaks the benchmark fails |
 | `make bench` | Runs `make bench-server` and `make bench-browser`, which report server and browser performance (see [Benchmark](benchmark.md)); they are not part of `make check` |
 | `make check` | Runs every check above through the native final-verification runner (see below) |
+| `make preflight` | Runs the targets of the CI groups that the checkout runs with its own processes, to their ends, and names what only CI runs (see [Preflight](#preflight)) |
 
 The Darwin virtiofs tests read the digest-pinned `VIRTIOFS_IMAGE` of the Makefile. `make hyper-install-virtiofs` installs that image explicitly; the tests inspect the local image first and fail with that install target when it is missing. The tests mount this checkout and any external source providers read-only at their original paths. Provider roots are discovered with `git rev-parse --show-toplevel` from the installed template and compiler module entries; this preserves native package source links and their dependency resolution inside the container.
 
@@ -90,6 +91,18 @@ The runner writes the tree, runtime versions, target status and times to `var/re
 Host suspension can exceed a test deadline while execution is stopped. Preserve that failure and the matching suspension interval, then rerun only the affected owner after resume; do not increase its deadline or claim a code repair without a reproduced code defect.
 
 Read the failed target names from that report. Run their owner checks directly, or group only those targets with `make ci-targets TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners` once the repair is committed and no item is active. Preserve the original report and use a separate report for repairs. Owner reruns are evidence for those repairs; they do not turn the original full run into a passing run of another tree.
+
+## Preflight
+
+`make preflight` runs locally the part of the CI suite that the checkout provides with its own processes (H35.92), so that a basic fault shows before a push. Its list is the targets of `CI_TARGETS_<group>` of every group of `CI_GROUPS` that is not in `CI_GROUPS_MEASURE`, so a target that a CI group gains is on its list without another declaration. It runs them with the report runner of kit into `var/report/preflight`, every target to its end, and then fails and names each failed target (HR-86).
+
+It first prints what it skips, because only CI runs it:
+
+- the targets of `PREFLIGHT_CI_ONLY`, `e2e` and `parity`, which drive a browser;
+- the targets of the measurement groups, `bench-browser` among them, which report and never fail;
+- the test files of `tests/scripts` that start a Redis server, which are the files that import `tests/scripts/session-redis-server.mts`; `hyper-test-scripts` runs the other files.
+
+The release assets (`ci-assets-*`) are in no CI group, so the list never holds them. A server that a test starts in its own process on a port that the system assigns runs, as AGENTS.md states.
 
 ## Hooks
 

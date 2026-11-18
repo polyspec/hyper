@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 91e79bdaf95bfeba5f4503cd24a2d60a50810eb99d8a64c76514f7bff69ef59b -->
+<!-- source-sha256: bc2d020a9d6f009ad9a706b41b6170bc40c908e49b031865537bf275d55f6018 -->
 # 개발
 
 [English](development.md).
@@ -69,6 +69,7 @@
 | `make bench-server-smoke` | PHP 측정기를 측정마다 한 번씩 실행한다. 측정기를 깨는 변경이 실패하도록 `make check`에 들어 있다 |
 | `make bench` | 서버와 브라우저 성능을 보고하는 `make bench-server`와 `make bench-browser`를 실행한다([성능 측정](benchmark.ko.md) 참조). `make check`에는 포함하지 않는다 |
 | `make check` | 위의 모든 검사를 기본 최종 검증 실행기를 거쳐 실행한다(아래 참조) |
+| `make preflight` | checkout이 자기 process로 실행하는 CI group의 target을 끝까지 실행하고, CI만 실행하는 것을 이름한다([Preflight](#preflight) 참조) |
 
 Darwin virtiofs 검사는 Makefile의 digest로 고정한 `VIRTIOFS_IMAGE`를 읽는다. `make hyper-install-virtiofs`가 그 image를 명시적으로 설치한다. 검사는 로컬 image를 먼저 확인하고 없으면 해당 설치 target을 밝히고 실패한다. 검사는 이 checkout과 외부 소스 제공 저장소를 원래 경로에 읽기 전용으로 mount한다. 제공 저장소 root는 설치된 template과 compiler 모듈 진입점에서 `git rev-parse --show-toplevel`로 찾는다. 컨테이너 안에서도 기본 package 소스 link와 그 의존성 해석을 유지한다.
 
@@ -91,6 +92,18 @@ Script 검사는 runner 전에 `assets`와 `server`를 요구한다. `package-ch
 호스트가 절전하면 실행이 멈춘 동안 test 제한 시간을 넘길 수 있다. 실패와 겹치는 절전 구간을 보존하고 재개 후 영향받은 소유 검사만 다시 실행한다. 제한 시간을 늘리거나 코드 결함을 재현하지 않고 코드 수정으로 보고하지 않는다.
 
 보고서에서 실패 target 이름을 읽는다. 소유 검사를 직접 실행하거나, 수정을 commit하고 활성 항목이 없을 때 `make ci-targets TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners`로 그 target만 묶어 실행한다. 원본 보고서를 보존하고 수정 검사는 별도 보고서에 기록한다. 소유 검사 재실행은 해당 수정의 근거이며 원본 전체 실행을 다른 tree의 성공으로 바꾸지 않는다.
+
+## Preflight
+
+`make preflight`는 checkout이 자기 process로 제공하는 CI suite 부분을 로컬에서 실행하므로(H35.92), 기본 결함이 push 전에 드러난다. 그 목록은 `CI_GROUPS_MEASURE`에 없는 `CI_GROUPS`의 모든 group의 `CI_TARGETS_<group>` target이므로, CI group이 얻는 target은 다른 선언 없이 그 목록에 오른다. kit의 report runner로 `var/report/preflight`에 모든 target을 끝까지 실행하고, 그 뒤 실패한 각 target을 이름하며 실패한다(HR-86).
+
+먼저 CI만 실행하므로 건너뛰는 것을 출력한다.
+
+- browser를 움직이는 `PREFLIGHT_CI_ONLY`의 target `e2e`와 `parity`
+- 보고만 하고 실패하지 않는 측정 group의 target이며, `bench-browser`도 그 가운데 있다
+- Redis server를 시작하는 `tests/scripts`의 test 파일이며, 그것은 `tests/scripts/session-redis-server.mts`를 import하는 파일이다. `hyper-test-scripts`는 나머지 파일을 실행한다
+
+release asset(`ci-assets-*`)은 어떤 CI group에도 없으므로 목록에 오르지 않는다. AGENTS.md가 밝히듯, test가 자기 process에서 system이 정하는 port로 시작하는 server는 실행된다.
 
 ## Hooks
 
