@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 496bffb844ffdecf9f71e03233fd320fd5ac3c9c9bc21361f82c9ef9b07ddcea -->
+<!-- source-sha256: 51f3705044fa7cd3303a2d2f99f164e1dcbb545b50ed02576cdf008b68863312 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -681,3 +681,4 @@
 | H35.66 | recipe e2e는 test의 command를 구분자 -- 다음에 scripts/run-e2e.mts에 넘긴다: --$(NODE)를 한 단어로 넘기므로 parseArgs가 ERR_PARSE_ARGS_UNKNOWN_OPTION으로 거부한다 | Makefile, tests/scripts/check-recipes.test.mts, CHANGELOG.md와 한국어 쌍 | `make hyper-test-scripts TESTS="tests/scripts/check-recipes.test.mts"` | [v] |
 | H35.67 | node-package는 node-addon이 자기 test feature로 addon을 build하듯, packages/ts/native/wasm/Cargo.toml이 선언한 모든 test feature, 곧 panic-test, fault-test, thrown-count-test로 WASM module을 build한다. panic-test만으로 build했으므로 test-wasm의 생성 test가 glue.__armFaults is not a function과 stepGlue.__thrownCount is not a function으로 실패했다. B-4 경로(GN-6y)와 K-2의 case는 알려진 실패로 남는다 | Makefile | `make test-wasm` | [ ] |
 | H35.68 | node-package는 production closure를 자기 run의 staging 디렉터리에 pack하고 scripts/publish.mts로 var/bindings/node/deps에 publish한다(HR-82). deps를 mkdir -p로 만들고 비우지 않았으므로 0.0.31을 고정한 뒤의 polyspec-template-0.0.30.tgz처럼 이전 run이 pack한 파일이 새 파일 옆에 설치되었고, offline install이 ENOTCACHED로 실패했다 | Makefile, tests/scripts/node-package-deps.test.mts | `make hyper-test-scripts TESTS=tests/scripts/node-package-deps.test.mts` | [v] |
+| H35.68-1 | 77718b13은 production closure를 실행의 staging 디렉터리에 pack하지만 tests/scripts/node-package.test.mts는 여전히 `--pack-destination …/node/deps`를 기대했으므로 전체 `make hyper-test-scripts`가 test 1개에서 실패했다. test는 closure가 실행의 staging 디렉터리에 pack된 뒤 deps로 게시되는지 검사한다. | tests/scripts | `make hyper-test-scripts` | [ ] |
