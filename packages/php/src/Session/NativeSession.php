@@ -136,6 +136,12 @@ final class NativeSession implements SessionStore
      * temporary directory, as for the native files handler. No request calls it: the application calls it when it
      * chooses, such as from a scheduled task, because the options turn the removal during a request off. A directory
      * that cannot be read fails with `SessionStoreIoError` (SF-9.2).
+     *
+     * The save path is read as the native files handler reads it (ext/session/mod_files.c of PHP 8.4): up to two
+     * fields before the path, separated by `;`, are the depth of the subdirectories and the mode of the files. A depth
+     * of 0 keeps the files in the path itself, so the path is collected. Another depth keeps them in subdirectories,
+     * which the store does not walk, so the whole save path goes to the store, which fails with `invalid_directory`
+     * and names it (SF-1.2).
      */
     public static function collect(): int
     {
@@ -143,6 +149,10 @@ final class NativeSession implements SessionStore
         $directory = (string) ini_get('session.save_path');
         if ($directory === '') {
             $directory = sys_get_temp_dir();
+        }
+        $fields = explode(';', $directory, 3);
+        if (\count($fields) > 1 && (int) $fields[0] === 0) {
+            $directory = $fields[\count($fields) - 1];
         }
 
         return \Polyspec\SessionStore\FileSessions::inDirectory($directory, (int) ini_get('session.gc_maxlifetime'))
