@@ -521,7 +521,7 @@ hyper-test-scripts: $(if $(TESTS),$(shell $(NODE) scripts/test-inputs.mts '$(SCR
 RECIPE_TYPESCRIPT := scripts/recipe/typescript/node_modules
 RECIPE_RESULTS_DIR := $(CURDIR)/var/recipe/results
 
-.PHONY: recipe-check recipe-compare recipe-candidates recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build
+.PHONY: recipe-check recipe-compare recipe-files recipe-candidates recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build
 # Each case runner writes one line per case to the file that RECIPE_RESULTS names (HYR-7); recipe-check runs the five
 # runners to their end, then the comparison, which reads their files, and fails when a runner or the comparison fails,
 # naming each failed one in its last line (HR-86). Its checks are the commands of the runners and of the comparison,
@@ -576,6 +576,9 @@ recipe-check: server-fixtures ext hyper-ext packages node-fixtures ## Check cont
 recipe-compare: ## Compare contracts/interfaces.json with the sources of the three servers and the case results that the runners wrote (HYR-7, HYR-8)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-compare needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
 	$(recipe_compare)
+
+recipe-files: ## Check contracts/interfaces.json against its schema and the files and classes of its units, without the binding graph (H35.94, HYR-8)
+	$(NODE) scripts/recipe/files.mts --root .
 
 recipe-candidates: ## Write the candidate of contracts/interfaces.json under var/recipe, with the hand-written fields listed beside it (HYR-10)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-candidates needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
