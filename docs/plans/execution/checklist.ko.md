@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 57c7135e8ee7c89539807c2615d5e4769ee13584ac089ab170c42f3d33bac3a9 -->
+<!-- source-sha256: 5a8d5d190365dbaa4f51447272fe8d80c4121952a4f842da191ee141893c515e -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -674,3 +674,4 @@
 | H35.58 | make target이 config/php-ext-pins.json을 쓴다. pin한 각 PHP 확장에 대해 pin한 version의 release에서 packages.json과 각 platform zip의 release asset의 field digest를 읽으므로 파일의 어떤 sha256도 손으로 복사하지 않는다. 지금까지 각 pin은 download한 asset의 shasum에서 손으로 썼다 | a script under scripts/ and its make target, config/php-ext-pins.json, tests/scripts/php-ext-pins.test.mts | `make hyper-test-scripts TESTS=tests/scripts/php-ext-pins.test.mts` | [v] |
 | H35.62 | config/rebuild.json가 scripts/dependency-closure.mts를 분류한다: package-lock.json에서 workspace의 dependency closure를 출력하는 그 script에 대해 make rebuild-check가 'the tool has no class in config/rebuild.json'로 실패한다 | config/rebuild.json, CHANGELOG.md와 한국어 쌍 | `make rebuild-check` | [ ] |
 | H35.63 | make lint-ts가 통과한다: oxlint가 tests/scripts/php-ext-pins.test.mts:23에서 prefer-string-starts-ends-with를, scripts/dependency-closure.mts:43, tests/scripts/php-ext-pins.test.mts:36, tests/scripts/release-assets.test.mts:102에서 no-unsafe-type-assertion을 보고한다; 각 값은 suppression 없이 scripts/json.mts의 type check로 읽는다 | scripts/dependency-closure.mts, tests/scripts/php-ext-pins.test.mts, tests/scripts/release-assets.test.mts, CHANGELOG.md와 한국어 쌍 | `make lint-ts` | [ ] |
+| H35.64 | contracts/functions.json의 browser runner가 function kind zone을 두 번째 인자의 env.timezone으로 매핑하고 case의 time zone +09:00으로 render한다: make hyper-test-js가 'functions.json names the kind zone, which the runner does not map'로 실패한다(HYC-24.10) | packages/client/tests/functions.test.ts, CHANGELOG.md와 한국어 쌍 | `make hyper-test-js` | [ ] |
