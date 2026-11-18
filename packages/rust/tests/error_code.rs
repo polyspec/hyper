@@ -52,6 +52,7 @@ fn name(code: ErrorCode<'_>) -> &'static str {
         ErrorCode::InvalidCsrfForm => "InvalidCsrfForm",
         ErrorCode::InvalidSessionToken => "InvalidSessionToken",
         ErrorCode::InvalidSessionRecord => "InvalidSessionRecord",
+        ErrorCode::InvalidSessionHandler => "InvalidSessionHandler",
         ErrorCode::SharedHoldsContext => "SharedHoldsContext",
         ErrorCode::NotSelected => "NotSelected",
         ErrorCode::MalformedContentType => "MalformedContentType",
@@ -340,6 +341,10 @@ fn a_failure_of_hyper_projects_to_its_own_code_which_the_contract_lists() -> Res
         (Error::InvalidCsrfForm, ErrorCode::InvalidCsrfForm),
         (Error::InvalidSessionToken, ErrorCode::InvalidSessionToken),
         (Error::InvalidSessionRecord, ErrorCode::InvalidSessionRecord),
+        (
+            Error::InvalidSessionHandler,
+            ErrorCode::InvalidSessionHandler,
+        ),
         (Error::SharedHoldsContext, ErrorCode::SharedHoldsContext),
         (Error::NotSelected, ErrorCode::NotSelected),
         (Error::MalformedContentType, ErrorCode::MalformedContentType),

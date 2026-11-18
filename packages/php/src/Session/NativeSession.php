@@ -152,7 +152,8 @@ final class NativeSession implements SessionStore
         $handler = (string) ini_get('session.save_handler');
         if ($handler !== 'files') {
             throw new HyperValueError(
-                "collect removes the files of the handler files, and session.save_handler is {$handler}, whose store removes ended sessions itself (HY-115.2)",
+                "collect removes the files of the handler files, and session.save_handler is {$handler}, "
+                . 'whose store removes ended sessions itself (HY-115.2)',
                 'invalid_session_handler',
             );
         }
