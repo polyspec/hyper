@@ -1733,7 +1733,8 @@
             13,
             16,
             18,
-            22
+            22,
+            24
           ],
           "blocks": [
             {
@@ -1746,10 +1747,10 @@
                   "koSource": "62bd975e2927bc8b8069defc57f262d6a60204154a0d79ef0a98e2365977c86f"
                 },
                 {
-                  "id": "HY-125.24",
-                  "en": "It leaves out `program/build.json`, the static shell `csr/index.html`, which holds the id, the copies below `csr/assets`, which hold the bytes of the files below `public/assets`, and `client/assets.previous.json`, which holds the files of earlier builds, so the id of a build does not depend on the builds before it.",
-                  "ko": "`program/build.json`, id를 담는 정적 셸 `csr/index.html`, `public/assets` 아래 파일의 바이트를 담는 `csr/assets` 아래 사본, 그리고 앞선 build의 파일을 담는 `client/assets.previous.json`은 빼고 계산하므로, build의 id는 앞선 build에 달려 있지 않다.",
-                  "koSource": "ae253888bfefb710dcae4cc441d6b980fd0927989e6af1fedbdb94002f8a35ca"
+                  "id": "HY-125.25",
+                  "en": "It leaves out `program/build.json`, the static shell `csr/index.html`, which holds the id, a file `csr/assets/<name>` when the outputs also hold `public/assets/<name>`, because it is the copy of that file, and `client/assets.previous.json`, which holds the files of earlier builds, so the id of a build does not depend on the builds before it; a `--static` file below `csr/assets` that copies no file of `public/assets` is hashed like every other `--static` file.",
+                  "ko": "`program/build.json`, id를 담는 정적 셸 `csr/index.html`, 출력이 `public/assets/<name>`도 담을 때의 파일 `csr/assets/<name>`(그 파일의 사본이므로), 그리고 앞선 build의 파일을 담는 `client/assets.previous.json`은 빼고 계산하므로, build의 id는 앞선 build에 달려 있지 않다. `public/assets`의 어떤 파일도 복사하지 않는 `csr/assets` 아래 `--static` 파일은 다른 모든 `--static` 파일처럼 hash한다.",
+                  "koSource": "7761b37a9e8a98d08bf214523db62725f20a74b90fec0dbbc86b2afec59258f6"
                 },
                 {
                   "id": "HY-125.17",

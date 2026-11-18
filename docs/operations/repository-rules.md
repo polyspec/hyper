@@ -15,7 +15,7 @@ These rules govern how this repository builds, installs, checks and releases its
   | `<app>/public/assets/hyper-<hash>.js`, `hyper-chunk-<hash>.js` | browser | the client entry and its chunks (HYC-16), when `client/main.ts` exists |
   | `<app>/public/assets/<name>.<hash>.<extension>` | browser | each asset of `--asset` and `--tailwind` (HR-77) |
   | `<output>/client/manifest.json` | the layout code of the application | the URL of the entry as `hyper` and the URL of each asset by its name (HYC-16) |
-  | `<output>/client/assets.previous.json` | the next build, for the removal (HYC-16.18) | `{"files": [...]}`, the files of the last build before this one whose list differed; the build id leaves it out (HY-125.24) |
+  | `<output>/client/assets.previous.json` | the next build, for the removal (HYC-16.18) | `{"files": [...]}`, the files of the last build before this one whose list differed; the build id leaves it out (HY-125.25) |
   | `<output>/client/assets.json` | the next build, which keeps the files of this build for one different build more (HYC-16.18) | `{"files": [...]}`, every path `public/assets/...` that this build wrote, in byte order |
   | `<output>/client/templates.index.json` | the checks of a build | each template name with its file URL; the client bundle holds the same index |
   | `<output>/client/csr/` | static deployment, `ClientRendering` of HY-62 | the static shell `index.html`, `assets/` with the copies of the files of this build and the `--static` files, when `client/main.ts` exists and `--api` is given |
