@@ -15,8 +15,9 @@ namespace Polyspec\Hyper;
 final class BodyReader
 {
     /**
-     * The largest limit that the binding takes: its type uint holds the integers up to 2^53 - 1 (binding B-2), and
-     * PHP_INT_MAX, the limit of a server without one, is above it; no body reaches that size.
+     * The largest limit that the binding takes: its type uint holds the integers up to 2^53 - 1 and fails a larger one
+     * with kind invalid_number (binding GN-12a), and PHP_INT_MAX, the limit of a server without one, is above it; no
+     * body reaches that size.
      */
     private const NO_LIMIT = 9_007_199_254_740_991;
 

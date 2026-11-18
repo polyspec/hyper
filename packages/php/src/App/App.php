@@ -951,7 +951,8 @@ final class App
 
     /**
      * The response that refuses a form request: 400 for a Content-Type that is no media type and 415 for a media type
-     * that the application does not accept (HY-59.12), or null. It reads no session (HY-120.3).
+     * that the application does not accept (HY-59.12), then 400 for a `multipart/form-data` type without a boundary,
+     * or with an empty one (HY-113.24), or null. It reads no session (HY-120.3).
      */
     private function refusedMedia(Request $request): ?Response
     {
@@ -961,6 +962,9 @@ final class App
         }
         if (!in_array($mediaType, $this->formTypes, true)) {
             return Response::text(415, 'Unsupported Media Type');
+        }
+        if ($request->boundaryMissing()) {
+            return Response::text(400, 'Bad Request');
         }
 
         return null;

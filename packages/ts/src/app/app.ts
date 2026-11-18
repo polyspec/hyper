@@ -764,11 +764,13 @@ export class App<S extends object = Record<string, never>> {
   }
 
   // Returns the refusal of a form request: 400 for a Content-Type that is no media type and 415 for a media type that
-  // the application does not accept (HY-59.12), or null. It reads no session (HY-120.3).
+  // the application does not accept (HY-59.12), then 400 for a `multipart/form-data` type without a boundary, or with
+  // an empty one (HY-113.24), or null. It reads no session (HY-120.3).
   private refusedMedia(request: Request): Response | null {
     const mediaType = App.readMediaType(request);
     if (mediaType === null) return Response.text(400, 'Bad Request');
     if (!this.formTypes.includes(mediaType)) return Response.text(415, 'Unsupported Media Type');
+    if (request.boundaryMissing()) return Response.text(400, 'Bad Request');
     return null;
   }
 

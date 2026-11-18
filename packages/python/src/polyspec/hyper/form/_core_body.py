@@ -8,13 +8,12 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import NO_LIMIT, core_rules
 from ._fields import Fields
 from ._files import Files
 from .uploaded_file import UploadedFile
 
-# The largest limit of the core (a u64), for a limit that does not apply.
-NO_LIMIT = 2**64 - 1
+__all__ = ["NO_LIMIT", "RequestBody", "body_form", "held_form"]
 
 # The status of http-form for a body that passed one of its limits (F-25).
 _PASSED = 413
@@ -149,19 +148,21 @@ class RequestBody:
 
 def held_form(
     content_type: str, body: bytes, value_limit: int, part_limit: int, file_limit: int
-) -> tuple[Optional[tuple[Fields, Files]], bool]:
+) -> tuple[Optional[tuple[Fields, Files]], bool, bool]:
     """Reads a body held as one value through the core: its form, or None when it fails with ``invalid`` or
-    ``header_limit`` (HY-42, HY-113.25), and whether it passed a limit (HY-131.32)."""
+    ``header_limit`` (HY-42, HY-113.25), whether it passed a limit (HY-131.32), and whether its type is a
+    ``multipart/form-data`` type without a boundary, or with an empty one (HY-113.24)."""
     rules = core_rules()
     limits = rules.body_limits(NO_LIMIT, value_limit, part_limit, file_limit)
     try:
-        return body_form(rules.read_held_body(content_type or None, body, limits)), False
+        return body_form(rules.read_held_body(content_type or None, body, limits)), False, False
     except Exception as error:
         status = _status(error)
         if status is None:
             raise
         # HY-113.24, HY-59.12: a type without a boundary or that is no media type fails no reading and gives no form
         # value; its Content-Type is judged after the route.
-        if getattr(error, "kind", None) in _NO_READING:
-            return (Fields.empty(), Files.empty()), False
-        return None, status == _PASSED
+        kind = getattr(error, "kind", None)
+        if kind in _NO_READING:
+            return (Fields.empty(), Files.empty()), False, kind == "no_boundary"
+        return None, status == _PASSED, False

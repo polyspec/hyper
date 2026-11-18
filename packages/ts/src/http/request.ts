@@ -69,8 +69,10 @@ const REQUEST_OPTIONAL = ['headers', 'query', 'body', 'flash', 'csrfToken', 'par
 export const HYPER_JSON = 'application/vnd.hyper+json';
 
 // The form values and the files of each body that is one value, each null when it fails with HY-42, by its content
-// type: the copies of a request share its body, which is read once.
-const READ = new WeakMap<Uint8Array, Map<string, [Fields | null, Files | null]>>();
+// type, and whether the core found a multipart type without a boundary: the copies of a request share its body, which
+// is read once.
+type HeldForm = [Fields | null, Files | null, boolean];
+const READ = new WeakMap<Uint8Array, Map<string, HeldForm>>();
 
 // The kinds of http-form of a body that passed one of its four limits (F-25, HY-131.32).
 const LIMIT_KINDS = new Set(['body_limit', 'value_limit', 'part_limit', 'file_limit']);
@@ -90,14 +92,15 @@ function formOf(form: CoreForm): [Fields, Files] {
 
 // The form values and the files of a body held as one value, read by form_functions.read_held_body (HY-57, HY-113):
 // both null when a part fails with `invalid` or `header_limit` (HY-42, HY-113.23, HY-113.25), and none for a content
-// type that is no media type or a multipart type without a boundary, which the route judges (HY-59.12, HY-113.24).
-function heldForm(type: string, body: Uint8Array): [Fields | null, Files | null] {
+// type that is no media type or a multipart type without a boundary, which the route judges (HY-59.12, HY-113.24); the
+// third member is true for the multipart type without a boundary.
+function heldForm(type: string, body: Uint8Array): HeldForm {
   try {
-    return formOf(rules().formReadHeld(type === '' ? null : type, body, UNBOUNDED));
+    return [...formOf(rules().formReadHeld(type === '' ? null : type, body, UNBOUNDED)), false];
   } catch (error) {
     const kind = kindOf(error);
-    if (kind === 'malformed_content_type' || kind === 'no_boundary') return [Fields.empty(), Files.empty()];
-    if (kind === 'invalid' || kind === 'header_limit') return [null, null];
+    if (kind === 'malformed_content_type' || kind === 'no_boundary') return [Fields.empty(), Files.empty(), kind === 'no_boundary'];
+    if (kind === 'invalid' || kind === 'header_limit') return [null, null, false];
     throw error;
   }
 }
@@ -117,6 +120,8 @@ export class Request {
   private readonly queryFields: Fields | null;
   private readonly formFields: Fields | null;
   private readonly fileParts: Files | null;
+  // True for a multipart type without a boundary, or with an empty one, as the core reads it (HY-113.24).
+  private readonly noBoundary: boolean;
   private readonly media: string | null;
   private readonly read: ReadBody | null;
 
@@ -146,15 +151,26 @@ export class Request {
     if (this.read?.core.streamed() === true) {
       // HY-131.5: a body read in chunks gives its parts, none when it failed (HY-113.25, HY-131.32).
       [this.formFields, this.fileParts] = this.read.failure === null ? formOf(this.read.core.parts()) : [null, null];
+      this.noBoundary = false;
     } else {
       // A body that is one value is read once for the copies of a request, which share it.
       let parts = READ.get(this.body)?.get(type);
       if (parts === undefined) {
         parts = heldForm(type, this.body);
-        READ.set(this.body, (READ.get(this.body) ?? new Map<string, [Fields | null, Files | null]>()).set(type, parts));
+        READ.set(this.body, (READ.get(this.body) ?? new Map<string, HeldForm>()).set(type, parts));
       }
-      [this.formFields, this.fileParts] = parts;
+      [this.formFields, this.fileParts, this.noBoundary] = parts;
     }
+  }
+
+  /**
+   * Returns true when the Content-Type is a `multipart/form-data` type without a boundary, or with an empty one, as the
+   * core reads it (HY-113.24): the body was held as bytes and fails no reading, and the route judges the type.
+   *
+   * @internal
+   */
+  boundaryMissing(): boolean {
+    return this.noBoundary;
   }
 
   // Returns a copy of this request with the given parts replaced.

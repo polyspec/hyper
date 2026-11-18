@@ -19,6 +19,10 @@ from typing import Any, Optional
 # The module of the binding that `core_rules` imports.
 BINDING = "polyspec.hyper._binding._root"
 
+# The largest limit that the binding takes: its type uint holds the integers up to 2^53 - 1 and fails a larger one with
+# kind invalid_number (binding GN-12a); no body reaches that size, so it is the limit that does not apply.
+NO_LIMIT = 2**53 - 1
+
 # The members of the binding that this module calls, which `CoreRules` requires of the module that it receives.
 _MEMBERS = (
     "csrf_mask",
@@ -156,8 +160,13 @@ class CoreRules:
 
     def body_limits(self, limit: int, value_limit: int, part_limit: int, file_limit: int) -> dict[str, int]:
         """The fields of the record body_limits of the four limits of a body (HY-59.15, HY-131.7 to HY-131.12), which
-        the binding takes as the keyword arguments of the member that reads the body."""
-        return {"limit": limit, "value_limit": value_limit, "part_limit": part_limit, "file_limit": file_limit}
+        the binding takes as the keyword arguments of the member that reads the body, each limit at most NO_LIMIT."""
+        return {
+            "limit": min(limit, NO_LIMIT),
+            "value_limit": min(value_limit, NO_LIMIT),
+            "part_limit": min(part_limit, NO_LIMIT),
+            "file_limit": min(file_limit, NO_LIMIT),
+        }
 
     def request_body_start(
         self, content_type: Optional[str], content_length: Optional[str], stream: bool, limits: dict[str, int]

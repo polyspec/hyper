@@ -19,6 +19,9 @@ final class Request
     /** The file parts of the body, or null when a name, a filename or a content type is not UTF-8 (HY-42, HY-113). */
     private readonly ?Files $fileParts;
 
+    /** True for a multipart type without a boundary, or with an empty one, as the core reads it (HY-113.24). */
+    private readonly bool $noBoundary;
+
     /**
      * @param array<string, string> $headers header names in any case
      * @param string $query the raw query: the request target after its first `?` up to its first `#`
@@ -53,9 +56,9 @@ final class Request
         $this->queryFields = Fields::parse($query);
         // The core reads the body (H35.11): the parts of a body that its host read in chunks, or the form of a body
         // that is one value, which fails as a whole (HY-113.23, HY-113.25).
-        $parts = $read !== null && $read->streamed()
-            ? $read->parts()
-            : Files::heldForm($this->header('Content-Type') ?? '', $body);
+        [$parts, $this->noBoundary] = $read !== null && $read->streamed()
+            ? [$read->parts(), false]
+            : Files::heldFormOf($this->header('Content-Type') ?? '', $body);
         $this->formFields = $parts[0] ?? null;
         $this->fileParts = $parts[1] ?? null;
     }
@@ -315,6 +318,17 @@ final class Request
         $type = $this->header('Content-Type');
 
         return $type === null ? '' : CoreRules::shared()->requestMediaType($type);
+    }
+
+    /**
+     * Returns true when the Content-Type is a `multipart/form-data` type without a boundary, or with an empty one, as
+     * the core reads it (HY-113.24): the body was held as bytes and fails no reading, and the route judges the type.
+     *
+     * @internal
+     */
+    public function boundaryMissing(): bool
+    {
+        return $this->noBoundary;
     }
 
     /** Returns the value of a header, or null. */

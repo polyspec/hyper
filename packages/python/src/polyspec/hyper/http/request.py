@@ -77,12 +77,16 @@ class Request:
         self._query_fields = Fields.parse(query.encode("latin-1"))
         # The body as a host read it: a body read in chunks gives its parts (HY-131).
         self._read = read
+        # True for a multipart type without a boundary, or with an empty one, as the core reads it (HY-113.24).
+        self._no_boundary = False
         if read is not None and read.streamed():
             parts = read.parts()
         else:
             # A body that is one value is read once by the core (HY-57, HY-113, H35.11); its limits are judged by
             # `_exceeded`.
-            parts, _ = held_form(self.header("Content-Type") or "", body, NO_LIMIT, NO_LIMIT, NO_LIMIT)
+            parts, _, self._no_boundary = held_form(
+                self.header("Content-Type") or "", body, NO_LIMIT, NO_LIMIT, NO_LIMIT
+            )
         # The form values and the file parts of the body, or None when it fails with `invalid` or `header_limit` of
         # http-form (HY-42, HY-113.23, HY-113.25).
         self._form_fields = None if parts is None else parts[0]
@@ -99,7 +103,7 @@ class Request:
             return read.exceeded()
         # The core judges a body that is one value: the value limit always, the part limit and the file limit only
         # when the application reads a multipart body in chunks (HY-131.7 to HY-131.12).
-        _, passed = held_form(
+        _, passed, _ = held_form(
             self.header("Content-Type") or "",
             self._body,
             value_limit,
@@ -199,6 +203,12 @@ class Request:
         if content_type is None:
             return ""
         return core_rules().request_media_type(content_type)
+
+    def _boundary_missing(self) -> bool:
+        """Returns True when the Content-Type is a ``multipart/form-data`` type without a boundary, or with an empty
+        one, as the core reads it (HY-113.24): the body was held as bytes and fails no reading, and the route judges
+        the type."""
+        return self._no_boundary
 
     def header(self, name: str) -> Optional[str]:
         """Returns the value of a header, or None."""

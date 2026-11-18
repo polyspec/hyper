@@ -875,12 +875,15 @@ class App:
 
     def _refused_media(self, request: Request) -> Optional[Response]:
         """Returns the response that refuses a form request: 400 for a Content-Type that is no media type and 415 for a
-        media type that the application does not accept (HY-59.12), or None. It reads no session (HY-120.3)."""
+        media type that the application does not accept (HY-59.12), then 400 for a ``multipart/form-data`` type
+        without a boundary, or with an empty one (HY-113.24), or None. It reads no session (HY-120.3)."""
         media_type = App._read_media_type(request)
         if media_type is None:
             return Response.text(400, "Bad Request")
         if media_type not in self._form_types:
             return Response.text(415, "Unsupported Media Type")
+        if request._boundary_missing():
+            return Response.text(400, "Bad Request")
         return None
 
     @staticmethod

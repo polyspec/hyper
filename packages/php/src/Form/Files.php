@@ -39,10 +39,23 @@ final class Files extends NamedValues
      */
     public static function heldForm(string $type, string $body): ?array
     {
+        return self::heldFormOf($type, $body)[0];
+    }
+
+    /**
+     * Returns the form of a body held as one value as `heldForm` does, and whether its type is a `multipart/form-data`
+     * type without a boundary, or with an empty one, which the route refuses (HY-113.24).
+     *
+     * @return array{0: array{0: Fields, 1: Files}|null, 1: bool}
+     *
+     * @internal
+     */
+    public static function heldFormOf(string $type, string $body): array
+    {
         try {
-            return self::readHeld($type, $body);
+            return self::held($type, $body);
         } catch (HyperValueError) {
-            return null;
+            return [null, false];
         }
     }
 
@@ -56,12 +69,23 @@ final class Files extends NamedValues
      */
     public static function readHeld(string $type, string $body): array
     {
+        return self::held($type, $body)[0];
+    }
+
+    /**
+     * Returns the form of a body held as one value, and whether its type is a multipart type without a boundary
+     * (HY-113.24), and fails with the error of the core for a body that fails (HY-113.23, HY-113.25).
+     *
+     * @return array{0: array{0: Fields, 1: Files}, 1: bool}
+     */
+    private static function held(string $type, string $body): array
+    {
         $none = BodyReader::limits(PHP_INT_MAX, PHP_INT_MAX, PHP_INT_MAX, PHP_INT_MAX);
         try {
-            return BodyReader::named(readHeldBody($type === '' ? null : $type, $body, ...$none));
+            return [BodyReader::named(readHeldBody($type === '' ? null : $type, $body, ...$none)), false];
         } catch (HyperValueError $error) {
             if (in_array($error->kind(), ['malformed_content_type', 'no_boundary'], true)) {
-                return [Fields::empty(), self::empty()];
+                return [[Fields::empty(), self::empty()], $error->kind() === 'no_boundary'];
             }
 
             throw $error;
