@@ -507,7 +507,7 @@ final class App
 
     /**
      * Writes hyper's plain 500 for an error that escapes the answer of the request (HY-60): the text, no-store and the
-     * frame policy, as the other failures of the server. The headers that the caller set before `App::run` (`$kept`)
+     * frame policy, as the other failures of the server. The headers that the caller set before `run` (`$kept`)
      * stay, and no other header does (HY-60). Headers that have been sent leave the response as it is, and the write
      * is then not complete (HY-99). The response hook receives no escaped 500 (HY-60). The caller has written the log
      * line of the error, whose failure is `$failure`.
@@ -1040,9 +1040,12 @@ final class App
      * A response without a body receives no Content-Type from PHP (HY-52), and a client that closed the connection
      * ends the script at the first failed write and is reported to the disconnect hook (HY-67). The elapsed time of
      * HY-60 counts from `$started`, an hrtime(true) value of the monotonic clock that the caller takes at the start
-     * of the request, such as the first statement of its front controller, and that defaults to now.
+     * of the request, such as the first statement of its front controller, and that defaults to now. The host
+     * function `run` calls it (HY-106.20).
+     *
+     * @internal
      */
-    public function run(?int $started = null): void
+    public function serve(?int $started = null): void
     {
         ArgumentCount::most(\func_num_args(), 1);
         // The headers that the caller set before this call stay on the plain 500 of an escaped error (HY-60).
@@ -1089,19 +1092,24 @@ final class App
                 $this->escaped($error['message'], $delivery, $kept);
             }
         });
-        // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
-        $request = Request::fromGlobals(
+        // HY-60.18: the request as received is built first, without its body, so that the hooks and the removal of the
+        // directory of its files are registered before the body is read, and a read that fails is an escaped error
+        // that the write hook reports once with that request (HY-60.14, HY-60.17, HY-131.14). HY-131: a multipart body
+        // of an application with that form type is read in chunks into files of the request.
+        $received = Request::received(
             $this->bodyLimit,
             in_array('multipart/form-data', $this->formTypes, true),
             $this->valueLimit,
             $this->partLimit,
             $this->fileLimit,
         );
+        // The hooks read the request by reference, so they receive the request with its body once it is read.
+        $request = $received;
         // HY-99: the write hook runs after the escape function and before the disconnect hook. A response that no write
         // started is the plain 500, and its write is not complete.
         if ($this->written !== null) {
             $hook = $this->written;
-            register_shutdown_function(static function () use ($hook, $request, $started, $delivery): void {
+            register_shutdown_function(static function () use ($hook, &$request, $started, $delivery): void {
                 // HY-99: a request that ended before a response started has no response; its write did not end.
                 $ended = $delivery->response !== null && $delivery->complete && connection_aborted() !== 1;
                 $hook($request, $delivery->response, $ended, (hrtime(true) - $started) / 1e6, $delivery->failure);
@@ -1117,9 +1125,10 @@ final class App
         }
         // HY-131.14: the files of the request are removed after the hooks above, which run first, also for a request
         // that fails or whose client closed the connection.
-        register_shutdown_function(static function () use ($request): void {
-            $request->release();
+        register_shutdown_function(static function () use ($received): void {
+            $received->release();
         });
+        $request = $received->withInput();
         $store = new NativeSession($this->https, $request, $this->sessionSetup);
         $response = $this->through($request, $store, $started, $delivery);
         $delivery->response = $response;

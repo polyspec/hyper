@@ -12,7 +12,9 @@ use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Result;
 use Polyspec\Hyper\Tests\Support\Json;
 
-/** HY-43, HY-52, HY-100: the PHP settings that `App::run` applies before it answers the request. */
+use function Polyspec\Hyper\run;
+
+/** HY-43, HY-52, HY-100: the PHP settings that `the host function `run`` applies before it answers the request. */
 final class RunTest extends TestCase
 {
     #[RunInSeparateProcess]
@@ -28,7 +30,7 @@ final class RunTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/missing';
 
         ob_start();
-        $app->run();
+        run($app);
         $body = ob_get_clean();
 
         self::assertSame('Not Found', $body);
@@ -92,20 +94,20 @@ final class RunTest extends TestCase
         ];
         foreach ($apps as $option => $app) {
             try {
-                $app->run();
+                run($app);
                 self::fail("run accepted the option {$option}");
             } catch (\LogicException) {
                 self::addToAssertionCount(1);
             }
         }
         ob_start();
-        App::open(
+        run(App::open(
             __DIR__ . '/fixtures/app.json',
             __DIR__ . '/build/server',
             $handlers,
             'Z',
             bodyLimit: 8 * 1024 * 1024,
-        )->run();
+        ));
         self::assertSame('Not Found', ob_get_clean());
     }
 
@@ -121,7 +123,7 @@ final class RunTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/missing';
 
         ob_start();
-        $app->run(hrtime(true) - 1_500_000_000);
+        run($app, hrtime(true) - 1_500_000_000);
         ob_end_clean();
 
         self::assertCount(1, $reports);
@@ -146,7 +148,7 @@ final class RunTest extends TestCase
         $_SERVER['REQUEST_TIME_FLOAT'] = microtime(true) + 10.0;
 
         ob_start();
-        $app->run();
+        run($app);
         ob_end_clean();
 
         self::assertCount(1, $reports);
@@ -177,7 +179,7 @@ final class RunTest extends TestCase
         $server = null;
         try {
             // The server listens on a port that the system assigns and reports it, so no other process can take the
-            // port between its choice and its use (HR-89). ignore_user_abort is on here, so App::run must turn it off.
+            // port between its choice and its use (HR-89). ignore_user_abort is on here, so the host function `run` must turn it off.
             [$server, $stderr, $port] = self::startServer(
                 [
                     PHP_BINARY,
@@ -236,7 +238,47 @@ final class RunTest extends TestCase
         self::assertSame("response 200\nwritten 500 true \"a fatal error of the response hook\"\n", $lines);
     }
 
-    /** HY-99: a fatal error after App::run sent the response reports ended false with the failure, and no second response. */
+    /**
+     * HY-60.14, HY-60.17, HY-60.18: a read of the body that fails is an escaped error: the plain 500 and no shortened
+     * body, no response hook, and one call of the write hook, which the request as received reaches.
+     */
+    public function testAFailedReadOfTheBodyAnswersThePlain500AndCallsTheWriteHookOnce(): void
+    {
+        [$status, $headers, $body, $lines] = self::escape('read-fails');
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertContains('Cache-Control: no-store', $headers);
+        // json_encode writes each slash of php://input as `\/`.
+        self::assertMatchesRegularExpression(
+            '/\Awritten 500 true "hyper: the read of php:\S*input failed \(HY-60\)"\n\z/',
+            $lines,
+        );
+    }
+
+    /**
+     * HY-60.14, HY-131.14: a POST whose multipart body has started a file part when the read fails answers the plain
+     * 500, calls the write hook once and leaves no directory of the request.
+     */
+    public function testAFailedReadOfAMultipartBodyLeavesNoDirectoryOfTheRequest(): void
+    {
+        [$status, , $body, $lines, $entries] = self::escape(
+            'read-fails-multipart',
+            '0',
+            ['multipart/form-data; boundary=b', "--b\r\nContent-Disposition: form-data; name=\"f\"; filename=\"a.txt\"\r\n"
+                . "Content-Type: text/plain\r\n\r\nthe file\r\n--b--\r\n"],
+        );
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertMatchesRegularExpression(
+            '/\Awritten 500 true "hyper: the read of php:\S*input failed \(HY-60\)"\n\z/',
+            $lines,
+        );
+        self::assertSame([], $entries);
+    }
+
+    /** HY-99: a fatal error after the host function `run` sent the response reports ended false with the failure, and no second response. */
     public function testAFatalErrorAfterTheHeadersWereSentReportsAnUnendedWrite(): void
     {
         [$status, , , $lines] = self::escape('after-send');
@@ -292,12 +334,19 @@ final class RunTest extends TestCase
      * and returns the status, the headers, the body of the response and the lines that the response hook appended to
      * the log.
      *
+     * The server runs with a temporary directory of its own, whose entries after the response are the fifth value.
+     *
      * @param string $outputBuffering the output_buffering setting of the server
-     * @return array{int, list<string>, string, string}
+     * @param ?array{string, string} $post the content type and the body of a POST request; null sends a GET request
+     * @return array{int, list<string>, string, string, list<string>}
      */
-    private static function escape(string $mode, string $outputBuffering = '0'): array
+    private static function escape(string $mode, string $outputBuffering = '0', ?array $post = null): array
     {
         $log = (string) tempnam(sys_get_temp_dir(), 'hyper-escape-');
+        $temporary = sys_get_temp_dir() . '/hyper-escape-tmp-' . bin2hex(random_bytes(8));
+        if (!mkdir($temporary, 0700)) {
+            self::fail("cannot create {$temporary}");
+        }
         $server = null;
         try {
             [$server, , $port] = self::startServer(
@@ -315,10 +364,14 @@ final class RunTest extends TestCase
                     '127.0.0.1:0',
                     __DIR__ . '/Support/escape.php',
                 ],
-                [...getenv(), 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log],
+                [...getenv(), 'HYPER_ESCAPE_MODE' => $mode, 'HYPER_ESCAPE_LOG' => $log, 'TMPDIR' => $temporary],
             );
-            $context = stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 10]]);
-            $stream = fopen("http://127.0.0.1:{$port}/", 'r', false, $context);
+            $http = ['ignore_errors' => true, 'timeout' => 10];
+            if ($post !== null) {
+                $http += ['method' => 'POST', 'header' => "Content-Type: {$post[0]}", 'content' => $post[1]];
+            }
+            $context = stream_context_create(['http' => $http]);
+            $stream = fopen("http://127.0.0.1:{$port}/" . ($post === null ? '' : 'add'), 'r', false, $context);
             if ($stream === false) {
                 self::fail('the PHP built-in server gave no response');
             }
@@ -338,14 +391,34 @@ final class RunTest extends TestCase
             }
             $status = (int) explode(' ', $headers[0])[1];
 
-            return [$status, array_slice($headers, 1), $body, (string) file_get_contents($log)];
+            // The body ends when the script of the request has ended, after its shutdown functions removed the
+            // directory of the request (HY-131.14).
+            $entries = array_values(array_diff(scandir($temporary) ?: [], ['.', '..']));
+
+            return [$status, array_slice($headers, 1), $body, (string) file_get_contents($log), $entries];
         } finally {
             if ($server !== null) {
                 proc_terminate($server);
                 proc_close($server);
             }
             unlink($log);
+            // The server has exited, so no process uses the directory when it is removed.
+            self::remove($temporary);
         }
+    }
+
+    /** Removes `$path` with what it holds. */
+    private static function remove(string $path): void
+    {
+        if (is_dir($path)) {
+            foreach (array_diff(scandir($path) ?: [], ['.', '..']) as $entry) {
+                self::remove("{$path}/{$entry}");
+            }
+            rmdir($path);
+
+            return;
+        }
+        unlink($path);
     }
 
     /**

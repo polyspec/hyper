@@ -29,6 +29,8 @@ use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Result;
 
+use function Polyspec\Hyper\run;
+
 require dirname(__DIR__, 5) . '/vendor/autoload.php';
 if (getenv('UPLOAD_ERRORS') !== false) {
     ini_set('error_log', (string) getenv('UPLOAD_ERRORS'));
@@ -277,7 +279,7 @@ if (getenv('UPLOAD_SESSIONS_OPEN') === 'throws') {
 if (getenv('UPLOAD_BEFORE') === '1') {
     header('X-Before: kept');
 }
-App::open(
+run(App::open(
     manifest: "{$application}/manifest.json",
     program: "{$application}/program",
     handlers: $handlers,
@@ -295,4 +297,4 @@ App::open(
     onDisconnect: $log === null ? null : $onDisconnect,
     written: $log === null ? null : $written,
     around: $answerMode === 'none' ? null : $hook,
-)->run();
+));
