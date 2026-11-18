@@ -648,7 +648,7 @@ bindings-scaffold: binding-cases ## Write the tracked binding packages, go.mod a
 # installs the generator; -include lets a checkout without the file run every other
 # target. No rule of this Makefile has a recipe for one of its targets.
 # The file also defines LLVM_MAJOR and LLVM_ROOT, which hyper-ext reads. Once make install-packages installed the
-# generator, the file has a rule: a make that does not find it writes it with the recipe of release-recipes, which
+# generator, the file has a rule: a make that does not find it, or finds it older than the generator, writes it with the recipe of release-recipes, which
 # renames the whole file into place (HR-82), and then reads the Makefile again with it, also in a dry run, so every
 # target, the first make of a fresh checkout included, reads the values of that one source. Before the install the
 # rule does not exist and the file stays absent.
@@ -662,7 +662,9 @@ endef
 release-recipes: ## Write packages/release.mk, the release recipes of the bindings, with binding release-recipes (HR-99)
 	$(write-release-recipes)
 ifneq ($(wildcard $(BINDING)),)
-$(CURDIR)/packages/release.mk:
+# The file depends on the generator, so an install of another binding release writes it again: a file of an earlier
+# release lacks the targets of the installed one.
+$(CURDIR)/packages/release.mk: $(BINDING)
 	$(write-release-recipes)
 endif
 # The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of

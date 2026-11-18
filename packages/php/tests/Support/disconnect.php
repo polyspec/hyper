@@ -14,8 +14,10 @@ use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\Support\FrontController;
 
+use function Polyspec\Hyper\run;
+
 $log = (string) getenv('HYPER_DISCONNECT_LOG');
-FrontController::open(
+run(FrontController::open(
     $log,
     function (Reply $reply): array {
         $reply->note('stage', 'shared');
@@ -37,4 +39,4 @@ FrontController::open(
             FILE_APPEND,
         );
     },
-)->run();
+));

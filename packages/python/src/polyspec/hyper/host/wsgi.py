@@ -65,18 +65,25 @@ def create_wsgi(
         except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
             return _escape(app, exchange, error, start_response, head)
         if isinstance(result, FileResponse):
-            start_response(
-                _status(200),
-                [
-                    ("Content-Type", result.content_type),
-                    ("Content-Length", str(result.length)),
-                ],
-            )
+            try:
+                start_response(
+                    _status(200),
+                    [
+                        ("Content-Type", result.content_type),
+                        ("Content-Length", str(result.length)),
+                    ],
+                )
+            except Exception as error:  # noqa: BLE001 - HY-100.9: a start_response that raises is an escape, also for a file
+                return _escape(
+                    app, exchange, error, start_response, head, sys.exc_info()
+                )
             return [result.data]
         try:
             line, headers, encoded = _encode(result)
         except Exception as error:  # noqa: BLE001 - HY-60: a status, header or body that cannot be written is an escape
-            return _escape(app, exchange, error, start_response, head)
+            # HY-100.9: the plain 500 of this error goes to start_response with the exception information, with which
+            # PEP 3333 lets an application report an error that it caught.
+            return _escape(app, exchange, error, start_response, head, sys.exc_info())
         try:
             start_response(line, headers)
         except Exception as error:  # noqa: BLE001 - HY-60: a start_response that raises is an escape

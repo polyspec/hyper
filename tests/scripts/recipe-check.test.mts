@@ -259,6 +259,37 @@ test('the candidate derives the members of a unit that the spec lists without me
   }
 });
 
+test('the candidate adds a member that the sources hold and the spec of a listed unit lacks (H35.56)', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'recipe-members-'));
+  const root = mkdtempSync(path.join(tmpdir(), 'recipe-members-root-'));
+  try {
+    cpSync(fixture, root, { recursive: true });
+    track(root);
+    const spec = specOf(path.join(fixture, 'contracts', 'interfaces.json'));
+    const unit = spec.concerns.find((c) => c.id === 'csrf')?.units[0];
+    assert.ok(unit !== undefined && unit.members.length >= 2, 'the fixture unit of csrf has fewer than two members');
+    const expected = unit.members.map((m) => m.id);
+    unit.members = unit.members.slice(0, 1);
+    writeFileSync(path.join(root, 'contracts', 'interfaces.json'), JSON.stringify(spec));
+    const output = path.join(dir, 'interfaces.candidate.json');
+    const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    const derived = listAt(readJson(output), 'concerns').find((c) => at(c, 'id') === 'csrf');
+    const ids = listAt(derived, 'units', 0, 'members').map((m) => at(m, 'id'));
+    assert.deepEqual([...ids].sort(), [...expected].sort(), 'the candidate does not hold every member of the sources');
+    const handWritten = listAt(readJson(path.join(dir, 'interfaces.candidate.hand-written.json')));
+    const ci = listAt(readJson(output), 'concerns').findIndex((c) => at(c, 'id') === 'csrf');
+    for (let mi = 1; mi < ids.length; mi += 1) {
+      for (const field of ['inputs', 'output', 'errors', 'state']) {
+        assert.ok(handWritten.includes(`/concerns/${ci}/units/0/members/${mi}/${field}`), `the added member ${String(ids[mi])} is not marked for its ${field}`);
+      }
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 for (const m of mutations) {
   test(`mutation ${m.id} fails with ${m.code}`, () => {
     const root = mkdtempSync(path.join(tmpdir(), 'recipe-mutation-'));

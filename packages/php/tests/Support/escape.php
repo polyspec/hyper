@@ -6,7 +6,9 @@ declare(strict_types=1);
 // the memory limit in the shared loader, before the response hook runs; `time-limit` exceeds max_execution_time in the
 // shared loader; `hook-fatal` raises E_USER_ERROR in the response hook; `after-send` raises E_USER_ERROR after App::run
 // sent the response, `after-send-flushed` flushes the output first; `exit` ends the script with exit() in the shared
-// loader, before any output. Every response hook call appends a `response` line and every write hook call appends a
+// loader, before any output; `read-fails` replaces the `php` stream wrapper with one whose read of php://input fails,
+// so that `run` fails while it reads the body (HY-60.14); `read-fails-multipart` accepts multipart/form-data and
+// gives the head of a file part before the read fails, so that the request has a directory (HY-131.14). Every response hook call appends a `response` line and every write hook call appends a
 // `written` line to the file of HYPER_ESCAPE_LOG, so a test reads how often each hook ran and in which order.
 
 require __DIR__ . '/../../../../vendor/autoload.php';
@@ -14,6 +16,40 @@ require_once __DIR__ . '/FrontController.php';
 
 use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Tests\Support\FrontController;
+
+use function Polyspec\Hyper\run;
+
+/** A `php` stream wrapper whose stream opens and whose every read fails, as a read of a broken input does. */
+final class FailingInput
+{
+    /** @var resource|null set by PHP for a stream wrapper */
+    public $context;
+
+    public function stream_open(string $path, string $mode, int $options, ?string &$opened): bool
+    {
+        return true;
+    }
+
+    /** The bytes that the first read gives before the reads fail, so that a part with a file has started. */
+    public static string $head = '';
+
+    public function stream_read(int $count): string|false
+    {
+        $head = self::$head;
+        self::$head = '';
+
+        return $head === '' ? false : $head;
+    }
+
+    public function stream_eof(): bool
+    {
+        return false;
+    }
+
+    public function stream_close(): void
+    {
+    }
+}
 
 $mode = (string) getenv('HYPER_ESCAPE_MODE');
 $log = (string) getenv('HYPER_ESCAPE_LOG');
@@ -41,8 +77,20 @@ $app = FrontController::open(
             trigger_error('a fatal error of the response hook', E_USER_ERROR);
         }
     },
+    formTypes: $mode === 'read-fails-multipart'
+        ? ['application/x-www-form-urlencoded', 'multipart/form-data']
+        : ['application/x-www-form-urlencoded'],
 );
-$app->run();
+if ($mode === 'read-fails' || $mode === 'read-fails-multipart') {
+    if ($mode === 'read-fails-multipart') {
+        // The head of a file part of the body that the test sends with the boundary `b`; its content never ends.
+        FailingInput::$head = "--b\r\nContent-Disposition: form-data; name=\"f\"; filename=\"a.txt\"\r\n"
+            . "Content-Type: text/plain\r\n\r\nthe start of the file";
+    }
+    stream_wrapper_unregister('php');
+    stream_wrapper_register('php', FailingInput::class);
+}
+run($app);
 if ($mode === 'after-send-flushed') {
     while (ob_get_level() > 0) {
         ob_end_flush();
