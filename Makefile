@@ -731,9 +731,12 @@ node-package: bindings packages node-addon ## Build the WASM module and the Node
 	# The production closure of the package that the lock names is packed from the root install, which installed it from
 	# the lock, since an offline install of the packed package finds no registry for a dependency that is not packed
 	# (@polyspec/hyper-client is in no registry, and npm ci caches no metadata of eventsource-parser, H34.12).
-	mkdir -p $(BINDINGS_VAR)/node/deps
+	# The install below installs every file of deps, so the closure is packed into a staging directory of this run and
+	# published to deps with scripts/publish.mts, which removes a file that an earlier run packed (HR-82, H35.68).
+	staging=$(BINDINGS_VAR)/node/deps.next-$$$$ && trap 'rm -rf "$$staging"' EXIT && trap 'exit 130' INT TERM && mkdir -p "$$staging" && \
 	for dependency in $$($(NODE) scripts/dependency-closure.mts --lock package-lock.json --workspace $(NODE_PACKAGE)); do \
-		(cd $(CURDIR)/node_modules/$$dependency && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node/deps) || exit 1; done
+		(cd $(CURDIR)/node_modules/$$dependency && $(NPM) pack --pack-destination "$$staging") || exit 1; done && \
+	$(NODE) $(CURDIR)/scripts/publish.mts directory "$$staging" $(BINDINGS_VAR)/node/deps
 	echo '{ "private": true }' > $(BINDINGS_VAR)/node/package.json
 	cd $(BINDINGS_VAR)/node && $(NPM) install --no-audit --no-fund --omit=optional ./deps/*.tgz ./polyspec-hyper-$(NODE_VERSION).tgz ./polyspec-hyper-$(NODE_PLATFORM)-$(NODE_VERSION).tgz
 

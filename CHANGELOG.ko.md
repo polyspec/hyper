@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `make node-package`는 production closure를 자기 run의 staging 디렉터리에 pack하고 `scripts/publish.mts`로 `var/bindings/node/deps`에 publish한다(HR-82, H35.68). 입력: 이전 run이 `polyspec-template-0.0.30.tgz`를 pack했고 lock이 0.0.31을 고정한 뒤의 `make node-package`. 동작: recipe가 deps를 `mkdir -p`로 만들고 비우지 않았으므로 `./deps/*.tgz`의 install이 새 파일 옆의 옛 파일까지 받아 offline에서 ENOTCACHED로 실패했다. 기대 동작이자 현재 동작: publish가 이전 run의 파일을 지운다. 검증: `make hyper-test-scripts TESTS=tests/scripts/node-package-deps.test.mts`, 1개 통과. deps에 오래된 파일을 둔 `make node-package`가 `7 files; removed stale-0.0.1.tgz`를 출력했다.
+
 - `make node-package`는 `packages/ts/native/wasm/Cargo.toml`의 모든 test feature, 곧 `panic-test`, `fault-test`, `thrown-count-test`로 WASM module을 build한다(`WASM_FEATURES`, H35.67). 입력: `make test-wasm`. 동작: module을 `panic-test`만으로 build했으므로 생성 test 6개가 `glue.__armFaults is not a function`과 `stepGlue.__thrownCount is not a function`으로 실패했다. 기대 동작이자 현재 동작: 그 6개가 통과한다. 검증: `make test-wasm`, 341개 중 336개 통과. path 값의 B-4 case 3개(GN-6y)와 다른 type의 callback 결과에 대한 K-2 case 2개가 알려진 실패다.
 
 - `benchmarks/server.php`는 core의 page render를 `App`으로 측정한다(H35.61). 행 section은 10, 100, 1,000행을 돌려주는 region `rows`의 loader로 board를 열고 `GET /board`의 문서와 region JSON에 대한 `App::handle`을 측정한다. 입력: `make bench-server-smoke`. 동작: page render가 core로 옮겨질 때(H35.32) 4ed11336이 `packages/php/src/Page/Renderer.php`를 지웠으므로 benchmark가 125행에서 `Class "Polyspec\Hyper\Renderer" not found`로 실패했고 `tests/scripts/benchmark-server.test.mts`가 실패했다. 기대 동작이자 현재 동작: benchmark가 두 section을 모두 출력한다. 검증: `make hyper-test-scripts TESTS=tests/scripts/benchmark-server.test.mts`, 3개 통과.
