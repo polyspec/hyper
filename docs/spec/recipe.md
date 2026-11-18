@@ -275,7 +275,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
       `steps/recorded.py`), and only a section that names a member of the JSON codec in `members` calls the codec. The
       check fails a step that reaches a member of the unit `json-codec` that its section does not name.
   - **Reading a case.** A runner reads each case only through the case reader of its language, one unit of the test
-    tree with the same members in every language: the public members `cases`, `section`, `id`, `has`, `input`,
+    tree with the same members in every language: the public members `cases`, `file`, `section`, `id`, `has`, `input`,
     `compare`, `outcome`, `fail` and `line`, and the private members `declaration`, `matches` and `equal`. `compare`
     compares a field and `outcome` an outcome of the step.
     - `caseFiles` of `contracts/interfaces.json` is the one source of the roles and comparisons of the case files

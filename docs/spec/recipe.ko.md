@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: fd3ac823f0341f6afe879fa0cdb141af299d3c2dbb347139532228ea49b70b50 -->
+<!-- source-sha256: 2aa93385e8ef412d755abcc35736a7fb29a9898407ea836d9c46205a33066779 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -256,7 +256,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       `members`에 JSON codec의 member를 적은 section만 codec을 호출한다. check는 자기 section이 적지 않은 unit
       `json-codec`의 member에 닿는 step을 실패시킨다.
   - **Reading a case.** runner는 각 case를 그 언어의 case reader를 통해서만 읽는다. case reader는 모든 언어에서 같은
-    member를 가진 test tree의 unit 하나다: public member `cases`, `section`, `id`, `has`, `input`, `compare`, `outcome`,
+    member를 가진 test tree의 unit 하나다: public member `cases`, `file`, `section`, `id`, `has`, `input`, `compare`, `outcome`,
     `fail`, `line`과 private member `declaration`, `matches`, `equal`. `compare`는 필드를, `outcome`은 단계의 결과를
     비교한다.
     - `contracts/interfaces.json`의 `caseFiles`는 case 파일의 역할과 비교의 유일한 출처다(HYR-11). 파일마다 최상위 key(`fixtures`)를,
