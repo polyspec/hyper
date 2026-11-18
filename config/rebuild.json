@@ -83,8 +83,8 @@
       "tool": "esbuild bundles the client, @tailwindcss/node and @tailwindcss/oxide build the stylesheets, and node:crypto hashes the outputs for the build id"
     },
     "packages/cli/lib/check.mjs": {
-      "kind": "policy",
-      "reason": "the manifest check of @polyspec/hyper-client and the template rules of hyper (HY-2, HY-48.3); no ecosystem tool states the rules of this protocol"
+      "kind": "ecosystem",
+      "tool": "templateProblems of @polyspec/hyper/build, the Rust core, checks the manifest and the templates (HY-2, HY-48.3)"
     },
     "packages/cli/lib/options.mjs": {
       "kind": "ecosystem",
@@ -98,10 +98,6 @@
       "kind": "ecosystem",
       "tool": "readsFile of @polyspec/hyper/build, the Rust core, computes reads.json from the manifest and the template sources"
     },
-    "packages/cli/lib/shell.mjs": {
-      "kind": "policy",
-      "reason": "the static shell of client rendering with the meta elements of HY-62, HY-125 and HYC-16; no ecosystem tool writes the shell of this protocol"
-    },
     "packages/cli/lib/output-files.mjs": {
       "kind": "ecosystem",
       "tool": "node:fs writes and copies the files, and sets the modes 0644 and 0755 that HR-68 requires whatever the umask"
@@ -113,10 +109,6 @@
     "packages/cli/lib/template-files.mjs": {
       "kind": "ecosystem",
       "tool": "node:crypto hashes the template files and @polyspec/template parses them"
-    },
-    "packages/cli/lib/template-rules.mjs": {
-      "kind": "policy",
-      "reason": "the template rules of hyper (HC-6, HY-3, HY-30, HY-75) over the AST that @polyspec/template parses; no ecosystem tool states the rules of this protocol"
     },
     "scripts/board-servers.mts": {
       "kind": "ecosystem",

@@ -438,20 +438,6 @@
     },
     {
       "paths": [
-        "packages/cli/lib/template-rules.mjs"
-      ],
-      "targets": [
-        "templates-check",
-        "hyper-test-php",
-        "typecheck"
-      ],
-      "tests": [
-        "tests/scripts/check-templates.test.mts",
-        "tests/scripts/package-source.test.mts"
-      ]
-    },
-    {
-      "paths": [
         "packages/cli/bin/hyper.mjs",
         "packages/cli/lib/build.mjs",
         "packages/cli/lib/check.mjs",
@@ -475,7 +461,6 @@
       "paths": [
         "packages/cli/lib/program-files.mjs",
         "packages/cli/lib/program.mjs",
-        "packages/cli/lib/shell.mjs",
         "scripts/fixture-program.mts"
       ],
       "targets": [

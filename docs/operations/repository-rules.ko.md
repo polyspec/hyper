@@ -1,5 +1,5 @@
 <!-- doc-id: repository-rules -->
-<!-- source-sha256: fcf6897e7fd899c1e92cf7c631c464ed8969ae820f11655de8f2cfb72ddd88b4 -->
+<!-- source-sha256: aa95ec0c3016ec7e434a1e36be5d0e354d432eb9ce9943f9f6c762704540fb72 -->
 # 저장소 규칙
 
 [English](repository-rules.md).
@@ -16,7 +16,7 @@
   | `<app>/public/assets/hyper-<hash>.js`, `hyper-chunk-<hash>.js` | 브라우저 | `client/main.ts`가 있을 때 클라이언트 진입 파일과 조각 파일(HYC-16) |
   | `<app>/public/assets/<name>.<hash>.<extension>` | 브라우저 | `--asset`과 `--tailwind`의 각 에셋(HR-77) |
   | `<output>/client/manifest.json` | 애플리케이션의 레이아웃 코드 | `hyper`로 진입 파일의 URL, 이름마다 각 에셋의 URL(HYC-16) |
-  | `<output>/client/assets.previous.json` | 다음 build. 지움에 쓴다(HYC-16.18) | `{"files": [...]}`, 이 build 앞에서 목록이 달랐던 마지막 build의 파일. build id는 이를 뺀다(HY-125.24) |
+  | `<output>/client/assets.previous.json` | 다음 build. 지움에 쓴다(HYC-16.18) | `{"files": [...]}`, 이 build 앞에서 목록이 달랐던 마지막 build의 파일. build id는 이를 뺀다(HY-125.25) |
   | `<output>/client/assets.json` | 다음 build. 이 build의 파일을 다른 build 하나만큼 더 남긴다(HYC-16.18) | `{"files": [...]}`, 이 build가 쓴 모든 경로 `public/assets/...`를 바이트 순서로 |
   | `<output>/client/templates.index.json` | build의 검사 | 각 템플릿 이름과 그 파일 URL. 클라이언트 번들도 같은 색인을 담는다 |
   | `<output>/client/csr/` | 정적 배포, HY-62의 `ClientRendering` | `client/main.ts`가 있고 `--api`가 주어질 때 정적 셸 `index.html`, 이 build의 파일 사본을 담은 `assets/`, `--static` 파일 |

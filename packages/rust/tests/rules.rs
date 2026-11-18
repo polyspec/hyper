@@ -692,7 +692,7 @@ fn a_chosen_request_outside_the_data_base_path() -> Result<(), Error> {
 }
 
 mod build {
-    // HY-125.24, HY-125.17, HY-125.19: the files that the hash leaves out and the paths of the files of a build. The
+    // HY-125.25, HY-125.17, HY-125.19: the files that the hash leaves out and the paths of the files of a build. The
     // contract cases of the build id run on the build runner, which computes the hash of the files that it is given;
     // these rules move to the cases when the command tool calls the core for the build id (H-8).
     use binding_core::Kinds;
@@ -741,6 +741,18 @@ mod build {
         );
         match (id(&all), id(&hashed_files)) {
             (Ok(left), Ok(right)) => assert_eq!(left, right),
+            (left, right) => panic!("{left:?} {right:?}"),
+        }
+    }
+
+    #[test]
+    fn a_static_file_below_csr_assets_that_copies_nothing_is_hashed() {
+        // HY-125.25: only the copy of a file of public/assets is left out.
+        let first = [output("csr/assets/app.css", "p {}\n")];
+        let second = [output("csr/assets/app.css", "p { margin: 0; }\n")];
+        assert_eq!(paths(&first), vec!["csr/assets/app.css"]);
+        match (id(&first), id(&second)) {
+            (Ok(left), Ok(right)) => assert_ne!(left, right),
             (left, right) => panic!("{left:?} {right:?}"),
         }
     }
@@ -894,4 +906,50 @@ fn stored_flash_and_kept_values_of_another_form_fail() {
         }
         Err(error) => panic!("{error:?}"),
     }
+}
+
+#[test]
+fn the_static_shell_is_one_text_of_the_core() -> Result<(), Error> {
+    // HYC-16.23, HYC-16.8, HYC-16.11, HY-125.8
+    use polyspec_hyper::client_rendering::shell_file;
+    let build = "a".repeat(64);
+    assert_eq!(
+        shell_file("/api", &build, "/assets/hyper-a1.js", "export{};")?,
+        format!(
+            "<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n\
+             <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
+             <meta name=\"hyper-api\" content=\"/api\">\n<meta name=\"hyper-build\" content=\"{build}\">\n\
+             <meta name=\"hyper-entry\" content=\"/assets/hyper-a1.js\">\n<title></title>\n\
+             <script type=\"module\">export{{}};</script>\n</head>\n<body></body>\n</html>\n"
+        )
+    );
+    assert!(shell_file("/a&b", &build, "/e.js", "")?.contains("content=\"/a&amp;b\""));
+    for refused in [
+        shell_file("/api", &build, "/e.js", "x</SCRIPT>"),
+        shell_file("/api", "x", "/e.js", ""),
+    ] {
+        match refused {
+            Err(error) => assert_eq!(error.kind(), "invalid_build"),
+            Ok(text) => panic!("{text}"),
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn the_paths_and_the_stream_of_a_build_as_the_binding_gives_them() -> Result<(), Error> {
+    // HY-125.3: the order of the hashed paths and the hexadecimal text of the hashed bytes, which the build runner
+    // compares through the binding.
+    use polyspec_hyper::build::{paths, stream_hex, Output};
+    let outputs = [
+        Output { path: "program/b".to_owned(), bytes: b"y".to_vec() },
+        Output { path: "client/a".to_owned(), bytes: b"x".to_vec() },
+        Output { path: "program/build.json".to_owned(), bytes: b"{}".to_vec() },
+    ];
+    assert_eq!(paths(&outputs)?, vec!["client/a", "program/b"]);
+    assert_eq!(
+        stream_hex(&outputs[1..2])?,
+        "636c69656e742f6100000000000000000178"
+    );
+    Ok(())
 }

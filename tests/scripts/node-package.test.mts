@@ -7,7 +7,10 @@ import { dryRun } from './make-dry-run.mts';
 
 test('node-package packs the dependencies of packages/ts and installs them with the package (H35.7)', () => {
   const lines = dryRun('node-package').join('\n');
-  assert.match(lines, /node_modules\/\$dependency && \S+ pack --pack-destination \S+\/node\/deps/u, lines);
+  // H35.68: the closure is packed into a staging directory of the run, which scripts/publish.mts then publishes to deps.
+  assert.match(lines, /staging=\S+\/node\/deps\.next-\S+ /u, lines);
+  assert.match(lines, /node_modules\/\$dependency && \S+ pack --pack-destination "\$staging"/u, lines);
+  assert.match(lines, /scripts\/publish\.mts directory "\$staging" \S+\/node\/deps\b/u, lines);
   assert.match(lines, /install --no-audit --no-fund --omit=optional \.\/deps\/\*\.tgz \.\/polyspec-hyper-/u, lines);
 });
 
