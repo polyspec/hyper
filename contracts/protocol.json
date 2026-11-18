@@ -4310,6 +4310,12 @@
                   "koSource": "dcd729668fc6a6c7c46baa916218a56067e41abc89e736d992e8939df43d2ea6"
                 },
                 {
+                  "id": "HYC-16.23",
+                  "en": "One rule of the core writes the text of the static shell from the data base path, the build id and the URL and the code of the entry, so every caller writes the same bytes: the lines `<!doctype html>`, `<html>`, `<head>`, `<meta charset=\"utf-8\">`, `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">`, the elements `hyper-api`, `hyper-build` and `hyper-entry`, `<title></title>`, the entry in `<script type=\"module\">`, `</head>`, `<body></body>` and `</html>`, each followed by a line feed; the data base path is escaped as the declaration check of HY-62 reads it, and an entry whose code contains `</script` in any case, or a build id of another form (HY-125.19), fails the build with the kind `invalid_build`, because such an entry cannot be inlined.",
+                  "ko": "core의 규칙 하나가 데이터 기본 경로, build id, 진입 파일의 URL과 코드로 정적 셸의 텍스트를 쓰므로, 모든 호출자는 같은 바이트를 쓴다: 줄 `<!doctype html>`, `<html>`, `<head>`, `<meta charset=\"utf-8\">`, `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">`, 요소 `hyper-api`, `hyper-build`, `hyper-entry`, `<title></title>`, `<script type=\"module\">` 안의 진입 파일, `</head>`, `<body></body>`, `</html>`이며 각 줄 뒤에 line feed가 온다. 데이터 기본 경로는 HY-62의 선언 검사가 읽는 대로 escape하며, 코드에 대소문자와 상관없이 `</script`를 담은 진입 파일이나 다른 형식의 build id(HY-125.19)는 kind `invalid_build`로 build를 실패시킨다. 그런 진입 파일은 인라인할 수 없기 때문이다.",
+                  "koSource": "550d6ba0f9bb804ef6ec5c79431f4a74ba5d1db95f4d315d76c42807f18d16d6"
+                },
+                {
                   "id": "HYC-16.9",
                   "en": "`tests/scripts/build-assets.test.mts` builds an application whose entry imports a module with `import()`.",
                   "ko": "`tests/scripts/build-assets.test.mts`는 진입 파일이 `import()`로 모듈을 불러오는 애플리케이션을 빌드한다.",
