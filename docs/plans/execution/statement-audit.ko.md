@@ -1,5 +1,5 @@
 <!-- doc-id: plan-statement-audit -->
-<!-- source-sha256: 751a28bdc999f8069320d4a4fc218577607416ec612ad796dc2031a49eb7667c -->
+<!-- source-sha256: 4281afb1459c6f1a5a7896edd766772e48bc8fcf2734934b552ee69207b8cf7c -->
 # 진술 감사
 
 [English](statement-audit.md).
@@ -12,13 +12,13 @@
 | --- | --- | --- | --- | --- |
 | HY-60 | 32 | 32 | 0 | 0 |
 | HY-100 | 36 | 36 | 0 | 0 |
-| HY-104 | 30 | 20 | 7 | 3 |
+| HY-104 | 30 | 22 | 6 | 2 |
 | HY-113 | 6 | 3 | 2 | 1 |
 | HY-114 | 8 | 8 | 0 | 0 |
 | HY-115 | 21 | 18 | 3 | 0 |
 | HY-131 | 13 | 10 | 1 | 2 |
 | HY-133 | 13 | 13 | 0 | 0 |
-| 합계 | 159 | 140 | 13 | 6 |
+| 합계 | 159 | 142 | 12 | 5 |
 
 ## 열린 진술
 
@@ -27,12 +27,12 @@
 - HY-100.2: 참이다. `App.handle`은 각 host가 자기 store로 호출하는 한 메서드를 감싼다(그 행을 보라).
 - HY-104.33: H35.87이 코드를 고친다. PHP 서버는 `gc_probability`를 0으로 두고, Python store에는 public `collect`가 있으며, PHP 서버는 public `collect`를 받는다. PHP file store를 가진 H35.37은 첫 release 뒤까지 철회되었으므로, PHP `collect`는 H35.87에서 작성되고 그 store를 기다리지 않는다. H35.87의 실행이 통과할 때까지 판정은 일부 참으로 남는다.
 - HY-115.11: 폐기되었다. HY-115.30이 각 store의 순서를 적고, 그 진술은 참이다(그 행을 보라).
-- H35.84가 HY-104.14를, H35.85가 HY-104.31을, H35.82가 HY-104.37을, H35.83이 HY-115.23을 고친다. 이 행들은 session id 한도의 작업 줄에 있는 checklist 행이다. 각 판정은 그 행의 실행이 통과할 때까지 아래와 같이 남는다.
+- HY-104.14: 이 tree에서 참이며, H35.84가 참으로 만들었다. PHP 서버는 Node와 Python처럼 다른 class의 object를 거부한다(`packages/php/src/Session/NativeSession.php:177`, 그 행을 보라).
+- HY-104.31: 이 tree에서 참이며, H35.85가 참으로 만들었다. 모든 서버가 22자에서 256자를 받는다(그 행을 보라).
+- H35.82가 HY-104.37을, H35.83이 HY-115.23을 고친다. 이 행들은 session id 한도의 작업 줄에 있는 checklist 행이다. 각 판정은 그 행의 실행이 통과할 때까지 아래와 같이 남는다.
 
 이 행들이 고치는 진술:
 
-- HY-104.14: Node와 Python은 다른 class의 object에서 실패한다(`php-serialization@v0.0.16:packages/rust/src/read.rs:460`). PHP 서버는 PHP 자신의 session decoder로 기록을 읽고, 저장된 값을 class 검사 없이 돌려준다(`packages/php/src/Session/NativeSession.php:176`).
-- HY-104.31: 모든 서버가 22자에서 128자의 식별자를 받는다(`packages/ts/src/session/record-session.ts:9`, `packages/python/src/polyspec/hyper/session/_record_session.py:17`, `packages/php/src/Session/NativeSession.php:40`). 그러나 진술, SE-5.1(`session-store@v0.0.7:packages/core/rust/src/identifier.rs:8`), PHP(`php-src@php-8.4.27:ext/session/session.c:791`)는 22자에서 256자를 준다.
 - HY-104.37: Node 인터페이스는 값이 없는 key에 대해 null이 아니라 `undefined`를 돌려준다(`packages/ts/src/session/session-store.ts:5`).
 - HY-115.23: PHP 서버는 `session_write_close`를 호출하지 않으므로, PHP는 응답 뒤에 session을 쓰고, 잃은 lock이 상태 코드를 바꿀 수 없다.
 
@@ -137,14 +137,14 @@ HY-104는 세 서버가 session-store 라이브러리와 core의 session 규칙�
 | HY-104.11 | 참 | `packages/ts/src/session/file-session.ts:65`, `packages/php/src/Session/NativeSession.php:256` | 없음 | |
 | HY-104.12 | 참 | `packages/ts/src/session/file-session.ts:71` | 없음 | |
 | HY-104.13 | 참 | `packages/rust/src/session.rs:91` | `packages/rust/tests/contracts.rs`, `packages/php/tests/Support/Steps/SessionSteps.php`, `packages/ts/tests/steps/session-requests.ts` | |
-| HY-104.14 | 일부 참 | `packages/rust/src/session.rs:242`, `packages/rust/src/session.rs:256` | `packages/rust/tests/contracts.rs`, `packages/rust/tests/rules.rs`, `tests/scripts/node-core.test.mts` | Node와 Python에서 쓰기는 `O:8:"stdClass"`를 만들고(`php-serialization@v0.0.16:packages/rust/src/write.rs:166`), 읽기는 다른 class를 오류 `class`로 거부하며(`php-serialization@v0.0.16:packages/rust/src/read.rs:460`), 라이브러리는 그것을 기록 오류로 돌려준다(`session-store@v0.0.7:packages/core/rust/src/record.rs:38`). PHP 서버는 PHP 자신의 session decoder로 읽고 저장된 값을 class 검사 없이 돌려주므로(`packages/php/src/Session/NativeSession.php:176`), 거기서는 다른 class의 object가 실패하지 않는다. |
+| HY-104.14 | 참 | `packages/rust/src/session.rs:242`, `packages/rust/src/session.rs:256` | `packages/rust/tests/contracts.rs`, `packages/rust/tests/rules.rs`, `tests/scripts/node-core.test.mts`, `packages/php/tests/NativeSessionTest.php::testAnObjectOfAnotherClassFailsWithKindRecord` | Node와 Python에서 쓰기는 `O:8:"stdClass"`를 만들고(`php-serialization@v0.0.16:packages/rust/src/write.rs:166`), 읽기는 다른 class를 오류 `class`로 거부하며(`php-serialization@v0.0.16:packages/rust/src/read.rs:460`), 라이브러리는 그것을 기록 오류로 돌려준다(`session-store@v0.0.7:packages/core/rust/src/record.rs:38`). PHP 서버는 저장된 값을 읽고(`packages/php/src/Session/NativeSession.php:176`) 어느 깊이에서든 다른 class의 object를 `refuseClasses`로 거부한다(`:177`). |
 | HY-104.34 | 참 | `packages/rust/src/session.rs:177`, `packages/rust/src/session.rs:192` | 정확한 id로는 없음 | |
 | HY-104.39 | 참 | `packages/rust/src/session.rs:194`(`value == 0.0`이 0을 준다) | 없음 | |
 | HY-104.15 | 참 | `packages/ts/src/session/file-sessions.ts:63`, `packages/python/src/polyspec/hyper/session/file_sessions.py:37`, `session-store@v0.0.7:packages/file/rust/src/store.rs:218` | 없음 | 삭제는 기다리지 않고 lock을 잡으며, 다른 요청이 lock을 쥐고 있으면 그 파일을 건너뛴다(`store.rs:220`). |
-| HY-104.33 | 일부 참 | `packages/ts/src/session/file-sessions.ts:65`, `packages/python/src/polyspec/hyper/session/file_sessions.py:37`, `packages/php/src/Session/NativeSession.php:115` | 없음 | Python은 메서드 이름을 public이 아닌 `_collect`로 둔다. PHP에는 `collect`가 없고 그 옵션은 `gc_probability`를 0으로 두지 않으므로, native handler가 요청 중에 우연히 만료된 파일을 지울 수 있다. H35.87이 코드를 고친다. |
+| HY-104.33 | 일부 참 | `packages/ts/src/session/file-sessions.ts:65`, `packages/python/src/polyspec/hyper/session/file_sessions.py:37`, `packages/php/src/Session/NativeSession.php:115` | 없음 | Node에는 public `collect`(`file-sessions.ts:65`)가, Python에는 public `collect`(`file_sessions.py:37`)가 있다. PHP 옵션은 `gc_probability`를 0으로 두고(`NativeSession.php:115`), PHP 서버에는 public static `NativeSession::collect`가 있다. 그 코드는 H35.87에 있고 그 실행은 아직 통과하지 않았다. |
 | HY-104.28 | 참 | `tests/scripts/session-shared.test.mts` | 자기 자신 | |
 | HY-104.29 | 참 | `packages/ts/src/session/file-sessions.ts:22`, `packages/python/src/polyspec/hyper/session/file_sessions.py:7`, `session-store@v0.0.7:packages/file/rust/src/turns.rs:59`, `session-store@v0.0.7:packages/file/rust/src/store.rs:157`, `store.rs:172` | 없음 | 라이브러리는 lock 전에 요청을 queue에 넣고(`store.rs:157`), 취소된 요청을 queue에서 뺀다(`turns.rs:58`). lock을 기다리는 동안 취소된 요청은 파일을 놓아 lock을 푼다(`store.rs:173`). |
-| HY-104.31 | 거짓 | `packages/ts/src/session/record-session.ts:9`, `packages/ts/src/session/record-session.ts:80`, `packages/python/src/polyspec/hyper/session/_record_session.py:17`, `packages/python/src/polyspec/hyper/session/_record_session.py:76`, `packages/php/src/Session/NativeSession.php:40` | `tests/legacy/interfaces.json` | 모든 서버는 store가 cookie를 보기 전에 22자에서 128자만 받는다. 라이브러리는 22자에서 256자를 받고(`session-store@v0.0.7:packages/core/rust/src/identifier.rs:7`, `:8`, `:14`), PHP도 같다(`php-src@php-8.4.27:ext/session/session.c:75`, `:791`, `:380`). hyper의 core에는 식별자 검사가 없다. |
+| HY-104.31 | 참 | `packages/ts/src/session/record-session.ts:9`, `packages/ts/src/session/record-session.ts:80`, `packages/python/src/polyspec/hyper/session/_record_session.py:17`, `packages/python/src/polyspec/hyper/session/_record_session.py:76`, `packages/php/src/Session/NativeSession.php:40` | `tests/legacy/interfaces.json` | 모든 서버는 store가 cookie를 보기 전에 22자에서 256자를 받는다(`record-session.ts:9`, `_record_session.py:17`, `NativeSession.php:40`). 라이브러리도 22자에서 256자를 받고(`session-store@v0.0.7:packages/core/rust/src/identifier.rs:7`, `:8`, `:14`), PHP도 같다(`php-src@php-8.4.27:ext/session/session.c:75`, `:791`, `:380`). hyper의 core에는 식별자 검사가 없다. |
 | HY-104.32 | 일부 참 | `packages/ts/src/session/file-sessions.ts:38`, `packages/python/src/polyspec/hyper/session/file_sessions.py:24` | `packages/ts/tests/steps/file-sessions.ts`, `packages/rust/tests/cases/faults.json` | PHP에는 파일 store class가 없다(`packages/php/src/App/App.php:1132`는 `NativeSession`을 쓴다). php에 대해 H35.37로 표시되었다. |
 | HY-104.20 | 참 | `packages/rust/src/session.rs:311` | `tests/legacy/interfaces.json` | |
 | HY-104.21 | 참 | `session-store@v0.0.7:packages/file/rust/src/store.rs:43`, `store.rs:181`, `store.rs:224`; PHP `session.gc_maxlifetime` | 없음 | 만료된 파일을 열면 session이 없고, 삭제는 만료된 파일만 지운다. PHP에서는 PHP가 정한다. |
@@ -203,7 +203,7 @@ Node와 Python 서버는 Redis store를 session-store 라이브러리에 넘기�
 | HY-115.23 | 일부 참 | `packages/ts/src/host/http-host.ts:160`, `packages/python/src/polyspec/hyper/host/_pipeline.py:226`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:437` | 없음 | Node와 Python 서버는 응답을 쓰기 전에 session을 닫고, lock을 잃었으면 닫기가 `LockLost`로 실패한다. PHP 서버는 `packages/php/src`에서 `session_write_close`를 호출하지 않으므로, PHP는 script 끝, 즉 응답 뒤에 session을 쓰고, 잃은 lock이 상태 코드를 바꿀 수 없다. |
 | HY-115.7 | 참 | `packages/php/src/Session/RedisClusterSessions.php:80`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:412` | 없음 | 라이브러리는 바뀌지 않은 session에 `EXPIRE`를 보내고 lock을 비교하지 않는다. |
 | HY-115.8 | 참 | `packages/php/src/Session/RedisClusterSessions.php:14`, `packages/php/src/Session/RedisClusterSessions.php:84`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:12`, `protocol.rs:180` | 없음 | 라이브러리는 secret을 가질 때만 key를 지우는 script로 lock을 푼다. |
-| HY-115.24 | 참 | `packages/php/src/Session/NativeSession.php:128` | 없음 | phpredis 상대에 대한 조건이다. `tests/scripts/fixtures/session-worker/worker.php:52`는 `HYPER_SESSION_RETRIES`가 없으면 `redis.session.lock_retries` -1로 PHP worker를 실행하고, 이 진술은 그 설정을 제외한다. |
+| HY-115.24 | 참 | `packages/php/src/Session/NativeSession.php:128` | 없음 | phpredis 상대에 대한 조건이다. |
 | HY-115.29 | 일부 참 | `packages/ts/src/session/redis-sessions.ts:16`, `packages/python/src/polyspec/hyper/session/redis_sessions.py:37`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:22`, `protocol.rs:86` | 없음 | 라이브러리는 `lock_retries`와 `lock_wait`를 store의 옵션으로 받는다. PHP에 대해 `unimplemented` H35.37로 표시되었다. PHP 서버는 설정을 store의 옵션이 아니라 phpredis의 ini 값과 `RedisClusterSessions`에서 받는다. |
 | HY-115.30 | 참 | `packages/php/src/Session/NativeSession.php:256`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:402`, `protocol.rs:447` | 없음 | 모든 서버가 새 key를 먼저 쓴다고 한 HY-115.11을 대신한다. Node와 Python은 새 key를 `SETEX`로 쓴 뒤 옛 key를 `DEL`로 지운다. PHP 갱신은 `session_regenerate_id(true)`를 호출하고, 이 함수는 옛 session을 먼저 없애고(`php-src@php-8.4.27:ext/session/session.c:2415`) 새 session은 요청 끝에 쓴다. |
 | HY-115.12 | 참 | `packages/php/src/Session/NativeSession.php:49`, `packages/php/src/Session/NativeSession.php:54` | `tests/scripts/session-redis-failure.test.mts`(HY-115를 인용) | |
