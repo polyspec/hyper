@@ -154,6 +154,10 @@
       "kind": "ecosystem",
       "tool": "node:fs reads the installed.json that PIE and Composer write for the package polyspec/template, and its pie-built-binary entries (H27.51)"
     },
+    "scripts/pin.mts": {
+      "kind": "policy",
+      "reason": "writes and checks the version of each sibling release of config/pins.json in every place together: release asset URLs, npm requirements, Cargo tags and lock sources, Composer platform versions, Makefile variables, config/php-ext-pins.json and Go modules (H35.75); no ecosystem tool covers these places together, and a tool that picks versions queries a live registry, which HR-89 forbids"
+    },
     "scripts/php-ext-requires.mts": {
       "kind": "ecosystem",
       "tool": "fetch downloads the packages.json of each release and node:crypto compares its sha256 with config/php-ext-pins.json before the script compares the require of polyspec/json with the pinned json version (H35.52, H35.54)"
