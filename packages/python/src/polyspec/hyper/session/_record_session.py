@@ -13,7 +13,7 @@ from polyspec.php_serialize import Reference, StdClass, serialize, unserialize
 from ..app._core_rules import core_rules
 from .session_store import SessionStore
 
-# The identifiers that PHP and the session-store library accept (HY-104.31).
+# The identifiers that PHP and the session-store library accept (HY-104.42).
 _IDENTIFIER = re.compile(r"[A-Za-z0-9,-]{22,256}\Z")
 
 

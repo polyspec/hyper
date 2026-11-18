@@ -6957,6 +6957,7 @@
           "kind": "rule",
           "id": "HY-104",
           "retired": [
+            31,
             30,
             4,
             5,
@@ -7024,10 +7025,16 @@
                   "koSource": "38b888f6ba68431670d9dfe7a2d11d8eea4f5f681aeb98ed25f4e73f002237fc"
                 },
                 {
-                  "id": "HY-104.31",
-                  "en": "An identifier is 22 to 256 characters of `A-Za-z0-9,-`, the identifiers that PHP creates for its session handlers (`session.sid_length` from 22 to 256), as SE-5.1 of the session-store library states: every server creates 64 lowercase hexadecimal digits (SE-5.3) and accepts the identifier of another and of a PHP peer.",
-                  "ko": "식별자는 session-store 라이브러리의 SE-5.1대로 PHP가 session handler에 만드는 식별자(`session.sid_length` 22부터 256)인 `A-Za-z0-9,-`의 22자부터 256자다. 모든 server는 소문자 16진수 64자리를 만들고(SE-5.3) 다른 server와 PHP peer의 식별자를 받는다.",
-                  "koSource": "9456f16888e9bb48b15e2f501d6846708c97a662cf34b3eecb299775e603679e"
+                  "id": "HY-104.42",
+                  "en": "A server accepts an identifier of 22 to 256 characters of `A-Za-z0-9,-`, the range of `session.sid_length` of PHP and of SE-5.1 of the session-store library, so that the three servers and a PHP peer share their sessions.",
+                  "ko": "server는 PHP의 `session.sid_length`와 session-store 라이브러리 SE-5.1의 범위인 `A-Za-z0-9,-`의 22자부터 256자의 식별자를 받으므로, 세 server와 PHP peer는 session을 나눈다.",
+                  "koSource": "6c035b350aa1eb8503a23e5f95780cf0b25302a4340c758ca865becedfa78c39"
+                },
+                {
+                  "id": "HY-104.43",
+                  "en": "The Node and the Python server create an identifier of 64 lowercase hexadecimal digits (SE-5.3); the PHP server takes the identifier that the PHP runtime creates, 32 lowercase hexadecimal digits by the defaults of PHP 8.4 (`session.sid_length` 32 and `session.sid_bits_per_character` 4), which are 128 bits, and hyper changes neither setting; the strict mode that replaces an identifier that the store does not hold is that of PHP.",
+                  "ko": "Node와 Python server는 소문자 16진수 64자리의 식별자를 만든다(SE-5.3). PHP server는 PHP runtime이 만드는 식별자를 쓰며, 그것은 PHP 8.4의 기본값(`session.sid_length` 32, `session.sid_bits_per_character` 4)으로 소문자 16진수 32자리, 곧 128 bit이고, hyper는 두 설정을 바꾸지 않는다. 저장소가 갖지 않은 식별자를 바꾸는 strict mode는 PHP의 것이다.",
+                  "koSource": "f98648a1c67deb621b6dc1b050938af518879c181cbdfc91f30fa6deef4ae946"
                 },
                 {
                   "id": "HY-104.10",
