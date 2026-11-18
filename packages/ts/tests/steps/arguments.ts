@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ArgumentCountError } from '../../src/app/argument-count-error.js';
 import { Container } from '../../src/app/container.js';
-import { App, ArraySession, BadRequest, Choice, ClientRendering, FileSessions, Forbidden, MediaType, NotFound, RedisSessions, Redirect, Reply, Representation, Request, Response, Result, UploadedFile } from '../../src/index.js';
+import { App, ArraySession, BadRequest, Choice, ClientRendering, FileSessions, Forbidden, listener, MediaType, NotFound, RedisSessions, Redirect, Reply, Representation, Request, Response, Result, server, UploadedFile } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
 import { client, Fixture, FIXTURES, handlers, PROGRAM, type Services } from '../support.js';
 import { textOf } from '../inputs.js';
@@ -74,15 +74,17 @@ const MEMBERS: Record<string, Member> = {
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
     call: (receiver, args) => app(receiver).handle(...args),
   },
+  // HY-106.20: the host entries are functions of the host code whose first argument is the application, which the
+  // case gives as the receiver; their other arguments are the arguments of the case.
   'app.server': {
-    required: App.prototype.server.length,
+    required: server.length - 1,
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
-    call: (receiver, args) => app(receiver).server(...args),
+    call: (receiver, args) => server(app(receiver), ...args),
   },
   'app.listener': {
-    required: App.prototype.listener.length,
+    required: listener.length - 1,
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
-    call: (receiver, args) => app(receiver).listener(...args),
+    call: (receiver, args) => listener(app(receiver), ...args),
   },
   'media-type.parameters': {
     required: MediaType.prototype.parameters.length,
@@ -429,10 +431,12 @@ const MEMBERS: Record<string, Member> = {
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
     call: (_receiver, args) => new ArraySession(...args),
   },
+  // The store of session files of Node is made by its maker, which waits; the member has the name of the constructor
+  // of the other servers.
   'file-sessions.constructor': {
-    required: FileSessions.length,
+    required: FileSessions.inDirectory.length,
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
-    call: (_receiver, args) => new FileSessions(...args),
+    call: (_receiver, args) => FileSessions.inDirectory(...args),
   },
   'redis-sessions.constructor': {
     required: RedisSessions.length,
@@ -464,8 +468,8 @@ function request(): Request {
   return new Request({ method: 'GET', path: '/', media: 'text/html' });
 }
 
-// A command function of a Redis store that no case calls.
-const command = (): Promise<unknown> => Promise.reject(new Error('a store of a case sent a command'));
+// The setting of a Redis store that no case connects: the store opens a connection only for a request.
+const setting = { kind: 'server', url: 'redis://127.0.0.1:1', authorities: null } as const;
 
 // Returns the receiver of a method of a unit, a new object for each case, or null for a unit without one.
 async function receiverOf(unit: string): Promise<unknown> {
@@ -506,7 +510,8 @@ function argumentsOf(member: string, directory: string): unknown[] {
       return [request(), new ArraySession(), 0];
     case 'app.server':
     case 'app.listener':
-      return [new FileSessions({ directory }), {}];
+      // A store that is made without waiting: the store of session files is made by a maker that waits.
+      return [new RedisSessions({ setting, lockExpire: 30 }), {}];
     case 'media-type.constructor':
       return [new Map(), 'application/json'];
     case 'media-type.etag':
@@ -620,7 +625,7 @@ function recordOf(member: string, directory: string, all: boolean): Record<strin
     case 'file-sessions.constructor':
       return { directory, ...(all ? { lifetime: 1440 } : {}) };
     case 'redis-sessions.constructor':
-      return { command, ...(all ? { lifetime: 1440, prefix: 'PHPREDIS_SESSION:', lockExpire: 30, lockRetries: 100, lockWait: 20 } : {}) };
+      return { setting, lockExpire: 30, ...(all ? { lifetime: 1440, prefix: 'PHPREDIS_SESSION:', lockRetries: 100, lockWait: 20000 } : {}) };
     default:
       throw new Error(`the member ${member} takes no options record`);
   }

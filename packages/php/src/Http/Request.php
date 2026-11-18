@@ -22,6 +22,9 @@ final class Request
     /** The number of parts of a multipart body that is one value (HY-131.12). */
     private readonly int $partCount;
 
+    /** The reader of the body of a request as received, which `withInput` feeds; null in every other request (HY-60.18). */
+    private ?RequestBody $unread = null;
+
     /**
      * @param array<string, string> $headers header names in any case
      * @param string $query the raw query: the request target after its first `?` up to its first `#`
@@ -98,7 +101,7 @@ final class Request
      */
     public function release(): void
     {
-        $this->read?->remove();
+        ($this->read ?? $this->unread)?->remove();
     }
 
     /**
@@ -495,12 +498,13 @@ final class Request
     }
 
     /**
-     * Creates a request from the PHP request globals. It reads the body in chunks up to the body limit `$limit`, and
-     * a multipart body through the reader of HY-131 when `$stream` is true, with the limits of HY-131.7 to HY-131.12.
+     * Creates the request as received from the PHP request globals, with an empty body (HY-60.18), and the reader of
+     * its body, which `withInput` feeds in chunks up to the body limit `$limit`, and a multipart body through the
+     * reader of HY-131 when `$stream` is true, with the limits of HY-131.7 to HY-131.12.
      *
      * @internal
      */
-    public static function fromGlobals(
+    public static function received(
         int $limit = PHP_INT_MAX,
         bool $stream = false,
         int $valueLimit = PHP_INT_MAX,
@@ -522,33 +526,98 @@ final class Request
         // HY-100.31: the host passes the method in upper case.
         $method = $_SERVER['REQUEST_METHOD'] ?? null;
         $method = is_string($method) ? strtoupper($method) : $method;
+        // HY-100.2: a request whose target the SAPI does not give is answered with the plain 500 and not as the
+        // request of the path `/`, which would be the answer to another request. The error escapes `run` before a
+        // request exists, so no write hook is called for it (HY-99.12).
         $target = $_SERVER['REQUEST_URI'] ?? null;
-        $target = is_string($target) ? $target : '/';
-
-        // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data request
-        // here only when enable_post_data_reading is off, and holds what was read in a temporary file of its own.
-        $read = new RequestBody($headers['Content-Type'] ?? '', $limit, $stream, $valueLimit, $partLimit, $fileLimit);
-        $input = fopen('php://input', 'rb');
-        if ($input === false) {
-            throw new \RuntimeException('hyper: cannot open php://input');
+        if (!is_string($target)) {
+            throw new \RuntimeException(
+                'hyper: $_SERVER has no REQUEST_URI, so the request target is unknown (HY-100)',
+            );
         }
-        while (!feof($input)) {
-            $chunk = fread($input, 65536);
-            if ($chunk === false || !$read->feed($chunk)) {
-                break;
-            }
-        }
-        fclose($input);
 
-        return new self(
+        // HY-60.18: the request as received has an empty body whose size is the declared Content-Length.
+        $declared = $headers['Content-Length'] ?? null;
+        $received = new self(
             strtoupper(is_string($method) ? $method : 'GET'),
             self::targetPath($target),
             $headers,
             self::targetQuery($target),
-            $read->held(),
             // HY-129: the one parse of the header, which PHP gives as it received it in $_SERVER.
             cookies: Cookies::parse(is_string($_SERVER['HTTP_COOKIE'] ?? null) ? $_SERVER['HTTP_COOKIE'] : null),
             https: ($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off',
+            bodySize: $declared !== null && ctype_digit($declared) ? (int) $declared : null,
+        );
+        $received->unread = new RequestBody(
+            $headers['Content-Type'] ?? '',
+            $limit,
+            $stream,
+            $valueLimit,
+            $partLimit,
+            $fileLimit,
+        );
+
+        return $received;
+    }
+
+    /**
+     * Creates a request from the PHP request globals and reads its body, as `received` and `withInput` do.
+     *
+     * @internal
+     */
+    public static function fromGlobals(
+        int $limit = PHP_INT_MAX,
+        bool $stream = false,
+        int $valueLimit = PHP_INT_MAX,
+        int $partLimit = PHP_INT_MAX,
+        int $fileLimit = PHP_INT_MAX,
+    ): self {
+        return self::received($limit, $stream, $valueLimit, $partLimit, $fileLimit)->withInput();
+    }
+
+    /**
+     * Returns the request of this request as received with the body that `$source` gives, `php://input` by default,
+     * read in chunks through the reader of the request as received. A read of the source that fails raises, so the
+     * failure is an escaped error answered with the plain 500 and not a shortened body (HY-60.14). The files of the
+     * body stay in the directory that `release` of this request as received removes (HY-131.14).
+     *
+     * @internal
+     */
+    public function withInput(string $source = 'php://input'): self
+    {
+        $read = $this->unread;
+        if ($read === null) {
+            throw new \LogicException('hyper: only a request as received reads its body');
+        }
+        // The raw body, not $_POST, which nests bracketed names. PHP gives the body of a multipart/form-data request
+        // here only when enable_post_data_reading is off, and holds what was read in a temporary file of its own.
+        $input = fopen($source, 'rb');
+        if ($input === false) {
+            throw new \RuntimeException("hyper: cannot open {$source}");
+        }
+        try {
+            while (!feof($input)) {
+                $chunk = fread($input, 65536);
+                if ($chunk === false) {
+                    throw new \RuntimeException("hyper: the read of {$source} failed (HY-60)");
+                }
+                // A reader that holds the limit takes no more of the body (HY-59).
+                if (!$read->feed($chunk)) {
+                    break;
+                }
+            }
+        } finally {
+            fclose($input);
+        }
+
+        return new self(
+            $this->method,
+            $this->path,
+            $this->headers,
+            $this->query,
+            $read->held(),
+            cookies: $this->cookies,
+            https: $this->https,
             read: $read,
         );
     }

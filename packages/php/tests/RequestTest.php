@@ -47,6 +47,28 @@ final class RequestTest extends TestCase
         self::assertSame('__Host-hy-session', NativeSession::options(true)['name']);
     }
 
+    /**
+     * HY-100.2: a request without a target fails, so that `run` answers it with the plain 500 of HY-60; it is not read
+     * as the request of the path `/`.
+     */
+    public function testFromGlobalsFailsWithoutARequestUri(): void
+    {
+        $server = $_SERVER;
+        unset($_SERVER['REQUEST_URI']);
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        // The failure of PHPUnit is a \RuntimeException too, so the assertion is made outside the catch.
+        $failure = null;
+        try {
+            Request::fromGlobals();
+        } catch (\RuntimeException $error) {
+            $failure = $error->getMessage();
+        } finally {
+            $_SERVER = $server;
+        }
+        self::assertNotNull($failure, 'a request without REQUEST_URI was read');
+        self::assertStringContainsString('$_SERVER has no REQUEST_URI', $failure);
+    }
+
     /** HY-42: `fromGlobals` takes the request target from `REQUEST_URI`. */
     public function testFromGlobalsTakesTheTargetFromTheRequestUri(): void
     {

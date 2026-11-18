@@ -23,7 +23,7 @@
 // which install-tools installs only for the targets of rust-toolchain.toml. What a utility of kit starts inside its
 // process (npm pack, git archive, gh) is in no dry run and is not judged here.
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, utimesSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -339,6 +339,16 @@ test('install-wasm-bindgen of a tree without packages/release.mk writes the file
   assert.ok(existsSync(path.join(tree, 'packages/release.mk')), `make wrote packages/release.mk before it read install-wasm-bindgen:\n${lines.join('\n')}`);
   // The line downloads, so it lifts the offline settings of the Makefile ($(ONLINE)), and names the mise of the tree.
   assert.deepEqual(lines.filter((line) => line.includes('mise install')), [`env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK ${path.join(tree, 'var/tools/bin/mise')} install --locked github:wasm-bindgen/wasm-bindgen`]);
+});
+
+test('a packages/release.mk older than the binding generator is written again before make reads its targets (HR-99)', (t) => {
+  // A release.mk of an earlier binding release lacks the targets of the installed one, such as release-go-module-push.
+  const { tree, variables } = treeWithoutReleaseRecipes(t, 'hyper-stale-release-recipes-');
+  const file = path.join(tree, 'packages/release.mk');
+  writeFileSync(file, '# the release recipes of an earlier binding release\n');
+  utimesSync(file, new Date(0), new Date(0));
+  const lines = dryRun('install-wasm-bindgen', { cwd: tree, variables });
+  assert.match(readFileSync(file, 'utf8'), /^release-go-module-push:/mu, `make did not write packages/release.mk again:\n${lines.join('\n')}`);
 });
 
 test('the group core is the one CI group that starts wasm-bindgen, and its setup writes the release recipes and installs it after install-tools (H35.16-6)', () => {

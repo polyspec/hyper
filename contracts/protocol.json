@@ -5497,9 +5497,9 @@
                   "statements": [
                     {
                       "id": "HY-97.9",
-                      "en": "The Node server gives the same through the `node:http` server that `app.server()` returns: a consumer replaces its `request` listener with a listener that calls the listener of the application, so that it runs each request in a context of its own, adds a request id header to the request and the response, or answers a request itself before the application, such as a 400 for a request that did not come from its web server.",
-                      "ko": "Node 서버는 `app.server()`가 돌려주는 `node:http` 서버를 통해 같은 기능을 제공한다: 소비자는 그 서버의 `request` listener를 애플리케이션의 listener를 호출하는 listener로 바꿔, 각 요청을 자기 context에서 실행하거나, 요청과 응답에 request id header를 붙이거나, 애플리케이션보다 먼저 요청에 직접 응답한다(예: 자기 web server에서 오지 않은 요청에 400).",
-                      "koSource": "6b49392bbf6550c4cb27ea6ff80cf01473b4b5fb4667d93f6e3e7d5399773d7d"
+                      "en": "The Node server gives the same through the `node:http` server that the host function `server(app, sessions, options)` returns: a consumer replaces its `request` listener with a listener that calls the listener of the application, so that it runs each request in a context of its own, adds a request id header to the request and the response, or answers a request itself before the application, such as a 400 for a request that did not come from its web server.",
+                      "ko": "Node 서버는 host 함수 `server(app, sessions, options)`가 돌려주는 `node:http` 서버를 통해 같은 기능을 제공한다: 소비자는 그 서버의 `request` listener를 애플리케이션의 listener를 호출하는 listener로 바꿔, 각 요청을 자기 context에서 실행하거나, 요청과 응답에 request id header를 붙이거나, 애플리케이션보다 먼저 요청에 직접 응답한다(예: 자기 web server에서 오지 않은 요청에 400).",
+                      "koSource": "8bae2d70089cd6722deb2181f73b564c0bc99f12a6c04f577e9213e912d60ad5"
                     },
                     {
                       "id": "HY-97.10",
@@ -5625,7 +5625,11 @@
         {
           "kind": "rule",
           "id": "HY-100",
-          "retired": [],
+          "retired": [
+            6,
+            18,
+            27
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -5687,10 +5691,10 @@
                       "koSource": "157b565b7e8557908413357bd03fff04e929f1c843d24d0dc401e549ad09e0bc"
                     },
                     {
-                      "id": "HY-100.6",
-                      "en": "The write hook `written` (HY-99) reports that the write ended when the WSGI server consumed the whole body iterable, and that it failed when the server closed the iterable before its end, which PEP 3333 defines as premature termination; when the write failed, the callable calls the disconnect hook (HY-67) with the request that it gave to `around` and the reply of the last call of `answer`.",
-                      "ko": "write hook `written`(HY-99)은 WSGI 서버가 body iterable 전체를 소비하면 쓰기가 끝났다고 보고하고, 서버가 iterable을 끝나기 전에 닫으면(PEP 3333이 premature termination으로 정의하는 경우) 실패했다고 보고한다; 쓰기가 실패하면 callable은 `around`에 넘긴 요청과 마지막 `answer` 호출의 reply로 disconnect hook(HY-67)을 호출한다.",
-                      "koSource": "48d1d5abb037d7caf792c10ab322f212bccc5cf301b52c1a10c020dcf24ff935"
+                      "id": "HY-100.37",
+                      "en": "The write hook `written` (HY-99) reports that the write ended when the WSGI server consumed the whole body iterable, and that it failed when the server closed the iterable before its end, which PEP 3333 defines as premature termination; when the write failed, the callable calls the disconnect hook (HY-67) with the request and the reply of the last call of `answer` (HY-97.5).",
+                      "ko": "write hook `written`(HY-99)은 WSGI 서버가 body iterable 전체를 소비하면 쓰기가 끝났다고 보고하고, 서버가 iterable을 끝나기 전에 닫으면(PEP 3333이 premature termination으로 정의하는 경우) 실패했다고 보고한다; 쓰기가 실패하면 callable은 마지막 `answer` 호출의 요청과 reply로 disconnect hook(HY-67)을 호출한다(HY-97.5).",
+                      "koSource": "46487f89361e0ff6e01f77a4cbf4f35ce18c6ff49f817b88c324e2be90fe4ce3"
                     },
                     {
                       "id": "HY-100.34",
@@ -5782,10 +5786,10 @@
                       "koSource": "6c42faef49be144c4ffae2b09ff2304d7f6dca90b3027e273207517ce9fd454a"
                     },
                     {
-                      "id": "HY-100.18",
-                      "en": "It sends one `http.response.start` with the status and the headers of the `Response` and one `http.response.body` with the complete body: the write hook `written` (HY-99) reports that the write ended when both sends return, and that it failed when a send raises, which an ASGI server does for a connection that the client closed; when the write failed, the callable calls `written`, then the disconnect hook (HY-67) with the request that it gave to `around` and the reply of the last call of `answer`, and lets the error propagate to the server.",
-                      "ko": "callable은 `Response`의 status와 header를 담은 `http.response.start` 하나와 완전한 body를 담은 `http.response.body` 하나를 전송한다: write hook `written`(HY-99)은 두 send가 모두 반환하면 쓰기가 끝났다고 보고하고, send가 예외를 던지면 실패했다고 보고하며, ASGI 서버는 클라이언트가 닫은 연결에 대해 예외를 던진다; 쓰기가 실패하면 callable은 `written`을 호출한 뒤, `around`에 넘긴 요청과 마지막 `answer` 호출의 reply로 disconnect hook(HY-67)을 호출하고, 오류를 서버로 전파한다.",
-                      "koSource": "94da86adac82fa17352e653a18f287dbd83437eac984623c0db75775a3e5327e"
+                      "id": "HY-100.38",
+                      "en": "It sends one `http.response.start` with the status and the headers of the `Response` and one `http.response.body` with the complete body: the write hook `written` (HY-99) reports that the write ended when both sends return, and that it failed when a send raises, which an ASGI server does for a connection that the client closed; when the write failed, the callable calls `written`, then the disconnect hook (HY-67) with the request and the reply of the last call of `answer` (HY-97.5), and lets the error propagate to the server.",
+                      "ko": "callable은 `Response`의 status와 header를 담은 `http.response.start` 하나와 완전한 body를 담은 `http.response.body` 하나를 전송한다: write hook `written`(HY-99)은 두 send가 모두 반환하면 쓰기가 끝났다고 보고하고, send가 예외를 던지면 실패했다고 보고하며, ASGI 서버는 클라이언트가 닫은 연결에 대해 예외를 던진다; 쓰기가 실패하면 callable은 `written`을 호출한 뒤, 마지막 `answer` 호출의 요청과 reply로 disconnect hook(HY-67)을 호출하고(HY-97.5), 오류를 서버로 전파한다.",
+                      "koSource": "8a943df491ccb503c68e89f5dabd354236617ac47660c19016d3ad2d958ff669"
                     },
                     {
                       "id": "HY-100.19",
@@ -5836,10 +5840,10 @@
                       "koSource": "8b7842647b9726a555300b262c32bf215b4ada302d60be83adc3e98cf5f85929"
                     },
                     {
-                      "id": "HY-100.27",
-                      "en": "When a send of that 500 fails, the callable calls `written` with the failed write and lets the error propagate to the server, as HY-67 does for a failed send.",
-                      "ko": "그 500의 send가 실패하면 callable은 실패한 쓰기와 함께 `written`을 부르고, 실패한 send에 대해 HY-67이 하듯 오류를 서버로 전파되게 둔다.",
-                      "koSource": "72d23ceb285d8177c11e652e239e66c6b12698c165b6c060e158b6027a60d887"
+                      "id": "HY-100.39",
+                      "en": "When a send of that 500 fails, the callable calls no write hook, because the transport gave no request to report (HY-99.12), and lets the error propagate to the server, as HY-67 does for a failed send.",
+                      "ko": "그 500의 send가 실패하면 callable은 write hook을 부르지 않고(전송이 보고할 요청을 주지 않았기 때문이다, HY-99.12), 실패한 send에 대해 HY-67이 하듯 오류를 서버로 전파되게 둔다.",
+                      "koSource": "53b5d3511c454336d1c5461608d6d1a957f3b04ec8b48a5dab10586fcdd6f4f6"
                     }
                   ],
                   "blocks": []
@@ -5898,7 +5902,8 @@
                   "id": "HY-132.1",
                   "en": "Every failure that hyper raises is an error with a kind that never changes, an HTTP status or none, and a category, and a caller tells failures apart by the kind and never by the class or the message.",
                   "ko": "hyper가 내는 모든 실패는 바뀌지 않는 kind, HTTP 상태나 없음, category를 가진 오류이며, 호출자는 실패를 class나 message가 아니라 kind로 구별한다.",
-                  "koSource": "a0fb640afd5c5d1bf5216ee473aa03af7208163d300675cdb240037eac89b0e3"
+                  "koSource": "a0fb640afd5c5d1bf5216ee473aa03af7208163d300675cdb240037eac89b0e3",
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
                   "id": "HY-132.2",
@@ -5910,7 +5915,8 @@
                   "id": "HY-132.3",
                   "en": "The kinds of hyper are those of the table below, and an error of a library that hyper uses, such as http-form, http-negotiation, http-media-type, http-cookie, json, the template data model, the session-store library or the binding, reaches the caller with the kind, the status and the category of that library, in the class of that category of hyper.",
                   "ko": "hyper의 kind는 아래 표의 것이며, http-form, http-negotiation, http-media-type, http-cookie, json, template 데이터 모델, session-store 라이브러리, binding처럼 hyper가 쓰는 라이브러리의 오류는 그 라이브러리의 kind, 상태, category를 가지고 hyper의 그 category class로 호출자에게 간다.",
-                  "koSource": "a14248cc27a57ee2d6f96ff4ec12f334fd841ea9456451247b42222d4fbb4565"
+                  "koSource": "a14248cc27a57ee2d6f96ff4ec12f334fd841ea9456451247b42222d4fbb4565",
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
                   "id": "HY-132.4",
@@ -6427,7 +6433,14 @@
                 [{ "en": "`exists`", "ko": "`exists`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
                 [{ "en": "`moved`", "ko": "`moved`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
                 [{ "en": "`no_rows`", "ko": "`no_rows`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.8", "ko": "HY-107.8" }],
-                [{ "en": "`revision_changed`", "ko": "`revision_changed`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.9", "ko": "HY-107.9" }]
+                [{ "en": "`revision_changed`", "ko": "`revision_changed`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.9", "ko": "HY-107.9" }],
+                [{ "en": "`record`", "ko": "`record`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-104.8", "ko": "HY-104.8" }],
+                [{ "en": "`record_not_array`", "ko": "`record_not_array`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-104.20", "ko": "HY-104.20" }],
+                [{ "en": "`invalid_directory`", "ko": "`invalid_directory`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-104.32", "ko": "HY-104.32" }],
+                [{ "en": "`invalid_lifetime`", "ko": "`invalid_lifetime`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-104.32, HY-115.28", "ko": "HY-104.32, HY-115.28" }],
+                [{ "en": "`invalid_lock_expire`", "ko": "`invalid_lock_expire`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-115.28", "ko": "HY-115.28" }],
+                [{ "en": "`lock_timeout`", "ko": "`lock_timeout`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-115.3", "ko": "HY-115.3" }],
+                [{ "en": "`lock_lost`", "ko": "`lock_lost`" }, { "en": "session-store", "ko": "session-store" }, { "en": "HY-115.5", "ko": "HY-115.5" }]
               ]
             }
           ]
@@ -6952,6 +6965,7 @@
           "kind": "rule",
           "id": "HY-104",
           "retired": [
+            30,
             4,
             5,
             6,
@@ -6977,7 +6991,7 @@
                   "en": "The storage of a session, which is its identifier, its record bytes, its lock, its file or Redis key and its expiry, is the rule of the session-store library, and hyper uses its store interface; the session values that hyper keeps in a record, which are the token (HY-24), the flash values and the changed topics (HY-25), the kept values (HY-40), the conversion between a record and the data model (HY-104.13, HY-104.14) and the keys of HY-104.22 and HY-104.23, are rules of hyper.",
                   "ko": "session의 저장(식별자, record 바이트, 잠금, 파일이나 Redis key, 만료)은 session-store 라이브러리의 규칙이고 hyper는 그 저장소 interface를 쓴다. hyper가 record에 두는 session 값, 곧 token(HY-24), flash 값과 바뀐 topic(HY-25), kept 값(HY-40), record와 데이터 모델 사이의 변환(HY-104.13, HY-104.14), HY-104.22와 HY-104.23의 key는 hyper의 규칙이다.",
                   "koSource": "ed407dc1f359937edf87dc67f8dc31ec49e94c4ae9f1a58bc9dbe3e6d6303aba",
-                  "unimplemented": "H35.37"
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
                   "id": "HY-104.2",
@@ -6996,14 +7010,14 @@
                   "en": "The PHP server keeps a session with the file store of the session-store library, as the Node and Python servers do, and not with the native session handler of PHP, with which it shares only the file name, the record form `php_serialize`, the file mode and `flock` with `LOCK_EX`.",
                   "ko": "PHP server는 Node와 Python server처럼 session-store 라이브러리의 파일 저장소로 session을 가지며 PHP의 native session handler를 쓰지 않는다. native handler와는 파일 이름, record 형식 `php_serialize`, 파일 mode, `LOCK_EX`의 `flock`만 같다.",
                   "koSource": "eb1366b1ae934510b5c85fe91dd840dc6f522e59aecb7ed04580d4b04b845be8",
-                  "unimplemented": "H35.37"
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
                   "id": "HY-104.27",
                   "en": "Every server waits for the lock of a session file in the core of the session-store library, which blocks on `flock` with `LOCK_EX` on a thread of its own for each waiting session, with no retry and no interval, so the operating system orders the waiting requests as it orders the native files handler of PHP.",
                   "ko": "모든 server는 session-store 라이브러리의 core에서 session 파일의 잠금을 기다리며, core는 기다리는 session마다 자기 스레드에서 `LOCK_EX`의 `flock`으로 블로킹하고 재시도와 간격을 두지 않는다. 그래서 운영체제가 PHP native files handler에서처럼 기다리는 요청의 순서를 정한다.",
                   "koSource": "850dfd9cfa53b44788215fa683d5290400a5ad97c9a7f27f93e8c6666750751c",
-                  "unimplemented": "H35.37"
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
                   "id": "HY-104.7",
@@ -7060,6 +7074,12 @@
                   "koSource": "37d4562f526b568faed620ee12887f5022afceb44862887c4c88303cd30171ce"
                 },
                 {
+                  "id": "HY-104.39",
+                  "en": "Negative zero is an integer for this rule and is written as the PHP integer 0, because a PHP integer has no negative zero and the data model tells no zero from another.",
+                  "ko": "음의 0은 이 규칙에서 정수이며 PHP 정수 0으로 쓰인다. PHP 정수에는 음의 0이 없고 데이터 모델은 0을 서로 구별하지 않기 때문이다.",
+                  "koSource": "4c74f6f66fd0efb1d59a11a1620ada38f36f9fd61ee22f0bf00961d43ffad660"
+                },
+                {
                   "id": "HY-104.15",
                   "en": "The removal of expired sessions skips a session whose lock a request holds.",
                   "ko": "만료된 session의 제거는 요청이 잡고 있는 lock의 session을 건너뛴다.",
@@ -7087,7 +7107,8 @@
                   "id": "HY-104.32",
                   "en": "A session store of files takes an existing absolute directory and a lifetime, an unsigned integer of seconds whose default is 1440, and making it with another directory or a lifetime of 0 fails with the kind of the session-store library (`invalid_directory`, `invalid_lifetime`).",
                   "ko": "파일 session 저장소는 존재하는 절대 디렉터리와 lifetime(초 단위 부호 없는 정수, 기본값 1440)을 받으며, 다른 디렉터리나 0인 lifetime으로 만들면 session-store 라이브러리의 kind(`invalid_directory`, `invalid_lifetime`)로 실패한다.",
-                  "koSource": "e98e2043110bf49d2d87e2875b197d2d3225967988107e7f9fd930b31ed61fbf"
+                  "koSource": "e98e2043110bf49d2d87e2875b197d2d3225967988107e7f9fd930b31ed61fbf",
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
                   "id": "HY-104.20",
@@ -7126,10 +7147,24 @@
                   "koSource": "96d379f7815dcdba15ecc8d474f3f35b3eec493a5e12739ee9552545842b660c"
                 },
                 {
-                  "id": "HY-104.30",
-                  "en": "A session store returns null for a key that holds no value, replaces the value of a key that is set again, and removes a key without failing when it holds none; a store that an application writes in its own language implements this interface, its locking and its sharing with other processes are the task of the application, and an exception that it raises reaches the caller of `App.handle` as it was raised.",
-                  "ko": "session 저장소는 값이 없는 key에 null을 반환하고, 다시 설정한 key의 값을 바꾸며, 값이 없는 key를 실패 없이 지운다. 애플리케이션이 자기 언어로 쓴 저장소는 이 interface를 구현하며, 그 잠금과 다른 process와의 공유는 애플리케이션의 일이고, 그것이 던진 예외는 던진 그대로 `App.handle`의 호출자에게 간다.",
-                  "koSource": "3934136cde12c4ebca7d44fe7c18249272c67da195de79bfd8e13506c205ec14"
+                  "id": "HY-104.37",
+                  "en": "A session store returns null for a key that holds no value, replaces the value of a key that is set again, and removes a key without failing when it holds none; a store that an application writes in its own language implements this interface, and its locking and its sharing with other processes are the task of the application; an exception that it raises is no error that HY-43 handles: the server answers the plain 500 of HY-60.15, and the write hook receives that 500 once (HY-60.17).",
+                  "ko": "session 저장소는 값이 없는 key에 null을 반환하고, 다시 설정한 key의 값을 바꾸며, 값이 없는 key를 실패 없이 지운다. 애플리케이션이 자기 언어로 쓴 저장소는 이 interface를 구현하며, 그 잠금과 다른 process와의 공유는 애플리케이션의 일이다. 그것이 던진 예외는 HY-43이 처리하는 오류가 아니다: 서버는 HY-60.15의 plain 500으로 응답하고, write hook은 그 500을 한 번 받는다(HY-60.17).",
+                  "koSource": "58b64d2d7f85053df23dc3cd0f3b685100d052b7e3fff575697a0df7835020e6"
+                },
+                {
+                  "id": "HY-104.38",
+                  "en": "A route of the manifest that holds `\"session\": false` uses no session, so a server opens no session for a request of that route, and such a request takes no lock of a session, does not wait for a request that holds one, reads an empty session and sets no session cookie.",
+                  "ko": "manifest에서 `\"session\": false`를 가진 route는 session을 쓰지 않는다. 그래서 서버는 그 route의 요청에 session을 열지 않고, 그런 요청은 session의 lock을 잡지 않으며, session을 잡고 있는 요청을 기다리지 않고, 빈 session을 읽고, session cookie를 설정하지 않는다.",
+                  "koSource": "7586ed3e09828a615911148295f08547af0cb7e49ca4f2d19f2ea41eb603d7c8",
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
+                },
+                {
+                  "id": "HY-104.40",
+                  "en": "A host opens the session of a request with its store and its session cookie, closes it after the answer and reads the identifier of a new session through members of the core, so that the rule of opening and closing a session is stated once in the core and a host only passes the store and the cookie.",
+                  "ko": "host는 요청의 session을 그 store와 session cookie로 열고, 응답 뒤에 닫고, 새 session의 식별자를 core의 member를 통해 읽는다. 그래서 session을 열고 닫는 규칙은 core에 한 번만 적히고 host는 store와 cookie만 넘긴다.",
+                  "koSource": "7a1612be41512b39581246c145413aa673edc534de3e0327642c8713f90cd623",
+                  "unimplemented": "H35.38-1"
                 }
               ]
             }
@@ -7211,7 +7246,7 @@
                   "en": "Every server takes the connection settings of the Redis store, which are the addresses, TLS and the ACL user, and not a client of the application, and the options `lockExpire` in seconds, `lockRetries` and `lockWait` in microseconds, which are `redis.session.lock_expire`, `redis.session.lock_retries` and `redis.session.lock_wait_time` of phpredis; every server of one Redis server gives them the same values, and the expiry is longer than any request.",
                   "ko": "모든 server는 애플리케이션의 client가 아니라 Redis 저장소의 연결 설정(주소, TLS, ACL 사용자)과, phpredis의 `redis.session.lock_expire`, `redis.session.lock_retries`, `redis.session.lock_wait_time`인 option `lockExpire`(초), `lockRetries`, `lockWait`(마이크로초)를 받는다. 한 Redis server의 모든 server는 같은 값을 주고, 만료는 어떤 요청보다 길다.",
                   "koSource": "762541508b4ddc88adf8975b1ebda70b88c5a44eaf851dbca46aa67713c5ef55",
-                  "unimplemented": "H35.37"
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
                   "id": "HY-115.11",
@@ -7272,7 +7307,7 @@
                   "en": "`lifetime` of the Redis store is an unsigned integer of seconds with the default 1440, and `lockExpire` is an unsigned integer of seconds that the caller states, with no default, because no value is longer than every request of every application; a lifetime or a lock expiry of 0 fails with the kind of the session-store library (`invalid_lifetime`, `invalid_lock_expire`).",
                   "ko": "Redis 저장소의 `lifetime`은 기본값 1440인 초 단위 부호 없는 정수이고, `lockExpire`는 호출자가 밝히는 초 단위 부호 없는 정수로 기본값이 없다. 어떤 값도 모든 애플리케이션의 모든 요청보다 길지 않기 때문이다. 0인 lifetime이나 lock expiry는 session-store 라이브러리의 kind(`invalid_lifetime`, `invalid_lock_expire`)로 실패한다.",
                   "koSource": "0b072b82de3ff88e6627c2aba1855bd3de1c8bf8943d4c7e5fd30b0cb8fa7f96",
-                  "unimplemented": "H35.37"
+                  "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
                   "id": "HY-115.22",
@@ -7710,6 +7745,12 @@
                   "en": "`handle` of every server takes the start of the request as an optional value of its monotonic clock, `hrtime(true)` in PHP, `performance.now()` in Node and `time.perf_counter_ns()` in Python, and counts from its own call without it.",
                   "ko": "모든 서버의 `handle`은 요청의 시작을 자기 단조 시계의 값으로 선택적으로 받는다. PHP에서는 `hrtime(true)`, Node에서는 `performance.now()`, Python에서는 `time.perf_counter_ns()`의 값이며, 그 값이 없으면 자기 호출부터 측정한다.",
                   "koSource": "2e8598cc046da9c8e6da319d28d7bf6ea59cb52e451fbb271a06dbfdf58333bf"
+                },
+                {
+                  "id": "HY-60.33",
+                  "en": "In the PHP server, when headers have been sent before an error escapes, `run` writes no 500 and records only that the write of the response is not complete, so the write hook receives that response with `ended` false and the failure of the error (HY-99); a write whose client has closed the connection is reported with `ended` false by `connection_aborted()`, and the PHP server does not close the connection itself, which the SAPI that runs it does.",
+                  "ko": "PHP 서버에서 오류가 빠져나가기 전에 header가 이미 보내졌으면 `run`은 500을 쓰지 않고 응답의 쓰기가 완료되지 않았다는 것만 기록한다. 그래서 쓰기 hook은 그 응답을 `ended` false와 그 오류의 실패와 함께 받는다(HY-99). client가 연결을 닫은 쓰기는 `connection_aborted()`로 `ended` false로 보고되며, PHP 서버는 연결을 직접 닫지 않고 그것을 실행하는 SAPI가 닫는다.",
+                  "koSource": "cb0ac85a8d18a50c4eea25c4ee63add8f7c7ea86208bae81884c3045e5be20f0"
                 }
               ]
             }

@@ -245,8 +245,44 @@ export interface CoreBinding {
   answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;
   Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions) => CorePagesInstance;
   PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;
+  sessionValue(record: unknown): CoreValue;
+  sessionRecord(value: unknown): unknown;
   HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;
   HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;
+}
+
+// The constructor of an error class of a binding (E-2): the message, the kind, the status and the errno.
+type ErrorClass = new (message: string, kind: unknown, status: unknown, errno: unknown) => Error;
+
+// The prefix of the name of the category classes of the binding of hyper, which stands in the place of the prefix of
+// the category classes of a library: `SessionStoreStoreError` of the session-store package is `HyperStoreError`.
+const OWN_PREFIX = 'Hyper';
+
+/**
+ * Returns the error of hyper for an error of a library that hyper uses (HY-132.3), or the error as it is. An error of
+ * a library is an instance of a class that the package of the library exports. The class of hyper is the class of the
+ * binding of hyper of the same role: the class of the same name, such as `RecordError`, or the category class, whose
+ * name has `Hyper` where the category class of the library has `prefix`. The error of hyper has the message, the kind,
+ * the status and the errno of the error of the library, so no kind and no category is listed here; a class of the
+ * library without a class of hyper of its role is tried by its parent class, and an error that the class of hyper
+ * refuses, because the contract of hyper does not list its kind, stays as it is.
+ */
+function libraryError(core: object, library: object, prefix: string, error: unknown): unknown {
+  if (!(error instanceof Error)) return error;
+  for (let type: unknown = Object.getPrototypeOf(error); typeof type === 'object' && type !== null; type = Object.getPrototypeOf(type)) {
+    const made: unknown = (type as { constructor?: unknown }).constructor;
+    const name: unknown = typeof made === 'function' ? made.name : undefined;
+    if (typeof name !== 'string' || name === '' || Reflect.get(library, name) !== made) continue;
+    const role: unknown = Reflect.get(core, name.startsWith(prefix) ? `${OWN_PREFIX}${name.slice(prefix.length)}` : name);
+    if (typeof role !== 'function') continue;
+    const { kind, status, errno } = error as Error & { kind?: unknown; status?: unknown; errno?: unknown };
+    try {
+      return new (role as ErrorClass)(error.message, kind, status ?? null, errno ?? null);
+    } catch {
+      return error;
+    }
+  }
+  return error;
 }
 
 // An error of hyper: its kind and its status, which a caller tells failures apart by (HY-132.1, HY-132.2).
@@ -262,6 +298,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'buildPaths', 'buildStream', 'shellFile', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'checkFunctionEntry', 'routeRequest', 'computePageHeaders', 'frameHeaders',
   'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'sessionValue', 'sessionRecord',
 ];
 
 // A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
@@ -284,6 +321,16 @@ export interface CoreRules {
   // the binding.
   valueError(message: string, kind: string): HyperError & RangeError;
   typeError(message: string, kind: string): HyperError & TypeError;
+  // libraryError: the error of hyper for an error of a library, by the class of the binding of hyper of the same role
+  // as the class of the error, with its message, kind and status (HY-132.3); any other value is returned as it is.
+  // `library` is the module of the package of the library and `prefix` the prefix of the names of its category classes.
+  libraryError(library: object, prefix: string, error: unknown): unknown;
+  // sessionValue: rules.session_value gives the value of the data model of a PHP value of a session record
+  // (HY-104.13), and fails with the kind of the data model for a value outside it.
+  sessionValue(record: unknown): CoreValue;
+  // sessionRecord: rules.session_record gives the PHP value of a session record of a value of the data model
+  // (HY-104.14), and fails with `data_unsupported_type` for a native object.
+  sessionRecord(value: unknown): unknown;
   // Exact units.
   // csrfMask: rules.csrf_mask (HY-24.2, HY-24.14).
   csrfMask(token: string, mask: string): string;
@@ -469,6 +516,9 @@ export function coreRules(module: object): CoreRules {
   return {
     valueError: (message, kind) => new core.HyperValueError(message, kind, null),
     typeError: (message, kind) => new core.HyperTypeError(message, kind, null),
+    libraryError: (library, prefix, error) => libraryError(core, library, prefix, error),
+    sessionValue: (record) => core.sessionValue(record),
+    sessionRecord: (value) => core.sessionRecord(value),
     csrfMask: (token, mask) => core.csrfMask(token, mask),
     csrfVerify: (token, value) => core.csrfVerify(token, value),
     csrfBrowserOf: (masked) => core.browser(masked),

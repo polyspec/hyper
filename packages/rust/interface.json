@@ -46,6 +46,10 @@
     "template_value": {
       "library": "template",
       "unit": "template_value"
+    },
+    "php_value": {
+      "library": "php-serialization",
+      "unit": "php_value"
     }
   },
   "errors": {
@@ -1852,6 +1856,61 @@
           ],
           "wait": "none",
           "core": "polyspec_hyper::session::kept_record"
+        },
+        {
+          "id": "rules.session_value",
+          "name": [
+            "session",
+            "value"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "record"
+              ],
+              "type": "php_value",
+              "required": true
+            }
+          ],
+          "returns": "template_value",
+          "raises": [
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberRange",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberNotFinite",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataInvalidUtf8",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataDepth",
+            "polyspec_hyper::ErrorCode::RecordValue",
+            "polyspec_hyper::ErrorCode::Internal"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::session::from_record"
+        },
+        {
+          "id": "rules.session_record",
+          "name": [
+            "session",
+            "record"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "value"
+              ],
+              "type": "template_value",
+              "required": true
+            }
+          ],
+          "returns": "php_value",
+          "raises": [
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataUnsupportedType",
+            "polyspec_hyper::ErrorCode::RecordValue",
+            "polyspec_hyper::ErrorCode::Internal"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::session::to_record"
         },
         {
           "id": "rules.kept_cookie",
@@ -4582,8 +4641,8 @@
     },
     {
       "id": "array-session",
-      "rule": "HY-104.30",
-      "reason": "HY-104.30, C-6: the store that keeps one session in memory belongs to the session-store library as MemoryStore, which hyper uses through the store interface",
+      "rule": "HY-104.37",
+      "reason": "HY-104.37, C-6: the store that keeps one session in memory belongs to the session-store library as MemoryStore, which hyper uses through the store interface",
       "symbol": "ArraySession",
       "from": {
         "php": "Polyspec\\Hyper\\ArraySession",

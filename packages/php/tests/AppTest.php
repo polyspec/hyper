@@ -128,7 +128,7 @@ final class AppTest extends TestCase
 
     public function testAnErrorOfAroundAndAValueThatIsNoResponseEscape(): void
     {
-        // HY-97, HY-60: they are not answered by the application (HY-43); App::run writes the plain 500 for them.
+        // HY-97, HY-60: they are not answered by the application (HY-43); the host function `run` writes the plain 500 for them.
         $throws = $this->app(['around' => function (): Response {
             throw new \RuntimeException('around boom');
         }]);

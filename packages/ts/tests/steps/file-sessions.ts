@@ -3,10 +3,10 @@
 import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { UnserializeError } from '@polyspec/php-serialize';
 import { FileSessions } from '../../src/session/file-sessions.js';
 import { RecordSession } from '../../src/session/record-session.js';
 import type { CaseReader } from '../case-reader.js';
+import { raisesOf } from '../case-rules.js';
 import { bytesOf } from '../support.js';
 import { textOf } from '../inputs.js';
 import { requests } from './session-requests.js';
@@ -49,22 +49,26 @@ export async function sessionFileRequests(reader: CaseReader): Promise<void> {
       utimesSync(path, time, time);
       aged.set(`${PREFIX}${identifier}`, age);
     }
-    const sessions = new FileSessions({ directory });
+    const sessions = await FileSessions.inDirectory({ directory });
     const records: [string, string][][] = [];
     const touched: string[][] = [];
     const outcome = await requests(reader.input('steps'), {
       open: (cookie) => sessions.open(cookie),
+      // The names that the case files give the two failures of a record, by the kind of the error of hyper: a record
+      // that cannot be decoded (kind `record`) is `unserialize`, and a record that holds no array (kind
+      // `record_not_array`) is `record`.
       failure: (error) => {
-        if (error instanceof UnserializeError) return 'unserialize';
-        return error instanceof Error && error.constructor === Error ? 'record' : null;
+        const kind: unknown = error instanceof Error ? Reflect.get(error, 'kind') : undefined;
+        if (kind === 'record') return 'unserialize';
+        return kind === 'record_not_array' ? 'record' : null;
       },
       call: (method, _args, made) => {
         if (method !== 'directory') throw new Error(`the method ${method} of the case is unknown`);
         return names(directory, made);
       },
-      other: (step) => {
+      other: async (step) => {
         if (step.get('collect') !== true) throw new Error('a step of the case is neither a request nor a collection');
-        return [sessions.collect()];
+        return [await sessions.collect()];
       },
       identifiers,
       after: (made) => {
@@ -88,6 +92,54 @@ export async function sessionFileRequests(reader: CaseReader): Promise<void> {
 export const steps = {
   async requests(reader: CaseReader): Promise<void> {
     await sessionFileRequests(reader);
+  },
+
+  // The failure of making a store or of the first request of a session, with its kind, status and category (HY-132.3).
+  // An error that is no error of hyper fails the case, because `raisesOf` throws it again.
+  async storeFailures(reader: CaseReader): Promise<void> {
+    const root = mkdtempSync(join(tmpdir(), 'hyper-file-sessions-'));
+    try {
+      const files = reader.has('files') ? reader.input('files') : [];
+      if (!Array.isArray(files)) throw new Error('the files of the case are not a list');
+      for (const file of files) {
+        if (!(file instanceof Map)) throw new Error('a file of the case is not a map');
+        writeFileSync(join(root, `${PREFIX}${textOf(file.get('identifier'), 'the identifier of a file')}`), bytesOf(textOf(file.get('bytes'), 'the bytes of a file')), { mode: 0o600 });
+      }
+      const named = reader.has('directory') ? reader.input('directory') : null;
+      let directory = root;
+      if (named === 'missing') directory = join(root, 'missing');
+      else if (named === 'relative') directory = 'hyper-sessions-of-the-case';
+      else if (named === 'file') {
+        directory = join(root, 'file');
+        writeFileSync(directory, '');
+      } else if (named !== null) throw new Error('the directory of the case is not missing, file or relative');
+      const lifetime = reader.has('lifetime') ? reader.input('lifetime') : undefined;
+      const cookie = reader.has('cookie') ? textOf(reader.input('cookie'), 'the cookie of the case') : null;
+      // The first failure counts: the session is closed also after a read that failed.
+      let failure: unknown = null;
+      try {
+        // @ts-expect-error -- a case gives the lifetime as a JSON value of any type, which the maker refuses (HY-104.32)
+        const sessions = await FileSessions.inDirectory(lifetime === undefined ? { directory } : { directory, lifetime });
+        if (cookie !== null) {
+          const store = await sessions.open(cookie);
+          try {
+            store.get('a');
+          } catch (error) {
+            failure = error;
+          }
+          try {
+            await store.close();
+          } catch (error) {
+            failure ??= error;
+          }
+        }
+      } catch (error) {
+        failure ??= error;
+      }
+      reader.compare('raises', failure === null ? null : raisesOf(failure));
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   },
 
   cookie(reader: CaseReader): void {

@@ -196,6 +196,37 @@ test('a marked statement renders with the phrase of each language and its row (H
   assert.equal(run('check', root).status, 0);
 });
 
+// The per-server form of a mark (H35.40-2): a list of rows, each with the servers that do not meet the statement.
+const checklistOf = (rows: string[]): string => `# Checklist\n\n| ID | Task | Deliverables | Verification | State |\n|---|---|---|---|---|\n${rows.map((row) => `| ${row} | A task | — | \`make x\` | [ ] |\n`).join('')}`;
+
+test('a mark per server renders each row with the servers that do not meet the statement (H35.40-2)', () => {
+  const root = makeRoot({
+    contract: (edit) => { edit([...HY_2_1, 'unimplemented'], [{ row: 'H9.1', servers: ['php'] }, { row: 'H9.2', servers: ['node', 'python'] }]); },
+    files: { [CHECKLIST]: checklistOf(['H9.1', 'H9.2']), [FEATURES]: features('not implemented: no code follows it (H9.1, H9.2)') },
+  });
+  const result = run('write', root);
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(docBytes(root, 'protocol.md').includes('The second rule has one statement. *(Not implemented in PHP: row H9.1; in Node and Python: row H9.2.)*'), docBytes(root, 'protocol.md'));
+  assert.ok(docBytes(root, 'protocol.ko.md').includes(' *(구현되지 않음: PHP는 행 H9.1, Node와 Python은 행 H9.2.)*'), docBytes(root, 'protocol.ko.md'));
+  assert.equal(run('check', root).status, 0);
+});
+
+test('a mark per server whose row the checklist does not hold fails (H35.40-2)', () => {
+  const root = makeRoot({
+    contract: (edit) => { edit([...HY_2_1, 'unimplemented'], [{ row: 'H9.3', servers: ['php'] }]); },
+    files: { [CHECKLIST]: checklistOf(['H9.1']), [FEATURES]: features('not implemented: no code follows it (H9.3)') },
+  });
+  assertFails(run('write', root), ['HY-2.1: the row H9.3 of its mark is no row of docs/plans/execution/checklist.md']);
+});
+
+test('a mark per server that names a server twice fails (H35.40-2)', () => {
+  const root = makeRoot({
+    contract: (edit) => { edit([...HY_2_1, 'unimplemented'], [{ row: 'H9.1', servers: ['php'] }, { row: 'H9.2', servers: ['php'] }]); },
+    files: { [CHECKLIST]: checklistOf(['H9.1', 'H9.2']), [FEATURES]: features('not implemented: no code follows it (H9.1)') },
+  });
+  assertFails(run('write', root), ['HY-2.1: its mark names the server php twice']);
+});
+
 test('a mark that names a row which the checklist does not hold fails (H35.40)', () => {
   const root = makeRoot({ contract: marked('H9.2'), files: { [CHECKLIST]: checklist('[ ]'), [FEATURES]: features('not implemented: no code follows it (H9.2)') } });
   assertFails(run('write', root), ['HY-2.1: the row H9.2 of its mark is no row of docs/plans/execution/checklist.md']);

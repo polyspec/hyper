@@ -575,7 +575,7 @@ test('handler-error-is-the-plain-500-and-is-reported (HY-43.1, HY-43.2, HY-43.4,
   });
 });
 
-test('session-open-error-is-the-plain-500 (HY-60.14 to HY-60.17, HY-99.2, HY-99.5, HY-100.2)', SCENARIO, async (t) => {
+test('session-open-error-is-the-plain-500 (HY-60.14 to HY-60.17, HY-99.2, HY-99.5, HY-100.2, HY-104.37)', SCENARIO, async (t) => {
   // The session store of each server fails to open: the store of App.server in Node, the store of create_server in
   // Python and the session save handler of PHP, which `App::run` starts.
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_SESSIONS_OPEN: 'throws' } });

@@ -3,7 +3,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { App, FileSessions, type AppOptions, type ServerOptions } from '../../src/index.js';
+import { App, FileSessions, listener, server, type AppOptions, type ServerOptions } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
 import { raisesOf } from '../case-rules.js';
 import { FIXTURES, PROGRAM, type Services } from '../support.js';
@@ -49,15 +49,15 @@ export const steps = {
     // A session store over a directory of the step, which no entry uses, because no entry listens.
     const directory = mkdtempSync(join(tmpdir(), 'hyper-hooks-'));
     try {
-      const sessions = new FileSessions({ directory });
+      const sessions = await FileSessions.inDirectory({ directory });
       // The text stands in the place of the hook, which each host entry checks (HY-97.7, HY-99.14).
       const options: ServerOptions = { [hook]: 'no function' };
       const errors: [Error, Error] = [
-        creationError('App.server', () => {
+        creationError('server', () => {
           // A server that is created although it should have failed is closed; it never listened.
-          app.server(sessions, options).close();
+          server(app, sessions, options).close();
         }),
-        creationError('App.listener', () => app.listener(sessions, options)),
+        creationError('listener', () => listener(app, sessions, options)),
       ];
       const [first, second] = errors;
       if (first.message !== second.message) throw new Error(`the host entries fail with two messages: ${first.message} and ${second.message}`);

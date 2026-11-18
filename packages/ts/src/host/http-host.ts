@@ -5,8 +5,10 @@ import type { Socket } from 'node:net';
 import { extname, isAbsolute, join } from 'node:path';
 import { TLSSocket } from 'node:tls';
 import type { App } from '../app/app.js';
+import { ArgumentCountError } from '../app/argument-count-error.js';
 import { rules } from '../app/core-rules.js';
 import { Cookies } from '../http/cookies.js';
+import type { FileSession } from '../session/file-session.js';
 import type { FileSessions } from '../session/file-sessions.js';
 import type { RedisSessions } from '../session/redis-sessions.js';
 import { RecordSession } from '../session/record-session.js';
@@ -48,6 +50,25 @@ const CONTENT_TYPES: Record<string, string> = {
   '.svg': 'image/svg+xml',
   '.txt': 'text/plain; charset=utf-8',
 };
+
+// The names of the options of a host entry, the members of its options record (HY-106.9).
+const SERVER_REQUIRED: string[] = [];
+const SERVER_OPTIONAL = ['files', 'written', 'around'];
+
+// Returns an HTTP server that answers every request with the application `app` and its sessions. The host entries
+// are functions of the host code that take the application first, and no members of `App` (HY-100.28, HY-106.20).
+export function server<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server {
+  ArgumentCountError.between(arguments.length, 2, 3);
+  ArgumentCountError.members(options, SERVER_REQUIRED, SERVER_OPTIONAL);
+  return createServer(app, sessions, options);
+}
+
+// Returns the node:http request listener that `server` installs (HY-100.28).
+export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener {
+  ArgumentCountError.between(arguments.length, 2, 3);
+  ArgumentCountError.members(options, SERVER_REQUIRED, SERVER_OPTIONAL);
+  return createListener(app, sessions, options);
+}
 
 // Returns a server that answers every request with the application. A request whose start line or headers
 // node:http cannot parse, such as a request target with a byte outside ASCII (HY-42), receives a plain 400.
@@ -103,37 +124,48 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
     // The request that holds `read`, which releases the files of the body (HY-131.14).
     let holder: Request | null = null;
     try {
-      const file = files === undefined ? null : publicFile(files, incoming);
+      // HY-100.2: a request whose target node:http does not give is answered with the plain 500 and not as the request
+      // of the path `/`, which would be the answer to another request; no request exists then, so no write hook is
+      // called (HY-99.12).
+      const target = incoming.url;
+      if (target === undefined) throw new Error('hyper: the request has no target (HY-100)');
+      // HY-42.9: every line of a name, which `headers` of node:http keeps only the first of for the names that it reads
+      // as one value; `requestOf` joins them (HY-42.8). The request as received exists before the public directory is
+      // read, so that a failed stat of its file is an escaped error that the write hook receives with it (HY-60.14,
+      // HY-60.17); a file that is served returns before the hooks (HY-100.7).
+      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, https });
+      const file = files === undefined ? null : publicFile(files, incoming, target);
       if (file !== null) {
         serveFile(outgoing, incoming, file);
         return;
       }
-      // HY-42.9: every line of a name, which `headers` of node:http keeps only the first of for the names that it reads
-      // as one value; `requestOf` joins them (HY-42.8).
-      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, https });
       // The application answers a body larger than its limit with 413 (HY-59); the server reads no more of it.
       // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
       read = new RequestBody(request.header('Content-Type') ?? '', app.bodyLimit, app.formTypes.includes('multipart/form-data'), app.valueLimit, app.partLimit, app.fileLimit);
       await readBody(incoming, read, app.bodyLimit);
-      request = requestOf({ method: incoming.method ?? 'GET', target: incoming.url ?? '/', headers: incoming.headersDistinct, body: read.held(), bodySize: read.size(), https }, read);
+      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, body: read.held(), bodySize: read.size(), https }, read);
       holder = request;
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
       const last: { request?: Request; reply?: Reply } = {};
-      // Opens the session of the request by its session cookie, answers with the application, closes the session and
-      // adds the cookie of a new session first (HY-45).
+      // Answers with the application, which opens the session of the request by its session cookie only for a route that
+      // uses it (HY-104.38), closes an opened session and adds the cookie of a new session first (HY-45).
       const answerWith = async (given: Request): Promise<Response> => {
-        const session = await sessions.open(given.cookie(RecordSession.cookieName(app.https || https)));
+        const opened: { session: FileSession | null } = { session: null };
+        const open = async (): Promise<FileSession> => {
+          opened.session = await sessions.open(given.cookie(RecordSession.cookieName(app.https || https)));
+          return opened.session;
+        };
         let answer;
         try {
-          answer = await app.respond(given.withSignal(closed.signal), session, started);
+          answer = await app.respond(given.withSignal(closed.signal), open, started);
         } finally {
-          await session.close();
+          await opened.session?.close();
         }
         last.request = given;
         last.reply = answer.reply;
         // A request whose client closed the connection has no response to write (HY-67).
         if (answer.stopped) throw new Disconnected();
-        return withSessionCookie(app, sessions, answer.response, session.created(), https);
+        return withSessionCookie(app, sessions, answer.response, opened.session?.created() ?? null, https);
       };
       try {
         const given = around === undefined ? await answerWith(request) : await around(request, answerWith);
@@ -234,10 +266,10 @@ function serveFile(outgoing: ServerResponse, incoming: IncomingMessage, file: st
   else createReadStream(file).pipe(outgoing);
 }
 
-// Returns the file of a GET or HEAD request path in the public directory, or null.
-function publicFile(files: string, incoming: IncomingMessage): string | null {
+// Returns the file of a GET or HEAD request path in the public directory, or null; `target` is the target of the request.
+function publicFile(files: string, incoming: IncomingMessage, target: string): string | null {
   if (incoming.method !== 'GET' && incoming.method !== 'HEAD') return null;
-  const path = Request.targetPath(incoming.url ?? '/');
+  const path = Request.targetPath(target);
   if (!/^(\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$/.test(path)) return null;
   const file = join(files, path);
   try {

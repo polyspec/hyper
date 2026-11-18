@@ -1,82 +1,82 @@
-// The session store of one request of the file sessions (HY-24, HY-45, HY-72, HY-104).
-import { closeSync, constants, fstatSync, ftruncateSync, futimesSync, openSync, readSync, unlinkSync, writeSync } from 'node:fs';
-import type { FileSessions } from './file-sessions.js';
-import { RecordSession } from './record-session.js';
+// The session store of one request of the file sessions (HY-24, HY-45, HY-72, HY-104): the record session of the file
+// store of the session-store library, whose values this class gives and takes as values of the data model.
+import * as library from '@polyspec/session-store';
+import { rules } from '../app/core-rules.js';
+import type { SessionStore } from './session-store.js';
 
-const OPEN = constants.O_RDWR | constants.O_NOFOLLOW;
+// The prefix of the names of the category classes of the session-store package, such as `SessionStoreStoreError`.
+const LIBRARY_PREFIX = 'SessionStore';
+
+// Runs a call of the session-store library that returns at once. A failure of the library is thrown as the error of
+// hyper of the same role, with its kind, status and message (HY-132.3); any other failure is thrown as it is.
+/** @internal */
+export function converted<T>(call: () => T): T {
+  try {
+    return call();
+  } catch (error) {
+    throw rules().libraryError(library, LIBRARY_PREFIX, error);
+  }
+}
+
+// Runs a call of the session-store library that waits, and throws its failure as `converted` does.
+/** @internal */
+export async function awaited<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return await call();
+  } catch (error) {
+    throw rules().libraryError(library, LIBRARY_PREFIX, error);
+  }
+}
 
 /** @internal */
-export class FileSession extends RecordSession {
-  private readonly sessions: FileSessions;
-  private readonly held: number | null;
+export class FileSession implements SessionStore {
+  private readonly session: library.FileSession | library.RedisSession;
+  // The identifier that the close wrote for a new session, which the response sets as the session cookie.
+  private made: string | null;
 
-  constructor(sessions: FileSessions, cookieId: string | null, held: number | null) {
-    super(cookieId);
-    this.sessions = sessions;
-    this.held = held;
+  constructor(session: library.FileSession | library.RedisSession) {
+    this.session = session;
+    this.made = null;
   }
 
-  override stored(): Uint8Array | null {
-    if (this.held === null || this.sessions.expired(fstatSync(this.held).mtimeMs)) return null;
-    return FileSession.fileBytes(this.held);
+  // Returns the value of a key as a value of the data model (HY-104.13), or undefined for a key that holds no value. The
+  // library gives one value for a key that holds none and for a key that holds the PHP value null.
+  get(key: string): unknown {
+    const record = converted(() => this.session.get(key));
+    return record === null ? undefined : rules().sessionValue(record);
   }
 
-  // Writes a started session to its file, removes the file of a renewed identifier, and lets the next request of the
-  // session start. A session that the request did not change keeps its bytes and takes a new modification time, as PHP
-  // does with session.lazy_write.
+  // Stores a value of the data model as the PHP value of the record (HY-104.14).
+  set(key: string, item: unknown): void {
+    const record = rules().sessionRecord(item);
+    converted(() => {
+      this.session.set(key, record);
+    });
+  }
+
+  remove(key: string): void {
+    converted(() => {
+      this.session.remove(key);
+    });
+  }
+
+  // Gives the values a new identifier, which the response sets as the session cookie; closing deletes the old session
+  // (HY-72).
+  renew(): void {
+    converted(() => {
+      this.session.renew();
+    });
+  }
+
+  // Writes the values that the request changed, releases the lock of the session and its turn, and keeps the
+  // identifier that the store wrote for a new session.
   async close(): Promise<void> {
-    try {
-      const record = this.serialized();
-      if (record === null || this.id === null) return;
-      if (this.made) this.create(this.id, record);
-      else if (this.held !== null) this.rewrite(this.held, record);
-      if (this.renewed !== null) unlinkSync(this.sessions.file(this.renewed));
-    } finally {
-      try {
-        if (this.held !== null) closeSync(this.held);
-      } finally {
-        if (this.held !== null && this.cookieId !== null) this.sessions.turns.leave(this.cookieId);
-      }
-    }
-    return Promise.resolve();
+    this.made = await awaited(() => this.session.close());
   }
 
-  // Creates the file of a new identifier with the mode 0600; no other process knows the identifier yet.
-  private create(id: string, record: Uint8Array): void {
-    const descriptor = openSync(this.sessions.file(id), OPEN | constants.O_CREAT | constants.O_EXCL, 0o600);
-    try {
-      FileSession.writeBytes(descriptor, record);
-    } finally {
-      closeSync(descriptor);
-    }
-  }
-
-  // Writes a record over the file of the session in place, under its lock, as PHP does.
-  private rewrite(descriptor: number, record: Uint8Array): void {
-    if (this.read !== null && Buffer.compare(this.read, record) === 0) {
-      const now = new Date();
-      futimesSync(descriptor, now, now);
-      return;
-    }
-    FileSession.writeBytes(descriptor, record);
-    ftruncateSync(descriptor, record.length);
-  }
-
-  // Returns the bytes of an open session file from its start.
-  private static fileBytes(descriptor: number): Buffer {
-    const chunks: Buffer[] = [];
-    let offset = 0;
-    for (;;) {
-      const chunk = Buffer.allocUnsafe(1 << 20);
-      const size = readSync(descriptor, chunk, 0, chunk.length, offset);
-      if (size === 0) return Buffer.concat(chunks);
-      chunks.push(chunk.subarray(0, size));
-      offset += size;
-    }
-  }
-
-  // Writes the bytes of a record at the start of an open session file.
-  private static writeBytes(descriptor: number, record: Uint8Array): void {
-    for (let offset = 0; offset < record.length; ) offset += writeSync(descriptor, record, offset, record.length - offset, offset);
+  // Returns the identifier that this request created, which the response sets as the session cookie, or null. It is
+  // known after the close.
+  created(): string | null {
+    return this.made;
   }
 }

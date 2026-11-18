@@ -14,7 +14,10 @@ import { isSchema } from './recipe/validators.mts';
 
 type Lang = 'en' | 'ko';
 type Text = { en: string; ko: string };
-type Statement = Text & { id?: string; koSource: string; term?: string; unimplemented?: string };
+type Server = 'php' | 'node' | 'python';
+// A mark is the row of every server, or the rows of the servers that do not meet the statement (H35.40-2).
+type Mark = string | { row: string; servers: Server[] }[];
+type Statement = Text & { id?: string; koSource: string; term?: string; unimplemented?: Mark };
 type Item = { statements: Statement[]; blocks: Block[] };
 type Block =
   | { kind: 'paragraph'; statements: Statement[] }
@@ -44,6 +47,25 @@ const UNIMPLEMENTED: Record<Lang, (row: string) => string> = {
   en: (row) => ` *(Not implemented: row ${row}.)*`,
   ko: (row) => ` *(구현되지 않음: 행 ${row}.)*`,
 };
+// The names of the servers in a mark per server, and the phrase of each language with the servers before each row.
+const SERVER_NAMES: Record<Server, string> = { php: 'PHP', node: 'Node', python: 'Python' };
+// The Korean topic particle after the last name: `Python` ends in a consonant sound, `PHP` and `Node` in a vowel sound.
+const TOPIC_KO: Record<Server, string> = { php: '는', node: '는', python: '은' };
+const joined = (names: string[], and: string): string => (names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')}${and}${names.at(-1) ?? ''}`);
+const UNIMPLEMENTED_PER_SERVER: Record<Lang, (marks: { row: string; servers: Server[] }[]) => string> = {
+  en: (marks) => ` *(Not implemented ${marks.map((m) => `in ${joined(m.servers.map((s) => SERVER_NAMES[s]), ' and ')}: row ${m.row}`).join('; ')}.)*`,
+  ko: (marks) => ` *(구현되지 않음: ${marks.map((m) => `${joined(m.servers.map((s) => SERVER_NAMES[s]), '와 ')}${TOPIC_KO[m.servers.at(-1) ?? 'php']} 행 ${m.row}`).join(', ')}.)*`,
+};
+
+/** The phrase of a mark in a language. */
+function markPhrase(mark: Mark, lang: Lang): string {
+  return typeof mark === 'string' ? UNIMPLEMENTED[lang](mark) : UNIMPLEMENTED_PER_SERVER[lang](mark);
+}
+
+/** The rows of a mark. */
+function markRows(mark: Mark): string[] {
+  return typeof mark === 'string' ? [mark] : mark.map((m) => m.row);
+}
 const CHECKLIST = 'docs/plans/execution/checklist.md';
 const FEATURES = 'docs/features.md';
 // The states of a row of the checklist whose task is done: a mark that names such a row is removed with the task.
@@ -98,11 +120,20 @@ function tableRows(text: string, header: string): string[][] {
 function markProblems(contract: Contract, root: string): string[] {
   const problems: string[] = [];
   const all = statementsOf(contract);
-  const marks = new Map<string, string>();
+  const marks = new Map<string, string[]>();
   for (const s of all) {
     if (s.unimplemented === undefined) continue;
     if (s.id === undefined) problems.push(`"${s.en}" holds a mark and no id; only a statement with an id is marked`);
-    else marks.set(s.id, s.unimplemented);
+    else {
+      marks.set(s.id, markRows(s.unimplemented));
+      if (typeof s.unimplemented !== 'string') {
+        const seen = new Set<Server>();
+        for (const server of s.unimplemented.flatMap((m) => m.servers)) {
+          if (seen.has(server)) problems.push(`${s.id}: its mark names the server ${server} twice`);
+          seen.add(server);
+        }
+      }
+    }
   }
   const read = (name: string): string | undefined => (existsSync(path.join(root, name)) ? readFileSync(path.join(root, name), 'utf8') : undefined);
 
@@ -114,10 +145,12 @@ function markProblems(contract: Contract, root: string): string[] {
       const row = /^\| (H[0-9][^ |]*) \|.*\| (\[.\])[^|]*\|$/u.exec(line);
       if (row?.[1] !== undefined && row[2] !== undefined) states.set(row[1], row[2]);
     }
-    for (const [id, row] of marks) {
-      const state = states.get(row);
-      if (state === undefined) problems.push(`${id}: the row ${row} of its mark is no row of ${CHECKLIST}`);
-      else if (DONE.includes(state)) problems.push(`${id}: the row ${row} of its mark has the state ${state}; remove the mark`);
+    for (const [id, rows] of marks) {
+      for (const row of rows) {
+        const state = states.get(row);
+        if (state === undefined) problems.push(`${id}: the row ${row} of its mark is no row of ${CHECKLIST}`);
+        else if (DONE.includes(state)) problems.push(`${id}: the row ${row} of its mark has the state ${state}; remove the mark`);
+      }
     }
   }
 
@@ -224,7 +257,7 @@ function semanticProblems(contract: Contract): string[] {
 }
 
 function inline(list: Statement[], lang: Lang): string {
-  return list.map((s) => (s.id === undefined ? '' : `<a id="${s.id}"></a> `) + s[lang] + (s.unimplemented === undefined ? '' : UNIMPLEMENTED[lang](s.unimplemented))).join(' ');
+  return list.map((s) => (s.id === undefined ? '' : `<a id="${s.id}"></a> `) + s[lang] + (s.unimplemented === undefined ? '' : markPhrase(s.unimplemented, lang))).join(' ');
 }
 
 function indent(text: string): string {

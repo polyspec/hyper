@@ -1,83 +1,66 @@
-"""The session store of one request of the file sessions (HY-24, HY-45, HY-72, HY-104)."""
+"""The session store of one request of the file sessions (HY-24, HY-45, HY-72, HY-104): the record session of the
+file store of the session-store library, whose values this class gives and takes as values of the data model."""
 
 from __future__ import annotations
 
-import os
-from typing import TYPE_CHECKING, Optional
+from typing import Callable, Optional, TypeVar
 
-from ._record_session import RecordSession
+import polyspec.session_store as library
 
-if TYPE_CHECKING:
-    from .file_sessions import FileSessions
+from ..app._core_rules import core_rules
+from .session_store import SessionStore
 
-_OPEN = os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC
+T = TypeVar("T")
+
+# The prefix of the names of the category classes of the session-store package, such as `SessionStoreStoreError`.
+_LIBRARY_PREFIX = "SessionStore"
 
 
-class FileSession(RecordSession):
+def converted(call: Callable[[], T]) -> T:
+    """Runs a call of the session-store library. A failure of the library is raised as the error of hyper of the same
+    role, with its kind, status and message (HY-132.3); any other failure is raised as it is."""
+    try:
+        return call()
+    except Exception as error:  # noqa: BLE001 - every failure is converted or raised again
+        own = core_rules().library_error(library, _LIBRARY_PREFIX, error)
+        if own is error:
+            raise
+        raise own from error
+
+
+class FileSession(SessionStore):
     """The session store of one request (HY-24, HY-45, HY-72)."""
 
-    def __init__(
-        self, sessions: "FileSessions", cookie_id: Optional[str], held: Optional[int]
-    ) -> None:
-        super().__init__(cookie_id)
-        self._sessions = sessions
-        self._held = held
+    def __init__(self, session: library.FileSession | library.RedisSession) -> None:
+        self._session = session
+        # The identifier that the close wrote for a new session, which the response sets as the session cookie.
+        self._made: Optional[str] = None
 
-    def stored(self) -> Optional[bytes]:
-        if self._held is None or self._sessions._expired(os.fstat(self._held).st_mtime):
-            return None
-        return FileSession._file_bytes(self._held)
+    def get(self, key: str) -> object:
+        """Returns the value of a key as a value of the data model (HY-104.13), or None for a key that holds no
+        value."""
+        record = converted(lambda: self._session.get(key))
+        return None if record is None else core_rules().session_value(record)
+
+    def set(self, key: str, item: object) -> None:
+        """Stores a value of the data model as the PHP value of the record (HY-104.14)."""
+        record = core_rules().session_record(item)
+        converted(lambda: self._session.set(key, record))
+
+    def remove(self, key: str) -> None:
+        converted(lambda: self._session.remove(key))
+
+    def renew(self) -> None:
+        """Gives the values a new identifier, which the response sets as the session cookie; closing deletes the old
+        session (HY-72)."""
+        converted(self._session.renew)
 
     def close(self) -> None:
-        """Writes a started session to its file, removes the file of a renewed identifier and lets the next request of
-        the session start. A session that the request did not change keeps its bytes and takes a new modification
-        time, as PHP does with `session.lazy_write`."""
-        try:
-            record = self.serialized()
-            if record is None or self._id is None:
-                return
-            if self._made:
-                self._create(self._id, record)
-            elif self._held is not None:
-                self._rewrite(self._held, record)
-            if self._renewed is not None:
-                self._sessions._file(self._renewed).unlink(missing_ok=True)
-        finally:
-            if self._held is not None:
-                os.close(self._held)
+        """Writes the values that the request changed, releases the lock of the session and its turn, and keeps the
+        identifier that the store wrote for a new session."""
+        self._made = converted(self._session.close)
 
-    def _create(self, id: str, record: bytes) -> None:
-        """Creates the file of a new identifier with the mode 0600; no other process knows the identifier yet."""
-        descriptor = os.open(
-            self._sessions._file(id), _OPEN | os.O_CREAT | os.O_EXCL, 0o600
-        )
-        try:
-            FileSession._write_bytes(descriptor, record)
-        finally:
-            os.close(descriptor)
-
-    def _rewrite(self, descriptor: int, record: bytes) -> None:
-        """Writes a record over the file of the session in place, under its lock, as PHP does."""
-        if record == self._read:
-            os.utime(descriptor)
-            return
-        FileSession._write_bytes(descriptor, record)
-        os.ftruncate(descriptor, len(record))
-
-    @staticmethod
-    def _file_bytes(descriptor: int) -> bytes:
-        """Returns the bytes of an open session file from its start."""
-        chunks = []
-        offset = 0
-        while chunk := os.pread(descriptor, 1 << 20, offset):
-            chunks.append(chunk)
-            offset += len(chunk)
-        return b"".join(chunks)
-
-    @staticmethod
-    def _write_bytes(descriptor: int, record: bytes) -> None:
-        """Writes the bytes of a record at the start of an open session file."""
-        view = memoryview(record)
-        offset = 0
-        while offset < len(view):
-            offset += os.pwrite(descriptor, view[offset:], offset)
+    def created(self) -> Optional[str]:
+        """Returns the identifier that this request created, which the response sets as the session cookie, or None.
+        It is known after the close."""
+        return self._made

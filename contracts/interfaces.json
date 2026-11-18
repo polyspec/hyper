@@ -963,8 +963,8 @@
               "state": "Answers the request of the SAPI and registers the shutdown function of the write hook and the disconnect hook (HY-100.30).",
               "native": {
                 "php": {
-                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::run",
-                  "signature": "public function run(?int $started): void"
+                  "symbol": "packages/php/src/Host/functions.php::Polyspec\\Hyper\\run",
+                  "signature": "function run(App $app, ?int $started = null): void"
                 }
               },
               "only": {
@@ -1099,8 +1099,8 @@
               "state": "Returns a node:http server whose request listener is the listener of the application (HY-97.9).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.server",
-                  "signature": "server(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
+                  "symbol": "packages/ts/src/host/http-host.ts::server",
+                  "signature": "export function server<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
                 }
               },
               "only": {
@@ -1110,7 +1110,7 @@
                 "sentence": "HY-97.9"
               },
               "tests": [
-                "packages/ts/tests/http.test.ts::App.server > reports the plain 500 of an escaped error to the write events of its response with its request (HY-60, HY-99): App.server returns a node:http server whose request listener a consumer extends (HY-97.9); the test prepends a listener and asserts that it receives the finish of the plain 500 of an escaped error with its request."
+                "packages/ts/tests/http.test.ts::server > reports the plain 500 of an escaped error to the write events of its response with its request (HY-60, HY-99): App.server returns a node:http server whose request listener a consumer extends (HY-97.9); the test prepends a listener and asserts that it receives the finish of the plain 500 of an escaped error with its request."
               ]
             },
             {
@@ -1126,8 +1126,8 @@
               "state": "Returns the request listener of the application for node:http (HY-100.29).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.listener",
-                  "signature": "listener(sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
+                  "symbol": "packages/ts/src/host/http-host.ts::listener",
+                  "signature": "export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
                 }
               },
               "only": {
@@ -1137,8 +1137,8 @@
                 "sentence": "HY-100.29"
               },
               "tests": [
-                "packages/ts/tests/http.test.ts::the write hook and App.listener > App.listener returns the request listener of the application (HY-100): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
-                "packages/ts/tests/http.test.ts::the write hook and App.listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
+                "packages/ts/tests/http.test.ts::the write hook and listener > listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
+                "packages/ts/tests/http.test.ts::the write hook and listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
                 "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
                 "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
               ]
@@ -1504,6 +1504,71 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_kept_of",
                   "signature": "def session_kept_of(self, stored: object) -> object"
+                }
+              }
+            },
+            {
+              "id": "core-rules.libraryError",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "string",
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the error of hyper for an error of a library that hyper uses, by the class of the binding of hyper of the same role as the class of the error, with its message, kind, status and errno, and any other value as it is (HY-132.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.libraryError",
+                  "signature": "libraryError(library: object, prefix: string, error: unknown): unknown"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.library_error",
+                  "signature": "def library_error(self, library: object, prefix: str, error: BaseException) -> BaseException"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sessionValue",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "rules.session_value gives the value of the data model of a PHP value of a session record, and fails with the kind of the data model for a value outside it (HY-104.13).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionValue",
+                  "signature": "sessionValue(record: unknown): CoreValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_value",
+                  "signature": "def session_value(self, record: object) -> object"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sessionRecord",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "rules.session_record gives the PHP value of a session record of a value of the data model, and fails with data_unsupported_type for a native object (HY-104.14).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionRecord",
+                  "signature": "sessionRecord(value: unknown): unknown"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_record",
+                  "signature": "def session_record(self, value: object) -> object"
                 }
               }
             },
@@ -3795,7 +3860,7 @@
               ],
               "output": "wsgi-body",
               "errors": [],
-              "state": "Starts the plain 500 of an escaped error (HY-100.27).",
+              "state": "Starts the plain 500 of an escaped error (HY-100.9).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/wsgi.py::_escape",
@@ -3974,7 +4039,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Returns the header pairs and the body bytes of a response (HY-100.18).",
+              "state": "Returns the header pairs and the body bytes of a response (HY-100.38).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/asgi.py::_messages",
@@ -4530,8 +4595,8 @@
             }
           ],
           "tests": [
-            "packages/ts/tests/http.test.ts::App.server > answers a request target with a byte outside ASCII with a plain 400 (HY-42): Only the Node server answers and reports the 400 of a request that node:http cannot parse, with a request of the request line or with no request and with an empty reply (HY-60.7, HY-60.8); the test sends raw packets to the server of http-host.createServer.",
-            "packages/ts/tests/http.test.ts::App.server > answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65): Only the Node server answers headers larger than node:http accepts with a 431 that carries Cache-Control: no-store (HY-60.7, HY-65.1).",
+            "packages/ts/tests/http.test.ts::server > answers a request target with a byte outside ASCII with a plain 400 (HY-42): Only the Node server answers and reports the 400 of a request that node:http cannot parse, with a request of the request line or with no request and with an empty reply (HY-60.7, HY-60.8); the test sends raw packets to the server of http-host.createServer.",
+            "packages/ts/tests/http.test.ts::server > answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65): Only the Node server answers headers larger than node:http accepts with a 431 that carries Cache-Control: no-store (HY-60.7, HY-65.1).",
             "packages/ts/tests/http.test.ts::the field lines of a request > reads the lines of a name as one value joined with `, `, the media type of the body included (HY-42.8, HY-42.9): Only the Node host is the listener of node:http (HY-100.1), whose `headers` keeps the first line of `content-type` and `user-agent`; the test sends two lines of each and asserts the joined values that `around` reads.",
             "packages/ts/tests/http.test.ts::the field lines of a request > answers an action with two Content-Type lines with 415, as the servers that do not call the core answer a value that is no media type, where the protocol answers 400 (HY-42.14, HY-59.12): Only the Node host is the listener of node:http (HY-100.1); the test sends two `Content-Type` lines to an action through it.",
             "packages/ts/tests/http.test.ts::the field lines of a request > leaves a request with two Content-Length lines to the 400 of node:http (HY-42.13, HY-60.7): Only the Node server has node:http, which refuses two `Content-Length` lines itself; the test asserts the plain 400 of HY-60.7.",
@@ -9876,7 +9941,6 @@
       ],
       "cases": [
         "contracts/file-sessions.json",
-        "tests/legacy/redis-sessions.json",
         "tests/legacy/file-store-sessions.json"
       ],
       "units": [
@@ -10870,16 +10934,18 @@
               "inputs": [],
               "output": "string",
               "errors": [],
-              "state": "Holds the directory of the session files.",
+              "state": "Returns the directory of the session files that the store of the session-store library holds.",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.directory",
-                  "signature": "readonly directory: string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._directory",
-                  "signature": "_directory: Path"
+                  "signature": "get directory(): string"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-104.26"
               }
             },
             {
@@ -10889,41 +10955,19 @@
               "inputs": [],
               "output": "number",
               "errors": [],
-              "state": "Holds the seconds after the last request of a session until the session ends.",
+              "state": "Returns the seconds after the last request of a session until the session ends, as the store of the session-store library holds them.",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.lifetime",
-                  "signature": "readonly lifetime: number"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._lifetime",
-                  "signature": "_lifetime: int"
-                }
-              }
-            },
-            {
-              "id": "file-sessions.turns",
-              "kind": "property",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "session-turns",
-              "errors": [],
-              "state": "Holds the turns of the requests of this process (HY-104.29).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.turns",
-                  "signature": "readonly turns: SessionTurns"
+                  "signature": "get lifetime(): number"
                 }
               },
               "only": {
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-104.29"
-              },
-              "tests": [
-                "packages/ts/tests/sessions.test.ts::FileSessions > runs the requests of one session one after another: The requests of one session in one Node process wait in a queue of that process before they try the lock (HY-104.29); the test opens one session twice in one event loop and asserts that the second open reads the value that the first wrote."
-              ]
+                "sentence": "HY-104.26"
+              }
             },
             {
               "id": "file-sessions.constructor",
@@ -10934,11 +10978,11 @@
               ],
               "output": "file-sessions",
               "errors": [],
-              "state": "Holds an existing absolute directory and the lifetime of its sessions, and fails for another directory or lifetime (HY-104.1).",
+              "state": "Holds an existing absolute directory and the lifetime of its sessions, and fails for another directory or lifetime (HY-104.32); in Node it holds the store that inDirectory made, because the library makes a store only with a call that waits.",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.constructor",
-                  "signature": "constructor(options: FileSessionsOptions)"
+                  "signature": "private constructor(store: LibraryFileSessions)"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions.__init__",
@@ -10965,71 +11009,10 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._open",
                   "signature": "def _open(self, cookie: Optional[str]) -> 'FileSession'"
                 }
-              }
-            },
-            {
-              "id": "file-sessions.file",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Returns the path of the session file of an identifier (HY-104.2).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.file",
-                  "signature": "file(id: string): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._file",
-                  "signature": "def _file(self, identifier: str) -> Path"
-                }
-              }
-            },
-            {
-              "id": "file-sessions.hold",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "string",
-                "boolean"
-              ],
-              "output": "optional<number>",
-              "errors": [],
-              "state": "Takes the exclusive lock of a session file and returns its descriptor, or null without a file and, when it does not wait, while another holds the lock (HY-104.3).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.hold",
-                  "signature": "private async hold(id: string, blocking: boolean): Promise<number | null>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._hold",
-                  "signature": "def _hold(self, identifier: str, blocking: bool) -> Optional[int]"
-                }
-              }
-            },
-            {
-              "id": "file-sessions.tryHold",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Tries the lock of a session file once without blocking, and counts it only when the path still names the locked file (HY-104.27).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.tryHold",
-                  "signature": "private tryHold(id: string): number | null | 'busy'"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._try_hold",
-                  "signature": "def _try_hold(self, identifier: str) -> Optional[int] | Literal['busy']"
-                }
-              }
+              },
+              "tests": [
+                "packages/ts/tests/sessions.test.ts::FileSessions > runs the requests of one session one after another: The requests of one session in one Node process wait in a queue of that process before they try the lock (HY-104.29); the test opens one session twice in one event loop and asserts that the second open reads the value that the first wrote."
+              ]
             },
             {
               "id": "file-sessions.collect",
@@ -11042,7 +11025,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.collect",
-                  "signature": "collect(): number"
+                  "signature": "async collect(): Promise<number>"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._collect",
@@ -11051,45 +11034,26 @@
               }
             },
             {
-              "id": "file-sessions.live",
-              "kind": "method",
-              "visibility": "private",
+              "id": "file-sessions.inDirectory",
+              "kind": "static method",
+              "visibility": "public",
               "inputs": [
-                "string"
+                "fileSessionsOptions"
               ],
-              "output": "boolean",
+              "output": "file-sessions",
               "errors": [],
-              "state": "Returns false when the session file of an identifier is missing or older than the lifetime.",
+              "state": "Makes the store of an existing absolute directory with the file store of the session-store library, and fails with invalid_directory for another directory and with invalid_lifetime for a lifetime of 0 (HY-104.32); a failure of the library is the error of hyper of the same category with its kind (HY-132.3).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.live",
-                  "signature": "private live(id: string): boolean"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._live",
-                  "signature": "def _live(self, identifier: str) -> bool"
+                  "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.inDirectory",
+                  "signature": "static async inDirectory(options: FileSessionsOptions): Promise<FileSessions>"
                 }
-              }
-            },
-            {
-              "id": "file-sessions.expired",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "number"
-              ],
-              "output": "boolean",
-              "errors": [],
-              "state": "Returns true when a modification time is older than the lifetime.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.expired",
-                  "signature": "expired(modified: number): boolean"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._expired",
-                  "signature": "def _expired(self, modified: float) -> bool"
-                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-104.32"
               }
             }
           ],
@@ -11111,7 +11075,7 @@
             },
             "python": {
               "file": "packages/python/src/polyspec/hyper/session/_file_session.py",
-              "kind": "class",
+              "kind": "functions",
               "internal": true
             }
           },
@@ -11121,40 +11085,19 @@
               "kind": "constructor",
               "visibility": "internal",
               "inputs": [
-                "file-sessions",
-                "optional<string>",
-                "optional<number>"
+                "value"
               ],
               "output": "file-session",
               "errors": [],
-              "state": "Holds the sessions, the identifier of the cookie and the descriptor of the locked session file of a request.",
+              "state": "Holds the record session that the file store or the Redis store of the session-store library opened for a request, and no identifier that the close wrote yet.",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-session.ts::FileSession.constructor",
-                  "signature": "constructor(sessions: FileSessions, cookieId: string | null, held: number | null)"
+                  "signature": "constructor(session: library.FileSession | library.RedisSession)"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.__init__",
-                  "signature": "def __init__(self, sessions: 'FileSessions', cookie_id: Optional[str], held: Optional[int]) -> None"
-                }
-              }
-            },
-            {
-              "id": "file-session.stored",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "optional<bytes>",
-              "errors": [],
-              "state": "Returns the bytes of the locked session file, or null without a file or for a session whose lifetime has passed.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.stored",
-                  "signature": "override stored(): Uint8Array | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.stored",
-                  "signature": "def stored(self) -> Optional[bytes]"
+                  "signature": "def __init__(self, session: library.FileSession | library.RedisSession) -> None"
                 }
               }
             },
@@ -11178,90 +11121,149 @@
               }
             },
             {
-              "id": "file-session.create",
+              "id": "file-session.get",
               "kind": "method",
-              "visibility": "private",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the value of a key as a value of the data model (HY-104.13), or no value for a key that holds none.",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.get",
+                  "signature": "get(key: string): unknown"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.get",
+                  "signature": "def get(self, key: str) -> object"
+                }
+              }
+            },
+            {
+              "id": "file-session.set",
+              "kind": "method",
+              "visibility": "internal",
               "inputs": [
                 "string",
-                "bytes"
+                "value"
               ],
               "output": "none",
               "errors": [],
-              "state": "Creates the file of a new identifier with the mode 0600.",
+              "state": "Stores a value of the data model as the PHP value of the record (HY-104.14).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.create",
-                  "signature": "private create(id: string, record: Uint8Array): void"
+                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.set",
+                  "signature": "set(key: string, item: unknown): void"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession._create",
-                  "signature": "def _create(self, id: str, record: bytes) -> None"
+                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.set",
+                  "signature": "def set(self, key: str, item: object) -> None"
                 }
               }
             },
             {
-              "id": "file-session.rewrite",
+              "id": "file-session.remove",
               "kind": "method",
-              "visibility": "private",
+              "visibility": "internal",
               "inputs": [
-                "number",
-                "bytes"
+                "string"
               ],
               "output": "none",
               "errors": [],
-              "state": "Writes a record over the file of the session in place, or sets a new modification time when the record did not change (HY-104.7).",
+              "state": "Removes the value of a key, without failing for a key that holds none (HY-104.30).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.rewrite",
-                  "signature": "private rewrite(descriptor: number, record: Uint8Array): void"
+                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.remove",
+                  "signature": "remove(key: string): void"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession._rewrite",
-                  "signature": "def _rewrite(self, descriptor: int, record: bytes) -> None"
+                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.remove",
+                  "signature": "def remove(self, key: str) -> None"
                 }
               }
             },
             {
-              "id": "file-session.fileBytes",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "number"
-              ],
-              "output": "bytes",
+              "id": "file-session.renew",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
               "errors": [],
-              "state": "Returns the bytes of an open session file from its start.",
+              "state": "Gives the values a new identifier, which the response sets as the session cookie; the close deletes the old session (HY-72).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.fileBytes",
-                  "signature": "private static fileBytes(descriptor: number): Buffer"
+                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.renew",
+                  "signature": "renew(): void"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession._file_bytes",
-                  "signature": "def _file_bytes(descriptor: int) -> bytes"
+                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.renew",
+                  "signature": "def renew(self) -> None"
                 }
               }
             },
             {
-              "id": "file-session.writeBytes",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "number",
-                "bytes"
-              ],
-              "output": "none",
+              "id": "file-session.created",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<string>",
               "errors": [],
-              "state": "Writes the bytes of a record at the start of an open session file.",
+              "state": "Returns the identifier that the close wrote for a new session, which the response sets as the session cookie, or null.",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.writeBytes",
-                  "signature": "private static writeBytes(descriptor: number, record: Uint8Array): void"
+                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.created",
+                  "signature": "created(): string | null"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession._write_bytes",
-                  "signature": "def _write_bytes(descriptor: int, record: bytes) -> None"
+                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.created",
+                  "signature": "def created(self) -> Optional[str]"
                 }
+              }
+            },
+            {
+              "id": "file-session.converted",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Runs a call of the session-store library that returns at once, and raises a failure of the library as the error of hyper of the same role with its kind, status and message (HY-132.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/session/file-session.ts::converted",
+                  "signature": "export function converted<T>(call: () => T): T"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::converted",
+                  "signature": "def converted(call: Callable[[], T]) -> T"
+                }
+              }
+            },
+            {
+              "id": "file-session.awaited",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Runs a call of the session-store library that waits, and raises its failure as converted does (HY-132.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/session/file-session.ts::awaited",
+                  "signature": "export async function awaited<T>(call: () => Promise<T>): Promise<T>"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-132.3"
               }
             }
           ],
@@ -11289,65 +11291,6 @@
           },
           "members": [
             {
-              "id": "redis-sessions.command",
-              "kind": "property",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "redisCommand",
-              "errors": [],
-              "state": "Holds the function that runs one command on the Redis client of the application (HY-115.29).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.command",
-                  "signature": "readonly command: RedisCommand"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._command",
-                  "signature": "_command: _RedisCommand"
-                }
-              }
-            },
-            {
-              "id": "redis-sessions.lifetime",
-              "kind": "property",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "number",
-              "errors": [],
-              "state": "Holds the seconds after the last request of a session until the session ends.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.lifetime",
-                  "signature": "readonly lifetime: number"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._lifetime",
-                  "signature": "_lifetime: int"
-                }
-              }
-            },
-            {
-              "id": "redis-sessions.turns",
-              "kind": "property",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "session-turns",
-              "errors": [],
-              "state": "Holds the turns of the requests of this process (HY-104.29).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.turns",
-                  "signature": "readonly turns: SessionTurns"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-104.29"
-              }
-            },
-            {
               "id": "redis-sessions.constructor",
               "kind": "constructor",
               "visibility": "public",
@@ -11356,7 +11299,7 @@
               ],
               "output": "redis-sessions",
               "errors": [],
-              "state": "Holds the command of a Redis client, the lifetime, the key prefix and the lock options of the sessions (HY-115.29).",
+              "state": "Makes the Redis store of the session-store library with the connection setting, the lock expiry, the lifetime, the key prefix and the lock tries of the sessions (HY-115.17, HY-115.28, HY-115.29); a lifetime or a lock expiry of 0 fails with invalid_lifetime or invalid_lock_expire, as the error of hyper of the same category (HY-132.3).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.constructor",
@@ -11364,7 +11307,7 @@
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions.__init__",
-                  "signature": "def __init__(self, command: _RedisCommand, lifetime: int=1440, prefix: str='PHPREDIS_SESSION:', lock_expire: int=30, lock_retries: int=100, lock_wait: float=0.02, setup: Optional[Callable[[], object]]=None)"
+                  "signature": "def __init__(self, setting: RedisSetting, *, lock_expire: int, lifetime: int=1440, prefix: str='PHPREDIS_SESSION:', lock_retries: int=100, lock_wait: int=20000)"
                 }
               }
             },
@@ -11385,143 +11328,9 @@
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._open",
-                  "signature": "def _open(self, cookie: Optional[str]) -> 'RedisSession'"
+                  "signature": "def _open(self, cookie: Optional[str]) -> RedisSession"
                 }
               }
-            },
-            {
-              "id": "redis-sessions.key",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Returns the key of the session of an identifier (HY-115.2).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.key",
-                  "signature": "key(id: string): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._key",
-                  "signature": "def _key(self, identifier: str) -> str"
-                }
-              }
-            },
-            {
-              "id": "redis-sessions.holds",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "string"
-              ],
-              "output": "boolean",
-              "errors": [],
-              "state": "Returns true while the lock of a session is the lock with a secret (HY-115.5).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.holds",
-                  "signature": "async holds(key: string, secret: string): Promise<boolean>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._holds",
-                  "signature": "def _holds(self, key: str, secret: str) -> bool"
-                }
-              }
-            },
-            {
-              "id": "redis-sessions.release",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "string"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Releases the lock of a session unless another request holds it now (HY-115.8).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.release",
-                  "signature": "async release(key: string, secret: string): Promise<void>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._release",
-                  "signature": "def _release(self, key: str, secret: str) -> None"
-                }
-              }
-            },
-            {
-              "id": "redis-sessions.takeLock",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Takes the lock of a session and returns its secret, and fails when its tries end (HY-115.3).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.takeLock",
-                  "signature": "private async takeLock(key: string): Promise<string>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._take_lock",
-                  "signature": "def _take_lock(self, key: str) -> str"
-                }
-              }
-            },
-            {
-              "id": "redis-sessions.bulkBytes",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value"
-              ],
-              "output": "optional<bytes>",
-              "errors": [],
-              "state": "Returns a reply of a bulk string as bytes, or null, and fails for a reply as text.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.bulkBytes",
-                  "signature": "private static bulkBytes(reply: unknown): Uint8Array | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._bulk_bytes",
-                  "signature": "def _bulk_bytes(reply: object) -> Optional[bytes]"
-                }
-              }
-            },
-            {
-              "id": "redis-sessions.prepare",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "none",
-              "errors": [],
-              "state": "Runs the setup of a request that is about to send its first command (HY-115.26).",
-              "native": {
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._prepare",
-                  "signature": "def _prepare(self) -> None"
-                }
-              },
-              "only": {
-                "languages": [
-                  "python"
-                ],
-                "sentence": "HY-115.26"
-              },
-              "tests": [
-                "packages/python/tests/test_redis_sessions.py::RedisSessionsTest.test_setup_runs_before_the_first_command_of_an_opened_session: RedisSessions of Python runs its setup before the first command of a request whose cookie names a session (HY-115.26); the test asserts that no command was sent when setup ran.",
-                "packages/python/tests/test_redis_sessions.py::RedisSessionsTest.test_setup_runs_before_a_new_session_is_written: RedisSessions of Python runs its setup before it writes a new session, and not when the session opens (HY-115.26).",
-                "packages/python/tests/test_redis_sessions.py::RedisSessionsTest.test_a_request_without_a_session_does_not_run_setup: RedisSessions of Python does not run its setup for a request that has no session and writes none (HY-115.26).",
-                "packages/python/tests/test_redis_sessions.py::RedisSessionsTest.test_a_setup_that_fails_fails_the_request_before_any_command: An error of the setup of RedisSessions of Python leaves the open before any command is sent (HY-115.26)."
-              ]
             }
           ],
           "only": {
@@ -11546,92 +11355,6 @@
               "internal": true
             }
           },
-          "members": [
-            {
-              "id": "redis-session.constructor",
-              "kind": "constructor",
-              "visibility": "internal",
-              "inputs": [
-                "redis-sessions",
-                "optional<string>",
-                "optional<string>",
-                "optional<bytes>"
-              ],
-              "output": "redis-session",
-              "errors": [],
-              "state": "Holds the sessions, the identifier of the cookie, the secret of its lock and the record that was read.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-session.ts::RedisSession.constructor",
-                  "signature": "constructor(sessions: RedisSessions, cookieId: string | null, secret: string | null, record: Uint8Array | null)"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_redis_session.py::RedisSession.__init__",
-                  "signature": "def __init__(self, sessions: 'RedisSessions', cookie_id: Optional[str], secret: Optional[str], record: Optional[bytes]) -> None"
-                }
-              }
-            },
-            {
-              "id": "redis-session.stored",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "optional<bytes>",
-              "errors": [],
-              "state": "Returns the record that the opening read, or null.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-session.ts::RedisSession.stored",
-                  "signature": "override stored(): Uint8Array | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_redis_session.py::RedisSession.stored",
-                  "signature": "def stored(self) -> Optional[bytes]"
-                }
-              }
-            },
-            {
-              "id": "redis-session.close",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "none",
-              "errors": [],
-              "state": "Writes a started session while the request still holds its lock, removes a renewed one, releases the lock and lets the next request of the session start (HY-115.5, HY-115.7, HY-115.11).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/redis-session.ts::RedisSession.close",
-                  "signature": "async close(): Promise<void>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_redis_session.py::RedisSession.close",
-                  "signature": "def close(self) -> None"
-                }
-              }
-            }
-          ],
-          "only": {
-            "languages": [
-              "node",
-              "python"
-            ],
-            "sentence": "HY-104.26"
-          }
-        },
-        {
-          "id": "session-lock-error",
-          "native": {
-            "node": {
-              "file": "packages/ts/src/session/session-lock-error.ts",
-              "kind": "class",
-              "internal": false
-            },
-            "python": {
-              "file": "packages/python/src/polyspec/hyper/session/session_lock_error.py",
-              "kind": "class",
-              "internal": false
-            }
-          },
           "members": [],
           "only": {
             "languages": [
@@ -11639,123 +11362,6 @@
               "python"
             ],
             "sentence": "HY-104.26"
-          }
-        },
-        {
-          "id": "flock",
-          "native": {
-            "node": {
-              "file": "packages/ts/src/session/flock.ts",
-              "kind": "functions",
-              "internal": true
-            }
-          },
-          "members": [
-            {
-              "id": "flock.isFfi",
-              "kind": "function",
-              "visibility": "private",
-              "inputs": [
-                "value"
-              ],
-              "output": "boolean",
-              "errors": [],
-              "state": "Returns true for the module node:ffi with the functions that the lock uses.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/flock.ts::isFfi",
-                  "signature": "function isFfi(module: unknown): module is { dlopen(path: null, definitions: Record<string, { arguments: string[]; return: string }>): { functions: Record<string, ((...values: number[]) => unknown) | undefined> }; getInt32(pointer: unknown, offset: number): number; }"
-                }
-              }
-            },
-            {
-              "id": "flock.exclusiveLock",
-              "kind": "function",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "function(number) -> boolean",
-              "errors": [],
-              "state": "Returns the function that tries the exclusive lock of a file descriptor through node:ffi, true when it holds the lock and false while another holds it (HY-104.27).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/flock.ts::exclusiveLock",
-                  "signature": "export function exclusiveLock(): (descriptor: number) => boolean"
-                }
-              }
-            }
-          ],
-          "only": {
-            "languages": [
-              "node"
-            ],
-            "sentence": "HY-104.27"
-          }
-        },
-        {
-          "id": "session-turns",
-          "native": {
-            "node": {
-              "file": "packages/ts/src/session/session-turns.ts",
-              "kind": "class",
-              "internal": true
-            }
-          },
-          "members": [
-            {
-              "id": "session-turns.constructor",
-              "kind": "constructor",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "session-turns",
-              "errors": [],
-              "state": "Starts the turns of a process without a waiting request.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/session-turns.ts::SessionTurns.constructor",
-                  "signature": "constructor()"
-                }
-              }
-            },
-            {
-              "id": "session-turns.enter",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Waits for the turn of an identifier, which lasts until it is left (HY-104.29).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/session-turns.ts::SessionTurns.enter",
-                  "signature": "async enter(id: string): Promise<void>"
-                }
-              }
-            },
-            {
-              "id": "session-turns.leave",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Ends the turn of an identifier, so that the next request of its session in this process goes on (HY-104.29).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/session-turns.ts::SessionTurns.leave",
-                  "signature": "leave(id: string): void"
-                }
-              }
-            }
-          ],
-          "only": {
-            "languages": [
-              "node"
-            ],
-            "sentence": "HY-104.29"
           }
         }
       ]
@@ -14499,27 +14105,22 @@
       }
     },
     {
-      "id": "redisCommand",
+      "id": "redisSetting",
       "visibility": "public",
       "unit": "redis-sessions",
       "shape": {
-        "function": {
-          "inputs": [
-            "list<value>"
-          ],
-          "output": "value"
-        }
+        "term": "value"
       },
       "only": {
         "languages": [
           "node"
         ],
-        "sentence": "HY-115.29"
+        "sentence": "HY-115.17"
       },
       "native": {
         "node": {
-          "symbol": "packages/ts/src/session/redis-sessions.ts::RedisCommand",
-          "declaration": "export type RedisCommand = (words: (string | Uint8Array)[]) => Promise<unknown>;"
+          "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSetting",
+          "declaration": "export type RedisSetting = Setting;"
         }
       }
     },
@@ -14529,29 +14130,18 @@
       "unit": "redis-sessions",
       "shape": {
         "fields": {
-          "command": "redisCommand",
+          "setting": "redisSetting",
+          "lockExpire": "number",
           "lifetime": "number",
           "prefix": "string",
-          "lockExpire": "number",
           "lockRetries": "number",
-          "lockWait": "number",
-          "setup": {
-            "term": "function() -> value",
-            "only": {
-              "languages": [
-                "python"
-              ],
-              "sentence": "HY-115.26"
-            }
-          }
+          "lockWait": "number"
         },
         "optional": [
           "lifetime",
           "prefix",
-          "lockExpire",
           "lockRetries",
-          "lockWait",
-          "setup"
+          "lockWait"
         ]
       },
       "only": {
@@ -14563,7 +14153,7 @@
       "native": {
         "node": {
           "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessionsOptions",
-          "declaration": "export interface RedisSessionsOptions {\n  // Runs a command on the Redis server that the server processes share.\n  command: RedisCommand;\n  // Seconds after the last request of a session until the session ends; PHP's session.gc_maxlifetime is 1440.\n  lifetime?: number;\n  // The prefix of the keys; the `prefix` of session.save_path of phpredis.\n  prefix?: string;\n  // Seconds until a lock expires, longer than any request; redis.session.lock_expire of phpredis.\n  lockExpire?: number;\n  // How many more times a request tries a lock that another holds; redis.session.lock_retries of phpredis.\n  lockRetries?: number;\n  // Milliseconds between two tries; redis.session.lock_wait_time of phpredis, in microseconds there.\n  lockWait?: number;\n}"
+          "declaration": "export interface RedisSessionsOptions {\n  // The addresses, TLS and the ACL user of the Redis server; the store keeps its own connections.\n  setting: RedisSetting;\n  // Seconds until a lock expires, longer than any request; redis.session.lock_expire of phpredis. It has no default,\n  // because no value is longer than every request of every application (HY-115.28).\n  lockExpire: number;\n  // Seconds after the last request of a session until the session ends; PHP's session.gc_maxlifetime is 1440.\n  lifetime?: number;\n  // The prefix of the keys; the `prefix` of session.save_path of phpredis. Its default is `PHPREDIS_SESSION:`.\n  prefix?: string;\n  // How many more times a request tries a lock that another holds; redis.session.lock_retries of phpredis, 100.\n  lockRetries?: number;\n  // Microseconds between two tries; redis.session.lock_wait_time of phpredis, 20000.\n  lockWait?: number;\n}"
         }
       }
     },
@@ -18274,7 +17864,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-104.8",
-              "state": "`errors` holds for each step null, or the pair of where the first failure happened (`open`, `call` or `close`) and its class: `unserialize` for the `UnserializeError` of the php-serialize package and `record` for the `Error` of Node and the `ValueError` of Python."
+              "state": "`errors` holds for each step null, or the pair of where the first failure happened (`open`, `call` or `close`) and its name: `unserialize` for an error of hyper of the kind `record`, a record that cannot be decoded, and `record` for an error of hyper of the kind `record_not_array`, a record that holds no array (HY-132.3)."
             },
             "message": {
               "role": "expected",
@@ -18346,6 +17936,49 @@
           "members": [
             "record-session.cookieHeader",
             "record-session.cookieName"
+          ]
+        },
+        "storeFailures": {
+          "runners": [
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "files": {
+              "role": "input",
+              "optional": true
+            },
+            "directory": {
+              "role": "input",
+              "optional": true
+            },
+            "lifetime": {
+              "role": "input",
+              "optional": true
+            },
+            "cookie": {
+              "role": "input",
+              "optional": true
+            },
+            "raises": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-132.3",
+              "state": "The step makes a store of session files with `lifetime`, or its default, over a temporary directory of the case that holds the session files `files`, or over what `directory` names in place of it: `missing` a path below it that does not exist, `file` the path of a file below it and `relative` a relative path. With `cookie` it opens the session of that cookie value, reads the key `a` and closes the session. `raises` is the first failure of these calls, compared through the call of the store by the runner, because the answer of a server to a failed session open is the plain 500 of HY-60.14, which carries no class and no kind: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null."
+            }
+          },
+          "members": [
+            "file-sessions.constructor",
+            "file-sessions.open",
+            "record-session.close",
+            "record-session.get"
           ]
         }
       }

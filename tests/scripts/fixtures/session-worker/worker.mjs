@@ -5,56 +5,39 @@
 // names the ports of Sentinels instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection;
 // HYPER_SESSION_CLUSTER names the ports of nodes of a Redis Cluster.
 import { once } from 'node:events';
-import { readFileSync } from 'node:fs';
-import { createClient, createCluster, createSentinel, RESP_TYPES } from 'redis';
+// The Redis store of the session-store library keeps its own connections; HYPER_SESSION_TLS_CA turns TLS on and is the
+// file of the authorities that the store trusts.
 import { FileSessions, RedisSessions } from '@polyspec/hyper';
 
 const [directory, id, command, first, second] = process.argv.slice(2);
 const port = process.env.HYPER_SESSION_REDIS;
 const sentinels = process.env.HYPER_SESSION_SENTINEL;
-const ca = process.env.HYPER_SESSION_TLS_CA;
-const secure = {
-  ...(ca === undefined ? {} : { socket: { tls: true, ca: readFileSync(ca) } }),
-  username: process.env.HYPER_SESSION_USER,
-  password: process.env.HYPER_SESSION_PASSWORD,
-};
-const direct = async () => {
-  const client = await createClient({
-    socket: { host: '127.0.0.1', port: Number(port), reconnectStrategy: false, ...(ca === undefined ? {} : { tls: true, ca: readFileSync(ca) }) },
-    disableOfflineQueue: true,
-    username: secure.username,
-    password: secure.password,
-  }).connect();
-  return { client, command: (words) => client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).sendCommand(words.map((word) => Buffer.from(word))) };
-};
-const sentinel = async () => {
-  const client = await createSentinel({
-    name: 'hyper',
-    sentinelRootNodes: sentinels.split(',').map((item) => ({ host: '127.0.0.1', port: Number(item) })),
-    nodeClientOptions: { disableOfflineQueue: true, ...secure },
-    sentinelClientOptions: secure,
-  }).on('error', () => {}).connect();
-  return { client, command: (words) => client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).sendCommand(false, words.map((word) => Buffer.from(word))) };
-};
 const nodes = process.env.HYPER_SESSION_CLUSTER;
-// A cluster client routes a command by its key, the first argument, or the fourth of EVAL.
-const cluster = async () => {
-  const client = await createCluster({
-    rootNodes: nodes.split(',').map((item) => ({ socket: { host: '127.0.0.1', port: Number(item) } })),
-    defaults: { disableOfflineQueue: true, ...secure },
-  }).on('error', () => {}).connect();
-  const bytes = client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
-  const key = (words) => (words[0] === 'EVAL' ? words[3] : words[1]);
-  return { client, command: (words) => bytes.sendCommand(key(words), false, words.map((word) => Buffer.from(word))) };
+// The file of the authority of the test, which the store trusts alone (SR-6.7 of session-store), or null.
+const authorities = process.env.HYPER_SESSION_TLS_CA ?? null;
+const tls = authorities !== null;
+const user = process.env.HYPER_SESSION_USER ?? null;
+const password = process.env.HYPER_SESSION_PASSWORD ?? null;
+// The URL of a node: the scheme `rediss` for TLS and the ACL user and its password in its user information.
+const url = (item) => {
+  const credentials = user === null && password === null ? '' : `${encodeURIComponent(user ?? '')}:${encodeURIComponent(password ?? '')}@`;
+  return `${tls ? 'rediss' : 'redis'}://${credentials}127.0.0.1:${item}`;
 };
-const connection = nodes !== undefined ? await cluster() : sentinels !== undefined ? await sentinel() : port !== undefined ? await direct() : null;
-const client = connection?.client ?? null;
-const sessions = connection === null
-  ? new FileSessions({ directory })
+const setting = nodes !== undefined
+  ? { kind: 'cluster', urls: nodes.split(',').map(url), user: null, password: null, authorities }
+  : sentinels !== undefined
+    // The Sentinels of a test with an authority take TLS and the ACL user alone, as the Redis servers do, and a
+    // Sentinel takes them from its address (SR-6.1 of session-store).
+    ? { kind: 'sentinel', urls: sentinels.split(',').map(url), service: 'hyper', tls, user, password, authorities }
+    : port !== undefined
+      ? { kind: 'server', url: url(port), authorities }
+      : null;
+const sessions = setting === null
+  ? await FileSessions.inDirectory({ directory })
   : new RedisSessions({
-      command: connection.command,
+      setting,
       lockRetries: Number(process.env.HYPER_SESSION_RETRIES ?? 1_000_000),
-      lockWait: 2,
+      lockWait: 2000,
       lockExpire: Number(process.env.HYPER_SESSION_EXPIRE ?? 30),
     });
 
@@ -113,4 +96,3 @@ if (command === 'count') {
     for (const [name, value] of mapped(first)) store.set(name, value);
   });
 }
-await client?.close();

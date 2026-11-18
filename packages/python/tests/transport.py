@@ -41,8 +41,10 @@ class Application:
     def _respond(self, request: Request, session, started: int):
         self.requests.append(request)
         self.threads.append(threading.get_ident())
+        # The transport gives the call that opens the session, which the application calls for a route that uses one
+        # (HY-104.38).
         if self.opens_session:
-            session.set("count", 1)
+            session().set("count", 1)
         reply = Reply()
         self.replies.append(reply)
         return Response(

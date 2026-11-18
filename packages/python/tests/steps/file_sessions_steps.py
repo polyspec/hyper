@@ -7,8 +7,8 @@ from pathlib import Path
 
 from polyspec.hyper.session._record_session import RecordSession
 from polyspec.hyper.session.file_sessions import FileSessions
-from polyspec.php_serialize import UnserializeError
 
+from ..case_rules import raises_of
 from .store_requests import StoreRequests
 
 _PREFIX = "sess_"
@@ -66,6 +66,51 @@ def requests(case) -> None:
     case.compare("touched", touched)
 
 
+def store_failures(case) -> None:
+    """The failure of making a store or of the first request of a session, with its kind, status and category
+    (HY-132.3). An error that is no error of hyper fails the case, because `raises_of` raises it again."""
+    failure: BaseException | None = None
+    with tempfile.TemporaryDirectory(prefix="hyper-sessions-") as root:
+        for entry in case.input("files") if case.has("files") else []:
+            file = Path(root) / f"{_PREFIX}{entry['identifier']}"
+            descriptor = os.open(file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            try:
+                os.write(descriptor, entry["bytes"].encode("latin-1"))
+            finally:
+                os.close(descriptor)
+        named = case.input("directory") if case.has("directory") else None
+        directory = root
+        if named == "missing":
+            directory = str(Path(root) / "missing")
+        elif named == "relative":
+            directory = "hyper-sessions-of-the-case"
+        elif named == "file":
+            directory = str(Path(root) / "file")
+            Path(directory).write_bytes(b"")
+        elif named is not None:
+            raise ValueError("the directory of the case is not missing, file or relative")
+        try:
+            store = (
+                FileSessions(directory, case.input("lifetime"))
+                if case.has("lifetime")
+                else FileSessions(directory)
+            )
+            if case.has("cookie"):
+                session = store._open(case.input("cookie"))
+                # The first failure counts: the session is closed also after a read that failed.
+                try:
+                    session.get("a")
+                except Exception as error:  # noqa: BLE001 - the failure is what the case compares
+                    failure = error
+                try:
+                    session.close()
+                except Exception as error:  # noqa: BLE001 - the failure is what the case compares
+                    failure = failure or error
+        except Exception as error:  # noqa: BLE001 - the failure is what the case compares
+            failure = failure or error
+    case.compare("raises", None if failure is None else raises_of(failure))
+
+
 def cookie(case) -> None:
     https = case.input("https")
     identifier = case.input("identifier")
@@ -74,9 +119,13 @@ def cookie(case) -> None:
 
 
 def _failure_class(error: Exception) -> str | None:
-    if isinstance(error, UnserializeError):
+    """The names that the case files give the two failures of a record, by the kind of the error of hyper: a record
+    that cannot be decoded (kind `record`) is `unserialize`, and a record that holds no array (kind
+    `record_not_array`) is `record`."""
+    kind = getattr(error, "kind", None)
+    if kind == "record":
         return "unserialize"
-    return "record" if type(error) is ValueError else None
+    return "record" if kind == "record_not_array" else None
 
 
 def _names(directory: str, identifiers: list) -> dict[str, str]:
