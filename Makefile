@@ -776,7 +776,7 @@ bundle-size: board ## Print the sizes of the SSR script, the CSR shell, the chun
 	$(NODE) scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build/client --limits config/bundle-size.json$(if $(filter true,$(GITHUB_ACTIONS)), --annotations)
 
 e2e: board ext hyper-ext ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run; CASES=<pattern> runs the cases whose title matches
-	$(NODE) scripts/run-e2e.mts $(PHP_SERVER_ARGUMENTS) --$(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
+	$(NODE) scripts/run-e2e.mts $(PHP_SERVER_ARGUMENTS) -- $(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
 
 virtiofs-check: ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HR-68); a target of the full suite on Darwin
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/virtiofs/
