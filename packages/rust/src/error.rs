@@ -18,7 +18,7 @@ pub enum Error {
     OutsideRedirectStores,
     /// A page status other than 200, 409 and 422 (HY-58.6).
     PageStatusNotAllowed(i64),
-    /// A page status of a reply other than 403 (HY-69.10).
+    /// A page status of a reply other than 403 (HY-69.11).
     ReplyStatusNotAllowed(i64),
     /// A cookie name of a reply outside HY-52.2 (HY-52.16).
     CookieNameNotAllowed(String),
@@ -26,7 +26,7 @@ pub enum Error {
     CookieValueNotAllowed(String),
     /// A negative `Max-Age` of a reply cookie (HY-52.16).
     NegativeMaxAge(String),
-    /// An integer outside ±(2^53 − 1) where a rule takes an integer of the data model (HY-52.19, HY-69.10).
+    /// An integer outside ±(2^53 − 1) where a rule takes an integer of the data model (HY-52.20, HY-69.11).
     IntegerRange,
     /// A `Cache-Control` with a character other than U+0020 to U+007E (HY-52.16).
     CacheControlNotAllowed,
@@ -88,7 +88,7 @@ pub enum ErrorCode<'a> {
     OutsideRedirectStores,
     /// A page status other than 200, 409 and 422 (HY-58.6).
     PageStatusNotAllowed,
-    /// A page status of a reply other than 403 (HY-69.10).
+    /// A page status of a reply other than 403 (HY-69.11).
     ReplyStatusNotAllowed,
     /// A cookie name of a reply outside HY-52.2 (HY-52.16).
     CookieNameNotAllowed,
@@ -96,7 +96,7 @@ pub enum ErrorCode<'a> {
     CookieValueNotAllowed,
     /// A negative `Max-Age` of a reply cookie (HY-52.16).
     NegativeMaxAge,
-    /// An integer outside ±(2^53 − 1) (HY-52.19, HY-69.10).
+    /// An integer outside ±(2^53 − 1) (HY-52.20, HY-69.11).
     IntegerRange,
     /// A `Cache-Control` with a character that is not allowed (HY-52.16).
     CacheControlNotAllowed,

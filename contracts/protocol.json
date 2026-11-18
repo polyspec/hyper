@@ -6096,8 +6096,8 @@
                     "ko": "`value`"
                   },
                   {
-                    "en": "HY-69.10",
-                    "ko": "HY-69.10"
+                    "en": "HY-69.11",
+                    "ko": "HY-69.11"
                   }
                 ],
                 [
@@ -6366,8 +6366,8 @@
                     "ko": "`value`"
                   },
                   {
-                    "en": "HY-52.19, HY-69.10",
-                    "ko": "HY-52.19, HY-69.10"
+                    "en": "HY-52.20, HY-69.11",
+                    "ko": "HY-52.20, HY-69.11"
                   }
                 ],
                 [
@@ -6410,7 +6410,7 @@
               ],
               "rows": [
                 [{ "en": "`invalid_text`", "ko": "`invalid_text`" }, { "en": "binding", "ko": "binding" }, { "en": "HY-42.7, HY-122.14", "ko": "HY-42.7, HY-122.14" }],
-                [{ "en": "`invalid_number`", "ko": "`invalid_number`" }, { "en": "binding", "ko": "binding" }, { "en": "HY-52.19, HY-69.10, HY-114.12", "ko": "HY-52.19, HY-69.10, HY-114.12" }],
+                [{ "en": "`invalid_number`", "ko": "`invalid_number`" }, { "en": "binding", "ko": "binding" }, { "en": "HY-52.20, HY-69.11, HY-114.12", "ko": "HY-52.20, HY-69.11, HY-114.12" }],
                 [{ "en": "`invalid_argument_type`", "ko": "`invalid_argument_type`" }, { "en": "binding", "ko": "binding" }, { "en": "HY-25.7, HY-52.15, HY-60.32, HY-103.9", "ko": "HY-25.7, HY-52.15, HY-60.32, HY-103.9" }],
                 [{ "en": "`invalid_accept`", "ko": "`invalid_accept`" }, { "en": "http-negotiation", "ko": "http-negotiation" }, { "en": "HY-116.18", "ko": "HY-116.18" }],
                 [{ "en": "`invalid_weight`", "ko": "`invalid_weight`" }, { "en": "http-negotiation", "ko": "http-negotiation" }, { "en": "HY-116.18", "ko": "HY-116.18" }],
@@ -6548,7 +6548,8 @@
             12,
             14,
             17,
-            18
+            18,
+            19
           ],
           "blocks": [
             {
@@ -6609,10 +6610,10 @@
                   "koSource": "610eb1a61386c2c5835af43268b074948194c2d397e6564e32caffa42c821d90"
                 },
                 {
-                  "id": "HY-52.19",
-                  "en": "A `Max-Age` is an integer of the data model that is not negative, which the binding takes as the type `int`, the integers within ±(2^53 − 1), so a value that it does not take as such an integer, such as a float in PHP and Python, a bool, a string or an integer outside ±(2^53 − 1), fails with kind `invalid_number` of the binding before the core runs (B-2); the core, which a Rust caller gives an `i64`, refuses an integer outside ±(2^53 − 1) with kind `integer_range` before its sign is checked.",
-                  "ko": "`Max-Age`는 음수가 아닌 데이터 모델의 정수다. binding은 그것을 type `int`, 즉 ±(2^53 − 1) 안의 정수로 받으므로, PHP와 Python의 float, bool, 문자열, ±(2^53 − 1) 밖의 정수처럼 binding이 그런 정수로 받지 않는 값은 core가 실행되기 전에 binding의 kind `invalid_number`로 실패한다(B-2). Rust 호출자가 `i64`를 주는 core는 ±(2^53 − 1) 밖의 정수를 부호를 보기 전에 kind `integer_range`로 거부한다.",
-                  "koSource": "1d854a07b1cdf884898d351ff64375fdfa9b0817c060aca22e649b028add27bd"
+                  "id": "HY-52.20",
+                  "en": "A `Max-Age` is an integer of the data model that is not negative, which the binding takes as the type `int`, the integers within ±(2^53 − 1), so a value that it does not take as such an integer, such as a float in PHP and Python, `-0` in every language, a bool, a string or an integer outside ±(2^53 − 1), fails with kind `invalid_number` of the binding before the core runs (B-2); the core, which a Rust caller gives an `i64`, refuses an integer outside ±(2^53 − 1) with kind `integer_range` before its sign is checked.",
+                  "ko": "`Max-Age`는 음수가 아닌 데이터 모델의 정수다. binding은 그것을 type `int`, 즉 ±(2^53 − 1) 안의 정수로 받으므로, PHP와 Python의 float, 모든 언어의 `-0`, bool, 문자열, ±(2^53 − 1) 밖의 정수처럼 binding이 그런 정수로 받지 않는 값은 core가 실행되기 전에 binding의 kind `invalid_number`로 실패한다(B-2). Rust 호출자가 `i64`를 주는 core는 ±(2^53 − 1) 밖의 정수를 부호를 보기 전에 kind `integer_range`로 거부한다.",
+                  "koSource": "f055ae3853bb8dad49a483459072930dadd1f04293d72b26bbc9b1debaa6ec91"
                 },
                 {
                   "id": "HY-52.15",
@@ -7365,7 +7366,8 @@
             6,
             7,
             8,
-            9
+            9,
+            10
           ],
           "blocks": [
             {
@@ -7402,10 +7404,10 @@
                   "koSource": "a8cacf52b7f32dcf2b06779e44a924d668d8f701a6d9c07e67f7a9eccfc39c2e"
                 },
                 {
-                  "id": "HY-69.10",
-                  "en": "A status that the binding does not take as an integer of the type `int`, the integers within ±(2^53 − 1), fails with kind `invalid_number` of the binding before the core runs (B-2), and another integer than 403 fails with kind `reply_status_not_allowed` and the message `page status <status> of a reply is not 403 (HY-69)`, where `<status>` is the integer in decimal digits; the core, which a Rust caller gives an `i64`, refuses an integer outside ±(2^53 − 1) with kind `integer_range`.",
-                  "ko": "binding이 type `int`, 즉 ±(2^53 − 1) 안의 정수로 받지 않는 상태는 core가 실행되기 전에 binding의 kind `invalid_number`로 실패하고(B-2), 403이 아닌 다른 정수는 kind `reply_status_not_allowed`와 message `page status <status> of a reply is not 403 (HY-69)`로 실패한다. `<status>`는 십진수로 쓴 정수다. Rust 호출자가 `i64`를 주는 core는 ±(2^53 − 1) 밖의 정수를 kind `integer_range`로 거부한다.",
-                  "koSource": "c80605fcb41a4d848b4911ea1990f3c740d7bd0e49be2795450eddcdf58e5cbe"
+                  "id": "HY-69.11",
+                  "en": "A status that the binding does not take as an integer of the type `int`, the integers within ±(2^53 − 1), such as `-0` in every language, fails with kind `invalid_number` of the binding before the core runs (B-2), and another integer than 403 fails with kind `reply_status_not_allowed` and the message `page status <status> of a reply is not 403 (HY-69)`, where `<status>` is the integer in decimal digits; the core, which a Rust caller gives an `i64`, refuses an integer outside ±(2^53 − 1) with kind `integer_range`.",
+                  "ko": "모든 언어의 `-0`처럼 binding이 type `int`, 즉 ±(2^53 − 1) 안의 정수로 받지 않는 상태는 core가 실행되기 전에 binding의 kind `invalid_number`로 실패하고(B-2), 403이 아닌 다른 정수는 kind `reply_status_not_allowed`와 message `page status <status> of a reply is not 403 (HY-69)`로 실패한다. `<status>`는 십진수로 쓴 정수다. Rust 호출자가 `i64`를 주는 core는 ±(2^53 − 1) 밖의 정수를 kind `integer_range`로 거부한다.",
+                  "koSource": "e6e12b4d2a9421ef47faca1f136155c17c6747a1cbfe383832d61e013c96f4a8"
                 }
               ]
             }
