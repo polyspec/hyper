@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: b46f21df5d754ad95ff524396e5ef47d9a1f5a205846b887cb05fa2c4e1d6219 -->
+<!-- source-sha256: 6c38c92dd5a496255ad54c0db95cec71528c98c892be6835d53c8d9f8ffdfb93 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -673,3 +673,4 @@
 | H35.57 | template을 적는 모든 추적 manifest와 lock은 한 release를 적는다. template-pins.test.mts의 test가 tree에서 template을 적는 모든 Cargo.toml과 Cargo.lock, go.mod와 go.sum, composer.json과 composer.lock, package.json과 package-lock.json, pyproject.toml과 uv.lock을 계산으로 찾고 다른 release를 적는 각 위치를 밝히며 실패하므로, 한 ecosystem만 옮기고 다른 것을 남긴 pin은 통과하지 못한다. Rust core, binding crate, Go module, packages/php/native/composer.json은 lock과 함께 template 0.0.31로 옮긴다 | tests/scripts/template-pins.test.mts, packages/rust/Cargo.toml, Cargo.lock, the Cargo.toml of each binding crate, packages/go/go.mod, packages/go/go.sum, packages/php/native/composer.json | `make hyper-test-scripts TESTS=tests/scripts/template-pins.test.mts` | [v] |
 | H35.58 | make target이 config/php-ext-pins.json을 쓴다. pin한 각 PHP 확장에 대해 pin한 version의 release에서 packages.json과 각 platform zip의 release asset의 field digest를 읽으므로 파일의 어떤 sha256도 손으로 복사하지 않는다. 지금까지 각 pin은 download한 asset의 shasum에서 손으로 썼다 | a script under scripts/ and its make target, config/php-ext-pins.json, tests/scripts/php-ext-pins.test.mts | `make hyper-test-scripts TESTS=tests/scripts/php-ext-pins.test.mts` | [ ] |
 | H35.60 | make hyper-test-scripts의 선택 TESTS는 테스트가 시작하는 make에 들어가지 않는다. make는 명령줄 변수를 recipe의 환경으로 넘기므로 tests/scripts/make-recursion.test.mts의 내부 make가 TESTS를 보았고, Makefile:484의 prerequisite가 테스트의 가짜 node를 실행해 6개 case가 실패했다. 선택했을 때만 실패하는 테스트는 그 선택으로 검증할 수 없다 | Makefile | `make hyper-test-scripts TESTS=tests/scripts/make-recursion.test.mts`와 `make hyper-test-scripts` | [ ] |
+| H35.61 | benchmarks/server.php는 board의 template 하나의 render를 template extension의 Engine과 FsLoader로 측정한다. 이 benchmark는 Polyspec\Hyper\Renderer를 썼는데, page render가 core로 옮겨질 때(H35.32-2) 4ed11336이 packages/php/src/Page/Renderer.php와 함께 그것을 지웠으므로 125행에서 Class not found로 실패했고 tests/scripts/benchmark-server.test.mts가 실패했다 | benchmarks/server.php | `make hyper-test-scripts TESTS=tests/scripts/benchmark-server.test.mts` | [ ] |
