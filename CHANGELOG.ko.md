@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1e2f1b283a36055c9200e7909e3a7754da4d6aead2f917961f5746e8b3d266ce -->
+<!-- source-sha256: 026b74c7e4f99290c66ba00862b23556c25207986bddc980411cd73ad8b75153 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- HY-104.40은 host가 요청의 session을 core의 member를 통해 열고 닫으며 store와 session cookie만 넘긴다고 정하고, 행 H35.38-1로 구현되지 않음 표시를 받는다(H35.40). 입력: 세 서버의 host. 현재 동작: Node host, Python host, PHP 서버의 `RequestSession`이 session-store 라이브러리의 store를 직접 호출하므로, session을 열고 닫는 규칙이 각 host에 적힌다. H35.38-1 이후 기대 동작: core가 그 규칙을 한 번 가진다. `docs/features.md`의 행 `session-open-core`가 이 statement를 구현되지 않음으로 적는다. `make spec-docs-check`로 검증했다.
 - `contracts/interfaces.json`에서 Node와 Python 서버의 session unit은 session-store 라이브러리의 store 위의 code를 서술한다(H35.38, HYR-10). 입력: `make recipe-candidates`와 `make recipe-check`. 이전 동작: unit `file-sessions`, `file-session`, `redis-sessions`, `redis-session`은 지운 file과 Redis code의 member를 가졌고, `session-lock-error`, `flock`, `session-turns`는 지운 파일을, 선언 `redisCommand`는 지운 type을 적었으므로, candidate가 그 unit의 native item 54개를 stale로 표시했고 check는 없는 member와 spec에 없는 member를 하나씩 밝혔다. 기대 동작: source에 있는 member는 candidate에서 쓰고 중립 field는 손으로 쓰며, 지운 unit, member, `redisCommand`는 없어지고, `redisSessionsOptions`는 새 type `redisSetting`이 적는 `setting`과 필수인 `lockExpire`를 가지고, file session의 queue test는 `file-sessions.open`에 적힌다. `make recipe-candidates`(stale item 이전 155개, 이후 100개, 이 unit에는 없음)와, 발견이 741개에서 611개로 줄고 새 발견 5개를 plan 행이 밝히는 `make recipe-check`로 검증했다. `CASES="file-sessions.json#storeFailures"`인 `make hyper-test-node`와 `make hyper-test-python`은 각각 case 9개를 통과한다.
 - recipe candidate는 spec이 member와 함께 적은 unit에 그 source에 있고 spec에 없는 각 member를 더하고, 그 중립 field를 hand-written으로 적는다(H35.56). 입력: source의 두 member 중 하나를 적는 `contracts/interfaces.json`의 unit으로 실행한 `make recipe-candidates`. 이전 동작: `scripts/recipe/candidate.mts`의 `buildCandidate`는 member가 없는 unit에만 source의 member를 유도했으므로 candidate는 적힌 member만 담았고 unit을 그것으로 다시 쓸 수 없었다. 기대 동작: `deriveMembers`가 모든 unit에서 실행되고 unit이 이미 적은 native symbol의 member는 건너뛴다. `make hyper-test-scripts TESTS=tests/scripts/recipe-check.test.mts`(이전 170개 중 169개, 이후 170개 모두 통과)로 검증했다. `make recipe-candidates`는 spec의 member 520개에 185개를 더한다.
 - `tests/scripts/node-package.test.mts`는 production closure를 실행의 staging 디렉터리에 pack하고 `var/bindings/node/deps`로 게시하는 `make node-package`의 recipe를 검사한다(H35.68-1). 입력: `make hyper-test-scripts`. 이전 동작: test는 recipe가 더는 쓰지 않는 `--pack-destination …/node/deps`를 기대했으므로 실패했다. 기대 동작: test는 staging 디렉터리 `deps.next-<pid>`, `"$staging"`으로의 pack, 그리고 `scripts/publish.mts`가 `"$staging"`을 `deps`로 게시하는 것을 요구한다. `make hyper-test-scripts`로 검증했다(이전 1개 실패, 이후의 수는 row에 적는다).

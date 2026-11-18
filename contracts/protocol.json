@@ -7145,6 +7145,13 @@
                   "ko": "manifest에서 `\"session\": false`를 가진 route는 session을 쓰지 않는다. 그래서 서버는 그 route의 요청에 session을 열지 않고, 그런 요청은 session의 lock을 잡지 않으며, session을 잡고 있는 요청을 기다리지 않고, 빈 session을 읽고, session cookie를 설정하지 않는다.",
                   "koSource": "7586ed3e09828a615911148295f08547af0cb7e49ca4f2d19f2ea41eb603d7c8",
                   "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
+                },
+                {
+                  "id": "HY-104.40",
+                  "en": "A host opens the session of a request with its store and its session cookie, closes it after the answer and reads the identifier of a new session through members of the core, so that the rule of opening and closing a session is stated once in the core and a host only passes the store and the cookie.",
+                  "ko": "host는 요청의 session을 그 store와 session cookie로 열고, 응답 뒤에 닫고, 새 session의 식별자를 core의 member를 통해 읽는다. 그래서 session을 열고 닫는 규칙은 core에 한 번만 적히고 host는 store와 cookie만 넘긴다.",
+                  "koSource": "7a1612be41512b39581246c145413aa673edc534de3e0327642c8713f90cd623",
+                  "unimplemented": "H35.38-1"
                 }
               ]
             }

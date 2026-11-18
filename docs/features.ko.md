@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 1c7173d3e7b55e98d73b49703b2985d808b1c2b3c6662ae3ba526dd3c0be79d5 -->
+<!-- source-sha256: 67d42dddfb736b29f648f6603c6e94a0cd20ba0b50c2f9f98dc834a09befbad7 -->
 # 기능 상태
 
 [English](features.md).
@@ -55,6 +55,7 @@
 | hyper-node | server protocol의 Node.js 구현 `@polyspec/hyper`, 파일 session(HY-104), PHP 구현과 같은 바이트의 JSON, board 예제 서버(HY-54) | implemented | `make hyper-test-node`, `make node-server` |
 | python-request-hook | Python 서버 `create_server`의 요청 hook `around`. 요청과 `answer`를 받고, `Request.with_header`로 요청을 바꾸거나 응답을 바꾸며, session과 애플리케이션의 hook 없이 혼자 응답할 수 있다 (HY-97) | implemented | `make test-python`, `make hyper-test-python-render` |
 | hyper-python | server protocol의 Python 구현 `polyspec-hyper`. template Python package로 렌더하고 file session(HY-104)과 `http.server` 서버, body iterable이 자기 `close()`에서 write hook과 disconnect hook을 실행하는 WSGI application callable(H19.1, H34.1), ASGI application callable(H19.2), board 예제 서버를 둔다 (H15.3) | implemented | `make test-python`, `make hyper-test-python-render`, `make server-parity-python` |
+| session-open-core | host는 요청의 session을 core의 member를 통해 열고 닫으며 store와 session cookie만 넘긴다(HY-104.40) | not implemented: Node host(`packages/ts/src/host/http-host.ts`), Python host(`host/_pipeline.py`), PHP 서버의 `RequestSession`이 session-store 라이브러리의 store를 직접 호출한다(행 H35.38-1) | `make hyper-test-node CASES="file-sessions.json"`, `make hyper-test-python CASES="file-sessions.json"` |
 | session-route-open | 서버는 `"session": false`를 가진 route의 요청에 session을 열지 않아, 그런 요청은 lock을 기다리지 않는다(HY-104.38) | not implemented: PHP 서버는 그 field를 읽지 않는다(행 H35.37). Node와 Python 서버는 그 field를 읽고 route가 session을 쓸 때만 요청의 session을 연다. `packages/ts/tests/session-routes.test.ts`와 `packages/python/tests/test_session_routes.py`의 test `a request of a route without a session answers while the session is held`가 이를 보인다 | `make hyper-test-node NODE_TESTS="tests/session-routes.test.ts"`, `make hyper-test-python PYTHON_TESTS="tests/test_session_routes.py"` |
 | session-failure-kinds | 서버의 session 저장 실패는 session-store 라이브러리가 그 실패에 주는 kind, 상태, category를 가진 hyper의 해당 category class의 오류다(HY-132.1, HY-132.3, HY-104.32) | not implemented: PHP 서버는 kind 없는 `SessionOpenError`를 발생시킨다(행 H35.37). Node와 Python 서버는 file과 Redis session을 라이브러리의 store에 두고 그 오류를 kind와 함께 발생시키며, `contracts/file-sessions.json`의 section `storeFailures`는 두 서버에서 case 9개를 모두 통과한다 | `make hyper-test-node CASES="file-sessions.json#storeFailures"`, `make hyper-test-python CASES="file-sessions.json#storeFailures"` |
 | route-regions | 자기 로더를 가진 페이지 안의 라우트 영역(HY-30) | implemented | `make test-php`, `make parity` |
