@@ -708,6 +708,9 @@ NODE_VERSION := $(shell sed -n 's/^  "version": "\(.*\)",$$/\1/p' $(NODE_PACKAGE
 # it, so test-node-addon runs them in the checkout after node-addon, on the test runner of kit; the vitest run of
 # packages/ts excludes native/ (vitest.config.mts). test-bindings runs it with the generated tests of WASM and Go.
 NODE_ADDON_FEATURES := panic-test,fault-test,thread-test,thrown-count-test
+# The test features of packages/ts/native/wasm/Cargo.toml, which the generated tests of test-wasm call as the addon
+# tests call those of NODE_ADDON_FEATURES: the fault arming of fault-test and the count of thrown-count-test (H35.67).
+WASM_FEATURES := panic-test,fault-test,thrown-count-test
 .PHONY: node-addon test-node-addon
 test-node-addon: node-addon ## Run the generated tests of the Node binding on node --test against the addon of the checkout
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- $(NODE_PACKAGE)/native/generated/tests/generated.test.mjs
@@ -717,7 +720,7 @@ node-addon: bindings ## Build the Node addon of this platform and put it beside 
 
 node-package: bindings packages node-addon ## Build the WASM module and the Node addon, then pack and install the npm package into var/bindings/node
 	test "$$($(WASM_BINDGEN) --version)" = "wasm-bindgen $(WASM_BINDGEN_RELEASE)"
-	$(CARGO) build --locked --offline --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test
+	$(CARGO) build --locked --offline --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features $(WASM_FEATURES)
 	$(WASM_BINDGEN) --target web --out-dir $(NODE_PACKAGE)/native/wasm/generated --out-name hyper_wasm \
 		$(CARGO_TARGET)/wasm32-unknown-unknown/debug/polyspec_hyper_wasm.wasm
 	mkdir -p $(BINDINGS_VAR)/node $(BINDINGS_VAR)/node-platform
