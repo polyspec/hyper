@@ -222,7 +222,8 @@ lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language 
 # requires is the pinned json version of json-ext, because PHP loads one json library; PIE adds those verified copies as
 # its repositories, not the URLs, and the trap removes them with PIE_WORK (HR-80, H35.54). json-ext does the same.
 # scripts/pie-binary.mts prints the one library that PIE recorded there, which is published into build/ext with a rename
-# (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
+# (scripts/publish.mts, HR-82), beside the stub polyspec_template.stub.php of the platform zip, which declares the classes
+# of the extension for PHPStan (packages/php/phpstan-max.neon, H35.110). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
 # PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs. The Composer repository of the release
 # names no shasum. Composer inside PIE downloads the platform zip into its cache, files/<package>/<sha1 of the URL>.zip, and
 # reuses a zip of the cache of the machine, so both PIE commands set COMPOSER_CACHE_DIR to PIE_WORK/cache, which starts
@@ -277,7 +278,8 @@ template-ext: json-ext ## Build the native template extension of TEMPLATE_TAG wi
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction && \
 	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/template $(PIE_WORK) && \
 	binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template) && \
-	mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
+	mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && \
+	cp "$$(dirname "$$binary")/polyspec_template.stub.php" build/ext.next-$$$$/ && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
 # The template extension requires the json extension polyspec_json (ext-polyspec_json), which PHP loads before it. PIE gets
 # polyspec/json JSON_VERSION from the Composer repository JSON_PACKAGES of the json release, as template-ext gets the
