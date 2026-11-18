@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: a2c1acb275331be48da37d1d0fddce8ceb021e1d17377f45b7529a5c8621386f -->
+<!-- source-sha256: 6b1374c1cc15abda72884c0b2866fdea7ac94d912cd45211b1244122255a185a -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -735,3 +735,4 @@
 | H35.99 | make language-check가 실패한다: tests/scripts/no-commit-names.test.mts의 주석에 한글이 있다; 그 한국어 단어를 영어로 이름 붙인다. make duplication-check가 clone 8개로 실패한다: no-commit-names와 twin-shape의 config/documents.json 읽기, recipe-check 테스트 둘의 candidate 실행, file-session step 둘의 session 파일, Python barrel과 그 테스트의 공개 API 목록, ASGI와 WSGI 테스트의 닫힌 public 디렉터리와 write hook, WSGI 테스트 둘의 거부하는 start_response; 각각 helper 하나가 되고, 테스트의 공개 API 목록은 fixture가 된다. | tests/scripts/no-commit-names.test.mts, tests/scripts/twin-shape.test.mts, tests/scripts/documents.mts, tests/scripts/recipe-check.test.mts, packages/python/tests | `make language-check`, `make duplication-check` | [ ] |
 | H35.100 | 릴리스 0.0.41 뒤에 시작한다. version-bump commit은 손으로 쓰인다. make version-bump VERSION=X.Y.Z는 AGENTS.md의 version-bump 규칙이 나열한 모든 파일을 쓴다. make spec-released-check의 기준선은 쓰지 않으며, 그 검사는 마지막 릴리스를 tag에서 얻는다. | Makefile, scripts, AGENTS.md, AGENTS.ko.md | `make version-bump VERSION=X.Y.Z` | [ ] |
 | H35.110 | make analyse-php가 템플릿 확장의 class를 안다: template-ext가 platform zip의 stub polyspec_template.stub.php를 build/ext의 polyspec_template.so 곁에 게시하고, packages/php/phpstan-max.neon이 polyspec_hyper와 polyspec_session_store의 stub처럼 그것을 읽는다. 원인: H35.9-14는 템플릿 선언의 경로가 설치에 달려 있어 polyspec_hyper의 stub만 적었으므로, PHPStan이 tests/Support/Steps/FunctionsSteps.php의 Polyspec\Template\Environment를 모르는 class로 보고했다. baseline도 ignoreErrors도 그것을 덮지 않아 analyse-php가 실패했다. | Makefile, packages/php/phpstan-max.neon, CHANGELOG.md와 그 한국어 쌍 | `make analyse-php` | [ ] |
+| H35.109 | HY-132는 오류 kind를, HY-133은 outside redirect를 담는다: main이 outside redirect에 HY-132를 주었는데도 그것이 HY-133을 가졌고, 오류 kind가 HY-132를 가졌다. 두 rule 모두 릴리스에 없으므로(v0.0.40에는 둘 다 없다), 두 id는 추적되는 map config/renumber/h35-109.json과 make spec-renumber로 되바뀐다: 계약과 추적되는 모든 인용에서 outside redirect는 HY-132, 오류 kind는 HY-133이고, 그 retired 목록은 기록으로 남는다. | config/renumber/h35-109.json, contracts, packages, tests, docs, examples, scripts, Makefile, benchmarks | `make spec-docs-check`, `make recipe-check` | [ ] |
