@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 // One PHP server process over one session (tests/scripts/session-workers.mts): the arguments are the session directory,
-// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, `renew`, `collect`, or `hold`
-// or `stale`, which reads or writes a value and closes after a line of its input. With HYPER_SESSION_REDIS, the port
-// of a Redis server, it keeps the session there through phpredis; HYPER_SESSION_SENTINEL names the ports of Sentinels
-// instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection;
+// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, `renew`, `collect`,
+// or `hold` or `stale`, which reads or writes a value and closes after a line of its input. With HYPER_SESSION_REDIS,
+// the port of a Redis server, it keeps the session there through phpredis; HYPER_SESSION_SENTINEL names the ports of
+// Sentinels instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection;
 // HYPER_SESSION_PERSISTENT keeps one connection for the requests of the process, and HYPER_SESSION_CLUSTER names the
 // ports of nodes of a Redis Cluster.
 
@@ -129,7 +129,8 @@ if ($command === 'count') {
     try {
         echo json_encode(['handler' => $handler, 'count' => NativeSession::collect()], JSON_THROW_ON_ERROR);
     } catch (\Polyspec\Hyper\HyperValueError $failure) {
-        echo json_encode(['handler' => $handler, 'kind' => $failure->kind(), 'message' => $failure->getMessage()], JSON_THROW_ON_ERROR);
+        $failed = ['handler' => $handler, 'kind' => $failure->kind(), 'message' => $failure->getMessage()];
+        echo json_encode($failed, JSON_THROW_ON_ERROR);
     }
 } elseif ($command === 'read') {
     $names = json_decode($first, true, 512, JSON_THROW_ON_ERROR);
