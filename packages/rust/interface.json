@@ -4516,6 +4516,11 @@
       "group": "session"
     },
     {
+      "member": "opening_functions.open_page",
+      "file": "packages/rust/tests/cases/faults.json",
+      "group": "session_memory"
+    },
+    {
       "member": "front_functions.route_request",
       "file": "packages/rust/tests/cases/members.json",
       "group": "route"

@@ -2770,7 +2770,8 @@ fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
     // tests/cases/faults.json breaks the new token, which the core makes by random_hex, and raises random, and
     // session_store.internal of tests/cases/core-faults.json breaks the start of the record session in the store and
     // raises internal; the same call without the arming opens the page with a new token. The other cases raise the
-    // kinds that the stored values of their session file or their mask give.
+    // kinds that the stored values of their session file give, and the case of the group session_memory raises the kind
+    // that its mask gives with a session of the memory store.
     use binding_core::Failure;
     use polyspec_hyper::opening::{open_page, Opened, Opening};
     use polyspec_hyper::steps::PageKind;
@@ -2779,6 +2780,7 @@ fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
     let mut ran = 0;
     for case in group(&file, "session")
         .iter()
+        .chain(group(&file, "session_memory"))
         .chain(group(&core_file, "session"))
     {
         let directory = CaseDirectory::new(case);
