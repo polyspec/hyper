@@ -300,7 +300,9 @@ json-ext: ## Get the json extension polyspec_json of JSON_VERSION with PIE from 
 # extension polyspec_session_store, so that the rule of the removal lives once in the core of session-store (HY-48.25).
 # PIE gets polyspec/session-store SESSION_STORE_VERSION from the Composer repository of the session-store release as
 # json-ext gets the json extension, verified by config/php-ext-pins.json, and the library is published into
-# build/session-store-ext with a rename (HR-80, HR-82). The package requires only php.
+# build/session-store-ext with a rename (HR-80, HR-82), beside the stub polyspec_session_store.stub.php of the platform
+# zip, which declares the classes of the extension for PHPStan (packages/php/phpstan-max.neon). The package requires
+# only php.
 SESSION_STORE_VERSION := 0.0.8
 SESSION_STORE_EXT := build/session-store-ext/polyspec_session_store.so
 SESSION_STORE_PIE_WORK := $(CURDIR)/var/pie/polyspec/session-store
@@ -312,7 +314,8 @@ session-store-ext: ## Get the session-store extension polyspec_session_store of 
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(SESSION_STORE_PIE_WORK) COMPOSER_CACHE_DIR=$(SESSION_STORE_PIE_WORK)/cache $(PIE) build polyspec/session-store:$(SESSION_STORE_VERSION) --no-interaction && \
 	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/session-store $(SESSION_STORE_PIE_WORK) && \
 	binary=$$($(NODE) scripts/pie-binary.mts $(SESSION_STORE_PIE_WORK) polyspec/session-store) && \
-	mkdir -p build/session-store-ext.next-$$$$ && cp "$$binary" build/session-store-ext.next-$$$$/polyspec_session_store.so && $(NODE) scripts/publish.mts directory build/session-store-ext.next-$$$$ build/session-store-ext
+	mkdir -p build/session-store-ext.next-$$$$ && cp "$$binary" build/session-store-ext.next-$$$$/polyspec_session_store.so && \
+	cp "$$(dirname "$$binary")/polyspec_session_store.stub.php" build/session-store-ext.next-$$$$/ && $(NODE) scripts/publish.mts directory build/session-store-ext.next-$$$$ build/session-store-ext
 
 # The session tests of HY-115 run against a real Redis server and the real phpredis extension, at these versions. PIE builds
 # phpredis as it builds the template extension; `pie build` installs nothing into the PHP, and the tests load the library
