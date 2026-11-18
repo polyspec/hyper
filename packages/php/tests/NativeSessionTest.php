@@ -182,6 +182,24 @@ final class NativeSessionTest extends TestCase
         }
     }
 
+    /**
+     * HY-104.44, HY-132.14: under the handler `user`, which a store of the application sets, `collect` removes nothing
+     * and fails with kind `invalid_session_handler` and a message that names the handler.
+     */
+    #[RunInSeparateProcess]
+    public function testCollectFailsUnderTheUserHandler(): void
+    {
+        session_set_save_handler(new RefusingSessionHandler(true));
+        self::assertSame('user', ini_get('session.save_handler'));
+        try {
+            NativeSession::collect();
+            self::fail('collect ran under the handler user');
+        } catch (\Polyspec\Hyper\HyperValueError $error) {
+            self::assertSame('invalid_session_handler', $error->kind());
+            self::assertStringContainsString('user', $error->getMessage());
+        }
+    }
+
     #[RunInSeparateProcess]
     public function testStartsTheSessionOnFirstUse(): void
     {
