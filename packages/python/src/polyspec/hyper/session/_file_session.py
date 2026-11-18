@@ -18,7 +18,7 @@ _LIBRARY_PREFIX = "SessionStore"
 
 def converted(call: Callable[[], T]) -> T:
     """Runs a call of the session-store library. A failure of the library is raised as the error of hyper of the same
-    role, with its kind, status and message (HY-132.3); any other failure is raised as it is."""
+    role, with its kind, status and message (HY-133.3); any other failure is raised as it is."""
     try:
         return call()
     # Every failure is converted or raised again.

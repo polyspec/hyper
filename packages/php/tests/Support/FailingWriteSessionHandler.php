@@ -20,7 +20,7 @@ final class FailingWriteSessionHandler implements \SessionHandlerInterface
         return true;
     }
 
-    public function read(string $id): string|false
+    public function read(string $id): string
     {
         return '';
     }

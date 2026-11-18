@@ -1,7 +1,7 @@
 // The entry `@polyspec/hyper/build` of the package: the rules of the Rust core that a build of an application applies,
 // which the command tool `@polyspec/hyper-cli` calls, so that a build and the servers apply one implementation of each
 // rule. A failure reaches the caller as the binding raises it, an error of the class of its category with `kind` and
-// `status` (HY-132.2).
+// `status` (HY-133.2).
 import { rules } from './app/core-rules.js';
 
 /**

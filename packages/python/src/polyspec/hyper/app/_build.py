@@ -23,7 +23,7 @@ class Build:
             )
             failure.add_note(f"hyper: the build file is {file}")
             raise failure from error
-        # HY-132.2: the core reads the build id of the bytes and fails with invalid_build; the note of the failure
+        # HY-133.2: the core reads the build id of the bytes and fails with invalid_build; the note of the failure
         # names the path of the file (HY-125.5).
         try:
             return core_rules().build_read(data)

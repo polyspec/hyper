@@ -1,4 +1,4 @@
-// The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58, HY-133): the results of actions and the stops.
+// The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58, HY-132): the results of actions and the stops.
 import { BadRequest } from '../../src/result/bad-request.js';
 import { Forbidden } from '../../src/result/forbidden.js';
 import { NotFound } from '../../src/result/not-found.js';
@@ -64,7 +64,7 @@ export const steps = {
     reader.compare('status', outcome.result?.status ?? null);
     reader.compare('raises', outcome.raises);
   },
-  // Makes an outside redirect to the location, or records the failure with which it fails (HY-133).
+  // Makes an outside redirect to the location, or records the failure with which it fails (HY-132).
   outside(reader: CaseReader): void {
     const location = text(reader, 'location');
     const outcome = failureOf(() => Result.outside(location));
@@ -72,12 +72,12 @@ export const steps = {
     reader.compare('status', outcome.result?.status ?? null);
     reader.compare('raises', outcome.raises);
   },
-  // Records the origin of the text, or null for a text that is no outside location (HY-133).
+  // Records the origin of the text, or null for a text that is no outside location (HY-132).
   origin(reader: CaseReader): void {
     reader.compare('origin', Result.origin(text(reader, 'text')));
   },
   // Calls `flash` or `changed` of an outside redirect with the decoded argument as a JavaScript caller may, and records
-  // the failure with which it fails (HY-133).
+  // the failure with which it fails (HY-132).
   outsideStores(reader: CaseReader): void {
     stores(reader, Result.outside('https://outside.example/'));
   },

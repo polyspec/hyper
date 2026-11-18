@@ -1,0 +1,2 @@
+// HY-1.1 and HY-2 are renamed; HY-12, HY-1.10x and HYX-1 are other words.
+export const cited = ['HY-1.2', 'HY-2.1'];

@@ -8,7 +8,14 @@ parameters:
         - tests/build (?)
     # The declarations of the extension polyspec_hyper, which `make bindings` writes: PHP source declares none of its
     # classes and functions, so PHPStan finds them here. The path is relative to this file.
+    # The stubs of the template and session-store extensions declare their classes, such as
+    # Polyspec\Template\Environment (H35.110) and FileSessions with the errors of session-store (HY-48.25). make
+    # analyse-php gives HYPER_TEMPLATE_STUB, PHP_TEMPLATE_STUB of the Makefile, which names the stub of the template
+    # library that the checks load: of a linked checkout, or the one that `make template-ext` publishes. `make
+    # session-store-ext` publishes the stub of session-store beside its library.
     scanFiles:
         - native/generated/polyspec_hyper.stub.php
+        - %env.HYPER_TEMPLATE_STUB%
+        - ../../build/session-store-ext/polyspec_session_store.stub.php
     # The repository ignores build/, which holds the outputs of the Makefile targets.
     tmpDir: ../../build/phpstan

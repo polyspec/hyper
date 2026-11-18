@@ -124,7 +124,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 # (HR-83). hyper-install is no such target: its first step writes the wrapper.
 # A target that starts PHP is named here, and tests/scripts/php-check.test.mts fails for a PHP recipe that is not.
 CHECKOUT_PHP := $(KIT_TOOLS)/bin/php
-PHP_TARGETS := hyper-install-php composer-lock template-ext json-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
+PHP_TARGETS := hyper-install-php composer-lock template-ext json-ext session-store-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
 .PHONY: php-check php-check-installed
 $(PHP_TARGETS): php-check
 php_check = want="$$(tr -d '[:space:]' < .php-version)"; \
@@ -176,6 +176,7 @@ crates-check: ## Fail unless every crate that Cargo.lock pins is fetched, naming
 .PHONY: hyper-install-php
 hyper-install-php: ## Install only the locked root and board Composer projects and their pinned PHP archives
 	$(MAKE) --no-print-directory template-ext
+	$(MAKE) --no-print-directory session-store-ext
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
 
@@ -221,7 +222,8 @@ lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language 
 # requires is the pinned json version of json-ext, because PHP loads one json library; PIE adds those verified copies as
 # its repositories, not the URLs, and the trap removes them with PIE_WORK (HR-80, H35.54). json-ext does the same.
 # scripts/pie-binary.mts prints the one library that PIE recorded there, which is published into build/ext with a rename
-# (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
+# (scripts/publish.mts, HR-82), beside the stub polyspec_template.stub.php of the platform zip, which declares the classes
+# of the extension for PHPStan (packages/php/phpstan-max.neon, H35.110). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
 # PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs. The Composer repository of the release
 # names no shasum. Composer inside PIE downloads the platform zip into its cache, files/<package>/<sha1 of the URL>.zip, and
 # reuses a zip of the cache of the machine, so both PIE commands set COMPOSER_CACHE_DIR to PIE_WORK/cache, which starts
@@ -276,7 +278,8 @@ template-ext: json-ext ## Build the native template extension of TEMPLATE_TAG wi
 	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction && \
 	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/template $(PIE_WORK) && \
 	binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template) && \
-	mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
+	mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && \
+	cp "$$(dirname "$$binary")/polyspec_template.stub.php" build/ext.next-$$$$/ && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
 # The template extension requires the json extension polyspec_json (ext-polyspec_json), which PHP loads before it. PIE gets
 # polyspec/json JSON_VERSION from the Composer repository JSON_PACKAGES of the json release, as template-ext gets the
@@ -294,6 +297,27 @@ json-ext: ## Get the json extension polyspec_json of JSON_VERSION with PIE from 
 	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/json $(JSON_PIE_WORK) && \
 	binary=$$($(NODE) scripts/pie-binary.mts $(JSON_PIE_WORK) polyspec/json) && \
 	mkdir -p build/json-ext.next-$$$$ && cp "$$binary" build/json-ext.next-$$$$/polyspec_json.so && $(NODE) scripts/publish.mts directory build/json-ext.next-$$$$ build/json-ext
+
+# NativeSession::collect of the PHP server removes the expired session files with FileSessions of the session-store
+# extension polyspec_session_store, so that the rule of the removal lives once in the core of session-store (HY-48.25).
+# PIE gets polyspec/session-store SESSION_STORE_VERSION from the Composer repository of the session-store release as
+# json-ext gets the json extension, verified by config/php-ext-pins.json, and the library is published into
+# build/session-store-ext with a rename (HR-80, HR-82), beside the stub polyspec_session_store.stub.php of the platform
+# zip, which declares the classes of the extension for PHPStan (packages/php/phpstan-max.neon). The package requires
+# only php.
+SESSION_STORE_VERSION := 0.0.8
+SESSION_STORE_EXT := build/session-store-ext/polyspec_session_store.so
+SESSION_STORE_PIE_WORK := $(CURDIR)/var/pie/polyspec/session-store
+.PHONY: session-store-ext
+session-store-ext: ## Get the session-store extension polyspec_session_store of SESSION_STORE_VERSION with PIE into build/session-store-ext (HY-48.25); ONLINE
+	$(call pie_run,$(SESSION_STORE_PIE_WORK),build/session-store-ext.next-$$$$) && \
+	$(ONLINE) $(NODE) scripts/php-ext-requires.mts config/php-ext-pins.json polyspec/session-store $(SESSION_STORE_PIE_WORK) && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(SESSION_STORE_PIE_WORK) COMPOSER_CACHE_DIR=$(SESSION_STORE_PIE_WORK)/cache $(PIE) repository:add composer $(SESSION_STORE_PIE_WORK)/repository/polyspec/session-store/packages.json --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(SESSION_STORE_PIE_WORK) COMPOSER_CACHE_DIR=$(SESSION_STORE_PIE_WORK)/cache $(PIE) build polyspec/session-store:$(SESSION_STORE_VERSION) --no-interaction && \
+	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/session-store $(SESSION_STORE_PIE_WORK) && \
+	binary=$$($(NODE) scripts/pie-binary.mts $(SESSION_STORE_PIE_WORK) polyspec/session-store) && \
+	mkdir -p build/session-store-ext.next-$$$$ && cp "$$binary" build/session-store-ext.next-$$$$/polyspec_session_store.so && \
+	cp "$$(dirname "$$binary")/polyspec_session_store.stub.php" build/session-store-ext.next-$$$$/ && $(NODE) scripts/publish.mts directory build/session-store-ext.next-$$$$ build/session-store-ext
 
 # The session tests of HY-115 run against a real Redis server and the real phpredis extension, at these versions. PIE builds
 # phpredis as it builds the template extension; `pie build` installs nothing into the PHP, and the tests load the library
@@ -315,17 +339,20 @@ hyper-install-redis: ## Build the Redis server and the phpredis extension of the
 # The template extension that the PHP checks load. In a linked run `make link` links vendor/polyspec/template to the
 # packages/php-ext of a template checkout, and the checks load the library that the checkout builds into its
 # target/release; otherwise they load the library of template-ext. PHP_EXTENSIONS lists the json extension before the
-# template extension, which requires it (HY-48.23).
+# template extension, which requires it (HY-48.23), and then the session-store extension of collect (HY-48.25).
 TEMPLATE_LINKED_EXT = $(wildcard $(realpath $(PHP_VENDOR)/polyspec/template)/../../target/release/libpolyspec_template.$(CDYLIB))
 PHP_TEMPLATE_EXT = $(or $(TEMPLATE_LINKED_EXT),$(abspath $(EXT)))
-PHP_EXTENSIONS = $(abspath $(JSON_EXT)) $(PHP_TEMPLATE_EXT)
+# The stub that declares the classes of the template extension for PHPStan comes from where its library comes from: the
+# linked checkout writes it into packages/php-ext/generated, and template-ext publishes it beside build/ext (H35.110).
+PHP_TEMPLATE_STUB = $(if $(TEMPLATE_LINKED_EXT),$(realpath $(PHP_VENDOR)/polyspec/template)/generated/polyspec_template.stub.php,$(abspath $(dir $(EXT))polyspec_template.stub.php))
+PHP_EXTENSIONS = $(abspath $(JSON_EXT)) $(PHP_TEMPLATE_EXT) $(abspath $(SESSION_STORE_EXT))
 
 # The checks load the libraries that `make hyper-install` built with PIE (json-ext, template-ext) or the linked template
 # library; they run offline and build nothing.
-ext: ## Fail unless the json extension and the template extension that the PHP checks load exist (HY-48.23, H14.1-7, H27.45)
-	@for library in $(PHP_EXTENSIONS); do test -f "$$library" || { echo "ext: $$library does not exist; run make hyper-install-php, which builds it with PIE (make json-ext, make template-ext)" >&2; exit 1; }; done
+ext: ## Fail unless the json, template and session-store extensions that the PHP checks load exist (HY-48.23, HY-48.25, H14.1-7, H27.45)
+	@for library in $(PHP_EXTENSIONS); do test -f "$$library" || { echo "ext: $$library does not exist; run make hyper-install-php, which builds it with PIE (make json-ext, make template-ext, make session-store-ext)" >&2; exit 1; }; done
 
-# The PHP extension polyspec_hyper of the server (HY-132.2) for development: packages/php/native, built through $(CARGO),
+# The PHP extension polyspec_hyper of the server (HY-133.2) for development: packages/php/native, built through $(CARGO),
 # which applies the patches of .links, against the php and the php-config of the checkout, with the libclang and the
 # clang of the LLVM of config/toolchain.json (LLVM_ROOT of packages/release.mk), as release-php-ext builds it for a
 # release. The library is checked to load into that PHP without a php.ini and published into build/hyper-ext with one
@@ -346,7 +373,7 @@ HYPER_EXT := build/hyper-ext/polyspec_hyper.so
 php_api_target = headers="$$(php-config --vernum)" && build="$$(php -n -r 'echo PHP_DEBUG ? "-debug" : "", "-", PHP_ZTS ? "zts" : "nts";')" && target="$(CARGO_TARGET)/php-$$headers$$build"
 PHP_EXT_CARGO = $(php_api_target) && CARGO_TARGET_DIR="$$target" $(CARGO)
 .PHONY: hyper-ext
-hyper-ext: bindings ## Build the PHP extension polyspec_hyper of packages/php/native into build/hyper-ext (HY-132.2, H35.25)
+hyper-ext: bindings ## Build the PHP extension polyspec_hyper of packages/php/native into build/hyper-ext (HY-133.2, H35.25)
 	@test -n "$(LLVM_MAJOR)" || { echo 'hyper-ext: LLVM_MAJOR is empty, since packages/release.mk, which make release-recipes writes, is missing' >&2; exit 2; }
 	@test -x "$(LLVM_ROOT)/bin/clang" && ls "$(LLVM_ROOT)/lib" 2>/dev/null | grep -q '^libclang' || { echo 'hyper-ext: the bindgen of ext-php-rs needs the libclang and the clang of LLVM $(LLVM_MAJOR) (config/toolchain.json) in $(LLVM_ROOT)' >&2; exit 2; }
 	$(php_api_target) && PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang CARGO_TARGET_DIR="$$target" $(CARGO) build --locked --offline -p polyspec-hyper-php-ext
@@ -444,7 +471,7 @@ else
 	$(call cases_selected,node) $(case_run_node)
 endif
 
-# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.23, HY-132.2). Every PHP server
+# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.23, HY-133.2). Every PHP server
 # of a check, a test and the demo loads PHP_SERVER_EXTENSIONS: scripts take them as --extension arguments, and the tests
 # of hyper-test-scripts read them from HYPER_PHP_EXTENSIONS.
 PHP_SERVER_EXTENSIONS = $(PHP_EXTENSIONS) $(abspath $(HYPER_EXT))
@@ -493,7 +520,7 @@ hyper-lint: ## Check PHP formatting
 # generator writes (packages/php/native/generated/polyspec_hyper.stub.php, scanFiles of phpstan-max.neon), which Git
 # ignores, so analyse-php writes them first.
 analyse-php: ext bindings ## Run PHPStan at level max on the source and the tests of the server package
-	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
+	cd $(PHP_PACKAGE) && HYPER_TEMPLATE_STUB=$(PHP_TEMPLATE_STUB) $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 # The command tool imports the built modules of the two npm packages (packages/cli/lib/check.mjs reads
 # @polyspec/hyper-client, and build.mjs @polyspec/hyper/build), so a target that starts it builds them first.
@@ -596,7 +623,7 @@ CORE := packages/rust
 # Every cargo command runs through `cargo <dir> <args>` of the link script of kit, which in a development checkout patches
 # the polyspec crates to the providers that .links names and otherwise runs cargo as given, so no .cargo file is needed (H35.14-1).
 CARGO := $(NODE) $(KIT)/link.$(KIT_EXT) cargo $(CURDIR)
-core-test: ## Run the tests of the Rust core, which run the cases of contracts/ that it decides (HY-132)
+core-test: ## Run the tests of the Rust core, which run the cases of contracts/ that it decides (HY-133)
 	$(CARGO) test --locked --offline -p polyspec-hyper
 core-lint: ## Run clippy on the Rust core and its tests with every warning an error (plan R-1)
 	$(CARGO) clippy --locked --offline -p polyspec-hyper --all-targets -- -D warnings
@@ -798,7 +825,16 @@ go-release-build: bindings ## Build and vet packages/go alone as a release tags 
 	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) build -mod=readonly ./...
 	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) vet ./...
 
-.PHONY: spec-docs spec-docs-check
+.PHONY: spec-docs spec-docs-check spec-released-check spec-renumber
+# The renaming of ids by the tracked map MAP (H35.98), then the protocol documents written again from the contract.
+spec-renumber: ## Rename the statement and rule ids of the tracked map MAP in contracts/protocol.json and every tracked citation, then run spec-docs; offline
+	@test -n "$(MAP)" || { echo 'spec-renumber: MAP is required, for example make spec-renumber MAP=config/renumber.json' >&2; exit 2; }
+	$(NODE) scripts/spec-renumber.mts apply --map "$(MAP)"
+	$(NODE) scripts/spec-docs.mts write
+# An id of contracts/protocol.json keeps one meaning: the ids of the last release, the newest tag vX.Y.Z reachable from
+# HEAD other than a tag of HEAD, are statements of the same topic or retired (H35.98). It reads local tags only.
+spec-released-check: ## Fail a released statement id of contracts/protocol.json that is missing and not retired, or whose topic changed (H35.98); offline
+	$(NODE) scripts/spec-docs.mts released
 spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/protocol.json (H2)
 	$(NODE) scripts/spec-docs.mts write
 spec-docs-check: ## Check contracts/protocol.json and the protocol documents against their generation (H2)
@@ -849,7 +885,7 @@ bench: bench-server bench-browser bench-uploads ## Run the measurements; results
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
 GATE_TARGETS := layout-check docs-check pin-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
-CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check release-candidate-assets hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
+CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check spec-released-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check release-candidate-assets hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
 
 # The CI groups of the full suite (HR-91): the matrix of the job check of .github/workflows/ci.yml names CI_GROUPS, and
 # each entry runs `make ci-check NAME=<group>` (HR-90). A group declares the tools that install-tools installs (CI_TOOLS),
@@ -874,7 +910,7 @@ CI_SYMBOLS_gates := php
 CI_TARGETS_gates := $(GATE_TARGETS)
 CI_TOOLS_docs := node php composer pie python uv rust maturin
 CI_SETUP_docs := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-redis hyper-ext
-CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check recipe-check
+CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check spec-released-check recipe-check
 CI_TOOLS_php := node php composer pie rust
 CI_SETUP_php := install-tools hyper-install-crates hyper-install-php
 CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php

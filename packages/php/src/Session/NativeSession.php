@@ -152,7 +152,8 @@ final class NativeSession implements SessionStore
         $handler = (string) ini_get('session.save_handler');
         if ($handler !== 'files') {
             throw new HyperValueError(
-                "collect removes the files of the handler files, and session.save_handler is {$handler}, whose store removes ended sessions itself (HY-115.2)",
+                "collect removes the files of the handler files, and session.save_handler is {$handler}, "
+                . 'whose store removes ended sessions itself (HY-115.2)',
                 'invalid_session_handler',
             );
         }
@@ -228,7 +229,10 @@ final class NativeSession implements SessionStore
         if (session_status() !== PHP_SESSION_ACTIVE) {
             return;
         }
-        // PHP reports a failed write as a warning and a return of false; the warning is read here, not raised.
+        // PHP 8.4 returns true from session_write_close() when the write fails and only warns: the function returns
+        // true after php_session_flush(), whose save of the state returns nothing (ext/session/session.c:2837-2838
+        // and :1767-1773 of php-8.4.27). So a warning raised during the call, read here and not raised, fails the
+        // close as a return of false does; the handler covers that call alone, so no other warning counts.
         $warning = null;
         set_error_handler(static function (int $level, string $message) use (&$warning): bool {
             $warning = $message;
@@ -240,7 +244,7 @@ final class NativeSession implements SessionStore
         } finally {
             restore_error_handler();
         }
-        if (!$closed) {
+        if (!$closed || $warning !== null) {
             throw new \RuntimeException(
                 'hyper: the session could not be written' . ($warning === null ? '' : ": {$warning}"),
             );

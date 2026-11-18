@@ -28,6 +28,7 @@
     "require": {
         "php": ">=8.4",
         "ext-polyspec_json": "*",
+        "ext-polyspec_session_store": "*",
         "ext-polyspec_template": "*",
         "min-0-max/json-schema": "^2.6.0-p2",
         "polyspec/hyper": "0.0.40"
@@ -65,6 +66,7 @@
             "php": "8.4.1",
             "ext-polyspec_hyper": "0.0.40",
             "ext-polyspec_json": "0.0.40",
+            "ext-polyspec_session_store": "0.0.8",
             "ext-polyspec_template": "0.0.32"
         },
         "sort-packages": true

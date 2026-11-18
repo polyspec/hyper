@@ -377,7 +377,7 @@ fn a_refused_request_opens_no_session() {
 
 #[test]
 fn errors_name_their_kind_and_category() {
-    // HY-132.1 to HY-132.3
+    // HY-133.1 to HY-133.3
     assert_eq!(Error::NotApplicationPath.category().as_str(), "value");
     assert_eq!(Error::NotSelected.category().as_str(), "type");
     assert_eq!(Error::InvalidSessionRecord.category().as_str(), "store");

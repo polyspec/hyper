@@ -395,7 +395,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - `keys`: the expected list equals the keys of the observed map in their order;
   - `raises`: when the expected value is true, the step fails with the error of hyper of the kind that the statement of
     the field or the outcome states, and when it is false, the step does not fail. The kinds of a statement are those
-    that the kind tables of HY-132 (HY-132.3, HY-132.9) give to it in their column Rule, and the runner reads them from
+    that the kind tables of HY-133 (HY-133.3, HY-133.9) give to it in their column Rule, and the runner reads them from
     those tables in `contracts/protocol.json`, never from the text of the statement: HY-106.21 gives
     `invalid_application` and `invalid_build`, and HY-42.7 gives `invalid_text` of the binding. An outcome whose
     statement the tables do not name is an open failure and expects the open error, the hyper class of the category
@@ -412,7 +412,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - Every runner that `caseFiles` names compares every case by these comparisons and by no other. A case that compares
     nothing for its runner fails with `CASE_EMPTY`; fields and outcomes whose `only` leaves that runner out do not count.
   - `raises` on a step: the runner catches every error of the step and gives it, or null, to the reader, which reads it
-    through `raisesOf`. For an outcome whose statement the kind tables of HY-132 name, the reader checks that its kind
+    through `raisesOf`. For an outcome whose statement the kind tables of HY-133 name, the reader checks that its kind
     is one of the kinds that they give to the statement; for an open failure it checks that its category is `value`
     and its kind is `invalid_application` (HY-106.21); for `creation` of `hooks.json` it checks only that the error is
     an error of hyper (HY-97.7, H35.29-6).

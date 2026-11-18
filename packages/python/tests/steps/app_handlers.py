@@ -294,7 +294,7 @@ class _Run:
 
 
 def _redirect(step: dict) -> Result:
-    """The redirect result of a step, or its outside redirect (HY-133), with its flash values and its changed topics in
+    """The redirect result of a step, or its outside redirect (HY-132), with its flash values and its changed topics in
     their order."""
     result = (
         Result.outside(step["outside"])

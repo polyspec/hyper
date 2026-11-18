@@ -8,7 +8,7 @@ import type { SessionStore } from './session-store.js';
 const LIBRARY_PREFIX = 'SessionStore';
 
 // Runs a call of the session-store library that returns at once. A failure of the library is thrown as the error of
-// hyper of the same role, with its kind, status and message (HY-132.3); any other failure is thrown as it is.
+// hyper of the same role, with its kind, status and message (HY-133.3); any other failure is thrown as it is.
 /** @internal */
 export function converted<T>(call: () => T): T {
   try {

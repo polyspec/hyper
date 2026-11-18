@@ -175,6 +175,10 @@
         "category": "store"
       },
       {
+        "variant": "polyspec_hyper::ErrorCode::InvalidSessionHandler",
+        "category": "value"
+      },
+      {
         "variant": "polyspec_hyper::ErrorCode::SharedHoldsContext",
         "category": "value"
       },
@@ -603,7 +607,7 @@
       "fills": [
         "internal"
       ],
-      "reason": "HY-132.6",
+      "reason": "HY-133.6",
       "place": "each check of an invariant of the core that gives Error::Internal: polyspec_hyper::front::route_request, polyspec_hyper::client_rendering, polyspec_hyper::media::select, polyspec_hyper::manifest::Manifest::page, polyspec_hyper::read_paths, polyspec_hyper::render, polyspec_hyper::session, polyspec_hyper::build, polyspec_hyper::steps"
     }
   ],
@@ -833,7 +837,7 @@
           "returns": {
             "optional": "text"
           },
-          "optional_reason": "HY-133.13",
+          "optional_reason": "HY-132.13",
           "raises": [],
           "wait": "none",
           "core": "polyspec_hyper::location::origin"
@@ -4556,7 +4560,7 @@
     {
       "id": "value-error-classes",
       "rule": "HY-46.3",
-      "reason": "HY-46.3, HY-132.2, B-4: every error is the class Hyper<Category>Error of its category with kind and status, in place of the built-in classes",
+      "reason": "HY-46.3, HY-133.2, B-4: every error is the class Hyper<Category>Error of its category with kind and status, in place of the built-in classes",
       "symbol": "Result.redirect, Result.page, Reply, Csrf",
       "from": {
         "php": "throws \\InvalidArgumentException",

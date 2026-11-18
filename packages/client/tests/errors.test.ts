@@ -23,7 +23,7 @@ function expectInvalidApplication(error: unknown, message: string): void {
   expect(error).toMatchObject({ kind: 'invalid_application', status: null, message });
 }
 
-// HY-132.7, HY-106.21, HY-132.4: a failure of a check at open is a HyperValueError of kind invalid_application, and its
+// HY-133.7, HY-106.21, HY-133.4: a failure of a check at open is a HyperValueError of kind invalid_application, and its
 // message has no prefix of a runtime.
 describe('the checks at open', () => {
   it('checkManifest fails with kind invalid_application', () => {

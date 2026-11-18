@@ -122,7 +122,7 @@ pub fn set_cookie_field(cookie: &ReplyCookie, https: bool) -> Result<Vec<u8>, Er
 }
 
 /// The `Set-Cookie` field value of a cookie that a reply adds (HY-52.13), checked in the order of HY-52.16 and written
-/// by [`set_cookie_field`]: the one rule that the three servers call (HY-132.2).
+/// by [`set_cookie_field`]: the one rule that the three servers call (HY-133.2).
 ///
 /// # Errors
 /// The errors of [`cookie`].

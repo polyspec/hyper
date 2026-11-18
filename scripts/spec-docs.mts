@@ -3,8 +3,10 @@
 // and their numbering, koSource, one sentence (HYR-6) per English statement, and the marks of the statements that no
 // code follows (`unimplemented`, H35.40), which are compared with the checklist and the feature status of the root.
 // `write` renders the documents; `check`
-// also fails when a committed document differs from its rendering. Usage: spec-docs.mts write|check [--root <dir>]
+// also fails when a committed document differs from its rendering. `released` compares the ids of the contract with
+// those of the last release (H35.98). Usage: spec-docs.mts write|check|released [--root <dir>]
 import { Ajv2020 } from 'ajv/dist/2020.js';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -316,18 +318,148 @@ function firstDifferentLine(actual: string, expected: string): number {
   return 1;
 }
 
+// The check of the released ids (H35.98): the statements of the last release, read from its tag (baselineTag), are
+// compared with the contract of the tree. An id keeps one meaning, so a released id is either a statement of the same
+// topic or retired. The topic changed when the section title (en) or the rule of the statement changed, or when the word
+// sets of the two English texts share less than TOPIC_SHARE (Jaccard); a citation and a code span count as one word
+// each, so that a renumbered citation or a renamed symbol is a wording edit.
+const TOPIC_SHARE = 0.4;
+const RELEASE_TAG = 'v[0-9]*.[0-9]*.[0-9]*';
+
+type Placed = { id: string; rule: string; section: string; en: string };
+
+/**
+ * Whether a model holds the lists that the comparison reads. A released contract passed the schema of its own release,
+ * which this schema may no longer accept, so the comparison checks only the shape it walks; spec-docs-check validates
+ * the contract of the tree.
+ */
+function holdsSections(model: unknown): model is Contract {
+  return typeof model === 'object' && model !== null && 'sections' in model && Array.isArray(model.sections) && 'retiredRules' in model && Array.isArray(model.retiredRules);
+}
+
+/** The statements of a contract that hold an id, each with its rule and the English title of its section. */
+function placedStatements(contract: Contract): Placed[] {
+  const found: Placed[] = [];
+  const walk = (list: Block[], section: string, rule: string | undefined): void => {
+    for (const block of list) {
+      if (block.kind === 'rule') walk(block.blocks, section, block.id);
+      else if (block.kind === 'paragraph' || block.kind === 'list') {
+        const groups = block.kind === 'paragraph' ? [{ statements: block.statements, blocks: [] }] : block.items;
+        for (const group of groups) {
+          for (const s of group.statements) if (s.id !== undefined && rule !== undefined) found.push({ id: s.id, rule, section, en: s.en });
+          walk(group.blocks, section, rule);
+        }
+      }
+    }
+  };
+  for (const section of contract.sections) walk(section.blocks, section.title.en, undefined);
+  return found;
+}
+
+/** The retired ids of a contract: each retired number of a rule, and each rule of retiredRules. */
+function retiredOf(contract: Contract): { statements: Set<string>; rules: Set<string> } {
+  const statements = new Set<string>();
+  const walk = (list: Block[]): void => {
+    for (const block of list) {
+      if (block.kind === 'rule') {
+        for (const n of block.retired) statements.add(`${block.id}.${n}`);
+        walk(block.blocks);
+      } else if (block.kind === 'list') for (const item of block.items) walk(item.blocks);
+    }
+  };
+  for (const section of contract.sections) walk(section.blocks);
+  return { statements, rules: new Set(contract.retiredRules) };
+}
+
+/** The words of an English text, with each citation and each code span as one word. */
+function topicWords(text: string): Set<string> {
+  const reduced = text.replace(/HYC?-[0-9]+(?:\.[0-9]+)?/gu, ' cite ').replace(/`[^`]*`/gu, ' code ');
+  return new Set(reduced.toLowerCase().match(/[a-z0-9]+/gu) ?? []);
+}
+
+function share(a: Set<string>, b: Set<string>): number {
+  const union = new Set([...a, ...b]);
+  if (union.size === 0) return 1;
+  let common = 0;
+  for (const word of a) if (b.has(word)) common += 1;
+  return common / union.size;
+}
+
+function git(root: string, args: string[]): { ok: boolean; out: string; err: string } {
+  const result = spawnSync('git', args, { cwd: root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  return { ok: result.status === 0, out: result.stdout, err: result.stderr };
+}
+
+/**
+ * The release that the contract is compared with: the tag vX.Y.Z nearest to HEAD in its history, other than a tag that
+ * points at HEAD itself. At a release commit, which CI tags, it is the previous release, and at a later commit the
+ * latest one. `git describe --tags --abbrev=0` prints the nearest tag (git-describe: "--abbrev=<n> ... An <n> of 0 will
+ * suppress long format, only showing the closest tag"), `--match` limits it to the release tags and `--exclude` drops
+ * each tag of HEAD (git-describe: "--exclude <pattern>: Do not consider tags matching the given glob(7) pattern").
+ * HEAD and not HEAD^ is described, so that a merge commit also reaches the tags of its other parents.
+ */
+function baselineTag(root: string): string | undefined {
+  const own = git(root, ['tag', '--points-at', 'HEAD', '--list', RELEASE_TAG]);
+  const excluded = own.ok ? own.out.split('\n').filter(Boolean).flatMap((t) => ['--exclude', t]) : [];
+  const found = git(root, ['describe', '--tags', '--abbrev=0', '--match', RELEASE_TAG, ...excluded, 'HEAD']);
+  return found.ok ? found.out.trim() : undefined;
+}
+
+/** The problems of the released ids, with the lines that name the moved texts; the count of compared ids on success. */
+function releasedProblems(root: string): { problems: string[]; notes: string[] } {
+  const problems: string[] = [];
+  const notes: string[] = [];
+  const tag = baselineTag(root);
+  if (tag === undefined) return { problems: [`no tag vX.Y.Z is reachable from HEAD other than a tag of HEAD itself; fetch the tags of the repository (git fetch --tags)`], notes };
+
+  const shown = git(root, ['show', `${tag}:contracts/protocol.json`]);
+  if (!shown.ok) return { problems: [...problems, `git show ${tag}:contracts/protocol.json failed: ${shown.err.trim()}`], notes };
+  const releasedModel: unknown = JSON.parse(shown.out);
+  const currentModel: unknown = JSON.parse(readFileSync(path.join(root, 'contracts', 'protocol.json'), 'utf8'));
+  if (!holdsSections(releasedModel)) return { problems: [...problems, `contracts/protocol.json of ${tag} holds no sections and retiredRules`], notes };
+  if (!holdsSections(currentModel)) return { problems: [...problems, 'contracts/protocol.json holds no sections and retiredRules'], notes };
+  const released = placedStatements(releasedModel);
+  const current = currentModel;
+  const now = new Map(placedStatements(current).map((s) => [s.id, s]));
+  const byText = new Map(placedStatements(current).map((s) => [s.en, s.id]));
+  const retired = retiredOf(current);
+  for (const old of released) {
+    const moved = byText.get(old.en);
+    if (moved !== undefined && moved !== old.id) notes.push(`the text of ${old.id} of ${tag} is now ${moved}`);
+    const s = now.get(old.id);
+    if (s === undefined) {
+      if (!retired.statements.has(old.id) && !retired.rules.has(old.rule)) problems.push(`${old.id} of ${tag} is missing and not retired`);
+      continue;
+    }
+    const changes: string[] = [];
+    if (s.section !== old.section) changes.push(`section ${old.section} -> ${s.section}`);
+    if (s.rule !== old.rule) changes.push(`rule ${old.rule} -> ${s.rule}`);
+    const common = share(topicWords(old.en), topicWords(s.en));
+    if (common < TOPIC_SHARE) changes.push(`its words share ${common.toFixed(2)}, below ${TOPIC_SHARE}`);
+    if (changes.length > 0) problems.push(`${old.id} of ${tag} changed its topic: ${changes.join('; ')}; retire the id and add a new statement`);
+  }
+  notes.push(`compared ${released.length} released statement ids of ${tag}`);
+  return { problems, notes };
+}
+
 function usage(): number {
-  process.stderr.write('usage: spec-docs.mts write|check [--root <dir>]\n');
+  process.stderr.write('usage: spec-docs.mts write|check|released [--root <dir>]\n');
   return 2;
 }
 
 function main(argv: string[]): number {
   const [mode, ...rest] = argv;
-  if (mode !== 'write' && mode !== 'check') return usage();
+  if (mode !== 'write' && mode !== 'check' && mode !== 'released') return usage();
   let root = repo;
   if (rest.length > 0) {
     if (rest.length !== 2 || rest[0] !== '--root' || rest[1] === undefined) return usage();
     root = path.resolve(rest[1]);
+  }
+  if (mode === 'released') {
+    const { problems, notes } = releasedProblems(root);
+    for (const note of notes) process.stdout.write(`${note}\n`);
+    for (const problem of problems) process.stderr.write(`${problem}\n`);
+    return problems.length > 0 ? 1 : 0;
   }
 
   const problems: string[] = [];

@@ -123,7 +123,11 @@ final class NativeSessionTest extends TestCase
         try {
             chmod($directory, 0000);
             clearstatcache();
-            self::assertFalse(is_readable($directory), "the test needs a directory that it cannot read, and {$directory} with mode 0000 is readable to this user");
+            self::assertFalse(
+                is_readable($directory),
+                "the test needs a directory that it cannot read, and {$directory} with mode 0000 is readable "
+                . 'to this user',
+            );
             ini_set('session.save_path', $directory);
             ini_set('session.gc_maxlifetime', '60');
 
@@ -183,7 +187,7 @@ final class NativeSessionTest extends TestCase
     }
 
     /**
-     * HY-104.44, HY-132.14: under the handler `user`, which a store of the application sets, `collect` removes nothing
+     * HY-104.44, HY-133.14: under the handler `user`, which a store of the application sets, `collect` removes nothing
      * and fails with kind `invalid_session_handler` and a message that names the handler.
      */
     #[RunInSeparateProcess]

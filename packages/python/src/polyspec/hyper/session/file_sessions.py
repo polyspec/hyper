@@ -6,7 +6,7 @@ another form or without an unexpired file starts a new session. The session star
 request that never uses it creates no session. A request holds `flock` on the session file from its opening to its
 closing, as PHP does: the library orders the requests of this process in a queue and waits for the lock of the other
 processes with no retry and no pause (HY-104.27), and the operating system releases the lock of a process that
-ended. A failure of the library is an error of hyper of the same category with the kind of the library (HY-132.3)."""
+ended. A failure of the library is an error of hyper of the same category with the kind of the library (HY-133.3)."""
 
 from __future__ import annotations
 

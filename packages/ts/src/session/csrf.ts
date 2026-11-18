@@ -1,6 +1,6 @@
 // Masks the session token for a response and verifies a masked form value (HY-24). A masked value is 32 mask bytes
 // followed by the mask XOR the token, as 128 lowercase hexadecimal digits, so no response contains the token. The core
-// states each rule (HY-132.2); this class draws the random mask.
+// states each rule (HY-133.2); this class draws the random mask.
 import { randomBytes } from 'node:crypto';
 import { rules } from '../app/core-rules.js';
 
