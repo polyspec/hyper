@@ -253,8 +253,9 @@ test('the HTTP servers answer status 500 during a failover and go on with the se
     await redis.replicated(await redis.primary());
     await redis.failOver();
     for (const board of boards) {
-      // The first request after the switch may meet the connection to the killed primary and answer 500; the client of the
-      // server replaces that connection, so the next request reaches the new primary.
+      // The first request after the switch may meet the connection to the killed primary and answer 500; the store drops a
+      // connection that failed, and the next request makes it again (session-store v0.0.7,
+      // packages/redis/rust/src/connection.rs:339-345), so the next request reaches the new primary.
       let response: Response = await post(board, session.cookie, session.token, `after ${board.name}`);
       if (response.status === 500) {
         assertKeepsCookie(response, `${board.name} during the failover`);
@@ -279,16 +280,18 @@ test('the servers share a new session on the new primary while the former primar
     await redis.replicated(await redis.primary());
     const old = await redis.switchOver();
     const pairs: [Board, Board][] = boards.flatMap((first) => boards.filter((second) => second !== first).map((second): [Board, Board] => [first, second]));
+    // Each Sentinel logged the switch, and each server asks a Sentinel for the primary when it opens the session of a
+    // request: the store of session-store v0.0.7 at each open (packages/redis/rust/src/connection.rs:415, :369 and
+    // :263-264, where it replaces its connection when the address changed, :266-272) and RedisSentinelSessions of PHP
+    // before each session (packages/php/src/Session/RedisSentinelSessions.php:33-45). So the first request of each pair
+    // reaches the new primary, and a refusal fails.
     for (const [first, second] of pairs) {
-      for (;;) {
-        const opened = await fetch(`${first.url}/board/create`);
-        assert.equal(opened.status, 200, `${first.name} opens the form`);
-        const cookie = cookieOf(opened);
-        const token = tokenOf(await opened.text());
-        const accepted = (await post(second, cookie, token, `${first.name} ${second.name}`)).status === 303;
-        assert.ok(await redis.isPrimary(old), `${second.name} ${accepted ? 'accepted' : 'refused'} the session of ${first.name} only after the former primary became a replica`);
-        if (accepted) break;
-      }
+      const opened = await fetch(`${first.url}/board/create`);
+      assert.equal(opened.status, 200, `${first.name} opens the form`);
+      const cookie = cookieOf(opened);
+      const token = tokenOf(await opened.text());
+      assert.equal((await post(second, cookie, token, `${first.name} ${second.name}`)).status, 303, `${second.name} accepts the session of ${first.name} on the new primary`);
+      assert.ok(await redis.isPrimary(old), `${second.name} accepted the session of ${first.name} while the former primary still accepted writes`);
     }
   } finally {
     await stopServers(children);
