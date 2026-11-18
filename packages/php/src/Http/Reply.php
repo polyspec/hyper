@@ -242,7 +242,7 @@ final class Reply
 
     /**
      * Returns an integer of the data model, or null for another value: an int within ±(2^53 − 1); a float is no
-     * integer of the interface contract, even without a fraction (HY-52.19).
+     * integer of the interface contract, even without a fraction (HY-52.20).
      */
     private static function integer(mixed $value): ?int
     {

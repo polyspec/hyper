@@ -166,7 +166,7 @@ class Reply:
     @staticmethod
     def _integer(value: object) -> int | None:
         """Returns an integer of the data model, or None for another value: an int within ±(2^53 − 1); a float,
-        even without a fraction, and a bool are not one (HY-52.19)."""
+        even without a fraction, and a bool are not one (HY-52.20)."""
         if isinstance(value, bool):
             return None
         if isinstance(value, int):
