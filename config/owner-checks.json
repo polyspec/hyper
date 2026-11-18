@@ -721,7 +721,19 @@
         "tests/scripts/ci-workflow.test.mts",
         "tests/scripts/template-ext.test.mts",
         "tests/scripts/case-selection.test.mts",
-        "tests/scripts/test-selection.test.mts"
+        "tests/scripts/test-selection.test.mts",
+        "tests/scripts/preflight.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/preflight.test.mts"
+      ],
+      "tests": [
+        "tests/scripts/preflight.test.mts"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {
