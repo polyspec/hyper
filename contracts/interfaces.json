@@ -10718,27 +10718,6 @@
               }
             },
             {
-              "id": "record-session.accepted",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "optional<string>"
-              ],
-              "output": "optional<string>",
-              "errors": [],
-              "state": "Returns the value of a session cookie in the form of an identifier, or null (HY-104.42).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.accepted",
-                  "signature": "static accepted(cookie: string | null): string | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.accepted",
-                  "signature": "def accepted(cookie: Optional[str]) -> Optional[str]"
-                }
-              }
-            },
-            {
               "id": "record-session.cookieName",
               "kind": "static method",
               "visibility": "internal",

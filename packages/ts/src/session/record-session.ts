@@ -5,9 +5,6 @@ import { PhpFloat, Reference, serialize, StdClass, unserialize } from '@polyspec
 import { rules } from '../app/core-rules.js';
 import type { SessionStore } from './session-store.js';
 
-// The identifiers that PHP and the session-store library accept (HY-104.42).
-const IDENTIFIER = /^[A-Za-z0-9,-]{22,256}$/;
-
 // A value that a record holds, as unserialize of @polyspec/php-serialization gives it and serialize takes it; the
 // package exports no type of it, so a value is narrowed where it is read.
 type Stored = unknown;
@@ -84,11 +81,6 @@ export abstract class RecordSession implements SessionStore {
   // Returns the record to keep at closing, or null when the request did not use the session.
   serialized(): Uint8Array | null {
     return this.items === null || this.id === null ? null : serialize(this.items);
-  }
-
-  // Returns the value of a session cookie in the form of an identifier, or null (HY-104.9).
-  static accepted(cookie: string | null): string | null {
-    return cookie !== null && IDENTIFIER.test(cookie) ? cookie : null;
   }
 
   // Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45).
