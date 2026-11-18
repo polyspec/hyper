@@ -41,9 +41,9 @@ test('cases', () => {
   if (results === undefined) throw new Error('RECIPE_RESULTS is not set: the case runner writes its results to the file that it names');
   for (const reader of CaseReader.cases('build')) {
     try {
-      if (reader.section() === 'manifest.json:templateChecks') {
+      if (`${reader.file()}:${reader.section()}` === 'manifest.json:templateChecks') {
         reader.compare('problems', problemsOf(reader));
-      } else if (reader.section() === 'build.json:dataTemplate') {
+      } else if (`${reader.file()}:${reader.section()}` === 'build.json:dataTemplate') {
         const reserved = reservedTemplate();
         reader.compare('name', reserved.name);
         reader.compare('source', reserved.source);
