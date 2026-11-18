@@ -119,7 +119,12 @@ export function termKnown(term: string, ids: Set<string>): boolean {
   return false;
 }
 
-/** HYR-5: an error is a status of protocol.json (the status is named as a whole word in it) or an error unit of the spec. */
+/**
+ * HYR-5: an error is a status of protocol.json (the status is named as a whole word in it), an error unit of the spec,
+ * or `<unit>:<kind>` of a unit of the spec, whose extension unit and kind make recipe-files checks.
+ */
 export function errorKnown(term: string, ids: Set<string>, flat: string): boolean {
+  const at = term.indexOf(':');
+  if (at >= 0) return ids.has(term.slice(0, at));
   return ids.has(term) || new RegExp(`\\b${term}\\b`, 'u').test(flat);
 }
