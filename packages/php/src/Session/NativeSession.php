@@ -132,8 +132,32 @@ final class NativeSession implements SessionStore
     {
         ArgumentCount::most(\func_num_args(), 1);
         $this->start();
+        $value = $_SESSION[$key] ?? null;
+        self::refuseClasses($value);
 
-        return $_SESSION[$key] ?? null;
+        return $value;
+    }
+
+    /**
+     * Fails with kind `record` for an object of a class other than stdClass at any depth of a stored value, which the
+     * Node and the Python server refuse through the session-store library (HY-104.41).
+     */
+    private static function refuseClasses(mixed $value): void
+    {
+        if (is_object($value)) {
+            if (get_class($value) !== \stdClass::class) {
+                throw new RecordError(
+                    'hyper: the session record holds an object of class ' . get_class($value) . ' (HY-104.41)',
+                    'record',
+                );
+            }
+            $value = get_object_vars($value);
+        }
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                self::refuseClasses($item);
+            }
+        }
     }
 
     public function set(string $key, mixed $value): void
