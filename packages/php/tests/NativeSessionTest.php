@@ -7,6 +7,7 @@ namespace Polyspec\Hyper\Tests;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\NativeSession;
+use Polyspec\Hyper\RecordError;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
 
@@ -17,6 +18,24 @@ final class NativeSessionTest extends TestCase
     private static function request(array $cookies = [], bool $https = false): Request
     {
         return new Request('GET', '/', cookies: $cookies, https: $https);
+    }
+
+    /** HY-104.41: a record that holds an object of a class other than stdClass fails, at any depth, as in the other servers. */
+    #[RunInSeparateProcess]
+    public function testAnObjectOfAnotherClassFailsWithKindRecord(): void
+    {
+        $store = new NativeSession(false, self::request());
+        $store->set('map', (object) ['a' => 1]);
+        self::assertEquals((object) ['a' => 1], $store->get('map'));
+        foreach (['top' => new \ArrayObject(), 'nested' => ['x' => [new \DateTimeImmutable('@0')]]] as $key => $value) {
+            $store->set($key, $value);
+            try {
+                $store->get($key);
+                self::fail("the object of {$key} was read");
+            } catch (RecordError $failure) {
+                self::assertSame('record', $failure->kind());
+            }
+        }
     }
 
     #[RunInSeparateProcess]
