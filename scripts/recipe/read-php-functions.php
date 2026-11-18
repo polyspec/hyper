@@ -129,8 +129,9 @@ function ownMethods(ReflectionClass $class): array
 
 /**
  * Whether a method is an empty private constructor without parameters (HYR-6): it only stops the construction of a
- * class of static methods, a runtime idiom that no rule names, so it is no member. The body is read from the lines of
- * the file that Reflection names, because Reflection does not tell an empty body.
+ * class of static methods, a runtime idiom that no rule names, so it is no member. Reflection does not tell an empty
+ * body, so the tokens of the lines that Reflection names are read: once whitespace and comments are dropped, the tokens
+ * after the name are only `(`, `)`, `{` and `}`.
  */
 function isConstructionGuard(ReflectionMethod $method): bool
 {
@@ -156,7 +157,13 @@ function isConstructionGuard(ReflectionMethod $method): bool
         return false;
     }
     $lines = array_slice(file($file), $start - 1, $end - $start + 1);
-    return preg_match('/__construct\s*\(\s*\)\s*\{\s*\}\s*$/', implode('', $lines)) === 1;
+    $tokens = array_values(array_filter(
+        PhpToken::tokenize('<?php ' . implode('', $lines)),
+        static fn(PhpToken $t) => !$t->is([T_OPEN_TAG, T_WHITESPACE, T_COMMENT, T_DOC_COMMENT]),
+    ));
+    $texts = array_map(static fn(PhpToken $t) => $t->text, $tokens);
+    $name = array_search('__construct', $texts, true);
+    return $name !== false && array_slice($texts, $name + 1) === ['(', ')', '{', '}'];
 }
 
 /** @return list<ReflectionProperty> the properties a class declares itself, not the ones its traits declare */
