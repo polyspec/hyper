@@ -286,7 +286,8 @@
         "tests/scripts/session-redis-cluster.test.mts",
         "tests/scripts/benchmark-sessions.test.mts",
         "tests/scripts/session-holder.test.mts",
-        "tests/scripts/no-polling.test.mts"
+        "tests/scripts/no-polling.test.mts",
+        "tests/scripts/session-worker-settings.test.mts"
       ]
     },
     {
