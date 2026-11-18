@@ -47,6 +47,7 @@ for (const writer of NAMES) {
     requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
     requireBuilt('hyper-install-php', 'vendor/autoload.php');
     requireBuilt('hyper-ext', HYPER_EXT);
+    requireBuilt('packages', 'packages/ts/dist/index.js');
     requireBuilt('node-addon', NODE_ADDON);
     const directory = directoryOf(t);
     writeFileSync(file(directory), '');
@@ -64,6 +65,7 @@ test('the lock of a process that ended is released and the session goes on (HY-1
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   requireBuilt('hyper-ext', HYPER_EXT);
+  requireBuilt('packages', 'packages/ts/dist/index.js');
   requireBuilt('node-addon', NODE_ADDON);
   const directory = directoryOf(t);
   writeFileSync(file(directory), 'a:1:{s:1:"n";i:0;}');
