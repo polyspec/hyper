@@ -1,5 +1,5 @@
 <!-- doc-id: agents -->
-<!-- source-sha256: 210ad74b3dcfd0f306af117c152a92b7459ba8cf61b4d2fb936f8b012fd5822b -->
+<!-- source-sha256: 5e4b4d60aa68b02e755b83b4d311d229efcf0c69687c234ffb1cb82bff064577 -->
 # 개발
 
 [English](AGENTS.md).
@@ -105,6 +105,8 @@
   Enforced by: none, `make commit` 없이 만든 commit은 review로 찾는다.
 - Own: Version 0.1 전까지 변경은 그것을 소유한 unit test로 검사하고, checklist의 모든 task가 `[o]`일 때 `main`을 한 번 push한다(HR-94). Pull request, merge queue, GitHub ruleset은 없으며, push는 `git push origin main`이다. `main`의 push는 `.github/workflows/ci.yml`을 실행하고, 그 마지막 job `ci-passed`는 workflow의 다른 모든 job이 통과했을 때만 통과한다. 그 push의 CI 실행이 commit의 근거이며, release tag는 태그된 commit에 대해 `ci-passed`가 성공한 뒤에만 정한다(`docs/operations/development.md`).
   Enforced by: `make ci-passed`
+- Own: branch는 merge한 tree에서 전체 `make hyper-test-scripts`가 통과한 뒤에만 release의 통합 branch에 merge한다. 행이 고른 시험으로만 검증한 branch는 같은 tree의 다른 시험을 깨뜨릴 수 있고, 그 시험은 보이지 않은 채 통합 branch에 들어가기 때문이다.
+  Enforced by: none, merge 전의 local 실행은 도구가 관찰하지 않는다.
 
 - Own: 각 애플리케이션 CI group은 실행할 도구와 잠긴 package 환경을 선언하고 공유 도구 선택 및 native package manager로 자신의 job에 설치하며 build 입력도 직접 준비한다. Parity group은 비교하는 모든 구현을 독립적으로 준비하고 다른 언어 job의 설치 환경이나 build 산출물을 사용하지 않는다. 최종 job은 필수 job의 결과만 판정한다.
   Enforced by: `make hyper-test-scripts`

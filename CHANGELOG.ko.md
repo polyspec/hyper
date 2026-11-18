@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a81f7b3fa40fc192751b6502f3a91486774f9cc00231d9266677cd728bf0496e -->
+<!-- source-sha256: 572dd36e9a26cecda1859f87308c054974ca3b05a1fa414fbdac3045eeb47f09 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- AGENTS.md는 merge한 tree에서 전체 `make hyper-test-scripts`가 통과한 뒤에만 branch를 release의 통합 branch에 merge한다고 적는다. 입력: 행이 고른 시험만 실행한 branch(H35.68). 동작: 그 merge가 `tests/scripts/node-package.test.mts`를 통합 branch에서 실패한 채로 남겼고, 고른 실행은 그것을 보이지 않았다. 기대 동작이자 현재 동작: merge 전에 merge한 tree에서 전체 실행을 한다. 검증: `make docs-check`.
 - `tests/scripts/node-package.test.mts`는 production closure를 실행의 staging 디렉터리에 pack하고 `var/bindings/node/deps`로 게시하는 `make node-package`의 recipe를 검사한다(H35.68-1). 입력: `make hyper-test-scripts`. 이전 동작: test는 recipe가 더는 쓰지 않는 `--pack-destination …/node/deps`를 기대했으므로 실패했다. 기대 동작: test는 staging 디렉터리 `deps.next-<pid>`, `"$staging"`으로의 pack, 그리고 `scripts/publish.mts`가 `"$staging"`을 `deps`로 게시하는 것을 요구한다. `make hyper-test-scripts`로 검증했다(이전 1개 실패, 이후의 수는 row에 적는다).
 - `make node-package`는 production closure를 자기 run의 staging 디렉터리에 pack하고 `scripts/publish.mts`로 `var/bindings/node/deps`에 publish한다(HR-82, H35.68). 입력: 이전 run이 `polyspec-template-0.0.30.tgz`를 pack했고 lock이 0.0.31을 고정한 뒤의 `make node-package`. 동작: recipe가 deps를 `mkdir -p`로 만들고 비우지 않았으므로 `./deps/*.tgz`의 install이 새 파일 옆의 옛 파일까지 받아 offline에서 ENOTCACHED로 실패했다. 기대 동작이자 현재 동작: publish가 이전 run의 파일을 지운다. 검증: `make hyper-test-scripts TESTS=tests/scripts/node-package-deps.test.mts`, 1개 통과. deps에 오래된 파일을 둔 `make node-package`가 `7 files; removed stale-0.0.1.tgz`를 출력했다.
 - `make node-package`는 `packages/ts/native/wasm/Cargo.toml`의 모든 test feature, 곧 `panic-test`, `fault-test`, `thrown-count-test`로 WASM module을 build한다(`WASM_FEATURES`, H35.67). 입력: `make test-wasm`. 동작: module을 `panic-test`만으로 build했으므로 생성 test 6개가 `glue.__armFaults is not a function`과 `stepGlue.__thrownCount is not a function`으로 실패했다. 기대 동작이자 현재 동작: 그 6개가 통과한다. 검증: `make test-wasm`, 341개 중 336개 통과. path 값의 B-4 case 3개(GN-6y)와 다른 type의 callback 결과에 대한 K-2 case 2개가 알려진 실패다.

@@ -105,6 +105,8 @@ The working principles of every polyspec repository, and the rules of work that 
   Enforced by: none, a commit made without `make commit` is found by review.
 - Own: Until version 0.1 a change is checked by the unit tests that own it, and `main` is pushed once, when every task of the checklist is `[o]` (HR-94). There is no pull request, no merge queue and no GitHub ruleset, and the push is `git push origin main`. The push of `main` runs `.github/workflows/ci.yml`, whose last job `ci-passed` passes only when every other job of the workflow passed. The CI run of that push is the evidence of the commit, and a release tag is set only after `ci-passed` succeeded for the tagged commit (`docs/operations/development.md`).
   Enforced by: `make ci-passed`
+- Own: A branch is merged into the integration branch of a release only after the full `make hyper-test-scripts` has passed on the merged tree, because a branch verified only by the tests that its rows select can break another test of the same tree, which then enters the integration branch unseen.
+  Enforced by: none, a local run before a merge is not observed by a tool.
 
 - Own: Each application CI group declares the tools and locked package environments it executes, installs them in its own job through shared tool selection and native package managers, and builds its own inputs. A parity group prepares every compared implementation independently and consumes no other language job’s installed environment or build output. The final job only judges the required job results.
   Enforced by: `make hyper-test-scripts`
