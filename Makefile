@@ -794,7 +794,11 @@ go-release-build: bindings ## Build and vet packages/go alone as a release tags 
 	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) build -mod=readonly ./...
 	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) vet ./...
 
-.PHONY: spec-docs spec-docs-check
+.PHONY: spec-docs spec-docs-check spec-released-check
+# An id of contracts/protocol.json keeps one meaning: the ids of the last release, from the tag that
+# config/spec-baseline.json names, are statements of the same topic or retired (H35.98). It reads local tags only.
+spec-released-check: ## Fail a released statement id of contracts/protocol.json that is missing and not retired, or whose topic changed (H35.98); offline
+	$(NODE) scripts/spec-docs.mts released
 spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/protocol.json (H2)
 	$(NODE) scripts/spec-docs.mts write
 spec-docs-check: ## Check contracts/protocol.json and the protocol documents against their generation (H2)
@@ -845,7 +849,7 @@ bench: bench-server bench-browser bench-uploads ## Run the measurements; results
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
 GATE_TARGETS := layout-check docs-check pin-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
-CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check release-candidate-assets hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
+CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check spec-released-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check release-candidate-assets hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
 
 # The CI groups of the full suite (HR-91): the matrix of the job check of .github/workflows/ci.yml names CI_GROUPS, and
 # each entry runs `make ci-check NAME=<group>` (HR-90). A group declares the tools that install-tools installs (CI_TOOLS),
@@ -870,7 +874,7 @@ CI_SYMBOLS_gates := php
 CI_TARGETS_gates := $(GATE_TARGETS)
 CI_TOOLS_docs := node php composer pie python uv rust maturin
 CI_SETUP_docs := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-redis hyper-ext
-CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check recipe-check
+CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check spec-released-check recipe-check
 CI_TOOLS_php := node php composer pie rust
 CI_SETUP_php := install-tools hyper-install-crates hyper-install-php
 CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php

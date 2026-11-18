@@ -242,18 +242,6 @@
     },
     {
       "paths": [
-        "tests/scripts/script-run.mts"
-      ],
-      "tests": [
-        "tests/scripts/spec-docs.test.mts",
-        "tests/scripts/spec-released.test.mts"
-      ],
-      "targets": [
-        "typecheck"
-      ]
-    },
-    {
-      "paths": [
         "docs/spec/protocol.md",
         "docs/spec/protocol.ko.md"
       ],
@@ -270,11 +258,34 @@
         "scripts/schema/protocol.schema.json"
       ],
       "tests": [
-        "tests/scripts/spec-docs.test.mts"
+        "tests/scripts/spec-docs.test.mts",
+        "tests/scripts/spec-released.test.mts"
       ],
       "targets": [
         "typecheck",
-        "spec-docs-check"
+        "spec-docs-check",
+        "spec-released-check"
+      ]
+    },
+    {
+      "paths": [
+        "config/spec-baseline.json",
+        "contracts/protocol.json"
+      ],
+      "targets": [
+        "spec-released-check"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/script-run.mts"
+      ],
+      "tests": [
+        "tests/scripts/spec-docs.test.mts",
+        "tests/scripts/spec-released.test.mts"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {
