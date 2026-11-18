@@ -11,7 +11,7 @@
     { "source": "reply.json", "group": "cacheControl", "member": "rules.cache_control", "args": { "value": { "call": "cacheControl" } }, "result": "value" },
     { "source": "reply.json", "group": "referrerPolicy", "member": "rules.referrer_policy", "args": { "value": { "call": "referrerPolicy" } }, "result": "value" },
     { "source": "reply.json", "group": "status", "member": "rules.reply_status", "args": { "status": { "call": "status" } }, "result": "value" },
-    { "source": "context.json", "group": "contexts", "member": "rules.context_hash", "args": { "build": { "field": "build" }, "text": { "field": "text" } }, "result": "hash" },
+    { "source": "context.json", "group": "contexts", "member": "rules.context_hash", "args": { "build": { "field": "build" }, "text": { "field": "context" } }, "result": "hash" },
     { "source": "build.json", "group": "read", "member": "rules.read_build", "args": { "bytes": { "field": "text", "as": "bytes" } }, "result": "build" }
   ]
 }

@@ -17,6 +17,7 @@ import { dirname, join, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { buildFileText } from '@polyspec/hyper/build';
 import { writeProgramTemplates } from '../../packages/cli/lib/program-files.mjs';
 import { programFiles } from '../../packages/cli/lib/program.mjs';
 import { requireBuilt } from '../scripts/requires.mts';
@@ -34,7 +35,6 @@ function run(t: TestContext, args: string[], input?: string) {
   // from each resolved package entry with Git, and mount it read-only at the same path (HR-70, HR-78).
   const entries = [
     createRequire(join(root, 'packages/cli/package.json')).resolve('@polyspec/template'),
-    fileURLToPath(import.meta.resolve('@polyspec/template-compiler/compiler.mjs')),
   ];
   const sources = new Set([root]);
   for (const entry of entries) {
@@ -73,17 +73,18 @@ test('the program of hyper build writes its files on a virtiofs bind mount', { t
   const input = mkdtempSync(join(tmpdir(), 'hyper-virtiofs-input-'));
   t.after(() => rmSync(input, { recursive: true, force: true }));
   const manifest: unknown = JSON.parse(readFileSync(manifestFile, 'utf8'));
-  const computed = programFiles({ manifest, templates: writeProgramTemplates(templates, join(input, 'program')), phpNamespace: 'Polyspec\\Hyper\\Examples\\Board\\Program' });
+  const computed = programFiles({ manifest, templates: writeProgramTemplates(templates, join(input, 'program')) });
   const names = computed.files.map(([name]) => name);
-  assert.ok(names.includes('reads.json') && names.includes('program.json') && names.some((name) => name.startsWith('php/')), names.join(', '));
+  assert.deepEqual(names, ['reads.json']);
   writeFileSync(join(input, 'files.json'), JSON.stringify(computed.files));
+  writeFileSync(join(input, 'build.json'), JSON.stringify([['build.json', buildFileText(id)]]));
   // The writes of the build (packages/cli/lib/program-files.mjs, which writeProgram calls), into the bind mount.
   const script = [
     `import { readFileSync } from 'node:fs';`,
-    `import { writeBuildFile, writeProgramFiles, writeProgramTemplates } from ${JSON.stringify(join(root, 'packages', 'cli', 'lib', 'program-files.mjs'))};`,
+    `import { writeProgramFiles, writeProgramTemplates } from ${JSON.stringify(join(root, 'packages', 'cli', 'lib', 'program-files.mjs'))};`,
     `writeProgramTemplates(${JSON.stringify(templates)}, '/output/program');`,
     `writeProgramFiles('/output/program', JSON.parse(readFileSync('/input/files.json', 'utf8')));`,
-    `writeBuildFile('/output/program', '${id}');`,
+    `writeProgramFiles('/output/program', JSON.parse(readFileSync('/input/build.json', 'utf8')));`,
   ].join('\n');
   const result = run(t, ['--input-type=module', '--eval', script], input);
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
@@ -93,10 +94,10 @@ test('the program of hyper build writes its files on a virtiofs bind mount', { t
     assert.deepEqual(readFileSync(join(copied, name)), readFileSync(join(templates, name)), name);
     assert.equal(statSync(join(copied, name)).mode & 0o777, 0o644, name);
   }
-  // HY-31.9, HY-31.10: the copy of the reserved template lies below legacy/ and not below templates/.
+  // HY-31.9: the program holds no copy of the reserved template.
   assert.equal(files(copied).includes('hyper/data.tpl'), false);
   // Every file of the program is on the mount with the content that the host computed, and no other file.
-  assert.deepEqual(files(join(output, 'program')), [...files(copied).map((name) => `templates/${name}`), 'legacy/hyper/data.tpl', ...names, 'build.json'].sort());
+  assert.deepEqual(files(join(output, 'program')), [...files(copied).map((name) => `templates/${name}`), ...names, 'build.json'].sort());
   for (const [name, content] of computed.files) assert.equal(readFileSync(join(output, 'program', name), 'utf8'), content, name);
   assert.equal(readFileSync(join(output, 'program', 'build.json'), 'utf8'), `{"build":"${id}"}`);
 });

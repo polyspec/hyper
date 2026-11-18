@@ -55,6 +55,8 @@ function send(url: string, method: string, headers: Record<string, string>, body
 // are, its children, which the end of the test stops before it removes the directory, and the environment of a server
 // with directories of its own.
 async function started(t: TestContext): Promise<{ directory: string; children: ChildProcess[]; environment: (server: string) => Record<string, string> }> {
+  // contract-programs builds the Node application with the Node package, which loads the addon of this platform.
+  requireBuilt('node-addon', `packages/ts/native/generated/hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`);
   const directory = mkdtempSync(path.join(tmpdir(), 'hyper-upload-servers-'));
   const children: ChildProcess[] = [];
   t.after(async () => {
@@ -236,7 +238,10 @@ interface Wanted {
 }
 
 /** The start of a scenario: the variables of the fixture servers and the settings of PHP that it adds. */
-interface Start { env?: Record<string, string>; ini?: string[]; servers?: readonly Name[]; gate?: boolean; files?: boolean }
+// `starting` runs where the servers start, so that a test can make that start fail.
+interface Start { env?: Record<string, string>; ini?: string[]; servers?: readonly Name[]; gate?: boolean; files?: boolean; starting?: () => void }
+// The gate listeners that are open; the close of a gate removes it.
+const gates = new Set<Server>();
 
 const FILLER = 6 * 1024 * 1024;
 const FORM = 'application/x-www-form-urlencoded';
@@ -472,6 +477,14 @@ async function hostsOf(t: TestContext, start: Start = {}): Promise<{ hosts: Host
     socket.on('data', read);
   });
   await new Promise<void>((resolve) => listener.listen(0, '127.0.0.1', () => resolve()));
+  gates.add(listener);
+  listener.on('close', () => gates.delete(listener));
+  // The test owns the listener from here: a start of the servers that fails ends the test, and an open listener would
+  // keep the file from ending (HR-87).
+  t.after(async () => {
+    for (const socket of sockets) socket.destroy();
+    await new Promise<void>((resolve) => listener.close(() => resolve()));
+  });
   const address = listener.address();
   if (address === null || typeof address === 'string') throw new Error(`the gate listens on no TCP port: ${String(address)}`);
   const gate: Gate = {
@@ -484,11 +497,8 @@ async function hostsOf(t: TestContext, start: Start = {}): Promise<{ hosts: Host
       return first.socket;
     },
   };
+  start.starting?.();
   const { directory, children, environment } = await started(t);
-  t.after(async () => {
-    for (const socket of sockets) socket.destroy();
-    await new Promise<void>((resolve) => listener.close(() => resolve()));
-  });
   const hosts: Host[] = [];
   for (const name of start.servers ?? SERVERS) {
     const own = path.join(directory, name);
@@ -559,7 +569,7 @@ test('handler-error-is-the-plain-500-and-is-reported (HY-43.1, HY-43.2, HY-43.4,
   await eachHost(t, hosts, async (host, check) => {
     // The error is handled (HY-43): the response hook receives the 500 with the message and the notes of the reply, and
     // the write hook receives no failure, which is the message of an escaped error only (HY-99.2).
-    check.response('GET /', await ask(host, requestBytes('GET', '/')), { ...PLAIN_500, absent: [], cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); path=/; HttpOnly; SameSite=Lax$`) });
+    check.response('GET /', await ask(host, requestBytes('GET', '/')), { ...PLAIN_500, absent: [], cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); Path=/; HttpOnly; SameSite=Lax$`) });
     check.log('GET /', HOOKS, ['load shared mark=-', 'load home mark=-', responseLine(500, 'GET /', '-', '"handler boom"'), writtenLine(500, true, 'GET /')]);
     check.errors('GET /', 'handler boom');
   });
@@ -591,7 +601,7 @@ test('escaped-500-keeps-the-headers-of-the-caller (HY-60.24 to HY-60.27, HY-99.2
 test('around-answers-a-changed-copy-and-changes-the-response (HY-97.2, HY-97.3, HY-97.4, HY-45.1, HY-45.3, HY-99.2, HY-104.9)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'mark' } });
   await eachHost(t, hosts, async (host, check) => {
-    const identifier = check.response('GET /', await ask(host, requestBytes('GET', '/')), { status: 200, bodyContains: '<p>upload</p>', headers: { 'x-around': 'yes' }, cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); path=/; HttpOnly; SameSite=Lax$`) });
+    const identifier = check.response('GET /', await ask(host, requestBytes('GET', '/')), { status: 200, bodyContains: '<p>upload</p>', headers: { 'x-around': 'yes' }, cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); Path=/; HttpOnly; SameSite=Lax$`) });
     check.same('GET /, the entries of the session directory', sessionsOf(host), [`sess_${identifier}`]);
     // The handlers and the response hook read the header of the copy; the write hook receives the request that the
     // server gave to around (HY-99.2).
@@ -691,7 +701,7 @@ test('session-cookie-of-a-new-session (HY-45.1, HY-45.3, HY-45.4, HY-24.2, HY-24
   await eachHost(t, hosts, async (host, check) => {
     const accept = { Accept: 'application/vnd.hyper+json' };
     const first = await ask(host, requestBytes('GET', '/list', accept));
-    const identifier = check.response('the first GET /list', first, { status: 200, cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); path=/; HttpOnly; SameSite=Lax$`) });
+    const identifier = check.response('the first GET /list', first, { status: 200, cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); Path=/; HttpOnly; SameSite=Lax$`) });
     check.same('the first GET /list, whether shared.csrf has 128 hexadecimal digits', /^[0-9a-f]{128}$/.test(csrfOf(first)), true);
     check.same('the first GET /list, the entries of the session directory', sessionsOf(host), [`sess_${identifier}`]);
     const second = await ask(host, requestBytes('GET', '/list', { ...accept, Cookie: `hy-session=${identifier}` }));
@@ -716,13 +726,13 @@ test('no-session-for-a-path-without-a-route (HY-45.4, HY-27.1, HY-60.2, HY-60.8,
 test('session-cookie-is-secure-when-the-application-declares-https (HY-45.1, HY-45.3, HY-45.6)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_HTTPS: '1' } });
   await eachHost(t, hosts, async (host, check) => {
-    check.response('GET /', await ask(host, requestBytes('GET', '/')), { status: 200, cookie: new RegExp(`^__Host-hy-session=(${SESSION[host.name]}); path=/; secure; HttpOnly; SameSite=Lax$`) });
+    check.response('GET /', await ask(host, requestBytes('GET', '/')), { status: 200, cookie: new RegExp(`^__Host-hy-session=(${SESSION[host.name]}); Path=/; Secure; HttpOnly; SameSite=Lax$`) });
   });
 });
 
 const TOO_LARGE: Wanted = { status: 413, body: 'Content Too Large', headers: { 'cache-control': 'no-store', 'content-security-policy': "frame-ancestors 'self'" }, absent: ['set-cookie'] };
 
-test('body-over-the-limit-is-413 (HY-59.4, HY-59.5, HY-59.6, HY-60.2, HY-60.8, HY-45.4, HY-65.1)', SCENARIO, async (t) => {
+test('body-over-the-limit-is-413 (HY-59.15, HY-59.5, HY-59.14, HY-60.2, HY-60.8, HY-45.4, HY-65.1)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_LIMIT: '10' } });
   await eachHost(t, hosts, async (host, check) => {
     check.response('POST /add', await ask(host, requestBytes('POST', '/add', { 'Content-Type': FORM }, 'name=aaaaaaaaaaaaaaaaaaaa')), TOO_LARGE);
@@ -731,7 +741,7 @@ test('body-over-the-limit-is-413 (HY-59.4, HY-59.5, HY-59.6, HY-60.2, HY-60.8, H
   });
 });
 
-test('chunked-body-is-read-and-the-body-limit-applies, a body over the limit (HY-59.4, HY-59.5, HY-59.6, HY-100.2, HY-60.2, HY-45.4, HY-65.1)', SCENARIO, async (t) => {
+test('chunked-body-is-read-and-the-body-limit-applies, a body over the limit (HY-59.15, HY-59.5, HY-59.14, HY-100.2, HY-60.2, HY-45.4, HY-65.1)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none', UPLOAD_LIMIT: '10' } });
   await eachHost(t, hosts, async (host, check) => {
     // 16 bytes in two chunks, without a Content-Length.
@@ -742,7 +752,7 @@ test('chunked-body-is-read-and-the-body-limit-applies, a body over the limit (HY
   });
 });
 
-test('chunked-body-is-read-and-the-body-limit-applies, a body under the limit (HY-59.4, HY-100.2)', SCENARIO, async (t) => {
+test('chunked-body-is-read-and-the-body-limit-applies, a body under the limit (HY-59.15, HY-100.2)', SCENARIO, async (t) => {
   // The request hook of the fixture answers what the request gave of its body.
   const { hosts } = await hostsOf(t);
   await eachHost(t, hosts, async (host, check) => {
@@ -825,4 +835,15 @@ test('request-method-reaches-the-application-in-upper-case (HY-100.31, HY-27.2, 
       check.log(`${method} /`, KINDS, log);
     }
   });
+});
+
+test('the gate of a scenario closes when its servers do not start (HR-87, H34.3)', async (t) => {
+  const before = new Set(gates);
+  await t.test('a start that fails', async (failing) => {
+    await assert.rejects(hostsOf(failing, { starting: () => { throw new Error('the servers do not start'); } }), /the servers do not start/);
+  });
+  const open = [...gates].filter((gate) => !before.has(gate));
+  // A gate that stays open would keep the file from ending; the test closes it after it reports it.
+  for (const gate of open) gate.close();
+  assert.equal(open.length, 0, `${open.length} gate listener stays open after the test whose servers did not start`);
 });

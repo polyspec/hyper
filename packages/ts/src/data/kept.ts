@@ -1,7 +1,7 @@
 // Kept values (HY-37, HY-38). Values outside the template data model are ignored; the cases of contracts/keep.json hold
 // the rules.
 import { DataModel } from './data-model.js';
-import { SafeString, toValue, type MapValue, type Value } from './values.js';
+import { toValue, type MapValue, type Value } from './values.js';
 
 /** @internal */
 export class Kept {
@@ -92,10 +92,9 @@ export class Kept {
   private static valueKind(value: Value): string {
     if (value === null) return 'null';
     if (typeof value === 'boolean') return 'bool';
-    if (typeof value === 'number' || typeof value === 'bigint') return 'number';
-    if (typeof value === 'string' || value instanceof SafeString) return 'string';
+    if (typeof value === 'number') return 'number';
+    if (typeof value === 'string') return 'string';
     if (Array.isArray(value)) return 'list';
-    if (value instanceof Map) return 'map';
-    return 'other';
+    return 'map';
   }
 }

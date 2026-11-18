@@ -71,17 +71,24 @@ final class App
         /** The host functions of the application, which the engine registers (HYC-24). */
         array $functions,
         string $program,
+        string $manifestPath,
     ) {
         $this->container = new Container();
         $this->page = new Page(
             $manifest,
+            Program::pages(
+                $manifestPath,
+                $program,
+                $timezone,
+                $context !== null,
+                $basePath,
+                $formTypes,
+                $client?->basePath,
+                $functions,
+            ),
             $shared,
             $regionLoaders,
             $this->container,
-            Renderer::open($program, $timezone, $functions),
-            Reads::open($program),
-            Build::read("{$program}/build.json"),
-            $timezone,
             $https,
             $context,
             $this->varyHeader(),
@@ -225,6 +232,7 @@ final class App
             $context,
             $functions,
             $program,
+            $manifest,
         );
     }
 
@@ -554,7 +562,7 @@ final class App
     /** Answers a request; the loaders and actions of a routed request receive `$reply` (HY-52, HY-60). */
     private function dispatch(Request $request, SessionStore $store, Reply $reply): Response
     {
-        // HY-131.11: a body that passed the value limit, the part limit or the file limit is answered as a body over
+        // HY-131.32: a body that passed the value limit, the part limit or the file limit is answered as a body over
         // the body limit.
         $streams = in_array('multipart/form-data', $this->formTypes, true);
         if (
@@ -851,7 +859,7 @@ final class App
             if ($request->method === 'GET') {
                 return self::withoutRenewal(
                     $reply,
-                    $this->page->respond($request, $route, $handler, $session, $flash, 200, [], $reply, $basePath),
+                    $this->page->respond($request, $route, $handler, $session, $flash, null, $reply, $basePath),
                 );
             }
             if ($request->method !== 'POST' || !isset($handler['post'])) {
@@ -898,8 +906,7 @@ final class App
                     $handler,
                     $session,
                     $flash,
-                    $result->status,
-                    $result->data,
+                    [$result->status, $result->data],
                     $reply,
                     $basePath,
                 ),

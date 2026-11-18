@@ -1,7 +1,16 @@
 // The rules that CaseReader applies to one case of a case file (HYR-7, HYR-11): the declarations, the field lookups,
 // the undeclared keys, the unread and uncompared fields, and the folding of header names.
 import { existsSync, readFileSync } from 'node:fs';
-import { parseJson } from '@polyspec/template/render';
+import { createRequire } from 'node:module';
+import type * as Json from '@polyspec/json';
+
+type JsonValue = Json.Value;
+
+// The JSON reader of json, loaded with the require of Node, as the binding of the template package loads it: the addon
+// registers its classes once in a process, so that a second instance of its entry, which an import that the test
+// runner transforms would make, fails.
+const required: (name: '@polyspec/json') => typeof Json = createRequire(import.meta.url);
+const json = required('@polyspec/json');
 
 export type Compare = 'exact' | 'ordered' | 'subset' | 'absent' | 'contains' | 'excludes' | 'prefix' | 'keys' | 'raises';
 
@@ -58,27 +67,45 @@ const HEADER_FIELDS = new Set(['headers', 'allHeaders', 'absentHeaders']);
 // The case keys that are not fields of a section (HYR-11 requirements, HYR-6 only).
 const SKIPPED_KEYS = new Set(['only', 'requirements']);
 
-// The text that stands for an integer literal outside ±(2^53 − 1) while a case file is parsed: a character of the
-// private use area, which no case file holds, before the digits.
-const LARGE = '\ue000integer:';
+/** The string of a JSON string value: its UTF-16 code units, an unpaired surrogate included. */
+function stringOf(value: JsonValue): string {
+  const text = value.stringText();
+  if (text !== null) return text;
+  let units = '';
+  for (const unit of value.stringUnits()) units += String.fromCharCode(unit);
+  return units;
+}
 
-/** The value of a large integer literal after the parse, with every other value as it is. */
-function restored(value: unknown): unknown {
-  if (typeof value === 'string') return value.startsWith(LARGE) ? BigInt(value.slice(LARGE.length)) : value;
-  if (Array.isArray(value)) return value.map(restored);
-  if (value instanceof Map) return new Map([...value].map(([key, item]) => [key, restored(item)]));
-  return value;
+/** The number of a JSON number literal: a bigint for an integer literal outside ±(2^53 − 1), a number for every other. */
+function numberOf(literal: string): number | bigint {
+  return /^-?[0-9]+$/u.test(literal) && !Number.isSafeInteger(Number(literal)) ? BigInt(literal) : Number(literal);
+}
+
+/** The host value of a value of the JSON reader. */
+function hostValue(value: JsonValue): unknown {
+  switch (value.kind) {
+    case 'null': return null;
+    case 'boolean': return value.booleanValue();
+    case 'number': return numberOf(value.numberLiteral());
+    case 'string': return stringOf(value);
+    case 'array': return value.items().map(hostValue);
+    case 'object': {
+      const map = new Map<string, unknown>();
+      for (const [key, item] of value.members()) map.set(stringOf(key), hostValue(item));
+      return map;
+    }
+  }
 }
 
 /**
  * The value of the JSON text of a case file: an object is a Map in document order, and an integer literal outside
- * ±(2^53 − 1), which a case gives a handler as its host value (HY-44), is a bigint.
+ * ±(2^53 − 1), which a case gives a handler as its host value (HY-44), is a bigint. The text is read as JSON, with the
+ * reader of json and its limit of 256 nested containers, and not as a value of the template data model: a case states
+ * a value outside the data model, such as a map of 64 levels (HY-44.11), which the server under test refuses, not the
+ * reader. JSON.parse does not read it, because it moves the keys of an object that are integers before its other keys.
  */
 export function parsed(text: string): unknown {
-  if (text.includes(LARGE)) throw new Error('a case file holds the text that stands for a large integer');
-  // A string literal is copied as it is; a number literal outside a string that is a large integer becomes a string.
-  const marked = text.replace(/"(?:[^"\\]|\\.)*"|-?[0-9]+(?![0-9.eE])/gu, (token) => (token.startsWith('"') || Number.isSafeInteger(Number(token)) ? token : `"${LARGE}${token}"`));
-  return restored(parseJson(marked));
+  return hostValue(json.parse(text));
 }
 
 let cached: Record<string, Declaration> | undefined;

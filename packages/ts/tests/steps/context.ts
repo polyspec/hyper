@@ -2,10 +2,10 @@
 // without a context answers. Every expected value comes from the contract.
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { Context, type ContextHandler } from '../../src/app/context.js';
+import type { ContextHandler } from '../../src/app/context.js';
+import { rules } from '../../src/app/core-rules.js';
 import { Csrf } from '../../src/session/csrf.js';
 import { parsed } from '../case-rules.js';
-import { placesContext } from './context-place.js';
 import { decoded } from './session-requests.js';
 import { App, ArraySession, NotFound, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/data/values.js';
@@ -178,6 +178,20 @@ function hostMap(value: unknown, what: string): Map<string, unknown> {
   return new Map(mapIn(value, what));
 }
 
+// Returns the shared data of a case with each marker {"$": "kind", "name": <kind>} replaced by the value of that kind of
+// the fixture `valueKinds`, which JSON cannot state; a kind that Node has no value for fails the case.
+function withKinds(value: unknown, kinds: Map<unknown, unknown>): unknown {
+  if (Array.isArray(value)) return value.map((item: unknown) => withKinds(item, kinds));
+  if (!(value instanceof Map)) return value;
+  if (value.get('$') === 'kind') {
+    const name: unknown = value.get('name');
+    if (!kinds.has(name)) throw new Error(`valueKinds does not hold the kind ${String(name)}`);
+    if (name === 'loneSurrogate') return '\ud800';
+    throw new Error(`the kind ${String(name)} has no value in Node`);
+  }
+  return new Map([...value].map(([key, item]: [unknown, unknown]) => [key, withKinds(item, kinds)]));
+}
+
 // Returns a decoded value that is a map, and fails for any other value.
 function mapOf(value: unknown, name: string): Map<string, Value> {
   if (!isMap(value)) throw new Error(`${name} is not a map of values`);
@@ -218,18 +232,16 @@ function bodyOf(form: Map<string, string> | undefined, token: string | null): st
 }
 
 export const steps = {
-  withContext(reader: CaseReader): void {
-    placesContext(reader, (shared, context) => Context.withContext(shared, context));
-  },
+  // The JSON text of a context and its hash with the build, which the core gives (HY-125.12, HY-54.18).
   contexts(reader: CaseReader): void {
     const build = stringField(reader, 'build');
-    const text = Context.text(mapOf(parsed(stringField(reader, 'context')), 'context'));
+    const text = rules().jsonCodecEncode(mapOf(parsed(stringField(reader, 'context')), 'context'));
     reader.compare('context', text);
     reader.compare('text', `{"build":"${build}","context":${text}}`);
-    reader.compare('hash', Context.hash(build, text));
+    reader.compare('hash', rules().contextHash(build, text));
     if (reader.has('reorderedText')) {
       const reordered = mapOf(parsed(stringField(reader, 'reorderedText')), 'reorderedText');
-      reader.compare('reorderedHash', Context.hash(build, Context.text(mapOf(reordered.get('context'), 'the member context of reorderedText'))));
+      reader.compare('reorderedHash', rules().contextHash(build, rules().jsonCodecEncode(mapOf(reordered.get('context'), 'the member context of reorderedText'))));
     }
   },
 
@@ -242,7 +254,9 @@ export const steps = {
     const application = applicationOf(applications.get(name), name);
     const dir = join(PROGRAMS, name);
     // Absent shared data declares no shared handler; present shared data must be a map.
-    const shared = reader.has('shared') ? hostMap(reader.input('shared'), 'the shared data of the case') : application.shared;
+    const kinds = reader.input('valueKinds');
+    if (!(kinds instanceof Map)) throw new Error('valueKinds is not a map');
+    const shared = reader.has('shared') ? hostMap(withKinds(reader.input('shared'), kinds), 'the shared data of the case') : application.shared;
     const contextText = reader.has('context') ? stringField(reader, 'context') : application.context;
     const calls: string[] = [];
     const selections: unknown[] = [];
@@ -261,8 +275,7 @@ export const steps = {
     }
     const app = await App.open<Record<string, never>>({
       manifest: join(dir, 'manifest.json'),
-      build: join(dir, 'build.json'),
-      templates: { index: join(dir, 'node', 'templates.index.json'), root: join(dir, 'node') },
+      program: join(dir, 'program'),
       handlers,
       timezone: '+09:00',
       log: () => {},

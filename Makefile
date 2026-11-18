@@ -17,7 +17,6 @@ export MISE_STATE_DIR := $(KIT_TOOLS)/mise/state
 export MISE_CONFIG_DIR := $(KIT_TOOLS)/mise/config
 export MISE_GLOBAL_CONFIG_FILE := $(CURDIR)/mise.toml
 export MISE_GLOBAL_CONFIG_ROOT := $(CURDIR)
-MISE_ENVIRONMENT := MISE_DATA_DIR MISE_CACHE_DIR MISE_STATE_DIR MISE_CONFIG_DIR MISE_GLOBAL_CONFIG_FILE MISE_GLOBAL_CONFIG_ROOT
 # The node of mise.toml, which the bootstrap wraps in var/tools/bin; the bootstrap itself runs on the Node.js of the machine.
 NODE := $(KIT_TOOLS)/bin/node
 BOOTSTRAP_NODE := node
@@ -53,11 +52,11 @@ UV := $(KIT_TOOLS)/mise/shims/uv
 # The Python of that venv, which scripts/board-servers.mts starts the board Python server with.
 export HYPER_PYTHON := $(PYTHON_VENV)/bin/python
 # TEMPLATE_VERSION is the one declaration of the template release that hyper uses; every pin of the manifests and their locks
-# names it (H21.4). npm installs @polyspec/template and @polyspec/template-compiler from the tarballs of that release that
-# package.json names (HR-70). Composer installs polyspec/template from TEMPLATE_PACKAGES, the Composer repository of the
-# release (packages.json), which composer.json and examples/board/composer.json declare and whose dist carries the sha1 of the
-# php zip; PIE builds the native template extension polyspec/template-php-ext from the same repository (H27.45).
-TEMPLATE_VERSION := 0.0.27
+# names it (H21.4). npm installs @polyspec/template and its platform packages from the tarballs of that release that
+# package.json names (HR-70). The Composer package polyspec/template of TEMPLATE_PACKAGES, the Composer repository of the
+# release (packages.json), is the native template extension, a php-ext package with a pre-packaged binary for each
+# platform; PIE builds it (H27.45, H31.5), and the PHP manifests require ext-polyspec_template.
+TEMPLATE_VERSION := 0.0.31
 TEMPLATE_TAG := v$(TEMPLATE_VERSION)
 TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TEMPLATE_TAG)/packages.json
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
@@ -83,6 +82,9 @@ EXT := build/ext/polyspec_template.so
 # kit 0.0.98's run-tests dropped NODE_TEST_CONTEXT, so a node --test that a recipe starts from inside a node test runs as
 # its own run, not as a child of that test (kit K1094); no recipe passes it on.
 unexport NODE_TEST_CONTEXT
+# make passes a variable of its command line to the environment of its recipes, so a selection TESTS of a test target
+# would reach a make that a test starts and change what that make runs; the recipes read it only as $(TESTS) (H35.60).
+unexport TESTS
 export PATH := $(KIT_TOOLS)/bin:$(KIT_TOOLS)/mise/shims:$(PATH)
 # A check reads no network (HR-89): `make hyper-install` downloads everything that the checks read, and every other recipe
 # and the programs that it starts run npm and Composer offline, so a missing download fails at once instead of
@@ -122,7 +124,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 # (HR-83). hyper-install is no such target: its first step writes the wrapper.
 # A target that starts PHP is named here, and tests/scripts/php-check.test.mts fails for a PHP recipe that is not.
 CHECKOUT_PHP := $(KIT_TOOLS)/bin/php
-PHP_TARGETS := hyper-install-php template-ext json-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
+PHP_TARGETS := hyper-install-php composer-lock template-ext json-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
 .PHONY: php-check php-check-installed
 $(PHP_TARGETS): php-check
 php_check = want="$$(tr -d '[:space:]' < .php-version)"; \
@@ -147,15 +149,32 @@ hyper-install: ## Install the pinned tools and the npm packages, the sources tha
 	$(MAKE) --no-print-directory install-packages
 	$(MAKE) --no-print-directory install-tools
 	$(MAKE) --no-print-directory install-symbols EXTRACTORS=php
+	$(MAKE) --no-print-directory hyper-install-crates
 	$(MAKE) --no-print-directory bindings
 	$(MAKE) --no-print-directory node-addon
 	$(MAKE) --no-print-directory hyper-ext
 	$(MAKE) --no-print-directory hyper-install-php
 	$(MAKE) --no-print-directory hyper-install-python
 
+# The crates of Cargo.lock (HR-89): hyper-install-crates is the one target that downloads them, the git tags of the
+# polyspec crates and the crates of crates.io, with `cargo fetch --locked` through the link script, which fetches for
+# every target of the lock, wasm32 among them. Every other recipe starts cargo with --offline, as maturin of
+# hyper-install-python and the binding generator do, so no check downloads a crate in one run and not in another.
+# crates-check is a prerequisite of each target of CRATE_TARGETS, the targets whose recipes start cargo, maturin or the
+# binding generator: it reads the packages of the lock offline, as the binding generator does, and fails with the name
+# of the install target when one is not fetched, so the failure is not the advice of cargo to leave the offline mode.
+# A target that starts cargo is named here and in the setup of its CI group, and tests/scripts/ci-group-tools.test.mts
+# fails for a group that starts one of them before hyper-install-crates.
+CRATE_TARGETS := hyper-install-python hyper-ext core-test core-lint bindings bindings-check lint-bindings test-bindings node-addon node-package test-go go-release-build
+.PHONY: hyper-install-crates crates-check
+$(CRATE_TARGETS): crates-check
+hyper-install-crates: ## Fetch the crates that Cargo.lock pins, which every other recipe reads offline (HR-89); ONLINE
+	$(ONLINE) $(CARGO) fetch --locked
+crates-check: ## Fail unless every crate that Cargo.lock pins is fetched, naming make hyper-install-crates (HR-89)
+	@$(CARGO) metadata --locked --offline --format-version 1 > /dev/null || { echo "crates-check: a crate that Cargo.lock pins is not fetched, or the lock does not match the manifests; run make hyper-install-crates" >&2; exit 1; }
+
 .PHONY: hyper-install-php
 hyper-install-php: ## Install only the locked root and board Composer projects and their pinned PHP archives
-	$(MAKE) --no-print-directory json-ext
 	$(MAKE) --no-print-directory template-ext
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
@@ -164,13 +183,15 @@ hyper-install-php: ## Install only the locked root and board Composer projects a
 # which applies no patch of .links and resolves two binding-core crates. The package with its native module is the wheel
 # that maturin of mise.toml builds through the link script of kit, which passes the patches to the cargo that maturin runs
 # (K1266), into a staging directory of the process that the shell removes when it ends (HR-87); uv installs that wheel
-# into the venv without its dependencies.
+# into the venv without its dependencies. The native module includes packages/python/native/generated/lib.rs, which
+# make bindings writes, so the target writes it first: a setup step of CI runs it without hyper-install (H34.10).
 MATURIN := $(KIT_TOOLS)/mise/shims/maturin
-hyper-install-python: ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5, H35.24)
+hyper-install-python: bindings ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5, H35.24)
 	rm -rf $(PYTHON_VENV)
 	$(NODE) $(KIT)/python-venv.$(KIT_EXT) $(PYTHON_VENV)
 	UV_SYNC='--locked --quiet --no-editable --no-install-project --project $(PYTHON_PACKAGE)' $(ONLINE) $(NODE) $(KIT)/uv-install.$(KIT_EXT) .
 	wheels=$(CURDIR)/var/python-wheel.next-$$$$ && trap 'rm -rf '"$$wheels" EXIT && trap 'exit 130' INT TERM && MATURIN=$(MATURIN) $(NODE) $(KIT)/link.$(KIT_EXT) maturin $(CURDIR)/$(PYTHON_PACKAGE) build --locked --offline --out "$$wheels" && $(UV) pip install --offline --python $(PYTHON_VENV)/bin/python --no-deps --reinstall "$$wheels"/*.whl
+	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts write $(PYTHON_VENV)
 
 hyper-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HR-91)
 	$(ONLINE) $(NODE) node_modules/@playwright/test/cli.js install --with-deps chromium
@@ -186,41 +207,67 @@ test: hyper-test-js hyper-test-node hyper-test-php hyper-test-python hyper-test-
 
 lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language of the checkout
 
-# The release workflow runs make release-prepare before release-tools: the release installs as CI does, each template asset
-# verified by the integrity of its lock (HR-80, H23.7).
-release-prepare: ## Install the locked dependencies, for a release; ONLINE
-	$(ONLINE) $(MAKE) hyper-install
-
-# PIE resolves polyspec/template-php-ext TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES, which checks the sha1
-# of its zip, and builds it with phpize and the php-config of the PHP of PATH (H27.51). PIE keeps one Composer project per
-# target PHP in PIE_WORKING_DIRECTORY and never undoes repository:add, so each run starts in an empty PIE_WORK.
+# PIE resolves polyspec/template TEMPLATE_VERSION in the Composer repository TEMPLATE_PACKAGES and builds it for the PHP
+# of PATH (H27.51). PIE keeps one Composer project per target PHP in PIE_WORKING_DIRECTORY and never undoes repository:add,
+# so each run starts in an empty PIE_WORK, and the recipe is one shell whose trap removes PIE_WORK with its Composer cache at
+# its end, its failure and SIGINT and SIGTERM, because no later target reads it (HR-87). The template package requires
+# ext-polyspec_json, and PIE reads the extensions of its target PHP by running that php, so template-ext runs after json-ext
+# and both PIE commands set PHP_INI_SCAN_DIR to a leading colon, which keeps the scan directory of the PHP, and
+# PIE_WORK/ini, whose one ini loads JSON_EXT; no other PHP run of the checkout loads it (H35.52). The package also requires
+# the Composer library polyspec/json, which only the Composer repository JSON_PACKAGES of the json release holds, so the
+# PIE project of the template adds that repository after the one of the template. Before PIE, scripts/php-ext-requires.mts
+# downloads the packages.json of both releases into PIE_WORK/repository, fails unless each has the sha256 that
+# config/php-ext-pins.json pins from the digest of its release asset, and fails unless the json version that the template
+# requires is the pinned json version of json-ext, because PHP loads one json library; PIE adds those verified copies as
+# its repositories, not the URLs, and the trap removes them with PIE_WORK (HR-80, H35.54). json-ext does the same.
 # scripts/pie-binary.mts prints the one library that PIE recorded there, which is published into build/ext with a rename
 # (scripts/publish.mts, HR-82). `pie build` installs nothing into the PHP; the checks load the library with -d extension.
-# PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs.
+# PIE is the http:pie of mise.toml, which `make install-tools TOOLS=pie` installs. The Composer repository of the release
+# names no shasum. Composer inside PIE downloads the platform zip into its cache, files/<package>/<sha1 of the URL>.zip, and
+# reuses a zip of the cache of the machine, so both PIE commands set COMPOSER_CACHE_DIR to PIE_WORK/cache, which starts
+# empty; scripts/php-ext-verify.mts compares each platform zip that PIE downloaded there with the sha256
+# that config/php-ext-pins.json pins from the digest of its release asset, and fails before the library is published
+# (HR-80, H35.51); json-ext does the same.
 PIE := $(KIT_TOOLS)/mise/shims/pie
-PIE_WORK := $(CURDIR)/var/pie/polyspec/template-php-ext
+# php-ext-pins writes config/php-ext-pins.json from the releases of the versions that it pins: the sha256 of each
+# packages.json and platform zip is the field digest of its release asset; it downloads no asset, since template-ext and
+# json-ext verify each download by that pin (H35.58).
+.PHONY: php-ext-pins
+php-ext-pins: ## Write config/php-ext-pins.json from the digests of the release assets of the pinned PHP extensions; ONLINE
+	$(ONLINE) $(NODE) $(CURDIR)/scripts/php-ext-pins.mts write config/php-ext-pins.json
+# $(call pie_run,WORK,STAGING) starts the one shell of a PIE recipe: it empties WORK and sets the trap that removes WORK
+# and STAGING at the end, the failure and SIGINT and SIGTERM of the run (HR-87, H35.53). template-ext, json-ext and
+# hyper-install-redis use it; each goes on with `&& \`.
+pie_run = rm -rf $(1) && mkdir -p $(1) && trap 'rm -rf $(strip $(1) $(2))' EXIT && trap 'exit 130' INT TERM
+PIE_WORK := $(CURDIR)/var/pie/polyspec/template
 .PHONY: template-ext
-template-ext: ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, H27.51); ONLINE
-	rm -rf $(PIE_WORK) && mkdir -p $(PIE_WORK)
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) repository:add composer $(TEMPLATE_PACKAGES) --no-interaction
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) $(PIE) build polyspec/template-php-ext:$(TEMPLATE_VERSION) --no-interaction
-	@binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template-php-ext) || exit $$?; \
-	  mkdir -p build/ext.next-$$$$ && trap 'rm -rf build/ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
+template-ext: json-ext ## Build the native template extension of TEMPLATE_TAG with PIE from the Composer repository of the template release into build/ext (H27.45, H27.51); ONLINE
+	$(call pie_run,$(PIE_WORK),build/ext.next-$$$$) && mkdir -p $(PIE_WORK)/ini && \
+	$(ONLINE) $(NODE) scripts/php-ext-requires.mts config/php-ext-pins.json polyspec/template $(PIE_WORK) polyspec/json && \
+	printf 'extension=%s\n' '$(CURDIR)/$(JSON_EXT)' > $(PIE_WORK)/ini/polyspec_json.ini && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) repository:add composer $(PIE_WORK)/repository/polyspec/template/packages.json --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) repository:add composer $(PIE_WORK)/repository/polyspec/json/packages.json --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PIE_WORK) COMPOSER_CACHE_DIR=$(PIE_WORK)/cache PHP_INI_SCAN_DIR=:$(PIE_WORK)/ini $(PIE) build polyspec/template:$(TEMPLATE_VERSION) --no-interaction && \
+	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/template $(PIE_WORK) && \
+	binary=$$($(NODE) scripts/pie-binary.mts $(PIE_WORK) polyspec/template) && \
+	mkdir -p build/ext.next-$$$$ && cp "$$binary" build/ext.next-$$$$/polyspec_template.so && $(NODE) scripts/publish.mts directory build/ext.next-$$$$ build/ext
 
 # The template extension requires the json extension polyspec_json (ext-polyspec_json), which PHP loads before it. PIE gets
 # polyspec/json JSON_VERSION from the Composer repository JSON_PACKAGES of the json release, as template-ext gets the
 # template extension, and the library is published into build/json-ext with a rename (HR-82).
-JSON_VERSION := 0.0.34
+JSON_VERSION := 0.0.38
 JSON_PACKAGES := https://github.com/polyspec/json/releases/download/v$(JSON_VERSION)/packages.json
 JSON_EXT := build/json-ext/polyspec_json.so
 JSON_PIE_WORK := $(CURDIR)/var/pie/polyspec/json
 .PHONY: json-ext
 json-ext: ## Get the json extension polyspec_json of JSON_VERSION with PIE from the Composer repository of the json release into build/json-ext (H35.31); ONLINE
-	rm -rf $(JSON_PIE_WORK) && mkdir -p $(JSON_PIE_WORK)
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) $(PIE) repository:add composer $(JSON_PACKAGES) --no-interaction
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) $(PIE) build polyspec/json:$(JSON_VERSION) --no-interaction
-	@binary=$$($(NODE) scripts/pie-binary.mts $(JSON_PIE_WORK) polyspec/json) || exit $$?; \
-	  mkdir -p build/json-ext.next-$$$$ && trap 'rm -rf build/json-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$binary" build/json-ext.next-$$$$/polyspec_json.so && $(NODE) scripts/publish.mts directory build/json-ext.next-$$$$ build/json-ext
+	$(call pie_run,$(JSON_PIE_WORK),build/json-ext.next-$$$$) && \
+	$(ONLINE) $(NODE) scripts/php-ext-requires.mts config/php-ext-pins.json polyspec/json $(JSON_PIE_WORK) && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) repository:add composer $(JSON_PIE_WORK)/repository/polyspec/json/packages.json --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(JSON_PIE_WORK) COMPOSER_CACHE_DIR=$(JSON_PIE_WORK)/cache $(PIE) build polyspec/json:$(JSON_VERSION) --no-interaction && \
+	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/json $(JSON_PIE_WORK) && \
+	binary=$$($(NODE) scripts/pie-binary.mts $(JSON_PIE_WORK) polyspec/json) && \
+	mkdir -p build/json-ext.next-$$$$ && cp "$$binary" build/json-ext.next-$$$$/polyspec_json.so && $(NODE) scripts/publish.mts directory build/json-ext.next-$$$$ build/json-ext
 
 # The session tests of HY-115 run against a real Redis server and the real phpredis extension, at these versions. PIE builds
 # phpredis as it builds the template extension; `pie build` installs nothing into the PHP, and the tests load the library
@@ -234,21 +281,22 @@ PHPREDIS_WORK := $(CURDIR)/var/pie/phpredis
 hyper-install-redis: ## Build the Redis server and the phpredis extension of the session tests into var/redis (HY-115); ONLINE
 	mkdir -p $(REDIS_DIR)
 	$(ONLINE) $(NODE) scripts/install-redis.mts $(REDIS_VERSION) $(REDIS_SHA256) $(REDIS_DIR)
-	rm -rf $(PHPREDIS_WORK) && mkdir -p $(PHPREDIS_WORK)
-	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PHPREDIS_WORK) $(PIE) build phpredis/phpredis:$(PHPREDIS_VERSION) --no-interaction
-	@binary=$$($(NODE) scripts/pie-binary.mts $(PHPREDIS_WORK) phpredis/phpredis) || exit $$?; cp "$$binary" $(REDIS_DIR)/redis.so
+	$(call pie_run,$(PHPREDIS_WORK),) && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(PHPREDIS_WORK) $(PIE) build phpredis/phpredis:$(PHPREDIS_VERSION) --no-interaction && \
+	binary=$$($(NODE) scripts/pie-binary.mts $(PHPREDIS_WORK) phpredis/phpredis) && \
+	cp "$$binary" $(REDIS_DIR)/redis.so
 
 # The template extension that the PHP checks load. In a linked run `make link` links vendor/polyspec/template to the
 # packages/php-ext of a template checkout, and the checks load the library that the checkout builds into its
 # target/release; otherwise they load the library of template-ext. PHP_EXTENSIONS lists the json extension before the
-# template extension, which requires it (HY-48.15).
+# template extension, which requires it (HY-48.23).
 TEMPLATE_LINKED_EXT = $(wildcard $(realpath $(PHP_VENDOR)/polyspec/template)/../../target/release/libpolyspec_template.$(CDYLIB))
 PHP_TEMPLATE_EXT = $(or $(TEMPLATE_LINKED_EXT),$(abspath $(EXT)))
 PHP_EXTENSIONS = $(abspath $(JSON_EXT)) $(PHP_TEMPLATE_EXT)
 
 # The checks load the libraries that `make hyper-install` built with PIE (json-ext, template-ext) or the linked template
 # library; they run offline and build nothing.
-ext: ## Fail unless the json extension and the template extension that the PHP checks load exist (HY-48.15, H14.1-7, H27.45)
+ext: ## Fail unless the json extension and the template extension that the PHP checks load exist (HY-48.23, H14.1-7, H27.45)
 	@for library in $(PHP_EXTENSIONS); do test -f "$$library" || { echo "ext: $$library does not exist; run make hyper-install-php, which builds it with PIE (make json-ext, make template-ext)" >&2; exit 1; }; done
 
 # The PHP extension polyspec_hyper of the server (HY-132.2) for development: packages/php/native, built through $(CARGO),
@@ -275,7 +323,7 @@ PHP_EXT_CARGO = $(php_api_target) && CARGO_TARGET_DIR="$$target" $(CARGO)
 hyper-ext: bindings ## Build the PHP extension polyspec_hyper of packages/php/native into build/hyper-ext (HY-132.2, H35.25)
 	@test -n "$(LLVM_MAJOR)" || { echo 'hyper-ext: LLVM_MAJOR is empty, since packages/release.mk, which make release-recipes writes, is missing' >&2; exit 2; }
 	@test -x "$(LLVM_ROOT)/bin/clang" && ls "$(LLVM_ROOT)/lib" 2>/dev/null | grep -q '^libclang' || { echo 'hyper-ext: the bindgen of ext-php-rs needs the libclang and the clang of LLVM $(LLVM_MAJOR) (config/toolchain.json) in $(LLVM_ROOT)' >&2; exit 2; }
-	$(php_api_target) && PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang CARGO_TARGET_DIR="$$target" $(CARGO) build --locked -p polyspec-hyper-php-ext
+	$(php_api_target) && PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang CARGO_TARGET_DIR="$$target" $(CARGO) build --locked --offline -p polyspec-hyper-php-ext
 	$(php_api_target) && mkdir -p build/hyper-ext.next-$$$$ && trap 'rm -rf build/hyper-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$target/debug/libpolyspec_hyper.$(CDYLIB)" build/hyper-ext.next-$$$$/polyspec_hyper.so && php -n -d extension=$(CURDIR)/build/hyper-ext.next-$$$$/polyspec_hyper.so -r 'exit(extension_loaded("polyspec_hyper") ? 0 : 1);' && $(NODE) scripts/publish.mts directory build/hyper-ext.next-$$$$ build/hyper-ext
 
 # A build that fails or is interrupted leaves no staging directory: the shell of each line removes its own when it ends
@@ -301,11 +349,11 @@ package-check: packages node-fixtures ## Install the npm packages into tests/pac
 	$(TSC) -p tests/package-install/tsconfig.json
 	NPM_BIN=$(NPM) $(NODE) $(KIT)/run-tests.$(KIT_EXT) node --cwd tests/package-install -- --test-concurrency=1 package-install.test.ts
 
-# The program assembly of the command tool writes reads.json with the Rust core (HY-73.23), through the entry
+# The program assembly of the command tool writes reads.json with the Rust core (HY-73.34), through the entry
 # @polyspec/hyper/build of the Node package, so each target that writes a server program needs the dist of `packages`
 # and the Node addon of this platform (`node-addon`).
 server-fixtures: packages node-addon contract-programs ##Build the server program of the PHP test fixtures with the fixed build id of their build.json (HY-48, HY-125.21)
-	$(NODE) scripts/fixture-program.mts --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --php-namespace 'Polyspec\Hyper\Tests\Program' --id-file $(FIXTURES)/build.json
+	$(NODE) scripts/fixture-program.mts --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(PHP_PACKAGE)/tests/build/server --id-file $(FIXTURES)/build.json
 
 contract-programs: packages node-addon ##Build the applications of contracts/context.json, contracts/functions.json, contracts/representations.json and contracts/app.json and one application per case of contracts/reads.json for the tests of the three servers (HY-73, HY-118, HY-124, HYC-24)
 	$(NODE) scripts/contract-programs.mts --contract $(abspath contracts/context.json) --contract $(abspath contracts/functions.json) --contract $(abspath contracts/representations.json) --contract $(abspath contracts/app.json) --reads $(abspath contracts/reads.json) --output $(abspath var/contract-programs)
@@ -316,14 +364,14 @@ node-server: board node-addon ## Build the board Node server into examples/board
 	$(TSC) -p $(BOARD)/node/tsconfig.json
 	$(ESBUILD) $(BOARD)/node/main.ts --bundle --platform=node --format=esm --packages=external --target=node26 --log-level=warning --outfile=$(BOARD)/build/node/server.mjs
 
-node-fixtures: packages contract-programs ## Build the template files of the PHP test fixtures for the Node server tests
-	$(NODE) scripts/build-templates.mts --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build
+node-fixtures: packages contract-programs ## Build the server program of the PHP test fixtures for the Node server tests, with the fixed build id of their build.json (HY-48.19, HY-125.21)
+	$(NODE) scripts/fixture-program.mts --manifest $(FIXTURES)/app.json --templates $(FIXTURES)/templates --output $(NODE_PACKAGE)/tests/build/program --id-file $(FIXTURES)/build.json
 
 # Shared gates read the declarations and runtime fixtures built by this checkout.
 lint-ts: packages
 
-board: packages node-addon ##Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program with the generated PHP program (HR-34, HY-48, HY-125)
-	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs build --app $(BOARD) --output $(BOARD)/build --api /api --php-namespace 'Polyspec\Hyper\Examples\Board\Program' --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
+board: packages node-addon ##Build the board with one run of hyper build: public/assets, build/client with the static shell, and build/program (HR-34, HY-48, HY-125)
+	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs build --app $(BOARD) --output $(BOARD)/build --api /api --static public/assets/app.css --static public/assets/reader.css --static public/assets/reader.js --static public/assets/after-reader.js
 
 # A selection of cases (H35.9-11): CASES="<name> ..." of hyper-test-js, hyper-test-node, hyper-test-php and
 # hyper-test-python names the cases that the case runner of the target runs, each name a case file (reads.json), a
@@ -334,6 +382,16 @@ board: packages node-addon ##Build the board with one run of hyper build: public
 # case of the runner fails the run (HR-84). recipe-check and the targets recipe-run-* set no RECIPE_CASES, so they run
 # every case whatever CASES holds.
 cases_selected = RECIPE_CASES='$(strip $(CASES))' RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/$(1).selected.txt
+
+# A selection of unit test files (H35.9-14): PHP_TESTS, NODE_TESTS and PYTHON_TESTS of hyper-test-php, hyper-test-node
+# and hyper-test-python name test files by their paths below the package of the target, such as tests/http.test.ts,
+# as JS_TESTS does for hyper-test-js. With a selection the recipe runs those files alone with the test runner of the
+# target, without the type check and the other test runs; its prerequisites are built as for a full run. tests_guard
+# runs first: it fails the target when CASES is set too, since a run selects cases or files, and when a path names no
+# file of the package, so a selection that selects nothing fails before the runner starts (HR-84). A case runner among
+# the files writes <runner>.files.txt, so <runner>.txt holds a full run only, which recipe-check reads.
+tests_guard = @test -z '$(strip $(CASES))' || { echo "$@: CASES and $(1) are both set: a run selects cases or test files, not both"; exit 1; }; for file in $(strip $($(1))); do test -f $(2)/$$file || { echo "$@: the selection $(1)=\"$(strip $($(1)))\" names no test file $(2)/$$file (HR-84)"; exit 1; }; done; mkdir -p $(RECIPE_RESULTS_DIR)
+tests_selected = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/$(1).files.txt
 
 hyper-test-js: ## Run the browser code tests, including the browser case runner (HYR-7), and the type check; CASES="<file|file#section|id> ..." runs only those cases of the case runner
 ifeq ($(strip $(CASES)),)
@@ -346,8 +404,11 @@ else
 	$(call cases_selected,browser) $(case_run_browser)
 endif
 
-hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests, including the case runner (HYR-7), and the type check; CASES="<file|file#section|id> ..." runs only those cases of the case runner
-ifeq ($(strip $(CASES)),)
+hyper-test-node: packages node-fixtures node-addon ## Run the Node server tests, including the case runner (HYR-7), and the type check; CASES="<file|file#section|id> ..." runs only those cases of the case runner; NODE_TESTS="<path> ..." runs only those test files of the package
+ifneq ($(strip $(NODE_TESTS)),)
+	$(call tests_guard,NODE_TESTS,$(NODE_PACKAGE))
+	$(call tests_selected,node) node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE) -- $(strip $(NODE_TESTS))
+else ifeq ($(strip $(CASES)),)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,the tests of $(NODE_PACKAGE),RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt node $(KIT)/run-tests.$(KIT_EXT) vitest --cwd $(NODE_PACKAGE)) \
 	$(call check,the type check of $(NODE_PACKAGE),$(TSC) --noEmit -p $(NODE_PACKAGE)/tsconfig.json) \
@@ -357,27 +418,36 @@ else
 	$(call cases_selected,node) $(case_run_node)
 endif
 
-# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.15, HY-132.2). Every PHP server
+# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.23, HY-132.2). Every PHP server
 # of a check, a test and the demo loads PHP_SERVER_EXTENSIONS: scripts take them as --extension arguments, and the tests
 # of hyper-test-scripts read them from HYPER_PHP_EXTENSIONS.
 PHP_SERVER_EXTENSIONS = $(PHP_EXTENSIONS) $(abspath $(HYPER_EXT))
 PHP_SERVER_ARGUMENTS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--extension $(library))
 PHPUNIT_EXTENSIONS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--php-extension $(library))
-hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions; CASES="<file|file#section|id> ..." runs only those cases of the case runner
+hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions; CASES="<file|file#section|id> ..." runs only those cases of the case runner; PHP_TESTS="<path> ..." runs only those test files of the package
 	@mkdir -p $(RECIPE_RESULTS_DIR)
-ifeq ($(strip $(CASES)),)
+ifneq ($(strip $(PHP_TESTS)),)
+	$(call tests_guard,PHP_TESTS,$(PHP_PACKAGE))
+	$(call tests_selected,php) COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS) -- $(strip $(PHP_TESTS))
+else ifeq ($(strip $(CASES)),)
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/php.txt COMPOSER_VENDOR_DIR=$(PHP_VENDOR) node $(KIT)/run-tests.$(KIT_EXT) phpunit --cwd $(PHP_PACKAGE) $(PHPUNIT_EXTENSIONS)
 else
 	$(call cases_selected,php) $(case_run_php)
 endif
 
-hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7); CASES="<file|file#section|id> ..." runs only those cases of the case runner
-ifeq ($(strip $(CASES)),)
+hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7); CASES="<file|file#section|id> ..." runs only those cases of the case runner; PYTHON_TESTS="<path> ..." runs only those test files of the package
+ifneq ($(strip $(PYTHON_TESTS)),)
+	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts check $(PYTHON_VENV)
+	$(call tests_guard,PYTHON_TESTS,$(PYTHON_PACKAGE))
+	@failed=; $(foreach file,$(strip $(PYTHON_TESTS)),$(call check,$(file),$(call tests_selected,python) PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/$(patsubst %/,%,$(dir $(file))) -t $(PYTHON_PACKAGE) -p $(notdir $(file)))) $(checks_result)
+else ifeq ($(strip $(CASES)),)
+	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts check $(PYTHON_VENV)
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,Python protocol unit tests,RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s $(PYTHON_PACKAGE)/tests -t $(PYTHON_PACKAGE) -p 'test_*.py') \
 	$(call check,Python package data tests,PYTHONUNBUFFERED=1 NO_COLOR=1 PYTHON_COLORS=0 $(NODE) $(KIT)/run-tests.$(KIT_EXT) python --venv $(PYTHON_VENV) -- discover -s tests/python_package -p 'test_*.py') \
 	$(checks_result)
 else
+	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts check $(PYTHON_VENV)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	$(call cases_selected,python) $(case_run_python)
 endif
@@ -393,10 +463,15 @@ hyper-lint: ## Check PHP formatting
 	$(call check,Pint of $(BOARD),cd $(BOARD) && vendor/bin/pint --test app src public) \
 	$(checks_result)
 
-analyse-php: ext ## Run PHPStan at level max on the source and the tests of the server package
+# PHPStan reads the classes and the functions of the extension polyspec_hyper from the declarations that the binding
+# generator writes (packages/php/native/generated/polyspec_hyper.stub.php, scanFiles of phpstan-max.neon), which Git
+# ignores, so analyse-php writes them first.
+analyse-php: ext bindings ## Run PHPStan at level max on the source and the tests of the server package
 	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
-templates-check: ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
+# The command tool imports the built modules of the two npm packages (packages/cli/lib/check.mjs reads
+# @polyspec/hyper-client, and build.mjs @polyspec/hyper/build), so a target that starts it builds them first.
+templates-check: packages ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs check --app $(BOARD)
 
 # The TypeScript of scripts/, tests/ and benchmarks/ (tsconfig.json), which Node runs by type stripping and so never checks
@@ -411,8 +486,11 @@ toolchain-policy-test: ## Verify the declared toolchain and offline recipe polic
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/toolchain.test.mts
 
 # The tests are the files of tests/scripts itself: a file below tests/scripts/fixtures that is named as a test is the
-# input of a test and is not run.
-hyper-test-scripts: packages board node-server ext hyper-ext ## Run the tests of the check scripts, the build case runner included (HYR-7), or only the files of TESTS
+# input of a test and is not run. The full set builds every input of SCRIPT_TEST_INPUTS first; a selection of TESTS builds
+# only the ones that its files, and the modules that they import, name with requireBuilt (scripts/test-inputs.mts,
+# HR-85, H35.55), so a selection that reads none of them builds nothing and starts no cargo.
+SCRIPT_TEST_INPUTS := packages board node-addon node-server ext hyper-ext
+hyper-test-scripts: $(if $(TESTS),$(shell $(NODE) scripts/test-inputs.mts '$(SCRIPT_TEST_INPUTS)' $(TESTS)),$(SCRIPT_TEST_INPUTS)) ## Run the tests of the check scripts, the build case runner included (HYR-7), or only the files of TESTS
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt HYPER_PHP_EXTENSIONS='$(PHP_SERVER_EXTENSIONS)' $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 $(or $(TESTS),$(wildcard tests/scripts/*.test.mts))
 
@@ -490,22 +568,45 @@ CORE := packages/rust
 # the polyspec crates to the providers that .links names and otherwise runs cargo as given, so no .cargo file is needed (H35.14-1).
 CARGO := $(NODE) $(KIT)/link.$(KIT_EXT) cargo $(CURDIR)
 core-test: ## Run the tests of the Rust core, which run the cases of contracts/ that it decides (HY-132)
-	$(CARGO) test --locked -p polyspec-hyper
+	$(CARGO) test --locked --offline -p polyspec-hyper
 core-lint: ## Run clippy on the Rust core and its tests with every warning an error (plan R-1)
-	$(CARGO) clippy --locked -p polyspec-hyper --all-targets -- -D warnings
+	$(CARGO) clippy --locked --offline -p polyspec-hyper --all-targets -- -D warnings
 core-fmt-check: ## Check the format of the Rust core
 	$(CARGO) fmt --check -p polyspec-hyper
 
 # Cargo.lock is written by cargo (HR-70): after a change of the tag of a crate in a Cargo.toml, cargo-lock runs
-# `cargo update -p <crate>` for the crates of CRATES through $(CARGO), which fetches the tag. In a checkout with a link
-# declaration the link script gives cargo its own copy of the lock under var/link/cargo and leaves the tracked lock as
-# it is (kit K1269), and it has no mode that writes the tracked lock, so the target fails there before it starts cargo:
-# it writes Cargo.lock only in the release state, a checkout without .links, where the link script runs cargo as given.
+# `cargo update -p <crate>` for the crates of CRATES, which fetches the tag. A linked run of the link script gives cargo
+# its own copy of the lock under var/link/cargo and leaves the tracked lock as it is (kit K1269), so the recipe starts
+# the link script with --tracked-lock (kit K1287): it runs cargo as given, with no patch and no copy of the lock, in a
+# checkout with .links too, where it holds the execution lock of a linked run. cargo then reads only the sources that
+# the manifests name, so a crate or a version that only a linked checkout provides fails in cargo with that cause.
 .PHONY: cargo-lock
-cargo-lock: ## Write Cargo.lock for the crates of CRATES with cargo update, in a checkout without .links; ONLINE
+cargo-lock: ## Write Cargo.lock for the crates of CRATES with cargo update, in a checkout with or without .links; ONLINE
 	@test -n "$(strip $(CRATES))" || { echo 'cargo-lock: CRATES is empty; name the crates whose pin changed: make cargo-lock CRATES="<crate> <crate>"' >&2; exit 2; }
-	@test ! -e $(CURDIR)/.links || { echo 'cargo-lock: $(CURDIR)/.links exists, so the link script of kit would update its copy of the lock under var/link/cargo and leave Cargo.lock as it is (kit K1269); run the target in a checkout without .links' >&2; exit 1; }
-	$(ONLINE) $(CARGO) update $(foreach crate,$(CRATES),-p $(crate))
+	$(ONLINE) $(NODE) $(KIT)/link.$(KIT_EXT) cargo --tracked-lock $(CURDIR) update $(foreach crate,$(CRATES),-p $(crate))
+
+# The locks of uv and of Composer are written by their tools too (HR-70), after a change of a requirement of their
+# manifests. python-lock runs `uv lock` for the Python package, which keeps every locked version that pyproject.toml
+# still allows and resolves only what the change needs. composer-lock runs `composer update --no-install` for the
+# packages of PACKAGES alone, in the private root and in the board, whose manifests pin the polyspec packages by their
+# exact versions; it fails without PACKAGES, in a dry run too, because an update of every package resolves each range
+# at the time of the run (HR-89). Neither reads a link: `make link` changes no manifest and no lock of uv or Composer.
+# npm-lock runs `npm install --package-lock-only --ignore-scripts`, which writes the lock and installs nothing, for the
+# root and for tests/package-install, whose own .npmrc npm reads through --prefix. A lock records each polyspec package by
+# the URL of its release asset with its integrity and every other package by the exact version that its manifest names,
+# and npm keeps a locked version that its manifest still allows, so the run resolves no range anew.
+.PHONY: npm-lock python-lock composer-lock
+npm-lock: ## Write package-lock.json of the root and of tests/package-install from their manifests with npm install --package-lock-only; ONLINE
+	$(ONLINE) $(NPM) install --package-lock-only --ignore-scripts
+	$(ONLINE) $(NPM) install --package-lock-only --ignore-scripts --prefix tests/package-install
+
+python-lock: ## Write packages/python/uv.lock from pyproject.toml with uv lock; ONLINE
+	$(ONLINE) $(UV) lock --project $(PYTHON_PACKAGE)
+
+composer-lock: ## Write composer.lock and examples/board/composer.lock for the packages of PACKAGES with composer update; ONLINE
+	$(if $(strip $(PACKAGES)),,$(error composer-lock: PACKAGES is empty; name the packages whose pin changed: make composer-lock PACKAGES="<vendor/package> <vendor/package>"))
+	$(ONLINE) $(COMPOSER_BIN) update --no-install --no-interaction $(PACKAGES)
+	$(ONLINE) $(COMPOSER_BIN) update --no-install --no-interaction --working-dir=$(BOARD) $(PACKAGES)
 
 # The bindings of the Rust core for the five targets of packages/rust/interface.json (binding design L-1, L-2, L-2a).
 # BINDING is the bin of the npm package @polyspec/binding, which package.json declares by its release asset and
@@ -517,7 +618,7 @@ cargo-lock: ## Write Cargo.lock for the crates of CRATES with cargo update, in a
 # compares the tracked binding packages with what binding scaffold writes (binding L-2, CK-19). bindings-scaffold runs
 # binding scaffold, which writes those tracked packages: the Cargo manifest, the entry file and the language manifest of
 # each binding, packages/go/go.mod and go.sum among them, after a change of the contract or of a pin that they state.
-.PHONY: bindings bindings-check bindings-scaffold lint-bindings test-bindings node-package test-wasm test-go
+.PHONY: bindings bindings-check bindings-scaffold lint-bindings test-bindings node-package test-wasm test-go go-release-build
 BINDING := $(CURDIR)/node_modules/@polyspec/binding/dist/cli.js
 .PHONY: binding-cases
 # The cases of contracts/ that the generated tests of every binding run (HR-100): scripts/binding-cases.mts writes the
@@ -560,6 +661,13 @@ ifneq ($(wildcard $(BINDING)),)
 $(CURDIR)/packages/release.mk:
 	$(write-release-recipes)
 endif
+# The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
+# the WASM crate (binding GN-15, GN-18), which mise.toml pins and make install-tools installs into var/tools (HR-81);
+# test-go and node-package compare both releases before they use them. They are defined before the include, because
+# packages/release.mk sets GO to the go of PATH when the Makefile has not defined it (binding GN-19h).
+GO ?= $(KIT_TOOLS)/mise/shims/go
+GOFMT ?= $(KIT_TOOLS)/mise/shims/gofmt
+WASM_BINDGEN ?= $(KIT_TOOLS)/mise/shims/wasm-bindgen
 -include $(CURDIR)/packages/release.mk
 
 # The binding crates of the workspace. The WASM crate is not in the tree (Cargo.toml): its lint and its build name the
@@ -570,19 +678,13 @@ endif
 BINDING_CRATES := polyspec-hyper-python polyspec-hyper-node polyspec-hyper-go
 WASM_MANIFEST := packages/ts/native/wasm/Cargo.toml
 lint-bindings: bindings ## Run clippy on the binding crates with every warning an error, after make bindings
-	$(CARGO) clippy --locked $(foreach crate,$(BINDING_CRATES),-p $(crate)) --all-targets --features panic-test -- -D warnings
-	$(PHP_EXT_CARGO) clippy --locked -p polyspec-hyper-php-ext --all-targets --features panic-test -- -D warnings
-	$(CARGO) clippy --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test -- -D warnings
-test-bindings: lint-bindings test-wasm test-go ## Run the tests of the binding crates and the generated tests of WASM and Go
-	$(CARGO) test --locked $(foreach crate,$(BINDING_CRATES),-p $(crate))
-	$(PHP_EXT_CARGO) test --locked -p polyspec-hyper-php-ext
+	$(CARGO) clippy --locked --offline $(foreach crate,$(BINDING_CRATES),-p $(crate)) --all-targets --features panic-test -- -D warnings
+	$(PHP_EXT_CARGO) clippy --locked --offline -p polyspec-hyper-php-ext --all-targets --features panic-test -- -D warnings
+	$(CARGO) clippy --locked --offline --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test -- -D warnings
+test-bindings: lint-bindings test-node-addon test-wasm test-go go-release-build ## Run the tests of the binding crates, the generated tests of Node, WASM and Go, and the released form of the Go module
+	$(CARGO) test --locked --offline $(foreach crate,$(BINDING_CRATES),-p $(crate))
+	$(PHP_EXT_CARGO) test --locked --offline -p polyspec-hyper-php-ext
 
-# The Go of the go directive of packages/go/go.mod and the wasm-bindgen CLI of the release of the wasm-bindgen crate of
-# the WASM crate (binding GN-15, GN-18), which mise.toml pins and make install-tools installs into var/tools (HR-81);
-# test-go and node-package compare both releases before they use them.
-GO ?= $(KIT_TOOLS)/mise/shims/go
-GOFMT ?= $(KIT_TOOLS)/mise/shims/gofmt
-WASM_BINDGEN ?= $(KIT_TOOLS)/mise/shims/wasm-bindgen
 # The file name extension of a library that Cargo builds as a cdylib: dylib on macOS, so on Linux.
 CDYLIB := $(if $(filter Darwin,$(shell uname -s)),dylib,so)
 CARGO_TARGET := $(CURDIR)/target
@@ -599,14 +701,26 @@ NODE_VERSION := $(shell sed -n 's/^  "version": "\(.*\)",$$/\1/p' $(NODE_PACKAGE
 # The addon of the Node package in a checkout (binding T-2): the generated entry native/generated/index.cjs loads the
 # package of the platform or, in a checkout, the file hyper.<platform>.node beside it, so the build of the crate is
 # copied there and published with one rename (HR-82).
-.PHONY: node-addon
+# The addon is built with every test feature of the crate (NODE_ADDON_FEATURES), which the generated tests of the
+# binding call: __panicTest, __armFaults, __threadTest and __thrownCount. A feature compiles its member and changes no
+# other member, so the Node server tests and the packed platform package of node-package use the same build.
+# The generated tests of the Node binding (binding GN-3c) are a node:test file that imports the generated entry beside
+# it, so test-node-addon runs them in the checkout after node-addon, on the test runner of kit; the vitest run of
+# packages/ts excludes native/ (vitest.config.mts). test-bindings runs it with the generated tests of WASM and Go.
+NODE_ADDON_FEATURES := panic-test,fault-test,thread-test,thrown-count-test
+# The test features of packages/ts/native/wasm/Cargo.toml, which the generated tests of test-wasm call as the addon
+# tests call those of NODE_ADDON_FEATURES: the fault arming of fault-test and the count of thrown-count-test (H35.67).
+WASM_FEATURES := panic-test,fault-test,thrown-count-test
+.PHONY: node-addon test-node-addon
+test-node-addon: node-addon ## Run the generated tests of the Node binding on node --test against the addon of the checkout
+	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- $(NODE_PACKAGE)/native/generated/tests/generated.test.mjs
 node-addon: bindings ## Build the Node addon of this platform and put it beside the generated entry of the Node package
-	$(CARGO) build --locked -p polyspec-hyper-node --features panic-test
+	$(CARGO) build --locked --offline -p polyspec-hyper-node --features $(NODE_ADDON_FEATURES)
 	cp $(CARGO_TARGET)/debug/libpolyspec_hyper_node.$(CDYLIB) $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ && mv -f $(NODE_PACKAGE)/native/generated/$(NODE_ADDON).next-$$$$ $(NODE_PACKAGE)/native/generated/$(NODE_ADDON)
 
 node-package: bindings packages node-addon ## Build the WASM module and the Node addon, then pack and install the npm package into var/bindings/node
 	test "$$($(WASM_BINDGEN) --version)" = "wasm-bindgen $(WASM_BINDGEN_RELEASE)"
-	$(CARGO) build --locked --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features panic-test
+	$(CARGO) build --locked --offline --manifest-path $(WASM_MANIFEST) --target wasm32-unknown-unknown --features $(WASM_FEATURES)
 	$(WASM_BINDGEN) --target web --out-dir $(NODE_PACKAGE)/native/wasm/generated --out-name hyper_wasm \
 		$(CARGO_TARGET)/wasm32-unknown-unknown/debug/polyspec_hyper_wasm.wasm
 	mkdir -p $(BINDINGS_VAR)/node $(BINDINGS_VAR)/node-platform
@@ -614,19 +728,24 @@ node-package: bindings packages node-addon ## Build the WASM module and the Node
 	$(NODE) -e 'require("fs").writeFileSync("$(BINDINGS_VAR)/node-platform/package.json", JSON.stringify({ name: "@polyspec/hyper-$(NODE_PLATFORM)", version: "$(NODE_VERSION)", os: [process.platform], cpu: [process.arch], main: "$(NODE_ADDON)", files: ["$(NODE_ADDON)"] }, null, 2) + "\n")'
 	cd $(BINDINGS_VAR)/node-platform && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node
 	cd $(NODE_PACKAGE) && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node
-	# The dependencies of the package are packed from the root install, which installed them from the lock, since an
-	# offline install of the packed package finds no registry for them (@polyspec/hyper-client is in no registry).
-	mkdir -p $(BINDINGS_VAR)/node/deps
-	for dependency in $$($(NODE) -p 'Object.keys(require("./$(NODE_PACKAGE)/package.json").dependencies ?? {}).join(" ")'); do \
-		(cd $(CURDIR)/node_modules/$$dependency && $(NPM) pack --pack-destination $(BINDINGS_VAR)/node/deps) || exit 1; done
+	# The production closure of the package that the lock names is packed from the root install, which installed it from
+	# the lock, since an offline install of the packed package finds no registry for a dependency that is not packed
+	# (@polyspec/hyper-client is in no registry, and npm ci caches no metadata of eventsource-parser, H34.12).
+	# The install below installs every file of deps, so the closure is packed into a staging directory of this run and
+	# published to deps with scripts/publish.mts, which removes a file that an earlier run packed (HR-82, H35.68).
+	staging=$(BINDINGS_VAR)/node/deps.next-$$$$ && trap 'rm -rf "$$staging"' EXIT && trap 'exit 130' INT TERM && mkdir -p "$$staging" && \
+	for dependency in $$($(NODE) scripts/dependency-closure.mts --lock package-lock.json --workspace $(NODE_PACKAGE)); do \
+		(cd $(CURDIR)/node_modules/$$dependency && $(NPM) pack --pack-destination "$$staging") || exit 1; done && \
+	$(NODE) $(CURDIR)/scripts/publish.mts directory "$$staging" $(BINDINGS_VAR)/node/deps
 	echo '{ "private": true }' > $(BINDINGS_VAR)/node/package.json
 	cd $(BINDINGS_VAR)/node && $(NPM) install --no-audit --no-fund --omit=optional ./deps/*.tgz ./polyspec-hyper-$(NODE_VERSION).tgz ./polyspec-hyper-$(NODE_PLATFORM)-$(NODE_VERSION).tgz
 
-# The generated tests of the WASM binding through the subpath ./wasm of the installed package (binding P-5);
-# --expose-gc serves the generated tests that collect instances (binding GN-18a).
-test-wasm: node-package ## Run the generated tests of the WASM binding on node --test against the installed package
-	cp $(NODE_PACKAGE)/native/wasm/generated/tests/generated.test.mjs $(BINDINGS_VAR)/node/generated.wasm.test.mjs
-	cd $(BINDINGS_VAR)/node && $(NODE) --expose-gc --test generated.wasm.test.mjs
+# The generated tests of the WASM binding are a node:test file that imports the generated entry ../index.mjs, which
+# loads the module hyper_wasm.js that node-package writes beside it, so test-wasm runs them where the generator writes
+# them, as test-node-addon does; a copy in another directory does not find the entry. --expose-gc serves the generated
+# tests that collect instances (binding GN-18a).
+test-wasm: node-package ## Run the generated tests of the WASM binding on node --test against the WASM module of the checkout
+	$(NODE) --expose-gc --test $(NODE_PACKAGE)/native/wasm/generated/tests/generated.test.mjs
 
 # The static library with the test features (binding GN-13b), which Go links through CGO_LDFLAGS; gofmt and go vet,
 # then the generated tests on go test. GOTOOLCHAIN=local: a go of another release than the go directive fails instead
@@ -635,10 +754,17 @@ GO_RELEASE := $(shell sed -n 's/^go \(.*\)$$/\1/p' packages/go/go.mod)
 GO_ENV := GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET)/debug GOFLAGS=-tags=polyspec_panic_test,polyspec_codec_test
 test-go: bindings ## Build the static library of the Go binding, run gofmt and go vet, then the generated tests on go test
 	test "$$($(GO_ENV) $(GO) env GOVERSION)" = "go$(GO_RELEASE)"
-	$(CARGO) build --locked -p polyspec-hyper-go --features panic-test,codec-test
+	$(CARGO) build --locked --offline -p polyspec-hyper-go --features panic-test,codec-test
 	test -z "$$(cd packages/go && $(GOFMT) -l .)"
 	cd packages/go && $(GO_ENV) $(GO) vet ./...
 	cd packages/go && $(GO_ENV) $(GO) test -count=1 -v ./...
+
+# The released form of the Go module (H35.35-7, binding GN-15g): the module alone, with no go.work of make link
+# (GOWORK=off), with the go.mod and go.sum of the tree (-mod=readonly) and the sources that make bindings writes, as the
+# commit of its tag holds them. go build of a library package compiles it and links nothing, so it needs no static library.
+go-release-build: bindings ## Build and vet packages/go alone as a release tags it: GOWORK=off, -mod=readonly
+	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) build -mod=readonly ./...
+	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) vet ./...
 
 .PHONY: spec-docs spec-docs-check
 spec-docs: ## Write docs/spec/protocol.md and protocol.ko.md from contracts/protocol.json (H2)
@@ -659,7 +785,7 @@ bundle-size: board ## Print the sizes of the SSR script, the CSR shell, the chun
 	$(NODE) scripts/check-bundle-size.mts --app $(BOARD) --output $(BOARD)/build/client --limits config/bundle-size.json$(if $(filter true,$(GITHUB_ACTIONS)), --annotations)
 
 e2e: board ext hyper-ext ## Run the SSR, CSR, no-JavaScript and comparison flows in Chromium on servers of the run; CASES=<pattern> runs the cases whose title matches
-	$(NODE) scripts/run-e2e.mts $(PHP_SERVER_ARGUMENTS) --$(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
+	$(NODE) scripts/run-e2e.mts $(PHP_SERVER_ARGUMENTS) -- $(NODE) $(KIT)/run-tests.$(KIT_EXT) playwright -- --config tests/e2e/playwright.config.ts$(if $(CASES), --grep '$(CASES)')
 
 virtiofs-check: ## Write the outputs of the server build and of the output copies on a virtiofs bind mount of Apple container (HR-68); a target of the full suite on Darwin
 	$(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/virtiofs/
@@ -691,7 +817,7 @@ bench: bench-server bench-browser bench-uploads ## Run the measurements; results
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
 GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
-CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
+CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check release-candidate-assets hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
 
 # The CI groups of the full suite (HR-91): the matrix of the job check of .github/workflows/ci.yml names CI_GROUPS, and
 # each entry runs `make ci-check NAME=<group>` (HR-90). A group declares the tools that install-tools installs (CI_TOOLS),
@@ -703,37 +829,41 @@ CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse
 # whose targets are reports and belong to no check (make ci-bench).
 CI_GROUPS := gates docs php node board python core
 # hyper-install-python builds the native module with maturin of mise.toml and Cargo, so each group that runs it names
-# maturin and rust (install-tools of kit selects maturin since K1278).
-CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan rust maturin
-CI_SETUP_gates := install-tools install-symbols hyper-install-php hyper-install-python
+# maturin and rust (install-tools of kit selects maturin since K1278). The group gates does not run it: no gate
+# starts the Python package, cargo, maturin or the binding generator, so its setup builds no native module and
+# fetches no crate; python and uv stay, because mise installs vulture with them.
+CI_TOOLS_gates := node php composer pie python uv ruff vulture alint phpcs phpstan
+CI_SETUP_gates := install-tools install-symbols hyper-install-php
 CI_SYMBOLS_gates := php
 CI_TARGETS_gates := $(GATE_TARGETS)
 CI_TOOLS_docs := node php composer pie python uv rust maturin
-CI_SETUP_docs := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-ext
+CI_SETUP_docs := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-redis hyper-ext
 CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check recipe-check
 CI_TOOLS_php := node php composer pie rust
-CI_SETUP_php := install-tools hyper-install-php
+CI_SETUP_php := install-tools hyper-install-crates hyper-install-php
 CI_TARGETS_php := bench-server-smoke hyper-lint analyse-php hyper-test-php
-CI_TOOLS_node := node rust
-CI_SETUP_node := install-tools
-CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check
+# release-candidate-assets runs release candidate-assets of kit, which finds the environment of packages/python with uv
+# workspace dir (H34.11).
+CI_TOOLS_node := node rust uv
+CI_SETUP_node := install-tools hyper-install-crates
+CI_TARGETS_node := templates-check hyper-test-js hyper-test-node package-check release-candidate-assets
 CI_TOOLS_board := node php composer pie python uv rust maturin
-CI_SETUP_board := install-tools hyper-install-php hyper-install-python hyper-install-browser hyper-ext
+CI_SETUP_board := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-browser hyper-ext
 CI_TARGETS_board := parity server-parity server-parity-python bundle-size e2e
 CI_TOOLS_python := node python uv rust maturin
-CI_SETUP_python := install-tools hyper-install-python
+CI_SETUP_python := install-tools hyper-install-crates hyper-install-python
 CI_TARGETS_python := hyper-test-python hyper-test-python-render
 # The group core checks the Rust core and the bindings of its five targets with the binding generator of package.json (H35.2):
-# test-bindings runs lint-bindings, test-wasm and test-go first, so each runs once. Its tools build the PHP extension, the
+# test-bindings runs lint-bindings, test-node-addon, test-wasm and test-go first, so each runs once. Its tools build the PHP extension, the
 # Python module, the WASM module and the static library of Go. The wasm-bindgen CLI of mise.toml, which node-package runs
 # for test-wasm, has no selector of install-tools of kit: the setup writes packages/release.mk (release-recipes) and runs
 # its target install-wasm-bindgen, which installs that CLI alone with the mise of the checkout at the digest of
 # mise.lock. tests/scripts/ci-group-tools.test.mts fails for a group that starts a tool that its setup does not install.
 CI_TOOLS_core := node rust php python uv go
-CI_SETUP_core := install-tools release-recipes install-wasm-bindgen
+CI_SETUP_core := install-tools hyper-install-crates release-recipes install-wasm-bindgen
 CI_TARGETS_core := core-test core-lint core-fmt-check bindings-check test-bindings
 CI_TOOLS_bench := node php composer pie python uv rust maturin
-CI_SETUP_bench := install-tools hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser hyper-ext
+CI_SETUP_bench := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-redis hyper-install-browser hyper-ext
 CI_TARGETS_bench := bench bench-sessions
 
 # The targets of the full suite that exist on one platform only. Apple `container`, whose bind mounts are virtiofs,
@@ -920,6 +1050,7 @@ ci_step_args = $(if $(filter install-tools,$(2)), TOOLS="$(CI_TOOLS_$(1))")$(if 
 ci_run = steps=; status=0; \
 	$(foreach step,$(CI_SETUP_$(1)),if test $$status -ne 0; then outcome=skipped; elif $(MAKE) --no-print-directory $(step)$(call ci_step_args,$(1),$(step)); then outcome=success; else outcome=failure; status=1; fi; steps="$$steps$${steps:+,}\"$(step)\":{\"outcome\":\"$$outcome\"}";) \
 	test $$status -ne 0 || env -u GITHUB_STEP_SUMMARY $(MAKE) --no-print-directory ci-targets TARGETS="$(CI_TARGETS_$(1))" CI_REPORT=var/ci/$(1) || status=1; \
+	$(MAKE) --no-print-directory ci-results CI_REPORT=var/ci/$(1) || status=1; \
 	CI_STEPS="{$$steps}" $(MAKE) --no-print-directory ci-summary CI_REPORT=var/ci/$(1) || status=1; \
 	exit $$status
 
@@ -931,10 +1062,17 @@ ci-check: ## Run the CI group NAME as its job of ci.yml does: its setup, its tar
 ci-bench: ## Run the job of bench.yml: the setup of the group bench, make bench and make bench-sessions, and the report var/ci/bench; ONLINE
 	$(call ci_run,bench)
 
-.PHONY: ci-targets ci-summary ci-passed
+.PHONY: ci-targets ci-results ci-summary ci-passed
 CI_REPORT ?= var/report/ci-targets
 ci-targets: ## Run TARGETS past failures and write CI_REPORT (logs, record.json, summary.md)
 	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) -k $(CI_REPORT) $(TARGETS)
+
+# A recipe runner fails with the count of its failed cases and the path of its results file, whose lines name each case
+# (HYR-7); the report that a job uploads holds those files in recipe-results/, so a failed case is named in the report
+# and not only on the runner (HR-84). A group whose targets run no runner has no results file, and its report has none.
+# The make that ci_run starts expands the wildcard after the targets of the group ended.
+ci-results: ## Copy the case results of the recipe runners, RECIPE_RESULTS_DIR/*.txt, into CI_REPORT/recipe-results
+	$(if $(wildcard $(RECIPE_RESULTS_DIR)/*.txt),mkdir -p $(CI_REPORT)/recipe-results && cp $(wildcard $(RECIPE_RESULTS_DIR)/*.txt) $(CI_REPORT)/recipe-results/,@:)
 
 ci-summary: ## Write summary.md of CI_REPORT again from its record, also for a run that stopped
 	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) --summary $(CI_REPORT)
@@ -943,51 +1081,119 @@ ci-passed: ## Fail unless every job of RESULTS, the JSON of toJSON(needs), has t
 	$(NODE) $(KIT)/ci-passed.$(KIT_EXT)
 
 # ---- Release (config/release.json) -----------------------------------------------------------------------------------
-# The steps of .github/workflows/release.yml, in this order: release-tag tags the commit of the successful CI run RUN of ci.yml
-# on main and appends TAG and VERSION to GITHUB_ENV; release-checkout checks that tag out; release-prepare installs as make
-# hyper-install does; release-tools installs the tools of the release and release-tools-path puts them on the PATH of the
-# later steps; release-assets builds the packages and their archives into var/release/assets; release-publish creates the
-# draft GitHub Release and release-undraft makes it public.
-# The job of .github/workflows/release.yml runs make ci-release (HR-90): each step in this order, a make of its own, so the
-# steps after release-checkout read the Makefile and the packages of the tagged commit, and the first failure stops the run,
-# since each step reads what the step before wrote. release-tag writes TAG and VERSION into var/release/tag.env, the
-# GITHUB_ENV of this run, which the recipe reads; when it tagged no version, the run ends with nothing to release. AUTO=1
-# follows a workflow_run event (GITHUB_EVENT_NAME), and a dispatch or a local run `make ci-release RUN=<id>` releases the
-# commit of RUN. The tools of var/tools are on the PATH of this Makefile, so the recipe needs no release-tools-path.
-RELEASE_ENV := var/release/tag.env
-RELEASE_STEPS := release-checkout release-php-check bootstrap install-tools install-packages release-archive-tool release-prepare release-tools release-recipes release-assets release-publish release-undraft
-.PHONY: ci-release release-php-check
-# setup-php sets up the PHP of the .php-version of the checkout before the tag is checked out, and a dispatch checks out main,
-# so the release requires the PHP on PATH to be the minor release of the .php-version of the tag before it builds anything.
-release-php-check: ## Fail unless the PHP on PATH is the minor release that .php-version of the checkout names, naming both
-	@want="$$(tr -d '[:space:]' < .php-version)"; have="$$(php -r 'echo PHP_MAJOR_VERSION, ".", PHP_MINOR_VERSION;')"; \
-	test "$$have" = "$$want" || { echo "release-php-check: the PHP on PATH is $$have, and .php-version of $${TAG:-the checkout} names $$want; set up PHP $$want"; exit 1; }
-ci-release: ## Run the job of release.yml: tag the commit of the CI run RUN, then check out, build and publish its release; ONLINE
-	@mkdir -p $(dir $(RELEASE_ENV)) && : > $(RELEASE_ENV) && \
-	GITHUB_ENV=$(CURDIR)/$(RELEASE_ENV) $(CI_MAKE) release-tag$(if $(filter workflow_run,$(GITHUB_EVENT_NAME)), AUTO=1) && \
-	set -a && . ./$(RELEASE_ENV) && set +a && \
-	if test -z "$$TAG"; then echo "ci-release: release-tag tagged no version, so nothing is released"; exit 0; fi && \
-	$(foreach step,$(RELEASE_STEPS),$(CI_MAKE) $(step)$(if $(filter install-tools,$(step)), TOOLS=npm) &&) true
+# .github/workflows/release.yml has three jobs, each with one recipe (HR-90, HR-95). The job tag runs ci-release-tag:
+# release-tag tags the commit of the successful CI run RUN of ci.yml on main and appends TAG and VERSION to GITHUB_ENV,
+# which a later line of the same step does not receive in its environment, so release-tag-output reads them from that
+# file and gives them to the later jobs. The job assets calls assets.yml, whose jobs run ci-assets-<job>. The job release
+# runs ci-release-release on the tag, each line a make of its own that stops the recipe when it fails, since each reads
+# what the line before wrote: release-tools installs the tools of the release, release-assets builds the archives of kit
+# into var/release/assets, release-publish creates the draft GitHub Release, the assets of each platform that the
+# workflow downloaded into var/release/downloaded join var/release/assets with their folders, release-go-module commits
+# and tags the Go module with the identity of the actor of the run, release-go-module-push of binding 0.0.21 pushes the
+# tags of the Go module with one git push --atomic (H35.35-7, B2.488), release-platform-assets uploads the assets of each
+# platform to the draft and release-undraft makes it public. The tools of var/tools are on the PATH of this Makefile.
+#
+# The tag exists before the jobs assets and release run. So CI runs what they run without a tag: every run of ci.yml
+# calls assets.yml, and release-candidate-assets, a target of the full suite, builds the archives of kit from the
+# committed HEAD for the version of the first section ## X.Y.Z of the change log (kit K1286); kit refuses a checkout with
+# a changed or an untracked path or with a dependency linked from outside it.
+.PHONY: ci-release-tag ci-release-release release-tag-output release-candidate-assets
+RELEASE_IDENTITY = GIT_AUTHOR_NAME="$${GITHUB_ACTOR:?}" GIT_AUTHOR_EMAIL="$${GITHUB_ACTOR:?}@users.noreply.github.com" \
+	GIT_COMMITTER_NAME="$${GITHUB_ACTOR:?}" GIT_COMMITTER_EMAIL="$${GITHUB_ACTOR:?}@users.noreply.github.com"
+ci-release-tag: ## Run the job tag of release.yml: tag the commit of the CI run RUN and give TAG and VERSION to the later jobs; AUTO=1 for a workflow_run
+	@test -n "$$GITHUB_ENV" || { echo 'ci-release-tag: GITHUB_ENV is set only in a step of a workflow' >&2; exit 2; }
+	$(CI_MAKE) release-tag
+	$(CI_MAKE) release-tag-output TAG="$$(sed -n 's/^TAG=//p' "$$GITHUB_ENV" | tail -n 1)" VERSION="$$(sed -n 's/^VERSION=//p' "$$GITHUB_ENV" | tail -n 1)"
 
-.PHONY: release-tag release-checkout release-archive-tool release-prepare release-tools release-tools-path release-assets release-publish release-undraft release-coverage
+ci-release-release: ## Run the job release of release.yml: build the archives of TAG, publish the draft, add the assets of each platform and make the release public; ONLINE
+	@test -n "$(TAG)" || { echo 'ci-release-release: TAG is required, for example make ci-release-release TAG=v0.0.1' >&2; exit 2; }
+	$(CI_MAKE) release-tools
+	$(CI_MAKE) hyper-install-crates
+	$(CI_MAKE) release-assets
+	$(CI_MAKE) release-publish
+	mkdir -p var/release/assets && cp -R var/release/downloaded/. var/release/assets/
+	$(CI_MAKE) release-recipes
+	$(CI_MAKE) binding-cases
+	$(RELEASE_IDENTITY) $(CI_MAKE) release-go-module
+	$(CI_MAKE) release-go-module-push
+	$(CI_MAKE) release-platform-assets
+	$(CI_MAKE) release-undraft
+
+release-tag-output: ## Write TAG and VERSION as the outputs tag and version of the step (GITHUB_OUTPUT); both are empty when the run releases nothing
+	@test -n "$$GITHUB_OUTPUT" || { echo 'release-tag-output: GITHUB_OUTPUT is set only in a step of a workflow' >&2; exit 2; }
+	printf 'tag=%s\nversion=%s\n' "$$TAG" "$$VERSION" >> "$$GITHUB_OUTPUT"
+
+release-candidate-assets: packages ## Build the archive of every package of config/release.json from the committed HEAD with no tag into var/release-candidate/assets (kit K1286)
+	RELEASE_ASSETS=var/release-candidate/assets $(NODE) $(KIT)/release.$(KIT_EXT) candidate-assets
+
+# The rehearsal of a release before its version commit is pushed: on a clean clone of that commit, the archives of kit
+# for VERSION, the version that the commit names, with no tag; it prints the commit that it packed.
+.PHONY: release-rehearsal
+release-rehearsal: packages ## Build the archives of VERSION from the committed HEAD of a clean clone with release-run prepare of kit, before the version commit is pushed
+	@test -n "$(VERSION)" || { echo 'release-rehearsal: VERSION is required, for example make release-rehearsal VERSION=0.0.1' >&2; exit 2; }
+	RELEASE_ASSETS=var/release-candidate/assets $(NODE) $(KIT)/release-run.$(KIT_EXT) prepare "$(VERSION)"
+
+# The jobs of .github/workflows/assets.yml, each one recipe (HR-90, binding GN-19i). A recipe installs the tools that it
+# starts, writes the release recipes and the cases of the generated tests, and checks the bindings before it builds: with
+# RELEASE=true, which a release passes, the release check of binding (release-binding-check, CK-70), and otherwise the
+# check that CI runs (bindings-check). Both compute the go.sum of packages/go/go.mod with `go mod download`, so every
+# recipe installs go, and a job that lacks a tool of the check fails in CI, before a tag exists. The builds are the
+# targets release-assets-<job> of packages/release.mk, which run each build of the job to its end.
+# The crates of the musl targets of release-go-static compile C with the clang and the llvm-ar of the LLVM of
+# config/toolchain.json, by their paths in LLVM_ROOT of packages/release.mk; musl-cc-check fails on Linux while that
+# clang is missing or is of another major release.
+# install-llvm-action of the job php appends DYLD_LIBRARY_PATH and LD_LIBRARY_PATH with /usr/lib first to GITHUB_ENV on
+# macOS, and the PHP of that runner then loads the libsqlite3 of the system and aborts; ci-assets-php and its makes run
+# with both empty, and the build reads LLVM through LLVM_ROOT alone, which is the LLVM_PATH that the action sets.
+ASSETS_CHECK = $(if $(filter true,$(RELEASE)),release-binding-check,bindings-check)
+export CC_x86_64_unknown_linux_musl = $(LLVM_ROOT)/bin/clang
+export AR_x86_64_unknown_linux_musl = $(LLVM_ROOT)/bin/llvm-ar
+export CC_aarch64_unknown_linux_musl = $(LLVM_ROOT)/bin/clang
+export AR_aarch64_unknown_linux_musl = $(LLVM_ROOT)/bin/llvm-ar
+.PHONY: ci-assets-platform ci-assets-php ci-assets-npm musl-cc-check
+musl-cc-check: ## Fail on Linux unless the clang and the llvm-ar of the LLVM of config/toolchain.json, which build the C of the musl targets, exist
+	@test "$$(uname -s)" != Linux || { \
+	test -n "$(LLVM_MAJOR)" || { echo 'musl-cc-check: config/toolchain.json pins no major release of LLVM (llvm.version), or packages/release.mk is not written (make release-recipes)' >&2; exit 2; }; \
+	test -x "$(LLVM_ROOT)/bin/clang" && test -x "$(LLVM_ROOT)/bin/llvm-ar" || { echo 'musl-cc-check: the musl targets build C with the clang and the llvm-ar of LLVM $(LLVM_MAJOR) (config/toolchain.json) in $(LLVM_ROOT), which are missing' >&2; exit 2; }; \
+	test "$$("$(LLVM_ROOT)/bin/clang" -dumpversion | cut -d. -f1)" = "$(LLVM_MAJOR)" || { echo "musl-cc-check: $(LLVM_ROOT)/bin/clang is clang $$("$(LLVM_ROOT)/bin/clang" -dumpversion), not $(LLVM_MAJOR) (config/toolchain.json)" >&2; exit 2; }; \
+	}
+
+ci-assets-platform: ## Run the job platform of assets.yml: the Go static library, the wheel and the npm platform package of this host; RELEASE=true for a release; ONLINE
+	$(CI_MAKE) install-tools TOOLS="rust uv python go"
+	$(CI_MAKE) hyper-install-crates
+	$(CI_MAKE) release-recipes
+	$(CI_MAKE) binding-cases
+	$(CI_MAKE) musl-cc-check
+	$(CI_MAKE) $(ASSETS_CHECK)
+	$(CI_MAKE) release-assets-platform
+
+ci-assets-php: DYLD_LIBRARY_PATH :=
+ci-assets-php: LD_LIBRARY_PATH :=
+ci-assets-php: ## Run the job php of assets.yml: the PHP extension for the PHP on PATH, whose minor is EXPECTED_PHP_MINOR; RELEASE=true for a release; ONLINE
+	@test -n "$(EXPECTED_PHP_MINOR)" || { echo 'ci-assets-php needs EXPECTED_PHP_MINOR, the PHP minor of the job, for example make ci-assets-php EXPECTED_PHP_MINOR=8.4' >&2; exit 2; }
+	$(CI_MAKE) install-tools TOOLS="rust go"
+	$(CI_MAKE) hyper-install-crates
+	$(CI_MAKE) release-recipes
+	$(CI_MAKE) binding-cases
+	$(CI_MAKE) $(ASSETS_CHECK)
+	$(CI_MAKE) release-assets-php EXPECTED_PHP_MINOR=$(EXPECTED_PHP_MINOR)$(if $(LLVM_PATH), LLVM_ROOT=$(LLVM_PATH))
+
+ci-assets-npm: ## Run the job npm of assets.yml: the npm package @polyspec/hyper with its WASM module; RELEASE=true for a release; ONLINE
+	$(CI_MAKE) install-tools TOOLS="rust go"
+	$(CI_MAKE) hyper-install-crates
+	$(CI_MAKE) release-recipes
+	$(CI_MAKE) binding-cases
+	$(CI_MAKE) $(ASSETS_CHECK)
+	$(CI_MAKE) packages
+	$(CI_MAKE) release-assets-npm
+
+.PHONY: release-tag release-tools release-assets release-publish release-undraft release-coverage
 release-tag: ## Tag the commit of the successful CI run RUN of ci.yml on main with vX.Y.Z of the change log; AUTO=1 releases only a version commit; reads the run with gh
 	@test -n "$$RUN" || { echo "release-tag: RUN is required, for example make release-tag RUN=123"; exit 1; }
 	RELEASE_MAIN=origin/main $(NODE) $(KIT)/release-run.$(KIT_EXT) tag "$$RUN"$(if $(AUTO), --auto)
 
-release-checkout: ## Check out the tag TAG that release-tag created
-	git checkout --quiet "$$TAG"
-
-release-archive-tool: ## Fail unless Info-ZIP, which builds the Composer archives of the release, is on PATH
-	@command -v zip >/dev/null || { echo 'release-archive-tool: Info-ZIP is required for the Composer release archives; install the zip package'; exit 1; }
-
 release-tools: ## Install the tools that config/release.json needs for the release, with the Composer home of install-tools; ONLINE
 	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/release-tools.$(KIT_EXT)
-
-release-tools-path: ## Append var/tools/bin and the shims of mise to GITHUB_PATH and the environment of mise to GITHUB_ENV
-	@test -n "$$GITHUB_PATH" && test -n "$$GITHUB_ENV" || { echo 'release-tools-path: GITHUB_PATH and GITHUB_ENV are set only between the steps of a workflow'; exit 1; }
-	@echo "$(KIT_TOOLS)/mise/shims" >> "$$GITHUB_PATH"
-	@echo "$(KIT_TOOLS)/bin" >> "$$GITHUB_PATH"
-	@for name in $(MISE_ENVIRONMENT); do echo "$$name=$$(printenv $$name)"; done >> "$$GITHUB_ENV"
 
 # The archives are built from the built packages, so release-assets builds them first.
 release-assets: packages ## Build the archive of every package of TAG and packages.json into var/release/assets; ONLINE

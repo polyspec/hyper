@@ -6,7 +6,7 @@
 // (HR-85).
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'node:test';
@@ -36,7 +36,8 @@ function script(file: string, lines: string[]): void {
  * the questions of the recipes as that PHP would, with its php-config. The test removes the directory when it ends.
  */
 function tree(t: TestContext, php: Php | undefined): string {
-  const directory = mkdtempSync(path.join(tmpdir(), 'hyper-php-check-'));
+  // The real path, which make prints as $(CURDIR): on macOS tmpdir() is below /var, a link to /private/var (H35.50).
+  const directory = realpathSync(mkdtempSync(path.join(tmpdir(), 'hyper-php-check-')));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   for (const file of ['Makefile', '.php-version']) copyFileSync(path.join(ROOT, file), path.join(directory, file));
   if (php !== undefined) wrappers(directory, php);
@@ -126,8 +127,8 @@ function recipes(): Map<string, string[]> {
 // that starts a PHP server with the extensions, the lint and the symbol extractor of kit, and Cargo for the crate of
 // the PHP extension, whose build script runs php and php-config.
 const STARTS_PHP = /(?:^|[\s;&|(])php(?:-config)? |\$\((?:PIE|COMPOSER_BIN|PHP_SERVER_ARGUMENTS|PHPUNIT_EXTENSIONS|PHP_SERVER_EXTENSIONS|PHP_EXT_CARGO|php_api_target)\)|\/(?:pint|phpstan|phpcs) |\/(?:lint-php|install-symbols)\.\$\(KIT_EXT\)|polyspec-hyper-php-ext|--php-autoload /u;
-// php-check is the check itself, and release-php-check judges the php of PATH before the release installs the wrapper.
-const NOT_CHECKED = ['php-check', 'release-php-check'];
+// php-check is the check itself.
+const NOT_CHECKED = ['php-check'];
 
 test('every target whose recipe starts PHP has php-check as a prerequisite (H35.16-4)', () => {
   const declared = (/^PHP_TARGETS := (.*)$/mu.exec(MAKEFILE)?.[1] ?? '').split(' ').filter(Boolean);
@@ -182,8 +183,9 @@ function extensionTree(t: TestContext): { directory: string; run: (...words: str
   const variables = [`CARGO=${path.join(directory, 'cargo')}`, `NODE=${process.execPath}`, 'LLVM_MAJOR=1', `LLVM_ROOT=${path.join(directory, 'llvm')}`];
   const run = (...words: string[]): CargoStart[] => {
     rmSync(log, { force: true });
-    // -o keeps make from the recipes of the prerequisites, which write the sources of the bindings and run their tests.
-    const result = make(directory, '-o', 'bindings', '-o', 'test-wasm', '-o', 'test-go', ...words, ...variables);
+    // -o keeps make from the recipes of the prerequisites, which write the sources of the bindings, read the crates of
+    // the lock (crates-check) and run their tests.
+    const result = make(directory, '-o', 'bindings', '-o', 'crates-check', '-o', 'test-node-addon', '-o', 'test-wasm', '-o', 'test-go', '-o', 'go-release-build', ...words, ...variables);
     assert.equal(result.status, 0, `make ${words.join(' ')}:\n${result.stdout}\n${result.stderr}`);
     const starts = readFileSync(log, 'utf8').split('\n').filter(Boolean).map((line) => /^target=(\S*) php=(\S*) config=(\S*) args=(.*)$/u.exec(line));
     return starts.map((start) => ({ target: start?.[1] ?? '', php: start?.[2] ?? '', config: start?.[3] ?? '', args: start?.[4] ?? '' }));
@@ -201,7 +203,7 @@ test('hyper-ext builds the extension of each API of PHP in a target directory of
     assert.equal(starts.length, 1, 'the recipe of hyper-ext starts cargo once');
     const start = starts[0];
     assert.ok(start !== undefined, 'the recipe of hyper-ext starts cargo');
-    assert.equal(start.args, 'build --locked -p polyspec-hyper-php-ext');
+    assert.equal(start.args, 'build --locked --offline -p polyspec-hyper-php-ext');
     // The paths that the build script of ext-php-rs reads are those of the wrappers, which do not change with the PHP.
     assert.equal(start.php, path.join(directory, 'var/tools/bin/php'));
     assert.equal(start.config, path.join(directory, 'var/tools/bin/php-config'));
@@ -229,7 +231,7 @@ test('hyper-ext does not publish a library that the PHP of the checkout does not
   // A library of another API in the directory of this API, which only a build outside the recipe leaves there.
   writeFileSync(path.join(directory, 'cargo'), '#!/bin/sh\nexit 0\n');
   for (const extension of ['so', 'dylib']) writeFileSync(path.join(directory, `target/php-80427-nts/debug/libpolyspec_hyper.${extension}`), '80510-nts');
-  const result = make(directory, '-o', 'bindings', 'hyper-ext', `CARGO=${path.join(directory, 'cargo')}`, `NODE=${process.execPath}`, 'LLVM_MAJOR=1', `LLVM_ROOT=${path.join(directory, 'llvm')}`);
+  const result = make(directory, '-o', 'bindings', '-o', 'crates-check', 'hyper-ext', `CARGO=${path.join(directory, 'cargo')}`, `NODE=${process.execPath}`, 'LLVM_MAJOR=1', `LLVM_ROOT=${path.join(directory, 'llvm')}`);
   assert.notEqual(result.status, 0, result.stdout);
   assert.equal(readFileSync(path.join(directory, 'build/hyper-ext/polyspec_hyper.so'), 'utf8'), '80427-nts', 'build/hyper-ext keeps the library that loaded');
 });

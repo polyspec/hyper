@@ -60,7 +60,7 @@ function handlerOf(spec: Map<string, unknown> | null, calls: Observed[]): Repres
 
 // Returns the paths of the representations program and its handlers: each route loads the data of `loaders`, and has a
 // representation handler for each type of `types`.
-function programOf(manifest: string, loaders: Map<string, unknown>, types: Map<string, string[]>, handler: RepresentationHandler<Services>): { manifest: string; build: string; templates: { index: string; root: string }; handlers: Handlers<Services> } {
+function programOf(manifest: string, loaders: Map<string, unknown>, types: Map<string, string[]>, handler: RepresentationHandler<Services>): { manifest: string; program: string; handlers: Handlers<Services> } {
   const dir = join(PROGRAMS, APPLICATION);
   const routes: Record<string, RouteHandlers<Services>> = {};
   for (const [name, declared] of types) {
@@ -72,8 +72,7 @@ function programOf(manifest: string, loaders: Map<string, unknown>, types: Map<s
   }
   return {
     manifest,
-    build: join(dir, 'build.json'),
-    templates: { index: join(dir, 'node', 'templates.index.json'), root: join(dir, 'node') },
+    program: join(dir, 'program'),
     handlers: { routes },
   };
 }

@@ -1,0 +1,245 @@
+{
+  "comment": "The cases of the interface contract that give every argument of a member that takes a `Pages`, without faults, files or a service, in the case form of binding (G-5). A generated test that checks one argument of such a member takes its `Pages` from the first such case of the member (binding GN-13t), because the core refuses a `Pages` of placeholder arguments with invalid_application before it reads the argument under test (HY-2.9). Each case gives the smallest application that routes the request GET / to its page home, whose region content keeps no value. The group route routes that request to the page (HY-116). The group kept gives no value for a path that the region does not keep (HY-40.1). The group keep answers 403 to a request to the kept endpoint without the token of the form (HY-24.4). The group request makes the page request of the route home. The group register registers a function of the application on such a `Pages` (HYC-24.9), so that a generated test that needs any instance of `Pages`, as B-5c does, takes it from this case and not from placeholder arguments (binding GN-13t).",
+  "route": [
+    {
+      "id": "a_request_of_a_page_is_routed_to_the_page",
+      "rule": "HY-116.1",
+      "pages": {
+        "new": "pages.open",
+        "args": {
+          "manifest": {
+            "hex": "7b226c61796f7574223a226c61796f75742e74706c222c227469746c65223a227469746c652e74706c222c22726567696f6e73223a5b7b226e616d65223a22636f6e74656e74222c2270616765223a747275657d5d2c22726f75746573223a5b7b226e616d65223a22686f6d65222c2270617468223a222f222c227469746c65223a22486f6d65222c2274656d706c617465223a22706167652e74706c227d5d7d"
+          },
+          "templates": [
+            ["layout.tpl", "<title>{# title}</title>{# build}\n<main id=\"content\">{# content}</main>\n{# data}\n"],
+            ["title.tpl", "{= title} - Site"],
+            ["page.tpl", "<p>{= title}</p>\n"]
+          ],
+          "reads": {
+            "kind": "map",
+            "value": [["home", { "kind": "map", "value": [["shared", { "kind": "bool", "value": true }], ["regions", { "kind": "map", "value": [] }]] }]]
+          },
+          "options": {
+            "build": "1111111111111111111111111111111111111111111111111111111111111111",
+            "timezone": "+09:00",
+            "context": false,
+            "base_path": "",
+            "data_base_path": null,
+            "form_types": ["application/x-www-form-urlencoded"]
+          }
+        }
+      },
+      "chosen": false,
+      "front": {
+        "method": "GET",
+        "path": "/",
+        "accept": ["text/html"],
+        "hx_request": false,
+        "context_header": null,
+        "content_type": null
+      },
+      "result": {
+        "route": "page",
+        "name": "home",
+        "params": [],
+        "kind": "html",
+        "action": false
+      }
+    }
+  ],
+  "kept": [
+    {
+      "id": "a_path_that_the_region_does_not_keep_gives_no_value",
+      "rule": "HY-40.1",
+      "pages": {
+        "new": "pages.open",
+        "args": {
+          "manifest": {
+            "hex": "7b226c61796f7574223a226c61796f75742e74706c222c227469746c65223a227469746c652e74706c222c22726567696f6e73223a5b7b226e616d65223a22636f6e74656e74222c2270616765223a747275657d5d2c22726f75746573223a5b7b226e616d65223a22686f6d65222c2270617468223a222f222c227469746c65223a22486f6d65222c2274656d706c617465223a22706167652e74706c227d5d7d"
+          },
+          "templates": [
+            ["layout.tpl", "<title>{# title}</title>{# build}\n<main id=\"content\">{# content}</main>\n{# data}\n"],
+            ["title.tpl", "{= title} - Site"],
+            ["page.tpl", "<p>{= title}</p>\n"]
+          ],
+          "reads": {
+            "kind": "map",
+            "value": [["home", { "kind": "map", "value": [["shared", { "kind": "bool", "value": true }], ["regions", { "kind": "map", "value": [] }]] }]]
+          },
+          "options": {
+            "build": "1111111111111111111111111111111111111111111111111111111111111111",
+            "timezone": "+09:00",
+            "context": false,
+            "base_path": "",
+            "data_base_path": null,
+            "form_types": ["application/x-www-form-urlencoded"]
+          }
+        }
+      },
+      "region": "content",
+      "path": "draft",
+      "text": "1",
+      "result": null
+    }
+  ],
+  "keep": [
+    {
+      "id": "a_request_without_the_token_of_the_form_is_answered_403",
+      "rule": "HY-24.4",
+      "pages": {
+        "new": "pages.open",
+        "args": {
+          "manifest": {
+            "hex": "7b226c61796f7574223a226c61796f75742e74706c222c227469746c65223a227469746c652e74706c222c22726567696f6e73223a5b7b226e616d65223a22636f6e74656e74222c2270616765223a747275657d5d2c22726f75746573223a5b7b226e616d65223a22686f6d65222c2270617468223a222f222c227469746c65223a22486f6d65222c2274656d706c617465223a22706167652e74706c227d5d7d"
+          },
+          "templates": [
+            ["layout.tpl", "<title>{# title}</title>{# build}\n<main id=\"content\">{# content}</main>\n{# data}\n"],
+            ["title.tpl", "{= title} - Site"],
+            ["page.tpl", "<p>{= title}</p>\n"]
+          ],
+          "reads": {
+            "kind": "map",
+            "value": [["home", { "kind": "map", "value": [["shared", { "kind": "bool", "value": true }], ["regions", { "kind": "map", "value": [] }]] }]]
+          },
+          "options": {
+            "build": "1111111111111111111111111111111111111111111111111111111111111111",
+            "timezone": "+09:00",
+            "context": false,
+            "base_path": "",
+            "data_base_path": null,
+            "form_types": ["application/x-www-form-urlencoded"]
+          }
+        }
+      },
+      "store": {
+        "new": "memory_store.new",
+        "args": {},
+        "then": []
+      },
+      "request": {
+        "region": "content",
+        "path": "draft",
+        "value": "1",
+        "form_csrf": null
+      },
+      "result": {
+        "status": 403,
+        "body": { "hex": "466f7262696464656e" },
+        "vary_accept": false,
+        "allow": null
+      }
+    }
+  ],
+  "request": [
+    {
+      "id": "the_page_request_of_a_route_of_the_application_is_made",
+      "rule": "HY-132.2",
+      "pages": {
+        "new": "pages.open",
+        "args": {
+          "manifest": {
+            "hex": "7b226c61796f7574223a226c61796f75742e74706c222c227469746c65223a227469746c652e74706c222c22726567696f6e73223a5b7b226e616d65223a22636f6e74656e74222c2270616765223a747275657d5d2c22726f75746573223a5b7b226e616d65223a22686f6d65222c2270617468223a222f222c227469746c65223a22486f6d65222c2274656d706c617465223a22706167652e74706c227d5d7d"
+          },
+          "templates": [
+            ["layout.tpl", "<title>{# title}</title>{# build}\n<main id=\"content\">{# content}</main>\n{# data}\n"],
+            ["title.tpl", "{= title} - Site"],
+            ["page.tpl", "<p>{= title}</p>\n"]
+          ],
+          "reads": {
+            "kind": "map",
+            "value": [["home", { "kind": "map", "value": [["shared", { "kind": "bool", "value": true }], ["regions", { "kind": "map", "value": [] }]] }]]
+          },
+          "options": {
+            "build": "1111111111111111111111111111111111111111111111111111111111111111",
+            "timezone": "+09:00",
+            "context": false,
+            "base_path": "",
+            "data_base_path": null,
+            "form_types": ["application/x-www-form-urlencoded"]
+          }
+        }
+      },
+      "input": {
+        "route": "home",
+        "params": [],
+        "kind": "html",
+        "action": false,
+        "csrf": "abababababababababababababababababababababababababababababababab",
+        "changed": [],
+        "stored": [],
+        "now": 0.0,
+        "keep_cookie": null,
+        "held_hash": null
+      }
+    }
+  ],
+  "register": [
+    {
+      "id": "a_function_of_the_application_is_registered",
+      "rule": "HYC-24.9",
+      "receiver": {
+        "new": "pages.open",
+        "args": {
+          "manifest": {
+            "hex": "7b226c61796f7574223a226c61796f75742e74706c222c227469746c65223a227469746c652e74706c222c22726567696f6e73223a5b7b226e616d65223a22636f6e74656e74222c2270616765223a747275657d5d2c22726f75746573223a5b7b226e616d65223a22686f6d65222c2270617468223a222f222c227469746c65223a22486f6d65222c2274656d706c617465223a22706167652e74706c227d5d7d"
+          },
+          "templates": [
+            [
+              "layout.tpl",
+              "<title>{# title}</title>{# build}\n<main id=\"content\">{# content}</main>\n{# data}\n"
+            ],
+            [
+              "title.tpl",
+              "{= title} - Site"
+            ],
+            [
+              "page.tpl",
+              "<p>{= title}</p>\n"
+            ]
+          ],
+          "reads": {
+            "kind": "map",
+            "value": [
+              [
+                "home",
+                {
+                  "kind": "map",
+                  "value": [
+                    [
+                      "shared",
+                      {
+                        "kind": "bool",
+                        "value": true
+                      }
+                    ],
+                    [
+                      "regions",
+                      {
+                        "kind": "map",
+                        "value": []
+                      }
+                    ]
+                  ]
+                }
+              ]
+            ]
+          },
+          "options": {
+            "build": "1111111111111111111111111111111111111111111111111111111111111111",
+            "timezone": "+09:00",
+            "context": false,
+            "base_path": "",
+            "data_base_path": null,
+            "form_types": [
+              "application/x-www-form-urlencoded"
+            ]
+          }
+        }
+      },
+      "name": "shout",
+      "host_function": {
+        "function": []
+      }
+    }
+  ]
+}

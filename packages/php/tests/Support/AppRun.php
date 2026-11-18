@@ -32,7 +32,7 @@ final class AppRun
         'responseLimit',
         'formTypes',
     ];
-    private const STEPS = ['calls', 'observe', 'add', 'warn'];
+    private const STEPS = ['calls', 'observe', 'add', 'warn', 'store'];
     private const RESULTS = ['return', 'stop', 'throw', 'redirect', 'outside', 'page'];
 
     /** @var list<string> the calls of the handlers in the order in which they start */
@@ -54,11 +54,13 @@ final class AppRun
      * @param array<array-key, mixed> $application an application of the fixture `applications`
      * @param array<array-key, mixed> $handlers the handlers of the case, merged over those of the application
      * @param array<array-key, mixed> $options the options of the case, merged over those of the application
+     * @param CountingStore $store the session store of the requests, which a step `store` writes (HY-38.20)
      */
     public function __construct(
         private readonly array $application,
         private readonly array $handlers,
         private readonly array $options,
+        private readonly CountingStore $store = new CountingStore(),
     ) {
         $this->reports = new Reports();
     }
@@ -310,6 +312,12 @@ final class AppRun
                     throw new \UnexpectedValueException("the handler {$name} adds no integer to a member of a service");
                 }
                 $service->{$member} = $held + $add[2];
+            } elseif (array_key_exists('store', $step)) {
+                // HY-38.20: the step writes each key in the session store of the request, as the application does
+                // through its hold on that store, so the page reads the value after the handler returned.
+                foreach (Json::map($step['store'], 'the member store') as $key => $stored) {
+                    $this->store->preset((string) $key, $stored);
+                }
             } elseif (array_key_exists('warn', $step)) {
                 trigger_error(Json::string($step['warn']), E_USER_WARNING);
             } elseif (array_key_exists('stop', $step)) {

@@ -21,20 +21,27 @@ The server tells the two kinds of requests apart by their headers (HY-15). A dir
 
 PHP runs without a base path. Responses carry `Vary: Accept, HX-Request, HX-Current-URL`.
 
-Deploy `build/program`, which `make board` writes with `hyper build`, next to the PHP code; the application opens it with `App::open(program: ...)`. PHP renders `build/program/templates/` with the template extension `polyspec_template`: load the json extension `polyspec_json` and then the template extension with the `extension` setting of `php.ini`, both built for the PHP version of the server (HY-48.15).
+Deploy `build/program`, which `make board` writes with `hyper build`, next to the PHP code; the application opens it with `App::open(program: ...)`. PHP renders `build/program/templates/` with the core in the extension `polyspec_hyper` (HY-48.22): load the json extension `polyspec_json`, then the template extension `polyspec_template` and then `polyspec_hyper` with the `extension` setting of `php.ini`, each built for the PHP version of the server (HY-48.23).
 
-One build is deployed as one set: upload the new files of `public/assets` first, then replace `client/` and `program/` on every server, because a page of the new build names files of `public/assets` that must exist before a server sends it. Every server of one deployment reads the outputs of the same build, also servers of several runtimes that share sessions (HY-125.20). `public/assets` keeps the files of earlier builds, which a page that is still open loads; remove a file only when no `client/assets.json` of a build in use lists it (HR-34).
+One build is deployed as one set: upload the new files of `public/assets` first, then replace `client/` and `program/` on every server, because a page of the new build names files of `public/assets` that must exist before a server sends it. Every server of one deployment reads the outputs of the same build, also servers of several runtimes that share sessions (HY-125.20). `public/assets` keeps the files of the build before, which a page that is still open loads; on a deployment remove a file only when no `client/assets.json` of a build in use lists it. In its own application directory the build keeps the files of the build before it and removes the files of the build two lists back that neither of the two newer lists names (HR-34, HYC-16.18), so a page of the build before finds its files there as well, for one different build.
 
 ### Paths that an application changes
 
 `hyper build` replaces the two bins of the asset build and the server build of earlier releases (HR-96). An application that used them changes:
 
-- the call: one run of `hyper build --app <directory> --output <directory>` with `--api`, `--static` and `--php-namespace` as before; the option `--build` does not exist, and the manifest and the templates are read from `app/app.json` and `templates/` of `--app`;
-- the program directory: `<output>/program` in place of the directory of `--output` of the server build, and the PSR-4 path of the generated program `<output>/program/php/` in `composer.json`;
+- the call: one run of `hyper build --app <directory> --output <directory>` with `--api` and `--static` as before; the option `--build` does not exist, and the manifest and the templates are read from `app/app.json` and `templates/` of `--app`;
+- the program directory: `<output>/program` in place of the directory of `--output` of the server build;
 - the manifest of the layout: `<output>/client/manifest.json` in place of `<output>/manifest.json`; it holds the URL of each asset by its name besides `hyper`;
-- the Node server: the option `build` of `App.open` names `<output>/client/build.json` and `templates.index` names `<output>/client/templates.index.json`;
+- the Node server: the option `program` of `App.open` names `<output>/program`, as the PHP and the Python server take it; the options `build` and `templates` do not exist (HY-48.19);
 - the static shell: `<output>/client/csr/` in place of `<output>/csr/`;
 - a stylesheet of `--tailwind <source>=<output>` or a file that the application wrote below `public/assets` after the build: `--tailwind <source>=<name>` or `--asset <name>=<path>`, and the layout links the URL of `<name>` of `client/manifest.json`; no output is changed after the build (HR-77).
+
+`hyper build` writes no generated PHP program (HY-48.20): the three servers render the templates of `program/templates/`, and no server read `program/php/` or `program/program.json`. An application that built with `--php-namespace` changes:
+
+- the call: remove `--php-namespace` and its value from the build command; `hyper build` fails with a usage error that names the option while the command holds it;
+- the autoload: remove the entry of `autoload.psr-4` of `composer.json` that maps the namespace of the program to `<output>/program/php/`, and any code that reads `<output>/program/program.json` for that namespace;
+- its checks of the build: remove `program.json` and `php/GeneratedProgram.php` from the outputs that a check of the build or of a deployment expects; `program/` holds `templates/`, `legacy/`, `reads.json` and `build.json`;
+- its dependencies: remove a dependency on the compiler package `@polyspec/template-compiler` that it declared for the build; `@polyspec/hyper-cli` no longer reads that package.
 
 ## Static shell
 

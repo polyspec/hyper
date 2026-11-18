@@ -1288,6 +1288,62 @@
       ]
     },
     {
+      "id": "a_server_value_that_a_loader_of_the_request_stores_is_sent_in_kept",
+      "label": "a conforming value that the loader of the route region stores for a server path, in the session store of the request, is sent in kept of the document JSON of that request (HY-38.20)",
+      "application": "a_board",
+      "handlers": {
+        "routes": {
+          "list": {
+            "regions": {
+              "rows": [
+                {
+                  "store": {
+                    "_hyper_keep": {
+                      "rows": {
+                        "open": true
+                      }
+                    }
+                  }
+                },
+                {
+                  "return": {
+                    "items": [
+                      "a"
+                    ],
+                    "open": false,
+                    "mode": "a",
+                    "view": "x",
+                    "filter": {
+                      "a": 1
+                    },
+                    "tags": []
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/list",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 200,
+      "members": {
+        "kept": {
+          "rows": {
+            "open": true
+          }
+        }
+      },
+      "requirements": [
+        "HY-38"
+      ]
+    },
+    {
       "id": "a_keep_request_with_a_wrong_token_is_refused",
       "label": "a POST to the keep endpoint whose token does not match is answered with 403",
       "application": "a_board",
@@ -2728,6 +2784,36 @@
         }
       },
       "status": 500,
+      "requirements": [
+        "HY-44",
+        "HY-43"
+      ]
+    },
+    {
+      "id": "an_application_object_in_shared_data_fails_before_any_loader_runs",
+      "label": "an application object in shared data fails a document when the shared handler returns, so the loader of the region side and the loader of the route are not called (HY-44.10)",
+      "application": "a_board",
+      "handlers": {
+        "shared": [
+          {
+            "return": {
+              "value": {
+                "$": "kind",
+                "name": "applicationObject"
+              }
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {}
+      },
+      "status": 500,
+      "handlerCalls": [
+        "shared"
+      ],
       "requirements": [
         "HY-44",
         "HY-43"
@@ -9150,8 +9236,8 @@
       ]
     },
     {
-      "id": "a_document_reads_a_shared_value_twice_whatever_the_number_of_its_renders",
-      "label": "a document whose title, manifest region and page region render a shared value reads the value twice: for the check and for the bound shared data",
+      "id": "a_document_reads_a_shared_value_once_whatever_the_number_of_its_renders",
+      "label": "a document whose title, manifest region and page region render a shared value reads the value once, when the binding converts it for the core",
       "application": "c_counting",
       "request": {
         "method": "GET",
@@ -9164,7 +9250,7 @@
         "<b>{\"a\":1}</b>",
         "<p>{\"a\":1}</p>"
       ],
-      "valueReads": 2,
+      "valueReads": 1,
       "requirements": [
         "HY-44"
       ],
@@ -9173,12 +9259,12 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.8"
       }
     },
     {
-      "id": "a_document_json_reads_a_shared_value_twice",
-      "label": "a document JSON reads a shared value twice: for the check and for its JSON text",
+      "id": "a_document_json_reads_a_shared_value_once",
+      "label": "a document JSON reads a shared value once, when the binding converts it for the core",
       "application": "c_counting",
       "request": {
         "method": "GET",
@@ -9196,7 +9282,7 @@
           }
         }
       },
-      "valueReads": 2,
+      "valueReads": 1,
       "requirements": [
         "HY-44"
       ],
@@ -9205,12 +9291,12 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.8"
       }
     },
     {
-      "id": "a_region_json_reads_a_shared_value_twice",
-      "label": "a region response reads a shared value twice: for the check and for its JSON text",
+      "id": "a_region_json_reads_a_shared_value_once",
+      "label": "a region response reads a shared value once, when the binding converts it for the core",
       "application": "c_counting",
       "request": {
         "method": "GET",
@@ -9221,7 +9307,7 @@
         }
       },
       "status": 200,
-      "valueReads": 2,
+      "valueReads": 1,
       "requirements": [
         "HY-44"
       ],
@@ -9230,12 +9316,12 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.8"
       }
     },
     {
-      "id": "a_document_of_a_route_with_a_route_region_reads_a_shared_value_twice",
-      "label": "a document of a route with a route region that embeds no data reads a shared value twice",
+      "id": "a_document_of_a_route_with_a_route_region_reads_a_shared_value_once",
+      "label": "a document of a route with a route region that embeds no data reads a shared value once",
       "application": "c_counting",
       "request": {
         "method": "GET",
@@ -9246,7 +9332,7 @@
       "bodyNotContains": [
         "id=\"hy-data\""
       ],
-      "valueReads": 2,
+      "valueReads": 1,
       "requirements": [
         "HY-44"
       ],
@@ -9255,12 +9341,12 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.8"
       }
     },
     {
-      "id": "a_document_that_embeds_its_data_reads_a_shared_value_three_times",
-      "label": "a document that embeds its data reads a shared value once more, for the embedded data, which carries the shared data",
+      "id": "a_document_that_embeds_its_data_reads_a_shared_value_once",
+      "label": "a document that embeds its data reads a shared value once, also for the embedded data, which the core writes from the converted value",
       "application": "c_counting",
       "handlers": {
         "routes": {
@@ -9296,7 +9382,7 @@
       "bodyContains": [
         "id=\"hy-data\""
       ],
-      "valueReads": 3,
+      "valueReads": 1,
       "requirements": [
         "HY-44"
       ],
@@ -9305,7 +9391,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-54.3"
+        "sentence": "HY-13.8"
       }
     },
     {
@@ -10151,14 +10237,7 @@
       },
       "requirements": [
         "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-73.23"
-      }
+      ]
     },
     {
       "id": "a_reads_json_that_is_cut_fails_the_open",
@@ -10169,14 +10248,7 @@
       },
       "requirements": [
         "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-73.23"
-      }
+      ]
     },
     {
       "id": "a_reads_json_that_is_not_utf8_fails_the_open",
@@ -10187,31 +10259,7 @@
       },
       "requirements": [
         "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-73.23"
-      }
-    },
-    {
-      "id": "a_template_index_that_is_cut_fails_the_open",
-      "label": "opening fails with the open error for a template index whose JSON text is cut",
-      "application": "b_board",
-      "files": {
-        "templateIndex": "{\"layout\":"
-      },
-      "requirements": [
-        "HY-48"
-      ],
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-48.11"
-      }
+      ]
     },
     {
       "id": "an_open_without_reads_json_names_it_as_the_first_missing_output",
@@ -10225,13 +10273,6 @@
       "requirements": [
         "HY-48"
       ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-48.18"
-      },
       "raises": {
         "kind": "invalid_application",
         "status": null,
@@ -10250,13 +10291,6 @@
       "requirements": [
         "HY-48"
       ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-48.18"
-      },
       "raises": {
         "kind": "invalid_build",
         "status": null,
@@ -10274,13 +10308,6 @@
       "requirements": [
         "HY-48"
       ],
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-48.18"
-      },
       "raises": {
         "kind": "invalid_application",
         "status": null,

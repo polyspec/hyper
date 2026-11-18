@@ -11,7 +11,10 @@ import { failureOf } from './recorded.js';
 const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));
 
 const IMPLEMENTATIONS: Record<string, unknown> = {
-  suffix: (args: unknown[]) => `${String(args[0])}!`,
+  // HYC-24.10: a host function receives the argument list and the environment of the render; the binding refuses a
+  // function that names fewer parameters than the two arguments it is called with.
+  suffix: (args: unknown[], _environment: unknown) => `${String(args[0])}!`,
+  zone: (_args: unknown[], environment: { timezone: string }) => environment.timezone,
   not_a_function: 'x',
 };
 
@@ -44,8 +47,7 @@ export const steps = {
     };
     const options: Record<string, unknown> = {
       manifest: `${dir}/manifest.json`,
-      build: `${dir}/build.json`,
-      templates: { index: `${dir}/node/templates.index.json`, root: `${dir}/node` },
+      program: `${dir}/program`,
       handlers,
       timezone: '+09:00',
       log: () => {},

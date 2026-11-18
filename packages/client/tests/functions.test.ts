@@ -1,7 +1,7 @@
 // The cases of contracts/functions.json (HYC-24, HY-43, HY-106): the host functions of an application are registered
 // when the application opens, through createApplication, and through HyperOptions.functions of the browser code, where a
 // failed registration fails the start.
-import { parseJson, type Template } from '@polyspec/template/render';
+import { type FunctionContext, parseJson, type Template } from '@polyspec/template/render';
 import { parseTemplate } from '../../ts/tests/parse-template.js';
 import { describe, expect, it } from 'vitest';
 import fixture from '../../../contracts/functions.json';
@@ -9,9 +9,11 @@ import { checkManifest, createApplication, decodeResponse, Hyper, renderDocument
 import { defined, isRecord, isStringRecord } from './values.js';
 
 // The host function of each kind that the contract names (functionKinds): `suffix` returns its first argument followed by
-// `!`, and `not_a_function` is the string "x" in the place of a function.
+// `!`, `zone` returns the time zone of the environment that its second argument holds (HYC-24.10), and `not_a_function`
+// is the string "x" in the place of a function.
 const KINDS: Record<string, unknown> = {
   suffix: (args: unknown[]) => `${String(args[0])}!`,
+  zone: (_args: unknown[], context: FunctionContext) => context.env.timezone,
   not_a_function: 'x',
 };
 
@@ -46,8 +48,16 @@ function isFunctionCase(value: unknown): value is FunctionCase {
 }
 // The JSON import is typed by the union of its literal cases, where a member that one case omits is undefined in another.
 const all: readonly unknown[] = fixture.cases;
-const cases = all.filter(isFunctionCase);
-if (cases.length !== all.length) throw new Error('functions.json holds a case that the runner cannot read');
+const readable = all.filter(isFunctionCase);
+if (readable.length !== all.length) throw new Error('functions.json holds a case that the runner cannot read');
+// A case that `only` limits to other runners is no case of the browser code: the function of a server receives the
+// environment as its second argument, and that of the browser as the member `env` of it (HYC-24.10).
+const cases = readable.filter((testCase) => {
+  const only: unknown = Reflect.get(testCase, 'only');
+  const languages: unknown = isRecord(only) ? only.languages : undefined;
+  return !Array.isArray(languages) || languages.includes('browser');
+});
+if (cases.length === 0) throw new Error('functions.json holds no case of the browser code');
 const spec = fixture.applications.with_functions;
 const manifest = checkManifest(spec.manifest);
 const sources: Record<string, string> = spec.templates;
@@ -55,8 +65,9 @@ const parsed: Record<string, Template> = Object.fromEntries(Object.entries(sourc
 const index: TemplateIndex = Object.fromEntries(Object.keys(sources).map((name) => [name, { url: `/t/${name}` }]));
 const fetcher = async (url: string): Promise<Template> => defined(parsed[url.slice('/t/'.length)], `the template of ${url}`);
 
-// The JSON response of the home route of the application (HY-17, HY-128).
-const response = parseJson(JSON.stringify({ env: { timezone: 'Z' }, route: 'home', params: {}, build: spec.build, shared: { title: 'Home' }, regions: { content: {} }, kept: {} }));
+// The JSON response of the home route of the application (HY-17, HY-128), with the time zone of the server that the case
+// of HYC-24.10 reads, as the server runners open.
+const response = parseJson(JSON.stringify({ env: { timezone: '+09:00' }, route: 'home', params: {}, build: spec.build, shared: { title: 'Home' }, regions: { content: {} }, kept: {} }));
 
 // A document adapter of the test, which holds the build of the page (HY-125).
 class FunctionDocument implements DocumentAdapter {

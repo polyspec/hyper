@@ -37,6 +37,22 @@ function data(reader: CaseReader, name: string): Map<string, unknown> {
   return map;
 }
 
+// Calls `flash` or `changed` of the result, whichever the case names, with the decoded argument of the case as a
+// JavaScript caller may, and records the failure with which the call fails, or null.
+function stores(reader: CaseReader, result: Result): void {
+  const call = text(reader, 'call');
+  if (call !== 'flash' && call !== 'changed') throw new Error(`the call ${call} of the case is unknown`);
+  const argument = decoded(text(reader, 'argument'));
+  const outcome = failureOf(() => {
+    if (call === 'flash') {
+      // @ts-expect-error -- a JavaScript caller passes a name that is not a string
+      return result.flash(argument, null);
+    }
+    // @ts-expect-error -- a JavaScript caller passes a topic that is not a string
+    return result.changed(argument);
+  });
+  reader.compare('raises', outcome.raises);
+}
 
 export const steps = {
   // Makes a redirect to the location, or records the failure with which it fails (HY-46).
@@ -63,19 +79,7 @@ export const steps = {
   // Calls `flash` or `changed` of an outside redirect with the decoded argument as a JavaScript caller may, and records
   // the failure with which it fails (HY-133).
   outsideStores(reader: CaseReader): void {
-    const call = text(reader, 'call');
-    if (call !== 'flash' && call !== 'changed') throw new Error(`the call ${call} of the case is unknown`);
-    const argument = decoded(text(reader, 'argument'));
-    const result = Result.outside('https://outside.example/');
-    const outcome = failureOf(() => {
-      if (call === 'flash') {
-        // @ts-expect-error -- a JavaScript caller passes a name that is not a string
-        return result.flash(argument, null);
-      }
-      // @ts-expect-error -- a JavaScript caller passes a topic that is not a string
-      return result.changed(argument);
-    });
-    reader.compare('raises', outcome.raises);
+    stores(reader, Result.outside('https://outside.example/'));
   },
   // Makes the page with the status and the data, or records the failure with which it fails (HY-58).
   page(reader: CaseReader): void {
@@ -124,19 +128,7 @@ export const steps = {
   // Calls `flash` or `changed` with the decoded argument as a JavaScript caller may, and records the failure
   // with which it fails, or null (HY-25.6).
   types(reader: CaseReader): void {
-    const call = text(reader, 'call');
-    if (call !== 'flash' && call !== 'changed') throw new Error(`the call ${call} of the case is unknown`);
-    const argument = decoded(text(reader, 'argument'));
-    const result = Result.redirect('/');
-    const outcome = failureOf(() => {
-      if (call === 'flash') {
-        // @ts-expect-error -- a JavaScript caller passes a name that is not a string
-        return result.flash(argument, null);
-      }
-      // @ts-expect-error -- a JavaScript caller passes a topic that is not a string
-      return result.changed(argument);
-    });
-    reader.compare('raises', outcome.raises);
+    stores(reader, Result.redirect('/'));
   },
   // Makes the stop of the kind, or records the failure with which it fails (HY-27, HY-50).
   stop(reader: CaseReader): void {

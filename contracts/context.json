@@ -1,4 +1,12 @@
 {
+  "valueKinds": {
+    "loneSurrogate": "Text that is not UTF-8: Node and Python the string U+D800, PHP the three bytes ED A0 80.",
+    "resource": "A PHP resource: the stream of php://memory, opened for reading.",
+    "function": "A Python function of no parameter that returns 1.",
+    "method": "A Python bound method of no parameter that returns 1.",
+    "builtin": "The Python builtin function len.",
+    "callableObject": "A Python object whose class defines __call__."
+  },
   "builds": [
     {
       "id": "two_files",
@@ -1199,9 +1207,9 @@
     },
     {
       "id": "a_context_value_outside_the_data_model_fails",
-      "label": "a context that holds an integer outside ±(2^53 − 1) fails with HY-43",
+      "label": "a context that holds an integer outside ±(2^53 − 1) fails with HY-43; failure holds the kind data_number_range, with which the message of the failure starts (HY-44.12)",
       "application": "with_context",
-      "context": "{\"n\":9007199254740993}",
+      "context": "{\"n\":9007199254740992}",
       "request": {
         "method": "GET",
         "target": "/",
@@ -1219,7 +1227,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)",
+      "failure": "data_number_range",
       "requirements": [
         "HY-43",
         "HY-44",
@@ -1817,10 +1825,10 @@
     },
     {
       "id": "a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_document",
-      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a document with HY-43",
+      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a document with HY-43; failure holds the kind data_number_range, with which the message of the failure starts (HY-44.12)",
       "application": "without_context",
       "shared": {
-        "big": 9223372036854776000
+        "big": 9007199254740992
       },
       "request": {
         "method": "GET",
@@ -1837,7 +1845,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)",
+      "failure": "data_number_range",
       "requirements": [
         "HY-43",
         "HY-44",
@@ -1848,10 +1856,10 @@
     },
     {
       "id": "a_shared_value_outside_the_data_model_that_no_template_reads_fails_a_region_request",
-      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a region request with HY-43",
+      "label": "a shared handler that returns an integer outside ±(2^53 − 1), which no template reads, fails a region request with HY-43; failure holds the kind data_number_range, with which the message of the failure starts (HY-44.12)",
       "application": "without_context",
       "shared": {
-        "big": 9223372036854776000
+        "big": 9007199254740992
       },
       "request": {
         "method": "GET",
@@ -1871,7 +1879,7 @@
       "absentHeaders": [
         "Vary"
       ],
-      "failure": "a number outside ±(2^53 − 1) is not a value of the data model (HY-44)",
+      "failure": "data_number_range",
       "requirements": [
         "HY-43",
         "HY-44",
@@ -1905,6 +1913,532 @@
       "requirements": [
         "HY-133"
       ]
+    },
+    {
+      "id": "a_shared_map_of_63_levels_passes",
+      "label": "a shared handler that returns a map of 63 levels of lists and maps, the map itself included, passes, because the map that holds it under `shared` is level 1 of the 64 (HY-44.11)",
+      "application": "without_context",
+      "shared": {
+        "deep": [
+          [
+            [
+              [
+                [
+                  [
+                    [
+                      [
+                        [
+                          [
+                            [
+                              [
+                                [
+                                  [
+                                    [
+                                      [
+                                        [
+                                          [
+                                            [
+                                              [
+                                                [
+                                                  [
+                                                    [
+                                                      [
+                                                        [
+                                                          [
+                                                            [
+                                                              [
+                                                                [
+                                                                  [
+                                                                    [
+                                                                      [
+                                                                        [
+                                                                          [
+                                                                            [
+                                                                              [
+                                                                                [
+                                                                                  [
+                                                                                    [
+                                                                                      [
+                                                                                        [
+                                                                                          [
+                                                                                            [
+                                                                                              [
+                                                                                                [
+                                                                                                  [
+                                                                                                    [
+                                                                                                      [
+                                                                                                        [
+                                                                                                          [
+                                                                                                            [
+                                                                                                              [
+                                                                                                                [
+                                                                                                                  [
+                                                                                                                    [
+                                                                                                                      [
+                                                                                                                        [
+                                                                                                                          [
+                                                                                                                            [
+                                                                                                                              [
+                                                                                                                                [
+                                                                                                                                  []
+                                                                                                                                ]
+                                                                                                                              ]
+                                                                                                                            ]
+                                                                                                                          ]
+                                                                                                                        ]
+                                                                                                                      ]
+                                                                                                                    ]
+                                                                                                                  ]
+                                                                                                                ]
+                                                                                                              ]
+                                                                                                            ]
+                                                                                                          ]
+                                                                                                        ]
+                                                                                                      ]
+                                                                                                    ]
+                                                                                                  ]
+                                                                                                ]
+                                                                                              ]
+                                                                                            ]
+                                                                                          ]
+                                                                                        ]
+                                                                                      ]
+                                                                                    ]
+                                                                                  ]
+                                                                                ]
+                                                                              ]
+                                                                            ]
+                                                                          ]
+                                                                        ]
+                                                                      ]
+                                                                    ]
+                                                                  ]
+                                                                ]
+                                                              ]
+                                                            ]
+                                                          ]
+                                                        ]
+                                                      ]
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 200,
+      "requirements": [
+        "HY-44"
+      ]
+    },
+    {
+      "id": "a_shared_map_of_64_levels_fails_with_the_depth_of_the_data_model",
+      "label": "a shared handler that returns a map of 64 levels of lists and maps, the map itself included, fails with HY-43 and the message of the kind data_depth of the template data model (HY-44.11, HY-44.12)",
+      "application": "without_context",
+      "shared": {
+        "deep": [
+          [
+            [
+              [
+                [
+                  [
+                    [
+                      [
+                        [
+                          [
+                            [
+                              [
+                                [
+                                  [
+                                    [
+                                      [
+                                        [
+                                          [
+                                            [
+                                              [
+                                                [
+                                                  [
+                                                    [
+                                                      [
+                                                        [
+                                                          [
+                                                            [
+                                                              [
+                                                                [
+                                                                  [
+                                                                    [
+                                                                      [
+                                                                        [
+                                                                          [
+                                                                            [
+                                                                              [
+                                                                                [
+                                                                                  [
+                                                                                    [
+                                                                                      [
+                                                                                        [
+                                                                                          [
+                                                                                            [
+                                                                                              [
+                                                                                                [
+                                                                                                  [
+                                                                                                    [
+                                                                                                      [
+                                                                                                        [
+                                                                                                          [
+                                                                                                            [
+                                                                                                              [
+                                                                                                                [
+                                                                                                                  [
+                                                                                                                    [
+                                                                                                                      [
+                                                                                                                        [
+                                                                                                                          [
+                                                                                                                            [
+                                                                                                                              [
+                                                                                                                                [
+                                                                                                                                  [
+                                                                                                                                    []
+                                                                                                                                  ]
+                                                                                                                                ]
+                                                                                                                              ]
+                                                                                                                            ]
+                                                                                                                          ]
+                                                                                                                        ]
+                                                                                                                      ]
+                                                                                                                    ]
+                                                                                                                  ]
+                                                                                                                ]
+                                                                                                              ]
+                                                                                                            ]
+                                                                                                          ]
+                                                                                                        ]
+                                                                                                      ]
+                                                                                                    ]
+                                                                                                  ]
+                                                                                                ]
+                                                                                              ]
+                                                                                            ]
+                                                                                          ]
+                                                                                        ]
+                                                                                      ]
+                                                                                    ]
+                                                                                  ]
+                                                                                ]
+                                                                              ]
+                                                                            ]
+                                                                          ]
+                                                                        ]
+                                                                      ]
+                                                                    ]
+                                                                  ]
+                                                                ]
+                                                              ]
+                                                            ]
+                                                          ]
+                                                        ]
+                                                      ]
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 500,
+      "failure": "data_depth: lists and maps nest deeper than 64 levels",
+      "requirements": [
+        "HY-43",
+        "HY-44"
+      ]
+    },
+    {
+      "id": "a_shared_text_that_is_not_utf8_fails_with_the_cause_of_the_bytes",
+      "label": "a shared handler that returns the bytes ED A0 80, which are not UTF-8, fails with HY-43 and the message of the kind data_invalid_utf8 of the template data model, with the cause of the bytes (HY-44.6, HY-44.12)",
+      "application": "without_context",
+      "shared": {
+        "text": {
+          "$": "kind",
+          "name": "loneSurrogate"
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 500,
+      "failure": "data_invalid_utf8: a string is not valid Unicode text: invalid utf-8 sequence of 1 bytes from index 0",
+      "requirements": [
+        "HY-43",
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-44.6"
+      }
+    },
+    {
+      "id": "a_shared_text_with_a_lone_surrogate_fails_with_the_code_point",
+      "label": "a shared handler that returns the string U+D800, a lone surrogate, fails with HY-43 and the message of the kind data_invalid_utf8 of the template data model, with the code point that is no scalar value (HY-44.6, HY-44.12)",
+      "application": "without_context",
+      "shared": {
+        "text": {
+          "$": "kind",
+          "name": "loneSurrogate"
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 500,
+      "failure": "data_invalid_utf8: a string is not valid Unicode text: U+D800 is no scalar value",
+      "requirements": [
+        "HY-43",
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-44.6"
+      }
+    },
+    {
+      "id": "a_shared_text_with_a_lone_surrogate_fails_with_the_utf16_cause",
+      "label": "a shared handler that returns the string U+D800, a lone surrogate, fails with HY-43 and the message of the kind data_invalid_utf8 of the template data model, with the cause of the UTF-16 units (HY-44.6, HY-44.12)",
+      "application": "without_context",
+      "shared": {
+        "text": {
+          "$": "kind",
+          "name": "loneSurrogate"
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 500,
+      "failure": "data_invalid_utf8: a string is not valid Unicode text: invalid utf-16: lone surrogate found",
+      "requirements": [
+        "HY-43",
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-44.6"
+      }
+    },
+    {
+      "id": "a_shared_resource_fails_with_its_type_name",
+      "label": "a shared handler that returns a PHP resource fails with HY-43 and the message of the kind data_unsupported_type of the template data model, which names the type resource (HY-44.6, HY-44.12)",
+      "application": "without_context",
+      "shared": {
+        "stream": {
+          "$": "kind",
+          "name": "resource"
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 500,
+      "failure": "data_unsupported_type: a value of the type resource is not a template value",
+      "requirements": [
+        "HY-43",
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "php"
+        ],
+        "sentence": "HY-44.6"
+      }
+    },
+    {
+      "id": "a_shared_python_function_fails_as_a_function",
+      "label": "a shared handler that returns a Python function fails with HY-43 and the message of the kind data_unsupported_type of the template data model for a function (HY-44.6, HY-44.12)",
+      "application": "without_context",
+      "shared": {
+        "call": {
+          "$": "kind",
+          "name": "function"
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 500,
+      "failure": "data_unsupported_type: a function is not a template value",
+      "requirements": [
+        "HY-43",
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-44.6"
+      }
+    },
+    {
+      "id": "a_shared_python_method_fails_as_a_function",
+      "label": "a shared handler that returns a Python bound method fails with HY-43 and the message of the kind data_unsupported_type of the template data model for a function (HY-44.6, HY-44.12)",
+      "application": "without_context",
+      "shared": {
+        "call": {
+          "$": "kind",
+          "name": "method"
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 500,
+      "failure": "data_unsupported_type: a function is not a template value",
+      "requirements": [
+        "HY-43",
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-44.6"
+      }
+    },
+    {
+      "id": "a_shared_python_builtin_fails_as_a_function",
+      "label": "a shared handler that returns the Python builtin len fails with HY-43 and the message of the kind data_unsupported_type of the template data model for a function (HY-44.6, HY-44.12)",
+      "application": "without_context",
+      "shared": {
+        "call": {
+          "$": "kind",
+          "name": "builtin"
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 500,
+      "failure": "data_unsupported_type: a function is not a template value",
+      "requirements": [
+        "HY-43",
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-44.6"
+      }
+    },
+    {
+      "id": "a_shared_python_callable_object_fails_as_a_function",
+      "label": "a shared handler that returns a Python object whose class defines __call__ fails with HY-43 and the message of the kind data_unsupported_type of the template data model for a function (HY-44.6, HY-44.12)",
+      "application": "without_context",
+      "shared": {
+        "call": {
+          "$": "kind",
+          "name": "callableObject"
+        }
+      },
+      "request": {
+        "method": "GET",
+        "target": "/",
+        "headers": {
+          "Accept": "application/vnd.hyper+json"
+        }
+      },
+      "status": 500,
+      "failure": "data_unsupported_type: a function is not a template value",
+      "requirements": [
+        "HY-43",
+        "HY-44"
+      ],
+      "only": {
+        "languages": [
+          "python"
+        ],
+        "sentence": "HY-44.6"
+      }
     }
   ]
 }

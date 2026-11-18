@@ -211,7 +211,8 @@
         "tests/scripts/fixtures/{chunks,invalid-manifest}/**"
       ],
       "tests": [
-        "tests/scripts/build.test.mts"
+        "tests/scripts/build.test.mts",
+        "tests/scripts/build-old-assets.test.mts"
       ]
     },
     {
@@ -290,7 +291,8 @@
         "tests/scripts/session-waits.test.mts",
         "tests/scripts/session-until.test.mts",
         "tests/scripts/session-lost-lock.test.mts",
-        "tests/scripts/benchmark-sessions.test.mts"
+        "tests/scripts/benchmark-sessions.test.mts",
+        "tests/scripts/session-holder.test.mts"
       ]
     },
     {
@@ -301,6 +303,30 @@
         "tests/scripts/check-recipes.test.mts",
         "tests/scripts/toolchain.test.mts",
         "tests/scripts/template-pins.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/template-release.mts"
+      ],
+      "tests": [
+        "tests/scripts/template-pins.test.mts",
+        "tests/scripts/template-version.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/release-recipes-tree.mts"
+      ],
+      "tests": [
+        "tests/scripts/hyper-ext.test.mts",
+        "tests/scripts/ci-group-tools.test.mts"
       ],
       "targets": [
         "typecheck"
@@ -338,6 +364,15 @@
       ],
       "targets": [
         "typecheck"
+      ]
+    },
+    {
+      "paths": [
+        "packages/ts/package.json",
+        "tests/scripts/napi-package.test.mts"
+      ],
+      "tests": [
+        "tests/scripts/napi-package.test.mts"
       ]
     },
     {
@@ -392,8 +427,7 @@
     },
     {
       "paths": [
-        "packages/cli/lib/template-files.mjs",
-        "scripts/build-templates.mts"
+        "packages/cli/lib/template-files.mjs"
       ],
       "targets": [
         "bundle-size",
@@ -402,20 +436,6 @@
       "tests": [
         "tests/scripts/build.test.mts",
         "tests/scripts/template-dir.test.mts",
-        "tests/scripts/package-source.test.mts"
-      ]
-    },
-    {
-      "paths": [
-        "packages/cli/lib/template-rules.mjs"
-      ],
-      "targets": [
-        "templates-check",
-        "hyper-test-php",
-        "typecheck"
-      ],
-      "tests": [
-        "tests/scripts/check-templates.test.mts",
         "tests/scripts/package-source.test.mts"
       ]
     },
@@ -435,6 +455,7 @@
         "tests/scripts/cli.test.mts",
         "tests/scripts/build-inputs.test.mts",
         "tests/scripts/build.test.mts",
+        "tests/scripts/build-old-assets.test.mts",
         "tests/scripts/check-templates.test.mts",
         "tests/scripts/package-source.test.mts"
       ]
@@ -443,7 +464,6 @@
       "paths": [
         "packages/cli/lib/program-files.mjs",
         "packages/cli/lib/program.mjs",
-        "packages/cli/lib/shell.mjs",
         "scripts/fixture-program.mts"
       ],
       "targets": [
@@ -531,6 +551,29 @@
     },
     {
       "paths": [
+        "scripts/php-ext-verify.mts",
+        "scripts/php-ext-requires.mts",
+        "config/php-ext-pins.json",
+        "scripts/test-inputs.mts",
+        "scripts/python-install-stamp.mts",
+        "scripts/php-ext-pins.mts",
+        "tests/scripts/fixtures/php-ext-pins/**"
+      ],
+      "targets": [
+        "typecheck"
+      ],
+      "tests": [
+        "tests/scripts/php-ext-verify.test.mts",
+        "tests/scripts/php-ext-requires.test.mts",
+        "tests/scripts/template-pins.test.mts",
+        "tests/scripts/test-inputs.test.mts",
+        "tests/scripts/python-install-stamp.test.mts",
+        "tests/scripts/node-package-deps.test.mts",
+        "tests/scripts/php-ext-pins.test.mts"
+      ]
+    },
+    {
+      "paths": [
         "scripts/publish.mts",
         "packages/cli/lib/publish.mjs",
         "scripts/tracked-files.mts"
@@ -582,6 +625,17 @@
       ],
       "tests": [
         "tests/scripts/run-e2e.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "scripts/dependency-closure.mts"
+      ],
+      "tests": [
+        "tests/scripts/node-package.test.mts"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {
@@ -666,7 +720,8 @@
         "tests/scripts/check-recipes.test.mts",
         "tests/scripts/ci-workflow.test.mts",
         "tests/scripts/template-ext.test.mts",
-        "tests/scripts/case-selection.test.mts"
+        "tests/scripts/case-selection.test.mts",
+        "tests/scripts/test-selection.test.mts"
       ]
     },
     {

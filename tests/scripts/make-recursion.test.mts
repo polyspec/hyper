@@ -58,30 +58,32 @@ test('a dry run of install-tools prints the check of the PHP of the checkout wit
 
 // The targets that write tracked files which their tools own (H35.8-3): Cargo.lock by cargo update, and the tracked
 // binding packages, go.mod and go.sum among them, by binding scaffold.
-test('a dry run of cargo-lock prints cargo update of the named crates through the link script by absolute paths and starts nothing (H35.8-3)', (t) => {
+test('a dry run of cargo-lock prints cargo update of the named crates through the tracked-lock form of the link script by absolute paths and starts nothing (H35.8-3, H35.8-5)', (t) => {
   const real = dryRun('cargo-lock', { variables: ['CRATES=polyspec-one polyspec-two'] });
-  assert.match(real.at(-1) ?? '', /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \/\S+\/node \/\S+\/link\.m[jt]s cargo \/\S+ update -p polyspec-one -p polyspec-two$/u, real.join('\n'));
+  assert.match(real.at(-1) ?? '', /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK \/\S+\/node \/\S+\/link\.m[jt]s cargo --tracked-lock \/\S+ update -p polyspec-one -p polyspec-two$/u, real.join('\n'));
   const { directory, variables, started } = tree(t);
   writeFileSync(path.join(directory, '.links'), '../provider\n');
   dryRun('cargo-lock', { cwd: directory, variables: [...variables, 'CRATES=polyspec-one'] });
   assert.equal(started(), '', 'make -n cargo-lock started a command of its recipe');
 });
 
-test('cargo-lock starts no cargo without CRATES or in a checkout with .links, whose lock the link script does not write (H35.8-3)', (t) => {
+test('cargo-lock starts no cargo without CRATES, and starts the tracked-lock form in a checkout with and without .links (H35.8-3, H35.8-5)', (t) => {
   const { directory, variables, started } = tree(t);
   const make = (...more: string[]) => spawnSync('make', ['--no-print-directory', 'cargo-lock', ...variables, ...more], { cwd: directory, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))) });
   const empty = make();
   assert.notEqual(empty.status, 0, empty.stdout + empty.stderr);
   assert.match(empty.stderr, /cargo-lock: CRATES is empty/u);
+  assert.equal(started(), '', 'cargo-lock started a command without CRATES');
+  // With a link declaration the link script runs cargo without the patches and the copy of the lock (kit K1287), so
+  // the recipe is the same with and without .links and refuses neither.
   writeFileSync(path.join(directory, '.links'), '../provider\n');
   const linked = make('CRATES=polyspec-one');
-  assert.notEqual(linked.status, 0, linked.stdout + linked.stderr);
-  assert.match(linked.stderr, /cargo-lock: \S+\/\.links exists, so the link script of kit would update its copy of the lock/u);
-  assert.equal(started(), '', 'cargo-lock started a command');
+  assert.equal(linked.status, 0, linked.stdout + linked.stderr);
+  assert.match(started(), /link\.m[jt]s cargo --tracked-lock \S+ update -p polyspec-one\n$/u);
   rmSync(path.join(directory, '.links'));
   const released = make('CRATES=polyspec-one polyspec-two');
   assert.equal(released.status, 0, released.stdout + released.stderr);
-  assert.match(started(), /link\.m[jt]s cargo \S+ update -p polyspec-one -p polyspec-two\n$/u);
+  assert.match(started(), /link\.m[jt]s cargo --tracked-lock \S+ update -p polyspec-one -p polyspec-two\n$/u);
 });
 
 test('a dry run of bindings-scaffold prints binding scaffold with the cargo of the link script by absolute paths and starts nothing (H35.8-3)', (t) => {
@@ -92,6 +94,43 @@ test('a dry run of bindings-scaffold prints binding scaffold with the cargo of t
   const { directory, variables, started } = tree(t);
   dryRun('bindings-scaffold', { cwd: directory, variables });
   assert.equal(started(), '', 'make -n bindings-scaffold started a command of its recipe');
+});
+
+// The locks of uv and of Composer have their targets too (H35.41): each starts the tool of the checkout by its absolute
+// path with the offline settings lifted, since the tool downloads what it locks.
+const ONLINE = 'env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK';
+
+test('a dry run of npm-lock prints npm install of the lock alone for the root and for tests/package-install by the absolute path of the npm of the checkout (H35.41)', () => {
+  const npm = path.join(ROOT, 'var/tools/bin/npm');
+  const lines = dryRun('npm-lock');
+  // --package-lock-only installs nothing, and --ignore-scripts runs no script of a package; --prefix names the second
+  // project, whose .npmrc npm then reads, as make install-packages names the project of the recipe reader.
+  assert.deepEqual(lines.slice(-2), [
+    `${ONLINE} ${npm} install --package-lock-only --ignore-scripts`,
+    `${ONLINE} ${npm} install --package-lock-only --ignore-scripts --prefix tests/package-install`,
+  ], lines.join('\n'));
+});
+
+test('a dry run of python-lock prints uv lock of the Python package by the absolute path of the uv of the checkout (H35.41)', () => {
+  const lines = dryRun('python-lock');
+  assert.equal(lines.at(-1), `${ONLINE} ${path.join(ROOT, 'var/tools/mise/shims/uv')} lock --project packages/python`, lines.join('\n'));
+});
+
+test('a dry run of composer-lock prints composer update of the named packages alone for both Composer roots, and fails without PACKAGES (H35.41)', () => {
+  const composer = path.join(ROOT, 'var/tools/mise/shims/composer');
+  const lines = dryRun('composer-lock', { variables: ['PACKAGES=vendor/one vendor/two'] });
+  // Only the named packages move, with no install: an update of every package would resolve ranges at the time of the run (HR-89).
+  assert.deepEqual(lines.slice(-2), [
+    `${ONLINE} ${composer} update --no-install --no-interaction vendor/one vendor/two`,
+    `${ONLINE} ${composer} update --no-install --no-interaction --working-dir=examples/board vendor/one vendor/two`,
+  ], lines.join('\n'));
+  // Without PACKAGES the recipe stops before it prints or starts a command, in a dry run too.
+  for (const variables of [[], ['PACKAGES=']]) {
+    const empty = spawnSync('make', ['--no-print-directory', '-n', 'composer-lock', ...variables], { cwd: ROOT, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))) });
+    assert.notEqual(empty.status, 0, empty.stdout + empty.stderr);
+    assert.match(empty.stderr, /composer-lock: PACKAGES is empty; name the packages whose pin changed: make composer-lock PACKAGES="<vendor\/package> <vendor\/package>"/u);
+    assert.doesNotMatch(empty.stdout, /composer update/u);
+  }
 });
 
 /** The recipe lines of the Makefile, each with its continuation lines. */

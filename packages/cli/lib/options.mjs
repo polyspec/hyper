@@ -59,9 +59,14 @@ export function checkOptions(args) {
 
 /**
  * The options of `hyper build`: the application, the output directory, the data base path of the static shell, the
- * assets of --asset and --tailwind by their names (HYC-16.13), the files of --static and the PHP namespace.
+ * assets of --asset and --tailwind by their names (HYC-16.13) and the files of --static. The option --php-namespace of
+ * earlier releases is refused by its name with the repair (HY-48.20), since an unknown option alone does not say that
+ * its value is to be removed with it.
  */
 export function buildOptions(args) {
+  if (args.some((arg) => arg === '--php-namespace' || arg.startsWith('--php-namespace='))) {
+    throw new UsageError('the option --php-namespace was removed: hyper build writes no generated PHP program, because no server reads one; remove --php-namespace and its value from the command');
+  }
   const values = read(args, {
     app: { type: 'string' },
     output: { type: 'string' },
@@ -69,7 +74,6 @@ export function buildOptions(args) {
     asset: { type: 'string', multiple: true },
     tailwind: { type: 'string', multiple: true },
     static: { type: 'string', multiple: true },
-    'php-namespace': { type: 'string' },
   });
   required(values, ['app', 'output']);
   if (values.api === '') throw new Error('--api is empty');
@@ -100,6 +104,5 @@ export function buildOptions(args) {
     if (!normalize(path).startsWith(`public${sep}`)) throw new Error(`--static ${path} is not below public/ of ${app}`);
     return { path: normalize(path).slice('public/'.length).split(sep).join('/'), file: inside(app, path, '--static') };
   });
-  if (values['php-namespace'] === '') throw new Error('--php-namespace is empty');
-  return { app, output: resolve(values.output), client, api: shell ? values.api : undefined, assets, tailwind, statics, phpNamespace: values['php-namespace'] };
+  return { app, output: resolve(values.output), client, api: shell ? values.api : undefined, assets, tailwind, statics };
 }

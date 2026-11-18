@@ -11,7 +11,7 @@ use crate::Error;
 pub enum JsonError {
     /// A text that json refuses (HY-54.21, kind `malformed_json`), with that rejection as its source.
     Malformed(polyspec_json::Error),
-    /// A value outside the data model (HY-54.20, HY-44.9), with the kind of the template data model.
+    /// A value outside the data model (HY-54.20, HY-44.12), with the kind of the template data model.
     DataModel(BindError),
 }
 

@@ -29,7 +29,7 @@ use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Result;
 
-$loader = require dirname(__DIR__, 5) . '/vendor/autoload.php';
+require dirname(__DIR__, 5) . '/vendor/autoload.php';
 if (getenv('UPLOAD_ERRORS') !== false) {
     ini_set('error_log', (string) getenv('UPLOAD_ERRORS'));
 }
@@ -37,10 +37,6 @@ if (getenv('UPLOAD_ERRORS') !== false) {
 $application = (string) getenv('UPLOAD_APP');
 $moved = (string) getenv('UPLOAD_MOVED');
 $limit = (int) getenv('UPLOAD_LIMIT');
-// The autoloader of Composer maps the namespace of the server program to its directory php, as autoload.psr-4 of an
-// application does.
-$program = json_decode((string) file_get_contents("{$application}/program/program.json"), true, 4, JSON_THROW_ON_ERROR);
-$loader->addPsr4("{$program['namespace']}\\", "{$application}/program/php");
 const FILLER_SIZE = 6 * 1024 * 1024;
 const JSON_PLAIN = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR;
 $log = getenv('UPLOAD_LOG') === false ? null : (string) getenv('UPLOAD_LOG');

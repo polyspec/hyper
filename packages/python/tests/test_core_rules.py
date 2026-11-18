@@ -257,7 +257,7 @@ PARTIAL = [
         "hy-keep",
     ),
     (
-        "Build.read (HY-125.18)",
+        "Build.read (HY-125.23)",
         "read_build",
         lambda rules: rules.build_read(b"{}"),
         (b"{}",),

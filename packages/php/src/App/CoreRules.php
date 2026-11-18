@@ -30,6 +30,7 @@ final class CoreRules
         'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary', 'contextHash', 'currentPath',
         'checkShellPath', 'shellText', 'checkBuildId', 'readBuild', 'frameHeaders', 'keptValue', 'validContextHeader',
         'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver',
+        'checkFunctionEntry',
     ];
 
     /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
@@ -241,6 +242,15 @@ final class CoreRules
         return $result;
     }
 
+    /**
+     * Program::pages: rules.check_function_entry fails an entry of `functions` that is not a function with kind
+     * `invalid_application` and the message of the core (HYC-24.7).
+     */
+    public function programFunctionEntry(string $name, bool $callable): void
+    {
+        $this->call('checkFunctionEntry', $name, $callable);
+    }
+
     /** Request::currentPath: rules.current_path of the value of HX-Current-URL (HY-11.5). */
     public function requestCurrentPath(?string $header): ?string
     {
@@ -424,8 +434,8 @@ final class CoreRules
     }
 
     /**
-     * Partial. Build::read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.18, HY-125.19).
-     * The server still reads the file and names the absolute path of the file in a failure (HY-125.18).
+     * Partial. Build::read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23, HY-125.19).
+     * The server still reads the file and names the absolute path of the file in a failure (HY-125.23).
      */
     public function buildRead(string $bytes): string
     {

@@ -103,7 +103,7 @@ final class SessionCookieTest extends TestCase
         [$setCookies, $id] = $this->request('mode=write');
 
         self::assertCount(1, $setCookies);
-        self::assertSame("Set-Cookie: hy-session={$id}; path=/; HttpOnly; SameSite=Lax", $setCookies[0]);
+        self::assertSame("Set-Cookie: hy-session={$id}; Path=/; HttpOnly; SameSite=Lax", $setCookies[0]);
         self::assertMatchesRegularExpression('/^[A-Za-z0-9,-]{22,128}$/D', $id);
     }
 
@@ -112,7 +112,7 @@ final class SessionCookieTest extends TestCase
         [$setCookies, $id] = $this->request('mode=write&https=1');
 
         self::assertCount(1, $setCookies);
-        self::assertSame("Set-Cookie: __Host-hy-session={$id}; path=/; secure; HttpOnly; SameSite=Lax", $setCookies[0]);
+        self::assertSame("Set-Cookie: __Host-hy-session={$id}; Path=/; Secure; HttpOnly; SameSite=Lax", $setCookies[0]);
     }
 
     /** HY-129: a session that the request's cookie names is resumed, and its identifier is not sent again. */
@@ -134,7 +134,7 @@ final class SessionCookieTest extends TestCase
         [$setCookies, $id] = $this->request('mode=read', "hy-session={$unknown}");
 
         self::assertNotSame($unknown, $id);
-        self::assertSame(["Set-Cookie: hy-session={$id}; path=/; HttpOnly; SameSite=Lax"], $setCookies);
+        self::assertSame(["Set-Cookie: hy-session={$id}; Path=/; HttpOnly; SameSite=Lax"], $setCookies);
     }
 
     /** HY-129: a regenerated identifier is sent, so the client holds the identifier that the server keeps. */
@@ -145,7 +145,23 @@ final class SessionCookieTest extends TestCase
         [$setCookies, $new] = $this->request('mode=renew', "hy-session={$old}");
 
         self::assertNotSame($old, $new);
-        self::assertSame(["Set-Cookie: hy-session={$new}; path=/; HttpOnly; SameSite=Lax"], $setCookies);
+        self::assertSame(["Set-Cookie: hy-session={$new}; Path=/; HttpOnly; SameSite=Lax"], $setCookies);
+    }
+
+    /**
+     * HY-45.8: the cookie of an identifier that is regenerated after the headers were sent is no Set-Cookie line, and
+     * the session throws; the response holds only the cookie of the start.
+     */
+    public function testThrowsWhenTheHeadersAreSentBeforeTheCookie(): void
+    {
+        [$setCookies, $body] = $this->request('mode=sent');
+
+        self::assertCount(1, $setCookies);
+        self::assertMatchesRegularExpression(
+            '/^Set-Cookie: hy-session=[A-Za-z0-9,-]{22,128}; Path=\/; HttpOnly; SameSite=Lax$/D',
+            $setCookies[0],
+        );
+        self::assertSame('body hyper: the session cookie could not be sent', $body);
     }
 
     /** HY-115, HY-129: a start that fails answers status 500 and sends no session cookie. */

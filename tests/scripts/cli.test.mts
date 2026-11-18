@@ -45,6 +45,19 @@ test('an unknown option, an argument without an option and a missing required op
   }
 });
 
+test('hyper build refuses the removed option --php-namespace by its name and says how to repair the command (HY-48.20, HR-96)', (t) => {
+  const app = fixture('chunks', t);
+  const output = join(app, 'out');
+  for (const option of [['--php-namespace', 'Fixture\\Program'], ['--php-namespace=Fixture\\Program']]) {
+    const result = hyper('build', '--app', app, '--output', output, ...option);
+    assert.equal(result.status, 2, result.stderr);
+    assert.match(result.stderr, /^hyper: the option --php-namespace was removed: hyper build writes no generated PHP program, because no server reads one; remove --php-namespace and its value from the command\n/);
+    // A usage error writes nothing.
+    assert.equal(result.stdout, '');
+    assert.throws(() => readFileSync(join(output, 'program', 'build.json')), { code: 'ENOENT' });
+  }
+});
+
 test('hyper check exits with 0 for an application that passes and 1 with every problem for one that does not (HR-96)', (t) => {
   const passes = hyper('check', '--app', fixture('chunks', t));
   assert.equal(passes.status, 0, passes.stderr);

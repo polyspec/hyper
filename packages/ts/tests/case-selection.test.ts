@@ -57,17 +57,23 @@ afterEach(() => {
 });
 
 it('runs only the selected cases and states the selection in the first line of the results file', async () => {
-  vi.stubEnv('RECIPE_CASES', 'reads.json');
+  // H35.47: keep.json declares the node runner for its sections, so the selection picks cases of the node runner.
+  vi.stubEnv('RECIPE_CASES', 'keep.json');
   // The runner has no step here, so every selected case fails with STEP_UNKNOWN and the run fails with their count.
-  await expect(runCases('node', {})).rejects.toThrow(/^(\d+) of \1 cases fail/u);
+  const error: unknown = await runCases('node', {}).then(() => undefined, (thrown: unknown) => thrown);
+  if (!(error instanceof Error)) throw new Error('runCases resolved or threw no Error', { cause: error });
+  const message = error.message.split('\n');
+  expect(message[0]).toMatch(/^(\d+) of \1 cases fail; see /u);
   const lines = readFileSync(join(directory, 'node.selected.txt'), 'utf8').trimEnd().split('\n');
-  expect(lines[0]).toBe('SELECTION reads.json');
+  expect(lines[0]).toBe('SELECTION keep.json');
   expect(lines.length).toBeGreaterThan(1);
-  expect(lines.slice(1).filter((line) => !line.startsWith('CASE reads.json '))).toEqual([]);
+  // H35.46: the message names each failed case on an indented line of its own, which a CI report takes (HR-84).
+  expect(message.slice(1)).toEqual(lines.slice(1).map((line) => `  ${line}`));
+  expect(lines.slice(1).filter((line) => !line.startsWith('CASE keep.json '))).toEqual([]);
 });
 
 it('fails before a case runs for a name that selects no case, and writes no results file', async () => {
-  vi.stubEnv('RECIPE_CASES', 'reads.json no-such-file.json');
-  await expect(runCases('node', {})).rejects.toThrow('the selection "reads.json no-such-file.json" of the node runner selects no case for no-such-file.json');
+  vi.stubEnv('RECIPE_CASES', 'keep.json no-such-file.json');
+  await expect(runCases('node', {})).rejects.toThrow('the selection "keep.json no-such-file.json" of the node runner selects no case for no-such-file.json');
   expect(readdirSync(directory)).toEqual([]);
 });

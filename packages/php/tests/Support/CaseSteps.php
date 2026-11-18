@@ -82,7 +82,6 @@ final class CaseSteps
             'rest.json invalidPaths' => RestSteps::invalidPaths(...),
             'client.json cases' => ClientSteps::cases(...),
             'context.json contexts' => ContextSteps::contexts(...),
-            'context.json withContext' => ContextSteps::withContext(...),
             'context.json cases' => ContextSteps::cases(...),
             'functions.json cases' => FunctionsSteps::cases(...),
             'representations.json manifestRejections' => RepresentationsSteps::manifestRejections(...),

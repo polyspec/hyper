@@ -13,11 +13,11 @@
         },
         {
             "type": "composer",
-            "url": "https://github.com/polyspec/template/releases/download/v0.0.27/packages.json"
+            "url": "https://github.com/polyspec/template/releases/download/v0.0.31/packages.json"
         },
         {
             "type": "composer",
-            "url": "https://github.com/polyspec/json/releases/download/v0.0.34/packages.json"
+            "url": "https://github.com/polyspec/json/releases/download/v0.0.38/packages.json"
         },
         {
             "type": "vcs",
@@ -28,9 +28,9 @@
     "require": {
         "php": ">=8.4",
         "ext-polyspec_json": "*",
+        "ext-polyspec_template": "*",
         "min-0-max/json-schema": "^2.6.0-p2",
-        "polyspec/hyper": "0.0.40",
-        "polyspec/template": "0.0.27"
+        "polyspec/hyper": "0.0.40"
     },
     "require-dev": {
         "laravel/pint": "^1.32.1",
@@ -54,9 +54,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Polyspec\\Hyper\\Tests\\": "packages/php/tests/",
-            "Polyspec\\Hyper\\Tests\\Program\\": "packages/php/tests/build/server/php/",
-            "Polyspec\\Hyper\\Tests\\Contract\\": "var/contract-programs/"
+            "Polyspec\\Hyper\\Tests\\": "packages/php/tests/"
         },
         "files": [
             "packages/php/tests/Support/CoreStandIn/functions.php"
@@ -66,7 +64,8 @@
         "platform": {
             "php": "8.4.1",
             "ext-polyspec_hyper": "0.0.40",
-            "ext-polyspec_json": "0.0.34"
+            "ext-polyspec_json": "0.0.38",
+            "ext-polyspec_template": "0.0.31"
         },
         "sort-packages": true
     }

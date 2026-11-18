@@ -32,8 +32,8 @@ export class RequestBody {
     this.length = 0;
   }
 
-  // Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.4,
-  // HY-131.11).
+  // Reads the next chunk, and returns false when the body passed a limit, after which it holds no bytes (HY-59.15,
+  // HY-131.32).
   feed(chunk: Uint8Array): boolean {
     if (this.over) return false;
     this.length += chunk.byteLength;
@@ -43,7 +43,7 @@ export class RequestBody {
     return true;
   }
 
-  // Returns true when the body passed the body limit, the value limit, the part limit or the file limit (HY-131.11).
+  // Returns true when the body passed the body limit, the value limit, the part limit or the file limit (HY-131.32).
   exceeded(): boolean {
     return this.over;
   }

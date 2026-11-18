@@ -1,12 +1,12 @@
 // Tests the outputs of one run of `hyper build` (HR-34, HYC-16, HY-125): below public/assets it only adds files whose
 // names hold a hash of their content, it publishes client/ and program/ of --output and nothing else there, and it
-// computes the build id once over the files of HY-125.15 to HY-125.17, which client/build.json, program/build.json and
-// the static shell hold.
+// computes the build id once over the files of HY-125.15 to HY-125.17, which program/build.json and the static shell
+// hold (HY-125.23).
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { test } from 'node:test';
-import { buildId } from '../../packages/cli/lib/build-id.mjs';
+import { buildId } from '@polyspec/hyper/build';
 import { listFiles } from '../../packages/cli/lib/output-files.mjs';
 import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { fixture, runBuild } from './build-fixture.mts';
@@ -21,8 +21,7 @@ const readJson = (file: string) => parseJsonObject(readFileSync(file, 'utf8'), f
 const buildOf = (file: string) => jsonString(readJson(file).build, `${file} build`);
 
 // The files that the build id hashes, read back from disk by the paths of HY-125.17: the files of assets.json, the
-// files of client/ without build.json and csr/, the --static files as csr/<path>, and the files of program/ without
-// build.json.
+// files of client/ without csr/, the --static files as csr/<path>, and the files of program/ without build.json.
 function hashedFiles(app: string, statics: string[] = []) {
   const output = join(app, 'out');
   const assets = jsonArray(readJson(join(output, 'client', 'assets.json')).files, 'assets.json files').map((path) => jsonString(path, 'assets.json path'));
@@ -42,29 +41,22 @@ test('writes the outputs of HR-34 below public/assets, client/ and program/ and 
   mkdirSync(output);
   // A file of the application below --output, which the build neither reads nor removes.
   writeFileSync(join(output, 'app.json'), '{"own":true}');
-  build(app, '--api', '/api', '--php-namespace', 'Fixture\\Program');
+  build(app, '--api', '/api');
   assert.deepEqual(readdirSync(output).sort(), ['app.json', 'client', 'program']);
   assert.equal(readFileSync(join(output, 'app.json'), 'utf8'), '{"own":true}');
-  assert.deepEqual(readdirSync(join(output, 'client')).sort(), ['assets.json', 'build.json', 'csr', 'manifest.json', 'templates.index.json']);
-  // The intermediate files of the PHP compilation, graph/ and types.json, are not in the program.
-  assert.deepEqual(readdirSync(join(output, 'program')).sort(), ['build.json', 'legacy', 'php', 'program.json', 'reads.json', 'templates']);
-  assert.deepEqual(readJson(join(output, 'program', 'program.json')), { namespace: 'Fixture\\Program' });
-  assert.ok(existsSync(join(output, 'program', 'php', 'GeneratedProgram.php')));
-  // HY-31.9, HY-31.10: program/templates holds no copy of the reserved template, and program/legacy holds the copy
-  // for a server that does not call the core.
+  // HY-125.23: the build id file is a file of program/ only. HYC-16.17: client/ holds the two lists of files.
+  assert.deepEqual(readdirSync(join(output, 'client')).sort(), ['assets.json', 'assets.previous.json', 'csr', 'manifest.json', 'templates.index.json']);
+  assert.deepEqual(readJson(join(output, 'client', 'assets.previous.json')), { files: [] });
+  // HY-48.20: the program holds no generated PHP program, so neither php/ nor program.json.
+  // HY-48.21: the program holds reads.json, build.json and templates, and no copy of the reserved template.
+  assert.deepEqual(readdirSync(join(output, 'program')).sort(), ['build.json', 'reads.json', 'templates']);
+  // HY-31.9: program/templates holds no copy of the reserved template, which the core gives.
   assert.equal(existsSync(join(output, 'program', 'templates', 'hyper', 'data.tpl')), false);
-  assert.deepEqual(listFiles(join(output, 'program', 'legacy')).map((file) => relative(join(output, 'program'), file)), [join('legacy', 'hyper', 'data.tpl')]);
   // assets.json lists every file that this build wrote below public/assets, in byte order.
   const assets = jsonArray(readJson(join(output, 'client', 'assets.json')).files, 'files').map((path) => jsonString(path, 'path'));
   const written = listFiles(join(app, 'public', 'assets')).map((file) => relative(app, file)).sort();
   assert.deepEqual(assets, written);
   assert.deepEqual([...assets].sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b))), assets);
-});
-
-test('without --php-namespace the program holds no PHP program (HY-48.6)', (t) => {
-  const app = fixture('chunks', t);
-  build(app);
-  assert.deepEqual(readdirSync(join(app, 'out', 'program')).sort(), ['build.json', 'legacy', 'reads.json', 'templates']);
 });
 
 test('writes the entry, a chunk for code that the entry imports with import(), the manifest and the shell (HYC-16)', (t) => {
@@ -95,7 +87,8 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
   assert.doesNotMatch(shell, /<style|<link/);
   assert.equal(readFileSync(join(client, 'csr', 'assets', chunk), 'utf8'), readFileSync(join(assets, chunk), 'utf8'));
   // A build after a change of the chunk code and a template adds the new chunk and template file and keeps every
-  // file of the earlier build, which a server or an open page of that build still loads (HR-34).
+  // file of the build before it, which an open page of that build still loads (HR-34, HYC-16.18);
+  // tests/scripts/build-old-assets.test.mts holds the cases of the removal one build later.
   const templateFiles = () => readdirSync(join(assets, 'templates')).sort();
   const firstTemplates = templateFiles();
   writeFileSync(join(app, 'client', 'forms.ts'), "export function bindForms(): void {\n  console.log('chunk: bind the forms again');\n}\n");
@@ -110,46 +103,53 @@ test('writes the entry, a chunk for code that the entry imports with import(), t
   assert.deepEqual(readdirSync(join(client, 'csr', 'assets')).filter((name) => name.endsWith('.js')), [secondChunk]);
 });
 
-test('computes the build id once over the files of HY-125.15 to HY-125.17 and writes it into both build.json and the shell', (t) => {
+test('computes the build id once over the files of HY-125.15 to HY-125.17 and writes it into build.json of the program and the shell', (t) => {
   const app = fixture('chunks', t);
   mkdirSync(join(app, 'public', 'assets'), { recursive: true });
   writeFileSync(join(app, 'public', 'assets', 'app.css'), 'p {}\n');
-  build(app, '--api', '/api', '--php-namespace', 'Fixture\\Program', '--static', 'public/assets/app.css');
-  const client = join(app, 'out', 'client', 'build.json');
+  build(app, '--api', '/api', '--static', 'public/assets/app.css');
   const program = join(app, 'out', 'program', 'build.json');
-  const id = buildOf(client);
+  const id = buildOf(program);
   assert.match(id, /^[0-9a-f]{64}$/);
-  assert.equal(readFileSync(client, 'utf8'), `{"build":"${id}"}`);
+  assert.equal(existsSync(join(app, 'out', 'client', 'build.json')), false);
   assert.equal(readFileSync(program, 'utf8'), `{"build":"${id}"}`);
   assert.equal(id, buildId(hashedFiles(app, ['assets/app.css'])));
   const shell = readFileSync(join(app, 'out', 'client', 'csr', 'index.html'), 'utf8');
   assert.equal(shell.split(`<meta name="hyper-build" content="${id}">`).length - 1, 1, shell);
   // A changed --static file gives another id (HY-125.15).
   writeFileSync(join(app, 'public', 'assets', 'app.css'), 'p { margin: 0; }\n');
-  build(app, '--api', '/api', '--php-namespace', 'Fixture\\Program', '--static', 'public/assets/app.css');
-  const secondId = buildOf(client);
+  build(app, '--api', '/api', '--static', 'public/assets/app.css');
+  const secondId = buildOf(program);
   assert.notEqual(secondId, id);
   assert.equal(secondId, buildId(hashedFiles(app, ['assets/app.css'])));
 });
 
-test('a build that changes only a server output gives a new build id (HY-125.20)', (t) => {
+test('a build that changes a template and no asset of the client manifest gives a new build id (HY-125.20)', (t) => {
   const app = fixture('chunks', t);
-  build(app, '--php-namespace', 'Fixture\\Program');
+  // Without a client entry the build writes no script, so client/manifest.json names no asset and a changed template
+  // changes the program and the template index alone.
+  rmSync(join(app, 'client'), { recursive: true });
+  build(app);
   const first = buildOf(join(app, 'out', 'program', 'build.json'));
   const client = readFileSync(join(app, 'out', 'client', 'manifest.json'), 'utf8');
-  build(app, '--php-namespace', 'Fixture\\Other');
+  writeFileSync(join(app, 'templates', 'home.tpl'), `${readFileSync(join(app, 'templates', 'home.tpl'), 'utf8')}<!-- changed -->`);
+  build(app);
   assert.equal(readFileSync(join(app, 'out', 'client', 'manifest.json'), 'utf8'), client);
   assert.notEqual(buildOf(join(app, 'out', 'program', 'build.json')), first);
   // The same inputs give the same id.
-  build(app, '--php-namespace', 'Fixture\\Other');
   const again = buildOf(join(app, 'out', 'program', 'build.json'));
-  build(app, '--php-namespace', 'Fixture\\Other');
+  build(app);
   assert.equal(buildOf(join(app, 'out', 'program', 'build.json')), again);
 });
 
 test('a second build removes the files of client/ and program/ that it does not write (HR-82)', (t) => {
   const app = fixture('chunks', t);
-  build(app, '--api', '/api', '--php-namespace', 'Fixture\\Program');
+  build(app, '--api', '/api');
+  // A file of an earlier build of the program that this build does not write, such as the generated PHP program of an
+  // earlier release.
+  mkdirSync(join(app, 'out', 'program', 'php'));
+  writeFileSync(join(app, 'out', 'program', 'php', 'GeneratedProgram.php'), '<?php\n');
+  writeFileSync(join(app, 'out', 'program', 'program.json'), '{}\n');
   build(app);
   assert.equal(existsSync(join(app, 'out', 'client', 'csr')), false);
   assert.equal(existsSync(join(app, 'out', 'program', 'php')), false);

@@ -48,6 +48,7 @@ final class CoreRulesTest extends TestCase
             'Session::takeFlash (HY-25.2)' => ['sessionFlashOf', [['values' => []]], 'flashOf', ['changed' => []]],
             'Session::kept (HY-104.22)' => ['sessionKeptOf', [['r' => []]], 'keptOf', ['r' => []]],
             'Page::kept (HY-38.11)' => ['pageKeptCookie', ['{}'], 'keptCookie', ['r' => []]],
+            'Program::pages (HYC-24.7)' => ['programFunctionEntry', ['shout', true], 'checkFunctionEntry', null],
             'the session cookie name (HY-45.1)' => ['sessionCookieName', [true], 'sessionName', '__Host-hy-session'],
             'RepresentationResponse::etag (HY-122.10)' => [
                 'representationEtag',
@@ -113,7 +114,7 @@ final class CoreRulesTest extends TestCase
             ],
             'the stored token (HY-24.14)' => ['sessionStoredToken', [self::TOKEN], 'storedToken', self::TOKEN],
             'the name of the kept cookie (HYC-13.6)' => ['keptCookieName', [false], 'keepName', 'hy-keep'],
-            'Build::read (HY-125.18)' => [
+            'Build::read (HY-125.23)' => [
                 'buildRead',
                 ['{}'],
                 'readBuild',
@@ -143,9 +144,9 @@ final class CoreRulesTest extends TestCase
         self::assertSame([[$function, $arguments]], Calls::$calls);
     }
 
-    public function testThereAreTwentyTwoExactUnits(): void
+    public function testThereAreTwentyThreeExactUnits(): void
     {
-        self::assertCount(22, self::exactUnits());
+        self::assertCount(23, self::exactUnits());
     }
 
     public function testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields(): void

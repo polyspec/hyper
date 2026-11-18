@@ -5,9 +5,8 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { test } from 'node:test';
-import dataTemplate from '../../packages/client/data-template.json' with { type: 'json' };
-import { shellText } from '../../packages/cli/lib/shell.mjs';
+import { test, type TestContext } from 'node:test';
+import { reservedTemplate, shellFile } from '@polyspec/hyper/build';
 import { requireBuilt } from './requires.mts';
 
 const fixtures = resolve('packages/php/tests/fixtures');
@@ -15,35 +14,34 @@ const fixtures = resolve('packages/php/tests/fixtures');
 function program(output: string, idFile: string) {
   return spawnSync(process.execPath, [
     'scripts/fixture-program.mts', '--manifest', join(fixtures, 'app.json'), '--templates', join(fixtures, 'templates'),
-    '--output', output, '--php-namespace', 'Polyspec\\Hyper\\Tests\\Program', '--id-file', idFile,
+    '--output', output, '--id-file', idFile,
   ], { encoding: 'utf8' });
 }
 
-test('writes the program of the fixture with the build id of its build file (HY-125.21)', (t) => {
+// The program of the fixture with the build file of the fixture, written into a directory of the test, which the
+// test removes at its end.
+function written(t: TestContext): string {
   const directory = mkdtempSync(join(tmpdir(), 'hyper-fixture-program-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const output = join(directory, 'program');
   const result = program(output, join(fixtures, 'build.json'));
   assert.equal(result.status, 0, result.stderr);
+  return output;
+}
+
+test('writes the program of the fixture with the build id of its build file (HY-125.21)', (t) => {
+  const output = written(t);
   assert.equal(readFileSync(join(output, 'build.json'), 'utf8'), readFileSync(join(fixtures, 'build.json'), 'utf8'));
-  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'legacy', 'php', 'program.json', 'reads.json', 'templates']);
-  assert.ok(existsSync(join(output, 'php', 'GeneratedProgram.php')));
+  // HY-48.20: the program holds no generated PHP program.
+  assert.deepEqual(readdirSync(output).sort(), ['build.json', 'reads.json', 'templates']);
 });
 
-test('the program holds the reserved template below legacy/ and no copy of it below templates/ (HY-31.9, HY-31.10)', (t) => {
-  const directory = mkdtempSync(join(tmpdir(), 'hyper-fixture-program-'));
-  t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const output = join(directory, 'program');
-  const result = program(output, join(fixtures, 'build.json'));
-  assert.equal(result.status, 0, result.stderr);
+test('the program holds no copy of the reserved template (HY-31.9, HY-48.21)', (t) => {
+  const output = written(t);
   // HY-31.9: templates/ holds the templates of the application only, so the core takes the whole directory.
+  const dataTemplate = reservedTemplate();
   assert.equal(existsSync(join(output, 'templates', dataTemplate.name)), false, `templates/${dataTemplate.name} exists`);
-  // HY-31.10: the copy for a server that does not call the core is the only file below legacy/.
-  assert.deepEqual(readdirSync(join(output, 'legacy')), ['hyper']);
-  assert.deepEqual(readdirSync(join(output, 'legacy', 'hyper')), ['data.tpl']);
-  assert.equal(readFileSync(join(output, 'legacy', dataTemplate.name), 'utf8'), dataTemplate.source);
-  // The PHP compilation takes the reserved template as an input, so the generated program holds it.
-  assert.ok(readFileSync(join(output, 'php', 'GeneratedTemplates.php'), 'utf8').includes(`case '${dataTemplate.name}':`));
+  assert.equal(existsSync(join(output, 'legacy')), false, 'legacy/ exists');
 });
 
 test('the program names the literal key of an index in reads.json by its text (HY-73.33)', (t) => {
@@ -60,7 +58,7 @@ test('the program names the literal key of an index in reads.json by its text (H
   const output = join(directory, 'program');
   const result = spawnSync(process.execPath, [
     'scripts/fixture-program.mts', '--manifest', manifest, '--templates', templates, '--output', output,
-    '--php-namespace', 'Polyspec\\Hyper\\Tests\\Program', '--id-file', join(fixtures, 'build.json'),
+    '--id-file', join(fixtures, 'build.json'),
   ], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   // HY-73.32: the keys follow the byte order of their text.
@@ -76,13 +74,13 @@ test('a build file without a build id of 64 lowercase hexadecimal characters fai
   const output = join(directory, 'program');
   const result = program(output, idFile);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /the build id ABC is not 64 lowercase hexadecimal characters/);
+  assert.match(result.stderr, /a build id is not 64 lowercase hexadecimal characters \(HY-125\.19\)/);
   assert.equal(existsSync(output), false);
 });
 
 test('the shell of a test takes its build id as an argument (HY-125.21)', () => {
-  const shell = shellText({ api: '/api', build: '1'.repeat(64), entry: { url: '/assets/hyper-A.js', code: 'export{};' } });
+  const shell = shellFile('/api', '1'.repeat(64), '/assets/hyper-A.js', 'export{};');
   assert.ok(shell.includes(`<meta name="hyper-build" content="${'1'.repeat(64)}">`), shell);
   assert.ok(shell.includes('<meta name="hyper-entry" content="/assets/hyper-A.js">'), shell);
-  assert.throws(() => shellText({ api: '/api', build: '1'.repeat(64), entry: { url: '/assets/hyper-A.js', code: '</script>' } }), /cannot be inlined/);
+  assert.throws(() => shellFile('/api', '1'.repeat(64), '/assets/hyper-A.js', '</script>'), /cannot be inlined/);
 });

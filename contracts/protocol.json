@@ -469,7 +469,9 @@
         {
           "kind": "rule",
           "id": "HY-13",
-          "retired": [],
+          "retired": [
+            7
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -511,10 +513,10 @@
                   "koSource": "65bea62561de694d2ba00c6b769aaaae2cf902066f1a0e266045fb3d3625bfb6"
                 },
                 {
-                  "id": "HY-13.7",
-                  "en": "The PHP and Python servers read a shared value that a handler returns once for the check of HY-44, once in the bound shared data of a document, once more in the embedded data of a document that embeds its data, and once for the JSON text of a JSON response, so they read the value twice for a document, three times for a document that embeds its data and twice for a JSON response.",
-                  "ko": "PHP 서버와 Python 서버는 handler가 반환한 공유 값을 HY-44의 검사에서 한 번, 문서의 bind된 공유 데이터에서 한 번, 데이터를 내장하는 문서의 내장 데이터에서 한 번 더, JSON 응답의 JSON text에서 한 번 읽으므로, 그 값을 문서에서는 두 번, 데이터를 내장하는 문서에서는 세 번, JSON 응답에서는 두 번 읽는다.",
-                  "koSource": "44823b50831a792888b6439d6ae56a4b94c13f8c8382f50953bd24cbd55526bb"
+                  "id": "HY-13.8",
+                  "en": "Each server reads a shared value that a handler returns once, when its binding converts the value for the core (HY-44.12), so a document, a document that embeds its data and a JSON response each read it once.",
+                  "ko": "각 서버는 handler가 반환한 공유 값을 바인딩이 그 값을 core에 넘기려고 변환할 때 한 번 읽으므로(HY-44.12), 문서, 데이터를 내장하는 문서, JSON 응답은 각각 그 값을 한 번 읽는다.",
+                  "koSource": "41fd20d8e25a99d2ad4da4487cff9e221d8064359b41df23bba4e0ea6876ca28"
                 }
               ]
             }
@@ -550,12 +552,18 @@
           "retired": [
             4,
             5,
+            6,
             7,
             8,
             9,
             10,
+            11,
+            12,
             14,
-            16
+            15,
+            16,
+            17,
+            18
           ],
           "blocks": [
             {
@@ -584,12 +592,6 @@
                   "en": "One rule of the Rust core holds that check and gives every problem as a line that names the template, in this order: the `hx-*` attributes of each template other than the layout whose name ends with `.tpl`, in the byte order of the names and the order of their lines, then the placements of `{# title}`, `{# data}` and `{# build}`, of the manifest regions and of the page region in the layout, then the route regions of each route in manifest order.",
                   "ko": "Rust core의 규칙 하나가 그 검사를 가지며 모든 문제를 템플릿 이름을 밝힌 줄로 이 순서대로 준다: 이름이 `.tpl`로 끝나는 layout 외 템플릿의 `hx-*` 속성을 이름의 바이트 순서와 줄 순서로, 그다음 layout의 `{# title}`, `{# data}`, `{# build}`, manifest 영역, page 영역 배치를, 그다음 manifest 순서로 각 라우트의 라우트 영역을.",
                   "koSource": "a9cf95d9dbef17510d6324ba551d671f3f5a2cfd29cedcf88b121082298149ec"
-                },
-                {
-                  "id": "HY-48.12",
-                  "en": "Node: `App.open` fails when the template index is not a template index or does not hold a template of a route.",
-                  "ko": "Node: `App.open`은 template index가 template index가 아니거나 라우트의 template을 담고 있지 않을 때 실패한다.",
-                  "koSource": "90f0be619e5a62a55f2da3691e77ba373b0c9337731e6bc9cc2ffd4bb0207eb2"
                 }
               ]
             },
@@ -600,22 +602,34 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-48.15",
-                      "en": "PHP: the PHP server renders the templates of the directory `templates` of the program directory with the `Engine` and the `FsLoader` of the template extension `polyspec_template`, as the Node and the Python servers render the same templates, so it loads no generated program class; PHP loads the json extension `polyspec_json`, which the template extension requires, before it.",
-                      "ko": "PHP: PHP 서버는 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 템플릿 확장 `polyspec_template`의 `Engine`과 `FsLoader`로 렌더하며, Node와 Python 서버가 같은 템플릿을 렌더하는 것과 같으므로 generated 프로그램 클래스를 불러오지 않는다. PHP는 템플릿 확장이 요구하는 json 확장 `polyspec_json`을 그보다 먼저 불러온다.",
-                      "koSource": "f6f557d92ac8514407a06b7d57b0471ba2360951502e421191118056dff60d82"
+                      "id": "HY-48.22",
+                      "en": "PHP: the PHP server renders the templates of the directory `templates` of the program directory with the page render of the core in the extension `polyspec_hyper` (HY-48.21), as the Node server renders the same templates, so it loads no generated program class and no engine of the template extension.",
+                      "ko": "PHP: PHP 서버는 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 확장 `polyspec_hyper`에 있는 core의 페이지 렌더로 렌더하며(HY-48.21), Node 서버가 같은 템플릿을 렌더하는 것과 같으므로 generated 프로그램 클래스도 템플릿 확장의 engine도 불러오지 않는다.",
+                      "koSource": "575499a1890397eb50e1423b507e6cd66a52e98b3611858b7e0153d6b3c1b12a"
                     },
                     {
-                      "id": "HY-48.6",
-                      "en": "The build compiles the generated program into a PHP namespace that the application chooses and writes it into the directory `php` of the program directory as PSR-4 files, one class per file named after its class, so it declares no global name and the programs of several applications load in one PHP process.",
-                      "ko": "빌드는 generated 프로그램을 애플리케이션이 고른 PHP namespace로 컴파일하여, 클래스마다 그 이름을 딴 파일 하나인 PSR-4 파일로 프로그램 디렉터리의 디렉터리 `php`에 쓰며, 그래서 전역 이름을 선언하지 않고 여러 애플리케이션의 프로그램이 한 PHP 프로세스에서 불러와진다.",
-                      "koSource": "0f0ecfd732d18d556449b89efe24cacf5f1e0a61b0460b9b1dfa0d1d2cf0312d"
+                      "id": "HY-48.23",
+                      "en": "PHP loads the json extension `polyspec_json`, then the template extension `polyspec_template`, which requires it, and then the extension `polyspec_hyper` (HY-132.2).",
+                      "ko": "PHP는 json 확장 `polyspec_json`을, 그다음 그것을 요구하는 템플릿 확장 `polyspec_template`을, 그다음 확장 `polyspec_hyper`를 불러온다(HY-132.2).",
+                      "koSource": "5bb769bc3938c65712ffa63ed8b6e9d3ac3e5952eb5aded3ebc35b7009da17b2"
                     },
                     {
-                      "id": "HY-48.17",
-                      "en": "PHP: the program directory holds `reads.json`, `build.json`, the directory `templates` and the copy `legacy/hyper/data.tpl` of the reserved template (HY-31.10); `App::open` fails with a `HyperValueError` (HY-106) that names the absolute path of the first of them, in that order, that is missing.",
-                      "ko": "PHP: 프로그램 디렉터리에는 `reads.json`, `build.json`, 디렉터리 `templates`, 예약 템플릿의 사본 `legacy/hyper/data.tpl`(HY-31.10)이 있고, `App::open`은 그 순서에서 처음 없는 것의 절대 경로를 밝히는 `HyperValueError`(HY-106)로 실패한다.",
-                      "koSource": "72dfa856c8185963880caf04560a322d2c4feaa1ab51f315c0548a8cf429d398"
+                      "id": "HY-48.24",
+                      "en": "PHP loads the template extension because the binding of the core takes its class `Polyspec\\Template\\Environment` for the second argument of a host function (HYC-24.10), so a render that calls a function of the application fails without it.",
+                      "ko": "core의 바인딩이 host 함수의 두 번째 인자로 템플릿 확장의 class `Polyspec\\Template\\Environment`를 받으므로 PHP는 템플릿 확장을 불러오며, 그것이 없으면 애플리케이션의 함수를 부르는 렌더는 실패한다(HYC-24.10).",
+                      "koSource": "09758da5cd8518c2bf439f005d0da2c989207bf84c89dea7b6e36660d742ca74"
+                    },
+                    {
+                      "id": "HY-48.20",
+                      "en": "The build writes no generated PHP program and no `program.json`: the three servers render the templates of the directory `templates` of the program directory, and `hyper build` refuses the option `--php-namespace` with a usage error that names the option and says to remove it from the command.",
+                      "ko": "빌드는 generated PHP 프로그램도 `program.json`도 쓰지 않는다: 세 서버가 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 렌더하며, `hyper build`는 option `--php-namespace`를 그 option을 밝히고 명령에서 빼라고 말하는 usage error로 거부한다.",
+                      "koSource": "c096c0bf78b37e6a5c5d0dea327774b00cec6dbdc8d45948ebd22cfccccde00a"
+                    },
+                    {
+                      "id": "HY-48.21",
+                      "en": "PHP and Python: the program directory holds `reads.json`, `build.json` and the directory `templates`; `App.open` fails with a `HyperValueError` (HY-106) that names the absolute path of the first of them, in that order, that is missing.",
+                      "ko": "PHP와 Python: 프로그램 디렉터리에는 `reads.json`, `build.json`, 디렉터리 `templates`가 있고, `App.open`은 그 순서에서 처음 없는 것의 절대 경로를 밝히는 `HyperValueError`(HY-106)로 실패한다.",
+                      "koSource": "9996dbf5884c7b2bd74510a485eb87c68ad2d7b09f6600ca657e333c58ff3ac5"
                     }
                   ],
                   "blocks": []
@@ -623,21 +637,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-48.18",
-                      "en": "Python: the program directory holds `reads.json`, `build.json`, the directory `templates` and the copy `legacy/hyper/data.tpl` of the reserved template (HY-31.10); `App.open` fails with a `HyperValueError` (HY-106) that names the absolute path of the first of them, in that order, that is missing.",
-                      "ko": "Python: 프로그램 디렉터리에는 `reads.json`, `build.json`, 디렉터리 `templates`, 예약 템플릿의 사본 `legacy/hyper/data.tpl`(HY-31.10)이 있고, `App.open`은 그 순서에서 처음 없는 것의 절대 경로를 밝히는 `HyperValueError`(HY-106)로 실패한다.",
-                      "koSource": "9fa33015c787e172973d5f744b46fa0d6d57908336b5241459e0d148547f0bae"
-                    }
-                  ],
-                  "blocks": []
-                },
-                {
-                  "statements": [
-                    {
-                      "id": "HY-48.11",
-                      "en": "Node: `App.open` reads the manifest, the template index, the template files and the build id file by absolute paths, the last from its option `build`, the absolute path of `client/build.json` of the build output (HY-125); a missing file fails with the error that names its path.",
-                      "ko": "Node: `App.open`은 매니페스트, 템플릿 index, 템플릿 파일, build id 파일을 절대 경로로 읽으며, 마지막은 build 출력의 `client/build.json`의 절대 경로인 option `build`로 받고(HY-125), 없는 파일은 그 경로를 밝히는 오류로 실패한다.",
-                      "koSource": "47df76ecfa398b4ade99239b0fae5ebca9ec2d578700ceaa4dac22f52e82458b"
+                      "id": "HY-48.19",
+                      "en": "Node: `App.open` reads the manifest by the absolute path of its option `manifest`; the program directory of its option `program`, an absolute path, holds `reads.json`, `build.json` and the directory `templates`, and `App.open` fails with a `HyperValueError` (HY-106) that names the absolute path of the first missing one.",
+                      "ko": "Node: `App.open`은 매니페스트를 option `manifest`의 절대 경로로 읽는다. 절대 경로인 option `program`의 프로그램 디렉터리는 `reads.json`, `build.json`, 디렉터리 `templates`를 담으며, `App.open`은 처음으로 없는 것의 절대 경로를 밝히는 `HyperValueError`(HY-106)로 실패한다.",
+                      "koSource": "b601eb87eda1dfea2dcf110bb237e2a7709f13b89b29382e12ccad6dbae82784"
                     }
                   ],
                   "blocks": []
@@ -785,6 +788,12 @@
                   "en": "The type of a body is read from its `Content-Type` by F-12 of http-form, and a parameter that its type does not define changes nothing (F-12.4): a `charset` or another parameter of an `application/x-www-form-urlencoded` body fails nothing, and the body is read as UTF-8.",
                   "ko": "body의 type은 http-form의 F-12가 `Content-Type`에서 읽고, 그 type이 정의하지 않는 매개변수는 아무것도 바꾸지 않는다(F-12.4). `application/x-www-form-urlencoded` body의 `charset`이나 다른 매개변수는 실패를 만들지 않으며 body는 UTF-8로 읽는다.",
                   "koSource": "875cd9b72bf25e9c62d3992f7fde93069085d35bc743ea97478dea4c252ea0f6"
+                },
+                {
+                  "id": "HY-57.15",
+                  "en": "The bytes of a body are read under the limits before the route is decided, for every request (HY-131.31), and they are read as a form there only when the `Content-Type` reads as `application/x-www-form-urlencoded` or as `multipart/form-data`, whose reader of http-form starts only with a boundary (HY-113.24); a `Content-Type` that is no media type, such as `application/x-www-form-urlencoded` followed by a line feed, which is no whitespace of a media type (MT-1.3 of http-media-type), is no failure of that reading: its body is held as bytes and gives no form value and no file, a request to an unknown path receives 404 whatever its `Content-Type`, and the `Content-Type` is judged after the route, for an action and `/_hyper/keep` by HY-59.12 and for a representation by HY-121.11.",
+                  "ko": "body의 byte는 모든 요청에서 route가 정해지기 전에 제한 아래에서 읽는다(HY-131.31). 거기서 form으로 읽는 것은 `Content-Type`이 `application/x-www-form-urlencoded`나 `multipart/form-data`로 읽힐 때뿐이며, `multipart/form-data`에 대한 http-form의 reader는 boundary가 있을 때만 시작한다(HY-113.24). media type이 아닌 `Content-Type`, 예를 들어 line feed가 뒤따르는 `application/x-www-form-urlencoded`(line feed는 media type의 공백이 아니다, http-media-type의 MT-1.3)는 그 읽기의 실패가 아니다. 그 body는 byte로 보유되어 폼 값도 파일도 주지 않고, 알 수 없는 경로로의 요청은 `Content-Type`이 무엇이든 404를 받으며, `Content-Type`은 route 뒤에 판정한다. action과 `/_hyper/keep`은 HY-59.12로, representation은 HY-121.11로 판정한다.",
+                  "koSource": "3cf381b23b9aa0663109354d239b4f40f3fcc85e86fd16cafeead3132e593d30"
                 }
               ]
             }
@@ -811,7 +820,8 @@
             17,
             18,
             19,
-            20
+            20,
+            22
           ],
           "blocks": [
             {
@@ -824,10 +834,25 @@
                   "koSource": "853b0caf7e03fbc1471e73bc4cd3d53cb0a930bca10f5b95df67c9162d18ed6d"
                 },
                 {
-                  "id": "HY-113.22",
-                  "en": "The header lines and the parameters of a part are read as F-23, F-6 and F-16 of http-form state, and its boundary as F-12.3 and F-7 state; a part that fails with kind `invalid`, `header_limit` or `no_boundary` of http-form fails the whole body (F-23.3) with status 400 as HY-42 does.",
-                  "ko": "part의 header 줄과 매개변수는 http-form의 F-23, F-6, F-16대로, boundary는 F-12.3과 F-7대로 읽으며, http-form의 kind `invalid`, `header_limit`, `no_boundary`로 실패하는 part는 body 전체를 실패시키고(F-23.3) HY-42처럼 상태 400을 받는다.",
-                  "koSource": "e94dd0e72a15adba0033fc06fef9d25edee642e89d4f68a7421093bedeab290a"
+                  "id": "HY-113.23",
+                  "en": "The header lines of a part are read as F-23 of http-form states and the parameters of its `Content-Disposition` as F-6 states, and every part is a `form-data` part with a `name` parameter as F-16 states, so a part of another disposition type, also of a type that only starts with `form-data`, a part without a `name` parameter, a part without header lines, a part whose `Content-Disposition` follows a lone carriage return and so starts no line, a part whose `name` parameter follows a no-break space, a part that gives a parameter such as `name` twice and a part whose quoted parameter value has no end fail with kind `invalid` of http-form, and header lines of a part longer than 8192 bytes fail with kind `header_limit` (F-23.4).",
+                  "ko": "part의 header 줄은 http-form의 F-23대로, 그 `Content-Disposition`의 매개변수는 F-6대로 읽고, 모든 part는 F-16대로 `name` 매개변수를 가진 `form-data` part다. 그래서 다른 disposition type의 part(`form-data`로 시작하기만 하는 type 포함), `name` 매개변수가 없는 part, header 줄이 없는 part, `Content-Disposition`이 홀로 있는 carriage return 뒤에 와서 줄을 시작하지 못하는 part, `name` 매개변수가 no-break space 뒤에 오는 part, `name` 같은 매개변수를 두 번 주는 part, 인용된 매개변수 값이 끝나지 않는 part는 http-form의 kind `invalid`로 실패하고, 8192 byte보다 긴 part의 header 줄은 kind `header_limit`로 실패한다(F-23.4).",
+                  "koSource": "51a5b420e5d40796d6d4d673a21ae363ef4bae0f51fb1ffe9880d200b58d981c",
+                  "unimplemented": "H35.11"
+                },
+                {
+                  "id": "HY-113.24",
+                  "en": "A boundary is a parameter of the `Content-Type` and no byte of the body, so a `multipart/form-data` content type without a `boundary` parameter, or with an empty one such as `boundary=\"\"`, is no failure of the reading: the reader does not start, the body is held as bytes and gives no form value and no file (HY-57.15), a request to an unknown path receives 404, and after the route a `POST` to an action or to `/_hyper/keep` of an application whose form types include `multipart/form-data` receives status 400 with the text `Bad Request` and kind `malformed_content_type`, at the place of HY-59.12 and after its 415 for a type that is no form type, while a representation answers such a type by HY-121.11.",
+                  "ko": "boundary는 `Content-Type`의 매개변수이고 body의 byte가 아니다. 그래서 `boundary` 매개변수가 없거나 `boundary=\"\"`처럼 비어 있는 `multipart/form-data` content type은 읽기의 실패가 아니다. reader는 시작하지 않고, body는 byte로 보유되어 폼 값도 파일도 주지 않으며(HY-57.15), 알 수 없는 경로로의 요청은 404를 받는다. route 뒤에, form 타입에 `multipart/form-data`가 있는 application의 action이나 `/_hyper/keep`으로의 `POST`는 HY-59.12의 자리에서, form 타입이 아닌 type에 대한 그 415 뒤에 상태 400과 텍스트 `Bad Request`, kind `malformed_content_type`을 받고, representation은 그런 type에 HY-121.11로 답한다.",
+                  "koSource": "2ee076a2801e00947a868b58c3fd13e314a80687510393b22424ac7880a741ed",
+                  "unimplemented": "H35.11"
+                },
+                {
+                  "id": "HY-113.25",
+                  "en": "A body whose bytes fail with kind `invalid` or `header_limit` of http-form fails as a whole, so that it gives no form value and no file (F-23.3), and its request receives status 400 as HY-42 does while the body is read, before the route is decided (HY-131.31), so that no loader and no action runs.",
+                  "ko": "byte가 http-form의 kind `invalid`나 `header_limit`로 실패하는 body는 전체가 실패하여 폼 값도 파일도 주지 않고(F-23.3), 그 요청은 body를 읽는 동안, route가 정해지기 전에 HY-42처럼 상태 400을 받아(HY-131.31) loader도 action도 실행되지 않는다.",
+                  "koSource": "fac01f7c3d66c643f23b5469eab0b43482eba3f19096bb77959ab71ca30f760d",
+                  "unimplemented": "H35.11"
                 },
                 {
                   "id": "HY-113.2",
@@ -896,9 +921,9 @@
                 },
                 {
                   "id": "HY-114.7",
-                  "en": "The server checks the bytes of each file part while it reads the body (HY-131.11): a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59.4 does and at its place in the order of HY-59.3, and no action runs.",
-                  "ko": "server는 body를 읽는 동안 각 file part의 byte를 검사한다(HY-131.11). byte가 file 제한보다 많은 file은 HY-59.4처럼, 그리고 HY-59.3의 순서에서 그 자리에서 text `Content Too Large`와 함께 status 413으로 요청을 실패시키며 action은 실행되지 않는다.",
-                  "koSource": "7a8dfddda65cfcb63c198a3df174b76dfa49a482a0c3e1436ed1b8b8ef687bb5"
+                  "en": "The server checks the bytes of each file part while it reads the body (HY-131.32): a file whose bytes are more than the file limit makes the request fail with status 413 and the text `Content Too Large`, as HY-59.15 does and at its place in the order of HY-59.3, and no action runs.",
+                  "ko": "server는 body를 읽는 동안 각 file part의 byte를 검사한다(HY-131.32). byte가 file 제한보다 많은 file은 HY-59.15처럼, 그리고 HY-59.3의 순서에서 그 자리에서 text `Content Too Large`와 함께 status 413으로 요청을 실패시키며 action은 실행되지 않는다.",
+                  "koSource": "d16720d58cefb21c0ee4c73d2583dc1f3971d5d3f992002993a9c76816f15f33"
                 },
                 {
                   "id": "HY-114.12",
@@ -921,16 +946,19 @@
             5,
             6,
             7,
+            11,
             12,
             13,
             15,
             16,
             17,
+            18,
             20,
             21,
             22,
             23,
-            24
+            24,
+            25
           ],
           "blocks": [
             {
@@ -967,16 +995,24 @@
                   "koSource": "a6e622e8111c913f532db2c614982ecc879cd1023751c20649d171a7f1ba13e1"
                 },
                 {
-                  "id": "HY-131.11",
-                  "en": "A body that passes the body limit, the value limit, the part limit or the file limit (HY-114) receives status 413 with the text `Content Too Large`, and every server stops reading the body when it passes a limit.",
-                  "ko": "body 제한, value 제한, part 제한, file 제한(HY-114)을 넘는 body는 text `Content Too Large`와 함께 status 413을 받고, 모든 server는 제한을 넘는 순간 body 읽기를 멈춘다.",
-                  "koSource": "a6721f7d4392a75b4f1522caf1b9d5f2638c263b2b6e552331479952ee6d83d3"
+                  "id": "HY-131.32",
+                  "en": "A body that passes the body limit, the value limit, the part limit or the file limit (HY-114) receives status 413 with the text `Content Too Large`, and after the limit is passed no server parses or stores the remaining bytes: the host discards them, by reading them or by leaving them unread, and the file that was open is closed.",
+                  "ko": "body 제한, value 제한, part 제한, file 제한(HY-114)을 넘는 body는 text `Content Too Large`와 함께 status 413을 받고, 제한을 넘은 뒤에는 어떤 server도 남은 byte를 parse하거나 저장하지 않는다. host는 그것을 읽어서든 읽지 않고 두어서든 버리고, 열려 있던 file은 닫는다.",
+                  "koSource": "d5583505da86ba05b830bc82d2a2b41ed76cfcb0e2ed6bb4eb06becd8c3aee17"
+                },
+                {
+                  "id": "HY-131.30",
+                  "en": "A body that passes a limit fails with the kind of that limit of http-form, each of status 413: `body_limit` for the body limit (F-25.1), `value_limit` for the value limit (F-25.2), `part_limit` for the part limit, which counts every part of the body (F-25.3), and `file_limit` for the file limit (F-25.4).",
+                  "ko": "제한을 넘는 body는 http-form의 그 제한의 kind로 실패하며 각각 상태 413이다. body 제한은 `body_limit`(F-25.1), value 제한은 `value_limit`(F-25.2), body의 모든 part를 세는 part 제한은 `part_limit`(F-25.3), file 제한은 `file_limit`(F-25.4)이다.",
+                  "koSource": "26cd54f5e9339a55c8be50bc87a74dae3da947ab3fe39ac2ab754cc7625f74e6",
+                  "unimplemented": "H35.11"
                 },
                 {
                   "id": "HY-131.28",
                   "en": "The server writes the content of a file part, as it arrives, to the directory of the request of F-10 of http-form, and `UploadedFile` gives the bytes of its file as `size()`, moves it with `moveTo(path)` (`move_to` in Python) and reads it with `content()` as F-11 states, so that a path that exists and a file that was moved fail with the kinds `exists` and `moved` of http-form.",
                   "ko": "서버는 파일 part의 내용을 도착하는 대로 http-form F-10의 요청 디렉터리에 쓰고, `UploadedFile`은 F-11대로 파일의 byte 수를 `size()`로 주고 `moveTo(path)`(Python은 `move_to`)로 옮기며 `content()`로 읽는다. 그래서 이미 있는 경로와 이미 옮긴 파일은 http-form의 kind `exists`와 `moved`로 실패한다.",
-                  "koSource": "00673cbb1e71ffc7eebb33eab59f51f4bcdf69d6775fb9f8e015c9d2b3b94bfe"
+                  "koSource": "00673cbb1e71ffc7eebb33eab59f51f4bcdf69d6775fb9f8e015c9d2b3b94bfe",
+                  "unimplemented": "H35.11"
                 },
                 {
                   "id": "HY-131.14",
@@ -985,16 +1021,17 @@
                   "koSource": "2475b53711b855c615fbe14abc7bd013bbf94ffd874a7e8ee35483becda15f5e"
                 },
                 {
-                  "id": "HY-131.18",
-                  "en": "The checks keep the order of HY-59.3: a `Content-Length` larger than the body limit receives 413 before the body is read; the limits of this rule and the failures of HY-42 answer while the body is read; then routing, the form type (HY-59.12) and the CSRF token (HY-59.8) answer, and a request that they refuse leaves no temporary file.",
-                  "ko": "검사는 HY-59.3의 순서를 유지하여, body 제한보다 큰 `Content-Length`는 body를 읽기 전에 413을 받고, 이 rule의 제한과 HY-42의 실패는 body를 읽는 동안 답하며, 그 뒤에 routing, form type(HY-59.12), CSRF token(HY-59.8)이 답하고 그것들이 거부한 요청은 임시 file을 남기지 않는다.",
-                  "koSource": "bef3f82895ba609fb184a4fc92acbd8f87e57a52efd52ce14b1cea4fa4004f7e"
+                  "id": "HY-131.31",
+                  "en": "The checks keep the order of HY-59.3: a request whose `Content-Length` is larger than the body limit receives 413, and no byte of its body is parsed or stored, whether the host leaves the body unread or reads it to discard it; the limits of this rule and the failures of HY-42 answer while the body is read; then routing, the form type (HY-59.12) and the CSRF token (HY-59.8) answer, and a request that they refuse leaves no temporary file.",
+                  "ko": "검사는 HY-59.3의 순서를 유지한다. `Content-Length`가 body 제한보다 큰 요청은 413을 받고, host가 body를 읽지 않고 두든 버리려고 읽든 그 body의 어떤 byte도 parse하거나 저장하지 않는다. 이 rule의 제한과 HY-42의 실패는 body를 읽는 동안 답하며, 그 뒤에 routing, form type(HY-59.12), CSRF token(HY-59.8)이 답하고 그것들이 거부한 요청은 임시 file을 남기지 않는다.",
+                  "koSource": "3bc05a656061e45ee311cabed7379e5687985c1e086b219479ec0b254fde199a"
                 },
                 {
                   "id": "HY-131.29",
                   "en": "A `Content-Length` that is no number receives status 400 with kind `invalid_content_length` of http-form before the body is read (F-9), and the host passes the field value to the core, which compares it with the body limit (F-25.1).",
                   "ko": "숫자가 아닌 `Content-Length`는 body를 읽기 전에 http-form의 kind `invalid_content_length`와 상태 400을 받고(F-9), host는 그 field 값을 core에 넘겨 core가 body 한도와 비교한다(F-25.1).",
-                  "koSource": "2c99960ae716bb9e2eaf81e377fd1bdb77c6029533f4acb6f01098b5096131cb"
+                  "koSource": "2c99960ae716bb9e2eaf81e377fd1bdb77c6029533f4acb6f01098b5096131cb",
+                  "unimplemented": "H35.36-2"
                 },
                 {
                   "id": "HY-131.19",
@@ -1003,10 +1040,10 @@
                   "koSource": "2701dc599b0bb82fe04770389b2c17678cde1759bef816c6aed0efb58672d2e7"
                 },
                 {
-                  "id": "HY-131.25",
-                  "en": "The Node host reads a body in paused mode: on each `'readable'` event it takes the bytes that `request.read()` gives as one buffer, awaits `feed` of that buffer and reads again only after it settled, and it joins no chunks, because joining would pass the bound of HY-131.26 and delay the check of a limit; the PHP and Python servers feed a chunk before they read the next one.",
-                  "ko": "Node host는 body를 paused mode로 읽는다. `'readable'` event마다 `request.read()`가 주는 byte를 buffer 하나로 받아 그 buffer의 `feed`를 기다리고, 그것이 끝난 뒤에만 다시 읽으며, 조각을 모으지 않는다. 모으면 HY-131.26의 한도를 넘고 제한의 판정이 늦어지기 때문이다. PHP와 Python server는 조각 하나를 넘긴 뒤에 다음 조각을 읽는다.",
-                  "koSource": "4301d8857b9500c8cbc4caf206f617a95a44b18d03bda6b99a347401b173eefb"
+                  "id": "HY-131.33",
+                  "en": "The Node host gives a body to `feed` one chunk at a time, as `node:http` delivers it, and takes the next chunk only after the files of the body took the bytes of the last one, and it joins no chunks, because joining would pass the bound of HY-131.26 and delay the check of a limit; the PHP and Python servers feed a chunk before they read the next one.",
+                  "ko": "Node host는 `node:http`가 주는 대로 body를 조각 하나씩 `feed`에 주고, body의 file이 앞 조각의 byte를 받은 뒤에만 다음 조각을 받으며, 조각을 모으지 않는다. 모으면 HY-131.26의 한도를 넘고 제한의 판정이 늦어지기 때문이다. PHP와 Python server는 조각 하나를 넘긴 뒤에 다음 조각을 읽는다.",
+                  "koSource": "293a65dbc8859dfa43251e1231398a7e72e466ab3b81f248e3c9d0333f4b9444"
                 }
               ]
             }
@@ -1693,7 +1730,11 @@
             4,
             5,
             6,
-            13
+            13,
+            16,
+            18,
+            22,
+            24
           ],
           "blocks": [
             {
@@ -1706,10 +1747,10 @@
                   "koSource": "62bd975e2927bc8b8069defc57f262d6a60204154a0d79ef0a98e2365977c86f"
                 },
                 {
-                  "id": "HY-125.16",
-                  "en": "It leaves out `client/build.json` and `program/build.json`, the static shell `csr/index.html`, which holds the id, and the copies below `csr/assets`, which hold the bytes of the files below `public/assets`.",
-                  "ko": "`client/build.json`과 `program/build.json`, id를 담는 정적 셸 `csr/index.html`, 그리고 `public/assets` 아래 파일의 바이트를 담는 `csr/assets` 아래 사본은 빼고 계산한다.",
-                  "koSource": "50b07dbd0cad8e9c5db8690e0b1faca453f2dfb71d160c9641ae84463de9e4e8"
+                  "id": "HY-125.25",
+                  "en": "It leaves out `program/build.json`, the static shell `csr/index.html`, which holds the id, a file `csr/assets/<name>` when the outputs also hold `public/assets/<name>`, because it is the copy of that file, and `client/assets.previous.json`, which holds the files of earlier builds, so the id of a build does not depend on the builds before it; a `--static` file below `csr/assets` that copies no file of `public/assets` is hashed like every other `--static` file.",
+                  "ko": "`program/build.json`, id를 담는 정적 셸 `csr/index.html`, 출력이 `public/assets/<name>`도 담을 때의 파일 `csr/assets/<name>`(그 파일의 사본이므로), 그리고 앞선 build의 파일을 담는 `client/assets.previous.json`은 빼고 계산하므로, build의 id는 앞선 build에 달려 있지 않다. `public/assets`의 어떤 파일도 복사하지 않는 `csr/assets` 아래 `--static` 파일은 다른 모든 `--static` 파일처럼 hash한다.",
+                  "koSource": "7761b37a9e8a98d08bf214523db62725f20a74b90fec0dbbc86b2afec59258f6"
                 },
                 {
                   "id": "HY-125.17",
@@ -1724,10 +1765,10 @@
                   "id": "HY-125.3"
                 },
                 {
-                  "id": "HY-125.18",
-                  "en": "It writes the id as `{\"build\":\"<build id>\"}` into `build.json` of `program/` and of `client/`, and every server reads the id when the application opens; `open` fails with the absolute path of a `build.json` that is missing or that does not hold exactly the key `build` with a build id.",
-                  "ko": "build는 id를 `{\"build\":\"<build id>\"}`로 `program/`과 `client/`의 `build.json`에 쓰고, 모든 서버는 애플리케이션을 열 때 id를 읽는다. `open`은 `build.json`이 없거나 build id를 가진 key `build` 하나만 담고 있지 않으면 그 절대 경로로 실패한다.",
-                  "koSource": "a6e034be3abc9a02262ce34ec4e1b936676c438b1b31b96e3fb35404ec260250"
+                  "id": "HY-125.23",
+                  "en": "It writes the id as `{\"build\":\"<build id>\"}` into `build.json` of `program/` only, and every server reads the id there when the application opens; `open` fails with the absolute path of a `build.json` that is missing or that does not hold exactly the key `build` with a build id.",
+                  "ko": "build는 id를 `{\"build\":\"<build id>\"}`로 `program/`의 `build.json`에만 쓰고, 모든 서버는 애플리케이션을 열 때 거기서 id를 읽는다. `open`은 `build.json`이 없거나 build id를 가진 key `build` 하나만 담고 있지 않으면 그 절대 경로로 실패한다.",
+                  "koSource": "8254d267962bdab8dde6d757185e3dc8f5765ee7f21fc68d966d663d147a9dd0"
                 },
                 {
                   "id": "HY-125.19",
@@ -1857,6 +1898,7 @@
           "kind": "rule",
           "id": "HY-128",
           "retired": [
+            4,
             6,
             7,
             8,
@@ -1886,12 +1928,6 @@
                   "ko": "`shared`의 member `context`는 JSON 응답에 없다. 브라우저 코드는 렌더하기 전에 context를 HY-10의 위치에 맞춰 `shared`에 넣는다. 응답에 `value`가 있으면 그 값이고, 없으면 보관한 context다.",
                   "koSource": "f71d6802c85bdc391c671e2f7c66527aa1112d3a38fd02aa3a9f83720187cee1",
                   "id": "HY-128.3"
-                },
-                {
-                  "en": "The Node server renders its documents with that same code (HY-54) from the context map, and puts the member `context` with `hash` and `value` into the value that it renders only for a document that embeds its data.",
-                  "ko": "Node 서버는 context map으로 같은 코드(HY-54)를 써서 문서를 렌더하며, `hash`와 `value`를 가진 member `context`는 데이터를 내장하는 문서에서만 렌더하는 값에 넣는다.",
-                  "koSource": "444d40acd8cc281d5438d7000b867053eb66a5ae6fbbb52d7c2ff13b2b6d29bc",
-                  "id": "HY-128.4"
                 },
                 {
                   "en": "A document that embeds its data (HY-31) embeds `build` and `context` with `value`.",
@@ -2395,6 +2431,7 @@
           "kind": "rule",
           "id": "HYC-24",
           "retired": [
+            2,
             3,
             4
           ],
@@ -2409,10 +2446,22 @@
                   "id": "HYC-24.1"
                 },
                 {
-                  "en": "The `App` of every server takes the same map as its option `functions` (HY-106) when the application opens, and the Node server registers it through `createApplication` of the browser code, so the server and the browser register the same names (template FUN-47); a registration that fails (template FUN-44) fails the open.",
-                  "ko": "모든 서버의 `App`은 애플리케이션을 열 때 같은 map을 option `functions`(HY-106)로 받고, Node 서버는 브라우저 코드의 `createApplication`으로 그것을 등록하므로, 서버와 브라우저는 같은 이름을 등록한다(template FUN-47). 등록이 실패하면(template FUN-44) 열기가 실패한다.",
-                  "koSource": "a9e5774cf33b564f7718a40f77e95a6763ea44110331e5ebac72c0bb9b2482c1",
-                  "id": "HYC-24.2"
+                  "id": "HYC-24.9",
+                  "en": "The `App` of every server takes a map from names to functions as its option `functions` (HY-106) when the application opens and registers each entry in its template engine; an application gives the server and the browser the same names (template FUN-47), and a registration that fails (template FUN-44) fails the open.",
+                  "ko": "모든 서버의 `App`은 애플리케이션을 열 때 이름에서 함수로 가는 map을 option `functions`(HY-106)로 받아 각 entry를 자기 template engine에 등록한다. 애플리케이션은 서버와 브라우저에 같은 이름을 주며(template FUN-47), 등록이 실패하면(template FUN-44) 열기가 실패한다.",
+                  "koSource": "f52f03d70ccb458257fdb398d71483e75c0c5422dc95107812ea2439805dbc14"
+                },
+                {
+                  "id": "HYC-24.10",
+                  "en": "A function of a server receives the list of its arguments and, as its second argument, the environment of the render, a value with `timezone` and `now`; a function of the browser receives that environment as the member `env` of its second argument while the browser renders with the JS engine.",
+                  "ko": "서버의 함수는 인자 목록과, 두 번째 인자로 렌더의 환경 곧 `timezone`과 `now`를 가진 값을 받는다. 브라우저의 함수는 브라우저가 JS engine으로 렌더하는 동안 그 환경을 두 번째 인자의 member `env`로 받는다.",
+                  "koSource": "b562307b2135702f1949e7838d63fad7f036bc19613192c53ac2000021744277"
+                },
+                {
+                  "id": "HYC-24.11",
+                  "en": "PHP: the binding of the core calls a function with two arguments, so `App::open` fails with a `HyperTypeError` of kind `invalid_callback` whose message names the function, the number of its parameters and the two arguments, for a closure that takes fewer than two parameters.",
+                  "ko": "PHP: core의 바인딩은 함수를 두 인자로 부르므로, 매개변수가 둘보다 적은 closure에 대해 `App::open`은 그 함수, 그 매개변수의 수, 두 인자를 밝히는 message를 가진 kind `invalid_callback`의 `HyperTypeError`로 실패한다.",
+                  "koSource": "aa14adadb5eade6802fb1f75a1e27f662be874bbb819311ffc73dd05bd45447c"
                 },
                 {
                   "id": "HYC-24.5",
@@ -2425,6 +2474,18 @@
                   "en": "A render that calls a name that is neither built in nor registered fails with HY-43.",
                   "ko": "built-in이 아니고 등록되지도 않은 이름을 호출하는 render는 HY-43으로 실패한다.",
                   "koSource": "be1b66131962cfe97a15fc9e8068bff013eb6b8cfdc2ed341a75d2babc867584"
+                },
+                {
+                  "id": "HYC-24.7",
+                  "en": "The core judges an entry of `functions`: its rule `rules.check_function_entry` takes the name of the entry and whether its value is a function of the host language, and fails an entry that is not one with kind `invalid_application` and the message `functions.<name> is not a function`.",
+                  "ko": "core가 `functions`의 entry를 판정한다: core의 규칙 `rules.check_function_entry`는 entry의 이름과 그 값이 host 언어의 함수인지를 받고, 함수가 아닌 entry를 kind `invalid_application`과 메시지 `functions.<name> is not a function`으로 실패시킨다.",
+                  "koSource": "17999d8d629cdc8ebe2d7a84b9723fb211c3e1c3c031f759007e820f44de0087"
+                },
+                {
+                  "id": "HYC-24.8",
+                  "en": "A registration that the template language refuses fails with kind `invalid_application` and the message of the template language, unchanged.",
+                  "ko": "template 언어가 거부하는 등록은 kind `invalid_application`과 template 언어의 메시지 그대로 실패한다.",
+                  "koSource": "c4b529e0edb4ca8130663897ab8a2ce7dd6ab46e9d67411a9567a7b73baa7b8f"
                 }
               ]
             }
@@ -2523,9 +2584,9 @@
                     },
                     {
                       "id": "HY-62.9",
-                      "en": "The server calls the selection once per request, after HY-59.4 and HY-42 and before routing, with the request without its `Cookie` header: the choice decides the shell response and the path of a representation, and neither varies by `Cookie` (HY-117).",
-                      "ko": "서버는 요청마다 HY-59.4와 HY-42 뒤, 라우팅 전에 `Cookie` header를 뺀 요청으로 선택을 한 번 호출한다. choice가 셸 응답과 representation의 경로를 정하고, 둘 다 `Cookie`에 따라 달라지지 않기 때문이다(HY-117).",
-                      "koSource": "74af890ff305d3d1635a44f4cb4edf08491ddafc25dd05cf6b249cc7f7fcc92d"
+                      "en": "The server calls the selection once per request, after HY-59.15 and HY-42 and before routing, with the request without its `Cookie` header: the choice decides the shell response and the path of a representation, and neither varies by `Cookie` (HY-117).",
+                      "ko": "서버는 요청마다 HY-59.15와 HY-42 뒤, 라우팅 전에 `Cookie` header를 뺀 요청으로 선택을 한 번 호출한다. choice가 셸 응답과 representation의 경로를 정하고, 둘 다 `Cookie`에 따라 달라지지 않기 때문이다(HY-117).",
+                      "koSource": "fcc6716fb3d8ed721ebc9e3f4c1dffbed5b57f6221055ff47af8508313defba5"
                     },
                     {
                       "id": "HY-62.10",
@@ -2694,9 +2755,9 @@
                 },
                 {
                   "id": "HY-62.38",
-                  "en": "A request that HY-59.4 or HY-42 refuses calls no selection.",
-                  "ko": "HY-59.4나 HY-42가 거절하는 요청은 selection을 호출하지 않는다.",
-                  "koSource": "e0347e9943aac6bbea1d7fc6d5e6ff29fe1139f2abf6bf553b74f0049718fe21"
+                  "en": "A request that HY-59.15 or HY-42 refuses calls no selection.",
+                  "ko": "HY-59.15나 HY-42가 거절하는 요청은 selection을 호출하지 않는다.",
+                  "koSource": "cf996945086865aedbc15bbfe00a75b994c7d2e17655eeb71d465a0539de1203"
                 }
               ]
             }
@@ -3178,7 +3239,9 @@
         {
           "kind": "rule",
           "id": "HY-31",
-          "retired": [],
+          "retired": [
+            10
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -3206,12 +3269,6 @@
                   "en": "One rule of the Rust core gives the name and the source of the reserved template, so that the build, which writes no copy of it below `program/templates/`, and every server take them from one place.",
                   "ko": "Rust core의 규칙 하나가 예약 템플릿의 이름과 소스를 주므로, `program/templates/` 아래에 그 사본을 쓰지 않는 build와 모든 서버는 그것을 한 곳에서 받는다.",
                   "koSource": "718d9aac27f512ce30961f41abc835224e23228663bd62d106eb7b4dda27e794"
-                },
-                {
-                  "id": "HY-31.10",
-                  "en": "While a server does not call the core, the build writes the copy `program/legacy/hyper/data.tpl` of that source, which only such a server reads.",
-                  "ko": "core를 부르지 않는 서버가 있는 동안 build는 그 소스의 사본 `program/legacy/hyper/data.tpl`을 쓰고, 그런 서버만 그것을 읽는다.",
-                  "koSource": "0bcc434476acf7d486c58e86f5504d6fbe9fdadaef856497cc6adcde943e1b19"
                 },
                 {
                   "id": "HY-31.4",
@@ -3337,6 +3394,7 @@
           "retired": [
             10,
             21,
+            23,
             24,
             26,
             27,
@@ -3517,10 +3575,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-73.23",
-                      "en": "The build writes the read paths of every route to `reads.json` of the server program (HY-48), and the Node server computes them with the browser package when the application opens.",
-                      "ko": "빌드는 모든 라우트의 읽기 경로를 서버 프로그램의 `reads.json`(HY-48)에 쓰고, Node 서버는 애플리케이션을 열 때 브라우저 패키지로 읽기 경로를 계산한다.",
-                      "koSource": "5eee8f6e4610f61c9d2dad5d662ce97c777b43fcafa943d2d2689b1980f9a2a3"
+                      "id": "HY-73.34",
+                      "en": "The build writes the read paths of every route to `reads.json` of the server program (HY-48).",
+                      "ko": "빌드는 모든 라우트의 읽기 경로를 서버 프로그램의 `reads.json`(HY-48)에 쓴다.",
+                      "koSource": "48f56062512b976a70f972d7057ecb844ed9c5dee50c3d7c63e01c7b8fd8a105"
                     },
                     {
                       "id": "HY-73.30",
@@ -4077,7 +4135,10 @@
         {
           "kind": "rule",
           "id": "HYC-12",
-          "retired": [],
+          "retired": [
+            6,
+            9
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -4113,10 +4174,10 @@
                   "koSource": "32c19530bc2e4ef2f411ab4aa5210baad7fa59f5d11493580284fe3e3f4afc1f"
                 },
                 {
-                  "id": "HYC-12.6",
-                  "en": "The browser never renders `hyper/data.tpl`, because a client-rendered document embeds no data (HY-31); the Node server, which renders it, checks that the index holds it.",
-                  "ko": "클라이언트 렌더 문서는 데이터를 내장하지 않으므로(HY-31) 브라우저는 `hyper/data.tpl`을 결코 렌더하지 않으며, 그것을 렌더하는 Node 서버가 색인에 그것이 있는지 확인한다.",
-                  "koSource": "b1cbd19c5ca3bf71e98a4a9dbe5e5fc6a6fb1ed208009c01b647b11d4d1a9f04"
+                  "id": "HYC-12.10",
+                  "en": "The browser never renders `hyper/data.tpl`, because a client-rendered document embeds no data (HY-31).",
+                  "ko": "클라이언트 렌더 문서는 데이터를 내장하지 않으므로(HY-31) 브라우저는 `hyper/data.tpl`을 결코 렌더하지 않는다.",
+                  "koSource": "60caec06dbf0fa06da4b784d1fc6e62dd292c5ab9d0cecd527428c5d09ccc7e6"
                 },
                 {
                   "id": "HYC-12.7",
@@ -4129,12 +4190,6 @@
                   "en": "Loaded templates stay loaded until the page unloads.",
                   "ko": "불러온 템플릿은 페이지가 unload될 때까지 유지된다.",
                   "koSource": "8135013d968f9c655ce53fa6c0d79c33409316e0212ff9ae75022a042dcbd6ee"
-                },
-                {
-                  "id": "HYC-12.9",
-                  "en": "The Node server, which renders every page, reads every template of the index when it opens.",
-                  "ko": "모든 페이지를 렌더하는 Node 서버는 열 때 색인의 모든 템플릿을 읽는다.",
-                  "koSource": "ac8da5b0cc3b913b60594c76c0aafe504aaecc1eb40523af2ed182274ca35b22"
                 }
               ]
             }
@@ -4144,7 +4199,10 @@
           "kind": "rule",
           "id": "HYC-16",
           "retired": [
-            6
+            6,
+            7,
+            15,
+            16
           ],
           "blocks": [
             {
@@ -4199,10 +4257,46 @@
                   "koSource": "0f04ae429defb5a2b8ff4e399ad710f855722a11da89d3730654a62804620553"
                 },
                 {
-                  "id": "HYC-16.7",
-                  "en": "The application places and links its own stylesheets and names with `--static` the files below `public/` that the static deployment holds at the same path, such as the stylesheets that its layouts link; the build adds no other file of `public/assets` to the deployment than the files that it writes, because `public/assets` keeps the files of earlier builds.",
-                  "ko": "애플리케이션은 자기 스타일시트를 두고 링크하며, 레이아웃이 링크하는 스타일시트처럼 정적 배포물이 같은 경로에 담을 `public/` 아래 파일을 `--static`으로 밝힌다. `public/assets`에는 이전 build의 파일이 남으므로, build는 자신이 쓰는 파일 말고는 `public/assets`의 파일을 배포물에 추가하지 않는다.",
-                  "koSource": "483705be6961b646b55dee07088351876e32573687c5b38f445861a9d6ca143c"
+                  "id": "HYC-16.14",
+                  "en": "The application places and links its own stylesheets and names with `--static` the files below `public/` that the static deployment holds at the same path, such as the stylesheets that its layouts link; the build adds no other file of `public/assets` to the deployment than the files that it writes, because `public/assets` also holds the files that the application placed there.",
+                  "ko": "애플리케이션은 자기 스타일시트를 두고 링크하며, 레이아웃이 링크하는 스타일시트처럼 정적 배포물이 같은 경로에 담을 `public/` 아래 파일을 `--static`으로 밝힌다. `public/assets`에는 애플리케이션이 직접 둔 파일도 있으므로, build는 자신이 쓰는 파일 말고는 `public/assets`의 파일을 배포물에 추가하지 않는다.",
+                  "koSource": "5f751e279f3cb08bda0ce8f52fcd4317b37a35c46852c90bbfa6eebb2b88f164"
+                },
+                {
+                  "id": "HYC-16.17",
+                  "en": "The build keeps two lists below `client/`: `assets.json`, the files below `public/assets` that it wrote, and `assets.previous.json`, the files of the last build before it whose list differed.",
+                  "ko": "build는 `client/` 아래에 두 목록을 둔다. 자기가 쓴 `public/assets` 아래 파일의 `assets.json`과, 목록이 달랐던 마지막 앞선 build의 파일의 `assets.previous.json`이다.",
+                  "koSource": "ee76565f688127fe34de09e51ce7d708f839c4bfbe6dd89eab68d4094fa40b4e"
+                },
+                {
+                  "id": "HYC-16.18",
+                  "en": "After a build whose list differs from the list of the build before it published its outputs, it removes below `public/assets` exactly the files that `assets.previous.json` named and that neither the list of the build before nor its own list names, and prints each file that it removed, so a page of the build before, which is still open, keeps loading the files of that build.",
+                  "ko": "목록이 앞선 build의 목록과 다른 build는 출력을 게시한 뒤, `assets.previous.json`이 적었고 앞선 build의 목록도 자기 목록도 적지 않는 파일만 `public/assets` 아래에서 지우며 지운 파일을 하나씩 출력하므로, 아직 열려 있는 앞선 build의 페이지는 그 build의 파일을 계속 불러온다.",
+                  "koSource": "9b2b62a1cd31aad51665d391ec129e2611d383bf4d1154177ce1b2b7b63db5ef"
+                },
+                {
+                  "id": "HYC-16.19",
+                  "en": "A build whose list equals the list of the build before it removes nothing and leaves `assets.previous.json` as it is, so builds of unchanged sources do not shorten the time for which the files of the last different build stay.",
+                  "ko": "목록이 앞선 build의 목록과 같은 build는 아무것도 지우지 않고 `assets.previous.json`을 그대로 두므로, source가 바뀌지 않은 build는 마지막으로 달랐던 build의 파일이 남는 기간을 줄이지 않는다.",
+                  "koSource": "81bfff2dd9b1030f09119dcb42aebaf8ec3cff6faf4767e59e76e28e28a71c14"
+                },
+                {
+                  "id": "HYC-16.20",
+                  "en": "A build without a list of a build before it, or with that list alone, removes nothing, and no file is removed for the form of its name, so a file that the application placed below `public/assets` stays.",
+                  "ko": "앞선 build의 목록이 없거나 그 목록 하나만 있는 build는 아무것도 지우지 않고, 이름의 형태로는 어떤 파일도 지우지 않으므로 애플리케이션이 `public/assets` 아래에 둔 파일은 남는다.",
+                  "koSource": "9af422621040a85a80714bb43cc1992d4f26193115477495f12d409850018f04"
+                },
+                {
+                  "id": "HYC-16.21",
+                  "en": "Before a build whose list differs writes a file below `public/assets`, it writes into `assets.previous.json` every path that the two earlier lists and its own list name, and after the removal the list of the build before it, so a build that ends early leaves lists that name every file that the builds wrote.",
+                  "ko": "목록이 다른 build는 `public/assets` 아래에 파일을 쓰기 전에 앞선 두 목록과 자기 목록이 적는 모든 경로를 `assets.previous.json`에 쓰고, 지운 뒤에는 앞선 build의 목록을 쓰므로, 일찍 끝난 build는 build들이 쓴 모든 파일을 적는 목록을 남긴다.",
+                  "koSource": "3c5bafc2d0f2e0c92e60f1c95ab211205f247847672cfbe31b4b42c42b8b63e8"
+                },
+                {
+                  "id": "HYC-16.22",
+                  "en": "A list of an earlier build that is no list of paths of files below `public/assets` fails the build before it writes, with an error that names the file of the list, the path that it refuses and the repair, which is to remove or correct that file.",
+                  "ko": "앞선 build의 목록이 `public/assets` 아래 파일 경로의 목록이 아니면 build는 쓰기 전에 실패하며, 오류는 그 목록의 파일, 거부한 경로, 그리고 그 파일을 지우거나 고치라는 고치는 방법을 밝힌다.",
+                  "koSource": "a13fae724446a00a4b86d514d806ee63013cda107489f21cdef30313899afb43"
                 },
                 {
                   "id": "HYC-16.8",
@@ -4215,6 +4309,12 @@
                   "en": "The static shell also contains `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`, whose content is the member `hyper` of `client/manifest.json`, the URL of the entry that it inlines, because an inlined script has no address and a layout that names the entry as a module script must not load it again (HYC-25).",
                   "ko": "정적 셸은 `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`도 담으며, 그 content는 `client/manifest.json`의 member `hyper`, 곧 셸이 인라인한 진입 파일의 URL이다. 인라인한 script에는 주소가 없고, 진입 파일을 module script로 적은 레이아웃이 그것을 다시 불러오면 안 되기 때문이다(HYC-25).",
                   "koSource": "dcd729668fc6a6c7c46baa916218a56067e41abc89e736d992e8939df43d2ea6"
+                },
+                {
+                  "id": "HYC-16.23",
+                  "en": "One rule of the core writes the text of the static shell from the data base path, the build id and the URL and the code of the entry, so every caller writes the same bytes: the lines `<!doctype html>`, `<html>`, `<head>`, `<meta charset=\"utf-8\">`, `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">`, the elements `hyper-api`, `hyper-build` and `hyper-entry`, `<title></title>`, the entry in `<script type=\"module\">`, `</head>`, `<body></body>` and `</html>`, each followed by a line feed; the data base path is escaped as the declaration check of HY-62 reads it, and an entry whose code contains `</script` in any case, or a build id of another form (HY-125.19), fails the build with the kind `invalid_build`, because such an entry cannot be inlined.",
+                  "ko": "core의 규칙 하나가 데이터 기본 경로, build id, 진입 파일의 URL과 코드로 정적 셸의 텍스트를 쓰므로, 모든 호출자는 같은 바이트를 쓴다: 줄 `<!doctype html>`, `<html>`, `<head>`, `<meta charset=\"utf-8\">`, `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">`, 요소 `hyper-api`, `hyper-build`, `hyper-entry`, `<title></title>`, `<script type=\"module\">` 안의 진입 파일, `</head>`, `<body></body>`, `</html>`이며 각 줄 뒤에 line feed가 온다. 데이터 기본 경로는 HY-62의 선언 검사가 읽는 대로 escape하며, 코드에 대소문자와 상관없이 `</script`를 담은 진입 파일이나 다른 형식의 build id(HY-125.19)는 kind `invalid_build`로 build를 실패시킨다. 그런 진입 파일은 인라인할 수 없기 때문이다.",
+                  "koSource": "550d6ba0f9bb804ef6ec5c79431f4a74ba5d1db95f4d315d76c42807f18d16d6"
                 },
                 {
                   "id": "HYC-16.9",
@@ -4543,6 +4643,12 @@
                   "en": "A kept value takes the place of the value at its path, so every map of the data keeps its keys in their order, and a kept map keeps its keys in its own order.",
                   "ko": "유지 값은 그 경로의 값을 대신하므로, 데이터의 모든 map은 키를 그 순서대로 유지하고, 유지 map은 자신의 순서대로 키를 유지한다.",
                   "koSource": "d837eab31e964475e895019b54bb2b42f4c2c335fe5f793c0d531d9a197ec80b"
+                },
+                {
+                  "id": "HY-38.20",
+                  "en": "The server reads the stored kept values of a response after the loaders of the request returned, so `kept` of that response holds the stored values as they are then, a value that was stored while the handlers of the request ran included.",
+                  "ko": "서버는 요청의 로더가 돌아온 뒤에 응답의 저장된 유지 값을 읽으므로, 그 응답의 `kept`는 그때의 저장된 값을 담으며, 요청의 handler가 실행되는 동안 저장된 값도 거기에 포함된다.",
+                  "koSource": "2f46d2ca9b22b3f7d1a4f3339151e0ef0f8499663917119077f87324ff92d0e7"
                 }
               ]
             }
@@ -4869,7 +4975,8 @@
           "kind": "rule",
           "id": "HY-44",
           "retired": [
-            8
+            8,
+            9
           ],
           "blocks": [
             {
@@ -4918,10 +5025,22 @@
                   "koSource": "2ba01cc5768542a57bc4f3e910c0f1e5abf811f7c12ddf5320a2950c367fab54"
                 },
                 {
-                  "id": "HY-44.9",
-                  "en": "A value outside the data model fails with the error of the template data model, whose kind, such as `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth` or `data_unsupported_type`, and message hyper passes on as they are (VAL-2, VAL-3, VAL-13, VAL-20).",
-                  "ko": "데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며, hyper는 그 kind(`data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`, `data_unsupported_type` 등)와 message를 그대로 넘긴다(VAL-2, VAL-3, VAL-13, VAL-20).",
-                  "koSource": "9db70dc460932177a39be716f1a747ed1becc1c3a010e5181fb7d153e2d8659c"
+                  "id": "HY-44.10",
+                  "en": "A value outside the data model fails the request when the server receives it from its handler: the context, the shared data, the data of each loader and the data of an action are each checked before the server calls the next handler, so no handler runs after one that returned such a value.",
+                  "ko": "데이터 모델 밖의 값은 서버가 그 handler에게서 값을 받을 때 요청을 실패시킨다: context, 공유 데이터, 각 로더의 데이터, action의 데이터는 서버가 다음 handler를 호출하기 전에 각각 검사되므로, 그런 값을 돌려준 handler 뒤에는 어떤 handler도 실행되지 않는다.",
+                  "koSource": "ac4fba08a4df2a1bd8f782123c572f40f65acb0d36a807abb216f9cf197821bf"
+                },
+                {
+                  "id": "HY-44.11",
+                  "en": "The limit of 64 levels of lists and maps (VAL-20) counts the maps that hold a value in the check: the context under the key `context` of one map, the shared data under the key `shared` of one map, and the data of a region under its name in the map `regions` of one map; so the map of a context or of the shared data nests at most 63 levels of lists and maps, itself included, and the map of the data of a region, the data of an action included, at most 62.",
+                  "ko": "list와 map의 64단계 한계(VAL-20)는 검사에서 값을 담는 map도 센다: context는 한 map의 key `context` 아래에, 공유 데이터는 한 map의 key `shared` 아래에, 영역의 데이터는 한 map의 map `regions` 안에서 그 이름 아래에 있다. 그래서 context나 공유 데이터의 map은 자신을 포함해 list와 map을 최대 63단계까지 중첩하고, action의 데이터를 포함한 영역 데이터의 map은 최대 62단계까지 중첩한다.",
+                  "koSource": "7d3d6ab76d5c6b954aff940058b4bbacd6c4cdda642b25d7da4aeedd31be78bf"
+                },
+                {
+                  "id": "HY-44.12",
+                  "en": "A value outside the data model fails with the error of the template data model (VAL-2, VAL-3, VAL-13, VAL-20), and hyper passes on its kind, such as `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth` or `data_unsupported_type`, and its message as they are: the message that a caller receives, as the failure of the response hook does (HY-60), is the whole text of that error as the binding gives it, which starts with the kind, such as `data_number_range: number 9007199254740992 is outside the safe range`, and hyper adds nothing to it and removes nothing from it.",
+                  "ko": "데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며(VAL-2, VAL-3, VAL-13, VAL-20), hyper는 그 kind(`data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`, `data_unsupported_type` 등)와 message를 그대로 넘긴다: 호출자가 받는 message는, 응답 hook이 받는 failure(HY-60)가 그렇듯, binding이 주는 그 오류의 전체 text이고 kind로 시작하며(예: `data_number_range: number 9007199254740992 is outside the safe range`), hyper는 거기에 아무것도 더하지 않고 거기에서 아무것도 빼지 않는다.",
+                  "koSource": "25600438c6861cabec4157c4c0a48e0eb2d17a9d6dbc8c03c2452fa600d93745"
                 }
               ]
             }
@@ -5166,6 +5285,7 @@
           "kind": "rule",
           "id": "HY-54",
           "retired": [
+            3,
             4,
             5,
             6,
@@ -5207,10 +5327,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-54.3",
-                      "en": "It renders a document as the browser renders the document JSON value (HY-12, HY-31, HY-38), with the browser code and the template files of `hyper build` (HR-34), and embeds its data when the reply asks for it (HY-92).",
-                      "ko": "문서는 브라우저가 문서 JSON 값을 렌더하는 방식대로(HY-12, HY-31, HY-38) `hyper build`의 브라우저 코드와 템플릿 파일(HR-34)로 렌더하며, reply가 요청하면 그 데이터를 내장한다(HY-92).",
-                      "koSource": "4e1f6a30b454925a971e263f0b51a470aa0a2c9bcb2255a91a43d846c5ffb423"
+                      "id": "HY-54.23",
+                      "en": "It matches the path of a request with the router of the browser code and reads the declarations of the manifest, its regions and their kept paths included, with the manifest check of the browser code, after the core accepted the manifest (HY-2.7), until the core routes a request.",
+                      "ko": "요청의 경로는 브라우저 코드의 router로 match하고, 매니페스트의 선언은 영역과 그 유지 경로를 포함해 브라우저 코드의 매니페스트 검사로 읽는다. 이는 core가 매니페스트를 받아들인 뒤이며(HY-2.7), core가 요청을 routing할 때까지다.",
+                      "koSource": "edd938f779491777be5ab155172a80b599822c7f2c38d611083fd33339354c91"
                     }
                   ],
                   "blocks": []
@@ -5767,7 +5887,9 @@
         {
           "kind": "rule",
           "id": "HY-132",
-          "retired": [],
+          "retired": [
+            8
+          ],
           "blocks": [
             {
               "kind": "paragraph",
@@ -5813,12 +5935,6 @@
                   "en": "The browser code (packages/client), which runs without a binding, raises every failure of hyper in its own class of the category of the failure, `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError` or `HyperInternalError`, which extends the base class of Node of that category (HY-132.2) and gives the kind and the status as the properties `kind` and `status`, so that a failure of its checks at open (`checkManifest`, `checkTemplateIndex`, `createApplication` and `routeReads`) is a `HyperValueError` of kind `invalid_application` (HY-106.21); a failure without a kind or in another class fails this rule.",
                   "ko": "binding 없이 실행되는 브라우저 코드(packages/client)는 hyper의 모든 실패를 그 실패의 category에 속한 자기 class `HyperValueError`, `HyperTypeError`, `HyperIoError`, `HyperStoreError`, `HyperBusyError`, `HyperInternalError`로 내며, 이 class는 그 category의 Node 기반 class(HY-132.2)를 상속하고 kind와 상태를 속성 `kind`와 `status`로 준다. 따라서 open 때 그 검사(`checkManifest`, `checkTemplateIndex`, `createApplication`, `routeReads`)의 실패는 kind `invalid_application`의 `HyperValueError`이다(HY-106.21). kind가 없거나 다른 class인 실패는 이 규칙을 어긴다.",
                   "koSource": "2a9e1b4b3d83b48cfe34fb5fe83f2aa0e98b6566c56aab44d55ffb78aae529b3"
-                },
-                {
-                  "id": "HY-132.8",
-                  "en": "The Node server, which runs the checks of the browser code at open, raises a failure of them as the class of its binding of the same category with the same kind, status and message, so that its open fails with the `HyperValueError` of the binding of kind `invalid_application`, as the PHP and Python servers fail for the same input; an open that raises the class of the browser code, or an error without a kind, fails this rule.",
-                  "ko": "open 때 브라우저 코드의 검사를 실행하는 Node 서버는 그 검사의 실패를 같은 category의 binding class로, 같은 kind, 상태, message를 가지고 낸다. 따라서 그 open은 같은 입력에서 PHP와 Python 서버가 실패하듯 kind `invalid_application`의 binding `HyperValueError`로 실패한다. 브라우저 코드의 class나 kind 없는 오류를 내는 open은 이 규칙을 어긴다.",
-                  "koSource": "66dc94ac15907b6aa196a6877aba42d6f915f101b0838330e07e6d69e7274c63"
                 }
               ]
             },
@@ -6227,16 +6343,16 @@
                     "ko": "`malformed_content_type`"
                   },
                   {
-                    "en": "none",
-                    "ko": "없음"
+                    "en": "400",
+                    "ko": "400"
                   },
                   {
                     "en": "`value`",
                     "ko": "`value`"
                   },
                   {
-                    "en": "HY-59.12, HY-59.13",
-                    "ko": "HY-59.12, HY-59.13"
+                    "en": "HY-59.12, HY-59.13, HY-113.24",
+                    "ko": "HY-59.12, HY-59.13, HY-113.24"
                   }
                 ],
                 [
@@ -6302,9 +6418,14 @@
                 [{ "en": "`invalid_accept`", "ko": "`invalid_accept`" }, { "en": "http-negotiation", "ko": "http-negotiation" }, { "en": "HY-116.18", "ko": "HY-116.18" }],
                 [{ "en": "`invalid_weight`", "ko": "`invalid_weight`" }, { "en": "http-negotiation", "ko": "http-negotiation" }, { "en": "HY-116.18", "ko": "HY-116.18" }],
                 [{ "en": "`invalid_content_length`", "ko": "`invalid_content_length`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.29", "ko": "HY-131.29" }],
-                [{ "en": "`invalid`", "ko": "`invalid`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
-                [{ "en": "`header_limit`", "ko": "`header_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
-                [{ "en": "`no_boundary`", "ko": "`no_boundary`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.22", "ko": "HY-113.22" }],
+                [{ "en": "`invalid`", "ko": "`invalid`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.23, HY-113.25", "ko": "HY-113.23, HY-113.25" }],
+                [{ "en": "`header_limit`", "ko": "`header_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-113.23, HY-113.25", "ko": "HY-113.23, HY-113.25" }],
+                [{ "en": "`body_limit`", "ko": "`body_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`value_limit`", "ko": "`value_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`part_limit`", "ko": "`part_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`file_limit`", "ko": "`file_limit`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.30", "ko": "HY-131.30" }],
+                [{ "en": "`exists`", "ko": "`exists`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
+                [{ "en": "`moved`", "ko": "`moved`" }, { "en": "http-form", "ko": "http-form" }, { "en": "HY-131.28", "ko": "HY-131.28" }],
                 [{ "en": "`no_rows`", "ko": "`no_rows`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.8", "ko": "HY-107.8" }],
                 [{ "en": "`revision_changed`", "ko": "`revision_changed`" }, { "en": "orm", "ko": "orm" }, { "en": "HY-107.9", "ko": "HY-107.9" }]
               ]
@@ -6698,7 +6819,8 @@
                   "id": "HY-107.7",
                   "en": "The server recognizes an error of the ORM by the error classes of the orm package and by its kind, so hyper depends on the orm package, and the kinds `no_rows` and `revision_changed` are kinds that the orm library states.",
                   "ko": "server는 ORM의 오류를 orm 패키지의 오류 class와 그 kind로 알아보므로 hyper는 orm 패키지에 의존하며, kind `no_rows`와 `revision_changed`는 orm 라이브러리가 정한 kind다.",
-                  "koSource": "0e78a81022ef8184bde36a5a8f7c952578cf48fe09b2284336de2af03fd18160"
+                  "koSource": "0e78a81022ef8184bde36a5a8f7c952578cf48fe09b2284336de2af03fd18160",
+                  "unimplemented": "H35.45"
                 },
                 {
                   "id": "HY-107.8",
@@ -6854,7 +6976,8 @@
                   "id": "HY-104.25",
                   "en": "The storage of a session, which is its identifier, its record bytes, its lock, its file or Redis key and its expiry, is the rule of the session-store library, and hyper uses its store interface; the session values that hyper keeps in a record, which are the token (HY-24), the flash values and the changed topics (HY-25), the kept values (HY-40), the conversion between a record and the data model (HY-104.13, HY-104.14) and the keys of HY-104.22 and HY-104.23, are rules of hyper.",
                   "ko": "session의 저장(식별자, record 바이트, 잠금, 파일이나 Redis key, 만료)은 session-store 라이브러리의 규칙이고 hyper는 그 저장소 interface를 쓴다. hyper가 record에 두는 session 값, 곧 token(HY-24), flash 값과 바뀐 topic(HY-25), kept 값(HY-40), record와 데이터 모델 사이의 변환(HY-104.13, HY-104.14), HY-104.22와 HY-104.23의 key는 hyper의 규칙이다.",
-                  "koSource": "ed407dc1f359937edf87dc67f8dc31ec49e94c4ae9f1a58bc9dbe3e6d6303aba"
+                  "koSource": "ed407dc1f359937edf87dc67f8dc31ec49e94c4ae9f1a58bc9dbe3e6d6303aba",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-104.2",
@@ -6872,13 +6995,15 @@
                   "id": "HY-104.26",
                   "en": "The PHP server keeps a session with the file store of the session-store library, as the Node and Python servers do, and not with the native session handler of PHP, with which it shares only the file name, the record form `php_serialize`, the file mode and `flock` with `LOCK_EX`.",
                   "ko": "PHP server는 Node와 Python server처럼 session-store 라이브러리의 파일 저장소로 session을 가지며 PHP의 native session handler를 쓰지 않는다. native handler와는 파일 이름, record 형식 `php_serialize`, 파일 mode, `LOCK_EX`의 `flock`만 같다.",
-                  "koSource": "eb1366b1ae934510b5c85fe91dd840dc6f522e59aecb7ed04580d4b04b845be8"
+                  "koSource": "eb1366b1ae934510b5c85fe91dd840dc6f522e59aecb7ed04580d4b04b845be8",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-104.27",
                   "en": "Every server waits for the lock of a session file in the core of the session-store library, which blocks on `flock` with `LOCK_EX` on a thread of its own for each waiting session, with no retry and no interval, so the operating system orders the waiting requests as it orders the native files handler of PHP.",
                   "ko": "모든 server는 session-store 라이브러리의 core에서 session 파일의 잠금을 기다리며, core는 기다리는 session마다 자기 스레드에서 `LOCK_EX`의 `flock`으로 블로킹하고 재시도와 간격을 두지 않는다. 그래서 운영체제가 PHP native files handler에서처럼 기다리는 요청의 순서를 정한다.",
-                  "koSource": "850dfd9cfa53b44788215fa683d5290400a5ad97c9a7f27f93e8c6666750751c"
+                  "koSource": "850dfd9cfa53b44788215fa683d5290400a5ad97c9a7f27f93e8c6666750751c",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-104.7",
@@ -7085,7 +7210,8 @@
                   "id": "HY-115.29",
                   "en": "Every server takes the connection settings of the Redis store, which are the addresses, TLS and the ACL user, and not a client of the application, and the options `lockExpire` in seconds, `lockRetries` and `lockWait` in microseconds, which are `redis.session.lock_expire`, `redis.session.lock_retries` and `redis.session.lock_wait_time` of phpredis; every server of one Redis server gives them the same values, and the expiry is longer than any request.",
                   "ko": "모든 server는 애플리케이션의 client가 아니라 Redis 저장소의 연결 설정(주소, TLS, ACL 사용자)과, phpredis의 `redis.session.lock_expire`, `redis.session.lock_retries`, `redis.session.lock_wait_time`인 option `lockExpire`(초), `lockRetries`, `lockWait`(마이크로초)를 받는다. 한 Redis server의 모든 server는 같은 값을 주고, 만료는 어떤 요청보다 길다.",
-                  "koSource": "762541508b4ddc88adf8975b1ebda70b88c5a44eaf851dbca46aa67713c5ef55"
+                  "koSource": "762541508b4ddc88adf8975b1ebda70b88c5a44eaf851dbca46aa67713c5ef55",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-115.11",
@@ -7145,7 +7271,8 @@
                   "id": "HY-115.28",
                   "en": "`lifetime` of the Redis store is an unsigned integer of seconds with the default 1440, and `lockExpire` is an unsigned integer of seconds that the caller states, with no default, because no value is longer than every request of every application; a lifetime or a lock expiry of 0 fails with the kind of the session-store library (`invalid_lifetime`, `invalid_lock_expire`).",
                   "ko": "Redis 저장소의 `lifetime`은 기본값 1440인 초 단위 부호 없는 정수이고, `lockExpire`는 호출자가 밝히는 초 단위 부호 없는 정수로 기본값이 없다. 어떤 값도 모든 애플리케이션의 모든 요청보다 길지 않기 때문이다. 0인 lifetime이나 lock expiry는 session-store 라이브러리의 kind(`invalid_lifetime`, `invalid_lock_expire`)로 실패한다.",
-                  "koSource": "0b072b82de3ff88e6627c2aba1855bd3de1c8bf8943d4c7e5fd30b0cb8fa7f96"
+                  "koSource": "0b072b82de3ff88e6627c2aba1855bd3de1c8bf8943d4c7e5fd30b0cb8fa7f96",
+                  "unimplemented": "H35.37"
                 },
                 {
                   "id": "HY-115.22",
@@ -7262,6 +7389,8 @@
           "kind": "rule",
           "id": "HY-59",
           "retired": [
+            4,
+            6,
             7,
             11
           ],
@@ -7296,10 +7425,10 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-59.4",
-                      "en": "A body larger than the limit receives status 413 with the text `Content Too Large`, for every request and before HY-42.",
-                      "ko": "한도보다 큰 body는 모든 요청에 대해 그리고 HY-42 전에 상태 413과 텍스트 `Content Too Large`를 받는다.",
-                      "koSource": "91762af08192cdeac0ce2a0cbdf0d1cbfd840faa09e04091c515a3e499559306"
+                      "id": "HY-59.15",
+                      "en": "A body larger than the limit receives status 413 with the text `Content Too Large`, for every request and before the checks of HY-42 on the path, the query, the headers and a body held as one value, while in a body read in chunks the failure whose byte comes first answers (HY-131.26), so that an invalid byte before the limit receives 400 also when later bytes pass the limit, and a `Content-Length` larger than the limit receives 413 whatever the bytes of the body are (HY-131.31).",
+                      "ko": "한도보다 큰 body는 모든 요청에 대해, 그리고 경로, query, header, 한 값으로 보유한 body에 대한 HY-42의 검사 전에 상태 413과 텍스트 `Content Too Large`를 받는다. 조각 단위로 읽는 body에서는 byte가 먼저 오는 실패가 답하므로(HY-131.26), 한도 전의 잘못된 byte는 뒤의 byte가 한도를 넘어도 400을 받고, 한도보다 큰 `Content-Length`는 body의 byte가 무엇이든 413을 받는다(HY-131.31).",
+                      "koSource": "b633f32e62779145f0de99c07c922eed788f8b618d0450558ec6610d2e0bbc77"
                     },
                     {
                       "id": "HY-59.5",
@@ -7308,10 +7437,10 @@
                       "koSource": "6a73ad23221920ade4c23d83af3e8324f10a2edb83b8b28434e4a53be18768db"
                     },
                     {
-                      "id": "HY-59.6",
-                      "en": "Every server stops reading a body when it passes the body limit or another limit of HY-131.11.",
-                      "ko": "모든 server는 body가 body 제한이나 HY-131.11의 다른 제한을 넘으면 body 읽기를 멈춘다.",
-                      "koSource": "d54a0efd7ef78af68e9aff9d9c4721e7c0249c28938c1cf0100c271e1048ffa5"
+                      "id": "HY-59.14",
+                      "en": "After a body passes the body limit or another limit of HY-131.32, and for a body whose `Content-Length` is larger than the body limit (HY-131.31), no server parses or stores the remaining bytes, which the host discards.",
+                      "ko": "body가 body 제한이나 HY-131.32의 다른 제한을 넘은 뒤, 그리고 `Content-Length`가 body 제한보다 큰 body(HY-131.31)에 대해, 어떤 server도 남은 byte를 parse하거나 저장하지 않으며 host는 그것을 버린다.",
+                      "koSource": "e6b36c70231a64a8785a7ddd6ee4d4d61fef15d5a60acf0671ae5eda02b6f522"
                     }
                   ],
                   "blocks": []

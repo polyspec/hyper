@@ -1,16 +1,19 @@
 // Tests the rules of the GitHub workflows (HR-90, HR-91, HR-95): every job runs on the declared runner ubuntu-26.04-arm,
-// every action is pinned by its commit, no step or job has a time limit, and every step that runs a command runs one make
-// target, so the exported settings and the checks of the Makefile, such as the offline settings and the toolchain check,
-// apply to it. Every job of a workflow that CI runs (ci.yml, bench.yml) has exactly one run step, `make ci-<job>` with
-// make variables, and its other steps are uses: steps, so a local run `make ci-<job> NAME=<value>` is the call of CI
-// (H33.1). The matrix of ci.yml names the CI groups of the Makefile, whose targets are the targets of CHECK_TARGETS, each
-// once; the group gates runs GATE_TARGETS, the checkers of kit, and no job calls another workflow. The last job of ci.yml
-// is ci-passed, which a release requires of the run whose id it takes (HR-95): it runs after every other job
-// (`if: ${{ always() }}`), needs every other job of the workflow, runs on their runner and runs `make ci-passed` with the
-// JSON of `needs`.
+// except the jobs platform and php of assets.yml, which run on the runner of each platform of the release, because the
+// asset of a platform is built and loaded on that platform alone; every action is pinned by its commit, no step or job
+// has a time limit, and every step that runs a command runs one make target, so the exported settings and the checks of
+// the Makefile, such as the offline settings and the toolchain check, apply to it. Every job of a workflow has exactly
+// one run step, `make ci-<job>` (`make ci-assets-<job>` in assets.yml, `make ci-release-<job>` in release.yml) with make
+// variables, and its other steps are uses: steps, so a local run `make ci-<job> NAME=<value>` is the call of CI (H33.1).
+// The matrix of ci.yml names the CI groups of the Makefile, whose targets are the targets of CHECK_TARGETS, each once;
+// the group gates runs GATE_TARGETS, the checkers of kit. ci.yml and release.yml call assets.yml, which builds the assets
+// of the release, and no job calls another workflow (H35.35-1). The last job of ci.yml is ci-passed, which a release
+// requires of the run whose id it takes (HR-95): it runs after every other job (`if: ${{ always() }}`), needs every
+// other job of the workflow, runs on their runner and runs `make ci-passed` with the JSON of `needs`.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -20,6 +23,12 @@ import { dryRun } from './make-dry-run.mts';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const WORKFLOWS = path.join(ROOT, '.github/workflows');
 const RUNNER = 'ubuntu-26.04-arm';
+// The workflow of the assets of a release, which ci.yml calls for the commit of its run and release.yml for its tag, and
+// the runner of each platform of the release, on which its jobs platform and php build the assets of that platform.
+const ASSETS = 'assets.yml';
+const ASSETS_CALL = './.github/workflows/assets.yml';
+const PLATFORM_RUNNERS: Record<string, string> = { 'linux-x64-gnu': 'ubuntu-26.04', 'linux-arm64-gnu': 'ubuntu-26.04-arm', 'darwin-arm64': 'macos-15' };
+const MATRIX_RUNNER = '${{ matrix.runner }}';
 const CI_PASSED = 'ci-passed';
 const CI_PASSED_RUN = "make ci-passed RESULTS='${{ toJSON(needs) }}' FAIL_SKIPPED=1";
 // The bootstrap of hyper: the action of .github/actions/bootstrap, which sets up the Node.js of mise.toml and installs the lock,
@@ -81,8 +90,36 @@ function jobs(text: string): Job[] {
 // The workflows of this repository, each a file of hyper.
 const workflows = () => readdirSync(WORKFLOWS).filter((name) => name.endsWith('.yml')).map((name) => ({ name, text: readFileSync(path.join(WORKFLOWS, name), 'utf8') }));
 const allWorkflows = workflows;
-// A job with `uses:` runs the jobs of another workflow; no job of hyper calls one, so each job runs its own steps.
+// A job with `uses:` runs the jobs of another workflow: the job assets of ci.yml and of release.yml calls assets.yml,
+// and every other job runs its own steps.
 const calls = (job: Job) => /^ {4}uses: /m.test(job.text);
+
+/** The entries of the matrix of a job, read from the block layout: an entry is an item at indent 10 and its keys are at indent 12. */
+function jobMatrix(job: Job): Record<string, string>[] {
+  const entries: Record<string, string>[] = [];
+  for (const line of job.text.split('\n')) {
+    const key = /^ {10}(- | {2})([\w-]+): (.*)$/.exec(line);
+    if (!key) continue;
+    if (key[1] === '- ') entries.push({});
+    const last = entries.at(-1);
+    if (last) last[group(key, 2)] = group(key, 3).replace(/^'(.*)'$/, '$1');
+  }
+  return entries;
+}
+
+/**
+ * Each broken rule of the runner of a job: ubuntu-26.04-arm, or, for a job of assets.yml that builds per platform, the
+ * runner of its matrix entry, which is the runner of the platform of that entry.
+ */
+function runnerProblems(workflow: string, job: Job): string[] {
+  const runner = /^ {4}runs-on: (.*)$/m.exec(job.text)?.[1];
+  if (runner === RUNNER) return [];
+  if (workflow !== ASSETS || runner !== MATRIX_RUNNER) return [`${workflow} ${job.name}: runs-on is not ${RUNNER}`];
+  const entries = jobMatrix(job);
+  const found = entries.filter((entry) => entry['platform'] === undefined || PLATFORM_RUNNERS[entry['platform']] !== entry['runner']).map((entry) => `${workflow} ${job.name}: the matrix entry ${entry['platform']} runs on ${entry['runner']}, not on the runner of its platform`);
+  const missing = Object.keys(PLATFORM_RUNNERS).filter((platform) => !entries.some((entry) => entry['platform'] === platform));
+  return missing.length ? [...found, `${workflow} ${job.name}: the matrix lacks the platforms ${missing.join(', ')}`] : found;
+}
 
 test('the reader finds the jobs and the steps of a workflow', () => {
   const read = jobs('on:\n  push:\njobs:\n  first:\n    runs-on: x\n    steps:\n      - uses: a/b@c\n        with:\n          d: e\n      - run: make one\n        if: ${{ !cancelled() }}\n  second:\n    steps:\n      - id: s\n        run: make two\n');
@@ -96,7 +133,7 @@ test('every job runs on the declared runner without a time limit, and every acti
   for (const workflow of workflows()) {
     if (/timeout-minutes/.test(workflow.text)) found.push(`${workflow.name}: timeout-minutes`);
     for (const job of jobs(workflow.text).filter((job) => !calls(job))) {
-      if (!new RegExp(`^ {4}runs-on: ${RUNNER}$`, 'm').test(job.text)) found.push(`${workflow.name} ${job.name}: runs-on is not ${RUNNER}`);
+      found.push(...runnerProblems(workflow.name, job));
       for (const step of job.steps) {
         // A local action of the checkout (./) is a file of this commit, so no commit pin applies to it.
         if (step.uses === undefined || step.uses === '' || step.uses.startsWith('./')) continue;
@@ -105,6 +142,13 @@ test('every job runs on the declared runner without a time limit, and every acti
     }
   }
   assert.deepEqual(found, []);
+  // A job of another workflow on another runner, a platform on the runner of another platform and a missing platform are found.
+  const platform = (entries: string) => item(jobs(`jobs:\n  platform:\n    strategy:\n      matrix:\n        include:\n${entries}    runs-on: \${{ matrix.runner }}\n`), 0, 'the jobs');
+  const all = Object.entries(PLATFORM_RUNNERS).map(([name, runner]) => `          - platform: ${name}\n            runner: ${runner}\n`).join('');
+  assert.deepEqual(runnerProblems(ASSETS, platform(all)), []);
+  assert.equal(runnerProblems('ci.yml', platform(all)).length, 1);
+  assert.equal(runnerProblems(ASSETS, platform(all.replace('macos-15', 'ubuntu-26.04'))).length, 1);
+  assert.equal(runnerProblems(ASSETS, platform(all.split('          - platform: darwin-arm64')[0] ?? '')).length, 1);
 });
 
 test('every step that runs a command runs one make, right after the bootstrap of the checkout (HR-90)', () => {
@@ -124,7 +168,10 @@ test('every step that runs a command runs one make, right after the bootstrap of
 
 // The workflows of this repository, whose jobs hold one call of a recipe each (HR-90): the release among them, whose recipe
 // runs its steps in order.
-const CI_WORKFLOWS = ['ci.yml', 'bench.yml', 'release.yml'];
+const CI_WORKFLOWS = ['ci.yml', 'bench.yml', 'release.yml', ASSETS];
+// The recipe of a job is make ci-<job>; a job of assets.yml runs make ci-assets-<job> and a job of release.yml
+// make ci-release-<job>, so that the two workflows may name a job alike.
+const RECIPE_PREFIX: Record<string, string> = { [ASSETS]: 'ci-assets-', 'release.yml': 'ci-release-' };
 // The judgement job of ci.yml, which reads the results of the other jobs and so exists only in CI: its run step may pass
 // the JSON of `needs`, the one expression besides a matrix value.
 const JUDGEMENT: Record<string, string> = { [CI_PASSED]: "RESULTS='${{ toJSON(needs) }}'" };
@@ -146,11 +193,14 @@ function jobShapeProblems(name: string, text: string): string[] {
       continue;
     }
     const run = item(runs, 0, `the run steps of ${at}`);
-    const target = job.name.startsWith('ci-') ? job.name : `ci-${job.name}`;
+    const target = job.name.startsWith('ci-') ? job.name : `${RECIPE_PREFIX[name] ?? 'ci-'}${job.name}`;
     // The words of the run line, an expression or a quoted value being part of its word.
-    const [command, called, ...words] = (run.run ?? '').match(/(?:\$\{\{ [^}]* \}\}|'[^']*'|[^\s'])+/g) ?? [];
+    const [command, called, ...words] = (run.run ?? '').match(/(?:\$\{\{ [^}]* \}\}|'[^']*'|"[^"]*"|[^\s'"])+/g) ?? [];
     const judgement = JUDGEMENT[job.name];
-    const argument = (word: string) => /^[A-Z][A-Z0-9_]*=(?:[\w./-]+|\$\{\{ matrix\.[\w-]+ \}\})$/.test(word) || word === judgement;
+    // A value is a word, a matrix value, an input of a called workflow or an output of a needed job; the job tag of
+    // release.yml alone reads the event, in a quoted expression, since the event names the run that it tags.
+    const event = name === 'release.yml' && job.name === 'tag';
+    const argument = (word: string) => /^[A-Z][A-Z0-9_]*=(?:[\w./-]+|\$\{\{ (?:matrix|inputs)\.[\w-]+ \}\}|\$\{\{ needs\.[\w-]+\.outputs\.[\w-]+ \}\})$/.test(word) || word === judgement || (event && /^[A-Z][A-Z0-9_]*="\$\{\{ [^"}]* \}\}"$/.test(word));
     if (command !== 'make' || called !== target) found.push(`${at}: the run step is "${run.run}", not make ${target}`);
     const bad = words.filter((word) => !argument(word));
     if (bad.length) found.push(`${at}: the run step passes ${bad.join(' ')}, not make variables of a word or a matrix value`);
@@ -288,6 +338,8 @@ function ciRunProblems(goal: string, group: string, makefile: string): string[] 
   const expected = [
     ...groupWords(makefile, 'CI_SETUP', group).map((step) => ` ${step}${argumentsOf[step] ?? ''};`),
     ` ci-targets TARGETS="${groupWords(makefile, 'CI_TARGETS', group).join(' ')}" CI_REPORT=var/ci/${group} `,
+    // H35.46: the report holds the case results of the recipe runners, which name each failed case (HR-84).
+    ` ci-results CI_REPORT=var/ci/${group} `,
     ` ci-summary CI_REPORT=var/ci/${group} `,
   ];
   const found: string[] = [];
@@ -305,21 +357,109 @@ test('H33.1 make ci-check NAME=<group> and make ci-bench run the setup, the targ
   const groups = makeWords(makefile, 'CI_GROUPS');
   assert.deepEqual([...groups.flatMap((group) => ciRunProblems('ci-check', group, makefile)), ...ciRunProblems('ci-bench', 'bench', makefile)], []);
   assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'bench'), ['bench', 'bench-sessions']);
-  // make ci-release tags first, with AUTO=1 for a workflow_run, reads TAG, then runs every later step in order, each after
-  // the one before it passed.
-  const release = dryRun('ci-release', { variables: ['GITHUB_EVENT_NAME=workflow_run'] }).join('\n');
-  let from = release.indexOf(' release-tag AUTO=1 ');
-  assert.ok(from >= 0, release);
-  for (const step of [' . ./var/release/tag.env ', 'test -z "$TAG"', ...makeWords(makefile, 'RELEASE_STEPS').map((step) => ` ${step}${step === 'install-tools' ? ' TOOLS=npm' : ''} &&`)]) {
-    const at = release.indexOf(step, from);
-    assert.ok(at > from, `make -n ci-release does not run "${step.trim()}" after the steps before it: ${release}`);
-    from = at;
-  }
-  assert.ok(!dryRun('ci-release').join('\n').includes('AUTO=1'), 'a dispatch or a local run releases with AUTO');
   // A NAME that names no group fails before any step runs, naming the groups.
   const unknown = spawnSync('make', ['--no-print-directory', '-n', 'ci-check', 'NAME=nope'], { cwd: ROOT, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))) });
   assert.notEqual(unknown.status, 0, unknown.stdout);
   assert.match(unknown.stderr, new RegExp(`NAME=nope names no CI group of CI_GROUPS: ${groups.join(' ')}`));
+});
+
+test('H35.35-7 make go-release-build builds and vets packages/go alone with the go of the checkout, and make ci-release publishes the Go module before the draft', () => {
+  const build = dryRun('go-release-build').join('\n');
+  const go = `${ROOT}/var/tools/mise/shims/go`;
+  for (const command of ['build -mod=readonly ./...', 'vet ./...']) {
+    assert.ok(build.includes(`cd packages/go && GOWORK=off GOTOOLCHAIN=local ${go} ${command}`), `make -n go-release-build runs no "${command}" of ${go} with GOWORK=off in packages/go: ${build}`);
+  }
+  assert.ok(dryRun('test-bindings').join('\n').includes('-mod=readonly ./...'), 'make test-bindings runs no go-release-build');
+  // The job release pushes the tag of the Go module after release-go-module made it, and before the public release.
+  assert.deepEqual(makeOrderProblems('ci-release-release', ['TAG=v0.0.0', 'VERSION=0.0.0'], [started('release-go-module'), started('release-go-module-push'), started('release-platform-assets'), started('release-undraft')]), []);
+});
+
+test('H35.46 make ci-results copies the case results of the recipe runners into the report, and passes without them (HR-84, HR-91)', (t) => {
+  const work = mkdtempSync(path.join(tmpdir(), 'hyper-ci-results-'));
+  t.after(() => rmSync(work, { recursive: true, force: true }));
+  const results = path.join(work, 'results');
+  const report = path.join(work, 'report');
+  mkdirSync(report);
+  const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name)));
+  const run = () => spawnSync('make', ['--no-print-directory', 'ci-results', `RECIPE_RESULTS_DIR=${results}`, `CI_REPORT=${report}`], { cwd: ROOT, encoding: 'utf8', env });
+  // A group whose targets run no recipe runner writes no results; its report is complete without them.
+  const none = run();
+  assert.equal(none.status, 0, `${none.stdout}${none.stderr}`);
+  assert.deepEqual(readdirSync(report), []);
+  mkdirSync(results);
+  const failed = 'CASE browser.json render r1 FAIL expected <p>, got <div>\n';
+  writeFileSync(path.join(results, 'browser.txt'), failed);
+  writeFileSync(path.join(results, 'node.txt'), 'CASE node.json reads r1 PASS\n');
+  const copied = run();
+  assert.equal(copied.status, 0, `${copied.stdout}${copied.stderr}`);
+  assert.deepEqual(readdirSync(path.join(report, 'recipe-results')).sort(), ['browser.txt', 'node.txt']);
+  assert.equal(readFileSync(path.join(report, 'recipe-results', 'browser.txt'), 'utf8'), failed);
+});
+
+/** The makes of `steps` that the dry run of `goal` does not start in their order, each a make of its own. */
+function makeOrderProblems(goal: string, variables: string[], steps: string[]): string[] {
+  const lines = `${dryRun(goal, { variables, env: { ...process.env, GITHUB_ENV: '/dev/null', GITHUB_ACTOR: 'actor' } }).join('\n')}\n`;
+  const found: string[] = [];
+  let from = 0;
+  for (const step of steps) {
+    const at = lines.indexOf(step, from);
+    if (at < 0) found.push(`make -n ${goal} ${variables.join(' ')} does not run "${step.trim()}" after the steps before it: ${lines}`);
+    else from = at + step.length;
+  }
+  return found;
+}
+
+// The make that a recipe of a job starts for the target `target`.
+const started = (target: string) => ` --no-print-directory ${target}\n`;
+
+test('H35.35-1 the release tags the commit of the CI run, builds the assets of the tag with assets.yml and then publishes (HR-95)', () => {
+  const release = jobs(readFileSync(path.join(WORKFLOWS, 'release.yml'), 'utf8'));
+  assert.deepEqual(release.map((job) => job.name), ['tag', 'assets', 'release']);
+  const assets = item(release, 1, 'the jobs of release.yml');
+  // The job assets builds the tree of the tag that the job tag made, with the release check of binding, and runs only
+  // when a tag was made; the job release publishes what it built.
+  for (const line of [`    uses: ${ASSETS_CALL}`, '    needs: tag', "    if: ${{ needs.tag.outputs.tag != '' }}", '      ref: ${{ needs.tag.outputs.tag }}', '      release: true']) assert.ok(assets.text.split('\n').includes(line), `the job assets of release.yml lacks the line "${line.trim()}"`);
+  assert.ok(item(release, 2, 'the jobs of release.yml').text.split('\n').includes('    needs: [tag, assets]'), 'the job release of release.yml does not need the jobs tag and assets');
+  // The job tag runs release-tag and gives its tag to the later jobs; a dispatch or a local run passes no AUTO.
+  assert.deepEqual(makeOrderProblems('ci-release-tag', ['RUN=1', 'AUTO=1'], [started('release-tag'), ' --no-print-directory release-tag-output ']), []);
+  assert.match(dryRun('release-tag', { variables: ['RUN=1', 'AUTO=1'] }).join('\n'), /\/release-run\.m[jt]s tag "\$RUN" --auto$/m);
+  assert.ok(!dryRun('release-tag', { variables: ['RUN=1', 'AUTO='] }).join('\n').includes('--auto'), 'a dispatch or a local run releases with --auto');
+  // The job release: the archives of kit and the draft, then the assets of each platform that the workflow downloaded,
+  // with their folders, the Go module, the upload of the platform assets and the public release.
+  assert.deepEqual(makeOrderProblems('ci-release-release', ['TAG=v0.0.0', 'VERSION=0.0.0'], [started('release-tools'), started('release-assets'), started('release-publish'), 'cp -R var/release/downloaded/. var/release/assets/\n', started('release-recipes'), started('release-go-module'), started('release-platform-assets'), started('release-undraft')]), []);
+});
+
+test('H35.35-1 every CI run builds the assets with the recipes of the release, and each recipe checks the bindings before it builds', () => {
+  const ci = jobs(readFileSync(path.join(WORKFLOWS, 'ci.yml'), 'utf8'));
+  const called = ci.find((job) => job.name === 'assets');
+  assert.ok(called !== undefined, 'ci.yml has no job assets');
+  assert.ok(called.text.split('\n').includes(`    uses: ${ASSETS_CALL}`), 'the job assets of ci.yml does not call assets.yml');
+  assert.ok(!/^ {6}release:/m.test(called.text), 'the job assets of ci.yml passes release, which is the input of a release alone');
+  const assets = jobs(readFileSync(path.join(WORKFLOWS, ASSETS), 'utf8'));
+  assert.deepEqual(assets.map((job) => job.name), ['platform', 'php', 'npm']);
+  for (const job of assets) {
+    const run = job.steps.find((step) => step.run !== undefined)?.run ?? '';
+    assert.ok(run.endsWith(' RELEASE=${{ inputs.release }}'), `assets.yml ${job.name}: the run step "${run}" does not pass RELEASE=\${{ inputs.release }}`);
+    assert.ok(job.text.includes('          ref: ${{ inputs.ref }}'), `assets.yml ${job.name}: the checkout does not take the ref of the caller`);
+    const variables = job.name === 'php' ? ['EXPECTED_PHP_MINOR=8.4'] : [];
+    const build = started(`release-assets-${job.name}`).trimEnd();
+    // Without RELEASE the recipe runs the check of binding that CI runs, with RELEASE=true the check of a release; both
+    // start go, which the recipe installs first, and both come before the build.
+    assert.deepEqual(makeOrderProblems(`ci-assets-${job.name}`, variables, [' install-tools TOOLS=', started('release-recipes'), started('bindings-check'), build]), []);
+    assert.deepEqual(makeOrderProblems(`ci-assets-${job.name}`, [...variables, 'RELEASE=true'], [' install-tools TOOLS=', started('release-recipes'), started('release-binding-check'), build]), []);
+    const plain = dryRun(`ci-assets-${job.name}`, { variables }).join('\n');
+    assert.ok(!plain.includes(started('release-binding-check').trimEnd()), `make ci-assets-${job.name} runs the release check without RELEASE=true`);
+    assert.match(/ install-tools TOOLS="([^"]*)"/.exec(plain)?.[1] ?? '', /\bgo\b/, `make ci-assets-${job.name} installs no go before the check of binding, which starts it`);
+  }
+});
+
+test('H35.35-1 a CI group builds the archives of the release from the committed HEAD with no tag (kit K1286)', () => {
+  assert.ok(checkTargets().includes('release-candidate-assets'), 'CHECK_TARGETS does not run release-candidate-assets');
+  const lines = dryRun('release-candidate-assets').join('\n');
+  assert.match(lines, /RELEASE_ASSETS=var\/release-candidate\/assets .*\/release\.m[jt]s candidate-assets$/m, lines);
+  // The rehearsal of the version commit on a clean clone builds the same archives for the version that it is given.
+  const rehearsal = dryRun('release-rehearsal', { variables: ['VERSION=0.0.1'] }).join('\n');
+  assert.match(rehearsal, /RELEASE_ASSETS=var\/release-candidate\/assets .*\/release-run\.m[jt]s prepare "0\.0\.1"$/m, rehearsal);
 });
 
 /** Each broken rule of the job ci-passed of a workflow text. */
@@ -350,8 +490,9 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
     missing: [head + '\n', 'the job ci-passed is missing'],
     'not last': [head.replace('\njobs:\n', `\njobs:\n  ci-passed:\n${tail.trimEnd()}\n`) + '\n', 'the job ci-passed is not the last job'],
     'not always': [text.replace('    if: ${{ always() }}\n', '    if: ${{ success() }}\n'), 'the job ci-passed has if: ${{ success() }}'],
-    'needs no job': [text.replace('    needs: [check]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [check]'],
-    'another runner': [text.replace('    needs: [check]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
+    'needs no job': [text.replace('    needs: [check, assets]\n', '    needs: []\n'), 'the job ci-passed needs [], not every other job [check, assets]'],
+    'needs no assets': [text.replace('    needs: [check, assets]\n', '    needs: [check]\n'), 'the job ci-passed needs [check], not every other job [check, assets]'],
+    'another runner': [text.replace('    needs: [check, assets]\n    runs-on: ubuntu-26.04-arm\n', '    needs: [check, assets]\n    runs-on: ubuntu-24.04\n'), 'the job ci-passed runs on ubuntu-24.04, not on the runner of the other jobs'],
     'another step': [text.replace(CI_PASSED_RUN, 'make ci-passed'), 'the job ci-passed runs [make ci-passed], not the one last step'],
   };
   for (const [name, [changed, message]] of Object.entries(broken)) {
@@ -365,7 +506,8 @@ test('ci-passed is the last job of ci.yml, runs always, needs every other job an
 /**
  * The problems of the PHP that the workflows set up: `.php-version` holds one minor release, and every setup-php step
  * reads it by `php-version-file` (a path that ends in `.php-version`, such as that of a checkout into a folder) instead
- * of naming a PHP itself, so the release workflow of kit and the jobs of CI start the same PHP (kit K193).
+ * of naming a PHP itself, so the jobs of CI start the same PHP (kit K193). The job php of assets.yml alone names the PHP
+ * of its matrix entry, `php-version: ${{ matrix.php }}`, since it builds the extension once for each PHP minor.
  */
 function phpVersionProblems(phpVersion: string, files: { name: string; text: string }[]): string[] {
   const found: string[] = [];
@@ -374,6 +516,7 @@ function phpVersionProblems(phpVersion: string, files: { name: string; text: str
     for (const job of jobs(workflow.text)) {
       for (const step of job.steps) {
         if (!step.uses?.startsWith('shivammathur/setup-php@')) continue;
+        if (workflow.name === ASSETS && job.name === 'php' && step.text.split('\n').includes('          php-version: ${{ matrix.php }}')) continue;
         if (!/^ {10}php-version-file: (?:[\w.-]+\/|\$\{\{ github\.event\.repository\.name \}\}\/)?\.php-version$/m.test(step.text)) found.push(`${workflow.name} ${job.name}: a setup-php step does not read php-version-file: .php-version`);
         if (/^ {10}php-version:/m.test(step.text)) found.push(`${workflow.name} ${job.name}: a setup-php step names php-version itself`);
       }
@@ -402,8 +545,10 @@ test('H27.83 the Makefile includes no file of kit, and every make target of a wo
   const defined = new Set([...makefile.matchAll(/^([a-z][\w-]*(?: [a-z][\w-]*)*):(?!=)/gm)].flatMap((match) => (match[1] ?? '').split(' ')));
   const action = readFileSync(path.join(ROOT, '.github/actions/bootstrap/action.yml'), 'utf8');
   const called = [...workflows().map((workflow) => workflow.text), action].flatMap((text) => [...text.matchAll(/^\s*(?:- )?run: make ([a-z][\w-]*)/gm)].map((match) => match[1] ?? ''));
-  assert.ok(called.includes('ci-check') && called.includes('ci-bench') && called.includes('ci-release') && called.includes('bootstrap'), called.join(' '));
+  assert.ok(called.includes('ci-check') && called.includes('ci-bench') && called.includes('ci-release-tag') && called.includes('ci-release-release') && called.includes('ci-assets-platform') && called.includes('bootstrap'), called.join(' '));
   assert.deepEqual([...new Set(called)].filter((target) => !defined.has(target)), [], 'a workflow runs a target that the Makefile does not define');
-  for (const workflow of workflows()) assert.deepEqual(jobs(workflow.text).filter(calls).map((job) => job.name), [], `${workflow.name} calls another workflow`);
+  // The one called workflow is assets.yml of this repository, which the job assets of ci.yml and of release.yml calls.
+  const callers = workflows().flatMap((workflow) => jobs(workflow.text).filter(calls).map((job) => `${workflow.name} ${job.name}: ${/^ {4}uses: (.*)$/m.exec(job.text)?.[1]}`));
+  assert.deepEqual(callers.sort(), [`ci.yml assets: ${ASSETS_CALL}`, `release.yml assets: ${ASSETS_CALL}`], 'a job calls another workflow than assets.yml');
 });
 
