@@ -82,6 +82,9 @@ EXT := build/ext/polyspec_template.so
 # kit 0.0.98's run-tests dropped NODE_TEST_CONTEXT, so a node --test that a recipe starts from inside a node test runs as
 # its own run, not as a child of that test (kit K1094); no recipe passes it on.
 unexport NODE_TEST_CONTEXT
+# make passes a variable of its command line to the environment of its recipes, so a selection TESTS of a test target
+# would reach a make that a test starts and change what that make runs; the recipes read it only as $(TESTS) (H35.60).
+unexport TESTS
 export PATH := $(KIT_TOOLS)/bin:$(KIT_TOOLS)/mise/shims:$(PATH)
 # A check reads no network (HR-89): `make hyper-install` downloads everything that the checks read, and every other recipe
 # and the programs that it starts run npm and Composer offline, so a missing download fails at once instead of
