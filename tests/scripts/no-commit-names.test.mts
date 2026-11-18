@@ -9,8 +9,8 @@
 // - A word of digits only is a number or the id of a CI run, and a word of letters only is an English word, so the
 //   word needs a digit and a letter.
 // - A digest that its line labels is no commit: the word follows one of the labels sha1, sha256, sha512, shasum,
-//   digest, integrity or inputs within 24 characters before it, or it is followed by `...`, the abbreviation of a
-//   digest.
+//   digest, integrity or inputs, or 입력 (inputs) in a Korean twin, within 24 characters before it, or it is followed
+//   by `...`, the abbreviation of a digest.
 // - A generated document holds what its generator writes: docs/spec/protocol.md and docs/spec/protocol.ko.md, which
 //   `make spec-docs` writes from contracts/protocol.json, are not read.
 // The workflows of .github pin each action by its commit (HR-90), and they are no document of config/documents.json.
@@ -22,7 +22,7 @@ import { test } from 'node:test';
 
 const GENERATED = new Set(['docs/spec/protocol.md', 'docs/spec/protocol.ko.md']);
 const WORD = /(?<![0-9A-Za-z_-])[0-9a-f]{7,40}(?![0-9A-Za-z_-])/g;
-const LABEL = /(?:sha1|sha256|sha512|shasum|digest|integrity|inputs)\b/i;
+const LABEL = /(?:sha1|sha256|sha512|shasum|digest|integrity|inputs|입력)(?![A-Za-z])/i;
 
 // The tracked documents that the include globs of config/documents.json select, without the generated ones.
 function documents(): string[] {
@@ -56,6 +56,7 @@ test('the rules tell a commit name from a number, a word and a labelled digest',
   assert.deepEqual(commitNames('a.md', 'CI run 44130032438 and the number 9007199254740992'), []);
   assert.deepEqual(commitNames('a.md', 'the sha1 `02f0244bd3fd663b68576d0c740284306b3f8320` and sha256 dbdeb77e...2e7b'), []);
   assert.deepEqual(commitNames('a.md', 'the word deadbeef and the id H35-4ed1133'), []);
+  assert.deepEqual(commitNames('a.ko.md', '그 build의 입력 `5b20342ee479`와 함께'), []);
 });
 
 test('no tracked document names a Git commit', () => {
