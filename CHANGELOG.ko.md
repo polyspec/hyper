@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- 세 서버는 22자에서 256자의 session identifier를 받는다(H35.85, HY-104.31). 입력: PHP가 `session.sid_length` 200으로 만드는 `A-Za-z0-9,-` 200자의 session cookie. 이전 동작: 각 서버는 22자에서 128자를 받았고, 그 cookie에 새 session을 시작했다. 기대: PHP와 session-store 라이브러리가 22자에서 256자를 받듯이, 서버는 그 session을 이어 간다.
 - PHP 서버의 `NativeSession`은 어느 깊이에 있든 `stdClass`가 아닌 class의 저장된 객체에 `RecordError`와 kind `record`로 실패한다(H35.84, HY-104.41). 입력: session 값 `new ArrayObject()`나 `["x" => [new DateTimeImmutable()]]`. 이전 동작: `get`이 그 객체를 돌려주었다. 기대: Node와 Python 서버가 session-store 라이브러리로 주는 것과 같은 실패.
 - HY-104.41은 `stdClass`가 아닌 class의 객체를 담은 session record의 실패 kind를 적는다: 세 서버에서 session-store 라이브러리의 kind `record`(HY-104.8)이고, H35.84의 mark를 지닌다. 입력: 그런 record. 이전 동작: HY-104.14는 요청이 실패한다고만 했고 kind를 적지 않았다. 기대: 명세가 kind를 적고, HY-104.14는 그 뜻을 지킨다.
 - PHP 서버는 응답을 보내기 전에 세션을 닫으므로, 쓸 수 없는 세션은 plain 500으로 답한다(H35.83, HY-115.23, HY-43). 입력: lock을 잃은 요청에 대한 phpredis의 write처럼 세션 write가 실패하는 요청. 이전 동작: PHP는 script 끝, 응답 뒤에 세션을 썼고, 요청은 application의 상태로 답했다. 기대: plain 500이고, write hook은 failure `hyper: the session could not be written`과 함께 그것을 받는다.

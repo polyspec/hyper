@@ -287,7 +287,8 @@
         "tests/scripts/benchmark-sessions.test.mts",
         "tests/scripts/session-holder.test.mts",
         "tests/scripts/no-polling.test.mts",
-        "tests/scripts/session-worker-settings.test.mts"
+        "tests/scripts/session-worker-settings.test.mts",
+        "tests/scripts/session-identifier.test.mts"
       ]
     },
     {
