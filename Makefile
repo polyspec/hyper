@@ -342,6 +342,9 @@ hyper-install-redis: ## Build the Redis server and the phpredis extension of the
 # template extension, which requires it (HY-48.23), and then the session-store extension of collect (HY-48.25).
 TEMPLATE_LINKED_EXT = $(wildcard $(realpath $(PHP_VENDOR)/polyspec/template)/../../target/release/libpolyspec_template.$(CDYLIB))
 PHP_TEMPLATE_EXT = $(or $(TEMPLATE_LINKED_EXT),$(abspath $(EXT)))
+# The stub that declares the classes of the template extension for PHPStan comes from where its library comes from: the
+# linked checkout writes it into packages/php-ext/generated, and template-ext publishes it beside build/ext (H35.110).
+PHP_TEMPLATE_STUB = $(if $(TEMPLATE_LINKED_EXT),$(realpath $(PHP_VENDOR)/polyspec/template)/generated/polyspec_template.stub.php,$(abspath $(dir $(EXT))polyspec_template.stub.php))
 PHP_EXTENSIONS = $(abspath $(JSON_EXT)) $(PHP_TEMPLATE_EXT) $(abspath $(SESSION_STORE_EXT))
 
 # The checks load the libraries that `make hyper-install` built with PIE (json-ext, template-ext) or the linked template
@@ -517,7 +520,7 @@ hyper-lint: ## Check PHP formatting
 # generator writes (packages/php/native/generated/polyspec_hyper.stub.php, scanFiles of phpstan-max.neon), which Git
 # ignores, so analyse-php writes them first.
 analyse-php: ext bindings ## Run PHPStan at level max on the source and the tests of the server package
-	cd $(PHP_PACKAGE) && $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
+	cd $(PHP_PACKAGE) && HYPER_TEMPLATE_STUB=$(PHP_TEMPLATE_STUB) $(PHP_VENDOR)/bin/phpstan analyse --configuration=phpstan-max.neon --no-progress --memory-limit=$(PHPSTAN_MEMORY)
 
 # The command tool imports the built modules of the two npm packages (packages/cli/lib/check.mjs reads
 # @polyspec/hyper-client, and build.mjs @polyspec/hyper/build), so a target that starts it builds them first.
