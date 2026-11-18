@@ -10,6 +10,7 @@ use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Untyped;
+use Polyspec\Template\Environment;
 
 /** HYC-24: the cases of contracts/functions.json. */
 final class FunctionsSteps
@@ -38,10 +39,16 @@ final class FunctionsSteps
                 "{$directory}/manifest.json",
                 "{$directory}/program",
                 ['routes' => $routes],
-                'Z',
+                // The time zone of the server that the case of HYC-24.10 reads, as the Node and the Python runner open.
+                '+09:00',
                 functions: $functions,
             );
         } catch (\Throwable $error) {
+            // A case that states no openFails expects the open to succeed, so its error fails the case with the
+            // message of the engine; without this the case compared nothing and reported only CASE_EMPTY (H34.6).
+            if (!$case->has('openFails')) {
+                throw $error;
+            }
             $case->compare('openFails', $error);
             $case->compare('openError', $error->getMessage());
 
@@ -82,8 +89,12 @@ final class FunctionsSteps
                 throw new \LogicException("the kind {$kind} is not a functionKinds of the contract");
             }
             $functions[$name] = match ($kind) {
-                // FUN-43: a host function receives the argument list as host values.
-                'suffix' => static fn (array $arguments): string => Json::string($arguments[0] ?? null) . '!',
+                // FUN-43: a host function receives the argument list as host values and the environment of the
+                // render; the extension calls it with both, so a function of one parameter fails the open.
+                'suffix' => static fn (array $arguments, Environment $environment): string
+                    => Json::string($arguments[0] ?? null) . '!',
+                // HYC-24.10: the second argument is the environment of the render, with the time zone of the server.
+                'zone' => static fn (array $arguments, Environment $environment): string => $environment->timezone,
                 'not_a_function' => 'x',
                 default => throw new \LogicException("the kind {$kind} of the contract is unknown"),
             };

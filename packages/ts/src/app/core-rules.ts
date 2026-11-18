@@ -260,6 +260,9 @@ export interface CoreBinding {
   checkShellPath(path: string): void;
   shellText(path: string, bytes: Uint8Array): string;
   buildId(outputs: Iterable<BuildOutput>): string;
+  buildPaths(outputs: Iterable<BuildOutput>): readonly string[];
+  buildStream(outputs: Iterable<BuildOutput>): string;
+  shellFile(basePath: string, build: string, entryUrl: string, entryCode: string): string;
   checkBuildId(text: string): void;
   buildFileText(id: string): string;
   readBuild(bytes: Uint8Array): string;
@@ -301,7 +304,7 @@ interface HyperError extends Error {
 const MEMBERS: readonly (keyof CoreBinding)[] = [
   'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl', 'keepsOutOfSharedCaches',
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
-  'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
+  'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'buildPaths', 'buildStream', 'shellFile', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'checkFunctionEntry', 'routeRequest', 'computePageHeaders', 'frameHeaders',
   'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'readHeldBody', 'parseUrlencoded', 'RequestBody', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
 ];
@@ -460,6 +463,12 @@ export interface CoreRules {
   // Partial. The build id of the command tool: rules.build_id (HY-125.15 to HY-125.17). The command tool still
   // collects the files that one build writes and gives each its path with the prefix of its place.
   buildId(outputs: Iterable<BuildOutput>): string;
+  // buildPaths: rules.build_paths, the paths that the build id hashes in their order (HY-125.3).
+  buildPaths(outputs: Iterable<BuildOutput>): readonly string[];
+  // buildStream: rules.build_stream, the hexadecimal text of the bytes that the build id hashes (HY-125.3).
+  buildStream(outputs: Iterable<BuildOutput>): string;
+  // Partial. The text of the static shell: rules.shell_file (HYC-16.23). The command tool still writes the file.
+  buildShellFile(basePath: string, build: string, entryUrl: string, entryCode: string): string;
   // Partial. The text of `build.json`: rules.build_file_text (HY-125.23). The command tool still writes the file.
   buildFileText(id: string): string;
   readonly Templates: {
@@ -471,8 +480,7 @@ export interface CoreRules {
     routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): CoreValue;
     // Partial. The read paths of one template: rules.template_reads (HY-73).
     reads(templates: ReadonlyMap<string, string>, name: string): CoreValue;
-    // Partial. The reserved template of the embedded data: rules.reserved_data_template (HY-31.3). The build still
-    // writes its copy for a server that does not call the core (HY-31.10).
+    // Partial. The reserved template of the embedded data: rules.reserved_data_template (HY-31.3).
     reserved(): DataTemplate;
   };
   readonly Application: {
@@ -568,6 +576,9 @@ export function coreRules(module: object): CoreRules {
       core.checkBuildId(text);
     },
     buildId: (outputs) => core.buildId(outputs),
+    buildPaths: (outputs) => core.buildPaths(outputs),
+    buildStream: (outputs) => core.buildStream(outputs),
+    buildShellFile: (basePath, build, entryUrl, entryCode) => core.shellFile(basePath, build, entryUrl, entryCode),
     buildFileText: (id) => core.buildFileText(id),
     Templates: {
       problems: (manifest, templates) => core.templateProblems(manifest, templates),

@@ -6,12 +6,14 @@
 // package. Workspaces resolve the same installed template package, including a source link, and PHPStan reads the PHP
 // library without an extension stub.
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { requireBuilt } from './requires.mts';
+import { JSON_PACKAGES, JSON_VERSION, NPM_PACKAGE, NPM_PLATFORMS, releaseOf, tarballOf } from './template-release.mts';
 
 const repository = resolve('.');
 // The JSON object of the file `file`.
@@ -21,16 +23,9 @@ const platform = (file: string) => jsonObject(jsonObject(readObject(file).config
 // The template release: the exact version that the platform of the private root composer.json declares for
 // ext-polyspec_template; every pin below names it.
 const VERSION = jsonString(platform('composer.json')['ext-polyspec_template'], 'composer.json platform ext-polyspec_template');
-const RELEASE = `https://github.com/polyspec/template/releases/download/v${VERSION}`;
-// The json release whose extension the template extension requires (HY-48.15): the version that the platform of the
-// root composer.json declares for ext-polyspec_json, whose Composer repository both Composer roots declare.
-const JSON_VERSION = jsonString(platform('composer.json')['ext-polyspec_json'], 'composer.json platform ext-polyspec_json');
-const JSON_PACKAGES = `https://github.com/polyspec/json/releases/download/v${JSON_VERSION}/packages.json`;
-// The package @polyspec/template and its platform packages, which hold the native module of the napi root.
-const NPM_PACKAGE = '@polyspec/template';
-const NPM_PLATFORMS = ['@polyspec/template-darwin-arm64', '@polyspec/template-linux-arm64-gnu', '@polyspec/template-linux-x64-gnu'];
+const RELEASE = releaseOf(VERSION);
 // The tarball asset of the npm package `name` of the release.
-const tarball = (name: string) => `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`;
+const tarball = (name: string) => tarballOf(VERSION, name);
 // The wheel assets of the release, one for each platform.
 const WHEELS = ['macosx_11_0_arm64', 'manylinux_2_34_aarch64', 'manylinux_2_34_x86_64'].map((tag) => `${RELEASE}/polyspec_template-${VERSION}-cp314-abi3-${tag}.whl`);
 
@@ -144,6 +139,40 @@ test('pyproject.toml and uv.lock name the wheel assets of the release and pin ea
     const [, url, sha256] = requirement;
     assert.ok(lock.includes(`{ url = "${url}", hash = "sha256:${sha256}" }`), `uv.lock pins ${url} by the sha256 of pyproject.toml`);
   }
-  const urls = new Set([...lock.matchAll(/"(https:\/\/github\.com\/polyspec\/template\/[^"]*)"/g)].map((match) => match[1]));
+  const urls = new Set([...lock.matchAll(/"(https:\/\/github\.com\/polyspec\/template\/[^"]*)"/g)].map((match) => match[1] ?? ''));
   assert.deepEqual([...urls].sort(), [...WHEELS].sort(), 'uv.lock names only the template wheels of the release');
+});
+
+// The manifests and locks of every ecosystem, by their file names: git lists each tracked one, so a new manifest is read
+// without a change of this test (H35.57).
+const MANIFESTS = ['Cargo.toml', 'Cargo.lock', 'go.mod', 'go.sum', 'composer.json', 'composer.lock', 'package.json', 'package-lock.json', 'pyproject.toml', 'uv.lock'];
+// The forms in which a manifest or a lock names a template release; the first group is its version.
+const TEMPLATE_NAMES = [
+  /github\.com\/polyspec\/template\/releases\/download\/v(\d+\.\d+\.\d+)\//g,
+  /polyspec-template\s*=\s*\{[^}\n]*\btag\s*=\s*"v(\d+\.\d+\.\d+)"/g,
+  /github\.com\/polyspec\/template\.git\?tag=v(\d+\.\d+\.\d+)/g,
+  /name = "polyspec-template"\nversion = "(\d+\.\d+\.\d+)"/g,
+  /github\.com\/polyspec\/template\/packages\/go v(\d+\.\d+\.\d+)/g,
+  /"(?:ext-polyspec_template|polyspec\/template|@polyspec\/template(?:-[a-z0-9-]+)?)"\s*:\s*"(\d+\.\d+\.\d+)"/g,
+  /"node_modules\/@polyspec\/template(?:-[a-z0-9-]+)?"\s*:\s*\{\s*"version"\s*:\s*"(\d+\.\d+\.\d+)"/g,
+];
+
+test('every tracked manifest and lock that names template names the one release of the tree (H35.57)', () => {
+  const files = execFileSync('git', ['ls-files', '-z'], { cwd: repository, encoding: 'utf8' })
+    .split('\0')
+    .filter((file) => MANIFESTS.some((name) => file === name || file.endsWith(`/${name}`)));
+  const places: { at: string; version: string }[] = [];
+  for (const file of files) {
+    const text = readFileSync(join(repository, file), 'utf8');
+    for (const pattern of TEMPLATE_NAMES) {
+      for (const match of text.matchAll(pattern)) {
+        const line = text.slice(0, match.index).split('\n').length;
+        places.push({ at: `${file}:${line}`, version: match[1] ?? '' });
+      }
+    }
+  }
+  const kinds = new Set(places.map((place) => MANIFESTS.find((name) => place.at.split(':')[0]?.endsWith(name))));
+  assert.deepEqual(MANIFESTS.filter((name) => !kinds.has(name)), [], 'no tracked file of these kinds names template');
+  const other = places.filter((place) => place.version !== VERSION).map((place) => `${place.at} names template ${place.version}`);
+  assert.deepEqual(other, [], `every manifest and lock names template ${VERSION}`);
 });

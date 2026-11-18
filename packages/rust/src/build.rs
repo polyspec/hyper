@@ -12,14 +12,14 @@ use crate::Error;
 /// The places of the files that a build writes, as the prefixes of their paths (HY-125.17).
 const PLACES: [&str; 4] = ["public/assets/", "client/", "program/", "csr/"];
 
-/// The files that hold the id or the files of earlier builds, which the hash leaves out (HY-125.24).
+/// The files that hold the id or the files of earlier builds, which the hash leaves out (HY-125.25).
 const LEFT_OUT: [&str; 3] = [
     "program/build.json",
     "csr/index.html",
     "client/assets.previous.json",
 ];
 
-/// The copies of the files below `public/assets` in the static shell (HY-125.24).
+/// The copies of the files below `public/assets` in the static shell, which the hash leaves out (HY-125.25).
 const SHELL_ASSETS: &str = "csr/assets/";
 
 /// One file that a build writes: its path with the prefix of its place (HY-125.17) and its bytes.
@@ -32,7 +32,7 @@ pub struct Output {
 }
 
 /// The files of `outputs` that the build id hashes, in the order of their paths compared as bytes (HY-125.3,
-/// HY-125.15, HY-125.24).
+/// HY-125.15, HY-125.25).
 ///
 /// # Errors
 /// `invalid_build` with the path for a path without the prefix of a place, with nothing after its prefix or with a
@@ -41,7 +41,7 @@ pub fn hashed(outputs: &[Output]) -> Result<Vec<&Output>, Error> {
     let mut files = Vec::with_capacity(outputs.len());
     for output in outputs {
         check_path(&output.path)?;
-        if !left_out(&output.path) {
+        if !left_out(&output.path, outputs) {
             files.push(output);
         }
     }
@@ -82,6 +82,25 @@ pub fn stream(outputs: &[Output]) -> Result<Vec<u8>, Error> {
         bytes.extend_from_slice(&file.bytes);
     }
     Ok(bytes)
+}
+
+/// The paths of the files of `outputs` that the build id hashes, in the order in which it hashes them (HY-125.3).
+///
+/// # Errors
+/// The errors of [`hashed`].
+pub fn paths(outputs: &[Output]) -> Result<Vec<String>, Error> {
+    Ok(hashed(outputs)?
+        .into_iter()
+        .map(|file| file.path.clone())
+        .collect())
+}
+
+/// The lowercase hexadecimal text of [`stream`] (HY-125.3).
+///
+/// # Errors
+/// The errors of [`hashed`].
+pub fn stream_hex(outputs: &[Output]) -> Result<String, Error> {
+    Ok(to_hex(&stream(outputs)?))
 }
 
 /// The build id of the files that a build writes: the lowercase hexadecimal SHA-256 digest of [`stream`] (HY-125.15).
@@ -146,9 +165,18 @@ pub fn read(bytes: &[u8]) -> Result<String, Error> {
     }
 }
 
-/// Whether the hash leaves out the file of `path` (HY-125.24).
-fn left_out(path: &str) -> bool {
-    LEFT_OUT.contains(&path) || path.starts_with(SHELL_ASSETS)
+/// Whether the hash leaves out the file of `path` of `outputs` (HY-125.25): a file that holds the id or the files of
+/// earlier builds, and `csr/assets/<name>` when `outputs` also hold `public/assets/<name>`, whose copy it is.
+fn left_out(path: &str, outputs: &[Output]) -> bool {
+    LEFT_OUT.contains(&path)
+        || path.strip_prefix(SHELL_ASSETS).is_some_and(|name| {
+            outputs.iter().any(|output| {
+                output
+                    .path
+                    .strip_prefix(PLACES[0])
+                    .is_some_and(|asset| asset == name)
+            })
+        })
 }
 
 /// Checks the path of a file that a build writes (HY-125.17).

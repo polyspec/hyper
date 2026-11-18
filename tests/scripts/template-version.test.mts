@@ -1,4 +1,4 @@
-// Tests that hyper depends on one template release, 0.0.30 (H21.4, H23.23, H23.25, H23.28, H31.5): the npm packages and
+// Tests that hyper depends on one template release, 0.0.31 (H21.4, H23.23, H23.25, H23.28, H31.5): the npm packages and
 // their locks, the Composer roots and the php-ext package that PIE builds, and the Python package of packages/python name
 // that release and no other, and no check or release step reads a template checkout. A mixed version fails here before
 // any install runs.
@@ -6,8 +6,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
-import { type JsonObject, jsonObject, jsonObjects, jsonString, parseJsonObject } from '../../scripts/json.mts';
+import { type JsonObject, jsonObject, jsonObjects, parseJsonObject } from '../../scripts/json.mts';
 import { dryRun } from './make-dry-run.mts';
+import { JSON_PACKAGES, NPM_PACKAGE, NPM_PLATFORMS, releaseOf, tarballOf } from './template-release.mts';
 
 const repository = resolve('.');
 const read = (file: string) => readFileSync(join(repository, file), 'utf8');
@@ -18,15 +19,9 @@ const member = (object: JsonObject, key: string, where: string): JsonObject => j
 const optionalMember = (object: JsonObject, key: string, where: string): JsonObject => (object[key] === undefined ? {} : member(object, key, where));
 
 // The template release that hyper depends on (H21.4, H23.23). Every pin below names this version.
-const VERSION = '0.0.30';
-const TAG = `v${VERSION}`;
-const RELEASE = `https://github.com/polyspec/template/releases/download/${TAG}`;
-// The json release that the platform of the root composer.json declares for ext-polyspec_json.
-const JSON_VERSION = jsonString(member(member(json('composer.json'), 'config', 'composer.json'), 'platform', 'composer.json config')['ext-polyspec_json'], 'composer.json platform ext-polyspec_json');
-const JSON_PACKAGES = `https://github.com/polyspec/json/releases/download/v${JSON_VERSION}/packages.json`;
-const NPM_PACKAGE = '@polyspec/template';
-const NPM_PLATFORMS = ['@polyspec/template-darwin-arm64', '@polyspec/template-linux-arm64-gnu', '@polyspec/template-linux-x64-gnu'];
-const tarball = (name: string) => `${RELEASE}/${name.slice(1).replace('/', '-')}-${VERSION}.tgz`;
+const VERSION = '0.0.31';
+const RELEASE = releaseOf(VERSION);
+const tarball = (name: string) => tarballOf(VERSION, name);
 
 test('the npm manifests name the template tarballs of the release, and their dependencies name its version (H21.4)', () => {
   const root = json('package.json');
@@ -66,7 +61,7 @@ test('the Composer roots name the Composer repository of the release and declare
   }
   for (const manifest of ['composer.json', 'examples/board/composer.json']) {
     const urls = jsonObjects(json(manifest).repositories, `${manifest} repositories`).filter(({ type }) => type === 'composer').map(({ url }) => url);
-    // Beside the template release, each root declares the Composer repository of the json release (HY-48.15).
+    // Beside the template release, each root declares the Composer repository of the json release (HY-48.23).
     assert.deepEqual(urls, [`${RELEASE}/packages.json`, JSON_PACKAGES], `${manifest} Composer repository`);
   }
 });

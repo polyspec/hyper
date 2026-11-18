@@ -44,7 +44,6 @@ STEPS = {
     ("client.json", "openRejections"): client_steps.open_rejections,
     ("client.json", "declaration"): client_steps.declaration,
     ("context.json", "contexts"): context_steps.contexts,
-    ("context.json", "withContext"): context_steps.with_context,
     ("context.json", "cases"): context_steps.cases,
     ("cookies.json", "parse"): cookies_steps.parse,
     ("build.json", "read"): build_steps.read,

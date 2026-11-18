@@ -1114,7 +1114,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-hyper"
-version = "0.0.0"
+version = "0.0.40"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-http-cookie",
@@ -1132,7 +1132,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-hyper-go"
-version = "0.0.0"
+version = "0.0.40"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-http-cookie",
@@ -1146,7 +1146,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-hyper-node"
-version = "0.0.0"
+version = "0.0.40"
 dependencies = [
  "napi",
  "napi-build",
@@ -1163,7 +1163,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-hyper-php-ext"
-version = "0.0.0"
+version = "0.0.40"
 dependencies = [
  "ext-php-rs",
  "polyspec-binding-core",
@@ -1178,7 +1178,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-hyper-python"
-version = "0.0.0"
+version = "0.0.40"
 dependencies = [
  "polyspec-binding-core",
  "polyspec-http-cookie",
@@ -1193,7 +1193,7 @@ dependencies = [
 
 [[package]]
 name = "polyspec-hyper-wasm"
-version = "0.0.0"
+version = "0.0.40"
 dependencies = [
  "js-sys",
  "polyspec-binding-core",
@@ -1260,8 +1260,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.30"
-source = "git+https://github.com/polyspec/template.git?tag=v0.0.30#1088507549ac8673852183b0fe3f6209291e8d09"
+version = "0.0.31"
+source = "git+https://github.com/polyspec/template.git?tag=v0.0.31#d318f06c33f7aca54d81ec242e1129a75eb5d684"
 dependencies = [
  "js-sys",
  "polyspec-binding-core",

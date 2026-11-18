@@ -1,5 +1,5 @@
 <!-- doc-id: benchmark -->
-<!-- source-sha256: c573a933f06af39d9c782467c7720e637c4f36b607406ec82caed650bf4b9c89 -->
+<!-- source-sha256: ddcabe259b4f052af89391119d42328c0c26480ad87c82043ab77483810b894d -->
 # 성능 측정
 
 [English](benchmark.md).
@@ -8,7 +8,7 @@
 
 | 타깃 | 스크립트 | 측정 대상 |
 |---|---|---|
-| `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | 네트워크 없이 요청 종류별 `App::handle`, 그리고 10, 100, 1,000행에서 `board/rows.tpl` 렌더, 템플릿 확장의 `bind`, `json_encode` 비용. 템플릿 확장으로 실행한다(HY-48.15) |
+| `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | 네트워크 없이 요청 종류별 `App::handle`, 그리고 region `rows`가 10, 100, 1,000행일 때 core의 page render가 렌더하는 `GET /board`의 문서와 region JSON에 대한 `App::handle`. 템플릿 확장으로 실행한다(HY-48.23) |
 | `make bench-browser` | `benchmarks/browser.mts --ssr <port> --edge <port> --api <port> --runs <n>` | 첫 화면, 영역 이동, 10, 100, 1,000행에서 `hy-set` 변경 1회(시간, 단계, 메인 스레드 부하, 긴 작업), 반복 이동 중 메모리와 두 힙 스냅샷 사이의 증가, 템플릿 로드, 전송 바이트 |
 | `make bench-sessions` | `benchmarks/sessions.mts --requests <n>` | Redis 서버 하나에서 process 하나와 넷으로 측정한 PHP, Node, Python 서버의 초당 요청 수와 Redis CPU 1초당 요청 수 |
 | `make bench-uploads` | `benchmarks/uploads.mts --size <bytes> --runs <n>` | PHP, Node, Python server와 PHP 자체 reader에서 upload의 요청 시간, server의 processor 시간, 최대 메모리 |
@@ -17,7 +17,7 @@
 
 ## 방법
 
-- **서버:** PHP 프로세스는 json 확장 다음에 불러온 템플릿 확장으로 렌더한다. 마지막 줄은 템플릿 확장의 버전을 밝힌다(HY-48.15). 요청마다 20회 예열한 뒤 지정한 횟수만큼 한 프로세스 안에서 메모리 세션으로 실행한다. 시간은 `App::handle` 앞뒤의 `hrtime`이다. 라우팅, SQLite 로더, 렌더, 인코딩을 포함하고 네트워크와 PHP 시작은 제외한다.
+- **서버:** PHP 프로세스는 core로 페이지를 렌더하고(HY-48.22), json 확장, 템플릿 확장, hyper 확장을 그 순서로 불러온다. 마지막 줄은 템플릿 확장의 버전을 밝힌다(HY-48.23). 요청마다 20회 예열한 뒤 지정한 횟수만큼 한 프로세스 안에서 메모리 세션으로 실행한다. 시간은 `App::handle` 앞뒤의 `hrtime`이다. 라우팅, SQLite 로더, 렌더, 인코딩을 포함하고 네트워크와 PHP 시작은 제외한다.
 - **Redis session:** 각 process는 자기 session의 요청을 실행한다. 요청은 작은 record를 loopback 연결로 다루며 잠금을 얻고, 읽고, 쓰고, 잠금을 푼다. PHP worker는 배포 환경처럼 `persistent=1`로 연결 하나를 유지한다. Client가 Redis 서버와 머신을 공유하므로 초당 요청 수는 그 머신이 내는 값을 보여 주고, `INFO`의 `used_cpu_user`와 `used_cpu_sys`로 구한 Redis CPU 1초당 요청 수는 명령을 한 thread에서 실행하는 Redis 서버의 비용을 보여 준다.
 - **Upload:** 각 구현의 실제 server 하나가 benchmark가 쓴 같은 요청 body를 읽는다. 1 GiB file 하나, 값 500개와 204,800 byte file 500개, 반복 이름과 대괄호 이름의 값 900개다. server는 `tests/scripts/fixtures/upload-server`의 것이다. PHP application은 worker 하나와 `memory_limit=64M`의 PHP-FPM 아래에서 돌며 benchmark의 FastCGI client가 web server처럼 UNIX socket으로 부르고, Node의 `App.server` server와 Python의 `http.server` server는 HTTP로 부른다. PHP 자체 reader는 `enable_post_data_reading`을 켠 같은 PHP-FPM 아래의 `benchmarks/uploads-native.php`다. 각 server의 request hook은 file의 크기를 읽고 자기 process의 processor 시간과 최대 메모리를 답한다. file 없는 요청이 먼저 오고, 요청의 processor 시간은 직전 요청과의 차이다. client는 같은 machine에서 돈다. `http.server` server는 Python의 개발용 server이며 WSGI나 ASGI server는 측정하지 않는다.
 - **첫 화면:** 페이지 로드 전에 추가한 `MutationObserver`가 목록 제목 `게시판`이 나타난 시각을 내비게이션 시작부터 기록한다. 매 회 새 브라우저 컨텍스트를 쓰므로 캐시가 없다.

@@ -1,6 +1,6 @@
 [package]
 name = "polyspec-hyper"
-version = "0.0.0"
+version = "0.0.40"
 edition = "2021"
 rust-version = "1.99.0"
 description = "The Rust core of the hyper server library, with the rules that every runtime shares: media selection, representations, tags, cookies, the reply, the CSRF token and the order of a request"
@@ -40,7 +40,7 @@ polyspec-http-form = { git = "https://github.com/polyspec/http-form.git", tag = 
 # The JSON text of HY-54.18 to HY-54.21 (RQ-006, RQ-011, RQ-028, RQ-030).
 polyspec-json = { git = "https://github.com/polyspec/json.git", tag = "v0.0.38" }
 # The values of the data model and their JSON form (VAL-2, VAL-12, VAL-20; HY-44, HY-54.20).
-polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.30" }
+polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.31" }
 # The store interface of a session and its values (SE-2, SE-7; HY-104.25, HY-104.30), which the host entries take.
 # The stores of files and Redis are features of the library that the bindings build; the core needs the interface only.
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.7", default-features = false }
@@ -60,7 +60,7 @@ polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag =
 # The file store of session-store with its fault injection points, which a case of opening_functions.open_page gives.
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.7", default-features = false, features = ["file", "fault-test"] }
 polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.6", features = ["fault-test"] }
-polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.30", features = ["fault-test"] }
+polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.31", features = ["fault-test"] }
 
 [lints]
 workspace = true

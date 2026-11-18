@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper;
 
-use Polyspec\Template\BoundMap;
-
 /**
- * Renders the page of a route as a document or as JSON, with the data of its loaders and the kept values (HY-10 to
- * HY-19, HY-31, HY-38, HY-44, HY-53, HY-73, HY-75, HY-92, HY-124, HY-128).
+ * Answers the page of a route as a document or as JSON (HY-10 to HY-19, HY-31, HY-38, HY-44, HY-53, HY-69, HY-73,
+ * HY-75, HY-92, HY-124, HY-128) with the steps of a page of the core: `PageRequest::next` names each handler, the
+ * server calls it and gives its result to the next step, and the last step holds the document or the JSON text. The
+ * core selects the regions, checks every value (HY-44), keeps the read paths (HY-73), applies the kept values (HY-38)
+ * and renders; the server holds no rule of them.
  *
  * @internal
  *
@@ -23,21 +24,18 @@ final class Page
     /**
      * @internal
      *
+     * @param Pages $pages the pages of the application that the core opened
      * @param ?\Closure $shared the shared handler, or null without one
      * @param array<string, \Closure> $regionLoaders the loaders of the regions that are no route regions
-     * @param string $build the build id of the application, which every JSON response holds (HY-125, HY-128)
      * @param ?\Closure $context the context handler (HY-124), or null without one
      * @param string $vary the Vary of a response with text/html or application/vnd.hyper+json (HY-117)
      */
     public function __construct(
         private readonly Manifest $manifest,
+        private readonly Pages $pages,
         private readonly ?\Closure $shared,
         private readonly array $regionLoaders,
         private readonly Container $container,
-        private readonly Renderer $renderer,
-        private readonly Reads $reads,
-        private readonly string $build,
-        private readonly string $timezone,
         private readonly bool $https,
         private readonly ?\Closure $context,
         private readonly string $vary,
@@ -45,11 +43,13 @@ final class Page
     }
 
     /**
-     * Renders the route page as a document or as JSON.
+     * Renders the route page as a document or as JSON. `$action` is the status and the data of the result of the action
+     * of a POST request that answers its page (HY-26), or null for a GET request; the request holds the masked token of
+     * the session after a renewal of the action (HY-72.3).
      *
      * @param RouteDefinition $route
      * @param RouteHandler $handler
-     * @param array<array-key, mixed> $invalid
+     * @param array{int, array<array-key, mixed>}|null $action
      *
      * @internal
      */
@@ -59,359 +59,170 @@ final class Page
         array $handler,
         Session $session,
         Flash $flash,
-        int $status,
-        array $invalid,
+        ?array $action,
         Reply $reply,
         string $basePath,
     ): Response {
-        $json = $request->wantsJson();
         $provided = [Request::class => $request, Reply::class => $reply];
-        $shared = ['title' => $route['title'], 'csrf' => $request->csrfToken()];
-        // HY-124: the context handler runs after the action and before the shared handler and any loader.
-        $context = $this->context === null ? null : Context::held($this->context, $request->selection());
-        if ($this->shared !== null) {
-            $returned = self::loaderMap($this->container->call($this->shared, $provided), 'the shared handler');
-            if (array_key_exists('context', $returned)) {
-                throw new \LogicException('the shared handler returned the key context (HY-124)');
-            }
-            $shared = array_replace($shared, $returned);
-        }
-
-        $changed = RegionPlanner::changedTopics($request, $flash, $basePath);
-        $data = [];
-        $templates = [];
-        foreach (RegionPlanner::select($this->manifest, !$request->isRegionRequest(), $changed) as $selected) {
-            if ($selected->page) {
-                $loaded = isset($handler['load']) ? self::loaderMap(
-                    $this->container->call($handler['load'], $provided),
-                    "the loader of route {$route['name']}",
-                ) : [];
-                $data[$selected->name] = array_replace($loaded, $invalid);
-                $templates[$selected->name] = $route['template'];
-                foreach ($route['regions'] as $routeRegion) {
-                    $loader = $handler['regions'][$routeRegion->name] ?? null;
-                    $loaded = $loader === null ? [] : $this->container->call($loader, $provided);
+        $json = $request->wantsJson();
+        $page = new PageRequest(
+            $this->pages,
+            $route['name'],
+            $request->params(),
+            $json ? ($request->isRegionRequest() ? PageKind::RegionJson : PageKind::DocumentJson) : PageKind::Html,
+            $action !== null,
+            $request->csrfToken(),
+            RegionPlanner::changedTopics($request, $flash, $basePath),
+            // HY-14.3: one whole number of seconds for every render of the response.
+            (float) time(),
+            // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
+            self::utf8($request->cookie(CoreRules::shared()->keptCookieName($this->https || $request->https))),
+            $request->header('Hyper-Context'),
+        );
+        // The regions whose loader gave data, in the order of their calls; the session is read for these (HY-38.20).
+        $present = [];
+        $pageRegion = $this->manifest->page->name;
+        $step = $page->next(new PageStepInputStart());
+        while ($step instanceof StepCall) {
+            $call = $step->call;
+            if ($call instanceof CallAction) {
+                if ($action === null) {
+                    throw new \LogicException('a page without an action asked for its action');
+                }
+                $input = new PageStepInputAction(
+                    new ActionOutcomePage($action[0], self::map($action[1], "the action of route {$route['name']}")),
+                    null,
+                );
+            } elseif ($call instanceof CallContext) {
+                // HY-124: the context handler runs after the action and before the shared handler and any loader.
+                if ($this->context === null) {
+                    throw new \LogicException('a page without a context handler asked for its context');
+                }
+                $input = new PageStepInputContext(
+                    self::map(Context::held($this->context, $request->selection()), 'the context handler'),
+                );
+            } elseif ($call instanceof CallShared) {
+                $input = $this->shared === null
+                    ? new PageStepInputNoHandler()
+                    : new PageStepInputShared(
+                        self::map($this->container->call($this->shared, $provided), 'the shared handler'),
+                    );
+            } elseif ($call instanceof CallRouteLoader) {
+                $input = isset($handler['load'])
+                    ? new PageStepInputLoaded(self::map(
+                        $this->container->call($handler['load'], $provided),
+                        "the loader of route {$route['name']}",
+                    ))
+                    : new PageStepInputNoHandler();
+                $present[] = $pageRegion;
+            } elseif ($call instanceof CallRouteRegionLoader) {
+                /** @var string $region The type that the extension declares for the member (T-1a). */
+                $region = $call->region;
+                $loader = $handler['regions'][$region] ?? null;
+                if ($loader === null) {
+                    $input = new PageStepInputNoHandler();
+                    $present[] = $region;
+                } else {
+                    $loaded = $this->container->call($loader, $provided);
                     // HY-75: a route region loader that returns null makes the region absent from this response.
                     if ($loaded === null) {
-                        continue;
+                        $input = new PageStepInputAbsent();
+                    } else {
+                        $input = new PageStepInputLoaded(self::map($loaded, "the loader of region {$region}"));
+                        $present[] = $region;
                     }
-                    $data[$routeRegion->name] = self::loaderMap($loaded, "the loader of region {$routeRegion->name}");
-                    $templates[$routeRegion->name] = (string) $routeRegion->template;
                 }
+            } elseif ($call instanceof CallRegionLoader) {
+                /** @var string $region The type that the extension declares for the member (T-1a). */
+                $region = $call->region;
+                $loader = $this->regionLoaders[$region] ?? null;
+                $input = $loader === null
+                    ? new PageStepInputNoHandler()
+                    : new PageStepInputLoaded(self::map(
+                        $this->container->call($loader, $provided),
+                        "the loader of region {$region}",
+                    ));
+                $present[] = $region;
             } else {
-                $loader = $this->regionLoaders[$selected->name] ?? null;
-                $data[$selected->name] = $loader === null ? [] : self::loaderMap(
-                    $this->container->call($loader, $provided),
-                    "the loader of region {$selected->name}",
-                );
-                $templates[$selected->name] = (string) $selected->template;
+                // HY-38.20: the stored kept values are read after every loader returned. HY-92, HY-69: the reply
+                // states whether a document embeds its data and the status of a page with status 200.
+                $stored = [];
+                foreach ($present as $name) {
+                    $stored[$name] = self::map($session->kept($name), "the kept values of region {$name}");
+                }
+                $input = new PageStepInputReply($reply->embedsData(), $stored, $reply->statusValue());
             }
+            $step = $page->next($input);
+        }
+        $answer = $step instanceof StepAnswer ? $step->answer : null;
+        if (!$answer instanceof AnswerJson && !$answer instanceof AnswerDocument) {
+            throw new \LogicException('the page of a request answered no page');
+        }
+        /** @var int $status The type that the extension declares for the member (T-1a). */
+        $status = $answer->status;
+        /** @var string $body The type that the extension declares for the member (T-1a). */
+        $body = $answer instanceof AnswerJson ? $answer->text : $answer->html;
+        if ($answer instanceof AnswerJson) {
+            return $this->json($request, $session, $reply, $status, $body);
         }
 
-        // HY-44: every value that the handlers returned belongs to the data model, also a value that no template reads.
-        DataModel::check(['shared' => $shared, 'regions' => $data]);
-        // HY-73: the page keeps only the paths that the templates of the route read.
-        $shared = $this->reads->shared($route['name'], $shared);
-        foreach ($data as $name => $regionData) {
-            $data[$name] = $this->reads->region($route['name'], $name, $regionData);
-        }
-        $kept = $this->kept($request, $session, $data);
-        // HY-69: the reply gives a page with status 200 the status 403.
-        if ($status === 200 && $reply->statusValue() !== null) {
-            $status = $reply->statusValue();
-        }
-        if ($json) {
-            // HY-128: the member context holds the hash, and the value unless the request holds that hash (HY-127).
-            $member = $context === null
-                ? null
-                : Context::member($this->build, $context, $request->header('Hyper-Context'));
-            $response = JsonCodec::value(
-                $this->timezone,
-                $route['name'],
-                $request->params(),
-                $this->build,
-                $member,
-                $shared,
-                $data,
-                $kept,
-            );
-            // HY-44: the check above covered the handler data, and a kept value enters only when it belongs to the
-            // data model, so only the parameters of the request are checked here.
-            DataModel::check($request->params());
-
-            $body = JsonCodec::encode($response);
-            $headers = [
-                'Content-Type' => self::DATA_TYPE,
-                'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
-                'Vary' => $this->vary,
-                ...$reply->referrerPolicyHeaders(),
-            ];
-            if ($status !== 200) {
-                return new Response($status, $headers, $body);
-            }
-            // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not
-            // change it; a matching GET request receives 304 without a body and without `Content-Type`, because a
-            // 304 carries no representation.
-            $tag = CoreRules::shared()->pageTag($body, $request->csrfToken(), $session->csrfToken());
-            $headers['ETag'] = $tag;
-            if ($request->method !== 'GET' || $request->header('If-None-Match') !== $tag) {
-                return new Response(200, $headers, $body);
-            }
-            unset($headers['Content-Type']);
-
-            return new Response(304, $headers, '');
-        }
-
-        $headers = [
+        return new Response($status, [
             'Content-Type' => 'text/html; charset=utf-8',
             'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
             'Vary' => $this->vary,
             ...$reply->referrerPolicyHeaders(),
-        ];
+        ], $body);
+    }
 
-        return new Response(
-            $status,
-            $headers,
-            $this->document($request, $route, $shared, $context, $data, $templates, $kept, $reply->embedsData()),
-        );
+    /** Answers the JSON text of a page with its headers, its tag and the 304 of a matching tag (HY-53). */
+    private function json(Request $request, Session $session, Reply $reply, int $status, string $body): Response
+    {
+        $headers = [
+            'Content-Type' => self::DATA_TYPE,
+            'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
+            'Vary' => $this->vary,
+            ...$reply->referrerPolicyHeaders(),
+        ];
+        if ($status !== 200) {
+            return new Response($status, $headers, $body);
+        }
+        // HY-53: a weak tag of the body with the masked token replaced by the session token, so the mask does not
+        // change it; a matching GET request receives 304 without a body and without `Content-Type`, because a 304
+        // carries no representation.
+        $tag = CoreRules::shared()->pageTag($body, $request->csrfToken(), $session->csrfToken());
+        $headers['ETag'] = $tag;
+        if ($request->method !== 'GET' || $request->header('If-None-Match') !== $tag) {
+            return new Response(200, $headers, $body);
+        }
+        unset($headers['Content-Type']);
+
+        return new Response(304, $headers, '');
     }
 
     /**
-     * Returns the value that the shared handler or a loader returned when it is a map of the data model: an array that
-     * is empty or is not a list (HY-44). Another value fails with HY-43.
+     * Returns the result of a handler as the map that a step of the core takes: an array that is empty or is not a
+     * list (HY-44); another value fails with HY-43. A `JsonSerializable` is replaced by its value, read once (HY-44.6),
+     * and the binding converts the values, which the core checks (HY-44.12).
      *
      * @return array<array-key, mixed>
      */
-    private static function loaderMap(mixed $value, string $source): array
+    private static function map(mixed $value, string $source): array
     {
         if (!is_array($value) || ($value !== [] && array_is_list($value))) {
             throw new \LogicException("{$source} did not return a map");
         }
+        /** @var array<array-key, mixed> $plain */
+        $plain = DataModel::plain($value);
 
-        return $value;
+        return $plain;
     }
 
     /**
-     * Returns the conforming `server` and `cookie` kept values of the regions, by region and path (HY-17, HY-38).
-     *
-     * @param array<string, array<array-key, mixed>> $data
-     * @return array<string, array<string, mixed>>
+     * Returns the value of the hy-keep cookie, or null for a cookie that is absent (HY-42). A cookie whose bytes are
+     * not UTF-8 is no JSON text, so the core reads it as the empty text, which gives no value.
      */
-    private function kept(Request $request, Session $session, array $data): array
+    private static function utf8(?string $text): ?string
     {
-        // On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
-        $cookieName = CoreRules::shared()->keptCookieName($this->https || $request->https);
-        $cookie = self::decodedCookie($request->cookie($cookieName));
-        $kept = [];
-        foreach ($data as $name => $regionData) {
-            $region = $this->manifest->region($name);
-            if ($region === null) {
-                continue;
-            }
-            $stored = $session->kept($name);
-            $values = [];
-            foreach ($region->keep as $keptPath => $kind) {
-                $source = match ($kind) {
-                    'server' => $stored,
-                    'cookie' => JsonCodec::mapEntries(JsonCodec::mapEntries($cookie)[$name] ?? null) ?? [],
-                    default => [],
-                };
-                if (array_key_exists($keptPath, $source)) {
-                    $values[] = [$keptPath, $source[$keptPath]];
-                }
-            }
-            $selected = Kept::select($regionData, $values);
-            if ($selected !== []) {
-                $kept[$name] = $selected;
-            }
-        }
-
-        return $kept;
-    }
-
-    /**
-     * Renders the document with the kept values applied. When that fails, every region whose rendering alone
-     * fails with its kept values renders with its loader data, route regions first, and its kept values leave
-     * the embedded data (HY-31, HY-38). The document embeds its data only when `$embed` is true (HY-92).
-     *
-     * @param RouteDefinition $route
-     * @param array<array-key, mixed> $shared
-     * @param array<array-key, mixed>|null $context the context of the application, or null without one (HY-124)
-     * @param array<string, array<array-key, mixed>> $data
-     * @param array<string, string> $templates
-     * @param array<string, array<string, mixed>> $kept
-     */
-    private function document(
-        Request $request,
-        array $route,
-        array $shared,
-        ?array $context,
-        array $data,
-        array $templates,
-        array $kept,
-        bool $embed,
-    ): string {
-        // H10.4: each root of the document is bound once, and every render merges the bound roots (VAL-22).
-        // HY-10, HY-124: the templates read the context in the shared data, in its place after csrf or title.
-        $boundShared = $this->renderer->bind($context === null ? $shared : Context::withContext($shared, $context));
-        $applied = [];
-        foreach ($data as $name => $regionData) {
-            $pairs = [];
-            foreach ($kept[$name] ?? [] as $path => $value) {
-                $pairs[] = [$path, $value];
-            }
-            $applied[$name] = $this->renderer->bind(Kept::apply($regionData, $pairs));
-        }
-        try {
-            return $this->renderDocument(
-                $request,
-                $route,
-                $shared,
-                $context,
-                $boundShared,
-                $data,
-                $applied,
-                $templates,
-                $kept,
-                $embed,
-            );
-        } catch (\Throwable $error) {
-            if ($kept === []) {
-                throw $error;
-            }
-        }
-        $page = $this->manifest->page->name;
-        $routeRegions = self::present($route, $data);
-        $others = array_values(array_diff(array_keys($data), [...$routeRegions, $page]));
-        foreach ([...$routeRegions, ...$others, $page] as $name) {
-            if (!isset($kept[$name])) {
-                continue;
-            }
-            try {
-                $define = [];
-                if ($name === $page) {
-                    foreach ($routeRegions as $routeRegion) {
-                        $define[$routeRegion] = [
-                            'template' => $templates[$routeRegion],
-                            'data' => $applied[$routeRegion],
-                        ];
-                    }
-                }
-                $this->renderer->alone($templates[$name], $boundShared, $applied[$name], $define);
-            } catch (\Throwable) {
-                $applied[$name] = $this->renderer->bind($data[$name]);
-                unset($kept[$name]);
-            }
-        }
-
-        return $this->renderDocument(
-            $request,
-            $route,
-            $shared,
-            $context,
-            $boundShared,
-            $data,
-            $applied,
-            $templates,
-            $kept,
-            $embed,
-        );
-    }
-
-    /**
-     * Returns the names of the route regions of a route that are present in the data (HY-75).
-     *
-     * @param RouteDefinition $route
-     * @param array<string, array<array-key, mixed>> $data
-     * @return list<string>
-     */
-    private static function present(array $route, array $data): array
-    {
-        return array_values(
-            array_filter(
-                array_map(fn (Region $region): string => $region->name, $route['regions']),
-                fn (string $name): bool => array_key_exists($name, $data),
-            ),
-        );
-    }
-
-    /**
-     * @param RouteDefinition $route
-     * @param array<array-key, mixed> $shared shared data, which the embedded data carries
-     * @param array<array-key, mixed>|null $context the context of the application, or null without one (HY-124)
-     * @param array<string, array<array-key, mixed>> $data loader data, which the embedded data carries
-     * @param array<string, BoundMap> $applied bound region data with kept values applied, which the
-     *     regions render
-     * @param array<string, string> $templates
-     * @param array<string, array<string, mixed>> $kept
-     * @param bool $embed whether the reply asked the document to embed its data (HY-92)
-     */
-    private function renderDocument(
-        Request $request,
-        array $route,
-        array $shared,
-        ?array $context,
-        BoundMap $boundShared,
-        array $data,
-        array $applied,
-        array $templates,
-        array $kept,
-        bool $embed,
-    ): string {
-        // HY-31, HY-75, HY-92: a document embeds its data only when the reply asks for it, and then only the present
-        // route regions and their kept entries, the data that the browser can change; a response without a present
-        // route region embeds none. The embedded data is one more root, bound once (H10.4).
-        $routeRegionNames = self::present($route, $data);
-        $response = null;
-        if ($embed && $routeRegionNames !== []) {
-            $embedded = array_intersect_key($data, array_flip($routeRegionNames));
-            // HY-31: an embedded document holds build and context with its value, whatever the request holds.
-            $member = $context === null ? null : Context::member($this->build, $context, null);
-            $response = JsonCodec::value(
-                $this->timezone,
-                $route['name'],
-                $request->params(),
-                $this->build,
-                $member,
-                $shared,
-                $embedded,
-                array_intersect_key($kept, $embedded),
-            );
-        }
-        $regions = [];
-        $routeRegions = [];
-        foreach ($applied as $name => $regionData) {
-            $region = ['template' => $templates[$name], 'data' => $regionData];
-            if (in_array($name, $routeRegionNames, true)) {
-                $routeRegions[$name] = $region;
-            } else {
-                $regions[$name] = $region;
-            }
-        }
-
-        return $this->renderer->document(
-            $this->manifest->layout,
-            $this->manifest->title,
-            $boundShared,
-            $regions,
-            $this->manifest->page->name,
-            $routeRegions,
-            $response === null ? null : $this->renderer->bind(['response' => $response]),
-            $this->build,
-        );
-    }
-
-    /**
-     * Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or null
-     * for a cookie that is absent (HY-42). A cookie whose bytes are not UTF-8 is no JSON text, so the core reads it as
-     * the empty text, which gives no value, and the request is answered.
-     */
-    private static function decodedCookie(?string $text): mixed
-    {
-        if ($text === null) {
-            return null;
-        }
-
-        return CoreRules::shared()->pageKeptCookie(preg_match('//u', $text) === 1 ? $text : '');
+        return $text === null ? null : (preg_match('//u', $text) === 1 ? $text : '');
     }
 }

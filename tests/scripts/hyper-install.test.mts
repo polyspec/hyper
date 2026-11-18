@@ -19,6 +19,15 @@ test('hyper-install writes the sources of the bindings before it installs the PH
   assert.ok(at('bindings') < at('hyper-install-python'), `bindings runs before hyper-install-python: ${steps.join(' ')}`);
 });
 
+test('hyper-install-python alone writes the sources of the bindings before maturin builds the native module (H34.10)', () => {
+  // A setup step of CI runs hyper-install-python without hyper-install, in a checkout that holds no generated source.
+  const lines = dryRun('hyper-install-python');
+  const generate = lines.findIndex((line) => /\/@polyspec\/binding\/dist\/cli\.js generate /u.test(line));
+  const maturin = lines.findIndex((line) => / maturin \S+ build --locked --offline /u.test(line));
+  assert.ok(maturin >= 0, `make -n hyper-install-python builds no native module with maturin:\n${lines.join('\n')}`);
+  assert.ok(generate >= 0 && generate < maturin, `make -n hyper-install-python builds the native module before make bindings writes packages/python/native/generated:\n${lines.join('\n')}`);
+});
+
 test('hyper-install-python builds the native module with maturin of the link script and uv sync does not build it (H35.24)', () => {
   const lines = dryRun('hyper-install-python').join('\n');
   assert.match(lines, /UV_SYNC='[^']*--no-install-project[^']*'/u, lines);

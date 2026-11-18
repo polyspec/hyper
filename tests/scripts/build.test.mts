@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { test } from 'node:test';
-import { buildId } from '../../packages/cli/lib/build-id.mjs';
+import { buildId } from '@polyspec/hyper/build';
 import { listFiles } from '../../packages/cli/lib/output-files.mjs';
 import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { fixture, runBuild } from './build-fixture.mts';
@@ -48,11 +48,10 @@ test('writes the outputs of HR-34 below public/assets, client/ and program/ and 
   assert.deepEqual(readdirSync(join(output, 'client')).sort(), ['assets.json', 'assets.previous.json', 'csr', 'manifest.json', 'templates.index.json']);
   assert.deepEqual(readJson(join(output, 'client', 'assets.previous.json')), { files: [] });
   // HY-48.20: the program holds no generated PHP program, so neither php/ nor program.json.
-  assert.deepEqual(readdirSync(join(output, 'program')).sort(), ['build.json', 'legacy', 'reads.json', 'templates']);
-  // HY-31.9, HY-31.10: program/templates holds no copy of the reserved template, and program/legacy holds the copy
-  // for a server that does not call the core.
+  // HY-48.21: the program holds reads.json, build.json and templates, and no copy of the reserved template.
+  assert.deepEqual(readdirSync(join(output, 'program')).sort(), ['build.json', 'reads.json', 'templates']);
+  // HY-31.9: program/templates holds no copy of the reserved template, which the core gives.
   assert.equal(existsSync(join(output, 'program', 'templates', 'hyper', 'data.tpl')), false);
-  assert.deepEqual(listFiles(join(output, 'program', 'legacy')).map((file) => relative(join(output, 'program'), file)), [join('legacy', 'hyper', 'data.tpl')]);
   // assets.json lists every file that this build wrote below public/assets, in byte order.
   const assets = jsonArray(readJson(join(output, 'client', 'assets.json')).files, 'files').map((path) => jsonString(path, 'path'));
   const written = listFiles(join(app, 'public', 'assets')).map((file) => relative(app, file)).sort();

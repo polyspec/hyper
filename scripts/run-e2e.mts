@@ -4,7 +4,7 @@
 // and removes the directory. `make e2e` passes the Playwright run of the shared test runner, which reports each case and
 // gives it its own timeout (H27.26). Starting the servers is a step without a time limit.
 //
-// Each --extension loads a PHP extension into both PHP servers in the given order (HY-48.15, HY-132.2).
+// Each --extension loads a PHP extension into both PHP servers in the given order (HY-48.23, HY-132.2).
 //
 // Usage: node scripts/run-e2e.mts [--extension <library>]... -- <command> [<arguments>...]
 import { spawn } from 'node:child_process';

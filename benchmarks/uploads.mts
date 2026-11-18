@@ -4,7 +4,7 @@
 // PHP application under PHP-FPM, which a FastCGI client of this file calls as a web server does, the server of
 // `App.server` of Node and the `http.server` server of Python. The reader of PHP itself is benchmarks/uploads-native.php
 // under PHP-FPM with `enable_post_data_reading` on. The results are a report and judge nothing.
-// Each --extension loads a PHP extension into the PHP-FPM of the hyper application in the given order (HY-48.15,
+// Each --extension loads a PHP extension into the PHP-FPM of the hyper application in the given order (HY-48.23,
 // HY-132.2).
 // Usage: node benchmarks/uploads.mts --size <bytes of the large file> --runs <n> [--json] [--extension <library>]...
 import { type ChildProcess, execFile, spawn } from 'node:child_process';

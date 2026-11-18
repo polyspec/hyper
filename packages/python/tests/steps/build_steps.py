@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 
 from polyspec.hyper.app._build import Build
-from polyspec.hyper.page._renderer import Renderer
+from polyspec.hyper.app.app import App
 
 from ..case_rules import FAILURES, raises_of
 
@@ -14,8 +14,15 @@ _OUTPUTS = {
     "reads.json": False,
     "build.json": False,
     "templates": True,
-    # HY-48.18: the copy of the reserved template, which the open of the server needs (HY-31.10).
-    "legacy/hyper/data.tpl": False,
+}
+# The options of the pages of the core that the open of the step gives; the open fails at the first missing output,
+# before it reads the manifest.
+_PAGES_OPTIONS = {
+    "timezone": "Z",
+    "context": False,
+    "base_path": "",
+    "form_types": ["application/x-www-form-urlencoded"],
+    "data_base_path": None,
 }
 
 
@@ -69,7 +76,7 @@ def outputs(case) -> None:
                 (program / name).write_bytes(b"")
         error = None
         try:
-            Renderer.open(str(program), "Z")
+            App._open_pages(b"", str(program), None, _PAGES_OPTIONS)
         except Exception as failure:  # noqa: BLE001 - the reader checks the class of the error
             error = failure
     case.outcome("open", error)

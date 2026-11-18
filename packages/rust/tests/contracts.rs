@@ -2,27 +2,16 @@
 //! decides before the core runs (`invalid_argument_type`, and `invalid_number` of a value that is no integer) is the
 //! binding's and is left to the generated tests (binding design G-5).
 
+mod contract_cases;
+
 use std::fs;
 use std::path::PathBuf;
 
 use binding_core::Kinds;
+use contract_cases::cases;
 use polyspec_hyper::media::{accept_ranges, select, Selected, Selection, Served};
 use polyspec_hyper::{csrf, etag, location, reply, Error};
 use serde_json::Value;
-
-fn cases(file: &str) -> Value {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../contracts")
-        .join(file);
-    let text = match fs::read_to_string(&path) {
-        Ok(text) => text,
-        Err(error) => panic!("{}: {error}", path.display()),
-    };
-    match serde_json::from_str(&text) {
-        Ok(value) => value,
-        Err(error) => panic!("{}: {error}", path.display()),
-    }
-}
 
 fn group<'a>(value: &'a Value, name: &str) -> &'a Vec<Value> {
     match value.get(name).and_then(Value::as_array) {
@@ -1625,6 +1614,12 @@ fn the_data_model_cases_of_the_context_file_run_as_the_steps_of_a_page() {
         if !names.into_iter().any(|name| name == "HY-44") {
             continue;
         }
+        // HYR-6: a case with `only` states the behaviour of the hosts that it names, with a host value that only those
+        // hosts build, such as bytes that are not UTF-8 or a resource; the host runners skip a case that does not name
+        // their language, and the core, which no `only` names, skips every such case (H35.32-1-6-1).
+        if case.get("only").is_some() {
+            continue;
+        }
         let id = &case["id"];
         let fixture = &file["applications"][text(case, "application")];
         let route = case_route(&file, case);
@@ -2817,7 +2812,18 @@ fn case_store(case: &Value, directory: &CaseDirectory) -> Box<dyn polyspec_sessi
 
 /// The cases of tests/cases/faults.json.
 fn fault_cases() -> Value {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/faults.json");
+    case_file("tests/cases/faults.json")
+}
+
+/// The cases of tests/cases/core-faults.json, which arm a point of a library that only an object of that library
+/// reaches, so that only the tests of the core read them (binding B2.487).
+fn core_fault_cases() -> Value {
+    case_file("tests/cases/core-faults.json")
+}
+
+/// The cases of a case file of the package.
+fn case_file(relative: &str) -> Value {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(relative);
     match fs::read_to_string(&path).map(|text| serde_json::from_str(&text)) {
         Ok(Ok(value)) => value,
         Ok(Err(error)) => panic!("{}: {error}", path.display()),
@@ -2854,17 +2860,24 @@ fn case_pages(case: &Value) -> Result<polyspec_hyper::steps::Pages, Error> {
 
 #[test]
 fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
-    // HY-132.6, HY-24.14, HY-104.23; binding design G-5, X-1. The case of the group session of tests/cases/faults.json
-    // that arms session_store.internal for opening_functions.open_page opens a page with a file session that found
-    // no record, whose first get starts the record session, and raises internal; the same call without the arming
-    // opens the page with a new token, because the start of the session leaves it started. Its other cases raise the
-    // kinds that the stored values of their session file or their mask give.
+    // HY-132.6, HY-24.14, HY-104.23; binding design G-5, X-1, B2.487. A case of the group session that arms a point for
+    // opening_functions.open_page opens a page with a file session that found no record: session_store.random of
+    // tests/cases/faults.json breaks the new token, which the core makes by random_hex, and raises random, and
+    // session_store.internal of tests/cases/core-faults.json breaks the start of the record session in the store and
+    // raises internal; the same call without the arming opens the page with a new token. The other cases raise the
+    // kinds that the stored values of their session file give, and the case of the group session_memory raises the kind
+    // that its mask gives with a session of the memory store.
     use binding_core::Failure;
     use polyspec_hyper::opening::{open_page, Opened, Opening};
     use polyspec_hyper::steps::PageKind;
     let file = fault_cases();
+    let core_file = core_fault_cases();
     let mut ran = 0;
-    for case in group(&file, "session") {
+    for case in group(&file, "session")
+        .iter()
+        .chain(group(&file, "session_memory"))
+        .chain(group(&core_file, "session"))
+    {
         let directory = CaseDirectory::new(case);
         let pages = case_pages(case)?;
         let given = &case["opening"];

@@ -2,11 +2,9 @@
 // (HR-34), and writes its build id. `hyper build` passes the id that it computed from its outputs (HY-125.21); a test
 // that needs a fixed id builds its program with the same functions and that id, so the rules of the assembly exist once.
 //   templates/    every template of the application, and no copy of the reserved template hyper/data.tpl (HY-31.9)
-//   legacy/       hyper/data.tpl, the copy of the reserved template for a server that does not call the core
-//                 (HY-31.10)
 //   reads.json    the read paths of every route, by which the server keeps data (HY-73), as readsFile of the core
 //                 writes them (@polyspec/hyper/build)
-//   build.json    {"build":"<id>"}, written by writeBuildFile (HY-125.23)
+//   build.json    {"build":"<id>"}, whose text is buildFileText of the core (HY-125.23), written by the build
 // The program holds no generated PHP program (HY-48.20): the three servers render the templates of templates/.
 // The assembly has two parts. This module computes the content of the files with the core, which loads the native
 // addon of the platform. lib/program-files.mjs writes the files and loads no addon. writeProgram composes them: the
@@ -14,10 +12,16 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { readsFile } from '@polyspec/hyper/build';
+import { buildFileText, readsFile } from '@polyspec/hyper/build';
 import { writeProgramFiles, writeProgramTemplates } from './program-files.mjs';
 
-export { writeBuildFile } from './program-files.mjs';
+/**
+ * Writes build.json of `directory` with the build id `id`, whose text the core gives (HY-125.23); an id of another
+ * form fails with the kind `invalid_build` (HY-125.19).
+ */
+export function writeBuildFile(directory, id) {
+  writeProgramFiles(directory, [['build.json', buildFileText(id)]]);
+}
 
 /** The files of the program that a reader takes after every other file, so it never finds a file missing (HR-82). */
 export const PROGRAM_LAST = ['reads.json', 'build.json'];

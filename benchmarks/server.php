@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-// Measures the CPU time of the PHP server without network, with the template extension (HY-48.15):
-// App::handle per request kind, and the template, data model and JSON costs as the number of rows grows. It uses its
+// Measures the CPU time of the PHP server without network, with the extensions that it loads (HY-48.23):
+// App::handle per request kind, and App::handle of the board list as the number of rows grows. It uses its
 // own database file, which it recreates on every run.
 //
 // Usage: php benchmarks/server.php --app examples/board --iterations 300
@@ -13,12 +13,7 @@ use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Csrf;
 use Polyspec\Hyper\Examples\Board\Assets;
 use Polyspec\Hyper\Examples\Board\Posts;
-use Polyspec\Hyper\Build;
-use Polyspec\Hyper\JsonCodec;
-use Polyspec\Hyper\Renderer;
 use Polyspec\Hyper\Request;
-
-use function Polyspec\Template\bind;
 
 $options = getopt('', ['app:', 'iterations:']);
 if (!isset($options['app'], $options['iterations'])) {
@@ -122,13 +117,11 @@ foreach ($requests as $label => [$expected, $request]) {
     );
 }
 
-$renderer = Renderer::open("{$app}/build/program", '+09:00');
-// The build id of the program, which every JSON value holds (HY-128).
-$build = Build::read("{$app}/build/program/build.json");
-$shared = ['title' => '게시판', 'csrf' => $token];
-echo "\n## Scaling with rows (board/rows.tpl)\n\n";
-echo "| Rows | render ms | bind ms | json_encode ms | HTML bytes | JSON bytes |\n";
-echo "|---:|---:|---:|---:|---:|---:|\n";
+// The page render of the core (H35.32): each count opens the board with a rows loader that returns that many rows, and
+// App::handle renders the list as a document and as the region JSON, as the server answers it.
+echo "\n## Scaling with rows (App::handle of GET /board, the region rows)\n\n";
+echo "| Rows | document HTML ms | region JSON ms | HTML bytes | JSON bytes |\n";
+echo "|---:|---:|---:|---:|---:|\n";
 foreach ([10, 100, 1000] as $count) {
     $rows = [];
     for ($index = 1; $index <= $count; $index++) {
@@ -139,29 +132,43 @@ foreach ([10, 100, 1000] as $count) {
             'created_at' => 1790000000 + $index,
         ];
     }
-    $data = ['posts' => $rows, 'sort' => 'title', 'compact' => false, 'highlight' => null];
-    $value = JsonCodec::value('+09:00', 'board.list', [], $build, null, $shared, ['rows' => $data]);
-    // The render measures one render of roots that the document binds once (H10.4).
-    $boundShared = $renderer->bind($shared);
-    $boundData = $renderer->bind($data);
-    $render = $measure(
-        max(20, intdiv($iterations, 10)),
-        fn (): int => strlen($renderer->alone('board/rows.tpl', $boundShared, $boundData)),
+    $handlers = require "{$app}/app/handlers.php";
+    $handlers['routes']['board.list']['regions']['rows'] = static fn (): array => [
+        'posts' => $rows,
+        'sort' => 'title',
+        'compact' => false,
+        'highlight' => null,
+    ];
+    $scaled = App::open(
+        manifest: "{$app}/app/app.json",
+        program: "{$app}/build/program",
+        handlers: $handlers,
+        timezone: '+09:00',
     );
-    $bind = $measure(max(20, intdiv($iterations, 10)), function () use ($value): int {
-        bind($value);
-
-        return 0;
-    });
-    $encode = $measure(max(20, intdiv($iterations, 10)), fn (): int => strlen(JsonCodec::encode($value)));
+    $scaled->bind(Posts::class, fn (): Posts => $posts);
+    $scaled->bind(Assets::class, fn (): Assets => Assets::fromManifest("{$app}/build/client/manifest.json"));
+    $times = [];
+    foreach (['document' => [], 'region' => $region] as $kind => $headers) {
+        $status = $scaled->handle(new Request('GET', '/board', $headers), $session)->status;
+        if ($status !== 200) {
+            fwrite(STDERR, "GET /board with {$count} rows, {$kind}, answers status {$status}, not 200\n");
+            if (is_file($database)) {
+                unlink($database);
+            }
+            exit(1);
+        }
+        $times[$kind] = $measure(
+            max(20, intdiv($iterations, 10)),
+            fn (): int => strlen($scaled->handle(new Request('GET', '/board', $headers), $session)->body),
+        );
+    }
     printf(
-        "| %d | %.3f | %.3f | %.3f | %d | %d |\n",
+        "| %d | %.3f | %.3f | %d | %d |\n",
         $count,
-        $render['mean'],
-        $bind['mean'],
-        $encode['mean'],
-        $render['bytes'],
-        $encode['bytes'],
+        $times['document']['mean'],
+        $times['region']['mean'],
+        $times['document']['bytes'],
+        $times['region']['bytes'],
     );
 }
 printf(

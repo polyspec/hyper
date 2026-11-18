@@ -30,12 +30,11 @@ import { fileURLToPath } from 'node:url';
 import { compile } from '@tailwindcss/node';
 import { Scanner } from '@tailwindcss/oxide';
 import { build as bundle } from 'esbuild';
-import { buildId } from './build-id.mjs';
+import { buildId, shellFile } from '@polyspec/hyper/build';
 import { checkApplication } from './check.mjs';
 import { copyFile, listFiles, writeFileAtomic } from './output-files.mjs';
 import { PROGRAM_LAST, writeBuildFile, writeProgram } from './program.mjs';
 import { publish, staging } from './publish.mjs';
-import { shellText } from './shell.mjs';
 import { sha256, templateFiles, templatePlugin } from './template-files.mjs';
 
 /** Runs the build of `options` (lib/options.mjs) and returns the lines that it reports. */
@@ -130,7 +129,7 @@ export async function runBuild(options) {
 
     let shellBytes = 0;
     if (options.api !== undefined && entry !== undefined) {
-      const shell = shellText({ api: options.api, build: id, entry });
+      const shell = shellFile(options.api, id, entry.url, entry.code);
       shellBytes = Buffer.byteLength(shell);
       writeFileAtomic(join(clientNext, 'csr', 'index.html'), shell);
       // The copies hold the files of this build only; public/assets also holds the files that the application placed

@@ -10,7 +10,6 @@ from polyspec.hyper.session._csrf import Csrf
 from polyspec.hyper.http.request import Request
 from polyspec.hyper.session.array_session import ArraySession
 
-from ..case_rules import FAILURES, raises_of
 from .context_application import open_application, program_of
 from .recorded import decoded
 
@@ -29,30 +28,6 @@ def contexts(case) -> None:
             raise ValueError("reorderedText has no member context")
         context = _map_of(reordered["context"], "the member context of reorderedText")
         case.compare("reorderedHash", Context.hash(build, Context.text(context)))
-
-
-def with_context(case) -> None:
-    shared = {name: name for name in _string_list(case, "shared")}
-    keys = None
-    context = None
-    raises = None
-    try:
-        placed = Context.with_context(shared, {"name": "Board"})
-        keys = list(placed)
-        context = placed["context"]
-    except FAILURES as error:
-        raises = raises_of(error)
-    case.compare("keys", keys)
-    case.compare("context", context)
-    case.compare("raises", raises)
-
-
-def _string_list(case, name: str) -> list[str]:
-    """Returns a field of a case that is a list of strings, and fails for any other value."""
-    value = case.input(name)
-    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
-        raise TypeError(f"the case field {name} is not a list of strings")
-    return value
 
 
 def _string_field(case, name: str) -> str:
@@ -81,9 +56,12 @@ def cases(case) -> None:
         raise ValueError(f"the contract has no application {name}")
     application = applications[name]
     # Absent shared data declares no shared handler; present shared data must be a map.
+    kinds = case.input("valueKinds")
     shared = case.input("shared") if case.has("shared") else application.get("shared")
     if shared is not None and not isinstance(shared, dict):
         raise TypeError("the shared data of the case is not a map")
+    if shared is not None:
+        shared = _with_kinds(shared, kinds)
     context = (
         _string_field(case, "context")
         if case.has("context")
@@ -160,6 +138,47 @@ def cases(case) -> None:
     case.compare("contextCalls", calls.count("context"))
     case.compare("firstCalls", calls)
     case.compare("selection", selections)
+
+
+class _Callable:
+    """The value of the kind `callableObject`: an object whose class defines __call__."""
+
+    def __call__(self) -> int:
+        return 1
+
+    def method(self) -> int:
+        return 1
+
+
+def _function() -> int:
+    return 1
+
+
+# The values of the kinds of the fixture `valueKinds` that Python has, built anew for each case.
+_KINDS = {
+    "loneSurrogate": lambda: "\ud800",
+    "function": lambda: _function,
+    "method": lambda: _Callable().method,
+    "builtin": lambda: len,
+    "callableObject": _Callable,
+}
+
+
+def _with_kinds(value: object, kinds: dict) -> object:
+    """Returns the shared data of a case with each marker {"$": "kind", "name": <kind>} replaced by the value of that
+    kind of the fixture `valueKinds`, which JSON cannot state; a kind that Python has no value for fails the case."""
+    if isinstance(value, list):
+        return [_with_kinds(item, kinds) for item in value]
+    if not isinstance(value, dict):
+        return value
+    if value.get("$") == "kind":
+        name = value.get("name")
+        if name not in kinds:
+            raise LookupError(f"valueKinds does not hold the kind {name!r}")
+        if name not in _KINDS:
+            raise LookupError(f"the kind {name} has no value in Python")
+        return _KINDS[name]()
+    return {key: _with_kinds(item, kinds) for key, item in value.items()}
 
 
 def _member(body: str, name: str) -> dict:

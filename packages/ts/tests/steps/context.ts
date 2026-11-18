@@ -178,6 +178,20 @@ function hostMap(value: unknown, what: string): Map<string, unknown> {
   return new Map(mapIn(value, what));
 }
 
+// Returns the shared data of a case with each marker {"$": "kind", "name": <kind>} replaced by the value of that kind of
+// the fixture `valueKinds`, which JSON cannot state; a kind that Node has no value for fails the case.
+function withKinds(value: unknown, kinds: Map<unknown, unknown>): unknown {
+  if (Array.isArray(value)) return value.map((item: unknown) => withKinds(item, kinds));
+  if (!(value instanceof Map)) return value;
+  if (value.get('$') === 'kind') {
+    const name: unknown = value.get('name');
+    if (!kinds.has(name)) throw new Error(`valueKinds does not hold the kind ${String(name)}`);
+    if (name === 'loneSurrogate') return '\ud800';
+    throw new Error(`the kind ${String(name)} has no value in Node`);
+  }
+  return new Map([...value].map(([key, item]: [unknown, unknown]) => [key, withKinds(item, kinds)]));
+}
+
 // Returns a decoded value that is a map, and fails for any other value.
 function mapOf(value: unknown, name: string): Map<string, Value> {
   if (!isMap(value)) throw new Error(`${name} is not a map of values`);
@@ -240,7 +254,9 @@ export const steps = {
     const application = applicationOf(applications.get(name), name);
     const dir = join(PROGRAMS, name);
     // Absent shared data declares no shared handler; present shared data must be a map.
-    const shared = reader.has('shared') ? hostMap(reader.input('shared'), 'the shared data of the case') : application.shared;
+    const kinds = reader.input('valueKinds');
+    if (!(kinds instanceof Map)) throw new Error('valueKinds is not a map');
+    const shared = reader.has('shared') ? hostMap(withKinds(reader.input('shared'), kinds), 'the shared data of the case') : application.shared;
     const contextText = reader.has('context') ? stringField(reader, 'context') : application.context;
     const calls: string[] = [];
     const selections: unknown[] = [];
