@@ -14,25 +14,30 @@ This document records row H35.43 of the [execution checklist](checklist.md). It 
 | HY-104 | 30 | 20 | 7 | 3 |
 | HY-113 | 6 | 3 | 2 | 1 |
 | HY-114 | 8 | 8 | 0 | 0 |
-| HY-115 | 21 | 17 | 4 | 0 |
+| HY-115 | 21 | 18 | 3 | 0 |
 | HY-131 | 13 | 10 | 1 | 2 |
 | HY-133 | 13 | 13 | 0 | 0 |
-| Total | 159 | 139 | 14 | 6 |
+| Total | 159 | 140 | 13 | 6 |
 
 ## Open statements
 
-The following statements are not true and carry no `unimplemented` mark. Each one still needs a mark with a row that makes it true, or the code must be corrected. Until then H35.43 stays open.
+Seven statements were found not true without an `unimplemented` mark. Each one names its row, its new statement, or the ruling it waits for:
+
+- HY-100.2: true. `App.handle` wraps the one method that each host calls with its store (see its row).
+- HY-104.33: the code is corrected by H35.87: the PHP server sets `gc_probability` to 0, the Python store has a public `collect`, and the PHP server gets a public `collect`. H35.37, which holds the PHP file store, is withdrawn until after the first release, so the PHP `collect` is written in H35.87 and does not wait for that store. The verdict stays partly true until the runs of H35.87 pass.
+- HY-115.11: retired. HY-115.30 states the order of each store, and it is true (see its row).
+- HY-104.14 is corrected by H35.84, HY-104.31 by H35.85, HY-104.37 by H35.82 and HY-115.23 by H35.83, rows of the checklist on the line of the session id limits. Each verdict stays as below until the runs of its row pass.
+
+The statements that these rows correct:
 
 - HY-104.14: Node and Python fail at an object of another class (`php-serialization@v0.0.16:packages/rust/src/read.rs:460`). The PHP server reads the record with PHP's own session decoder and gives a stored value without a class check (`packages/php/src/Session/NativeSession.php:136`).
 - HY-104.31: every server accepts identifiers of 22 to 128 characters (`packages/ts/src/session/record-session.ts:8`, `packages/python/src/polyspec/hyper/session/_record_session.py:16`, `packages/php/src/Session/NativeSession.php:39`), while the statement, SE-5.1 (`session-store@v0.0.7:packages/core/rust/src/identifier.rs:8`) and PHP (`php-src@php-8.4.27:ext/session/session.c:791`) give 22 to 256.
-- HY-104.33: Python names the method `_collect`, which is not public. PHP has no `collect`, and its options do not set `gc_probability` to 0.
 - HY-104.37: the Node interface returns `undefined`, not null, for a key that holds no value (`packages/ts/src/session/session-store.ts:5`).
-- HY-115.11: the PHP renewal calls `session_regenerate_id(true)` (`packages/php/src/Session/NativeSession.php:159`), which deletes the old session (`php-src@php-8.4.27:ext/session/session.c:2415`) before the new one is written at the end of the request. Node and Python write the new key first (`session-store@v0.0.7:packages/redis/rust/src/protocol.rs:402`, `:447`).
 - HY-115.23: the PHP server calls no `session_write_close`, so PHP writes the session after the response, and a lost lock cannot change the status.
 
 ## Limits
 
-A place in a library is written `<repository>@<tag>:<path>:<line>`, at the tag that hyper pins: session-store v0.0.7 (`Cargo.lock`, `packages/ts/package.json`, `packages/python/uv.lock`) and php-serialization v0.0.16 (`Cargo.lock`). The Rust and TypeScript sources of session-store v0.0.8 are the same as those of v0.0.7, so each session-store place holds for both tags. A place in PHP is written `php-src@php-8.4.27:<path>:<line>`. For PHP, the evidence for the Redis lock order is the session handler of phpredis, which this audit did not open.
+A place in a library is written `<repository>@<tag>:<path>:<line>`, at the tag that hyper pins: session-store v0.0.7 (`Cargo.lock`, `packages/ts/package.json`, `packages/python/uv.lock`) and php-serialization v0.0.16 (`Cargo.lock`). The Rust and TypeScript sources of session-store v0.0.8 are the same as those of v0.0.7, so each session-store place holds for both tags. A place in PHP is written `php-src@php-8.4.27:<path>:<line>`. For PHP, the evidence for the Redis lock order is the session handler of phpredis, which this audit did not open; H35.86 reads it and compares its lock order with HY-115.
 
 ## HY-60
 
@@ -135,7 +140,7 @@ HY-104 states how the three servers store, lock, share and convert a session, th
 | HY-104.34 | true | `packages/rust/src/session.rs:177`, `packages/rust/src/session.rs:192` | none by exact id | |
 | HY-104.39 | true | `packages/rust/src/session.rs:194` (`value == 0.0` gives 0) | none | |
 | HY-104.15 | true | `packages/ts/src/session/file-sessions.ts:63`, `packages/python/src/polyspec/hyper/session/file_sessions.py:37`, `session-store@v0.0.7:packages/file/rust/src/store.rs:218` | none | The removal takes the lock without waiting and skips the file when another holds it (`store.rs:220`). |
-| HY-104.33 | partly true | `packages/ts/src/session/file-sessions.ts:65`, `packages/python/src/polyspec/hyper/session/file_sessions.py:37`, `packages/php/src/Session/NativeSession.php:114` | none | Python names the method `_collect`, which is not public; PHP has no `collect`, and its options do not set `gc_probability` to 0, so the native handler can remove expired files during a request by chance. |
+| HY-104.33 | partly true | `packages/ts/src/session/file-sessions.ts:65`, `packages/python/src/polyspec/hyper/session/file_sessions.py:37`, `packages/php/src/Session/NativeSession.php:114` | none | Python names the method `_collect`, which is not public; PHP has no `collect`, and its options do not set `gc_probability` to 0, so the native handler can remove expired files during a request by chance. H35.87 corrects the code. |
 | HY-104.28 | true | `tests/scripts/session-shared.test.mts` | itself | |
 | HY-104.29 | true | `packages/ts/src/session/file-sessions.ts:22`, `packages/python/src/polyspec/hyper/session/file_sessions.py:7`, `session-store@v0.0.7:packages/file/rust/src/turns.rs:59`, `session-store@v0.0.7:packages/file/rust/src/store.rs:157`, `store.rs:172` | none | The library queues the request before the lock (`store.rs:157`), takes a cancelled request out of the queue (`turns.rs:58`), and drops the file, which releases the lock, when the request was cancelled while it waited for the lock (`store.rs:173`). |
 | HY-104.31 | false | `packages/ts/src/session/record-session.ts:8`, `packages/ts/src/session/record-session.ts:77`, `packages/python/src/polyspec/hyper/session/_record_session.py:16`, `packages/python/src/polyspec/hyper/session/_record_session.py:75`, `packages/php/src/Session/NativeSession.php:39` | `tests/legacy/interfaces.json` | Every server accepts 22 to 128 characters before the store sees the cookie. The library accepts 22 to 256 (`session-store@v0.0.7:packages/core/rust/src/identifier.rs:7`, `:8`, `:14`), and so does PHP (`php-src@php-8.4.27:ext/session/session.c:75`, `:791`, `:380`). The core of hyper has no identifier check. |
@@ -199,7 +204,7 @@ The Node and Python servers pass the Redis store to the session-store library (`
 | HY-115.8 | true | `packages/php/src/Session/RedisClusterSessions.php:14`, `packages/php/src/Session/RedisClusterSessions.php:84`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:12`, `protocol.rs:180` | none | The library releases with the script that deletes the key only when it holds the secret. |
 | HY-115.24 | true | `packages/php/src/Session/NativeSession.php:127` | none | A condition on a phpredis peer. `tests/scripts/fixtures/session-worker/worker.php:52` runs the PHP worker with `redis.session.lock_retries` -1 unless `HYPER_SESSION_RETRIES` is set, a setting that this statement excludes. |
 | HY-115.29 | partly true | `packages/ts/src/session/redis-sessions.ts:16`, `packages/python/src/polyspec/hyper/session/redis_sessions.py:37`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:22`, `protocol.rs:86` | none | The library takes `lock_retries` and `lock_wait` as options of the store. Marked `unimplemented` H35.37 for PHP. The PHP server takes the settings from ini values of phpredis and from `RedisClusterSessions`, not as options of a store. |
-| HY-115.11 | partly true | `packages/php/src/Session/NativeSession.php:159`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:402`, `protocol.rs:447` | none | Node and Python write the new key with `SETEX` and then delete the old key with `DEL`. The PHP renewal calls `session_regenerate_id(true)`, which destroys the old session first (`php-src@php-8.4.27:ext/session/session.c:2415`) and writes the new one at the end of the request. |
+| HY-115.30 | true | `packages/php/src/Session/NativeSession.php:159`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:402`, `protocol.rs:447` | none | Retires HY-115.11, which said that every server writes the new key first. Node and Python write the new key with `SETEX` and then delete the old key with `DEL`. The PHP renewal calls `session_regenerate_id(true)`, which destroys the old session first (`php-src@php-8.4.27:ext/session/session.c:2415`) and writes the new one at the end of the request. |
 | HY-115.12 | true | `packages/php/src/Session/NativeSession.php:48`, `packages/php/src/Session/NativeSession.php:53` | `tests/scripts/session-redis-failure.test.mts` (cites HY-115) | |
 | HY-115.13 | true | `tests/scripts/session-shared-redis.test.mts`, `tests/scripts/session-redis-failure.test.mts:59` | itself | The failure test kills a process with SIGKILL (`tests/scripts/session-redis-failure.test.mts:62`). |
 | HY-115.26 | true | `packages/php/src/Session/RedisSentinelSessions.php:34`, `packages/ts/src/session/redis-sessions.ts:8`, `session-store@v0.0.7:packages/redis/rust/src/connection.rs:258`, `connection.rs:264` | `tests/scripts/session-redis-failover.test.mts` (cites HY-115) | The library asks Sentinel for the primary at the start of each request. |

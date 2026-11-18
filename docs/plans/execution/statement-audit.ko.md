@@ -1,5 +1,5 @@
 <!-- doc-id: plan-statement-audit -->
-<!-- source-sha256: 637b355df7e218681e36715df86c43104dfa4f5c13c56d6140ae3fe7049904f4 -->
+<!-- source-sha256: affadb9ae6faceb8ad9bd56f804dae9c3a0f4d719ffcdf99a8826118981ea1bf -->
 # 진술 감사
 
 [English](statement-audit.md).
@@ -15,25 +15,30 @@
 | HY-104 | 30 | 20 | 7 | 3 |
 | HY-113 | 6 | 3 | 2 | 1 |
 | HY-114 | 8 | 8 | 0 | 0 |
-| HY-115 | 21 | 17 | 4 | 0 |
+| HY-115 | 21 | 18 | 3 | 0 |
 | HY-131 | 13 | 10 | 1 | 2 |
 | HY-133 | 13 | 13 | 0 | 0 |
-| 합계 | 159 | 139 | 14 | 6 |
+| 합계 | 159 | 140 | 13 | 6 |
 
 ## 열린 진술
 
-다음 진술은 참이 아니고 `unimplemented` 표시도 없다. 각 진술은 그것을 참으로 만드는 행과 함께 표시를 받거나, 코드를 고쳐야 한다. 그때까지 H35.43은 열린 상태로 남는다.
+`unimplemented` 표시 없이 참이 아닌 진술 7개를 찾았다. 각 진술은 그 행, 새 진술, 또는 기다리는 판정을 적는다.
+
+- HY-100.2: 참이다. `App.handle`은 각 host가 자기 store로 호출하는 한 메서드를 감싼다(그 행을 보라).
+- HY-104.33: H35.87이 코드를 고친다. PHP 서버는 `gc_probability`를 0으로 두고, Python store에는 public `collect`가 있으며, PHP 서버는 public `collect`를 받는다. PHP file store를 가진 H35.37은 첫 release 뒤까지 철회되었으므로, PHP `collect`는 H35.87에서 작성되고 그 store를 기다리지 않는다. H35.87의 실행이 통과할 때까지 판정은 일부 참으로 남는다.
+- HY-115.11: 폐기되었다. HY-115.30이 각 store의 순서를 적고, 그 진술은 참이다(그 행을 보라).
+- H35.84가 HY-104.14를, H35.85가 HY-104.31을, H35.82가 HY-104.37을, H35.83이 HY-115.23을 고친다. 이 행들은 session id 한도의 작업 줄에 있는 checklist 행이다. 각 판정은 그 행의 실행이 통과할 때까지 아래와 같이 남는다.
+
+이 행들이 고치는 진술:
 
 - HY-104.14: Node와 Python은 다른 class의 object에서 실패한다(`php-serialization@v0.0.16:packages/rust/src/read.rs:460`). PHP 서버는 PHP 자신의 session decoder로 기록을 읽고, 저장된 값을 class 검사 없이 돌려준다(`packages/php/src/Session/NativeSession.php:136`).
 - HY-104.31: 모든 서버가 22자에서 128자의 식별자를 받는다(`packages/ts/src/session/record-session.ts:8`, `packages/python/src/polyspec/hyper/session/_record_session.py:16`, `packages/php/src/Session/NativeSession.php:39`). 그러나 진술, SE-5.1(`session-store@v0.0.7:packages/core/rust/src/identifier.rs:8`), PHP(`php-src@php-8.4.27:ext/session/session.c:791`)는 22자에서 256자를 준다.
-- HY-104.33: Python은 메서드 이름을 public이 아닌 `_collect`로 둔다. PHP에는 `collect`가 없고, 그 옵션은 `gc_probability`를 0으로 두지 않는다.
 - HY-104.37: Node 인터페이스는 값이 없는 key에 대해 null이 아니라 `undefined`를 돌려준다(`packages/ts/src/session/session-store.ts:5`).
-- HY-115.11: PHP 갱신은 `session_regenerate_id(true)`를 호출한다(`packages/php/src/Session/NativeSession.php:159`). 이 함수는 옛 session을 먼저 삭제하고(`php-src@php-8.4.27:ext/session/session.c:2415`), 새 session은 요청 끝에 쓴다. Node와 Python은 새 key를 먼저 쓴다(`session-store@v0.0.7:packages/redis/rust/src/protocol.rs:402`, `:447`).
 - HY-115.23: PHP 서버는 `session_write_close`를 호출하지 않으므로, PHP는 응답 뒤에 session을 쓰고, 잃은 lock이 상태 코드를 바꿀 수 없다.
 
 ## 한계
 
-라이브러리의 위치는 hyper가 고정한 tag에서 `<repository>@<tag>:<path>:<line>`으로 쓴다. 그 tag는 session-store v0.0.7(`Cargo.lock`, `packages/ts/package.json`, `packages/python/uv.lock`)과 php-serialization v0.0.16(`Cargo.lock`)이다. session-store v0.0.8의 Rust와 TypeScript 소스는 v0.0.7과 같으므로, session-store의 각 위치는 두 tag 모두에 맞다. PHP의 위치는 `php-src@php-8.4.27:<path>:<line>`으로 쓴다. PHP에서 Redis lock 순서의 근거는 phpredis의 session handler이고, 이 감사는 그것을 열지 않았다.
+라이브러리의 위치는 hyper가 고정한 tag에서 `<repository>@<tag>:<path>:<line>`으로 쓴다. 그 tag는 session-store v0.0.7(`Cargo.lock`, `packages/ts/package.json`, `packages/python/uv.lock`)과 php-serialization v0.0.16(`Cargo.lock`)이다. session-store v0.0.8의 Rust와 TypeScript 소스는 v0.0.7과 같으므로, session-store의 각 위치는 두 tag 모두에 맞다. PHP의 위치는 `php-src@php-8.4.27:<path>:<line>`으로 쓴다. PHP에서 Redis lock 순서의 근거는 phpredis의 session handler이고, 이 감사는 그것을 열지 않았다. H35.86이 그것을 읽고 그 lock 순서를 HY-115와 비교한다.
 
 ## HY-60
 
@@ -136,7 +141,7 @@ HY-104는 세 서버가 session-store 라이브러리와 core의 session 규칙�
 | HY-104.34 | 참 | `packages/rust/src/session.rs:177`, `packages/rust/src/session.rs:192` | 정확한 id로는 없음 | |
 | HY-104.39 | 참 | `packages/rust/src/session.rs:194`(`value == 0.0`이 0을 준다) | 없음 | |
 | HY-104.15 | 참 | `packages/ts/src/session/file-sessions.ts:63`, `packages/python/src/polyspec/hyper/session/file_sessions.py:37`, `session-store@v0.0.7:packages/file/rust/src/store.rs:218` | 없음 | 삭제는 기다리지 않고 lock을 잡으며, 다른 요청이 lock을 쥐고 있으면 그 파일을 건너뛴다(`store.rs:220`). |
-| HY-104.33 | 일부 참 | `packages/ts/src/session/file-sessions.ts:65`, `packages/python/src/polyspec/hyper/session/file_sessions.py:37`, `packages/php/src/Session/NativeSession.php:114` | 없음 | Python은 메서드 이름을 public이 아닌 `_collect`로 둔다. PHP에는 `collect`가 없고 그 옵션은 `gc_probability`를 0으로 두지 않으므로, native handler가 요청 중에 우연히 만료된 파일을 지울 수 있다. |
+| HY-104.33 | 일부 참 | `packages/ts/src/session/file-sessions.ts:65`, `packages/python/src/polyspec/hyper/session/file_sessions.py:37`, `packages/php/src/Session/NativeSession.php:114` | 없음 | Python은 메서드 이름을 public이 아닌 `_collect`로 둔다. PHP에는 `collect`가 없고 그 옵션은 `gc_probability`를 0으로 두지 않으므로, native handler가 요청 중에 우연히 만료된 파일을 지울 수 있다. H35.87이 코드를 고친다. |
 | HY-104.28 | 참 | `tests/scripts/session-shared.test.mts` | 자기 자신 | |
 | HY-104.29 | 참 | `packages/ts/src/session/file-sessions.ts:22`, `packages/python/src/polyspec/hyper/session/file_sessions.py:7`, `session-store@v0.0.7:packages/file/rust/src/turns.rs:59`, `session-store@v0.0.7:packages/file/rust/src/store.rs:157`, `store.rs:172` | 없음 | 라이브러리는 lock 전에 요청을 queue에 넣고(`store.rs:157`), 취소된 요청을 queue에서 뺀다(`turns.rs:58`). lock을 기다리는 동안 취소된 요청은 파일을 놓아 lock을 푼다(`store.rs:173`). |
 | HY-104.31 | 거짓 | `packages/ts/src/session/record-session.ts:8`, `packages/ts/src/session/record-session.ts:77`, `packages/python/src/polyspec/hyper/session/_record_session.py:16`, `packages/python/src/polyspec/hyper/session/_record_session.py:75`, `packages/php/src/Session/NativeSession.php:39` | `tests/legacy/interfaces.json` | 모든 서버는 store가 cookie를 보기 전에 22자에서 128자만 받는다. 라이브러리는 22자에서 256자를 받고(`session-store@v0.0.7:packages/core/rust/src/identifier.rs:7`, `:8`, `:14`), PHP도 같다(`php-src@php-8.4.27:ext/session/session.c:75`, `:791`, `:380`). hyper의 core에는 식별자 검사가 없다. |
@@ -200,7 +205,7 @@ Node와 Python 서버는 Redis store를 session-store 라이브러리에 넘기�
 | HY-115.8 | 참 | `packages/php/src/Session/RedisClusterSessions.php:14`, `packages/php/src/Session/RedisClusterSessions.php:84`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:12`, `protocol.rs:180` | 없음 | 라이브러리는 secret을 가질 때만 key를 지우는 script로 lock을 푼다. |
 | HY-115.24 | 참 | `packages/php/src/Session/NativeSession.php:127` | 없음 | phpredis 상대에 대한 조건이다. `tests/scripts/fixtures/session-worker/worker.php:52`는 `HYPER_SESSION_RETRIES`가 없으면 `redis.session.lock_retries` -1로 PHP worker를 실행하고, 이 진술은 그 설정을 제외한다. |
 | HY-115.29 | 일부 참 | `packages/ts/src/session/redis-sessions.ts:16`, `packages/python/src/polyspec/hyper/session/redis_sessions.py:37`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:22`, `protocol.rs:86` | 없음 | 라이브러리는 `lock_retries`와 `lock_wait`를 store의 옵션으로 받는다. PHP에 대해 `unimplemented` H35.37로 표시되었다. PHP 서버는 설정을 store의 옵션이 아니라 phpredis의 ini 값과 `RedisClusterSessions`에서 받는다. |
-| HY-115.11 | 일부 참 | `packages/php/src/Session/NativeSession.php:159`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:402`, `protocol.rs:447` | 없음 | Node와 Python은 새 key를 `SETEX`로 쓴 뒤 옛 key를 `DEL`로 지운다. PHP 갱신은 `session_regenerate_id(true)`를 호출하고, 이 함수는 옛 session을 먼저 없애고(`php-src@php-8.4.27:ext/session/session.c:2415`) 새 session은 요청 끝에 쓴다. |
+| HY-115.30 | 참 | `packages/php/src/Session/NativeSession.php:159`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:402`, `protocol.rs:447` | 없음 | 모든 서버가 새 key를 먼저 쓴다고 한 HY-115.11을 대신한다. Node와 Python은 새 key를 `SETEX`로 쓴 뒤 옛 key를 `DEL`로 지운다. PHP 갱신은 `session_regenerate_id(true)`를 호출하고, 이 함수는 옛 session을 먼저 없애고(`php-src@php-8.4.27:ext/session/session.c:2415`) 새 session은 요청 끝에 쓴다. |
 | HY-115.12 | 참 | `packages/php/src/Session/NativeSession.php:48`, `packages/php/src/Session/NativeSession.php:53` | `tests/scripts/session-redis-failure.test.mts`(HY-115를 인용) | |
 | HY-115.13 | 참 | `tests/scripts/session-shared-redis.test.mts`, `tests/scripts/session-redis-failure.test.mts:59` | 자기 자신 | 실패 테스트는 SIGKILL로 프로세스를 죽인다(`tests/scripts/session-redis-failure.test.mts:62`). |
 | HY-115.26 | 참 | `packages/php/src/Session/RedisSentinelSessions.php:34`, `packages/ts/src/session/redis-sessions.ts:8`, `session-store@v0.0.7:packages/redis/rust/src/connection.rs:258`, `connection.rs:264` | `tests/scripts/session-redis-failover.test.mts`(HY-115를 인용) | 라이브러리는 각 요청의 시작에 Sentinel에게 primary를 묻는다. |
