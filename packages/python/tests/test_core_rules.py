@@ -334,6 +334,24 @@ class CoreRulesTest(unittest.TestCase):
         )
 
 
+class BodyLimitsTest(unittest.TestCase):
+    """The binding takes a `uint` only up to 2^53 - 1 and fails a larger one with `invalid_number` (binding GN-12a),
+    so every limit that the server gives the core is at most that integer (H35.11)."""
+
+    def test_the_limit_that_does_not_apply_is_the_largest_uint_of_the_binding(self):
+        from polyspec.hyper.form._core_body import NO_LIMIT
+
+        self.assertEqual(NO_LIMIT, 2**53 - 1)
+
+    def test_a_limit_above_the_largest_uint_reaches_the_binding_as_that_uint(self):
+        binding, _ = stand_in({})
+        limits = CoreRules(binding).body_limits(2**64 - 1, 2**53, 7, 2**53 - 1)
+        self.assertEqual(
+            limits,
+            {"limit": 2**53 - 1, "value_limit": 2**53 - 1, "part_limit": 7, "file_limit": 2**53 - 1},
+        )
+
+
 class SharedCoreRulesTest(unittest.TestCase):
     """`core_rules` gives the units of the server one `CoreRules` of the binding module, and a binding that does not
     import fails with an error that names the module, with no rule of the server in its place (HY-132.2)."""

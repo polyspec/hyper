@@ -4830,6 +4830,56 @@
       ]
     },
     {
+      "id": "a_multipart_type_without_a_boundary_is_refused_after_the_route",
+      "label": "a POST to an action of an application whose form types include multipart/form-data, with the type multipart/form-data and no boundary, receives 400 with the kind malformed_content_type after the route and before the token",
+      "application": "a_board",
+      "options": {
+        "formTypes": [
+          "application/x-www-form-urlencoded",
+          "multipart/form-data"
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Content-Type": "multipart/form-data"
+        },
+        "body": "--x\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\na\r\n--x--\r\n"
+      },
+      "status": 400,
+      "body": "Bad Request",
+      "actions": 0,
+      "requirements": [
+        "HY-113"
+      ]
+    },
+    {
+      "id": "a_multipart_type_with_an_empty_boundary_is_refused_after_the_route",
+      "label": "a POST to an action of an application whose form types include multipart/form-data, with the type multipart/form-data; boundary=\"\", receives 400 with the kind malformed_content_type after the route and before the token",
+      "application": "a_board",
+      "options": {
+        "formTypes": [
+          "application/x-www-form-urlencoded",
+          "multipart/form-data"
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "target": "/add",
+        "headers": {
+          "Content-Type": "multipart/form-data; boundary=\"\""
+        },
+        "body": "--\"\"\r\nContent-Disposition: form-data; name=\"name\"\r\n\r\na\r\n--\"\"--\r\n"
+      },
+      "status": 400,
+      "body": "Bad Request",
+      "actions": 0,
+      "requirements": [
+        "HY-113"
+      ]
+    },
+    {
       "id": "a_post_whose_media_type_is_no_form_type_opens_no_session",
       "label": "a POST to an action whose media type is no form type receives 415, calls the session store not at all, leaves the session without a token and sets no cookie",
       "application": "a_board",
