@@ -41,6 +41,17 @@ from ..session.session_store import SessionStore
 from ._warnings_guard import WarningsGuard
 
 _FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
+# The error classes of the package polyspec.orm, one for each category of its contract (HY-107.7).
+_ORM_ERROR_CLASSES = frozenset(
+    (
+        "ORMValueError",
+        "ORMTypeError",
+        "ORMStoreError",
+        "ORMBusyError",
+        "ORMIoError",
+        "ORMInternalError",
+    )
+)
 _KEEP_VALUE_LIMIT = 4096
 # HY-116: the types that a request without a client rendering selection can select, in the order of the ties.
 _TEXT_HTML = "text/html"
@@ -714,10 +725,11 @@ class App:
                 {Request: given, MediaType: media, "request": given, "media": media},
             )
         except Exception as error:
-            code = App._orm_code(error)
-            if code == "NO_ROWS":
+            # HY-107.7, HY-122.12: an error of the ORM is known by its class and its kind.
+            kind = App._orm_kind(error)
+            if kind == "no_rows":
                 return Response.text(404, "Not Found").with_header("Vary", vary)
-            if code == "REVISION_CHANGED":
+            if kind == "revision_changed":
                 return Response.text(412, "Precondition Failed").with_header(
                     "Vary", vary
                 )
@@ -790,9 +802,9 @@ class App:
                     handler["post"], {Request: request, Reply: reply}
                 )
             except Exception as error:
-                # HY-107.4: only the action that raises REVISION_CHANGED is answered as the page with status 409 and
+                # HY-107.9: only the action that raises revision_changed is answered as the page with status 409 and
                 # no data of its own; a loader that raises it fails below (HY-43).
-                if App._orm_code(error) != "REVISION_CHANGED":
+                if App._orm_kind(error) != "revision_changed":
                     raise
                 result = None
             if result is not None and not isinstance(result, Result):
@@ -834,19 +846,28 @@ class App:
             return Response.text(400, "Bad Request")
         except Exception as error:
             # HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43),
-            # also REVISION_CHANGED of a loader (HY-107.4).
-            if App._orm_code(error) == "NO_ROWS":
+            # also revision_changed of a loader (HY-107.9, HY-107.5).
+            if App._orm_kind(error) == "no_rows":
                 return Response.text(404, "Not Found")
             raise
 
     @staticmethod
-    def _orm_code(error: Exception) -> str | None:
-        """The code of an error of the ORM, which hyper knows by the name of its class and by its attribute `code`, because
-        it does not depend on the ORM (HY-107), or None for every other error."""
-        code = getattr(error, "code", None)
-        if type(error).__name__ != "OrmError" or not isinstance(code, str):
+    def _orm_kind(error: Exception) -> str | None:
+        """The kind of an error of the ORM, or None for every other error (HY-107.7): an error of one of the error
+        classes of the package polyspec.orm, with its kind in `kind`. Only the kind string reaches the core (HY-107.10).
+        The module and the name stand for the class until the package is a dependency of hyper (H35.45-3)."""
+        kind = getattr(error, "kind", None)
+        cls = type(error)
+        if (
+            cls.__name__ not in _ORM_ERROR_CLASSES
+            or not (
+                cls.__module__ == "polyspec.orm"
+                or cls.__module__.startswith("polyspec.orm.")
+            )
+            or not isinstance(kind, str)
+        ):
             return None
-        return code
+        return kind
 
     @staticmethod
     def _without_renewal(reply: Reply, response: Response) -> Response:

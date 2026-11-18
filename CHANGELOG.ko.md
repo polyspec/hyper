@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- Node, PHP, Python 서버는 ORM의 오류를 orm 패키지의 오류 class `OrmValueError`부터 `OrmInternalError`까지(PHP는 `Polyspec\Orm\…`, Python은 `polyspec.orm`의 `ORM…Error`)로 알아보고, 그 소문자 kind인 `no_rows`나 `revision_changed`를 읽는다(HY-107.7, H35.45-4). HY-107.7이 orm 패키지의 class와 그 kind를 정하고 HY-107.5가 다른 모든 오류를 HY-43으로 실패시키므로, 대문자 `code`나 `code_`를 가진 legacy class `OrmError`나 `OrmException`의 인식은 지운다. orm 0.0.34 전에는 실행하지 않는다. 아직 orm의 패키지가 설치되지 않았다(H35.45-1부터 H35.45-3). 확인: `make lint-ts`와 `make lint-python` 통과. `make analyse-php`는 orm class에 대한 `class.notFound` 오류 6개와 `tests/Support/Steps/FunctionsSteps.php`의 `Polyspec\Template\Environment`에 대한 오류 4개를 보고한다.
+
 - protocol이 HY-107.10을 정한다. hyper와 ORM 사이의 계약은 server가 읽어 core에 넘기는 오류의 kind 문자열이므로, hyper의 core는 orm 라이브러리의 어떤 crate에도 의존하지 않고 orm의 release에 묶이지 않는다(H35.45-4).
 
 - `make node-package`는 production closure를 자기 run의 staging 디렉터리에 pack하고 `scripts/publish.mts`로 `var/bindings/node/deps`에 publish한다(HR-82, H35.68). 입력: 이전 run이 `polyspec-template-0.0.30.tgz`를 pack했고 lock이 0.0.31을 고정한 뒤의 `make node-package`. 동작: recipe가 deps를 `mkdir -p`로 만들고 비우지 않았으므로 `./deps/*.tgz`의 install이 새 파일 옆의 옛 파일까지 받아 offline에서 ENOTCACHED로 실패했다. 기대 동작이자 현재 동작: publish가 이전 run의 파일을 지운다. 검증: `make hyper-test-scripts TESTS=tests/scripts/node-package-deps.test.mts`, 1개 통과. deps에 오래된 파일을 둔 `make node-package`가 `7 files; removed stale-0.0.1.tgz`를 출력했다.
