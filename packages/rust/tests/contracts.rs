@@ -1614,6 +1614,12 @@ fn the_data_model_cases_of_the_context_file_run_as_the_steps_of_a_page() {
         if !names.into_iter().any(|name| name == "HY-44") {
             continue;
         }
+        // HYR-6: a case with `only` states the behaviour of the hosts that it names, with a host value that only those
+        // hosts build, such as bytes that are not UTF-8 or a resource; the host runners skip a case that does not name
+        // their language, and the core, which no `only` names, skips every such case (H35.32-1-6-1).
+        if case.get("only").is_some() {
+            continue;
+        }
         let id = &case["id"];
         let fixture = &file["applications"][text(case, "application")];
         let route = case_route(&file, case);
@@ -2764,14 +2770,19 @@ fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
     // tests/cases/faults.json breaks the new token, which the core makes by random_hex, and raises random, and
     // session_store.internal of tests/cases/core-faults.json breaks the start of the record session in the store and
     // raises internal; the same call without the arming opens the page with a new token. The other cases raise the
-    // kinds that the stored values of their session file or their mask give.
+    // kinds that the stored values of their session file give, and the case of the group session_memory raises the kind
+    // that its mask gives with a session of the memory store.
     use binding_core::Failure;
     use polyspec_hyper::opening::{open_page, Opened, Opening};
     use polyspec_hyper::steps::PageKind;
     let file = fault_cases();
     let core_file = core_fault_cases();
     let mut ran = 0;
-    for case in group(&file, "session").iter().chain(group(&core_file, "session")) {
+    for case in group(&file, "session")
+        .iter()
+        .chain(group(&file, "session_memory"))
+        .chain(group(&core_file, "session"))
+    {
         let directory = CaseDirectory::new(case);
         let pages = case_pages(case)?;
         let given = &case["opening"];

@@ -6,6 +6,7 @@
 // package. Workspaces resolve the same installed template package, including a source link, and PHPStan reads the PHP
 // library without an extension stub.
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
@@ -140,4 +141,38 @@ test('pyproject.toml and uv.lock name the wheel assets of the release and pin ea
   }
   const urls = new Set([...lock.matchAll(/"(https:\/\/github\.com\/polyspec\/template\/[^"]*)"/g)].map((match) => match[1] ?? ''));
   assert.deepEqual([...urls].sort(), [...WHEELS].sort(), 'uv.lock names only the template wheels of the release');
+});
+
+// The manifests and locks of every ecosystem, by their file names: git lists each tracked one, so a new manifest is read
+// without a change of this test (H35.57).
+const MANIFESTS = ['Cargo.toml', 'Cargo.lock', 'go.mod', 'go.sum', 'composer.json', 'composer.lock', 'package.json', 'package-lock.json', 'pyproject.toml', 'uv.lock'];
+// The forms in which a manifest or a lock names a template release; the first group is its version.
+const TEMPLATE_NAMES = [
+  /github\.com\/polyspec\/template\/releases\/download\/v(\d+\.\d+\.\d+)\//g,
+  /polyspec-template\s*=\s*\{[^}\n]*\btag\s*=\s*"v(\d+\.\d+\.\d+)"/g,
+  /github\.com\/polyspec\/template\.git\?tag=v(\d+\.\d+\.\d+)/g,
+  /name = "polyspec-template"\nversion = "(\d+\.\d+\.\d+)"/g,
+  /github\.com\/polyspec\/template\/packages\/go v(\d+\.\d+\.\d+)/g,
+  /"(?:ext-polyspec_template|polyspec\/template|@polyspec\/template(?:-[a-z0-9-]+)?)"\s*:\s*"(\d+\.\d+\.\d+)"/g,
+  /"node_modules\/@polyspec\/template(?:-[a-z0-9-]+)?"\s*:\s*\{\s*"version"\s*:\s*"(\d+\.\d+\.\d+)"/g,
+];
+
+test('every tracked manifest and lock that names template names the one release of the tree (H35.57)', () => {
+  const files = execFileSync('git', ['ls-files', '-z'], { cwd: repository, encoding: 'utf8' })
+    .split('\0')
+    .filter((file) => MANIFESTS.some((name) => file === name || file.endsWith(`/${name}`)));
+  const places: { at: string; version: string }[] = [];
+  for (const file of files) {
+    const text = readFileSync(join(repository, file), 'utf8');
+    for (const pattern of TEMPLATE_NAMES) {
+      for (const match of text.matchAll(pattern)) {
+        const line = text.slice(0, match.index).split('\n').length;
+        places.push({ at: `${file}:${line}`, version: match[1] ?? '' });
+      }
+    }
+  }
+  const kinds = new Set(places.map((place) => MANIFESTS.find((name) => place.at.split(':')[0]?.endsWith(name))));
+  assert.deepEqual(MANIFESTS.filter((name) => !kinds.has(name)), [], 'no tracked file of these kinds names template');
+  const other = places.filter((place) => place.version !== VERSION).map((place) => `${place.at} names template ${place.version}`);
+  assert.deepEqual(other, [], `every manifest and lock names template ${VERSION}`);
 });

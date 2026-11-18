@@ -17,6 +17,7 @@ import { dirname, join, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { buildFileText } from '@polyspec/hyper/build';
 import { writeProgramTemplates } from '../../packages/cli/lib/program-files.mjs';
 import { programFiles } from '../../packages/cli/lib/program.mjs';
 import { requireBuilt } from '../scripts/requires.mts';
@@ -76,13 +77,14 @@ test('the program of hyper build writes its files on a virtiofs bind mount', { t
   const names = computed.files.map(([name]) => name);
   assert.deepEqual(names, ['reads.json']);
   writeFileSync(join(input, 'files.json'), JSON.stringify(computed.files));
+  writeFileSync(join(input, 'build.json'), JSON.stringify([['build.json', buildFileText(id)]]));
   // The writes of the build (packages/cli/lib/program-files.mjs, which writeProgram calls), into the bind mount.
   const script = [
     `import { readFileSync } from 'node:fs';`,
-    `import { writeBuildFile, writeProgramFiles, writeProgramTemplates } from ${JSON.stringify(join(root, 'packages', 'cli', 'lib', 'program-files.mjs'))};`,
+    `import { writeProgramFiles, writeProgramTemplates } from ${JSON.stringify(join(root, 'packages', 'cli', 'lib', 'program-files.mjs'))};`,
     `writeProgramTemplates(${JSON.stringify(templates)}, '/output/program');`,
     `writeProgramFiles('/output/program', JSON.parse(readFileSync('/input/files.json', 'utf8')));`,
-    `writeBuildFile('/output/program', '${id}');`,
+    `writeProgramFiles('/output/program', JSON.parse(readFileSync('/input/build.json', 'utf8')));`,
   ].join('\n');
   const result = run(t, ['--input-type=module', '--eval', script], input);
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);

@@ -1733,7 +1733,8 @@
             13,
             16,
             18,
-            22
+            22,
+            24
           ],
           "blocks": [
             {
@@ -1746,10 +1747,10 @@
                   "koSource": "62bd975e2927bc8b8069defc57f262d6a60204154a0d79ef0a98e2365977c86f"
                 },
                 {
-                  "id": "HY-125.24",
-                  "en": "It leaves out `program/build.json`, the static shell `csr/index.html`, which holds the id, the copies below `csr/assets`, which hold the bytes of the files below `public/assets`, and `client/assets.previous.json`, which holds the files of earlier builds, so the id of a build does not depend on the builds before it.",
-                  "ko": "`program/build.json`, id를 담는 정적 셸 `csr/index.html`, `public/assets` 아래 파일의 바이트를 담는 `csr/assets` 아래 사본, 그리고 앞선 build의 파일을 담는 `client/assets.previous.json`은 빼고 계산하므로, build의 id는 앞선 build에 달려 있지 않다.",
-                  "koSource": "ae253888bfefb710dcae4cc441d6b980fd0927989e6af1fedbdb94002f8a35ca"
+                  "id": "HY-125.25",
+                  "en": "It leaves out `program/build.json`, the static shell `csr/index.html`, which holds the id, a file `csr/assets/<name>` when the outputs also hold `public/assets/<name>`, because it is the copy of that file, and `client/assets.previous.json`, which holds the files of earlier builds, so the id of a build does not depend on the builds before it; a `--static` file below `csr/assets` that copies no file of `public/assets` is hashed like every other `--static` file.",
+                  "ko": "`program/build.json`, id를 담는 정적 셸 `csr/index.html`, 출력이 `public/assets/<name>`도 담을 때의 파일 `csr/assets/<name>`(그 파일의 사본이므로), 그리고 앞선 build의 파일을 담는 `client/assets.previous.json`은 빼고 계산하므로, build의 id는 앞선 build에 달려 있지 않다. `public/assets`의 어떤 파일도 복사하지 않는 `csr/assets` 아래 `--static` 파일은 다른 모든 `--static` 파일처럼 hash한다.",
+                  "koSource": "7761b37a9e8a98d08bf214523db62725f20a74b90fec0dbbc86b2afec59258f6"
                 },
                 {
                   "id": "HY-125.17",
@@ -4308,6 +4309,12 @@
                   "en": "The static shell also contains `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`, whose content is the member `hyper` of `client/manifest.json`, the URL of the entry that it inlines, because an inlined script has no address and a layout that names the entry as a module script must not load it again (HYC-25).",
                   "ko": "정적 셸은 `<meta name=\"hyper-entry\" content=\"/assets/hyper-<hash>.js\">`도 담으며, 그 content는 `client/manifest.json`의 member `hyper`, 곧 셸이 인라인한 진입 파일의 URL이다. 인라인한 script에는 주소가 없고, 진입 파일을 module script로 적은 레이아웃이 그것을 다시 불러오면 안 되기 때문이다(HYC-25).",
                   "koSource": "dcd729668fc6a6c7c46baa916218a56067e41abc89e736d992e8939df43d2ea6"
+                },
+                {
+                  "id": "HYC-16.23",
+                  "en": "One rule of the core writes the text of the static shell from the data base path, the build id and the URL and the code of the entry, so every caller writes the same bytes: the lines `<!doctype html>`, `<html>`, `<head>`, `<meta charset=\"utf-8\">`, `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">`, the elements `hyper-api`, `hyper-build` and `hyper-entry`, `<title></title>`, the entry in `<script type=\"module\">`, `</head>`, `<body></body>` and `</html>`, each followed by a line feed; the data base path is escaped as the declaration check of HY-62 reads it, and an entry whose code contains `</script` in any case, or a build id of another form (HY-125.19), fails the build with the kind `invalid_build`, because such an entry cannot be inlined.",
+                  "ko": "core의 규칙 하나가 데이터 기본 경로, build id, 진입 파일의 URL과 코드로 정적 셸의 텍스트를 쓰므로, 모든 호출자는 같은 바이트를 쓴다: 줄 `<!doctype html>`, `<html>`, `<head>`, `<meta charset=\"utf-8\">`, `<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">`, 요소 `hyper-api`, `hyper-build`, `hyper-entry`, `<title></title>`, `<script type=\"module\">` 안의 진입 파일, `</head>`, `<body></body>`, `</html>`이며 각 줄 뒤에 line feed가 온다. 데이터 기본 경로는 HY-62의 선언 검사가 읽는 대로 escape하며, 코드에 대소문자와 상관없이 `</script`를 담은 진입 파일이나 다른 형식의 build id(HY-125.19)는 kind `invalid_build`로 build를 실패시킨다. 그런 진입 파일은 인라인할 수 없기 때문이다.",
+                  "koSource": "550d6ba0f9bb804ef6ec5c79431f4a74ba5d1db95f4d315d76c42807f18d16d6"
                 },
                 {
                   "id": "HYC-16.9",

@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import dataTemplate from '@polyspec/hyper-client/data-template.json' with { type: 'json' };
+import { reservedTemplate } from '@polyspec/hyper/build';
 import { listFiles } from './output-files.mjs';
 
 // The file of a module of the template package `@polyspec/template` that this package depends on, such as
@@ -13,12 +13,13 @@ function templateExport(specifier) {
   return fileURLToPath(import.meta.resolve(specifier));
 }
 
-// Parses every template of a directory and the reserved template hyper/data.tpl of the browser package with the
+// Parses every template of a directory and the reserved template hyper/data.tpl, which the core gives, with the
 // template package of this package (HR-70) and returns, without writing a file, the index: template name ->
 // { url: <urlPrefix>/<file> }, and files: the bytes of each AST file as { name: <file>, bytes }, whose name holds a
 // hash of its content, the files that the build id hashes (HY-125).
 export async function templateFiles({ templates, urlPrefix }) {
   const { encodeTemplate, parse } = await import('@polyspec/template');
+  const dataTemplate = reservedTemplate();
   const sources = { [dataTemplate.name]: dataTemplate.source };
   for (const file of listFiles(templates).filter((name) => name.endsWith('.tpl')).sort()) {
     sources[relative(templates, file).split(sep).join('/')] = readFileSync(file, 'utf8');

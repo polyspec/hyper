@@ -16,11 +16,9 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import { parseArgs } from 'node:util';
-import { parse, resolvePath } from '@polyspec/template';
+import { buildId, templateProblems } from '@polyspec/hyper/build';
 import { publish, staging } from '../packages/cli/lib/publish.mjs';
-import { buildId } from '../packages/cli/lib/build-id.mjs';
 import { writeBuildFile, writeProgram } from '../packages/cli/lib/program.mjs';
-import { templateProblems } from '../packages/cli/lib/template-rules.mjs';
 
 const { values } = parseArgs({ options: { contract: { type: 'string', multiple: true }, reads: { type: 'string' }, output: { type: 'string' } } });
 if (!values.contract || values.contract.length === 0) throw new Error('--contract is required');
@@ -92,7 +90,7 @@ for (const [key, { application }] of applications) {
     writeFileSync(manifest, JSON.stringify(application.manifest));
     writeFileSync(join(directory, 'build.json'), JSON.stringify({ build: application.build }));
     // HY-48.3: the template rules of hyper build pass before the program is written.
-    const { problems } = templateProblems({ manifest: application.manifest, templatesDir: templates, parse, resolvePath });
+    const problems = templateProblems(Buffer.from(JSON.stringify(application.manifest)), new Map(Object.entries(application.templates)));
     if (problems.length > 0) {
       failures.push(`the templates of the application ${key} break the template rules:\n${problems.join('\n')}`);
       continue;
@@ -122,7 +120,7 @@ function readsApplication(entry: ReadsCase): Application {
   }
   templates['layout.tpl'] = '<head><title>{# title}</title>{# build}</head>\n<main id="content">{# content}</main>\n{# data}\n';
   templates['title.tpl'] = '{= title}';
-  const build = buildId(Object.entries(templates).map(([path, source]) => ({ path, bytes: Buffer.from(source) })));
+  const build = buildId(Object.entries(templates).map(([path, source]) => ({ path: `program/templates/${path}`, bytes: Buffer.from(source) })));
   return {
     manifest: { layout: 'layout.tpl', title: 'title.tpl', regions: [{ name: 'content', page: true }], routes: [{ name: 'reads', path: '/', title: 'Reads', template: entry.template }] },
     templates,

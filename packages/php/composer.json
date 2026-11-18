@@ -45,7 +45,7 @@
     "config": {
         "platform": {
             "php": "8.4.1",
-            "ext-polyspec_template": "0.0.30"
+            "ext-polyspec_template": "0.0.31"
         },
         "sort-packages": true
     }
