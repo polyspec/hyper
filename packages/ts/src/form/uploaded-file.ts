@@ -32,10 +32,10 @@ export class UploadedFile {
    * @internal
    */
   static ofCore(file: CoreUploadedFile): UploadedFile {
-    const made = new UploadedFile(file.name(), file.filename(), file.contentType(), new Uint8Array());
+    const made = new UploadedFile(file.name, file.filename, file.contentType, new Uint8Array());
     made.bytes = null;
     made.core = file;
-    made.length = file.size();
+    made.length = file.size;
     return made;
   }
 

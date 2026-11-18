@@ -31,6 +31,8 @@ foreach ($cases as $index => $case) {
         }
     }
     fclose($input);
+    // The core reads the end of the body only at its finish (F-9), as the host does after the last chunk.
+    $read->finish();
     $parts = $read->parts();
     $ms = (hrtime(true) - $started) / 1e6;
     $hash = hash_init('sha256');

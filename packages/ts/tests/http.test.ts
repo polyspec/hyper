@@ -279,7 +279,7 @@ describe('a multipart body read in chunks', () => {
           return Promise.resolve(Response.text(200, 'stored'));
         },
         written: () => {
-          atHook = readdirSync(uploads).map((name) => (name.startsWith('hyper-') ? 'hyper-' : name)).sort();
+          atHook = readdirSync(uploads).map((name) => (name.startsWith('http-form-') ? 'http-form-' : name)).sort();
         },
       });
       server = createHttpServer((incoming, outgoing) => {
@@ -305,7 +305,7 @@ describe('a multipart body read in chunks', () => {
     expect(result.status).toBe(200);
     expect(result.seen).toEqual([true, [['a', ['1']]], 'big.bin', 1_500_000, 1]);
     // At the write hook the directory of the request is there with the moved file beside it; then only the moved file.
-    expect(result.atHook).toEqual(['hyper-', 'kept.bin']);
+    expect(result.atHook).toEqual(['http-form-', 'kept.bin']);
     expect(result.after).toEqual(['kept.bin']);
   });
 

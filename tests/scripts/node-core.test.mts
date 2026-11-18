@@ -84,7 +84,13 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
       return results['PageRequest.next'];
     }
   }
-  const classes: Record<string, unknown> = { Pages, PageRequest, HyperValueError, HyperTypeError };
+  class RequestBody {
+    static start(...args: unknown[]): unknown {
+      calls.push(['RequestBody.start', args]);
+      return results['RequestBody.start'];
+    }
+  }
+  const classes: Record<string, unknown> = { Pages, PageRequest, RequestBody, HyperValueError, HyperTypeError };
   const module: Record<string, unknown> = {};
   for (const name of REQUIRED) module[name] = classes[name] ?? member(name);
   return { core: module, calls };
@@ -94,7 +100,7 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
 // PARTIAL.
 const OWN_TEST = [
   'representationTag', 'openPage', 'answerKeepRequest', 'routeRequest', 'frameHeaders', 'computePageHeaders', 'checkShellPath', 'shellText',
-  'jsonRead', 'acceptRanges', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'jsonRead', 'acceptRanges', 'Pages', 'PageRequest', 'RequestBody', 'HyperValueError', 'HyperTypeError',
 ];
 
 function rulesOf(results: Record<string, unknown>): { rules: CoreRules; calls: Call[] } {
@@ -110,6 +116,8 @@ const STORE = { store: true };
 const STORED = { stored: true };
 const FLASH = new Map<string, unknown>([['values', new Map()], ['changed', []]]);
 const KEPT = new Map([['rows', new Map([['open', true]])]]);
+// The four limits of a body as the record body_limits of the core takes them (F-25).
+const LIMITS = { limit: 8, valueLimit: 4, partLimit: 2, fileLimit: 1 };
 
 // The exact units: the name of the unit of the server, the member of the binding, the arguments of the call, the
 // arguments that the member must receive and the value that the member returns, which the unit returns as it is.
@@ -301,6 +309,8 @@ const PARTIAL: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknow
   ['Templates.reads (HY-73)', 'templateReads', (rules) => rules.Templates.reads(new Map(), 'layout.tpl'), [new Map(), 'layout.tpl'], true],
   ['Templates.reserved (HY-31.3)', 'reservedDataTemplate', (rules) => rules.Templates.reserved(), [], { name: 'hyper/data.tpl', source: '' }],
   ['Application.checkFunctionEntry (HYC-24.7)', 'checkFunctionEntry', (rules) => rules.Application.checkFunctionEntry('shout', false), ['shout', false], undefined],
+  ['Request.form (HY-57, F-21, F-22)', 'readHeldBody', (rules) => rules.formReadHeld('application/x-www-form-urlencoded', new Uint8Array([97]), LIMITS), ['application/x-www-form-urlencoded', new Uint8Array([97]), LIMITS], { fields: [['a', ['']]], files: [] }],
+  ['Fields.parse (HY-56, F-20)', 'parseUrlencoded', (rules) => rules.formParseUrlencoded(new Uint8Array([97])), [new Uint8Array([97])], [['a', ['']]]],
 ];
 
 for (const [label, name, call, args, result] of [...EXACT, ...PARTIAL]) {
@@ -310,6 +320,13 @@ for (const [label, name, call, args, result] of [...EXACT, ...PARTIAL]) {
     assert.deepEqual(calls, [[name, args]]);
   });
 }
+
+test('the host gives request_body.start the content type, the Content-Length, the stream and the four limits, and receives its body (HY-131.1, HY-131.29)', async () => {
+  const body = { body: true };
+  const { rules, calls } = rulesOf({ 'RequestBody.start': Promise.resolve(body) });
+  assert.equal(await rules.formStart('multipart/form-data; boundary=x', '12', true, LIMITS), body);
+  assert.deepEqual(calls, [['RequestBody.start', ['multipart/form-data; boundary=x', '12', true, LIMITS]]]);
+});
 
 test('each member that coreRules requires has a test of the unit that calls it', () => {
   const tested = new Set<string>([...OWN_TEST, ...[...EXACT, ...PARTIAL].map(([, name]) => name)]);

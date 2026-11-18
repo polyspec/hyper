@@ -165,8 +165,9 @@ class Upload:
 
     def __init__(self, case: unittest.TestCase, app: Application, move: bool):
         self.uploads = tempfile.mkdtemp(prefix="hyper-uploads-")
-        previous = tempfile.tempdir
-        tempfile.tempdir = self.uploads
+        # The core makes the directory of a request in the temporary directory of the process, which TMPDIR names.
+        previous = os.environ.get("TMPDIR")
+        os.environ["TMPDIR"] = self.uploads
         case.addCleanup(self._restore, previous)
         self.seen: list = []
         self.at_hook: list[str] = []
@@ -190,9 +191,10 @@ class Upload:
         app._respond = record
 
     def written(self, request, response, ended, elapsed, failure) -> None:
-        """The write hook: records the entries of the directory, a directory of a request as `hyper-`."""
+        """The write hook: records the entries of the directory, the directory of a request, which http-form names,
+        as `http-form-`."""
         self.at_hook = sorted(
-            "hyper-" if name.startswith("hyper-") else name
+            "http-form-" if name.startswith("http-form-") else name
             for name in os.listdir(self.uploads)
         )
 
@@ -214,7 +216,7 @@ class Upload:
         """Requires that the request of `stored_body` gave its file from a file of the request, that the directory
         of the request was there at the write hook, and that only the moved file stays (HY-131.13, HY-131.14)."""
         case.assertEqual([True, [("a", ["1"])], "big.bin", 1500000, 1], self.seen)
-        case.assertEqual(["hyper-", "kept.bin"], self.at_hook)
+        case.assertEqual(["http-form-", "kept.bin"], self.at_hook)
         case.assertEqual(["kept.bin"], self.entries())
 
     def assert_cut(self, case: unittest.TestCase) -> None:
@@ -228,7 +230,10 @@ class Upload:
         return sorted(os.listdir(self.uploads))
 
     def _restore(self, previous) -> None:
-        tempfile.tempdir = previous
+        if previous is None:
+            os.environ.pop("TMPDIR", None)
+        else:
+            os.environ["TMPDIR"] = previous
         for name in os.listdir(self.uploads):
             os.unlink(os.path.join(self.uploads, name))
         os.rmdir(self.uploads)

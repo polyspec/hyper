@@ -64,6 +64,11 @@ def create_wsgi(
             )
         except Exception as error:  # noqa: BLE001 - HY-60: an error that escapes the answer gets the plain 500
             return _escape(app, exchange, error, start_response, head)
+        except BaseException:
+            # HY-43: an exception that is no error, such as SystemExit, passes through the callable; the files of the
+            # body are removed first (HY-131.14), because no write hook and no close of a body follows.
+            exchange.release()
+            raise
         if isinstance(result, FileResponse):
             try:
                 start_response(

@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-import { requireBuilt } from './requires.mts';
+import { phpServerExtensions, requireBuilt } from './requires.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const WORKERS = path.join(ROOT, 'tests/scripts/fixtures/multipart-worker');
@@ -114,7 +114,9 @@ function isLine(value: unknown): value is Line {
 
 // Runs the worker of a server over the cases, with the temporary directory of the test, and returns its lines.
 async function run(server: Server, list: string, moved: string, temporary: string): Promise<Line[]> {
-  const [command, ...prefix] = COMMANDS[server];
+  const [command, ...worker] = COMMANDS[server];
+  // HY-132.2: the PHP server reads a body through the core, which the extensions of the PHP server load.
+  const prefix = server === 'php' ? [...phpServerExtensions().map((file) => `-dextension=${file}`), ...worker] : worker;
   const { stdout } = await promisify(execFile)(command, [...prefix, list, moved], { cwd: ROOT, env: { ...process.env, TMPDIR: temporary }, maxBuffer: 1 << 26 });
   return stdout.trim().split('\n').map((text) => {
     const line: unknown = JSON.parse(text);

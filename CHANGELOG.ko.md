@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a26ab396187d86ddb0da07937264990c65147b2a39268fb1b50e024841f921a8 -->
+<!-- source-sha256: 2e52ca00d621b0aa8025055ae7d4887cc64a5030154e41e73963a26341baff71 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Node 서버는 core 파일의 이름, filename, content type, 크기를 binding이 주는 getter로 읽는다(H35.11). 입력: Node 서버로 보내는 파일을 가진 multipart 요청. 이전 동작: `UploadedFile.ofCore`가 getter인 binding 파일의 `name()`을 불러 `file.name is not a function`으로 실패했으므로 `contracts/request.json`과 `contracts/app.json`의 case 10개가 실패했고, 파일을 가진 요청은 500을 받았다. 기대 동작이자 현재 동작: 요청은 그 파일을 준다. WSGI host는 `SystemExit`처럼 오류가 아닌 예외가 callable을 지나가기 전에 body의 파일을 지운다(HY-43, HY-131.14). 이전에는 body가 소멸자로만 해제되어 경고했다. 조각 단위로 읽는 body의 테스트는 `tempfile.tempdir` 대신 core가 읽는 `TMPDIR`을 정하고 core가 만드는 디렉터리 `http-form-`을 기대한다. PHP의 multipart worker는 PHP 서버의 extension을 load하고 part를 읽기 전에 body를 끝낸다. `tests/scripts/node-core.test.mts`는 `readHeldBody`, `parseUrlencoded`, `RequestBody`를 테스트한다. 검증: `make hyper-test-node`, `make hyper-test-python`, `make hyper-test-scripts`.
 - recipe candidate는 spec이 member와 함께 적은 unit에 그 source에 있고 spec에 없는 각 member를 더하고, 그 중립 field를 hand-written으로 적는다(H35.56). 입력: source의 두 member 중 하나를 적는 `contracts/interfaces.json`의 unit으로 실행한 `make recipe-candidates`. 이전 동작: `scripts/recipe/candidate.mts`의 `buildCandidate`는 member가 없는 unit에만 source의 member를 유도했으므로 candidate는 적힌 member만 담았고 unit을 그것으로 다시 쓸 수 없었다. 기대 동작: `deriveMembers`가 모든 unit에서 실행되고 unit이 이미 적은 native symbol의 member는 건너뛴다. `make hyper-test-scripts TESTS=tests/scripts/recipe-check.test.mts`(이전 170개 중 169개, 이후 170개 모두 통과)로 검증했다. `make recipe-candidates`는 spec의 member 520개에 185개를 더한다.
 - `packages/release.mk`는 binding 생성기에 의존하므로, 설치된 생성기보다 오래되면 make가 다시 쓴다(HR-99). 입력: 앞선 binding 릴리스가 `packages/release.mk`를 쓴 checkout에서 더 새 릴리스를 `make install-packages`한다. 이전 동작: Makefile은 파일이 없을 때만 그것을 썼으므로, 오래된 파일은 `release-go-module-push`를 정의하지 않았고 `ci-group-tools.test.mts`와 `release-assets.test.mts`가 `No rule to make target`으로 test 5개에서 실패했다. 기대 동작: rule은 `$(BINDING)`을 선행 조건으로 적는다. `ci-group-tools.test.mts`의 새 test는 tree에 1970년의 `packages/release.mk`를 주고 dry run이 그것을 다시 쓰기를 요구한다. `make hyper-test-scripts TESTS="tests/scripts/ci-group-tools.test.mts tests/scripts/release-assets.test.mts"`로 검증했다(이전 6개 통과 5개 실패, 이후 11개 중 11개).
 - `tests/scripts/fixtures/upload-server/server.mjs`의 Node upload 서버는 host entry 함수 `server(app, sessions, options)`로 시작한다(H35.44-1). 입력: `make hyper-test-scripts`. 이전 동작: fixture는 H35.44-1이 지운 `app.server`를 불렀으므로, `upload-servers.test.mts`와 `benchmark-uploads.test.mts`의 모든 Node 서버가 주소를 알리기 전에 `TypeError: app.server is not a function`으로 끝났다(test 28개 실패). 기대 동작: fixture는 `@polyspec/hyper`의 `server`를 import하고, 두 파일은 96개 중 96개 통과한다.

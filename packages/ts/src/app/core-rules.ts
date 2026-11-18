@@ -169,13 +169,14 @@ export interface BodyLimits {
 }
 
 // A file of a body as the class uploaded_file of the core gives it (F-22, F-11); `content` and `moveTo` wait on the
-// file system, so the binding gives their result as a promise (GN-6m).
+// file system, so the binding gives their result as a promise (GN-6m). The binding gives the four parts of the file as
+// getters, which take no argument and read no file.
 /** @internal */
 export interface CoreUploadedFile {
-  name(): string;
-  filename(): string;
-  contentType(): string;
-  size(): number;
+  readonly name: string;
+  readonly filename: string;
+  readonly contentType: string;
+  readonly size: number;
   content(): Promise<Uint8Array>;
   moveTo(path: string): Promise<void>;
 }
