@@ -99,7 +99,10 @@ test('H35.35-4 the job php builds the extension for each PHP minor of config/too
 /** The version that the manifest `file` states, or undefined: `version` of a JSON manifest, and of [package] or [project] of a TOML one. */
 function manifestVersion(file: string): string | undefined {
   const text = read(file);
-  if (file.endsWith('.json')) return (JSON.parse(text) as { version?: string }).version;
+  if (file.endsWith('.json')) {
+    const { version } = parseJsonObject(text, file);
+    return version === undefined ? undefined : jsonString(version, `version of ${file}`);
+  }
   return /^\[(?:package|project)\]\n(?:(?!\[).*\n)*?version = "([^"]+)"$/m.exec(text)?.[1];
 }
 

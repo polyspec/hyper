@@ -25,7 +25,7 @@ polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", ta
 polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.6" }
 polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", tag = "v0.0.16" }
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.7", default-features = false }
-polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.30" }
+polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.31" }
 
 [lints]
 workspace = true

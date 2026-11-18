@@ -1242,8 +1242,8 @@ dependencies = [
 
 [[package]]
 name = "polyspec-template"
-version = "0.0.30"
-source = "git+https://github.com/polyspec/template.git?tag=v0.0.30#1088507549ac8673852183b0fe3f6209291e8d09"
+version = "0.0.31"
+source = "git+https://github.com/polyspec/template.git?tag=v0.0.31#d318f06c33f7aca54d81ec242e1129a75eb5d684"
 dependencies = [
  "js-sys",
  "polyspec-binding-core",

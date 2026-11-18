@@ -6,8 +6,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
-import dataTemplate from '../../packages/client/data-template.json' with { type: 'json' };
-import { shellText } from '../../packages/cli/lib/shell.mjs';
+import { reservedTemplate, shellFile } from '@polyspec/hyper/build';
 import { requireBuilt } from './requires.mts';
 
 const fixtures = resolve('packages/php/tests/fixtures');
@@ -40,6 +39,7 @@ test('writes the program of the fixture with the build id of its build file (HY-
 test('the program holds no copy of the reserved template (HY-31.9, HY-48.21)', (t) => {
   const output = written(t);
   // HY-31.9: templates/ holds the templates of the application only, so the core takes the whole directory.
+  const dataTemplate = reservedTemplate();
   assert.equal(existsSync(join(output, 'templates', dataTemplate.name)), false, `templates/${dataTemplate.name} exists`);
   assert.equal(existsSync(join(output, 'legacy')), false, 'legacy/ exists');
 });
@@ -74,13 +74,13 @@ test('a build file without a build id of 64 lowercase hexadecimal characters fai
   const output = join(directory, 'program');
   const result = program(output, idFile);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /the build id ABC is not 64 lowercase hexadecimal characters/);
+  assert.match(result.stderr, /a build id is not 64 lowercase hexadecimal characters \(HY-125\.19\)/);
   assert.equal(existsSync(output), false);
 });
 
 test('the shell of a test takes its build id as an argument (HY-125.21)', () => {
-  const shell = shellText({ api: '/api', build: '1'.repeat(64), entry: { url: '/assets/hyper-A.js', code: 'export{};' } });
+  const shell = shellFile('/api', '1'.repeat(64), '/assets/hyper-A.js', 'export{};');
   assert.ok(shell.includes(`<meta name="hyper-build" content="${'1'.repeat(64)}">`), shell);
   assert.ok(shell.includes('<meta name="hyper-entry" content="/assets/hyper-A.js">'), shell);
-  assert.throws(() => shellText({ api: '/api', build: '1'.repeat(64), entry: { url: '/assets/hyper-A.js', code: '</script>' } }), /cannot be inlined/);
+  assert.throws(() => shellFile('/api', '1'.repeat(64), '/assets/hyper-A.js', '</script>'), /cannot be inlined/);
 });

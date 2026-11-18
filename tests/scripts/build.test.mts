@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { test } from 'node:test';
-import { buildId } from '../../packages/cli/lib/build-id.mjs';
+import { buildId } from '@polyspec/hyper/build';
 import { listFiles } from '../../packages/cli/lib/output-files.mjs';
 import { jsonArray, jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 import { fixture, runBuild } from './build-fixture.mts';
