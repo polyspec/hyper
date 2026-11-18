@@ -1,11 +1,13 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 3b7217550b81bc623c1d71c0aeaa861a938d8e56552da118b7115ccf0e5101f1 -->
+<!-- source-sha256: fc2ae0b3793fd17ffc722263cdcb30499871acfd584e20e51e1bb6ed64ea7095 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make node-package`는 production closure를 자기 run의 staging 디렉터리에 pack하고 `scripts/publish.mts`로 `var/bindings/node/deps`에 publish한다(HR-82, H35.68). 입력: 이전 run이 `polyspec-template-0.0.30.tgz`를 pack했고 lock이 0.0.31을 고정한 뒤의 `make node-package`. 동작: recipe가 deps를 `mkdir -p`로 만들고 비우지 않았으므로 `./deps/*.tgz`의 install이 새 파일 옆의 옛 파일까지 받아 offline에서 ENOTCACHED로 실패했다. 기대 동작이자 현재 동작: publish가 이전 run의 파일을 지운다. 검증: `make hyper-test-scripts TESTS=tests/scripts/node-package-deps.test.mts`, 1개 통과. deps에 오래된 파일을 둔 `make node-package`가 `7 files; removed stale-0.0.1.tgz`를 출력했다.
+- `make node-package`는 `packages/ts/native/wasm/Cargo.toml`의 모든 test feature, 곧 `panic-test`, `fault-test`, `thrown-count-test`로 WASM module을 build한다(`WASM_FEATURES`, H35.67). 입력: `make test-wasm`. 동작: module을 `panic-test`만으로 build했으므로 생성 test 6개가 `glue.__armFaults is not a function`과 `stepGlue.__thrownCount is not a function`으로 실패했다. 기대 동작이자 현재 동작: 그 6개가 통과한다. 검증: `make test-wasm`, 341개 중 336개 통과. path 값의 B-4 case 3개(GN-6y)와 다른 type의 callback 결과에 대한 K-2 case 2개가 알려진 실패다.
 - `make e2e`가 browser test의 command를 구분자 `--` 다음에 `scripts/run-e2e.mts`에 넘긴다(H35.66). 입력: `make e2e`. 이전 동작: recipe가 `--$(NODE)`를 한 단어로 넘겨 script의 `parseArgs`가 `ERR_PARSE_ARGS_UNKNOWN_OPTION`으로 거부했고, recipe의 option을 읽는 test는 글자로 된 option 이름만 읽었으므로 그 단어를 보지 못했다. 기대 동작: recipe는 `-- $(NODE)`를 넘기고, test는 make 변수에 붙은 option도 script의 option으로 읽는다. `make hyper-test-scripts TESTS=tests/scripts/check-recipes.test.mts`(이전 6개 중 5개, `scripts/run-e2e.mts does not declare --$(NODE)`를 밝힘. 이후 6개 모두 통과)와 `make -n e2e`로 검증했다. `make e2e` 자체는 실행하지 않았다.
 - `packages/rust/tests/contracts.rs`는 rustfmt가 쓰는 형식이다(H35.65). 입력: `make core-fmt-check`. 이전 동작: session fault case를 도는 loop가 rustfmt의 너비보다 긴 한 행에 있어 2777행에서 실패했다. 기대 동작: chain은 호출마다 한 행에 선다. 0으로 끝나는 `make core-fmt-check`로 검증했다.
 - `contracts/functions.json`의 browser runner가 function kind `zone`을 실행한다(H35.64, HYC-24.10). 입력: `make hyper-test-js`. 이전 동작: HYC-24.10의 case가 더 이상 Node로 한정되지 않으므로 `packages/client/tests/functions.test.ts`가 `functions.json names the kind zone, which the runner does not map`로 실패했다. 기대 동작: runner는 `zone`을 두 번째 인자인 environment의 `timezone`으로 매핑하고, case의 응답은 PHP와 Python runner가 여는 것처럼 time zone `+09:00`을 준다. `make hyper-test-js`(189개 모두 통과)로 검증했다.
