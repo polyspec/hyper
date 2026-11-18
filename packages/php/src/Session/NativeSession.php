@@ -135,7 +135,9 @@ final class NativeSession implements SessionStore
      * file whose lock a request holds, and returns how many it removed (HY-104.33, SF-5). An empty save path is the
      * temporary directory, as for the native files handler. No request calls it: the application calls it when it
      * chooses, such as from a scheduled task, because the options turn the removal during a request off. A directory
-     * that cannot be read fails with `SessionStoreIoError` (SF-9.2).
+     * that cannot be read fails with `SessionStoreIoError` (SF-9.2). A `session.save_handler` other than `files` fails
+     * with kind `invalid_session_handler` and names the handler, because its store removes ended sessions itself
+     * (HY-104.44).
      *
      * The save path is read as the native files handler reads it (ext/session/mod_files.c of PHP 8.4): up to two
      * fields before the path, separated by `;`, are the depth of the subdirectories and the mode of the files. A depth
@@ -146,6 +148,14 @@ final class NativeSession implements SessionStore
     public static function collect(): int
     {
         ArgumentCount::most(\func_num_args(), 0);
+        // HY-104.44: another handler, such as redis or a handler of the application, keeps no files of this store.
+        $handler = (string) ini_get('session.save_handler');
+        if ($handler !== 'files') {
+            throw new HyperValueError(
+                "collect removes the files of the handler files, and session.save_handler is {$handler}, whose store removes ended sessions itself (HY-115.2)",
+                'invalid_session_handler',
+            );
+        }
         $directory = (string) ini_get('session.save_path');
         if ($directory === '') {
             $directory = sys_get_temp_dir();

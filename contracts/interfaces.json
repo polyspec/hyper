@@ -10059,7 +10059,7 @@
               "inputs": [],
               "output": "number",
               "errors": [],
-              "state": "Removes the session files of session.save_path whose lifetime of session.gc_maxlifetime has passed through collect of FileSessions of session-store, skips a session whose lock a request holds, returns how many it removed, and fails with SessionStoreIoError for a directory that cannot be read (HY-104.33, SF-5, SF-9.2).",
+              "state": "Removes the session files of session.save_path whose lifetime of session.gc_maxlifetime has passed through collect of FileSessions of session-store, skips a session whose lock a request holds, returns how many it removed, fails with SessionStoreIoError for a directory that cannot be read, and fails with kind invalid_session_handler under a session.save_handler other than files (HY-104.33, HY-104.44, SF-5, SF-9.2).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::collect",
