@@ -49,9 +49,9 @@ test('pin-check passes a tree whose every place names the declared version', () 
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /pin-check: (\d+) places/);
     const places = Number(/pin-check: (\d+) places/.exec(result.stdout)?.[1]);
-    // Every place of the fixture: 4 release URLs of package.json, 1 plain version, 2 + 1 Cargo tags, 1 lock source,
+    // Every place of the fixture: 4 release URLs of package.json, 1 plain version, 2 + 2 Cargo tags, 1 lock source,
     // 1 Composer repository, 1 platform version, 1 Makefile variable, 1 php-ext pin, 1 wheel and 1 Go module.
-    assert.equal(places, 15, result.stdout);
+    assert.equal(places, 16, result.stdout);
   });
 });
 
@@ -86,9 +86,9 @@ for (const [file, from, to, line, key] of mutations) {
 
 test('pin writes every place that no tool writes and names the lock targets that write the others', () => {
   withTree((root) => {
-    const before = { lock: read(root, 'Cargo.lock'), go: read(root, 'packages/go/go.mod'), native: read(root, 'packages/ts/native/Cargo.toml') };
+    const before = read(root, 'Cargo.lock');
     const { written, targets } = pinFiles(root, { json: '0.0.40' }, release);
-    assert.deepEqual(written.sort(), ['Makefile', 'composer.json', 'config/php-ext-pins.json', 'config/pins.json', 'package.json', 'packages/python/pyproject.toml', 'packages/rust/Cargo.toml']);
+    assert.deepEqual(written.sort(), ['Makefile', 'composer.json', 'config/php-ext-pins.json', 'config/pins.json', 'package.json', 'packages/go/go.mod', 'packages/python/pyproject.toml', 'packages/rust/Cargo.toml', 'packages/ts/native/Cargo.toml']);
     assert.ok(read(root, 'package.json').includes('download/v0.0.40/polyspec-json-0.0.40.tgz'));
     assert.ok(read(root, 'package.json').includes('download/v0.0.40/polyspec-json-darwin-arm64-0.0.40.tgz'));
     assert.ok(read(root, 'package.json').includes('download/v0.0.6/polyspec-php-serialize-0.0.6.tgz'), 'another package keeps its version');
@@ -99,19 +99,34 @@ test('pin writes every place that no tool writes and names the lock targets that
     assert.ok(read(root, 'config/php-ext-pins.json').includes('"version": "0.0.40"'));
     assert.ok(read(root, 'packages/python/pyproject.toml').includes('polyspec_json-0.0.40-cp314-abi3-macosx_11_0_arm64.whl#sha256=9336f7aed9e79a9febb215d5d2cb57a703073aa854cb965fb513f0f5090502f8'));
     assert.ok(read(root, 'config/pins.json').includes('"json": { "repository": "polyspec/json", "version": "0.0.40" }'));
-    // The locks, the Go module and the Cargo manifest of a binding are written by their tools, which the targets name.
-    assert.deepEqual({ lock: read(root, 'Cargo.lock'), go: read(root, 'packages/go/go.mod'), native: read(root, 'packages/ts/native/Cargo.toml') }, before);
-    assert.deepEqual(targets, ['npm-lock', 'install-packages', 'cargo-lock CRATES=polyspec-json', 'bindings-scaffold', 'composer-lock PACKAGES=polyspec/json', 'php-ext-pins', 'python-lock']);
+    // The Cargo manifest of a binding and go.mod name the new release too, so that no lock target sees two versions of
+    // one crate (H35.75-1); the locks and go.sum are written by their tools, which the targets name.
+    assert.ok(read(root, 'packages/ts/native/Cargo.toml').includes('json.git", tag = "v0.0.40"'));
+    assert.ok(read(root, 'packages/go/go.mod').includes('github.com/polyspec/json/packages/go v0.0.40'));
+    assert.equal(read(root, 'Cargo.lock'), before);
+    assert.deepEqual(targets, ['npm-lock', 'install-packages', 'cargo-lock CRATES=polyspec-json', 'bindings-scaffold', 'cargo-lock CRATES=polyspec-json', 'composer-lock PACKAGES=polyspec/json', 'php-ext-pins', 'python-lock']);
   });
 });
 
 test('a binding change runs cargo-lock again after bindings-scaffold, in a second make call', () => {
   withTree((root) => {
     const { targets } = pinFiles(root, { binding: '0.0.22' }, release);
+    assert.ok(read(root, 'packages/ts/native/Cargo.toml').includes('binding.git", tag = "v0.0.22"'));
     assert.deepEqual(lockGroups(targets), [
       ['npm-lock', 'install-packages', 'cargo-lock CRATES=polyspec-binding-core', 'bindings-scaffold'],
       ['cargo-lock CRATES=polyspec-binding-core'],
     ]);
+  });
+});
+
+test('a change of several crates names them in one cargo-lock, and every goal fits the two make calls of make pin', () => {
+  withTree((root) => {
+    const { targets } = pinFiles(root, { binding: '0.0.22', json: '0.0.40' }, release);
+    const groups = lockGroups(targets);
+    assert.equal(groups.length, 2, JSON.stringify(groups));
+    assert.deepEqual(groups[0], ['npm-lock', 'install-packages', 'cargo-lock CRATES=polyspec-binding-core CRATES=polyspec-json', 'bindings-scaffold']);
+    assert.deepEqual(groups[1], ['cargo-lock CRATES=polyspec-binding-core CRATES=polyspec-json', 'composer-lock PACKAGES=polyspec/json', 'php-ext-pins', 'python-lock']);
+    assert.equal(lockFiles(groups[0] ?? []).crates, 'polyspec-binding-core polyspec-json\n');
   });
 });
 
