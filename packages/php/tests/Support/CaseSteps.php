@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests\Support;
 
-use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Steps\AcceptSteps;
 use Polyspec\Hyper\Tests\Support\Steps\AppSteps;
