@@ -713,7 +713,11 @@ define write-release-recipes
 endef
 release-recipes: ## Write packages/release.mk, the release recipes of the bindings, with binding release-recipes (HR-99)
 	$(write-release-recipes)
-ifneq ($(wildcard $(BINDING)),)
+# A make whose goals are only install targets does not rewrite the file (H35.116): the install of the tools creates
+# var/tools/bin/node, which the rewrite runs, so a fresh checkout would fail before it installs anything. The make with
+# no goal, or with a goal that reads the release recipes, rewrites it as before.
+RELEASE_MK_GOALS := $(filter-out bootstrap install-tools install-packages hyper-install%,$(MAKECMDGOALS))$(if $(MAKECMDGOALS),,x)
+ifneq ($(and $(wildcard $(BINDING)),$(RELEASE_MK_GOALS)),)
 # The file depends on the generator, so an install of another binding release writes it again: a file of an earlier
 # release lacks the targets of the installed one.
 $(CURDIR)/packages/release.mk: $(BINDING)

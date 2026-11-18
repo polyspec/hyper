@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- 새 checkout이 `var/tools/bin/node` 없이 `make bootstrap`, `make install-tools TOOLS=npm`, `make install-packages`를 돈다(H35.116). 입력: `node_modules`에 binding 생성기가 있고 `var/tools`가 없는 checkout. 이전 동작: 설치 goal의 make가 아직 설치되지 않은 `var/tools/bin/node`로 `packages/release.mk`를 다시 써서 `No such file or directory`로 실패했다. 현재 동작: 설치 goal은 그 파일을 다시 쓰지 않고, goal이 없거나 release recipe를 읽는 goal은 이전처럼 다시 쓴다. `tests/scripts/install-order.test.mts`가 검증한다.
 - PHP의 Redis lock 순서를 `docs/plans/execution/statement-audit.md`에서 HY-115와 비교한다(H35.86). 입력: `RedisClusterSessions` handler와 session-store v0.0.8. 이전 동작: 감사가 PHP handler를 읽지 않았고, HY-115.23의 판정이 PHP는 `session_write_close`를 부르지 않는다고 했다. 현재 동작: PHP는 응답 전에 session을 닫고(`packages/php/src/Session/NativeSession.php:243`, `packages/php/src/App/App.php:1135`), phpredis handler는 아직 읽지 않아 그 행들은 판정이 없다.
 - Kit를 `package.json`과 `package-lock.json`에서 `v0.0.124`로 고정했다 (H35.90). 입력: 이전 pin의 kit release asset. 이전 동작: 설치된 kit이 잘못된 마이너 버전의 PHP wrapper를 쓰고 0으로 종료했다 (K1293). 기대 동작: lock이 지정한 kit으로 `make hyper-test-scripts TESTS=tests/scripts/php-check.test.mts`가 통과한다. 그 명령으로 검증했다: rc 0, 9 passed, 0 failed.
 - `make duplication-check`가 통과한다(H35.94). 입력: 트리에서 실행한 target. 이전 동작: 발견이나 통과 줄을 출력하고 던져진 오류를 `CHECK_ERROR`로 바꾸는 `scripts/recipe/check.mts`와 `scripts/recipe/files.mts`의 끝부분 clone 하나로 실패했다. 지금 동작: 둘과 `scripts/recipe/candidate.mts`는 `scripts/recipe/exit.mts`의 `report`와 `runCommand`로 끝나고, 출력은 같다. 검증: duplication-check와 `recipe-check`, `recipe-files`의 테스트가 통과한다.
