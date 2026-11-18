@@ -13,11 +13,7 @@
 
 ## 서버와 CDN(권장)
 
-서버는 요청 헤더로 두 종류의 요청을 구분한다(HY-15).
-- **직접 요청:** 주소창 입력, 새로고침, 북마크, 검색 크롤러, 링크 미리보기 봇의 요청이다. `HX-Request`가 없으며 완성된 문서를 받는다.
-- **htmx 요청:** 페이지 안에서 htmx가 보내는 요청이다. `Accept: application/vnd.hyper+json`과 `HX-Request`를 가지며 JSON을 받고, 브라우저가 이를 렌더한다.
-
-따라서 검색엔진과 링크 미리보기는 언제나 제목이 들어 있는 완성된 문서를 받는다.
+서버는 요청 헤더로 두 종류의 요청을 구분한다(HY-15). 직접 요청(주소창 입력, 새로고침, 북마크, 검색 크롤러, 링크 미리보기 봇)은 `HX-Request`가 없으며 완성된 문서를 받는다. 페이지 안에서 htmx가 보내는 요청은 `Accept: application/vnd.hyper+json`과 `HX-Request`를 가지며 JSON을 받고, 브라우저가 이를 렌더한다. 따라서 검색엔진과 링크 미리보기는 언제나 제목이 들어 있는 완성된 문서를 받는다.
 
 | 경로 패턴 | 오리진 | 동작 |
 |---|---|---|
@@ -52,16 +48,9 @@ build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을
 
 `make board`는 `examples/board/build/client/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HYC-16), 템플릿마다 파일 하나를 담은 `assets/templates/`, 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`(HYC-15), 그리고 페이지의 head가 적고 브라우저가 그 페이지를 보이기 전에 만드는 module script `assets/reader.js`와 `assets/after-reader.js`다(HYC-25). `make board`는 `--static`으로 `public/assets/`의 이 넷을 밝힌다.
 
-1. S3 버킷에 다음과 같이 올린다.
-   - `index.html`: `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`
-   - `assets/templates/*`: `Content-Type: application/json`, `Cache-Control: public, max-age=31536000, immutable`
-   - `assets/*.css`: 이름에 해시가 없으므로 `Content-Type: text/css; charset=utf-8`, `Cache-Control: no-cache`
-   - `assets/reader.js`, `assets/after-reader.js`: 이름에 해시가 없으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: no-cache`
+1. S3 버킷에 `index.html`을 `Content-Type: text/html; charset=utf-8`과 `Cache-Control: no-cache`로, `assets/templates/*`를 `Content-Type: application/json`과 `Cache-Control: public, max-age=31536000, immutable`로, `assets/*.css`를 `Content-Type: text/css; charset=utf-8`과 `Cache-Control: no-cache`로, `assets/reader.js`와 `assets/after-reader.js`를 `Content-Type: text/javascript; charset=utf-8`과 `Cache-Control: no-cache`로 올린다. 이 파일들은 이름에 해시가 없기 때문이다.
 2. PHP를 환경 변수 `BOARD_BASE_PATH=/api`로 실행한다(HY-8).
-3. 라우팅을 다음과 같이 설정한다.
-   - `/api/*`: 위 표와 같이 PHP로 보낸다.
-   - `/assets/*`: S3로 보낸다.
-   - 그 밖의 모든 경로: 뷰어 요청 단계의 CloudFront Function으로 `/index.html`로 보낸다.
+3. `/api/*`는 위 표와 같이 PHP로, `/assets/*`는 S3로, 그 밖의 모든 경로는 뷰어 요청 단계의 CloudFront Function으로 `/index.html`로 보낸다.
 4. 인라인한 진입 파일을 해시로, 조각 파일과 link한 스타일시트를 `'self'`로 허용하는 Content Security Policy를 보낸다. 그 정책은 `make board`가 출력한다. 조각 파일 `assets/hyper-chunk-*.js`는 이름에 해시가 있으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: public, max-age=31536000, immutable`로 올린다.
 
 모든 페이지 경로가 같은 빈 셸을 반환한다. 그래서 JavaScript를 실행하지 않는 검색 크롤러와 링크 미리보기 봇은 내용도 제목도 보지 못한다. 이 형태는 그런 노출이 필요 없는 화면에만 쓴다.
