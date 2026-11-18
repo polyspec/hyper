@@ -226,6 +226,12 @@ lint: hyper-lint lint-ts lint-php lint-python ## Run the lint of every language 
 # that config/php-ext-pins.json pins from the digest of its release asset, and fails before the library is published
 # (HR-80, H35.51); json-ext does the same.
 PIE := $(KIT_TOOLS)/mise/shims/pie
+# php-ext-pins writes config/php-ext-pins.json from the releases of the versions that it pins: the sha256 of each
+# packages.json and platform zip is the field digest of its release asset; it downloads no asset, since template-ext and
+# json-ext verify each download by that pin (H35.58).
+.PHONY: php-ext-pins
+php-ext-pins: ## Write config/php-ext-pins.json from the digests of the release assets of the pinned PHP extensions; ONLINE
+	$(ONLINE) $(NODE) $(CURDIR)/scripts/php-ext-pins.mts write config/php-ext-pins.json
 # $(call pie_run,WORK,STAGING) starts the one shell of a PIE recipe: it empties WORK and sets the trap that removes WORK
 # and STAGING at the end, the failure and SIGINT and SIGTERM of the run (HR-87, H35.53). template-ext, json-ext and
 # hyper-install-redis use it; each goes on with `&& \`.

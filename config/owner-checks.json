@@ -567,7 +567,9 @@
         "scripts/php-ext-requires.mts",
         "config/php-ext-pins.json",
         "scripts/test-inputs.mts",
-        "scripts/python-install-stamp.mts"
+        "scripts/python-install-stamp.mts",
+        "scripts/php-ext-pins.mts",
+        "tests/scripts/fixtures/php-ext-pins/**"
       ],
       "targets": [
         "typecheck"
@@ -577,7 +579,8 @@
         "tests/scripts/php-ext-requires.test.mts",
         "tests/scripts/template-pins.test.mts",
         "tests/scripts/test-inputs.test.mts",
-        "tests/scripts/python-install-stamp.test.mts"
+        "tests/scripts/python-install-stamp.test.mts",
+        "tests/scripts/php-ext-pins.test.mts"
       ]
     },
     {
