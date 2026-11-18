@@ -12,7 +12,7 @@
 // other job of the workflow, runs on their runner and runs `make ci-passed` with the JSON of `needs`.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -311,9 +311,11 @@ test('H33.1 the matrix of ci.yml names the CI groups of the Makefile, whose targ
     assert.deepEqual(Object.keys(entry.keys).filter((key) => key !== 'php'), [], `the entry ${entry.name} declares keys that belong to the Makefile`);
     assert.equal(entry.keys['php'] === 'true', groupWords(makefile, 'CI_TOOLS', entry.name).includes('php'), `the entry ${entry.name} sets up PHP, or does not, against CI_TOOLS_${entry.name}`);
   }
-  const all = groups.flatMap((group) => groupWords(makefile, 'CI_TARGETS', group));
+  // A measurement group (CI_GROUPS_MEASURE) reports and never fails, so its targets belong to no check (H35.91).
+  const measure = makeWords(makefile, 'CI_GROUPS_MEASURE');
+  const all = groups.filter((group) => !measure.includes(group)).flatMap((group) => groupWords(makefile, 'CI_TARGETS', group));
   assert.equal(new Set(all).size, all.length, `a target runs in two CI groups: ${all.join(' ')}`);
-  assert.deepEqual([...all].sort(), [...checkTargets()].sort(), 'the targets of the CI groups are not the targets of CHECK_TARGETS, each once');
+  assert.deepEqual([...all].sort(), [...checkTargets()].sort(), 'the targets of the CI groups that check are not the targets of CHECK_TARGETS, each once');
   assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'gates'), makeWords(makefile, 'GATE_TARGETS'), 'the group gates does not run GATE_TARGETS');
 });
 
@@ -322,6 +324,17 @@ test('a CI group checks the Rust core and the bindings (H35.2)', () => {
   const targets = ['core-test', 'core-lint', 'core-fmt-check', 'bindings-check', 'test-bindings'];
   assert.deepEqual(targets.filter((target) => !checkTargets().includes(target)), [], 'CHECK_TARGETS runs every target of the core and the bindings');
   assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'core'), targets, 'the group core runs the targets of the core and the bindings');
+});
+
+test('the CI group bench of ci.yml measures the benchmarks with Redis on every run (H35.91)', () => {
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  assert.ok(makeWords(makefile, 'CI_GROUPS').includes('bench'), 'CI_GROUPS lacks the group bench, so no run of ci.yml measures the benchmarks');
+  assert.ok(makeWords(makefile, 'CI_GROUPS_MEASURE').includes('bench'), 'CI_GROUPS_MEASURE does not declare the group bench a measurement');
+  const measured = makeWords(makefile, 'CI_GROUPS_MEASURE').flatMap((group) => groupWords(makefile, 'CI_TARGETS', group));
+  assert.deepEqual(measured.filter((target) => checkTargets().includes(target)), [], 'CHECK_TARGETS holds a target of a measurement group, which never fails');
+  assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'bench'), ['bench', 'bench-sessions'], 'the group bench runs bench and bench-sessions');
+  assert.ok(groupWords(makefile, 'CI_SETUP', 'bench').includes('hyper-install-redis'), 'the setup of the group bench installs no Redis, which bench-sessions needs');
+  assert.equal(existsSync(path.join(WORKFLOWS, 'bench.yml')), false, 'bench.yml runs the group bench a second time on a manual run');
 });
 
 /**
