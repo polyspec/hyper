@@ -33,6 +33,32 @@ function pausesInLoops(text: string): string[] {
   return found;
 }
 
+const REPEAT = /^\s*(?:for\s*\(\s*;\s*;\s*\)|while\s*\()/;
+const REQUEST = /\b(?:fetch|post)\(/;
+
+// The loops of `text` that send a request again until its answer changes, with or without a pause: a `for (;;)` or a
+// `while` whose header or body sends a request and reads its `status`, as `line: text` of the head of the loop.
+function repeatedRequests(text: string): string[] {
+  const found: string[] = [];
+  const lines = text.split('\n');
+  for (const [index, line] of lines.entries()) {
+    if (!REPEAT.test(line)) continue;
+    let depth = 0;
+    let body = '';
+    for (const next of lines.slice(index)) {
+      body += `${next}\n`;
+      for (const character of next.replace(/\/\/.*$/, '')) {
+        if (character === '{') depth += 1;
+        else if (character === '}') depth -= 1;
+      }
+      if (depth <= 0 && body.includes('{')) break;
+      if (depth <= 0 && !next.trimEnd().endsWith('{')) break;
+    }
+    if (REQUEST.test(body) && /\.status\b|\bstatus\b/.test(body)) found.push(`${String(index + 1)}: ${line.trim()}`);
+  }
+  return found;
+}
+
 test('tests/scripts/until.mts, which repeated a check with a pause, is removed (H35.19-2)', () => {
   assert.equal(existsSync('tests/scripts/until.mts'), false, 'tests/scripts/until.mts still exists');
 });
@@ -42,4 +68,9 @@ test('no loop of a test file pauses with delay or setTimeout (H35.19-2, HR-89)',
   assert.ok(files.length > 0, 'git ls-files tests lists no source file');
   const found = files.flatMap((file) => pausesInLoops(readFileSync(file, 'utf8')).map((line) => `${file}:${line}`));
   assert.deepEqual(found, [], `loops that pause:\n${found.join('\n')}`);
+});
+
+test('no loop of a test file sends a request again until its status changes (H35.19-2, HR-89)', () => {
+  const found = testFiles().flatMap((file) => repeatedRequests(readFileSync(file, 'utf8')).map((line) => `${file}:${line}`));
+  assert.deepEqual(found, [], `loops that send a request again:\n${found.join('\n')}`);
 });
