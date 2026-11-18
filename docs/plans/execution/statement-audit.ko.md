@@ -1,5 +1,5 @@
 <!-- doc-id: plan-statement-audit -->
-<!-- source-sha256: 586386268f04d08627d156e9292df7772d98cb07027a6e44d79a81bfdd71387c -->
+<!-- source-sha256: 637b355df7e218681e36715df86c43104dfa4f5c13c56d6140ae3fe7049904f4 -->
 # 진술 감사
 
 [English](statement-audit.md).
@@ -11,20 +11,19 @@
 | 그룹 | 진술 | 참 | 일부 참 | 거짓 |
 | --- | --- | --- | --- | --- |
 | HY-60 | 32 | 32 | 0 | 0 |
-| HY-100 | 36 | 35 | 1 | 0 |
+| HY-100 | 36 | 36 | 0 | 0 |
 | HY-104 | 30 | 20 | 7 | 3 |
 | HY-113 | 6 | 3 | 2 | 1 |
 | HY-114 | 8 | 8 | 0 | 0 |
 | HY-115 | 21 | 17 | 4 | 0 |
 | HY-131 | 13 | 10 | 1 | 2 |
 | HY-133 | 13 | 13 | 0 | 0 |
-| 합계 | 159 | 138 | 15 | 6 |
+| 합계 | 159 | 139 | 14 | 6 |
 
 ## 열린 진술
 
 다음 진술은 참이 아니고 `unimplemented` 표시도 없다. 각 진술은 그것을 참으로 만드는 행과 함께 표시를 받거나, 코드를 고쳐야 한다. 그때까지 H35.43은 열린 상태로 남는다.
 
-- HY-100.2: 어떤 host도 자기 store를 `App.handle`에 넘기지 않는다. Node는 `app.respond`를, Python은 `App._respond`를, PHP는 private `through`를 호출한다.
 - HY-104.14: Node와 Python은 다른 class의 object에서 실패한다(`php-serialization@v0.0.16:packages/rust/src/read.rs:460`). PHP 서버는 PHP 자신의 session decoder로 기록을 읽고, 저장된 값을 class 검사 없이 돌려준다(`packages/php/src/Session/NativeSession.php:136`).
 - HY-104.31: 모든 서버가 22자에서 128자의 식별자를 받는다(`packages/ts/src/session/record-session.ts:8`, `packages/python/src/polyspec/hyper/session/_record_session.py:16`, `packages/php/src/Session/NativeSession.php:39`). 그러나 진술, SE-5.1(`session-store@v0.0.7:packages/core/rust/src/identifier.rs:8`), PHP(`php-src@php-8.4.27:ext/session/session.c:791`)는 22자에서 256자를 준다.
 - HY-104.33: Python은 메서드 이름을 public이 아닌 `_collect`로 둔다. PHP에는 `collect`가 없고, 그 옵션은 `gc_probability`를 0으로 두지 않는다.
@@ -82,7 +81,7 @@ HY-100은 각 서버가 자기 런타임의 표준 host 인터페이스로 서�
 | 진술 | 판정 | 판정을 정하는 코드 | 인용하는 테스트 | 메모 |
 | --- | --- | --- | --- | --- |
 | HY-100.1 | 참 | `packages/php/src/Host/functions.php:14`, `packages/python/src/polyspec/hyper/host/wsgi.py:38`, `packages/python/src/polyspec/hyper/host/asgi.py:36`, `packages/ts/src/host/http-host.ts:60`, `packages/ts/src/host/http-host.ts:67` | 정확한 id로는 없음. `packages/php/tests/RunTest.php:17`, `packages/ts/tests/http.test.ts:17`이 HY-100을 인용한다 | |
-| HY-100.2 | 일부 참 | `packages/ts/src/host/http-host.ts:128`, `packages/ts/src/host/http-host.ts:143`, `packages/ts/src/host/http-host.ts:158`, `packages/python/src/polyspec/hyper/host/_pipeline.py:223`, `packages/php/src/App/App.php:1133`, `packages/php/src/Http/Request.php:532` | `packages/php/tests/RequestTest.php:51`, `packages/ts/tests/http.test.ts:190`, `tests/scripts/upload-servers.test.mts:578`, `tests/scripts/upload-servers.test.mts:744`, `tests/scripts/upload-servers.test.mts:755` | 어떤 host도 자기 store를 `App.handle`에 넘기지 않는다. Node는 `open` 함수와 함께 `app.respond`를, Python은 `open_session`과 함께 `App._respond`를, PHP는 `NativeSession`과 함께 private `through`를 호출한다. 나머지 조항(body 한도, 새 session의 cookie를 먼저, hook, 없는 대상의 평문 500)은 성립한다. 진술이 host가 호출하는 진입점의 이름을 적거나, host가 `App.handle`을 호출해야 한다. |
+| HY-100.2 | 참 | `packages/ts/src/app/app.ts:462`, `packages/ts/src/app/app.ts:464`, `packages/ts/src/host/http-host.ts:128`, `packages/ts/src/host/http-host.ts:143`, `packages/ts/src/host/http-host.ts:158`, `packages/python/src/polyspec/hyper/app/app.py:449`, `packages/python/src/polyspec/hyper/app/app.py:457`, `packages/python/src/polyspec/hyper/host/_pipeline.py:223`, `packages/php/src/App/App.php:356`, `packages/php/src/App/App.php:359`, `packages/php/src/App/App.php:1133`, `packages/php/src/Http/Request.php:532` | `packages/php/tests/RequestTest.php:51`, `packages/ts/tests/http.test.ts:190`, `tests/scripts/upload-servers.test.mts:578`, `tests/scripts/upload-servers.test.mts:744`, `tests/scripts/upload-servers.test.mts:755` | `App.handle`은 요청에 답하는 한 메서드를 감싼다. Node `handle`은 `respond`를 호출하고, Python `handle`은 `_respond`를 돌려주며, PHP `handle`은 `through`를 호출한다. 각 host는 자기 store로 바로 그 메서드를 호출하므로, session을 열고 hook을 실행하는 곳은 `App.handle`도 닿는 한 곳이다. 나머지 조항(body 한도, 새 session의 cookie를 먼저, hook, 없는 대상의 평문 500)은 성립한다. |
 | HY-100.3 | 참 | `packages/python/src/polyspec/hyper/host/wsgi.py:38` | 정확한 id로는 없음. `packages/python/tests/test_wsgi.py:1`이 HY-100을 인용한다 | |
 | HY-100.4 | 참 | `packages/python/src/polyspec/hyper/host/wsgi.py:160`, `packages/python/src/polyspec/hyper/host/wsgi.py:173`, `packages/python/src/polyspec/hyper/host/_pipeline.py:114`, `packages/python/src/polyspec/hyper/host/_pipeline.py:231` | `tests/scripts/upload-servers.test.mts:784` | Content-Length로 한도를 넘는 body는 읽지 않는다. 읽은 body에서 한도를 넘는 byte는 읽고 버리며 보관하지 않는다(`_pipeline.py:114`). |
 | HY-100.5 | 참 | `packages/python/src/polyspec/hyper/host/wsgi.py:105` | 없음 | 204나 304 응답에는 Content-Length가 붙지 않는다(`wsgi.py:100`). |

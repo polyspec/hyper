@@ -10,20 +10,19 @@ This document records row H35.43 of the [execution checklist](checklist.md). It 
 | Group | Statements | True | Partly true | False |
 | --- | --- | --- | --- | --- |
 | HY-60 | 32 | 32 | 0 | 0 |
-| HY-100 | 36 | 35 | 1 | 0 |
+| HY-100 | 36 | 36 | 0 | 0 |
 | HY-104 | 30 | 20 | 7 | 3 |
 | HY-113 | 6 | 3 | 2 | 1 |
 | HY-114 | 8 | 8 | 0 | 0 |
 | HY-115 | 21 | 17 | 4 | 0 |
 | HY-131 | 13 | 10 | 1 | 2 |
 | HY-133 | 13 | 13 | 0 | 0 |
-| Total | 159 | 138 | 15 | 6 |
+| Total | 159 | 139 | 14 | 6 |
 
 ## Open statements
 
 The following statements are not true and carry no `unimplemented` mark. Each one still needs a mark with a row that makes it true, or the code must be corrected. Until then H35.43 stays open.
 
-- HY-100.2: no host passes its store to `App.handle`. Node calls `app.respond`, Python calls `App._respond`, and PHP calls the private `through`.
 - HY-104.14: Node and Python fail at an object of another class (`php-serialization@v0.0.16:packages/rust/src/read.rs:460`). The PHP server reads the record with PHP's own session decoder and gives a stored value without a class check (`packages/php/src/Session/NativeSession.php:136`).
 - HY-104.31: every server accepts identifiers of 22 to 128 characters (`packages/ts/src/session/record-session.ts:8`, `packages/python/src/polyspec/hyper/session/_record_session.py:16`, `packages/php/src/Session/NativeSession.php:39`), while the statement, SE-5.1 (`session-store@v0.0.7:packages/core/rust/src/identifier.rs:8`) and PHP (`php-src@php-8.4.27:ext/session/session.c:791`) give 22 to 256.
 - HY-104.33: Python names the method `_collect`, which is not public. PHP has no `collect`, and its options do not set `gc_probability` to 0.
@@ -81,7 +80,7 @@ HY-100 states how each server is served through the standard host interface of i
 | Statement | Verdict | Code that decides it | Tests that cite it | Note |
 | --- | --- | --- | --- | --- |
 | HY-100.1 | true | `packages/php/src/Host/functions.php:14`, `packages/python/src/polyspec/hyper/host/wsgi.py:38`, `packages/python/src/polyspec/hyper/host/asgi.py:36`, `packages/ts/src/host/http-host.ts:60`, `packages/ts/src/host/http-host.ts:67` | none by the exact id; `packages/php/tests/RunTest.php:17`, `packages/ts/tests/http.test.ts:17` cite HY-100 | |
-| HY-100.2 | partly true | `packages/ts/src/host/http-host.ts:128`, `packages/ts/src/host/http-host.ts:143`, `packages/ts/src/host/http-host.ts:158`, `packages/python/src/polyspec/hyper/host/_pipeline.py:223`, `packages/php/src/App/App.php:1133`, `packages/php/src/Http/Request.php:532` | `packages/php/tests/RequestTest.php:51`, `packages/ts/tests/http.test.ts:190`, `tests/scripts/upload-servers.test.mts:578`, `tests/scripts/upload-servers.test.mts:744`, `tests/scripts/upload-servers.test.mts:755` | No host passes its store to `App.handle`: Node calls `app.respond` with an `open` function, Python calls `App._respond` with `open_session`, and PHP calls the private `through` with a `NativeSession`. The other clauses (body limit, cookie of a new session first, hooks, plain 500 for a missing target) hold. The statement needs the name of the entry that the hosts call, or the hosts call `App.handle`. |
+| HY-100.2 | true | `packages/ts/src/app/app.ts:462`, `packages/ts/src/app/app.ts:464`, `packages/ts/src/host/http-host.ts:128`, `packages/ts/src/host/http-host.ts:143`, `packages/ts/src/host/http-host.ts:158`, `packages/python/src/polyspec/hyper/app/app.py:449`, `packages/python/src/polyspec/hyper/app/app.py:457`, `packages/python/src/polyspec/hyper/host/_pipeline.py:223`, `packages/php/src/App/App.php:356`, `packages/php/src/App/App.php:359`, `packages/php/src/App/App.php:1133`, `packages/php/src/Http/Request.php:532` | `packages/php/tests/RequestTest.php:51`, `packages/ts/tests/http.test.ts:190`, `tests/scripts/upload-servers.test.mts:578`, `tests/scripts/upload-servers.test.mts:744`, `tests/scripts/upload-servers.test.mts:755` | `App.handle` is a wrapper over the one method that answers a request: Node `handle` calls `respond`, Python `handle` returns `_respond`, and PHP `handle` calls `through`. Each host calls that same method with its store, so the session is opened and the hooks are run in one place that `App.handle` also reaches. The other clauses (body limit, cookie of a new session first, hooks, plain 500 for a missing target) hold. |
 | HY-100.3 | true | `packages/python/src/polyspec/hyper/host/wsgi.py:38` | none by the exact id; `packages/python/tests/test_wsgi.py:1` cites HY-100 | |
 | HY-100.4 | true | `packages/python/src/polyspec/hyper/host/wsgi.py:160`, `packages/python/src/polyspec/hyper/host/wsgi.py:173`, `packages/python/src/polyspec/hyper/host/_pipeline.py:114`, `packages/python/src/polyspec/hyper/host/_pipeline.py:231` | `tests/scripts/upload-servers.test.mts:784` | A body over the limit by its Content-Length is not read; bytes past the limit of a read body are read and discarded, not held (`_pipeline.py:114`). |
 | HY-100.5 | true | `packages/python/src/polyspec/hyper/host/wsgi.py:105` | none | A 204 or 304 response gets no Content-Length (`wsgi.py:100`). |
