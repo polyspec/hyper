@@ -54,7 +54,9 @@ class SessionRoutesTest(unittest.TestCase):
             given = handlers()
             given["regions"] = {"side": lambda: {"count": 0, "note": None}}
             given["routes"]["home"] = {"load": held}
-            app = fixture_app(Counter(), handlers=given, manifest=str(Path(directory) / "app.json"))
+            app = fixture_app(
+                Counter(), handlers=given, manifest=str(Path(directory) / "app.json")
+            )
             order: list[str] = []
 
             class Observed(FileSessions):

@@ -26,7 +26,9 @@ class FileSessions:
         `invalid_directory` and with a lifetime of 0 with `invalid_lifetime` (HY-104.32); the binding of the library
         refuses a lifetime that is no integer of 0 or more with `invalid_number`, and one that is no number with
         `invalid_argument_type`."""
-        self._store = converted(lambda: library.FileSessions.in_directory(directory, lifetime))
+        self._store = converted(
+            lambda: library.FileSessions.in_directory(directory, lifetime)
+        )
 
     def _open(self, cookie: Optional[str]) -> "FileSession":
         """Returns the store of a request with the value of its session cookie, after the earlier requests of the same
