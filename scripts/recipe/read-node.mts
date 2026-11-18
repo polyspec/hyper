@@ -203,7 +203,8 @@ function readClassMember(file: string, sf: ts.SourceFile, cls: string, classInte
       file,
       unit: cls,
       name,
-      kind: hasModifier(m, ts.SyntaxKind.StaticKeyword) ? 'static method' : 'method',
+      // An accessor is read and written as a field is, so it is a property, static or not.
+      kind: !ts.isMethodDeclaration(m) ? 'property' : hasModifier(m, ts.SyntaxKind.StaticKeyword) ? 'static method' : 'method',
       visibility: memberVisibility(m, classInternal),
       symbol: `${file}::${cls}.${name}`,
       signature: headOf(m, sf),

@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 52e6d26761bff1ce0adaa2b025e3f341b13395819639781ae0cadf78f0155382 -->
+<!-- source-sha256: 7d877f6dff7fd9c730260a1b862d08faf11d60bc6ad96eaf9ac427b41e27b140 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -111,7 +111,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     method 본문의 대입은 property가 아니다.
   - **Fields of a member.**
     - `id`: `<unit>.<member>`, 언어 중립 이름을 camelCase로 쓴다.
-    - `kind`: constructor, method, static method, function, property 중 하나.
+    - `kind`: constructor, method, static method, function, property 중 하나. Node의 `get` 또는 `set` 접근자는 static이든
+      아니든 property다. 필드처럼 읽고 쓰기 때문이다. `MEMBER_SIGNATURE`는 멤버에서 spec과 다른 항목을 각각 밝힌다:
+      시그니처, 종류, 매개변수의 수.
     - `visibility`: public, internal, private 중 하나.
     - `inputs`, `output`, `errors`: 어휘의 용어로 쓴다. 어휘는 `contracts/protocol.json`의 용어, spec의 unit과 type, 그리고 이들의
       `list<T>`, `map<T>`, `optional<T>`, `function(...) -> T`다. union 용어는 없고, Node의 `Promise<T>`는 `T`이며, iterator 또는
