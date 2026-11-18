@@ -69,6 +69,8 @@ TEMPLATE_PACKAGES := https://github.com/polyspec/template/releases/download/$(TE
 FIXTURES := $(PHP_PACKAGE)/tests/fixtures
 # The Composer vendor directory of the private root composer.json, which installs packages/php for development.
 PHP_VENDOR := $(CURDIR)/vendor
+# The symbol extractor of PHP that install-symbols writes and lint-php reads (H35.122); a variable so a test can name a missing one.
+PHP_SYMBOLS_AUTOLOAD ?= $(CURDIR)/var/tools/symbols-php/vendor/autoload.php
 # The native template extension, built from the unpacked php-ext asset (HY-48, H14.1-7).
 # The lock of `make serve-demo`, whose fixed ports exist once on this machine (holder-lock of @polyspec/kit).
 SERVE_DEMO_LOCK := /tmp/hyper-serve-demo.lock
@@ -1141,6 +1143,7 @@ lint-ts: ## Lint the TypeScript: oxlint, knip and tsc of each project; offline
 	$(NODE) $(KIT)/lint-ts.$(KIT_EXT)
 
 lint-php: ## Lint the PHP: phpcs and PHPStan on each Composer package; offline
+	@test -f $(PHP_SYMBOLS_AUTOLOAD) || { echo "lint-php: $(PHP_SYMBOLS_AUTOLOAD) is missing; make install-symbols writes it (EXTRACTORS=php), run it before make lint-php" >&2; exit 1; }
 	$(NODE) $(KIT)/lint-php.$(KIT_EXT) --memory-limit=-1
 
 lint-python: ## Lint the Python: ruff and vulture on each package; offline
