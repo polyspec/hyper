@@ -1,4 +1,4 @@
-"""The outcome of an action: a redirect (HY-25, HY-46), an outside redirect (HY-133) or a page with a status (HY-26,
+"""The outcome of an action: a redirect (HY-25, HY-46), an outside redirect (HY-132) or a page with a status (HY-26,
 HY-58), with the flash values and the changed topics that it stores for the next request."""
 
 from __future__ import annotations
@@ -8,7 +8,7 @@ import re
 from ..app._core_rules import core_rules
 from ..data._data_model import DataModel
 
-# An outside location (HY-133.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
+# An outside location (HY-132.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
 # holds every visible ASCII character except the backslash.
 _OUTSIDE = re.compile(
     r"([Hh][Tt][Tt][Pp][Ss]?)://([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*)(?::([1-9][0-9]{0,4}))?"
@@ -41,15 +41,15 @@ class Result:
 
     @staticmethod
     def redirect(location: str) -> Result:
-        """Returns a redirect to a path of this application (HY-46); the core checks the location (HY-132.2)."""
+        """Returns a redirect to a path of this application (HY-46); the core checks the location (HY-133.2)."""
         return Result(core_rules().result_redirect(location), 303, {}, {}, [])
 
     @staticmethod
     def outside(location: str) -> Result:
-        """Returns an outside redirect to an outside location (HY-133)."""
+        """Returns an outside redirect to an outside location (HY-132)."""
         if Result.origin(location) is None:
             raise core_rules().value_error(
-                "an outside location is not an http or https URL with a host (HY-133)",
+                "an outside location is not an http or https URL with a host (HY-132)",
                 "not_outside_location",
             )
         return Result(location, 303, {}, {}, [])
@@ -57,7 +57,7 @@ class Result:
     @staticmethod
     def origin(text: str) -> str | None:
         """Returns the origin of an outside location, its scheme and its host in lower case and its port or the default
-        port of its scheme, or None for a text that is no outside location (HY-133)."""
+        port of its scheme, or None for a text that is no outside location (HY-132)."""
         parts = _OUTSIDE.fullmatch(text)
         if parts is None:
             return None
@@ -74,7 +74,7 @@ class Result:
     @staticmethod
     def page(status: int, data: dict) -> Result:
         """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58); the core
-        checks the status (HY-132.2)."""
+        checks the status (HY-133.2)."""
         return Result(None, core_rules().result_page(status), data, {}, [])
 
     @staticmethod
@@ -120,13 +120,13 @@ class Result:
         return self.location is not None
 
     def _is_outside(self) -> bool:
-        """Returns True for an outside redirect, whose location is no application path (HY-133)."""
+        """Returns True for an outside redirect, whose location is no application path (HY-132)."""
         return self.location is not None and not self.location.startswith("/")
 
     def _refuse_outside(self) -> None:
-        """Fails for an outside redirect, which stores no flash value and no changed topic (HY-133)."""
+        """Fails for an outside redirect, which stores no flash value and no changed topic (HY-132)."""
         if self._is_outside():
             raise core_rules().value_error(
-                "an outside redirect holds no flash value or changed topic (HY-133)",
+                "an outside redirect holds no flash value or changed topic (HY-132)",
                 "outside_redirect_stores",
             )

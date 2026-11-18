@@ -1,6 +1,6 @@
 // The cookies, the cache control, the page status and the embedding of the data that the loaders and actions of one
 // request give its response (HY-52, HY-69, HY-92), and the notes that they give the response hook (HY-60).
-// The core states the rule of each value (HY-132.2); this class checks the JavaScript type of an argument.
+// The core states the rule of each value (HY-133.2); this class checks the JavaScript type of an argument.
 import { ArgumentCountError } from '../app/argument-count-error.js';
 import { rules } from '../app/core-rules.js';
 

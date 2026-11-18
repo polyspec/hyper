@@ -67,12 +67,12 @@ class RecordSession(SessionStore):
     @staticmethod
     def cookie_name(secure: bool) -> str:
         """Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45); the core
-        names it (HY-132.2)."""
+        names it (HY-133.2)."""
         return core_rules().session_cookie_name(secure)
 
     @staticmethod
     def cookie_header(id: str, secure: bool) -> str:
-        """Returns the Set-Cookie value of a new session (HY-45.8); the core writes it (HY-132.2)."""
+        """Returns the Set-Cookie value of a new session (HY-45.8); the core writes it (HY-133.2)."""
         return core_rules().session_cookie_header(id, secure)
 
     def _start(self) -> dict:

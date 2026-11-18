@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The rules of the Rust core behind the names of the units of the PHP server (HY-132.2). The binding of the core gives
+ * The rules of the Rust core behind the names of the units of the PHP server (HY-133.2). The binding of the core gives
  * its rules as functions of one namespace, `Polyspec\Hyper` of the extension `polyspec_hyper`; this class takes that
  * namespace and gives each rule under the name of the unit of the server that states it today, the name of the unit
  * followed by the name of its member, so that a unit of the server calls the core in place of its own rule. A test
@@ -17,7 +17,7 @@ namespace Polyspec\Hyper;
  * unit here.
  *
  * A failure of the core reaches the caller as the binding raises it: an error of the class of its category with
- * `kind()` and `status()` (HY-132.1, HY-132.2). No method here catches or replaces one.
+ * `kind()` and `status()` (HY-133.1, HY-133.2). No method here catches or replaces one.
  *
  * @internal
  */
@@ -33,7 +33,7 @@ final class CoreRules
         'checkFunctionEntry',
     ];
 
-    /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
+    /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-133.2). */
     private const string EXTENSION = 'polyspec_hyper';
 
     private static ?self $shared = null;
@@ -41,7 +41,7 @@ final class CoreRules
     private readonly string $namespace;
 
     /**
-     * The one CoreRules of the server, over the extension `polyspec_hyper`, created on its first use (HY-132.2). A
+     * The one CoreRules of the server, over the extension `polyspec_hyper`, created on its first use (HY-133.2). A
      * server without the extension stops here with the name of the extension; no rule of the server answers in its
      * place.
      */
@@ -51,7 +51,7 @@ final class CoreRules
             if (!extension_loaded(self::EXTENSION)) {
                 throw new \RuntimeException(
                     'hyper: the PHP extension ' . self::EXTENSION . ' is not loaded; the server calls the rules of '
-                    . 'the core through it (HY-132.2)',
+                    . 'the core through it (HY-133.2)',
                 );
             }
             self::$shared = new self(__NAMESPACE__);

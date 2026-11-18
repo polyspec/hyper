@@ -286,6 +286,17 @@
     },
     {
       "paths": [
+        "config/renumber/*.json"
+      ],
+      "tests": [
+        "tests/scripts/spec-renumber.test.mts"
+      ],
+      "targets": [
+        "spec-docs-check"
+      ]
+    },
+    {
+      "paths": [
         "scripts/spec-renumber.mts"
       ],
       "tests": [

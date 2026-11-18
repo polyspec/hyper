@@ -1,4 +1,4 @@
-// The rules of the core behind the names of the units of the Node server (packages/ts/src/app/core-rules.ts, HY-132.2),
+// The rules of the core behind the names of the units of the Node server (packages/ts/src/app/core-rules.ts, HY-133.2),
 // against a stand-in of the module of the Node binding: the stand-in records each call and returns the value that the
 // test gives it, so the tests need no native module. They state which member of the binding each unit calls, with
 // which arguments, and what the unit returns; the rules themselves are tested in the core.
@@ -145,7 +145,7 @@ test('RepresentationResponse.etag gives representation_tag the content type and 
   assert.deepEqual(calls, [['representationTag', ['application/json', new TextEncoder().encode('{"a":"é"}')]]]);
 });
 
-test('a failure of the binding reaches the caller as the binding raised it (HY-132.1, HY-132.2)', () => {
+test('a failure of the binding reaches the caller as the binding raised it (HY-133.1, HY-133.2)', () => {
   const failure = Object.assign(new RangeError('a CSRF token is not 64 lowercase hexadecimal digits'), { kind: 'invalid_csrf_form', status: null });
   const { rules } = rulesOf({ csrfMask: failure, storedToken: failure, openPage: failure });
   assert.throws(() => rules.csrfMask('x', MASK), (error) => error === failure);
@@ -176,7 +176,7 @@ test('Accept.parse gives accept_ranges the value as one line, and no line for a 
   assert.deepEqual(calls, [['acceptRanges', [['text/html']]], ['acceptRanges', [[]]]]);
 });
 
-test('valueError and typeError give the errors of the classes of the binding with their kind and no status (HY-132.2)', () => {
+test('valueError and typeError give the errors of the classes of the binding with their kind and no status (HY-133.2)', () => {
   const { rules, calls } = rulesOf({});
   const value = rules.valueError('a value', 'invalid_value');
   const type = rules.typeError('a type', 'invalid_type');
@@ -321,7 +321,7 @@ test('each member that coreRules requires has a test of the unit that calls it',
 
 const ADDON =`hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`;
 
-test('a loader that throws fails each call with CoreBindingError naming the addon, and no rule answers (HY-132.2)', () => {
+test('a loader that throws fails each call with CoreBindingError naming the addon, and no rule answers (HY-133.2)', () => {
   let loads = 0;
   const rules = sharedRules(() => {
     loads += 1;
@@ -333,7 +333,7 @@ test('a loader that throws fails each call with CoreBindingError naming the addo
   assert.equal(loads, 2);
 });
 
-test('the shared rules load the module once and give one instance (HY-132.2)', () => {
+test('the shared rules load the module once and give one instance (HY-133.2)', () => {
   let loads = 0;
   const { core, calls } = standIn({ csrfMask: 'masked' });
   const rules = sharedRules(() => {

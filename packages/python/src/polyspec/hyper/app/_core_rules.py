@@ -1,4 +1,4 @@
-"""The rules of the Rust core behind the names of the units of the Python server (HY-132.2). `CoreRules` takes the
+"""The rules of the Rust core behind the names of the units of the Python server (HY-133.2). `CoreRules` takes the
 module of the Python binding of the core, `polyspec.hyper._binding._root`, and gives each rule under the name of the
 unit of the server that states it, so that a unit of the server calls the core in place of its own rule. The units of
 the server reach one shared instance through `core_rules`, which imports the binding on its first call; a test gives
@@ -10,7 +10,7 @@ does a part itself; each partial unit names that part by its rule. The members o
 here.
 
 A failure of the core reaches the caller as the binding raises it: an error of the class of its category with `kind`
-and `status` (HY-132.1, HY-132.2). No function here catches or replaces one."""
+and `status` (HY-133.1, HY-133.2). No function here catches or replaces one."""
 
 from __future__ import annotations
 
@@ -224,13 +224,13 @@ class CoreRules:
         return self._core.keep_name(secure)
 
     def value_error(self, message: str, kind: str) -> ValueError:
-        """The error of hyper of the category value with its kind (HY-132.2), of the class of the binding."""
+        """The error of hyper of the category value with its kind (HY-133.2), of the class of the binding."""
         from .._binding._errors import HyperValueError
 
         return HyperValueError(message, kind)
 
     def type_error(self, message: str, kind: str) -> TypeError:
-        """The error of hyper of the category type with its kind (HY-132.2), of the class of the binding."""
+        """The error of hyper of the category type with its kind (HY-133.2), of the class of the binding."""
         from .._binding._errors import HyperTypeError
 
         return HyperTypeError(message, kind)
@@ -238,7 +238,7 @@ class CoreRules:
     def library_error(
         self, library: object, prefix: str, error: BaseException
     ) -> BaseException:
-        """The error of hyper for an error of a library that hyper uses (HY-132.3), or the error as it is. An error
+        """The error of hyper for an error of a library that hyper uses (HY-133.3), or the error as it is. An error
         of a library is an instance of a class that the error module of the library, `library`, defines. The class of
         hyper is the class of the binding of hyper of the same role: the class of the same name, such as
         `RecordError`, or the category class, whose name has `Hyper` where the category class of the library has
@@ -295,7 +295,7 @@ class CoreRules:
 
 class CoreBindingError(ImportError):
     """The binding of the core does not import. The server has no rule of its own in place of the core, so the first
-    unit that needs a rule fails with this error, which names the module (HY-132.2)."""
+    unit that needs a rule fails with this error, which names the module (HY-133.2)."""
 
 
 _shared: Optional[CoreRules] = None

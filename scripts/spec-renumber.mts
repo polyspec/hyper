@@ -3,15 +3,15 @@
 //   spec-renumber.mts apply --map <file> [--root <dir>]
 //   spec-renumber.mts anchor <id>... [--root <dir>]
 //
-// The map is JSON: {"renames": [{"from": "HY-132", "to": "HY-133", "anchor": "<sha256>"}, ...]}. An entry renames a rule
-// id with the ids of its statements (HY-132 and HY-132.n), or one statement id. The anchor identifies the entry's
+// The map is JSON: {"renames": [{"from": "HY-133", "to": "HY-132", "anchor": "<sha256>"}, ...]}. An entry renames a rule
+// id with the ids of its statements (HY-133 and HY-133.n), or one statement id. The anchor identifies the entry's
 // statement independently of its id: the sha256 of the English text of the statement (for a rule, its first statement)
 // with each citation replaced by `HY`, so that the renaming of a citation inside it keeps the anchor. `anchor` prints the
 // anchors of the ids of the contract, for writing a map.
 //
 // The run is idempotent: when the anchor of every entry is at its `to`, the map is applied and nothing is written; when
 // it is at every `from`, the map is applied; a mix, or an anchor at neither, fails without writing. The rename is two
-// steps, every id to a placeholder and then every placeholder to its new id, so a swap such as HY-132 <-> HY-133 cannot
+// steps, every id to a placeholder and then every placeholder to its new id, so a swap such as HY-133 <-> HY-132 cannot
 // collide. The files are the tracked files of the root, without CHANGELOG*, docs/plans/** (the history of changes,
 // which names the ids of their time), the maps of config/renumber (each the record of the ids that one run moved) and
 // the generated docs/spec/protocol*.md, which `make spec-docs` writes after the run. The koSource of every statement

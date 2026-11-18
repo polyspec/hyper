@@ -747,7 +747,7 @@ export class App<S extends object = Record<string, never>> {
 
   // Stores the flash values and changed topics of a redirect result and responds with 303 (HY-25, HY-50); an outside
   // redirect stores nothing, takes no base path and responds to a request with `HX-Request: true` and to a document
-  // request with 200 and `HX-Redirect`, and to every other request with 303 (HY-133).
+  // request with 200 and `HX-Redirect`, and to every other request with 303 (HY-132).
   private redirectResponse(request: Request, session: Session, result: Result, basePath: string): Response {
     if (result.isOutside()) {
       const headers = { 'Cache-Control': 'no-store', Vary: this.varyHeader() };

@@ -60,7 +60,7 @@ pub fn page_status(status: i64) -> Result<u16, Error> {
     }
 }
 
-/// The parts of an outside location (HY-133.2): its scheme in lower case, its host in lower case and its port, the
+/// The parts of an outside location (HY-132.2): its scheme in lower case, its host in lower case and its port, the
 /// port of the location or the default port of its scheme.
 fn outside_parts(text: &str) -> Option<(String, String, u32)> {
     if !text.is_ascii() {
@@ -73,7 +73,7 @@ fn outside_parts(text: &str) -> Option<(String, String, u32)> {
         "https" => 443,
         _ => return None,
     };
-    // The authority ends at the first `/`, `?` or `#`, or at the end of a location without a rest (HY-133.2).
+    // The authority ends at the first `/`, `?` or `#`, or at the end of a location without a rest (HY-132.2).
     let end = match after.find(['/', '?', '#']) {
         Some(end) => end,
         None => after.len(),
@@ -117,7 +117,7 @@ fn outside_parts(text: &str) -> Option<(String, String, u32)> {
     Some((scheme, host.to_ascii_lowercase(), port))
 }
 
-/// Checks the location of an outside redirect (HY-133.2 to HY-133.5).
+/// Checks the location of an outside redirect (HY-132.2 to HY-132.5).
 ///
 /// # Errors
 /// `not_outside_location` for a text that is no outside location.
@@ -129,7 +129,7 @@ pub fn outside_location(location: &str) -> Result<&str, Error> {
 }
 
 /// The origin of an outside location, `<scheme>://<host>:<port>` with the scheme and the host in lower case and the
-/// port of the location or the default port of its scheme, or none for a text that is no outside location (HY-133.13).
+/// port of the location or the default port of its scheme, or none for a text that is no outside location (HY-132.13).
 #[must_use]
 pub fn origin(text: &str) -> Option<String> {
     outside_parts(text).map(|(scheme, host, port)| format!("{scheme}://{host}:{port}"))

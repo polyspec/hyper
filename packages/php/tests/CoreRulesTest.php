@@ -10,7 +10,7 @@ use Polyspec\Hyper\CoreRules;
 use Polyspec\Hyper\Tests\Support\CoreStandIn\Calls;
 
 /**
- * The rules of the core behind the names of the units of the PHP server (CoreRules, HY-132.2), against stand-in
+ * The rules of the core behind the names of the units of the PHP server (CoreRules, HY-133.2), against stand-in
  * functions of the binding, which record each call and return the value that the test gives them, so the tests need no
  * extension. They state which function of the binding each unit calls, with which arguments, and what the unit
  * returns; the rules themselves are tested in the core.
@@ -184,7 +184,7 @@ final class CoreRulesTest extends TestCase
 
     public function testAFailureOfTheBindingReachesTheCallerAsTheBindingRaisedIt(): void
     {
-        // HY-132.1, HY-132.2; HY-24.14 for a session that holds another value in the place of the token.
+        // HY-133.1, HY-133.2; HY-24.14 for a session that holds another value in the place of the token.
         $failure = new \InvalidArgumentException('the session holds a token of another form');
         Calls::$results = ['storedToken' => $failure];
         try {
@@ -197,7 +197,7 @@ final class CoreRulesTest extends TestCase
 
     public function testTheServerHasOneCoreRulesOverTheExtensionOrFailsWithItsName(): void
     {
-        // HY-132.2: the run with the extension gets one instance; the run without it gets the error that names it.
+        // HY-133.2: the run with the extension gets one instance; the run without it gets the error that names it.
         if (extension_loaded('polyspec_hyper')) {
             self::assertSame(CoreRules::shared(), CoreRules::shared());
 

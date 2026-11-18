@@ -20,7 +20,7 @@ export class Session {
   }
 
   // Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use (HY-24.1). A stored text of
-  // another form fails, which the core checks (HY-24.14, HY-132.2).
+  // another form fails, which the core checks (HY-24.14, HY-133.2).
   csrfToken(): string {
     const token = this.store.get(TOKEN);
     if (typeof token === 'string') return rules().sessionStoredToken(token);

@@ -74,7 +74,7 @@ def requests(case) -> None:
 
 def store_failures(case) -> None:
     """The failure of making a store or of the first request of a session, with its kind, status and category
-    (HY-132.3). An error that is no error of hyper fails the case, because `raises_of` raises it again."""
+    (HY-133.3). An error that is no error of hyper fails the case, because `raises_of` raises it again."""
     failure: BaseException | None = None
     with tempfile.TemporaryDirectory(prefix="hyper-sessions-") as root:
         for entry in case.input("files") if case.has("files") else []:

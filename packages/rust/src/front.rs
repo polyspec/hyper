@@ -208,7 +208,7 @@ pub fn route_request(pages: &Pages, chosen: bool, front: &Front) -> Result<Route
             }));
         }
         // HY-116.18: only a field that NG-5.7 refuses is a 400; another failure of http-negotiation, such as its
-        // internal kind (HY-132.6), reaches the caller.
+        // internal kind (HY-133.6), reaches the caller.
         Err(Error::Negotiate(
             polyspec_http_negotiation::Error::InvalidAccept
             | polyspec_http_negotiation::Error::InvalidWeight,

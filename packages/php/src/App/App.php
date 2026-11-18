@@ -933,7 +933,7 @@ final class App
     /**
      * Stores the flash values and changed topics of a redirect result and responds with 303 (HY-25, HY-50); an outside
      * redirect stores nothing, takes no base path and responds to a request with `HX-Request: true` and to a document
-     * request with 200 and `HX-Redirect`, and to every other request with 303 (HY-133).
+     * request with 200 and `HX-Redirect`, and to every other request with 303 (HY-132).
      */
     private function redirectResponse(Request $request, Session $session, Result $result, string $basePath): Response
     {

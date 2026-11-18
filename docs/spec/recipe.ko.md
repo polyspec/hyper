@@ -359,7 +359,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - `prefix`: expected list가 관찰된 list의 첫 item들과 같다;
   - `keys`: expected list가 관찰된 map의 key를 그 순서대로 나열한 list와 같다;
   - `raises`: expected 값이 true이면 단계는 필드나 결과의 statement가 정하는 kind의 hyper 오류로 실패하고, false이면 단계는
-    실패하지 않는다. statement의 kind는 HY-132의 kind 표(HY-132.3, HY-132.9)가 열 규칙에서 그 statement에 주는 kind이며,
+    실패하지 않는다. statement의 kind는 HY-133의 kind 표(HY-133.3, HY-133.9)가 열 규칙에서 그 statement에 주는 kind이며,
     runner는 그것을 statement의 text가 아니라 `contracts/protocol.json`의 그 표에서 읽는다: HY-106.21은 `invalid_application`과
     `invalid_build`를, HY-42.7은 binding의 `invalid_text`를 준다. 표가 statement를 가리키지 않는 결과는 open 실패이며 open
     error를 기대한다. open error는 kind `invalid_application`을 가진 category `value`의 hyper class이고, 열리지 않는
@@ -374,7 +374,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - `caseFiles`가 가리키는 모든 runner는 모든 case를 이 비교들로만 비교한다. 자기 runner에 대해 아무것도 비교하지 않는 case는
     `CASE_EMPTY`로 실패하며, `only`가 그 runner를 빼는 필드와 결과는 세지 않는다.
   - 단계의 `raises`: runner는 단계의 모든 error를 잡아 그것 또는 null을 reader에 넘기고, reader는 그것을 `raisesOf`로
-    읽는다. HY-132의 kind 표가 statement를 가리키는 결과에 대해 reader는 그 kind가 표가 그 statement에 주는 kind 가운데
+    읽는다. HY-133의 kind 표가 statement를 가리키는 결과에 대해 reader는 그 kind가 표가 그 statement에 주는 kind 가운데
     하나인지 확인하고, open 실패에 대해 그 category가 `value`이고 kind가 `invalid_application`인지 확인하며(HY-106.21),
     `hooks.json`의 `creation`에 대해 그 오류가 hyper의 오류인지만 확인한다(HY-97.7, H35.29-6).
   - 각 case는 `requirements`를 가진다. 이는 response 필드가 확인하는 규칙의 목록이다. `requirements`는 필드가 아니다: reader는

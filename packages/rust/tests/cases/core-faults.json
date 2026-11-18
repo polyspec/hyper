@@ -1,9 +1,9 @@
 {
-  "comment": "The cases of the faults of a library that reach the core of hyper only through an object of that library, which only the tests of the core read, in the case form of binding (G-5). The interface contract names no file of these cases: the package of session-store makes its store with a binding_core of its own, so a generated test of a binding arms session_store.internal where the store never reaches it, and binding check refuses such a case in a case file that the contract names (binding B2.487, HY-132.6). The group session arms session_store.internal for opening_functions.open_page with a file session of the directory of the test that found no record, whose first get starts the record session; without the faults the page opens with a new token. A directory is a relative path that the test resolves in a directory of its own (binding GN-6y, GN-13i).",
+  "comment": "The cases of the faults of a library that reach the core of hyper only through an object of that library, which only the tests of the core read, in the case form of binding (G-5). The interface contract names no file of these cases: the package of session-store makes its store with a binding_core of its own, so a generated test of a binding arms session_store.internal where the store never reaches it, and binding check refuses such a case in a case file that the contract names (binding B2.487, HY-133.6). The group session arms session_store.internal for opening_functions.open_page with a file session of the directory of the test that found no record, whose first get starts the record session; without the faults the page opens with a new token. A directory is a relative path that the test resolves in a directory of its own (binding GN-6y, GN-13i).",
   "session": [
     {
       "id": "a_session_that_waits_after_its_start_is_internal",
-      "rule": "HY-132.6",
+      "rule": "HY-133.6",
       "pages": {
         "new": "pages.open",
         "args": {

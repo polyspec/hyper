@@ -4,7 +4,7 @@ import type { MapValue, Value } from '@polyspec/template/render';
 import type { CaseReader } from '../case-reader.ts';
 import { stringsOf } from '../inputs.ts';
 
-// The failure of HY-132 that an error gives: its kind, its status, the category of its class (HY-132.2) and its message.
+// The failure of HY-133 that an error gives: its kind, its status, the category of its class (HY-133.2) and its message.
 function raisesOf(error: Error): Record<string, unknown> {
   const { kind, status } = error as Error & { kind?: unknown; status?: unknown };
   const category = error instanceof RangeError ? 'value' : error instanceof TypeError ? 'type' : null;

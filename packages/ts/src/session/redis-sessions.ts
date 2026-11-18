@@ -37,7 +37,7 @@ const REDIS_SESSIONS_OPTIONAL = ['lifetime', 'prefix', 'lockRetries', 'lockWait'
 // its values and which expires after the lifetime, so the PHP, Node and Python servers that share the Redis server share
 // its sessions. A request holds the lock `<key>_LOCK` from its opening to its closing, so the requests of one session run
 // one after another in every process (HY-115.3); a holder that lost its lock writes nothing (HY-115.5). A failure of the
-// library is an error of hyper of the same category with the kind of the library (HY-132.3): a lifetime or a lock
+// library is an error of hyper of the same category with the kind of the library (HY-133.3): a lifetime or a lock
 // expiry of 0 fails with `invalid_lifetime` or `invalid_lock_expire`, a lock whose tries end with `lock_timeout` and a
 // lost lock with `lock_lost`.
 export class RedisSessions {

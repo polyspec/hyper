@@ -181,7 +181,7 @@
         "HY-107",
         "HY-27",
         "HY-106",
-        "HY-132"
+        "HY-133"
       ],
       "cases": [
         "contracts/context.json",
@@ -883,7 +883,7 @@
               ],
               "output": "response",
               "errors": [],
-              "state": "Stores the flash values and the changed topics of a redirect and returns the 303 (HY-25.3), or returns the response of an outside redirect, which stores nothing (HY-133.6).",
+              "state": "Stores the flash values and the changed topics of a redirect and returns the 303 (HY-25.3), or returns the response of an outside redirect, which stores nothing (HY-132.6).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::redirectResponse",
@@ -1181,7 +1181,7 @@
               "php",
               "python"
             ],
-            "sentence": "HY-132.2"
+            "sentence": "HY-133.2"
           },
           "members": []
         },
@@ -1212,7 +1212,7 @@
               "inputs": [],
               "output": "core-rules",
               "errors": [],
-              "state": "The one CoreRules of the PHP server over the extension polyspec_hyper, created on its first use; without the extension it fails with the name of the extension, and no rule of the server answers in its place (HY-132.2).",
+              "state": "The one CoreRules of the PHP server over the extension polyspec_hyper, created on its first use; without the extension it fails with the name of the extension, and no rule of the server answers in its place (HY-133.2).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::shared",
@@ -1223,10 +1223,10 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-132.2"
+                "sentence": "HY-133.2"
               },
               "tests": [
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheServerHasOneCoreRulesOverTheExtensionOrFailsWithItsName: The PHP server reaches the core through one CoreRules over the extension polyspec_hyper (HY-132.2); without the extension it fails with the name of the extension."
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheServerHasOneCoreRulesOverTheExtensionOrFailsWithItsName: The PHP server reaches the core through one CoreRules over the extension polyspec_hyper (HY-133.2); without the extension it fails with the name of the extension."
               ]
             },
             {
@@ -1255,14 +1255,14 @@
                 }
               },
               "tests": [
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testAUnitCallsItsFunctionWithItsArgumentsAndReturnsItsResult: Every server opens the rules of the core through one unit (HY-132.2); each member calls its function of the binding with its arguments and returns its result.",
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testThereAreFifteenExactUnits: Every server opens the rules of the core through one unit (HY-132.2); the exact members are the fifteen that the core decides alone.",
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testANamespaceWithoutAFunctionOfTheBindingFailsWithTheNamesOfTheFunctions: Every server opens the rules of the core through one unit (HY-132.2); a binding that lacks a function fails with the names of the functions.",
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testAFailureOfTheBindingReachesTheCallerAsTheBindingRaisedIt: Every server opens the rules of the core through one unit (HY-132.2); a failure of the binding reaches the caller unchanged (HY-132.1).",
-                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_each_unit_calls_its_member_with_its_arguments_and_returns_its_result: Every server opens the rules of the core through one unit (HY-132.2); each member calls its member of the binding with its arguments and returns its result.",
-                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_there_are_fifteen_exact_units: Every server opens the rules of the core through one unit (HY-132.2); the exact members are the fifteen that the core decides alone.",
-                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_a_module_without_a_member_of_the_binding_fails_with_the_name_of_the_member: Every server opens the rules of the core through one unit (HY-132.2); a binding that lacks a member fails with the name of the member.",
-                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_a_failure_of_the_binding_reaches_the_caller_as_the_binding_raised_it: Every server opens the rules of the core through one unit (HY-132.2); a failure of the binding reaches the caller unchanged (HY-132.1)."
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testAUnitCallsItsFunctionWithItsArgumentsAndReturnsItsResult: Every server opens the rules of the core through one unit (HY-133.2); each member calls its function of the binding with its arguments and returns its result.",
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testThereAreFifteenExactUnits: Every server opens the rules of the core through one unit (HY-133.2); the exact members are the fifteen that the core decides alone.",
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testANamespaceWithoutAFunctionOfTheBindingFailsWithTheNamesOfTheFunctions: Every server opens the rules of the core through one unit (HY-133.2); a binding that lacks a function fails with the names of the functions.",
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testAFailureOfTheBindingReachesTheCallerAsTheBindingRaisedIt: Every server opens the rules of the core through one unit (HY-133.2); a failure of the binding reaches the caller unchanged (HY-133.1).",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_each_unit_calls_its_member_with_its_arguments_and_returns_its_result: Every server opens the rules of the core through one unit (HY-133.2); each member calls its member of the binding with its arguments and returns its result.",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_there_are_fifteen_exact_units: Every server opens the rules of the core through one unit (HY-133.2); the exact members are the fifteen that the core decides alone.",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_a_module_without_a_member_of_the_binding_fails_with_the_name_of_the_member: Every server opens the rules of the core through one unit (HY-133.2); a binding that lacks a member fails with the name of the member.",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_a_failure_of_the_binding_reaches_the_caller_as_the_binding_raised_it: Every server opens the rules of the core through one unit (HY-133.2); a failure of the binding reaches the caller unchanged (HY-133.1)."
               ]
             },
             {
@@ -1453,7 +1453,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Returns the error of hyper for an error of a library that hyper uses, by the class of the binding of hyper of the same role as the class of the error, with its message, kind, status and errno, and any other value as it is (HY-132.3).",
+              "state": "Returns the error of hyper for an error of a library that hyper uses, by the class of the binding of hyper of the same role as the class of the error, with its message, kind, status and errno, and any other value as it is (HY-133.3).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.libraryError",
@@ -1860,8 +1860,8 @@
                 }
               },
               "tests": [
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheFrameHeadersAreAMapInTheOrderOfTheCore: Every server opens the rules of the core through one unit (HY-132.2); the frame headers keep the order of the core (HY-65.1).",
-                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_the_frame_headers_are_a_record_in_the_order_of_the_core: Every server opens the rules of the core through one unit (HY-132.2); the frame headers keep the order of the core (HY-65.1)."
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheFrameHeadersAreAMapInTheOrderOfTheCore: Every server opens the rules of the core through one unit (HY-133.2); the frame headers keep the order of the core (HY-65.1).",
+                "packages/python/tests/test_core_rules.py::CoreRulesTest.test_the_frame_headers_are_a_record_in_the_order_of_the_core: Every server opens the rules of the core through one unit (HY-133.2); the frame headers keep the order of the core (HY-65.1)."
               ]
             },
             {
@@ -1943,7 +1943,7 @@
                 }
               },
               "tests": [
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields: Every server opens the rules of the core through one unit (HY-132.2); the kept value check gives the core the pages and the fields of the form (HY-40.1)."
+                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields: Every server opens the rules of the core through one unit (HY-133.2); the kept value check gives the core the pages and the fields of the form (HY-40.1)."
               ]
             },
             {
@@ -6085,7 +6085,7 @@
         "HY-50",
         "HY-51",
         "HY-58",
-        "HY-133"
+        "HY-132"
       ],
       "cases": [
         "contracts/result.json",
@@ -6228,7 +6228,7 @@
               ],
               "output": "result",
               "errors": [],
-              "state": "Returns an outside redirect with status 303 to an outside location, and fails for another text (HY-133).",
+              "state": "Returns an outside redirect with status 303 to an outside location, and fails for another text (HY-132).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::outside",
@@ -6253,7 +6253,7 @@
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Returns the origin of an outside location with its scheme and host in lower case and its port, or null for another text (HY-133).",
+              "state": "Returns the origin of an outside location with its scheme and host in lower case and its port, or null for another text (HY-132).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::origin",
@@ -6373,7 +6373,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Fails for an outside redirect, which stores no flash value and no changed topic (HY-133).",
+              "state": "Fails for an outside redirect, which stores no flash value and no changed topic (HY-132).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::refuseOutside",
@@ -9487,7 +9487,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-132.2"
+                "sentence": "HY-133.2"
               }
             },
             {
@@ -9515,7 +9515,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-132.2"
+                "sentence": "HY-133.2"
               }
             },
             {
@@ -9544,7 +9544,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-132.2"
+                "sentence": "HY-133.2"
               }
             }
           ]
@@ -10623,7 +10623,7 @@
               ],
               "output": "file-sessions",
               "errors": [],
-              "state": "Makes the store of an existing absolute directory with the file store of the session-store library, and fails with invalid_directory for another directory and with invalid_lifetime for a lifetime of 0 (HY-104.32); a failure of the library is the error of hyper of the same category with its kind (HY-132.3).",
+              "state": "Makes the store of an existing absolute directory with the file store of the session-store library, and fails with invalid_directory for another directory and with invalid_lifetime for a lifetime of 0 (HY-104.32); a failure of the library is the error of hyper of the same category with its kind (HY-133.3).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.inDirectory",
@@ -10812,7 +10812,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Runs a call of the session-store library that returns at once, and raises a failure of the library as the error of hyper of the same role with its kind, status and message (HY-132.3).",
+              "state": "Runs a call of the session-store library that returns at once, and raises a failure of the library as the error of hyper of the same role with its kind, status and message (HY-133.3).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-session.ts::converted",
@@ -10833,7 +10833,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Runs a call of the session-store library that waits, and raises its failure as converted does (HY-132.3).",
+              "state": "Runs a call of the session-store library that waits, and raises its failure as converted does (HY-133.3).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-session.ts::awaited",
@@ -10844,7 +10844,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-132.3"
+                "sentence": "HY-133.3"
               }
             }
           ],
@@ -10880,7 +10880,7 @@
               ],
               "output": "redis-sessions",
               "errors": [],
-              "state": "Makes the Redis store of the session-store library with the connection setting, the lock expiry, the lifetime, the key prefix and the lock tries of the sessions (HY-115.17, HY-115.28, HY-115.29); a lifetime or a lock expiry of 0 fails with invalid_lifetime or invalid_lock_expire, as the error of hyper of the same category (HY-132.3).",
+              "state": "Makes the Redis store of the session-store library with the connection setting, the lock expiry, the lifetime, the key prefix and the lock tries of the sessions (HY-115.17, HY-115.28, HY-115.29); a lifetime or a lock expiry of 0 fails with invalid_lifetime or invalid_lock_expire, as the error of hyper of the same category (HY-133.3).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.constructor",
@@ -12596,7 +12596,7 @@
         "HY-120",
         "HY-121",
         "HY-122",
-        "HY-133"
+        "HY-132"
       ],
       "cases": [
         "contracts/client.json",
@@ -16508,14 +16508,14 @@
             "outside": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-133.2",
+              "sentence": "HY-132.2",
               "state": "`outside` is the location of the outside redirect to `location`.",
               "optional": true
             },
             "status": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-133.1",
+              "sentence": "HY-132.1",
               "state": "`status` is the status of the outside redirect, 303.",
               "optional": true
             },
@@ -16523,7 +16523,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-133.5",
+              "sentence": "HY-132.5",
               "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
@@ -16551,7 +16551,7 @@
             "origin": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-133.13",
+              "sentence": "HY-132.13",
               "state": "`origin` is the origin of `text` with its scheme and host in lower case and its port, or null when `text` is no outside location."
             }
           },
@@ -16583,7 +16583,7 @@
               "role": "expected",
               "optional": true,
               "compare": "exact",
-              "sentence": "HY-133.10",
+              "sentence": "HY-132.10",
               "state": "`raises` is the failure of the case: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; a case with `raises` has no result field."
             }
           },
@@ -17445,7 +17445,7 @@
               "role": "expected",
               "compare": "exact",
               "sentence": "HY-104.8",
-              "state": "`errors` holds for each step null, or the pair of where the first failure happened (`open`, `call` or `close`) and its name: `unserialize` for an error of hyper of the kind `record`, a record that cannot be decoded, and `record` for an error of hyper of the kind `record_not_array`, a record that holds no array (HY-132.3)."
+              "state": "`errors` holds for each step null, or the pair of where the first failure happened (`open`, `call` or `close`) and its name: `unserialize` for an error of hyper of the kind `record`, a record that cannot be decoded, and `record` for an error of hyper of the kind `record_not_array`, a record that holds no array (HY-133.3)."
             },
             "message": {
               "role": "expected",
@@ -17551,7 +17551,7 @@
             "raises": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-132.3",
+              "sentence": "HY-133.3",
               "state": "The step makes a store of session files with `lifetime`, or its default, over a temporary directory of the case that holds the session files `files`, or over what `directory` names in place of it: `missing` a path below it that does not exist, `file` the path of a file below it and `relative` a relative path. With `cookie` it opens the session of that cookie value, reads the key `a` and closes the session. `raises` is the first failure of these calls, compared through the call of the store by the runner, because the answer of a server to a failed session open is the plain 500 of HY-60.14, which carries no class and no kind: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null."
             }
           },

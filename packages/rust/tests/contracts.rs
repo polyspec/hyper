@@ -146,7 +146,7 @@ fn redirect_locations_and_page_statuses() {
 
 #[test]
 fn outside_locations_and_their_origins() {
-    // HY-133.2 to HY-133.5, HY-133.13
+    // HY-132.2 to HY-132.5, HY-132.13
     let file = cases("result.json");
     let mut ran = 0;
     for case in group(&file, "outside") {
@@ -2555,7 +2555,7 @@ fn armed<T>(case: &Value, member: &str, call: impl FnOnce() -> T) -> T {
 
 #[test]
 fn the_fault_cases_raise_their_kind_where_their_points_break() -> Result<(), Error> {
-    // HY-132.6; binding design G-5, X-1. Each case of the group internal of tests/cases/faults.json arms a point for
+    // HY-133.6; binding design G-5, X-1. Each case of the group internal of tests/cases/faults.json arms a point for
     // front_functions.route_request and raises internal; the same call without the arming routes to the page home,
     // because a point that no case armed breaks nothing.
     use polyspec_hyper::front::{route_request, Front, Route};
@@ -2599,7 +2599,7 @@ fn the_fault_cases_raise_their_kind_where_their_points_break() -> Result<(), Err
 
 #[test]
 fn the_fault_cases_of_the_template_raise_internal_where_the_parser_breaks() -> Result<(), Error> {
-    // HY-132.6, HY-73.2; binding design G-5, X-1. A case of the group template of tests/cases/faults.json that arms
+    // HY-133.6, HY-73.2; binding design G-5, X-1. A case of the group template of tests/cases/faults.json that arms
     // template.internal for rules.template_reads parses a template with an else-if branch and raises internal; the same
     // call without the arming gives the read paths of both tests, because the parser finds the open block of the branch.
     // A case without faults raises its kind without any arming.
@@ -2765,7 +2765,7 @@ fn case_pages(case: &Value) -> Result<polyspec_hyper::steps::Pages, Error> {
 
 #[test]
 fn the_session_cases_of_a_page_raise_their_kinds() -> Result<(), Error> {
-    // HY-132.6, HY-24.14, HY-104.23; binding design G-5, X-1, B2.487. A case of the group session that arms a point for
+    // HY-133.6, HY-24.14, HY-104.23; binding design G-5, X-1, B2.487. A case of the group session that arms a point for
     // opening_functions.open_page opens a page with a file session that found no record: session_store.random of
     // tests/cases/faults.json breaks the new token, which the core makes by random_hex, and raises random, and
     // session_store.internal of tests/cases/core-faults.json breaks the start of the record session in the store and

@@ -4,7 +4,7 @@ the key `<prefix><id>`, whose bytes are the `php_serialize` record of its values
 lifetime, so the PHP, Node and Python servers that share the Redis server share its sessions. A request holds the
 lock `<key>_LOCK` from its opening to its closing, so the requests of one session run one after another in every
 process (HY-115.3); a holder that lost its lock writes nothing (HY-115.5). A failure of the library is an error of
-hyper of the same category with the kind of the library (HY-132.3)."""
+hyper of the same category with the kind of the library (HY-133.3)."""
 
 from __future__ import annotations
 

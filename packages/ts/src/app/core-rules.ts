@@ -1,4 +1,4 @@
-// The rules of the Rust core behind the names of the units of the Node server (HY-132.2). `coreRules` takes the module
+// The rules of the Rust core behind the names of the units of the Node server (HY-133.2). `coreRules` takes the module
 // of the Node binding of the core, the generated entry of `native/generated`, and gives each rule under the name of the
 // unit of the server that states it today, so that a unit of the server calls the core in place of its own rule. This
 // file imports nothing of the package, so a test gives `coreRules` a stand-in of that module; `rules` gives the one
@@ -8,7 +8,7 @@
 // server still does a part itself; each partial unit names that part by its rule.
 //
 // A failure of the core reaches the caller as the binding raises it: an error of the class of its category with
-// `kind` and `status` (HY-132.1, HY-132.2). No function here catches or replaces one.
+// `kind` and `status` (HY-133.1, HY-133.2). No function here catches or replaces one.
 
 import { createRequire } from 'node:module';
 
@@ -257,7 +257,7 @@ export interface CoreBinding {
 const OWN_PREFIX = 'Hyper';
 
 /**
- * Returns the error of hyper for an error of a library that hyper uses (HY-132.3), or the error as it is. An error of
+ * Returns the error of hyper for an error of a library that hyper uses (HY-133.3), or the error as it is. An error of
  * a library is an instance of a class that the package of the library exports. The class of hyper is the class of the
  * binding of hyper of the same role: the class of the same name, such as `RecordError`, or the category class, whose
  * name has `Hyper` where the category class of the library has `prefix`. The error of hyper has the message, the kind,
@@ -285,7 +285,7 @@ function libraryError(core: object, library: object, prefix: string, error: unkn
   return error;
 }
 
-// An error of hyper: its kind and its status, which a caller tells failures apart by (HY-132.1, HY-132.2).
+// An error of hyper: its kind and its status, which a caller tells failures apart by (HY-133.1, HY-133.2).
 interface HyperError extends Error {
   readonly kind: string;
   readonly status: number | null;
@@ -317,12 +317,12 @@ interface PageHeaderParts {
 
 /** @internal */
 export interface CoreRules {
-  // The error of hyper of the category value and of the category type with its kind (HY-132.2), of the classes of
+  // The error of hyper of the category value and of the category type with its kind (HY-133.2), of the classes of
   // the binding.
   valueError(message: string, kind: string): HyperError & RangeError;
   typeError(message: string, kind: string): HyperError & TypeError;
   // libraryError: the error of hyper for an error of a library, by the class of the binding of hyper of the same role
-  // as the class of the error, with its message, kind and status (HY-132.3); any other value is returned as it is.
+  // as the class of the error, with its message, kind and status (HY-133.3); any other value is returned as it is.
   // `library` is the module of the package of the library and `prefix` the prefix of the names of its category classes.
   libraryError(library: object, prefix: string, error: unknown): unknown;
   // sessionValue: rules.session_value gives the value of the data model of a PHP value of a session record
@@ -606,7 +606,7 @@ class CoreBindingError extends Error {
 }
 
 // Returns the function that gives one CoreRules, built on its first successful call from the module that `load`
-// returns (HY-132.2). A load that throws fails with CoreBindingError, which names the addon, at that call and at every
+// returns (HY-133.2). A load that throws fails with CoreBindingError, which names the addon, at that call and at every
 // later call; no rule of the server answers in its place.
 /** @internal */
 export function sharedRules(load: () => unknown): () => CoreRules {
@@ -619,11 +619,11 @@ export function sharedRules(load: () => unknown): () => CoreRules {
     } catch (error) {
       const platform = `${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}`;
       throw new CoreBindingError(
-        `hyper: the native addon hyper.${platform}.node of the Node package does not load (HY-132.2): ${error instanceof Error ? error.message : String(error)}`,
+        `hyper: the native addon hyper.${platform}.node of the Node package does not load (HY-133.2): ${error instanceof Error ? error.message : String(error)}`,
         { cause: error },
       );
     }
-    if (module === null || typeof module !== 'object') throw new CoreBindingError('hyper: the native addon of the Node package gave no module (HY-132.2)', { cause: module });
+    if (module === null || typeof module !== 'object') throw new CoreBindingError('hyper: the native addon of the Node package gave no module (HY-133.2)', { cause: module });
     shared = coreRules(module);
     return shared;
   };

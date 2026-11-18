@@ -243,7 +243,7 @@
   "storeFailures": [
     {
       "id": "a_session_file_that_holds_no_array_fails_with_record_not_array",
-      "label": "a session file that holds no array fails with the kind record_not_array of the session-store library (HY-104.20, HY-132.3)",
+      "label": "a session file that holds no array fails with the kind record_not_array of the session-store library (HY-104.20, HY-133.3)",
       "files": [
         {
           "identifier": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
@@ -260,7 +260,7 @@
     },
     {
       "id": "a_session_file_that_is_no_php_serialize_text_fails_with_record",
-      "label": "a session file that is no php_serialize text fails with the kind record of the session-store library (HY-104.8, HY-132.3)",
+      "label": "a session file that is no php_serialize text fails with the kind record of the session-store library (HY-104.8, HY-133.3)",
       "files": [
         {
           "identifier": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -277,7 +277,7 @@
     },
     {
       "id": "a_store_of_a_directory_that_does_not_exist_fails_with_invalid_directory",
-      "label": "making a store with a directory that does not exist fails with the kind invalid_directory (HY-104.32, HY-132.3)",
+      "label": "making a store with a directory that does not exist fails with the kind invalid_directory (HY-104.32, HY-133.3)",
       "directory": "missing",
       "raises": {
         "kind": "invalid_directory",
@@ -288,7 +288,7 @@
     },
     {
       "id": "a_store_of_a_path_that_is_a_file_fails_with_invalid_directory",
-      "label": "making a store with the path of a file fails with the kind invalid_directory (HY-104.32, HY-132.3)",
+      "label": "making a store with the path of a file fails with the kind invalid_directory (HY-104.32, HY-133.3)",
       "directory": "file",
       "raises": {
         "kind": "invalid_directory",
@@ -299,7 +299,7 @@
     },
     {
       "id": "a_store_of_a_relative_directory_fails_with_invalid_directory",
-      "label": "making a store with a relative path fails with the kind invalid_directory (HY-104.32, HY-132.3)",
+      "label": "making a store with a relative path fails with the kind invalid_directory (HY-104.32, HY-133.3)",
       "directory": "relative",
       "raises": {
         "kind": "invalid_directory",
@@ -310,7 +310,7 @@
     },
     {
       "id": "a_store_with_a_negative_lifetime_fails_with_invalid_number",
-      "label": "making a store with a negative lifetime fails with the kind invalid_number of the binding of the library, not with invalid_lifetime (HY-104.32, HY-132.3)",
+      "label": "making a store with a negative lifetime fails with the kind invalid_number of the binding of the library, not with invalid_lifetime (HY-104.32, HY-133.3)",
       "lifetime": -1,
       "raises": {
         "kind": "invalid_number",
@@ -321,7 +321,7 @@
     },
     {
       "id": "a_store_with_a_fractional_lifetime_fails_with_invalid_number",
-      "label": "making a store with a fractional lifetime fails with the kind invalid_number (HY-104.32, HY-132.3)",
+      "label": "making a store with a fractional lifetime fails with the kind invalid_number (HY-104.32, HY-133.3)",
       "lifetime": 1.5,
       "raises": {
         "kind": "invalid_number",
@@ -332,7 +332,7 @@
     },
     {
       "id": "a_store_with_a_lifetime_that_is_no_number_fails_with_invalid_argument_type",
-      "label": "making a store with a lifetime that is a text fails with the kind invalid_argument_type (HY-104.32, HY-132.3)",
+      "label": "making a store with a lifetime that is a text fails with the kind invalid_argument_type (HY-104.32, HY-133.3)",
       "lifetime": "1440",
       "raises": {
         "kind": "invalid_argument_type",
@@ -343,7 +343,7 @@
     },
     {
       "id": "a_store_with_a_lifetime_of_0_fails_with_invalid_lifetime",
-      "label": "making a store with a lifetime of 0 fails with the kind invalid_lifetime (HY-104.32, HY-132.3)",
+      "label": "making a store with a lifetime of 0 fails with the kind invalid_lifetime (HY-104.32, HY-133.3)",
       "lifetime": 0,
       "raises": {
         "kind": "invalid_lifetime",

@@ -16,7 +16,7 @@ export function requireBuilt(target: string, ...paths: string[]): void {
 
 /**
  * The PHP extensions that a PHP server of a test loads, in their order: the json, the template and the hyper extension
- * (HY-48.23, HY-132.2). `make hyper-test-scripts` passes them in HYPER_PHP_EXTENSIONS, from PHP_SERVER_EXTENSIONS of the
+ * (HY-48.23, HY-133.2). `make hyper-test-scripts` passes them in HYPER_PHP_EXTENSIONS, from PHP_SERVER_EXTENSIONS of the
  * Makefile, which also decides whether the template extension is the linked one; each must exist.
  */
 export function phpServerExtensions(): string[] {
