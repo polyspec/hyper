@@ -293,6 +293,18 @@
     },
     {
       "paths": [
+        "tests/scripts/documents.mts"
+      ],
+      "tests": [
+        "tests/scripts/no-commit-names.test.mts",
+        "tests/scripts/twin-shape.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "tests/scripts/make-dry-run.mts"
       ],
       "tests": [

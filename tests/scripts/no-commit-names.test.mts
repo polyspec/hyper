@@ -18,10 +18,9 @@
 //   whose State cell starts with `[o]` is not read. Every other cell of that row, and every cell of another row, is.
 // The workflows of .github pin each action by its commit (HR-90), and they are no document of config/documents.json.
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { matchesGlob } from 'node:path';
 import { test } from 'node:test';
+import { trackedDocuments } from './documents.mts';
 
 const GENERATED = new Set(['docs/spec/protocol.md', 'docs/spec/protocol.ko.md']);
 const WORD = /(?<![0-9A-Za-z_-])[0-9a-f]{7,40}(?![0-9A-Za-z_-])/g;
@@ -29,13 +28,8 @@ const LABEL = /(?:sha1|sha256|sha512|shasum|digest|integrity|inputs|입력)(?![A
 
 // The tracked documents that the include globs of config/documents.json select, without the generated ones.
 function documents(): string[] {
-  const config: unknown = JSON.parse(readFileSync('config/documents.json', 'utf8'));
-  if (typeof config !== 'object' || config === null || !('include' in config) || !Array.isArray(config.include)) {
-    throw new Error('config/documents.json has no list include');
-  }
-  const globs = config.include.filter((glob: unknown): glob is string => typeof glob === 'string');
-  const tracked = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' }).split('\0').filter(Boolean);
-  return tracked.filter((file) => !GENERATED.has(file) && globs.some((glob) => matchesGlob(file, glob)));
+  const { tracked, selected } = trackedDocuments();
+  return tracked.filter((file) => !GENERATED.has(file) && selected(file));
 }
 
 // The range of the Verification cell of a done checklist row, or null for another line. The cells are split at each

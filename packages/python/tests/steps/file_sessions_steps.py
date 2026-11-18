@@ -14,18 +14,24 @@ from .store_requests import StoreRequests
 _PREFIX = "sess_"
 
 
+def _write_session_file(directory: str, entry) -> Path:
+    """Creates the session file of a case entry in `directory`, with mode 0600 and the bytes of the entry."""
+    file = Path(directory) / f"{_PREFIX}{entry['identifier']}"
+    descriptor = os.open(file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        os.write(descriptor, entry["bytes"].encode("latin-1"))
+    finally:
+        os.close(descriptor)
+    return file
+
+
 def requests(case) -> None:
     files = case.input("files") if case.has("files") else []
     with tempfile.TemporaryDirectory(prefix="hyper-sessions-") as directory:
         start = time.time()
         aged: dict[str, float] = {}
         for entry in files:
-            file = Path(directory) / f"{_PREFIX}{entry['identifier']}"
-            descriptor = os.open(file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            try:
-                os.write(descriptor, entry["bytes"].encode("latin-1"))
-            finally:
-                os.close(descriptor)
+            file = _write_session_file(directory, entry)
             if "age" in entry:
                 os.utime(file, (start - entry["age"], start - entry["age"]))
                 aged[file.name] = start - entry["age"] / 2
@@ -72,12 +78,7 @@ def store_failures(case) -> None:
     failure: BaseException | None = None
     with tempfile.TemporaryDirectory(prefix="hyper-sessions-") as root:
         for entry in case.input("files") if case.has("files") else []:
-            file = Path(root) / f"{_PREFIX}{entry['identifier']}"
-            descriptor = os.open(file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            try:
-                os.write(descriptor, entry["bytes"].encode("latin-1"))
-            finally:
-                os.close(descriptor)
+            _write_session_file(root, entry)
         named = case.input("directory") if case.has("directory") else None
         directory = root
         if named == "missing":

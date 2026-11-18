@@ -233,33 +233,11 @@ test('the candidate derives the units and concerns from an empty skeleton', () =
   }
 });
 
-test('the candidate derives the members of a unit that the spec lists without members', () => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'recipe-members-'));
-  const root = mkdtempSync(path.join(tmpdir(), 'recipe-members-root-'));
-  try {
-    cpSync(fixture, root, { recursive: true });
-    track(root);
-    const spec = specOf(path.join(fixture, 'contracts', 'interfaces.json'));
-    const csrf = spec.concerns.find((c) => c.id === 'csrf');
-    assert.ok(csrf?.units[0] !== undefined, 'the fixture has no unit of csrf');
-    const expected = csrf.units[0].members.length;
-    csrf.units[0].members = [];
-    writeFileSync(path.join(root, 'contracts', 'interfaces.json'), JSON.stringify(spec));
-    const output = path.join(dir, 'interfaces.candidate.json');
-    const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
-    assert.equal(result.status, 0, result.stdout + result.stderr);
-    const derived = listAt(readJson(output), 'concerns').find((c) => at(c, 'id') === 'csrf');
-    const members = listAt(derived, 'units', 0, 'members');
-    assert.ok(expected > 0, 'the fixture unit of csrf has no members');
-    assert.equal(members.length, expected);
-    assert.ok(members.every((m) => keysAt(m, 'native').length > 0), 'a derived member names no native symbol');
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-    rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test('the candidate adds a member that the sources hold and the spec of a listed unit lacks (H35.56)', () => {
+/**
+ * Runs the candidate on a copy of the fixture whose first unit of csrf `edit` changes, and gives `inspect` the members
+ * of that unit in the candidate, the candidate file and its directory; the copy and the directory are removed after.
+ */
+function csrfCandidate(edit: (unit: Unit) => void, inspect: (members: unknown[], output: string, dir: string) => void): void {
   const dir = mkdtempSync(path.join(tmpdir(), 'recipe-members-'));
   const root = mkdtempSync(path.join(tmpdir(), 'recipe-members-root-'));
   try {
@@ -267,28 +245,56 @@ test('the candidate adds a member that the sources hold and the spec of a listed
     track(root);
     const spec = specOf(path.join(fixture, 'contracts', 'interfaces.json'));
     const unit = spec.concerns.find((c) => c.id === 'csrf')?.units[0];
-    assert.ok(unit !== undefined && unit.members.length >= 2, 'the fixture unit of csrf has fewer than two members');
-    const expected = unit.members.map((m) => m.id);
-    unit.members = unit.members.slice(0, 1);
+    assert.ok(unit !== undefined, 'the fixture has no unit of csrf');
+    edit(unit);
     writeFileSync(path.join(root, 'contracts', 'interfaces.json'), JSON.stringify(spec));
     const output = path.join(dir, 'interfaces.candidate.json');
     const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stdout + result.stderr);
     const derived = listAt(readJson(output), 'concerns').find((c) => at(c, 'id') === 'csrf');
-    const ids = listAt(derived, 'units', 0, 'members').map((m) => at(m, 'id'));
-    const byText = (a: unknown, b: unknown): number => String(a).localeCompare(String(b));
-    assert.deepEqual([...ids].sort(byText), [...expected].sort(byText), 'the candidate does not hold every member of the sources');
-    const handWritten = listAt(readJson(path.join(dir, 'interfaces.candidate.hand-written.json')));
-    const ci = listAt(readJson(output), 'concerns').findIndex((c) => at(c, 'id') === 'csrf');
-    for (let mi = 1; mi < ids.length; mi += 1) {
-      for (const field of ['inputs', 'output', 'errors', 'state']) {
-        assert.ok(handWritten.includes(`/concerns/${ci}/units/0/members/${mi}/${field}`), `the added member ${String(ids[mi])} is not marked for its ${field}`);
-      }
-    }
+    inspect(listAt(derived, 'units', 0, 'members'), output, dir);
   } finally {
     rmSync(dir, { recursive: true, force: true });
     rmSync(root, { recursive: true, force: true });
   }
+}
+
+test('the candidate derives the members of a unit that the spec lists without members', () => {
+  let expected = 0;
+  csrfCandidate(
+    (unit) => {
+      expected = unit.members.length;
+      unit.members = [];
+    },
+    (members) => {
+      assert.ok(expected > 0, 'the fixture unit of csrf has no members');
+      assert.equal(members.length, expected);
+      assert.ok(members.every((m) => keysAt(m, 'native').length > 0), 'a derived member names no native symbol');
+    },
+  );
+});
+
+test('the candidate adds a member that the sources hold and the spec of a listed unit lacks (H35.56)', () => {
+  let expected: string[] = [];
+  csrfCandidate(
+    (unit) => {
+      assert.ok(unit.members.length >= 2, 'the fixture unit of csrf has fewer than two members');
+      expected = unit.members.map((m) => m.id);
+      unit.members = unit.members.slice(0, 1);
+    },
+    (members, output, dir) => {
+      const ids = members.map((m) => at(m, 'id'));
+      const byText = (a: unknown, b: unknown): number => String(a).localeCompare(String(b));
+      assert.deepEqual([...ids].sort(byText), [...expected].sort(byText), 'the candidate does not hold every member of the sources');
+      const handWritten = listAt(readJson(path.join(dir, 'interfaces.candidate.hand-written.json')));
+      const ci = listAt(readJson(output), 'concerns').findIndex((c) => at(c, 'id') === 'csrf');
+      for (let mi = 1; mi < ids.length; mi += 1) {
+        for (const field of ['inputs', 'output', 'errors', 'state']) {
+          assert.ok(handWritten.includes(`/concerns/${ci}/units/0/members/${mi}/${field}`), `the added member ${String(ids[mi])} is not marked for its ${field}`);
+        }
+      }
+    },
+  );
 });
 
 for (const m of mutations) {
