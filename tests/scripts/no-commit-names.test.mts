@@ -9,8 +9,8 @@
 // - A word of digits only is a number or the id of a CI run, and a word of letters only is an English word, so the
 //   word needs a digit and a letter.
 // - A digest that its line labels is no commit: the word follows one of the labels sha1, sha256, sha512, shasum,
-//   digest, integrity or inputs, or 입력 (inputs) in a Korean twin, within 24 characters before it, or it is followed
-//   by `...`, the abbreviation of a digest.
+//   digest, integrity or inputs, or the Korean word for inputs in a Korean twin, within 24 characters before it, or it
+//   is followed by `...`, the abbreviation of a digest.
 // - A generated document holds what its generator writes: docs/spec/protocol.md and docs/spec/protocol.ko.md, which
 //   `make spec-docs` writes from contracts/protocol.json, are not read.
 // - The Verification cell of a checklist row whose state is `[o]` keeps its text, because a done row is a finished
