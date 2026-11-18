@@ -318,14 +318,13 @@ function firstDifferentLine(actual: string, expected: string): number {
   return 1;
 }
 
-// The check of the released ids (H35.98): the statements of the release that config/spec-baseline.json names, read from
-// its tag, are compared with the contract of the tree. An id keeps one meaning, so a released id is either a statement
-// of the same topic or retired. The topic changed when the section title (en) or the rule of the statement changed, or
-// when the word sets of the two English texts share less than TOPIC_SHARE (Jaccard); a citation and a code span count
-// as one word each, so that a renumbered citation or a renamed symbol is a wording edit.
-const BASELINE = 'config/spec-baseline.json';
+// The check of the released ids (H35.98): the statements of the last release, read from its tag (baselineTag), are
+// compared with the contract of the tree. An id keeps one meaning, so a released id is either a statement of the same
+// topic or retired. The topic changed when the section title (en) or the rule of the statement changed, or when the word
+// sets of the two English texts share less than TOPIC_SHARE (Jaccard); a citation and a code span count as one word
+// each, so that a renumbered citation or a renamed symbol is a wording edit.
 const TOPIC_SHARE = 0.4;
-const VERSION_HEADING = /^## ([0-9]+\.[0-9]+\.[0-9]+)\s*$/gmu;
+const RELEASE_TAG = 'v[0-9]*.[0-9]*.[0-9]*';
 
 type Placed = { id: string; rule: string; section: string; en: string };
 
@@ -391,29 +390,27 @@ function git(root: string, args: string[]): { ok: boolean; out: string; err: str
   return { ok: result.status === 0, out: result.stdout, err: result.stderr };
 }
 
+/**
+ * The release that the contract is compared with: the tag vX.Y.Z nearest to HEAD in its history, other than a tag that
+ * points at HEAD itself. At a release commit, which CI tags, it is the previous release, and at a later commit the
+ * latest one. `git describe --tags --abbrev=0` prints the nearest tag (git-describe: "--abbrev=<n> ... An <n> of 0 will
+ * suppress long format, only showing the closest tag"), `--match` limits it to the release tags and `--exclude` drops
+ * each tag of HEAD (git-describe: "--exclude <pattern>: Do not consider tags matching the given glob(7) pattern").
+ * HEAD and not HEAD^ is described, so that a merge commit also reaches the tags of its other parents.
+ */
+function baselineTag(root: string): string | undefined {
+  const own = git(root, ['tag', '--points-at', 'HEAD', '--list', RELEASE_TAG]);
+  const excluded = own.ok ? own.out.split('\n').filter(Boolean).flatMap((t) => ['--exclude', t]) : [];
+  const found = git(root, ['describe', '--tags', '--abbrev=0', '--match', RELEASE_TAG, ...excluded, 'HEAD']);
+  return found.ok ? found.out.trim() : undefined;
+}
+
 /** The problems of the released ids, with the lines that name the moved texts; the count of compared ids on success. */
 function releasedProblems(root: string): { problems: string[]; notes: string[] } {
   const problems: string[] = [];
   const notes: string[] = [];
-  const baselineFile = path.join(root, BASELINE);
-  if (!existsSync(baselineFile)) return { problems: [`${BASELINE} is missing; it names the version of the last release`], notes };
-  const baseline: unknown = JSON.parse(readFileSync(baselineFile, 'utf8'));
-  const version = typeof baseline === 'object' && baseline !== null && 'version' in baseline && typeof baseline.version === 'string' ? baseline.version : undefined;
-  if (version === undefined || !/^[0-9]+\.[0-9]+\.[0-9]+$/u.test(version)) return { problems: [`${BASELINE} holds no version X.Y.Z`], notes };
-  const tag = `v${version}`;
-  const hasTag = (name: string): boolean => git(root, ['rev-parse', '-q', '--verify', `refs/tags/${name}`]).ok;
-  if (!hasTag(tag)) return { problems: [`the tag ${tag} of ${BASELINE} is missing; fetch the tags of the repository (git fetch --tags)`], notes };
-
-  // The baseline is the newest version of the change log that has a tag: at a version-bump commit the new section has
-  // no tag yet, and after a release a baseline that names an older version is stale.
-  const changelogFile = path.join(root, 'CHANGELOG.md');
-  if (!existsSync(changelogFile)) problems.push('CHANGELOG.md is missing; the baseline is compared with its versions');
-  else {
-    const versions = [...readFileSync(changelogFile, 'utf8').matchAll(VERSION_HEADING)].map((m) => m[1] ?? '');
-    const newest = versions.find((v) => hasTag(`v${v}`));
-    if (newest === undefined) problems.push(`no version of CHANGELOG.md has a tag; ${BASELINE} names ${version}`);
-    else if (newest !== version) problems.push(`${BASELINE} names ${version}; the newest version of CHANGELOG.md with a tag is ${newest}`);
-  }
+  const tag = baselineTag(root);
+  if (tag === undefined) return { problems: [`no tag vX.Y.Z is reachable from HEAD other than a tag of HEAD itself; fetch the tags of the repository (git fetch --tags)`], notes };
 
   const shown = git(root, ['show', `${tag}:contracts/protocol.json`]);
   if (!shown.ok) return { problems: [...problems, `git show ${tag}:contracts/protocol.json failed: ${shown.err.trim()}`], notes };
