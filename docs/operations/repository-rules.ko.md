@@ -1,5 +1,5 @@
 <!-- doc-id: repository-rules -->
-<!-- source-sha256: fcf6897e7fd899c1e92cf7c631c464ed8969ae820f11655de8f2cfb72ddd88b4 -->
+<!-- source-sha256: aa95ec0c3016ec7e434a1e36be5d0e354d432eb9ce9943f9f6c762704540fb72 -->
 # 저장소 규칙
 
 [English](repository-rules.md).
