@@ -8676,7 +8676,8 @@
       "group": "session",
       "rules": [
         "HY-104",
-        "HY-106"
+        "HY-106",
+        "HY-133"
       ],
       "cases": [
         "contracts/session.json",
