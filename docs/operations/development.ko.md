@@ -322,9 +322,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 상한을 넘는 크기는 실패가 아니라 warning이다(AGENTS). 출력이 상한보다 커지는 변경은 같은 변경 안에서 상한을 고치고 그 증가가 필요한 이유를 적는다. 출력이 작아지는 변경은 같은 규칙으로 상한을 낮춘다.
 
-브라우저는 렌더가 닿는 템플릿만 불러오고(HYC-12), 템플릿 파일은 해시가 붙은 이름으로 캐시된다.
-- 템플릿 AST는 노드마다 소스 위치를 기록하므로 압축 후 크기가 소스의 약 2배다.
-- `config/bundle-size.json`은 템플릿 파일 하나를 4,096 gzip 바이트로 제한한다. 이보다 커지는 템플릿은 블록으로 나눈다.
+브라우저는 렌더가 닿는 템플릿만 불러오고(HYC-12), 템플릿 파일은 해시가 붙은 이름으로 캐시된다. 템플릿 AST는 노드마다 소스 위치를 기록하므로 압축 후 크기가 소스의 약 2배다. `config/bundle-size.json`은 템플릿 파일 하나를 4,096 gzip 바이트로 제한하므로, 이보다 커지는 템플릿은 블록으로 나눈다.
 
 Package virtual environment를 사용하는 Python discovery를 포함해 모든 runtime test target은 설치된 Kit runner를 사용한다. 범위를 제한한 Python 검사는 정확한 discovery 파일명 또는 `--cwd`와 dotted module 이름을 사용하며 앱 전용 unittest harness는 없다. 지원하지 않거나 잘못된 runner 동작은 runner를 교체하거나 CI 식별을 바꾸는 대신 Kit GitHub issue로 보고한다. 완료된 과거 검증 기록의 원래 명령은 유지하며 현재 실행 지침으로 사용하지 않는다.
 
