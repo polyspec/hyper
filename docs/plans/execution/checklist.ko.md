@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 5a8d5d190365dbaa4f51447272fe8d80c4121952a4f842da191ee141893c515e -->
+<!-- source-sha256: ad64e8221400e4d88533e35308c50151f8e7bacb069ebf2028d87fd176d5ad64 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -675,3 +675,4 @@
 | H35.62 | config/rebuild.json가 scripts/dependency-closure.mts를 분류한다: package-lock.json에서 workspace의 dependency closure를 출력하는 그 script에 대해 make rebuild-check가 'the tool has no class in config/rebuild.json'로 실패한다 | config/rebuild.json, CHANGELOG.md와 한국어 쌍 | `make rebuild-check` | [ ] |
 | H35.63 | make lint-ts가 통과한다: oxlint가 tests/scripts/php-ext-pins.test.mts:23에서 prefer-string-starts-ends-with를, scripts/dependency-closure.mts:43, tests/scripts/php-ext-pins.test.mts:36, tests/scripts/release-assets.test.mts:102에서 no-unsafe-type-assertion을 보고한다; 각 값은 suppression 없이 scripts/json.mts의 type check로 읽는다 | scripts/dependency-closure.mts, tests/scripts/php-ext-pins.test.mts, tests/scripts/release-assets.test.mts, CHANGELOG.md와 한국어 쌍 | `make lint-ts` | [ ] |
 | H35.64 | contracts/functions.json의 browser runner가 function kind zone을 두 번째 인자의 env.timezone으로 매핑하고 case의 time zone +09:00으로 render한다: make hyper-test-js가 'functions.json names the kind zone, which the runner does not map'로 실패한다(HYC-24.10) | packages/client/tests/functions.test.ts, CHANGELOG.md와 한국어 쌍 | `make hyper-test-js` | [ ] |
+| H35.65 | packages/rust/tests/contracts.rs는 rustfmt가 쓰는 형식이다: make core-fmt-check가 2777행에서 실패한다 | packages/rust/tests/contracts.rs, CHANGELOG.md와 한국어 쌍 | `make core-fmt-check` | [ ] |
