@@ -213,8 +213,8 @@ test('a request fails when no Sentinel names the primary and goes past a Sentine
 });
 
 // A step that waits ends with the server or the Sentinel that its condition needs, instead of the time limit of the test
-// (HR-84). The limit of these tests is below the 60 seconds of the runner, so a wait that does not watch them fails here.
-test('a step that waits for the Sentinels fails with the name and the status of a Sentinel that ended (HR-84)', { timeout: 30_000 }, async () => {
+// (HR-84): each test awaits the exit of the process that it ends and then the rejection of the wait.
+test('a step that waits for the Sentinels fails with the name and the status of a Sentinel that ended (HR-84)', async () => {
   const redis = await topology('sentinel-ended');
   const [, , last] = redis.watchers;
   assert.ok(last !== undefined);
@@ -224,7 +224,7 @@ test('a step that waits for the Sentinels fails with the name and the status of 
   await assert.rejects(redis.switchOver(), new RegExp(`^Error: ${last.name} ended with SIGKILL while a step waited for a condition that needs it$`));
 });
 
-test('a failover fails with the name and the status of the replica that ended, not of the primary that it stops (HR-84)', { timeout: 30_000 }, async () => {
+test('a failover fails with the name and the status of the replica that ended, not of the primary that it stops (HR-84)', async () => {
   const redis = await topology('replica-ended');
   const [primary, replica] = redis.nodes;
   assert.ok(primary !== undefined && replica !== undefined && (await redis.primary()) === primary);
