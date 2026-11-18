@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: debc277e33017837c429752181b5bc6b108c5afa53ffde28ebc43330e347fcd5 -->
+<!-- source-sha256: 9eea54e3023459b37db581ac2e35573773ceba28224a7bcc02be33d16690eac6 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -704,3 +704,4 @@
 | H35.79 | reply의 note가 packages/php/src/Http/Reply.php와 packages/ts/src/http/reply.ts에서 폐기된 HY-60.28을 인용한다. 문자열이 아닌 note 이름이 kind invalid_argument_type으로 실패한다는 규칙은 HY-60.32이고, 두 주석이 그것을 인용한다. | packages/php/src/Http/Reply.php, packages/ts/src/http/reply.ts | git grep -c HY-60.28 -- packages가 1로 끝난다 | [v] |
 | H35.80 | docs/features.md의 행 session-library-stores와 그 한국어 짝은 Node 서버와 Python 서버가 파일 저장소와 Redis 저장소를 직접 구현한다고 한다. 두 서버는 이제 session-store 라이브러리의 저장소에서 세션을 열고, 행은 세 서버의 현재 상태를 그 근거와 함께 적는다. | docs/features.md, docs/features.ko.md | make docs-check | [v] |
 | H35.81 | PHP session worker tests/scripts/fixtures/session-worker/worker.php는 HYPER_SESSION_RETRIES가 없으면 phpredis를 redis.session.lock_retries -1로 돌리고 RedisClusterSessions에 -1을 준다. HY-115.24는 그 설정의 phpredis peer가 서버의 세션을 나누지 않는다고 한다. worker는 Node와 Python worker처럼 1000000을 받는다. scripts test가 worker를 읽고 -1에서 실패한다. | tests/scripts/session-worker-settings.test.mts, tests/scripts/fixtures/session-worker/worker.php, config/owner-checks.json | make hyper-test-scripts | [ ] |
+| H35.82 | Node 서버의 저장소는 값이 없는 key에 undefined를 돌려주지만, HY-104.37은 session store가 null을 돌려준다고 한다: packages/ts/src/session의 ArraySession, RecordSession, FileSession과 interface SessionStore. 각각 null을 돌려주고, ArraySession과 FileSessions의 test가 HY-104.37을 인용한다. 그 실행은 native addon을 읽으므로 pin을 기다린다. | packages/ts/src/session/session-store.ts, array-session.ts, record-session.ts, file-session.ts, packages/ts/tests/session.test.ts, packages/ts/tests/sessions.test.ts | make hyper-test-node NODE_TESTS="tests/session.test.ts tests/sessions.test.ts" | [ ] |

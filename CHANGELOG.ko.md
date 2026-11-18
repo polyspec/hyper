@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- Node 서버의 session store는 값이 없는 key에 null을 돌려준다(H35.82, HY-104.37). 입력: `ArraySession`과 `FileSessions`나 `RedisSessions`의 session에 대한 `get("missing")`. 이전 동작: `undefined`. 기대: HY-104.37대로 null이고, interface `SessionStore`도 null을 적는다.
 - PHP session worker `tests/scripts/fixtures/session-worker/worker.php`는 `HYPER_SESSION_RETRIES`가 없으면 Node와 Python worker처럼 lock을 1000000번 시도한다(H35.81, HY-115.24). 입력: `HYPER_SESSION_RETRIES` 없는 worker 실행. 이전 동작: `redis.session.lock_retries`와 `RedisClusterSessions`의 재시도를 -1로 두었고, 그 설정의 phpredis peer는 서버의 세션을 나누지 않는다. 기대: -1이 아닌 값. `tests/scripts/session-worker-settings.test.mts`가 worker를 읽고 -1에서 실패한다.
 - `docs/features.md`의 행 `session-library-stores`는 현재 상태를 적는다(H35.80). 입력: 그 행. 이전 동작: Node 서버와 Python 서버가 잠시 쉰 뒤 다시 시도하는 lock으로 파일 저장소와 Redis 저장소를 직접 구현한다고 적었다. 기대: 두 서버는 session-store 라이브러리의 `FileSessions`와 `RedisSessions`에서 세션을 열고, 그 host는 core 없이 세션을 열고 닫으며(HY-104.40), PHP는 PHP의 세션을 쓴다. 행은 in progress이고 그 test를 적는다.
 - `packages/php/src/Http/Reply.php`와 `packages/ts/src/http/reply.ts`에서 note 이름을 검사하는 곳의 주석은 HY-60.32를 인용한다(H35.79). 입력: 호출 `note(1, "a")`. 이전 동작: 주석은 `contracts/protocol.json`에 더는 없는 statement HY-60.28을 인용했다. 기대: 그런 이름이 kind `invalid_argument_type`으로 실패한다고 하는 HY-60.32를 인용한다. 동작은 바뀌지 않는다.

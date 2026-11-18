@@ -26,3 +26,13 @@ describe('Session', () => {
     expect(kindOf(() => session.keep('rows', 'sort', 'title'))).toBe('invalid_session_record');
   });
 });
+
+describe('ArraySession', () => {
+  it('HY-104.37: returns null for a key that holds no value, also after its removal', () => {
+    const store = new ArraySession();
+    expect(store.get('missing')).toBeNull();
+    store.set('a', 1);
+    store.remove('a');
+    expect(store.get('a')).toBeNull();
+  });
+});
