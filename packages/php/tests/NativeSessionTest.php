@@ -11,6 +11,7 @@ use Polyspec\Hyper\RecordError;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\Support\PhpSessionIdentifier;
 use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
+use Polyspec\SessionStore\SessionStoreIoError;
 
 /** HY-45, HY-72, HY-104, HY-129: the PHP session starts only when a request reads or writes session data, under the name that hyper sets. */
 final class NativeSessionTest extends TestCase
@@ -67,6 +68,66 @@ final class NativeSessionTest extends TestCase
             } catch (RecordError $failure) {
                 self::assertSame('record', $failure->kind());
             }
+        }
+    }
+
+    /** Makes an empty directory of session files, which `removeDirectory` removes. */
+    private static function sessionDirectory(): string
+    {
+        $directory = sys_get_temp_dir() . '/hyper-collect-' . bin2hex(random_bytes(8));
+        self::assertTrue(mkdir($directory, 0700));
+
+        return $directory;
+    }
+
+    private static function removeDirectory(string $directory): void
+    {
+        chmod($directory, 0700);
+        foreach (glob($directory . '/*') ?: [] as $file) {
+            unlink($file);
+        }
+        rmdir($directory);
+    }
+
+    /**
+     * HY-104.33, SF-5: `collect` removes the session files of the save path whose lifetime has passed, keeps a file
+     * within its lifetime, and returns how many it removed.
+     */
+    #[RunInSeparateProcess]
+    public function testCollectRemovesTheExpiredSessionsOfTheSavePath(): void
+    {
+        $directory = self::sessionDirectory();
+        try {
+            $expired = $directory . '/sess_' . str_repeat('a', 26);
+            $current = $directory . '/sess_' . str_repeat('b', 26);
+            file_put_contents($expired, 'a:0:{}');
+            file_put_contents($current, 'a:0:{}');
+            touch($expired, time() - 3600);
+            ini_set('session.save_path', $directory);
+            ini_set('session.gc_maxlifetime', '60');
+
+            self::assertSame(1, NativeSession::collect());
+            self::assertFileDoesNotExist($expired);
+            self::assertFileExists($current);
+        } finally {
+            self::removeDirectory($directory);
+        }
+    }
+
+    /** HY-104.33, SF-9.2: a save path that cannot be read fails `collect` with the Io error of session-store. */
+    #[RunInSeparateProcess]
+    public function testCollectFailsWithTheIoErrorForAnUnreadableSavePath(): void
+    {
+        $directory = self::sessionDirectory();
+        try {
+            chmod($directory, 0000);
+            ini_set('session.save_path', $directory);
+            ini_set('session.gc_maxlifetime', '60');
+
+            $this->expectException(SessionStoreIoError::class);
+            NativeSession::collect();
+        } finally {
+            self::removeDirectory($directory);
         }
     }
 
