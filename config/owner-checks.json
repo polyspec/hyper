@@ -580,6 +580,7 @@
         "tests/scripts/template-pins.test.mts",
         "tests/scripts/test-inputs.test.mts",
         "tests/scripts/python-install-stamp.test.mts",
+        "tests/scripts/node-package-deps.test.mts",
         "tests/scripts/php-ext-pins.test.mts"
       ]
     },
