@@ -10,7 +10,7 @@ import { test } from 'node:test';
 import { applyMutation, readMutations, track } from '../../scripts/recipe/mutations.mts';
 import { checkStated } from '../../scripts/recipe/stated.mts';
 import { expectedDirectory } from '../../scripts/recipe/names.mts';
-import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type Unit } from '../../scripts/recipe/types.mts';
+import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type SpecDocument, type Unit } from '../../scripts/recipe/types.mts';
 import { validators } from '../../scripts/recipe/validators.mts';
 import { withoutExtensions } from '../../scripts/recipe/run.mts';
 
@@ -66,11 +66,17 @@ const schemas = validators();
  * back, and the `Spec` of the checks has no extension entries to write.
  */
 function specOf(file: string): Spec {
-  const doc: unknown = JSON.parse(readFileSync(file, 'utf8'));
-  if (!schemas.spec(doc)) throw new Error(`${file} is no spec: ${JSON.stringify(schemas.spec.errors?.[0])}`);
+  const doc = documentOf(file);
   const spec = withoutExtensions(doc);
   assert.deepEqual(spec, doc, `${file} holds an extension unit, which a test cannot write back`);
   return spec;
+}
+
+/** The spec of a file as the file holds it, extension units included, which must pass the schema of the spec. */
+function documentOf(file: string): SpecDocument {
+  const doc: unknown = JSON.parse(readFileSync(file, 'utf8'));
+  if (!schemas.spec(doc)) throw new Error(`${file} is no spec: ${JSON.stringify(schemas.spec.errors?.[0])}`);
+  return doc;
 }
 
 /** The unit `id` of the spec of a tree, and a function that writes the spec back. */
@@ -856,7 +862,8 @@ test('the Node reader writes the call of the parent constructor in the construct
 });
 
 test('the PSR-4 list of each composer.json is the directory of each group that holds a PHP unit (HYR-4)', () => {
-  const spec = specOf(path.join(repo, 'contracts', 'interfaces.json'));
+  // An extension unit has no file, so only the units that name a file hold a PHP directory (HYR-5).
+  const spec = withoutExtensions(documentOf(path.join(repo, 'contracts', 'interfaces.json')));
   const groups = spec.groups.filter((g) => spec.concerns.some((c) => c.group === g && c.units.some((u) => u.native.php !== undefined)));
   const directories = groups.map((g) => `src/${expectedDirectory('php', g)}/`).sort();
   assert.ok(directories.length > 0, 'no group of the spec holds a PHP unit');
