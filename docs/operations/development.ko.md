@@ -60,7 +60,6 @@
 | `make hooks` | changelog와 checklist의 merge driver를 선언한다([Hooks](#hooks) 참조) |
 | `make hooks-check` | `make hooks`의 merge driver가 선언되지 않았으면 실패한다 |
 | `make ci-check` | CI group `NAME`을 `ci.yml`의 job처럼 실행한다. setup, 끝까지 실행하는 target, 보고서 `var/ci/<name>`이다([CI](#ci) 참고) |
-| `make ci-bench` | `bench.yml`의 job을 실행한다. group `bench`의 setup, `make bench`, `make bench-sessions`, 보고서 `var/ci/bench`이다([CI](#ci) 참고) |
 | `make ci-targets` | make target `TARGETS`를 끝까지 실행하고 보고서 `CI_REPORT`를 쓴다([CI](#ci) 참고) |
 | `make ci-summary` | 보고서 `CI_REPORT`의 요약과 job summary를 쓴다([CI](#ci) 참고) |
 | `make ci-passed` | `RESULTS`, 곧 `needs`의 JSON의 모든 job의 결과가 `success`가 아니면 실패한다([CI](#ci) 참고) |
@@ -214,9 +213,9 @@ job의 나머지 step은 `uses:` step이다. hyper를 history와 함께 workspac
 - `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;
 - `targets/<target>.log`: 각 target의 명령, 전체 출력, make가 끝난 방식.
 
-마지막 job `ci-passed`는 다른 모든 job 뒤에 실행되고 `make ci-passed RESULTS='<JSON of needs>'`을 실행한다. 이 target은 필요한 모든 job의 결과를 출력하고 하나라도 `success`가 아니면 실패한다. 다른 job의 결과를 판정하므로 CI에만 있다. `ci.yml`에 추가한 job은 `needs`에 나열한다. `tests/scripts/ci-workflow.test.mts`는 `ci-passed`가 없거나, 마지막 job이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need하지 않거나, 다른 runner에서 실행하거나, 다른 step을 실행하면 실패하고, `ci.yml`이나 `bench.yml`의 job이 make 변수를 받는 `make ci-<job>` 하나 말고 다른 run step을 가지면 실패한다.
+마지막 job `ci-passed`는 다른 모든 job 뒤에 실행되고 `make ci-passed RESULTS='<JSON of needs>'`을 실행한다. 이 target은 필요한 모든 job의 결과를 출력하고 하나라도 `success`가 아니면 실패한다. 다른 job의 결과를 판정하므로 CI에만 있다. `ci.yml`에 추가한 job은 `needs`에 나열한다. `tests/scripts/ci-workflow.test.mts`는 `ci-passed`가 없거나, 마지막 job이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need하지 않거나, 다른 runner에서 실행하거나, 다른 step을 실행하면 실패하고, `ci.yml`의 job이 make 변수를 받는 `make ci-<job>` 하나 말고 다른 run step을 가지면 실패한다.
 
-workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실행한다. 그 job 하나는 `make ci-bench`를 실행하고, 이 recipe는 Makefile의 group `bench`의 setup, 이어 `make ci-targets`로 `var/ci/bench`에 `make bench`와 `make bench-sessions`, 그리고 요약을 실행한다. job은 보고서를 upload한다. local 실행도 같은 `make ci-bench`이다. 그 결과는 어떤 검사도 통과시키거나 실패시키지 않으며, `ci-passed`와 release는 이를 읽지 않는다([성능 측정](benchmark.ko.md) 참고).
+`ci.yml`의 group `bench`는 모든 실행에서 benchmark를 실행한다. `make ci-check NAME=bench`는 Redis를 설치하는 그 setup, 이어 `make ci-targets`로 `var/ci/bench`에 `make bench`와 `make bench-sessions`, 그리고 요약을 실행하고, job은 보고서를 upload한다. 한도를 넘는 측정은 `WARNING` 줄을 출력하고 통과하므로, job은 benchmark를 실행할 수 없을 때만 실패한다([성능 측정](benchmark.ko.md) 참고).
 
 ## Test 실행
 

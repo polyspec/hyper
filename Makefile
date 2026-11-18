@@ -845,12 +845,16 @@ CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse
 # The CI groups of the full suite (HR-91): the matrix of the job check of .github/workflows/ci.yml names CI_GROUPS, and
 # each entry runs `make ci-check NAME=<group>` (HR-90). A group declares the tools that install-tools installs (CI_TOOLS),
 # its setup steps in their order (CI_SETUP), the symbol extractors of install-symbols (CI_SYMBOLS) and the targets that
-# ci-targets runs (CI_TARGETS); the targets of the groups together are every target of CHECK_TARGETS once
+# ci-targets runs (CI_TARGETS); the targets of the groups that check together are every target of CHECK_TARGETS once
 # (tests/scripts/ci-workflow.test.mts). A group gathers the targets that need the same setup: docs Node.js, PHP, Python
 # and Redis for the case runners of recipe-check and the session tests, php PHP and the template build, node Node.js
-# and the Rust toolchain that builds the native addon, board also Python and Chromium, python only the Python of its pins. The group bench is the job of bench.yml,
-# whose targets are reports and belong to no check (make ci-bench).
-CI_GROUPS := gates docs php node board python core
+# and the Rust toolchain that builds the native addon, board also Python and Chromium, python only the Python of its pins,
+# bench the board, Chromium and Redis of the benchmarks, whose measures are reports: a measure over its limit prints a
+# WARNING and passes (AGENTS).
+CI_GROUPS := gates docs php node board python core bench
+# The measurement groups: their targets report and never fail, so they belong to no check and CHECK_TARGETS holds none of
+# them; the other groups together run every target of CHECK_TARGETS once (tests/scripts/ci-workflow.test.mts, H35.91).
+CI_GROUPS_MEASURE := bench
 # hyper-install-python builds the native module with maturin of mise.toml and Cargo, so each group that runs it names
 # maturin and rust (install-tools of kit selects maturin since K1278). The group gates does not run it: no gate
 # starts the Python package, cargo, maturin or the binding generator, so its setup builds no native module and
@@ -1059,8 +1063,7 @@ lint-python: ## Lint the Python: ruff and vulture on each package; offline
 	$(NODE) $(KIT)/lint-python.$(KIT_EXT)
 
 # ---- CI jobs and reports (HR-90, HR-91, HR-95) -----------------------------------------------------------------------
-# Each job of ci.yml and bench.yml runs one recipe, `make ci-check NAME=<group>` or `make ci-bench`, and a local run makes the
-# same call. `$(call ci_run,<group>)` runs the setup steps of the group in their order, each a make of its own so it reads
+# Each job of ci.yml runs one recipe, `make ci-check NAME=<group>`, and a local run makes the same call. `$(call ci_run,<group>)` runs the setup steps of the group in their order, each a make of its own so it reads
 # what the step before installed, and stops at the first failed step: a later step and the targets do not run, because
 # they read what the failed step did not install. Then `make ci-targets` runs every target of the group to its end and
 # writes the report var/ci/<group>, and `make ci-summary` always writes summary.md and the job summary with the outcome of
@@ -1077,13 +1080,10 @@ ci_run = steps=; status=0; \
 	CI_STEPS="{$$steps}" $(MAKE) --no-print-directory ci-summary CI_REPORT=var/ci/$(1) || status=1; \
 	exit $$status
 
-.PHONY: ci-check ci-bench
+.PHONY: ci-check
 ci-check: ## Run the CI group NAME as its job of ci.yml does: its setup, its targets to their ends and its report var/ci/NAME; ONLINE
 	$(if $(filter $(NAME),$(CI_GROUPS)),,$(error NAME=$(NAME) names no CI group of CI_GROUPS: $(CI_GROUPS)))
 	$(call ci_run,$(NAME))
-
-ci-bench: ## Run the job of bench.yml: the setup of the group bench, make bench and make bench-sessions, and the report var/ci/bench; ONLINE
-	$(call ci_run,bench)
 
 .PHONY: ci-targets ci-results ci-summary ci-passed
 CI_REPORT ?= var/report/ci-targets

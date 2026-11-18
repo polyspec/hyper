@@ -1,4 +1,4 @@
-# The bootstrap of every CI job of hyper: the jobs of ci.yml, bench.yml and release.yml run it after their checkout with
+# The bootstrap of every CI job of hyper: the jobs of ci.yml and release.yml run it after their checkout with
 # `uses: ./.github/actions/bootstrap`. Each step runs one make target of the Makefile (HR-90).
 name: bootstrap
 description: Sets up the Node.js of mise.toml, installs the lock with the npm of devEngines, then the mise, node and npm of mise.toml into var/tools and the packages of package-lock.json with that npm.

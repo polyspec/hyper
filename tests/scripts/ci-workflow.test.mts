@@ -168,7 +168,7 @@ test('every step that runs a command runs one make, right after the bootstrap of
 
 // The workflows of this repository, whose jobs hold one call of a recipe each (HR-90): the release among them, whose recipe
 // runs its steps in order.
-const CI_WORKFLOWS = ['ci.yml', 'bench.yml', 'release.yml', ASSETS];
+const CI_WORKFLOWS = ['ci.yml', 'release.yml', ASSETS];
 // The recipe of a job is make ci-<job>; a job of assets.yml runs make ci-assets-<job> and a job of release.yml
 // make ci-release-<job>, so that the two workflows may name a job alike.
 const RECIPE_PREFIX: Record<string, string> = { [ASSETS]: 'ci-assets-', 'release.yml': 'ci-release-' };
@@ -365,11 +365,10 @@ function ciRunProblems(goal: string, group: string, makefile: string): string[] 
   return found;
 }
 
-test('H33.1 make ci-check NAME=<group> and make ci-bench run the setup, the targets and the report of the group in order (HR-90)', () => {
+test('H33.1 make ci-check NAME=<group> runs the setup, the targets and the report of the group in order (HR-90)', () => {
   const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
   const groups = makeWords(makefile, 'CI_GROUPS');
-  assert.deepEqual([...groups.flatMap((group) => ciRunProblems('ci-check', group, makefile)), ...ciRunProblems('ci-bench', 'bench', makefile)], []);
-  assert.deepEqual(groupWords(makefile, 'CI_TARGETS', 'bench'), ['bench', 'bench-sessions']);
+  assert.deepEqual(groups.flatMap((group) => ciRunProblems('ci-check', group, makefile)), []);
   // A NAME that names no group fails before any step runs, naming the groups.
   const unknown = spawnSync('make', ['--no-print-directory', '-n', 'ci-check', 'NAME=nope'], { cwd: ROOT, encoding: 'utf8', env: Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name))) });
   assert.notEqual(unknown.status, 0, unknown.stdout);
@@ -558,7 +557,7 @@ test('H27.83 the Makefile includes no file of kit, and every make target of a wo
   const defined = new Set([...makefile.matchAll(/^([a-z][\w-]*(?: [a-z][\w-]*)*):(?!=)/gm)].flatMap((match) => (match[1] ?? '').split(' ')));
   const action = readFileSync(path.join(ROOT, '.github/actions/bootstrap/action.yml'), 'utf8');
   const called = [...workflows().map((workflow) => workflow.text), action].flatMap((text) => [...text.matchAll(/^\s*(?:- )?run: make ([a-z][\w-]*)/gm)].map((match) => match[1] ?? ''));
-  assert.ok(called.includes('ci-check') && called.includes('ci-bench') && called.includes('ci-release-tag') && called.includes('ci-release-release') && called.includes('ci-assets-platform') && called.includes('bootstrap'), called.join(' '));
+  assert.ok(called.includes('ci-check') &&called.includes('ci-release-tag') && called.includes('ci-release-release') && called.includes('ci-assets-platform') && called.includes('bootstrap'), called.join(' '));
   assert.deepEqual([...new Set(called)].filter((target) => !defined.has(target)), [], 'a workflow runs a target that the Makefile does not define');
   // The one called workflow is assets.yml of this repository, which the job assets of ci.yml and of release.yml calls.
   const callers = workflows().flatMap((workflow) => jobs(workflow.text).filter(calls).map((job) => `${workflow.name} ${job.name}: ${/^ {4}uses: (.*)$/m.exec(job.text)?.[1]}`));
