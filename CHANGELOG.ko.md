@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 48670aeeddf44d90941b43b0e961702dc3820eefd266b99d3785e08e67953cf6 -->
+<!-- source-sha256: 819f84fb695e9f511b62a2ccc067f0480b360e3d8288152438e193f708fc39e1 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP 검사가 session-store 확장 `polyspec_session_store` 0.0.8 을 불러온다(H35.107, HY-48.25). 입력: collect 시험이 `NativeSession::collect` 를 부르는 `make hyper-test-php PHP_TESTS=tests/NativeSessionTest.php`. 이전 동작: 어떤 recipe 도 그 확장을 빌드하거나 불러오지 않아, collect 시험 네 개가 `Class "Polyspec\SessionStore\FileSessions" not found` 로 실패했다. 기대 동작: `make hyper-install-php` 가 실행하는 `make session-store-ext` 가 release 의 Composer repository 에서 PIE 로 빌드하고 `config/php-ext-pins.json` 으로 검증한다. `PHP_EXTENSIONS` 가 그것을 불러오고, 루트, board, 라이브러리 manifest 가 `ext-polyspec_session_store` 를 요구한다. 그래서 `collect` 의 제거 규칙은 session-store 의 core 한 곳에 있다. `make hyper-test-php PHP_TESTS=tests/NativeSessionTest.php` 로 검증했다: 시험 19개 중 18개가 통과하고, core 에 kind `invalid_session_handler` 가 없어 `testCollectFailsUnderTheUserHandler` 가 실패한다(H35.87). `make pin-check` 로도 검증했다.
 - `make core-fmt-check` 이 `packages/rust/tests/rules.rs` 에서 통과한다(H35.34-2). 입력: H35.34-2 가 더한 테스트 `the_paths_and_the_stream_of_a_build_as_the_binding_gives_them`. 이전 동작: 그 세 `Output` 값은 각각 한 줄에 있었고, rustfmt 는 그것을 `rules.rs:942` 에서 보고했다. 기대 동작: 각 값은 rustfmt 가 쓰는 대로 필드마다 한 줄을 쓴다. `make core-fmt-check` 로 검증했다.
 - `make test-go` 가 Go binding 의 태그가 붙은 생성 테스트를 모두 빌드한다(H35.106). 입력: binding 0.0.22 와 함께 실행한 `make test-go`. 이전 동작: `GO_ENV` 는 `go test` 에 태그 `polyspec_panic_test` 와 `polyspec_codec_test` 를 주었지만, 생성 테스트는 binding v0.0.22 changelog 의 0.0.20 절이 요구하는 `polyspec_<library>_<feature>` 형식의 태그 뒤에 있어(B2.438), 태그 테스트는 하나도 빌드되지 않았고 두 패키지에서 `TestGN13bfEveryBuildTagOfThePackageIsBuilt` 가 실패했다(GN-13bf). 기대 동작: `GO_ENV` 는 `polyspec_hyper_codec_test`, `polyspec_hyper_fault_test`, `polyspec_hyper_panic_test`, `polyspec_hyper_thrown_count_test` 를 주고, 정적 라이브러리는 그 테스트가 부르는 feature `panic-test`, `codec-test`, `fault-test`, `thrown-count-test` 로 빌드된다. `make test-go` 로 검증했다: 두 패키지가 통과하고 테스트는 300개다.
 - `make release-coverage` 가 pin fixture 의 manifest 를 분류한다(H35.108). 입력: `scripts/pin.mts` 테스트의 fixture 트리인 `tests/scripts/fixtures/pin/tree` 의 패키지 파일 일곱 개(H35.75-1). 이전 동작: `config/release.json` 이 그것들을 릴리스하지도, 릴리스되지 않음으로 나열하지도 않아 release-coverage 가 실패했다. 기대 동작: 각각은 `tests/package-install/package.json` 처럼 테스트 데이터이며 아무것도 공개하지 않는다는 이유와 함께 `notReleased` 에 있다. `make release-coverage` 로 검증했다.

@@ -124,7 +124,7 @@ checks_result = test -z "$$failed" || { echo "failed checks:$$failed"; exit 1; }
 # (HR-83). hyper-install is no such target: its first step writes the wrapper.
 # A target that starts PHP is named here, and tests/scripts/php-check.test.mts fails for a PHP recipe that is not.
 CHECKOUT_PHP := $(KIT_TOOLS)/bin/php
-PHP_TARGETS := hyper-install-php composer-lock template-ext json-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
+PHP_TARGETS := hyper-install-php composer-lock template-ext json-ext session-store-ext hyper-install-redis install-symbols hyper-ext hyper-php-install hyper-test-php hyper-lint analyse-php lint-php hyper-test-scripts recipe-run-php recipe-check recipe-compare recipe-candidates lint-bindings test-bindings parity server-parity server-parity-python e2e serve-demo bench-server bench-server-smoke bench-browser bench-uploads bench-sessions
 .PHONY: php-check php-check-installed
 $(PHP_TARGETS): php-check
 php_check = want="$$(tr -d '[:space:]' < .php-version)"; \
@@ -176,6 +176,7 @@ crates-check: ## Fail unless every crate that Cargo.lock pins is fetched, naming
 .PHONY: hyper-install-php
 hyper-install-php: ## Install only the locked root and board Composer projects and their pinned PHP archives
 	$(MAKE) --no-print-directory template-ext
+	$(MAKE) --no-print-directory session-store-ext
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction
 	$(ONLINE) $(NODE) $(KIT)/holder-lock.$(KIT_EXT) run $(INSTALL_LOCK) -- $(COMPOSER_BIN) install --no-interaction --working-dir=$(BOARD)
 
@@ -295,6 +296,24 @@ json-ext: ## Get the json extension polyspec_json of JSON_VERSION with PIE from 
 	binary=$$($(NODE) scripts/pie-binary.mts $(JSON_PIE_WORK) polyspec/json) && \
 	mkdir -p build/json-ext.next-$$$$ && cp "$$binary" build/json-ext.next-$$$$/polyspec_json.so && $(NODE) scripts/publish.mts directory build/json-ext.next-$$$$ build/json-ext
 
+# NativeSession::collect of the PHP server removes the expired session files with FileSessions of the session-store
+# extension polyspec_session_store, so that the rule of the removal lives once in the core of session-store (HY-48.25).
+# PIE gets polyspec/session-store SESSION_STORE_VERSION from the Composer repository of the session-store release as
+# json-ext gets the json extension, verified by config/php-ext-pins.json, and the library is published into
+# build/session-store-ext with a rename (HR-80, HR-82). The package requires only php.
+SESSION_STORE_VERSION := 0.0.8
+SESSION_STORE_EXT := build/session-store-ext/polyspec_session_store.so
+SESSION_STORE_PIE_WORK := $(CURDIR)/var/pie/polyspec/session-store
+.PHONY: session-store-ext
+session-store-ext: ## Get the session-store extension polyspec_session_store of SESSION_STORE_VERSION with PIE into build/session-store-ext (HY-48.25); ONLINE
+	$(call pie_run,$(SESSION_STORE_PIE_WORK),build/session-store-ext.next-$$$$) && \
+	$(ONLINE) $(NODE) scripts/php-ext-requires.mts config/php-ext-pins.json polyspec/session-store $(SESSION_STORE_PIE_WORK) && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(SESSION_STORE_PIE_WORK) COMPOSER_CACHE_DIR=$(SESSION_STORE_PIE_WORK)/cache $(PIE) repository:add composer $(SESSION_STORE_PIE_WORK)/repository/polyspec/session-store/packages.json --no-interaction && \
+	$(ONLINE) env PIE_WORKING_DIRECTORY=$(SESSION_STORE_PIE_WORK) COMPOSER_CACHE_DIR=$(SESSION_STORE_PIE_WORK)/cache $(PIE) build polyspec/session-store:$(SESSION_STORE_VERSION) --no-interaction && \
+	$(NODE) scripts/php-ext-verify.mts config/php-ext-pins.json polyspec/session-store $(SESSION_STORE_PIE_WORK) && \
+	binary=$$($(NODE) scripts/pie-binary.mts $(SESSION_STORE_PIE_WORK) polyspec/session-store) && \
+	mkdir -p build/session-store-ext.next-$$$$ && cp "$$binary" build/session-store-ext.next-$$$$/polyspec_session_store.so && $(NODE) scripts/publish.mts directory build/session-store-ext.next-$$$$ build/session-store-ext
+
 # The session tests of HY-115 run against a real Redis server and the real phpredis extension, at these versions. PIE builds
 # phpredis as it builds the template extension; `pie build` installs nothing into the PHP, and the tests load the library
 # with -d extension.
@@ -315,15 +334,15 @@ hyper-install-redis: ## Build the Redis server and the phpredis extension of the
 # The template extension that the PHP checks load. In a linked run `make link` links vendor/polyspec/template to the
 # packages/php-ext of a template checkout, and the checks load the library that the checkout builds into its
 # target/release; otherwise they load the library of template-ext. PHP_EXTENSIONS lists the json extension before the
-# template extension, which requires it (HY-48.23).
+# template extension, which requires it (HY-48.23), and then the session-store extension of collect (HY-48.25).
 TEMPLATE_LINKED_EXT = $(wildcard $(realpath $(PHP_VENDOR)/polyspec/template)/../../target/release/libpolyspec_template.$(CDYLIB))
 PHP_TEMPLATE_EXT = $(or $(TEMPLATE_LINKED_EXT),$(abspath $(EXT)))
-PHP_EXTENSIONS = $(abspath $(JSON_EXT)) $(PHP_TEMPLATE_EXT)
+PHP_EXTENSIONS = $(abspath $(JSON_EXT)) $(PHP_TEMPLATE_EXT) $(abspath $(SESSION_STORE_EXT))
 
 # The checks load the libraries that `make hyper-install` built with PIE (json-ext, template-ext) or the linked template
 # library; they run offline and build nothing.
-ext: ## Fail unless the json extension and the template extension that the PHP checks load exist (HY-48.23, H14.1-7, H27.45)
-	@for library in $(PHP_EXTENSIONS); do test -f "$$library" || { echo "ext: $$library does not exist; run make hyper-install-php, which builds it with PIE (make json-ext, make template-ext)" >&2; exit 1; }; done
+ext: ## Fail unless the json, template and session-store extensions that the PHP checks load exist (HY-48.23, HY-48.25, H14.1-7, H27.45)
+	@for library in $(PHP_EXTENSIONS); do test -f "$$library" || { echo "ext: $$library does not exist; run make hyper-install-php, which builds it with PIE (make json-ext, make template-ext, make session-store-ext)" >&2; exit 1; }; done
 
 # The PHP extension polyspec_hyper of the server (HY-132.2) for development: packages/php/native, built through $(CARGO),
 # which applies the patches of .links, against the php and the php-config of the checkout, with the libclang and the
