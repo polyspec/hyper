@@ -13,8 +13,9 @@
 // it is at every `from`, the map is applied; a mix, or an anchor at neither, fails without writing. The rename is two
 // steps, every id to a placeholder and then every placeholder to its new id, so a swap such as HY-132 <-> HY-133 cannot
 // collide. The files are the tracked files of the root, without CHANGELOG*, docs/plans/** (the history of changes,
-// which names the ids of their time) and the generated docs/spec/protocol*.md, which `make spec-docs` writes after the
-// run. The koSource of every statement whose English text changed is written again. Every file is written atomically.
+// which names the ids of their time), the maps of config/renumber (each the record of the ids that one run moved) and
+// the generated docs/spec/protocol*.md, which `make spec-docs` writes after the run. The koSource of every statement
+// whose English text changed is written again. Every file is written atomically.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -31,9 +32,8 @@ const RULE_ID = /^HYC?-[1-9][0-9]*$/u;
 const STATEMENT_ID = /^HYC?-[1-9][0-9]*\.[1-9][0-9]*$/u;
 // A citation: an id with no letter, digit or `.digit` after it, and no letter, digit or `-` before it.
 const CITATION = /(?<![0-9A-Za-z-])HYC?-[0-9]+(?:\.[0-9]+)?(?![0-9]|\.[0-9])/gu;
-// A character of the private use area of Unicode, which no tracked text holds; the run fails on a file that holds it.
-const PLACEHOLDER = 'renumber:';
-const EXCLUDED = (file: string): boolean => /^CHANGELOG[^/]*$/u.test(file) || file.startsWith('docs/plans/') || /^docs\/spec\/protocol(\.ko)?\.md$/u.test(file);
+const EXCLUDED = (file: string): boolean =>
+  /^CHANGELOG[^/]*$/u.test(file) || file.startsWith('docs/plans/') || file.startsWith('config/renumber/') || /^docs\/spec\/protocol(\.ko)?\.md$/u.test(file);
 
 const sha256 = (text: string): string => createHash('sha256').update(text, 'utf8').digest('hex');
 const anchorOf = (en: string): string => sha256(en.replace(CITATION, 'HY'));
@@ -106,15 +106,23 @@ function renamer(renames: Rename[]): (id: string) => string {
   };
 }
 
-/** The text with every citation renamed, in two steps through placeholders. */
-function renamed(text: string, rename: (id: string) => string, file: string): string {
-  if (text.includes(PLACEHOLDER)) throw new UsageError(`${file} holds the placeholder of the renumbering`);
+/**
+ * The text with every citation renamed, in two steps: each citation becomes a placeholder, a marker that the text does
+ * not hold followed by the index of its new id, and then each placeholder becomes that new id.
+ */
+function renamed(text: string, rename: (id: string) => string): string {
+  let marker = '@renumber@';
+  while (text.includes(marker)) marker = `@${marker}@`;
   const targets: string[] = [];
   const held = text.replace(CITATION, (id) => {
     targets.push(rename(id));
-    return `${PLACEHOLDER}${targets.length - 1};`;
+    return `${marker}${targets.length - 1};`;
   });
-  return held.replace(/renumber:([0-9]+);/gu, (_, n: string) => targets[Number(n)] ?? '');
+  return held.split(marker).map((part, i) => {
+    if (i === 0) return part;
+    const end = part.indexOf(';');
+    return (targets[Number(part.slice(0, end))] ?? '') + part.slice(end + 1);
+  }).join('');
 }
 
 function tracked(root: string): string[] {
@@ -166,7 +174,7 @@ function apply(root: string, mapFile: string): number {
     const buffer = readFileSync(full);
     if (buffer.includes(0)) continue;
     const text = buffer.toString('utf8');
-    let next = renamed(text, rename, file);
+    let next = renamed(text, rename);
     if (file === CONTRACT) next = restamped(text, next);
     if (next !== text) writes.push([full, next]);
   }
