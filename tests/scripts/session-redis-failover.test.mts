@@ -13,7 +13,7 @@ import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
 import { assertKeepsCookie, cookieOf, post, requireServers, shareAcross, startBoards, tokenOf, type Board } from './session-board.mts';
-import { ask, certificates, EXTENSION, freePort, startRedis, stopRedis, until, type Secure } from './session-redis-server.mts';
+import { ask, certificates, EXTENSION, freePort, startRedis, stopRedis, until, type Needed, type Secure } from './session-redis-server.mts';
 import { COMMANDS, IDENTIFIER, NAMES, ROOT, run as runWorker, type Server } from './session-workers.mts';
 
 const KEY = `PHPREDIS_SESSION:${IDENTIFIER}`;
@@ -38,6 +38,8 @@ interface Node { name: string; port: string; server: ChildProcessWithoutNullStre
 class Topology {
   readonly nodes: Node[] = [];
   readonly sentinels: string[] = [];
+  // The processes of the Sentinels, in the order of their ports.
+  readonly watchers: Needed[] = [];
 
   private readonly prefix: string;
   private readonly secure: Secure | undefined;
@@ -101,8 +103,10 @@ class Topology {
       const monitor = [`sentinel monitor hyper 127.0.0.1 ${first.port} 2`, 'sentinel down-after-milliseconds hyper 1000', 'sentinel failover-timeout hyper 5000'];
       const peer = this.secure === undefined ? [] : ['sentinel auth-user hyper hyper', `sentinel auth-pass hyper ${this.secure.password}`];
       writeFileSync(file, [...lines, 'bind 127.0.0.1', `dir ${directory}`, ...auth, ...monitor, ...peer, ''].join('\n'));
-      processes.push(spawn(REDIS, [file, '--sentinel'], { stdio: 'ignore' }));
+      const sentinel = spawn(REDIS, [file, '--sentinel'], { stdio: 'ignore' });
+      processes.push(sentinel);
       this.sentinels.push(port);
+      this.watchers.push({ name: `the Sentinel of the port ${port}`, process: sentinel });
     }
     for (const port of this.sentinels) {
       await until(async () => String(await this.ask(port, 'SENTINEL', 'CKQUORUM', 'hyper')).includes('OK 3'));
@@ -206,6 +210,26 @@ test('a request fails when no Sentinel names the primary and goes past a Sentine
   }
   const values = JSON.parse(await runWorker('php', directory, { HYPER_SESSION_SENTINEL: sentinels.join(','), PHP_PREFIX: EXTENSION }, 'read', '["php","python","node","x"]')) as unknown;
   assert.deepEqual(values, [1, 1, 1, null]);
+});
+
+// A step that waits ends with the server or the Sentinel that its condition needs, instead of the time limit of the test
+// (HR-84). The limit of these tests is below the 60 seconds of the runner, so a wait that does not watch them fails here.
+test('a step that waits for the Sentinels fails with the name and the status of a Sentinel that ended (HR-84)', { timeout: 30_000 }, async () => {
+  const redis = await topology('sentinel-ended');
+  const [, , last] = redis.watchers;
+  assert.ok(last !== undefined);
+  const ended = once(last.process, 'exit');
+  last.process.kill('SIGKILL');
+  await ended;
+  await assert.rejects(redis.switchOver(), new RegExp(`^Error: ${last.name} ended with SIGKILL while a step waited for a condition that needs it$`));
+});
+
+test('a failover fails with the name and the status of the replica that ended, not of the primary that it stops (HR-84)', { timeout: 30_000 }, async () => {
+  const redis = await topology('replica-ended');
+  const [primary, replica] = redis.nodes;
+  assert.ok(primary !== undefined && replica !== undefined && (await redis.primary()) === primary);
+  await stopRedis(replica.server, 'SIGKILL');
+  await assert.rejects(redis.failOver(), new RegExp(`^Error: the Redis server ${replica.name} of the port ${replica.port} ended with SIGKILL while a step waited`));
 });
 
 test('the three servers go on with a session through two failovers that Sentinel makes (HY-115)', { timeout: 180_000 }, async () => {
