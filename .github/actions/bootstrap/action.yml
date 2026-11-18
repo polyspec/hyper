@@ -5,12 +5,16 @@ description: Sets up the Node.js of mise.toml, installs the lock with the npm of
 runs:
   using: composite
   steps:
-    # actions/setup-node v7.1.0: the Node.js of mise.toml runs make bootstrap and the bootstrap of install-tools, which installs
-    # that release into var/tools with mise (kit K171); the recipes then run the node of var/tools. The pinned npm of var/tools
-    # installs the packages, so the cache of setup-node is off.
+    # make node-version writes the node version of mise.toml to var/node-version, which setup-node reads (H35.117). The Node.js
+    # runs make bootstrap and the bootstrap of install-tools, which installs that release into var/tools with mise (kit K171);
+    # the recipes then run the node of var/tools. The pinned npm of var/tools installs the packages, so the cache of setup-node
+    # is off.
+    - name: read the node version of mise.toml
+      shell: bash
+      run: make node-version
     - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
-        node-version-file: mise.toml
+        node-version-file: var/node-version
         package-manager-cache: false
     # The npm of devEngines installs the lock, @polyspec/kit included, whose utilities the recipes run.
     - name: bootstrap the lock

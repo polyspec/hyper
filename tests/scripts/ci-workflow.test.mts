@@ -564,3 +564,12 @@ test('H27.83 the Makefile includes no file of kit, and every make target of a wo
   assert.deepEqual(callers.sort(), [`ci.yml assets: ${ASSETS_CALL}`, `release.yml assets: ${ASSETS_CALL}`], 'a job calls another workflow than assets.yml');
 });
 
+
+test('H35.117 the setup-node of the bootstrap action reads the node version that make node-version writes from mise.toml', () => {
+  const action = readFileSync(path.join(ROOT, '.github/actions/bootstrap/action.yml'), 'utf8');
+  const makefile = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
+  assert.doesNotMatch(action, /node-version-file: mise\.toml/, 'the action names mise.toml as node-version-file, which setup-node cannot read');
+  assert.match(makefile, /^node-version:/m, 'the Makefile has no node-version target');
+  assert.match(action, /^ {6}run: make node-version$/m, 'the action does not run make node-version before setup-node');
+  assert.match(action, /^ {8}node-version-file: var\/node-version$/m, 'setup-node does not read the version that make node-version writes');
+});
