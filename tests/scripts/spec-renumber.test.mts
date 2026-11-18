@@ -43,7 +43,11 @@ function run(root: string, ...args: string[]): ScriptResult {
 function writeMap(root: string, renames: [string, string][]): string {
   const printed = run(root, 'anchor', ...renames.map(([from]) => from));
   assert.equal(printed.status, 0, printed.stderr);
-  const anchors = new Map(printed.stdout.trim().split('\n').map((line) => line.split(' ') as [string, string]));
+  const anchors = new Map<string, string>();
+  for (const line of printed.stdout.trim().split('\n')) {
+    const [id, anchor] = line.split(' ');
+    if (id !== undefined && anchor !== undefined) anchors.set(id, anchor);
+  }
   const file = path.join(root, 'map.json');
   writeFileSync(file, `${JSON.stringify({ renames: renames.map(([from, to]) => ({ from, to, anchor: anchors.get(from) })) }, null, 2)}\n`);
   return file;

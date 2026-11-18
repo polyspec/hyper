@@ -310,6 +310,10 @@
       "kind": "policy",
       "reason": "H2: the protocol documents are rendered from contracts/protocol.json by this script and checked against that rendering; no tool of an ecosystem writes them"
     },
+    "scripts/spec-renumber.mts": {
+      "kind": "policy",
+      "reason": "H35.98: an id of contracts/protocol.json keeps one meaning, so a renumbering renames the contract and every tracked citation in one run by a declared map; no tool of an ecosystem knows the ids of this contract"
+    },
     "scripts/tracked-files.mts": {
       "kind": "ecosystem",
       "tool": "git ls-files lists the tracked files of a path; the copy keeps their modification time and executable bits through packages/cli/lib/output-files.mjs"

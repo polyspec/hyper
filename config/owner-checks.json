@@ -287,6 +287,17 @@
     },
     {
       "paths": [
+        "scripts/spec-renumber.mts"
+      ],
+      "tests": [
+        "tests/scripts/spec-renumber.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "tests/scripts/script-run.mts"
       ],
       "tests": [

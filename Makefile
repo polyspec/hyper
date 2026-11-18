@@ -794,7 +794,12 @@ go-release-build: bindings ## Build and vet packages/go alone as a release tags 
 	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) build -mod=readonly ./...
 	cd packages/go && GOWORK=off GOTOOLCHAIN=local $(GO) vet ./...
 
-.PHONY: spec-docs spec-docs-check spec-released-check
+.PHONY: spec-docs spec-docs-check spec-released-check spec-renumber
+# The renaming of ids by the tracked map MAP (H35.98), then the protocol documents written again from the contract.
+spec-renumber: ## Rename the statement and rule ids of the tracked map MAP in contracts/protocol.json and every tracked citation, then run spec-docs; offline
+	@test -n "$(MAP)" || { echo 'spec-renumber: MAP is required, for example make spec-renumber MAP=config/renumber.json' >&2; exit 2; }
+	$(NODE) scripts/spec-renumber.mts apply --map "$(MAP)"
+	$(NODE) scripts/spec-docs.mts write
 # An id of contracts/protocol.json keeps one meaning: the ids of the last release, from the tag that
 # config/spec-baseline.json names, are statements of the same topic or retired (H35.98). It reads local tags only.
 spec-released-check: ## Fail a released statement id of contracts/protocol.json that is missing and not retired, or whose topic changed (H35.98); offline
