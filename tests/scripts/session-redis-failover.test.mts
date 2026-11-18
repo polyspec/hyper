@@ -79,6 +79,13 @@ class Topology {
     return { name, port, server };
   }
 
+  // The servers and the Sentinels that a wait of the topology needs, without a server that the step ends on purpose,
+  // and the other processes of the step (HR-84).
+  needed(without?: Node, ...others: Needed[]): Needed[] {
+    const servers = this.nodes.filter((node) => node !== without).map((node) => ({ name: `the Redis server ${node.name} of the port ${node.port}`, process: node.server }));
+    return [...servers, ...this.watchers, ...others];
+  }
+
   async linked(node: Node): Promise<boolean> {
     return String(await this.ask(node.port, 'INFO', 'replication')).includes('master_link_status:up');
   }
@@ -88,7 +95,7 @@ class Topology {
     const first = await this.startNode(`${this.prefix}-a`, await freePort(), []);
     const second = await this.startNode(`${this.prefix}-b`, await freePort(), ['--replicaof', '127.0.0.1', first.port]);
     this.nodes.push(first, second);
-    await until(() => this.linked(second));
+    await until(() => this.linked(second), ...this.needed());
     for (const index of [0, 1, 2]) {
       const port = await freePort();
       const file = path.join(directory, `${this.prefix}-sentinel-${String(index)}.conf`);
@@ -109,11 +116,11 @@ class Topology {
       this.watchers.push({ name: `the Sentinel of the port ${port}`, process: sentinel });
     }
     for (const port of this.sentinels) {
-      await until(async () => String(await this.ask(port, 'SENTINEL', 'CKQUORUM', 'hyper')).includes('OK 3'));
+      await until(async () => String(await this.ask(port, 'SENTINEL', 'CKQUORUM', 'hyper')).includes('OK 3'), ...this.needed());
       await until(async () => {
         const replicas = await this.ask(port, 'SENTINEL', 'REPLICAS', 'hyper');
         return Array.isArray(replicas) && replicas.length === 1;
-      });
+      }, ...this.needed());
     }
   }
 
@@ -130,7 +137,7 @@ class Topology {
   async failOver(): Promise<Node> {
     const old = await this.primary();
     await stopRedis(old.server, 'SIGKILL');
-    await until(async () => (await this.primary()).port !== old.port);
+    await until(async () => (await this.primary()).port !== old.port, ...this.needed(old));
     return old;
   }
 
@@ -138,12 +145,12 @@ class Topology {
   // The Sentinels make the former primary a replica some seconds later, so until then it still accepts writes.
   async switchOver(): Promise<Node> {
     const old = await this.primary();
-    await until(async () => String(await this.ask(this.sentinels[0] ?? '', 'SENTINEL', 'FAILOVER', 'hyper')) === 'OK');
+    await until(async () => String(await this.ask(this.sentinels[0] ?? '', 'SENTINEL', 'FAILOVER', 'hyper')) === 'OK', ...this.needed());
     for (const port of this.sentinels) {
       await until(async () => {
         const named = await this.ask(port, 'SENTINEL', 'GET-MASTER-ADDR-BY-NAME', 'hyper');
         return Array.isArray(named) && String(named[1]) !== old.port;
-      });
+      }, ...this.needed());
     }
     return old;
   }
@@ -240,7 +247,7 @@ test('the three servers go on with a session through two failovers that Sentinel
   // The old primary comes back as a replica of the new one, and a second failover keeps the session.
   const back = await redis.startNode(old.name, old.port, []);
   redis.nodes[redis.nodes.indexOf(old)] = back;
-  await until(() => redis.linked(back));
+  await until(() => redis.linked(back), ...redis.needed());
   await redis.replicated(await redis.primary());
   await redis.failOver();
   for (const name of NAMES) assert.deepEqual(JSON.parse(await retried(name, env, 'read', names)), [1, 1, 1, 1, 1, 1], `${name} reads the session after the second failover`);
@@ -316,7 +323,7 @@ test('a failover while the three servers write one session keeps the acknowledge
     await redis.replicated(primary);
     acknowledged = counted(record);
     return acknowledged >= 50;
-  });
+  }, ...redis.needed(undefined, ...writers.map((writer, index) => ({ name: `the ${NAMES[index] ?? ''} writer`, process: writer }))));
   await redis.failOver();
   for (const writer of writers) {
     if (writer.exitCode === null && writer.signalCode === null) {
