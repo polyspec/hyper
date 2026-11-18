@@ -1,18 +1,22 @@
 // `hyper check` (HR-96): the manifest rules (HY-2) and the template rules (HY-48.3) of an application directory,
-// without any output. `hyper build` runs the same checks before it writes anything.
+// without any output. `hyper build` runs the same checks before it writes anything. Both rules are those of the core
+// of hyper (@polyspec/hyper/build), so the command tool and the servers apply one implementation.
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { checkManifest } from '@polyspec/hyper-client';
-import { parse, resolvePath } from '@polyspec/template';
-import { templateProblems } from './template-rules.mjs';
+import { join, relative, sep } from 'node:path';
+import { templateProblems } from '@polyspec/hyper/build';
+import { listFiles } from './output-files.mjs';
 
 /**
  * Returns the manifest of the application `app` and the problems of its templates with the number of templates; a
- * manifest that breaks HY-2 fails with the message of the manifest check.
+ * manifest that breaks HY-2 fails with the error of the manifest check of the core.
  */
 export function checkApplication(app) {
-  const manifest = JSON.parse(readFileSync(join(app, 'app', 'app.json'), 'utf8'));
-  checkManifest(manifest);
-  const { problems, templates } = templateProblems({ manifest, templatesDir: join(app, 'templates'), parse, resolvePath });
-  return { manifest, problems, templates };
+  const bytes = readFileSync(join(app, 'app', 'app.json'));
+  const templatesDir = join(app, 'templates');
+  const templates = new Map();
+  for (const file of listFiles(templatesDir).filter((name) => name.endsWith('.tpl')).sort()) {
+    templates.set(relative(templatesDir, file).split(sep).join('/'), readFileSync(file, 'utf8'));
+  }
+  const problems = [...templateProblems(bytes, templates)];
+  return { manifest: JSON.parse(bytes.toString('utf8')), problems, templates: templates.size };
 }
