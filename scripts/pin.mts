@@ -29,7 +29,7 @@
 // Usage: node scripts/pin.mts check [--root DIR]
 //        node scripts/pin.mts write [--root DIR] [--locks DIR] [<package>=<version>]...
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeFileAtomic } from '../packages/cli/lib/output-files.mjs';
@@ -177,6 +177,15 @@ function rewrite(file: string, text: string, declared: Declared, changed: Record
     .join('\n');
 }
 
+/** The names of the packages that the Composer lock `file` holds, or none when there is no such file. */
+function lockedOf(file: string): string[] {
+  if (!existsSync(file)) return [];
+  const lock: unknown = JSON.parse(readFileSync(file, 'utf8'));
+  if (!isRecord(lock)) return [];
+  const entries: unknown[] = [lock.packages, lock['packages-dev']].flatMap((list): unknown[] => (Array.isArray(list) ? (list as unknown[]) : []));
+  return entries.flatMap((entry) => (isRecord(entry) && typeof entry.name === 'string' ? [entry.name] : []));
+}
+
 /** The make arguments of the lock targets that follow a change of the packages of `keys` in the files `written`. */
 function targetsOf(declared: Declared, keys: string[], written: string[], before: Map<string, string>, root: string): string[] {
   const targets: string[] = [];
@@ -197,10 +206,13 @@ function targetsOf(declared: Declared, keys: string[], written: string[], before
   if (crates.size > 0) targets.push(cargo);
   if (scaffold) targets.push('bindings-scaffold');
   if (scaffold && crates.size > 0) targets.push(cargo);
-  // composer-lock updates the packages whose places a written composer.json holds, all in one goal.
-  const composer = new Set(written.filter((f) => path.posix.basename(f) === 'composer.json').flatMap((f) => placesOf(f, readFileSync(path.join(root, f), 'utf8'), declared).map((place) => place.key)));
-  const packages = keys.filter((key) => composer.has(key));
-  if (packages.length > 0) targets.push(`composer-lock ${packages.map((key) => `PACKAGES=${declared[key]?.repository}`).join(' ')}`);
+  // composer-lock updates, in one goal, the changed packages that the composer.lock beside a written composer.json
+  // locks; an extension that PIE installs is in no lock, and with no such package there is no goal, since composer-lock
+  // refuses an empty PACKAGES (H35.75-2, H35.41).
+  const manifests = written.filter((f) => path.posix.basename(f) === 'composer.json');
+  const locked = new Set(manifests.flatMap((f) => lockedOf(path.join(root, path.posix.dirname(f), 'composer.lock'))));
+  const packages = keys.map((key) => declared[key]?.repository ?? '').filter((name) => locked.has(name));
+  if (packages.length > 0) targets.push(['composer-lock', ...packages.map((name) => `PACKAGES=${name}`)].join(' '));
   if (written.includes('config/php-ext-pins.json')) targets.push('php-ext-pins');
   if (written.some((f) => path.posix.basename(f) === 'pyproject.toml')) targets.push('python-lock');
   return targets;
