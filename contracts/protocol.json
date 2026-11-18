@@ -6807,6 +6807,12 @@
                   "unimplemented": "H35.45"
                 },
                 {
+                  "id": "HY-107.10",
+                  "en": "The core of hyper depends on no crate of the orm library: the contract between hyper and the ORM is the kind string of an error, which the server reads from the error and passes to the core, so the core of hyper is not tied to a release of orm.",
+                  "ko": "hyper의 core는 orm 라이브러리의 어떤 crate에도 의존하지 않는다. hyper와 ORM 사이의 계약은 오류의 kind 문자열이며, server가 그것을 오류에서 읽어 core에 넘기므로 hyper의 core는 orm의 release에 묶이지 않는다.",
+                  "koSource": "3146c52dd51be233056576ae206accd30c081967727994f31be102c7296170f8"
+                },
+                {
                   "id": "HY-107.8",
                   "en": "The kind `no_rows`, a strict query for one row that matched no row, is answered as `NotFound` (HY-27: status 404 and the text `Not Found`).",
                   "ko": "kind `no_rows`(한 행을 기대한 strict query가 행을 찾지 못한 것)는 `NotFound`로 응답한다(HY-27: 상태 404와 텍스트 `Not Found`).",
