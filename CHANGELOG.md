@@ -5,6 +5,7 @@
 
 ## Unreleased
 
+- The session handler of the escape test of H35.83 is the class `FailingWriteSessionHandler` in its own file of `packages/php/tests/Support` (H35.83). Input: `make lint-php`. Behaviour before: phpcs failed at a second class without a namespace in `escape.php` and at two lines over 120 characters. Expected: no finding of phpcs in the lines of H35.83.
 - The three servers accept a session identifier of 22 to 256 characters (H35.85, HY-104.31). Input: a session cookie of 200 characters of `A-Za-z0-9,-`, which PHP creates with `session.sid_length` 200. Behaviour before: each server accepted 22 to 128 characters and started a new session for that cookie. Expected: the server resumes the session, as PHP and the session-store library accept 22 to 256.
 - `NativeSession` of the PHP server fails with `RecordError` and the kind `record` for a stored object of a class other than `stdClass`, at any depth (H35.84, HY-104.41). Input: a session value `new ArrayObject()` or `["x" => [new DateTimeImmutable()]]`. Behaviour before: `get` returned the object. Expected: the failure, as the Node and the Python server give through the session-store library.
 - HY-104.41 states the kind of the failure of a session record that holds an object of a class other than `stdClass`: the kind `record` of the session-store library (HY-104.8) in the three servers, marked for H35.84. Input: such a record. Behaviour before: HY-104.14 stated that the request fails and named no kind. Expected: the specification names the kind; HY-104.14 keeps its meaning.

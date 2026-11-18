@@ -292,7 +292,10 @@ final class RunTest extends TestCase
 
         self::assertSame(500, $status);
         self::assertSame('Internal Server Error', $body);
-        self::assertMatchesRegularExpression('/\Aresponse \d+\nwritten 500 true "hyper: the session could not be written[^"]*"\n\z/', $lines);
+        self::assertMatchesRegularExpression(
+            '/\Aresponse \d+\nwritten 500 true "hyper: the session could not be written[^"]*"\n\z/',
+            $lines,
+        );
     }
 
     /** HY-99: a fatal error after the host function `run` sent the response reports ended false with the failure, and no second response. */
