@@ -34,9 +34,10 @@ final class NativeSession implements SessionStore
         $https = $this->secure();
         $name = self::name($https);
         $this->clientId = $this->request->cookie($name);
-        // An identifier that is not of HY-45 starts no session, the same as no identifier.
+        // An identifier that is not of HY-45 starts no session, the same as no identifier; PHP and the session-store
+        // library accept 22 to 256 characters (HY-104.31).
         $id = $this->clientId;
-        if ($id !== null && preg_match('/^[A-Za-z0-9,-]{22,128}$/D', $id) !== 1) {
+        if ($id !== null && preg_match('/^[A-Za-z0-9,-]{22,256}$/D', $id) !== 1) {
             $id = null;
         }
         if ($this->setup !== null) {

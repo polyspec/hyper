@@ -5,7 +5,8 @@ import { PhpFloat, Reference, serialize, StdClass, unserialize, type ArrayKey, t
 import { rules } from '../app/core-rules.js';
 import type { SessionStore } from './session-store.js';
 
-const IDENTIFIER = /^[A-Za-z0-9,-]{22,128}$/;
+// The identifiers that PHP and the session-store library accept (HY-104.31).
+const IDENTIFIER = /^[A-Za-z0-9,-]{22,256}$/;
 
 // The values of one session in one request (HY-24, HY-45, HY-72): the record as it was read and as the request changed
 // it. A value that the request did not set stays what PHP wrote, so a request that does not change it writes the same
