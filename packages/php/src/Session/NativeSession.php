@@ -130,6 +130,25 @@ final class NativeSession implements SessionStore
         ];
     }
 
+    /**
+     * Removes the session files of `session.save_path` whose lifetime of `session.gc_maxlifetime` has passed, skips a
+     * file whose lock a request holds, and returns how many it removed (HY-104.33, SF-5). An empty save path is the
+     * temporary directory, as for the native files handler. No request calls it: the application calls it when it
+     * chooses, such as from a scheduled task, because the options turn the removal during a request off. A directory
+     * that cannot be read fails with `SessionStoreIoError` (SF-9.2).
+     */
+    public static function collect(): int
+    {
+        ArgumentCount::most(\func_num_args(), 0);
+        $directory = (string) ini_get('session.save_path');
+        if ($directory === '') {
+            $directory = sys_get_temp_dir();
+        }
+
+        return \Polyspec\SessionStore\FileSessions::inDirectory($directory, (int) ini_get('session.gc_maxlifetime'))
+            ->collect();
+    }
+
     public function get(string $key): mixed
     {
         ArgumentCount::most(\func_num_args(), 1);
