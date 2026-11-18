@@ -433,6 +433,11 @@ test('the PHP reader counts no empty private constructor of a class of static me
   assertNoGuard('php', 'StaticOnly');
 });
 
+test('the PHP reader counts no empty private constructor whose body holds a comment or that is one line (HYR-6, H35.105)', () => {
+  assertNoGuard('php', 'StaticCommented');
+  assertNoGuard('php', 'StaticInline');
+});
+
 test('the PHP reader lists a trait member under the trait, not under the class that uses it', () => {
   const names = readFixture('php', path.join(fixture, 'readers', 'php')).members.filter((m) => m.unit === 'Gadget').map((m) => m.name);
   assert.ok(names.includes('size'), `Gadget does not list size: ${names.join(', ')}`);
