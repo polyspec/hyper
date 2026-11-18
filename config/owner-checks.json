@@ -233,6 +233,27 @@
     },
     {
       "paths": [
+        "tests/scripts/fixtures/spec-released/**",
+        "tests/scripts/spec-released.test.mts"
+      ],
+      "tests": [
+        "tests/scripts/spec-released.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/script-run.mts"
+      ],
+      "tests": [
+        "tests/scripts/spec-docs.test.mts",
+        "tests/scripts/spec-released.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
         "docs/spec/protocol.md",
         "docs/spec/protocol.ko.md"
       ],
