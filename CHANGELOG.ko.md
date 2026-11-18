@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4be3bd98eb4b6fe1fc535c4cb736b2ace9f03d4588ef17a87c4ab7075dd07666 -->
+<!-- source-sha256: 2eca7d6f5bba5a19b5b3aa971907bebf1af77dcd02b2a2b630663e369d15569c -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- Node 레시피 리더는 `get` 또는 `set` 접근자에 종류 `property`를 주고, `MEMBER_SIGNATURE`는 다른 항목을 각각 밝힌다(HYR-8, H35.73). 입력: Node 심볼이 접근자 `get directory(): string`이고 spec에 같은 시그니처가 있는 종류 `property`의 spec 멤버. 이전 동작: `scripts/recipe/read-node.mts`가 접근자에 종류 `method` 또는 `static method`를 주어, 검사가 `MEMBER_SIGNATURE ... is "get directory(): string", spec says "get directory(): string"`를 보고했다. 이 발견은 종류나 매개변수 수가 달라도 나오지만 메시지는 시그니처만 밝혔다. 기대 동작: 접근자는 static이든 아니든 property다. 메시지는 시그니처, 종류(`has the kind method, spec says static method`), 매개변수 수(`has 1 parameters, spec says 2`) 가운데 다른 것을 나열한다. `tests/scripts/fixtures/recipe/mutations.json`의 변이 `member-kind-differs`와 `member-arity-differs`가 둘을 진술한다. `make hyper-test-scripts TESTS=tests/scripts/recipe-check.test.mts`로 검증했다(이전에는 169 통과, 3 실패, 이후 172 중 172 통과).
 - 영어 파일과 전체를 대조해 읽은 `docs/operations/development.ko.md`와 `docs/operations/repository-rules.ko.md`는 `npm ci`의 명시적 download, PHPStan 메모리 한도의 이유, 명령 다섯 개의 placeholder 원문, parity 표의 순서, HR-68의 읽기 검사에 붙는 "모든 platform에서", HR-99의 평서문, HR-82의 임시 파일 위치를 되살린다. (H35.72)
 - `CHANGELOG.md`와 전체를 대조해 읽은 `CHANGELOG.ko.md`는 영어 항목의 사실을 적는다: 빠진 절, id, 파일 이름을 되살리고(H19.9-3, H19.11, H20.1, H20.7, H25.20, H26.2-1, HY-79), 영어로 남은 항목 H25.3을 번역하며, commit 이름을 지운 뒤 남은 조사를 지우고(Rust core lock 항목), 바뀐 뜻을 고치며(H35.35-1, HY-113.19, HY-115.23, 네이티브 검사), code의 placeholder를 그대로 둔다. 영어 항목 H25.22는 매달린 "of"를 지운다. (H35.72)
 - 추적 파일이 Git commit을 적지 않는다는 AGENTS.md의 규칙은 그 규칙 전에 `[o]`였던 checklist 행의 Verification 칸을 유지합니다: 완료된 행은 끝난 기록이고(P26) kit이 그 Verification 칸을 유지하므로 글이 그대로 남습니다. 새 행은 commit을 적지 않습니다. `tests/scripts/no-commit-names.test.mts`는 상태가 `[o]`인 행의 Verification 칸만 빼고 모든 칸을 읽습니다. 그 칸에 H35.49와 H35.54의 마지막 이름 10개가 있으며, 테스트는 통과합니다. (H35.71)
