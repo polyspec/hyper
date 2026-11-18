@@ -127,7 +127,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.19"
+        "sentence": "HY-52.20"
       }
     },
     {
@@ -154,35 +154,12 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.19"
+        "sentence": "HY-52.20"
       }
     },
     {
-      "id": "a_max_age_of_negative_zero_is_zero_in_node",
-      "label": "a max age of negative zero is zero in Node, whose number has no float type (B-2)",
-      "calls": [
-        [
-          "cookie",
-          [
-            "\"a\"",
-            "\"b\"",
-            "-0.0"
-          ]
-        ]
-      ],
-      "headers": [
-        "a=b; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
-      ],
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-52.19"
-      }
-    },
-    {
-      "id": "a_max_age_of_negative_zero_fails_in_php_and_python",
-      "label": "a max age of negative zero is a float, which is no integer of the interface contract in PHP and Python (B-2), and fails with invalid_number",
+      "id": "a_max_age_of_negative_zero_fails",
+      "label": "a max age of negative zero is no integer of the type int in any language (B-2), and fails with invalid_number",
       "calls": [
         [
           "cookie",
@@ -198,13 +175,6 @@
         "status": null,
         "category": "value",
         "message": null
-      },
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-52.19"
       }
     },
     {
@@ -1257,7 +1227,7 @@
         "languages": [
           "node"
         ],
-        "sentence": "HY-52.19"
+        "sentence": "HY-52.20"
       }
     },
     {
@@ -1282,7 +1252,7 @@
           "php",
           "python"
         ],
-        "sentence": "HY-52.19"
+        "sentence": "HY-52.20"
       }
     },
     {
@@ -1322,32 +1292,8 @@
       }
     },
     {
-      "id": "the_status_negative_zero_is_the_integer_0_in_node",
-      "label": "the status negative zero is the integer 0 in Node, whose number has no float type (B-2)",
-      "calls": [
-        [
-          "status",
-          [
-            "-0.0"
-          ]
-        ]
-      ],
-      "raises": {
-        "kind": "reply_status_not_allowed",
-        "status": null,
-        "category": "value",
-        "message": "page status 0 of a reply is not 403 (HY-69)"
-      },
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-52.19"
-      }
-    },
-    {
-      "id": "the_status_negative_zero_fails_in_php_and_python",
-      "label": "the status negative zero is a float, which is no integer of the interface contract in PHP and Python (B-2), and fails with invalid_number",
+      "id": "the_status_negative_zero_fails",
+      "label": "the status negative zero is no integer of the type int in any language (B-2), and fails with invalid_number",
       "calls": [
         [
           "status",
@@ -1361,13 +1307,6 @@
         "status": null,
         "category": "value",
         "message": null
-      },
-      "only": {
-        "languages": [
-          "php",
-          "python"
-        ],
-        "sentence": "HY-52.19"
       }
     },
     {
