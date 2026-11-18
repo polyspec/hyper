@@ -63,7 +63,7 @@ export class CaseReader {
   }
 
   section(): string {
-    return `${this.caseFile}:${this.sectionName}`;
+    return this.sectionName;
   }
 
   id(): string {

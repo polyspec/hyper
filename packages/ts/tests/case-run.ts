@@ -64,11 +64,12 @@ export async function runCases(runner: string, steps: Record<string, Step>): Pro
   const results = process.env.RECIPE_RESULTS;
   if (results === undefined) throw new Error('RECIPE_RESULTS is not set: the case runner writes its results to the file that it names');
   const selection = process.env.RECIPE_CASES;
-  const readers = selection === undefined ? CaseReader.cases(runner) : selectCases(runner, selection, CaseReader.cases(runner), (reader) => ({ file: reader.file(), section: reader.section().slice(reader.file().length + 1), id: reader.id() }));
+  const readers = selection === undefined ? CaseReader.cases(runner) : selectCases(runner, selection, CaseReader.cases(runner), (reader) => ({ file: reader.file(), section: reader.section(), id: reader.id() }));
   const lines: string[] = [];
   for (const reader of readers) {
-    const step = Object.hasOwn(steps, reader.section()) ? steps[reader.section()] : undefined;
-    if (step === undefined) reader.fail(`STEP_UNKNOWN ${reader.section()}`);
+    const key = `${reader.file()}:${reader.section()}`;
+    const step = Object.hasOwn(steps, key) ? steps[key] : undefined;
+    if (step === undefined) reader.fail(`STEP_UNKNOWN ${key}`);
     else {
       try {
         await step(reader);
