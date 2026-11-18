@@ -93,7 +93,7 @@
 
 ## 필수 검사
 
-- Own: commit 전에는 `make docs-check`를 실행한다. `make owner-check`, `make check`나 end-to-end 검사(Apple `container`, browser, parity, run의 server 등)는 commit이나 push 전에 local에서 실행하지 않는다. CI가 push 뒤에 실행한다.
+- Own: commit 전에는 `make docs-check`를 실행한다. checkout이 자기 process로 실행하는 검사는 local에서 실행한다. 그 검사가 CI보다 먼저 기본 결함을 잡기 때문이다. 이 저장소의 test가 자기 process로, system이 정하는 port에서 시작하고 끝에 멈추는 server(HR-87), 예를 들어 `packages/php/tests/RunTest.php`와 `SessionCookieTest.php`의 `php -S`, `tests/scripts/upload-servers.test.mts`, `board-servers.test.mts`, `check-parity.test.mts`가 그런 검사다. checkout 밖의 service나 무거운 환경이 필요한 검사는 checkout이 자기 process로 그것을 마련할 수 없으므로 push 뒤에 CI에서만 실행한다: Redis, Apple `container`, browser(`make e2e`, `make parity`, `make bench-browser`), release asset(`ci-assets-*`). `make owner-check`와 `make check`는 commit이나 push 전에 local에서 실행하지 않는다.
   Enforced by: none, local 실행은 어떤 도구도 관찰하지 않는다.
 - Refines P26: `docs/plans/execution/checklist.md`에서 task를 `[o]`로 표시하기 전에, 커밋된 tree에서 그 task의 검증 명령을 실행한다. Verification 열은 `make check`가 아니라 task를 맡는 명령을 적는다. 이미 `[o]`인 행은 명령을 그대로 둔다.
   Enforced by: `make docs-check`

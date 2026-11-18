@@ -93,7 +93,7 @@ The working principles of every polyspec repository, and the rules of work that 
 
 ## Required checks
 
-- Own: Before a commit, run `make docs-check`. Do not run `make owner-check`, `make check` or an end-to-end check, such as Apple `container`, a browser, parity or a server of a run, locally before a commit or a push: CI runs them after the push.
+- Own: Before a commit, run `make docs-check`. A check that the checkout runs with its own processes runs locally, because it catches a basic fault before CI does: a server that a test of this repository starts in its own process, on a port that the system assigns, and stops at its end (HR-87), such as `php -S` of `packages/php/tests/RunTest.php` and `SessionCookieTest.php`, `tests/scripts/upload-servers.test.mts`, `board-servers.test.mts` and `check-parity.test.mts`, is such a check. A check that needs a service from outside the checkout or a heavy environment runs only in CI after the push, because the checkout cannot provide it with its own processes: Redis, Apple `container`, the browser (`make e2e`, `make parity`, `make bench-browser`) and the release assets (`ci-assets-*`). `make owner-check` and `make check` are not run locally before a commit or a push.
   Enforced by: none, a local run is not observed by a tool.
 - Refines P26: Before marking a task `[o]` in `docs/plans/execution/checklist.md`, run the verification command of the task on the committed tree. The Verification column names the command that owns the task, not `make check`. Rows that are already `[o]` keep their command.
   Enforced by: `make docs-check`
