@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: f549f37b958fbd3e7565ede86156e0673f51a6c6a76c3f8cb53c4d841d932b7d -->
+<!-- source-sha256: cc910e22659400fe0276ce23169e8f545c447ad24057da52517adeeff07d24a9 -->
 # 기능 상태
 
 [English](features.md).

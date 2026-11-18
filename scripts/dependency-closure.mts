@@ -7,6 +7,7 @@
 //
 // Usage: node scripts/dependency-closure.mts --lock <package-lock.json> --workspace <path of the workspace>
 import { readFileSync } from 'node:fs';
+import { jsonObject, type JsonObject, jsonString, parseJsonObject } from './json.mts';
 
 interface LockEntry {
   readonly dependencies?: Readonly<Record<string, string>>;
@@ -32,6 +33,20 @@ export function dependencyClosure(packages: Readonly<Record<string, LockEntry>>,
   return seen;
 }
 
+/** The entries of the `packages` map of a lock, each read for the members that the closure follows. */
+function lockPackages(packages: JsonObject, lock: string): Record<string, LockEntry> {
+  return Object.fromEntries(Object.entries(packages).map(([key, value]): [string, LockEntry] => {
+    const where = `packages["${key}"] of ${lock}`;
+    const entry = jsonObject(value, where);
+    const dependencies = entry.dependencies === undefined
+      ? undefined
+      : Object.fromEntries(Object.entries(jsonObject(entry.dependencies, `${where}.dependencies`)).map(([name, range]) => [name, jsonString(range, `${where}.dependencies.${name}`)]));
+    const link = entry.link === undefined ? undefined : entry.link === true;
+    const resolved = entry.resolved === undefined ? undefined : jsonString(entry.resolved, `${where}.resolved`);
+    return [key, { ...(dependencies === undefined ? {} : { dependencies }), ...(link === undefined ? {} : { link }), ...(resolved === undefined ? {} : { resolved }) }];
+  }));
+}
+
 if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   const lock = args[0] === '--lock' ? args[1] : undefined;
@@ -40,6 +55,7 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
     process.stderr.write('Usage: node scripts/dependency-closure.mts --lock <package-lock.json> --workspace <path of the workspace>\n');
     process.exit(2);
   }
-  const parsed = JSON.parse(readFileSync(lock, 'utf8')) as { packages?: Record<string, LockEntry> };
-  for (const name of dependencyClosure(parsed.packages ?? {}, workspace)) process.stdout.write(`${name}\n`);
+  const parsed = parseJsonObject(readFileSync(lock, 'utf8'), lock);
+  const packages = parsed.packages === undefined ? {} : lockPackages(jsonObject(parsed.packages, `packages of ${lock}`), lock);
+  for (const name of dependencyClosure(packages, workspace)) process.stdout.write(`${name}\n`);
 }
