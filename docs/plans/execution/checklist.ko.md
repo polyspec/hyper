@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 41aa44a2c30f2f56a208c9d69b4dd3f5eced5e6385537df13bd555c9689fa16d -->
+<!-- source-sha256: bfef2846139414f8065df1dca0f636a5ae226b7e3f2fbbb07af2ea17ace101e1 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -674,3 +674,4 @@
 | H35.58 | make target이 config/php-ext-pins.json을 쓴다. pin한 각 PHP 확장에 대해 pin한 version의 release에서 packages.json과 각 platform zip의 release asset의 field digest를 읽으므로 파일의 어떤 sha256도 손으로 복사하지 않는다. 지금까지 각 pin은 download한 asset의 shasum에서 손으로 썼다 | a script under scripts/ and its make target, config/php-ext-pins.json, tests/scripts/php-ext-pins.test.mts | `make hyper-test-scripts TESTS=tests/scripts/php-ext-pins.test.mts` | [v] |
 | H35.60 | make hyper-test-scripts의 선택 TESTS는 테스트가 시작하는 make에 들어가지 않는다. make는 명령줄 변수를 recipe의 환경으로 넘기므로 tests/scripts/make-recursion.test.mts의 내부 make가 TESTS를 보았고, Makefile:484의 prerequisite가 테스트의 가짜 node를 실행해 6개 case가 실패했다. 선택했을 때만 실패하는 테스트는 그 선택으로 검증할 수 없다 | Makefile | `make hyper-test-scripts TESTS=tests/scripts/make-recursion.test.mts`와 `make hyper-test-scripts` | [v] |
 | H35.61 | benchmarks/server.php는 hyper가 page render를 core로 옮긴 뒤(H35.32) 실행하는 core의 page render를 App으로 측정한다. 행 section은 10, 100, 1,000행을 돌려주는 rows loader로 board를 열고 GET /board의 문서와 region JSON에 대한 App::handle을 측정한다. 이 benchmark는 core가 대체한 template 하나의 render인 Polyspec\Hyper\Renderer를 썼다. core page render 설계의 한국어 twin stamp라는 제목의 4ed11336은 설계가 의도한 대로(docs/plans/execution/core-page-render.md:286) packages/php/src/Page/Renderer.php, Reads.php, packages/php/tests/RendererTest.php도 지웠고 benchmark는 그대로 두었다. 그래서 benchmark가 125행에서 Class not found로 실패했고 tests/scripts/benchmark-server.test.mts가 실패했다 | benchmarks/server.php, docs/operations/benchmark.md | `make hyper-test-scripts TESTS=tests/scripts/benchmark-server.test.mts` | [v] |
+| H35.67 | node-package는 node-addon이 자기 test feature로 addon을 build하듯, packages/ts/native/wasm/Cargo.toml이 선언한 모든 test feature, 곧 panic-test, fault-test, thrown-count-test로 WASM module을 build한다. panic-test만으로 build했으므로 test-wasm의 생성 test가 glue.__armFaults is not a function과 stepGlue.__thrownCount is not a function으로 실패했다. B-4 경로(GN-6y)와 K-2의 case는 알려진 실패로 남는다 | Makefile | `make test-wasm` | [ ] |
