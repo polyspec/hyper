@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 62a7234a5cb44f66a0c9b577205dc18c2f3267f5a86137fa655a5b9b4540bd9a -->
+<!-- source-sha256: 0589d0adff357dc32584da8b8c8978e248c9720664019346f7c5a28ac8db7539 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 영어 파일과 전체를 대조해 읽은 `docs/operations/development.ko.md`와 `docs/operations/repository-rules.ko.md`는 `npm ci`의 명시적 download, PHPStan 메모리 한도의 이유, 명령 다섯 개의 placeholder 원문, parity 표의 순서, HR-68의 읽기 검사에 붙는 "모든 platform에서", HR-99의 평서문, HR-82의 임시 파일 위치를 되살린다. (H35.72)
 - `CHANGELOG.md`와 전체를 대조해 읽은 `CHANGELOG.ko.md`는 영어 항목의 사실을 적는다: 빠진 절, id, 파일 이름을 되살리고(H19.9-3, H19.11, H20.1, H20.7, H25.20, H26.2-1, HY-79), 영어로 남은 항목 H25.3을 번역하며, commit 이름을 지운 뒤 남은 조사를 지우고(Rust core lock 항목), 바뀐 뜻을 고치며(H35.35-1, HY-113.19, HY-115.23, 네이티브 검사), code의 placeholder를 그대로 둔다. 영어 항목 H25.22는 매달린 "of"를 지운다. (H35.72)
 - 추적 파일이 Git commit을 적지 않는다는 AGENTS.md의 규칙은 그 규칙 전에 `[o]`였던 checklist 행의 Verification 칸을 유지합니다: 완료된 행은 끝난 기록이고(P26) kit이 그 Verification 칸을 유지하므로 글이 그대로 남습니다. 새 행은 commit을 적지 않습니다. `tests/scripts/no-commit-names.test.mts`는 상태가 `[o]`인 행의 Verification 칸만 빼고 모든 칸을 읽습니다. 그 칸에 H35.49와 H35.54의 마지막 이름 10개가 있으며, 테스트는 통과합니다. (H35.71)
 - changelog, deployment, development, repository-rules의 한국어 쌍둥이는 영어 파일의 모양을 따릅니다: 쌍둥이가 중첩된 목록 항목으로 나눴던 문장은 영어처럼 다시 한 문단이나 한 목록 항목이 되고, 사실은 같습니다. changelog의 `## 0.0.1`에서는 영어 항목이 산문으로 쓰는 일곱 항목이 중첩 항목 37개를 가졌고, deployment는 9개, development는 2개, repository-rules는 3개를 가졌습니다. `tests/scripts/twin-shape.test.mts`는 20개 쌍에서 통과합니다. (H35.72)
