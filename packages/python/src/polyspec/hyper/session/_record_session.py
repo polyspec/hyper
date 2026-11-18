@@ -8,7 +8,7 @@ import secrets
 from abc import abstractmethod
 from typing import Optional
 
-from polyspec.php_serialize import Reference, StdClass, serialize, unserialize
+from polyspec.php_serialization import Reference, StdClass, serialize, unserialize
 
 from ..app._core_rules import core_rules
 from .session_store import SessionStore

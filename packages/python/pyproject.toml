@@ -12,8 +12,6 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
-    # The wheel asset of the php-serialization release v0.0.6, published under the package name polyspec-php-serialize, with the sha256 of that asset (HY-104).
-    "polyspec-php-serialize @ https://github.com/polyspec/php-serialization/releases/download/v0.0.6/polyspec_php_serialize-0.0.6-py3-none-any.whl#sha256=00d8022dd33432532dbbbd3bed072e33d9243784b5454ddc814f867be14bc716",
     # The wheel assets of the template release v0.0.32 with the sha256 of each asset (H21.4, H23.5, H31.5). A wheel holds
     # the native module of the template binding, so each platform has its asset. uv.lock locks them with their
     # dependencies, and `make hyper-install-python` installs that lock into the venv of the package (H23.15).
@@ -25,8 +23,9 @@ dependencies = [
     "polyspec-session-store @ https://github.com/polyspec/session-store/releases/download/v0.0.8/polyspec_session_store-0.0.8-cp314-abi3-macosx_11_0_arm64.whl#sha256=c56a208b6a2a1fd454d70cbf795099324d4467bcee07026b6fbe7e86aba40b83 ; sys_platform == 'darwin' and platform_machine == 'arm64'",
     "polyspec-session-store @ https://github.com/polyspec/session-store/releases/download/v0.0.8/polyspec_session_store-0.0.8-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=b2e16f2bfa88dec72e71f63a54acd9c1df418f4caec6ba4a14ae09b43f54b062 ; sys_platform == 'linux' and platform_machine == 'aarch64'",
     "polyspec-session-store @ https://github.com/polyspec/session-store/releases/download/v0.0.8/polyspec_session_store-0.0.8-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=a918c4acbb48edea5fc2243fe1bc8e43d2d5d30b1df384b77fa574d2d34599a5 ; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    # The wheel assets of the php-serialization release v0.0.17, which the session-store wheel requires at that exact
-    # version and no registry carries.
+    # The wheel assets of the php-serialization release v0.0.17, whose module polyspec.php_serialization reads and
+    # writes the session records of PHP (HY-104, H35.77) and which the session-store wheel requires at that exact
+    # version; no registry carries it.
     "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.17/polyspec_php_serialization-0.0.17-cp314-abi3-macosx_11_0_arm64.whl#sha256=48e1860034b4571aca8bab07f8b87175de99b43774f13b24f5f08c487bcf26ed ; sys_platform == 'darwin' and platform_machine == 'arm64'",
     "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.17/polyspec_php_serialization-0.0.17-cp314-abi3-manylinux_2_34_aarch64.whl#sha256=fbac98174b00204ced70a5cddc93ba61057837310900590c715ca8568faa0685 ; sys_platform == 'linux' and platform_machine == 'aarch64'",
     "polyspec-php-serialization @ https://github.com/polyspec/php-serialization/releases/download/v0.0.17/polyspec_php_serialization-0.0.17-cp314-abi3-manylinux_2_34_x86_64.whl#sha256=3e176082e065fc86e2f4417fd8adaf225184fe9df6c2f6efb5244f90524feb64 ; sys_platform == 'linux' and platform_machine == 'x86_64'",
