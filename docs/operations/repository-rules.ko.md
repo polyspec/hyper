@@ -1,5 +1,5 @@
 <!-- doc-id: repository-rules -->
-<!-- source-sha256: aa95ec0c3016ec7e434a1e36be5d0e354d432eb9ce9943f9f6c762704540fb72 -->
+<!-- source-sha256: 4146e0c93626159496cc0e5d9e866e7be565bfcfed84a03f852aaa3e440b208e -->
 # 저장소 규칙
 
 [English](repository-rules.md).
@@ -32,7 +32,7 @@
   - `hyper check --app <디렉터리>`는 매니페스트와 템플릿 규칙만 검사하며, 파일을 쓰지 않고 출력을 읽지 않는다.
   - 문서는 release archive에서 devDependency로 설치한 뒤의 호출을 `package.json` script나 `npm exec --package=@polyspec/hyper-cli -- hyper build`로 적는다. 설치 없는 `npx hyper`와 `npm exec hyper`는 npm의 무관한 공개 package `hyper`를 실행하므로 쓰지 않는다.
 
-  package는 다른 package와 함께 `polyspec-hyper-cli-X.Y.Z.tgz`로 릴리스된다(HR-95). `files`는 `bin`과 `lib`이고 `exports`는 `./package.json`뿐이며, module은 자신이 배포하는 파일, Node의 내장 module, manifest가 정확한 버전으로 요구하는 package만 import한다. manifest 검사와 예약 템플릿 `hyper/data.tpl`(`@polyspec/hyper-client/data-template.json`)을 위한 `@polyspec/hyper-client`, `reads.json`의 read path를 위한 `@polyspec/hyper`(그 entry `@polyspec/hyper/build`가 Rust core로 read path를 계산하고 쓴다(HR-61, HY-73.34). 그래서 build와 서버는 read path의 한 구현을 쓰고, build는 그 platform의 native addon이 필요하다), template package(HR-70), esbuild, Tailwind CSS가 그것이다. source는 `packages/cli`에 한 번만 있다. Makefile은 bin을 그 파일로 실행하고(HR-79) 이 저장소의 script는 module을 거기서 import하며, pack할 때 복사하거나 고쳐 쓰지 않는다. bin은 애플리케이션의 입력과 출력만 받고, 어떤 옵션도 이 저장소의 경로를 밝히지 않는다. `tests/scripts/package-source.test.mts`가 import를, `tests/scripts/cli.test.mts`가 하위 명령, 종료 코드, option을 검사한다.
+  package는 다른 package와 함께 `polyspec-hyper-cli-X.Y.Z.tgz`로 릴리스된다(HR-95). `files`는 `bin`과 `lib`이고 `exports`는 `./package.json`뿐이며, module은 자신이 배포하는 파일, Node의 내장 module, manifest가 정확한 버전으로 요구하는 package만 import한다. `@polyspec/hyper`(그 entry `@polyspec/hyper/build`가 manifest 검사, 예약 템플릿 `hyper/data.tpl`, Rust core로 계산하는 `reads.json`의 read path를 준다(HR-61, HY-73.34). 그래서 build와 서버는 이 규칙의 한 구현을 쓰고, build는 그 platform의 native addon이 필요하다), template package(HR-70), esbuild, Tailwind CSS가 그것이다. package는 `@polyspec/hyper-client`를 요구하지 않는다: `hyper build`는 애플리케이션의 client 코드를 bundle하며, 그 `@polyspec/hyper-client` import는 애플리케이션의 의존성에서 풀리므로 애플리케이션이 그 package를 선언한다. source는 `packages/cli`에 한 번만 있다. Makefile은 bin을 그 파일로 실행하고(HR-79) 이 저장소의 script는 module을 거기서 import하며, pack할 때 복사하거나 고쳐 쓰지 않는다. bin은 애플리케이션의 입력과 출력만 받고, 어떤 옵션도 이 저장소의 경로를 밝히지 않는다. `tests/scripts/package-source.test.mts`가 import를, `tests/scripts/cli.test.mts`가 하위 명령, 종료 코드, option을 검사한다.
 
 ## package
 
