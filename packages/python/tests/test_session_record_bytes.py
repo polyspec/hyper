@@ -44,7 +44,10 @@ class SessionRecordBytesTest(unittest.TestCase):
         session = FixedSession(b"")
         session.set("f", 1.5)
         session.set("o", StdClass({"x": 1}))
-        self.assertEqual(session.serialized(), b'a:2:{s:1:"f";d:1.5;s:1:"o";O:8:"stdClass":1:{s:1:"x";i:1;}}')
+        self.assertEqual(
+            session.serialized(),
+            b'a:2:{s:1:"f";d:1.5;s:1:"o";O:8:"stdClass":1:{s:1:"x";i:1;}}',
+        )
 
 
 if __name__ == "__main__":
