@@ -150,6 +150,38 @@ final class NativeSession implements SessionStore
         unset($_SESSION[$key]);
     }
 
+    /**
+     * Writes and closes a started session before the server answers, so that a session that cannot be written, as
+     * the session of a request that lost its lock, fails the request with the plain 500 (HY-115.23, HY-43). A request
+     * that started no session writes nothing.
+     *
+     * @internal
+     */
+    public function close(): void
+    {
+        ArgumentCount::most(\func_num_args(), 0);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+        // PHP reports a failed write as a warning and a return of false; the warning is read here, not raised.
+        $warning = null;
+        set_error_handler(static function (int $level, string $message) use (&$warning): bool {
+            $warning = $message;
+
+            return true;
+        });
+        try {
+            $closed = session_write_close();
+        } finally {
+            restore_error_handler();
+        }
+        if (!$closed) {
+            throw new \RuntimeException(
+                'hyper: the session could not be written' . ($warning === null ? '' : ": {$warning}"),
+            );
+        }
+    }
+
     public function renew(): void
     {
         ArgumentCount::most(\func_num_args(), 0);

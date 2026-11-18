@@ -1131,6 +1131,8 @@ final class App
         $request = $received->withInput();
         $store = new NativeSession($this->https, $request, $this->sessionSetup);
         $response = $this->through($request, $store, $started, $delivery);
+        // HY-115.23: the session is closed before the response is sent; a failed write is an escaped error.
+        $store->close();
         $delivery->response = $response;
         $response->send();
     }
