@@ -94,13 +94,13 @@ Read the failed target names from that report. Run their owner checks directly, 
 
 ## Preflight
 
-`make preflight` runs locally the part of the CI suite that the checkout provides with its own processes (H35.92), so that a basic fault shows before a push. Its list is the targets of `CI_TARGETS_<group>` of every group of `CI_GROUPS` that is not in `CI_GROUPS_MEASURE`, so a target that a CI group gains is on its list without another declaration. It runs them with the report runner of kit into `var/report/preflight`, every target to its end, and then fails and names each failed target (HR-86).
+`make preflight` runs locally the part of the CI suite that the checkout provides with its own processes (H35.92), so that a basic fault shows before a push. Its list is the targets of `CI_TARGETS_<group>` of every group of `CI_GROUPS` that is not in `CI_GROUPS_MEASURE`, without the targets that declare a need (below), so a target that a CI group gains is on its list without another declaration. It runs them with the report runner of kit into `var/report/preflight`, every target to its end, and then fails and names each failed target (HR-86).
 
 It first prints what it skips, because only CI runs it:
 
-- the targets of `PREFLIGHT_CI_ONLY`, `e2e` and `parity`, which drive a browser;
-- the targets of the measurement groups, `bench-browser` among them, which report and never fail;
-- the test files of `tests/scripts` that start a Redis server, which are the files that import `tests/scripts/session-redis-server.mts`; `hyper-test-scripts` runs the other files.
+- each target that declares what the checkout cannot provide, `CI_NEEDS_<target> := browser|container|redis`: `e2e`, `bench-browser` and `bench` need a browser, `bench-sessions` a Redis server and `virtiofs-check` Apple container. `tests/scripts/preflight.test.mts` fails a declaration that the dry run of its target does not reach, and a target of a check that reaches playwright, `container`, bay or a Redis server without one. `make parity` declares none, because it renders the browser code in Node;
+- the targets of the measurement groups, `bench` and `bench-sessions`, which report and never fail;
+- the test files of `tests/scripts` that start a Redis server, which are the files that import from `./session-redis-server.mts`; `hyper-test-scripts` runs the other files.
 
 The release assets (`ci-assets-*`) are in no CI group, so the list never holds them. A server that a test starts in its own process on a port that the system assigns runs, as AGENTS.md states.
 

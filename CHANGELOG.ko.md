@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 877c86ace402795176bc04c79aabb416f3b1b5ce5e52008e5b5fcca9198e833d -->
+<!-- source-sha256: a25a28ba8d06a0a2b1db87c5953a294bc2524a73240f679fe0d0bfc953997930 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make preflight`는 checkout이 자기 process로 실행하는 CI group의 target을 로컬에서 실행한다(H35.111, H35.92). 입력: `.github/workflows/ci.yml`이 실행하는 Makefile의 CI group. 이전 동작: suite의 그 부분을 실행하는 target이 없었으므로, 기본 결함은 push 뒤 CI에서만 드러났다. 기대 동작: checkout이 마련할 수 없는 것이 필요한 target은 그것을 `CI_NEEDS_<target> := browser|container|redis`로 선언하고(`e2e`, `bench-browser`, `bench`는 browser, `bench-sessions`는 Redis, `virtiofs-check`는 Apple container), 그 target은 `CI_GROUPS_MEASURE`에 없는 `CI_GROUPS`의 모든 group의 `CI_TARGETS_<group>`을 선언한 target 없이 kit의 report runner로 `var/report/preflight`에 모든 target을 끝까지 실행하고, 그 뒤 실패한 각 target을 이름하며 실패한다(HR-86). `hyper-test-scripts`는 Redis server를 시작하는, `./session-redis-server.mts`에서 import하는 test 파일 없이 실행하고, 그 target은 먼저 건너뛰는 각 target과 test 파일을 출력한다. `tests/scripts/preflight.test.mts`는 dry run을 읽어, target이 닿지 않는 선언과, 선언 없이 playwright, `container`, bay나 Redis server에 닿는 검사 target을 실패시킨다. `docs/operations/development.md`가 그 target을 설명한다.
 - AGENTS.md의 Required checks rule은 `make parity`를 로컬에서 실행하는 검사로 이름한다(H35.111, H35.92). 입력: `scripts/check-parity.mts`가 자기 PHP server를 시작하고 browser code를 Node에서 render하는 `make parity`. 이전 동작: rule은 browser를 시작하지 않는 그것을 CI만 실행하는 browser 검사로 이름했다. 기대 동작: rule은 그것을 test가 자기 process로 시작하는 server와 함께 이름하고, browser 목록은 `make e2e`와 `make bench-browser`를 담는다.
 - `tests/legacy/interfaces.json`에서 `file-store-sessions.json`의 결과 `created`는 각 server가 만드는 식별자의 statement인 HY-104.43을 인용한다(H35.43). 입력: 그 결과의 선언. 이전 동작: 파일의 note는 그 sentence가 현재 statement를 이름한다고 밝히는데도, 그 결과는 폐기된 HY-104.31을 인용했다. 기대 동작: Node와 Python server가 만들고 두 server의 step이 검사하는 소문자 16진수 64자리를 밝히는 HY-104.43을 인용하며, 고정 사본의 텍스트와 값은 그대로다.
 - recipe의 Node와 PHP reader는 매개변수 없는 빈 private 생성자를 member로 세지 않는다(H35.105, HYR-6). 입력: Node와 PHP server의 `Accept`처럼, 빈 private 생성자로 생성을 막는 static method만 가진 class. 이전 동작: `scripts/recipe/read-node.mts`와 `scripts/recipe/read-php.php`가 그것을 보고했으므로, unit에 생성자를 나열하지 않는 명세는 `MEMBER_ADDED`로 실패했다. 기대 동작: class의 다른 member가 모두 static이면 그것은 어떤 rule도 이름하지 않는 runtime 관용구이므로 두 reader는 그것을 건너뛰고, recipe fixture의 `MediaType`처럼 instance member가 있어 그 생성자로 instance를 만드는 class에서는 유지한다. Reflection은 빈 본문을 알려주지 않으므로 `scripts/recipe/read-php-functions.php`의 `isConstructionGuard`는 `PhpToken::tokenize`로 선언의 token을 읽으므로, 공백이나 주석만 담은 본문은 한 줄이든 여러 줄이든 빈 본문이다. Python에는 private 생성자가 없으므로 그 reader는 그대로다. test는 `tests/scripts/recipe-check.test.mts`에서 fixture class `StaticOnly`를 읽으며, `make hyper-test-scripts`에서의 실행은 CI를 기다린다.

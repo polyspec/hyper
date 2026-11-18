@@ -912,6 +912,34 @@ CHECK_TARGETS += $(if $(filter Darwin,$(shell uname)),$(DARWIN_TARGETS))
 check: ## Run final verification once after checklist development, on a committed tree
 	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) -k var/report/full-run $(CHECK_TARGETS)
 
+# What a target of a check needs that the checkout cannot provide with its own processes (H35.92): `browser`, a browser
+# that playwright drives, `container`, Apple container or bay, and `redis`, a Redis server. Only CI runs such a target;
+# tests/scripts/preflight.test.mts fails a declaration that the dry run of its target does not reach, and a target that
+# reaches one undeclared. make parity declares none: it starts its own PHP server and renders the browser code in Node.
+CI_NEEDS_e2e := browser
+CI_NEEDS_bench-browser := browser
+CI_NEEDS_bench := browser
+CI_NEEDS_bench-sessions := redis
+CI_NEEDS_virtiofs-check := container
+
+# The local preflight (H35.111): the targets of the CI groups that the checkout runs with its own processes. The list is
+# CI_TARGETS of every group of CI_GROUPS that is not in CI_GROUPS_MEASURE, without the targets that declare a need of
+# CI_NEEDS, so a target that a group gains is on it with no other declaration. hyper-test-scripts runs without the test
+# files that start a Redis server, which are the files that import from './session-redis-server.mts'. The report runner
+# of kit runs every target to its end and then fails with each failed target (HR-86); it runs them, not
+# $(call check,...), because a check of a recipe is no make: make runs a recipe line that names a make in a dry run too
+# (HR-83, the comment of check above). TESTS reaches only the make of each target, because the Makefile does not export
+# it to recipes.
+PREFLIGHT_CI_ONLY = $(patsubst CI_NEEDS_%,%,$(filter CI_NEEDS_%,$(.VARIABLES)))
+PREFLIGHT_TARGETS = $(filter-out $(PREFLIGHT_CI_ONLY),$(foreach group,$(filter-out $(CI_GROUPS_MEASURE),$(CI_GROUPS)),$(CI_TARGETS_$(group))))
+PREFLIGHT_REDIS_TESTS = $(shell grep -l "from './session-redis-server.mts'" $(wildcard tests/scripts/*.test.mts))
+PREFLIGHT_TESTS = $(filter-out $(PREFLIGHT_REDIS_TESTS),$(wildcard tests/scripts/*.test.mts))
+
+.PHONY: preflight
+preflight: ## Run the targets of the CI groups that the checkout runs with its own processes, to their ends, into var/report/preflight; names what only CI runs
+	@echo 'preflight skips what only CI runs: the targets that need a browser, a container or Redis $(foreach target,$(PREFLIGHT_CI_ONLY),$(target) ($(CI_NEEDS_$(target)))); the measurement targets $(foreach group,$(CI_GROUPS_MEASURE),$(CI_TARGETS_$(group))); the Redis tests $(PREFLIGHT_REDIS_TESTS)'
+	TESTS='$(PREFLIGHT_TESTS)' $(NODE) $(KIT)/ci-targets.$(KIT_EXT) -k var/report/preflight $(PREFLIGHT_TARGETS)
+
 
 
 .PHONY: hyper-runner-owner-check

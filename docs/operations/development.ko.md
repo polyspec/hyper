@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: bc2d020a9d6f009ad9a706b41b6170bc40c908e49b031865537bf275d55f6018 -->
+<!-- source-sha256: 23adca736a3f70a27f985c86c5a045497729feee0c0dbacb00eed9bf13d930cc -->
 # 개발
 
 [English](development.md).
@@ -95,13 +95,13 @@ Script 검사는 runner 전에 `assets`와 `server`를 요구한다. `package-ch
 
 ## Preflight
 
-`make preflight`는 checkout이 자기 process로 제공하는 CI suite 부분을 로컬에서 실행하므로(H35.92), 기본 결함이 push 전에 드러난다. 그 목록은 `CI_GROUPS_MEASURE`에 없는 `CI_GROUPS`의 모든 group의 `CI_TARGETS_<group>` target이므로, CI group이 얻는 target은 다른 선언 없이 그 목록에 오른다. kit의 report runner로 `var/report/preflight`에 모든 target을 끝까지 실행하고, 그 뒤 실패한 각 target을 이름하며 실패한다(HR-86).
+`make preflight`는 checkout이 자기 process로 제공하는 CI suite 부분을 로컬에서 실행하므로(H35.92), 기본 결함이 push 전에 드러난다. 그 목록은 `CI_GROUPS_MEASURE`에 없는 `CI_GROUPS`의 모든 group의 `CI_TARGETS_<group>` target에서 필요를 선언하는 target(아래)을 뺀 것이므로, CI group이 얻는 target은 다른 선언 없이 그 목록에 오른다. kit의 report runner로 `var/report/preflight`에 모든 target을 끝까지 실행하고, 그 뒤 실패한 각 target을 이름하며 실패한다(HR-86).
 
 먼저 CI만 실행하므로 건너뛰는 것을 출력한다.
 
-- browser를 움직이는 `PREFLIGHT_CI_ONLY`의 target `e2e`와 `parity`
-- 보고만 하고 실패하지 않는 측정 group의 target이며, `bench-browser`도 그 가운데 있다
-- Redis server를 시작하는 `tests/scripts`의 test 파일이며, 그것은 `tests/scripts/session-redis-server.mts`를 import하는 파일이다. `hyper-test-scripts`는 나머지 파일을 실행한다
+- checkout이 마련할 수 없는 것을 `CI_NEEDS_<target> := browser|container|redis`로 선언하는 각 target. `e2e`, `bench-browser`, `bench`는 browser가, `bench-sessions`는 Redis server가, `virtiofs-check`는 Apple container가 필요하다. `tests/scripts/preflight.test.mts`는 target의 dry run이 닿지 않는 선언과, 선언 없이 playwright, `container`, bay나 Redis server에 닿는 검사 target을 실패시킨다. `make parity`는 browser code를 Node에서 render하므로 아무것도 선언하지 않는다
+- 보고만 하고 실패하지 않는 측정 group의 target `bench`와 `bench-sessions`
+- Redis server를 시작하는 `tests/scripts`의 test 파일이며, 그것은 `./session-redis-server.mts`에서 import하는 파일이다. `hyper-test-scripts`는 나머지 파일을 실행한다
 
 release asset(`ci-assets-*`)은 어떤 CI group에도 없으므로 목록에 오르지 않는다. AGENTS.md가 밝히듯, test가 자기 process에서 system이 정하는 port로 시작하는 server는 실행된다.
 
