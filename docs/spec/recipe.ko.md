@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 7d877f6dff7fd9c730260a1b862d08faf11d60bc6ad96eaf9ac427b41e27b140 -->
+<!-- source-sha256: fd3ac823f0341f6afe879fa0cdb141af299d3c2dbb347139532228ea49b70b50 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -119,6 +119,12 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       `list<T>`, `map<T>`, `optional<T>`, `function(...) -> T`다. union 용어는 없고, Node의 `Promise<T>`는 `T`이며, iterator 또는
       generator는 `list<T>`, callable은 `function(...) -> T`다. 이 밖의 용어는 HYR-8에 실패한다. error는
       `contracts/protocol.json`의 statement가 이름을 붙이는 status 또는 spec의 error unit이다.
+      - **Extension classes.** 서버의 소스 파일이 아니라 hyper extension이 정의하는 error class는 native 항목이
+        `{"extension": "<qualified class name>", "kind": "class", "internal": <boolean>}`이고 `file`이 없는 unit이다. 이
+        unit은 member를 가지지 않는다. extension이 member를 선언하고 어떤 reader도 그것을 읽지 않기 때문이다.
+      - **Kinds.** 그런 class의 kind가 있는 error는 `<unit>:<kind>`로 쓴다. 예: `hyper-value-error:invalid_session_handler`.
+        `make recipe-files`는 unit이 extension unit이 아닌 error와 `contracts/protocol.json`의 어떤 statement도 이름을
+        붙이지 않는 kind를 실패시킨다. 호출자는 이 실패들을 kind만으로 구별하기 때문이다.
     - `state`: member가 하는 일을 한 문장으로 쓴다.
     - `native`: 언어마다 정확한 `symbol`과 정확한 `signature`(아래 참조).
   - **Types.** type은 unit(HYR-3)이 아닌 타입 선언이다: Node의 `type` alias 또는 `interface`, 그리고 Python의 `type` 문.
