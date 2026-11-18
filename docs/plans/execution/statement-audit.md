@@ -14,10 +14,10 @@ This document records row H35.43 of the [execution checklist](checklist.md). It 
 | HY-104 | 30 | 22 | 6 | 2 |
 | HY-113 | 6 | 3 | 2 | 1 |
 | HY-114 | 8 | 8 | 0 | 0 |
-| HY-115 | 21 | 18 | 3 | 0 |
+| HY-115 | 21 | 19 | 2 | 0 |
 | HY-131 | 13 | 10 | 1 | 2 |
 | HY-133 | 13 | 13 | 0 | 0 |
-| Total | 159 | 142 | 12 | 5 |
+| Total | 159 | 143 | 11 | 5 |
 
 ## Open statements
 
@@ -33,11 +33,10 @@ Seven statements were found not true without an `unimplemented` mark. Each one n
 The statements that these rows correct:
 
 - HY-104.37: the Node interface returns `undefined`, not null, for a key that holds no value (`packages/ts/src/session/session-store.ts:5`).
-- HY-115.23: the PHP server calls no `session_write_close`, so PHP writes the session after the response, and a lost lock cannot change the status.
 
 ## Limits
 
-A place in a library is written `<repository>@<tag>:<path>:<line>`, at the tag that hyper pins: session-store v0.0.7 (`Cargo.lock`, `packages/ts/package.json`, `packages/python/uv.lock`) and php-serialization v0.0.16 (`Cargo.lock`). The Rust and TypeScript sources of session-store v0.0.8 are the same as those of v0.0.7, so each session-store place holds for both tags. A place in PHP is written `php-src@php-8.4.27:<path>:<line>`. For PHP, the evidence for the Redis lock order is the session handler of phpredis, which this audit did not open; H35.86 reads it and compares its lock order with HY-115.
+A place in a library is written `<repository>@<tag>:<path>:<line>`, at the tag that hyper pins: session-store v0.0.7 (`Cargo.lock`, `packages/ts/package.json`, `packages/python/uv.lock`) and php-serialization v0.0.16 (`Cargo.lock`). The Rust and TypeScript sources of session-store v0.0.8 are the same as those of v0.0.7, so each session-store place holds for both tags. A place in PHP is written `php-src@php-8.4.27:<path>:<line>`. For PHP, the Redis lock order is compared with HY-115 in the section H35.86, which reads the `RedisClusterSessions` handler and the library; the phpredis session handler is not read there (see that section).
 
 ## HY-60
 
@@ -199,7 +198,7 @@ The Node and Python servers pass the Redis store to the session-store library (`
 | HY-115.3 | true | `packages/php/src/Session/RedisClusterSessions.php:63`, `packages/php/src/Session/NativeSession.php:54`, `packages/php/src/App/App.php:420`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:286`, `protocol.rs:300`, `protocol.rs:328` | none | The library takes `<key>_LOCK` with `SET NX PX`, waits `lock_wait` after a refusal, and fails with `LockTimeout` when its tries end (`protocol.rs:330`). |
 | HY-115.4 | true | `packages/php/src/Session/RedisClusterSessions.php:12`, `packages/php/src/Session/RedisClusterSessions.php:17`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:342` | `packages/ts/tests/steps/session-requests.ts:72` | The library reads the key after the lock, and a key that is gone gives no session. |
 | HY-115.5 | true | `packages/php/src/Session/RedisClusterSessions.php:26`, `packages/php/src/Session/RedisClusterSessions.php:33`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:419`, `protocol.rs:434`, `protocol.rs:437` | none | The library compares the lock value with its secret before `SETEX` and fails with `LockLost` without a write. |
-| HY-115.23 | partly true | `packages/ts/src/host/http-host.ts:160`, `packages/python/src/polyspec/hyper/host/_pipeline.py:226`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:437` | none | The Node and Python servers close the session before they write the response, and the close fails with `LockLost` for a lost lock. The PHP server calls no `session_write_close` in `packages/php/src`, so PHP writes the session at the end of the script, after the response, and a lost lock cannot change the status. |
+| HY-115.23 | true | `packages/ts/src/host/http-host.ts:160`, `packages/python/src/polyspec/hyper/host/_pipeline.py:226`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:437`, `packages/php/src/Session/NativeSession.php:243`, `packages/php/src/App/App.php:1135` | none | The Node and Python servers close the session before they write the response, and the close fails with `LockLost` for a lost lock. The PHP server closes it the same way: `NativeSession::close` calls `session_write_close` (`NativeSession.php:243`) before `App.php:1137` sends the response, and a failed write throws (`NativeSession.php:247`). See H35.86 below. |
 | HY-115.7 | true | `packages/php/src/Session/RedisClusterSessions.php:80`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:412` | none | The library sends `EXPIRE` for an unchanged session and compares no lock. |
 | HY-115.8 | true | `packages/php/src/Session/RedisClusterSessions.php:14`, `packages/php/src/Session/RedisClusterSessions.php:84`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:12`, `protocol.rs:180` | none | The library releases with the script that deletes the key only when it holds the secret. |
 | HY-115.24 | true | `packages/php/src/Session/NativeSession.php:128` | none | A condition on a phpredis peer. |
@@ -215,6 +214,21 @@ The Node and Python servers pass the Redis store to the session-store library (`
 | HY-115.20 | true | `tests/scripts/session-redis-cluster.test.mts:188` | itself | |
 | HY-115.28 | partly true | `packages/ts/src/session/redis-sessions.ts:21`, `packages/python/src/polyspec/hyper/session/redis_sessions.py:41`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:58`, `protocol.rs:62` | none | The library fails a lifetime of 0 with `InvalidLifetime` and a lock expiry of 0 with `InvalidLockExpire`, and gives the lock expiry no default. Marked `unimplemented` H35.37 for PHP. `RedisClusterSessions` gives `lockExpire` the default 30 (`packages/php/src/Session/RedisClusterSessions.php:32`). |
 | HY-115.22 | true | `packages/php/src/Session/RedisClusterSessions.php:63`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:328` | none | The library tries once and then `lock_retries` more times. |
+
+## H35.86: the Redis lock order of the PHP server
+
+The PHP server has two Redis session handlers: the session handler of phpredis, which `NativeSession` starts for a standalone or Sentinel store (`packages/php/src/Session/NativeSession.php:55`), and `RedisClusterSessions` (`packages/php/src/Session/RedisClusterSessions.php`) for Redis Cluster. Both are compared with the library that the Node and Python servers use, session-store v0.0.8, the release that the root `composer.json` pins for `ext-polyspec_session_store` and `docs/operations/dependencies.md` pins for the other servers. The library is read at its tag `session-store@v0.0.8` in the local checkout `~/Projects/polyspec/session-store`; its commit is `4fd527d4`.
+
+The phpredis 6.3.0 session source was not read verbatim. The only text obtained was a summary from a fetch tool, which gave line numbers that it marked as uncertain, so this section cites no phpredis line. The helper `make hyper-install-redis` (`Makefile:331`) extracts phpredis 6.3.0 into `var/pie/phpredis` (`Makefile:329`), but its `pie_run` trap removes that work tree on exit (`Makefile:269`), so no source file remains to read. The phpredis column of the table is therefore unverified, and no verdict is given for phpredis.
+
+| Step | Statements | session-store v0.0.8 (Node, Python) | PHP `RedisClusterSessions` | Verdict for PHP Cluster | phpredis (standalone, Sentinel) |
+| --- | --- | --- | --- | --- | --- |
+| Takes the lock | HY-115.3 | `protocol.rs:296-302` builds `SET <key>_LOCK <secret> NX PX`, sent at `:321` after `EXISTS` at `:316` | `RedisClusterSessions.php:143` in `acquire` (`:135`), called from `read` at `:91` for every request | true for the command; the library takes the lock only when the key exists (`:318`), PHP takes it for every id | not read |
+| Retries and waits | HY-115.3, HY-115.22 | `protocol.rs:328-334`: a refusal waits `lock_wait` and retries while `tries < lock_retries`; `LockTimeout` at `:330` | `RedisClusterSessions.php:142` loops `try <= lockRetries`, one try and then `lockRetries` more (HY-115.22 holds); `usleep` at `:149` after every refusal, the last one included | true for both; PHP waits once more after its last try, which the library does not, and returns false at `:152` | not read |
+| Writes | HY-115.23, HY-115.5 | `protocol.rs:418-423` reads the lock, `:434-437` refuses a lock that is not its secret (`LockLost`), `:398-402` writes with `SETEX`; `:412-416` sends `EXPIRE` for an unchanged session | `RedisClusterSessions.php:105` reads the lock and `:112` writes with `SETEX`, in `write` (`:101`); `write` runs in `session_write_close` at `NativeSession.php:243`, inside `NativeSession::close` (`:226`), before `App.php:1135` closes the store and `App.php:1137` sends the response | true; the earlier audit text that PHP calls no `session_write_close` was wrong | not read |
+| Frees the lock | HY-115.8 | `protocol.rs:12-13` is the `RELEASE` script, run at `:386-396` after the write or after the `LockLost` error | `RedisClusterSessions.php:14-15` is the script; `close` (`:65`) calls `release` (`:67`), which runs the script at `:163`; `destroy` (`:120`) releases at `:122` | true | not read |
+
+No statement that the PHP Cluster handler does not follow was found in these rows, so no statement gets the H35.40 mark here. The rows of phpredis stay unverified: HY-115.3 and HY-115.22 for phpredis, and the phpredis side of HY-115.24, need the phpredis source read before a verdict. Places cited in the table: 31. Statements compared: HY-115.3, HY-115.5, HY-115.8, HY-115.22 and HY-115.23.
 
 ## HY-131
 
