@@ -257,6 +257,12 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     library in `release`, such as `fields.json` and `forms.json` of http-form, is read from
     `var/release-files/<library>/<tag>/contracts/<file>`, which `make hyper-install-release-files` writes from the pin of
     `config/release-files.json`; a reader that does not find it fails with its path and that target.
+    The `caseFiles` entry of such a file declares every top-level key of the file, and each runner of `php`, `node`
+    and `python` runs every section of it: a section that a runner left out would narrow the cases of the release that
+    hyper takes, and the reader fails a key that the entry does not declare (`FILE_UNDECLARED`). A key whose value is
+    no list of cases, such as `binding` of `forms.json`, which lists the cases of the binding layer, is declared in
+    `fixtures`. A section whose step needs a member that a server does not have is a row of the checklist under the row
+    that pins the release, with the member it needs, and not a section that a runner leaves out.
   - **Steps.** The step of a section in a language is one function below the `steps` directory of that language, at the
     place that the words of the case file and the name of the section give: PHP the static method `<section>` of the
     class `<Words>Steps` in `<Words>Steps.php`, Node the property `<section>` of the exported object `steps` in

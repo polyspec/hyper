@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 575fc7be7874816ecabb8a74978edf6b01fb28b65c9fc5ec952707dda27d16fb -->
+<!-- source-sha256: 90cd1264202ec80575c2b2ceb335a01bb3f035f6a4aa1624a7bafa74ae4ab976 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -240,6 +240,11 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     http-form의 `fields.json`과 `forms.json`은 `var/release-files/<library>/<tag>/contracts/<file>`에서 읽는다. 이 파일은
     `make hyper-install-release-files`가 `config/release-files.json`의 pin으로 쓰며, 그것을 찾지 못한 reader는 그 경로와
     그 target을 적고 실패한다.
+    그런 파일의 `caseFiles` 항목은 파일의 모든 최상위 key를 선언하고, `php`, `node`, `python`의 각 runner는 그 모든
+    section을 실행한다. runner가 뺀 section은 hyper가 받는 release의 case를 좁히고, reader는 항목이 선언하지 않은 key를
+    실패시킨다(`FILE_UNDECLARED`). case 목록이 아닌 값의 key, 예를 들어 binding 계층의 case를 나열하는 `forms.json`의
+    `binding`은 `fixtures`에 선언한다. step이 서버에 없는 member를 필요로 하는 section은 release를 고정하는 행 아래의
+    checklist 행이 되어 필요한 member를 적으며, runner가 빼는 section이 되지 않는다.
   - **Steps.** 한 언어에서 section의 step은 그 언어의 `steps` 디렉터리 아래, case 파일의 words와 section의 이름이 정하는
     자리에 있는 함수 하나다: PHP는 `<Words>Steps.php`의 class `<Words>Steps`의 static method `<section>`, Node는
     `<words>.ts`가 export하는 객체 `steps`의 property `<section>`, Python은 `<words>_steps.py`의 snake_case 함수

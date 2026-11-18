@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 90935517e9c165328bae91061380cfdf0de173b24896fff9b4d71ad9aac4a1fb -->
+<!-- source-sha256: 68dd012e7cbe7bf199e5e4d99289ba04377462f400ffe9fde4ed4f884d633aab -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `docs/spec/recipe.md`의 HYR-7은 release의 case 파일의 `caseFiles` 항목이 파일의 모든 최상위 key를 선언하고, PHP, Node, Python의 runner가 그 모든 section을 실행하며, case 목록이 아닌 값의 key는 fixture이고, step이 서버에 없는 member를 필요로 하는 section은 runner가 빼는 section이 아니라 checklist의 행이라고 적는다(H35.11). 입력: `urlencoded`, `multipart`, `streamed` 밖의 section 18개를 어떤 항목도 선언하지 않은 http-form v0.0.3의 `fields.json`과 `forms.json`. 동작: reader가 두 파일의 모든 case를 `FILE_UNDECLARED`로 실패시켰다. 행 H35.11-1, H35.11-2, H35.11-3이 선언과 step, `content_type`과 `boundary`의 member, PHP와 Python의 fault build를 가진다. 검증: `make docs-check`.
 - `contracts/interfaces.json`은 서버가 모든 body를 core로 읽기 시작하면서 H35.11이 파일을 지운 concern `form-values`의 unit `multipart`, `multipart-reader`, `request-body`와, H35.11이 지운 그 concern의 case 파일 `tests/legacy/fields.json`을 더는 선언하지 않는다(H35.11). 입력: 세 서버의 recipe 검사. 이전 동작: 선언이 더는 없는 source와 member 18개를 가리켰다. 기대 동작이자 현재 동작: concern은 서버가 가진 unit을 선언한다. `NamedValues`는 세 서버의 `Fields`와 `Files`가 그것을 상속하므로 남는다. 검증: `make owner-validate`, `make hyper-test-scripts`.
 - Node 서버는 core 파일의 이름, filename, content type, 크기를 binding이 주는 getter로 읽는다(H35.11). 입력: Node 서버로 보내는 파일을 가진 multipart 요청. 이전 동작: `UploadedFile.ofCore`가 getter인 binding 파일의 `name()`을 불러 `file.name is not a function`으로 실패했으므로 `contracts/request.json`과 `contracts/app.json`의 case 10개가 실패했고, 파일을 가진 요청은 500을 받았다. 기대 동작이자 현재 동작: 요청은 그 파일을 준다. WSGI host는 `SystemExit`처럼 오류가 아닌 예외가 callable을 지나가기 전에 body의 파일을 지운다(HY-43, HY-131.14). 이전에는 body가 소멸자로만 해제되어 경고했다. 조각 단위로 읽는 body의 테스트는 `tempfile.tempdir` 대신 core가 읽는 `TMPDIR`을 정하고 core가 만드는 디렉터리 `http-form-`을 기대한다. PHP의 multipart worker는 PHP 서버의 extension을 load하고 part를 읽기 전에 body를 끝낸다. `tests/scripts/node-core.test.mts`는 `readHeldBody`, `parseUrlencoded`, `RequestBody`를 테스트한다. 검증: `make hyper-test-node`, `make hyper-test-python`, `make hyper-test-scripts`.
 - recipe candidate는 spec이 member와 함께 적은 unit에 그 source에 있고 spec에 없는 각 member를 더하고, 그 중립 field를 hand-written으로 적는다(H35.56). 입력: source의 두 member 중 하나를 적는 `contracts/interfaces.json`의 unit으로 실행한 `make recipe-candidates`. 이전 동작: `scripts/recipe/candidate.mts`의 `buildCandidate`는 member가 없는 unit에만 source의 member를 유도했으므로 candidate는 적힌 member만 담았고 unit을 그것으로 다시 쓸 수 없었다. 기대 동작: `deriveMembers`가 모든 unit에서 실행되고 unit이 이미 적은 native symbol의 member는 건너뛴다. `make hyper-test-scripts TESTS=tests/scripts/recipe-check.test.mts`(이전 170개 중 169개, 이후 170개 모두 통과)로 검증했다. `make recipe-candidates`는 spec의 member 520개에 185개를 더한다.
