@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: ad64e8221400e4d88533e35308c50151f8e7bacb069ebf2028d87fd176d5ad64 -->
+<!-- source-sha256: 1c6e80f32d891bab040f915e2d4a7d1bfbcccad0a1dbf28c44ba2b640ca08392 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -676,3 +676,4 @@
 | H35.63 | make lint-ts가 통과한다: oxlint가 tests/scripts/php-ext-pins.test.mts:23에서 prefer-string-starts-ends-with를, scripts/dependency-closure.mts:43, tests/scripts/php-ext-pins.test.mts:36, tests/scripts/release-assets.test.mts:102에서 no-unsafe-type-assertion을 보고한다; 각 값은 suppression 없이 scripts/json.mts의 type check로 읽는다 | scripts/dependency-closure.mts, tests/scripts/php-ext-pins.test.mts, tests/scripts/release-assets.test.mts, CHANGELOG.md와 한국어 쌍 | `make lint-ts` | [ ] |
 | H35.64 | contracts/functions.json의 browser runner가 function kind zone을 두 번째 인자의 env.timezone으로 매핑하고 case의 time zone +09:00으로 render한다: make hyper-test-js가 'functions.json names the kind zone, which the runner does not map'로 실패한다(HYC-24.10) | packages/client/tests/functions.test.ts, CHANGELOG.md와 한국어 쌍 | `make hyper-test-js` | [ ] |
 | H35.65 | packages/rust/tests/contracts.rs는 rustfmt가 쓰는 형식이다: make core-fmt-check가 2777행에서 실패한다 | packages/rust/tests/contracts.rs, CHANGELOG.md와 한국어 쌍 | `make core-fmt-check` | [ ] |
+| H35.66 | recipe e2e는 test의 command를 구분자 -- 다음에 scripts/run-e2e.mts에 넘긴다: --$(NODE)를 한 단어로 넘기므로 parseArgs가 ERR_PARSE_ARGS_UNKNOWN_OPTION으로 거부한다 | Makefile, tests/scripts/run-e2e.test.mts, CHANGELOG.md와 한국어 쌍 | `make hyper-test-scripts TESTS="tests/scripts/run-e2e.test.mts"` | [ ] |
