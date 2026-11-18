@@ -19,12 +19,12 @@ thrown-count-test = []
 
 [dependencies]
 polyspec-hyper = { path = "../../../rust" }
-polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag = "v0.0.21", features = ["construct", "lock"] }
-polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", tag = "v0.0.9" }
-polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.6" }
-polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", tag = "v0.0.16" }
-polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.7", default-features = false }
-polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.31" }
+polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag = "v0.0.22", features = ["construct", "lock"] }
+polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", tag = "v0.0.10" }
+polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.7" }
+polyspec-php-serialization = { git = "https://github.com/polyspec/php-serialization.git", tag = "v0.0.17" }
+polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.8", default-features = false }
+polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.32" }
 wasm-bindgen = "=0.2.130"
 js-sys = "=0.3.107"
 

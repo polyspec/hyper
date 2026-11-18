@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d800c4fb6912208dfe18bc76aa8ba0d2",
+    "content-hash": "ca2854aa0143efd7284e04b835f9ee9d",
     "packages": [
         {
             "name": "min-0-max/json-schema",
@@ -207,7 +207,7 @@
             "dist": {
                 "type": "path",
                 "url": "../../packages/php",
-                "reference": "619162b90428c6741f7f5b927660b7225673367c"
+                "reference": "19af25436fffcc2a78f3ac79915ebb1f5a8348f6"
             },
             "require": {
                 "ext-polyspec_hyper": "*",
@@ -348,8 +348,8 @@
     "platform-overrides": {
         "php": "8.4.1",
         "ext-polyspec_hyper": "0.0.40",
-        "ext-polyspec_json": "0.0.38",
-        "ext-polyspec_template": "0.0.31"
+        "ext-polyspec_json": "0.0.40",
+        "ext-polyspec_template": "0.0.32"
     },
     "plugin-api-version": "2.9.0"
 }

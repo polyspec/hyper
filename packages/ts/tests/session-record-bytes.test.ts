@@ -8,8 +8,11 @@ import { RecordSession } from '../src/session/record-session.js';
 
 /** A session whose record is the given bytes, as a store of a request gives it. */
 class FixedSession extends RecordSession {
-  constructor(private readonly record: Uint8Array) {
+  private readonly record: Uint8Array;
+
+  constructor(record: Uint8Array) {
     super('a'.repeat(32));
+    this.record = record;
   }
 
   override stored(): Uint8Array {
@@ -31,7 +34,8 @@ describe('the session record of php-serialization', () => {
     expect(session.get('a')).toBe(1.5);
     expect(session.get('o')).toEqual(new Map([['x', 1]]));
     expect(session.serialized()).toEqual(RECORD);
-    const stored = unserialize(session.serialized() ?? new Uint8Array()) as Map<unknown, unknown>;
+    const stored = unserialize(session.serialized() ?? new Uint8Array());
+    if (!(stored instanceof Map)) throw new Error('the record is no map');
     const keys = [...stored.keys()];
     expect(keys[0]).toEqual(Uint8Array.of(0xff, 0xfe));
     expect(stored.get('a')).toBe(1.5);

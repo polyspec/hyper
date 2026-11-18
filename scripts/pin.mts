@@ -83,8 +83,7 @@ function assetKey(declared: Declared, repository: string, asset: string): string
 
 /**
  * The declared package of a repository name: the package of that name, or else the one package of that repository. A
- * repository that publishes two packages, as php-serialization publishes php-serialize, names its own by its crate, its
- * Go module and its Composer repository.
+ * repository that publishes two packages names its own by its crate, its Go module and its Composer repository.
  */
 const repositoryKey = (declared: Declared, repository: string): string | undefined =>
   declared[repository]?.repository === `polyspec/${repository}` ? repository : Object.keys(declared).find((key) => declared[key]?.repository === `polyspec/${repository}`);

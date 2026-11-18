@@ -4,9 +4,12 @@ import { configDefaults, defineConfig } from 'vitest/config';
 // package one module instance, which its bound maps require (template VAL-22). Inlining the packages lets vitest load
 // them through its own transform only, not once through Node as well. Keeping the link path as the module id
 // (preserveSymlinks) stops vite from naming one file by its link path for one importer and by its real path for another.
+// @polyspec/php-serialization is the exception: the session record imports it and the session-store binding requires
+// it with the require of Node, and its addon registers its classes once (binding B-4), so vitest leaves it to Node,
+// whose module cache then holds its one instance for both (H35.77).
 // The generated tests of the Node and the WASM binding below native/ are node:test files, in which vitest finds no
 // suite: `make test-node-addon` and `make test-wasm` run them, and this run excludes the directory (H35.9-10).
 export default defineConfig({
   resolve: { preserveSymlinks: true },
-  test: { exclude: [...configDefaults.exclude, 'native/**'], server: { deps: { inline: [/@polyspec\//] } } },
+  test: { exclude: [...configDefaults.exclude, 'native/**'], server: { deps: { inline: [/@polyspec\/(?!php-serialization|session-store)/] } } },
 });
