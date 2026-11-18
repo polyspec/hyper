@@ -16,9 +16,9 @@
 //
 // `check` reads every place of the tracked files, offline, and fails at each one that names another version than the
 // declared one, with its file and line; it fails when it finds no place (HR-84). `write` sets the given versions in
-// config/pins.json and rewrites the places of the files that no tool writes: the locks, packages/go and the Cargo
-// manifests of the bindings, which binding scaffold writes, are left to the lock targets, whose make arguments it
-// prints one per line. A wheel whose version changes takes the sha256 of the field digest of its release asset from the
+// config/pins.json and rewrites the places of the files that no tool writes, and of the Cargo manifests of the bindings
+// and go.mod, which binding scaffold writes again (H35.75-1); the locks and go.sum are left to the lock targets, whose
+// make arguments it prints one per line. A wheel whose version changes takes the sha256 of the field digest of its release asset from the
 // releases API; an asset without one, or a package that config/pins.json does not declare, stops the script before it
 // writes. Each file is written with one rename (HR-82), and a second run with the same versions writes nothing.
 //
@@ -64,11 +64,13 @@ function filesOf(root: string): string[] {
   return listed.filter((file) => !file.startsWith('tests/scripts/fixtures/') && (names.has(path.posix.basename(file)) || file === 'config/php-ext-pins.json'));
 }
 
-/** A file that a tool writes: a lock, the Go module, and the Cargo manifest of a binding, which binding scaffold writes. */
+/**
+ * A file that a tool writes: a lock and go.sum, whose sums come from Go. The Cargo manifests of the bindings and go.mod
+ * are written here too, although binding scaffold writes them again, so that no cargo-lock before bindings-scaffold
+ * sees two versions of one crate (H35.75-1).
+ */
 function writtenByTool(file: string): boolean {
-  const base = path.posix.basename(file);
-  if (['package-lock.json', 'Cargo.lock', 'composer.lock', 'uv.lock', 'go.mod', 'go.sum'].includes(base)) return true;
-  return base === 'Cargo.toml' && /(^|\/)(native|internal\/ffi)(\/|$)/.test(path.posix.dirname(file));
+  return ['package-lock.json', 'Cargo.lock', 'composer.lock', 'uv.lock', 'go.sum'].includes(path.posix.basename(file));
 }
 
 /** The declared package of an asset of the release of `repository`. */
@@ -187,14 +189,21 @@ function targetsOf(declared: Declared, keys: string[], written: string[], before
       if (crate !== undefined && line !== old[index]) crates.add(crate);
     });
   }
+  if (keys.includes('binding')) crates.add('polyspec-binding-core');
+  // One cargo-lock names every changed crate, since cargo update reads the lock once; a goal that comes twice starts
+  // the second make call of make pin, so the goals fit two calls: the core before bindings-scaffold, then the rest.
+  const cargo = `cargo-lock ${[...crates].map((crate) => `CRATES=${crate}`).join(' ')}`;
+  const scaffold = crates.size > 0 || keys.includes('binding') || keys.includes('json');
   if (written.some((f) => path.posix.basename(f) === 'package.json')) targets.push('npm-lock', 'install-packages');
-  for (const crate of crates) targets.push(`cargo-lock CRATES=${crate}`);
-  if (keys.includes('binding') || keys.includes('json')) targets.push('bindings-scaffold');
-  if (keys.includes('binding')) targets.push('cargo-lock CRATES=polyspec-binding-core');
-  if (written.some((f) => path.posix.basename(f) === 'composer.json')) for (const key of keys) targets.push(`composer-lock PACKAGES=${declared[key]?.repository}`);
+  if (crates.size > 0) targets.push(cargo);
+  if (scaffold) targets.push('bindings-scaffold');
+  if (scaffold && crates.size > 0) targets.push(cargo);
+  // composer-lock updates the packages whose places a written composer.json holds, all in one goal.
+  const composer = new Set(written.filter((f) => path.posix.basename(f) === 'composer.json').flatMap((f) => placesOf(f, readFileSync(path.join(root, f), 'utf8'), declared).map((place) => place.key)));
+  const packages = keys.filter((key) => composer.has(key));
+  if (packages.length > 0) targets.push(`composer-lock ${packages.map((key) => `PACKAGES=${declared[key]?.repository}`).join(' ')}`);
   if (written.includes('config/php-ext-pins.json')) targets.push('php-ext-pins');
   if (written.some((f) => path.posix.basename(f) === 'pyproject.toml')) targets.push('python-lock');
-  // The same cargo-lock may come twice: once for the core and once after bindings-scaffold, in another make call.
   return targets;
 }
 
