@@ -66,7 +66,6 @@ final class CaseSteps
             'result.json redirect' => ResultSteps::redirect(...),
             'result.json stop' => ResultSteps::stop(...),
             'reply.json cookies' => ReplySteps::cookies(...),
-            'request.json texts' => RequestSteps::texts(...),
             'request.json bytes' => self::requestBytes(...),
             'request.json files' => RequestSteps::files(...),
             'reply.json cacheControl' => ReplySteps::cacheControl(...),
