@@ -62,8 +62,10 @@ def _session_of(store: SessionOpening) -> SessionStore:
         return store
     try:
         return store()
-    except Exception as error:  # noqa: BLE001 - every failure of the open escapes the answer (HY-60.14)
+    # Every failure of the open escapes the answer (HY-60.14).
+    except Exception as error:
         raise _SessionOpenFailure(error) from error
+
 
 _FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
 _KEEP_VALUE_LIMIT = 4096
@@ -607,7 +609,9 @@ class App:
                 return refused_media
         request = request._with_media(chosen)
         # HY-104.38: a route that uses no session reads an empty one, and its request opens none.
-        session = Session(ArraySession() if route["session"] is False else _session_of(store))
+        session = Session(
+            ArraySession() if route["session"] is False else _session_of(store)
+        )
         flash = session.take_flash()
         request = request._with_route(path, match["params"])._with_session(
             flash, Csrf.masked(session.csrf_token())

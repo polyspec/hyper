@@ -162,7 +162,11 @@ new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: fa
 ```python
 RedisSessions(
     SettingSentinel(
-        urls=["redis://sentinel-1:26379", "redis://sentinel-2:26379", "redis://sentinel-3:26379"],
+        urls=[
+            "redis://sentinel-1:26379",
+            "redis://sentinel-2:26379",
+            "redis://sentinel-3:26379",
+        ],
         service="hyper",
         tls=False,
         user=None,
@@ -200,7 +204,12 @@ new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', '
 
 ```python
 RedisSessions(
-    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"], user=None, password=None, authorities=None),
+    SettingCluster(
+        urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"],
+        user=None,
+        password=None,
+        authorities=None,
+    ),
     lock_expire=30,
 )
 ```
@@ -220,7 +229,12 @@ new RedisSessions({ setting: { kind: 'server', url: 'rediss://hyper:secret@redis
 ```
 
 ```python
-RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379", authorities="/etc/redis/ca.pem"), lock_expire=30)
+RedisSessions(
+    SettingServer(
+        url="rediss://hyper:secret@redis:6379", authorities="/etc/redis/ca.pem"
+    ),
+    lock_expire=30,
+)
 ```
 
 `authorities` is the file of the authorities that the store trusts alone, as `stream[cafile]` of the PHP server; null uses the trust store of the machine.
@@ -235,7 +249,11 @@ new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: tr
 ```python
 RedisSessions(
     SettingSentinel(
-        urls=["rediss://hyper:secret@sentinel-1:26379", "rediss://hyper:secret@sentinel-2:26379", "rediss://hyper:secret@sentinel-3:26379"],
+        urls=[
+            "rediss://hyper:secret@sentinel-1:26379",
+            "rediss://hyper:secret@sentinel-2:26379",
+            "rediss://hyper:secret@sentinel-3:26379",
+        ],
         service="hyper",
         tls=True,
         user="hyper",

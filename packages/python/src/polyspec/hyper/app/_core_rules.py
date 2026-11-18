@@ -235,7 +235,9 @@ class CoreRules:
 
         return HyperTypeError(message, kind)
 
-    def library_error(self, library: object, prefix: str, error: BaseException) -> BaseException:
+    def library_error(
+        self, library: object, prefix: str, error: BaseException
+    ) -> BaseException:
         """The error of hyper for an error of a library that hyper uses (HY-132.3), or the error as it is. An error
         of a library is an instance of a class that the error module of the library, `library`, defines. The class of
         hyper is the class of the binding of hyper of the same role: the class of the same name, such as
@@ -250,7 +252,11 @@ class CoreRules:
             name = cls.__name__
             if getattr(library, name, None) is not cls:
                 continue
-            role = getattr(own, f"Hyper{name[len(prefix):]}" if name.startswith(prefix) else name, None)
+            role = getattr(
+                own,
+                f"Hyper{name[len(prefix) :]}" if name.startswith(prefix) else name,
+                None,
+            )
             if not isinstance(role, type):
                 continue
             try:
@@ -260,7 +266,7 @@ class CoreRules:
                     getattr(error, "status", None),
                     getattr(error, "errno", None),
                 )
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 return error
             converted.__cause__ = error
             return converted

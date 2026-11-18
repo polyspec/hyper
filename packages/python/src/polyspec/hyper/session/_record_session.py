@@ -3,7 +3,6 @@ session store that holds its values, whatever keeps the record (HY-104, HY-115).
 
 from __future__ import annotations
 
-import re
 import secrets
 from abc import abstractmethod
 from typing import Optional
@@ -12,9 +11,6 @@ from polyspec.php_serialization import Reference, StdClass, serialize, unseriali
 
 from ..app._core_rules import core_rules
 from .session_store import SessionStore
-
-# The identifiers that PHP and the session-store library accept (HY-104.42).
-_IDENTIFIER = re.compile(r"[A-Za-z0-9,-]{22,256}\Z")
 
 
 class RecordSession(SessionStore):
@@ -66,15 +62,6 @@ class RecordSession(SessionStore):
         """Returns the record to keep at closing, or None when the request did not use the session."""
         return (
             None if self._items is None or self._id is None else serialize(self._items)
-        )
-
-    @staticmethod
-    def accepted(cookie: Optional[str]) -> Optional[str]:
-        """Returns the value of a session cookie in the form of an identifier, or None (HY-104.9)."""
-        return (
-            cookie
-            if cookie is not None and _IDENTIFIER.fullmatch(cookie) is not None
-            else None
         )
 
     @staticmethod

@@ -68,7 +68,10 @@ def session_store() -> FileSessions | RedisSessions:
     nodes_of_cluster = os.environ.get("BOARD_CLUSTER") or ""
     if nodes_of_cluster != "":
         urls = [f"redis://{item}" for item in nodes_of_cluster.split(",")]
-        return RedisSessions(SettingCluster(urls=urls, user=None, password=None, authorities=None), lock_expire=30)
+        return RedisSessions(
+            SettingCluster(urls=urls, user=None, password=None, authorities=None),
+            lock_expire=30,
+        )
     sentinels = os.environ.get("BOARD_SENTINEL") or ""
     if sentinels != "":
         setting = SettingSentinel(

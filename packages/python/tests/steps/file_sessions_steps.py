@@ -88,7 +88,9 @@ def store_failures(case) -> None:
             directory = str(Path(root) / "file")
             Path(directory).write_bytes(b"")
         elif named is not None:
-            raise ValueError("the directory of the case is not missing, file or relative")
+            raise ValueError(
+                "the directory of the case is not missing, file or relative"
+            )
         try:
             store = (
                 FileSessions(directory, case.input("lifetime"))
