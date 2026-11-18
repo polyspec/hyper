@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: d2278b6bed17b152833f40a36c6bfd2863e8119f40cbf2e3a419fe6f1ed1ea8e -->
+<!-- source-sha256: f5b392f0e8b0ed963b544c45d948247f04ce33fd7d591426a0580fc39bc48dfc -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -726,3 +726,4 @@
 | H35.104 | make rebuild-check 이 실패한다: H35.75 가 더한 scripts/pin.mts 는 config/rebuild.json 에 분류가 없다. 그것은 policy 이다: config/pins.json 의 각 형제 릴리스 버전을 모든 자리(릴리스 asset URL, npm requirement, Cargo tag 와 lock source, Composer platform 버전, Makefile 변수, config/php-ext-pins.json, Go module)에서 함께 쓰고 검사하는 ecosystem 도구는 없고, 버전을 고르는 도구는 HR-89 가 금지하는 live 레지스트리를 조회한다. scripts/pin.mts 의 항목은 그 이유와 함께 kind policy 를 선언한다. | config/rebuild.json | `make rebuild-check` | [v] |
 | H35.108 | make release-coverage 가 실패한다: pin 테스트의 fixture checkout 인 tests/scripts/fixtures/pin/tree 의 패키지 파일 일곱 개(H35.75-1)가 config/release.json 에서 릴리스되지도, 릴리스되지 않음으로 나열되지도 않는다. 그것들은 scripts/pin.mts 의 테스트 데이터로 아무것도 공개하지 않으므로, tests/package-install/package.json 처럼 각각 그 이유와 함께 notReleased 에 들어간다. | config/release.json | `make release-coverage` | [v] |
 | H35.106 | make test-go 가 TestGN13bfEveryBuildTagOfThePackageIsBuilt 로 실패한다: Makefile 의 GO_ENV 는 go test 에 태그 polyspec_panic_test 와 polyspec_codec_test 를 주지만, binding 0.0.22 의 생성 테스트는 binding v0.0.22 CHANGELOG.md 의 0.0.20 절이 요구하는 polyspec_<library>_<feature> 형식(B2.438, GN-13bf)의 태그 polyspec_hyper_codec_test, polyspec_hyper_fault_test, polyspec_hyper_panic_test, polyspec_hyper_thrown_count_test 뒤에 있으므로, 태그가 붙은 테스트는 하나도 빌드되지 않았다. GO_ENV 는 그 네 태그를 주고, test-go 의 정적 라이브러리는 태그 테스트가 부르는 feature panic-test, codec-test, fault-test, thrown-count-test 로 빌드된다. | Makefile | `make test-go` | [v] |
+| H35.110 | make analyse-php가 템플릿 확장의 class를 안다: template-ext가 platform zip의 stub polyspec_template.stub.php를 build/ext의 polyspec_template.so 곁에 게시하고, packages/php/phpstan-max.neon이 polyspec_hyper와 polyspec_session_store의 stub처럼 그것을 읽는다. 원인: H35.9-14는 템플릿 선언의 경로가 설치에 달려 있어 polyspec_hyper의 stub만 적었으므로, PHPStan이 tests/Support/Steps/FunctionsSteps.php의 Polyspec\Template\Environment를 모르는 class로 보고했다. baseline도 ignoreErrors도 그것을 덮지 않아 analyse-php가 실패했다. | Makefile, packages/php/phpstan-max.neon, CHANGELOG.md와 그 한국어 쌍 | `make analyse-php` | [ ] |
