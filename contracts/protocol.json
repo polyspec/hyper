@@ -7183,6 +7183,7 @@
             6,
             9,
             10,
+            11,
             14,
             15,
             19,
@@ -7255,10 +7256,10 @@
                   "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
-                  "id": "HY-115.11",
-                  "en": "A renewal (HY-72) writes the new key before it deletes the old one, and the rules of identifiers and values of HY-104 hold.",
-                  "ko": "갱신(HY-72)은 옛 key를 지우기 전에 새 key를 쓰며, HY-104의 identifier와 값의 규칙은 그대로 성립한다.",
-                  "koSource": "3d7e3e211f840a3a5d326d672c788c891c26cebcc6373c47f4cc344977378edf"
+                  "id": "HY-115.30",
+                  "en": "A renewal (HY-72) writes the new key and deletes the old one in the order of its store: the Node and the Python stores write the new key first, the PHP server deletes the old session first as `session_regenerate_id` of PHP does, and every server keeps the rules of identifiers and values of HY-104 and reads no session by the old identifier after the renewal.",
+                  "ko": "갱신(HY-72)은 store의 순서대로 새 key를 쓰고 옛 key를 지운다. Node와 Python store는 새 key를 먼저 쓰고, PHP 서버는 PHP의 `session_regenerate_id`처럼 옛 session을 먼저 지우며, 모든 server는 HY-104의 identifier와 값의 규칙을 지키고 갱신 뒤에는 옛 identifier로 session을 읽지 않는다.",
+                  "koSource": "cf33170dae94cbb6ceca581afe1780ce516dd096fc498f16ab9b87dd012a1cd2"
                 },
                 {
                   "id": "HY-115.12",
