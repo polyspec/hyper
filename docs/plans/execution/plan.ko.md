@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 9f909124a8ffa9be8474f6504232c69dc89c528c580a6e46da62147771415519 -->
+<!-- source-sha256: 6713746af3afe658c36fc6e9d6ac4837df02c9c73a1b7d8497db5ebafd46b88e -->
 # 실행
 
 [English](plan.md).
@@ -335,3 +335,5 @@ H35.38, 교체와 함께 없어지는 것. `flock.ts`의 호출자는 `file-sess
 H35.38, 라이브러리 오류의 변환. 서버에는 category를 받아 hyper의 class를 주는 함수가 없다. `packages/ts/src/app/core-rules.ts`의 `valueError`와 `typeError`(431행과 432행), `_core_rules.py`의 `value_error`와 `type_error`, `CoreRules.php`의 같은 쌍은 각각 class 하나를 지정한다. hyper binding의 class는 라이브러리의 kind를 자기 category에서 받아들인다. `packages/rust/interface.json`이 `errors.kinds` 아래에 `library: session-store`로 그것들을 나열하기 때문이며, unit `record_error`는 kind `record`와 `record_write`를 위한 class `RecordError`를 hyper에 준다. 그래서 kind의 표 없이 서버에서 일반 변환 하나가 가능하다: class chain에 라이브러리 package의 class를 가진 오류에 대해, 같은 역할의 hyper class, 곧 `RecordError`에는 `RecordError`를, `SessionStore<Category>Error`에는 `Hyper<Category>Error`를 골라 그 오류의 message, kind, 상태로 만든다. binding 경로에서는 고정된 binding 0.0.17로 contract가 이를 선언할 수 없다. 라이브러리의 store는 다른 repository의 callback unit으로 `opening_functions.open_page`에 들어가고, 그 언어 코드의 예외는 `Failure::Raised`이며 core가 이를 그대로 넘긴다(`packages/rust/src/session.rs`의 `from_store`). 그리고 binding은 다른 라이브러리의 error unit을 recognize하는 이 contract의 callback unit을 이름으로 거절한다(G-4를 인용하는, binding generator의 recognized error 규칙). 그래서 store가 core 안에서 발생시킨 라이브러리의 오류는 라이브러리의 class로 도착하고, 변환은 서버에서 core 호출을 감싸거나, 변환해 주는 binding을 기다린다.
 
 H35.38, adapter를 정하는 열린 질문. (a) Node 생성자: 공개 API의 비동기 maker인가, 첫 open에서의 실패인가. (b) `@polyspec/php-serialization` 위의 file session codec: 이 단계에서 쓰는가, 라이브러리에 데이터 모델의 값을 요청하는가. (c) binding 경로의 변환: 서버에서 `openPage`와 `answerKeepRequest`를 감싸는가, binding에 요청하는가. (b)가 그렇게 정해질 때의 라이브러리 요청 외에 다른 요청은 찾지 못했다. `flock`이 없는 플랫폼과 쓸 수 없는 `node:ffi`의 실패는 `flock.ts`와 함께 끝나기 때문이다.
+
+H35.75, `make pin`의 모델. 다른 polyspec repository의 pin script는 manifest의 Cargo tag와 npm release URL을 주어진 version으로 다시 쓰고, 각 wheel의 sha256을 입력으로 받으며, lock을 쓰지 않고, check mode에서 다른 version을 pin하는 파일과 함께 실패한다. `make pin`은 plain version, Composer, Makefile, php-ext의 곳과 wheel digest도 쓰고, 이 repository의 lock target을 실행하며, `make pin-check`는 다른 각 곳의 줄을 이름한다.
