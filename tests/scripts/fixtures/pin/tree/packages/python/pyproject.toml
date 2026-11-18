@@ -1,0 +1,6 @@
+[project]
+name = "polyspec-hyper"
+version = "0.0.40"
+dependencies = [
+    "polyspec-json @ https://github.com/polyspec/json/releases/download/v0.0.38/polyspec_json-0.0.38-cp314-abi3-macosx_11_0_arm64.whl#sha256=222f9c2149c82bf7244aea81df4143454f343c0b75dd78cc1cdb5cfd8f6dc643 ; sys_platform == 'darwin'",
+]

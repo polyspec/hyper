@@ -1,0 +1,6 @@
+version = 4
+
+[[package]]
+name = "polyspec-json"
+version = "0.0.38"
+source = "git+https://github.com/polyspec/json.git?tag=v0.0.38#a9cbf59acccef569ef1a6324414b91e53b0a889d"
