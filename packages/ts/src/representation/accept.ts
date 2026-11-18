@@ -9,6 +9,8 @@ const INVALID = new Set(['invalid_accept', 'invalid_weight']);
 
 /** @internal */
 export class Accept {
+  private constructor() {}
+
   // Parses an Accept field value into its ranges, in order, with rules.accept_ranges of the core. A null value is a
   // request without Accept, which reads as the range that matches every type (HY-116.17). Throws the error of the core
   // with the kind `invalid_accept` or `invalid_weight` for a value that the grammar does not allow, or a weight that is
