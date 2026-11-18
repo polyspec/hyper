@@ -214,7 +214,7 @@ Depends on: none. H34.1 states that the body iterable of the WSGI callable runs 
 
 Depends on: none. A fresh checkout installs and checks only the servers that do not call the core: `make hyper-install` installs the Python package of the bindings before `make bindings` writes its sources (H35.1), no CI group runs a target of the core or the bindings (H35.2), and Git does not ignore the Python package that `make bindings` writes (H35.3), and the binding of `Cargo.lock` does not generate Go and WASM for the callback unit of session-store and a function result (H35.4); a later binding changes the cases of negative zero (H35.5). The core takes the kept values, which have several copies, after the first release (H35.6). H35.7 fixes the defects that the full run against the local providers names. H35.8 takes each provider by its release in npm and in Cargo.
 
-Scope of the first release of this wave. The first release holds these rows, and the rows of H35.32 and H35.33 come after it:
+Scope of the first release of this wave. The first release holds these rows and H35.32 with its rows, and only H35.32-9, H35.32-11 and H35.33 come after it:
 
 - H35.34 and H35.34-1: the read paths of `reads.json` that `hyper build` writes, and the comparison of that file in the PHP and the Python case runner.
 - H35.31-2-1: the check of a file limit as a rule of the core.

@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 6713746af3afe658c36fc6e9d6ac4837df02c9c73a1b7d8497db5ebafd46b88e -->
+<!-- source-sha256: ae5876e9b2dd6b57105db77a99f927f8931993c316a303ebbf1c820800e900ae -->
 # 실행
 
 [English](plan.md).
@@ -215,7 +215,7 @@ core를 부르지 않는 서버와 core는 모두 `contracts/`의 case를 실행
 
 Depends on: none. 새 checkout은 core를 부르지 않는 서버만 설치하고 검사한다. `make hyper-install`은 `make bindings`가 소스를 쓰기 전에 바인딩의 Python 패키지를 설치하고(H35.1), 어떤 CI group도 core나 바인딩의 target을 실행하지 않으며(H35.2), Git은 `make bindings`가 쓰는 Python 패키지를 무시하지 않으며(H35.3), `Cargo.lock`의 binding은 session-store의 callback unit과 function result에 대해 Go와 WASM을 생성하지 않으며(H35.4), 다음 binding은 음의 0의 case를 바꾼다(H35.5). core는 사본이 여럿인 kept 값을 첫 릴리스 뒤에 맡는다(H35.6). H35.7은 로컬 provider에 대한 전체 실행이 지목한 결함을 고친다. H35.8은 npm과 Cargo에서 각 provider를 그 release로 받는다.
 
-이 wave의 첫 릴리스의 범위. 첫 릴리스는 다음 행을 가지며, H35.32와 H35.33의 행은 그 뒤에 온다.
+이 wave의 첫 릴리스의 범위. 첫 릴리스는 다음 행과 H35.32 및 그 행을 가지며, H35.32-9, H35.32-11, H35.33만 그 뒤에 온다.
 
 - H35.34와 H35.34-1: `hyper build`가 쓰는 `reads.json`의 read path, 그리고 PHP와 Python case runner가 그 파일을 비교하는 일.
 - H35.31-2-1: core의 규칙인 파일 limit 검사.
