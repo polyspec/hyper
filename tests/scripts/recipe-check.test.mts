@@ -291,6 +291,35 @@ test('the candidate adds a member that the sources hold and the spec of a listed
   }
 });
 
+test('the candidate keeps an extension unit and an error of its kind (HYR-5, H35.96)', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'recipe-extension-'));
+  try {
+    withFixtureCopy('recipe-extension-root-', (root, replaceIn) => {
+      const entry = { extension: 'Polyspec\\Hyper\\ValueError', kind: 'class', internal: true };
+      replaceIn(
+        'contracts/interfaces.json',
+        '"units": [\n        {\n          "id": "csrf",',
+        `"units": [\n        { "id": "value-error", "native": { "php": ${JSON.stringify(entry)} }, "members": [] },\n        {\n          "id": "csrf",`,
+      );
+      replaceIn('contracts/interfaces.json', '"errors": [],', '"errors": ["value-error:token"],');
+      track(root);
+      const output = path.join(dir, 'interfaces.candidate.json');
+      const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
+      const printed = result.stdout + result.stderr;
+      assert.equal(result.status, 0, printed);
+      const units = listAt(readJson(output), 'concerns').flatMap((c) => listAt(c, 'units'));
+      const unit = units.find((u) => at(u, 'id') === 'value-error');
+      assert.ok(unit !== undefined, 'the candidate dropped the extension unit value-error');
+      assert.deepEqual(at(unit, 'native', 'php'), entry, 'the candidate changed the extension entry');
+      const errors = units.flatMap((u) => listAt(u, 'members')).flatMap((m) => listAt(m, 'errors'));
+      assert.ok(errors.includes('value-error:token'), 'the candidate dropped the error value-error:token');
+      assert.doesNotMatch(printed, /^CANDIDATE_STALE .*value-error|^CANDIDATE_STALE \/concerns\/\d+\/units\/0\/native\/php/mu, 'the candidate reports the extension entry as stale');
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 for (const m of mutations) {
   test(`mutation ${m.id} fails with ${m.code}`, () => {
     const root = mkdtempSync(path.join(tmpdir(), 'recipe-mutation-'));
