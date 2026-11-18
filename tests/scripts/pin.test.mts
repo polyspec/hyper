@@ -50,8 +50,8 @@ test('pin-check passes a tree whose every place names the declared version', () 
     assert.match(result.stdout, /pin-check: (\d+) places/);
     const places = Number(/pin-check: (\d+) places/.exec(result.stdout)?.[1]);
     // Every place of the fixture: 4 release URLs of package.json, 1 plain version, 2 + 2 Cargo tags, 1 lock source,
-    // 1 Composer repository, 1 platform version, 1 Makefile variable, 1 php-ext pin, 1 wheel and 1 Go module.
-    assert.equal(places, 16, result.stdout);
+    // 1 Composer repository, 2 platform versions, 1 Makefile variable, 1 php-ext pin, 1 wheel and 1 Go module.
+    assert.equal(places, 17, result.stdout);
   });
 });
 
@@ -144,6 +144,21 @@ test('make pin-locks runs the goals of a group that pin wrote, in their order, w
   } finally {
     rmSync(locks, { recursive: true, force: true });
   }
+});
+
+test('composer-lock names only the packages that the composer.lock beside a written composer.json locks (H35.75-2)', () => {
+  withTree((root) => {
+    // The fixture lock holds polyspec/json; session-store, whose extension PIE installs, is in no lock.
+    const both = pinFiles(root, { json: '0.0.40', 'session-store': '0.0.8' }, release).targets.filter((t) => t.startsWith('composer-lock'));
+    assert.deepEqual(both, ['composer-lock PACKAGES=polyspec/json']);
+  });
+});
+
+test('pin names no composer-lock goal when no changed package is locked, since composer-lock refuses an empty PACKAGES (H35.75-2, H35.41)', () => {
+  withTree((root) => {
+    const { targets } = pinFiles(root, { 'session-store': '0.0.8' }, release);
+    assert.deepEqual(targets.filter((t) => t.startsWith('composer-lock')), [], targets.join('\n'));
+  });
 });
 
 test('pin with the declared versions writes nothing and names no target', () => {

@@ -9,7 +9,8 @@
     "config": {
         "platform": {
             "ext-polyspec_hyper": "0.0.40",
-            "ext-polyspec_json": "0.0.38"
+            "ext-polyspec_json": "0.0.38",
+            "ext-polyspec_session_store": "0.0.7"
         }
     }
 }
