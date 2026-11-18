@@ -59,3 +59,52 @@ test('a file that the schema refuses fails before the files are read', () => {
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /^SPEC_INVALID /mu);
 });
+
+/**
+ * Adds to the copy the extension unit `value-error` (HYR-5), whose native entry is `entry` and whose members are
+ * `members`, and gives the member csrf.mask the errors `errors`.
+ */
+function extension(root: string, entry: string, members: string, errors: string): void {
+  replace(
+    root,
+    'contracts/interfaces.json',
+    '"units": [\n        {\n          "id": "csrf",',
+    `"units": [\n        { "id": "value-error", "native": { "php": ${entry} }, "members": ${members} },\n        {\n          "id": "csrf",`,
+  );
+  replace(root, 'contracts/interfaces.json', '"errors": [],', `"errors": ${errors},`);
+}
+
+const entry = '{ "extension": "Polyspec\\\\Hyper\\\\ValueError", "kind": "class", "internal": true }';
+
+test('an extension unit with no file and an error of its kind pass (HYR-5)', () => {
+  const result = run((root) => extension(root, entry, '[]', '["value-error:token"]'));
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('an extension entry that also names a file fails the schema (HYR-5)', () => {
+  const both = '{ "extension": "ValueError", "file": "packages/php/src/Session/Csrf.php", "kind": "class", "internal": true }';
+  const result = run((root) => extension(root, both, '[]', '[]'));
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^SPEC_INVALID /mu);
+});
+
+test('an extension unit with members fails and names the unit (HYR-5)', () => {
+  const members = JSON.stringify([
+    { id: 'value-error.kind', kind: 'method', visibility: 'internal', inputs: [], output: 'string', errors: [], state: 'Returns the kind.', native: { php: { symbol: 'x::ValueError::kind', signature: 'public function kind(): string' } } },
+  ]);
+  const result = run((root) => extension(root, entry, members, '[]'));
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^EXTENSION_MEMBERS unit value-error is an extension class and lists 1 members$/mu);
+});
+
+test('an error kind of a unit that is no extension unit fails and names the member (HYR-5)', () => {
+  const result = run((root) => extension(root, entry, '[]', '["csrf:token"]'));
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^ERROR_UNIT_UNKNOWN csrf\.mask error csrf:token names csrf, which is no extension unit$/mu);
+});
+
+test('an error kind that no statement names fails and names the member (HYR-5)', () => {
+  const result = run((root) => extension(root, entry, '[]', '["value-error:no_such_kind"]'));
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^ERROR_KIND_UNKNOWN csrf\.mask error value-error:no_such_kind names a kind that no statement of protocol\.json names$/mu);
+});
