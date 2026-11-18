@@ -33,7 +33,7 @@ final class Reply
     public function note(mixed $name, mixed $value): self
     {
         ArgumentCount::most(\func_num_args(), 2);
-        // HY-60.28: a declared type would convert an integer name for a caller without strict types.
+        // HY-60.32: a declared type would convert an integer name for a caller without strict types.
         if (!is_string($name)) {
             throw new HyperTypeError('a note name is not a string (HY-60)', 'invalid_argument_type');
         }

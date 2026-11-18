@@ -17,7 +17,7 @@ export class Reply {
   // its position. The notes are not part of the response (HY-60).
   note(name: string, value: unknown): this {
     ArgumentCountError.between(arguments.length, 2, 2);
-    // HY-60.28: a JavaScript caller may pass a name that is not a string.
+    // HY-60.32: a JavaScript caller may pass a name that is not a string.
     if (typeof name !== 'string') throw rules().typeError('a note name is not a string (HY-60)', 'invalid_argument_type');
     this.noted.set(name, value);
     return this;
