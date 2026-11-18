@@ -12,6 +12,7 @@ import { checkStated } from '../../scripts/recipe/stated.mts';
 import { expectedDirectory } from '../../scripts/recipe/names.mts';
 import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type Unit } from '../../scripts/recipe/types.mts';
 import { validators } from '../../scripts/recipe/validators.mts';
+import { withoutExtensions } from '../../scripts/recipe/run.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
@@ -60,11 +61,16 @@ function withFixtureCopy(prefix: string, run: (root: string, replaceIn: (file: s
 
 const schemas = validators();
 
-/** The spec of a file, which must pass the schema of the spec. */
+/**
+ * The spec of a file, which must pass the schema of the spec and hold no extension unit (HYR-5): the tests write it
+ * back, and the `Spec` of the checks has no extension entries to write.
+ */
 function specOf(file: string): Spec {
   const doc: unknown = JSON.parse(readFileSync(file, 'utf8'));
   if (!schemas.spec(doc)) throw new Error(`${file} is no spec: ${JSON.stringify(schemas.spec.errors?.[0])}`);
-  return doc;
+  const spec = withoutExtensions(doc);
+  assert.deepEqual(spec, doc, `${file} holds an extension unit, which a test cannot write back`);
+  return spec;
 }
 
 /** The unit `id` of the spec of a tree, and a function that writes the spec back. */
