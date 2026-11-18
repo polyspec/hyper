@@ -2251,31 +2251,6 @@
           },
           "members": [
             {
-              "id": "accept.constructor",
-              "kind": "constructor",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "accept",
-              "errors": [],
-              "state": "Starts a reader of an Accept value at its first character.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Representation/Accept.php::Polyspec\\Hyper\\Accept::__construct",
-                  "signature": "private function __construct(string $text)"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/representation/accept.ts::Accept.constructor",
-                  "signature": "private constructor(text: string)"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/representation/_accept.py::Accept.__init__",
-                  "signature": "def __init__(self, text: str) -> None"
-                }
-              }
-            },
-            {
               "id": "accept.parse",
               "kind": "static method",
               "visibility": "internal",
@@ -2300,6 +2275,31 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/representation/_accept.py::Accept.parse",
                   "signature": "def parse(value: Optional[str]) -> list[MediaRange]"
+                }
+              }
+            },
+            {
+              "id": "accept.isInvalid",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether an error is the failure of an Accept value that parse raises, of kind invalid_accept or invalid_weight, which the server answers with status 400 (HY-116.18).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Representation/Accept.php::Polyspec\\Hyper\\Accept::isInvalid",
+                  "signature": "public static function isInvalid(Polyspec\\Hyper\\HyperValueError $error): bool"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/representation/accept.ts::Accept.isInvalid",
+                  "signature": "static isInvalid(error: unknown): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/representation/_accept.py::Accept.is_invalid",
+                  "signature": "def is_invalid(error: BaseException) -> bool"
                 }
               }
             },
