@@ -5883,7 +5883,11 @@
           "kind": "rule",
           "id": "HY-132",
           "retired": [
-            8
+            8,
+            10,
+            11,
+            12,
+            13
           ],
           "blocks": [
             {
@@ -5926,6 +5930,12 @@
                   "en": "A broken invariant of the core is kind `internal`, a panic of the core included, and a request that meets it fails with HY-43.",
                   "ko": "core의 불변식이 깨지면 core의 panic을 포함해 kind `internal`이며, 그것을 만난 요청은 HY-43으로 실패한다.",
                   "koSource": "1c959fcc8f2da78af627fbf0e451375beb7672b6586aec262c24a2965452b900"
+                },
+                {
+                  "id": "HY-132.14",
+                  "en": "Kind `invalid_session_handler` of category `value` and no status is the failure of `collect` of the PHP server under a session handler that is not its files handler (HY-104.44), and the Node and Python servers never raise it, because their stores have no setting that picks a handler.",
+                  "ko": "category `value`이고 상태가 없는 kind `invalid_session_handler`는 PHP server의 `collect`가 files handler가 아닌 session handler 아래에서 실패하는 것이며(HY-104.44), Node와 Python server는 이것을 내지 않는다. 그 저장소에는 handler를 고르는 설정이 없기 때문이다.",
+                  "koSource": "6e84c3159c32308745b58dfa78f9b16cedbc40740af0a39f14fb59d376433fc3"
                 },
                 {
                   "id": "HY-132.7",
@@ -5972,6 +5982,24 @@
                   {
                     "en": "HY-106.21",
                     "ko": "HY-106.21"
+                  }
+                ],
+                [
+                  {
+                    "en": "`invalid_session_handler`",
+                    "ko": "`invalid_session_handler`"
+                  },
+                  {
+                    "en": "none",
+                    "ko": "없음"
+                  },
+                  {
+                    "en": "`value`",
+                    "ko": "`value`"
+                  },
+                  {
+                    "en": "HY-104.44, HY-132.14",
+                    "ko": "HY-104.44, HY-132.14"
                   }
                 ],
                 [
@@ -7098,6 +7126,12 @@
                   "koSource": "478be6a3bd35fefc8cdbe9d770654851bbdf3a730464f0e5bb349272a49377ce"
                 },
                 {
+                  "id": "HY-104.44",
+                  "en": "Under a `session.save_handler` other than `files`, such as `redis` or `user`, `NativeSession::collect` of the PHP server removes nothing and fails with a `HyperValueError` of kind `invalid_session_handler` (HY-132.14) whose message names the handler and says that its store removes ended sessions itself, as the Redis store does by the expiry of each key (HY-115.2).",
+                  "ko": "`session.save_handler`가 `redis`나 `user`처럼 `files`가 아니면 PHP server의 `NativeSession::collect`는 아무것도 지우지 않고 kind `invalid_session_handler`의 `HyperValueError`로 실패하며(HY-132.14), 그 message는 handler를 적고, Redis 저장소가 각 key의 만료로 하듯 그 저장소가 끝난 session을 스스로 지운다고 말한다(HY-115.2).",
+                  "koSource": "51d211423e22319ffcdccb15dca3d9a48ec555e878284a45e513db58ded09fc4"
+                },
+                {
                   "id": "HY-104.28",
                   "en": "`tests/scripts/session-shared.test.mts` checks it with several processes of each of the three servers on one session.",
                   "ko": "`tests/scripts/session-shared.test.mts`가 세 server 각각의 여러 process로 한 session에 대해 이것을 확인한다.",
@@ -7183,6 +7217,7 @@
             6,
             9,
             10,
+            11,
             14,
             15,
             19,
@@ -7255,10 +7290,10 @@
                   "unimplemented": [{ "row": "H35.37", "servers": ["php"] }]
                 },
                 {
-                  "id": "HY-115.11",
-                  "en": "A renewal (HY-72) writes the new key before it deletes the old one, and the rules of identifiers and values of HY-104 hold.",
-                  "ko": "갱신(HY-72)은 옛 key를 지우기 전에 새 key를 쓰며, HY-104의 identifier와 값의 규칙은 그대로 성립한다.",
-                  "koSource": "3d7e3e211f840a3a5d326d672c788c891c26cebcc6373c47f4cc344977378edf"
+                  "id": "HY-115.30",
+                  "en": "A renewal (HY-72) writes the new key and deletes the old one in the order of its store: the Node and the Python stores write the new key first, the PHP server deletes the old session first as `session_regenerate_id` of PHP does, and every server keeps the rules of identifiers and values of HY-104 and reads no session by the old identifier after the renewal.",
+                  "ko": "갱신(HY-72)은 store의 순서대로 새 key를 쓰고 옛 key를 지운다. Node와 Python store는 새 key를 먼저 쓰고, PHP 서버는 PHP의 `session_regenerate_id`처럼 옛 session을 먼저 지우며, 모든 server는 HY-104의 identifier와 값의 규칙을 지키고 갱신 뒤에는 옛 identifier로 session을 읽지 않는다.",
+                  "koSource": "cf33170dae94cbb6ceca581afe1780ce516dd096fc498f16ab9b87dd012a1cd2"
                 },
                 {
                   "id": "HY-115.12",

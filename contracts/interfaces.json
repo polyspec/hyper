@@ -10053,6 +10053,21 @@
               }
             },
             {
+              "id": "native-session.collect",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Removes the session files of session.save_path whose lifetime of session.gc_maxlifetime has passed through collect of FileSessions of session-store, skips a session whose lock a request holds, returns how many it removed, fails with SessionStoreIoError for a directory that cannot be read, and fails with kind invalid_session_handler under a session.save_handler other than files (HY-104.33, HY-104.44, SF-5, SF-9.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::collect",
+                  "signature": "public static function collect(): int"
+                }
+              }
+            },
+            {
               "id": "native-session.get",
               "kind": "method",
               "visibility": "public",
@@ -10984,7 +10999,7 @@
             {
               "id": "file-sessions.collect",
               "kind": "method",
-              "visibility": "internal",
+              "visibility": "public",
               "inputs": [],
               "output": "number",
               "errors": [],
@@ -10995,8 +11010,8 @@
                   "signature": "async collect(): Promise<number>"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._collect",
-                  "signature": "def _collect(self) -> int"
+                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions.collect",
+                  "signature": "def collect(self) -> int"
                 }
               }
             },

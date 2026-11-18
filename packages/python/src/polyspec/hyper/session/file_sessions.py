@@ -34,7 +34,8 @@ class FileSessions:
         without a file names no session (HY-45)."""
         return FileSession(converted(lambda: self._store.open(cookie)))
 
-    def _collect(self) -> int:
+    def collect(self) -> int:
         """Removes the files of the sessions that ended and returns how many it removed; a file whose lock a request
-        holds is skipped. The store never collects by itself."""
+        holds is skipped. The store never collects by itself: the application calls this when it chooses, such as
+        from a scheduled task (HY-104.33, SF-5)."""
         return converted(self._store.collect)

@@ -103,6 +103,15 @@ for (const name of NAMES) {
   });
 }
 
+// The Redis store removes ended sessions by the expiry of each key (HY-115.2), so collect of the PHP server under the
+// handler redis of phpredis fails and names the handler instead of reading the address as a directory (HY-104.44).
+test('collect of the php server under the handler redis fails with invalid_session_handler (HY-104.44)', { timeout: 60_000 }, async () => {
+  const result = JSON.parse(await run('php', 'collect')) as { handler: string; kind?: string; message?: string };
+  assert.equal(result.handler, 'redis', 'the worker runs under the handler redis of phpredis, which must be loaded');
+  assert.equal(result.kind, 'invalid_session_handler', `collect failed with kind invalid_session_handler: ${JSON.stringify(result)}`);
+  assert.match(result.message ?? '', /redis/, 'the message names the handler');
+});
+
 // phpredis writes nothing for a request that lost its lock and warns; PHP closes the session after the response, so the
 // request has already answered (HY-115).
 test('a request of the php server that lost its lock writes nothing (HY-115)', { timeout: 60_000 }, async () => {
