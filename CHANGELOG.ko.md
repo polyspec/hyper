@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- PHP의 Redis lock 순서를 `docs/plans/execution/statement-audit.md`에서 HY-115와 비교한다(H35.86). 입력: `RedisClusterSessions` handler와 session-store v0.0.8. 이전 동작: 감사가 PHP handler를 읽지 않았고, HY-115.23의 판정이 PHP는 `session_write_close`를 부르지 않는다고 했다. 현재 동작: PHP는 응답 전에 session을 닫고(`packages/php/src/Session/NativeSession.php:243`, `packages/php/src/App/App.php:1135`), phpredis handler는 아직 읽지 않아 그 행들은 판정이 없다.
 - `make duplication-check`가 통과한다(H35.94). 입력: 트리에서 실행한 target. 이전 동작: 발견이나 통과 줄을 출력하고 던져진 오류를 `CHECK_ERROR`로 바꾸는 `scripts/recipe/check.mts`와 `scripts/recipe/files.mts`의 끝부분 clone 하나로 실패했다. 지금 동작: 둘과 `scripts/recipe/candidate.mts`는 `scripts/recipe/exit.mts`의 `report`와 `runCommand`로 끝나고, 출력은 같다. 검증: duplication-check와 `recipe-check`, `recipe-files`의 테스트가 통과한다.
 - outside redirect는 다시 HY-132이고 오류 kind는 HY-133이다(H35.109). 입력: `contracts/protocol.json`의 rule. 이전 동작: 전에 HY-132가 이름하던 outside redirect가 HY-133이었고, HY-132는 오류 kind를 이름했다. 지금 동작: `make spec-renumber MAP=config/renumber/h35-109.json`이 계약과, rule을 인용하는 오류 메시지를 포함한 추적되는 모든 인용에서 두 id를 바꿨다. 오류 kind는 retired 번호 8과 10부터 13을 기록으로 유지한다. v0.0.40에는 둘 다 없으므로 어느 rule도 릴리스에 없다. 검증: `make spec-docs-check`와 `make spec-released-check`.
 - `make spec-renumber`가 트리에서 실행된다(H35.98). 입력: `make spec-renumber MAP=config/renumber/h35-109.json`. 이전 동작: placeholder가 script 자신이 가진 고정 문자였으므로 `scripts/spec-renumber.mts holds the placeholder of the renumbering`으로 실패했다. 지금 동작: 각 파일의 placeholder는 그 파일이 갖지 않는 marker이고, `config/renumber`의 map은 그것이 기록한 id를 유지한다. 검증: `tests/scripts/spec-renumber.test.mts`의 테스트 6개가 통과한다.
