@@ -7,6 +7,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { readAllSources, withoutExtensions, type Validators } from './run.mts';
+import { runCommand } from './exit.mts';
 import { readerKey, words } from './names.mts';
 import { LANGS, type Concern, type ExtensionNative, type FileNative, type Lang, type Member, type Sources, type Spec, type SpecDocument, type SpecType, type Unit, type Visibility } from './types.mts';
 import { validators } from './validators.mts';
@@ -310,9 +311,4 @@ function argumentOf(name: string): string | undefined {
   return at < 0 ? undefined : process.argv[at + 1];
 }
 
-try {
-  process.exitCode = main();
-} catch (error) {
-  process.stdout.write(`CHECK_ERROR ${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-}
+runCommand(main);

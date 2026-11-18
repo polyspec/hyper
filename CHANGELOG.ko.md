@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- `make duplication-check`가 통과한다(H35.94). 입력: 트리에서 실행한 target. 이전 동작: 발견이나 통과 줄을 출력하고 던져진 오류를 `CHECK_ERROR`로 바꾸는 `scripts/recipe/check.mts`와 `scripts/recipe/files.mts`의 끝부분 clone 하나로 실패했다. 지금 동작: 둘과 `scripts/recipe/candidate.mts`는 `scripts/recipe/exit.mts`의 `report`와 `runCommand`로 끝나고, 출력은 같다. 검증: duplication-check와 `recipe-check`, `recipe-files`의 테스트가 통과한다.
 - outside redirect는 다시 HY-132이고 오류 kind는 HY-133이다(H35.109). 입력: `contracts/protocol.json`의 rule. 이전 동작: 전에 HY-132가 이름하던 outside redirect가 HY-133이었고, HY-132는 오류 kind를 이름했다. 지금 동작: `make spec-renumber MAP=config/renumber/h35-109.json`이 계약과, rule을 인용하는 오류 메시지를 포함한 추적되는 모든 인용에서 두 id를 바꿨다. 오류 kind는 retired 번호 8과 10부터 13을 기록으로 유지한다. v0.0.40에는 둘 다 없으므로 어느 rule도 릴리스에 없다. 검증: `make spec-docs-check`와 `make spec-released-check`.
 - `make spec-renumber`가 트리에서 실행된다(H35.98). 입력: `make spec-renumber MAP=config/renumber/h35-109.json`. 이전 동작: placeholder가 script 자신이 가진 고정 문자였으므로 `scripts/spec-renumber.mts holds the placeholder of the renumbering`으로 실패했다. 지금 동작: 각 파일의 placeholder는 그 파일이 갖지 않는 marker이고, `config/renumber`의 map은 그것이 기록한 id를 유지한다. 검증: `tests/scripts/spec-renumber.test.mts`의 테스트 6개가 통과한다.
 - `make analyse-php` 가 `packages/php/tests/Support/FailingWriteSessionHandler.php` 에서 통과한다(H35.83). 입력: `string|false` 로 선언된 그 메서드 `read`. 이전 동작: PHPStan 이 23행에서 `read()` 가 false 를 돌려주지 않는다고 보고했다. 기대 동작: `read` 는 `SessionHandlerInterface` 가 허용하는 `string` 으로 선언된다. `make analyse-php` 와 `make lint-php` 로 검증했다.

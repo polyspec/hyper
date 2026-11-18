@@ -9,6 +9,7 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { report, runCommand } from './exit.mts';
 import { words } from './names.mts';
 import { readProtocol } from './protocol.mts';
 import { validators } from './validators.mts';
@@ -68,14 +69,7 @@ function main(): number {
       }
     }
   }
-  for (const finding of findings) process.stdout.write(`${finding}\n`);
-  if (findings.length === 0) process.stdout.write(`recipe-files: ${units} units name files and classes that exist\n`);
-  return findings.length === 0 ? 0 : 1;
+  return report(findings, `recipe-files: ${units} units name files and classes that exist`);
 }
 
-try {
-  process.exitCode = main();
-} catch (error) {
-  process.stdout.write(`CHECK_ERROR ${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-}
+runCommand(main);
