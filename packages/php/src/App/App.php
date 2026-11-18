@@ -914,15 +914,16 @@ final class App
     }
 
     /**
-     * The kind of an error of the ORM, or null for every other error (HY-107.7): an error of one of the error classes of
-     * the extension polyspec_orm of the package polyspec/orm, with its kind in `kind`. Only the kind string reaches the
-     * core (HY-107.10). `instanceof` of a class that is not loaded is false, so the server runs without the extension.
+     * The kind of an error of the ORM, or null for every other error (HY-107.7): an error of one of the error classes
+     * of the extension polyspec_orm of the package polyspec/orm, whose method `kind()` gives its kind
+     * (GeneratedTest.php of orm 0.0.34, line 9637). Only the kind string reaches the core (HY-107.10). `instanceof`
+     * of a class that is not loaded is false, so the server runs without the extension.
      */
     private static function ormKind(\Throwable $error): ?string
     {
         foreach (self::ORM_ERROR_CLASSES as $class) {
-            if ($error instanceof $class) {
-                $kind = $error->kind ?? null;
+            if ($error instanceof $class && method_exists($error, 'kind')) {
+                $kind = $error->kind();
 
                 return is_string($kind) ? $kind : null;
             }

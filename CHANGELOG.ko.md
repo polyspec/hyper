@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- 초안: Node, PHP, Python runner는 case가 던지는 orm 패키지의 오류(HY-107.7)를 준비 단계에서 case를 실패시키는 대신, tests/fixtures/orm-errors.json이 정한 임시 디렉터리의 SQLite 파일에 대한 실제 orm 호출에서 얻어 던집니다. 행이 갖지 않은 revision을 기대한 update는 `OrmValueError` `revision_changed`를, 어떤 행도 갖지 않은 key에 requireMatch를 건 update는 `no_rows`를, 없는 디렉터리의 파일 연결은 `OrmStoreError` `driver`를 주며, orm 0.0.34의 생성 테스트가 만드는 방식을 따릅니다. PHP 서버는 orm 확장이 주는 메서드 `kind()`로 kind를 읽습니다. orm 0.0.34까지 실행하지 않습니다: orm 패키지가 아직 설치되지 않았습니다(H35.45-1부터 H35.45-4까지). 확인: `make lint-python` 통과; `make lint-ts`는 없는 모듈 `@polyspec/orm`으로, `make analyse-php`는 알 수 없는 orm class와 `tests/Support/Steps/FunctionsSteps.php`의 오류 4개(H34.15)로 실패합니다. (H35.45-4)
 - Node, PHP, Python 서버는 ORM의 오류를 orm 패키지의 오류 class `OrmValueError`부터 `OrmInternalError`까지(PHP는 `Polyspec\Orm\…`, Python은 `polyspec.orm`의 `ORM…Error`)로 알아보고, 그 소문자 kind인 `no_rows`나 `revision_changed`를 읽는다(HY-107.7, H35.45-4). HY-107.7이 orm 패키지의 class와 그 kind를 정하고 HY-107.5가 다른 모든 오류를 HY-43으로 실패시키므로, 대문자 `code`나 `code_`를 가진 legacy class `OrmError`나 `OrmException`의 인식은 지운다. orm 0.0.34 전에는 실행하지 않는다. 아직 orm의 패키지가 설치되지 않았다(H35.45-1부터 H35.45-3). 확인: `make lint-ts`와 `make lint-python` 통과. `make analyse-php`는 orm class에 대한 `class.notFound` 오류 6개와 `tests/Support/Steps/FunctionsSteps.php`의 `Polyspec\Template\Environment`에 대한 오류 4개를 보고한다.
 
 - protocol이 HY-107.10을 정한다. hyper와 ORM 사이의 계약은 server가 읽어 core에 넘기는 오류의 kind 문자열이므로, hyper의 core는 orm 라이브러리의 어떤 crate에도 의존하지 않고 orm의 release에 묶이지 않는다(H35.45-4).
