@@ -417,6 +417,15 @@ test('the Python reader counts a variadic parameter as one input, as PHP and Nod
   assert.deepEqual(grow?.parameters, ['sizes'], `python reads the parameters of grow as ${JSON.stringify(grow?.parameters)}`);
 });
 
+test('the Node and PHP readers count no empty private constructor of a class of static methods (HYR-6, H35.105)', () => {
+  for (const lang of ['node', 'php'] as const) {
+    const members = readFixture(lang, path.join(fixture, 'readers', lang)).members.filter((m) => m.unit === 'StaticOnly');
+    const names = members.map((m) => m.name);
+    assert.ok(names.includes('twice'), `${lang} does not read StaticOnly: ${names.join(', ')}`);
+    assert.ok(!members.some((m) => m.kind === 'constructor'), `${lang} counts the empty private constructor of StaticOnly as a member: ${names.join(', ')}`);
+  }
+});
+
 test('the PHP reader lists a trait member under the trait, not under the class that uses it', () => {
   const names = readFixture('php', path.join(fixture, 'readers', 'php')).members.filter((m) => m.unit === 'Gadget').map((m) => m.name);
   assert.ok(names.includes('size'), `Gadget does not list size: ${names.join(', ')}`);
