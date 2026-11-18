@@ -123,6 +123,13 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
       `function(...) -> T` of them; no union term, a Node `Promise<T>` is `T`, an iterator or generator is `list<T>`,
       and a callable is `function(...) -> T`. A term outside it fails HYR-8.
       An error is a status that a statement of `contracts/protocol.json` names or an error unit of the spec.
+      - **Extension classes.** An error class that the hyper extension defines, and no source file of a server, is a
+        unit whose native entry is `{"extension": "<qualified class name>", "kind": "class", "internal": <boolean>}` and
+        has no `file`; the unit has no members, because the extension declares them and no reader reads them.
+      - **Kinds.** An error of such a class with a kind is `<unit>:<kind>`, for example
+        `hyper-value-error:invalid_session_handler`. `make recipe-files` fails an error whose unit is no extension unit
+        and a kind that no statement of `contracts/protocol.json` names, because a caller tells these failures apart by
+        the kind alone.
     - `state`: one sentence of what it does.
     - `native`: for each language, the exact `symbol` and the exact `signature` (see below).
   - **Types.** A type is a type declaration that is no unit (HYR-3): a Node `type` alias or `interface`, and a Python

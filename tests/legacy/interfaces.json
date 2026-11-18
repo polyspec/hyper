@@ -248,7 +248,7 @@
             "created": {
               "role": "expected",
               "compare": "exact",
-              "sentence": "HY-104.31",
+              "sentence": "HY-104.43",
               "state": "`created` holds for each step null when the request created no identifier after its close, and `new` when it created 64 lowercase hexadecimal digits that are not the cookie value of the step, an identifier of `files` or an identifier that an earlier step created."
             },
             "errors": {
