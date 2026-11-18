@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: a4af9371da723f87b79fafbc0d9739a49214b834962d8faec00a8655fb7fe8c1 -->
+<!-- source-sha256: a81f7b3fa40fc192751b6502f3a91486774f9cc00231d9266677cd728bf0496e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `tests/scripts/node-package.test.mts`는 production closure를 실행의 staging 디렉터리에 pack하고 `var/bindings/node/deps`로 게시하는 `make node-package`의 recipe를 검사한다(H35.68-1). 입력: `make hyper-test-scripts`. 이전 동작: test는 recipe가 더는 쓰지 않는 `--pack-destination …/node/deps`를 기대했으므로 실패했다. 기대 동작: test는 staging 디렉터리 `deps.next-<pid>`, `"$staging"`으로의 pack, 그리고 `scripts/publish.mts`가 `"$staging"`을 `deps`로 게시하는 것을 요구한다. `make hyper-test-scripts`로 검증했다(이전 1개 실패, 이후의 수는 row에 적는다).
 - `make node-package`는 production closure를 자기 run의 staging 디렉터리에 pack하고 `scripts/publish.mts`로 `var/bindings/node/deps`에 publish한다(HR-82, H35.68). 입력: 이전 run이 `polyspec-template-0.0.30.tgz`를 pack했고 lock이 0.0.31을 고정한 뒤의 `make node-package`. 동작: recipe가 deps를 `mkdir -p`로 만들고 비우지 않았으므로 `./deps/*.tgz`의 install이 새 파일 옆의 옛 파일까지 받아 offline에서 ENOTCACHED로 실패했다. 기대 동작이자 현재 동작: publish가 이전 run의 파일을 지운다. 검증: `make hyper-test-scripts TESTS=tests/scripts/node-package-deps.test.mts`, 1개 통과. deps에 오래된 파일을 둔 `make node-package`가 `7 files; removed stale-0.0.1.tgz`를 출력했다.
 - `make node-package`는 `packages/ts/native/wasm/Cargo.toml`의 모든 test feature, 곧 `panic-test`, `fault-test`, `thrown-count-test`로 WASM module을 build한다(`WASM_FEATURES`, H35.67). 입력: `make test-wasm`. 동작: module을 `panic-test`만으로 build했으므로 생성 test 6개가 `glue.__armFaults is not a function`과 `stepGlue.__thrownCount is not a function`으로 실패했다. 기대 동작이자 현재 동작: 그 6개가 통과한다. 검증: `make test-wasm`, 341개 중 336개 통과. path 값의 B-4 case 3개(GN-6y)와 다른 type의 callback 결과에 대한 K-2 case 2개가 알려진 실패다.
 - `make e2e`가 browser test의 command를 구분자 `--` 다음에 `scripts/run-e2e.mts`에 넘긴다(H35.66). 입력: `make e2e`. 이전 동작: recipe가 `--$(NODE)`를 한 단어로 넘겨 script의 `parseArgs`가 `ERR_PARSE_ARGS_UNKNOWN_OPTION`으로 거부했고, recipe의 option을 읽는 test는 글자로 된 option 이름만 읽었으므로 그 단어를 보지 못했다. 기대 동작: recipe는 `-- $(NODE)`를 넘기고, test는 make 변수에 붙은 option도 script의 option으로 읽는다. `make hyper-test-scripts TESTS=tests/scripts/check-recipes.test.mts`(이전 6개 중 5개, `scripts/run-e2e.mts does not declare --$(NODE)`를 밝힘. 이후 6개 모두 통과)와 `make -n e2e`로 검증했다. `make e2e` 자체는 실행하지 않았다.
