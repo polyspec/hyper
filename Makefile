@@ -235,6 +235,11 @@ PIE := $(KIT_TOOLS)/mise/shims/pie
 .PHONY: php-ext-pins
 php-ext-pins: ## Write config/php-ext-pins.json from the digests of the release assets of the pinned PHP extensions; ONLINE
 	$(ONLINE) $(NODE) $(CURDIR)/scripts/php-ext-pins.mts write config/php-ext-pins.json
+# php-ext-pins-record writes the release responses of the pinned PHP extensions as the fixtures that the tests of
+# php-ext-pins read, so a pin of a new release records them with a target and not by hand (H35.74-1).
+.PHONY: php-ext-pins-record
+php-ext-pins-record: ## Record the release responses of the pinned PHP extensions in tests/scripts/fixtures/php-ext-pins; ONLINE
+	$(ONLINE) $(NODE) $(CURDIR)/scripts/php-ext-pins.mts record config/php-ext-pins.json tests/scripts/fixtures/php-ext-pins
 # pin sets the releases of the sibling polyspec packages that VERSIONS names, as "<package>=<version> ...", in
 # config/pins.json and in every place that no tool writes, then runs the lock targets that scripts/pin.mts names in their
 # order (H35.75). It is an installation target, since those targets download (HR-89). When a lock target refuses, pin
