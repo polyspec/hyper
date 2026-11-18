@@ -78,7 +78,7 @@ class Cluster {
       await until(async () => {
         const info = String(await this.ask(node.port, 'CLUSTER', 'INFO'));
         return info.includes('cluster_state:ok') && info.includes(`cluster_known_nodes:${String(PRIMARIES)}`);
-      });
+      }, once(node.server, 'exit'));
     }
   }
 
@@ -185,7 +185,7 @@ for (const [index, name] of NAMES.entries()) {
     const env = environment();
     const lockOwner = await cluster.ownerOf(LOCK);
     const holder = await holding(name, directory, { ...env, HYPER_SESSION_EXPIRE: '1' });
-    await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0);
+    await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0, once(holder, 'exit'));
     await runWorker(other, directory, env, 'write', '{"x":1}');
     const exit = once(holder, 'exit');
     holder.stdin.write('\n');
@@ -210,7 +210,7 @@ test('a request of the PHP server whose lock expired leaves the lock of the next
   const env = environment();
   const lockOwner = await cluster.ownerOf(LOCK);
   const expired = await holding('php', directory, { ...env, HYPER_SESSION_EXPIRE: '1' }, 'hold');
-  await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0);
+  await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0, once(expired, 'exit'));
   const next = await holding('node', directory, env);
   const ended = once(expired, 'exit');
   expired.stdin.write('\n');

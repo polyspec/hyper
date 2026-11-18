@@ -84,9 +84,19 @@ for (const name of NAMES) {
   test(`the ${name} server waits for the lock that a request of another server holds (HY-115)`, { timeout: 60_000 }, async () => {
     const other = name === 'python' ? 'node' : 'python';
     const holder = await holding(other, state.directory, { HYPER_SESSION_REDIS: state.port });
-    const waiting = run(name, 'count', '1', name);
-    const first = await Promise.race([waiting.then(() => 'finished'), new Promise((resolve) => setTimeout(() => resolve('waiting'), 200))]);
-    assert.equal(first, 'waiting');
+    // The event that decides the result is the try of the waiting request to take the lock, which MONITOR shows after
+    // the holder took it: the request must not have finished then, because the holder still holds the lock (H35.19-1).
+    const monitor = await createClient({ socket: { port: Number(state.port) } }).connect();
+    let tried: () => void = () => undefined;
+    const triedLock = new Promise<void>((resolve) => (tried = resolve));
+    await monitor.monitor((line) => {
+      if (commandOf(line) === 'SET' && line.includes(`"${LOCK}"`)) tried();
+    });
+    let finished = false;
+    const waiting = run(name, 'count', '1', name).finally(() => (finished = true));
+    await Promise.race([triedLock, waiting]);
+    monitor.destroy();
+    assert.equal(finished, false, 'the request finished while the other server held the lock');
     holder.stdin.write('\n');
     await waiting;
     assert.deepEqual(JSON.parse(await run('php', 'read', JSON.stringify(['n', 'stale', name]))), [1, 1, 1]);
