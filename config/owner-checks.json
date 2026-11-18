@@ -273,6 +273,7 @@
         "scripts/install-redis.mts",
         "tests/scripts/session-workers.mts",
         "tests/scripts/session-redis-server.mts",
+        "tests/scripts/until.mts",
         "tests/scripts/session-board.mts",
         "packages/php/src/Session/RedisSentinelSessions.php",
         "packages/php/src/Session/RedisClusterSessions.php",
@@ -285,7 +286,8 @@
         "tests/scripts/session-redis-failover.test.mts",
         "tests/scripts/session-redis-cluster.test.mts",
         "tests/scripts/benchmark-sessions.test.mts",
-        "tests/scripts/session-holder.test.mts"
+        "tests/scripts/session-holder.test.mts",
+        "tests/scripts/until.test.mts"
       ]
     },
     {

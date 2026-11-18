@@ -7,7 +7,6 @@ import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, before } from 'node:test';
-import { setTimeout as delay } from 'node:timers/promises';
 
 import { createClient } from 'redis';
 
@@ -44,15 +43,7 @@ export async function ask(port: string, secure: Secure | undefined, ...words: st
   }
 }
 
-// Repeats a check until it holds. The timeout of a test fails the test and leaves a check that never holds repeating, so
-// the wait between two checks does not keep the process: while a test waits, the servers of the file keep it, and after
-// the file stopped them a check that is left ends with the process (HR-87).
-export async function until(check: () => Promise<boolean>): Promise<void> {
-  for (;;) {
-    if (await check().catch(() => false)) return;
-    await delay(100, undefined, { ref: false });
-  }
-}
+export { until } from './until.mts';
 
 export const EXTENSION = `-dextension=${path.join(ROOT, 'var/redis/redis.so')}`;
 
