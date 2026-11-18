@@ -694,7 +694,7 @@ export const steps = {
     reader.compare('tokenRenewed', token !== tokenBefore);
     reader.compare('tokenForm', typeof token === 'string' && /^[0-9a-f]{64}$/u.test(token));
     reader.compare('tokenInBody', typeof token === 'string' && body.includes(token));
-    reader.compare('session', token !== undefined);
+    reader.compare('session', token !== null);
     if (reader.has('restored')) reader.compare('restored', await warnedOutside());
   },
 
