@@ -620,6 +620,12 @@
                       "koSource": "09758da5cd8518c2bf439f005d0da2c989207bf84c89dea7b6e36660d742ca74"
                     },
                     {
+                      "id": "HY-48.25",
+                      "en": "PHP loads the session-store extension `polyspec_session_store` beside them, because `NativeSession::collect` removes the expired session files of the handler `files` with `Polyspec\\SessionStore\\FileSessions` of that extension (HY-104.33), so that the rule of the removal, the prefix `sess_`, the modification time against `session.gc_maxlifetime` and the lock of each file, lives once in the core of session-store; without it `collect` fails because the class does not exist.",
+                      "ko": "PHP는 그 곁에 session-store 확장 `polyspec_session_store`를 불러온다. `NativeSession::collect`가 그 확장의 `Polyspec\\SessionStore\\FileSessions`로 handler `files`의 만료된 session 파일을 지우므로(HY-104.33), 제거 규칙인 접두사 `sess_`, `session.gc_maxlifetime`에 대한 수정 시각, 각 파일의 lock이 session-store의 core 한 곳에 있기 때문이다. 그것이 없으면 class가 없어 `collect`가 실패한다.",
+                      "koSource": "f6b3aa278022ea6fff1c6f781d27a28ff69f3ea271f059d02753efd077ce150c"
+                    },
+                    {
                       "id": "HY-48.20",
                       "en": "The build writes no generated PHP program and no `program.json`: the three servers render the templates of the directory `templates` of the program directory, and `hyper build` refuses the option `--php-namespace` with a usage error that names the option and says to remove it from the command.",
                       "ko": "빌드는 generated PHP 프로그램도 `program.json`도 쓰지 않는다: 세 서버가 프로그램 디렉터리의 디렉터리 `templates`에 있는 템플릿을 렌더하며, `hyper build`는 option `--php-namespace`를 그 option을 밝히고 명령에서 빼라고 말하는 usage error로 거부한다.",
