@@ -998,10 +998,12 @@
         "scripts/recipe/**",
         "scripts/schema/**",
         "tests/scripts/fixtures/recipe/**",
-        "tests/scripts/recipe-check.test.mts"
+        "tests/scripts/recipe-check.test.mts",
+        "tests/scripts/recipe-files.test.mts"
       ],
       "tests": [
-        "tests/scripts/recipe-check.test.mts"
+        "tests/scripts/recipe-check.test.mts",
+        "tests/scripts/recipe-files.test.mts"
       ],
       "targets": [
         "typecheck"

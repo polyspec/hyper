@@ -7054,9 +7054,9 @@
                 },
                 {
                   "id": "HY-104.42",
-                  "en": "A server accepts an identifier of 22 to 256 characters of `A-Za-z0-9,-`, the range of `session.sid_length` of PHP and of SE-5.1 of the session-store library, so that the three servers and a PHP peer share their sessions.",
-                  "ko": "server는 PHP의 `session.sid_length`와 session-store 라이브러리 SE-5.1의 범위인 `A-Za-z0-9,-`의 22자부터 256자의 식별자를 받으므로, 세 server와 PHP peer는 session을 나눈다.",
-                  "koSource": "6c035b350aa1eb8503a23e5f95780cf0b25302a4340c758ca865becedfa78c39"
+                  "en": "A server accepts an identifier of 22 to 256 characters of `A-Za-z0-9,-`, the range of `session.sid_length` of PHP and of SE-5.1 of the session-store library, so that the three servers and a PHP peer share their sessions; the PHP server checks the range itself, and the Node and Python servers give the cookie to the library, which checks it (`packages/core/rust/src/identifier.rs:7-8` of session-store v0.0.8).",
+                  "ko": "server는 PHP의 `session.sid_length`와 session-store 라이브러리 SE-5.1의 범위인 `A-Za-z0-9,-`의 22자부터 256자의 식별자를 받으므로, 세 server와 PHP peer는 session을 나누며, PHP server는 그 범위를 직접 검사하고 Node와 Python server는 쿠키를 라이브러리에 넘겨 라이브러리가 검사한다(session-store v0.0.8의 `packages/core/rust/src/identifier.rs:7-8`).",
+                  "koSource": "c932867a96687bca9c1c655cf57f93c61010974543e749003f344bf058ce0aa6"
                 },
                 {
                   "id": "HY-104.43",

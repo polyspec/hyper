@@ -10,8 +10,9 @@ import { test } from 'node:test';
 import { applyMutation, readMutations, track } from '../../scripts/recipe/mutations.mts';
 import { checkStated } from '../../scripts/recipe/stated.mts';
 import { expectedDirectory } from '../../scripts/recipe/names.mts';
-import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type Unit } from '../../scripts/recipe/types.mts';
+import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type SpecDocument, type Unit } from '../../scripts/recipe/types.mts';
 import { validators } from '../../scripts/recipe/validators.mts';
+import { withoutExtensions } from '../../scripts/recipe/run.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
@@ -60,8 +61,19 @@ function withFixtureCopy(prefix: string, run: (root: string, replaceIn: (file: s
 
 const schemas = validators();
 
-/** The spec of a file, which must pass the schema of the spec. */
+/**
+ * The spec of a file, which must pass the schema of the spec and hold no extension unit (HYR-5): the tests write it
+ * back, and the `Spec` of the checks has no extension entries to write.
+ */
 function specOf(file: string): Spec {
+  const doc = documentOf(file);
+  const spec = withoutExtensions(doc);
+  assert.deepEqual(spec, doc, `${file} holds an extension unit, which a test cannot write back`);
+  return spec;
+}
+
+/** The spec of a file as the file holds it, extension units included, which must pass the schema of the spec. */
+function documentOf(file: string): SpecDocument {
   const doc: unknown = JSON.parse(readFileSync(file, 'utf8'));
   if (!schemas.spec(doc)) throw new Error(`${file} is no spec: ${JSON.stringify(schemas.spec.errors?.[0])}`);
   return doc;
@@ -297,6 +309,35 @@ test('the candidate adds a member that the sources hold and the spec of a listed
   );
 });
 
+test('the candidate keeps an extension unit and an error of its kind (HYR-5, H35.96)', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'recipe-extension-'));
+  try {
+    withFixtureCopy('recipe-extension-root-', (root, replaceIn) => {
+      const entry = { extension: 'Polyspec\\Hyper\\ValueError', kind: 'class', internal: true };
+      replaceIn(
+        'contracts/interfaces.json',
+        '"units": [\n        {\n          "id": "csrf",',
+        `"units": [\n        { "id": "value-error", "native": { "php": ${JSON.stringify(entry)} }, "members": [] },\n        {\n          "id": "csrf",`,
+      );
+      replaceIn('contracts/interfaces.json', '"errors": [],', '"errors": ["value-error:token"],');
+      track(root);
+      const output = path.join(dir, 'interfaces.candidate.json');
+      const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
+      const printed = result.stdout + result.stderr;
+      assert.equal(result.status, 0, printed);
+      const units = listAt(readJson(output), 'concerns').flatMap((c) => listAt(c, 'units'));
+      const unit = units.find((u) => at(u, 'id') === 'value-error');
+      assert.ok(unit !== undefined, 'the candidate dropped the extension unit value-error');
+      assert.deepEqual(at(unit, 'native', 'php'), entry, 'the candidate changed the extension entry');
+      const errors = units.flatMap((u) => listAt(u, 'members')).flatMap((m) => listAt(m, 'errors'));
+      assert.ok(errors.includes('value-error:token'), 'the candidate dropped the error value-error:token');
+      assert.doesNotMatch(printed, /^CANDIDATE_STALE .*value-error|^CANDIDATE_STALE \/concerns\/\d+\/units\/0\/native\/php/mu, 'the candidate reports the extension entry as stale');
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 for (const m of mutations) {
   test(`mutation ${m.id} fails with ${m.code}`, () => {
     const root = mkdtempSync(path.join(tmpdir(), 'recipe-mutation-'));
@@ -380,6 +421,27 @@ test('the Python reader records a call of an imported name by its original name 
 test('the Python reader counts a variadic parameter as one input, as PHP and Node do', () => {
   const grow = readPython(path.join(fixture, 'readers', 'python')).members.find((m) => m.unit === 'Widget' && m.name === 'grow');
   assert.deepEqual(grow?.parameters, ['sizes'], `python reads the parameters of grow as ${JSON.stringify(grow?.parameters)}`);
+});
+
+/** Asserts that the reader of `lang` reads the class `unit` of its reader fixture with `twice` and no constructor. */
+function assertNoGuard(lang: 'node' | 'php', unit: string): void {
+  const members = readFixture(lang, path.join(fixture, 'readers', lang)).members.filter((m) => m.unit === unit);
+  const names = members.map((m) => m.name);
+  assert.ok(names.includes('twice'), `${lang} does not read ${unit}: ${names.join(', ')}`);
+  assert.ok(!members.some((m) => m.kind === 'constructor'), `${lang} counts the empty private constructor of ${unit} as a member: ${names.join(', ')}`);
+}
+
+test('the Node reader counts no empty private constructor of a class of static methods (HYR-6, H35.105)', () => {
+  assertNoGuard('node', 'StaticOnly');
+});
+
+test('the PHP reader counts no empty private constructor of a class of static methods (HYR-6, H35.105)', () => {
+  assertNoGuard('php', 'StaticOnly');
+});
+
+test('the PHP reader counts no empty private constructor whose body holds a comment or that is one line (HYR-6, H35.105)', () => {
+  assertNoGuard('php', 'StaticCommented');
+  assertNoGuard('php', 'StaticInline');
 });
 
 test('the PHP reader lists a trait member under the trait, not under the class that uses it', () => {
@@ -827,7 +889,8 @@ test('the Node reader writes the call of the parent constructor in the construct
 });
 
 test('the PSR-4 list of each composer.json is the directory of each group that holds a PHP unit (HYR-4)', () => {
-  const spec = specOf(path.join(repo, 'contracts', 'interfaces.json'));
+  // An extension unit has no file, so only the units that name a file hold a PHP directory (HYR-5).
+  const spec = withoutExtensions(documentOf(path.join(repo, 'contracts', 'interfaces.json')));
   const groups = spec.groups.filter((g) => spec.concerns.some((c) => c.group === g && c.units.some((u) => u.native.php !== undefined)));
   const directories = groups.map((g) => `src/${expectedDirectory('php', g)}/`).sort();
   assert.ok(directories.length > 0, 'no group of the spec holds a PHP unit');

@@ -942,9 +942,18 @@ fn the_paths_and_the_stream_of_a_build_as_the_binding_gives_them() -> Result<(),
     // compares through the binding.
     use polyspec_hyper::build::{paths, stream_hex, Output};
     let outputs = [
-        Output { path: "program/b".to_owned(), bytes: b"y".to_vec() },
-        Output { path: "client/a".to_owned(), bytes: b"x".to_vec() },
-        Output { path: "program/build.json".to_owned(), bytes: b"{}".to_vec() },
+        Output {
+            path: "program/b".to_owned(),
+            bytes: b"y".to_vec(),
+        },
+        Output {
+            path: "client/a".to_owned(),
+            bytes: b"x".to_vec(),
+        },
+        Output {
+            path: "program/build.json".to_owned(),
+            bytes: b"{}".to_vec(),
+        },
     ];
     assert_eq!(paths(&outputs)?, vec!["client/a", "program/b"]);
     assert_eq!(

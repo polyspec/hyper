@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import type { SchemaObject } from 'ajv';
 import type { Validators } from './run.mts';
-import type { Sources, Spec } from './types.mts';
+import type { Sources, SpecDocument } from './types.mts';
 
 const schemaDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'schema');
 
@@ -24,7 +24,7 @@ function readSchema(file: string): SchemaObject {
 export function validators(): Validators {
   const ajv = new Ajv2020({ strict: true, allErrors: true });
   return {
-    spec: ajv.compile<Spec>(readSchema('interfaces.schema.json')),
+    spec: ajv.compile<SpecDocument>(readSchema('interfaces.schema.json')),
     sources: ajv.compile<Sources>(readSchema('recipe-sources.schema.json')),
   };
 }

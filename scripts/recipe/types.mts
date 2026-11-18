@@ -35,12 +35,25 @@ export type Concern = {
   units: Unit[];
 };
 
+/** The native entry of a unit that a source file of a server declares (HYR-5). */
+export type FileNative = { file: string; kind: string; internal: boolean };
+/** The native entry of an extension unit (HYR-5): a class that the hyper extension defines, with no file. */
+export type ExtensionNative = { extension: string; kind: string; internal: boolean };
+
 export type Unit = {
   id: string;
-  native: Partial<Record<Lang, { file: string; kind: string; internal: boolean }>>;
+  native: Partial<Record<Lang, FileNative>>;
   members: Member[];
   only?: Only;
   tests?: string[];
+};
+
+/**
+ * The spec as `contracts/interfaces.json` holds it: a unit may also have extension entries. The checks of the sources
+ * read the `Spec` that `withoutExtensions` makes of it, because no reader reads an extension class.
+ */
+export type SpecDocument = Omit<Spec, 'concerns'> & {
+  concerns: (Omit<Concern, 'units'> & { units: (Omit<Unit, 'native'> & { native: Partial<Record<Lang, FileNative | ExtensionNative>> })[] })[];
 };
 
 export type Member = {

@@ -16,7 +16,11 @@ export function checkBarrels(ctx: Ctx): void {
       const n = u.native[lang];
       if (!n || n.internal) continue;
       const r = sources[lang].units.find((x) => x.file === n.file && words(x.name) === u.id);
-      if (!r) continue;
+      if (!r) {
+        // A public unit whose file declares no class of its name has no export to expect; it is a finding, not a skip.
+        add('UNIT_CLASS_MISSING', `${lang} unit ${u.id} is public, and ${n.file} declares no class of its name, so the barrel check cannot name its export`);
+        continue;
+      }
       if (r.kind === 'functions') {
         // A file of functions exports its public functions, not the file's stem (HYR-2).
         for (const m of u.members) if (m.visibility === 'public' && m.native[lang]) expected.add(symbolName(m.native[lang].symbol));

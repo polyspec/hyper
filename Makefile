@@ -526,7 +526,7 @@ hyper-test-scripts: $(if $(TESTS),$(shell $(NODE) scripts/test-inputs.mts '$(SCR
 RECIPE_TYPESCRIPT := scripts/recipe/typescript/node_modules
 RECIPE_RESULTS_DIR := $(CURDIR)/var/recipe/results
 
-.PHONY: recipe-check recipe-compare recipe-candidates recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build
+.PHONY: recipe-check recipe-compare recipe-files recipe-candidates recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build
 # Each case runner writes one line per case to the file that RECIPE_RESULTS names (HYR-7); recipe-check runs the five
 # runners to their end, then the comparison, which reads their files, and fails when a runner or the comparison fails,
 # naming each failed one in its last line (HR-86). Its checks are the commands of the runners and of the comparison,
@@ -581,6 +581,9 @@ recipe-check: server-fixtures ext hyper-ext packages node-fixtures ## Check cont
 recipe-compare: ## Compare contracts/interfaces.json with the sources of the three servers and the case results that the runners wrote (HYR-7, HYR-8)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-compare needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
 	$(recipe_compare)
+
+recipe-files: ## Check contracts/interfaces.json against its schema and the files and classes of its units, without the binding graph (H35.94, HYR-8)
+	$(NODE) scripts/recipe/files.mts --root .
 
 recipe-candidates: ## Write the candidate of contracts/interfaces.json under var/recipe, with the hand-written fields listed beside it (HYR-10)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-candidates needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
@@ -777,12 +780,13 @@ test-wasm: node-package ## Run the generated tests of the WASM binding on node -
 
 # The static library with the test features (binding GN-13b), which Go links through CGO_LDFLAGS; gofmt and go vet,
 # then the generated tests on go test. GOTOOLCHAIN=local: a go of another release than the go directive fails instead
-# of fetching that release.
+# of fetching that release. A tag of a test feature names the library, polyspec_hyper_<feature> (binding 0.0.20, B2.438,
+# GN-13bf), and TestGN13bfEveryBuildTagOfThePackageIsBuilt fails unless every tag of the tagged generated tests is built.
 GO_RELEASE := $(shell sed -n 's/^go \(.*\)$$/\1/p' packages/go/go.mod)
-GO_ENV := GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET)/debug GOFLAGS=-tags=polyspec_panic_test,polyspec_codec_test
+GO_ENV := GOTOOLCHAIN=local CGO_LDFLAGS=-L$(CARGO_TARGET)/debug GOFLAGS=-tags=polyspec_hyper_codec_test,polyspec_hyper_fault_test,polyspec_hyper_panic_test,polyspec_hyper_thrown_count_test
 test-go: bindings ## Build the static library of the Go binding, run gofmt and go vet, then the generated tests on go test
 	test "$$($(GO_ENV) $(GO) env GOVERSION)" = "go$(GO_RELEASE)"
-	$(CARGO) build --locked --offline -p polyspec-hyper-go --features panic-test,codec-test
+	$(CARGO) build --locked --offline -p polyspec-hyper-go --features panic-test,codec-test,fault-test,thrown-count-test
 	test -z "$$(cd packages/go && $(GOFMT) -l .)"
 	cd packages/go && $(GO_ENV) $(GO) vet ./...
 	cd packages/go && $(GO_ENV) $(GO) test -count=1 -v ./...
