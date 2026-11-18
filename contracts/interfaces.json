@@ -10984,7 +10984,7 @@
             {
               "id": "file-sessions.collect",
               "kind": "method",
-              "visibility": "internal",
+              "visibility": "public",
               "inputs": [],
               "output": "number",
               "errors": [],
@@ -10995,8 +10995,8 @@
                   "signature": "async collect(): Promise<number>"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._collect",
-                  "signature": "def _collect(self) -> int"
+                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions.collect",
+                  "signature": "def collect(self) -> int"
                 }
               }
             },
