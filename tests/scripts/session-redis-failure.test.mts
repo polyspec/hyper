@@ -95,7 +95,8 @@ test('the three HTTP servers share a session by its cookie, answer status 500 wh
     state.server = await startRedis(state.directory, state.port);
     redis = await connected();
     for (const board of boards) {
-      // The first request after the start may meet the connection to the ended server and answer 500; the store drops a
+      // HY-115.12: a request that cannot reach Redis answers 500, and the sessions go on after Redis starts again. The
+      // first request after the start may meet the connection to the ended server and answer 500; the store drops a
       // connection that failed, and the next request makes it again (session-store v0.0.7,
       // packages/redis/rust/src/connection.rs:339-345), so the next request reaches the started one.
       let response: Response = await post(board, session.cookie, session.token, `after ${board.name}`);

@@ -253,7 +253,8 @@ test('the HTTP servers answer status 500 during a failover and go on with the se
     await redis.replicated(await redis.primary());
     await redis.failOver();
     for (const board of boards) {
-      // The first request after the switch may meet the connection to the killed primary and answer 500; the store drops a
+      // HY-115.16: a request answers 500 while no primary answers, and the session goes on after a promotion. The first
+      // request after the switch may meet the connection to the killed primary and answer 500; the store drops a
       // connection that failed, and the next request makes it again (session-store v0.0.7,
       // packages/redis/rust/src/connection.rs:339-345), so the next request reaches the new primary.
       let response: Response = await post(board, session.cookie, session.token, `after ${board.name}`);
