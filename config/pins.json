@@ -1,0 +1,14 @@
+{
+  "description": "The release of each sibling polyspec package that this repository builds with: its repository and its exact version. make pin writes it and every place that names one of them, and make pin-check fails at a place that names another version (scripts/pin.mts, H35.75, H35.76).",
+  "versions": {
+    "binding": { "repository": "polyspec/binding", "version": "0.0.21" },
+    "http-cookie": { "repository": "polyspec/http-cookie", "version": "0.0.9" },
+    "http-media-type": { "repository": "polyspec/http-media-type", "version": "0.0.9" },
+    "http-negotiation": { "repository": "polyspec/http-negotiation", "version": "0.0.6" },
+    "json": { "repository": "polyspec/json", "version": "0.0.38" },
+    "php-serialization": { "repository": "polyspec/php-serialization", "version": "0.0.16" },
+    "php-serialize": { "repository": "polyspec/php-serialization", "version": "0.0.6" },
+    "session-store": { "repository": "polyspec/session-store", "version": "0.0.7" },
+    "template": { "repository": "polyspec/template", "version": "0.0.31" }
+  }
+}

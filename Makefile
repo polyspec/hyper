@@ -235,6 +235,27 @@ PIE := $(KIT_TOOLS)/mise/shims/pie
 .PHONY: php-ext-pins
 php-ext-pins: ## Write config/php-ext-pins.json from the digests of the release assets of the pinned PHP extensions; ONLINE
 	$(ONLINE) $(NODE) $(CURDIR)/scripts/php-ext-pins.mts write config/php-ext-pins.json
+# pin sets the releases of the sibling polyspec packages that VERSIONS names, as "<package>=<version> ...", in
+# config/pins.json and in every place that no tool writes, then runs the lock targets that scripts/pin.mts names in their
+# order (H35.75). It is an installation target, since those targets download (HR-89). When a lock target refuses, pin
+# stops with that target and keeps what it wrote; the rewrite is idempotent, so a second run with the same VERSIONS
+# finishes the work. A missing digest or an undeclared package stops scripts/pin.mts before it writes. pin-check reads
+# only tracked files, offline, and fails at each place that names another version with its file and line (H35.76).
+# The script writes the lock goals of the change into var/pin/locks-1.* and locks-2.* (goals, crates, packages), and
+# each later line of pin is one make call of pin-locks for one of them (H35.16-7), which reads them with cat: the
+# second group runs cargo-lock again after bindings-scaffold, which writes the Cargo manifests of the bindings.
+.PHONY: pin pin-check pin-locks
+pin: ## Set the sibling polyspec releases of VERSIONS="<package>=<version> ..." everywhere and write the locks; ONLINE
+	$(ONLINE) $(NODE) $(CURDIR)/scripts/pin.mts write --locks var/pin $(VERSIONS)
+	$(ONLINE) $(MAKE) --no-print-directory pin-locks PIN_LOCKS=var/pin/locks-1
+	$(ONLINE) $(MAKE) --no-print-directory pin-locks PIN_LOCKS=var/pin/locks-2
+ifdef PIN_LOCKS
+CRATES := $(shell cat $(PIN_LOCKS).crates)
+PACKAGES := $(shell cat $(PIN_LOCKS).packages)
+endif
+pin-locks: $(if $(PIN_LOCKS),$(shell cat $(PIN_LOCKS).goals)) ## Run the lock goals of PIN_LOCKS that make pin wrote, in their order; ONLINE
+pin-check: ## Fail at each place of a tracked file that names another sibling polyspec release than config/pins.json; offline
+	$(NODE) $(CURDIR)/scripts/pin.mts check
 # $(call pie_run,WORK,STAGING) starts the one shell of a PIE recipe: it empties WORK and sets the trap that removes WORK
 # and STAGING at the end, the failure and SIGINT and SIGTERM of the run (HR-87, H35.53). template-ext, json-ext and
 # hyper-install-redis use it; each goes on with `&& \`.
@@ -818,7 +839,7 @@ bench: bench-server bench-browser bench-uploads ## Run the measurements; results
 # The final suite runs through the native kit report runner, which runs every target to its end and refuses nothing.
 # Run it once after checklist development on a committed tree, then rerun only failed owners. GATE_TARGETS are the checks of the configuration,
 # the layout, the documents, the owners, the parity declarations and the lint, which run the checkers of kit.
-GATE_TARGETS := layout-check docs-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
+GATE_TARGETS := layout-check docs-check pin-check owner-validate rebuild-check rules-check language-check duplication-check suppression-check lint-ts lint-php lint-python
 CHECK_TARGETS := $(GATE_TARGETS) typecheck bench-server-smoke hyper-lint analyse-php templates-check hyper-test-scripts spec-docs-check recipe-check hyper-test-js hyper-test-node hyper-test-python hyper-test-python-render package-check release-candidate-assets hyper-test-php parity server-parity server-parity-python bundle-size e2e core-test core-lint core-fmt-check bindings-check test-bindings
 
 # The CI groups of the full suite (HR-91): the matrix of the job check of .github/workflows/ci.yml names CI_GROUPS, and

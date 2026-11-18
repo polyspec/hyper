@@ -12,7 +12,8 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { track } from '../../scripts/recipe/mutations.mts';
-import { pinFiles, type ReleaseOf } from '../../scripts/pin.mts';
+import { lockFiles, lockGroups, pinFiles, type ReleaseOf } from '../../scripts/pin.mts';
+import { dryRun } from './make-dry-run.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const script = path.resolve(here, '..', '..', 'scripts', 'pin.mts');
@@ -102,6 +103,32 @@ test('pin writes every place that no tool writes and names the lock targets that
     assert.deepEqual({ lock: read(root, 'Cargo.lock'), go: read(root, 'packages/go/go.mod'), native: read(root, 'packages/ts/native/Cargo.toml') }, before);
     assert.deepEqual(targets, ['npm-lock', 'install-packages', 'cargo-lock CRATES=polyspec-json', 'bindings-scaffold', 'composer-lock PACKAGES=polyspec/json', 'php-ext-pins', 'python-lock']);
   });
+});
+
+test('a binding change runs cargo-lock again after bindings-scaffold, in a second make call', () => {
+  withTree((root) => {
+    const { targets } = pinFiles(root, { binding: '0.0.22' }, release);
+    assert.deepEqual(lockGroups(targets), [
+      ['npm-lock', 'install-packages', 'cargo-lock CRATES=polyspec-binding-core', 'bindings-scaffold'],
+      ['cargo-lock CRATES=polyspec-binding-core'],
+    ]);
+  });
+});
+
+test('make pin-locks runs the goals of a group that pin wrote, in their order, with its crates and packages', () => {
+  const locks = mkdtempSync(path.join(tmpdir(), 'pin-locks-'));
+  try {
+    const group = ['cargo-lock CRATES=polyspec-json', 'composer-lock PACKAGES=polyspec/json', 'php-ext-pins'];
+    for (const [name, text] of Object.entries(lockFiles(group))) writeFileSync(path.join(locks, `locks-1.${name}`), text);
+    const lines = dryRun('pin-locks', { variables: [`PIN_LOCKS=${path.join(locks, 'locks-1')}`] });
+    const at = (pattern: RegExp): number => lines.findIndex((line) => pattern.test(line));
+    const cargo = at(/cargo --tracked-lock .* update -p polyspec-json$/);
+    const composer = at(/composer update --no-install --no-interaction polyspec\/json$/);
+    const pins = at(/php-ext-pins\.mts write config\/php-ext-pins\.json$/);
+    assert.ok(cargo >= 0 && composer > cargo && pins > composer, lines.join('\n'));
+  } finally {
+    rmSync(locks, { recursive: true, force: true });
+  }
 });
 
 test('pin with the declared versions writes nothing and names no target', () => {
