@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b3a9ecbc46f744c2a0cd123b7ad2265d0ee1964ae21192020816d8739505ce9f -->
+<!-- source-sha256: 4e90f4daec1104e1609e6ad668f0b3cb6dbe290e04e5e3989ea535a4f17a44ac -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `docs/plans/execution/statement-audit.md`와 그 한국어 짝 문서는 HY-60, HY-100, HY-104, HY-113, HY-114, HY-115, HY-131, HY-133의 살아 있는 statement 159개를 서버 코드와 비교한다(H35.43). 입력: `contracts/protocol.json`과 `packages/ts`, `packages/php`, `packages/python`의 서버. 이전: id를 가진 statement 845개 중 366개는 계약 밖 어디에서도 정확한 id로 인용되지 않았고, 코드가 그 statement를 따르는지 밝힌 문서가 없었다. 이제 각 statement는 판정과 그것을 결정하는 코드 위치를 가진다. 138개는 참, 16개는 일부 참, 5개는 거짓이다. 참이 아닌 statement 7개, HY-100.2, HY-104.14, HY-104.31, HY-104.33, HY-104.37, HY-115.11, HY-115.23에는 아직 `unimplemented` 표시가 없다. H35.43은 각 statement가 표시되거나 코드가 고쳐질 때까지 열려 있다. `make docs-check`와 `make owner-validate`로 검증했다.
 - PHP session test는 PHP 서버의 식별자를 PHP runtime의 설정으로 검사한다(H35.88, HY-104.42, HY-104.43). 입력: `NativeSession`의 새 식별자, 다시 만든 식별자, 바뀐 식별자와 `packages/php/tests/SessionCookieTest.php`의 session cookie. 이전 동작: test는 어떤 statement에도 없는 범위인 `A-Za-z0-9,-`의 22자에서 128자를 받았다. 기대: `session.sid_bits_per_character`의 문자 집합으로 된 `session.sid_length`자이고 22자에서 256자 안에 있으며, PHP의 strict mode는 저장소가 갖지 않은 식별자를 바꾼다. `tests/scripts/upload-servers.test.mts`는 Node와 Python에만 소문자 16진수 64자리를 기대하고, PHP에는 받는 범위를 기대한다.
 - HY-104.31은 폐기된다. 그것은 모든 server가 소문자 16진수 64자리를 만든다고 했지만(SE-5.3) PHP server는 그렇지 않다(H35.88). 입력: PHP server가 만드는 session. 이전 동작: PHP runtime은 PHP 8.4의 기본값으로 소문자 16진수 32자리를 만들어 HY-104.31과 어긋났다. 기대: HY-104.42는 모든 server가 받는 식별자, 곧 `A-Za-z0-9,-`의 22자부터 256자를 적고, HY-104.43은 Node와 Python server가 소문자 16진수 64자리를 만들고 PHP server는 PHP 8.4의 기본값으로 128 bit인 PHP runtime의 식별자를 PHP의 strict mode와 함께 쓴다고 적는다. HY-104.31의 인용은 그 규칙을 가진 statement를 적는다.
 - `make lint-php`가 통과한다(H35.89). 입력: checkout의 PHP 파일. 이전 동작: phpcs가 `packages/php/tests/Support/escape.php`의 class `FailingInput`(namespace가 없고, side effect가 있는 파일의 두 번째 symbol), 그 네 `stream_*` method, 120자를 넘는 네 줄에서 실패했다. 기대: 지적이 없다. `FailingInput`은 자기 파일에 있는 test support namespace의 class이고, PHP의 stream wrapper prototype이 이름을 정하므로 각 `stream_*` method에는 `PSR1.Methods.CamelCapsMethodName.NotCamelCaps`의 `phpcs:ignore` 하나가 있다.
