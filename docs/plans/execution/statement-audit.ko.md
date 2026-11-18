@@ -1,5 +1,5 @@
 <!-- doc-id: plan-statement-audit -->
-<!-- source-sha256: 4281afb1459c6f1a5a7896edd766772e48bc8fcf2734934b552ee69207b8cf7c -->
+<!-- source-sha256: 089c06258c349676c31eb4318d4cf6da8dc0f2bc122c2a5924739e641dba279b -->
 # 진술 감사
 
 [English](statement-audit.md).
@@ -15,10 +15,10 @@
 | HY-104 | 30 | 22 | 6 | 2 |
 | HY-113 | 6 | 3 | 2 | 1 |
 | HY-114 | 8 | 8 | 0 | 0 |
-| HY-115 | 21 | 18 | 3 | 0 |
+| HY-115 | 21 | 19 | 2 | 0 |
 | HY-131 | 13 | 10 | 1 | 2 |
 | HY-133 | 13 | 13 | 0 | 0 |
-| 합계 | 159 | 142 | 12 | 5 |
+| 합계 | 159 | 143 | 11 | 5 |
 
 ## 열린 진술
 
@@ -34,11 +34,10 @@
 이 행들이 고치는 진술:
 
 - HY-104.37: Node 인터페이스는 값이 없는 key에 대해 null이 아니라 `undefined`를 돌려준다(`packages/ts/src/session/session-store.ts:5`).
-- HY-115.23: PHP 서버는 `session_write_close`를 호출하지 않으므로, PHP는 응답 뒤에 session을 쓰고, 잃은 lock이 상태 코드를 바꿀 수 없다.
 
 ## 한계
 
-라이브러리의 위치는 hyper가 고정한 tag에서 `<repository>@<tag>:<path>:<line>`으로 쓴다. 그 tag는 session-store v0.0.7(`Cargo.lock`, `packages/ts/package.json`, `packages/python/uv.lock`)과 php-serialization v0.0.16(`Cargo.lock`)이다. session-store v0.0.8의 Rust와 TypeScript 소스는 v0.0.7과 같으므로, session-store의 각 위치는 두 tag 모두에 맞다. PHP의 위치는 `php-src@php-8.4.27:<path>:<line>`으로 쓴다. PHP에서 Redis lock 순서의 근거는 phpredis의 session handler이고, 이 감사는 그것을 열지 않았다. H35.86이 그것을 읽고 그 lock 순서를 HY-115와 비교한다.
+라이브러리의 위치는 hyper가 고정한 tag에서 `<repository>@<tag>:<path>:<line>`으로 쓴다. 그 tag는 session-store v0.0.7(`Cargo.lock`, `packages/ts/package.json`, `packages/python/uv.lock`)과 php-serialization v0.0.16(`Cargo.lock`)이다. session-store v0.0.8의 Rust와 TypeScript 소스는 v0.0.7과 같으므로, session-store의 각 위치는 두 tag 모두에 맞다. PHP의 위치는 `php-src@php-8.4.27:<path>:<line>`으로 쓴다. PHP의 Redis lock 순서는 HY-115와 비교해 아래 H35.86 절에 있다. 그 절은 `RedisClusterSessions` handler와 라이브러리를 읽고, phpredis의 session handler는 읽지 않는다(그 절을 본다).
 
 ## HY-60
 
@@ -200,7 +199,7 @@ Node와 Python 서버는 Redis store를 session-store 라이브러리에 넘기�
 | HY-115.3 | 참 | `packages/php/src/Session/RedisClusterSessions.php:63`, `packages/php/src/Session/NativeSession.php:54`, `packages/php/src/App/App.php:420`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:286`, `protocol.rs:300`, `protocol.rs:328` | 없음 | 라이브러리는 `<key>_LOCK`을 `SET NX PX`로 잡고, 거부되면 `lock_wait`만큼 기다리며, 시도가 끝나면 `LockTimeout`으로 실패한다(`protocol.rs:330`). |
 | HY-115.4 | 참 | `packages/php/src/Session/RedisClusterSessions.php:12`, `packages/php/src/Session/RedisClusterSessions.php:17`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:342` | `packages/ts/tests/steps/session-requests.ts:72` | 라이브러리는 lock 뒤에 key를 읽고, 사라진 key에는 session을 주지 않는다. |
 | HY-115.5 | 참 | `packages/php/src/Session/RedisClusterSessions.php:26`, `packages/php/src/Session/RedisClusterSessions.php:33`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:419`, `protocol.rs:434`, `protocol.rs:437` | 없음 | 라이브러리는 `SETEX` 전에 lock 값을 자기 secret과 비교하고, 쓰지 않고 `LockLost`로 실패한다. |
-| HY-115.23 | 일부 참 | `packages/ts/src/host/http-host.ts:160`, `packages/python/src/polyspec/hyper/host/_pipeline.py:226`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:437` | 없음 | Node와 Python 서버는 응답을 쓰기 전에 session을 닫고, lock을 잃었으면 닫기가 `LockLost`로 실패한다. PHP 서버는 `packages/php/src`에서 `session_write_close`를 호출하지 않으므로, PHP는 script 끝, 즉 응답 뒤에 session을 쓰고, 잃은 lock이 상태 코드를 바꿀 수 없다. |
+| HY-115.23 | 참 | `packages/ts/src/host/http-host.ts:160`, `packages/python/src/polyspec/hyper/host/_pipeline.py:226`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:437`, `packages/php/src/Session/NativeSession.php:243`, `packages/php/src/App/App.php:1135` | 없음 | Node와 Python 서버는 응답을 쓰기 전에 session을 닫고, lock을 잃었으면 닫기가 `LockLost`로 실패한다. PHP 서버도 같다: `NativeSession::close`가 응답을 보내기 전(`App.php:1137`)에 `session_write_close`(`NativeSession.php:243`)를 호출하고, 쓰기가 실패하면 예외를 던진다(`NativeSession.php:247`). 아래 H35.86을 본다. |
 | HY-115.7 | 참 | `packages/php/src/Session/RedisClusterSessions.php:80`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:412` | 없음 | 라이브러리는 바뀌지 않은 session에 `EXPIRE`를 보내고 lock을 비교하지 않는다. |
 | HY-115.8 | 참 | `packages/php/src/Session/RedisClusterSessions.php:14`, `packages/php/src/Session/RedisClusterSessions.php:84`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:12`, `protocol.rs:180` | 없음 | 라이브러리는 secret을 가질 때만 key를 지우는 script로 lock을 푼다. |
 | HY-115.24 | 참 | `packages/php/src/Session/NativeSession.php:128` | 없음 | phpredis 상대에 대한 조건이다. |
@@ -216,6 +215,21 @@ Node와 Python 서버는 Redis store를 session-store 라이브러리에 넘기�
 | HY-115.20 | 참 | `tests/scripts/session-redis-cluster.test.mts:188` | 자기 자신 | |
 | HY-115.28 | 일부 참 | `packages/ts/src/session/redis-sessions.ts:21`, `packages/python/src/polyspec/hyper/session/redis_sessions.py:41`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:58`, `protocol.rs:62` | 없음 | 라이브러리는 수명 0을 `InvalidLifetime`으로, lock 만료 0을 `InvalidLockExpire`로 실패시키고, lock 만료에 기본값을 두지 않는다. PHP에 대해 `unimplemented` H35.37로 표시되었다. `RedisClusterSessions`는 `lockExpire`에 기본값 30을 준다(`packages/php/src/Session/RedisClusterSessions.php:32`). |
 | HY-115.22 | 참 | `packages/php/src/Session/RedisClusterSessions.php:63`, `session-store@v0.0.7:packages/redis/rust/src/protocol.rs:328` | 없음 | 라이브러리는 한 번 시도한 뒤 `lock_retries`번 더 시도한다. |
+
+## H35.86: PHP 서버의 Redis lock 순서
+
+PHP 서버에는 Redis session handler가 둘 있다. 단독 또는 Sentinel store에서 `NativeSession`이 시작하는 phpredis의 session handler(`packages/php/src/Session/NativeSession.php:55`)와, Redis Cluster용 `RedisClusterSessions`(`packages/php/src/Session/RedisClusterSessions.php`)다. 두 handler를 Node와 Python 서버가 쓰는 라이브러리 session-store v0.0.8과 비교한다. 이 release는 루트 `composer.json`이 `ext-polyspec_session_store`로 고정하고, `docs/operations/dependencies.md`가 다른 서버에 고정한 것이다. 라이브러리는 로컬 checkout `~/Projects/polyspec/session-store`의 tag `session-store@v0.0.8`에서 읽었고, 그 commit은 `4fd527d4`다.
+
+phpredis 6.3.0의 session 소스는 글자 그대로 읽지 않았다. 얻은 것은 fetch 도구의 요약뿐이었고, 그 도구는 줄 번호가 불확실하다고 표시했으므로 이 절은 phpredis의 줄을 인용하지 않는다. 그래서 표의 phpredis 열은 확인되지 않았고, phpredis에 판정을 내리지 않는다.
+
+| 단계 | 진술 | session-store v0.0.8(Node, Python) | PHP `RedisClusterSessions` | PHP Cluster 판정 | phpredis(단독, Sentinel) |
+| --- | --- | --- | --- | --- | --- |
+| lock을 잡는다 | HY-115.3 | `protocol.rs:296-302`가 `SET <key>_LOCK <secret> NX PX`를 만들고, `:316`의 `EXISTS` 뒤 `:321`에서 보낸다 | `RedisClusterSessions.php:143`, `acquire`(`:135`)에서, `:91`의 `read`가 요청마다 부른다 | 명령은 참. 라이브러리는 key가 있을 때만 lock을 잡고(`:318`), PHP는 모든 id에 lock을 잡는다 | 읽지 않음 |
+| 재시도와 대기 | HY-115.3, HY-115.22 | `protocol.rs:328-334`: 거절되면 `lock_wait`만큼 기다리고 `tries < lock_retries`인 동안 다시 시도한다. `:330`에서 `LockTimeout` | `RedisClusterSessions.php:142`가 `try <= lockRetries`로 돈다. 한 번 시도하고 `lockRetries`번 더 한다(HY-115.22 성립). `:149`의 `usleep`은 마지막 거절 뒤에도 실행된다 | 둘 다 참. PHP는 마지막 시도 뒤에도 한 번 더 기다리고, 라이브러리는 기다리지 않는다. PHP는 `:152`에서 false를 돌려준다 | 읽지 않음 |
+| 쓴다 | HY-115.23, HY-115.5 | `protocol.rs:418-423`이 lock을 읽고, `:434-437`이 secret이 아닌 lock을 거절한다(`LockLost`), `:398-402`가 `SETEX`로 쓴다. `:412-416`은 바뀌지 않은 session에 `EXPIRE`를 보낸다 | `RedisClusterSessions.php:105`가 lock을 읽고 `:112`가 `SETEX`로 쓴다. 쓰기는 `write`(`:101`)이고, `NativeSession.php:243`의 `session_write_close`에서 `NativeSession::close`(`:226`) 안에서 불린다. `App.php:1135`가 store를 닫고, `App.php:1137`이 응답을 보낸다 | 참. 감사의 이전 문장, 즉 PHP가 `session_write_close`를 부르지 않는다는 말은 틀렸다 | 읽지 않음 |
+| lock을 푼다 | HY-115.8 | `protocol.rs:12-13`이 `RELEASE` script이고, `:386-396`에서 쓴 뒤 또는 `LockLost` 오류 뒤에 실행한다 | `RedisClusterSessions.php:14-15`가 script다. `close`(`:65`)가 `release`(`:67`)를 부르고, `release`는 `:163`에서 script를 실행한다. `destroy`(`:120`)도 `:122`에서 푼다 | 참 | 읽지 않음 |
+
+이 행들에서 PHP Cluster handler가 따르지 않는 진술은 찾지 못했으므로 H35.40 표시를 붙이지 않는다. phpredis 행은 확인되지 않은 채 남는다: phpredis의 HY-115.3과 HY-115.22, 그리고 HY-115.24의 phpredis 쪽은 phpredis 소스를 읽어야 판정할 수 있다. 표에 쓴 위치는 31개다. 비교한 진술은 HY-115.3, HY-115.5, HY-115.8, HY-115.22, HY-115.23이다.
 
 ## HY-131
 
