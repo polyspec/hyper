@@ -4,7 +4,7 @@
 // and a second run of the same map writes nothing.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,6 +62,23 @@ test('a swap of two rules renames the contract and the citations, and writes the
   assert.equal(result.status, 0, result.stderr);
   for (const file of RENAMED) assert.equal(read(root, file), readFileSync(path.join(fixture, 'expected', file), 'utf8'), file);
   for (const file of UNCHANGED) assert.equal(read(root, file), readFileSync(path.join(fixture, 'tree', file), 'utf8'), file);
+});
+
+test('a tracked map of config/renumber keeps the ids it moved, and a placeholder text in a file is kept', () => {
+  const root = makeRoot();
+  const map = writeMap(root, [['HY-1', 'HY-2'], ['HY-2', 'HY-1']]);
+  const recorded = path.join(root, 'config', 'renumber', 'swap.json');
+  mkdirSync(path.dirname(recorded), { recursive: true });
+  cpSync(map, recorded);
+  rmSync(map);
+  const declared = read(root, 'config/renumber/swap.json');
+  // A file may hold any text, the markers of a placeholder and a character of the private use area among them.
+  writeFileSync(path.join(root, 'src', 'marker.txt'), `@renumber@0; ${String.fromCodePoint(0xe000)}renumber:0; HY-1.1\n`);
+  assert.equal(spawnSync('git', ['add', '.'], { cwd: root, env: GIT_ENV }).status, 0);
+  const result = run(root, 'apply', '--map', recorded);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read(root, 'config/renumber/swap.json'), declared);
+  assert.equal(read(root, 'src/marker.txt'), `@renumber@0; ${String.fromCodePoint(0xe000)}renumber:0; HY-2.1\n`);
 });
 
 test('a second run of the same map writes nothing', () => {
