@@ -746,6 +746,18 @@ mod build {
     }
 
     #[test]
+    fn a_static_file_below_csr_assets_that_copies_nothing_is_hashed() {
+        // HY-125.25: only the copy of a file of public/assets is left out.
+        let first = [output("csr/assets/app.css", "p {}\n")];
+        let second = [output("csr/assets/app.css", "p { margin: 0; }\n")];
+        assert_eq!(paths(&first), vec!["csr/assets/app.css"]);
+        match (id(&first), id(&second)) {
+            (Ok(left), Ok(right)) => assert_ne!(left, right),
+            (left, right) => panic!("{left:?} {right:?}"),
+        }
+    }
+
+    #[test]
     fn a_build_id_covers_a_server_output() {
         let client = [output("client/manifest.json", "{}")];
         let mut server = client.to_vec();
