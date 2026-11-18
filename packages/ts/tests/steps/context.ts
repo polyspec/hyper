@@ -13,7 +13,7 @@ import type { CaseReader } from '../case-reader.js';
 import { ormThrown, parsedBody, record, requestFrom } from '../support.js';
 
 // An action of an application of a case: it renews the session when `renew` is true, and then redirects, redirects to
-// an outside location when `outside` is true (HY-133), or returns a page with its data.
+// an outside location when `outside` is true (HY-132), or returns a page with its data.
 interface Action {
   renew: boolean;
   redirect: string | null;

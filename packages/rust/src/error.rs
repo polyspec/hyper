@@ -1,20 +1,20 @@
-//! The errors of hyper (HY-132): a kind that never changes, an HTTP status or none, and a category. An error of a
-//! library that hyper uses keeps the kind, the status and the category of that library (HY-132.3).
+//! The errors of hyper (HY-133): a kind that never changes, an HTTP status or none, and a category. An error of a
+//! library that hyper uses keeps the kind, the status and the category of that library (HY-133.3).
 
 use std::fmt;
 
 use binding_core::{Category, Kinds};
 
-/// A failure of hyper or of a library that it passes on (HY-132.3).
+/// A failure of hyper or of a library that it passes on (HY-133.3).
 #[derive(Debug, Clone, PartialEq)]
 pub enum Error {
     /// A redirect location that is not an application path (HY-46.3).
     NotApplicationPath,
     /// A redirect stop of a result that is not a redirect (HY-50.3).
     NotRedirectResult,
-    /// An outside redirect to a text that is no outside location (HY-133.5).
+    /// An outside redirect to a text that is no outside location (HY-132.5).
     NotOutsideLocation,
-    /// A flash value or a changed topic of an outside redirect, which stores neither (HY-133.10).
+    /// A flash value or a changed topic of an outside redirect, which stores neither (HY-132.10).
     OutsideRedirectStores,
     /// A page status other than 200, 409 and 422 (HY-58.6).
     PageStatusNotAllowed(i64),
@@ -40,7 +40,7 @@ pub enum Error {
     InvalidSessionToken,
     /// A stored flash value or kept value of another form (HY-104.23).
     InvalidSessionRecord,
-    /// A `collect` of the PHP server under a session handler that is not its files handler (HY-104.44, HY-132.14).
+    /// A `collect` of the PHP server under a session handler that is not its files handler (HY-104.44, HY-133.14).
     InvalidSessionHandler,
     /// Shared data that already holds the member `context` (HY-124.8).
     SharedHoldsContext,
@@ -62,7 +62,7 @@ pub enum Error {
     /// A failure of the template language while a template renders, with its kind (HY-43, HY-38.18).
     Template(polyspec_template::TemplateError),
     /// A broken invariant of a record that php-serialize reports, such as an identity that the record does not hold
-    /// (HY-132.6).
+    /// (HY-133.6).
     RecordValue(polyspec_php_serialization::Error),
     /// A failure of the session-store library, with its kind (HY-104.25).
     Sessions(polyspec_session_store::Error),
@@ -70,13 +70,13 @@ pub enum Error {
     Negotiate(polyspec_http_negotiation::Error),
     /// A failure of the `Set-Cookie` writer, with the kind of http-cookie (HY-45.8, HY-52.13).
     Cookies(polyspec_http_cookie::Error),
-    /// A broken invariant of the core (HY-132.6).
+    /// A broken invariant of the core (HY-133.6).
     Internal(&'static str),
 }
 
-/// The code of an error (HY-132.1), which the interface contract lists as its kinds: a failure of hyper itself is one
+/// The code of an error (HY-133.1), which the interface contract lists as its kinds: a failure of hyper itself is one
 /// variant, and a failure of a library that hyper passes on is the variant of that library with the code of the library
-/// (HY-132.3). `Error::DataModel` and `Error::Template` both hold a code of the template language, so both are
+/// (HY-133.3). `Error::DataModel` and `Error::Template` both hold a code of the template language, so both are
 /// `Template`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ErrorCode<'a> {
@@ -84,9 +84,9 @@ pub enum ErrorCode<'a> {
     NotApplicationPath,
     /// A redirect stop of a result that is not a redirect (HY-50.3).
     NotRedirectResult,
-    /// An outside redirect to a text that is no outside location (HY-133.5).
+    /// An outside redirect to a text that is no outside location (HY-132.5).
     NotOutsideLocation,
-    /// A flash value or a changed topic of an outside redirect, which stores neither (HY-133.10).
+    /// A flash value or a changed topic of an outside redirect, which stores neither (HY-132.10).
     OutsideRedirectStores,
     /// A page status other than 200, 409 and 422 (HY-58.6).
     PageStatusNotAllowed,
@@ -112,7 +112,7 @@ pub enum ErrorCode<'a> {
     InvalidSessionToken,
     /// A stored flash value or kept value of another form (HY-104.23).
     InvalidSessionRecord,
-    /// A `collect` of the PHP server under a session handler that is not its files handler (HY-132.14).
+    /// A `collect` of the PHP server under a session handler that is not its files handler (HY-133.14).
     InvalidSessionHandler,
     /// Shared data that already holds the member `context` (HY-124.8).
     SharedHoldsContext,
@@ -128,9 +128,9 @@ pub enum ErrorCode<'a> {
     InvalidRepresentation,
     /// A JSON text that json refuses (HY-54.21).
     MalformedJson,
-    /// A broken invariant of the core (HY-132.6).
+    /// A broken invariant of the core (HY-133.6).
     Internal,
-    /// A broken invariant of a record that php-serialize reports (HY-132.6).
+    /// A broken invariant of a record that php-serialize reports (HY-133.6).
     RecordValue,
     /// A code of the template language, of its data model (HY-44.12) or of a render (HY-43, HY-38.18).
     Template(polyspec_template::ErrorCode),
@@ -142,8 +142,8 @@ pub enum ErrorCode<'a> {
     Cookies(polyspec_http_cookie::Error),
 }
 
-/// An error as its questions read it: a failure of hyper itself, with the kind and the category that HY-132.1 gives it,
-/// or the error of a library that hyper passes on (HY-132.3).
+/// An error as its questions read it: a failure of hyper itself, with the kind and the category that HY-133.1 gives it,
+/// or the error of a library that hyper passes on (HY-133.3).
 enum Part<'a> {
     Own(&'static str, Category),
     DataModel(&'a polyspec_template::BindError),
@@ -200,7 +200,7 @@ impl Error {
         }
     }
 
-    /// The code of the failure (HY-132.1, HY-132.3), which the bindings read to tell its kind apart.
+    /// The code of the failure (HY-133.1, HY-133.3), which the bindings read to tell its kind apart.
     #[must_use]
     pub fn code(&self) -> ErrorCode<'_> {
         match self {
@@ -238,7 +238,7 @@ impl Error {
         }
     }
 
-    /// The category of the failure (HY-132.1), which selects the class of each runtime (HY-132.2).
+    /// The category of the failure (HY-133.1), which selects the class of each runtime (HY-133.2).
     #[must_use]
     pub fn category(&self) -> Category {
         match self.part() {
@@ -308,12 +308,12 @@ impl Kinds for Error {
 }
 
 impl fmt::Display for Error {
-    /// The message that a rule states, or the fixed sentence of the kind (HY-132.4).
+    /// The message that a rule states, or the fixed sentence of the kind (HY-133.4).
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::NotApplicationPath => f.write_str("a redirect location is not an application path (HY-46)"),
-            Error::NotOutsideLocation => f.write_str("an outside location is not an http or https URL with a host (HY-133)"),
-            Error::OutsideRedirectStores => f.write_str("an outside redirect holds no flash value or changed topic (HY-133)"),
+            Error::NotOutsideLocation => f.write_str("an outside location is not an http or https URL with a host (HY-132)"),
+            Error::OutsideRedirectStores => f.write_str("an outside redirect holds no flash value or changed topic (HY-132)"),
             Error::NotRedirectResult => f.write_str("a redirect stop needs a redirect result (HY-50)"),
             Error::PageStatusNotAllowed(status) => write!(f, "a page status {status} is not 200, 409 or 422 (HY-58)"),
             Error::ReplyStatusNotAllowed(status) => write!(f, "page status {status} of a reply is not 403 (HY-69)"),
@@ -352,10 +352,10 @@ impl fmt::Display for Error {
             Error::DataModel(error) => error.fmt(f),
             Error::Template(error) => error.fmt(f),
             Error::Sessions(error) => error.fmt(f),
-            Error::RecordValue(error) => write!(f, "an invariant of a session record does not hold: {error} (HY-132)"),
+            Error::RecordValue(error) => write!(f, "an invariant of a session record does not hold: {error} (HY-133)"),
             Error::Negotiate(error) => error.fmt(f),
             Error::Cookies(error) => error.fmt(f),
-            Error::Internal(what) => write!(f, "an invariant of the core does not hold: {what} (HY-132)"),
+            Error::Internal(what) => write!(f, "an invariant of the core does not hold: {what} (HY-133)"),
         }
     }
 }

@@ -367,7 +367,7 @@ class App:
                     f"route {name} lies under the data base path {base}",
                     "invalid_application",
                 )
-        # HY-132.2: the core checks the path before the file is read and gives the text of its bytes.
+        # HY-133.2: the core checks the path before the file is read and gives the text of its bytes.
         core_rules().app_check_shell_path(client.shell)
         shell_path = Path(client.shell)
         if not shell_path.is_file():
@@ -518,7 +518,7 @@ class App:
 
     def _frame(self, response: Response) -> Response:
         """Adds the frame-ancestors policy of the application to a response (HY-45), and no-store to a failure
-        (HY-65); the core gives the headers (HY-132.2)."""
+        (HY-65); the core gives the headers (HY-133.2)."""
         for name, value in (
             core_rules()
             .app_frame_headers(response.status, self.frame_ancestors)
@@ -672,7 +672,7 @@ class App:
 
     def _vary_header(self) -> str:
         """Returns the `Vary` of a response that `Accept` and the context decide (HY-117); the core gives it
-        (HY-132.2)."""
+        (HY-133.2)."""
         return core_rules().app_vary_header(self._context_handler is not None)
 
     @staticmethod
@@ -896,7 +896,7 @@ class App:
     ) -> Response:
         """Stores the flash values and changed topics of a redirect result and responds with 303 (HY-25, HY-50); an
         outside redirect stores nothing, takes no base path and responds to a request with `HX-Request: true` and to a
-        document request with 200 and `HX-Redirect`, and to every other request with 303 (HY-133)."""
+        document request with 200 and `HX-Redirect`, and to every other request with 303 (HY-132)."""
         if result._is_outside():
             headers = {"Cache-Control": "no-store", "Vary": self._vary_header()}
             location = str(result.location)

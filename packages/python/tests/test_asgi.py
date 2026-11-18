@@ -15,7 +15,9 @@ from .transport import (
     TransportCase,
     Upload,
     UploadCases,
+    closed_public_directory,
     record_ended,
+    record_path_failure,
     record_status,
 )
 from polyspec.hyper.host.asgi import create_asgi
@@ -224,10 +226,7 @@ class AsgiTest(UploadCases, TransportCase):
     ) -> None:
         # HY-60.14, HY-60.17: a stat of a file of the public directory that fails for another reason than a missing
         # file is an escaped error: the plain 500, and one call of the write hook with the request as received.
-        files = Path(self.directory.name) / "public"
-        (files / "closed").mkdir(parents=True)
-        (files / "closed").chmod(0o000)
-        self.addCleanup((files / "closed").chmod, 0o700)
+        files = closed_public_directory(self, self.directory.name)
         written = []
         application = create_asgi(
             self.app, self.sessions, files=str(files), written=record_status(written)
@@ -263,11 +262,7 @@ class AsgiTest(UploadCases, TransportCase):
         # disconnect hook runs, because the client did not close the connection.
         written = []
         application = create_asgi(
-            self.app,
-            self.sessions,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request.path(), response.status, ended, failure)
-            ),
+            self.app, self.sessions, written=record_path_failure(written)
         )
 
         class FailingSends(Sends):
@@ -432,11 +427,7 @@ class AsgiTest(UploadCases, TransportCase):
         # and the disconnect hook does not run, because a cancellation does not state that the client closed.
         written = []
         application = create_asgi(
-            self.app,
-            self.sessions,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request.path(), response.status, ended, failure)
-            ),
+            self.app, self.sessions, written=record_path_failure(written)
         )
 
         class CancelledSends(Sends):

@@ -44,7 +44,7 @@ class ContextDocument implements DocumentAdapter {
   assign(url: string): void {
     this.assigned.push(url);
   }
-  // the URLs that replace the location of the page (HY-133); no case of this file sends an outside redirect
+  // the URLs that replace the location of the page (HY-132); no case of this file sends an outside redirect
   readonly replaced: string[] = [];
   replace(url: string): void {
     this.replaced.push(url);

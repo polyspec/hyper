@@ -187,7 +187,7 @@ final class NativeSessionTest extends TestCase
     }
 
     /**
-     * HY-104.44, HY-132.14: under the handler `user`, which a store of the application sets, `collect` removes nothing
+     * HY-104.44, HY-133.14: under the handler `user`, which a store of the application sets, `collect` removes nothing
      * and fails with kind `invalid_session_handler` and a message that names the handler.
      */
     #[RunInSeparateProcess]

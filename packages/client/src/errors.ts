@@ -1,6 +1,6 @@
-// The error classes of hyper in the browser code, which runs without a binding (HY-132.7). Each class extends the base
-// class of Node of its category (HY-132.2) and gives the kind of the failure, which never changes, and its HTTP status,
-// null when the kind has none (HY-132.3).
+// The error classes of hyper in the browser code, which runs without a binding (HY-133.7). Each class extends the base
+// class of Node of its category (HY-133.2) and gives the kind of the failure, which never changes, and its HTTP status,
+// null when the kind has none (HY-133.3).
 
 export class HyperValueError extends RangeError {
   readonly kind: string;

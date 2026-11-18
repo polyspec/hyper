@@ -74,6 +74,16 @@ def https_application(opened: bool) -> "Application":
     return app
 
 
+def closed_public_directory(test: unittest.TestCase, root: str) -> Path:
+    """The public directory under `root` with the subdirectory `closed`, whose mode 000 fails a stat of a file in it;
+    the cleanup of `test` gives the subdirectory its mode back, so that the temporary directory can be removed."""
+    files = Path(root) / "public"
+    (files / "closed").mkdir(parents=True)
+    (files / "closed").chmod(0o000)
+    test.addCleanup((files / "closed").chmod, 0o700)
+    return files
+
+
 def record_ended(written: list):
     """The write hook that appends (request, ended) of each write to `written`."""
     return lambda request, response, ended, elapsed, failure: written.append(
@@ -85,6 +95,13 @@ def record_status(written: list):
     """The write hook that appends (path, status, ended) of each write to `written`."""
     return lambda request, response, ended, elapsed, failure: written.append(
         (request.path(), response.status, ended)
+    )
+
+
+def record_path_failure(written: list):
+    """The write hook that appends (path, status, ended, failure) of each write to `written`."""
+    return lambda request, response, ended, elapsed, failure: written.append(
+        (request.path(), response.status, ended, failure)
     )
 
 

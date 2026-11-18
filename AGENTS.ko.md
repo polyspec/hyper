@@ -22,8 +22,8 @@
   Enforced by: `make docs-check`
 - Own: `docs/spec/protocol.md`와 `docs/spec/protocol.ko.md`는 `make spec-docs`가 `contracts/protocol.json`에서 쓴다. 변경은 JSON을 고치고 두 문서와 함께 commit한다.
   Enforced by: `make spec-docs-check`
-- Own: `contracts/protocol.json`의 문장은 뜻이 같은 동안만 그 id를 유지한다. 뜻이 바뀌면 그 id를 retire하고 새 문장을 더한다.
-  Enforced by: none, 변경이 문장의 뜻을 유지하는지는 review로 판단한다.
+- Own: `contracts/protocol.json`의 문장은 뜻이 같은 동안만 그 id를 유지한다. 뜻이 바뀌면 그 id를 retire하고 새 문장을 더한다. `make spec-released-check`는 계약을 마지막 릴리스의 계약과 비교한다. 마지막 릴리스는 HEAD 자신의 tag를 뺀, HEAD에서 닿는 가장 가까운 tag `vX.Y.Z`이므로, 릴리스 commit은 이전 릴리스와 비교하고 기준선을 적는 파일은 없다: 빠졌고 retire되지 않은 릴리스 id는 실패하고, section 제목이나 rule이 바뀌었거나 영어 단어가 릴리스된 text와 0.4 미만으로 겹치는 릴리스 id도 실패한다. 인용과 code span은 각각 단어 하나로 센다. 이 검사는 릴리스된 id만 지킨다. 마지막 릴리스 뒤에 더해진 id의 재사용은 review에 맡긴다.
+  Enforced by: 마지막 릴리스의 id는 `make spec-released-check`, 그 밖의 id는 review.
 
 ## 구현
 

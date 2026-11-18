@@ -94,7 +94,7 @@ export const steps = {
     await sessionFileRequests(reader);
   },
 
-  // The failure of making a store or of the first request of a session, with its kind, status and category (HY-132.3).
+  // The failure of making a store or of the first request of a session, with its kind, status and category (HY-133.3).
   // An error that is no error of hyper fails the case, because `raisesOf` throws it again.
   async storeFailures(reader: CaseReader): Promise<void> {
     const root = mkdtempSync(join(tmpdir(), 'hyper-file-sessions-'));

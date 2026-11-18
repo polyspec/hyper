@@ -70,7 +70,7 @@ type BrowserCode = Pick<typeof Client, 'checkManifest' | 'checkTemplateIndex' | 
 const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
 // Each --extension loads a PHP extension in the given order: the json extension, then the template extension, then
-// polyspec_hyper, through which the PHP server renders and calls the rules of the core (HY-48.23, HY-132.2).
+// polyspec_hyper, through which the PHP server renders and calls the rules of the core (HY-48.23, HY-133.2).
 const { values } = parseArgs({ options: { app: { type: 'string' }, requests: { type: 'string' }, extension: { type: 'string', multiple: true }, node: { type: 'boolean' }, python: { type: 'boolean' } } });
 if (!values.app || !values.requests) throw new Error('--app and --requests are required');
 const app = values.app;

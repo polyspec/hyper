@@ -13,6 +13,7 @@ from .transport import (
     https_application,
     Application,
     TransportCase,
+    closed_public_directory,
     record_ended,
     record_failure,
     record_status,
@@ -65,6 +66,17 @@ def call(application, values: dict) -> tuple[str, list[tuple[str, str]], bytes]:
 
     body = consume(application(values, start))
     return head[0], head[1], body
+
+
+def refusing_start(calls: list):
+    """A start_response that appends (status, exc_info) of each call to `calls` and raises on the first call."""
+
+    def start(status, headers, exc_info=None):
+        calls.append((status, exc_info))
+        if len(calls) == 1:
+            raise ValueError("the server refuses the headers")
+
+    return start
 
 
 def half_call(application, values: dict) -> None:
@@ -455,12 +467,7 @@ class WsgiTest(UploadCases, TransportCase):
         (files / "a.css").write_text("body{}", encoding="utf-8")
         written = []
         calls = []
-
-        def start(status, headers, exc_info=None):
-            calls.append((status, exc_info))
-            if len(calls) == 1:
-                raise ValueError("the server refuses the headers")
-
+        start = refusing_start(calls)
         application = create_wsgi(
             self.app,
             self.sessions,
@@ -481,10 +488,7 @@ class WsgiTest(UploadCases, TransportCase):
     ) -> None:
         # HY-60.14, HY-60.17: a stat of a file of the public directory that fails for another reason than a missing
         # file is an escaped error: the plain 500, and one call of the write hook with the request as received.
-        files = Path(self.directory.name) / "public"
-        (files / "closed").mkdir(parents=True)
-        (files / "closed").chmod(0o000)
-        self.addCleanup((files / "closed").chmod, 0o700)
+        files = closed_public_directory(self, self.directory.name)
         written = []
         application = create_wsgi(
             self.app, self.sessions, files=str(files), written=record_status(written)
@@ -503,12 +507,7 @@ class WsgiTest(UploadCases, TransportCase):
         # with the exception information, and the write hook receives the failure.
         written = []
         calls = []
-
-        def start(status, headers, exc_info=None):
-            calls.append((status, exc_info))
-            if len(calls) == 1:
-                raise ValueError("the server refuses the headers")
-
+        start = refusing_start(calls)
         application = create_wsgi(
             self.app,
             self.sessions,

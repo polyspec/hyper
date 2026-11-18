@@ -74,7 +74,7 @@ export interface DocumentAdapter {
   build(): string | null;
   // Loads the URL as a new document with GET (HYC-22).
   assign(url: string): void;
-  // Replaces the location of the page with the URL, which keeps no history entry of the current URL (HY-133, HYC-8.4).
+  // Replaces the location of the page with the URL, which keeps no history entry of the current URL (HY-132, HYC-8.4).
   replace(url: string): void;
 }
 
@@ -591,7 +591,7 @@ export class Hyper<E extends RegionElement = Element> {
         if (ctx.text === undefined) return;
         // A response that arrived before the abort of its superseded request does not swap over the newer navigation.
         if (ctx.hyperLocation !== undefined && ctx.hyperLocation !== this.location) return false;
-        // HYC-14.6: the outside redirect of the latest region request is no failure; htmx loads its URL (HY-133).
+        // HYC-14.6: the outside redirect of the latest region request is no failure; htmx loads its URL (HY-132).
         if (outside !== null) return;
         if (!isHyperJson(ctx.response?.headers.get('content-type') ?? null)) {
           markError(ctx.target, String(ctx.response?.status ?? 0));

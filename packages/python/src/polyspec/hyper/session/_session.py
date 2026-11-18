@@ -23,7 +23,7 @@ class Session:
 
     def csrf_token(self) -> str:
         """Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use (HY-24.1). A stored
-        text of another form fails, which the core checks (HY-24.14, HY-132.2)."""
+        text of another form fails, which the core checks (HY-24.14, HY-133.2)."""
         token = self._store.get(_TOKEN_KEY)
         if isinstance(token, str):
             return core_rules().session_stored_token(token)

@@ -22,8 +22,8 @@ The working principles of every polyspec repository, and the rules of work that 
   Enforced by: `make docs-check`
 - Own: `docs/spec/protocol.md` and `docs/spec/protocol.ko.md` are written by `make spec-docs` from `contracts/protocol.json`; a change edits the JSON and commits it with both documents.
   Enforced by: `make spec-docs-check`
-- Own: A statement of `contracts/protocol.json` keeps its id only while its meaning stays; a change of meaning retires the id and adds a new statement.
-  Enforced by: none, whether a change keeps the meaning of a statement is judged by review.
+- Own: A statement of `contracts/protocol.json` keeps its id only while its meaning stays; a change of meaning retires the id and adds a new statement. `make spec-released-check` compares the contract with that of the last release, the newest tag `vX.Y.Z` reachable from HEAD other than a tag of HEAD itself, so that a release commit compares with the previous release and no file names the baseline: a released id that is missing and not retired fails, and so does a released id whose section title or rule changed or whose English words share less than 0.4 with the released text, a citation and a code span counting as one word each. The check guards only released ids; the reuse of an id that was added after the last release is left to review.
+  Enforced by: `make spec-released-check` for the ids of the last release; review for the other ids.
 
 ## Implementation
 

@@ -8,10 +8,9 @@
 // code and not prose. The two files of a pair have the same shape. The pair docs/spec/protocol.md is excluded, because
 // `make spec-docs` writes both files and `make spec-docs-check` compares them statement by statement.
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { matchesGlob } from 'node:path';
 import { test } from 'node:test';
+import { trackedDocuments } from './documents.mts';
 
 const GENERATED = new Set(['docs/spec/protocol.md']);
 
@@ -39,14 +38,10 @@ function shapeOf(text: string): Shape {
 
 // The English files of the pairs: tracked, selected by config/documents.json, with a tracked twin, not generated.
 function pairs(): string[] {
-  const config: unknown = JSON.parse(readFileSync('config/documents.json', 'utf8'));
-  if (typeof config !== 'object' || config === null || !('include' in config) || !Array.isArray(config.include)) {
-    throw new Error('config/documents.json has no list include');
-  }
-  const globs = config.include.filter((glob: unknown): glob is string => typeof glob === 'string');
-  const tracked = new Set(execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' }).split('\0').filter(Boolean));
+  const documents = trackedDocuments();
+  const tracked = new Set(documents.tracked);
   return [...tracked].filter(
-    (file) => file.endsWith('.md') && !file.endsWith('.ko.md') && !GENERATED.has(file) && tracked.has(file.replace(/\.md$/, '.ko.md')) && globs.some((glob) => matchesGlob(file, glob)),
+    (file) => file.endsWith('.md') && !file.endsWith('.ko.md') && !GENERATED.has(file) && tracked.has(file.replace(/\.md$/, '.ko.md')) && documents.selected(file),
   );
 }
 

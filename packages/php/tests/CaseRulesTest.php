@@ -9,7 +9,7 @@ use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\HyperValueError;
 
 /**
- * The failure that a case step compares as `raises` (HY-132.2): only an error of hyper, whose classes include one named
+ * The failure that a case step compares as `raises` (HY-133.2): only an error of hyper, whose classes include one named
  * Hyper<Category>Error; any other error is an error of the step and fails the case as it was raised.
  */
 final class CaseRulesTest extends TestCase

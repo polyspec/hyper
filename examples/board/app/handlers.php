@@ -58,7 +58,7 @@ return [
     ],
 
     'routes' => [
-        // HY-133: the route sends the browser to a location of another origin, as a sign-in at an outside system does.
+        // HY-132: the route sends the browser to a location of another origin, as a sign-in at an outside system does.
         'away' => [
             'load' => static fn (): never => throw new Redirect(Result::outside('https://outside.example/landing')),
         ],
