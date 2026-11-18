@@ -1,6 +1,6 @@
 // The Redis server of a run of the session tests (HY-115) and a request of a server that holds its session until a line
 // of its input.
-import { execFileSync, spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { execFileSync, spawn, type ChildProcess, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { once } from 'node:events';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, before } from 'node:test';
 
-import { createClient } from 'redis';
+import { createClient, type RedisClientType } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
 import { requireBuilt } from './requires.mts';
@@ -28,14 +28,19 @@ export function certificates(directory: string): Secure {
   return { ca: file('ca.pem'), certificate: file('server.pem'), key: file('server.key'), password: 'secret' };
 }
 
-// Runs a command on one server and returns its reply; a connection that fails rejects at once, and a redirection is not followed.
-export async function ask(port: string, secure: Secure | undefined, ...words: string[]): Promise<unknown> {
+// A client of one server that does not reconnect: a connection that fails rejects at once, and a redirection is not followed.
+function connectTo(port: string, secure: Secure | undefined): Promise<RedisClientType> {
   const tls = secure === undefined ? {} : { host: '127.0.0.1', tls: true as const, ca: readFileSync(secure.ca) };
-  const client = await createClient({
+  return createClient({
     socket: { port: Number(port), reconnectStrategy: false, ...tls },
     disableOfflineQueue: true,
     ...(secure === undefined ? {} : { username: 'hyper', password: secure.password }),
   }).on('error', () => {}).connect();
+}
+
+// Runs a command on one server and returns its reply.
+export async function ask(port: string, secure: Secure | undefined, ...words: string[]): Promise<unknown> {
+  const client = await connectTo(port, secure);
   try {
     return await client.sendCommand(words);
   } finally {
@@ -43,7 +48,150 @@ export async function ask(port: string, secure: Secure | undefined, ...words: st
   }
 }
 
-export { until } from './until.mts';
+// Calls `fail` at once when one of `processes` has ended or when it ends later, and returns the function that stops the
+// watch. Every wait of the session tests races the end of the processes that make its state, so a process that ended fails
+// the wait with its status instead of the time limit of the test runner (H35.19-2, HR-89).
+function onExit(processes: ChildProcess[], fail: (reason: string) => void): () => void {
+  const watches = processes.map((child) => {
+    const ended = (code: number | null, signal: NodeJS.Signals | null): void => fail(`process ${String(child.pid)} ended with ${String(code ?? signal)}`);
+    if (child.exitCode !== null || child.signalCode !== null) ended(child.exitCode, child.signalCode);
+    child.once('exit', ended);
+    return (): void => {
+      child.off('exit', ended);
+    };
+  });
+  return (): void => {
+    for (const stop of watches) stop();
+  };
+}
+
+// The lines that a process of the run writes on its standard output, read once from its start: a wait searches the lines
+// that came before it and then each new line, so a line that the process wrote before the wait began counts, and no line is
+// read twice (H35.19-2).
+export class Lines {
+  private readonly lines: string[] = [];
+  private partial = '';
+  private readonly waiting = new Set<() => void>();
+  private readonly child: ChildProcess;
+  private readonly name: string;
+
+  constructor(name: string, child: ChildProcess) {
+    this.name = name;
+    this.child = child;
+    child.stdout?.on('data', (chunk: Buffer) => {
+      const parts = (this.partial + chunk.toString()).split('\n');
+      this.partial = parts.pop() ?? '';
+      this.lines.push(...parts);
+      // A wait that ends removes itself from the set, which the iteration of a Set allows.
+      for (const look of this.waiting) look();
+    });
+    child.once('exit', () => {
+      for (const look of this.waiting) look();
+    });
+  }
+
+  // The number of lines so far, the start of a wait for a line that an action after this point makes.
+  get length(): number {
+    return this.lines.length;
+  }
+
+  // Resolves with the index of the first line at `from` or after it that matches, and rejects when this process or one of
+  // `also` ends before such a line.
+  until(from: number, matches: (line: string) => boolean, what: string, also: ChildProcess[] = []): Promise<number> {
+    return new Promise<number>((resolve, reject) => {
+      let next = from;
+      let stopExit = (): void => {};
+      const finish = (): void => {
+        this.waiting.delete(look);
+        stopExit();
+      };
+      const failed = (reason: string): void => {
+        finish();
+        reject(new Error(`${this.name}: ${what}: ${reason} before the line; its last lines:\n${this.lines.slice(-20).join('\n')}`));
+      };
+      const look = (): void => {
+        for (; next < this.lines.length; next += 1) {
+          if (matches(this.lines[next] ?? '')) {
+            finish();
+            resolve(next);
+            return;
+          }
+        }
+        if (this.child.exitCode !== null || this.child.signalCode !== null) failed(`it ended with ${String(this.child.exitCode ?? this.child.signalCode)}`);
+      };
+      this.waiting.add(look);
+      stopExit = onExit(also, failed);
+      look();
+    });
+  }
+}
+
+const readers = new WeakMap<ChildProcess, Lines>();
+
+// Starts reading the lines of a process that the run just spawned.
+export function readLines(name: string, child: ChildProcess): Lines {
+  const lines = new Lines(name, child);
+  readers.set(child, lines);
+  return lines;
+}
+
+// The lines of a process whose lines `readLines` reads.
+export function linesOf(child: ChildProcess): Lines {
+  const lines = readers.get(child);
+  if (lines === undefined) throw new Error(`the lines of process ${String(child.pid)} are not read`);
+  return lines;
+}
+
+// Resolves when `key` does not exist on the server of `port`: it subscribes to the keyspace events del and expired of the
+// key first, then reads the key once, so a key that is already gone resolves at once and a key that goes later resolves by
+// its event; it rejects when one of `processes` ends first (H35.19-2).
+export async function keyGone(port: string, secure: Secure | undefined, key: string, processes: ChildProcess[]): Promise<void> {
+  await ask(port, secure, 'CONFIG', 'SET', 'notify-keyspace-events', 'Kgx');
+  await keyEvents(port, secure, key, processes, async () => (await ask(port, secure, 'EXISTS', key)) === 0, (event) => event === 'del' || event === 'expired');
+}
+
+// Subscribes to the keyspace events of `key` on the server of `port`, then calls `holds` once and again after each event
+// that `counts` takes, one call at a time, and resolves when it returns true; it rejects when one of `processes` ends first.
+// The caller sets notify-keyspace-events with the classes of the events.
+export async function keyEvents(port: string, secure: Secure | undefined, key: string, processes: ChildProcess[], holds: () => Promise<boolean>, counts: (event: string) => boolean = () => true): Promise<void> {
+  const subscriber = await connectTo(port, secure);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      let settled = false;
+      let pending = false;
+      let running = false;
+      const stopExit = onExit(processes, (reason) => settle(new Error(`the keyspace events of ${key} on ${port}: ${reason} before the state held`)));
+      function settle(error?: Error): void {
+        if (settled) return;
+        settled = true;
+        stopExit();
+        if (error === undefined) resolve();
+        else reject(error);
+      }
+      const check = (): void => {
+        if (settled) return;
+        if (running) {
+          pending = true;
+          return;
+        }
+        running = true;
+        holds().then((held) => {
+          running = false;
+          if (held) settle();
+          else if (pending) {
+            pending = false;
+            check();
+          }
+        }, (error: unknown) => settle(error instanceof Error ? error : new Error(String(error))));
+      };
+      subscriber.subscribe(`__keyspace@0__:${key}`, (event) => {
+        if (counts(event)) check();
+      }).then(check, (error: unknown) => settle(error instanceof Error ? error : new Error(String(error))));
+    });
+  } finally {
+    subscriber.destroy();
+  }
+}
 
 export const EXTENSION = `-dextension=${path.join(ROOT, 'var/redis/redis.so')}`;
 
@@ -59,19 +207,11 @@ export async function freePort(): Promise<string> {
   return String(address.port);
 }
 
-// Starts a Redis server of the run that keeps its data with the append-only file in `directory`, and resolves when it
-// accepts connections.
+// Starts a Redis server of the run that keeps its data with the append-only file in `directory`, reads its lines from its
+// start (`linesOf`), and resolves when it accepts connections.
 export async function startRedis(directory: string, port: string, settings: string[] = ['--port', port]): Promise<ChildProcessWithoutNullStreams> {
   const server = spawn(path.join(ROOT, 'var/redis/redis-server'), [...settings, '--bind', '127.0.0.1', '--save', '', '--appendonly', 'yes', '--dir', directory]);
-  await new Promise<void>((resolve, reject) => {
-    server.once('exit', (code) => reject(new Error(`the Redis server ended with ${String(code)}`)));
-    let output = '';
-    server.stdout.on('data', (chunk: Buffer) => {
-      output += chunk.toString();
-      if (output.includes('Ready to accept connections')) resolve();
-    });
-  });
-  server.removeAllListeners('exit');
+  await readLines(`the Redis server on ${port}`, server).until(0, (line) => line.includes('Ready to accept connections'), 'the start');
   return server;
 }
 

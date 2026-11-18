@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 47ebeeaa0f88d5744e1f707962d1f82abf1760581246debf95927d863490f931 -->
+<!-- source-sha256: b39724f7b8b99a0c0efacef55530abd538210ec26863496eefdba718ed985862 -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -544,7 +544,7 @@
 | H35.18 | 실패하는 test는 그 실패로 실행을 끝내고 process와 임시 directory를 남기지 않는다(HR-84, HR-87). worker가 실패한 session test는 시작한 process를 모두 멈추고 그 directory를 지운다. | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts TESTS=tests/scripts/session-holder.test.mts` | [ ] |
 | H35.19 | script 시험의 모든 기다림은 timer나 test runner의 시간 제한이 아니라 사건으로 끝난다(HR-89, HR-84). | tests/scripts, CHANGELOG.md와 한국어 짝 | `make hyper-test-scripts` | [ ] |
 | H35.19-1 | `tests/scripts/session-shared-redis.test.mts`는 더 이상 요청을 `setTimeout(200)`과 경쟁시키지 않는다. 시험은 그 결과를 정하는 사건을 기다린다. | tests/scripts/session-shared-redis.test.mts | `make hyper-test-scripts`. tests/scripts/session-shared-redis.test.mts는 실행의 Redis server를 시작하므로 CI가 검증한다 | [ ] |
-| H35.19-2 | holder가 끝난 뒤 `until()`에서 기다리는 session 시험의 step은 test runner의 60초 제한이 아니라 그 holder나 server의 실패로 끝난다. | tests/scripts/session-redis-server.mts, tests/scripts/session-redis-cluster.test.mts | `make hyper-test-scripts`. tests/scripts/until.test.mts는 server 없이 실행되고, tests/scripts/session-redis-cluster.test.mts는 실행의 Redis server를 시작하므로 CI가 검증한다 | [ ] |
+| H35.19-2 | holder가 끝난 뒤 `until()`에서 기다리는 session 시험의 step은 test runner의 60초 제한이 아니라 그 holder나 server의 실패로 끝난다. | tests/scripts/session-redis-server.mts, tests/scripts/session-redis-cluster.test.mts | `make hyper-test-scripts`. tests/scripts/no-polling.test.mts는 server 없이 실행되고, tests/scripts의 Redis test는 실행의 Redis server를 시작하므로 CI가 검증한다 | [ ] |
 | H35.20 | template 0.0.28을 pin한 tree에서 `make lint-ts`, `make lint-python`, `make typecheck`가 통과하고, 각 case runner는 hyper의 오류만 `raises`로 보고한다. | knip.json, packages/ts, packages/client, packages/php/tests, packages/python/tests, contracts | `make lint-ts`, `make lint-python`, `make typecheck`, `make hyper-test-php CASES="json.json"`, `make hyper-test-node CASES="json.json"`, `make hyper-test-python CASES="json.json"` | [ ] |
 | H35.20-1 | knip은 Makefile이 `node_modules/@polyspec/binding/dist/cli.js`를 경로로 시작한다는 것을 알고, 그래서 `@polyspec/binding`을 쓰이지 않는다고 보고하지 않는다. | knip.json | `make lint-ts` | [v] |
 | H35.20-2 | PHP, Node, Python case runner의 `failureOf`는 hyper와 binding의 오류 class만 잡는다. 다른 오류는 step의 오류로 case를 실패시킨다. | packages/php/tests/Support/CaseRules.php, packages/ts/tests/case-rules.ts, packages/python/tests/case_rules.py와 그 시험 | `make typecheck` | [v] |

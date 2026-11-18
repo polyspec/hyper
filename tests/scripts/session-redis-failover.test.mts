@@ -7,14 +7,13 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, before, test } from 'node:test';
-import { setTimeout as delay } from 'node:timers/promises';
 
 import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
 import { assertKeepsCookie, cookieOf, post, requireServers, shareAcross, startBoards, tokenOf, type Board } from './session-board.mts';
-import { ask, certificates, EXTENSION, freePort, startRedis, stopRedis, until, type Secure } from './session-redis-server.mts';
-import { COMMANDS, IDENTIFIER, NAMES, ROOT, run as runWorker, type Server } from './session-workers.mts';
+import { ask, certificates, EXTENSION, freePort, keyEvents, linesOf, readLines, startRedis, stopRedis, type Lines, type Secure } from './session-redis-server.mts';
+import { COMMANDS, IDENTIFIER, NAMES, ROOT, run as runWorker } from './session-workers.mts';
 
 const KEY = `PHPREDIS_SESSION:${IDENTIFIER}`;
 const RECORD = 'a:1:{s:1:"n";i:0;}';
@@ -34,10 +33,28 @@ after(async () => {
 
 interface Node { name: string; port: string; server: ChildProcessWithoutNullStreams }
 
+// The lines of the Redis source at the tag of REDIS_VERSION (8.10.3) that the waits read as events (H35.19-2):
+// - src/replication.c:2769 serverLog(LL_NOTICE, "MASTER <-> REPLICA sync: Finished with success"), when a replica holds
+//   the data of its primary;
+// - src/sentinel.c:705 serverLog(level,"%s %s",type,msg), the line of each event of a Sentinel, whose msg for an instance
+//   is "%s %s %s %d @ %s %s %d" (src/sentinel.c:682): the type, the name, the address and the port of the instance, and
+//   the name, the address and the port of its primary;
+// - src/sentinel.c:1643 and :2591 sentinelEvent(LL_NOTICE,"+slave",slave,"%@"), when a Sentinel adds the replica, whose
+//   name is its address and port (src/sentinel.c:1302);
+// - src/sentinel.c:2930 sentinelEvent(LL_NOTICE,"+sentinel",si,"%@"), when a Sentinel adds another Sentinel;
+// - src/sentinel.c:5367 and :2958 sentinelEvent(LL_WARNING,"+switch-master",master,"%s %s %d %s %d", ...), the name, the
+//   old address and port and the new address and port, which the leader logs when it switches and each other Sentinel when
+//   it takes the new configuration.
+const SYNCED = 'MASTER <-> REPLICA sync: Finished with success';
+const replicaAdded = (port: string) => (line: string): boolean => line.includes(` +slave slave 127.0.0.1:${port} 127.0.0.1 ${port} @ hyper `);
+const sentinelAdded = (line: string): boolean => line.includes(' +sentinel sentinel ');
+const switched = (old: string) => (line: string): boolean => line.includes(` +switch-master hyper 127.0.0.1 ${old} 127.0.0.1 `);
+
 // A primary, a replica and three Sentinels with a quorum of two, with or without TLS and the ACL user.
 class Topology {
   readonly nodes: Node[] = [];
   readonly sentinels: string[] = [];
+  private readonly watchers: ChildProcess[] = [];
 
   private readonly prefix: string;
   private readonly secure: Secure | undefined;
@@ -77,8 +94,23 @@ class Topology {
     return { name, port, server };
   }
 
-  async linked(node: Node): Promise<boolean> {
-    return String(await this.ask(node.port, 'INFO', 'replication')).includes('master_link_status:up');
+  // The servers and the Sentinels that still run, whose end fails a wait.
+  private running(): ChildProcess[] {
+    return [...this.nodes.map((node) => node.server), ...this.watchers].filter((child) => child.exitCode === null && child.signalCode === null);
+  }
+
+  private sentinelLines(): Lines[] {
+    return this.watchers.map((child) => linesOf(child));
+  }
+
+  // Resolves when a replica that started holds the data of its primary, by its line SYNCED.
+  async synced(node: Node): Promise<void> {
+    await linesOf(node.server).until(0, (line) => line.includes(SYNCED), 'the sync of the replica', this.running());
+  }
+
+  // Resolves when each Sentinel logged the switch from the primary `old`, after the line of each that `marks` names.
+  private async switchedFrom(old: Node, marks: number[]): Promise<void> {
+    for (const [index, lines] of this.sentinelLines().entries()) await lines.until(marks[index] ?? 0, switched(old.port), 'the switch of the primary', this.running());
   }
 
   // Starts the servers and the Sentinels, and resolves when each Sentinel sees all of them.
@@ -86,7 +118,7 @@ class Topology {
     const first = await this.startNode(`${this.prefix}-a`, await freePort(), []);
     const second = await this.startNode(`${this.prefix}-b`, await freePort(), ['--replicaof', '127.0.0.1', first.port]);
     this.nodes.push(first, second);
-    await until(() => this.linked(second));
+    await this.synced(second);
     for (const index of [0, 1, 2]) {
       const port = await freePort();
       const file = path.join(directory, `${this.prefix}-sentinel-${String(index)}.conf`);
@@ -101,15 +133,17 @@ class Topology {
       const monitor = [`sentinel monitor hyper 127.0.0.1 ${first.port} 2`, 'sentinel down-after-milliseconds hyper 1000', 'sentinel failover-timeout hyper 5000'];
       const peer = this.secure === undefined ? [] : ['sentinel auth-user hyper hyper', `sentinel auth-pass hyper ${this.secure.password}`];
       writeFileSync(file, [...lines, 'bind 127.0.0.1', `dir ${directory}`, ...auth, ...monitor, ...peer, ''].join('\n'));
-      processes.push(spawn(REDIS, [file, '--sentinel'], { stdio: 'ignore' }));
+      const sentinel = spawn(REDIS, [file, '--sentinel'], { stdio: ['ignore', 'pipe', 'ignore'] });
+      readLines(`the Sentinel on ${port}`, sentinel);
+      processes.push(sentinel);
+      this.watchers.push(sentinel);
       this.sentinels.push(port);
     }
-    for (const port of this.sentinels) {
-      await until(async () => String(await this.ask(port, 'SENTINEL', 'CKQUORUM', 'hyper')).includes('OK 3'));
-      await until(async () => {
-        const replicas = await this.ask(port, 'SENTINEL', 'REPLICAS', 'hyper');
-        return Array.isArray(replicas) && replicas.length === 1;
-      });
+    // Each Sentinel adds the replica and the two other Sentinels, which is the quorum of three that SENTINEL CKQUORUM states.
+    for (const lines of this.sentinelLines()) {
+      await lines.until(0, replicaAdded(second.port), 'the replica', this.running());
+      const other = await lines.until(0, sentinelAdded, 'the first other Sentinel', this.running());
+      await lines.until(other + 1, sentinelAdded, 'the second other Sentinel', this.running());
     }
   }
 
@@ -122,25 +156,23 @@ class Topology {
     return node;
   }
 
-  // Kills the primary and resolves when the Sentinels name the replica.
+  // Kills the primary and resolves when each Sentinel logged the switch to the replica.
   async failOver(): Promise<Node> {
     const old = await this.primary();
+    const marks = this.sentinelLines().map((lines) => lines.length);
     await stopRedis(old.server, 'SIGKILL');
-    await until(async () => (await this.primary()).port !== old.port);
+    await this.switchedFrom(old, marks);
     return old;
   }
 
-  // Asks the Sentinels to promote the replica while the primary keeps running, and resolves when each of them names the replica.
+  // Asks the Sentinels to promote the replica while the primary keeps running, and resolves when each of them logged the
+  // switch. The Sentinels added the replica when the topology started, so the first SENTINEL FAILOVER is taken.
   // The Sentinels make the former primary a replica some seconds later, so until then it still accepts writes.
   async switchOver(): Promise<Node> {
     const old = await this.primary();
-    await until(async () => String(await this.ask(this.sentinels[0] ?? '', 'SENTINEL', 'FAILOVER', 'hyper')) === 'OK');
-    for (const port of this.sentinels) {
-      await until(async () => {
-        const named = await this.ask(port, 'SENTINEL', 'GET-MASTER-ADDR-BY-NAME', 'hyper');
-        return Array.isArray(named) && String(named[1]) !== old.port;
-      });
-    }
+    const marks = this.sentinelLines().map((lines) => lines.length);
+    assert.equal(String(await this.ask(this.sentinels[0] ?? '', 'SENTINEL', 'FAILOVER', 'hyper')), 'OK', 'the Sentinel takes the failover');
+    await this.switchedFrom(old, marks);
     return old;
   }
 
@@ -169,18 +201,6 @@ function numbers(text: string): number[] {
   return values.map(Number);
 }
 
-// Runs a request of a server until it succeeds, while the clients follow a failover.
-async function retried(name: Server, env: Record<string, string>, ...args: string[]): Promise<string> {
-  for (let attempt = 1; ; attempt += 1) {
-    try {
-      return await runWorker(name, directory, env, ...args);
-    } catch (error) {
-      if (attempt === 150) throw error;
-      await delay(200);
-    }
-  }
-}
-
 // Each server writes a value on the primary, the primary fails, and each server writes another on the new primary and reads
 // them all. Returns the old primary and the names of the values.
 async function writeAcrossFailover(redis: Topology, env: Record<string, string>): Promise<{ old: Node; names: string }> {
@@ -189,9 +209,9 @@ async function writeAcrossFailover(redis: Topology, env: Record<string, string>)
   for (const name of NAMES) await runWorker(name, directory, env, 'write', JSON.stringify({ [`before_${name}`]: 1 }));
   await redis.replicated(primary);
   const old = await redis.failOver();
-  for (const name of NAMES) await retried(name, env, 'write', JSON.stringify({ [`after_${name}`]: 1 }));
+  for (const name of NAMES) await runWorker(name, directory, env, 'write', JSON.stringify({ [`after_${name}`]: 1 }));
   const names = JSON.stringify(NAMES.flatMap((name) => [`before_${name}`, `after_${name}`]));
-  for (const name of NAMES) assert.deepEqual(JSON.parse(await retried(name, env, 'read', names)), [1, 1, 1, 1, 1, 1], `${name} reads what every server wrote before and after`);
+  for (const name of NAMES) assert.deepEqual(JSON.parse(await runWorker(name, directory, env, 'read', names)), [1, 1, 1, 1, 1, 1], `${name} reads what every server wrote before and after`);
   return { old, names };
 }
 
@@ -216,10 +236,10 @@ test('the three servers go on with a session through two failovers that Sentinel
   // The old primary comes back as a replica of the new one, and a second failover keeps the session.
   const back = await redis.startNode(old.name, old.port, []);
   redis.nodes[redis.nodes.indexOf(old)] = back;
-  await until(() => redis.linked(back));
+  await redis.synced(back);
   await redis.replicated(await redis.primary());
   await redis.failOver();
-  for (const name of NAMES) assert.deepEqual(JSON.parse(await retried(name, env, 'read', names)), [1, 1, 1, 1, 1, 1], `${name} reads the session after the second failover`);
+  for (const name of NAMES) assert.deepEqual(JSON.parse(await runWorker(name, directory, env, 'read', names)), [1, 1, 1, 1, 1, 1], `${name} reads the session after the second failover`);
 });
 
 test('the HTTP servers answer status 500 during a failover and go on with the session after it (HY-115)', { timeout: 180_000 }, async () => {
@@ -233,10 +253,11 @@ test('the HTTP servers answer status 500 during a failover and go on with the se
     await redis.replicated(await redis.primary());
     await redis.failOver();
     for (const board of boards) {
+      // The first request after the switch may meet the connection to the killed primary and answer 500; the client of the
+      // server replaces that connection, so the next request reaches the new primary.
       let response: Response = await post(board, session.cookie, session.token, `after ${board.name}`);
-      while (response.status === 500) {
+      if (response.status === 500) {
         assertKeepsCookie(response, `${board.name} during the failover`);
-        await delay(200);
         response = await post(board, session.cookie, session.token, `after ${board.name}`);
       }
       assert.equal(response.status, 303, `${board.name} goes on with the session and its token after the failover`);
@@ -267,7 +288,6 @@ test('the servers share a new session on the new primary while the former primar
         const accepted = (await post(second, cookie, token, `${first.name} ${second.name}`)).status === 303;
         assert.ok(await redis.isPrimary(old), `${second.name} ${accepted ? 'accepted' : 'refused'} the session of ${first.name} only after the former primary became a replica`);
         if (accepted) break;
-        await delay(50);
       }
     }
   } finally {
@@ -287,7 +307,10 @@ test('a failover while the three servers write one session keeps the acknowledge
   processes.push(...writers);
   const counted = (record: unknown): number => Number(/"n";i:(\d+);/.exec(String(record))?.[1] ?? 0);
   let acknowledged = 0;
-  await until(async () => {
+  // The writes of the record are the keyspace events of its key (class $ of notify-keyspace-events); after each, the record is
+  // read once and waits for the replica.
+  await redis.ask(primary.port, 'CONFIG', 'SET', 'notify-keyspace-events', 'K$');
+  await keyEvents(primary.port, undefined, KEY, [primary.server, ...writers], async () => {
     const record = await redis.ask(primary.port, 'GET', KEY);
     await redis.replicated(primary);
     acknowledged = counted(record);
@@ -302,11 +325,11 @@ test('a failover while the three servers write one session keeps the acknowledge
     }
   }
   const names = '["n","php","python","node"]';
-  const [n = -1, php = 0, python = 0, node = 0] = numbers(await retried('php', env, 'read', names));
+  const [n = -1, php = 0, python = 0, node = 0] = numbers(await runWorker('php', directory, env, 'read', names));
   assert.ok(n >= acknowledged, `the record holds ${String(n)} updates of the ${String(acknowledged)} that the replica acknowledged`);
   assert.equal(n, php + python + node, 'each update of the record is whole');
   for (const name of NAMES) await runWorker(name, directory, env, 'count', '10', name);
-  const [later] = numbers(await retried('php', env, 'read', names));
+  const [later] = numbers(await runWorker('php', directory, env, 'read', names));
   assert.equal(later, n + 30, 'requests after the failover lose no update');
 });
 
