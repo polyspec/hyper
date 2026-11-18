@@ -24,7 +24,10 @@ final class RequestTest extends TestCase
         }
     }
 
-    /** HY-45, HY-52: the session cookie options; the session adds no caching header. */
+    /**
+     * HY-45, HY-52: the session cookie options; the session adds no caching header. HY-104.33: no expired session is
+     * removed by chance during a request.
+     */
     public function testSessionCookieOptions(): void
     {
         self::assertSame(
@@ -40,6 +43,7 @@ final class RequestTest extends TestCase
                 'use_cookies' => false,
                 'cache_limiter' => '',
                 'serialize_handler' => 'php_serialize',
+                'gc_probability' => 0,
             ],
             NativeSession::options(false),
         );
