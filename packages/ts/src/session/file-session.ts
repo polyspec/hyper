@@ -39,11 +39,11 @@ export class FileSession implements SessionStore {
     this.made = null;
   }
 
-  // Returns the value of a key as a value of the data model (HY-104.13), or undefined for a key that holds no value. The
-  // library gives one value for a key that holds none and for a key that holds the PHP value null.
+  // Returns the value of a key as a value of the data model (HY-104.13), or null for a key that holds no value
+  // (HY-104.37). The library gives one value for a key that holds none and for a key that holds the PHP value null.
   get(key: string): unknown {
     const record = converted(() => this.session.get(key));
-    return record === null ? undefined : rules().sessionValue(record);
+    return record === null ? null : rules().sessionValue(record);
   }
 
   // Stores a value of the data model as the PHP value of the record (HY-104.14).

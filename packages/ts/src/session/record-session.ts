@@ -41,7 +41,9 @@ export abstract class RecordSession implements SessionStore {
   }
 
   get(key: string): unknown {
-    return RecordSession.recordValue(this.start().get(key));
+    // A key that holds no value gives null (HY-104.37).
+    const items = this.start();
+    return items.has(key) ? RecordSession.recordValue(items.get(key)) : null;
   }
 
   set(key: string, item: unknown): void {
