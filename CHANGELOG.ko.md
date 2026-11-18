@@ -6,6 +6,7 @@
 
 ## Unreleased
 
+- HY-104.41은 `stdClass`가 아닌 class의 객체를 담은 session record의 실패 kind를 적는다: 세 서버에서 session-store 라이브러리의 kind `record`(HY-104.8)이고, H35.84의 mark를 지닌다. 입력: 그런 record. 이전 동작: HY-104.14는 요청이 실패한다고만 했고 kind를 적지 않았다. 기대: 명세가 kind를 적고, HY-104.14는 그 뜻을 지킨다.
 - PHP 서버는 응답을 보내기 전에 세션을 닫으므로, 쓸 수 없는 세션은 plain 500으로 답한다(H35.83, HY-115.23, HY-43). 입력: lock을 잃은 요청에 대한 phpredis의 write처럼 세션 write가 실패하는 요청. 이전 동작: PHP는 script 끝, 응답 뒤에 세션을 썼고, 요청은 application의 상태로 답했다. 기대: plain 500이고, write hook은 failure `hyper: the session could not be written`과 함께 그것을 받는다.
 - Node 서버의 session store는 값이 없는 key에 null을 돌려준다(H35.82, HY-104.37). 입력: `ArraySession`과 `FileSessions`나 `RedisSessions`의 session에 대한 `get("missing")`. 이전 동작: `undefined`. 기대: HY-104.37대로 null이고, interface `SessionStore`도 null을 적는다.
 - PHP session worker `tests/scripts/fixtures/session-worker/worker.php`는 `HYPER_SESSION_RETRIES`가 없으면 Node와 Python worker처럼 lock을 1000000번 시도한다(H35.81, HY-115.24). 입력: `HYPER_SESSION_RETRIES` 없는 worker 실행. 이전 동작: `redis.session.lock_retries`와 `RedisClusterSessions`의 재시도를 -1로 두었고, 그 설정의 phpredis peer는 서버의 세션을 나누지 않는다. 기대: -1이 아닌 값. `tests/scripts/session-worker-settings.test.mts`가 worker를 읽고 -1에서 실패한다.

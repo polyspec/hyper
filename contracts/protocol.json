@@ -7060,6 +7060,13 @@
                   "koSource": "cd694f6c871d28190619c015c87725a3d3785a91ab1b0105ac3bd4888fe8cd79"
                 },
                 {
+                  "id": "HY-104.41",
+                  "en": "A read of a record that holds an object of a class other than `stdClass`, at any depth, fails with the kind `record` of the session-store library (HY-104.8) in the three servers.",
+                  "ko": "어느 깊이에든 `stdClass`가 아닌 class의 객체를 담은 record를 읽으면 세 서버에서 session-store 라이브러리의 kind `record`(HY-104.8)로 실패한다.",
+                  "koSource": "3730735105bbd755546ac9d5d4c3056381af9b93e567a46ac285e7c0efc069ec",
+                  "unimplemented": "H35.84"
+                },
+                {
                   "id": "HY-104.34",
                   "en": "It writes a number of the data model that is an integer within ±(2^53 − 1) as a PHP integer and every other number as a PHP float, so that a PHP peer reads an integer as an integer; the integer is read from the bits of the number without a rounding conversion.",
                   "ko": "±(2^53 − 1) 안의 정수인 데이터 모델의 수는 PHP 정수로, 다른 수는 PHP float로 쓰므로 PHP peer는 정수를 정수로 읽는다. 정수는 반올림 변환 없이 수의 bit에서 읽는다.",
