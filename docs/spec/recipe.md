@@ -114,7 +114,9 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     An assignment in a method body is not a property.
   - **Fields of a member.**
     - `id`: `<unit>.<member>`, with the language-neutral name in camelCase.
-    - `kind`: one of constructor, method, static method, function or property.
+    - `kind`: one of constructor, method, static method, function or property. A Node `get` or `set` accessor, static or
+      not, is a property, because it is read and written as a field is. `MEMBER_SIGNATURE` names each item of a member
+      that differs from the spec: its signature, its kind and its number of parameters.
     - `visibility`: one of public, internal or private.
     - `inputs`, `output` and `errors`: in the terms of the vocabulary. The vocabulary is the terms of
       `contracts/protocol.json`, the units and types of the spec, and `list<T>`, `map<T>`, `optional<T>` and

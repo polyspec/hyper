@@ -425,13 +425,15 @@ test('the Node reader reads a test called on any receiver, and an each table wri
   assert.deepEqual(out.dynamicTests.map((t) => t.line), [3], `dynamic lines: ${out.dynamicTests.map((t) => t.line).join(', ')}`);
 });
 
-test('the Node reader lists an accessor as a method, with its head and not its body', () => {
+// An accessor is read as a field is read, so the reader gives it the kind property, static or not, as the spec declares
+// it.
+test('the Node reader lists an accessor as a property, with its head and not its body', () => {
   const members = readFixture('node', path.join(fixture, 'readers', 'node')).members.filter((m) => m.unit === 'Accessed');
   const size = members.find((m) => m.name === 'size');
   const kind = members.find((m) => m.name === 'kind');
-  assert.equal(size?.kind, 'method', `size is ${size?.kind}`);
+  assert.equal(size?.kind, 'property', `size is ${size?.kind}`);
   assert.equal(size?.signature, 'get size(): number', `size signature: ${size?.signature}`);
-  assert.equal(kind?.kind, 'static method', `kind is ${kind?.kind}`);
+  assert.equal(kind?.kind, 'property', `kind is ${kind?.kind}`);
   assert.equal(kind?.signature, 'static get kind(): string', `kind signature: ${kind?.signature}`);
 });
 
