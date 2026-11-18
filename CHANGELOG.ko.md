@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 28a2263326c47723ca6cbc8ab31544e7d7eb3099ebf87eee76f9fa55602c7640 -->
+<!-- source-sha256: 877c86ace402795176bc04c79aabb416f3b1b5ce5e52008e5b5fcca9198e833d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- AGENTS.md의 Required checks rule은 `make parity`를 로컬에서 실행하는 검사로 이름한다(H35.111, H35.92). 입력: `scripts/check-parity.mts`가 자기 PHP server를 시작하고 browser code를 Node에서 render하는 `make parity`. 이전 동작: rule은 browser를 시작하지 않는 그것을 CI만 실행하는 browser 검사로 이름했다. 기대 동작: rule은 그것을 test가 자기 process로 시작하는 server와 함께 이름하고, browser 목록은 `make e2e`와 `make bench-browser`를 담는다.
 - `tests/legacy/interfaces.json`에서 `file-store-sessions.json`의 결과 `created`는 각 server가 만드는 식별자의 statement인 HY-104.43을 인용한다(H35.43). 입력: 그 결과의 선언. 이전 동작: 파일의 note는 그 sentence가 현재 statement를 이름한다고 밝히는데도, 그 결과는 폐기된 HY-104.31을 인용했다. 기대 동작: Node와 Python server가 만들고 두 server의 step이 검사하는 소문자 16진수 64자리를 밝히는 HY-104.43을 인용하며, 고정 사본의 텍스트와 값은 그대로다.
 - recipe의 Node와 PHP reader는 매개변수 없는 빈 private 생성자를 member로 세지 않는다(H35.105, HYR-6). 입력: Node와 PHP server의 `Accept`처럼, 빈 private 생성자로 생성을 막는 static method만 가진 class. 이전 동작: `scripts/recipe/read-node.mts`와 `scripts/recipe/read-php.php`가 그것을 보고했으므로, unit에 생성자를 나열하지 않는 명세는 `MEMBER_ADDED`로 실패했다. 기대 동작: class의 다른 member가 모두 static이면 그것은 어떤 rule도 이름하지 않는 runtime 관용구이므로 두 reader는 그것을 건너뛰고, recipe fixture의 `MediaType`처럼 instance member가 있어 그 생성자로 instance를 만드는 class에서는 유지한다. Reflection은 빈 본문을 알려주지 않으므로 `scripts/recipe/read-php-functions.php`의 `isConstructionGuard`는 `PhpToken::tokenize`로 선언의 token을 읽으므로, 공백이나 주석만 담은 본문은 한 줄이든 여러 줄이든 빈 본문이다. Python에는 private 생성자가 없으므로 그 reader는 그대로다. test는 `tests/scripts/recipe-check.test.mts`에서 fixture class `StaticOnly`를 읽으며, `make hyper-test-scripts`에서의 실행은 CI를 기다린다.
 - `contracts/interfaces.json`의 unit `accept`는 `accept.isInvalid`를 나열하고 생성자를 나열하지 않는다(H35.97, HYR-5, HYR-6). 입력: 세 server의 App이 kind `invalid_accept`나 `invalid_weight`인 Accept 값에 상태 400으로 응답하려고 호출하는 `Accept::isInvalid`, `Accept.isInvalid`, `Accept.is_invalid`(HY-116.18)와 member `accept.constructor`. 이전 동작: 명세에는 그 method가 없었고, reader의 텍스트를 받는 생성자를 나열했는데, 세 server는 Accept 문법이 core로 옮겨질 때 그 생성자를 없앴다. PHP와 Node는 class의 생성을 막는 빈 private 생성자를 유지하고, Python에는 생성자가 없다. 기대 동작: 명세는 각 언어의 오류 입력, 곧 PHP `HyperValueError`, Node `unknown`, Python `BaseException`을 가진 internal static method를 나열하고 생성자는 나열하지 않는다. 빈 private 생성자는 어떤 rule도 이름하지 않는 runtime 관용구이고(HYR-6), reader가 그것을 건너뛰기 때문이다(H35.105). 그것을 비교하는 `make recipe-check`는 CI를 기다린다.
