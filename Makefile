@@ -32,6 +32,13 @@ bootstrap: ## Bootstrap the lock with the declared native npm before installed t
 	root="$$PWD"; version="$$(node -p 'require("./package.json").devEngines.packageManager.version')"; \
 	cd "$${TMPDIR:-/tmp}" && npm_config_offline=false npm_config_cache="$$root/var/bootstrap/npm-cache" "$(BOOTSTRAP_NPM)" exec --yes --package="npm@$$version" -- npm --prefix "$$root" ci --ignore-scripts
 
+# The node version of mise.toml under [tools] (H35.117). setup-node reads it from var/node-version, because it cannot read mise.toml.
+.PHONY: node-version
+node-version: ## Print the node version of mise.toml [tools] and write it to var/node-version for setup-node (H35.117)
+	@mkdir -p var && awk -F' *= *' '/^\[/ { section = $$0 } section == "[tools]" && $$1 == "node" { gsub(/"/, "", $$2); print $$2 }' mise.toml > var/node-version
+	@test -s var/node-version || { echo "node-version: mise.toml has no node under [tools]" >&2; exit 1; }
+	@cat var/node-version
+
 BOARD := examples/board
 PHP_PACKAGE := packages/php
 JS_PACKAGE := packages/client
