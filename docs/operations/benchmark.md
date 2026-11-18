@@ -7,7 +7,7 @@
 
 | Target | Script | Measures |
 |---|---|---|
-| `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | `App::handle` per request kind without network, and the cost of `board/rows.tpl` rendering, `bind` of the template extension and `json_encode` for 10, 100 and 1,000 rows, with the template extension (HY-48.23) |
+| `make bench-server` | `benchmarks/server.php --app <directory> --iterations <n>` | `App::handle` per request kind without network, and `App::handle` of `GET /board` as a document and as the region JSON with a region `rows` of 10, 100 and 1,000 rows, which the page render of the core renders (H35.32), with the template extension (HY-48.23) |
 | `make bench-browser` | `benchmarks/browser.mts --ssr <port> --edge <port> --api <port> --runs <n>` | First screens, region navigation, one `hy-set` change for 10, 100 and 1,000 rows (time, phases, main thread load and long tasks), memory over repeated navigation with the growth between two heap snapshots, template loading, and transferred bytes |
 | `make bench-sessions` | `benchmarks/sessions.mts --requests <n>` | The requests per second of the PHP, Node and Python servers on one Redis server, with one and four processes, and the requests per second of Redis CPU |
 | `make bench-uploads` | `benchmarks/uploads.mts --size <bytes> --runs <n>` | The time of a request, the processor time of the server and its largest memory for an upload in the PHP, Node and Python servers and in the reader of PHP itself |

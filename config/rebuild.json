@@ -126,6 +126,10 @@
       "kind": "policy",
       "reason": "it writes the applications of the contract files with the program assembly of the command tool (packages/cli/lib/program.mjs); no ecosystem tool writes them"
     },
+    "scripts/dependency-closure.mts": {
+      "kind": "ecosystem",
+      "tool": "node:fs reads the packages map of package-lock.json that npm writes, and the script follows the dependencies of a workspace through it, a linked workspace into its own entry (H34.12)"
+    },
     "scripts/fixture-program.mts": {
       "kind": "policy",
       "reason": "it writes the program of a test fixture with its fixed build id through the assembly of the command tool (HY-125.21); no ecosystem tool writes it"

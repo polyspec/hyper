@@ -9,6 +9,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { dryRun } from './make-dry-run.mts';
+import { jsonObject, jsonObjects } from '../../scripts/json.mts';
 import { pinsText } from '../../scripts/php-ext-pins.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -20,7 +21,7 @@ const recorded = (repo: string, version: string): unknown =>
 
 test('make php-ext-pins writes the pins with the script under $(ONLINE) (HR-89, H35.58)', () => {
   const lines = dryRun('php-ext-pins');
-  const line = lines.find((text) => /\/scripts\/php-ext-pins\.mts write config\/php-ext-pins\.json$/u.test(text));
+  const line = lines.find((text) => text.endsWith('/scripts/php-ext-pins.mts write config/php-ext-pins.json'));
   assert.ok(line !== undefined, `make -n php-ext-pins runs no scripts/php-ext-pins.mts write:\n${lines.join('\n')}`);
   assert.match(line, /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK /u, 'the writer reads the releases API without $(ONLINE)');
 });
@@ -33,8 +34,9 @@ test('the writer gives the bytes of the committed file from the recorded release
 test('the writer refuses an asset of a pinned file that has no digest (H35.58)', () => {
   const committed = readFileSync(PINS, 'utf8');
   const withoutDigest = (repo: string, version: string): unknown => {
-    const release = recorded(repo, version) as { assets: { name: string; digest?: string | null }[] };
-    return { ...release, assets: release.assets.map((asset) => (asset.name === 'packages.json' ? { ...asset, digest: null } : asset)) };
+    const release = jsonObject(recorded(repo, version), `the release ${repo} v${version}`);
+    const assets = jsonObjects(release.assets, `the assets of ${repo} v${version}`);
+    return { ...release, assets: assets.map((asset) => (asset.name === 'packages.json' ? { ...asset, digest: null } : asset)) };
   };
   assert.throws(() => pinsText(committed, withoutDigest), /packages\.json.*no sha256 digest/u);
 });
