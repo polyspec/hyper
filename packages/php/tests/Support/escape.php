@@ -8,7 +8,8 @@ declare(strict_types=1);
 // sent the response, `after-send-flushed` flushes the output first; `exit` ends the script with exit() in the shared
 // loader, before any output; `read-fails` replaces the `php` stream wrapper with one whose read of php://input fails,
 // so that `run` fails while it reads the body (HY-60.14); `read-fails-multipart` accepts multipart/form-data and
-// gives the head of a file part before the read fails, so that the request has a directory (HY-131.14). Every response hook call appends a `response` line and every write hook call appends a
+// gives the head of a file part before the read fails, so that the request has a directory (HY-131.14); `session-write-fails` keeps the session with a handler whose write
+// fails, as phpredis does for a request that lost its lock (HY-115.23). Every response hook call appends a `response` line and every write hook call appends a
 // `written` line to the file of HYPER_ESCAPE_LOG, so a test reads how often each hook ran and in which order.
 
 require __DIR__ . '/../../../../vendor/autoload.php';
@@ -51,7 +52,44 @@ final class FailingInput
     }
 }
 
+/** A session handler that opens and reads an empty session and whose write fails (HY-115.23). */
+final class FailingWrite implements \SessionHandlerInterface
+{
+    public function open(string $path, string $name): bool
+    {
+        return true;
+    }
+
+    public function close(): bool
+    {
+        return true;
+    }
+
+    public function read(string $id): string|false
+    {
+        return '';
+    }
+
+    public function write(string $id, string $data): bool
+    {
+        return false;
+    }
+
+    public function destroy(string $id): bool
+    {
+        return true;
+    }
+
+    public function gc(int $max_lifetime): int
+    {
+        return 0;
+    }
+}
+
 $mode = (string) getenv('HYPER_ESCAPE_MODE');
+if ($mode === 'session-write-fails') {
+    session_set_save_handler(new FailingWrite());
+}
 $log = (string) getenv('HYPER_ESCAPE_LOG');
 $app = FrontController::open(
     $log,

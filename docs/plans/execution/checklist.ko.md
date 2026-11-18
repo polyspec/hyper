@@ -1,5 +1,5 @@
 <!-- doc-id: checklist-execution -->
-<!-- source-sha256: 9eea54e3023459b37db581ac2e35573773ceba28224a7bcc02be33d16690eac6 -->
+<!-- source-sha256: bec5e7985c3d6ededff1bc0d9d38beca6cc07452e88e49b7ff79c035955f590d -->
 # 실행 체크리스트
 
 | ID | Task | Deliverables | Verification | State |
@@ -705,3 +705,4 @@
 | H35.80 | docs/features.md의 행 session-library-stores와 그 한국어 짝은 Node 서버와 Python 서버가 파일 저장소와 Redis 저장소를 직접 구현한다고 한다. 두 서버는 이제 session-store 라이브러리의 저장소에서 세션을 열고, 행은 세 서버의 현재 상태를 그 근거와 함께 적는다. | docs/features.md, docs/features.ko.md | make docs-check | [v] |
 | H35.81 | PHP session worker tests/scripts/fixtures/session-worker/worker.php는 HYPER_SESSION_RETRIES가 없으면 phpredis를 redis.session.lock_retries -1로 돌리고 RedisClusterSessions에 -1을 준다. HY-115.24는 그 설정의 phpredis peer가 서버의 세션을 나누지 않는다고 한다. worker는 Node와 Python worker처럼 1000000을 받는다. scripts test가 worker를 읽고 -1에서 실패한다. | tests/scripts/session-worker-settings.test.mts, tests/scripts/fixtures/session-worker/worker.php, config/owner-checks.json | make hyper-test-scripts | [ ] |
 | H35.82 | Node 서버의 저장소는 값이 없는 key에 undefined를 돌려주지만, HY-104.37은 session store가 null을 돌려준다고 한다: packages/ts/src/session의 ArraySession, RecordSession, FileSession과 interface SessionStore. 각각 null을 돌려주고, ArraySession과 FileSessions의 test가 HY-104.37을 인용한다. 그 실행은 native addon을 읽으므로 pin을 기다린다. | packages/ts/src/session/session-store.ts, array-session.ts, record-session.ts, file-session.ts, packages/ts/tests/session.test.ts, packages/ts/tests/sessions.test.ts | make hyper-test-node NODE_TESTS="tests/session.test.ts tests/sessions.test.ts" | [ ] |
+| H35.83 | PHP 서버는 session_write_close를 부르지 않으므로 PHP는 응답 뒤에 세션을 쓰고, lock을 잃은 요청은 500 대신 자기 상태로 답한다. HY-115.23은 모든 서버가 답하기 전에 세션을 닫는다고 한다. App::serve는 응답을 보내기 전에 NativeSession으로 PHP 세션을 닫고, 쓸 수 없는 세션은 plain 500의 escaped error다(HY-43). packages/php/tests/RunTest.php의 test가 write가 실패하는 session handler로 serve하고 HY-115.23을 인용한다. 그 실행은 PHP extension이 필요하므로 pin을 기다린다. | packages/php/src/App/App.php, packages/php/src/Session/NativeSession.php, packages/php/tests/RunTest.php, packages/php/tests/Support/escape.php | make hyper-test-php PHP_TESTS=tests/RunTest.php | [ ] |

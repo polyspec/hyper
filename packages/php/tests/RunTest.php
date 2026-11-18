@@ -278,6 +278,23 @@ final class RunTest extends TestCase
         self::assertSame([], $entries);
     }
 
+    /**
+     * HY-115.23: the server closes the session before it answers, so a session that cannot be written, as the session
+     * of a request that lost its lock, answers the plain 500 of HY-43 and not the status of the application.
+     */
+    public function testASessionThatCannotBeWrittenAnswersThePlain500(): void
+    {
+        [$status, , $body, $lines] = self::escape(
+            'session-write-fails',
+            '0',
+            ['application/x-www-form-urlencoded', '_csrf=x'],
+        );
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertMatchesRegularExpression('/\Aresponse \d+\nwritten 500 true "hyper: the session could not be written[^"]*"\n\z/', $lines);
+    }
+
     /** HY-99: a fatal error after the host function `run` sent the response reports ended false with the failure, and no second response. */
     public function testAFatalErrorAfterTheHeadersWereSentReportsAnUnendedWrite(): void
     {
