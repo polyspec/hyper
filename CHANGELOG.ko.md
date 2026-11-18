@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1387b5173195c0895b7e8021f863e47caf5add0c7beaf72468d6d9ff0e00ee5d -->
+<!-- source-sha256: f90cfe5e337a0ac24d837993cd022b2139a2011ef9aed7ecf5cdc08d7ef07927 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make lint-ts`는 발견 일곱 개 대신 하나를 보고한다(H35.78). 입력: lane/collect를 merge한 뒤의 tree. 이전 동작: oxlint는 `packages/ts/src/app/core-rules.ts`, `packages/ts/tests/session-routes.test.ts`, `tests/scripts/build-id.test.mts`의 unsafe assertion과 `tests/scripts/recipe-check.test.mts`의 compare 함수 없는 sort에서 실패했다. knip은 자기 module만 부르는 `packages/ts/src/host/http-host.ts`의 export `createServer`와 `createListener`, import가 닿는 `@polyspec/json`의 ignore, `packages/cli/package.json`의 `@polyspec/hyper-client`를 보고했다. 기대 동작: error class는 `Reflect.construct`로 만들고, manifest와 error는 검사로 좁히며, sort는 compare 함수를 받고, 두 host 함수는 module 함수이며 `contracts/interfaces.json`에서 private이고, `knip.json`은 더는 `@polyspec/json`을 무시하지 않는다. 어떤 rule도 끄지 않고 ignore 항목도 더하지 않는다. package의 import 없이 `hyper build`의 bundle이 푸는 `@polyspec/hyper-client`에 대한 발견은 판정을 기다린다. `make lint-ts`(knip 발견 하나 남음), `make typecheck`, 9개 파일의 `make hyper-test-scripts`(243개 중 241개 test, `build-id.test.mts`의 두 case는 이 tree가 build하지 않는 native addon이 필요하다)로 검증했다.
 - 검증된 행 H35.40-2의 항목은 그 실행의 tree와 그것이 재는 변경을 `tests/scripts/no-commit-names.test.mts`가 보고하는 commit hash 두 개 대신 그 행 H35.38과 H35.40-2로 이름한다. (H35.71)
 - lane/docs-fixes와 lane/recipe-accessor-2를 merge한 뒤 `CHANGELOG.md`와 전체를 대조해 읽은 `CHANGELOG.ko.md`는 `## Unreleased`의 항목을 영어의 순서로 둔다: merge가 lane/docs-fixes가 바꾼 한국어 항목 21개를 section의 맨 위에 두었다. 또한 영어 항목 H12.1, H13.1, H14.1, H20.4, H20.6, H27.49와 HY-64의 stylesheet 항목 등의 사실을 적고, 다른 문장 열한 개의 영어 뜻을 지킨다. (H35.72)
 - Node 레시피 리더는 `get` 또는 `set` 접근자에 종류 `property`를 주고, `MEMBER_SIGNATURE`는 다른 항목을 각각 밝힌다(HYR-8, H35.73). 입력: Node 심볼이 접근자 `get directory(): string`이고 spec에 같은 시그니처가 있는 종류 `property`의 spec 멤버. 이전 동작: `scripts/recipe/read-node.mts`가 접근자에 종류 `method` 또는 `static method`를 주어, 검사가 `MEMBER_SIGNATURE ... is "get directory(): string", spec says "get directory(): string"`를 보고했다. 이 발견은 종류나 매개변수 수가 달라도 나오지만 메시지는 시그니처만 밝혔다. 기대 동작: 접근자는 static이든 아니든 property다. 메시지는 시그니처, 종류(`has the kind method, spec says static method`), 매개변수 수(`has 1 parameters, spec says 2`) 가운데 다른 것을 나열한다. `tests/scripts/fixtures/recipe/mutations.json`의 변이 `member-kind-differs`와 `member-arity-differs`가 둘을 진술한다. `make hyper-test-scripts TESTS=tests/scripts/recipe-check.test.mts`로 검증했다(이전에는 169 통과, 3 실패, 이후 172 중 172 통과).

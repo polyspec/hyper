@@ -276,7 +276,8 @@ test('the candidate adds a member that the sources hold and the spec of a listed
     assert.equal(result.status, 0, result.stdout + result.stderr);
     const derived = listAt(readJson(output), 'concerns').find((c) => at(c, 'id') === 'csrf');
     const ids = listAt(derived, 'units', 0, 'members').map((m) => at(m, 'id'));
-    assert.deepEqual([...ids].sort(), [...expected].sort(), 'the candidate does not hold every member of the sources');
+    const byText = (a: unknown, b: unknown): number => String(a).localeCompare(String(b));
+    assert.deepEqual([...ids].sort(byText), [...expected].sort(byText), 'the candidate does not hold every member of the sources');
     const handWritten = listAt(readJson(path.join(dir, 'interfaces.candidate.hand-written.json')));
     const ci = listAt(readJson(output), 'concerns').findIndex((c) => at(c, 'id') === 'csrf');
     for (let mi = 1; mi < ids.length; mi += 1) {

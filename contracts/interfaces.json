@@ -4425,7 +4425,7 @@
             {
               "id": "http-host.createServer",
               "kind": "function",
-              "visibility": "internal",
+              "visibility": "private",
               "inputs": [
                 "app",
                 "value",
@@ -4437,14 +4437,14 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::createServer",
-                  "signature": "export function createServer<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
+                  "signature": "function createServer<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
                 }
               }
             },
             {
               "id": "http-host.createListener",
               "kind": "function",
-              "visibility": "internal",
+              "visibility": "private",
               "inputs": [
                 "app",
                 "value",
@@ -4456,7 +4456,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::createListener",
-                  "signature": "export function createListener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
+                  "signature": "function createListener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
                 }
               }
             },

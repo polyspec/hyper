@@ -50,7 +50,7 @@
     ]
   },
   "ignoreBinaries": ["container", "make", "openssl", "php", "php-fpm"],
-  "ignoreDependencies": ["@napi-rs/cli", "@polyspec/binding", "@polyspec/json", "@polyspec/php-serialization", "@polyspec/php-serialize", "@polyspec/session-store"],
+  "ignoreDependencies": ["@napi-rs/cli", "@polyspec/binding", "@polyspec/php-serialization", "@polyspec/php-serialize", "@polyspec/session-store"],
   "workspaces": {
     "packages/ts": {
       "entry": ["src/index.ts", "src/build.ts"],

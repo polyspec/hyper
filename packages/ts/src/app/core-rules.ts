@@ -251,8 +251,6 @@ export interface CoreBinding {
   HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;
 }
 
-// The constructor of an error class of a binding (E-2): the message, the kind, the status and the errno.
-type ErrorClass = new (message: string, kind: unknown, status: unknown, errno: unknown) => Error;
 
 // The prefix of the name of the category classes of the binding of hyper, which stands in the place of the prefix of
 // the category classes of a library: `SessionStoreStoreError` of the session-store package is `HyperStoreError`.
@@ -277,7 +275,9 @@ function libraryError(core: object, library: object, prefix: string, error: unkn
     if (typeof role !== 'function') continue;
     const { kind, status, errno } = error as Error & { kind?: unknown; status?: unknown; errno?: unknown };
     try {
-      return new (role as ErrorClass)(error.message, kind, status ?? null, errno ?? null);
+      // The constructor of an error class of a binding (E-2) takes the message, the kind, the status and the errno.
+      const converted: unknown = Reflect.construct(role, [error.message, kind, status ?? null, errno ?? null]);
+      return converted;
     } catch {
       return error;
     }

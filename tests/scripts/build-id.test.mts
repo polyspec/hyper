@@ -62,7 +62,8 @@ test('cases', () => {
 test('a duplicate path fails with the kind invalid_build and names the path (HY-125.17)', () => {
   const bytes = Buffer.from('x', 'utf8');
   assert.throws(() => buildId([{ path: 'public/assets/hyper-a1.js', bytes }, { path: 'public/assets/hyper-a1.js', bytes }]), (error: unknown) => {
-    assert.equal((error as { kind?: unknown }).kind, 'invalid_build');
+    assert.ok(error instanceof Error && 'kind' in error, String(error));
+    assert.equal(error.kind, 'invalid_build');
     assert.match(String(error), /public\/assets\/hyper-a1\.js/);
     return true;
   });
