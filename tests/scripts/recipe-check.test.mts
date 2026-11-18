@@ -640,7 +640,8 @@ test('a passing run prints the three numbers of the fixture: the members stated 
 // reading and not a difference between the languages.
 
 type Kind = 'constructor' | 'method' | 'static method';
-type Written = { unit: string; extends?: string; properties?: [string, string][]; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string }[] };
+// A member with `phpSymbol` has that PHP symbol as written (a namespace function has no class); its Node code is unchanged.
+type Written = { unit: string; extends?: string; properties?: [string, string][]; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string; phpSymbol?: string }[] };
 const FILE: Record<'php' | 'node', (unit: string) => string> = { php: (u) => `src/${u.charAt(0).toUpperCase()}${u.slice(1)}.php`, node: (u) => `src/${u}.ts` };
 const NATIVE: Record<'php' | 'node', (unit: string, name: string) => string> = {
   php: (u, n) => `${FILE.php(u)}::Fx\\${u.charAt(0).toUpperCase()}${u.slice(1)}::${n === 'constructor' ? '__construct' : n}`,
@@ -655,7 +656,7 @@ const cls = (unit: string): string => `${unit.charAt(0).toUpperCase()}${unit.sli
 function stated(
   units: Written[],
   named: string[],
-  scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr; ref: (unit: string) => ClassRef }) => { unit: string; method: string; uses?: Expr[]; assigns?: Scope['assigns']; loops?: Scope['loops']; returns?: ClassRef; parameters?: Parameter[] }[],
+  scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr; ref: (unit: string) => ClassRef }) => { unit: string; method: string; function?: boolean; uses?: Expr[]; assigns?: Scope['assigns']; loops?: Scope['loops']; returns?: ClassRef; parameters?: Parameter[] }[],
 ): { findings: string[] } {
   const specUnits: Unit[] = units.map((w) => ({
     id: w.unit,
@@ -668,7 +669,7 @@ function stated(
       output: m.output ?? 'string',
       errors: [],
       state: 'A member.',
-      native: { php: { symbol: NATIVE.php(w.unit, m.name), signature: '' }, node: { symbol: NATIVE.node(w.unit, m.name), signature: '' } },
+      native: { php: { symbol: m.phpSymbol ?? NATIVE.php(w.unit, m.name), signature: '' }, node: { symbol: NATIVE.node(w.unit, m.name), signature: '' } },
     })),
   }));
   const spec: Spec = {
@@ -698,8 +699,8 @@ function stated(
     const written = scopes(lang, { cls: (unit) => ({ kind: 'class', ...ref(unit) }), ref });
     const all: Scope[] = written.map((s) => ({
       file: FILE[lang](s.unit),
-      name: `${cls(s.unit)}.${s.method === 'constructor' && lang === 'php' ? '__construct' : s.method}`,
-      class: cls(s.unit),
+      name: s.function === true ? s.method : `${cls(s.unit)}.${s.method === 'constructor' && lang === 'php' ? '__construct' : s.method}`,
+      ...(s.function === true ? {} : { class: cls(s.unit) }),
       parameters: s.parameters ?? [],
       uses: s.uses ?? [],
       assigns: s.assigns ?? [],
@@ -725,6 +726,29 @@ const BOX: Written[] = [
   { unit: 'box', members: [{ name: 'run', kind: 'method', visibility: 'public' }, { name: 'all', kind: 'static method', visibility: 'public', output: 'list<item>' }] },
   { unit: 'item', members: [{ name: 'size', kind: 'method', visibility: 'internal' }] },
 ];
+
+test('an internal method that a PHP namespace function calls is reached by the function, and no MEMBER_UNREACHED is reported', () => {
+  const unit: Written[] = [
+    {
+      unit: 'box',
+      members: [
+        { name: 'run', kind: 'method', visibility: 'public', phpSymbol: `${FILE.php('box')}::Fx\\run` },
+        { name: 'helper', kind: 'method', visibility: 'internal', phpSymbol: NATIVE.php('box', 'helper') },
+      ],
+    },
+  ];
+  // PHP: the function `run` calls `helper`, so the reach from `run` fails in PHP only if its key is wrong.
+  // Node: the method `run` calls `helper`, so `helper` is reached in Node.
+  const calls = (lang: 'php' | 'node', e: { cls: (unit: string) => Expr }): { unit: string; method: string; function?: boolean; uses?: Expr[] }[] =>
+    lang === 'php' ? [
+      { unit: 'box', method: 'run', function: true, uses: [{ kind: 'member', of: e.cls('box'), name: 'helper', call: true }] },
+      { unit: 'box', method: 'helper' },
+    ] : [
+      { unit: 'box', method: 'run', uses: [{ kind: 'member', of: e.cls('box'), name: 'helper', call: true }] },
+      { unit: 'box', method: 'helper' },
+    ];
+  assert.deepEqual(stated(unit, ['box.run'], calls).findings, []);
+});
 
 test('the variable of a loop over the list that a member returns has the class inside the list, and an output that names no unit gives none', () => {
   const loop = (lang: 'php' | 'node', e: { cls: (unit: string) => Expr }): ReturnType<Parameters<typeof stated>[2]> => [
