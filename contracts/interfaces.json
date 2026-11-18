@@ -10976,7 +10976,10 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._open",
                   "signature": "def _open(self, cookie: Optional[str]) -> 'FileSession'"
                 }
-              }
+              },
+              "tests": [
+                "packages/ts/tests/sessions.test.ts::FileSessions > runs the requests of one session one after another: The requests of one session in one Node process wait in a queue of that process before they try the lock (HY-104.29); the test opens one session twice in one event loop and asserts that the second open reads the value that the first wrote."
+              ]
             },
             {
               "id": "file-sessions.collect",
@@ -14069,12 +14072,32 @@
       }
     },
     {
+      "id": "redisSetting",
+      "visibility": "public",
+      "unit": "redis-sessions",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-115.17"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSetting",
+          "declaration": "export type RedisSetting = Setting;"
+        }
+      }
+    },
+    {
       "id": "redisSessionsOptions",
       "visibility": "public",
       "unit": "redis-sessions",
       "shape": {
         "fields": {
-          "setting": "value",
+          "setting": "redisSetting",
           "lockExpire": "number",
           "lifetime": "number",
           "prefix": "string",
