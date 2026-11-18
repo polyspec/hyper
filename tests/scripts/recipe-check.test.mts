@@ -2,7 +2,7 @@
 // mutation of fixtures/recipe/mutations.json fails the check with the finding code that the mutation names.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -461,6 +461,25 @@ test('the PHP reader writes a signature in the form of HYR-8 on every PHP releas
     code: 'final public private(set) readonly string $code',
     label: 'public protected(set) string $label',
   });
+});
+
+test('the PHP reader keeps the visibility of a promoted constructor property: a private one is no public member (HYR-8, H35.115)', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'hyper-promoted-'));
+  try {
+    mkdirSync(path.join(root, 'src'), { recursive: true });
+    mkdirSync(path.join(root, 'tests'), { recursive: true });
+    writeFileSync(path.join(root, 'autoload.php'), "<?php\nrequire __DIR__ . '/src/Reader.php';\n");
+    writeFileSync(path.join(root, 'src', 'Reader.php'), '<?php\nfinal class Reader\n{\n    public function __construct(private readonly string $file, public readonly string $name)\n    {\n    }\n}\n');
+    // The readers read the files that git tracks, so the tree of the test is a repository of its own.
+    spawnSync('git', ['init', '-q'], { cwd: root });
+    spawnSync('git', ['add', '.'], { cwd: root });
+    // The class entry of the reader lists each property with its visibility; a promoted one has the visibility of its parameter.
+    const reader = readFixture('php', root).classes.find((c) => c.name === 'Reader');
+    const file = reader?.properties.find((p) => p.name === 'file');
+    assert.equal(file?.visibility, 'private', `file is ${String(file?.visibility)}, properties: ${JSON.stringify(reader?.properties ?? [])}`);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test('the PHP reader reads @internal as a tag of a docblock line, not as a word in a comment', () => {
