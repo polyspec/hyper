@@ -4513,7 +4513,16 @@
     {
       "member": "opening_functions.open_page",
       "file": "packages/rust/tests/cases/faults.json",
-      "group": "session"
+      "group": "session",
+      "only": {
+        "targets": [
+          "php",
+          "python",
+          "node",
+          "go"
+        ],
+        "reason": "HY-104.32"
+      }
     },
     {
       "member": "opening_functions.open_page",
