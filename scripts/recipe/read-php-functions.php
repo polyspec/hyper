@@ -137,6 +137,18 @@ function isConstructionGuard(ReflectionMethod $method): bool
     if ($method->getName() !== '__construct' || !$method->isPrivate() || $method->getNumberOfParameters() !== 0) {
         return false;
     }
+    // A class with an instance method or property makes its instances through the constructor, which is a member.
+    $class = $method->getDeclaringClass();
+    foreach ($class->getMethods() as $other) {
+        if ($other->getName() !== '__construct' && !$other->isStatic()) {
+            return false;
+        }
+    }
+    foreach ($class->getProperties() as $property) {
+        if (!$property->isStatic()) {
+            return false;
+        }
+    }
     $file = $method->getFileName();
     $start = $method->getStartLine();
     $end = $method->getEndLine();
