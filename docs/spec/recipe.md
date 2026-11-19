@@ -281,7 +281,14 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     `runners` names the runner of each of `php`, `node`, `python`, `browser` and `build`. `browser` and `build` read
     their sections through `caseReaders.node`, and the check counts the results of all five runners.
     For `php`, `node` and `python`, `runners` also names the directory of the steps (`steps`) and the registry of the
-    runner (`registry`), the file that maps each section to its step.
+    runner (`registry`), the file that maps each section to its step, and in `tests` the tests of that case runner
+    and its case reader, each as `<test file>::<test name>: HYR-<n> <reason>`, where HYR-n is the rule of the runner
+    that the test checks, such as the selection of cases below or the `raises` rule of HYR-11.
+    A runner whose environment holds the names of a selection in `RECIPE_CASES`, which are its words, runs only the cases that they select:
+    a file name selects the cases of the file, `<file>#<section>` those of the section, and an id those of the id in
+    every file. It runs each selected case once in its own order, fails before a case runs for a name that selects no
+    case and for a selection without a name, and writes the line `SELECTION <names>` first
+    (`docs/operations/development.md`).
     The case file `file-store-sessions.json`, whose cases the session-store library holds, is read from
     `tests/legacy` with their declaration in `tests/legacy/interfaces.json`.
     hyper's recipe covers only hyper's own units: a case file of a dependency, such as `fields.json` and `forms.json` of
@@ -350,7 +357,9 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     languages have is a case with `only: {languages, sentence}` (HYR-6), which the other runners leave out, and the
     check takes the case ids of each language from the sections whose `runners` name it, from the cases without `only`
     and those whose `only` names it.
-    - The spec names each one under that unit, member or concern as `<test file>::<test name>: <reason>`.
+    - The spec names each one under that unit, member or concern as `<test file>::<test name>: <reason>`. A test of
+      the case runner of one language is no native test of a unit: `runners.<language>.tests` names it, as stated
+      above, and HYR-8 fails it when it lies in another test tree or its reason does not start with its HYR rule.
     - HYR-8 lists every test of each language's test tree by that language's own parser. It fails for a test that is
       neither the runner nor named in the spec, for a named test that is missing, for an empty reason, and for a
       native test named under a unit or member whose `only` does not name exactly one language, or a concern with

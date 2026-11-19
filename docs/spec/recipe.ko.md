@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 1a6248dd9a5e3ec4dc03d9869f90799942d696b3a9912dde8cc1700f3d540ee6 -->
+<!-- source-sha256: 7dd632b6465ff27e22db422d7c0d8cc488a4f788fc9caeea528ab33de365eaec -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -258,7 +258,13 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `runners`는 `php`, `node`, `python`, `browser`, `build` 각각의 runner를 적는다. `browser`와 `build`는 section을
     `caseReaders.node`를 통해 읽으며, check는 다섯 runner의 결과를 모두 센다.
     `runners`는 `php`, `node`, `python`에 대해 step의 디렉터리(`steps`)와 runner의 registry(`registry`), 곧 각 section을
-    그 step에 대응시키는 파일도 적는다.
+    그 step에 대응시키는 파일도 적고, `tests`에 그 case runner와 case reader의 test를 각각
+    `<test file>::<test name>: HYR-<n> <reason>` 형식으로 적는다. HYR-n은 그 test가 검사하는 runner의 규칙이며, 예를 들어
+    아래의 case 선택이나 HYR-11의 `raises` 규칙이다.
+    환경의 `RECIPE_CASES`에 선택의 이름, 곧 그 단어들을 가진 runner는 그 이름이 선택하는 case만 실행한다: 파일 이름은 그 파일의 case를,
+    `<file>#<section>`은 그 section의 case를, id는 모든 파일에서 그 id의 case를 선택한다. runner는 선택된 각 case를 자신의
+    순서로 한 번 실행하고, 아무 case도 선택하지 않는 이름과 이름이 없는 선택에 대해서는 case를 실행하기 전에 실패하며,
+    `SELECTION <names>` 줄을 먼저 쓴다(`docs/operations/development.md`).
     session-store library가 가진 case 파일 `file-store-sessions.json`은 `tests/legacy`에서 읽으며,
     그 선언은 `tests/legacy/interfaces.json`에 있다.
     hyper의 recipe는 hyper 자신의 unit만 다룬다: 의존성의 case 파일, 예를 들어 http-form의 `fields.json`과 `forms.json`은
@@ -316,6 +322,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `only: {languages, sentence}`(HYR-6)를 가진 case이며, 다른 runner는 그 case를 빼고 실행한다. check는 각 언어의 case
     id를 `runners`가 그 언어를 가리키는 section의, `only`가 없는 case와 `only`가 그 언어를 가리키는 case에서 얻는다.
     - spec은 각 native test를 그 unit, member 또는 concern 아래에 `<test file>::<test name>: <reason>` 형식으로 적는다.
+      한 언어의 case runner의 test는 unit의 native test가 아니다: 위에서 적은 대로 `runners.<language>.tests`가 그것을
+      적으며, HYR-8은 그 test가 다른 test tree에 있거나 그 reason이 HYR 규칙으로 시작하지 않으면 실패시킨다.
     - HYR-8은 언어마다 그 언어의 파서로 test tree의 모든 test를 나열한다. runner도 아니고 spec에 이름이 적히지도 않은 test, spec에 이름이 적혔으나 없는
       test, 빈 reason, 그리고 `only`가 정확히 한 언어를 가리키지 않는 unit이나 member 또는 case가 있는 concern 아래에 적힌
       native test는 실패시킨다.

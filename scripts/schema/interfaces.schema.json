@@ -92,7 +92,12 @@
       "properties": {
         "runner": { "type": "string", "pattern": "::" },
         "steps": { "type": "string", "pattern": "^[^:]+$" },
-        "registry": { "type": "string", "pattern": "^[^:]+$" }
+        "registry": { "type": "string", "pattern": "^[^:]+$" },
+        "tests": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "::" }
+        }
       }
     },
     "kebab": { "type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$" },
