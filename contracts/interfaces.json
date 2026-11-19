@@ -2806,7 +2806,7 @@
               ],
               "output": "string",
               "errors": [],
-              "state": "Returns the context hash of a build id and the JSON text of a context.",
+              "state": "Returns the context hash of a build id and the JSON text of a context (HY-125.12).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/Context.php::Polyspec\\Hyper\\Context::hash",
@@ -14896,7 +14896,10 @@
               "sentence": "HY-125.12",
               "state": "`reorderedHash` is the context hash of the map that `reorderedText` writes, the members of `context` in another order."
             }
-          }
+          },
+          "members": [
+            "context.hash"
+          ]
         },
         "withContext": {
           "runners": [
@@ -15476,7 +15479,10 @@
               "sentence": "HY-38.9",
               "state": "`unchanged` states whether the region data `data` is the same after the selection, because the kept values never change `regions`."
             }
-          }
+          },
+          "members": [
+            "kept.select"
+          ]
         }
       }
     },

@@ -2,7 +2,7 @@
 // without a context answers. Every expected value comes from the contract.
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import type { ContextHandler } from '../../src/app/context.js';
+import { Context, type ContextHandler } from '../../src/app/context.js';
 import { rules } from '../../src/app/core-rules.js';
 import { Csrf } from '../../src/session/csrf.js';
 import { parsed } from '../case-rules.js';
@@ -238,10 +238,10 @@ export const steps = {
     const text = rules().jsonCodecEncode(mapOf(parsed(stringField(reader, 'context')), 'context'));
     reader.compare('context', text);
     reader.compare('text', `{"build":"${build}","context":${text}}`);
-    reader.compare('hash', rules().contextHash(build, text));
+    reader.compare('hash', Context.hash(build, text));
     if (reader.has('reorderedText')) {
       const reordered = mapOf(parsed(stringField(reader, 'reorderedText')), 'reorderedText');
-      reader.compare('reorderedHash', rules().contextHash(build, rules().jsonCodecEncode(mapOf(reordered.get('context'), 'the member context of reorderedText'))));
+      reader.compare('reorderedHash', Context.hash(build, rules().jsonCodecEncode(mapOf(reordered.get('context'), 'the member context of reorderedText'))));
     }
   },
 
