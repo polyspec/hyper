@@ -27,8 +27,7 @@ function isValue(input: unknown): input is Value {
 }
 
 // Returns true for a Map of string keys to values of the data model.
-/** @internal */
-export function isMapValue(input: unknown): input is MapValue {
+function isMapValue(input: unknown): input is MapValue {
   if (!(input instanceof Map)) return false;
   for (const [key, item] of input) {
     if (typeof key !== 'string' || !isValue(item)) return false;

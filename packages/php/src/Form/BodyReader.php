@@ -198,7 +198,10 @@ final class BodyReader
         $uploads = [];
         foreach ($files as [$name, $items]) {
             $fileNames[] = $name;
-            $uploads[$name] = array_map(static fn (FormFile $file): UploadedFile => UploadedFile::ofCore($file), $items);
+            $uploads[$name] = array_map(
+                static fn (FormFile $file): UploadedFile => UploadedFile::ofCore($file),
+                $items,
+            );
         }
 
         return [new Fields($names, $values), new Files($fileNames, $uploads)];
@@ -209,9 +212,9 @@ final class BodyReader
      * `internal` (HY-133.6) when they do not have it: the fields a list of pairs of a text and a list of texts, and the
      * files a list of pairs of a text and a list of files of the core.
      *
-     * The binding stub types `Form::$fields` and `Form::$files` as mixed, against packages/rust/interface.json:4705-4735,
-     * so this check holds the shape at the boundary; it is removed when hyper pins the binding release that carries
-     * binding row B2.558, which types them.
+     * The binding stub types `Form::$fields` and `Form::$files` as mixed, against
+     * packages/rust/interface.json:4705-4735, so this check holds the shape at the boundary; it is removed when hyper
+     * pins the binding release that carries binding row B2.558, which types them.
      *
      * @return array{0: list<array{0: string, 1: list<string>}>, 1: list<array{0: string, 1: list<FormFile>}>}
      *
@@ -273,6 +276,9 @@ final class BodyReader
     /** The error of kind `internal` (HY-133.6) for a member of a form of the core without the shape of the contract. */
     private static function broken(string $member): HyperInternalError
     {
-        return new HyperInternalError("the {$member} of a form of the core do not have the shape of the contract", 'internal');
+        return new HyperInternalError(
+            "the {$member} of a form of the core do not have the shape of the contract",
+            'internal',
+        );
     }
 }

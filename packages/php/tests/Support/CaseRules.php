@@ -50,8 +50,8 @@ final class CaseRules
 
     /**
      * Gets the errors of the orm package that the cases throw by real calls on a SQLite file of
-     * packages/php/tests/fixtures/orm-errors.json in a temporary directory, as the generated tests of orm 0.0.34 make them
-     * (GeneratedTest.php): an update with an expected revision that the row does not hold gives `revision_changed`
+     * packages/php/tests/fixtures/orm-errors.json in a temporary directory, as the generated tests of orm 0.0.34 make
+     * them (GeneratedTest.php): an update with an expected revision that the row does not hold gives `revision_changed`
      * (line 9603, testB4QueryUpdateAChangedRevision), an update with requireMatch of a key that no row holds gives
      * `no_rows` (line 9719), and a connection to a file in a missing directory gives the OrmStoreError `driver` (line
      * 1497). The database is closed and the directory removed before it returns (HR-87); the errors are kept.

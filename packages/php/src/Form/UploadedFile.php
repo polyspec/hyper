@@ -6,8 +6,8 @@ namespace Polyspec\Hyper;
 
 /**
  * A file that a request sent in a file part (HY-113): its name, its filename, its content type and its bytes. It holds
- * a file of the core, `FormFile` (form_file), whose bytes are a value or a temporary file of the request for a body that
- * the server read (HY-131, H35.11); http-form reads and moves it (F-11, F-22).
+ * a file of the core, `FormFile` (form_file), whose bytes are a value or a temporary file of the request for a body
+ * that the server read (HY-131, H35.11); http-form reads and moves it (F-11, F-22).
  */
 final class UploadedFile
 {

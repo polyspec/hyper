@@ -90,8 +90,7 @@ interface Front {
   readonly contentType?: string | null;
 }
 
-/** @internal */
-export interface Plain {
+interface Plain {
   readonly status: number;
   readonly body: Uint8Array;
   readonly varyAccept: boolean;

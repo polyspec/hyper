@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The context of an application (HY-124 to HY-128): the map that its handler returns, its hash with the build (HY-125) and the check of the `Hyper-Context` header (HY-127); the core places the context in the
+ * The context of an application (HY-124 to HY-128): the map that its handler returns, its hash with the build
+ * (HY-125) and the check of the `Hyper-Context` header (HY-127); the core places the context in the
  * shared data of a document (HY-10) and writes the member `context` of a JSON response (HY-128).
  *
  * @internal

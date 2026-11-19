@@ -13,7 +13,7 @@ pub fn cases(file: &str) -> serde_json::Value {
 
 /// The JSON of the file `path`; a file that cannot be read or parsed fails the test.
 pub fn json_file(path: &Path) -> serde_json::Value {
-    let text = match std::fs::read_to_string(&path) {
+    let text = match std::fs::read_to_string(path) {
         Ok(text) => text,
         Err(error) => panic!("{}: {error}", path.display()),
     };
