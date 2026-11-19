@@ -92,18 +92,6 @@ final class CoreRulesTest extends TestCase
                 'sessionCookie',
                 '__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax',
             ],
-            'the path of the static shell (HY-62)' => [
-                'appCheckShellPath',
-                ['/srv/csr/index.html'],
-                'checkShellPath',
-                null,
-            ],
-            'the text of the static shell (HY-62)' => [
-                'appShellText',
-                ['/srv/csr/index.html', '<html>'],
-                'shellText',
-                '<html>',
-            ],
             'the stored token (HY-24.14)' => ['sessionStoredToken', [self::TOKEN], 'storedToken', self::TOKEN],
             'the name of the kept cookie (HYC-13.6)' => ['keptCookieName', [false], 'keepName', 'hy-keep'],
             'Build::read (HY-125.23)' => [

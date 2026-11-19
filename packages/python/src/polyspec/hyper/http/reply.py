@@ -120,14 +120,6 @@ class Reply:
         """Returns the Referrer-Policy that the reply sets, or None."""
         return self.__referrer_policy
 
-    def _referrer_policy_headers(self) -> dict[str, str]:
-        """Returns the Referrer-Policy header of the reply, or no header (HY-103)."""
-        return (
-            {}
-            if self.__referrer_policy is None
-            else {"Referrer-Policy": self.__referrer_policy}
-        )
-
     def status(self, status: int) -> "Reply":
         """Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in
         place of the data that the request may not see; another status fails (HY-69). A status that is no integer

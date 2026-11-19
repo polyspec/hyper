@@ -43,6 +43,32 @@
       }
     },
     {
+      "id": "list_kept_for_a_map_is_ignored",
+      "label": "list kept for a map is ignored",
+      "data": {
+        "notice": {
+          "items": {
+            "a": 1
+          }
+        }
+      },
+      "kept": [
+        [
+          "notice.items",
+          [
+            1
+          ]
+        ]
+      ],
+      "expected": {
+        "notice": {
+          "items": {
+            "a": 1
+          }
+        }
+      }
+    },
+    {
       "id": "missing_path",
       "label": "missing path",
       "data": {

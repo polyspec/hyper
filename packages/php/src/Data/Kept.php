@@ -122,8 +122,8 @@ final class Kept
         if (self::valueKind($current) !== self::valueKind($value)) {
             return false;
         }
-        $data = JsonCodec::mapEntries($current);
-        $kept = JsonCodec::mapEntries($value);
+        $data = self::mapEntries($current);
+        $kept = self::mapEntries($value);
         if ($data !== null && $kept !== null) {
             if ($data === []) {
                 return true;
@@ -159,8 +159,19 @@ final class Kept
             is_int($value), is_float($value) => 'number',
             is_string($value) => 'string',
             JsonCodec::isList($value) => 'list',
-            JsonCodec::mapEntries($value) !== null => 'map',
+            self::mapEntries($value) !== null => 'map',
             default => 'other',
         };
+    }
+
+    /**
+     * Returns the entries of a map of the data model, or null for another value. The core gives a map as a
+     * `stdClass` or as an array whose keys are not a sequence (HY-104.22).
+     *
+     * @return array<array-key, mixed>|null
+     */
+    private static function mapEntries(mixed $value): ?array
+    {
+        return JsonCodec::mapEntries($value);
     }
 }

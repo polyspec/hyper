@@ -1887,18 +1887,16 @@
               "errors": [],
               "state": "The static shell of App.open: rules.check_shell_path checks its path before the server reads the file (HY-62). The server still reads the file, and checks the data base path of the declaration against the routes and the meta element of the shell (HY-62.2).",
               "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appCheckShellPath",
-                  "signature": "public function appCheckShellPath(string $path): void"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appCheckShellPath",
-                  "signature": "appCheckShellPath(path: string): void"
-                },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_check_shell_path",
                   "signature": "def app_check_shell_path(self, path: str) -> None"
                 }
+              },
+              "only": {
+                "languages": [
+                  "python"
+                ],
+                "sentence": "HY-62.39"
               }
             },
             {
@@ -1913,18 +1911,16 @@
               "errors": [],
               "state": "rules.shell_text gives the text of the bytes of the static shell (HY-62), which the server read.",
               "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appShellText",
-                  "signature": "public function appShellText(string $path, string $bytes): string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appShellText",
-                  "signature": "appShellText(path: string, bytes: Uint8Array): string"
-                },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_shell_text",
                   "signature": "def app_shell_text(self, path: str, data: bytes) -> str"
                 }
+              },
+              "only": {
+                "languages": [
+                  "python"
+                ],
+                "sentence": "HY-62.3"
               }
             },
             {
@@ -2019,14 +2015,17 @@
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::buildRead",
                   "signature": "public function buildRead(string $bytes): string"
                 },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildRead",
-                  "signature": "buildRead(bytes: Uint8Array): string"
-                },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.build_read",
                   "signature": "def build_read(self, data: bytes) -> str"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-125.23"
               }
             },
             {
@@ -6236,15 +6235,13 @@
                 "php": {
                   "symbol": "packages/php/src/Http/Reply.php::Polyspec\\Hyper\\Reply::referrerPolicyHeaders",
                   "signature": "public function referrerPolicyHeaders(): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/http/reply.ts::Reply.referrerPolicyHeaders",
-                  "signature": "referrerPolicyHeaders(): Record<string, string>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/http/reply.py::Reply._referrer_policy_headers",
-                  "signature": "def _referrer_policy_headers(self) -> dict[str, str]"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-103.5"
               }
             },
             {
