@@ -12,9 +12,6 @@
 
 import { createRequire } from 'node:module';
 
-// A value of the template data model as the binding passes it (HY-44).
-type CoreValue = unknown;
-
 // A value of the data model that rules.json_read gives: maps for the objects of the text, in document order (HY-54.20).
 type JsonValue = null | boolean | number | string | JsonValue[] | Map<string, JsonValue>;
 
@@ -72,17 +69,17 @@ type Call =
   | { readonly call: 'route_region_loader' | 'region_loader'; readonly region: string };
 
 type ActionOutcome =
-  | { readonly outcome: 'page'; readonly status: number; readonly data: ReadonlyMap<string, CoreValue> }
+  | { readonly outcome: 'page'; readonly status: number; readonly data: ReadonlyMap<string, unknown> }
   | { readonly outcome: 'revision_changed' | 'no_page' };
 
 /** @internal */
 export type PageStepInput =
   | { readonly input: 'start' | 'absent' | 'no_handler' }
   | { readonly input: 'action'; readonly outcome: ActionOutcome; readonly csrf?: string | null }
-  | { readonly input: 'context'; readonly context: ReadonlyMap<string, CoreValue> }
-  | { readonly input: 'shared'; readonly shared: ReadonlyMap<string, CoreValue> }
-  | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, CoreValue> }
-  | { readonly input: 'reply'; readonly embeds: boolean; readonly stored: ReadonlyMap<string, ReadonlyMap<string, CoreValue>>; readonly status?: number | null };
+  | { readonly input: 'context'; readonly context: ReadonlyMap<string, unknown> }
+  | { readonly input: 'shared'; readonly shared: ReadonlyMap<string, unknown> }
+  | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, unknown> }
+  | { readonly input: 'reply'; readonly embeds: boolean; readonly stored: ReadonlyMap<string, ReadonlyMap<string, unknown>>; readonly status?: number | null };
 
 type Answer =
   | { readonly answer: 'document'; readonly status: number; readonly html: string }
@@ -150,7 +147,7 @@ interface Opening {
 
 type Opened =
   | { readonly opened: 'refused'; readonly answer: Plain }
-  | { readonly opened: 'page'; readonly input: PageInput; readonly flash: ReadonlyMap<string, CoreValue>; readonly token: string };
+  | { readonly opened: 'page'; readonly input: PageInput; readonly flash: ReadonlyMap<string, unknown>; readonly token: string };
 
 interface KeepRequest {
   readonly region: string;
@@ -167,7 +164,7 @@ interface Environment {
 }
 
 // A function of the templates as the binding calls it (HYC-24.10): the list of its arguments and the environment.
-export type HostFunction = (args: readonly CoreValue[], environment: Environment) => CoreValue;
+export type HostFunction = (args: readonly unknown[], environment: Environment) => unknown;
 type CoreHostFunction = HostFunction;
 
 interface CorePageRequest {
@@ -181,13 +178,13 @@ interface DocumentParts {
 }
 
 // The data of each region of a document, by the name of the region.
-type RegionsData = ReadonlyMap<string, ReadonlyMap<string, CoreValue>>;
+type RegionsData = ReadonlyMap<string, ReadonlyMap<string, unknown>>;
 
 /** @internal */
 export interface CorePagesInstance {
   register(name: string, hostFunction: CoreHostFunction): void;
-  renderDocument(route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): string;
-  renderParts(route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): DocumentParts;
+  renderDocument(route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): string;
+  renderParts(route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): DocumentParts;
 }
 
 // The members of the Node binding of the core that the server calls, under the names that the binding gives the
@@ -225,13 +222,13 @@ export interface CoreBinding {
   buildFileText(id: string): string;
   readBuild(bytes: Uint8Array): string;
   templateProblems(manifest: Uint8Array, templates: ReadonlyMap<string, string>): readonly string[];
-  routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): CoreValue;
-  templateReads(templates: ReadonlyMap<string, string>, name: string): CoreValue;
+  routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): unknown;
+  templateReads(templates: ReadonlyMap<string, string>, name: string): unknown;
   reservedDataTemplate(): DataTemplate;
   validContextHeader(value: string | null): boolean;
   checkFunctionEntry(name: string, callable: boolean): void;
   jsonRead(text: Uint8Array): JsonValue;
-  jsonWrite(value: CoreValue): string;
+  jsonWrite(value: unknown): string;
   flashOf(stored: unknown): JsonValue;
   keptOf(stored: unknown): JsonValue;
   keptCookie(text: string): JsonValue;
@@ -240,12 +237,12 @@ export interface CoreBinding {
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
   computePageHeaders(response: PageResponse): PageHeaders;
   frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];
-  keptValue(pages: CorePages, region: string, path: string, text: string): CoreValue;
+  keptValue(pages: CorePages, region: string, path: string, text: string): unknown;
   openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;
   answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;
-  Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions) => CorePagesInstance;
+  Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: unknown, options: PagesOptions) => CorePagesInstance;
   PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;
-  sessionValue(record: unknown): CoreValue;
+  sessionValue(record: unknown): unknown;
   sessionRecord(value: unknown): unknown;
   HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;
   HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;
@@ -327,7 +324,7 @@ export interface CoreRules {
   libraryError(library: object, prefix: string, error: unknown): unknown;
   // sessionValue: rules.session_value gives the value of the data model of a PHP value of a session record
   // (HY-104.13), and fails with the kind of the data model for a value outside it.
-  sessionValue(record: unknown): CoreValue;
+  sessionValue(record: unknown): unknown;
   // sessionRecord: rules.session_record gives the PHP value of a session record of a value of the data model
   // (HY-104.14), and fails with `data_unsupported_type` for a native object.
   sessionRecord(value: unknown): unknown;
@@ -347,7 +344,7 @@ export interface CoreRules {
   jsonCodecDecode(text: string): JsonValue;
   // jsonCodecEncode: rules.json_write gives the JSON text of a value of the data model, and fails with the kind of the
   // data model for a value that has no JSON form (HY-54.18, HY-54.19).
-  jsonCodecEncode(value: CoreValue): string;
+  jsonCodecEncode(value: unknown): string;
   // sessionFlashOf: rules.flash_of checks a stored flash and gives the map of its `values` and its `changed` topics,
   // and fails with `invalid_session_record` for a stored flash of another form (HY-25.2, HY-104.23).
   sessionFlashOf(stored: unknown): JsonValue;
@@ -419,7 +416,7 @@ export interface CoreRules {
   appStoreKept(pages: CorePages, store: CoreStore, request: KeepRequest): PlainResponse;
   // Partial. The value check of appStoreKept: front_functions.kept_value (HY-40.1), for a caller that stores the
   // value itself.
-  appKeptValue(pages: CorePages, region: string, path: string, text: string): CoreValue;
+  appKeptValue(pages: CorePages, region: string, path: string, text: string): unknown;
   // The tag of a JSON response of pageRespond: rules.page_tag (HY-53.1).
   pageTag(body: string, maskedToken: string, token: string): string;
   // Partial. The headers of pageRespond: front_functions.compute_page_headers (HY-15.3, HY-52, HY-53, HY-65,
@@ -437,10 +434,10 @@ export interface CoreRules {
   // pageDocument: `pages.render_document` gives the document of a route from the shared data and the data of each
   // region, with no kept value and no embedded data, at the time `now` (HY-12.1). It renders below a request: no
   // handler is called and no step is run.
-  pageDocument(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): string;
+  pageDocument(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): string;
   // pageParts: `pages.render_parts` gives the title and each region of the given data rendered alone, the texts
   // that the document of the same data holds in their places (HY-13.1 to HY-13.3).
-  pageParts(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, CoreValue>, regions: RegionsData, now: number): DocumentParts;
+  pageParts(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): DocumentParts;
   // Partial. sessionCsrfToken: rules.stored_token checks the value that the session holds in the place of the
   // token (HY-24.14). The server still reads the store and creates the token of a session that holds none (HY-24.1),
   // which opening_functions.open_page does once the server gives the core its store.
@@ -470,9 +467,9 @@ export interface CoreRules {
     problems(manifest: Uint8Array, templates: ReadonlyMap<string, string>): readonly string[];
     // Partial. The read paths of the routes: rules.route_reads (HY-73). The caller still reads the manifest and the
     // sources of the templates.
-    routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): CoreValue;
+    routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): unknown;
     // Partial. The read paths of one template: rules.template_reads (HY-73).
-    reads(templates: ReadonlyMap<string, string>, name: string): CoreValue;
+    reads(templates: ReadonlyMap<string, string>, name: string): unknown;
     // Partial. The reserved template of the embedded data: rules.reserved_data_template (HY-31.3).
     reserved(): DataTemplate;
   };
@@ -481,7 +478,7 @@ export interface CoreRules {
     // application (HY-2, HY-48, HY-59.1, HY-62.2) and `pages.register` registers a host function (HYC-24). The server
     // still reads the files of `program/` (HY-48.19), checks the handlers against the manifest (HY-30, HY-118) and
     // holds the limits of the body and of the response (HY-59, HY-66, HY-114, HY-131).
-    open(manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: CoreValue, options: PagesOptions, functions: ReadonlyMap<string, CoreHostFunction>): CorePagesInstance;
+    open(manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: unknown, options: PagesOptions, functions: ReadonlyMap<string, CoreHostFunction>): CorePagesInstance;
     // rules.check_function_entry fails an entry of `functions` that is no function with kind `invalid_application`
     // (HYC-24.7); the server tells the core whether the entry is callable.
     checkFunctionEntry(name: string, callable: boolean): void;

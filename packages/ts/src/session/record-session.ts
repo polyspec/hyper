@@ -9,10 +9,7 @@ import type { SessionStore } from './session-store.js';
 // package exports no type of it, so a value is narrowed where it is read.
 type Stored = unknown;
 
-// An array key of a record: an integer, a UTF-8 string, or bytes that are not UTF-8 (HY-104.13).
-type ArrayKey = number | bigint | string | Uint8Array;
-
-function isArrayKey(key: unknown): key is ArrayKey {
+function isArrayKey(key: unknown): key is number | bigint | string | Uint8Array {
   return typeof key === 'number' || typeof key === 'bigint' || typeof key === 'string' || key instanceof Uint8Array;
 }
 
