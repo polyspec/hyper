@@ -1,4 +1,4 @@
-"""The session record of a key that is no array key (HY-104.13): a Python server reads a record as the data model, and
+"""The session record of a key that is no array key (HY-104.48): a Python server reads a record as the data model, and
 a record whose key is no array key fails the request with the message of the record codec."""
 
 from __future__ import annotations

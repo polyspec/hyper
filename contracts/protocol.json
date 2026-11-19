@@ -7164,6 +7164,12 @@
                   "koSource": "bf4785d616474a5b7e277b21f5dd6d6b0b01c8f2588e99476d693affa09341bb"
                 },
                 {
+                  "id": "HY-104.48",
+                  "en": "The record path of a Node or Python server refuses a session record whose key is not text, by its codec, before any key check.",
+                  "ko": "Node 또는 Python 서버의 record 경로는 key가 텍스트가 아닌 session record를 key를 검사하기 전에 그 codec으로 거부한다.",
+                  "koSource": "8317ebfcc59f6e66b00663e69a901942eef5d31a4744bdf7121761090d203e94"
+                },
+                {
                   "id": "HY-104.28",
                   "en": "`tests/scripts/session-shared.test.mts` checks it with several processes of each of the three servers on one session.",
                   "ko": "`tests/scripts/session-shared.test.mts`가 세 server 각각의 여러 process로 한 session에 대해 이것을 확인한다.",
