@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d044a966e58831dc21f942edc9d5faaf92322c7f3fb1bd06e862ed787a2ed69e -->
+<!-- source-sha256: 93696b3fbe3727015396bf8bec7c2618c8a7a7e91f0cb9e9bcb978c27d0c2af2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP와 Node의 `UploadedFile`이 constructor로 만들어질 때도 core의 파일을 갖는다(H35.165). 입력: `new UploadedFile(name, filename, contentType, content)` 뒤의 `content()`와 `moveTo(path)`. 이전 동작: 파일이 byte를 직접 갖고 `moveTo`의 파일을 직접 썼으며, 옮겨진 파일이나 있는 경로에 자기의 `InvalidArgumentException`(PHP)이나 `RangeError`(Node)로 실패했다. 현재 동작: constructor가 core의 `FormFile`(form_file, F-22)을 만들고 모든 member가 그것을 부르므로, constructor가 만든 파일도 request body의 파일과 Python 파일처럼 http-form의 kind `moved`와 `exists`로 실패한다(HY-131.15, HY-131.16). Node는 `node-core.test.mts`가 테스트하는 `CoreRules.uploadedFile`로 그 class에 닿는다. `contracts/interfaces.json`은 `uploaded-file.stored`, `createdFile`, `linkedFile`을 지우고 `uploaded-file.ofCore`를 적으며 Node `content`와 `moveTo`를 `Promise<T>`로 적는다. 검증: `make recipe-compare`와 `make hyper-test-scripts TESTS=tests/scripts/node-core.test.mts`.
 - `contracts/interfaces.json`이 `files.sizes`를 internal로 적는다(H35.164). 입력: tree에 대한 `make recipe-compare`. 이전 동작: 계약이 그 member를 public으로 적었고, compare가 그것을 세 host에서 internal이고 어느 section도 적지 않는 public member로 보고했다(6줄). 현재 동작: 항목은 unit `files`처럼 internal이고, 6줄이 없어졌으며, Python rule이 크기를 `fileOver`에 주지 않으므로 Python은 그것을 닿지 않는 member로 보고한다. 검증: `make recipe-compare`.
 - `contracts/interfaces.json`이 더는 `fields.percentDecoded`를 적지 않는다(H35.163). 입력: tree에 대한 `make recipe-compare`. 이전 동작: 계약이 core의 `parseUrlencoded`가 http-form으로 decode하게 되면서 H35.11이 지운 각 host의 private decoder를 적었고, compare가 그것을 PHP, Node, Python에서 없고 닿지 않는 member로 보고했다(6줄). 현재 동작: 항목을 지웠고 6줄이 없어졌다. 검증: `make recipe-compare`.
 - `make duplication-check`가 통과한다. 반복된 코드 조각 아홉 개가 각각 한 번만 있다(H35.160). 입력: check가 읽는 source와 test. 이전 동작: check가 clone 아홉 개를 보고했다. `App`과 `Page`의 method `varyHeader`, Python과 TypeScript session record 테스트의 테스트 session `FixedSession`, Rust 계약 테스트의 JSON 파일 읽기, `scripts/recipe/read-php-functions.php`의 namespace 이름 읽기, 테스트 네 개가 fixture에 reader를 실행하는 부분, session 테스트의 테스트 세 개의 `requireBuilt` 다섯 줄이다. 현재 동작: `App`은 자기 page의 Vary를 쓰고, 테스트 session은 각 package의 module `fixed_session.py`와 `fixed-session.ts`이며, `contract_cases::json_file`이 JSON 파일을 읽고, `namespaceAt`이 namespace 이름을 읽고, 테스트는 `readFixture`와 `requireServers`를 부른다. 검증: `make duplication-check`.

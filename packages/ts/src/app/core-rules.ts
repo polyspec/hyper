@@ -274,6 +274,7 @@ export interface CoreBinding {
   sessionRecord(value: unknown): unknown;
   readHeldBody(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;
   parseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];
+  FormFile: new (name: string, filename: string, contentType: string, content: Uint8Array) => CoreUploadedFile;
   RequestBody: { start(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody> };
   HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;
   HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;
@@ -325,7 +326,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'buildPaths', 'buildStream', 'shellFile', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'checkFunctionEntry', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'readHeldBody', 'parseUrlencoded', 'RequestBody', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'readHeldBody', 'parseUrlencoded', 'FormFile', 'RequestBody', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
   'sessionValue', 'sessionRecord',
 ];
 
@@ -395,6 +396,8 @@ export interface CoreRules {
   // Exact. formParseUrlencoded: form_functions.parse_urlencoded gives the values of a query or of an urlencoded text
   // (F-20, HY-56).
   formParseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];
+  // uploadedFile: form_file.new gives a file of the core that holds its bytes as a value (F-22, HY-113.3).
+  uploadedFile(name: string, filename: string, contentType: string, content: Uint8Array): CoreUploadedFile;
   // requestCurrentPath: rules.current_path of the value of HX-Current-URL (HY-11.5).
   requestCurrentPath(header: string | null): string | null;
   // replyCacheControl: rules.cache_control gives the value that the reply keeps (HY-52.6).
@@ -509,6 +512,7 @@ export function coreRules(module: object): CoreRules {
     formStart: (contentType, contentLength, stream, limits) => core.RequestBody.start(contentType, contentLength, stream, limits),
     formReadHeld: (contentType, body, limits) => core.readHeldBody(contentType, body, limits),
     formParseUrlencoded: (text) => core.parseUrlencoded(text),
+    uploadedFile: (name, filename, contentType, content) => new core.FormFile(name, filename, contentType, content),
     requestCurrentPath: (header) => core.currentPath(header),
     replyCacheControl: (value) => core.cacheControl(value),
     replyReferrerPolicy: (value) => core.referrerPolicy(value),
