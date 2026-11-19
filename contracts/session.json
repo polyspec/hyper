@@ -1066,6 +1066,29 @@
       "requirements": [
         "HY-104"
       ]
+    },
+    {
+      "id": "a_record_key_that_is_no_array_key_fails",
+      "label": "set of a record key that is no array key of the data model, a boolean, fails with the kind invalid_session_record (HY-104.13)",
+      "calls": [
+        [
+          "set",
+          [
+            "true",
+            "1"
+          ]
+        ]
+      ],
+      "results": [],
+      "raises": {
+        "kind": "invalid_session_record",
+        "status": null,
+        "category": "store",
+        "message": null
+      },
+      "requirements": [
+        "HY-104.13"
+      ]
     }
   ]
 }
