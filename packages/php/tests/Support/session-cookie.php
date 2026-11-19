@@ -13,6 +13,7 @@ require __DIR__ . '/../../../../vendor/autoload.php';
 
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
 
 $setup = null;
@@ -50,4 +51,5 @@ switch ($_GET['mode'] ?? '') {
         http_response_code(400);
         exit;
 }
-echo session_id();
+// The host writes the session cookie into the response, as the PHP server does (HY-45.8).
+(new Response(200, [], (string) session_id()))->withSessionCookie($store->cookieHeader())->send();

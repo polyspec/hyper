@@ -1134,6 +1134,8 @@ final class App
         // HY-115.23: the session is closed before the response is sent; a failed write is an escaped error.
         $store->close();
         $delivery->response = $response;
-        $response->send();
+        // HY-45.8, HY-104.40: the host writes the session cookie, which the session only names; it is not part of the
+        // response that the hooks received (HY-60.4).
+        $response->withSessionCookie($store->cookieHeader())->send();
     }
 }

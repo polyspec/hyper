@@ -39,6 +39,23 @@ final class Response
         );
     }
 
+    /**
+     * Returns a copy whose first cookie is the session cookie, when the session sets one (HY-45.8, HY-97.3). The host
+     * writes it, so the session passes only the field value.
+     *
+     * @internal
+     */
+    public function withSessionCookie(?string $field): self
+    {
+        ArgumentCount::most(\func_num_args(), 1);
+        if ($field === null) {
+            return $this;
+        }
+        $cookies = (array) ($this->headers['Set-Cookie'] ?? []);
+
+        return new self($this->status, [...$this->headers, 'Set-Cookie' => [$field, ...$cookies]], $this->body);
+    }
+
     /** Returns a plain text response. */
     public static function text(int $status, string $body): self
     {

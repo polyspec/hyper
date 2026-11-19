@@ -13,6 +13,9 @@ final class NativeSession implements SessionStore
     /** The session identifier that the client holds, which is the request's cookie until the server sends another one. */
     private ?string $clientId = null;
 
+    /** The identifier that the session holds after its start or its renewal; the host sends its cookie (HY-45.8). */
+    private ?string $issuedId = null;
+
     /**
      * Prepares the PHP session; it starts on the first read or write, so a request that never uses it creates no
      * session (HY-45) and `setup` runs just before it starts (HY-115). `$request` gives the cookies of the request,
@@ -59,29 +62,33 @@ final class NativeSession implements SessionStore
         if (!$started) {
             throw new SessionOpenError('hyper: the session could not start');
         }
-        $this->sendCookie();
+        $this->issuedId = $this->identifier();
     }
 
     /**
-     * Sends the session cookie of HY-45 when the session identifier differs from the one that the client holds, with
-     * the field value of HY-45.8. A session whose identifier the server kept sends nothing.
+     * Returns the field value of the session cookie of HY-45 that the client must receive, or null when it already
+     * holds the identifier of the session. The host writes this value into the response (HY-45.8, HY-104.40), and
+     * PHP writes no cookie itself, because `setcookie` would write path and secure in lower case.
+     *
+     * @internal
      */
-    private function sendCookie(): void
+    public function cookieHeader(): ?string
+    {
+        if ($this->issuedId === null || $this->issuedId === $this->clientId) {
+            return null;
+        }
+
+        return CoreRules::shared()->sessionCookieHeader($this->issuedId, $this->secure());
+    }
+
+    private function identifier(): string
     {
         $id = session_id();
         if (!is_string($id)) {
             throw new \RuntimeException('hyper: the session has no identifier');
         }
-        if ($id === $this->clientId) {
-            return;
-        }
-        // The field value of the core, which http-cookie writes (HY-45.8): setcookie of PHP writes path and secure in
-        // lower case, so its bytes would differ from those of the other servers.
-        if (headers_sent()) {
-            throw new \RuntimeException('hyper: the session cookie could not be sent');
-        }
-        header('Set-Cookie: ' . CoreRules::shared()->sessionCookieHeader($id, $this->secure()), false);
-        $this->clientId = $id;
+
+        return $id;
     }
 
     /** Whether the session runs over HTTPS: the request is HTTPS, or the application declares that it is served over HTTPS (HY-45). */
@@ -260,6 +267,6 @@ final class NativeSession implements SessionStore
         if (headers_sent() || !session_regenerate_id(true)) {
             throw new \RuntimeException('hyper: the session cookie could not be sent');
         }
-        $this->sendCookie();
+        $this->issuedId = $this->identifier();
     }
 }
