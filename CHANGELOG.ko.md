@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b74c301fb07b6a22ab34ddc3c4e453accb59002dbd21615dac3e5e82fc13c978 -->
+<!-- source-sha256: 1c9fe286d7bfd8ac7ffe26076e0d836bbd56b61b9d2353ea37e31247783c0859 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make install-tools`가 PATH에서 다른 PHP가 먼저 있어도 `.php-version`의 PHP를 감싼다(H35.137). 입력: PHP 8.5가 PATH에서 먼저 있는 기기의 `make install-tools`. 이전 동작: kit가 PATH의 첫 `php`를 감쌌고, 그것을 거부해(`php 8.5 is not a release that .php-version declares (8.4)`) PHP 8.4의 `var/tools/bin/php`가 생기지 않았다. 현재 동작: `scripts/php-wrappers.mts path 8.4`가 Homebrew prefix 아래 `opt/php@8.4/bin/php` 중 자신의 버전 질의가 8.4를 보고하는 php의 경로를 내고, install-tools는 그 경로를 `--php`로 kit에 넘긴다. 검증: `make hyper-test-scripts TESTS=tests/scripts/php-wrappers.test.mts`가 4개 테스트를 통과; 이 기기에서 `make install-tools`가 0으로 끝나고 `var/tools/bin/php`가 8.4.27을 실행; `make php-check`가 0으로 끝난다.
 - 추천 계약은 어떤 소스도 선언하지 않는 PHP와 Node member 일곱 개를 더 이상 나열하지 않고, Node 서버, listener와 PHP map 항목을 선언하는 unit에 둔다(H35.114). 입력: 명세 member `context.member`, `native-session.sendCookie`, `native-session.name`, `values.replaced`, `json-codec.value`, `json-codec.map`, `page.document`, 그리고 Node `app.server`/`app.listener`와 PHP `kept.mapEntries`의 위치. 이전 동작: check가 이들을 MEMBER_MISSING으로 보고했다. 지금 동작: 각각 지우거나 unit `http-host`, `json-codec`으로 옮기거나 PHP member `json-codec.mapEntries`로 준다. 검증: 병합된 head에서 check를 돌릴 때까지 대기; `app.run`(PHP 함수 선언) 결정은 열려 있다(H35.114).
 - PHP session은 session cookie 이름을 생성자의 셋째 인자로 받고, host가 core에서 그 이름을 읽는다(H35.129). 입력: session을 읽거나 쓰는 PHP 요청. 이전 동작: `NativeSession`이 `CoreRules::sessionCookieName`으로 이름을 직접 읽어 session 멤버가 core 규칙에 닿았고, TS와 Python host는 host에서 읽었다. 현재 동작: `App::serve`가 `CoreRules::shared()->sessionCookieName(...)`을 넘기고(`packages/php/src/App/App.php`), 생성자가 그것을 받는다(HY-104.45). 검증: install 승인 전이라 아직 실행하지 않았다.
 - PHP 서버가 session cookie를 응답에 쓰고, session은 그 이름만 정한다(H35.129). 입력: PHP 서버에서 session을 시작하거나 갱신하는 요청. 이전 동작: `NativeSession`이 `header()`로 `Set-Cookie` 줄을 직접 보냈고, TS와 Python host는 응답에 쓴다(HY-45.8, HY-104.40). 현재 동작: `NativeSession::cookieHeader()`가 field 값을 주고, `App::serve`가 응답의 쿠키 맨 앞에 그것을 쓴다(`packages/php/src/App/App.php`, `packages/php/src/Http/Response.php`). 검증: install 승인 전이라 아직 실행하지 않았다.

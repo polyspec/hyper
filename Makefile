@@ -1008,7 +1008,9 @@ install-tools: ## Install all locked tools or the tools of TOOLS; TOOLS=npm runs
 ifeq ($(TOOLS),npm)
 	$(ONLINE) $(BOOTSTRAP_NODE) $(KIT)/bootstrap/bootstrap.$(KIT_EXT)
 else
-	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-tools.$(KIT_EXT) --no-self-update $(TOOLS)
+	minor="$$(tr -d '[:space:]' < .php-version)"; \
+	php="$$($(NODE) scripts/php-wrappers.mts path "$$minor")" || exit 1; \
+	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-tools.$(KIT_EXT) --no-self-update --php="$$php" $(TOOLS)
 	@$(MAKE) --no-print-directory php-check-installed
 endif
 
