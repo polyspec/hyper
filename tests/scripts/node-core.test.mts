@@ -4,7 +4,7 @@
 // which arguments, and what the unit returns; the rules themselves are tested in the core.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { coreRules, sharedRules, type CoreBinding, type CoreRules, type PageInput, type Plain } from '../../packages/ts/src/app/core-rules.ts';
+import { coreRules, sharedRules, type CoreBinding, type CoreRules, type PageInput } from '../../packages/ts/src/app/core-rules.ts';
 
 type Call = [string, unknown[]];
 
@@ -146,11 +146,10 @@ test('RepresentationResponse.etag gives representation_tag the content type and 
 
 test('a failure of the binding reaches the caller as the binding raised it (HY-133.1, HY-133.2)', () => {
   const failure = Object.assign(new RangeError('a CSRF token is not 64 lowercase hexadecimal digits'), { kind: 'invalid_csrf_form', status: null });
-  const { rules } = rulesOf({ csrfMask: failure, storedToken: failure, openPage: failure });
+  const { rules } = rulesOf({ csrfMask: failure, storedToken: failure });
   assert.throws(() => rules.csrfMask('x', MASK), (error) => error === failure);
   // HY-24.14: a session that holds another value in the place of the token fails the request.
   assert.throws(() => rules.sessionStoredToken('conformance-token'), (error) => error === failure);
-  assert.throws(() => rules.pageOpen(PAGES, STORE, opening()), (error) => error === failure);
 });
 
 test('a module without a member of the binding fails with the name of the member', () => {
@@ -183,46 +182,6 @@ test('valueError and typeError give the errors of the classes of the binding wit
   assert.deepEqual([value.message, value.kind, value.status], ['a value', 'invalid_value', null]);
   assert.deepEqual([type.message, type.kind, type.status], ['a type', 'invalid_type', null]);
   assert.deepEqual(calls, [['new HyperValueError', ['a value', 'invalid_value', null]], ['new HyperTypeError', ['a type', 'invalid_type', null]]]);
-});
-
-function plain(status: number, body: string, more: Partial<Plain> = {}): Plain {
-  return { status, body: new TextEncoder().encode(body), varyAccept: false, ...more };
-}
-
-function opening(): Parameters<CoreRules['pageOpen']>[2] {
-  return { route: 'list', params: [], kind: 'html', action: false, path: '/list', basePath: '', mask: MASK, now: 0 };
-}
-
-test('a plain answer of the core is a text response with its Allow and its Vary (HY-58, HY-27.6, HY-117.3)', () => {
-  const { rules } = rulesOf({});
-  assert.deepEqual(rules.appPlain(plain(404, 'Not Found')), { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: 'Not Found' });
-  assert.deepEqual(rules.appPlain(plain(405, 'Method Not Allowed', { allow: 'GET, HEAD' })), {
-    status: 405,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8', Allow: 'GET, HEAD' },
-    body: 'Method Not Allowed',
-  });
-  assert.deepEqual(rules.appPlain(plain(406, 'text/html', { varyAccept: true, allow: null })), {
-    status: 406,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8', Vary: 'Accept' },
-    body: 'text/html',
-  });
-});
-
-test('App.storeKept gives answer_keep_request the pages, the store and the request, and the 204 has no Content-Type (HY-40.1)', () => {
-  const request = { region: 'rows', path: 'open', value: 'true', formCsrf: 'masked' };
-  const { rules, calls } = rulesOf({ answerKeepRequest: plain(204, '') });
-  assert.deepEqual(rules.appStoreKept(PAGES, STORE, request), { status: 204, headers: {}, body: '' });
-  assert.deepEqual(calls, [['answerKeepRequest', [PAGES, STORE, request]]]);
-  const refused = rulesOf({ answerKeepRequest: plain(403, 'Forbidden') });
-  assert.deepEqual(refused.rules.appStoreKept(PAGES, STORE, request), { status: 403, headers: { 'Content-Type': 'text/plain; charset=utf-8' }, body: 'Forbidden' });
-});
-
-test('App.route gives route_request the pages, the choice and the parts of the request (HY-116, HY-59.12, HY-120.2)', () => {
-  const front = { method: 'POST', path: '/add', accept: ['text/html'], hxRequest: false, contentType: '' };
-  const route = { route: 'plain', answer: plain(400, 'Bad Request') };
-  const { rules, calls } = rulesOf({ routeRequest: route });
-  assert.equal(rules.appRoute(PAGES, false, front), route);
-  assert.deepEqual(calls, [['routeRequest', [PAGES, false, front]]]);
 });
 
 test('App.frameHeaders gives the headers of frame_headers as a record (HY-45.5, HY-65.1)', () => {
@@ -272,14 +231,12 @@ test('Page.document and Page.parts give the pages the route, the shared data, th
   assert.deepEqual(calls.slice(1), [['Pages.renderDocument', ['home', shared, regions, 0]], ['Pages.renderParts', ['home', shared, regions, 0]]]);
 });
 
-test('Page.open and Page.request give the core the pages, the store and the input of a page (HY-120.6, HY-15)', () => {
+test('Page.request gives the core the pages and the input of a page, and steps it (HY-15)', () => {
   const input: PageInput = { route: 'list', params: new Map(), kind: 'html', action: false, csrf: 'masked', changed: [], now: 0 };
-  const opened = { opened: 'page', input, flash: new Map(), token: TOKEN };
   const step = { step: 'call', call: { call: 'shared' } };
-  const { rules, calls } = rulesOf({ openPage: opened, 'PageRequest.next': step });
-  assert.equal(rules.pageOpen(PAGES, STORE, opening()), opened);
+  const { rules, calls } = rulesOf({ 'PageRequest.next': step });
   assert.equal(rules.pageRequest(PAGES, input).next({ input: 'start' }), step);
-  assert.deepEqual(calls, [['openPage', [PAGES, STORE, opening()]], ['new PageRequest', [PAGES, input]], ['PageRequest.next', [{ input: 'start' }]]]);
+  assert.deepEqual(calls, [['new PageRequest', [PAGES, input]], ['PageRequest.next', [{ input: 'start' }]]]);
 });
 
 // The other partial units, which return the result of their member as it is.

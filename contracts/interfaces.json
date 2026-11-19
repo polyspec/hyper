@@ -1091,63 +1091,6 @@
               }
             },
             {
-              "id": "app.server",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [
-                "value",
-                "serverOptions"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Returns a node:http server whose request listener is the listener of the application (HY-97.9).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/host/http-host.ts::server",
-                  "signature": "export function server<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-97.9"
-              },
-              "tests": [
-                "packages/ts/tests/http.test.ts::server > reports the plain 500 of an escaped error to the write events of its response with its request (HY-60, HY-99): App.server returns a node:http server whose request listener a consumer extends (HY-97.9); the test prepends a listener and asserts that it receives the finish of the plain 500 of an escaped error with its request."
-              ]
-            },
-            {
-              "id": "app.listener",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [
-                "value",
-                "serverOptions"
-              ],
-              "output": "listener",
-              "errors": [],
-              "state": "Returns the request listener of the application for node:http (HY-100.29).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/host/http-host.ts::listener",
-                  "signature": "export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-100.29"
-              },
-              "tests": [
-                "packages/ts/tests/http.test.ts::the write hook and listener > listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
-                "packages/ts/tests/http.test.ts::the write hook and listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
-              ]
-            },
-            {
               "id": "app.refusedMedia",
               "kind": "method",
               "visibility": "private",
@@ -3290,40 +3233,6 @@
               }
             },
             {
-              "id": "context.member",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "map<value>",
-                "optional<string>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns the member context of a JSON response: the hash, and the value unless the held hash equals it.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/Context.php::Polyspec\\Hyper\\Context::member",
-                  "signature": "public static function member(string $build, array $map, ?string $held): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/context.ts::Context.member",
-                  "signature": "static member(build: string, map: MapValue, held: string | null): MapValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.member",
-                  "signature": "def member(build: str, map: dict, held: Optional[str]) -> dict"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php",
-                  "node"
-                ],
-                "sentence": "HY-128.2"
-              }
-            },
-            {
               "id": "context.validHeader",
               "kind": "static method",
               "visibility": "internal",
@@ -4553,6 +4462,34 @@
               }
             },
             {
+              "id": "http-host.server",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "app",
+                "value",
+                "serverOptions"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns a node:http server whose request listener is the listener of the application (HY-97.9).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/host/http-host.ts::server",
+                  "signature": "export function server<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-97.9"
+              },
+              "tests": [
+                "packages/ts/tests/http.test.ts::server > reports the plain 500 of an escaped error to the write events of its response with its request (HY-60, HY-99): App.server returns a node:http server whose request listener a consumer extends (HY-97.9); the test prepends a listener and asserts that it receives the finish of the plain 500 of an escaped error with its request."
+              ]
+            },
+            {
               "id": "http-host.requestLine",
               "kind": "function",
               "visibility": "private",
@@ -4684,6 +4621,37 @@
                   "signature": "function write(outgoing: ServerResponse, response: Response): void"
                 }
               }
+            },
+            {
+              "id": "http-host.listener",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "app",
+                "value",
+                "serverOptions"
+              ],
+              "output": "listener",
+              "errors": [],
+              "state": "Returns the request listener of the application for node:http (HY-100.29).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/host/http-host.ts::listener",
+                  "signature": "export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-100.29"
+              },
+              "tests": [
+                "packages/ts/tests/http.test.ts::the write hook and listener > listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
+                "packages/ts/tests/http.test.ts::the write hook and listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
+              ]
             }
           ],
           "tests": [
@@ -9695,8 +9663,18 @@
                 }
               },
               "reachDiffers": [
-                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "php", "sentence": "HY-104.47" },
-                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "python", "sentence": "HY-104.47" }
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "php",
+                  "sentence": "HY-104.47"
+                },
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "python",
+                  "sentence": "HY-104.47"
+                }
               ]
             },
             {
@@ -10091,21 +10069,6 @@
               }
             },
             {
-              "id": "native-session.sendCookie",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [],
-              "output": "none",
-              "errors": [],
-              "state": "Sends the session cookie with the identifier of the session.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::sendCookie",
-                  "signature": "private function sendCookie(): void"
-                }
-              }
-            },
-            {
               "id": "native-session.secure",
               "kind": "method",
               "visibility": "private",
@@ -10117,23 +10080,6 @@
                 "php": {
                   "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::secure",
                   "signature": "private function secure(): bool"
-                }
-              }
-            },
-            {
-              "id": "native-session.name",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "boolean"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Returns the name of the session cookie, with the host prefix over HTTPS (HY-45).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::name",
-                  "signature": "public static function name(bool $https): string"
                 }
               }
             },
@@ -10235,6 +10181,21 @@
                 "php": {
                   "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::renew",
                   "signature": "public function renew(): void"
+                }
+              }
+            },
+            {
+              "id": "native-session.close",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Writes and closes the started session before the answer is sent, and fails the request with status 500 when the write fails (HY-115.23).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::close",
+                  "signature": "public function close(): void"
                 }
               }
             },
@@ -11102,7 +11063,12 @@
                 }
               },
               "reachDiffers": [
-                { "member": "core-rules.libraryError", "reached": "python", "notReached": "node", "sentence": "HY-104.46" }
+                {
+                  "member": "core-rules.libraryError",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-104.46"
+                }
               ]
             },
             {
@@ -11384,7 +11350,12 @@
                 "sentence": "HY-133.3"
               },
               "reachDiffers": [
-                { "member": "file-session.converted", "reached": "python", "notReached": "node", "sentence": "HY-133.3" }
+                {
+                  "member": "file-session.converted",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-133.3"
+                }
               ]
             }
           ],
@@ -11677,24 +11648,6 @@
                   "signature": "export function isMapValue(input: unknown): input is MapValue"
                 }
               }
-            },
-            {
-              "id": "values.replaced",
-              "kind": "function",
-              "visibility": "internal",
-              "inputs": [
-                "map<value>",
-                "map<value>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns a map with the members of the second map over those of the first.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/values.ts::replaced",
-                  "signature": "export function replaced(base: MapValue, other: MapValue): MapValue"
-                }
-              }
             }
           ],
           "tests": [
@@ -11735,38 +11688,6 @@
             }
           },
           "members": [
-            {
-              "id": "json-codec.value",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "string",
-                "map<string>",
-                "string",
-                "optional<map<value>>",
-                "map<value>",
-                "map<map<value>>",
-                "map<map<value>>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns the JSON response value of a page with its members in their order.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::value",
-                  "signature": "public static function value(string $timezone, string $route, array $params, string $build, ?array $context, array $shared, array $regions, array $kept): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.value",
-                  "signature": "static value(timezone: string, route: string, params: MapValue, build: string, context: MapValue | null, shared: MapValue, regions: MapValue, kept: MapValue): MapValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec.value",
-                  "signature": "def value(timezone: str, route: str, params: dict, build: str, context: Optional[dict], shared: dict, regions: dict, kept: dict) -> dict"
-                }
-              }
-            },
             {
               "id": "json-codec.encode",
               "kind": "static method",
@@ -11815,29 +11736,6 @@
                   "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec.decode",
                   "signature": "def decode(text: str) -> object"
                 }
-              }
-            },
-            {
-              "id": "json-codec.map",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "map<value>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns an empty PHP array as an object, so that it encodes and binds as a map.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::map",
-                  "signature": "private static function map(array $value): stdClass|array"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-17.1"
               }
             },
             {
@@ -11959,6 +11857,31 @@
               }
             }
           ]
+        }
+      ],
+      "members": [
+        {
+          "id": "json-codec.mapEntries",
+          "kind": "static method",
+          "visibility": "public",
+          "inputs": [
+            "value"
+          ],
+          "output": "optional<map<value>>",
+          "errors": [],
+          "state": "Returns the entries of a map that the core gives, or none for another value (HY-54.20).",
+          "native": {
+            "php": {
+              "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::mapEntries",
+              "signature": "public static function mapEntries(mixed $value): ?array"
+            }
+          },
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-54.20"
+          }
         }
       ]
     },
@@ -12921,40 +12844,6 @@
                   "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._loader_map",
                   "signature": "def _loader_map(value: object, source: str) -> dict"
                 }
-              }
-            },
-            {
-              "id": "page.document",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "request",
-                "value",
-                "map<value>",
-                "optional<map<value>>",
-                "map<value>",
-                "map<string>",
-                "map<value>",
-                "boolean"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Renders the document with the kept values applied, and without them when they fail the rendering (HY-17.1).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::document",
-                  "signature": "private function document(Polyspec\\Hyper\\Request $request, array $route, array $shared, ?array $context, array $data, array $templates, array $kept, bool $embed): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._document",
-                  "signature": "def _document(self, request: Request, route: dict, shared: dict, context: Optional[dict], data: dict, templates: dict, kept: dict, embed: bool) -> str"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-48.1"
               }
             },
             {
