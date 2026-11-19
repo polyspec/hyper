@@ -1,11 +1,14 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f9506460b6281ccb89fbe870cb618523f952271b8f9184ebc4a4457ef6e11b96 -->
+<!-- source-sha256: bb99c1f562a1ef750449645da1f114a063f554c75a3673e06637b3be9850ae6e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 초안: Node, PHP, Python runner는 case가 던지는 orm 패키지의 오류(HY-107.7)를 준비 단계에서 case를 실패시키는 대신, tests/fixtures/orm-errors.json이 정한 임시 디렉터리의 SQLite 파일에 대한 실제 orm 호출에서 얻어 던집니다. 행이 갖지 않은 revision을 기대한 update는 `OrmValueError` `revision_changed`를, 어떤 행도 갖지 않은 key에 requireMatch를 건 update는 `no_rows`를, 없는 디렉터리의 파일 연결은 `OrmStoreError` `driver`를 주며, orm 0.0.34의 생성 테스트가 만드는 방식을 따릅니다. PHP 서버는 orm 확장이 주는 메서드 `kind()`로 kind를 읽습니다. orm 0.0.34까지 실행하지 않습니다: orm 패키지가 아직 설치되지 않았습니다(H35.45-1부터 H35.45-4까지). 확인: `make lint-python` 통과; `make lint-ts`는 없는 모듈 `@polyspec/orm`으로, `make analyse-php`는 알 수 없는 orm class와 `tests/Support/Steps/FunctionsSteps.php`의 오류 4개(H34.15)로 실패합니다. (H35.45-4)
+- Node, PHP, Python 서버는 ORM의 오류를 orm 패키지의 오류 class `OrmValueError`부터 `OrmInternalError`까지(PHP는 `Polyspec\Orm\…`, Python은 `polyspec.orm`의 `ORM…Error`)로 알아보고, 그 소문자 kind인 `no_rows`나 `revision_changed`를 읽는다(HY-107.7, H35.45-4). HY-107.7이 orm 패키지의 class와 그 kind를 정하고 HY-107.5가 다른 모든 오류를 HY-43으로 실패시키므로, 대문자 `code`나 `code_`를 가진 legacy class `OrmError`나 `OrmException`의 인식은 지운다. orm 0.0.34 전에는 실행하지 않는다. 아직 orm의 패키지가 설치되지 않았다(H35.45-1부터 H35.45-3). 확인: `make lint-ts`와 `make lint-python` 통과. `make analyse-php`는 orm class에 대한 `class.notFound` 오류 6개와 `tests/Support/Steps/FunctionsSteps.php`의 `Polyspec\Template\Environment`에 대한 오류 4개를 보고한다.
+- protocol이 HY-107.10을 정한다. hyper와 ORM 사이의 계약은 server가 읽어 core에 넘기는 오류의 kind 문자열이므로, hyper의 core는 orm 라이브러리의 어떤 crate에도 의존하지 않고 orm의 release에 묶이지 않는다(H35.45-4).
 - `tests/scripts/session-redis-failover.test.mts`의 `until()` wait 여덟 개는 어떤 process도 지정하지 않았으므로, Redis 서버나 Sentinel이 끝난 wait는 test runner의 시간 제한까지 이어졌다. 이제 topology는 각 Sentinel의 process를 보관하고, 각 wait는 그 조건이 필요로 하는 서버와 Sentinel을 지정한다. `failOver`의 wait는 자신이 멈추는 primary를 빼고, load test의 wait는 세 writer도 지정한다. 그러면 wait는 `<name> ended with <status or signal> while a step waited for a condition that needs it`로 끝난다. 두 test는 `switchOver` 전에 Sentinel을, `failOver` 전에 replica를 끝내고 그 실패를 기대한다. 이 변경은 작성만 했고 실행하지 않았다(HR-84, H35.19-3).
 - HY-74는 런타임의 경고가 요청을 실패시킨다는 규칙에 예외 하나를 두었다: Node file session이 `node:ffi`를 load하는 것으로, 이 load는 `WarningsGuard.outside`를 통해 warnings guard 밖에서 실행되었다. 이제 Node file session은 session-store library의 file store를 쓰고 `node:ffi`를 load하지 않으므로, 서버가 module을 load하는 어떤 호출도 guard 밖에서 실행되지 않는다. HY-74.8, HY-74.9, HY-74.10은 폐기된다. HY-74.11은 예외 없는 규칙을, HY-74.12는 load를 뺀 Node 문장을 서술한다. `WarningsGuard.outside`와 `packages/ts/tests/ffi-load.test.ts`는 제거된다(H35.9-9).
 - dispatch가 오류를 던진 PHP 서버의 요청은 상태 500으로 응답하고 session을 script 끝까지 열어 두었다. 그래서 session은 응답 뒤, 모든 shutdown function 뒤에야 쓰이고 그 lock이 풀렸다. 이제 PHP 서버는 그 경로에서도 response hook이 실행되기 전에 session을 닫는다. dispatch의 오류가 응답하며 response hook이 받는 failure도 그 오류다. 그 close의 실패는 log에 남고 그것을 대체하지 않는다. `AppTest::testClosesTheSessionWhenTheDispatchFails`는 loader 안, response hook 안, `App::handle` 뒤에서 `session_status()`를 읽는다. 이 변경과 그 test는 작성만 했고 실행하지 않았다(HY-115.23, H35.19-4).

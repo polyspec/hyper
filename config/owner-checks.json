@@ -81,6 +81,16 @@
     },
     {
       "paths": [
+        "tests/fixtures/orm-errors.json"
+      ],
+      "targets": [
+        "hyper-test-node",
+        "hyper-test-php",
+        "hyper-test-python"
+      ]
+    },
+    {
+      "paths": [
         "tests/python_package/**"
       ],
       "targets": [

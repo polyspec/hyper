@@ -16,7 +16,7 @@ from polyspec.hyper.session.array_session import ArraySession
 
 from .recorded import decoded
 from . import reply_steps
-from .representations_steps import orm_thrown
+from .representations_steps import orm_error
 
 _STEPS = ("calls", "observe", "add", "warn", "store")
 _RESULTS = ("return", "stop", "throw", "redirect", "outside", "page")
@@ -126,12 +126,6 @@ def _handler(name: str, steps: object, calls: Calls) -> Callable:
             raise LookupError(
                 f"the handler {name} does not end with one result after its steps"
             )
-        thrown = step.get("throw")
-        if isinstance(thrown, dict) and thrown.get("class") in (
-            "OrmValueError",
-            "OrmStoreError",
-        ):
-            orm_thrown(f"the handler {name}")
     services = _services(steps)
 
     def handle(request: Request, reply: Reply, *records: object) -> object:
@@ -236,6 +230,8 @@ class _Run:
             raise _STOPS[step["stop"]]()
         if "throw" in step:
             thrown = step["throw"]
+            if thrown["class"] in ("OrmValueError", "OrmStoreError"):
+                raise orm_error(thrown, "the handler")
             if thrown["class"] != "Error":
                 raise LookupError(
                     f"the case throws the unknown class {thrown['class']}"
