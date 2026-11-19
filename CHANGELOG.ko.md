@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2b47bde1c9d2f4d7ad90bc40f75b33ba5e05573f9642e44fbcfafc0f4dbc1be9 -->
+<!-- source-sha256: 12c76d197003a103b054f117633971e49675efca5ce3f1a24b1110ce4b051c63 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `tests/scripts/upload-servers.test.mts`의 HY-131 test가 Node 서버에서도, 서버가 요청의 끝을 알린 뒤에 요청의 임시 directory를 확인한다(H35.217, HY-131.14, HY-99). 입력: test의 네 요청을 Node upload server에 보낸다. 이전 동작: 확인은 PHP와 Python에서만 실행됐다. 제외를 없애면 Node에서 `node, a body without its closing delimiter: the directory of the request stays`로 실패했는데, client는 연결이 닫힐 때 directory를 읽고 Node 서버는 HY-131.14대로 response가 닫히고 hook이 끝난 뒤에 directory를 지우기 때문이다. 기대: test가 각 서버의 끝 줄(PHP의 `Closing`, Node와 Python fixture의 `ended <port>`)을 기다린 뒤 세 서버 어디에도 `http-form-` directory가 없다. library는 바뀌지 않는다.
 - `tests/scripts/upload-servers.test.mts`의 upload server fixture가 요청의 directory를 접두사 `http-form-`으로 세고, Node fixture가 `moveTo`를 기다린다(H35.213, HY-131, F-10). 입력: 세 서버에 보내는 3 MiB 파일의 multipart upload. 이전 동작: H35.11부터 http-form이 요청의 directory를 `http-form-`으로 이름 짓는데 fixture는 `hyper-`를 세어, PHP가 1이어야 할 `held: 0`으로 답했다. Node fixture는 `moveTo`의 promise가 끝나기 전에 옮긴 파일을 읽어 ENOENT로 500을 답했다. 기대: 각 서버의 `held: 1`과 옮긴 각 파일의 digest. `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts`: 95 passed, 0 failed.
 - `tests/scripts`에서 Node package의 Node 서버나 worker를 시작하는 test는 모두 시작하기 전에 직접, 또는 `session-board.mts`의 `requireServers`와 `session-redis-server.mts`의 `redisRun`을 거쳐 native addon을 `requireBuilt('node-addon', NODE_ADDON)`으로 적고, `tests/scripts/requires.mts`의 `NODE_ADDON`이 그 경로의 유일한 정의다(H35.209, HR-85, HY-133.2). 입력: `make node-addon`을 하지 않은 checkout. 이전 동작: `benchmark-uploads`, `multipart-compare`, `session-holder`, `session-redis-failure`, `session-redis-failover`, `session-shared-redis`, `session-redis-cluster`, `session-lost-lock`이 Node process에서 `CoreBindingError: ... Cannot find module './hyper.<platform>.node'`로 실패했고, `session-shared`, `upload-servers`, `fixture-program`은 각자 경로를 복사해 가졌다. 지금: 각 test가 없는 경로와 `make node-addon`을 적고 실패한다.
 - `contracts/session.json`의 Rust case step이 PHP step `record`처럼 저장된 각 JSON text의 record를 data model 없이 저장한다(H35.212, HY-104.23). 입력: 저장된 `_hyper_keep`가 정수 2^53을 가지고 호출 `kept`가 `data_number_range`를 기대하는 case `reading_stored_kept_values_outside_the_data_model_fails`. 이전 동작: `packages/rust/tests/contracts.rs`가 저장할 text를 data model로 읽은 뒤 저장해서 `data_number_range: number 9007199254740992 is outside the safe range`로 panic했고, `make core-test`가 40개 가운데 1개에서 실패했다. 기대: step이 decode한 JSON을 record에 쓰고, 호출 `kept`가 `data_number_range`로 실패하며, `make core-test`가 통과한다.
