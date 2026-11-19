@@ -19,14 +19,16 @@ final class NativeSession implements SessionStore
     /**
      * Prepares the PHP session; it starts on the first read or write, so a request that never uses it creates no
      * session (HY-45) and `setup` runs just before it starts (HY-115). `$request` gives the cookies of the request,
-     * parsed once (HY-129).
+     * parsed once (HY-129). `$cookieName` is the name of the session cookie, which the host reads from the core
+     * (HY-45.1, HY-104.45).
      */
     public function __construct(
         private readonly bool $https,
         private readonly Request $request,
+        private readonly string $cookieName,
         private readonly ?\Closure $setup = null,
     ) {
-        ArgumentCount::most(\func_num_args(), 3);
+        ArgumentCount::most(\func_num_args(), 4);
     }
 
     private function start(): void
@@ -35,7 +37,7 @@ final class NativeSession implements SessionStore
             return;
         }
         $https = $this->secure();
-        $name = self::name($https);
+        $name = $this->cookieName;
         $this->clientId = $this->request->cookie($name);
         // An identifier that is not of HY-45 starts no session, the same as no identifier; PHP and the session-store
         // library accept 22 to 256 characters (HY-104.42).
@@ -55,7 +57,7 @@ final class NativeSession implements SessionStore
         // HY-60.14: a failed open escapes the answer of the request, so it is not handled as an error of the
         // application.
         try {
-            $started = session_start(self::options($https));
+            $started = session_start(self::options($https, $this->cookieName));
         } catch (\Throwable $error) {
             throw new SessionOpenError($error->getMessage(), 0, $error);
         }
@@ -98,17 +100,7 @@ final class NativeSession implements SessionStore
     }
 
     /**
-     * Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45).
-     *
-     * @internal
-     */
-    public static function name(bool $https): string
-    {
-        return CoreRules::shared()->sessionCookieName($https);
-    }
-
-    /**
-     * Returns the session options: the cookie name of HY-45 with `Path=/` and no `Domain`, HttpOnly, SameSite=Lax,
+     * Returns the session options: the cookie name `$name` of HY-45 with `Path=/` and no `Domain`, HttpOnly, SameSite=Lax,
      * Secure on HTTPS, only identifiers that the server created, no cookie from PHP (`use_cookies`, HY-129), no caching
      * headers, because the application sets Cache-Control (HY-52), and the record form that the other servers read
      * (HY-104), and no removal of expired sessions during a request (`gc_probability` 0, HY-104.33).
@@ -119,10 +111,10 @@ final class NativeSession implements SessionStore
      *
      * @internal
      */
-    public static function options(bool $https): array
+    public static function options(bool $https, string $name): array
     {
         return [
-            'name' => self::name($https),
+            'name' => $name,
             'cookie_path' => '/',
             'cookie_domain' => '',
             'cookie_httponly' => true,

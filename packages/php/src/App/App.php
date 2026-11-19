@@ -1129,7 +1129,14 @@ final class App
             $received->release();
         });
         $request = $received->withInput();
-        $store = new NativeSession($this->https, $request, $this->sessionSetup);
+        // HY-45.1, HY-104.45: the host reads the cookie name from the core and gives it to the session.
+        $https = $this->https || $request->https;
+        $store = new NativeSession(
+            $this->https,
+            $request,
+            CoreRules::shared()->sessionCookieName($https),
+            $this->sessionSetup,
+        );
         $response = $this->through($request, $store, $started, $delivery);
         // HY-115.23: the session is closed before the response is sent; a failed write is an escaped error.
         $store->close();

@@ -45,10 +45,10 @@ final class RequestTest extends TestCase
                 'serialize_handler' => 'php_serialize',
                 'gc_probability' => 0,
             ],
-            NativeSession::options(false),
+            NativeSession::options(false, 'hy-session'),
         );
-        self::assertTrue(NativeSession::options(true)['cookie_secure']);
-        self::assertSame('__Host-hy-session', NativeSession::options(true)['name']);
+        self::assertTrue(NativeSession::options(true, '__Host-hy-session')['cookie_secure']);
+        self::assertSame('__Host-hy-session', NativeSession::options(true, '__Host-hy-session')['name']);
     }
 
     /**
