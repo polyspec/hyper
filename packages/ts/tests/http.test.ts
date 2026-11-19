@@ -272,11 +272,11 @@ describe('a multipart body read in chunks', () => {
       let handled: Promise<void> = Promise.resolve();
       const app = await new Fixture().app({ formTypes: ['application/x-www-form-urlencoded', 'multipart/form-data'], bodyLimit: 4 * 1024 * 1024 });
       const listener = hostListener(app, await FileSessions.inDirectory({ directory }), {
-        around: (request) => {
+        around: async (request) => {
           const file = request.file('f');
           seen.push(request.validInput(), request.form(), file?.filename() ?? null, file?.size() ?? null, readdirSync(uploads).length);
           if (move) await file?.moveTo(join(uploads, 'kept.bin'));
-          return Promise.resolve(Response.text(200, 'stored'));
+          return Response.text(200, 'stored');
         },
         written: () => {
           atHook = readdirSync(uploads).map((name) => (name.startsWith('http-form-') ? 'http-form-' : name)).sort();

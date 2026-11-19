@@ -183,14 +183,8 @@ export interface CoreRequestBody {
   remove(): Promise<void>;
 }
 
-// The environment of a render, which a function of a template receives as its second argument (HYC-24.10): the time
-// zone of the server and the `now` of the response in seconds since the Unix epoch.
-interface Environment {
-  readonly timezone: string;
-  readonly now: number;
-}
-
-// A function of the templates as the binding calls it (HYC-24.10): the list of its arguments and the environment.
+// A function of the templates as the binding calls it (HYC-24.10): the list of its arguments and the environment of
+// the render, the time zone of the server and the `now` of the response in seconds since the Unix epoch.
 export type HostFunction = (args: readonly unknown[], environment: { readonly timezone: string; readonly now: number }) => unknown;
 type CoreHostFunction = HostFunction;
 
