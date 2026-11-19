@@ -6,7 +6,7 @@ import { extname, isAbsolute, join } from 'node:path';
 import { TLSSocket } from 'node:tls';
 import type { App } from '../app/app.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
-import { rules, type CoreRequestBody } from '../app/core-rules.js';
+import { binding, rules, type CoreRequestBody } from '../app/core-rules.js';
 import { Cookies } from '../http/cookies.js';
 import type { FileSession } from '../session/file-session.js';
 import type { FileSessions } from '../session/file-sessions.js';
@@ -148,11 +148,11 @@ function createListener<S extends object>(app: App<S>, sessions: FileSessions | 
       let body: CoreRequestBody;
       let refused: string | null = null;
       try {
-        body = await rules().formStart(contentType, request.header('Content-Length') ?? null, stream, limits);
+        body = await binding().RequestBody.start(contentType, request.header('Content-Length') ?? null, stream, limits);
       } catch (error) {
         refused = error instanceof Error && 'kind' in error && typeof error.kind === 'string' ? error.kind : null;
         if (refused === null) throw error;
-        body = await rules().formStart(contentType, null, stream, limits);
+        body = await binding().RequestBody.start(contentType, null, stream, limits);
         // HY-131.31: no byte of a refused body is parsed or stored; the host reads the rest of it to discard it, as it
         // does for a declared length above the limit, so that the response is sent and the connection can be reused.
         incoming.resume();

@@ -301,10 +301,24 @@ class BodyLimitsTest(unittest.TestCase):
         self.assertEqual(NO_LIMIT, 2**53 - 1)
 
     def test_a_limit_above_the_largest_uint_reaches_the_binding_as_that_uint(self):
-        binding, _ = stand_in({})
-        limits = CoreRules(binding).body_limits(2**64 - 1, 2**53, 7, 2**53 - 1)
+        from polyspec.hyper.form._body_reader import BodyReader
+
+        received = {}
+
+        def read_held_body(content_type, body, **limits):
+            received.update(limits)
+            return types.SimpleNamespace(fields=[], files=[])
+
+        binding = types.SimpleNamespace(read_held_body=read_held_body)
+        package = types.ModuleType("polyspec.hyper._binding")
+        package._root = binding
+        with unittest.mock.patch.dict(
+            sys.modules,
+            {package.__name__: package, "polyspec.hyper._binding._root": binding},
+        ):
+            BodyReader.held_form("text/plain", b"", 2**64 - 1, 7, 2**53)
         self.assertEqual(
-            limits,
+            received,
             {
                 "limit": 2**53 - 1,
                 "value_limit": 2**53 - 1,

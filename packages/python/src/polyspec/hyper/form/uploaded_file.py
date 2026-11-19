@@ -6,16 +6,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..app._core_rules import CoreRules
-
 
 class UploadedFile:
     """A file that a request sent in a file part. Its content is the bytes of the part as they were sent."""
 
     def __init__(self, name: str, filename: str, content_type: str, content: bytes):
-        self.__core = CoreRules.shared().uploaded_file(
-            name, filename, content_type, content
-        )
+        from .._binding import _root
+
+        # form_file.new gives a file of the core that holds its bytes as a value (F-22).
+        self.__core = _root.FormFile(name, filename, content_type, content)
 
     @staticmethod
     def _of_core(core: Any) -> UploadedFile:

@@ -1493,92 +1493,6 @@
               }
             },
             {
-              "id": "core-rules.libraryError",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "value",
-                "string",
-                "value"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Returns the error of hyper for an error of a library that hyper uses, by the class of the binding of hyper of the same role as the class of the error, with its message, kind, status and errno, and any other value as it is (HY-133.3).",
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-133.3"
-              },
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.libraryError",
-                  "signature": "libraryError(library: object, prefix: string, error: unknown): unknown"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.library_error",
-                  "signature": "def library_error(self, library: object, prefix: str, error: BaseException) -> BaseException"
-                }
-              }
-            },
-            {
-              "id": "core-rules.sessionValue",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "value"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "rules.session_value gives the value of the data model of a PHP value of a session record, and fails with the kind of the data model for a value outside it (HY-104.13).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionValue",
-                  "signature": "sessionValue(record: unknown): unknown"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_value",
-                  "signature": "def session_value(self, record: object) -> object"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-104.26"
-              }
-            },
-            {
-              "id": "core-rules.sessionRecord",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "value"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "rules.session_record gives the PHP value of a session record of a value of the data model, and fails with data_unsupported_type for a native object (HY-104.14).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.sessionRecord",
-                  "signature": "sessionRecord(value: unknown): unknown"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_record",
-                  "signature": "def session_record(self, value: object) -> object"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-104.26"
-              }
-            },
-            {
               "id": "core-rules.sessionCookieName",
               "kind": "method",
               "visibility": "internal",
@@ -2505,151 +2419,6 @@
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::checkFunctionEntry",
                   "signature": "public function checkFunctionEntry(string $name, bool $callable): void"
-                }
-              }
-            },
-            {
-              "id": "core-rules.formStart",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "optional<string>",
-                "optional<string>",
-                "boolean",
-                "bodyLimits"
-              ],
-              "output": "coreRequestBody",
-              "errors": [],
-              "state": "RequestBody: request_body.start of the core reads the chunks of a body under its four limits (F-9, F-24, F-25, HY-131.32).",
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-131.32"
-              },
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.formStart",
-                  "signature": "formStart(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.form_start",
-                  "signature": "def form_start(self, content_type: Optional[str], content_length: Optional[str], stream: bool, limits: dict[str, int]) -> Any"
-                }
-              }
-            },
-            {
-              "id": "core-rules.formReadHeld",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "optional<string>",
-                "bytes",
-                "bodyLimits"
-              ],
-              "output": "coreForm",
-              "errors": [],
-              "state": "Request: form_functions.read_held_body gives the form of a body held as one value, under its limits (F-21, F-22, HY-113.23).",
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-113.23"
-              },
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.formReadHeld",
-                  "signature": "formReadHeld(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.form_read_held",
-                  "signature": "def form_read_held(self, content_type: Optional[str], body: bytes, limits: dict[str, int]) -> Any"
-                }
-              }
-            },
-            {
-              "id": "core-rules.formParseUrlencoded",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "bytes"
-              ],
-              "output": "list<value>",
-              "errors": [],
-              "state": "Fields.parse: form_functions.parse_urlencoded gives the values of an urlencoded text (F-20, F-21, HY-42, HY-56).",
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-42.1"
-              },
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.formParseUrlencoded",
-                  "signature": "formParseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[]"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.form_parse_urlencoded",
-                  "signature": "def form_parse_urlencoded(self, text: bytes) -> list[Any]"
-                }
-              }
-            },
-            {
-              "id": "core-rules.bodyLimits",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "number",
-                "number",
-                "number",
-                "number"
-              ],
-              "output": "map<number>",
-              "errors": [],
-              "state": "The fields of the record body_limits of the four limits of a body, each at most the largest limit of the binding (HY-59.15).",
-              "only": {
-                "languages": [
-                  "python"
-                ],
-                "sentence": "HY-59.15"
-              },
-              "native": {
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.body_limits",
-                  "signature": "def body_limits(self, limit: int, value_limit: int, part_limit: int, file_limit: int) -> dict[str, int]"
-                }
-              },
-              "tests": [
-                "packages/python/tests/test_core_rules.py::BodyLimitsTest.test_the_limit_that_does_not_apply_is_the_largest_uint_of_the_binding: The limit that does not apply is the largest unsigned integer of the binding (HY-59.15).",
-                "packages/python/tests/test_core_rules.py::BodyLimitsTest.test_a_limit_above_the_largest_uint_reaches_the_binding_as_that_uint: A limit above the largest unsigned integer reaches the binding as that integer (HY-59.15)."
-              ]
-            },
-            {
-              "id": "core-rules.uploadedFile",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "string",
-                "string",
-                "bytes"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "UploadedFile: form_file.new gives a file of the core that holds its bytes as a value (F-22).",
-              "only": {
-                "languages": [
-                  "python"
-                ],
-                "sentence": "HY-133.2"
-              },
-              "native": {
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.uploaded_file",
-                  "signature": "def uploaded_file(self, name: str, filename: str, content_type: str, content: bytes) -> Any"
                 }
               }
             },
@@ -7817,7 +7586,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Starts the body of the content type under its four limits; a Content-Length that is no number or above the body limit is the failure of the body before any byte is read (HY-131.1, HY-131.29).",
+              "state": "Starts the body of the content type under its four limits through request_body.start of the binding; a Content-Length that is no number or above the body limit is the failure of the body before any byte is read (HY-131.1, HY-131.29).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::__construct",
@@ -8250,7 +8019,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Reads a body held as one value through the core: its form or none, whether it passed a limit, and whether its type is multipart/form-data without a boundary (HY-113.24, HY-131.32).",
+              "state": "Reads a body held as one value through read_held_body of the binding, under its limits each at most the largest limit of the binding: its form or none, whether it passed a limit, and whether its type is multipart/form-data without a boundary (HY-59.15, HY-113.24, HY-131.32).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.held_form",
@@ -8262,7 +8031,11 @@
                   "python"
                 ],
                 "sentence": "HY-113.24"
-              }
+              },
+              "tests": [
+                "packages/python/tests/test_core_rules.py::BodyLimitsTest.test_the_limit_that_does_not_apply_is_the_largest_uint_of_the_binding: The limit that does not apply is the largest unsigned integer of the binding (HY-59.15).",
+                "packages/python/tests/test_core_rules.py::BodyLimitsTest.test_a_limit_above_the_largest_uint_reaches_the_binding_as_that_uint: A limit above the largest unsigned integer reaches the binding as that integer (HY-59.15)."
+              ]
             }
           ]
         },
@@ -8318,7 +8091,7 @@
               ],
               "output": "optional<fields>",
               "errors": [],
-              "state": "Parses name=value parts separated by &, skipping empty parts: + is a space, %XX is its byte and another % stays; returns null when a name or a value is not UTF-8 (HY-42, HY-56).",
+              "state": "Parses name=value parts separated by &, skipping empty parts, through parse_urlencoded of the binding: + is a space, %XX is its byte and another % stays; returns null when a name or a value is not UTF-8 (HY-42, HY-56).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/Fields.php::Polyspec\\Hyper\\Fields::parse",
@@ -10478,7 +10251,7 @@
               },
               "reachDiffers": [
                 {
-                  "member": "core-rules.libraryError",
+                  "member": "file-session.libraryError",
                   "reached": "python",
                   "notReached": "node",
                   "sentence": "HY-104.46"
@@ -10624,7 +10397,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Returns the value of a key as a value of the data model (HY-104.13, HY-104.37), or no value for a key that holds none.",
+              "state": "Returns the value of a key as a value of the data model through session_value of the binding (HY-104.13, HY-104.37), or no value for a key that holds none.",
               "tests": [
                 "packages/ts/tests/sessions.test.ts::FileSessions > HY-104.37: returns null for a key that holds no value, also after its removal: HY-104.37 (a store returns null for a key that holds no value)"
               ],
@@ -10649,7 +10422,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Stores a value of the data model as the PHP value of the record (HY-104.14).",
+              "state": "Stores a value of the data model as the PHP value of the record, which session_record of the binding gives (HY-104.14).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-session.ts::FileSession.set",
@@ -10717,6 +10490,36 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.created",
                   "signature": "def created(self) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "file-session.libraryError",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "string",
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the error of hyper for an error of a library that hyper uses, by the class of the binding of hyper of the same role as the class of the error, with its message, kind, status and errno, and any other value as it is (HY-133.3).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-133.3"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.libraryError",
+                  "signature": "private static libraryError(library: object, prefix: string, error: unknown): unknown"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession._library_error",
+                  "signature": "def _library_error(library: object, prefix: str, error: BaseException) -> BaseException"
                 }
               }
             },

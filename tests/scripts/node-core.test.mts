@@ -125,7 +125,7 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
 // The members of the binding that a test of this file below calls by its own statement, outside the tables EXACT and
 // PARTIAL.
 const OWN_TEST = [
-  'representationTag', 'frameHeaders', 'computePageHeaders', 'jsonRead', 'acceptRanges', 'Pages', 'PageRequest', 'RequestBody', 'FormFile', 'HyperValueError',
+  'representationTag', 'frameHeaders', 'computePageHeaders', 'jsonRead', 'acceptRanges', 'Pages', 'PageRequest', 'HyperValueError',
   'HyperTypeError',
 ];
 // The members of the binding that coreRules requires and no rule of the node server calls: the other hosts of the
@@ -134,6 +134,10 @@ const NOT_CALLED = [
   'openPage', 'answerKeepRequest', 'routeRequest', 'checkShellPath', 'shellText', 'readBuild', 'isApplicationPath', 'keepsOutOfSharedCaches',
   'checkBuildId', 'keptCookie', 'keptValue',
 ];
+// The members of the binding that the units of the server call directly through `binding`, as the PHP server calls the
+// functions of the extension, with no member of CoreRules between: the tests of those units and the case runner, which
+// run on the binding itself, test them.
+const DIRECT = ['sessionValue', 'sessionRecord', 'readHeldBody', 'parseUrlencoded', 'RequestBody', 'FormFile'];
 
 function rulesOf(results: Record<string, unknown>): { rules: CoreRules; calls: Call[] } {
   const { core, calls } = standIn(results);
@@ -147,8 +151,6 @@ const PAGES = { pages: true };
 const STORED = { stored: true };
 const FLASH = new Map<string, unknown>([['values', new Map()], ['changed', []]]);
 const KEPT = new Map([['rows', new Map([['open', true]])]]);
-// The four limits of a body as the record body_limits of the core takes them (F-25).
-const LIMITS = { limit: 8, valueLimit: 4, partLimit: 2, fileLimit: 1 };
 
 // The exact units: the name of the unit of the server, the member of the binding, the arguments of the call, the
 // arguments that the member must receive and the value that the member returns, which the unit returns as it is.
@@ -159,8 +161,6 @@ const EXACT: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[
   ['Csrf.browserOf of a request without a session (HY-24.12)', 'browser', (rules) => rules.csrfBrowserOf(''), [''], null],
   ['Context.hash (HY-125.12)', 'contextHash', (rules) => rules.contextHash('build', '{}'), ['build', '{}'], 'hash'],
   ['Context.validHeader (HY-127.2)', 'validContextHeader', (rules) => rules.contextValidHeader(null), [null], true],
-  ['FileSession.get (HY-104.13)', 'sessionValue', (rules) => rules.sessionValue('stored'), ['stored'], 'value'],
-  ['FileSession.set (HY-104.14)', 'sessionRecord', (rules) => rules.sessionRecord('value'), ['value'], 'stored'],
   ['JsonCodec.encode (HY-54.18)', 'jsonWrite', (rules) => rules.jsonCodecEncode(FLASH), [FLASH], '{"values":{},"changed":[]}'],
   ['Request.fileOver (HY-114.12)', 'fileOver', (rules) => rules.requestFileOver([3, 9], 8), [[3, 9], 8], true],
   ['Session.flashOf (HY-25.2)', 'flashOf', (rules) => rules.sessionFlashOf(STORED), [STORED], FLASH],
@@ -284,8 +284,6 @@ const PARTIAL: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknow
   ['Templates.reads (HY-73)', 'templateReads', (rules) => rules.Templates.reads(new Map(), 'layout.tpl'), [new Map(), 'layout.tpl'], true],
   ['Templates.reserved (HY-31.3)', 'reservedDataTemplate', (rules) => rules.Templates.reserved(), [], { name: 'hyper/data.tpl', source: '' }],
   ['Application.checkFunctionEntry (HYC-24.7)', 'checkFunctionEntry', (rules) => rules.Application.checkFunctionEntry('shout', false), ['shout', false], undefined],
-  ['Request.form (HY-57, F-21, F-22)', 'readHeldBody', (rules) => rules.formReadHeld('application/x-www-form-urlencoded', new Uint8Array([97]), LIMITS), ['application/x-www-form-urlencoded', new Uint8Array([97]), LIMITS], { fields: [['a', ['']]], files: [] }],
-  ['Fields.parse (HY-56, F-20)', 'parseUrlencoded', (rules) => rules.formParseUrlencoded(new Uint8Array([97])), [new Uint8Array([97])], [['a', ['']]]],
 ];
 
 for (const [label, name, call, args, result] of [...EXACT, ...PARTIAL]) {
@@ -296,24 +294,8 @@ for (const [label, name, call, args, result] of [...EXACT, ...PARTIAL]) {
   });
 }
 
-test('the host gives request_body.start the content type, the Content-Length, the stream and the four limits, and receives its body (HY-131.1, HY-131.29)', async () => {
-  const body = { body: true };
-  const { rules, calls } = rulesOf({ 'RequestBody.start': Promise.resolve(body) });
-  assert.equal(await rules.formStart('multipart/form-data; boundary=x', '12', true, LIMITS), body);
-  assert.deepEqual(calls, [['RequestBody.start', ['multipart/form-data; boundary=x', '12', true, LIMITS]]]);
-});
-
-test('UploadedFile gives form_file.new the name, the filename, the content type and the bytes, and holds the file of the core (HY-113.3, F-22)', () => {
-  const content = new Uint8Array([120]);
-  const { rules, calls } = rulesOf({});
-  const file = rules.uploadedFile('f', 'a.txt', 'text/plain', content);
-  assert.ok('made' in file, 'rules.uploadedFile gave no instance of FormFile of the binding');
-  assert.deepEqual(file.made, ['f', 'a.txt', 'text/plain', content]);
-  assert.deepEqual(calls, [['new FormFile', ['f', 'a.txt', 'text/plain', content]]]);
-});
-
 test('each member that coreRules requires has a test of the unit that calls it', () => {
-  const tested = new Set<string>([...OWN_TEST, ...NOT_CALLED, ...[...EXACT, ...PARTIAL].map(([, name]) => name)]);
+  const tested = new Set<string>([...OWN_TEST, ...NOT_CALLED, ...DIRECT, ...[...EXACT, ...PARTIAL].map(([, name]) => name)]);
   assert.deepEqual(REQUIRED.filter((name) => !tested.has(name)), [], 'core-rules.ts requires these members, which no test of this file calls');
   assert.deepEqual([...tested].filter((name) => !REQUIRED.includes(name)), [], 'this file tests these members, which core-rules.ts does not require');
 });

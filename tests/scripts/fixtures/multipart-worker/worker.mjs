@@ -5,13 +5,13 @@
 import { createHash } from 'node:crypto';
 import { createReadStream, readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { rules } from '../../../../packages/ts/dist/app/core-rules.js';
+import { binding } from '../../../../packages/ts/dist/app/core-rules.js';
 
 const cases = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 for (const [index, item] of cases.entries()) {
   const started = performance.now();
   // The core reads the chunks under the four limits in their order (F-25, HY-131.32); its first failure stops the body.
-  const read = await rules().formStart(item.type === '' ? null : item.type, null, true, { limit: item.limit, valueLimit: item.valueLimit, partLimit: item.partLimit, fileLimit: item.fileLimit });
+  const read = await binding().RequestBody.start(item.type === '' ? null : item.type, null, true, { limit: item.limit, valueLimit: item.valueLimit, partLimit: item.partLimit, fileLimit: item.fileLimit });
   let failure = null;
   for await (const chunk of createReadStream(item.body, { highWaterMark: item.chunk })) {
     try {
