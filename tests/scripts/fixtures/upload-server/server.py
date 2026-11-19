@@ -167,7 +167,7 @@ def upload(request):
             [
                 name
                 for name in os.listdir(tempfile.gettempdir())
-                if name.startswith("hyper-")
+                if name.startswith("http-form-")
             ]
         ),
     }
