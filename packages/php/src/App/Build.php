@@ -15,7 +15,7 @@ final class Build
     /**
      * Reads the build id of a `build.json` file. The file must exist, and the core reads its bytes: valid JSON that
      * holds exactly the key `build` with a build id of 64 lowercase hexadecimal characters; a failure names the path
-     * of the file (HY-125.5, HY-125.23).
+     * of the file (HY-125.19, HY-125.23).
      *
      * @throws HyperValueError of the kind `invalid_build` (HY-133.2)
      */

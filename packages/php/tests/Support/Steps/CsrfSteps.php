@@ -11,7 +11,7 @@ use Polyspec\Hyper\Tests\Support\CaseRules;
 /** HY-24: the cases of contracts/csrf.json, the masked values of a token and their verification. */
 final class CsrfSteps
 {
-    /** Masks the token with the mask, or records the failure with which it fails (HY-24.9). */
+    /** Masks the token with the mask, or records the failure with which it fails (HY-24.14). */
     public static function mask(CaseReader $case): void
     {
         $token = self::text($case, 'token');
@@ -21,7 +21,7 @@ final class CsrfSteps
         $case->compare('raises', $outcome['raises']);
     }
 
-    /** Verifies the value against the token, or records the failure with which it fails (HY-24.9). */
+    /** Verifies the value against the token, or records the failure with which it fails (HY-24.14). */
     public static function verify(CaseReader $case): void
     {
         $token = self::text($case, 'token');

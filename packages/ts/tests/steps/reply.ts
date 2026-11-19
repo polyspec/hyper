@@ -4,7 +4,7 @@ import type { CaseReader } from '../case-reader.js';
 import { failureOf } from '../case-rules.js';
 import { decoded } from './session-requests.js';
 
-// Calls a method of the reply with the arguments as a JavaScript caller may give them, of any type (HY-52.11).
+// Calls a method of the reply with the arguments as a JavaScript caller may give them, of any type (HY-52.15).
 export function call(reply: Reply, method: string, args: unknown[]): void {
   switch (method) {
     case 'cookie':

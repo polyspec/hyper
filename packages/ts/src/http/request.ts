@@ -124,7 +124,7 @@ export class Request {
   constructor(init: RequestInit) {
     ArgumentCountError.between(arguments.length, 1, 1);
     ArgumentCountError.members(init, REQUEST_REQUIRED, REQUEST_OPTIONAL);
-    // HY-42.6, HY-42.7: the text that a host gives holds bytes, one for each character, and a character above U+00FF
+    // HY-42.7: the text that a host gives holds bytes, one for each character, and a character above U+00FF
     // fails with the kind invalid_text of the binding, in the message of the binding for its subject.
     const texts: [string, string][] = [['path', init.path], ['query', init.query ?? ''], ...Object.entries(init.headers ?? {}).flatMap(([name, value]): [string, string][] => [['header', name], ['header', value]])];
     for (const [subject, text] of texts) {
@@ -142,7 +142,7 @@ export class Request {
     this.queryFields = Fields.parse(Buffer.from(this.queryText, 'latin1'));
     const type = this.headerValues.get('content-type') ?? '';
     if (this.read?.core.streamed() === true) {
-      // HY-131.5: a body read in chunks gives its parts, none when it failed (HY-113.25, HY-131.32).
+      // HY-131.26: a body read in chunks gives its parts, none when it failed (HY-113.25, HY-131.32).
       [this.formFields, this.fileParts] = this.read.failure === null ? Request.formOf(this.read.core.parts()) : [null, null];
       this.noBoundary = false;
     } else {

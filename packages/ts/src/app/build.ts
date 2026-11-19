@@ -8,7 +8,7 @@ import type { Value } from '../data/values.js';
 /** @internal */
 export class Build {
   // Reads the build id of a `build.json` file. The file must exist, be valid JSON and hold exactly the key `build` with
-  // a build id of 64 lowercase hexadecimal characters; a failure names the path of the file (HY-125.5).
+  // a build id of 64 lowercase hexadecimal characters; a failure names the path of the file (HY-125.23).
   static read(file: string): string {
     let bytes: Buffer;
     try {

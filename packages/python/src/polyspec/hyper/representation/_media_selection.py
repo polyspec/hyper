@@ -45,7 +45,7 @@ class MediaSelection:
     ) -> tuple[int, dict[str, str]]:
         """Returns the weight in thousandths that the ranges give a declared type, and the parameter values of the range
         that gives it: the highest weight, and the first in `Accept` order among equal ones, of the ranges that name the
-        type with a served value for every required parameter and no other parameter (HY-116.8, HY-119)."""
+        type with a served value for every required parameter and no other parameter (HY-116.19, HY-119)."""
         name, _, subtype = entry.media.partition("/")
         required = {parameter.lower(): served for parameter, served in entry.parameters}
         weight = 0

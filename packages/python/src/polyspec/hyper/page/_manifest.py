@@ -46,7 +46,7 @@ class Manifest:
             raise CoreRules.shared().open_error(f"manifest {file} does not exist")
         try:
             text = path.read_text(encoding="utf-8")
-            # HY-2.8: the manifest is JSON text as HY-54 decodes it.
+            # HY-2.9: the manifest is JSON text as HY-54 decodes it.
             JsonCodec.decode(text)
             data = json.loads(text)
         except ValueError as error:

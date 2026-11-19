@@ -49,8 +49,8 @@ final class DataModel
 
             return true;
         } catch (HyperValueError | HyperTypeError $error) {
-            // HY-44.8: only a failure of the data model, whose kinds start with `data_`, is a value outside it; another
-            // failure is not swallowed.
+            // HY-44.12: only a failure of the data model, whose kinds start with `data_`, is a value outside it;
+            // another failure is not swallowed.
             if (!str_starts_with($error->kind(), 'data_')) {
                 throw $error;
             }

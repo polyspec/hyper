@@ -63,7 +63,7 @@ def flags(case) -> None:
 def _applied(case, compare_failure: bool) -> Reply:
     """Makes a reply and applies the calls of the case in order until one fails, and compares the failure."""
     # The JSON text gives the value as a handler gives it (HY-44); a caller passes the decoded arguments, of any type
-    # (HY-52.11).
+    # (HY-52.15).
     calls = [
         (entry[0], [decoded(text) for text in entry[1]]) for entry in calls_of(case)
     ]

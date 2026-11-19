@@ -142,7 +142,7 @@ interface KeepRequest {
   readonly formCsrf?: string | null;
 }
 
-// The four limits of a body as the record body_limits of the core takes them (F-25, HY-59.15, HY-131.7 to HY-131.12).
+// The four limits of a body as the record body_limits of the core takes them (F-25, HY-59.15, HY-131.27, HY-131.8 to HY-131.10, HY-131.30).
 /** @internal */
 export interface BodyLimits {
   readonly limit: number;
@@ -526,7 +526,7 @@ export const rules: () => CoreRules = sharedRules(() => createRequire(import.met
 
 // Returns the module of the binding of the core, which the units of the server call directly for the form and the
 // session records, as the PHP server calls the functions of the extension: request_body.start, read_held_body,
-// parse_urlencoded and form_file.new of http-form (F-20 to F-25, HY-113.3, HY-131), and session_value and
+// parse_urlencoded and form_file.new of http-form (F-20 to F-25, HY-113.21, HY-131), and session_value and
 // session_record (HY-104.13, HY-104.14). It loads the module as `rules` does, which fails with CoreBindingError for an
 // addon that does not load and for a module that lacks a member of the binding.
 /** @internal */

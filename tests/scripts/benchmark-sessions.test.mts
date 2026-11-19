@@ -1,5 +1,5 @@
 // The benchmark of the Redis sessions runs each server and reports what it counted (HY-115). Its PHP server loads the
-// json, the template and the hyper extension, as every PHP server of a run does (HY-48.15, HY-132.2).
+// json, the template and the hyper extension, as every PHP server of a run does (HY-48.23, HY-132.2).
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { test } from 'node:test';

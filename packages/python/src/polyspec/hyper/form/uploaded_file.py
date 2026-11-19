@@ -18,7 +18,7 @@ class UploadedFile:
 
     @staticmethod
     def _of_core(core: Any) -> UploadedFile:
-        """Returns the file of hyper over a file that the core read (HY-131.13)."""
+        """Returns the file of hyper over a file that the core read (HY-131.28)."""
         file = UploadedFile.__new__(UploadedFile)
         file.__core = core
         return file
@@ -28,7 +28,7 @@ class UploadedFile:
         return self.__core.name
 
     def filename(self) -> str:
-        """Returns the filename parameter of the part, as it was sent (HY-113.14)."""
+        """Returns the filename parameter of the part, as it was sent (HY-113.21)."""
         return self.__core.filename
 
     def content_type(self) -> str:
@@ -36,16 +36,16 @@ class UploadedFile:
         return self.__core.content_type
 
     def size(self) -> int:
-        """Returns the number of bytes of the part (HY-131.15)."""
+        """Returns the number of bytes of the part (HY-131.28)."""
         return self.__core.size
 
     def content(self) -> bytes:
-        """Returns the bytes of the part as one value, and fails with `moved` after a move (HY-131.16)."""
+        """Returns the bytes of the part as one value, and fails with `moved` after a move (HY-131.28)."""
         return bytes(self.__core.content())
 
     def move_to(self, path: str) -> None:
         """Moves the file to the path, and fails with `exists` when the path exists and with `moved` when the file was
-        moved (HY-131.15, HY-131.16)."""
+        moved (HY-131.28)."""
         if not isinstance(path, str):
             raise TypeError("a path is not a string (F-11)")
         self.__core.move_to(path)

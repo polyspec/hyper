@@ -47,7 +47,8 @@ abstract class NamedValues
     }
 
     /**
-     * Returns each name with its values, in the order of the names; a pair keeps a decimal name a string (HY-56.4).
+     * Returns each name with its values, in the order of the names; a pair keeps a decimal name a string
+     * (HY-56.9, HY-56.7).
      *
      * @return list<array{string, list<T>}>
      */

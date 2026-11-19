@@ -1,6 +1,6 @@
 // The assets of a template release and of the json release whose extension the template extension requires, which
 // the tests of the template pins name. The json release is the version that the platform of the root composer.json
-// declares for ext-polyspec_json, whose Composer repository both Composer roots declare (HY-48.15).
+// declares for ext-polyspec_json, whose Composer repository both Composer roots declare (HY-48.23).
 import { readFileSync } from 'node:fs';
 import { jsonObject, jsonString, parseJsonObject } from '../../scripts/json.mts';
 

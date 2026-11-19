@@ -649,7 +649,7 @@ export class App<S extends object = Record<string, never>> {
       const mediaType = App.readMediaType(request);
       if (mediaType === null) return Response.text(400, 'Bad Request').withHeader('Vary', vary);
       if (mediaType !== 'application/json') return Response.text(415, 'Unsupported Media Type').withHeader('Vary', vary);
-      // HY-121.8: bytes that are not UTF-8, a text that json refuses and a value outside the data model are no value
+      // HY-121.11: bytes that are not UTF-8, a text that json refuses and a value outside the data model are no value
       // that a handler reads.
       try {
         value = JsonCodec.decode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(request.bodyBytes()));

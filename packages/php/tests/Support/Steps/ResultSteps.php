@@ -125,7 +125,7 @@ final class ResultSteps
         $case->compare('raises', $outcome['raises']);
     }
 
-    /** Calls `flash` or `changed` with the decoded argument, and records the failure with which it fails (HY-25.6). */
+    /** Calls `flash` or `changed` with the decoded argument, and records the failure with which it fails (HY-25.7). */
     public static function types(CaseReader $case): void
     {
         $case->compare('raises', self::stored($case, Result::redirect('/')));

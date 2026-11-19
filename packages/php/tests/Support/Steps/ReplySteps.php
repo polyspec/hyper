@@ -92,7 +92,7 @@ final class ReplySteps
     }
 
     /**
-     * Calls a method of the reply with the arguments as a caller may give them, of any type (HY-52.11).
+     * Calls a method of the reply with the arguments as a caller may give them, of any type (HY-52.15).
      *
      * @param list<mixed> $arguments
      */

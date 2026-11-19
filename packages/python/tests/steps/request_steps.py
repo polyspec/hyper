@@ -1,4 +1,4 @@
-# The steps of contracts/request.json: the text that a host gives a request (HY-42.6), the files of a request
+# The steps of contracts/request.json: the text that a host gives a request (HY-42.7), the files of a request
 # (HY-113.2), the path and the query of a request target (HY-42, HY-56) and the values that a request gives.
 import os
 import tempfile
@@ -201,7 +201,7 @@ def _pairs(pairs: list) -> list:
 
 def _kind(member) -> object:
     """The result of a member that needs the selected type, or `caller error` for the error of a request without one
-    (HY-116.16)."""
+    (HY-116.21)."""
     try:
         return member()
     except RuntimeError as error:

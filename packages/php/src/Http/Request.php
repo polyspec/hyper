@@ -534,7 +534,7 @@ final class Request
     /**
      * Creates the request as received from the PHP request globals, with an empty body (HY-60.18), and the reader of
      * its body, which `withInput` feeds in chunks up to the body limit `$limit`, and a multipart body through the
-     * reader of HY-131 when `$stream` is true, with the limits of HY-131.7 to HY-131.12.
+     * reader of HY-131 when `$stream` is true, with the limits of HY-131.27, HY-131.8 to HY-131.10, HY-131.30.
      *
      * @internal
      */

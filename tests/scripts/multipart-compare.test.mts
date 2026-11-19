@@ -83,7 +83,7 @@ function generated(next: () => number): Buffer {
     if (next() < 0.1) header += `\r\nX-Pad: ${'p'.repeat(Math.floor(next() * 9000))}`;
     let content = kind < 0.4 ? bytes(Math.floor(next() * 3000)) : Buffer.from(pick(['', '1', 'x=1&y=2', '값 №', `\r\n--${BOUNDARY.slice(0, 3)}`, `a--${BOUNDARY}b`, `\n--${BOUNDARY}`]));
     if (kind >= 0.4 && kind < 0.45) content = Buffer.concat([content, Buffer.from([0xff])]);
-    // The content of a part holds no delimiter after a CRLF, which would end it (HY-131.3).
+    // The content of a part holds no delimiter after a CRLF, which would end it (HY-131.26).
     while (content.includes(`\r\n--${BOUNDARY}`)) content = Buffer.from(content.toString('latin1').replace(`\r\n--${BOUNDARY}`, `\r\n-+${BOUNDARY}`), 'latin1');
     chunks.push(Buffer.from(`--${BOUNDARY}\r\n${header}\r\n\r\n`), content, Buffer.from('\r\n'));
   }

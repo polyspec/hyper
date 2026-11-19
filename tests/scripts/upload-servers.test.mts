@@ -600,7 +600,7 @@ test('escaped-500-keeps-the-headers-of-the-caller (HY-60.24 to HY-60.27, HY-99.2
   });
 });
 
-test('around-answers-a-changed-copy-and-changes-the-response (HY-97.2, HY-97.3, HY-97.4, HY-45.1, HY-45.3, HY-99.2, HY-104.9)', SCENARIO, async (t) => {
+test('around-answers-a-changed-copy-and-changes-the-response (HY-97.2, HY-97.3, HY-97.4, HY-45.1, HY-45.3, HY-99.2, HY-104.43)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'mark' } });
   await eachHost(t, hosts, async (host, check) => {
     const identifier = check.response('GET /', await ask(host, requestBytes('GET', '/')), { status: 200, bodyContains: '<p>upload</p>', headers: { 'x-around': 'yes' }, cookie: new RegExp(`^hy-session=(${SESSION[host.name]}); Path=/; HttpOnly; SameSite=Lax$`) });
@@ -694,7 +694,7 @@ function unmasked(masked: string): string {
   return Buffer.from(bytes.subarray(half).map((byte, index) => byte ^ (bytes[index] ?? 0))).toString('hex');
 }
 
-test('session-cookie-of-a-new-session (HY-45.1, HY-45.3, HY-45.4, HY-24.2, HY-24.3, HY-97.3, HY-104.2, HY-104.9, HY-52.7)', SCENARIO, async (t) => {
+test('session-cookie-of-a-new-session (HY-45.1, HY-45.3, HY-45.4, HY-24.2, HY-24.3, HY-97.3, HY-104.2, HY-104.43, HY-52.7)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'none' } });
   const csrfOf = (answer: Answer): string => {
     const csrf = member(member(jsonOf(answer.body), 'shared'), 'csrf');
@@ -799,7 +799,7 @@ test('public-files-are-served-before-around (HY-97.6, HY-60.12, HY-99.12, HY-100
   });
 });
 
-test('several-cookie-lines-are-one-cookie-header (HY-129.1, HY-129.4, HY-129.5, HY-129.6)', SCENARIO, async (t) => {
+test('several-cookie-lines-are-one-cookie-header (HY-129.13, HY-129.14, HY-129.15, HY-129.6)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'cookies' } });
   // The PHP built-in server joins the lines with `, ` before PHP reads them (HY-129.6).
   const expected = { php: '{"a":"1, b=2","b":null}', node: '{"a":"1","b":"2"}', python: '{"a":"1","b":"2"}' };

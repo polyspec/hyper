@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from ..app._core_rules import CoreRules
 
-# The kinds of a failure (HY-44.8), the kinds of the template data model.
+# The kinds of a failure (HY-44.12), the kinds of the template data model.
 _KINDS = frozenset(
     (
         "data_number_range",
@@ -33,7 +33,7 @@ class DataModel:
             DataModel.check(value)
             return True
         except (ValueError, TypeError) as error:
-            # HY-44.8: only a kind of the data model is a value outside it; another failure is not swallowed.
+            # HY-44.12: only a kind of the data model is a value outside it; another failure is not swallowed.
             if getattr(error, "kind", None) not in _KINDS:
                 raise
             return False

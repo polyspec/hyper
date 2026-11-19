@@ -248,7 +248,7 @@ fn reply_cookies() {
 
 #[test]
 fn reply_cache_control_referrer_policy_and_status() {
-    // HY-52.6, HY-52.16, HY-103.2, HY-103.9, HY-69.9
+    // HY-52.6, HY-52.16, HY-103.2, HY-103.9, HY-69.11
     let file = cases("reply.json");
     for (name, group_name) in [
         ("cacheControl", "cacheControl"),
@@ -1946,7 +1946,7 @@ fn a_page_refuses_the_result_of_another_call() {
 
 #[test]
 fn a_declaration_of_client_rendering_is_checked_when_the_application_opens() {
-    // HY-62.5, HY-62.6, HY-62.15, HY-62.35, HY-62.37, HY-62.39
+    // HY-62.5, HY-62.6, HY-62.15, HY-62.37, HY-62.39
     use polyspec_hyper::client_rendering::{check_declaration, check_shell_path, shell_text};
     let file = cases("client.json");
     let (_, manifest) = application(&cases("app.json"), "a_board");

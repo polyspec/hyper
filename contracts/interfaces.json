@@ -270,7 +270,7 @@
               ],
               "output": "string",
               "errors": [],
-              "state": "Checks the declaration of the client rendering against the manifest and returns the text of the static shell (HY-62.15, HY-62.35).",
+              "state": "Checks the declaration of the client rendering against the manifest and returns the text of the static shell (HY-62.15, HY-62.39).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::checkedShell",
@@ -3141,7 +3141,7 @@
               "errors": [
                 "hyper-value-error"
               ],
-              "state": "Reads the build id of a build.json file. A failure raises the kind `invalid_build` of the hyper-value-error (HY-125.5, HY-106.21).",
+              "state": "Reads the build id of a build.json file. A failure raises the kind `invalid_build` of the hyper-value-error (HY-125.19, HY-106.21).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/Build.php::Polyspec\\Hyper\\Build::read",
@@ -4467,7 +4467,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Removes the files of the request body (HY-131.1).",
+              "state": "Removes the files of the request body (HY-131.26).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/_exchange.py::Exchange.release",
@@ -4823,7 +4823,7 @@
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Gives the body to the body of the core in chunks up to the limit and no more, and returns the kind of its first failure, or null (HY-59.9, HY-131.21).",
+              "state": "Gives the body to the body of the core in chunks up to the limit and no more, and returns the kind of its first failure, or null (HY-59.9, HY-131.33).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::readBody",
@@ -4876,8 +4876,8 @@
               "tests": [
                 "packages/ts/tests/http.test.ts::the write hook and listener > listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
                 "packages/ts/tests/http.test.ts::the write hook and listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.28, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.26): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled.",
                 "packages/ts/tests/http.test.ts::the write hook and listener > answers a request without a target with the plain 500 and calls no write hook (HY-100.2, HY-99.12): Only the Node host is the listener of node:http (HY-100.1); the test gives the listener a request of node:http without its target and asserts the plain 500 and no write hook call.",
                 "packages/ts/tests/http.test.ts::the write hook and listener > answers a failed stat of a file of the public directory with the plain 500 and one write hook call with its request (HY-60.14, HY-60.17): Only the Node host is the listener of node:http (HY-100.1); the test serves a public directory whose subdirectory has no search permission and asserts the plain 500 and one write hook call with the request."
               ]
@@ -6108,7 +6108,7 @@
               ],
               "output": "request",
               "errors": [],
-              "state": "Creates the request as received from the PHP request globals, with an empty body and the reader of its body (HY-60.18, HY-131.7).",
+              "state": "Creates the request as received from the PHP request globals, with an empty body and the reader of its body (HY-60.18, HY-131.27).",
               "only": {
                 "languages": [
                   "php"
@@ -7608,7 +7608,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Starts the body of the content type under its four limits through request_body.start of the binding; a Content-Length that is no number or above the body limit is the failure of the body before any byte is read (HY-131.1, HY-131.29).",
+              "state": "Starts the body of the content type under its four limits through request_body.start of the binding; a Content-Length that is no number or above the body limit is the failure of the body before any byte is read (HY-131.26, HY-131.29).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::__construct",
@@ -7740,7 +7740,7 @@
               "inputs": [],
               "output": "boolean",
               "errors": [],
-              "state": "Returns true when the body is read in chunks (HY-131.1).",
+              "state": "Returns true when the body is read in chunks (HY-131.26).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::streamed",
@@ -7766,7 +7766,7 @@
               "inputs": [],
               "output": "optional<value>",
               "errors": [],
-              "state": "Returns the text fields and the files of a body read in chunks, or none when it failed (HY-131.5, HY-113.25).",
+              "state": "Returns the text fields and the files of a body read in chunks, or none when it failed (HY-131.26, HY-113.25).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::parts",
@@ -7820,7 +7820,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Returns the fields and the files of a form of the core as the containers of the server (HY-131.5).",
+              "state": "Returns the fields and the files of a form of the core as the containers of the server (HY-131.26).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::named",
@@ -8352,7 +8352,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Holds the name, the filename, the content type and the bytes of a file part as a value (HY-113.3).",
+              "state": "Holds the name, the filename, the content type and the bytes of a file part as a value (HY-113.21).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::__construct",
@@ -8377,7 +8377,7 @@
               ],
               "output": "uploaded-file",
               "errors": [],
-              "state": "Returns the file of hyper over a file of the core, which the body read in chunks or held as one value (HY-131.13, F-22).",
+              "state": "Returns the file of hyper over a file of the core, which the body read in chunks or held as one value (HY-131.28, F-22).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::ofCore",
@@ -8400,7 +8400,7 @@
               "inputs": [],
               "output": "string",
               "errors": [],
-              "state": "Returns the name parameter of the part (HY-113.3).",
+              "state": "Returns the name parameter of the part (HY-113.21).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::name",
@@ -8423,7 +8423,7 @@
               "inputs": [],
               "output": "string",
               "errors": [],
-              "state": "Returns the filename parameter of the part, with the escapes of its quoted string undone (HY-113.3, HY-113.20).",
+              "state": "Returns the filename parameter of the part, with the escapes of its quoted string undone (HY-113.21, HY-113.23).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::filename",
@@ -8446,7 +8446,7 @@
               "inputs": [],
               "output": "string",
               "errors": [],
-              "state": "Returns the Content-Type header of the part, or the empty text when it has none (HY-113.3).",
+              "state": "Returns the Content-Type header of the part, or the empty text when it has none (HY-113.21).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::contentType",
@@ -8469,7 +8469,7 @@
               "inputs": [],
               "output": "number",
               "errors": [],
-              "state": "Returns the number of bytes of the part (HY-131.15).",
+              "state": "Returns the number of bytes of the part (HY-131.28).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::size",
@@ -8492,7 +8492,7 @@
               "inputs": [],
               "output": "bytes",
               "errors": [],
-              "state": "Returns the bytes of the part as one value, read from its file when it has one, and fails with the class of HY-46.3 after a move (HY-113.3, HY-131.16).",
+              "state": "Returns the bytes of the part as one value, read from its file when it has one, and fails with the class of HY-46.3 after a move (HY-113.21, HY-131.28, HY-131.34).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::content",
@@ -8517,7 +8517,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Moves the file to the path; a path that is not a string fails with TypeError, and a path that exists or a file that was moved fails with the class of HY-46.3 (HY-131.15, HY-131.16).",
+              "state": "Moves the file to the path; a path that is not a string fails with TypeError, and a path that exists or a file that was moved fails with the class of HY-46.3 (HY-131.28, HY-131.34).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::moveTo",
@@ -10614,7 +10614,7 @@
               ],
               "output": "none",
               "errors": [],
-              "state": "Removes the value of a key, without failing for a key that holds none (HY-104.30).",
+              "state": "Removes the value of a key, without failing for a key that holds none (HY-104.37).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-session.ts::FileSession.remove",

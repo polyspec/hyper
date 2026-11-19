@@ -218,7 +218,7 @@ async def _answer(
 async def _read_body(receive: Callable, body: BodyReader) -> None:
     """Gives the request body of the receive events to `body`. A body that passes the limit is read to its end and
     discarded, so that the response can be sent (HY-59). A chunk of a body that is read into files is given in a
-    worker thread, so that the write of a file does not stop the event loop (HY-131.21)."""
+    worker thread, so that the write of a file does not stop the event loop (HY-131.33)."""
     reading = True
     while True:
         event = await receive()

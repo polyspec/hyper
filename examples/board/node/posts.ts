@@ -77,7 +77,7 @@ export class Posts {
   }
 
   // Returns the path of the file of a post in the directory `<database>.uploads`, which is created when it does not
-  // exist. An action moves an uploaded file to it (HY-131.15).
+  // exist. An action moves an uploaded file to it (HY-131.28).
   attachmentPath(id: number): string {
     const directory = `${this.file}.uploads`;
     mkdirSync(directory, { recursive: true, mode: 0o700 });

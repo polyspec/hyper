@@ -39,11 +39,11 @@ class BodyReader:
         content_length: Optional[str] = None,
     ):
         """Starts the body of the content type with its four limits; ``stream`` tells whether a multipart body is read
-        in chunks, which it is when ``multipart/form-data`` is a form type of the application (HY-131.1). The core
+        in chunks, which it is when ``multipart/form-data`` is a form type of the application (HY-131.26). The core
         starts the reader in chunks only for a ``multipart/form-data`` type with a boundary (HY-113.24)."""
         from .._binding import _root
 
-        # The four limits of the body (HY-59.15, HY-131.7 to HY-131.12) as the keyword arguments of the binding, each at
+        # The four limits of the body (HY-59.15, HY-131.27, HY-131.8 to HY-131.10, HY-131.30) as the keyword arguments of the binding, each at
         # most NO_LIMIT.
         limits = {
             "limit": min(limit, NO_LIMIT),
@@ -110,7 +110,7 @@ class BodyReader:
 
     def parts(self) -> Optional[tuple[Fields, Files]]:
         """Returns the text fields and the files of a body read in chunks, or None when it failed or passed a limit
-        (HY-131.5, HY-113.25). The first call ends the body."""
+        (HY-131.26, HY-113.25). The first call ends the body."""
         if not self.__body.streamed() or self.__over or self.__failed:
             return None
         try:

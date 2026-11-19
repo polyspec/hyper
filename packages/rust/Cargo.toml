@@ -41,7 +41,7 @@ polyspec-http-form = { git = "https://github.com/polyspec/http-form.git", tag = 
 polyspec-json = { git = "https://github.com/polyspec/json.git", tag = "v0.0.40" }
 # The values of the data model and their JSON form (VAL-2, VAL-12, VAL-20; HY-44, HY-54.20).
 polyspec-template = { git = "https://github.com/polyspec/template.git", tag = "v0.0.32" }
-# The store interface of a session and its values (SE-2, SE-7; HY-104.25, HY-104.30), which the host entries take.
+# The store interface of a session and its values (SE-2, SE-7; HY-104.25, HY-104.37), which the host entries take.
 # The stores of files and Redis are features of the library that the bindings build; the core needs the interface only.
 polyspec-session-store = { git = "https://github.com/polyspec/session-store.git", tag = "v0.0.8", default-features = false }
 # The values of a session record (RQ-001 to RQ-012; HY-104.13, HY-104.14).
