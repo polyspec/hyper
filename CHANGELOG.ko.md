@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: be88d8bd6df47ddc0ccd56458a3d7972dd96b921a98024052dc78fff7ed8cdd2 -->
+<!-- source-sha256: 241cf38a385d3062b7fe770bb44270a57cad76282d213c6d0959a2cad3988e57 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP, Node, Python runner가 실행하는 `contracts/request.json`의 section `uploads`가 생성자로 `UploadedFile`을 만들고 `name()`, `contentType()`, `size()`, `content()`, `moveTo(path)`로 새 경로에 옮긴 결과, 그 뒤 `content()`와 두 번째 이동의 실패 `moved`, 이미 있는 경로로의 이동의 실패 `exists`를 비교한다(H35.196, HY-113.8, HY-113.21, HY-131.28). 입력: `contracts/interfaces.json`과 `contracts/request.json`. 이전 동작: section이 적는 member는 `uploaded-file.filename`뿐이었고, `make recipe-compare`가 그 unit의 `MEMBER_UNSTATED` 줄 18개를 보고했다. 검증: `make hyper-test-php CASES=request.json`과 `make hyper-test-python CASES=request.json`이 통과하고, `make recipe-compare`가 18줄 가운데 어느 것도 보고하지 않는다.
 - `tests/scripts/read-php-functions.test.mts`가 host 파일 `packages/php/src/Host/Run.php`를 읽는다(H35.195, HY-106.20). 입력: 대소문자를 구분하는 file system에서의 그 test. 이전 동작: H35.192 이전의 이름인 `Host/run.php`를 읽어서, 대소문자를 구분하는 file system에서는 파일을 찾지 못했다. 기대: tracked 이름을 읽는다. 검증: `make hyper-test-scripts TESTS=tests/scripts/read-php-functions.test.mts` rc 0, 5 passed.
 - HYR-5가 PHP namespace 함수의 qualified name `Polyspec\Hyper\<member>`를 적고, 그 member 이름은 namespace 뒤의 이름이다(H35.194, HY-106.20). 입력: `docs/spec/recipe.md` HYR-5 "Symbol". 이전 동작: class member의 `Polyspec\Hyper\<Unit>::<member>`만 적어서, `scripts/recipe/names.mts`가 읽는 host 함수 `run`의 형식이 적혀 있지 않았다. 기대: spec이 reader가 읽는 형식을 적는다. 검증: `make docs-check` rc 0.
 - recipe 검사에 reexport 형식, `runners.<language>.tests`, camelCase PHP 파일 규칙이 없다(H35.192, HYR-4, HYR-5, HYR-7). 입력: `contracts/interfaces.json`, `docs/spec/recipe.md`, `scripts/recipe/`. 이전 동작: 검사가 `uploaded-file`의 member를 reexport로 건너뛰고 그것을 위해 `cargo metadata`와 라이브러리의 `interface.json`을 읽었으며, case runner에 test를 `NATIVE_REASON`과 함께 받아들였고, PHP host 파일을 HYR-4와 달리 camelCase의 `src/Host/run.php`로 지었다. 현재 동작: `uploaded-file`은 일곱 member를 PHP, Node, Python native와 함께 적고 기존 검사가 비교한다. case runner의 test는 `cases: none`인 concern `case-runner`의 native test다. host 함수 `run`은 두 manifest의 `autoload.files`가 load하는 `src/Host/Run.php`에 있다. `make recipe-compare`는 finding 28줄 대신 46줄을 보고한다: 어느 section도 적지 않는 `uploaded-file` member 여섯의 `MEMBER_UNSTATED` 18줄이다.

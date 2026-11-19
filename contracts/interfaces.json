@@ -17631,6 +17631,107 @@
             "uploaded-file.filename"
           ]
         },
+        "uploads": {
+          "runners": [
+            "php",
+            "node",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "file": {
+              "role": "input",
+              "fields": {
+                "name": {
+                  "role": "input"
+                },
+                "filename": {
+                  "role": "input"
+                },
+                "contentType": {
+                  "role": "input"
+                },
+                "content": {
+                  "role": "input"
+                }
+              }
+            },
+            "move": {
+              "role": "input",
+              "optional": true
+            },
+            "name": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-113.8",
+              "state": "`name` is what `name()` returns for the file that the constructor made of the four texts of `file`."
+            },
+            "contentType": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-113.8",
+              "state": "`contentType` is what `contentType()` (`content_type()` in Python) returns for the file of `file`."
+            },
+            "size": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-131.28",
+              "state": "`size` is what `size()` returns for the file of `file`, whose `content` is text whose characters U+0000 to U+00FF are bytes."
+            },
+            "content": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-113.21",
+              "state": "`content` is what `content()` returns for the file of `file`, its bytes given as text whose characters U+0000 to U+00FF are bytes."
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-131.28",
+              "state": "`raises` is the failure of `moveTo(path)` (`move_to` in Python) of the file of `file`, or null: `move` `new` names a path that does not exist, and `existing` a path where the step wrote a file first; its `kind`, its HTTP `status` or null, its `category`, and its `message` when a rule states the message."
+            },
+            "moved": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-131.28",
+              "state": "`moved` is the bytes of the file at the path after a move that did not fail, given as text whose characters U+0000 to U+00FF are bytes."
+            },
+            "after": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-131.28",
+              "state": "`after` is the failure of `content()` after the move, as its `kind` and its `category`, or null."
+            },
+            "again": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-131.28",
+              "state": "`again` is the failure of a second `moveTo(path)` to a path that does not exist, after the move, as its `kind` and its `category`, or null."
+            }
+          },
+          "members": [
+            "uploaded-file.constructor",
+            "uploaded-file.name",
+            "uploaded-file.contentType",
+            "uploaded-file.size",
+            "uploaded-file.content",
+            "uploaded-file.moveTo"
+          ]
+        },
         "targets": {
           "runners": [
             "php",

@@ -1,9 +1,12 @@
 // The steps of contracts/request.json: the text that a host gives a request (HY-42.6), the files of a request
 // (HY-113.2), the path and the query of a request target (HY-42, HY-56) and the values that a request gives.
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Cookies } from '../../src/http/cookies.js';
-import { Request } from '../../src/index.js';
+import { Request, UploadedFile } from '../../src/index.js';
 import type { CaseReader } from '../case-reader.js';
-import { failureOf } from '../case-rules.js';
+import { failureOf, raisesOf } from '../case-rules.js';
 import { listOf, textOf } from '../inputs.js';
 import { bytesOf } from '../support.js';
 
@@ -76,6 +79,18 @@ function kindOf(ask: () => boolean): boolean | string {
   }
 }
 
+// Returns the kind and the category of the failure of an awaited call, without the status and the message that the case
+// does not state, or null when the call does not fail.
+async function failureKindOf(call: () => Promise<unknown>): Promise<{ kind: unknown; category: unknown } | null> {
+  try {
+    await call();
+    return null;
+  } catch (error) {
+    const raises = raisesOf(error);
+    return { kind: raises.kind, category: raises.category };
+  }
+}
+
 export const steps = {
   // Compares the path and the raw query that the request gives for a request target.
   targets(reader: CaseReader): void {
@@ -112,6 +127,39 @@ export const steps = {
       failure = error;
     }
     reader.outcome('request', failure);
+  },
+  // Makes the file of the case with the constructor and compares its members, then moves it when the case names a move
+  // and compares the failure of the move, the bytes at the path, and the failures of content() and of a second move
+  // after it (HY-113.8, HY-131.28, HY-131.34).
+  async uploads(reader: CaseReader): Promise<void> {
+    const given = reader.input('file');
+    if (!(given instanceof Map)) throw new Error('the case field file is not a map');
+    const file = new UploadedFile(textIn(given, 'name', null), textIn(given, 'filename', null), textIn(given, 'contentType', null), bytesOf(textIn(given, 'content', null)));
+    reader.compare('name', file.name());
+    reader.compare('contentType', file.contentType());
+    reader.compare('size', file.size());
+    reader.compare('content', Buffer.from(await file.content()).toString('latin1'));
+    if (!reader.has('move')) return;
+    const directory = mkdtempSync(join(tmpdir(), 'hyper-uploads-'));
+    try {
+      const path = join(directory, 'moved');
+      const move = textOf(reader.input('move'), 'the case field move');
+      if (move === 'existing') writeFileSync(path, 'old bytes');
+      else if (move !== 'new') throw new Error('the move of the case is neither new nor existing');
+      let raises = null;
+      try {
+        await file.moveTo(path);
+      } catch (error) {
+        raises = raisesOf(error);
+      }
+      reader.compare('raises', raises);
+      if (raises !== null) return;
+      reader.compare('moved', readFileSync(path).toString('latin1'));
+      reader.compare('after', await failureKindOf(() => file.content()));
+      reader.compare('again', await failureKindOf(() => file.moveTo(join(directory, 'again'))));
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   },
   // Reads the body of the case as a request and records the last file of each name and the pairs of the files.
   files(reader: CaseReader): void {

@@ -73,6 +73,68 @@ final class RequestSteps
     }
 
     /**
+     * Makes the file of the case with the constructor and compares its members, then moves it when the case names a
+     * move and compares the failure of the move, the bytes at the path, and the failures of content() and of a second
+     * move after it (HY-113.8, HY-131.28).
+     */
+    public static function uploads(CaseReader $case): void
+    {
+        $given = Json::map($case->input('file'), 'the case field file');
+        $file = new UploadedFile(
+            Bytes::of(Json::string($given['name'] ?? null)),
+            Bytes::of(Json::string($given['filename'] ?? null)),
+            Bytes::of(Json::string($given['contentType'] ?? null)),
+            Bytes::of(Json::string($given['content'] ?? null)),
+        );
+        $case->compare('name', $file->name());
+        $case->compare('contentType', $file->contentType());
+        $case->compare('size', $file->size());
+        $case->compare('content', Bytes::text($file->content()));
+        if (!$case->has('move')) {
+            return;
+        }
+        $directory = sys_get_temp_dir() . '/hyper-uploads-' . bin2hex(random_bytes(6));
+        mkdir($directory);
+        $path = "{$directory}/moved";
+        try {
+            $move = Json::string($case->input('move'));
+            if ($move === 'existing') {
+                file_put_contents($path, 'old bytes');
+            } elseif ($move !== 'new') {
+                throw new \UnexpectedValueException('the move of the case is neither new nor existing');
+            }
+            $outcome = CaseRules::failureOf(static fn () => $file->moveTo($path));
+            $case->compare('raises', $outcome['raises']);
+            if ($outcome['raises'] !== null) {
+                return;
+            }
+            $case->compare('moved', Bytes::text((string) file_get_contents($path)));
+            $case->compare('after', self::kindOf(static fn () => $file->content()));
+            $case->compare('again', self::kindOf(static fn () => $file->moveTo("{$directory}/again")));
+        } finally {
+            foreach (['moved', 'again'] as $name) {
+                if (is_file("{$directory}/{$name}")) {
+                    unlink("{$directory}/{$name}");
+                }
+            }
+            rmdir($directory);
+        }
+    }
+
+    /**
+     * The kind and the category of the failure of a call, without the status and the message that the case does not
+     * state, or null when the call does not fail.
+     *
+     * @return array{kind: mixed, category: string}|null
+     */
+    private static function kindOf(callable $call): ?array
+    {
+        $raises = CaseRules::failureOf($call)['raises'];
+
+        return $raises === null ? null : ['kind' => $raises['kind'], 'category' => $raises['category']];
+    }
+
+    /**
      * Creates a request whose path, raw query and headers are the UTF-8 bytes of the texts of the case and compares
      * its failure, or null: a PHP string holds bytes, so a character above U+00FF is its bytes (HY-42.7).
      */

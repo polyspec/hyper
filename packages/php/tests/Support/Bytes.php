@@ -19,4 +19,10 @@ final class Bytes
 
         return (string) mb_convert_encoding($text, 'ISO-8859-1', 'UTF-8');
     }
+
+    /** Returns the text of bytes as a case states it: each byte is the character U+0000 to U+00FF of its value. */
+    public static function text(string $bytes): string
+    {
+        return (string) mb_convert_encoding($bytes, 'UTF-8', 'ISO-8859-1');
+    }
 }

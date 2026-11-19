@@ -1,5 +1,9 @@
 # The steps of contracts/request.json: the text that a host gives a request (HY-42.6), the files of a request
 # (HY-113.2), the path and the query of a request target (HY-42, HY-56) and the values that a request gives.
+import os
+import tempfile
+
+from polyspec.hyper.form.uploaded_file import UploadedFile
 from polyspec.hyper.http._cookies import Cookies
 from polyspec.hyper.http.request import Request
 
@@ -51,6 +55,59 @@ def files(case) -> None:
             raises = raises_of(failure)
         case.compare("over", over)
         case.compare("raises", raises)
+
+
+def _kind_of(failure: BaseException) -> dict:
+    """The kind and the category of a failure of hyper, without the status and the message that the case does not
+    state."""
+    raises = raises_of(failure)
+    return {"kind": raises["kind"], "category": raises["category"]}
+
+
+def uploads(case) -> None:
+    """Makes the file of the case with the constructor and compares its members, then moves it when the case names a
+    move and compares the failure of the move, the bytes at the path, and the failures of content() and of a second
+    move after it (HY-113.8, HY-131.28)."""
+    given = case.input("file")
+    file = UploadedFile(
+        given["name"],
+        given["filename"],
+        given["contentType"],
+        given["content"].encode("latin-1"),
+    )
+    case.compare("name", file.name())
+    case.compare("contentType", file.content_type())
+    case.compare("size", file.size())
+    case.compare("content", file.content().decode("latin-1"))
+    if not case.has("move"):
+        return
+    with tempfile.TemporaryDirectory(prefix="hyper-uploads-") as directory:
+        path = os.path.join(directory, "moved")
+        if case.input("move") == "existing":
+            with open(path, "wb") as existing:
+                existing.write(b"old bytes")
+        elif case.input("move") != "new":
+            raise LookupError("the move of the case is neither new nor existing")
+        try:
+            file.move_to(path)
+        except FAILURES as failure:
+            case.compare("raises", raises_of(failure))
+            return
+        case.compare("raises", None)
+        with open(path, "rb") as moved:
+            case.compare("moved", moved.read().decode("latin-1"))
+        try:
+            file.content()
+            after = None
+        except FAILURES as failure:
+            after = _kind_of(failure)
+        case.compare("after", after)
+        try:
+            file.move_to(os.path.join(directory, "again"))
+            again = None
+        except FAILURES as failure:
+            again = _kind_of(failure)
+        case.compare("again", again)
 
 
 def targets(case) -> None:
