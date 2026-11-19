@@ -276,6 +276,8 @@ export interface CoreBinding {
   answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;
   Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: unknown, options: PagesOptions) => CorePagesInstance;
   PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;
+  sessionValue(record: unknown): unknown;
+  sessionRecord(value: unknown): unknown;
   readHeldBody(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;
   parseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];
   RequestBody: { start(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody> };
@@ -330,7 +332,6 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'buildPaths', 'buildStream', 'shellFile', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'checkFunctionEntry', 'routeRequest', 'computePageHeaders', 'frameHeaders',
   'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'readHeldBody', 'parseUrlencoded', 'RequestBody', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
-  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
   'sessionValue', 'sessionRecord',
 ];
 
