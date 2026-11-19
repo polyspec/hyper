@@ -346,7 +346,7 @@
               "visibility": "public",
               "inputs": [
                 "request",
-                "session-store",
+                "sessionStore",
                 "optional<number>"
               ],
               "output": "response",
@@ -373,7 +373,7 @@
               "visibility": "private",
               "inputs": [
                 "request",
-                "session-store",
+                "sessionStore",
                 "number",
                 "optional<delivery>"
               ],
@@ -404,7 +404,7 @@
               "visibility": "internal",
               "inputs": [
                 "request",
-                "session-store",
+                "sessionStore",
                 "optional<number>"
               ],
               "output": "answer",
@@ -431,7 +431,7 @@
               "visibility": "private",
               "inputs": [
                 "request",
-                "session-store",
+                "sessionStore",
                 "number",
                 "reply"
               ],
@@ -591,7 +591,7 @@
               "visibility": "private",
               "inputs": [
                 "request",
-                "session-store",
+                "sessionStore",
                 "reply"
               ],
               "output": "response",
@@ -1152,7 +1152,7 @@
               "kind": "static method",
               "visibility": "private",
               "inputs": [
-                "app-options"
+                "appOptions"
               ],
               "output": "app",
               "errors": [],
@@ -1203,9 +1203,9 @@
               "kind": "static method",
               "visibility": "private",
               "inputs": [
-                "session-opening"
+                "sessionOpening"
               ],
-              "output": "function() -> session-store",
+              "output": "function() -> sessionStore",
               "errors": [],
               "state": "Returns the session store of a request, opened by the transport only when a route uses it (HY-104.38).",
               "native": {
@@ -1282,7 +1282,7 @@
               "kind": "static method",
               "visibility": "internal",
               "inputs": [],
-              "output": "core-rules",
+              "output": "coreRules",
               "errors": [],
               "state": "The one CoreRules of the PHP server over the extension polyspec_hyper, created on its first use; without the extension it fails with the name of the extension, and no rule of the server answers in its place (HY-133.2).",
               "native": {
@@ -2153,7 +2153,7 @@
                 "string",
                 "string"
               ],
-              "output": "hyper-error",
+              "output": "hyperError",
               "errors": [],
               "state": "The error of hyper of the category value with its kind, of the classes of the binding, that is a RangeError (HY-133.2).",
               "native": {
@@ -2171,7 +2171,7 @@
                 "string",
                 "string"
               ],
-              "output": "hyper-error",
+              "output": "hyperError",
               "errors": [],
               "state": "The error of hyper of the category type with its kind, of the classes of the binding, that is a TypeError (HY-133.2).",
               "native": {
@@ -2205,7 +2205,7 @@
               "inputs": [
                 "optional<string>"
               ],
-              "output": "list<accept-range>",
+              "output": "list<acceptRange>",
               "errors": [],
               "state": "Gives the ranges of an Accept value in field order, and fails with invalid_accept or invalid_weight (HY-116.17, HY-116.18).",
               "native": {
@@ -2255,7 +2255,7 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "core-pages",
+                "corePages",
                 "boolean",
                 "front"
               ],
@@ -2276,7 +2276,7 @@
               "inputs": [
                 "plain"
               ],
-              "output": "plain-response",
+              "output": "plainResponse",
               "errors": [],
               "state": "Gives a plain answer of the core as the parts of a response (HY-58).",
               "native": {
@@ -2291,11 +2291,11 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "core-pages",
-                "core-store",
-                "keep-request"
+                "corePages",
+                "coreStore",
+                "keepRequest"
               ],
-              "output": "plain-response",
+              "output": "plainResponse",
               "errors": [],
               "state": "Answers a request to the kept endpoint after its route (HY-40.1).",
               "native": {
@@ -2310,9 +2310,9 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "page-response"
+                "pageResponse"
               ],
-              "output": "page-headers-result",
+              "output": "pageHeadersResult",
               "errors": [],
               "state": "Gives the status, the headers and the body flag of a page response (HY-15.3, HY-52, HY-53).",
               "native": {
@@ -2327,8 +2327,8 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "core-pages",
-                "core-store",
+                "corePages",
+                "coreStore",
                 "opening"
               ],
               "output": "opened",
@@ -2346,10 +2346,10 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "core-pages",
-                "page-input"
+                "corePages",
+                "pageInput"
               ],
-              "output": "core-page-request",
+              "output": "corePageRequest",
               "errors": [],
               "state": "Gives the steps of a page (HY-15, HY-26, HY-58, HY-73, HY-75, HY-124).",
               "native": {
@@ -2364,10 +2364,10 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "core-pages-instance",
+                "corePagesInstance",
                 "string",
                 "map<value>",
-                "regions-data",
+                "regionsData",
                 "number"
               ],
               "output": "string",
@@ -2385,13 +2385,13 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "core-pages-instance",
+                "corePagesInstance",
                 "string",
                 "map<value>",
-                "regions-data",
+                "regionsData",
                 "number"
               ],
-              "output": "document-parts",
+              "output": "documentParts",
               "errors": [],
               "state": "Gives the title and each region rendered alone, the texts that the document holds in their places (HY-13.1 to HY-13.3).",
               "native": {
@@ -2406,7 +2406,7 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "list<build-output>"
+                "list<buildOutput>"
               ],
               "output": "string",
               "errors": [],
@@ -2423,7 +2423,7 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "list<build-output>"
+                "list<buildOutput>"
               ],
               "output": "list<string>",
               "errors": [],
@@ -2440,7 +2440,7 @@
               "kind": "method",
               "visibility": "internal",
               "inputs": [
-                "list<build-output>"
+                "list<buildOutput>"
               ],
               "output": "string",
               "errors": [],
@@ -2496,7 +2496,7 @@
               "inputs": [
                 "plain"
               ],
-              "output": "plain-response",
+              "output": "plainResponse",
               "errors": [],
               "state": "Gives a plain answer with a body as UTF-8 text, as Response.text of the server writes it, and a 204 without a body (HY-58).",
               "native": {
@@ -2531,7 +2531,7 @@
               "inputs": [
                 "object"
               ],
-              "output": "core-rules",
+              "output": "coreRules",
               "errors": [],
               "state": "Returns the rules of the core under the names of the units of the server; a module that lacks a member fails with its name (HY-133.2).",
               "native": {
@@ -2548,7 +2548,7 @@
               "inputs": [
                 "function() -> value"
               ],
-              "output": "function() -> core-rules",
+              "output": "function() -> coreRules",
               "errors": [],
               "state": "Returns the accessor of the one CoreRules of the Node server, created on its first use (HY-133.2).",
               "native": {
@@ -9519,7 +9519,7 @@
               "kind": "constructor",
               "visibility": "internal",
               "inputs": [
-                "session-store"
+                "sessionStore"
               ],
               "output": "session",
               "errors": [],
@@ -9635,8 +9635,18 @@
                 }
               },
               "reachDiffers": [
-                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "php", "sentence": "HY-104.47" },
-                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "python", "sentence": "HY-104.47" }
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "php",
+                  "sentence": "HY-104.47"
+                },
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "python",
+                  "sentence": "HY-104.47"
+                }
               ]
             },
             {
@@ -11012,7 +11022,12 @@
                 }
               },
               "reachDiffers": [
-                { "member": "core-rules.libraryError", "reached": "python", "notReached": "node", "sentence": "HY-104.46" }
+                {
+                  "member": "core-rules.libraryError",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-104.46"
+                }
               ]
             },
             {
@@ -11294,7 +11309,12 @@
                 "sentence": "HY-133.3"
               },
               "reachDiffers": [
-                { "member": "file-session.converted", "reached": "python", "notReached": "node", "sentence": "HY-133.3" }
+                {
+                  "member": "file-session.converted",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-133.3"
+                }
               ]
             }
           ],
@@ -13498,7 +13518,7 @@
               "inputs": [
                 "string"
               ],
-              "output": "hyper-error",
+              "output": "hyperError",
               "errors": [],
               "state": "Returns the failure of a representation declaration or handler, which fails the open of the application (HY-118.5).",
               "native": {
