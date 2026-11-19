@@ -218,7 +218,7 @@ Node와 Python 서버는 Redis store를 session-store 라이브러리에 넘기�
 
 ## H35.86: PHP 서버의 Redis lock 순서
 
-PHP 서버에는 Redis session handler가 둘 있다. 단독 또는 Sentinel store에서 `NativeSession`이 시작하는 phpredis의 session handler(`packages/php/src/Session/NativeSession.php:55`)와, Redis Cluster용 `RedisClusterSessions`(`packages/php/src/Session/RedisClusterSessions.php`)다. 두 handler를 Node와 Python 서버가 쓰는 라이브러리 session-store v0.0.8과 비교한다. 이 release는 루트 `composer.json`이 `ext-polyspec_session_store`로 고정하고, `docs/operations/dependencies.md`가 다른 서버에 고정한 것이다. 라이브러리는 로컬 checkout `~/Projects/polyspec/session-store`의 tag `session-store@v0.0.8`에서 읽었고, 그 commit은 `4fd527d4`다.
+PHP 서버에는 Redis session handler가 둘 있다. 단독 또는 Sentinel store에서 `NativeSession`이 시작하는 phpredis의 session handler(`packages/php/src/Session/NativeSession.php:55`)와, Redis Cluster용 `RedisClusterSessions`(`packages/php/src/Session/RedisClusterSessions.php`)다. 두 handler를 Node와 Python 서버가 쓰는 라이브러리 session-store v0.0.8과 비교한다. 이 release는 루트 `composer.json`이 `ext-polyspec_session_store`로 고정하고, `docs/operations/dependencies.md`가 다른 서버에 고정한 것이다. 라이브러리는 로컬 checkout `~/Projects/polyspec/session-store`의 tag `session-store@v0.0.8`에서 읽었고, tag가 그 release를 가리킨다.
 
 phpredis 6.3.0의 session 소스는 글자 그대로 읽지 않았다. 얻은 것은 fetch 도구의 요약뿐이었고, 그 도구는 줄 번호가 불확실하다고 표시했으므로 이 절은 phpredis의 줄을 인용하지 않는다. helper `make hyper-install-redis`(`Makefile:331`)가 phpredis 6.3.0을 `var/pie/phpredis`(`Makefile:329`)에 풀지만, 그 `pie_run` trap이 종료 때 그 작업 트리를 지우므로(`Makefile:269`) 읽을 소스 파일이 남지 않는다. 그래서 표의 phpredis 열은 확인되지 않았고, phpredis에 판정을 내리지 않는다.
 
