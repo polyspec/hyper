@@ -1146,6 +1146,63 @@
                 "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
                 "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
               ]
+            },
+            {
+              "id": "app.refusedMedia",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request"
+              ],
+              "output": "optional<response>",
+              "errors": [],
+              "state": "Returns the 400 for a Content-Type that is no media type, the 415 for a media type that the application does not accept, or null (HY-59.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::refusedMedia",
+                  "signature": "private function refusedMedia(Request $request): ?Response"
+                }
+              }
+            },
+            {
+              "id": "app.readMediaType",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "request"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the media type of the request, or null for a Content-Type that is no media type (HY-59.12, HY-59.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::readMediaType",
+                  "signature": "private static function readMediaType(Request $request): ?string"
+                }
+              }
+            },
+            {
+              "id": "app.serve",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<number>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Answers the request of the SAPI for the host function `run`, which calls it (HY-106.20).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::serve",
+                  "signature": "public function serve(?int $started = null): void"
+                }
+              }
             }
           ]
         },
@@ -2074,6 +2131,122 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.build_check_id",
                   "signature": "def build_check_id(self, text: str) -> None"
+                }
+              }
+            },
+            {
+              "id": "core-rules.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "core-rules",
+              "errors": [],
+              "state": "Takes the namespace of the functions of the binding and fails with the name of a function that the binding lacks (HY-133.2).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-133.2"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::__construct",
+                  "signature": "public function __construct(string $namespace)"
+                }
+              }
+            },
+            {
+              "id": "core-rules.call",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "list<value>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Calls a function of the binding of the core with the arguments, and fails with the name of a function that the binding lacks (HY-133.2).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-133.2"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::call",
+                  "signature": "private function call(string $name, mixed ...$arguments): mixed"
+                }
+              }
+            },
+            {
+              "id": "core-rules.jsonCodecEncode",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "rules.json_write gives the JSON text of a value of the data model, and fails for a value that has no JSON form (HY-54.18, HY-54.19).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::jsonCodecEncode",
+                  "signature": "public function jsonCodecEncode(mixed $value): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.acceptParse",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "list<accept>",
+              "errors": [],
+              "state": "rules.accept_ranges gives the ranges of an Accept value in field order, and fails with invalid_accept or invalid_weight (HY-116.17, HY-116.18).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::acceptParse",
+                  "signature": "public function acceptParse(?string $value): array"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestMediaType",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "rules.media_type gives the media type of a Content-Type value, and fails with malformed_content_type for a value that is no media type (HY-59.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestMediaType",
+                  "signature": "public function requestMediaType(string $contentType): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestFileOver",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<number>",
+                "number"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "rules.file_over tells whether a file of the body is larger than the limit, from the size of each file (HY-114.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestFileOver",
+                  "signature": "public function requestFileOver(array $sizes, int $limit): bool"
                 }
               }
             }
@@ -5307,6 +5480,56 @@
                 ],
                 "sentence": "HY-67.4"
               }
+            },
+            {
+              "id": "request.received",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "number",
+                "boolean",
+                "number",
+                "number",
+                "number"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Creates the request as received from the PHP request globals, with an empty body and the reader of its body (HY-60.18, HY-131.7).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::received",
+                  "signature": "public static function received(int $limit = PHP_INT_MAX, bool $stream = false, int $valueLimit = PHP_INT_MAX, int $partLimit = PHP_INT_MAX, int $fileLimit = PHP_INT_MAX): self"
+                }
+              }
+            },
+            {
+              "id": "request.withInput",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns the request with the body that the source gives, read in chunks through the reader of the request as received (HY-60.14, HY-131.14).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::withInput",
+                  "signature": "public function withInput(string $source = 'php://input'): self"
+                }
+              }
             }
           ]
         }
@@ -6051,6 +6274,23 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/http/response.py::Response.body",
                   "signature": "body: str"
+                }
+              }
+            },
+            {
+              "id": "response.withSessionCookie",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Returns a copy whose first cookie is the session cookie, when the session sets one (HY-45.8, HY-97.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Response.php::Polyspec\\Hyper\\Response::withSessionCookie",
+                  "signature": "public function withSessionCookie(?string $field): self"
                 }
               }
             }
@@ -6924,6 +7164,21 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/form/_files.py::Files.largest",
                   "signature": "def largest(self) -> int"
+                }
+              }
+            },
+            {
+              "id": "files.sizes",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "list<number>",
+              "errors": [],
+              "state": "Returns the size in bytes of each file, in the order of the pairs (HY-114).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/Files.php::Polyspec\\Hyper\\Files::sizes",
+                  "signature": "public function sizes(): array"
                 }
               }
             }
@@ -9636,6 +9891,36 @@
                   "signature": "public function renew(): void"
                 }
               }
+            },
+            {
+              "id": "native-session.cookieHeader",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the value of the session cookie when the session issued a new identifier, or null (HY-45.8, HY-104.40).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::cookieHeader",
+                  "signature": "public function cookieHeader(): ?string"
+                }
+              }
+            },
+            {
+              "id": "native-session.identifier",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the identifier of the PHP session, or fails when the session has none (HY-45).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::identifier",
+                  "signature": "private function identifier(): string"
+                }
+              }
             }
           ],
           "only": {
@@ -10918,6 +11203,48 @@
                   "signature": "def contains(value: object) -> bool"
                 }
               }
+            },
+            {
+              "id": "data-model.walk",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails at the first item of a value that is not a value of the data model.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::walk",
+                  "signature": "private static function walk(mixed $value): void"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/data/data-model.ts::DataModel.walk",
+                  "signature": "private static walk(value: Value): void"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/data/_data_model.py::DataModel._walk",
+                  "signature": "def _walk(value: object) -> None"
+                }
+              }
+            },
+            {
+              "id": "data-model.plain",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the value with each JsonSerializable replaced by its value, read once (HY-44.6).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::plain",
+                  "signature": "public static function plain(mixed $value): mixed"
+                }
+              }
             }
           ]
         },
@@ -11148,6 +11475,124 @@
                   "php"
                 ],
                 "sentence": "HY-17.1"
+              }
+            },
+            {
+              "id": "json-codec.encodeNumber",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "number"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Writes a number with the digits of PHP json_encode.",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.encodeNumber",
+                  "signature": "private static encodeNumber(value: number): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._encode_number",
+                  "signature": "def _encode_number(value: int | float) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.18"
+              }
+            },
+            {
+              "id": "json-codec.encodeString",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Writes a string with the escapes of PHP json_encode.",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.encodeString",
+                  "signature": "private static encodeString(text: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._encode_string",
+                  "signature": "def _encode_string(text: str) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.18"
+              }
+            },
+            {
+              "id": "json-codec.checkWellFormed",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails for a string with a lone surrogate.",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.checkWellFormed",
+                  "signature": "private static checkWellFormed(text: string): void"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._check_well_formed",
+                  "signature": "def _check_well_formed(text: str) -> None"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.18"
+              }
+            },
+            {
+              "id": "json-codec.isList",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a value that the core gives is a list (HY-54.20).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::isList",
+                  "signature": "public static function isList(mixed $value): bool"
+                }
+              }
+            },
+            {
+              "id": "json-codec.mapEntries",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<map<value>>",
+              "errors": [],
+              "state": "Returns the entries of a value that the core gives as a map, or null for another value (HY-54.20).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::mapEntries",
+                  "signature": "public static function mapEntries(mixed $value): ?array"
+                }
               }
             }
           ]
@@ -12140,6 +12585,168 @@
                 ],
                 "sentence": "HY-48.1"
               }
+            },
+            {
+              "id": "page.present",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "map<value>"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Returns the names of the route regions that are present in the data (HY-75.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::present",
+                  "signature": "private static function present(array $route, array $data): array"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._present",
+                  "signature": "def _present(route: dict, data: dict) -> list[str]"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-48.1"
+              }
+            },
+            {
+              "id": "page.renderDocument",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "value",
+                "map<value>",
+                "optional<map<value>>",
+                "value",
+                "map<value>",
+                "map<value>",
+                "map<string>",
+                "map<value>",
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Renders the layout with the regions of the route and the embedded data (HY-12.1, HY-31.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::renderDocument",
+                  "signature": "private function renderDocument(Polyspec\\Hyper\\Request $request, array $route, array $shared, ?array $context, Polyspec\\Template\\BoundMap $boundShared, array $data, array $applied, array $templates, array $kept, bool $embed): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._render_document",
+                  "signature": "def _render_document(self, request: Request, route: dict, shared: dict, context: Optional[dict], bound_shared, data: dict, applied: dict, templates: dict, kept: dict, embed: bool) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-48.1"
+              }
+            },
+            {
+              "id": "page.decodedCookie",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or null for a cookie that is absent (HY-38.11, HY-42.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::decodedCookie",
+                  "signature": "private static function decodedCookie(?string $text): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/page/page.ts::Page.decodedCookie",
+                  "signature": "private static decodedCookie(text: string | null): Value"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._decoded_cookie",
+                  "signature": "def _decoded_cookie(text: Optional[str]) -> object"
+                }
+              }
+            },
+            {
+              "id": "page.varyHeader",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the Vary of the page responses of the application (HY-117.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::varyHeader",
+                  "signature": "private function varyHeader(): string"
+                }
+              }
+            },
+            {
+              "id": "page.json",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session",
+                "reply",
+                "number",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers the JSON text of a page with its headers, its tag and the 304 of a matching tag (HY-53).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::json",
+                  "signature": "private function json(Request $request, Session $session, Reply $reply, int $status, string $body): Response"
+                }
+              }
+            },
+            {
+              "id": "page.map",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "string"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the map that a context handler, the shared handler or a loader returned, and fails for another value (HY-44.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::map",
+                  "signature": "private static function map(mixed $value, string $source): array"
+                }
+              }
+            },
+            {
+              "id": "page.utf8",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the text, the empty text for bytes that are not UTF-8, or null for an absent value (HY-42).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::utf8",
+                  "signature": "private static function utf8(?string $text): ?string"
+                }
+              }
             }
           ]
         }
@@ -12657,6 +13264,23 @@
                   "signature": "def _vary_names(route: str, kind: str, raw: object) -> tuple[str, ...]"
                 }
               }
+            },
+            {
+              "id": "representation-entries.invalid",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "hyper-value-error",
+              "errors": [],
+              "state": "Returns the error of a representation that fails the open of the application (HY-106.21).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Representation/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::invalid",
+                  "signature": "private static function invalid(string $message): HyperValueError"
+                }
+              }
             }
           ]
         },
@@ -13069,6 +13693,23 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/representation/_representation_response.py::RepresentationResponse._sent_location",
                   "signature": "def _sent_location(location: object, base_path: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "representation-response.headerBytes",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the bytes of the header field of a UTF-8 text, one byte per character up to U+00FF, and fails with invalid_text (HY-122.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Representation/RepresentationResponse.php::Polyspec\\Hyper\\RepresentationResponse::headerBytes",
+                  "signature": "private static function headerBytes(string $text): string"
                 }
               }
             }
