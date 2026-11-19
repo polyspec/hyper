@@ -176,6 +176,8 @@ const APP_OPTIONAL = ['basePath', 'https', 'frameAncestors', 'bodyLimit', 'formT
 
 // The media types of the request bodies that an application may accept (HY-59).
 const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
+// The error classes of the orm package, one for each category of its contract (HY-107.7).
+const ORM_ERROR_CLASSES = new Set(['OrmValueError', 'OrmTypeError', 'OrmStoreError', 'OrmBusyError', 'OrmIoError', 'OrmInternalError']);
 // The media types of the page and of the JSON of hyper, in the order of ties (HY-116).
 const PAGE_TYPE = 'text/html';
 const PAGE_AND_DATA = [PAGE_TYPE, HYPER_JSON];
@@ -660,10 +662,10 @@ export class App<S extends object = Record<string, never>> {
     try {
       returned = await handle({ request: request.asRepresentation(value), media: new MediaType(values, contentType), services: this.services });
     } catch (error) {
-      // HY-107: an error of the ORM is known by its class name and code.
-      const code = App.ormCode(error);
-      if (code === 'NO_ROWS') return Response.text(404, 'Not Found').withHeader('Vary', vary);
-      if (code === 'REVISION_CHANGED') return Response.text(412, 'Precondition Failed').withHeader('Vary', vary);
+      // HY-107.7, HY-122.12: an error of the ORM is known by its class and its kind.
+      const kind = App.ormKind(error);
+      if (kind === 'no_rows') return Response.text(404, 'Not Found').withHeader('Vary', vary);
+      if (kind === 'revision_changed') return Response.text(412, 'Precondition Failed').withHeader('Vary', vary);
       throw error;
     }
     const response = RepresentationResponse.of(returned, contentType, vary, request.header('Authorization') !== null, basePath);
@@ -698,7 +700,7 @@ export class App<S extends object = Record<string, never>> {
       if (refused !== null) return refused;
       // HY-114: a file over the file limit is refused before the action runs, as HY-59 refuses a large body.
       if (request.fileOver(this.fileLimit)) return Response.text(413, 'Content Too Large');
-      // HY-107.4: only a REVISION_CHANGED that the action raises is answered as the 409 page; `result` stays null for it.
+      // HY-107.9: only a revision_changed that the action raises is answered as the 409 page; `result` stays null for it.
       let result: Result | null = null;
       try {
         const returned = await handler.post({ request, reply, services: this.services });
@@ -706,7 +708,7 @@ export class App<S extends object = Record<string, never>> {
         if (!(returned instanceof Result)) throw new Error(`hyper: POST action of route ${route.name} did not return a Result`);
         result = returned;
       } catch (error) {
-        if (App.ormCode(error) !== 'REVISION_CHANGED') throw error;
+        if (App.ormKind(error) !== 'revision_changed') throw error;
       }
       // HY-72: the action renews the session after it ends, and a page that its request renders carries the new token.
       if (reply.takeRenewal()) {
@@ -722,21 +724,22 @@ export class App<S extends object = Record<string, never>> {
       if (error instanceof Redirect) return this.redirectResponse(rendered, session, error.result, basePath);
       if (error instanceof Forbidden) return Response.text(403, 'Forbidden');
       if (error instanceof BadRequest) return Response.text(400, 'Bad Request');
-      // HY-107: an error of the ORM is answered as the stop of its meaning; every other error, also the REVISION_CHANGED
-      // of a loader (HY-107.4), escapes (HY-43).
-      if (App.ormCode(error) === 'NO_ROWS') return Response.text(404, 'Not Found');
+      // HY-107: an error of the ORM is answered as the stop of its meaning; every other error, also the revision_changed
+      // of a loader (HY-107.9), escapes (HY-43, HY-107.5).
+      if (App.ormKind(error) === 'no_rows') return Response.text(404, 'Not Found');
       throw error;
     }
-    // HY-107.4, HY-58: the 409 page of the action, whose loaders stop nothing; a loader that renews the session fails
+    // HY-107.9, HY-58: the 409 page of the action, whose loaders stop nothing; a loader that renews the session fails
     // it (HY-72.4).
     return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, { result: null, masked: request.csrfToken() }, reply, basePath));
   }
 
-  // The code of an error of the ORM, which hyper knows by the name of its class and by its property `code`, because it does not
-  // depend on the ORM (HY-107), or undefined for every other error.
-  private static ormCode(error: unknown): string | undefined {
-    if (!(error instanceof Error) || error.name !== 'OrmError' || !('code' in error)) return undefined;
-    return typeof error.code === 'string' ? error.code : undefined;
+  // The kind of an error of the ORM, or undefined for every other error (HY-107.7): an error of one of the error classes
+  // of the orm package, which the binding of orm names in `name`, with its kind in `kind`. Only the kind string reaches
+  // the core (HY-107.10). The name stands for the class until the package is a dependency of hyper (H35.45-1).
+  private static ormKind(error: unknown): string | undefined {
+    if (!(error instanceof Error) || !ORM_ERROR_CLASSES.has(error.name) || !('kind' in error)) return undefined;
+    return typeof error.kind === 'string' ? error.kind : undefined;
   }
 
   // Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72).

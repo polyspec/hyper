@@ -54,7 +54,7 @@ const switched = (old: string) => (line: string): boolean => line.includes(` +sw
 class Topology {
   readonly nodes: Node[] = [];
   readonly sentinels: string[] = [];
-  private readonly watchers: ChildProcess[] = [];
+  readonly watchers: ChildProcess[] = [];
 
   private readonly prefix: string;
   private readonly secure: Secure | undefined;
@@ -94,9 +94,10 @@ class Topology {
     return { name, port, server };
   }
 
-  // The servers and the Sentinels that still run, whose end fails a wait.
-  private running(): ChildProcess[] {
-    return [...this.nodes.map((node) => node.server), ...this.watchers].filter((child) => child.exitCode === null && child.signalCode === null);
+  // The servers and the Sentinels that a wait needs, except the primary `without` that the step stops on purpose. An
+  // ended one is included too, so its end fails the wait at once instead of the time limit of the test (HR-84).
+  private running(without?: Node): ChildProcess[] {
+    return [...this.nodes.filter((node) => node !== without).map((node) => node.server), ...this.watchers];
   }
 
   private sentinelLines(): Lines[] {
@@ -110,7 +111,7 @@ class Topology {
 
   // Resolves when each Sentinel logged the switch from the primary `old`, after the line of each that `marks` names.
   private async switchedFrom(old: Node, marks: number[]): Promise<void> {
-    for (const [index, lines] of this.sentinelLines().entries()) await lines.until(marks[index] ?? 0, switched(old.port), 'the switch of the primary', this.running());
+    for (const [index, lines] of this.sentinelLines().entries()) await lines.until(marks[index] ?? 0, switched(old.port), 'the switch of the primary', this.running(old));
   }
 
   // Starts the servers and the Sentinels, and resolves when each Sentinel sees all of them.
@@ -226,6 +227,25 @@ test('a request fails when no Sentinel names the primary and goes past a Sentine
   }
   const values = JSON.parse(await runWorker('php', directory, { HYPER_SESSION_SENTINEL: sentinels.join(','), PHP_PREFIX: EXTENSION }, 'read', '["php","python","node","x"]')) as unknown;
   assert.deepEqual(values, [1, 1, 1, null]);
+});
+
+// A wait that needs a process ends with the failure of that process instead of the time limit of the test (HR-84).
+test('a wait for the switch fails when a Sentinel that it needs has ended (HR-84)', async () => {
+  const redis = await topology('sentinel-ended');
+  const last = redis.watchers[2];
+  assert.ok(last !== undefined);
+  const ended = once(last, 'exit');
+  last.kill('SIGKILL');
+  await ended;
+  await assert.rejects(redis.switchOver(), /ended with SIGKILL before the line/);
+});
+
+test('a failover fails with the status of the replica that ended, not of the primary that it stops (HR-84)', async () => {
+  const redis = await topology('replica-ended');
+  const [primary, replica] = redis.nodes;
+  assert.ok(primary !== undefined && replica !== undefined && (await redis.primary()) === primary);
+  await stopRedis(replica.server, 'SIGKILL');
+  await assert.rejects(redis.failOver(), /ended with SIGKILL before the line/);
 });
 
 test('the three servers go on with a session through two failovers that Sentinel makes (HY-115)', { timeout: 180_000 }, async () => {

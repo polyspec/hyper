@@ -73,7 +73,7 @@ export type PageStepInput =
   | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, unknown> }
   | { readonly input: 'reply'; readonly embeds: boolean; readonly stored: ReadonlyMap<string, ReadonlyMap<string, unknown>>; readonly status?: number | null };
 
-type Answer =
+export type Answer =
   | { readonly answer: 'document'; readonly status: number; readonly html: string }
   | { readonly answer: 'json'; readonly status: number; readonly text: string }
   | { readonly answer: 'no_page' };
@@ -214,6 +214,13 @@ export interface CorePagesInstance {
   renderParts(route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): DocumentParts;
 }
 
+// The status, the headers and whether the body is written, which the core computes for a page response.
+interface PageHeadersResult {
+  readonly status: number;
+  readonly headers: Iterable<readonly [string, string]>;
+  readonly body: boolean;
+}
+
 // The members of the Node binding of the core that the server calls, under the names that the binding gives the
 // members of `packages/rust/interface.json`: a function of a unit of kind functions is a function of the module, and a
 // class is a class of the module.
@@ -262,7 +269,7 @@ export interface CoreBinding {
   acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];
   fileOver(sizes: Iterable<number>, limit: number): boolean;
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
-  computePageHeaders(response: PageResponse): { readonly status: number; readonly headers: Iterable<readonly [string, string]>; readonly body: boolean };
+  computePageHeaders(response: PageResponse): PageHeadersResult;
   frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];
   keptValue(pages: CorePages, region: string, path: string, text: string): unknown;
   openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;

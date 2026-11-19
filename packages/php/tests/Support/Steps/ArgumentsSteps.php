@@ -365,7 +365,7 @@ final class ArgumentsSteps
             'uploaded-file.constructor' => ['f', 'a.txt', 'text/plain', 'x'],
             'uploaded-file.moveTo' => [$path],
             'container.call' => [static fn (): null => null, []],
-            'native-session.constructor' => [false, self::request(), null],
+            'native-session.constructor' => [false, self::request(), 'sid', null],
             'redis-cluster-sessions.constructor' => [['127.0.0.1:1'], 30, 100, 20000, 1.0, null, null],
             'redis-cluster-sessions.open', 'redis-cluster-sessions.updateTimestamp',
             'redis-cluster-sessions.write' => ['a', 'a'],

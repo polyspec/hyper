@@ -27,16 +27,13 @@ final class RepresentationCalls
     public ?object $service = null;
 
     /**
-     * Returns a handler that answers the response of a case, which has `status`, `body` and `headers`; a response with
-     * `throw` fails the case (HY-107.7); without a response the handler fails, because the case states no call. A
-     * response with `service` gives a handler that takes the service of that name between the media type and the
-     * request (HY-105.4).
+     * Returns a handler that answers the response of a case, which has `status`, `body` and `headers`, or throws the
+     * error of the orm package of its `throw` (HY-107.7); without a response the handler fails, because the case
+     * states no call. A response with `service` gives a handler that takes the service of that name between the media
+     * type and the request (HY-105.4).
      */
     public function handler(mixed $response): \Closure
     {
-        if (is_array($response) && isset($response['throw'])) {
-            CaseRules::ormThrown('the representation handler');
-        }
         return match (is_array($response) ? $response['service'] ?? null : null) {
             null => fn (Request $request, MediaType $media): Representation => $this->answer(
                 $request,
@@ -69,6 +66,10 @@ final class RepresentationCalls
         $this->parameters = $media->parameters();
         if (!is_array($response)) {
             throw new \LogicException('a case without a handler calls a representation handler');
+        }
+        // HY-107.7, HY-122.12: a response with `throw` raises the error of the orm package that it names.
+        if (isset($response['throw'])) {
+            throw CaseRules::ormError($response['throw'], 'the representation handler');
         }
         $status = $response['status'] ?? null;
         if (!is_int($status)) {

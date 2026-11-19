@@ -561,6 +561,12 @@ _ROWS: dict[str, _Row] = {
     ),
 }
 
+# The contract names the host entries by their member (HY-106.20): the Python server is create_server, which answers
+# every request with the application as http-host.server does, and the Python request handler of a WSGI host is
+# create_wsgi, which http-host.listener corresponds to. The names above stay for the cases that name them.
+_ROWS["http-host.server"] = _ROWS["server.createServer"]
+_ROWS["http-host.listener"] = _ROWS["wsgi.createWsgi"]
+
 
 def counts(case) -> None:
     """Calls the member of the case with the number of arguments that `call` names, and compares whether the call

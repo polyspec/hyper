@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests;
 
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\App;
 use Polyspec\Hyper\ArraySession;
+use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\Reply;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Response;
@@ -17,7 +19,7 @@ use Polyspec\Hyper\Tests\Support\Json;
 /**
  * `around` in the process (HY-97), where contracts/app.json does not state it.
  *
- * @phpstan-type Options array{onResponse?: \Closure, around?: \Closure}
+ * @phpstan-type Options array{onResponse?: \Closure, around?: \Closure, handlers?: array<string, mixed>}
  */
 final class AppTest extends TestCase
 {
@@ -140,5 +142,54 @@ final class AppTest extends TestCase
         $returns = $this->app(['around' => fn (): string => 'not a response']);
         $this->expectException(\UnexpectedValueException::class);
         $returns->handle(new Request('GET', '/'), $this->session);
+    }
+
+    /**
+     * HY-115.23, HY-43: the session of PHP is closed before the server answers also when the dispatch fails, and the
+     * error of the dispatch answers.
+     */
+    #[RunInSeparateProcess]
+    public function testClosesTheSessionWhenTheDispatchFails(): void
+    {
+        $inside = null;
+        $atHook = null;
+        $failure = null;
+        $app = $this->app([
+            'handlers' => [
+                'regions' => [
+                    'side' => fn (): array => ['count' => 0, 'note' => null],
+                ],
+                'routes' => [
+                    'home' => ['load' => function () use (&$inside): array {
+                        $inside = session_status();
+
+                        throw new \RuntimeException('load boom');
+                    }],
+                    'add' => ['post' => fn (): Result => Result::redirect('/')],
+                    'item' => ['load' => fn (Request $request): array => ['id' => $request->param('id')]],
+                ],
+            ],
+            'onResponse' => function (
+                Request $request,
+                Response $response,
+                float $elapsed,
+                Reply $reply,
+                ?string $message,
+            ) use (
+                &$atHook,
+                &$failure,
+            ): void {
+                $atHook = session_status();
+                $failure = $message;
+            },
+        ]);
+        $request = new Request('GET', '/');
+        $response = $app->handle($request, new NativeSession(false, $request, 'hy-session'));
+
+        self::assertSame(500, $response->status);
+        self::assertSame('load boom', $failure, 'the error of the dispatch is the failure of the request');
+        self::assertSame(PHP_SESSION_ACTIVE, $inside, 'the request started the session before its loader ran');
+        self::assertSame(PHP_SESSION_NONE, $atHook, 'the session is closed before the response hook runs');
+        self::assertSame(PHP_SESSION_NONE, session_status());
     }
 }

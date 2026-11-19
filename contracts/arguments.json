@@ -123,9 +123,10 @@
       "refused": true,
       "only": {
         "languages": [
-          "node"
+          "node",
+          "python"
         ],
-        "sentence": "HY-97.9"
+        "sentence": "HY-100.1"
       }
     },
     {
@@ -136,9 +137,10 @@
       "refused": false,
       "only": {
         "languages": [
-          "node"
+          "node",
+          "python"
         ],
-        "sentence": "HY-97.9"
+        "sentence": "HY-100.1"
       }
     },
     {
@@ -149,9 +151,10 @@
       "refused": false,
       "only": {
         "languages": [
-          "node"
+          "node",
+          "python"
         ],
-        "sentence": "HY-97.9"
+        "sentence": "HY-100.1"
       }
     },
     {
@@ -162,9 +165,10 @@
       "refused": true,
       "only": {
         "languages": [
-          "node"
+          "node",
+          "python"
         ],
-        "sentence": "HY-97.9"
+        "sentence": "HY-100.1"
       }
     },
     {
@@ -175,9 +179,10 @@
       "refused": true,
       "only": {
         "languages": [
-          "node"
+          "node",
+          "python"
         ],
-        "sentence": "HY-100.29"
+        "sentence": "HY-100.1"
       }
     },
     {
@@ -188,9 +193,10 @@
       "refused": false,
       "only": {
         "languages": [
-          "node"
+          "node",
+          "python"
         ],
-        "sentence": "HY-100.29"
+        "sentence": "HY-100.1"
       }
     },
     {
@@ -201,9 +207,10 @@
       "refused": false,
       "only": {
         "languages": [
-          "node"
+          "node",
+          "python"
         ],
-        "sentence": "HY-100.29"
+        "sentence": "HY-100.1"
       }
     },
     {
@@ -214,9 +221,10 @@
       "refused": true,
       "only": {
         "languages": [
-          "node"
+          "node",
+          "python"
         ],
-        "sentence": "HY-100.29"
+        "sentence": "HY-100.1"
       }
     },
     {

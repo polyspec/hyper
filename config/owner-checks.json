@@ -81,6 +81,16 @@
     },
     {
       "paths": [
+        "tests/fixtures/orm-errors.json"
+      ],
+      "targets": [
+        "hyper-test-node",
+        "hyper-test-php",
+        "hyper-test-python"
+      ]
+    },
+    {
+      "paths": [
         "tests/python_package/**"
       ],
       "targets": [
@@ -347,6 +357,9 @@
         "tests/scripts/session-redis-failure.test.mts",
         "tests/scripts/session-redis-failover.test.mts",
         "tests/scripts/session-redis-cluster.test.mts",
+        "tests/scripts/session-waits.test.mts",
+        "tests/scripts/session-until.test.mts",
+        "tests/scripts/session-lost-lock.test.mts",
         "tests/scripts/benchmark-sessions.test.mts",
         "tests/scripts/session-holder.test.mts",
         "tests/scripts/no-polling.test.mts",
@@ -645,6 +658,19 @@
         "tests/scripts/node-package-deps.test.mts",
         "tests/scripts/php-ext-pins.test.mts",
         "tests/scripts/pin.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "scripts/php-wrappers.mts"
+      ],
+      "targets": [
+        "hyper-test-scripts",
+        "typecheck"
+      ],
+      "tests": [
+        "tests/scripts/php-wrappers.test.mts",
+        "tests/scripts/php-check.test.mts"
       ]
     },
     {

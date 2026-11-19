@@ -51,7 +51,10 @@
                 "packages/php/src/Result/",
                 "packages/php/src/Session/"
             ]
-        }
+        },
+        "files": [
+            "packages/php/src/App/App.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

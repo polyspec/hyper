@@ -29,15 +29,115 @@ final class CaseRules
         'bodyNotContains' => 'excludes',
     ];
 
+    /** @var array<string, \Throwable>|null the errors of the orm package by `<class>:<kind>`, which ormErrors gets */
+    private static ?array $ormCaught = null;
+
     /**
-     * Fails the case whose handler throws an error class of the orm package (HY-107.7) when the case is set up: hyper
-     * does not depend on the orm package, so the runner has no such class to throw and the case is not run.
+     * The error of the orm package that the `throw` of a case names by its class and its kind (HY-107.7), which a real
+     * orm call raised.
      */
-    public static function ormThrown(string $what): never
+    public static function ormError(mixed $thrown, string $what): \Throwable
     {
-        throw new \UnexpectedValueException(
-            "{$what} throws an error of the orm package: the orm package is not a dependency of hyper yet (HY-107.7)",
+        if (!is_array($thrown) || !is_string($thrown['class'] ?? null) || !is_string($thrown['kind'] ?? null)) {
+            throw new \UnexpectedValueException("the throw of {$what} names no class and kind");
+        }
+        $key = "{$thrown['class']}:{$thrown['kind']}";
+
+        return self::ormErrors()[$key] ?? throw new \UnexpectedValueException(
+            "{$what} throws {$key}, which ormErrors does not get",
         );
+    }
+
+    /**
+     * Gets the errors of the orm package that the cases throw by real calls on a SQLite file of
+     * tests/fixtures/orm-errors.json in a temporary directory, as the generated tests of orm 0.0.34 make them
+     * (GeneratedTest.php): an update with an expected revision that the row does not hold gives `revision_changed`
+     * (line 9603, testB4QueryUpdateAChangedRevision), an update with requireMatch of a key that no row holds gives
+     * `no_rows` (line 9719), and a connection to a file in a missing directory gives the OrmStoreError `driver` (line
+     * 1497). The database is closed and the directory removed before it returns (HR-87); the errors are kept.
+     *
+     * @return array<string, \Throwable>
+     */
+    private static function ormErrors(): array
+    {
+        if (self::$ormCaught !== null) {
+            return self::$ormCaught;
+        }
+        $fixture = Json::file(__DIR__ . '/../../../../tests/fixtures/orm-errors.json');
+        $changedRow = Json::map($fixture['revisionChanged'] ?? null, 'revisionChanged');
+        $missingRow = Json::map($fixture['noRows'] ?? null, 'noRows');
+        $entity = Json::string($fixture['entity'] ?? null);
+        $directory = sys_get_temp_dir() . '/hyper-orm-errors-' . bin2hex(random_bytes(8));
+        if (!mkdir($directory, 0700)) {
+            throw new \RuntimeException("{$directory} cannot be made");
+        }
+        $caught = [];
+        try {
+            $schema = \Polyspec\Orm\Schema::load(
+                Json::string($fixture['manifest'] ?? null),
+                '',
+                Json::string($fixture['manifestHash'] ?? null),
+            );
+            $db = \Polyspec\Orm\Db::connectSchema("sqlite://{$directory}/shop.db", $schema, 1);
+            try {
+                foreach (Json::strings($fixture['steps'] ?? null) as $step) {
+                    $db->execute($step, []);
+                }
+                $changed = \Polyspec\Orm\Query::new($schema, $entity);
+                $changed->connect($db);
+                $changed->set('id', new \Polyspec\Orm\IntegerValue(Json::integer($changedRow['key'] ?? null, 'key')));
+                $changed->set('qty', new \Polyspec\Orm\IntegerValue(Json::integer($changedRow['qty'] ?? null, 'qty')));
+                $changed->expectRevision(
+                    Json::string($changedRow['revisionColumn'] ?? null),
+                    Json::integer($changedRow['revision'] ?? null, 'revision'),
+                );
+                $caught['OrmValueError:revision_changed'] = self::raised(static fn () => $changed->update());
+                $missing = \Polyspec\Orm\Query::new($schema, $entity);
+                $missing->connect($db);
+                $missing->set('id', new \Polyspec\Orm\IntegerValue(Json::integer($missingRow['key'] ?? null, 'key')));
+                $missing->set('qty', new \Polyspec\Orm\IntegerValue(Json::integer($missingRow['qty'] ?? null, 'qty')));
+                $missing->requireMatch();
+                $caught['OrmValueError:no_rows'] = self::raised(static fn () => $missing->update());
+            } finally {
+                $db->close();
+            }
+            $caught['OrmStoreError:driver'] = self::raised(
+                static fn () => \Polyspec\Orm\Db::connect(
+                    "sqlite://{$directory}/" . Json::string($fixture['driver'] ?? null),
+                    1,
+                ),
+            );
+        } finally {
+            foreach (glob("{$directory}/*") ?: [] as $file) {
+                unlink($file);
+            }
+            rmdir($directory);
+        }
+        foreach ($caught as $key => $error) {
+            [$class, $kind] = explode(':', $key);
+            if (
+                $error::class !== "Polyspec\\Orm\\{$class}"
+                || !method_exists($error, 'kind')
+                || $error->kind() !== $kind
+            ) {
+                throw new \UnexpectedValueException(
+                    "the orm call for {$key} raised " . $error::class . ": {$error->getMessage()}",
+                );
+            }
+        }
+
+        return self::$ormCaught = $caught;
+    }
+
+    /** The error that a call raises; a call that returns fails, since the case needs its error. */
+    private static function raised(\Closure $call): \Throwable
+    {
+        try {
+            $call();
+        } catch (\Throwable $error) {
+            return $error;
+        }
+        throw new \UnexpectedValueException('an orm call that must fail returned');
     }
 
     /** @return array<string, array<array-key, mixed>> the `caseFiles` of contracts/interfaces.json and of tests/legacy/interfaces.json */
