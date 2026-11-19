@@ -12103,7 +12103,7 @@
                 },
                 "node": {
                   "symbol": "packages/ts/src/page/page.ts::Page.loaderMap",
-                  "signature": "private static loaderMap(value: unknown, source: string): MapValue"
+                  "signature": "private static loaderMap(value: unknown, source: string): ReadonlyMap<string, unknown>"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._loader_map",
