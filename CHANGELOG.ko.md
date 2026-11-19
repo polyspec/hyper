@@ -8,6 +8,8 @@
 
 ## 0.0.41
 
+- `make templates-check`와 `make bench-sessions`는 Node addon을 먼저 만든다(`node-addon`). board 검사가 `core-rules`를 불러오고 Node session worker가 addon을 불러오기 때문이다(HY-133.2). CI의 node와 bench group에서 `Cannot find module '../../native/generated/index.cjs'`와 `Cannot find module './hyper.linux-arm64-gnu.node'`로 실패했다(H35.224).
+
 - `make duplication-check`가 다시 통과한다. PHP case runner의 대역 `OrmValueError`와 `OrmStoreError`는 constructor와 `kind()`를 trait `OrmKind` 하나에서 얻고, recipe check의 Python reader는 문자열로 쓴 type과 subscript type의 이름을 helper 하나씩으로 읽으며, `tests/scripts/recipe-check.test.mts`는 Python과 Node의 module table 검사와 property를 거친 호출을 helper 하나씩으로 만들고, `tests/scripts/session-shared-redis.test.mts`는 세 server의 잃은 lock을 helper 하나로 실행한다. 5개의 clone으로 실패했다(H35.224).
 - HY-44.13은 Node server가 application 값의 검사에서 core가 그 JSON text에서 다시 읽은 값을 돌려주고 PHP와 Python server는 받은 값을 그대로 돌려준다고 정하며, `contracts/interfaces.json`의 `data-model.check`가 `core-rules.jsonCodecDecode`이 node에서 닿고 php와 python에서 닿지 않는다고 선언하므로 `make recipe-check`가 통과한다. 2개의 `MEMBER_REACH_DIFFERS` 줄로 실패했다(H35.201).
 - `tests/scripts/session-shared-redis.test.mts`는 부르지 않는 `node:events`의 `once`를 import하지 않으므로 `make lint-ts`가 다시 통과한다. close test를 되살린 뒤로 `no-unused-vars`로 실패했다(H35.222).

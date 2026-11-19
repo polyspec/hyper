@@ -7,6 +7,8 @@
 
 ## 0.0.41
 
+- `make templates-check` and `make bench-sessions` build the Node addon first (`node-addon`), because the board check loads `core-rules` and the Node session worker loads the addon (HY-133.2); in the node and bench groups of CI they failed with `Cannot find module '../../native/generated/index.cjs'` and `Cannot find module './hyper.linux-arm64-gnu.node'` (H35.224).
+
 - `make duplication-check` passes again: the stand-ins `OrmValueError` and `OrmStoreError` of the PHP case runner take their constructor and `kind()` from one trait `OrmKind`, the Python reader of the recipe check reads a type written in a string and the name of a subscript type through one helper each, `tests/scripts/recipe-check.test.mts` checks the table of a module for Python and Node and builds a call through a property with one helper each, and `tests/scripts/session-shared-redis.test.mts` runs the lost lock of the three servers through one helper; it failed with 5 clones (H35.224).
 - HY-44.13 states that the Node server returns from the check of an application value the value that the core reads back from its JSON text, while the PHP and Python servers return the value as given, and `data-model.check` of `contracts/interfaces.json` declares that `core-rules.jsonCodecDecode` is reached in node and not in php or python, so `make recipe-check` passes; it failed with 2 `MEMBER_REACH_DIFFERS` lines (H35.201).
 - `tests/scripts/session-shared-redis.test.mts` imports no `once` of `node:events`, which it does not call, so `make lint-ts` passes again; it failed with `no-unused-vars` since the close tests were restored (H35.222).

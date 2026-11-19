@@ -555,7 +555,7 @@ analyse-php: ext bindings ## Run PHPStan at level max on the source and the test
 
 # The command tool imports the built modules of the two npm packages (packages/cli/lib/check.mjs reads
 # @polyspec/hyper-client, and build.mjs @polyspec/hyper/build), so a target that starts it builds them first.
-templates-check: packages ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
+templates-check: packages node-addon ## Check the manifest (HY-2), the hx- attributes (HC-6) and the region placements (HY-3, HY-30) of the board with hyper check (HY-48.3)
 	$(NODE) $(BUILD_PACKAGE)/bin/hyper.mjs check --app $(BOARD)
 
 # The TypeScript of scripts/, tests/ and benchmarks/ (tsconfig.json), which Node runs by type stripping and so never checks
@@ -910,7 +910,7 @@ bench-server: board ext hyper-ext ## Measure PHP request handling and rendering 
 bench-browser: board ext hyper-ext ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	$(NODE) benchmarks/browser.mts --runs 15 $(PHP_SERVER_ARGUMENTS)
 
-bench-sessions: packages ext hyper-ext ## Measure the requests per second of the three servers on one Redis server; the PHP server loads the json, the template, the session-store and the hyper extension
+bench-sessions: packages node-addon ext hyper-ext ## Measure the requests per second of the three servers on one Redis server; the PHP server loads the json, the template, the session-store and the hyper extension
 	$(NODE) benchmarks/sessions.mts --requests 20000 $(PHP_SERVER_ARGUMENTS)
 
 bench-uploads: packages ext hyper-ext ## Measure the time, the processor time and the memory of an upload in the three servers and in the reader of PHP itself
