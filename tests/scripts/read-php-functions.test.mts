@@ -80,3 +80,23 @@ test('a function of a file that the autoloader does not load is read from its fi
   }
 });
 
+test('a file with a class and a function is one unit of that name (HYR-3)', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'read-php-functions-'));
+  try {
+    cpSync(fixture, dir, { recursive: true });
+    for (const args of [['init', '-q'], ['add', '-A']]) {
+      const git = spawnSync('git', ['-C', dir, ...args], { encoding: 'utf8' });
+      assert.equal(git.status, 0, git.stderr);
+    }
+    const bin = process.env.RECIPE_PHP ?? 'php';
+    const result = spawnSync(bin, [reader, dir, '--autoload', path.join(dir, 'autoload.php'), '--sources', 'src'], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    const out = JSON.parse(result.stdout);
+    const named = out.units.filter((u: { name: string }) => u.name === 'Blend');
+    assert.equal(named.length, 1, `Blend is ${named.length} units: ${JSON.stringify(named)}`);
+    assert.equal(out.members.find((m: { name: string }) => m.name === 'blend')?.unit, 'Blend', 'mixed is not a member of the Blend unit');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
