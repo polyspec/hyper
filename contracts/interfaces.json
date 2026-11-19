@@ -3080,9 +3080,9 @@
               ],
               "output": "string",
               "errors": [
-                "invalid-build"
+                "hyper-value-error"
               ],
-              "state": "Reads the build id of a build.json file.",
+              "state": "Reads the build id of a build.json file. A failure raises the kind `invalid_build` of the hyper-value-error (HY-125.5, HY-106.21).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/Build.php::Polyspec\\Hyper\\Build::read",
@@ -9672,8 +9672,18 @@
                 }
               },
               "reachDiffers": [
-                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "php", "sentence": "HY-104.47" },
-                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "python", "sentence": "HY-104.47" }
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "php",
+                  "sentence": "HY-104.47"
+                },
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "python",
+                  "sentence": "HY-104.47"
+                }
               ]
             },
             {
@@ -11062,7 +11072,12 @@
                 }
               },
               "reachDiffers": [
-                { "member": "core-rules.libraryError", "reached": "python", "notReached": "node", "sentence": "HY-104.46" }
+                {
+                  "member": "core-rules.libraryError",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-104.46"
+                }
               ]
             },
             {
@@ -11344,7 +11359,12 @@
                 "sentence": "HY-133.3"
               },
               "reachDiffers": [
-                { "member": "file-session.converted", "reached": "python", "notReached": "node", "sentence": "HY-133.3" }
+                {
+                  "member": "file-session.converted",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-133.3"
+                }
               ]
             }
           ],
