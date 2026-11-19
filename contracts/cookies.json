@@ -23,6 +23,7 @@
     { "id": "empty_pairs_give_no_cookie", "label": "empty pairs give no cookie", "header": ";; a=1;", "cookies": {"a": "1"} },
     { "id": "an_empty_header_gives_no_cookies", "label": "an empty header gives no cookies", "header": "", "cookies": {} },
     { "id": "a_request_without_the_header_has_no_cookies", "label": "a request without the header has no cookies", "header": null, "cookies": {} },
+    { "id": "the_lines_of_the_field_are_read_one_after_another", "label": "the lines of the Cookie field are read one after another, and the end of a line ends a pair", "lines": ["a=1", "b=x,y"], "cookies": {"a": "1", "b": "x,y"} },
     { "id": "a_leading_bom_of_a_value_is_kept", "label": "a leading U+FEFF of a value is a character of the value", "header": "a=%EF%BB%BFx", "cookies": {"a": "\ufeffx"} }
   ]
 }
