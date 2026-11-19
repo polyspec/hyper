@@ -927,5 +927,7 @@ test('a member called on the result of a const declared with a function type is 
   // The fixture declares rules as `() => CoreRules` with a call initializer, as packages/ts/src/app/core-rules.ts does.
   const out = readCopy('node', path.join(fixture, 'readers', 'node-declared-rules'), ['--sources', 'src', '--tests', 'tests']);
   const scope = out.scopes.find((s) => s.name === 'Csrf.mask');
-  assert.deepEqual(scope?.uses, [{ kind: 'member', of: { kind: 'class', file: 'src/core-rules.ts', name: 'CoreRules' }, name: 'csrfMask', call: true }]);
+  // The receiver of csrfMask is the call of rules, which the checker resolves to the return type `CoreRules` (HY-24.2).
+  const rulesCall = { kind: 'member', of: { kind: 'module', file: 'src/core-rules.ts' }, name: 'rules', call: true };
+  assert.deepEqual(scope?.uses.find((u) => u.kind === 'member' && u.name === 'csrfMask'), { kind: 'member', of: rulesCall, name: 'csrfMask', call: true });
 });
