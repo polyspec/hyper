@@ -126,6 +126,11 @@ function declaredFunctions(string $code): array
         if (!is_array($token)) {
             continue;
         }
+        // An interpolation opens a brace that its closing brace, read as a plain `}`, closes, so it is a block here.
+        if ($token[0] === T_CURLY_OPEN || $token[0] === T_DOLLAR_OPEN_CURLY_BRACES) {
+            $stack[] = 'block';
+            continue;
+        }
         if ($token[0] === T_NAMESPACE && !isReference($tokens, $i)) {
             $namespace = '';
             for ($j = $i + 1; $tokens[$j] !== ';' && $tokens[$j] !== '{'; $j++) {
