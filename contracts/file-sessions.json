@@ -220,6 +220,107 @@
           ]
         ]
       ]
+    },
+    {
+      "id": "a_record_whose_key_is_a_float_fails_the_first_read_by_the_codec_of_the_record",
+      "label": "a session record whose key is a float, which is no array key, fails the first read of the session by the codec of the record, before any key check (HY-104.48)",
+      "files": [
+        {
+          "identifier": "9999999999999999999999999999999999999999999999999999999999999999",
+          "bytes": "a:1:{d:1.5;i:1;}"
+        }
+      ],
+      "steps": [
+        {
+          "cookie": "9999999999999999999999999999999999999999999999999999999999999999",
+          "calls": [
+            [
+              "get",
+              [
+                "\"a\""
+              ]
+            ]
+          ]
+        }
+      ],
+      "results": [
+        []
+      ],
+      "created": [
+        null
+      ],
+      "errors": [
+        [
+          "call",
+          "unserialize"
+        ]
+      ],
+      "records": [
+        [
+          [
+            "sess_9999999999999999999999999999999999999999999999999999999999999999",
+            "a:1:{d:1.5;i:1;}"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "a_record_with_a_byte_key_floats_and_a_stdclass_is_written_back_with_the_same_bytes",
+      "label": "a session record with a key of bytes that are not UTF-8, the floats 1.5 and 1.0 and a stdClass reads as the data model, and a request that sets a value writes the values it did not set as PHP wrote them (HY-104.13, HY-104.14)",
+      "files": [
+        {
+          "identifier": "8888888888888888888888888888888888888888888888888888888888888888",
+          "bytes": "a:4:{s:2:\"ÿþ\";i:1;s:1:\"a\";d:1.5;s:1:\"b\";d:1;s:1:\"o\";O:8:\"stdClass\":1:{s:1:\"x\";i:1;}}"
+        }
+      ],
+      "steps": [
+        {
+          "cookie": "8888888888888888888888888888888888888888888888888888888888888888",
+          "calls": [
+            [
+              "get",
+              [
+                "\"a\""
+              ]
+            ],
+            [
+              "get",
+              [
+                "\"o\""
+              ]
+            ],
+            [
+              "set",
+              [
+                "\"a\"",
+                "1.5"
+              ]
+            ]
+          ]
+        }
+      ],
+      "results": [
+        [
+          1.5,
+          {
+            "x": 1
+          }
+        ]
+      ],
+      "created": [
+        null
+      ],
+      "errors": [
+        null
+      ],
+      "records": [
+        [
+          [
+            "sess_8888888888888888888888888888888888888888888888888888888888888888",
+            "a:4:{s:2:\"ÿþ\";i:1;s:1:\"a\";d:1.5;s:1:\"b\";d:1;s:1:\"o\";O:8:\"stdClass\":1:{s:1:\"x\";i:1;}}"
+          ]
+        ]
+      ]
     }
   ],
   "cookie": [

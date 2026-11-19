@@ -26,15 +26,16 @@ const FILE_SESSIONS_OPTIONAL = ['lifetime'];
 export class FileSessions {
   private readonly store: LibraryFileSessions;
 
-  private constructor(store: LibraryFileSessions) {
+  // Holds the store that the library made: the library makes a store only with a call that waits, so the constructor
+  // takes the store that `inDirectory` of the library made (HY-104.46).
+  constructor(store: LibraryFileSessions) {
     this.store = store;
   }
 
   // Makes the store of an existing absolute directory. Making it with another directory fails with the kind
   // `invalid_directory` and with a lifetime of 0 with `invalid_lifetime` (HY-104.32); the binding of the library refuses
   // a lifetime that is no integer of 0 or more with `invalid_number`, and one that is no number with
-  // `invalid_argument_type`. The library makes a store only with a call that waits, so this class has no public
-  // constructor.
+  // `invalid_argument_type`.
   static async inDirectory(options: FileSessionsOptions): Promise<FileSessions> {
     ArgumentCountError.between(arguments.length, 1, 1);
     ArgumentCountError.members(options, FILE_SESSIONS_REQUIRED, FILE_SESSIONS_OPTIONAL);
