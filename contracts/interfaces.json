@@ -11113,6 +11113,13 @@
                   "symbol": "packages/ts/src/session/record-session.ts::isArrayKey",
                   "signature": "function isArrayKey(key: unknown): key is number | bigint | string | Uint8Array"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-104.13",
+                "reason": "Python refuses a key that is no text when it reads a record through its codec before any key check, and PHP has no record session (HY-104.13 names Node and Python), so this key check has a Node native only."
               }
             }
           ],
