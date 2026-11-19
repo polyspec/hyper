@@ -6,27 +6,13 @@ with that package is stored as it is (H35.77)."""
 from __future__ import annotations
 
 import unittest
-from typing import Optional
 
 from polyspec.php_serialization import StdClass, unserialize
-from polyspec.hyper.session._record_session import RecordSession
+
+from .fixed_session import FixedSession
 
 # The bytes of PHP serialize(["\xff\xfe" => 1, "a" => 1.5, "b" => 1.0, "o" => (object) ["x" => 1]]).
 RECORD = b'a:4:{s:2:"\xff\xfe";i:1;s:1:"a";d:1.5;s:1:"b";d:1;s:1:"o";O:8:"stdClass":1:{s:1:"x";i:1;}}'
-
-
-class FixedSession(RecordSession):
-    """A session whose record is the given bytes, as a store of a request gives it."""
-
-    def __init__(self, record: bytes) -> None:
-        super().__init__("a" * 32)
-        self._record = record
-
-    def stored(self) -> Optional[bytes]:
-        return self._record
-
-    def close(self) -> None:
-        pass
 
 
 class SessionRecordBytesTest(unittest.TestCase):

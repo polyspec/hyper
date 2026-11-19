@@ -27,12 +27,17 @@ const file = (directory: string) => path.join(directory, `sess_${IDENTIFIER}`);
 // The Node addon of this platform, which the node-addon target writes beside the Node package (HY-104).
 const NODE_ADDON = `packages/ts/native/generated/hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`;
 
-test('processes of the three servers that write one session at the same time lose no update (HY-104)', { timeout: 120_000 }, async (t) => {
+/** Requires the builds that the three servers run from: the packages, the Python and PHP installs, the extension and the addon. */
+function requireServers(): void {
   requireBuilt('packages', 'packages/ts/dist/index.js');
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   requireBuilt('hyper-ext', HYPER_EXT);
   requireBuilt('node-addon', NODE_ADDON);
+}
+
+test('processes of the three servers that write one session at the same time lose no update (HY-104)', { timeout: 120_000 }, async (t) => {
+  requireServers();
   const directory = directoryOf(t);
   writeFileSync(file(directory), 'a:1:{s:1:"n";i:0;}');
   await Promise.all(NAMES.flatMap((server) => Array.from({ length: PROCESSES }, () => run(server, directory, 'count', String(REQUESTS), server))));
@@ -44,11 +49,7 @@ test('processes of the three servers that write one session at the same time los
 
 for (const writer of NAMES) {
   test(`the values that the ${writer} server writes are the same values in every server (HY-104)`, { timeout: 60_000 }, async (t) => {
-    requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
-    requireBuilt('hyper-install-php', 'vendor/autoload.php');
-    requireBuilt('hyper-ext', HYPER_EXT);
-    requireBuilt('packages', 'packages/ts/dist/index.js');
-    requireBuilt('node-addon', NODE_ADDON);
+    requireServers();
     const directory = directoryOf(t);
     writeFileSync(file(directory), '');
     await run(writer, directory, 'write', VALUES);
@@ -62,11 +63,7 @@ for (const writer of NAMES) {
 }
 
 test('the lock of a process that ended is released and the session goes on (HY-104)', { timeout: 60_000 }, async (t) => {
-  requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
-  requireBuilt('hyper-install-php', 'vendor/autoload.php');
-  requireBuilt('hyper-ext', HYPER_EXT);
-  requireBuilt('packages', 'packages/ts/dist/index.js');
-  requireBuilt('node-addon', NODE_ADDON);
+  requireServers();
   const directory = directoryOf(t);
   writeFileSync(file(directory), 'a:1:{s:1:"n";i:0;}');
   const holder = spawn(PYTHON, [...COMMANDS.python.prefix, directory, IDENTIFIER, 'hold'], { cwd: ROOT, stdio: ['pipe', 'pipe', 'inherit'] });

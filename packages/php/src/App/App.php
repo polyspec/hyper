@@ -713,10 +713,10 @@ final class App
         );
     }
 
-    /** Returns the Vary of a response with text/html or application/vnd.hyper+json (HY-117). */
+    /** Returns the Vary of a response with text/html or application/vnd.hyper+json, which the page builds (HY-117). */
     private function varyHeader(): string
     {
-        return CoreRules::shared()->appVaryHeader($this->context !== null);
+        return $this->page->varyHeader();
     }
 
     /**
