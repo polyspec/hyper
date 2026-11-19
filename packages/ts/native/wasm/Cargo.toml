@@ -14,12 +14,11 @@ crate-type = ["cdylib"]
 
 [features]
 panic-test = []
-fault-test = ["polyspec-hyper/fault-test", "polyspec-http-form/fault-test", "polyspec-http-negotiation/fault-test", "polyspec-session-store/fault-test", "polyspec-template/fault-test"]
+fault-test = ["polyspec-hyper/fault-test", "polyspec-http-negotiation/fault-test", "polyspec-session-store/fault-test", "polyspec-template/fault-test"]
 thrown-count-test = []
 
 [dependencies]
 polyspec-hyper = { path = "../../../rust", default-features = false, features = [] }
-polyspec-hyper = { path = "../../../rust" }
 polyspec-binding-core = { git = "https://github.com/polyspec/binding.git", tag = "v0.0.22", features = ["construct", "lock"] }
 polyspec-http-cookie = { git = "https://github.com/polyspec/http-cookie.git", tag = "v0.0.10" }
 polyspec-http-negotiation = { git = "https://github.com/polyspec/http-negotiation.git", tag = "v0.0.7" }

@@ -15,7 +15,7 @@ crate-type = ["cdylib"]
 
 [features]
 panic-test = []
-fault-test = ["polyspec-hyper/fault-test", "polyspec-http-form/fault-test", "polyspec-http-negotiation/fault-test", "polyspec-session-store/fault-test", "polyspec-template/fault-test"]
+fault-test = ["polyspec-hyper/fault-test", "polyspec-http-negotiation/fault-test", "polyspec-session-store/fault-test", "polyspec-template/fault-test"]
 thread-test = []
 thrown-count-test = []
 
