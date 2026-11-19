@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: b74c301fb07b6a22ab34ddc3c4e453accb59002dbd21615dac3e5e82fc13c978 -->
+<!-- source-sha256: f8736ce51f296f62cf9debde64b7014684bf79b2a9df9f0f6f07e5abe28322c6 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP `Kept`이 map의 항목을 node와 python host처럼 자신의 `mapEntries` 멤버로 읽는다(H35.133). 입력: 데이터 값과 다른 종류의 값으로 kept된 list 또는 map. 이전 동작: `Kept`에 `mapEntries` 멤버가 없어 `make recipe-check`이 PHP에서 `kept.mapEntries`를 도달되지 않은 것으로 보고했고, 계약은 소스에 없는 멤버를 가리켰다. 기대 동작: `Kept::mapEntries`는 `JsonCodec::mapEntries`와 같은 항목을 주고, 세 host는 같은 값을 유지하며(HY-104.22), `contracts/keep.json`에 kept list가 map에 닿는 case가 있다.
 - PHP session은 session cookie 이름을 생성자의 셋째 인자로 받고, host가 core에서 그 이름을 읽는다(H35.129). 입력: session을 읽거나 쓰는 PHP 요청. 이전 동작: `NativeSession`이 `CoreRules::sessionCookieName`으로 이름을 직접 읽어 session 멤버가 core 규칙에 닿았고, TS와 Python host는 host에서 읽었다. 현재 동작: `App::serve`가 `CoreRules::shared()->sessionCookieName(...)`을 넘기고(`packages/php/src/App/App.php`), 생성자가 그것을 받는다(HY-104.45). 검증: install 승인 전이라 아직 실행하지 않았다.
 - PHP 서버가 session cookie를 응답에 쓰고, session은 그 이름만 정한다(H35.129). 입력: PHP 서버에서 session을 시작하거나 갱신하는 요청. 이전 동작: `NativeSession`이 `header()`로 `Set-Cookie` 줄을 직접 보냈고, TS와 Python host는 응답에 쓴다(HY-45.8, HY-104.40). 현재 동작: `NativeSession::cookieHeader()`가 field 값을 주고, `App::serve`가 응답의 쿠키 맨 앞에 그것을 쓴다(`packages/php/src/App/App.php`, `packages/php/src/Http/Response.php`). 검증: install 승인 전이라 아직 실행하지 않았다.
 - 새 checkout이 `var/tools/bin/node` 없이 `make bootstrap`, `make install-tools TOOLS=npm`, `make install-packages`를 돈다(H35.116). 입력: `node_modules`에 binding 생성기가 있고 `var/tools`가 없는 checkout. 이전 동작: 설치 goal의 make가 아직 설치되지 않은 `var/tools/bin/node`로 `packages/release.mk`를 다시 써서 `No such file or directory`로 실패했다. 현재 동작: 설치 goal은 그 파일을 다시 쓰지 않고, goal이 없거나 release recipe를 읽는 goal은 이전처럼 다시 쓴다. `tests/scripts/install-order.test.mts`가 검증한다.
