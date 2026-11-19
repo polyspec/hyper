@@ -402,6 +402,22 @@ class Scope:
                     self.parameters(node.args)
                 elif isinstance(node, ast.Call):
                     callees.add(id(node.func))
+                    # An isinstance check of a local with a class of the tree narrows the local to that class (HYR-5).
+                    if (
+                        isinstance(node.func, ast.Name)
+                        and node.func.id == "isinstance"
+                        and len(node.args) == 2
+                        and isinstance(node.args[0], ast.Name)
+                    ):
+                        typed = self.type_of(node.args[1])
+                        if typed is not None:
+                            self.out["assigns"].append(
+                                {
+                                    "target": node.args[0].id,
+                                    "value": OTHER,
+                                    "type": typed,
+                                }
+                            )
         for stmt in body:
             for node in ast.walk(stmt):
                 if id(node) in targets or id(node) in callees:
