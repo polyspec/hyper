@@ -14,7 +14,7 @@ from typing import Optional
 
 import polyspec.session_store as library
 
-from ._file_session import FileSession, converted
+from ._file_session import FileSession
 
 
 class FileSessions:
@@ -26,7 +26,7 @@ class FileSessions:
         `invalid_directory` and with a lifetime of 0 with `invalid_lifetime` (HY-104.32); the binding of the library
         refuses a lifetime that is no integer of 0 or more with `invalid_number`, and one that is no number with
         `invalid_argument_type`."""
-        self._store = converted(
+        self._store = FileSession.converted(
             lambda: library.FileSessions.in_directory(directory, lifetime)
         )
 
@@ -34,10 +34,10 @@ class FileSessions:
         """Returns the store of a request with the value of its session cookie, after the earlier requests of the same
         session have ended; it holds the lock of the session file until `close`. An identifier in another form or
         without a file names no session (HY-45)."""
-        return FileSession(converted(lambda: self._store.open(cookie)))
+        return FileSession(FileSession.converted(lambda: self._store.open(cookie)))
 
     def collect(self) -> int:
         """Removes the files of the sessions that ended and returns how many it removed; a file whose lock a request
         holds is skipped. The store never collects by itself: the application calls this when it chooses, such as
         from a scheduled task (HY-104.33, SF-5)."""
-        return converted(self._store.collect)
+        return FileSession.converted(self._store.collect)

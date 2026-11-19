@@ -1,7 +1,7 @@
 // Sessions in a Redis server, a Redis Sentinel group or a Redis Cluster, in the form of phpredis 6.3.0, for a server
 // process (HY-115): the Redis store of the session-store library, whose rule the storage of a session is.
 import { RedisSessions as LibraryRedisSessions, type Setting } from '@polyspec/session-store';
-import { converted, awaited } from './file-session.js';
+import { FileSession } from './file-session.js';
 import { RedisSession } from './redis-session.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
 
@@ -47,12 +47,12 @@ export class RedisSessions {
     ArgumentCountError.between(arguments.length, 1, 1);
     ArgumentCountError.members(options, REDIS_SESSIONS_REQUIRED, REDIS_SESSIONS_OPTIONAL);
     const { setting, ...rest } = options;
-    this.store = converted(() => new LibraryRedisSessions(setting, rest));
+    this.store = FileSession.converted(() => new LibraryRedisSessions(setting, rest));
   }
 
   // Opens the store of a request with the value of its session cookie; it holds the lock of the session until `close`.
   /** @internal */
   async open(cookie: string | null): Promise<RedisSession> {
-    return new RedisSession(await awaited(() => this.store.open(cookie)));
+    return new RedisSession(await FileSession.awaited(() => this.store.open(cookie)));
   }
 }

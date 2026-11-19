@@ -1,7 +1,7 @@
 // Sessions in files of one absolute directory, in the form of the files handler of PHP, for a server process (HY-45,
 // HY-104): the file store of the session-store library, whose rule the storage of a session is (HY-104.25).
 import { FileSessions as LibraryFileSessions } from '@polyspec/session-store';
-import { awaited, FileSession } from './file-session.js';
+import { FileSession } from './file-session.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
 
 export interface FileSessionsOptions {
@@ -39,7 +39,7 @@ export class FileSessions {
     ArgumentCountError.between(arguments.length, 1, 1);
     ArgumentCountError.members(options, FILE_SESSIONS_REQUIRED, FILE_SESSIONS_OPTIONAL);
     // `this` is the class that the maker was called on, so a class that extends this one gives its own instance.
-    return new this(await awaited(() => LibraryFileSessions.inDirectory(options.directory, options.lifetime)));
+    return new this(await FileSession.awaited(() => LibraryFileSessions.inDirectory(options.directory, options.lifetime)));
   }
 
   /** @internal */
@@ -57,13 +57,13 @@ export class FileSessions {
   // session have ended. The caller calls `close` of the store when the response is complete.
   /** @internal */
   async open(cookie: string | null): Promise<FileSession> {
-    return new FileSession(await awaited(() => this.store.open(cookie)));
+    return new FileSession(await FileSession.awaited(() => this.store.open(cookie)));
   }
 
   // Removes the files of the sessions that ended and returns how many it removed; a file whose lock a request holds
   // is skipped. The store never collects by itself: a server calls this on a schedule of its choice.
   async collect(): Promise<number> {
     ArgumentCountError.between(arguments.length, 0, 0);
-    return awaited(() => this.store.collect());
+    return FileSession.awaited(() => this.store.collect());
   }
 }

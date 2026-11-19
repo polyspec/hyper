@@ -8743,21 +8743,7 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/_session.py::Session.keep",
                   "signature": "def keep(self, region: str, path: str, value: object) -> None"
                 }
-              },
-              "reachDiffers": [
-                {
-                  "member": "core-rules.jsonCodecDecode",
-                  "reached": "node",
-                  "notReached": "php",
-                  "sentence": "HY-104.47"
-                },
-                {
-                  "member": "core-rules.jsonCodecDecode",
-                  "reached": "node",
-                  "notReached": "python",
-                  "sentence": "HY-104.47"
-                }
-              ]
+              }
             },
             {
               "id": "session.kept",
@@ -9170,7 +9156,8 @@
               "kind": "static method",
               "visibility": "internal",
               "inputs": [
-                "boolean"
+                "boolean",
+                "string"
               ],
               "output": "map<value>",
               "errors": [],
@@ -9178,7 +9165,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::options",
-                  "signature": "public static function options(bool $https): array"
+                  "signature": "public static function options(bool $https, string $name): array"
                 }
               }
             },
@@ -9213,6 +9200,23 @@
                 "php": {
                   "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::get",
                   "signature": "public function get(string $key): mixed"
+                }
+              }
+            },
+            {
+              "id": "native-session.refuseClasses",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails with kind record for an object of a class other than stdClass at any depth of a stored value (HY-104.41).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::refuseClasses",
+                  "signature": "private static function refuseClasses(mixed $value): void"
                 }
               }
             },
@@ -9269,7 +9273,7 @@
             {
               "id": "native-session.close",
               "kind": "method",
-              "visibility": "public",
+              "visibility": "internal",
               "inputs": [],
               "output": "none",
               "errors": [],
@@ -9337,7 +9341,17 @@
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsTheCookieOfTheSessionThatReplacesAnUnknownIdentifier: NativeSession sends the cookie of the identifier with which the strict mode of PHP replaced an unknown identifier.",
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsTheCookieOfARegeneratedIdentifier: NativeSession sends the cookie of the identifier that session_regenerate_id created.",
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsNoCookieWhenTheSessionCannotStart: NativeSession sends no Set-Cookie header when session_start of PHP fails, and the request ends with status 500.",
-            "packages/php/tests/AppTest.php::AppTest::testClosesTheSessionWhenTheDispatchFails: Only the PHP server keeps the session in the session module of PHP, which closes it at the end of the script unless the server closes it; the test reads session_status() in the loader, in the response hook and after App::handle of a request whose loader throws (HY-115.23)."
+            "packages/php/tests/AppTest.php::AppTest::testClosesTheSessionWhenTheDispatchFails: Only the PHP server keeps the session in the session module of PHP, which closes it at the end of the script unless the server closes it; the test reads session_status() in the loader, in the response hook and after App::handle of a request whose loader throws (HY-115.23).",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testCreatesTheIdentifiersOfThePhpRuntime: A new and a regenerated identifier of NativeSession are those of the PHP runtime, within the 22 to 256 characters that every server accepts (HY-104.42, HY-104.43); the test reads session_id() under the files handler of PHP.",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testReplacesAnUnknownIdentifierWithOneOfThePhpRuntime: The strict mode of PHP replaces an identifier that the store does not hold with one of the PHP runtime (HY-45, HY-104.43); the test reads session_id().",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testAnObjectOfAnotherClassFailsWithKindRecord: NativeSession fails with kind record for a PHP record that holds an object of a class other than stdClass at any depth (HY-104.41), which only the native session handler of PHP can hold.",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testCollectRemovesTheExpiredSessionsOfTheSavePath: NativeSession::collect removes the session files of the PHP save path whose lifetime has passed and returns how many it removed (HY-104.33).",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testCollectFailsWithTheIoErrorForAnUnreadableSavePath: NativeSession::collect fails with the Io error of session-store for a PHP save path that cannot be read (HY-104.33).",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testCollectFailsForASavePathWithSubdirectories: NativeSession::collect fails with invalid_directory for a PHP save path whose depth is above 0, which keeps the files in subdirectories (HY-104.33).",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testCollectReadsThePathOfASavePathWithDepthZeroAndAMode: NativeSession::collect reads the directory of a PHP save path `0;MODE;/path` as the files handler of PHP reads it (HY-104.33).",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testCollectFailsUnderTheUserHandler: NativeSession::collect fails with invalid_session_handler under the PHP save handler user (HY-104.44, HY-133.14).",
+            "packages/php/tests/RunTest.php::RunTest::testASessionThatCannotBeWrittenAnswersThePlain500: NativeSession::close writes the PHP session before the server answers, so a session that cannot be written answers the plain 500 (HY-115.23, HY-43).",
+            "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testThrowsWhenTheHeadersAreSentBeforeTheCookie: NativeSession throws on a renewal after PHP has sent the headers, and the response holds no Set-Cookie line (HY-45.8)."
           ]
         },
         {
@@ -9987,7 +10001,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/record-session.ts::RecordSession.recordKey",
-                  "signature": "private static recordKey(key: ArrayKey): string | Uint8Array"
+                  "signature": "private static recordKey(key: unknown): string | Uint8Array"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession._record_key",
@@ -10008,7 +10022,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/record-session.ts::RecordSession.recordValue",
-                  "signature": "private static recordValue(stored: Stored | undefined): unknown"
+                  "signature": "private static recordValue(stored: Stored): unknown"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession._record_value",
@@ -10061,7 +10075,7 @@
             },
             {
               "id": "record-session.isArrayKey",
-              "kind": "function",
+              "kind": "static method",
               "visibility": "private",
               "inputs": [
                 "value"
@@ -10071,8 +10085,8 @@
               "state": "Tells whether a key is an array key of the data model: an integer, a text or bytes (HY-104.13).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::isArrayKey",
-                  "signature": "function isArrayKey(key: unknown): key is number | bigint | string | Uint8Array"
+                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.isArrayKey",
+                  "signature": "private static isArrayKey(key: unknown): key is number | bigint | string | Uint8Array"
                 }
               },
               "only": {
@@ -10170,7 +10184,13 @@
               },
               "reachDiffers": [
                 {
-                  "member": "core-rules.libraryError",
+                  "member": "core-rules.coreRules",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-104.46"
+                },
+                {
+                  "member": "core-rules.sharedRules",
                   "reached": "python",
                   "notReached": "node",
                   "sentence": "HY-104.46"
@@ -10262,7 +10282,7 @@
             },
             "python": {
               "file": "packages/python/src/polyspec/hyper/session/_file_session.py",
-              "kind": "functions",
+              "kind": "class",
               "internal": true
             }
           },
@@ -10414,7 +10434,7 @@
             },
             {
               "id": "file-session.converted",
-              "kind": "function",
+              "kind": "static method",
               "visibility": "internal",
               "inputs": [
                 "value"
@@ -10424,18 +10444,18 @@
               "state": "Runs a call of the session-store library that returns at once, and raises a failure of the library as the error of hyper of the same role with its kind, status and message (HY-133.3).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/session/file-session.ts::converted",
-                  "signature": "export function converted<T>(call: () => T): T"
+                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.converted",
+                  "signature": "static converted<T>(call: () => T): T"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::converted",
+                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.converted",
                   "signature": "def converted(call: Callable[[], T]) -> T"
                 }
               }
             },
             {
               "id": "file-session.awaited",
-              "kind": "function",
+              "kind": "static method",
               "visibility": "internal",
               "inputs": [
                 "value"
@@ -10445,8 +10465,8 @@
               "state": "Runs a call of the session-store library that waits, and raises its failure as converted does (HY-133.3).",
               "native": {
                 "node": {
-                  "symbol": "packages/ts/src/session/file-session.ts::awaited",
-                  "signature": "export async function awaited<T>(call: () => Promise<T>): Promise<T>"
+                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.awaited",
+                  "signature": "static async awaited<T>(call: () => Promise<T>): Promise<T>"
                 }
               },
               "only": {
@@ -18010,15 +18030,14 @@
           },
           "members": [
             "file-session.close",
+            "file-session.created",
+            "file-session.get",
+            "file-session.remove",
+            "file-session.renew",
+            "file-session.set",
             "file-sessions.collect",
             "file-sessions.constructor",
-            "file-sessions.open",
-            "record-session.close",
-            "record-session.created",
-            "record-session.get",
-            "record-session.remove",
-            "record-session.renew",
-            "record-session.set"
+            "file-sessions.open"
           ]
         },
         "cookie": {
@@ -18095,10 +18114,10 @@
             }
           },
           "members": [
+            "file-session.close",
+            "file-session.get",
             "file-sessions.constructor",
-            "file-sessions.open",
-            "record-session.close",
-            "record-session.get"
+            "file-sessions.open"
           ]
         }
       }

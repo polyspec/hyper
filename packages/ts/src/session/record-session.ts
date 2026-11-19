@@ -9,10 +9,6 @@ import type { SessionStore } from './session-store.js';
 // package exports no type of it, so a value is narrowed where it is read.
 type Stored = unknown;
 
-function isArrayKey(key: unknown): key is number | bigint | string | Uint8Array {
-  return typeof key === 'number' || typeof key === 'bigint' || typeof key === 'string' || key instanceof Uint8Array;
-}
-
 // The values of one session in one request (HY-24, HY-45, HY-72): the record as it was read and as the request changed
 // it. A value that the request did not set stays what PHP wrote, so a request that does not change it writes the same
 // bytes back. A store of a request extends this class and gives the record of its session with `stored`.
@@ -106,10 +102,15 @@ export abstract class RecordSession implements SessionStore {
     return this.items;
   }
 
+  // Tells whether a key is an array key of the data model: an integer, a text or bytes (HY-104.13).
+  private static isArrayKey(key: unknown): key is number | bigint | string | Uint8Array {
+    return typeof key === 'number' || typeof key === 'bigint' || typeof key === 'string' || key instanceof Uint8Array;
+  }
+
   // Returns the key of the data model of an array key: an integer is its decimal text, and bytes that are not UTF-8 stay
   // bytes (HY-104.13).
   private static recordKey(key: unknown): string | Uint8Array {
-    if (!isArrayKey(key)) throw new TypeError('hyper: a session record has a key that is no array key');
+    if (!RecordSession.isArrayKey(key)) throw new TypeError('hyper: a session record has a key that is no array key');
     return typeof key === 'number' || typeof key === 'bigint' ? String(key) : key;
   }
 

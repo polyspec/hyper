@@ -11,8 +11,10 @@ from __future__ import annotations
 from typing import Optional
 
 import polyspec.session_store as library
+from polyspec.session_store import Setting as RedisSetting
+from polyspec.session_store import SettingCluster, SettingServer, SettingSentinel
 
-from ._file_session import converted
+from ._file_session import FileSession
 from ._redis_session import RedisSession
 
 # The connection settings of the store (HY-115.17, HY-115.29): `SettingServer(url=...)` with a URL `redis://` or
@@ -20,11 +22,15 @@ from ._redis_session import RedisSession
 # password=...)`, whose store asks the Sentinels for the primary of `service` before each request that has a session
 # (HY-115.26), or `SettingCluster(urls=..., user=..., password=...)`, whose user and password are None where the
 # URLs give the credentials. Each takes `authorities`, the path of a PEM file whose authorities alone
-# verify the servers of TLS, or None for the trust store of the machine.
-RedisSetting = library.Setting
-SettingServer = library.SettingServer
-SettingSentinel = library.SettingSentinel
-SettingCluster = library.SettingCluster
+# verify the servers of TLS, or None for the trust store of the machine. This module re-exports them, and `RedisSetting`
+# is the union of the three.
+__all__ = [
+    "RedisSessions",
+    "RedisSetting",
+    "SettingCluster",
+    "SettingSentinel",
+    "SettingServer",
+]
 
 
 class RedisSessions:
@@ -44,7 +50,7 @@ class RedisSessions:
         lock_retries: int = 100,
         lock_wait: int = 20000,
     ):
-        self._store = converted(
+        self._store = FileSession.converted(
             lambda: library.RedisSessions(
                 setting,
                 lock_expire=lock_expire,
@@ -58,4 +64,4 @@ class RedisSessions:
     def _open(self, cookie: Optional[str]) -> RedisSession:
         """Returns the store of a request with the value of its session cookie; it holds the lock of the session until
         `close`. An identifier in another form or without a key names no session (HY-45)."""
-        return RedisSession(converted(lambda: self._store.open(cookie)))
+        return RedisSession(FileSession.converted(lambda: self._store.open(cookie)))
