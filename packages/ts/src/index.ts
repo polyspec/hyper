@@ -19,4 +19,5 @@ export { Result } from './result/result.js';
 export { Container } from './app/container.js';
 export { ArraySession } from './session/array-session.js';
 export { type SessionStore } from './session/session-store.js';
-export { type Data } from './data/values.js';
+export { type Data, type MapValue, type Value } from './data/values.js';
+export { type HostFunction } from './app/core-rules.js';

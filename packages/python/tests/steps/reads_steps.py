@@ -8,7 +8,8 @@ from pathlib import Path
 
 from polyspec.hyper._binding import _root as core
 from polyspec.hyper.app.app import App
-from polyspec.hyper.data._json_codec import JsonCodec
+
+from .recorded import decoded
 
 PROGRAMS = Path(__file__).resolve().parents[4] / "var" / "contract-programs"
 _OPTIONS = {
@@ -72,7 +73,7 @@ def _kept(pages, data: dict) -> object:
         step = page.next(given)
     if not isinstance(step.answer, core.AnswerJson):
         raise TypeError("the route reads answered no JSON")
-    return JsonCodec.decode(step.answer.text)["regions"]["content"]
+    return decoded(step.answer.text)["regions"]["content"]
 
 
 def _alone(pages, data: dict) -> str:
