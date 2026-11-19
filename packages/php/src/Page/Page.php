@@ -96,7 +96,7 @@ final class Page
                 // HY-107.9: a revision change is the core outcome with no data; the core answers it as the 409 page.
                 $outcome = $action instanceof ActionOutcomeRevisionChanged
                     ? $action
-                    : new ActionOutcomePage($action[0], self::map($action[1], "the action of route {$route['name']}"));
+                    : new ActionOutcomePage($action[0], self::loaderMap($action[1], "the action of route {$route['name']}"));
                 $input = new PageStepInputAction($outcome, null);
             } elseif ($call instanceof CallContext) {
                 // HY-124: the context handler runs after the action and before the shared handler and any loader.
@@ -104,17 +104,17 @@ final class Page
                     throw new \LogicException('a page without a context handler asked for its context');
                 }
                 $input = new PageStepInputContext(
-                    self::map(Context::held($this->context, $request->selection()), 'the context handler'),
+                    self::loaderMap(Context::held($this->context, $request->selection()), 'the context handler'),
                 );
             } elseif ($call instanceof CallShared) {
                 $input = $this->shared === null
                     ? new PageStepInputNoHandler()
                     : new PageStepInputShared(
-                        self::map($this->container->call($this->shared, $provided), 'the shared handler'),
+                        self::loaderMap($this->container->call($this->shared, $provided), 'the shared handler'),
                     );
             } elseif ($call instanceof CallRouteLoader) {
                 $input = isset($handler['load'])
-                    ? new PageStepInputLoaded(self::map(
+                    ? new PageStepInputLoaded(self::loaderMap(
                         $this->container->call($handler['load'], $provided),
                         "the loader of route {$route['name']}",
                     ))
@@ -133,7 +133,7 @@ final class Page
                     if ($loaded === null) {
                         $input = new PageStepInputAbsent();
                     } else {
-                        $input = new PageStepInputLoaded(self::map($loaded, "the loader of region {$region}"));
+                        $input = new PageStepInputLoaded(self::loaderMap($loaded, "the loader of region {$region}"));
                         $present[] = $region;
                     }
                 }
@@ -143,7 +143,7 @@ final class Page
                 $loader = $this->regionLoaders[$region] ?? null;
                 $input = $loader === null
                     ? new PageStepInputNoHandler()
-                    : new PageStepInputLoaded(self::map(
+                    : new PageStepInputLoaded(self::loaderMap(
                         $this->container->call($loader, $provided),
                         "the loader of region {$region}",
                     ));
@@ -153,7 +153,7 @@ final class Page
                 // states whether a document embeds its data and the status of a page with status 200.
                 $stored = [];
                 foreach ($present as $name) {
-                    $stored[$name] = self::map($session->kept($name), "the kept values of region {$name}");
+                    $stored[$name] = self::loaderMap($session->kept($name), "the kept values of region {$name}");
                 }
                 $input = new PageStepInputReply($reply->embedsData(), $stored, $reply->statusValue());
             }
@@ -211,7 +211,7 @@ final class Page
      *
      * @return array<array-key, mixed>
      */
-    private static function map(mixed $value, string $source): array
+    private static function loaderMap(mixed $value, string $source): array
     {
         if (!is_array($value) || ($value !== [] && array_is_list($value))) {
             throw new \LogicException("{$source} did not return a map");
