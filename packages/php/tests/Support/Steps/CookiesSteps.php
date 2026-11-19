@@ -14,9 +14,15 @@ final class CookiesSteps
 {
     public static function parse(CaseReader $case): void
     {
-        $header = $case->input('header');
-        // The header of a case is text whose characters U+0000 to U+00FF are its bytes (HY-129).
-        $bytes = is_string($header) ? Bytes::of($header) : null;
-        $case->compare('cookies', Plain::map(Cookies::parse($bytes)));
+        // Each line of a case is text whose characters U+0000 to U+00FF are its bytes, and `header` is one line, as a
+        // host whose runtime joins the lines passes it (HY-129.15).
+        $given = $case->has('lines') ? (array) $case->input('lines') : [$case->input('header')];
+        $lines = [];
+        foreach ($given as $line) {
+            if (is_string($line)) {
+                $lines[] = Bytes::of($line);
+            }
+        }
+        $case->compare('cookies', Plain::map(Cookies::parse($lines)));
     }
 }

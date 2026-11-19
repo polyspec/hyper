@@ -129,7 +129,7 @@ def values(case) -> None:
         header = next(
             (value for name, value in headers.items() if name.lower() == "cookie"), None
         )
-        cookies = Cookies.parse(None if header is None else header.encode("latin-1"))
+        cookies = Cookies.parse([] if header is None else [header])
     original = Request(
         spec.get("method", "GET"),
         Request.target_path(target),

@@ -1,6 +1,7 @@
-# The field lines of a request (HY-42.8 to HY-42.13): `create_server` and the ASGI callable receive the lines of a name
-# apart and read them as one value joined with `, `, the media type of the body included; the WSGI callable takes the
-# value that its server joined as given; and `create_server` refuses a body that it cannot read by that one value.
+# The field lines of a request (HY-42.9 to HY-42.15): `create_server` and the ASGI callable receive the lines of a name
+# apart and read them as one value joined with `, `, the media type of the body included, and the `Cookie` lines joined
+# with `; `, while the cookies are parsed from the lines themselves (HY-129.14); the WSGI callable takes the value that
+# its server joined as given; and `create_server` refuses a body that it cannot read by that one value.
 import asyncio
 import io
 import socket
@@ -17,12 +18,15 @@ LINES = [
     ("Content-Type", "text/plain"),
     ("User-Agent", "a"),
     ("User-Agent", "b"),
+    ("Cookie", "a=1"),
+    ("Cookie", "b=x,y"),
 ]
 JOINED = "application/x-www-form-urlencoded, text/plain"
 # What the request gives: the two headers, the kind and the status of the failure of the read of the media type, because
 # the joined value is no media type (HY-42.14, HY-59.13), and the form values, of which a body of the joined type has
 # none.
-SEEN = [JOINED, ("malformed_content_type", 400), "a, b", []]
+# The `Cookie` lines are one header joined with `; `, and the cookie `b` holds the `,` of its line (HY-129.14).
+SEEN = [JOINED, ("malformed_content_type", 400), "a, b", [], "a=1; b=x,y", ("1", "x,y")]
 
 
 def exchange(server, data: bytes) -> bytes:
@@ -67,6 +71,8 @@ class HeaderLinesTest(TransportCase):
             media_type,
             request.header("User-Agent"),
             request.form(),
+            request.header("Cookie"),
+            (request.cookie("a"), request.cookie("b")),
         ]
 
     def test_create_server_reads_the_lines_of_a_name_as_one_value(self) -> None:
@@ -112,6 +118,7 @@ class HeaderLinesTest(TransportCase):
             "CONTENT_TYPE": JOINED,
             "CONTENT_LENGTH": "3",
             "HTTP_USER_AGENT": "a, b",
+            "HTTP_COOKIE": "a=1; b=x,y",
             "wsgi.input": io.BytesIO(b"a=1"),
         }
         status: list[str] = []

@@ -1,8 +1,12 @@
-# The steps of contracts/cookies.json (HY-129): a header is text whose characters U+0000 to U+00FF are its bytes.
+# The steps of contracts/cookies.json (HY-129): each line is text whose characters U+0000 to U+00FF are its bytes, and
+# `header` is one line, as a host whose runtime joins the lines passes it (HY-129.15).
 from polyspec.hyper.http._cookies import Cookies
 
 
 def parse(case) -> None:
-    header = case.input("header")
-    data = header.encode("latin-1") if isinstance(header, str) else None
-    case.compare("cookies", Cookies.parse(data))
+    if case.has("lines"):
+        lines = list(case.input("lines"))
+    else:
+        header = case.input("header")
+        lines = [] if header is None else [header]
+    case.compare("cookies", Cookies.parse(lines))

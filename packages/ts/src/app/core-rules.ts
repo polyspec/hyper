@@ -262,6 +262,7 @@ export interface CoreBinding {
   keptOf(stored: unknown): JsonValue;
   keptCookie(text: string): JsonValue;
   acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];
+  parseCookie(lines: Iterable<string>): readonly (readonly [string, string])[];
   fileOver(sizes: Iterable<number>, limit: number): boolean;
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
   computePageHeaders(response: PageResponse): PageHeadersResult;
@@ -293,7 +294,7 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'buildPaths', 'buildStream', 'shellFile', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'checkFunctionEntry', 'routeRequest', 'computePageHeaders', 'frameHeaders',
-  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'readHeldBody', 'parseUrlencoded', 'FormFile', 'RequestBody', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
+  'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'parseCookie', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'readHeldBody', 'parseUrlencoded', 'FormFile', 'RequestBody', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
   'sessionValue', 'sessionRecord',
 ];
 

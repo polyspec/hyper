@@ -108,8 +108,8 @@ class AsgiTest(UploadCases, TransportCase):
         )
         self.assertEqual([(request, True)], written)
 
-    def test_several_cookie_headers_join_with_a_semicolon(self) -> None:
-        # HY-129: the cookie headers of the scope are one header joined with `; `.
+    def test_the_cookie_headers_of_the_scope_are_its_lines(self) -> None:
+        # HY-129.14: the cookie headers of the scope are the lines of the parse, not joined.
         application = create_asgi(self.app, self.sessions)
         run(
             application,

@@ -1037,6 +1037,37 @@
           "core": "polyspec_hyper::cookies::session_name"
         },
         {
+          "id": "rules.parse_cookie",
+          "name": [
+            "parse",
+            "cookie"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "lines"
+              ],
+              "type": {
+                "list": "latin1"
+              },
+              "required": true
+            }
+          ],
+          "returns": {
+            "list": {
+              "tuple": [
+                "text",
+                "text"
+              ]
+            }
+          },
+          "raises": [],
+          "wait": "none",
+          "core": "polyspec_hyper::cookies::parse_cookie"
+        },
+        {
           "id": "rules.keep_name",
           "name": [
             "keep",

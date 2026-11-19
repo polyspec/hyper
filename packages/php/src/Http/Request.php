@@ -578,7 +578,7 @@ final class Request
             $headers,
             self::targetQuery($target),
             // HY-129: the one parse of the header, which PHP gives as it received it in $_SERVER.
-            cookies: Cookies::parse(is_string($_SERVER['HTTP_COOKIE'] ?? null) ? $_SERVER['HTTP_COOKIE'] : null),
+            cookies: Cookies::parse(is_string($_SERVER['HTTP_COOKIE'] ?? null) ? [$_SERVER['HTTP_COOKIE']] : []),
             https: ($_SERVER['HTTPS'] ?? '') !== '' && ($_SERVER['HTTPS'] ?? '') !== 'off',
             bodySize: $declared !== null && ctype_digit($declared) ? (int) $declared : null,
         );

@@ -1,12 +1,21 @@
 //! The cookies of hyper (HY-45, HY-38.10): their names, which the application does not choose, and the session cookie
 //! that every server writes.
 
-use polyspec_http_cookie::{set_cookie, Attributes, SameSite};
+use polyspec_http_cookie::{parse_cookie as parse_lines, set_cookie, Attributes, SameSite};
 
 use crate::Error;
 
 /// The prefix of the cookies of hyper, which a reply may not use (HY-52.2).
 pub const RESERVED_PREFIX: &str = "hy-";
+
+/// The cookies of a request (HY-129.13): what `parse_cookie` of http-cookie gives for the field values of its `Cookie`
+/// lines in their order (CK-2 to CK-5), the first cookie of a name only. A host passes the lines as it received them
+/// (HY-129.14), or the one value that its runtime joined as one line (HY-129.15); a request without the field gives no
+/// line.
+#[must_use]
+pub fn parse_cookie(lines: &[Vec<u8>]) -> Vec<(String, String)> {
+    parse_lines(lines)
+}
 
 /// The name of the session cookie (HY-45.1): `__Host-hy-session` on HTTPS, so that only its own host can set it
 /// (HY-45.2), and `hy-session` otherwise.

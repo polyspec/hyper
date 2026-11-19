@@ -152,7 +152,7 @@ async def _answer(
     method = scope["method"].upper()
     target = _raw_path(scope)
     declared = declared_length(_header(scope, b"content-length"))
-    cookies = Cookies.parse(_cookie_header(scope))
+    cookies = Cookies.parse(_cookie_lines(scope))
     # The request is HTTPS when the application was opened with https or the ASGI server says so.
     https = app.https or scope.get("scheme") == "https"
     # HY-100.24: the raw query is `query_string`, which `raw_path` does not hold, also for the request as received.
@@ -254,18 +254,25 @@ def _header(scope: dict, name: bytes) -> Optional[str]:
     return ", ".join(value.decode("latin-1") for value in values) if values else None
 
 
-def _cookie_header(scope: dict) -> Optional[bytes]:
-    """Returns the `cookie` headers of the scope joined with `; ` (HY-129), or None when it has none."""
-    values = [value for key, value in scope.get("headers", []) if key == b"cookie"]
-    return b"; ".join(values) if values else None
+def _cookie_lines(scope: dict) -> list[str]:
+    """Returns the `cookie` headers of the scope in their order, not joined (HY-129.14), each as text with one
+    character per byte."""
+    return [
+        value.decode("latin-1")
+        for key, value in scope.get("headers", [])
+        if key == b"cookie"
+    ]
 
 
 def _scope_headers(scope: dict) -> dict[str, str]:
-    """Returns the request headers of the scope in lower case; a repeated header joins its values,
-    as HTTP reads it."""
+    """Returns the request headers of the scope in lower case; a repeated header joins its values
+    with `, `, and `cookie` with `; ` (HY-42.15)."""
     joined: dict[str, list[str]] = {}
     for key, value in scope.get("headers", []):
         joined.setdefault(key.decode("latin-1").lower(), []).append(
             value.decode("latin-1")
         )
-    return {name: ", ".join(values) for name, values in joined.items()}
+    return {
+        name: ("; " if name == "cookie" else ", ").join(values)
+        for name, values in joined.items()
+    }

@@ -181,7 +181,7 @@ final class RequestSteps
             }
         } else {
             // HY-129.13: the one parse of the Cookie header.
-            $cookies = Cookies::parse($cookie);
+            $cookies = Cookies::parse($cookie === null ? [] : [$cookie]);
         }
         $original = new Request(
             Json::string($given['method'] ?? 'GET'),
