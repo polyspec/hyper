@@ -676,6 +676,72 @@ fn data_value(json: &str) -> Result<polyspec_template::Value, Error> {
     }
 }
 
+/// The record of a stored JSON text of a case, written as the PHP step `record` writes it and without the data model,
+/// so that a case can store a value outside it and test the read (HY-104.23): an integer is an integer, a JSON object
+/// whose keys are `0` to `n-1` in order, the empty one included, a `stdClass`, and another object an array.
+fn stored_record(json: &str) -> polyspec_php_serialization::PhpValue {
+    use polyspec_php_serialization::{Key, Node, PhpValue};
+    fn node(record: &mut PhpValue, value: &Value) -> Node {
+        match value {
+            Value::Null => Node::Null,
+            Value::Bool(value) => Node::Bool(*value),
+            Value::Number(number) => match (number.as_i64(), number.as_f64()) {
+                (Some(integer), _) => Node::Int(integer),
+                (None, Some(float)) => Node::Float(float),
+                (None, None) => panic!("{number}: no number of a record"),
+            },
+            Value::String(text) => Node::String(text.as_bytes().to_vec()),
+            Value::Array(items) => {
+                let array = record.new_array();
+                for (index, item) in (0_i64..).zip(items) {
+                    let item = node(record, item);
+                    if let Err(error) = record.set_element(array, Key::Int(index), item) {
+                        panic!("{error:?}");
+                    }
+                }
+                Node::Array(array)
+            }
+            Value::Object(map)
+                if map
+                    .keys()
+                    .enumerate()
+                    .all(|(index, key)| *key == index.to_string()) =>
+            {
+                let object = record.new_object();
+                for (key, item) in map {
+                    let item = node(record, item);
+                    if let Err(error) = record.set_property(object, key.as_bytes().to_vec(), item) {
+                        panic!("{error:?}");
+                    }
+                }
+                Node::Object(object)
+            }
+            Value::Object(map) => {
+                let array = record.new_array();
+                for (key, item) in map {
+                    let item = node(record, item);
+                    if let Err(error) =
+                        record.set_element(array, Key::of_string(key.as_bytes().to_vec()), item)
+                    {
+                        panic!("{error:?}");
+                    }
+                }
+                Node::Array(array)
+            }
+        }
+    }
+    let value = match serde_json::from_str::<Value>(json) {
+        Ok(value) => value,
+        Err(error) => panic!("{json}: {error}"),
+    };
+    let mut record = PhpValue::new();
+    let root = node(&mut record, &value);
+    if let Err(error) = record.set_root(root) {
+        panic!("{error:?}");
+    }
+    record
+}
+
 #[test]
 fn session_values_are_kept_in_the_record() {
     // HY-24.1, HY-24.14, HY-25.2, HY-40, HY-72.2, HY-104.13, HY-104.14, HY-104.23
@@ -688,14 +754,7 @@ fn session_values_are_kept_in_the_record() {
         for case in group(&file, group_name) {
             let mut store = MemoryStore::new();
             for pair in case["stored"].as_array().into_iter().flatten() {
-                let value = match data_value(text_of(&pair[1])) {
-                    Ok(value) => value,
-                    Err(error) => panic!("{error}"),
-                };
-                let record = match session::to_record(&value) {
-                    Ok(record) => record,
-                    Err(error) => panic!("{error}"),
-                };
+                let record = stored_record(text_of(&pair[1]));
                 if let Err(error) = store.set(text_of(&pair[0]), &record) {
                     panic!("{}: {error}", case["id"]);
                 }

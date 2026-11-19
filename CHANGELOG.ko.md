@@ -1,10 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 1578fc178982cce08550592bbe7c72921ee15cca113496c3c94c29a979edc163 -->
+<!-- source-sha256: d0c5fd91a740d437b81aff929a4c5f811f9874c0dc3b0d010c8d8128858fac39 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
+
+- `contracts/session.json`의 Rust case step이 PHP step `record`처럼 저장된 각 JSON text의 record를 data model 없이 저장한다(H35.212, HY-104.23). 입력: 저장된 `_hyper_keep`가 정수 2^53을 가지고 호출 `kept`가 `data_number_range`를 기대하는 case `reading_stored_kept_values_outside_the_data_model_fails`. 이전 동작: `packages/rust/tests/contracts.rs`가 저장할 text를 data model로 읽은 뒤 저장해서 `data_number_range: number 9007199254740992 is outside the safe range`로 panic했고, `make core-test`가 40개 가운데 1개에서 실패했다. 기대: step이 decode한 JSON을 record에 쓰고, 호출 `kept`가 `data_number_range`로 실패하며, `make core-test`가 통과한다.
 
 - 요청의 cookie는 http-cookie의 `parse_cookie`가 그 `Cookie` 줄에 대해 주는 것이며, PHP, Node, Python에서 core 함수 하나 `rules.parse_cookie`를 거친다(H35.207, HY-129.13~HY-129.15, HY-42.15). 입력: `Cookie` 줄 둘 `a=1`과 `b=x,y`를 가진 요청. 이전 동작: 각 server가 header 값 하나를 손으로 parse했고, Node, Python `create_server`, ASGI는 폐기된 HY-42.8대로 먼저 줄을 `; `로 이었다. 기대: Node는 `rawHeaders`의 `Cookie` 줄을, Python `create_server`와 ASGI는 모든 줄을 넘기고, PHP와 WSGI는 이어진 값 하나를 줄 하나로 넘기며, cookie는 `{"a": "1", "b": "x,y"}`이다. `header('cookie')`는 줄을 `; `로 이은 값으로 남고(HY-42.15), Python `create_server`와 ASGI는 이전에 `, `로 이었다. `contracts/cookies.json`의 case `the_lines_of_the_field_are_read_one_after_another`가 이를 검증한다.
 - `make recipe-compare`가 class union으로 타입이 적힌 parameter로 읽은 member에 닿는다(H35.204, HYR-5). 입력: parameter `sessions`가 `FileSessions | RedisSessions`로 적히고 그것에 `open`을 호출하는 host, `packages/ts/src/host/http-host.ts`의 `createListener`와 `packages/python/src/polyspec/hyper/host/_pipeline.py`의 `answer_with`. 이전 동작: Node reader(`typeOf`)와 Python reader(`type_of`)가 그런 parameter에 class를 주지 않았고 reader 출력은 parameter마다 class 하나만 가졌으므로, 검사가 node와 python에서 `MEMBER_UNREACHED internal member redis-sessions.open`을 보고했다. 지금 동작: 두 reader가 parameter나 property의 두 개 이상 class의 union을 `types`로 적고(`scripts/schema/recipe-sources.schema.json`), 그런 parameter로 읽은 member는 union의 class 가운데 그 member를 가진 각 class의 member에 닿는다. union 타입의 property는 reader가 적지만 검사는 아직 읽지 않는다. 검증: `make recipe-compare`가 두 줄을 더 보고하지 않고 새 줄도 없다. recipe와 reader test에 대한 `make hyper-test-scripts`가 통과하며, `tests/scripts/recipe-check.test.mts`에 새 test 두 개가 있다.
