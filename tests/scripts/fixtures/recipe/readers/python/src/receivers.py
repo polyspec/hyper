@@ -26,6 +26,9 @@ class Receivers:
         for other in others:
             other.grow()
 
+    def united(self, item: "Widget | Receivers | None") -> None:
+        item.grow()
+
     def run(self, widget: Widget, text: str) -> None:
         widget.grow()
         Widget.make()

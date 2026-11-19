@@ -35,6 +35,10 @@ export class Receivers {
     following?.grow();
   }
 
+  united(item: Widget | Sized | null): void {
+    item?.grow();
+  }
+
   listed(widgets: readonly Widget[], others: Array<Widget>): void {
     for (const listedWidget of widgets) listedWidget.grow();
     for (const other of others) other.grow();

@@ -916,6 +916,32 @@ test('each reader writes the class inside a written list type of a parameter, PH
   }
 });
 
+test('the Node and the Python reader write the classes of a parameter whose written type is a union of two classes', () => {
+  const second: Record<'node' | 'python', ClassRef> = { node: { file: 'src/sized.ts', name: 'Sized' }, python: { file: 'src/receivers.py', name: 'Receivers' } };
+  for (const lang of ['node', 'python'] as const) {
+    const out = readCopy(lang, path.join(fixture, 'readers', lang), ['--sources', 'src', '--tests', 'tests']);
+    const scope = out.scopes.find((s) => s.file === READER_FILES[lang].receivers && s.name === 'Receivers.united');
+    assert.deepEqual(scope?.parameters, [{ name: 'item', types: [{ file: READER_FILES[lang].widget, name: 'Widget' }, second[lang]] }], lang);
+  }
+});
+
+test('a member read through a parameter whose written type is a union of classes reaches the member in each class of the union', () => {
+  const units: Written[] = [
+    { unit: 'box', members: [{ name: 'run', kind: 'method', visibility: 'public' }] },
+    { unit: 'item', members: [{ name: 'size', kind: 'method', visibility: 'internal' }] },
+    { unit: 'other', members: [{ name: 'size', kind: 'method', visibility: 'internal' }] },
+  ];
+  const run = (_lang: 'php' | 'node', e: { ref: (unit: string) => ClassRef }): ReturnType<Parameters<typeof stated>[2]> => [
+    {
+      unit: 'box',
+      method: 'run',
+      parameters: [{ name: 'held', types: [e.ref('item'), e.ref('other')] }],
+      uses: [{ kind: 'member', of: { kind: 'variable', name: 'held' }, name: 'size', call: true }],
+    },
+  ];
+  assert.deepEqual(stated(units, ['box.run'], run).findings, []);
+});
+
 test('the variable of a loop over a parameter whose written type is a list of a class has that class', () => {
   const run = (_lang: 'php' | 'node', e: { ref: (unit: string) => ClassRef }): ReturnType<Parameters<typeof stated>[2]> => [
     {
