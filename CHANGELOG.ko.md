@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+- `.github/workflows/release.yml`의 job `release`가 `make ci-release-release` 전에 `.php-version`의 PHP를 설정한다(H35.225). 입력: v0.0.41의 release. 이전 동작: release를 job tag, assets, release로 나눈 일(H35.35-1)이 하나였던 release job의 setup-php 단계를 빠뜨렸으므로, `make release-tools`가 runner의 PHP 8.5만 찾아 tag 뒤, GitHub Release 전에 `php 8.5 (/usr/bin/php) is not a release that .php-version declares (8.4)`로 실패했다. 기대: job이 PHP를 가진 `ci.yml`의 job처럼 `.php-version`의 PHP를 시작하고, `tests/scripts/ci-workflow.test.mts`가 recipe 앞의 그 단계를 요구한다.
+
 ## 0.0.41
 
 - CI docs group의 script test가 다시 통과한다(H35.224). `tests/scripts/ci-group-tools.test.mts`는 install-tools의 tool로 selector만 읽고 그 option `--php`는 읽지 않으며, shell 대입 `php=`를 php의 시작으로 읽지 않는다. `make ci-results`는 recipe runner의 각 실행 폴더를 `recipe-results/<run>/`에 복사하므로 한 runner의 두 실행이 더는 충돌하지 않고, `tests/scripts/ci-workflow.test.mts`와 `tests/scripts/test-selection.test.mts`는 `docs/operations/development.md`가 이제 적는 대로 결과를 `var/recipe/results/<run>/` 아래에서 기대한다. `tests/scripts/node-addon.test.mts`는 `ENTRY`를 빌드된 `core-rules`에서 읽는다. `tests/scripts/node-core.test.mts`는 `parseCookie`를 unit이 직접 부르는 member로 센다. `tests/scripts/node-package-deps.test.mts`는 recipe의 이어진 줄을 합친 뒤 실행한다. `tests/scripts/php-wrappers.test.mts`는 자기 폴더만 담은 PATH로 script를 실행하므로 machine의 php는 입력이 아니다. docs group의 setup은 release file을 설치한다. 행과 항목은 commit을 적던 자리에 그 행과 merge를 적고, 영어 변경 기록은 한국어 짝처럼 0.0.41의 각 항목을 한 번만 둔다.

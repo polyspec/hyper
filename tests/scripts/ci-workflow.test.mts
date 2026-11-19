@@ -437,6 +437,12 @@ test('H35.35-1 the release tags the commit of the CI run, builds the assets of t
   // when a tag was made; the job release publishes what it built.
   for (const line of [`    uses: ${ASSETS_CALL}`, '    needs: tag', "    if: ${{ needs.tag.outputs.tag != '' }}", '      ref: ${{ needs.tag.outputs.tag }}', '      release: true']) assert.ok(assets.text.split('\n').includes(line), `the job assets of release.yml lacks the line "${line.trim()}"`);
   assert.ok(item(release, 2, 'the jobs of release.yml').text.split('\n').includes('    needs: [tag, assets]'), 'the job release of release.yml does not need the jobs tag and assets');
+  // The job release runs release-tools, whose install-tools wraps the php of PATH and accepts only the minor release of
+  // .php-version, so the job sets up that PHP before its recipe, as the jobs of ci.yml whose tools hold PHP do.
+  const publish = item(release, 2, 'the jobs of release.yml').steps;
+  const php = publish.findIndex((step) => step.uses?.startsWith('shivammathur/setup-php@') === true);
+  const recipe = publish.findIndex((step) => step.text.includes('make ci-release-release'));
+  assert.ok(php !== -1 && php < recipe, 'the job release of release.yml sets up no PHP of .php-version before make ci-release-release');
   // The job tag runs release-tag and gives its tag to the later jobs; a dispatch or a local run passes no AUTO.
   assert.deepEqual(makeOrderProblems('ci-release-tag', ['RUN=1', 'AUTO=1'], [started('release-tag'), ' --no-print-directory release-tag-output ']), []);
   assert.match(dryRun('release-tag', { variables: ['RUN=1', 'AUTO=1'] }).join('\n'), /\/release-run\.m[jt]s tag "\$RUN" --auto$/m);
