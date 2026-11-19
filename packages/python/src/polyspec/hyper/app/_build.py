@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from ._core_rules import CoreRules
+from .._binding._errors import HyperValueError
 
 
 class Build:
@@ -18,7 +19,7 @@ class Build:
         try:
             data = Path(file).read_bytes()
         except OSError as error:
-            failure = CoreRules.shared().value_error(
+            failure = HyperValueError(
                 f"{file} is missing or not readable (HY-125)", "invalid_build"
             )
             failure.add_note(f"hyper: the build file is {file}")

@@ -8,6 +8,7 @@ import re
 from typing import Optional
 
 from ..app._core_rules import CoreRules
+from .._binding._errors import HyperValueError
 from ..session._csrf import Csrf
 from ..form._fields import Fields
 from ..form._files import Files
@@ -52,7 +53,7 @@ class Request:
             texts += [("header", name), ("header", value)]
         for subject, text in texts:
             if any(ord(char) > 0xFF for char in text):
-                raise CoreRules.shared().value_error(
+                raise HyperValueError(
                     f"{subject} holds a character above U+00FF", "invalid_text"
                 )
         self.method = method
@@ -74,7 +75,7 @@ class Request:
         self.https = https
         self._selection = selection
         # The query values, or None when a name or a value is not UTF-8 (HY-42, HY-56).
-        self._query_fields = Fields.parse(query.encode("latin-1"))
+        self._query_fields: Optional[Fields] = Fields.parse(query.encode("latin-1"))
         # The body as a host read it: a body read in chunks gives its parts (HY-131).
         self._read = read
         # True for a multipart type without a boundary, or with an empty one, as the core reads it (HY-113.24).
@@ -89,8 +90,8 @@ class Request:
             )
         # The form values and the file parts of the body, or None when it fails with `invalid` or `header_limit` of
         # http-form (HY-42, HY-113.23, HY-113.25).
-        self._form_fields = None if parts is None else parts[0]
-        self._file_parts = None if parts is None else parts[1]
+        self._form_fields: Optional[Fields] = None if parts is None else parts[0]
+        self._file_parts: Optional[Files] = None if parts is None else parts[1]
 
     def _exceeded(
         self, value_limit: int, part_limit: int, file_limit: int, streams: bool

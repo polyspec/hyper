@@ -181,13 +181,6 @@ EXACT = [
         (True,),
         "Accept, HX-Request, HX-Current-URL, Hyper-Context",
     ),
-    (
-        "the tag of Page.respond (HY-53.1)",
-        "page_tag",
-        lambda rules: rules.page_tag("{}", "masked", TOKEN),
-        ("{}", "masked", TOKEN),
-        'W/"0"',
-    ),
 ]
 
 # The partial units, which return the result of their member as it is.

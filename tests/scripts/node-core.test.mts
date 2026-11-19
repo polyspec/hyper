@@ -156,7 +156,6 @@ const EXACT: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[
   ['Result.redirect (HY-46)', 'redirectLocation', (rules) => rules.resultRedirect('/list'), ['/list'], '/list'],
   ['Result.page (HY-58)', 'pageStatus', (rules) => rules.resultPage(422), [422], 422],
   ['App.varyHeader (HY-117.1)', 'pageVary', (rules) => rules.appVaryHeader(true), [true], 'Accept, HX-Request, HX-Current-URL, Hyper-Context'],
-  ['the tag of Page.respond (HY-53.1)', 'pageTag', (rules) => rules.pageTag('{}', 'masked', TOKEN), ['{}', 'masked', TOKEN], 'W/"0"'],
 ];
 
 test('RepresentationResponse.etag gives representation_tag the content type and the UTF-8 bytes of the body (HY-122.10)', () => {

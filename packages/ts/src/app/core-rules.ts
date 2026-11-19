@@ -418,8 +418,6 @@ export interface CoreRules {
   // Partial. appFrame: front_functions.frame_headers gives the headers that every response carries (HY-45.5,
   // HY-65.1). The server still adds them to its response, a header of the same name replaced.
   appFrameHeaders(status: number, frameAncestors: string): Record<string, string>;
-  // The tag of a JSON response of pageRespond: rules.page_tag (HY-53.1).
-  pageTag(body: string, maskedToken: string, token: string): string;
   // Partial. The headers of pageRespond: front_functions.compute_page_headers (HY-15.3, HY-52, HY-53, HY-65,
   // HY-103.5, HY-117.1). The server still writes the body and adds the cookies of the reply (HY-52.13).
   pageHeaders(response: PageResponse): { readonly status: number; readonly headers: Record<string, string>; readonly body: boolean };
@@ -524,7 +522,6 @@ export function coreRules(module: object): CoreRules {
     resultPage: (status) => core.pageStatus(status),
     appVaryHeader: (context) => core.pageVary(context),
     appFrameHeaders: (status, frameAncestors) => Object.fromEntries(core.frameHeaders(status, frameAncestors)),
-    pageTag: (body, maskedToken, token) => core.pageTag(body, maskedToken, token),
     pageHeaders: (response) => {
       const computed = core.computePageHeaders(response);
       return { status: computed.status, headers: Object.fromEntries(computed.headers), body: computed.body };

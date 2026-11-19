@@ -39,7 +39,6 @@ _MEMBERS = (
     "session_name",
     "keep_name",
     "session_cookie",
-    "page_tag",
     "representation_tag",
     "media_type",
     "page_status",
@@ -259,10 +258,6 @@ class CoreRules:
         """Partial. rules.shell_text gives the text of the bytes of the static shell (HY-62), which the server read."""
         return self._core.shell_text(path, data)
 
-    def page_tag(self, body: str, masked_token: str, token: str) -> str:
-        """The tag of a JSON response of Page.respond: rules.page_tag (HY-53.1)."""
-        return self._core.page_tag(body, masked_token, token)
-
     def session_stored_token(self, stored: str) -> str:
         """Partial. Session.csrf_token: rules.stored_token checks the value that the session holds in the place of the
         token (HY-24.14). The server still reads the store and creates the token of a session that holds none
@@ -273,18 +268,6 @@ class CoreRules:
         """Partial. The name of the cookie of the kept values: rules.keep_name (HYC-13.6). The server still reads the
         cookie from the request (HY-129)."""
         return self._core.keep_name(secure)
-
-    def value_error(self, message: str, kind: str) -> ValueError:
-        """The error of hyper of the category value with its kind (HY-133.2), of the class of the binding."""
-        from .._binding._errors import HyperValueError
-
-        return HyperValueError(message, kind)
-
-    def type_error(self, message: str, kind: str) -> TypeError:
-        """The error of hyper of the category type with its kind (HY-133.2), of the class of the binding."""
-        from .._binding._errors import HyperTypeError
-
-        return HyperTypeError(message, kind)
 
     def library_error(
         self, library: object, prefix: str, error: BaseException
@@ -342,4 +325,6 @@ class CoreRules:
     def open_error(self, message: str) -> ValueError:
         """The error with which an application fails to open: the class of the binding of the category value with the
         kind `invalid_application` (HY-106.21)."""
-        return self.value_error(message, "invalid_application")
+        from .._binding._errors import HyperValueError
+
+        return HyperValueError(message, "invalid_application")
