@@ -1,7 +1,10 @@
 // The fixture application of the PHP server tests, served by the Node server.
 import type { Server } from 'node:http';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Db, Query, Schema } from '@polyspec/orm';
 import { App, ArraySession, Choice, ClientRendering, Request, Result, type AppOptions, type Container, type Handlers, type RequestInit, type Response, type RouteHandlers } from '../src/index.js';
 import type { SessionStore } from '../src/session/session-store.js';
 import { Cookies } from '../src/http/cookies.js';
@@ -52,12 +55,98 @@ export function handlers(): Handlers<Services> {
 }
 
 // A fixture application with one session and one counter, as the PHP AppTest sets them up.
+// The errors of the orm package that a case throws, by `<class>:<kind>`, which ormErrors gets by real calls (HY-107.7).
+let ormCaught: ReadonlyMap<string, Error> | null = null;
+
 /**
- * Fails the case whose handler throws an error class of the orm package (HY-107.7) when the case is set up: hyper does
- * not depend on the orm package, so the runner has no such class to throw and the case is not run.
+ * Gets the errors of the orm package that the cases throw by real calls on a SQLite file of tests/fixtures/orm-errors.json
+ * in a temporary directory, as the generated tests of orm 0.0.34 make them: an update with an expected revision that the
+ * row does not hold gives `revision_changed` (generated.test.mjs:6376, Query.update a_changed_revision), an update with
+ * require_match of a key that no row holds gives `no_rows` (:6480, require_match_of_a_row_that_no_key_holds), and a
+ * connection to a file in a missing directory gives the OrmStoreError `driver` (:917, a_database_in_a_missing_directory).
+ * The database is closed and the directory removed before it returns (HR-87); the errors are kept for the process.
  */
-export function ormThrown(what: string): never {
-  throw new Error(`${what} throws an error of the orm package: the orm package is not a dependency of hyper yet (HY-107.7)`);
+export async function ormErrors(): Promise<void> {
+  if (ormCaught !== null) return;
+  const fixture = ormFixtureOf(JSON.parse(readFileSync(new URL('../../../tests/fixtures/orm-errors.json', import.meta.url), 'utf8')));
+  const directory = mkdtempSync(join(tmpdir(), 'hyper-orm-errors-'));
+  const caught = new Map<string, Error>();
+  try {
+    const schema = Schema.load(fixture.manifest, '', fixture.manifestHash);
+    const db = await Db.connectSchema(`sqlite://${join(directory, 'shop.db')}`, schema, 1, {});
+    try {
+      for (const step of fixture.steps) await db.execute(step, []);
+      const changed = Query.new(schema, fixture.entity);
+      changed.connect(db);
+      changed.set('id', fixture.revisionChanged.key);
+      changed.set('qty', fixture.revisionChanged.qty);
+      changed.expectRevision(fixture.revisionChanged.revisionColumn, fixture.revisionChanged.revision);
+      caught.set('OrmValueError:revision_changed', await rejected(() => changed.update()));
+      const missing = Query.new(schema, fixture.entity);
+      missing.connect(db);
+      missing.set('id', fixture.noRows.key);
+      missing.set('qty', fixture.noRows.qty);
+      missing.requireMatch();
+      caught.set('OrmValueError:no_rows', await rejected(() => missing.update()));
+    } finally {
+      await db.close();
+    }
+    caught.set('OrmStoreError:driver', await rejected(() => Db.connect(`sqlite://${join(directory, fixture.driver)}`, 1, {})));
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+  for (const [key, error] of caught) {
+    const [name, kind] = key.split(':');
+    if (error.name !== name || Reflect.get(error, 'kind') !== kind) throw new Error(`the orm call for ${key} raised ${error.name} ${String(Reflect.get(error, 'kind'))}: ${error.message}`);
+  }
+  ormCaught = caught;
+}
+
+interface OrmFixture {
+  manifest: string;
+  manifestHash: string;
+  entity: string;
+  steps: string[];
+  revisionChanged: { key: number; qty: number; revisionColumn: string; revision: number };
+  noRows: { key: number; qty: number };
+  driver: string;
+}
+
+// The fixture of ormErrors, and fails for a file that does not hold its members.
+function ormFixtureOf(value: unknown): OrmFixture {
+  const isRecord = (item: unknown): item is Record<string, unknown> => typeof item === 'object' && item !== null && !Array.isArray(item);
+  const isNumber = (item: unknown): item is number => typeof item === 'number';
+  if (!isRecord(value) || !isRecord(value.revisionChanged) || !isRecord(value.noRows) || !Array.isArray(value.steps)) throw new Error('tests/fixtures/orm-errors.json is no orm fixture');
+  const { manifest, manifestHash, entity, driver, steps, revisionChanged, noRows } = value;
+  const { key, qty, revisionColumn, revision } = revisionChanged;
+  if (typeof manifest !== 'string' || typeof manifestHash !== 'string' || typeof entity !== 'string' || typeof driver !== 'string' || typeof revisionColumn !== 'string') throw new Error('tests/fixtures/orm-errors.json holds a text that is no string');
+  const texts = steps.filter((step: unknown): step is string => typeof step === 'string');
+  if (texts.length !== steps.length || !isNumber(key) || !isNumber(qty) || !isNumber(revision) || !isNumber(noRows.key) || !isNumber(noRows.qty)) throw new Error('tests/fixtures/orm-errors.json holds a step or a number of another type');
+  return { manifest, manifestHash, entity, driver, steps: texts, revisionChanged: { key, qty, revisionColumn, revision }, noRows: { key: noRows.key, qty: noRows.qty } };
+}
+
+// The error that a call raises; a call that returns fails, since the case needs its error.
+async function rejected(call: () => Promise<unknown>): Promise<Error> {
+  try {
+    await call();
+  } catch (error) {
+    if (error instanceof Error) return error;
+    throw new Error(`an orm call raised ${String(error)}, which is no Error`, { cause: error });
+  }
+  throw new Error('an orm call that must fail returned');
+}
+
+/**
+ * The error of the orm package that the `throw` of a case names by its class and its kind (HY-107.7), which ormErrors got
+ * before the case was set up.
+ */
+export function ormError(thrown: unknown, what: string): Error {
+  if (!(thrown instanceof Map)) throw new Error(`the throw of ${what} is not a map`);
+  const key = `${String(thrown.get('class'))}:${String(thrown.get('kind'))}`;
+  if (ormCaught === null) throw new Error(`${what} throws an error of the orm package before ormErrors got them`);
+  const error = ormCaught.get(key);
+  if (error === undefined) throw new Error(`${what} throws ${key}, which ormErrors does not get`);
+  return error;
 }
 
 export class Fixture {

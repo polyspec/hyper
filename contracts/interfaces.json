@@ -390,7 +390,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-97.2"
               },
               "tests": [
                 "packages/php/tests/AppTest.php::AppTest::testAnErrorOfAroundAndAValueThatIsNoResponseEscape: Only PHP takes around as an argument of App::open (HY-97.1), so only App::handle of PHP lets the error of around and a return value that is no response leave the call; the test asserts the RuntimeException and the UnexpectedValueException at App::handle, which no case of a response states.",
@@ -442,13 +442,15 @@
                 "php": {
                   "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::respondWith",
                   "signature": "private function respondWith(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\SessionStore $store, int|float $started, Polyspec\\Hyper\\Reply $reply): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.respond",
+                  "signature": "async respond(request: Request, store: SessionOpening, started: number): Promise<Answer>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._respond",
+                  "signature": "def _respond(self, request: Request, store: SessionOpening, started: Optional[int] = None) -> tuple[Response, Reply]"
                 }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-100.30"
               },
               "tests": [
                 "packages/php/tests/RunTest.php::RunTest::testRunCallsTheDisconnectHookWhenTheScriptEndsDuringTheAnswerOfAClosedConnection: Only a PHP script can end during the answer; the delivery holds the request and the reply before the answer runs, so the shutdown function calls the disconnect hook (HY-67.5)."
@@ -582,7 +584,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-60.14"
               }
             },
             {
@@ -825,7 +827,7 @@
               }
             },
             {
-              "id": "app.ormCode",
+              "id": "app.ormKind",
               "kind": "static method",
               "visibility": "private",
               "inputs": [
@@ -833,19 +835,19 @@
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Returns the code of an ORM error, or null for another error (HY-107.7).",
+              "state": "Returns the kind of an error of an error class of the orm package, OrmValueError to OrmInternalError, or null for another error (HY-107.7).",
               "native": {
                 "php": {
-                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::ormCode",
-                  "signature": "private static function ormCode(Throwable $error): ?string"
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::ormKind",
+                  "signature": "private static function ormKind(Throwable $error): ?string"
                 },
                 "node": {
-                  "symbol": "packages/ts/src/app/app.ts::App.ormCode",
-                  "signature": "private static ormCode(error: unknown): string | undefined"
+                  "symbol": "packages/ts/src/app/app.ts::App.ormKind",
+                  "signature": "private static ormKind(error: unknown): string | undefined"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._orm_code",
-                  "signature": "def _orm_code(error: Exception) -> str | None"
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._orm_kind",
+                  "signature": "def _orm_kind(error: Exception) -> str | None"
                 }
               }
             },
@@ -969,13 +971,15 @@
                 "php": {
                   "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\run",
                   "signature": "function run(Polyspec\\Hyper\\App $app, ?int $started): void"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/host/http-host.ts::listener",
+                  "signature": "export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/host/wsgi.py::application",
+                  "signature": "def application(environ: dict, start_response: Callable) -> object"
                 }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-100.30"
               },
               "tests": [
                 "packages/php/tests/RunTest.php::RunTest::testRunTurnsOffErrorOutputAndTheDefaultContentType: App::run sets the ini settings display_errors and default_mimetype of PHP (HY-43.3); the test reads them with ini_get after a run.",
@@ -1028,17 +1032,22 @@
               "output": "value",
               "errors": [],
               "state": "Reads the bytes of the manifest or of a file of the program directory by its absolute path (HY-48.19).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-48.19"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.readBytes",
                   "signature": "private static readBytes(path: string): Buffer"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._read_bytes",
+                  "signature": "def _read_bytes(path: Path) -> bytes"
                 }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-48.19"
               },
               "tests": [
                 "packages/ts/tests/app.test.ts::App > opens only when every output of the build exists and names the first missing one (HY-48): The Node server reads the manifest by the absolute path of its option and names the first missing output of the program directory (HY-48.19); the test asserts that the error of a missing program names its reads.json, that the error of a missing manifest names its path, and that a program path that is not absolute fails."
@@ -1054,17 +1063,22 @@
               "output": "value",
               "errors": [],
               "state": "Reads the routes of `reads.json` of the program directory as the value that the core takes (HY-48.19).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-48.19"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.routeReads",
                   "signature": "private static routeReads(path: string): Value"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._route_reads",
+                  "signature": "def _route_reads(path: Path) -> object"
                 }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-48.19"
               }
             },
             {
@@ -1077,17 +1091,148 @@
               "output": "map<string>",
               "errors": [],
               "state": "Reads the sources of the templates of the directory `templates` of the program directory by their names (HY-48.19).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-48.19"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.templateSources",
                   "signature": "private static templateSources(directory: string): Map<string, string>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._template_sources",
+                  "signature": "def _template_sources(directory: Path) -> dict[str, str]"
                 }
-              },
+              }
+            },
+            {
+              "id": "app.refusedMedia",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request"
+              ],
+              "output": "optional<response>",
+              "errors": [],
+              "state": "Returns the 400 for a Content-Type that is no media type, the 415 for a media type that the application does not accept, or null (HY-59.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::refusedMedia",
+                  "signature": "private function refusedMedia(Request $request): ?Response"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.refusedMedia",
+                  "signature": "private refusedMedia(request: Request): Response | null"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._refused_media",
+                  "signature": "def _refused_media(self, request: Request) -> Optional[Response]"
+                }
+              }
+            },
+            {
+              "id": "app.readMediaType",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "request"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the media type of the request, or null for a Content-Type that is no media type (HY-59.12, HY-59.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::readMediaType",
+                  "signature": "private static function readMediaType(Request $request): ?string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.readMediaType",
+                  "signature": "private static readMediaType(request: Request): string | null"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._read_media_type",
+                  "signature": "def _read_media_type(request: Request) -> Optional[str]"
+                }
+              }
+            },
+            {
+              "id": "app.serve",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<number>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Answers the request of the SAPI for the host function `run`, which calls it (HY-106.20).",
               "only": {
                 "languages": [
-                  "node"
+                  "php"
                 ],
-                "sentence": "HY-48.19"
+                "sentence": "HY-106.20"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::serve",
+                  "signature": "public function serve(?int $started = null): void"
+                }
+              }
+            },
+            {
+              "id": "app.opened",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "appOptions"
+              ],
+              "output": "app",
+              "errors": [],
+              "state": "Checks the base path and the other options of the application and returns the application that App.open gives (HY-48.2).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.opened",
+                  "signature": "private static opened<S extends object>(options: AppOptions<S>): App<S>"
+                },
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::open",
+                  "signature": "public static function open(string $manifest, string $program, array $handlers, ...)"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App.open",
+                  "signature": "def open(manifest: str, program: str, handlers: dict, ...) -> App"
+                }
+              }
+            },
+            {
+              "id": "app.sessionOf",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "sessionOpening"
+              ],
+              "output": "function() -> sessionStore",
+              "errors": [],
+              "state": "Returns the session store of a request, opened by the transport only when a route uses it (HY-104.38).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-104.38"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.sessionOf",
+                  "signature": "private static async sessionOf(store: SessionOpening): Promise<SessionStore>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::_session_of",
+                  "signature": "def _session_of(store: SessionOpening) -> SessionStore"
+                }
               }
             }
           ]
@@ -1121,14 +1266,12 @@
               "extension": "HyperValueError",
               "kind": "class",
               "internal": true
+            },
+            "node": {
+              "extension": "HyperValueError",
+              "kind": "class",
+              "internal": true
             }
-          },
-          "only": {
-            "languages": [
-              "php",
-              "python"
-            ],
-            "sentence": "HY-133.2"
           },
           "members": []
         },
@@ -1152,30 +1295,6 @@
             }
           },
           "members": [
-            {
-              "id": "core-rules.shared",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "core-rules",
-              "errors": [],
-              "state": "The one CoreRules of the PHP server over the extension polyspec_hyper, created on its first use; without the extension it fails with the name of the extension, and no rule of the server answers in its place (HY-133.2).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::shared",
-                  "signature": "public static function shared(): self"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-133.2"
-              },
-              "tests": [
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheServerHasOneCoreRulesOverTheExtensionOrFailsWithItsName: The PHP server reaches the core through one CoreRules over the extension polyspec_hyper (HY-133.2); without the extension it fails with the name of the extension."
-              ]
-            },
             {
               "id": "core-rules.csrfMask",
               "kind": "method",
@@ -1401,6 +1520,13 @@
               "output": "value",
               "errors": [],
               "state": "Returns the error of hyper for an error of a library that hyper uses, by the class of the binding of hyper of the same role as the class of the error, with its message, kind, status and errno, and any other value as it is (HY-133.3).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-133.3"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.libraryError",
@@ -1431,6 +1557,14 @@
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_value",
                   "signature": "def session_value(self, record: object) -> object"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-104.26",
+                "reason": "PHP: HY-104.26 not implemented, row H35.37 [-] until after the first release"
               }
             },
             {
@@ -1452,6 +1586,14 @@
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_record",
                   "signature": "def session_record(self, value: object) -> object"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-104.26",
+                "reason": "PHP: HY-104.26 not implemented, row H35.37 [-] until after the first release"
               }
             },
             {
@@ -1886,6 +2028,606 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.build_read",
                   "signature": "def build_read(self, data: bytes) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "core-rules",
+              "errors": [],
+              "state": "Takes the namespace of the functions of the binding and fails with the name of a function that the binding lacks (HY-133.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::__construct",
+                  "signature": "public function __construct(string $namespace)"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.__init__",
+                  "signature": "def __init__(self, core: Any) -> None"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::coreRules",
+                  "signature": "export function coreRules(module: object): CoreRules"
+                }
+              }
+            },
+            {
+              "id": "core-rules.call",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "list<value>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Calls a function of the binding of the core with the arguments, and fails with the name of a function that the binding lacks (HY-133.2).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-133.2"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::call",
+                  "signature": "private function call(string $name, mixed ...$arguments): mixed"
+                }
+              }
+            },
+            {
+              "id": "core-rules.jsonCodecEncode",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "rules.json_write gives the JSON text of a value of the data model, and fails for a value that has no JSON form (HY-54.18, HY-54.19).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::jsonCodecEncode",
+                  "signature": "public function jsonCodecEncode(mixed $value): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.jsonCodecEncode",
+                  "signature": "jsonCodecEncode(value: unknown): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.json_codec_encode",
+                  "signature": "def json_codec_encode(self, value: object) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.acceptParse",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "list<accept>",
+              "errors": [],
+              "state": "rules.accept_ranges gives the ranges of an Accept value in field order, and fails with invalid_accept or invalid_weight (HY-116.17, HY-116.18).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::acceptParse",
+                  "signature": "public function acceptParse(?string $value): array"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.acceptParse",
+                  "signature": "acceptParse(value: string | null): readonly AcceptRange[]"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.accept_parse",
+                  "signature": "def accept_parse(self, value: Optional[str]) -> list[Any]"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestMediaType",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "rules.media_type gives the media type of a Content-Type value, and fails with malformed_content_type for a value that is no media type (HY-59.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestMediaType",
+                  "signature": "public function requestMediaType(string $contentType): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.requestMediaType",
+                  "signature": "requestMediaType(contentType: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.request_media_type",
+                  "signature": "def request_media_type(self, content_type: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestFileOver",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<number>",
+                "number"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "rules.file_over tells whether a file of the body is larger than the limit, from the size of each file (HY-114.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestFileOver",
+                  "signature": "public function requestFileOver(array $sizes, int $limit): bool"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.requestFileOver",
+                  "signature": "requestFileOver(sizes: readonly number[], limit: number): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.request_file_over",
+                  "signature": "def request_file_over(self, sizes: list[int], limit: int) -> bool"
+                }
+              }
+            },
+            {
+              "id": "core-rules.valueError",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "hyperError",
+              "errors": [],
+              "state": "The error of hyper of the category value with its kind, of the classes of the binding, that is a RangeError (HY-133.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Manifest.php::Polyspec\\Hyper\\Manifest::fromFile",
+                  "signature": "public static function fromFile(string $file): self"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.valueError",
+                  "signature": "valueError(message: string, kind: string): HyperError & RangeError"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.value_error",
+                  "signature": "def value_error(self, message: str, kind: str) -> ValueError"
+                }
+              }
+            },
+            {
+              "id": "core-rules.typeError",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "hyperError",
+              "errors": [],
+              "state": "The error of hyper of the category type with its kind, of the classes of the binding, that is a TypeError (HY-133.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::flash",
+                  "signature": "public function flash(mixed $name, mixed $value): self"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.typeError",
+                  "signature": "typeError(message: string, kind: string): HyperError & TypeError"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.type_error",
+                  "signature": "def type_error(self, message: str, kind: str) -> TypeError"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appRoute",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "corePages",
+                "boolean",
+                "front"
+              ],
+              "output": "route",
+              "errors": [],
+              "state": "Gives the route of a request as the application selects it (HY-62.16).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appRoute",
+                  "signature": "appRoute(pages: CorePages, chosen: boolean, front: Front): Route"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appPlain",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "plain"
+              ],
+              "output": "plainResponse",
+              "errors": [],
+              "state": "Gives a plain answer of the core as the parts of a response (HY-58).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appPlain",
+                  "signature": "appPlain(answer: Plain): PlainResponse"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appStoreKept",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "corePages",
+                "coreStore",
+                "keepRequest"
+              ],
+              "output": "plainResponse",
+              "errors": [],
+              "state": "Answers a request to the kept endpoint after its route (HY-40.1).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appStoreKept",
+                  "signature": "appStoreKept(pages: CorePages, store: CoreStore, request: KeepRequest): PlainResponse"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageHeaders",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "pageResponse"
+              ],
+              "output": "pageHeadersResult",
+              "errors": [],
+              "state": "Gives the status, the headers and the body flag of a page response (HY-15.3, HY-52, HY-53).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::json",
+                  "signature": "private function json(Request $request, Session $session, Reply $reply, int $status, string $body): Response"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageHeaders",
+                  "signature": "pageHeaders(response: PageResponse): { readonly status: number; readonly headers: Record<string, string>; readonly body: boolean }"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page.respond",
+                  "signature": "def respond( self, request: Request, route: dict, handler: dict, session: Session, flash: Flash, action: Optional[PageAction], reply: Reply, base_path: str, ) -> Response"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageOpen",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "corePages",
+                "coreStore",
+                "opening"
+              ],
+              "output": "opened",
+              "errors": [],
+              "state": "Opens the session of a page: takes the flash data, reads the token, checks the token of a POST and reads the kept values (HY-120.6, HY-24, HY-59.8, HY-40).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageOpen",
+                  "signature": "pageOpen(pages: CorePages, store: CoreStore, opening: Opening): Opened"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageRequest",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "corePages",
+                "pageInput"
+              ],
+              "output": "corePageRequest",
+              "errors": [],
+              "state": "Gives the steps of a page (HY-15, HY-26, HY-58, HY-73, HY-75, HY-124).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::respond",
+                  "signature": "public function respond( Request $request, array $route, array $handler, Session $session, Flash $flash, array|ActionOutcomeRevisionChanged|null $action, Reply $reply, string $basePath, ): Response"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageRequest",
+                  "signature": "pageRequest(pages: CorePages, input: PageInput): CorePageRequest"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page.respond",
+                  "signature": "def respond( self, request: Request, route: dict, handler: dict, session: Session, flash: Flash, action: Optional[PageAction], reply: Reply, base_path: str, ) -> Response"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageDocument",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "corePagesInstance",
+                "string",
+                "map<value>",
+                "regionsData",
+                "number"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the document of a route from the shared data and the data of each region, at the time now (HY-12.1).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageDocument",
+                  "signature": "pageDocument(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): string"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-12.1"
+              }
+            },
+            {
+              "id": "core-rules.pageParts",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "corePagesInstance",
+                "string",
+                "map<value>",
+                "regionsData",
+                "number"
+              ],
+              "output": "documentParts",
+              "errors": [],
+              "state": "Gives the title and each region rendered alone, the texts that the document holds in their places (HY-13.1 to HY-13.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::respond",
+                  "signature": "public function respond( Request $request, array $route, array $handler, Session $session, Flash $flash, array|ActionOutcomeRevisionChanged|null $action, Reply $reply, string $basePath, ): Response"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageParts",
+                  "signature": "pageParts(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): DocumentParts"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page.respond",
+                  "signature": "def respond( self, request: Request, route: dict, handler: dict, session: Session, flash: Flash, action: Optional[PageAction], reply: Reply, base_path: str, ) -> Response"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildId",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<buildOutput>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the build id of the files that one build writes (HY-125.15 to HY-125.17).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-125.15"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildId",
+                  "signature": "buildId(outputs: Iterable<BuildOutput>): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildPaths",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<buildOutput>"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Gives the paths that the build id hashes, in the order in which it hashes them (HY-125.3).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-125.3"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildPaths",
+                  "signature": "buildPaths(outputs: Iterable<BuildOutput>): readonly string[]"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildStream",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<buildOutput>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the hexadecimal text of the bytes that the build id hashes (HY-125.3).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-125.3"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildStream",
+                  "signature": "buildStream(outputs: Iterable<BuildOutput>): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildShellFile",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the text of the static shell (HYC-16.23).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HYC-16.23"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildShellFile",
+                  "signature": "buildShellFile(basePath: string, build: string, entryUrl: string, entryCode: string): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildFileText",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the text of build.json with the build id (HY-125.23).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-125.23"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildFileText",
+                  "signature": "buildFileText(id: string): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.plainResponse",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "plain"
+              ],
+              "output": "plainResponse",
+              "errors": [],
+              "state": "Gives a plain answer with a body as UTF-8 text, as Response.text of the server writes it (HY-106.17).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Response.php::Polyspec\\Hyper\\Response::text",
+                  "signature": "public static function text(int $status, string $body): self"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::plainResponse",
+                  "signature": "function plainResponse(answer: Plain): PlainResponse"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/http/response.py::Response.text",
+                  "signature": "def text(status: int, body: str) -> \"Response\""
+                }
+              }
+            },
+            {
+              "id": "core-rules.isBinding",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "object",
+                "list<string>"
+              ],
+              "output": "function(value) -> boolean",
+              "errors": [],
+              "state": "Tells whether a module has every member of the binding of the core (HY-133.2).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-133.2"
+              },
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::isBinding",
+                  "signature": "function isBinding(module: object, missing: readonly string[]): module is CoreBinding"
+                }
+              }
+            },
+            {
+              "id": "core-rules.coreRules",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "object"
+              ],
+              "output": "coreRules",
+              "errors": [],
+              "state": "Returns the rules of the core under the names of the units of the server; a module that lacks a member fails with its name (HY-133.2).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::coreRules",
+                  "signature": "export function coreRules(module: object): CoreRules"
+                },
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::__construct",
+                  "signature": "public function __construct(string $namespace)"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.__init__",
+                  "signature": "def __init__(self, core: Any) -> None"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sharedRules",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "function() -> value"
+              ],
+              "output": "function() -> coreRules",
+              "errors": [],
+              "state": "Returns the accessor of the one CoreRules of the Node server, created on its first use (HY-133.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::shared",
+                  "signature": "public static function shared(): self"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::sharedRules",
+                  "signature": "export function sharedRules(load: () => unknown): () => CoreRules"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::core_rules",
+                  "signature": "def core_rules() -> CoreRules"
                 }
               }
             }
@@ -2468,9 +3210,9 @@
               ],
               "output": "string",
               "errors": [
-                "invalid-build"
+                "hyper-value-error"
               ],
-              "state": "Reads the build id of a build.json file.",
+              "state": "Reads the build id of a build.json file. A failure raises the kind `invalid_build` of the hyper-value-error (HY-125.5, HY-106.21).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/Build.php::Polyspec\\Hyper\\Build::read",
@@ -2487,27 +3229,6 @@
               }
             }
           ]
-        },
-        {
-          "id": "invalid-build",
-          "native": {
-            "php": {
-              "extension": "Polyspec\\Hyper\\InvalidBuild",
-              "kind": "class",
-              "internal": true
-            },
-            "node": {
-              "extension": "InvalidBuild",
-              "kind": "class",
-              "internal": true
-            },
-            "python": {
-              "extension": "InvalidBuild",
-              "kind": "class",
-              "internal": true
-            }
-          },
-          "members": []
         }
       ]
     },
@@ -2605,14 +3326,11 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.text",
                   "signature": "def text(map: dict) -> str"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/context.ts::Context.text",
+                  "signature": "static text(map: MapValue): string"
                 }
-              },
-              "only": {
-                "languages": [
-                  "php",
-                  "python"
-                ],
-                "sentence": "HY-125.10"
               }
             },
             {
@@ -2663,6 +3381,32 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.valid_header",
                   "signature": "def valid_header(value: Optional[str]) -> bool"
+                }
+              }
+            },
+            {
+              "id": "context.withContext",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "map<value>",
+                "map<value>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the shared data with the context in its place.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/Context.php::Polyspec\\Hyper\\Context::withContext",
+                  "signature": "public static function withContext(array $shared, array $map): array"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/context.ts::Context.withContext",
+                  "signature": "static withContext(shared: MapValue, map: MapValue): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.with_context",
+                  "signature": "def with_context(shared: dict, map: dict) -> dict"
                 }
               }
             }
@@ -3796,7 +4540,7 @@
             "node": {
               "file": "packages/ts/src/host/http-host.ts",
               "kind": "functions",
-              "internal": false
+              "internal": true
             }
           },
           "only": {
@@ -3870,37 +4614,6 @@
               },
               "tests": [
                 "packages/ts/tests/http.test.ts::server > reports the plain 500 of an escaped error to the write events of its response with its request (HY-60, HY-99): App.server returns a node:http server whose request listener a consumer extends (HY-97.9); the test prepends a listener and asserts that it receives the finish of the plain 500 of an escaped error with its request."
-              ]
-            },
-            {
-              "id": "http-host.listener",
-              "kind": "function",
-              "visibility": "public",
-              "inputs": [
-                "app",
-                "value",
-                "serverOptions"
-              ],
-              "output": "listener",
-              "errors": [],
-              "state": "Returns the request listener of the application for node:http (HY-100.29).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/host/http-host.ts::listener",
-                  "signature": "export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-100.29"
-              },
-              "tests": [
-                "packages/ts/tests/http.test.ts::the write hook and listener > listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
-                "packages/ts/tests/http.test.ts::the write hook and listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
               ]
             },
             {
@@ -4035,6 +4748,37 @@
                   "signature": "function write(outgoing: ServerResponse, response: Response): void"
                 }
               }
+            },
+            {
+              "id": "http-host.listener",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "app",
+                "value",
+                "serverOptions"
+              ],
+              "output": "listener",
+              "errors": [],
+              "state": "Returns the request listener of the application for node:http (HY-100.29).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/host/http-host.ts::listener",
+                  "signature": "export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-100.29"
+              },
+              "tests": [
+                "packages/ts/tests/http.test.ts::the write hook and listener > listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
+                "packages/ts/tests/http.test.ts::the write hook and listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
+              ]
             }
           ],
           "tests": [
@@ -5148,6 +5892,56 @@
                 ],
                 "sentence": "HY-67.4"
               }
+            },
+            {
+              "id": "request.received",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "number",
+                "boolean",
+                "number",
+                "number",
+                "number"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Creates the request as received from the PHP request globals, with an empty body and the reader of its body (HY-60.18, HY-131.7).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::received",
+                  "signature": "public static function received(int $limit = PHP_INT_MAX, bool $stream = false, int $valueLimit = PHP_INT_MAX, int $partLimit = PHP_INT_MAX, int $fileLimit = PHP_INT_MAX): self"
+                }
+              }
+            },
+            {
+              "id": "request.withInput",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns the request with the body that the source gives, read in chunks through the reader of the request as received (HY-60.14, HY-131.14).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::withInput",
+                  "signature": "public function withInput(string $source = 'php://input'): self"
+                }
+              }
             }
           ]
         }
@@ -5894,6 +6688,31 @@
                   "signature": "body: str"
                 }
               }
+            },
+            {
+              "id": "response.withSessionCookie",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Returns a copy whose first cookie is the session cookie, when the session sets one (HY-45.8, HY-97.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Response.php::Polyspec\\Hyper\\Response::withSessionCookie",
+                  "signature": "public function withSessionCookie(?string $field): self"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/host/http-host.ts::withSessionCookie",
+                  "signature": "function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, response: Response, created: string | null, https: boolean): Response"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/host/_pipeline.py::answer_with",
+                  "signature": "def answer_with(app: App, sessions: FileSessions | RedisSessions, around: Optional[Callable], exchange: Exchange) -> Response"
+                }
+              }
             }
           ]
         }
@@ -6326,6 +7145,31 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result._changed_topics",
                   "signature": "_changed_topics: list[str]"
+                }
+              }
+            },
+            {
+              "id": "result.hasDotSegment",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the path of a location has a segment `.` or `..`, also with a percent-encoded dot.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::hasDotSegment",
+                  "signature": "private static function hasDotSegment(string $location): bool"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/result/result.ts::Result.hasDotSegment",
+                  "signature": "private static hasDotSegment(location: string): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result._has_dot_segment",
+                  "signature": "def _has_dot_segment(location: str) -> bool"
                 }
               }
             }
@@ -6765,6 +7609,29 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/form/_files.py::Files.largest",
                   "signature": "def largest(self) -> int"
+                }
+              }
+            },
+            {
+              "id": "files.sizes",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "list<number>",
+              "errors": [],
+              "state": "Returns the size in bytes of each file, in the order of the pairs (HY-114).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/Files.php::Polyspec\\Hyper\\Files::sizes",
+                  "signature": "public function sizes(): array"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/form/files.ts::Files.sizes",
+                  "signature": "sizes(): number[]"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_files.py::Files.sizes",
+                  "signature": "def sizes(self) -> list[int]"
                 }
               }
             }
@@ -9470,6 +10337,36 @@
                   "signature": "public function close(): void"
                 }
               }
+            },
+            {
+              "id": "native-session.cookieHeader",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the value of the session cookie when the session issued a new identifier, or null (HY-45.8, HY-104.40).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::cookieHeader",
+                  "signature": "public function cookieHeader(): ?string"
+                }
+              }
+            },
+            {
+              "id": "native-session.identifier",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the identifier of the PHP session, or fails when the session has none (HY-45).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::identifier",
+                  "signature": "private function identifier(): string"
+                }
+              }
             }
           ],
           "only": {
@@ -9496,7 +10393,8 @@
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsNoCookieForTheSessionOfTheRequest: NativeSession sends no Set-Cookie header for the session that the request cookie names.",
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsTheCookieOfTheSessionThatReplacesAnUnknownIdentifier: NativeSession sends the cookie of the identifier with which the strict mode of PHP replaced an unknown identifier.",
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsTheCookieOfARegeneratedIdentifier: NativeSession sends the cookie of the identifier that session_regenerate_id created.",
-            "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsNoCookieWhenTheSessionCannotStart: NativeSession sends no Set-Cookie header when session_start of PHP fails, and the request ends with status 500."
+            "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testSendsNoCookieWhenTheSessionCannotStart: NativeSession sends no Set-Cookie header when session_start of PHP fails, and the request ends with status 500.",
+            "packages/php/tests/AppTest.php::AppTest::testClosesTheSessionWhenTheDispatchFails: Only the PHP server keeps the session in the session module of PHP, which closes it at the end of the script unless the server closes it; the test reads session_status() in the loader, in the response hook and after App::handle of a request whose loader throws (HY-115.23)."
           ]
         },
         {
@@ -9504,6 +10402,23 @@
           "native": {
             "php": {
               "file": "packages/php/src/Session/SessionOpenError.php",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-104.26"
+          },
+          "members": []
+        },
+        {
+          "id": "session-close-error",
+          "native": {
+            "php": {
+              "file": "packages/php/src/Session/SessionCloseError.php",
               "kind": "class",
               "internal": true
             }
@@ -10200,6 +11115,30 @@
                   "signature": "def _record_values(record: bytes, id: str) -> dict"
                 }
               }
+            },
+            {
+              "id": "record-session.isArrayKey",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "function(value) -> boolean",
+              "errors": [],
+              "state": "Tells whether a key is an array key of the data model: an integer, a text or bytes (HY-104.13).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/session/record-session.ts::isArrayKey",
+                  "signature": "function isArrayKey(key: unknown): key is number | bigint | string | Uint8Array"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-104.48",
+                "reason": "Python refuses a key that is no text when it reads a record through its codec before any key check, and PHP has no record session (HY-104.13 names Node and Python), so this key check has a Node native only."
+              }
             }
           ],
           "only": {
@@ -10762,6 +11701,54 @@
                   "signature": "def contains(value: object) -> bool"
                 }
               }
+            },
+            {
+              "id": "data-model.walk",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails at the first item of a value that is not a value of the data model.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::walk",
+                  "signature": "private static function walk(mixed $value): void"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/data/data-model.ts::DataModel.walk",
+                  "signature": "private static walk(value: Value): void"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/data/_data_model.py::DataModel._walk",
+                  "signature": "def _walk(value: object) -> None"
+                }
+              }
+            },
+            {
+              "id": "data-model.plain",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the value with each JsonSerializable replaced by its value, read once (HY-44.6).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::plain",
+                  "signature": "public static function plain(mixed $value): mixed"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-44.6"
+              }
             }
           ]
         },
@@ -10919,6 +11906,113 @@
                   "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec.decode",
                   "signature": "def decode(text: str) -> object"
                 }
+              }
+            },
+            {
+              "id": "json-codec.encodeNumber",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "number"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Writes a number with the digits of PHP json_encode.",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.encodeNumber",
+                  "signature": "private static encodeNumber(value: number): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._encode_number",
+                  "signature": "def _encode_number(value: int | float) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.18"
+              }
+            },
+            {
+              "id": "json-codec.encodeString",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Writes a string with the escapes of PHP json_encode.",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.encodeString",
+                  "signature": "private static encodeString(text: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._encode_string",
+                  "signature": "def _encode_string(text: str) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.18"
+              }
+            },
+            {
+              "id": "json-codec.checkWellFormed",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Fails for a string with a lone surrogate.",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.checkWellFormed",
+                  "signature": "private static checkWellFormed(text: string): void"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._check_well_formed",
+                  "signature": "def _check_well_formed(text: str) -> None"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.18"
+              }
+            },
+            {
+              "id": "json-codec.isList",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a value that the core gives is a list (HY-54.20).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::isList",
+                  "signature": "public static function isList(mixed $value): bool"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-54.20"
               }
             },
             {
@@ -11099,6 +12193,10 @@
               "errors": [],
               "state": "Returns the entries of a map of the data model, or none for another value.",
               "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/Kept.php::Polyspec\\Hyper\\Kept::mapEntries",
+                  "signature": "private static function mapEntries(mixed $value): ?array"
+                },
                 "node": {
                   "symbol": "packages/ts/src/data/kept.ts::Kept.mapEntries",
                   "signature": "private static mapEntries(value: Value): MapValue | null"
@@ -11107,13 +12205,6 @@
                   "symbol": "packages/python/src/polyspec/hyper/data/_kept.py::Kept._map_entries",
                   "signature": "def _map_entries(value: object) -> Optional[dict]"
                 }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.20"
               }
             },
             {
@@ -11524,6 +12615,10 @@
                 "php": {
                   "symbol": "packages/php/src/Page/Region.php::Polyspec\\Hyper\\Region::usesAny",
                   "signature": "public function usesAny(array $topics): bool"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_region.py::Region.uses_any",
+                  "signature": "def uses_any(self, topics: list[str]) -> bool"
                 }
               },
               "only": {
@@ -11907,6 +13002,225 @@
                   "signature": "def _loader_map(value: object, source: str) -> dict"
                 }
               }
+            },
+            {
+              "id": "page.present",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "map<value>"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Returns the names of the route regions that are present in the data (HY-75.2).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::present",
+                  "signature": "private static function present(array $route, array $data): array"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._present",
+                  "signature": "def _present(route: dict, data: dict) -> list[str]"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-48.1"
+              }
+            },
+            {
+              "id": "page.renderDocument",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "value",
+                "map<value>",
+                "optional<map<value>>",
+                "value",
+                "map<value>",
+                "map<value>",
+                "map<string>",
+                "map<value>",
+                "boolean"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Renders the layout with the regions of the route and the embedded data (HY-12.1, HY-31.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::renderDocument",
+                  "signature": "private function renderDocument(Polyspec\\Hyper\\Request $request, array $route, array $shared, ?array $context, Polyspec\\Template\\BoundMap $boundShared, array $data, array $applied, array $templates, array $kept, bool $embed): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._render_document",
+                  "signature": "def _render_document(self, request: Request, route: dict, shared: dict, context: Optional[dict], bound_shared, data: dict, applied: dict, templates: dict, kept: dict, embed: bool) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-48.1"
+              }
+            },
+            {
+              "id": "page.decodedCookie",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or null for a cookie that is absent (HY-38.11, HY-42.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::decodedCookie",
+                  "signature": "private static function decodedCookie(?string $text): mixed"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/page/page.ts::Page.decodedCookie",
+                  "signature": "private static decodedCookie(text: string | null): Value"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._decoded_cookie",
+                  "signature": "def _decoded_cookie(text: Optional[str]) -> object"
+                }
+              }
+            },
+            {
+              "id": "page.varyHeader",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the Vary of the page responses of the application (HY-117.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::varyHeader",
+                  "signature": "private function varyHeader(): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.varyHeader",
+                  "signature": "private varyHeader(): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_vary_header",
+                  "signature": "def app_vary_header(self, context: bool) -> str"
+                }
+              }
+            },
+            {
+              "id": "page.json",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session",
+                "reply",
+                "number",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers the JSON text of a page with its headers, its tag and the 304 of a matching tag (HY-53).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::json",
+                  "signature": "private function json(Request $request, Session $session, Reply $reply, int $status, string $body): Response"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/page/page.ts::Page.json",
+                  "signature": "private static json(answer: Exclude<Answer, { readonly answer: 'no_page' }>, masked: string, session: Session): { json: boolean; body: string; maskedToken: string; token: string }"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._json",
+                  "signature": "def _json(answer: Any, masked: str, session: Session) -> tuple[bool, str, str, str]"
+                }
+              }
+            },
+            {
+              "id": "page.map",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "string"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the map that a context handler, the shared handler or a loader returned, and fails for another value (HY-44.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::map",
+                  "signature": "private static function map(mixed $value, string $source): array"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/page/page.ts::Page.loaderMap",
+                  "signature": "private static loaderMap(value: unknown, source: string): ReadonlyMap<string, unknown>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._loader_map",
+                  "signature": "def _loader_map(value: object, source: str) -> dict"
+                }
+              }
+            },
+            {
+              "id": "page.utf8",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the text, the empty text for bytes that are not UTF-8, or null for an absent value (HY-42).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::utf8",
+                  "signature": "private static function utf8(?string $text): ?string"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-42.4"
+              }
+            },
+            {
+              "id": "page.kept",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session",
+                "map<value>"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the conforming kept values of the server and of the cookie, by region and path (HY-38.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::kept",
+                  "signature": "private function kept(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\Session $session, array $data): array"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/page/page.ts::Page.kept",
+                  "signature": "private kept(request: Request, session: Session, data: Map<string, MapValue>): MapValue"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._kept",
+                  "signature": "def _kept(self, request: Request, session: Session, data: dict) -> dict"
+                }
+              }
             }
           ]
         }
@@ -11969,6 +13283,33 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/page/_region_planner.py::RegionPlanner.changed_topics",
                   "signature": "def changed_topics(request: Request, flash: Flash, base_path: str) -> list[str]"
+                }
+              }
+            },
+            {
+              "id": "region-planner.select",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "manifest",
+                "boolean",
+                "list<string>"
+              ],
+              "output": "list<region>",
+              "errors": [],
+              "state": "Returns the regions that a document or a region response contains.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/RegionPlanner.php::Polyspec\\Hyper\\RegionPlanner::select",
+                  "signature": "public static function select(Polyspec\\Hyper\\Manifest $manifest, bool $document, array $changed): array"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/page/region-planner.ts::RegionPlanner.select",
+                  "signature": "static select(manifest: Manifest, document: boolean, changed: readonly string[]): RegionDeclaration[]"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_region_planner.py::RegionPlanner.select",
+                  "signature": "def select(manifest: Manifest, document: bool, changed: list[str]) -> list[Region]"
                 }
               }
             }
@@ -12424,6 +13765,31 @@
                   "signature": "def _vary_names(route: str, kind: str, raw: object) -> tuple[str, ...]"
                 }
               }
+            },
+            {
+              "id": "representation-entries.invalid",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "hyper-value-error",
+              "errors": [],
+              "state": "Returns the error of a representation that fails the open of the application (HY-106.21).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Representation/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::invalid",
+                  "signature": "private static function invalid(string $message): HyperValueError"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/representation/representation-entries.ts::invalid",
+                  "signature": "function invalid(message: string): Error"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::open_error",
+                  "signature": "def open_error(message: str) -> ValueError"
+                }
+              }
             }
           ]
         },
@@ -12837,6 +14203,29 @@
                   "symbol": "packages/python/src/polyspec/hyper/representation/_representation_response.py::RepresentationResponse._sent_location",
                   "signature": "def _sent_location(location: object, base_path: str) -> str"
                 }
+              }
+            },
+            {
+              "id": "representation-response.headerBytes",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the bytes of the header field of a UTF-8 text, one byte per character up to U+00FF, and fails with invalid_text (HY-122.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Representation/RepresentationResponse.php::Polyspec\\Hyper\\RepresentationResponse::headerBytes",
+                  "signature": "private static function headerBytes(string $text): string"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-122.14"
               }
             }
           ]
@@ -13473,7 +14862,8 @@
             "only": {
               "languages": [
                 "php",
-                "python"
+                "python",
+                "node"
               ],
               "sentence": "HY-48.1"
             }
@@ -13509,7 +14899,7 @@
             }
           },
           "renderer": {
-            "term": "renderer",
+            "term": "value",
             "only": {
               "languages": [
                 "php",
@@ -13545,12 +14935,48 @@
               "sentence": "HY-105.4"
             }
           },
-          "reads": "value",
-          "build": "string",
-          "timezone": "string",
+          "reads": {
+            "term": "value",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "build": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "timezone": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
           "https": "boolean",
           "context": "optional<contextHandler>",
-          "vary": "string"
+          "vary": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          }
         },
         "optional": []
       },
@@ -13598,7 +15024,8 @@
             "only": {
               "languages": [
                 "php",
-                "python"
+                "python",
+                "node"
               ],
               "sentence": "HY-48.1"
             }
@@ -14223,6 +15650,399 @@
         "node": {
           "symbol": "packages/ts/src/app/app.ts::SessionOpening",
           "declaration": "export type SessionOpening = SessionStore | (() => Promise<SessionStore>);"
+        }
+      }
+    },
+    {
+      "id": "value",
+      "visibility": "public",
+      "unit": "values",
+      "shape": {
+        "union": [
+          "null",
+          "boolean",
+          "number",
+          "string",
+          "list<value>",
+          "mapValue"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-44.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/data/values.ts::Value",
+          "declaration": "export type Value = null | boolean | number | string | Value[] | MapValue;"
+        }
+      }
+    },
+    {
+      "id": "mapValue",
+      "visibility": "public",
+      "unit": "values",
+      "shape": {
+        "term": "map<value>"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-44.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/data/values.ts::MapValue",
+          "declaration": "export type MapValue = Map<string, Value>;"
+        }
+      }
+    },
+    {
+      "id": "jsonValue",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "union": [
+          "null",
+          "boolean",
+          "number",
+          "string",
+          "list<jsonValue>",
+          "map<jsonValue>"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.20"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::JsonValue",
+          "declaration": "type JsonValue = null | boolean | number | string | JsonValue[] | Map<string, JsonValue>;"
+        }
+      }
+    },
+    {
+      "id": "stored",
+      "visibility": "private",
+      "unit": "record-session",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-104.14"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/session/record-session.ts::Stored",
+          "declaration": "type Stored = unknown;"
+        }
+      }
+    },
+    {
+      "id": "pageKind",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "string"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageKind",
+          "declaration": "type PageKind = 'html' | 'document_json' | 'region_json';"
+        }
+      }
+    },
+    {
+      "id": "dataTemplate",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "name": "string",
+          "source": "string"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-31.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::DataTemplate",
+          "declaration": "interface DataTemplate {\n  readonly name: string;\n  readonly source: string;\n}"
+        }
+      }
+    },
+    {
+      "id": "pagesOptions",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "build": "string",
+          "timezone": "string",
+          "context": "boolean",
+          "basePath": "string",
+          "formTypes": "list<string>",
+          "dataBasePath": "optional<string>"
+        },
+        "optional": [
+          "dataBasePath"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PagesOptions",
+          "declaration": "interface PagesOptions {\n  readonly build: string;\n  readonly timezone: string;\n  readonly context: boolean;\n  readonly basePath: string;\n  readonly formTypes: Iterable<string>;\n  readonly dataBasePath?: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "pageStepInput",
+      "visibility": "internal",
+      "unit": "core-rules",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageStepInput",
+          "declaration": "export type PageStepInput =\n  | { readonly input: 'start' | 'absent' | 'no_handler' }\n  | { readonly input: 'action'; readonly outcome: { readonly outcome: 'page'; readonly status: number; readonly data: ReadonlyMap<string, unknown> } | { readonly outcome: 'revision_changed' | 'no_page' }; readonly csrf?: string | null }\n  | { readonly input: 'context'; readonly context: ReadonlyMap<string, unknown> }\n  | { readonly input: 'shared'; readonly shared: ReadonlyMap<string, unknown> }\n  | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, unknown> }\n  | { readonly input: 'reply'; readonly embeds: boolean; readonly stored: ReadonlyMap<string, ReadonlyMap<string, unknown>>; readonly status?: number | null };"
+        }
+      }
+    },
+    {
+      "id": "hostFunction",
+      "visibility": "public",
+      "unit": "core-rules",
+      "shape": {
+        "function": {
+          "inputs": [
+            "list<value>",
+            "value"
+          ],
+          "output": "value"
+        }
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HYC-24.10"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::HostFunction",
+          "declaration": "export type HostFunction = (args: readonly unknown[], environment: { readonly timezone: string; readonly now: number }) => unknown;"
+        }
+      }
+    },
+    {
+      "id": "coreHostFunction",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "hostFunction"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HYC-24.10"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::CoreHostFunction",
+          "declaration": "type CoreHostFunction = HostFunction;"
+        }
+      }
+    },
+    {
+      "id": "pageAction",
+      "visibility": "internal",
+      "unit": "page",
+      "shape": {
+        "fields": {
+          "result": "optional<value>",
+          "masked": "string"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-72.3"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/page/page.ts::PageAction",
+          "declaration": "export interface PageAction {\n  readonly result: { readonly status: number; readonly data: Data } | null;\n  readonly masked: string;\n}"
+        }
+      }
+    },
+    {
+      "id": "route",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-62.16"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::Route",
+          "declaration": "type Route =\n  | { readonly route: 'plain'; readonly answer: Plain }\n  | { readonly route: 'shell' | 'keep' }\n  | { readonly route: 'representation'; readonly name: string; readonly params: readonly (readonly [string, string])[]; readonly entry: number; readonly values: readonly string[] }\n  | { readonly route: 'page'; readonly name: string; readonly params: readonly (readonly [string, string])[]; readonly kind: PageKind; readonly action: boolean };"
+        }
+      }
+    },
+    {
+      "id": "pageResponse",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "status": "number",
+          "json": "boolean",
+          "body": "string",
+          "context": "boolean",
+          "maskedToken": "string",
+          "token": "string",
+          "method": "string",
+          "cacheControl": "optional<string>",
+          "ifNoneMatch": "optional<string>",
+          "referrerPolicy": "optional<string>"
+        },
+        "optional": [
+          "cacheControl",
+          "ifNoneMatch",
+          "referrerPolicy"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.3"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageResponse",
+          "declaration": "interface PageResponse {\n  readonly status: number;\n  readonly json: boolean;\n  readonly body: string;\n  readonly context: boolean;\n  readonly maskedToken: string;\n  readonly token: string;\n  readonly method: string;\n  readonly cacheControl?: string | null;\n  readonly ifNoneMatch?: string | null;\n  readonly referrerPolicy?: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "pageInput",
+      "visibility": "internal",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "route": "string",
+          "params": "map<string>",
+          "kind": "pageKind",
+          "action": "boolean",
+          "csrf": "string",
+          "changed": "list<string>",
+          "now": "number",
+          "keepCookie": "optional<string>",
+          "heldHash": "optional<string>"
+        },
+        "optional": [
+          "keepCookie",
+          "heldHash"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageInput",
+          "declaration": "export interface PageInput {\n  readonly route: string;\n  readonly params: ReadonlyMap<string, string>;\n  readonly kind: PageKind;\n  readonly action: boolean;\n  readonly csrf: string;\n  readonly changed: Iterable<string>;\n  readonly now: number;\n  readonly keepCookie?: string | null;\n  readonly heldHash?: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "corePageRequest",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::CorePageRequest",
+          "declaration": "interface CorePageRequest {\n  next(input: PageStepInput): { readonly step: 'call'; readonly call: { readonly call: 'action' | 'context' | 'shared' | 'route_loader' | 'reply' } | { readonly call: 'route_region_loader' | 'region_loader'; readonly region: string } } | { readonly step: 'answer'; readonly answer: Answer };\n}"
+        }
+      }
+    },
+    {
+      "id": "pageHeadersResult",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "status": "number",
+          "headers": "list<list<string>>",
+          "body": "boolean"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.3"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageHeadersResult",
+          "declaration": "interface PageHeadersResult {\n  readonly status: number;\n  readonly headers: Iterable<readonly [string, string]>;\n  readonly body: boolean;\n}"
         }
       }
     }
@@ -18030,10 +19850,10 @@
             }
           },
           "members": [
+            "app.listener",
             "app.open",
+            "app.server",
             "asgi.createAsgi",
-            "http-host.listener",
-            "http-host.server",
             "server.createServer",
             "wsgi.createWsgi"
           ]

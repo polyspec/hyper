@@ -4896,13 +4896,19 @@
         {
           "kind": "rule",
           "id": "HY-74",
-          "retired": [],
+          "retired": [
+            1,
+            7,
+            8,
+            9,
+            10
+          ],
           "blocks": [
             {
               "kind": "paragraph",
               "statements": [
                 {
-                  "id": "HY-74.1",
+                  "id": "HY-74.11",
                   "en": "While a server answers a request, a warning that its runtime raises becomes an error, and the request fails with HY-43.",
                   "ko": "서버가 요청에 응답하는 동안 그 서버의 런타임이 발생시키는 경고는 오류가 되며, 그 요청은 HY-43으로 실패한다.",
                   "koSource": "c839b8b5ea04ac5119fdacf7561d9c15b69e601ad527b1b9523d2d31a50649d5"
@@ -4956,7 +4962,7 @@
                 {
                   "statements": [
                     {
-                      "id": "HY-74.7",
+                      "id": "HY-74.12",
                       "en": "Node: a warning that is emitted with `process.emitWarning` while a request is answered throws its error at the call.",
                       "ko": "Node: 요청에 응답하는 동안 `process.emitWarning`으로 발생한 경고는 호출한 곳에서 그 오류를 던진다.",
                       "koSource": "af5b7170cb6e4331c1a4ce2e8e7f65aebfcb14fce62d2eecdd6c2d3defb48f31"
@@ -6862,6 +6868,12 @@
                   "unimplemented": "H35.45"
                 },
                 {
+                  "id": "HY-107.10",
+                  "en": "The core of hyper depends on no crate of the orm library: the contract between hyper and the ORM is the kind string of an error, which the server reads from the error and passes to the core, so the core of hyper is not tied to a release of orm.",
+                  "ko": "hyper의 core는 orm 라이브러리의 어떤 crate에도 의존하지 않는다. hyper와 ORM 사이의 계약은 오류의 kind 문자열이며, server가 그것을 오류에서 읽어 core에 넘기므로 hyper의 core는 orm의 release에 묶이지 않는다.",
+                  "koSource": "3146c52dd51be233056576ae206accd30c081967727994f31be102c7296170f8"
+                },
+                {
                   "id": "HY-107.8",
                   "en": "The kind `no_rows`, a strict query for one row that matched no row, is answered as `NotFound` (HY-27: status 404 and the text `Not Found`).",
                   "ko": "kind `no_rows`(한 행을 기대한 strict query가 행을 찾지 못한 것)는 `NotFound`로 응답한다(HY-27: 상태 404와 텍스트 `Not Found`).",
@@ -7162,6 +7174,12 @@
                   "en": "In Node a value that a session keeps, a flash value and a media type etag are converted to the Node value form, a `Map` for an object, by the JSON decoding of the core, so that the key order of the object is kept (HY-124.10); PHP and Python hold the value as it is.",
                   "ko": "Node에서 session이 보관하는 값, flash 값, media type etag는 core의 JSON 디코딩으로 Node 값 형식이 된다. 객체는 `Map`이 되어 key 순서를 지킨다(HY-124.10). PHP와 Python은 값을 그대로 보관한다.",
                   "koSource": "bf4785d616474a5b7e277b21f5dd6d6b0b01c8f2588e99476d693affa09341bb"
+                },
+                {
+                  "id": "HY-104.48",
+                  "en": "The record path of a Node or Python server refuses a session record whose key is not text, by its codec, before any key check.",
+                  "ko": "Node 또는 Python 서버의 record 경로는 key가 텍스트가 아닌 session record를 key를 검사하기 전에 그 codec으로 거부한다.",
+                  "koSource": "8317ebfcc59f6e66b00663e69a901942eef5d31a4744bdf7121761090d203e94"
                 },
                 {
                   "id": "HY-104.28",
