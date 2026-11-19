@@ -164,6 +164,17 @@ class ScopeReader {
     return undefined;
   }
 
+  /** The classes of a written union of two or more classes, also with `| null` and `| undefined`; none when a member of the union is no class. */
+  typesOf(node: ts.TypeNode | undefined): ClassRef[] | undefined {
+    if (node === undefined) return undefined;
+    if (ts.isParenthesizedTypeNode(node)) return this.typesOf(node.type);
+    if (!ts.isUnionTypeNode(node)) return undefined;
+    const kept = node.types.filter((t) => !(t.kind === ts.SyntaxKind.UndefinedKeyword || (ts.isLiteralTypeNode(t) && t.literal.kind === ts.SyntaxKind.NullKeyword)));
+    if (kept.length < 2) return undefined;
+    const found = kept.map((t) => this.typeOf(t));
+    return found.every((ref) => ref !== undefined) ? found : undefined;
+  }
+
   /** The class inside a written list type: `X[]`, `readonly X[]`, `Array<X>`, `ReadonlyArray<X>`, `Set<X>`, `Iterable<X>`, also with `| null`. */
   itemsOf(node: ts.TypeNode | undefined): ClassRef | undefined {
     if (node === undefined) return undefined;
@@ -314,11 +325,12 @@ function heritage(reader: ScopeReader, clauses: readonly ts.HeritageClause[] | u
   return found;
 }
 
-/** A property or a parameter with the class of its written type and the class inside its written list type. */
+/** A property or a parameter with the class of its written type, the classes of its written union of classes and the class inside its written list type. */
 function typed(reader: ScopeReader, name: string, type: ts.TypeNode | undefined): Parameter {
   const ref = reader.typeOf(type);
+  const types = reader.typesOf(type);
   const items = reader.itemsOf(type);
-  return { name, ...(ref === undefined ? {} : { type: ref }), ...(items === undefined ? {} : { items }) };
+  return { name, ...(ref === undefined ? {} : { type: ref }), ...(types === undefined ? {} : { types }), ...(items === undefined ? {} : { items }) };
 }
 
 export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: Scope[] } {

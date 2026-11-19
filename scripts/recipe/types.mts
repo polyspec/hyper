@@ -150,8 +150,8 @@ export type Expr =
   | { kind: 'either'; of: Expr[] }
   | { kind: 'other' };
 
-/** A parameter or a property: its name, the class of its written type, and the class inside a written list type. */
-export type Parameter = { name: string; type?: ClassRef; items?: ClassRef };
+/** A parameter or a property: its name, the class of its written type, the classes of a written union of classes, and the class inside a written list type. */
+export type Parameter = { name: string; type?: ClassRef; types?: ClassRef[]; items?: ClassRef };
 
 export type SourceClass = { file: string; name: string; extends: ClassRef[]; properties: Parameter[] };
 

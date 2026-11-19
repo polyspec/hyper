@@ -147,6 +147,20 @@ def _without_none(node: ast.BinOp) -> ast.expr | None:
     return parts[0] if len(parts) == 1 else None
 
 
+def _is_none(node: ast.expr) -> bool:
+    """True for the None of a written type."""
+    return (isinstance(node, ast.Constant) and node.value is None) or (
+        isinstance(node, ast.Name) and node.id in NONE_NAMES
+    )
+
+
+def _union_parts(node: ast.expr) -> list[ast.expr]:
+    """The members of a written union `A | B | C` in their order."""
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+        return _union_parts(node.left) + _union_parts(node.right)
+    return [node]
+
+
 class Scope:
     """The reading of one function or method: its expressions, assignments, loops and parameters."""
 
@@ -200,6 +214,42 @@ class Scope:
         if expr["kind"] == "class":
             return {"file": expr["file"], "name": expr["name"]}
         return None
+
+    def types_of(self, node: ast.expr | None) -> list[dict] | None:
+        """The classes of a written union of two or more classes, `A | B`, also with `| None`, `Union[...]` or in a
+        string; none when a member of the union is no class."""
+        if node is None:
+            return None
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            try:
+                return self.types_of(ast.parse(node.value, mode="eval").body)
+            except SyntaxError:
+                return None
+        if isinstance(node, ast.Subscript):
+            base = node.value
+            name = (
+                base.attr
+                if isinstance(base, ast.Attribute)
+                else getattr(base, "id", "")
+            )
+            if name == "Optional":
+                return self.types_of(node.slice)
+            if name != "Union":
+                return None
+            parts = (
+                list(node.slice.elts)
+                if isinstance(node.slice, ast.Tuple)
+                else [node.slice]
+            )
+        elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+            parts = _union_parts(node)
+        else:
+            return None
+        kept = [p for p in parts if not _is_none(p)]
+        if len(kept) < 2:
+            return None
+        found = [self.type_of(p) for p in kept]
+        return None if any(ref is None for ref in found) else found  # type: ignore[return-value]
 
     def items_of(self, node: ast.expr | None) -> dict | None:
         """The class inside a written list type: `list[X]`, `Sequence[X]`, `Iterable[X]`, `set[X]`, `tuple[X, ...]` and
@@ -332,6 +382,9 @@ class Scope:
             written = self.type_of(arg.annotation)
             if written is not None:
                 entry["type"] = written
+            types = self.types_of(arg.annotation)
+            if types is not None:
+                entry["types"] = types
             items = self.items_of(arg.annotation)
             if items is not None:
                 entry["items"] = items
@@ -442,6 +495,9 @@ def class_entry(files: Files, rel: str, node: ast.ClassDef) -> dict:
             written = scope.type_of(stmt.annotation)
             if written is not None:
                 entry["type"] = written
+            types = scope.types_of(stmt.annotation)
+            if types is not None:
+                entry["types"] = types
             items = scope.items_of(stmt.annotation)
             if items is not None:
                 entry["items"] = items
