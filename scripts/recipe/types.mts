@@ -44,16 +44,24 @@ export type Unit = {
   id: string;
   native: Partial<Record<Lang, FileNative>>;
   members: Member[];
+  /** HYR-5 Reexports: the library unit `<library>:<unit>` whose members every member of this unit passes a call to. */
+  reexport?: string;
+  /** HYR-5 Reexports: the ids of the members that pass a call to a library member, which the check does not compare. */
+  passed?: string[];
   only?: Only;
   tests?: string[];
 };
 
+/** HYR-5 Reexports: a member that only passes a call to the library member `<library>:<unit>.<member>`. */
+export type ReexportMember = { id: string; reexport: string };
+
 /**
  * The spec as `contracts/interfaces.json` holds it: a unit may also have extension entries. The checks of the sources
- * read the `Spec` that `withoutExtensions` makes of it, because no reader reads an extension class.
+ * read the `Spec` that `withoutExtensions` makes of it, because no reader reads an extension class; a member may also be a
+ * reexport (HYR-5), which `withoutExtensions` moves to `passed`.
  */
 export type SpecDocument = Omit<Spec, 'concerns'> & {
-  concerns: (Omit<Concern, 'units'> & { units: (Omit<Unit, 'native'> & { native: Partial<Record<Lang, FileNative | ExtensionNative>> })[] })[];
+  concerns: (Omit<Concern, 'units'> & { units: (Omit<Unit, 'native' | 'members' | 'passed'> & { native: Partial<Record<Lang, FileNative | ExtensionNative>>; members: (Member | ReexportMember)[] })[] })[];
 };
 
 export type Member = {

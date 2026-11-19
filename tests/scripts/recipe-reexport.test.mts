@@ -19,8 +19,12 @@ const fixture = path.join(here, 'fixtures', 'recipe');
 const check = path.join(repo, 'scripts', 'recipe', 'check.mts');
 const schemas = validators();
 
-/** The member of the fixture that the tests state as a reexport: a public member that a source of each language declares. */
-const MEMBER = 'media-type.essence';
+/**
+ * The member of the fixture that the tests state as a reexport: a source of each language declares it, so a check that
+ * compared it would report it as added, and no section names it and no other member is reached only through it, as a
+ * member that only passes a call to a library has no case of hyper and calls no member of hyper.
+ */
+const MEMBER = 'json-codec.decode';
 
 type Doc = { concerns: { units: { id: string; reexport?: string; members: Record<string, unknown>[] }[] }[] };
 
@@ -73,20 +77,20 @@ function runWith(target: string): { status: number | null; stdout: string; stder
 
 test('HYR-5: a reexport whose library member exists passes and yields no line for that member', () => {
   const result = runWith('lib:lib_unit.call');
-  assert.equal(result.stdout.split('\n').filter((l) => l.includes(MEMBER) || l.includes('essence')).join('\n'), '', result.stdout + result.stderr);
+  assert.equal(result.stdout.split('\n').filter((l) => l.includes(MEMBER) || l.includes('decode')).join('\n'), '', result.stdout + result.stderr);
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
 test('HYR-5: a reexport whose library member is missing yields REEXPORT_MISSING with the file and the name', () => {
   const result = runWith('lib:lib_unit.absent');
   assert.equal(result.status, 1, result.stdout + result.stderr);
-  assert.match(result.stdout, /^REEXPORT_MISSING member media-type\.essence reexports lib:lib_unit\.absent, which \S+crate\/interface\.json does not list$/mu);
+  assert.match(result.stdout, /^REEXPORT_MISSING member json-codec\.decode reexports lib:lib_unit\.absent, which \S+crate\/interface\.json does not list$/mu);
 });
 
 test('HYR-5: a reexport of a library that no locked crate is yields REEXPORT_MISSING', () => {
   const result = runWith('other:lib_unit.call');
   assert.equal(result.status, 1, result.stdout + result.stderr);
-  assert.match(result.stdout, /^REEXPORT_MISSING member media-type\.essence reexports other:lib_unit\.call; packages\/rust\/Cargo\.toml locks no crate polyspec-other$/mu);
+  assert.match(result.stdout, /^REEXPORT_MISSING member json-codec\.decode reexports other:lib_unit\.call; packages\/rust\/Cargo\.toml locks no crate polyspec-other$/mu);
 });
 
 test('HYR-5: the schema refuses a reexport member with inputs or native, and a reexport unit with members', () => {

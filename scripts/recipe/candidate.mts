@@ -7,6 +7,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { readAllSources, withoutExtensions, type Validators } from './run.mts';
+import { isReexport } from './reexport.mts';
 import { runCommand } from './exit.mts';
 import { readerKey, words } from './names.mts';
 import { LANGS, type Concern, type ExtensionNative, type FileNative, type Lang, type Member, type Sources, type Spec, type SpecDocument, type SpecType, type Unit, type Visibility } from './types.mts';
@@ -56,6 +57,9 @@ function specVisibility(visibility: Visibility, what: string): Member['visibilit
  * that the languages do not agree on is flagged.
  */
 function deriveMembers(unit: Unit, sources: Record<Lang, Sources>, flag: (item: Member, what: string) => void): void {
+  // HYR-5 Reexports: a reexport unit lists no member, and a reexport member stays as the spec writes it.
+  if (unit.reexport !== undefined) return;
+  const passed = new Set((unit.passed ?? []).map((id) => words(id.slice(id.indexOf('.') + 1))));
   const byKey = new Map<string, Partial<Record<Lang, ReaderMember>>>();
   for (const lang of LANGS) {
     const file = unit.native[lang]?.file;
@@ -74,7 +78,7 @@ function deriveMembers(unit: Unit, sources: Record<Lang, Sources>, flag: (item: 
   for (const [key, entry] of byKey) {
     const list = readOf(entry);
     const first = list[0];
-    if (first === undefined) continue;
+    if (first === undefined || passed.has(key)) continue;
     if (LANGS.some((lang) => entry[lang] !== undefined && listed.has(`${lang}:${entry[lang].symbol}`))) continue;
     const member: Member = {
       id: `${unit.id}.${camel(key)}`,
@@ -285,7 +289,10 @@ function withExtensionsOf(spec: Spec, doc: SpecDocument): SpecDocument {
             if (n !== undefined && 'extension' in n) native[lang] = n;
           }
         }
-        return { ...unit, native };
+        // HYR-5 Reexports: the reexport members go back after the members, as the spec writes them.
+        const { passed: _passed, ...kept } = unit;
+        const reexports = written?.id === unit.id ? written.members.filter(isReexport) : [];
+        return { ...kept, members: [...unit.members, ...reexports], native };
       }),
     })),
   };
