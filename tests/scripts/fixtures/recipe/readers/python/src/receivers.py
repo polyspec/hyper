@@ -20,6 +20,7 @@ MAKERS: dict[str, object] = {"widget": lambda: Widget()}
 
 class Receivers:
     kept: Optional[Widget]
+    held: "Widget | Receivers | None"
 
     def tabled(self) -> None:
         MAKERS["widget"]()
@@ -35,6 +36,9 @@ class Receivers:
 
     def united(self, item: "Widget | Receivers | None") -> None:
         item.grow()
+
+    def held_grow(self) -> None:
+        self.held.grow()
 
     def run(self, widget: Widget, text: str) -> None:
         widget.grow()

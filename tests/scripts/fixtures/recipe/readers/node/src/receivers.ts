@@ -7,9 +7,13 @@ export function widget(): void {}
 /** A function of the module whose name a variable of a method also has. */
 export function either(): void {}
 
+// A table of the module whose values make a class: a function that reads the table reaches what the table makes.
+const MAKERS: Record<string, () => Widget> = { widget: () => new Widget() };
+
 /** The receivers of the scope reading (HYR-5): what the source writes about the class of each. */
 export class Receivers {
   private kept: Widget | null = null;
+  private held: Widget | Sized | null = null;
 
   run(widget: Widget, items: Map<string, number>): void {
     widget.grow();
@@ -27,6 +31,10 @@ export class Receivers {
 
   other(): void {}
 
+  tabled(): void {
+    MAKERS['widget']?.();
+  }
+
   sized(item: Sized): void {
     item.grow();
     const { kept } = this;
@@ -37,6 +45,10 @@ export class Receivers {
 
   united(item: Widget | Sized | null): void {
     item?.grow();
+  }
+
+  heldGrow(): void {
+    this.held?.grow();
   }
 
   listed(widgets: readonly Widget[], others: Array<Widget>): void {

@@ -9,7 +9,7 @@ import { dirname, join, normalize } from 'node:path';
 import ts from './typescript/node_modules/typescript/lib/typescript.js';
 import type { ClassRef, Expr, Parameter, Scope, SourceClass, RegistryEntry } from './types.mts';
 
-type Found = { kind: 'class' | 'function' | 'module' | 'steps'; file: string; name: string };
+type Found = { kind: 'class' | 'function' | 'variable' | 'module' | 'steps'; file: string; name: string };
 type Binding = { from: string; name: string } | { from: string; namespace: true };
 
 const OTHER: Expr = { kind: 'other' };
@@ -55,6 +55,8 @@ export class NodeFiles {
           const init = d.initializer;
           if (ts.isArrowFunction(init) || ts.isFunctionExpression(init) || (d.type !== undefined && ts.isFunctionTypeNode(d.type))) declared.set(d.name.text, { kind: 'function', file, name: d.name.text });
           if (d.name.text === 'steps' && ts.isObjectLiteralExpression(init)) declared.set('steps', { kind: 'steps', file, name: 'steps' });
+          // Any other constant of the module, such as a table of callables, is a variable whose scope is its value.
+          if (!declared.has(d.name.text)) declared.set(d.name.text, { kind: 'variable', file, name: d.name.text });
         }
       }
       if (ts.isImportDeclaration(st) && ts.isStringLiteral(st.moduleSpecifier) && st.importClause !== undefined) {
@@ -101,6 +103,17 @@ export class NodeFiles {
     }
     return [];
   }
+}
+
+/** True for an identifier that reads the value of its name: no declared name, no property name and no callee. */
+function readsName(n: ts.Identifier): boolean {
+  const parent = n.parent;
+  if ((ts.isPropertyAccessExpression(parent) || ts.isPropertyAssignment(parent) || ts.isPropertyDeclaration(parent) || ts.isMethodDeclaration(parent)) && parent.name === n) return false;
+  if ((ts.isVariableDeclaration(parent) || ts.isParameter(parent) || ts.isBindingElement(parent) || ts.isFunctionDeclaration(parent) || ts.isClassDeclaration(parent)) && parent.name === n) return false;
+  if (ts.isBindingElement(parent) && parent.propertyName === n) return false;
+  if (ts.isImportSpecifier(parent) || ts.isExportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent)) return false;
+  if ((ts.isCallExpression(parent) || ts.isNewExpression(parent)) && parent.expression === n) return false;
+  return true;
 }
 
 /** True for a node inside a type, whose names are no reads. */
@@ -202,6 +215,8 @@ class ScopeReader {
       if (found === undefined) return { kind: 'variable', name: node.text };
       if (found.kind === 'class') return { kind: 'class', file: found.file, name: found.name };
       if (found.kind === 'module') return { kind: 'module', file: found.file };
+      // A read of a constant of a module reaches the scope of its value, such as a table of callables.
+      if (found.kind === 'variable') return { kind: 'member', of: { kind: 'module', file: found.file }, name: found.name, call: false };
       return OTHER;
     }
     if (ts.isPropertyAccessExpression(node)) {
@@ -211,7 +226,7 @@ class ScopeReader {
         const found = this.files.resolve(of.file, name);
         if (found?.kind === 'class') return { kind: 'class', file: found.file, name: found.name };
         if (found?.kind === 'module') return { kind: 'module', file: found.file };
-        if (found?.kind === 'function') return { kind: 'member', of: { kind: 'module', file: found.file }, name: found.name, call: false };
+        if (found?.kind === 'function' || found?.kind === 'variable') return { kind: 'member', of: { kind: 'module', file: found.file }, name: found.name, call: false };
       }
       return { kind: 'member', of, name, call: false };
     }
@@ -306,6 +321,7 @@ class ScopeReader {
         const written = ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.EqualsToken && parent.left === n;
         if (!callee && !written) this.use(this.expression(n));
       }
+      if (ts.isIdentifier(n) && !inType(n) && readsName(n)) this.use(this.expression(n));
       ts.forEachChild(n, visit);
     };
     visit(node);
