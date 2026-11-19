@@ -2806,7 +2806,7 @@
               ],
               "output": "string",
               "errors": [],
-              "state": "Returns the context hash of a build id and the JSON text of a context.",
+              "state": "Returns the context hash of a build id and the JSON text of a context (HY-125.12).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/Context.php::Polyspec\\Hyper\\Context::hash",
