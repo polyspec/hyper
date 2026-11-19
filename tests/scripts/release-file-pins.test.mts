@@ -60,3 +60,26 @@ test('each installed file has the pinned sha256', () => {
     assert.equal(createHash('sha256').update(readFileSync(target)).digest('hex'), sha256, target);
   }
 });
+
+// H35.11: every pin of polyspec-http-form names v0.0.4, the release whose files config/release-files.json pins, and
+// Cargo.lock holds one polyspec-binding-core, the binding of the hyper core (docs/operations/dependencies.md).
+const HTTP_FORM_TAG = 'v0.0.4';
+const trackedPins = ['packages/rust/Cargo.toml', 'Cargo.lock', 'config/release-files.json'].map((path) => ({ path, text: readFileSync(path, 'utf8') }));
+
+test('no tracked manifest or lock names polyspec-http-form v0.0.3', () => {
+  for (const { path, text } of trackedPins) {
+    assert.ok(!/polyspec-http-form[^\n]*v0\.0\.3/.test(text) && !/http-form\/releases\/download\/v0\.0\.3\//.test(text) && !/http-form\.git\?tag=v0\.0\.3/.test(text), `${path} still names polyspec-http-form v0.0.3`);
+  }
+});
+
+test(`every manifest pins polyspec-http-form ${HTTP_FORM_TAG}`, () => {
+  const line = cargo.split('\n').find((text) => text.startsWith('polyspec-http-form = '));
+  assert.ok(line !== undefined && line.includes(`tag = "${HTTP_FORM_TAG}"`), `packages/rust/Cargo.toml: polyspec-http-form is ${line}`);
+  assert.ok(releases.some(({ library, tag }) => library === 'http-form' && tag === HTTP_FORM_TAG), `${CONFIG} does not pin http-form ${HTTP_FORM_TAG}`);
+  assert.match(readFileSync('Cargo.lock', 'utf8'), /name = "polyspec-http-form"\nversion = "0\.0\.4"\n/, 'Cargo.lock does not pin polyspec-http-form 0.0.4');
+});
+
+test('Cargo.lock holds one polyspec-binding-core', () => {
+  const count = readFileSync('Cargo.lock', 'utf8').split('\n').filter((text) => text === 'name = "polyspec-binding-core"').length;
+  assert.equal(count, 1, `Cargo.lock holds ${count} polyspec-binding-core packages`);
+});
