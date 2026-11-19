@@ -14981,7 +14981,10 @@
               "sentence": "HY-125.12",
               "state": "`reorderedHash` is the context hash of the map that `reorderedText` writes, the members of `context` in another order."
             }
-          }
+          },
+          "members": [
+            "context.hash"
+          ]
         },
         "withContext": {
           "runners": [
