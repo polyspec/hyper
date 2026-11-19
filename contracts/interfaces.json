@@ -18,7 +18,8 @@
         "packages/ts/tests"
       ],
       "barrel": [
-        "packages/ts/src/index.ts"
+        "packages/ts/src/index.ts",
+        "packages/ts/src/build.ts"
       ]
     },
     "python": {
@@ -3222,6 +3223,163 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_build.py::Build.read",
                   "signature": "def read(file: str) -> str"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "build-rules",
+          "native": {
+            "node": {
+              "file": "packages/ts/src/app/build-rules.ts",
+              "kind": "functions",
+              "internal": false
+            }
+          },
+          "only": {
+            "languages": [
+              "node"
+            ],
+            "sentence": "HY-48.3"
+          },
+          "members": [
+            {
+              "id": "build-rules.buildId",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "list<buildOutput>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the build id of the files that one build writes (HY-125.15 to HY-125.17, HY-125.25).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/build-rules.ts::buildId",
+                  "signature": "export function buildId(outputs: Iterable<BuildOutput>): string"
+                }
+              }
+            },
+            {
+              "id": "build-rules.buildPaths",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "list<buildOutput>"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Returns the paths of the files that the build id hashes, in the order in which it hashes them (HY-125.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/build-rules.ts::buildPaths",
+                  "signature": "export function buildPaths(outputs: Iterable<BuildOutput>): readonly string[]"
+                }
+              }
+            },
+            {
+              "id": "build-rules.buildStream",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "list<buildOutput>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the hexadecimal text of the bytes that the build id hashes (HY-125.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/build-rules.ts::buildStream",
+                  "signature": "export function buildStream(outputs: Iterable<BuildOutput>): string"
+                }
+              }
+            },
+            {
+              "id": "build-rules.shellFile",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string",
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the text of the static shell, and fails with the kind invalid_build for an entry that contains </script (HYC-16.23).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/build-rules.ts::shellFile",
+                  "signature": "export function shellFile(api: string, build: string, url: string, code: string): string"
+                }
+              }
+            },
+            {
+              "id": "build-rules.buildFileText",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the text of build.json with the build id, and fails for an id of another form (HY-125.19, HY-125.23).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/build-rules.ts::buildFileText",
+                  "signature": "export function buildFileText(id: string): string"
+                }
+              }
+            },
+            {
+              "id": "build-rules.templateProblems",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "bytes",
+                "map<string>"
+              ],
+              "output": "list<string>",
+              "errors": [],
+              "state": "Returns the problems of the templates for the manifest, and fails with the error of the manifest check for a manifest that breaks HY-2 (HY-48.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/build-rules.ts::templateProblems",
+                  "signature": "export function templateProblems(manifest: Uint8Array, templates: ReadonlyMap<string, string>): readonly string[]"
+                }
+              }
+            },
+            {
+              "id": "build-rules.reservedTemplate",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [],
+              "output": "dataTemplate",
+              "errors": [],
+              "state": "Returns the name and the source of the reserved template of the embedded data (HY-31.3, HY-31.9).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/build-rules.ts::reservedTemplate",
+                  "signature": "export function reservedTemplate(): { readonly name: string; readonly source: string }"
+                }
+              }
+            },
+            {
+              "id": "build-rules.readsFile",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "bytes",
+                "map<string>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the text of reads.json of a server program: the read paths of every route of the manifest with the templates (HY-73.34).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/build-rules.ts::readsFile",
+                  "signature": "export function readsFile(manifest: Uint8Array, templates: ReadonlyMap<string, string>): string"
                 }
               }
             }
@@ -10645,34 +10803,9 @@
               }
             },
             {
-              "id": "data-model.walk",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Fails at the first item of a value that is not a value of the data model.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::walk",
-                  "signature": "private static function walk(mixed $value): void"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/data/data-model.ts::DataModel.walk",
-                  "signature": "private static walk(value: Value): void"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_data_model.py::DataModel._walk",
-                  "signature": "def _walk(value: object) -> None"
-                }
-              }
-            },
-            {
               "id": "data-model.plain",
               "kind": "static method",
-              "visibility": "public",
+              "visibility": "internal",
               "inputs": [
                 "value"
               ],
@@ -10851,93 +10984,9 @@
               }
             },
             {
-              "id": "json-codec.encodeNumber",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "number"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Writes a number with the digits of PHP json_encode.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.encodeNumber",
-                  "signature": "private static encodeNumber(value: number): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._encode_number",
-                  "signature": "def _encode_number(value: int | float) -> str"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.18"
-              }
-            },
-            {
-              "id": "json-codec.encodeString",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Writes a string with the escapes of PHP json_encode.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.encodeString",
-                  "signature": "private static encodeString(text: string): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._encode_string",
-                  "signature": "def _encode_string(text: str) -> str"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.18"
-              }
-            },
-            {
-              "id": "json-codec.checkWellFormed",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Fails for a string with a lone surrogate.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.checkWellFormed",
-                  "signature": "private static checkWellFormed(text: string): void"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec._check_well_formed",
-                  "signature": "def _check_well_formed(text: str) -> None"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.18"
-              }
-            },
-            {
               "id": "json-codec.isList",
               "kind": "static method",
-              "visibility": "public",
+              "visibility": "internal",
               "inputs": [
                 "value"
               ],
@@ -10960,7 +11009,7 @@
             {
               "id": "json-codec.mapEntries",
               "kind": "static method",
-              "visibility": "public",
+              "visibility": "internal",
               "inputs": [
                 "value"
               ],
@@ -11231,8 +11280,6 @@
               "kind": "constructor",
               "visibility": "private",
               "inputs": [
-                "string",
-                "string",
                 "list<region>",
                 "region",
                 "map<value>",
@@ -11240,15 +11287,15 @@
               ],
               "output": "manifest",
               "errors": [],
-              "state": "Holds the layout, the title template, the regions, the page region, the routes and the router of a checked manifest.",
+              "state": "Holds the regions, the page region, the routes and the router of a checked manifest.",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Page/Manifest.php::Polyspec\\Hyper\\Manifest::__construct",
-                  "signature": "private function __construct(string $layout, string $title, array $regions, Polyspec\\Hyper\\Region $page, array $routes, Polyspec\\Hyper\\Router $router)"
+                  "signature": "private function __construct(array $regions, Polyspec\\Hyper\\Region $page, array $routes, Polyspec\\Hyper\\Router $router)"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/page/_manifest.py::Manifest.__init__",
-                  "signature": "def __init__(self, layout: str, title: str, regions: list[Region], page: Region, routes: dict[str, dict], router: Router)"
+                  "signature": "def __init__(self, regions: list[Region], page: Region, routes: dict[str, dict], router: Router)"
                 }
               }
             },
@@ -11360,44 +11407,6 @@
               }
             },
             {
-              "id": "manifest.layout",
-              "kind": "property",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "string",
-              "errors": [],
-              "state": "Holds the name of the layout template.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Manifest.php::Polyspec\\Hyper\\Manifest::layout",
-                  "signature": "public readonly string $layout"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_manifest.py::Manifest.layout",
-                  "signature": "layout: str"
-                }
-              }
-            },
-            {
-              "id": "manifest.title",
-              "kind": "property",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "string",
-              "errors": [],
-              "state": "Holds the name of the title template.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Manifest.php::Polyspec\\Hyper\\Manifest::title",
-                  "signature": "public readonly string $title"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_manifest.py::Manifest.title",
-                  "signature": "title: str"
-                }
-              }
-            },
-            {
               "id": "manifest.regions",
               "kind": "property",
               "visibility": "internal",
@@ -11505,20 +11514,19 @@
                 "string",
                 "boolean",
                 "optional<string>",
-                "list<string>",
                 "map<string>"
               ],
               "output": "region",
               "errors": [],
-              "state": "Holds the name, the page flag, the template, the used topics and the kept paths of a region, and fails for a kept path or kind that HY-37 does not allow.",
+              "state": "Holds the name, the page flag, the template and the kept paths of a region, and fails for a kept path or kind that HY-37 does not allow.",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Page/Region.php::Polyspec\\Hyper\\Region::__construct",
-                  "signature": "public function __construct(string $name, bool $page, ?string $template, array $uses, array $keep)"
+                  "signature": "public function __construct(string $name, bool $page, ?string $template, array $keep)"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/page/_region.py::Region.__init__",
-                  "signature": "def __init__(self, name: str, page: bool, template: Optional[str], uses: list[str], keep: Optional[dict[str, str]]=None)"
+                  "signature": "def __init__(self, name: str, page: bool, template: Optional[str], keep: Optional[dict[str, str]]=None)"
                 }
               }
             },
@@ -11541,33 +11549,6 @@
                   "symbol": "packages/python/src/polyspec/hyper/page/_region.py::Region.kept_paths",
                   "signature": "def kept_paths(self, kinds: list[str]) -> list[str]"
                 }
-              }
-            },
-            {
-              "id": "region.usesAny",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "list<string>"
-              ],
-              "output": "boolean",
-              "errors": [],
-              "state": "Returns true when the region uses one of the topics (HY-11).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Region.php::Polyspec\\Hyper\\Region::usesAny",
-                  "signature": "public function usesAny(array $topics): bool"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_region.py::Region.uses_any",
-                  "signature": "def uses_any(self, topics: list[str]) -> bool"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-11.1"
               }
             },
             {
@@ -11624,25 +11605,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/page/_region.py::Region.template",
                   "signature": "template: Optional[str]"
-                }
-              }
-            },
-            {
-              "id": "region.uses",
-              "kind": "property",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "list<string>",
-              "errors": [],
-              "state": "Holds the topics that the region uses.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Region.php::Polyspec\\Hyper\\Region::uses",
-                  "signature": "public readonly array $uses"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_region.py::Region.uses",
-                  "signature": "uses: list[str]"
                 }
               }
             },
@@ -12225,33 +12187,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/page/_region_planner.py::RegionPlanner.changed_topics",
                   "signature": "def changed_topics(request: Request, flash: Flash, base_path: str) -> list[str]"
-                }
-              }
-            },
-            {
-              "id": "region-planner.select",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "manifest",
-                "boolean",
-                "list<string>"
-              ],
-              "output": "list<region>",
-              "errors": [],
-              "state": "Returns the regions that a document or a region response contains.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/RegionPlanner.php::Polyspec\\Hyper\\RegionPlanner::select",
-                  "signature": "public static function select(Polyspec\\Hyper\\Manifest $manifest, bool $document, array $changed): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/page/region-planner.ts::RegionPlanner.select",
-                  "signature": "static select(manifest: Manifest, document: boolean, changed: readonly string[]): RegionDeclaration[]"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_region_planner.py::RegionPlanner.select",
-                  "signature": "def select(manifest: Manifest, document: bool, changed: list[str]) -> list[Region]"
                 }
               }
             }
@@ -14249,7 +14184,7 @@
     {
       "id": "buildOutput",
       "visibility": "public",
-      "unit": "build",
+      "unit": "build-rules",
       "shape": {
         "fields": {
           "path": "string",
@@ -14265,7 +14200,7 @@
       },
       "native": {
         "node": {
-          "symbol": "packages/ts/src/build.ts::BuildOutput",
+          "symbol": "packages/ts/src/app/build-rules.ts::BuildOutput",
           "declaration": "export interface BuildOutput {\n  readonly path: string;\n  readonly bytes: Uint8Array;\n}"
         }
       }

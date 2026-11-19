@@ -5,21 +5,20 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * One manifest region: the page region, or a region with its own template and used topics (HY-2).
+ * One manifest region: the page region, or a region with its own template (HY-2). The core selects the regions of a
+ * response by their used topics from the manifest (HY-18, HY-19), so a region holds no topics.
  *
  * @internal
  */
 final class Region
 {
     /**
-     * @param list<string> $uses
      * @param array<string, string> $keep kept path to its kind (HY-37)
      */
     public function __construct(
         public readonly string $name,
         public readonly bool $page,
         public readonly ?string $template,
-        public readonly array $uses,
         public readonly array $keep = [],
     ) {
         foreach ($keep as $path => $kind) {
@@ -44,15 +43,5 @@ final class Region
     public function keptPaths(array $kinds): array
     {
         return array_keys(array_filter($this->keep, fn (string $kind): bool => in_array($kind, $kinds, true)));
-    }
-
-    /**
-     * Returns true when this region uses one of the topics.
-     *
-     * @param list<string> $topics
-     */
-    public function usesAny(array $topics): bool
-    {
-        return array_intersect($this->uses, $topics) !== [];
     }
 }

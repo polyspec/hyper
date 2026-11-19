@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: edb5423a9ff3f5fc767ba7cf2d9a92c370b47b3d8602a7933e55de23d76f2273 -->
+<!-- source-sha256: 74a575c73fab07a5b2ba2c26cdc7864b65b74057bd9d3289a40c9d1c8b172f22 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -34,9 +34,11 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
 
   `packages/php/src`, `packages/ts/src`, `packages/python/src/polyspec/hyper` 아래의 `git ls-files`
   파일은 모두 정확히 하나의 concern에 속하며, 이름이 적힌 파일은 모두 존재한다. unit의 파일은 정확히 하나의 unit을 가진다
-  (HYR-3). barrel 파일(`index.ts`와 package의 `__init__.py`), `py.typed`, 그리고 Python의 각 group 디렉터리의
+  (HYR-3). barrel 파일(`index.ts`, `build.ts`와 package의 `__init__.py`), `py.typed`, 그리고 Python의 각 group 디렉터리의
   `__init__.py`(HYR-4)는 `index` concern에 속하며 unit을 가지지 않는다. barrel 파일은 HY-106의 public member와 public
-  type을 re-export하는 내용만 가지며, HYR-8은 unit 검사 대신 이 목록을 검사한다.
+  type을 re-export하는 내용만 가지며, HYR-8은 unit 검사 대신 이 목록을 검사한다. `build.ts`는 entry
+  `@polyspec/hyper/build`이며, command tool을 위해 unit `build rules`의 public 함수와 그 type `BuildOutput`을
+  re-export하므로(HY-48.3) 빌드는 서버가 적용하는 core 규칙을 그대로 적용한다.
 
 - **HYR-3 One unit per file.** unit은 다음 필드를 가진다.
   - `id`: 단어들;
@@ -71,7 +73,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - PHP: PascalCase, `src/<Group>/<Words>.php`, namespace `Polyspec\Hyper`에 속한다.
     `packages/php/composer.json`의 `autoload.psr-4`는 `Polyspec\Hyper\`를 PHP unit이 있는 group 디렉터리의
     목록에 연결하고, root `composer.json`도 같은 디렉터리를 연결한다.
-  - Node: kebab-case, `src/<group>/<words>.ts`. barrel은 `src/index.ts`다.
+  - Node: kebab-case, `src/<group>/<words>.ts`. barrel은 `src/index.ts`와 빌드 entry `src/build.ts`다.
   - Python: snake_case, package `polyspec/hyper/<group>/` 안에 둔다.
     - `<words>.py`는 HY-106이 public으로 만드는 unit의 module이다.
     - `_<words>.py`는 internal module이다.
