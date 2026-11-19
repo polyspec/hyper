@@ -1,6 +1,6 @@
 [package]
 name = "polyspec-hyper"
-version = "0.0.40"
+version = "0.0.41"
 edition = "2021"
 rust-version = "1.99.0"
 description = "The Rust core of the hyper server library, with the rules that every runtime shares: media selection, representations, tags, cookies, the reply, the CSRF token and the order of a request"

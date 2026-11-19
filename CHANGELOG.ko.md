@@ -6,6 +6,8 @@
 
 ## Unreleased
 
+## 0.0.41
+
 - HY-44.13은 Node server가 application 값의 검사에서 core가 그 JSON text에서 다시 읽은 값을 돌려주고 PHP와 Python server는 받은 값을 그대로 돌려준다고 정하며, `contracts/interfaces.json`의 `data-model.check`가 `core-rules.jsonCodecDecode`이 node에서 닿고 php와 python에서 닿지 않는다고 선언하므로 `make recipe-check`가 통과한다. 2개의 `MEMBER_REACH_DIFFERS` 줄로 실패했다(H35.201).
 - `tests/scripts/session-shared-redis.test.mts`는 부르지 않는 `node:events`의 `once`를 import하지 않으므로 `make lint-ts`가 다시 통과한다. close test를 되살린 뒤로 `no-unused-vars`로 실패했다(H35.222).
 - HY-107.11이 HY-107.7을 대신한다. PHP, Python, Node server는 ORM의 오류를 namespace 없는 그 class의 이름(`OrmValueError`와 `OrmStoreError` 같은 orm 라이브러리의 오류 class 가운데 하나)과 그 kind로 알아보며, hyper는 orm 패키지에 의존하지 않는다(H35.45-4). 입력: 그런 오류를 내는 `contracts/context.json`이나 `contracts/representations.json`의 loader, action, representation handler. 동작: case runner가 hyper가 선언하지 않은 orm 패키지를 실제로 호출해 오류를 얻었으므로 `make lint-ts`가 `packages/ts/tests/support.ts`의 `@polyspec/orm` import에서 실패했고, `contracts/context.json`의 13개 case와 `contracts/representations.json`의 2개 case가 세 runner에서 실패했다. Python server는 module `polyspec.orm`을, PHP server는 namespace `Polyspec\\Orm`을 요구했다. 기대: runner가 case의 kind를 가진 그 class 이름의 오류를 던지고(`packages/php/tests/Support/OrmValueError.php`, `OrmStoreError.php`, Python과 Node step의 대역), server가 이름과 kind를 비교하며, `packages/php/tests/fixtures/orm-errors.json`과 그 owner rule은 지워진다. H35.45와 H35.45-4는 hyper에서 orm을 쓸 수 있을 때까지 우회된 채로 남는다.

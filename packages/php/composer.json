@@ -1,6 +1,6 @@
 {
     "name": "polyspec/hyper",
-    "version": "0.0.40",
+    "version": "0.0.41",
     "description": "The server library of the region protocol for PHP; the browser package is @polyspec/hyper-client. Routes, actions and region JSON for template language layouts",
     "type": "library",
     "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@polyspec/hyper-cli",
-  "version": "0.0.40",
+  "version": "0.0.41",
   "description": "The command tool hyper of the region protocol: hyper build writes the server program and the browser assets of an application, hyper check checks its manifest and templates",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "node": ">=26.12.0"
   },
   "dependencies": {
-    "@polyspec/hyper": "0.0.40",
+    "@polyspec/hyper": "0.0.41",
     "@polyspec/template": "0.0.32",
     "@tailwindcss/node": "4.3.3",
     "@tailwindcss/oxide": "4.3.3",

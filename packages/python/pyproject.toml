@@ -6,7 +6,7 @@ build-backend = "maturin"
 
 [project]
 name = "polyspec-hyper"
-version = "0.0.40"
+version = "0.0.41"
 description = "The server library of the polyspec region protocol for Python; the browser package is @polyspec/hyper-client. Manifest, routing, documents, JSON responses, actions and sessions"
 readme = "README.md"
 license = "MIT"
