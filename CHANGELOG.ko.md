@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d4404b6763327ac5190cb24e0ae4e8ad4c46acc434f6d743c26579651c682479 -->
+<!-- source-sha256: c04e9d15635355502bdac8d5e18ebc200ae4d860ecc5c5144b78c86b25fd9cd9 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP server의 `BodyReader::feed`는 body가 한도를 넘은 뒤에만 false를 돌려주고, byte가 kind `invalid`나 `header_limit`로 실패하는 body는 `contracts/interfaces.json` body-reader.feed와 Python server가 정하듯 계속 읽는다(H35.218, HY-131.32, HY-113.25). 입력: byte가 `invalid`로 실패하는, 조각 단위로 읽는 `multipart/form-data` body. 이전 동작: PHP는 첫 실패에 false를 돌려주고 읽기를 멈췄고 Node multipart worker는 모든 실패에 멈췄으므로, `tests/scripts/multipart-compare.test.mts`가 314개 중 193개 body의 stopped 값이 Python과 다르다고 보고했다. 기대: 세 서버가 그런 body를 끝까지 읽고 form 없이 상태 400을 준다. 한도를 넘은 body만 멈춘다.
 - `tests/scripts/multipart-compare.test.mts`의 Node worker는 core 파일의 크기, filename, content type을 getter로 읽는다(H35.215, HY-131.28). 입력: 생성한 요청 body에 대한 세 서버의 비교. 이전 동작: H35.11부터 core 파일은 이것들을 getter로 주는데 `tests/scripts/fixtures/multipart-worker/worker.mjs`는 method로 불러 `TypeError: file.size is not a function`으로 실패했다. 기대: worker가 getter를 읽고 비교가 통과한다. Node package의 `UploadedFile`은 method를 유지한다.
 - `tests/scripts/upload-servers.test.mts`의 upload server fixture가 요청의 directory를 접두사 `http-form-`으로 세고, Node fixture가 `moveTo`를 기다린다(H35.213, HY-131, F-10). 입력: 세 서버에 보내는 3 MiB 파일의 multipart upload. 이전 동작: H35.11부터 http-form이 요청의 directory를 `http-form-`으로 이름 짓는데 fixture는 `hyper-`를 세어, PHP가 1이어야 할 `held: 0`으로 답했다. Node fixture는 `moveTo`의 promise가 끝나기 전에 옮긴 파일을 읽어 ENOENT로 500을 답했다. 기대: 각 서버의 `held: 1`과 옮긴 각 파일의 digest. `make hyper-test-scripts TESTS=tests/scripts/upload-servers.test.mts`: 95 passed, 0 failed.
 - `tests/scripts`에서 Node package의 Node 서버나 worker를 시작하는 test는 모두 시작하기 전에 직접, 또는 `session-board.mts`의 `requireServers`와 `session-redis-server.mts`의 `redisRun`을 거쳐 native addon을 `requireBuilt('node-addon', NODE_ADDON)`으로 적고, `tests/scripts/requires.mts`의 `NODE_ADDON`이 그 경로의 유일한 정의다(H35.209, HR-85, HY-133.2). 입력: `make node-addon`을 하지 않은 checkout. 이전 동작: `benchmark-uploads`, `multipart-compare`, `session-holder`, `session-redis-failure`, `session-redis-failover`, `session-shared-redis`, `session-redis-cluster`, `session-lost-lock`이 Node process에서 `CoreBindingError: ... Cannot find module './hyper.<platform>.node'`로 실패했고, `session-shared`, `upload-servers`, `fixture-program`은 각자 경로를 복사해 가졌다. 지금: 각 test가 없는 경로와 `make node-addon`을 적고 실패한다.
