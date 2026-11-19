@@ -15564,7 +15564,10 @@
               "sentence": "HY-38.9",
               "state": "`unchanged` states whether the region data `data` is the same after the selection, because the kept values never change `regions`."
             }
-          }
+          },
+          "members": [
+            "kept.select"
+          ]
         }
       }
     },
