@@ -7541,6 +7541,10 @@
                 "node": {
                   "symbol": "packages/ts/src/form/files.ts::Files.sizes",
                   "signature": "sizes(): number[]"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_files.py::Files.sizes",
+                  "signature": "def sizes(self) -> list[int]"
                 }
               }
             }
@@ -11606,6 +11610,12 @@
                   "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::plain",
                   "signature": "public static function plain(mixed $value): mixed"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-44.6"
               }
             }
           ]
