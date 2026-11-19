@@ -7211,6 +7211,21 @@
                   "signature": "def largest(self) -> int"
                 }
               }
+            },
+            {
+              "id": "files.sizes",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "list<number>",
+              "errors": [],
+              "state": "Returns the size in bytes of each file, in the order of the pairs (HY-114).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/Files.php::Polyspec\\Hyper\\Files::sizes",
+                  "signature": "public function sizes(): array"
+                }
+              }
             }
           ]
         },
@@ -11258,6 +11273,23 @@
                   "signature": "def _walk(value: object) -> None"
                 }
               }
+            },
+            {
+              "id": "data-model.plain",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the value with each JsonSerializable replaced by its value, read once (HY-44.6).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::plain",
+                  "signature": "public static function plain(mixed $value): mixed"
+                }
+              }
             }
           ]
         },
@@ -11572,6 +11604,40 @@
                   "python"
                 ],
                 "sentence": "HY-54.18"
+              }
+            },
+            {
+              "id": "json-codec.isList",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a value that the core gives is a list (HY-54.20).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::isList",
+                  "signature": "public static function isList(mixed $value): bool"
+                }
+              }
+            },
+            {
+              "id": "json-codec.mapEntries",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<map<value>>",
+              "errors": [],
+              "state": "Returns the entries of a value that the core gives as a map, or null for another value (HY-54.20).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::mapEntries",
+                  "signature": "public static function mapEntries(mixed $value): ?array"
+                }
               }
             }
           ]
