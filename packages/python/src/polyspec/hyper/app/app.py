@@ -49,7 +49,7 @@ type _SessionOpening = SessionStore | Callable[[], SessionStore]
 
 
 _FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
-# The error classes of the package polyspec.orm, one for each category of its contract (HY-107.7).
+# The names of the error classes of the orm library, one for each category of its contract (HY-107.11).
 _ORM_ERROR_CLASSES = frozenset(
     (
         "ORMValueError",
@@ -751,7 +751,7 @@ class App:
                 {Request: given, MediaType: media, "request": given, "media": media},
             )
         except Exception as error:
-            # HY-107.7, HY-122.12: an error of the ORM is known by its class and its kind.
+            # HY-107.11, HY-122.12: an error of the ORM is known by the name of its class and its kind.
             kind = App._orm_kind(error)
             if kind == "no_rows":
                 return Response.text(404, "Not Found").with_header("Vary", vary)
@@ -879,19 +879,11 @@ class App:
 
     @staticmethod
     def _orm_kind(error: Exception) -> str | None:
-        """The kind of an error of the ORM, or None for every other error (HY-107.7): an error of one of the error
-        classes of the package polyspec.orm, with its kind in `kind`. Only the kind string reaches the core (HY-107.10).
-        The module and the name stand for the class until the package is a dependency of hyper (H35.45-3)."""
+        """The kind of an error of the ORM, or None for every other error (HY-107.11): an error whose class has the name
+        of one of the error classes of the orm library, with its kind in `kind`. hyper does not depend on the orm
+        package, so the name stands for the class. Only the kind string reaches the core (HY-107.10)."""
         kind = getattr(error, "kind", None)
-        cls = type(error)
-        if (
-            cls.__name__ not in _ORM_ERROR_CLASSES
-            or not (
-                cls.__module__ == "polyspec.orm"
-                or cls.__module__.startswith("polyspec.orm.")
-            )
-            or not isinstance(kind, str)
-        ):
+        if type(error).__name__ not in _ORM_ERROR_CLASSES or not isinstance(kind, str):
             return None
         return kind
 

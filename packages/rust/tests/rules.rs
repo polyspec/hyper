@@ -334,7 +334,7 @@ fn page_tags_replace_the_masked_token() {
 
 #[test]
 fn errors_of_the_orm_are_answered_by_their_kind() {
-    // HY-107.7 to HY-107.9, HY-122.12
+    // HY-107.8, HY-107.9, HY-107.11, HY-122.12
     assert_eq!(answer("no_rows", Escape::Loader), OrmAnswer::NotFound);
     assert_eq!(
         answer("revision_changed", Escape::Action),

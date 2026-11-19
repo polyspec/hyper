@@ -5494,8 +5494,8 @@
     },
     {
       "id": "orm-recognition",
-      "rule": "HY-107.7",
-      "reason": "HY-107.7, B-4: an error of the ORM is recognized by the error classes of the orm package and its kind, not by the class name OrmException or OrmError and the property code_ or code",
+      "rule": "HY-107.11",
+      "reason": "HY-107.11, B-4: an error of the ORM is recognized by the name of one of the error classes of the orm library and its kind, not by the class name OrmException or OrmError and the property code_ or code",
       "symbol": "App (loader, action and representation answers)",
       "from": {
         "php": "OrmException::$code_",

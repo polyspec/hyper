@@ -13,7 +13,7 @@ import { App, ArraySession, BadRequest, Forbidden, NotFound, Redirect, Result, t
 import { Session } from '../../src/session/session.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
-import { bytesOf, ormError, ormErrors, requestFrom } from '../support.js';
+import { bytesOf, ormError, requestFrom } from '../support.js';
 import { listOf, mapOf, textOf } from '../inputs.js';
 import { comparesParts } from './parts-cases.js';
 import { comparesOpen, failureOf, Recorded, RecordingStore } from './recorded.js';
@@ -591,8 +591,6 @@ function occurrences(text: string, part: string): number {
 
 export const steps = {
   async cases(reader: CaseReader): Promise<void> {
-    // The errors of the orm package that a handler of the case raises (HY-107.7).
-    await ormErrors();
     reader.input('valueKinds');
     const opening = openingOf(reader);
     const { run, recorded } = opening;

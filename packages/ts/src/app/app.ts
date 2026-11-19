@@ -168,7 +168,7 @@ const APP_OPTIONAL = ['basePath', 'https', 'frameAncestors', 'bodyLimit', 'formT
 
 // The media types of the request bodies that an application may accept (HY-59).
 const FORM_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data'];
-// The error classes of the orm package, one for each category of its contract (HY-107.7).
+// The names of the error classes of the orm library, one for each category of its contract (HY-107.11).
 const ORM_ERROR_CLASSES = new Set(['OrmValueError', 'OrmTypeError', 'OrmStoreError', 'OrmBusyError', 'OrmIoError', 'OrmInternalError']);
 // The media types of the page and of the JSON of hyper, in the order of ties (HY-116).
 const PAGE_TYPE = 'text/html';
@@ -665,7 +665,7 @@ export class App<S extends object = Record<string, never>> {
     try {
       returned = await handle({ request: request.asRepresentation(value), media: new MediaType(values, contentType), services: this.services });
     } catch (error) {
-      // HY-107.7, HY-122.12: an error of the ORM is known by its class and its kind.
+      // HY-107.11, HY-122.12: an error of the ORM is known by the name of its class and its kind.
       const kind = App.ormKind(error);
       if (kind === 'no_rows') return Response.text(404, 'Not Found').withHeader('Vary', vary);
       if (kind === 'revision_changed') return Response.text(412, 'Precondition Failed').withHeader('Vary', vary);
@@ -737,9 +737,9 @@ export class App<S extends object = Record<string, never>> {
     return App.withoutRenewal(reply, await this.page.respond(rendered, route, handler, session, flash, { result: null, masked: request.csrfToken() }, reply, basePath));
   }
 
-  // The kind of an error of the ORM, or undefined for every other error (HY-107.7): an error of one of the error classes
-  // of the orm package, which the binding of orm names in `name`, with its kind in `kind`. Only the kind string reaches
-  // the core (HY-107.10). The name stands for the class until the package is a dependency of hyper (H35.45-1).
+  // The kind of an error of the ORM, or undefined for every other error (HY-107.11): an error whose `name` is the name of
+  // one of the error classes of the orm library, with its kind in `kind`. hyper does not depend on the orm package, so
+  // the name stands for the class. Only the kind string reaches the core (HY-107.10).
   private static ormKind(error: unknown): string | undefined {
     if (!(error instanceof Error) || !ORM_ERROR_CLASSES.has(error.name) || !('kind' in error)) return undefined;
     return typeof error.kind === 'string' ? error.kind : undefined;

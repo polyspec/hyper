@@ -9,7 +9,7 @@ import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
 import { parsed } from '../case-rules.js';
 import { mapOf, plain, stringsOf, textOf, textsOf } from '../inputs.js';
-import { list, ormError, ormErrors, parsedBody, record, requestFrom } from '../support.js';
+import { list, ormError, parsedBody, record, requestFrom } from '../support.js';
 import { failureOf, messageStart } from './recorded.js';
 
 const PROGRAMS = fileURLToPath(new URL('../../../../var/contract-programs/', import.meta.url));
@@ -44,8 +44,8 @@ const rejected: RepresentationHandler<Services> = () => {
 };
 
 // Returns the representation handler of a case: it records what it received, with the service that `handler.service`
-// names (HY-105), and answers what the case states; a handler with `throw` raises the error of the orm package that it
-// names (HY-107.7, HY-122.12).
+// names (HY-105), and answers what the case states; a handler with `throw` raises the error of the ORM that it names
+// (HY-107.11, HY-122.12).
 function handlerOf(spec: Map<string, unknown> | null, calls: Observed[]): RepresentationHandler<Services> {
   const service = spec?.has('service') === true ? serviceName(spec.get('service')) : null;
   const raises = spec?.has('throw') === true ? ormError(spec.get('throw'), 'the representation handler') : null;
@@ -148,8 +148,6 @@ export const steps = {
   },
 
   async cases(reader: CaseReader): Promise<void> {
-    // The errors of the orm package that a handler of the case raises (HY-107.7).
-    await ormErrors();
     const calls: Observed[] = [];
     const spec = reader.has('handler') ? mapOf(reader.input('handler'), 'handler') : null;
     const app = await App.open<Services>({

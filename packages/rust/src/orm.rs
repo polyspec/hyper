@@ -24,7 +24,7 @@ pub enum OrmAnswer {
     Unhandled,
 }
 
-/// The answer of an error of the ORM by its kind (HY-107.7 to HY-107.9, HY-122.12).
+/// The answer of an error of the ORM by its kind (HY-107.8, HY-107.9, HY-107.11, HY-122.12).
 #[must_use]
 pub fn answer(kind: &str, escape: Escape) -> OrmAnswer {
     match (kind, escape) {

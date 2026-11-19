@@ -6874,7 +6874,8 @@
           "retired": [
             2,
             3,
-            4
+            4,
+            7
           ],
           "blocks": [
             {
@@ -6887,11 +6888,11 @@
                   "koSource": "5d00767c6d55e0af6010de1edb3fd1041cee3d6c13929d06d3596ac6b68bb9ae"
                 },
                 {
-                  "id": "HY-107.7",
-                  "en": "The server recognizes an error of the ORM by the error classes of the orm package and by its kind, so hyper depends on the orm package, and the kinds `no_rows` and `revision_changed` are kinds that the orm library states.",
-                  "ko": "server는 ORM의 오류를 orm 패키지의 오류 class와 그 kind로 알아보므로 hyper는 orm 패키지에 의존하며, kind `no_rows`와 `revision_changed`는 orm 라이브러리가 정한 kind다.",
-                  "koSource": "0e78a81022ef8184bde36a5a8f7c952578cf48fe09b2284336de2af03fd18160",
-                  "unimplemented": "H35.45"
+                  "id": "HY-107.11",
+                  "en": "The server recognizes an error of the ORM by the name of its class, without its namespace, which is one of the error classes that the orm library states for each category of its contract, such as `OrmValueError` and `OrmStoreError`, and by its kind, so hyper does not depend on the orm package, and the kinds `no_rows` and `revision_changed` are kinds that the orm library states.",
+                  "ko": "server는 ORM의 오류를, orm 라이브러리가 그 계약의 범주마다 정한 오류 class 가운데 하나(`OrmValueError`, `OrmStoreError` 등)인 namespace 없는 그 class의 이름과 그 kind로 알아보므로 hyper는 orm 패키지에 의존하지 않으며, kind `no_rows`와 `revision_changed`는 orm 라이브러리가 정한 kind다.",
+                  "koSource": "1086b6f413f9eced1fe5b0e3decf5ff6c600310906c772f765e81b92cee54ac9",
+                  "unimplemented": "H35.45-4"
                 },
                 {
                   "id": "HY-107.10",

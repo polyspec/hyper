@@ -5,7 +5,6 @@ import io
 import json
 import tempfile
 from pathlib import Path
-from typing import Callable
 
 from polyspec.hyper.session._session import _TOKEN_KEY
 from polyspec.hyper.app.app import App
@@ -21,87 +20,39 @@ from .container_steps import SERVICES
 from .recorded import decoded
 
 
-_PACKAGES = Path(__file__).resolve().parents[3]
-_ORM_FIXTURE = _PACKAGES / "php" / "tests" / "fixtures" / "orm-errors.json"
-_orm_caught: dict[str, Exception] | None = None
+class ORMValueError(Exception):
+    """An error of the ORM that a case throws, known to the server by the name of its class and its kind (HY-107.11)."""
+
+    def __init__(self, kind: str) -> None:
+        super().__init__(kind)
+        self.kind = kind
+
+
+class ORMStoreError(Exception):
+    """An error of the store of the ORM that a case throws, known to the server by its class name and kind (HY-107.11)."""
+
+    def __init__(self, kind: str) -> None:
+        super().__init__(kind)
+        self.kind = kind
+
+
+# The class of each error of the ORM that a case names, under the name of the orm library (HY-107.11).
+_ORM_CLASSES: dict[str, type[ORMValueError] | type[ORMStoreError]] = {
+    "OrmValueError": ORMValueError,
+    "OrmStoreError": ORMStoreError,
+}
 
 
 def orm_error(thrown: object, what: str) -> Exception:
-    """Returns the error of the orm package that the `throw` of a case names by its class and its kind (HY-107.7),
-    which a real orm call raised."""
+    """Returns the error of the ORM that the `throw` of a case names by its class and its kind (HY-107.11), an error of
+    a class of that name with that kind, because hyper does not depend on the orm package."""
     if (
         not isinstance(thrown, dict)
-        or not isinstance(thrown.get("class"), str)
+        or thrown.get("class") not in _ORM_CLASSES
         or not isinstance(thrown.get("kind"), str)
     ):
-        raise LookupError(f"the throw of {what} names no class and kind")
-    key = f"{thrown['class']}:{thrown['kind']}"
-    error = _orm_errors().get(key)
-    if error is None:
-        raise LookupError(f"{what} throws {key}, which _orm_errors does not get")
-    return error
-
-
-def _orm_errors() -> dict[str, Exception]:
-    """Gets the errors of the orm package that the cases throw by real calls on a SQLite file of
-    packages/php/tests/fixtures/orm-errors.json in a temporary directory, as the generated tests of orm 0.0.34 make them
-    (test_generated.py): an update with an expected revision that the row does not hold gives `revision_changed` (line
-    9203, test_b4_query_update_a_changed_revision), an update with require_match of a key that no row holds gives
-    `no_rows` (line 9313), and a connection to a file in a missing directory gives the ORMStoreError `driver` (line
-    3219). The database is closed and the directory removed before it returns (HR-87); the errors are kept."""
-    global _orm_caught
-    if _orm_caught is not None:
-        return _orm_caught
-    import polyspec.orm as orm
-
-    fixture = json.loads(_ORM_FIXTURE.read_text(encoding="utf-8"))
-    caught: dict[str, Exception] = {}
-    with tempfile.TemporaryDirectory(prefix="hyper-orm-errors-") as directory:
-        schema = orm.Schema.load(fixture["manifest"], "", fixture["manifestHash"])
-        db = orm.Db.connect_schema(f"sqlite://{directory}/shop.db", schema, 1)
-        try:
-            for step in fixture["steps"]:
-                db.execute(step, [])
-            changed = orm.Query.new(schema, fixture["entity"])
-            changed.connect(db)
-            changed.set("id", orm.IntegerValue(fixture["revisionChanged"]["key"]))
-            changed.set("qty", orm.IntegerValue(fixture["revisionChanged"]["qty"]))
-            changed.expect_revision(
-                fixture["revisionChanged"]["revisionColumn"],
-                fixture["revisionChanged"]["revision"],
-            )
-            caught["OrmValueError:revision_changed"] = _raised(changed.update)
-            missing = orm.Query.new(schema, fixture["entity"])
-            missing.connect(db)
-            missing.set("id", orm.IntegerValue(fixture["noRows"]["key"]))
-            missing.set("qty", orm.IntegerValue(fixture["noRows"]["qty"]))
-            missing.require_match()
-            caught["OrmValueError:no_rows"] = _raised(missing.update)
-        finally:
-            db.close()
-        caught["OrmStoreError:driver"] = _raised(
-            lambda: orm.Db.connect(f"sqlite://{directory}/{fixture['driver']}", 1)
-        )
-    for key, error in caught.items():
-        name, kind = key.split(":")
-        if (
-            type(error).__name__ != "ORM" + name[3:]
-            or getattr(error, "kind", None) != kind
-        ):
-            raise LookupError(
-                f"the orm call for {key} raised {type(error).__name__}: {error}"
-            )
-    _orm_caught = caught
-    return caught
-
-
-def _raised(call: Callable[[], object]) -> Exception:
-    """The error that a call raises; a call that returns fails, since the case needs its error."""
-    try:
-        call()
-    except Exception as error:  # noqa: BLE001 - the case needs the error that the orm call raises, whatever it is
-        return error
-    raise LookupError("an orm call that must fail returned")
+        raise LookupError(f"the throw of {what} names no class of the ORM and kind")
+    return _ORM_CLASSES[thrown["class"]](thrown["kind"])
 
 
 def manifest_rejections(case: CaseReader) -> None:
@@ -287,7 +238,7 @@ def _handler(spec: dict | None, calls: list):
 
     def answer(request: Request, media: MediaType, received: dict) -> Representation:
         calls.append({**_observed(request, media), **received})
-        # HY-107.7, HY-122.12: a handler with `throw` raises the error of the orm package that it names.
+        # HY-107.11, HY-122.12: a handler with `throw` raises the error of the ORM that it names.
         if raises is not None:
             raise raises
         if spec is None:

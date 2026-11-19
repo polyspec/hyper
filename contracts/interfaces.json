@@ -831,7 +831,7 @@
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Returns the kind of an error of an error class of the orm package, OrmValueError to OrmInternalError, or null for another error (HY-107.7).",
+              "state": "Returns the kind of an error whose class has the name of an error class of the orm library, OrmValueError to OrmInternalError, or null for another error (HY-107.11).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::ormKind",

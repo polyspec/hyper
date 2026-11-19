@@ -31,14 +31,14 @@ final class App
     /** The media type of a document (HY-15, HY-116). */
     private const PAGE_TYPE = 'text/html';
 
-    /** The error classes of the orm package, one for each category of its contract (HY-107.7). */
+    /** The names of the error classes of the orm library, one for each category of its contract (HY-107.11). */
     private const ORM_ERROR_CLASSES = [
-        'Polyspec\\Orm\\OrmValueError',
-        'Polyspec\\Orm\\OrmTypeError',
-        'Polyspec\\Orm\\OrmStoreError',
-        'Polyspec\\Orm\\OrmBusyError',
-        'Polyspec\\Orm\\OrmIoError',
-        'Polyspec\\Orm\\OrmInternalError',
+        'OrmValueError',
+        'OrmTypeError',
+        'OrmStoreError',
+        'OrmBusyError',
+        'OrmIoError',
+        'OrmInternalError',
     ];
 
     /** The media type of a JSON response (HY-15, HY-116). */
@@ -807,7 +807,7 @@ final class App
                 MediaType::class => new MediaType($values, $contentType),
             ]);
         } catch (\Throwable $error) {
-            // HY-107.7, HY-122.12: an error of the ORM is known by its class and its kind.
+            // HY-107.11, HY-122.12: an error of the ORM is known by the name of its class and its kind.
             return match (self::ormKind($error)) {
                 'no_rows' => Response::text(404, 'Not Found')->withHeader('Vary', $vary),
                 'revision_changed' => Response::text(412, 'Precondition Failed')->withHeader('Vary', $vary),
@@ -944,17 +944,18 @@ final class App
     }
 
     /**
-     * The kind of an error of the ORM, or null for every other error (HY-107.7): an error of one of the error classes
-     * of the extension polyspec_orm of the package polyspec/orm, whose method `kind()` gives its kind
-     * (GeneratedTest.php of orm 0.0.34, line 9637). Only the kind string reaches the core (HY-107.10). The classes are
-     * compared by their names with the class of the error and its parents, because the package is not a dependency
-     * until H35.45-2 pins its release: the server runs without the extension, and the analysis reads no declaration
-     * of it.
+     * The kind of an error of the ORM, or null for every other error (HY-107.11): an error whose class, or a parent of
+     * it, has the name of one of the error classes of the orm library without its namespace, and whose method `kind()`
+     * gives its kind. hyper does not depend on the orm package, so the name stands for the class. Only the kind string
+     * reaches the core (HY-107.10).
      */
     private static function ormKind(\Throwable $error): ?string
     {
-        $classes = [$error::class, ...array_values(class_parents($error))];
-        if (array_intersect($classes, self::ORM_ERROR_CLASSES) === [] || !method_exists($error, 'kind')) {
+        $names = array_map(
+            static fn (string $class): string => substr(strrchr('\\' . $class, '\\') ?: $class, 1),
+            [$error::class, ...array_values(class_parents($error))],
+        );
+        if (array_intersect($names, self::ORM_ERROR_CLASSES) === [] || !method_exists($error, 'kind')) {
             return null;
         }
         $kind = $error->kind();

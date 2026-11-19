@@ -261,7 +261,7 @@ final class ContextRun
             };
         }
         if (array_key_exists('throw', $spec)) {
-            // HY-107: the loader raises the error of the orm package that its throw names.
+            // HY-107: the loader raises the error of the ORM that its throw names.
             $error = CaseRules::ormError($spec['throw'], "the loader {$name}");
 
             return static function () use ($error): array {
@@ -304,7 +304,7 @@ final class ContextRun
                 // HY-72.1: the action calls renewSession of its reply first.
                 $reply->renewSession();
             }
-            // HY-107: the action raises the error of the orm package that its throw names.
+            // HY-107: the action raises the error of the ORM that its throw names.
             if ($error !== null) {
                 throw $error;
             }

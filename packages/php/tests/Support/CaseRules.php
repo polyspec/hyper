@@ -29,170 +29,21 @@ final class CaseRules
         'bodyNotContains' => 'excludes',
     ];
 
-    /** @var array<string, \Throwable>|null the errors of the orm package by `<class>:<kind>`, which ormErrors gets */
-    private static ?array $ormCaught = null;
-
     /**
-     * The error of the orm package that the `throw` of a case names by its class and its kind (HY-107.7), which a real
-     * orm call raised.
+     * The error of the ORM that the `throw` of a case names by its class and its kind (HY-107.11): an error of the
+     * class of that name with that kind, because hyper does not depend on the orm package.
      */
     public static function ormError(mixed $thrown, string $what): \Throwable
     {
-        if (!is_array($thrown) || !is_string($thrown['class'] ?? null) || !is_string($thrown['kind'] ?? null)) {
-            throw new \UnexpectedValueException("the throw of {$what} names no class and kind");
-        }
-        $key = "{$thrown['class']}:{$thrown['kind']}";
-
-        return self::ormErrors()[$key] ?? throw new \UnexpectedValueException(
-            "{$what} throws {$key}, which ormErrors does not get",
-        );
-    }
-
-    /**
-     * Gets the errors of the orm package that the cases throw by real calls on a SQLite file of
-     * packages/php/tests/fixtures/orm-errors.json in a temporary directory, as the generated tests of orm 0.0.34 make
-     * them (GeneratedTest.php): an update with an expected revision that the row does not hold gives `revision_changed`
-     * (line 9603, testB4QueryUpdateAChangedRevision), an update with requireMatch of a key that no row holds gives
-     * `no_rows` (line 9719), and a connection to a file in a missing directory gives the OrmStoreError `driver` (line
-     * 1497). The database is closed and the directory removed before it returns (HR-87); the errors are kept.
-     *
-     * @return array<string, \Throwable>
-     */
-    private static function ormErrors(): array
-    {
-        if (self::$ormCaught !== null) {
-            return self::$ormCaught;
-        }
-        $fixture = Json::file(__DIR__ . '/../fixtures/orm-errors.json');
-        $changedRow = Json::map($fixture['revisionChanged'] ?? null, 'revisionChanged');
-        $missingRow = Json::map($fixture['noRows'] ?? null, 'noRows');
-        $entity = Json::string($fixture['entity'] ?? null);
-        $directory = sys_get_temp_dir() . '/hyper-orm-errors-' . bin2hex(random_bytes(8));
-        if (!mkdir($directory, 0700)) {
-            throw new \RuntimeException("{$directory} cannot be made");
-        }
-        $caught = [];
-        try {
-            $schema = self::ormStatic(
-                'Schema',
-                'load',
-                Json::string($fixture['manifest'] ?? null),
-                '',
-                Json::string($fixture['manifestHash'] ?? null),
-            );
-            $db = self::ormStatic('Db', 'connectSchema', "sqlite://{$directory}/shop.db", $schema, 1);
-            try {
-                foreach (Json::strings($fixture['steps'] ?? null) as $step) {
-                    self::ormCall($db, 'execute', $step, []);
-                }
-                $changed = self::ormStatic('Query', 'new', $schema, $entity);
-                self::ormCall($changed, 'connect', $db);
-                $id = self::ormNew('IntegerValue', Json::integer($changedRow['key'] ?? null, 'key'));
-                self::ormCall($changed, 'set', 'id', $id);
-                $qty = self::ormNew('IntegerValue', Json::integer($changedRow['qty'] ?? null, 'qty'));
-                self::ormCall($changed, 'set', 'qty', $qty);
-                self::ormCall(
-                    $changed,
-                    'expectRevision',
-                    Json::string($changedRow['revisionColumn'] ?? null),
-                    Json::integer($changedRow['revision'] ?? null, 'revision'),
-                );
-                $caught['OrmValueError:revision_changed'] = self::raised(
-                    static fn () => self::ormCall($changed, 'update'),
-                );
-                $missing = self::ormStatic('Query', 'new', $schema, $entity);
-                self::ormCall($missing, 'connect', $db);
-                $id = self::ormNew('IntegerValue', Json::integer($missingRow['key'] ?? null, 'key'));
-                self::ormCall($missing, 'set', 'id', $id);
-                $qty = self::ormNew('IntegerValue', Json::integer($missingRow['qty'] ?? null, 'qty'));
-                self::ormCall($missing, 'set', 'qty', $qty);
-                self::ormCall($missing, 'requireMatch');
-                $caught['OrmValueError:no_rows'] = self::raised(
-                    static fn () => self::ormCall($missing, 'update'),
-                );
-            } finally {
-                self::ormCall($db, 'close');
-            }
-            $caught['OrmStoreError:driver'] = self::raised(
-                static fn () => self::ormStatic(
-                    'Db',
-                    'connect',
-                    "sqlite://{$directory}/" . Json::string($fixture['driver'] ?? null),
-                    1,
-                ),
-            );
-        } finally {
-            foreach (glob("{$directory}/*") ?: [] as $file) {
-                unlink($file);
-            }
-            rmdir($directory);
-        }
-        foreach ($caught as $key => $error) {
-            [$class, $kind] = explode(':', $key);
-            if (
-                $error::class !== "Polyspec\\Orm\\{$class}"
-                || !method_exists($error, 'kind')
-                || $error->kind() !== $kind
-            ) {
-                throw new \UnexpectedValueException(
-                    "the orm call for {$key} raised " . $error::class . ": {$error->getMessage()}",
-                );
-            }
+        if (!is_array($thrown) || !is_string($thrown['kind'] ?? null)) {
+            throw new \UnexpectedValueException("the throw of {$what} names no class of the ORM and kind");
         }
 
-        return self::$ormCaught = $caught;
-    }
-
-    /**
-     * Calls the static method `$method` of the class `$class` of the orm package and returns the object that it
-     * returns. The package is not a dependency of hyper until H35.45-2 pins its release, so the analysis reads no
-     * declaration of it, and the call checks the class and the method when it runs (HY-107.7).
-     */
-    private static function ormStatic(string $class, string $method, mixed ...$arguments): object
-    {
-        $callable = ["Polyspec\\Orm\\{$class}", $method];
-        if (!is_callable($callable)) {
-            throw new \UnexpectedValueException("the orm package has no {$class}::{$method}");
-        }
-        $result = $callable(...$arguments);
-        if (!is_object($result)) {
-            throw new \UnexpectedValueException("{$class}::{$method} of the orm package returned no object");
-        }
-
-        return $result;
-    }
-
-    /** Calls the method `$method` of an object of the orm package, which the call checks as ormStatic does. */
-    private static function ormCall(object $target, string $method, mixed ...$arguments): mixed
-    {
-        $callable = [$target, $method];
-        if (!is_callable($callable)) {
-            throw new \UnexpectedValueException('the object ' . $target::class . " has no method {$method}");
-        }
-
-        return $callable(...$arguments);
-    }
-
-    /** Makes an object of the class `$class` of the orm package, which the call checks as ormStatic does. */
-    private static function ormNew(string $class, mixed ...$arguments): object
-    {
-        $name = "Polyspec\\Orm\\{$class}";
-        if (!class_exists($name)) {
-            throw new \UnexpectedValueException("the orm package has no class {$class}");
-        }
-
-        return new $name(...$arguments);
-    }
-
-    /** The error that a call raises; a call that returns fails, since the case needs its error. */
-    private static function raised(\Closure $call): \Throwable
-    {
-        try {
-            $call();
-        } catch (\Throwable $error) {
-            return $error;
-        }
-        throw new \UnexpectedValueException('an orm call that must fail returned');
+        return match ($thrown['class'] ?? null) {
+            'OrmValueError' => new OrmValueError($thrown['kind']),
+            'OrmStoreError' => new OrmStoreError($thrown['kind']),
+            default => throw new \UnexpectedValueException("the throw of {$what} names no class of the ORM and kind"),
+        };
     }
 
     /** @return array<string, array<array-key, mixed>> the `caseFiles` of contracts/interfaces.json and of tests/legacy/interfaces.json */

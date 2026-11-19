@@ -10,13 +10,13 @@ import { decoded } from './session-requests.js';
 import { App, ArraySession, NotFound, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
 import type { Value } from '../../src/data/values.js';
 import type { CaseReader } from '../case-reader.js';
-import { ormError, ormErrors, parsedBody, record, requestFrom } from '../support.js';
+import { ormError, parsedBody, record, requestFrom } from '../support.js';
 
 // An action of an application of a case: it renews the session when `renew` is true, and then redirects, redirects to
 // an outside location when `outside` is true (HY-132), or returns a page with its data.
 interface Action {
   renew: boolean;
-  // The error of the orm package that the action raises (HY-107), or null.
+  // The error of the ORM that the action raises (HY-107), or null.
   raises: Error | null;
   redirect: string | null;
   outside: boolean;
@@ -113,7 +113,7 @@ function applicationOf(value: unknown, name: string): Application {
 
 // Returns what a loader of a case returns: it calls renewSession of its reply and returns an empty map for
 // `renew: true` (HY-72.4), and returns its stated data otherwise.
-// A loader with `throw` raises the error of the orm package that it names (HY-107).
+// A loader with `throw` raises the error of the ORM that it names (HY-107).
 function loaded(spec: Map<string, unknown>, reply: Reply, name: string): Map<string, unknown> {
   if (spec.has('throw')) throw ormError(spec.get('throw'), `the loader ${name}`);
   if (spec.get('renew') === true) {
@@ -256,8 +256,6 @@ export const steps = {
   // Opens the application of a case with its shared data and its context, sends its request and compares the response,
   // the failure that the response hook received (HY-60), the context calls and the shared data.
   async cases(reader: CaseReader): Promise<void> {
-    // The errors of the orm package that a loader or an action of the application raises (HY-107.7).
-    await ormErrors();
     const name = stringField(reader, 'application');
     const applications = reader.input('applications');
     if (!(applications instanceof Map) || !applications.has(name)) throw new Error(`the contract has no application ${name}`);
