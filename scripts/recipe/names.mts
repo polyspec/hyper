@@ -85,8 +85,19 @@ export function expectedVisibility(lang: Lang, v: Visibility): Visibility {
   return lang === 'python' && v === 'private' ? 'internal' : v;
 }
 
-/** The test key of a native test reference `<file>::<name>: <reason>`. */
-export function testKey(ref: string): string {
+/**
+ * The test key of a native test reference `<file>::<name>: <reason>`. A name may hold `: ` itself, so when the known
+ * test keys are given, the key is the longest known key that the reference starts with; otherwise the first `: ` ends it.
+ */
+export function testKey(ref: string, known?: ReadonlySet<string>): string {
+  if (known !== undefined) {
+    let best: string | undefined;
+    for (let at = ref.indexOf(': '); at >= 0; at = ref.indexOf(': ', at + 1)) {
+      const candidate = ref.slice(0, at);
+      if (known.has(candidate) && (best === undefined || candidate.length > best.length)) best = candidate;
+    }
+    if (best !== undefined) return best;
+  }
   const at = ref.indexOf(': ', ref.indexOf('::') + 2);
   return at < 0 ? ref : ref.slice(0, at);
 }
