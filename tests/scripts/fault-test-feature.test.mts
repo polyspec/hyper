@@ -9,7 +9,7 @@ const lines = (target: string) => dryRun(target).join('\n');
 
 test('the PHP extension of the tests is built with fault-test into its own directory (H35.11-3)', () => {
   const commands = lines('hyper-ext-test');
-  assert.match(commands, /cargo build \S*--features fault-test\b/, commands);
+  assert.match(commands, / build --locked [^\n]*--features fault-test\b/, commands);
   assert.match(commands, /build\/hyper-ext-test/, commands);
 });
 
