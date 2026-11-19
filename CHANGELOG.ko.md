@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: f8736ce51f296f62cf9debde64b7014684bf79b2a9df9f0f6f07e5abe28322c6 -->
+<!-- source-sha256: d48da706c6b8ab0a62a941164c428b68a95e3fa8e3d61bb13f502bdc361a2774 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- node와 python host가 reply의 helper 멤버 없이 응답의 Referrer-Policy 헤더를 비교한다(H35.134). 입력: `contracts/reply.json`의 reply case 중 Referrer-Policy가 있는 reply. 이전 동작: node의 `referrerPolicyHeaders`와 python의 `_referrer_policy_headers`에 페이지 경로의 호출자가 없었고, `make recipe-check`이 둘 다 도달되지 않은 것으로 보고했다(HY-103). 기대 동작: 각 host의 페이지 경로는 core가 계산한 페이지 헤더로 헤더를 내보내고, step은 같은 헤더를 비교하며, case가 통과한다. `reply.referrerPolicyHeaders`는 PHP 페이지 경로가 호출하는 PHP 항목을 유지한다.
 - PHP `Kept`이 map의 항목을 node와 python host처럼 자신의 `mapEntries` 멤버로 읽는다(H35.133). 입력: 데이터 값과 다른 종류의 값으로 kept된 list 또는 map. 이전 동작: `Kept`에 `mapEntries` 멤버가 없어 `make recipe-check`이 PHP에서 `kept.mapEntries`를 도달되지 않은 것으로 보고했고, 계약은 소스에 없는 멤버를 가리켰다. 기대 동작: `Kept::mapEntries`는 `JsonCodec::mapEntries`와 같은 항목을 주고, 세 host는 같은 값을 유지하며(HY-104.22), `contracts/keep.json`에 kept list가 map에 닿는 case가 있다.
 - PHP session은 session cookie 이름을 생성자의 셋째 인자로 받고, host가 core에서 그 이름을 읽는다(H35.129). 입력: session을 읽거나 쓰는 PHP 요청. 이전 동작: `NativeSession`이 `CoreRules::sessionCookieName`으로 이름을 직접 읽어 session 멤버가 core 규칙에 닿았고, TS와 Python host는 host에서 읽었다. 현재 동작: `App::serve`가 `CoreRules::shared()->sessionCookieName(...)`을 넘기고(`packages/php/src/App/App.php`), 생성자가 그것을 받는다(HY-104.45). 검증: install 승인 전이라 아직 실행하지 않았다.
 - PHP 서버가 session cookie를 응답에 쓰고, session은 그 이름만 정한다(H35.129). 입력: PHP 서버에서 session을 시작하거나 갱신하는 요청. 이전 동작: `NativeSession`이 `header()`로 `Set-Cookie` 줄을 직접 보냈고, TS와 Python host는 응답에 쓴다(HY-45.8, HY-104.40). 현재 동작: `NativeSession::cookieHeader()`가 field 값을 주고, `App::serve`가 응답의 쿠키 맨 앞에 그것을 쓴다(`packages/php/src/App/App.php`, `packages/php/src/Http/Response.php`). 검증: install 승인 전이라 아직 실행하지 않았다.

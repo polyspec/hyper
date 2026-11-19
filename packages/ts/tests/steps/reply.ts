@@ -76,8 +76,9 @@ export const steps = {
   // Records the Referrer-Policy of the reply and its headers (HY-103).
   referrerPolicy(reader: CaseReader): void {
     const reply = applied(reader, true);
-    reader.compare('value', reply.referrerPolicyValue());
-    reader.compare('headers', new Map(Object.entries(reply.referrerPolicyHeaders())));
+    const value = reply.referrerPolicyValue();
+    reader.compare('value', value);
+    reader.compare('headers', new Map(value === null ? [] : [['Referrer-Policy', value]]));
   },
   // Records the page status of the reply (HY-69).
   status(reader: CaseReader): void {

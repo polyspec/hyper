@@ -5472,15 +5472,13 @@
                 "php": {
                   "symbol": "packages/php/src/Http/Reply.php::Polyspec\\Hyper\\Reply::referrerPolicyHeaders",
                   "signature": "public function referrerPolicyHeaders(): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/http/reply.ts::Reply.referrerPolicyHeaders",
-                  "signature": "referrerPolicyHeaders(): Record<string, string>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/http/reply.py::Reply._referrer_policy_headers",
-                  "signature": "def _referrer_policy_headers(self) -> dict[str, str]"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-103"
               }
             },
             {
