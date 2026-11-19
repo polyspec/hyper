@@ -2076,6 +2076,53 @@
                   "signature": "def build_check_id(self, text: str) -> None"
                 }
               }
+            },
+            {
+              "id": "core-rules.constructor",
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "core-rules",
+              "errors": [],
+              "state": "Takes the namespace of the functions of the binding and fails with the name of a function that the binding lacks (HY-133.2).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-133.2"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::__construct",
+                  "signature": "public function __construct(string $namespace)"
+                }
+              }
+            },
+            {
+              "id": "core-rules.call",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "list<value>"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Calls a function of the binding of the core with the arguments, and fails with the name of a function that the binding lacks (HY-133.2).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-133.2"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::call",
+                  "signature": "private function call(string $name, mixed ...$arguments): mixed"
+                }
+              }
             }
           ]
         }
