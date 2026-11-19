@@ -134,6 +134,19 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
         the kind alone.
     - `state`: one sentence of what it does.
     - `native`: for each language, the exact `symbol` and the exact `signature` (see below).
+    - **Reexports.** A member of a hyper unit that only passes a call to a member of a library in `release` and converts
+      its types at the boundary is stated as `{"id": "<unit>.<member>", "reexport": "<library>:<unit>.<member>"}`, with
+      no `kind`, `visibility`, `inputs`, `output`, `errors`, `state` or `native`; the library part names the unit and
+      the member by their ids in the library. A unit whose members are all such entries is stated with
+      `"reexport": "<library>:<unit>"` on the unit and an empty `members`. The check does not compare such a member, or
+      the members of such a unit, with the sources, does not reach it and does not count it in the numbers of HYR-5,
+      because the library states and checks that member itself. It verifies that the library unit and member exist in
+      the pinned release: it reads the `interface.json` that the crate `polyspec-<library>` of the library ships beside
+      its `Cargo.toml`, the crate that `packages/rust/Cargo.toml` pins by its tag and `Cargo.lock` locks, and finds the
+      crate by `cargo metadata --locked --offline` of `packages/rust/Cargo.toml` with the cargo command of the
+      Makefile (`--cargo "$(CARGO)"`), as the binding generator does. A unit or member that the file does not list is
+      `REEXPORT_MISSING`, with the file and the name; a crate that is not fetched fails with the name of
+      `make hyper-install-crates`. A spec without reexports starts no cargo.
   - **Types.** A type is a type declaration that is no unit (HYR-3): a Node `type` alias or `interface`, and a Python
     `type` statement. The spec lists it once under `types` with `id` (its words in camelCase), `visibility` (as for a
     member), `unit` (the unit whose file holds it in each language), a neutral `shape` and, for each language that
