@@ -80,31 +80,6 @@ const LIMIT_KINDS = new Set(['body_limit', 'value_limit', 'part_limit', 'file_li
 // Limits that no body passes, for the form of a body whose limits the application judges apart (HY-59.15).
 const UNBOUNDED: BodyLimits = { limit: Number.MAX_SAFE_INTEGER, valueLimit: Number.MAX_SAFE_INTEGER, partLimit: Number.MAX_SAFE_INTEGER, fileLimit: Number.MAX_SAFE_INTEGER };
 
-// The kind of a failure of the core, or null for another error.
-function kindOf(error: unknown): string | null {
-  return error instanceof Error && 'kind' in error && typeof error.kind === 'string' ? error.kind : null;
-}
-
-// The form values and the files of a form of the core.
-function formOf(form: CoreForm): [Fields, Files] {
-  return [Fields.of(form.fields), Files.of(form.files.map(([name, files]) => [name, files.map((file) => UploadedFile.ofCore(file))]))];
-}
-
-// The form values and the files of a body held as one value, read by form_functions.read_held_body (HY-57, HY-113):
-// both null when a part fails with `invalid` or `header_limit` (HY-42, HY-113.23, HY-113.25), and none for a content
-// type that is no media type or a multipart type without a boundary, which the route judges (HY-59.12, HY-113.24); the
-// third member is true for the multipart type without a boundary.
-function heldForm(type: string, body: Uint8Array): HeldForm {
-  try {
-    return [...formOf(rules().formReadHeld(type === '' ? null : type, body, UNBOUNDED)), false];
-  } catch (error) {
-    const kind = kindOf(error);
-    if (kind === 'malformed_content_type' || kind === 'no_boundary') return [Fields.empty(), Files.empty(), kind === 'no_boundary'];
-    if (kind === 'invalid' || kind === 'header_limit') return [null, null, false];
-    throw error;
-  }
-}
-
 export class Request {
   // ignoreBOM keeps a leading U+FEFF as a character, as PHP and Python decode it; the default of TextDecoder drops it.
   private static readonly decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
@@ -124,6 +99,31 @@ export class Request {
   private readonly noBoundary: boolean;
   private readonly media: string | null;
   private readonly read: ReadBody | null;
+
+  // The kind of a failure of the core, or null for another error.
+  private static kindOf(error: unknown): string | null {
+    return error instanceof Error && 'kind' in error && typeof error.kind === 'string' ? error.kind : null;
+  }
+
+  // The form values and the files of a form of the core.
+  private static formOf(form: CoreForm): [Fields, Files] {
+    return [Fields.of(form.fields), Files.of(form.files.map(([name, files]) => [name, files.map((file) => UploadedFile.ofCore(file))]))];
+  }
+
+  // The form values and the files of a body held as one value, read by form_functions.read_held_body (HY-57, HY-113):
+  // both null when a part fails with `invalid` or `header_limit` (HY-42, HY-113.23, HY-113.25), and none for a content
+  // type that is no media type or a multipart type without a boundary, which the route judges (HY-59.12, HY-113.24); the
+  // third member is true for the multipart type without a boundary.
+  private static heldForm(type: string, body: Uint8Array): HeldForm {
+    try {
+      return [...Request.formOf(rules().formReadHeld(type === '' ? null : type, body, UNBOUNDED)), false];
+    } catch (error) {
+      const kind = Request.kindOf(error);
+      if (kind === 'malformed_content_type' || kind === 'no_boundary') return [Fields.empty(), Files.empty(), kind === 'no_boundary'];
+      if (kind === 'invalid' || kind === 'header_limit') return [null, null, false];
+      throw error;
+    }
+  }
 
   // Creates a request from the parts that a host gives. The form values are read from an
   // application/x-www-form-urlencoded body and from the text fields of a multipart/form-data body, without nesting
@@ -150,13 +150,13 @@ export class Request {
     const type = this.headerValues.get('content-type') ?? '';
     if (this.read?.core.streamed() === true) {
       // HY-131.5: a body read in chunks gives its parts, none when it failed (HY-113.25, HY-131.32).
-      [this.formFields, this.fileParts] = this.read.failure === null ? formOf(this.read.core.parts()) : [null, null];
+      [this.formFields, this.fileParts] = this.read.failure === null ? Request.formOf(this.read.core.parts()) : [null, null];
       this.noBoundary = false;
     } else {
       // A body that is one value is read once for the copies of a request, which share it.
       let parts = READ.get(this.body)?.get(type);
       if (parts === undefined) {
-        parts = heldForm(type, this.body);
+        parts = Request.heldForm(type, this.body);
         READ.set(this.body, (READ.get(this.body) ?? new Map<string, HeldForm>()).set(type, parts));
       }
       [this.formFields, this.fileParts, this.noBoundary] = parts;
@@ -196,7 +196,7 @@ export class Request {
       rules().formReadHeld(type === '' ? null : type, this.body, limits);
       return false;
     } catch (error) {
-      const kind = kindOf(error);
+      const kind = Request.kindOf(error);
       if (kind !== null && LIMIT_KINDS.has(kind)) return true;
       if (kind === null || kind === 'internal') throw error;
       return false;

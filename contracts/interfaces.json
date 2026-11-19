@@ -3297,36 +3297,11 @@
                 },
                 "node": {
                   "symbol": "packages/ts/src/app/context.ts::Context.held",
-                  "signature": "static async held(handler: ContextHandler, selection: unknown): Promise<MapValue>"
+                  "signature": "static async held(handler: ContextHandler, selection: unknown): Promise<ReadonlyMap<string, unknown>>"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.held",
                   "signature": "def held(handler: Callable[[object], object], selection: object) -> dict"
-                }
-              }
-            },
-            {
-              "id": "context.text",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "map<value>"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Returns the JSON text of a context map.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/Context.php::Polyspec\\Hyper\\Context::text",
-                  "signature": "public static function text(array $map): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.text",
-                  "signature": "def text(map: dict) -> str"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/context.ts::Context.text",
-                  "signature": "static text(map: MapValue): string"
                 }
               }
             },
@@ -3378,32 +3353,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.valid_header",
                   "signature": "def valid_header(value: Optional[str]) -> bool"
-                }
-              }
-            },
-            {
-              "id": "context.withContext",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "map<value>",
-                "map<value>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns the shared data with the context in its place.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/Context.php::Polyspec\\Hyper\\Context::withContext",
-                  "signature": "public static function withContext(array $shared, array $map): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/context.ts::Context.withContext",
-                  "signature": "static withContext(shared: MapValue, map: MapValue): MapValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.with_context",
-                  "signature": "def with_context(shared: dict, map: dict) -> dict"
                 }
               }
             }
@@ -4537,7 +4486,7 @@
             "node": {
               "file": "packages/ts/src/host/http-host.ts",
               "kind": "functions",
-              "internal": true
+              "internal": false
             }
           },
           "only": {
@@ -4657,7 +4606,7 @@
               "visibility": "internal",
               "inputs": [
                 "value",
-                "optional<request-body>"
+                "optional<readBody>"
               ],
               "output": "request",
               "errors": [],
@@ -4665,7 +4614,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::requestOf",
-                  "signature": "export function requestOf( parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean }, read: RequestBody | null = null, ): Request"
+                  "signature": "export function requestOf( parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean }, read: ReadBody | null = null, ): Request"
                 }
               },
               "tests": [
@@ -4697,15 +4646,16 @@
               "visibility": "private",
               "inputs": [
                 "string",
-                "value"
+                "value",
+                "string"
               ],
               "output": "optional<string>",
               "errors": [],
-              "state": "Returns the path of the public file that a GET or HEAD request names, or null (HY-100.1).",
+              "state": "Returns the path of the public file that the target of a GET or HEAD request names, or null (HY-100.1).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::publicFile",
-                  "signature": "function publicFile(files: string, incoming: IncomingMessage): string | null"
+                  "signature": "function publicFile(files: string, incoming: IncomingMessage, target: string): string | null"
                 }
               }
             },
@@ -4715,16 +4665,16 @@
               "visibility": "private",
               "inputs": [
                 "value",
-                "request-body",
+                "value",
                 "number"
               ],
-              "output": "none",
+              "output": "optional<string>",
               "errors": [],
-              "state": "Reads the body up to the limit and no more (HY-59.9).",
+              "state": "Gives the body to the body of the core in chunks up to the limit and no more, and returns the kind of its first failure, or null (HY-59.9, HY-131.21).",
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::readBody",
-                  "signature": "function readBody(incoming: IncomingMessage, read: RequestBody, limit: number): Promise<void>"
+                  "signature": "function readBody(incoming: IncomingMessage, body: CoreRequestBody, limit: number): Promise<string | null>"
                 }
               }
             },
@@ -4781,7 +4731,7 @@
           "tests": [
             "packages/ts/tests/http.test.ts::server > answers a request target with a byte outside ASCII with a plain 400 (HY-42): Only the Node server answers and reports the 400 of a request that node:http cannot parse, with a request of the request line or with no request and with an empty reply (HY-60.7, HY-60.8); the test sends raw packets to the server of http-host.createServer.",
             "packages/ts/tests/http.test.ts::server > answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65): Only the Node server answers headers larger than node:http accepts with a 431 that carries Cache-Control: no-store (HY-60.7, HY-65.1).",
-            "packages/ts/tests/http.test.ts::the field lines of a request > reads the lines of a name as one value joined with `, `, the media type of the body included (HY-42.8, HY-42.9): Only the Node host is the listener of node:http (HY-100.1), whose `headers` keeps the first line of `content-type` and `user-agent`; the test sends two lines of each and asserts the joined values that `around` reads.",
+            "packages/ts/tests/http.test.ts::the field lines of a request > reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.8, HY-42.9, HY-42.14, HY-59.13): Only the Node host is the listener of node:http (HY-100.1), whose `headers` keeps the first line of `content-type` and `user-agent`; the test sends two lines of each and asserts the joined values that `around` reads and the joined Content-Type that the core reads as no media type.",
             "packages/ts/tests/http.test.ts::the field lines of a request > answers an action with two Content-Type lines with 400, because the joined value is no media type (HY-42.14, HY-59.12): Only the Node host is the listener of node:http (HY-100.1); the test sends two `Content-Type` lines to an action through it.",
             "packages/ts/tests/http.test.ts::the field lines of a request > leaves a request with two Content-Length lines to the 400 of node:http (HY-42.13, HY-60.7): Only the Node server has node:http, which refuses two `Content-Length` lines itself; the test asserts the plain 400 of HY-60.7.",
             "packages/ts/tests/client.test.ts::client rendering (HY-62) > serves the shell over node:http without a session (HY-45, HY-62): Only the Node host is the listener of node:http (HY-100.1); a request for the shell through it leaves the session directory empty."
@@ -4835,7 +4785,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::__construct",
-                  "signature": "public function __construct(string $method, string $path, array $headers, string $query, string $body, array $flash, string $csrfToken, array $params, array $cookies, bool $https, mixed $selection, ?int $bodySize, ?string $media, ?Polyspec\\Hyper\\RequestBody $read, mixed $json)"
+                  "signature": "public function __construct(string $method, string $path, array $headers, string $query, string $body, array $flash, string $csrfToken, array $params, array $cookies, bool $https, mixed $selection, ?int $bodySize, ?string $media, ?Polyspec\\Hyper\\BodyReader $read, mixed $json)"
                 },
                 "node": {
                   "symbol": "packages/ts/src/http/request.ts::Request.constructor",
@@ -4896,6 +4846,99 @@
                   "symbol": "packages/python/src/polyspec/hyper/http/request.py::Request._release",
                   "signature": "def _release(self) -> None"
                 }
+              }
+            },
+            {
+              "id": "request.boundaryMissing",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the Content-Type is a multipart/form-data type without a boundary, or with an empty one, as the core reads it (HY-113.24).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::boundaryMissing",
+                  "signature": "public function boundaryMissing(): bool"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/http/request.ts::Request.boundaryMissing",
+                  "signature": "boundaryMissing(): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/http/request.py::Request._boundary_missing",
+                  "signature": "def _boundary_missing(self) -> bool"
+                }
+              }
+            },
+            {
+              "id": "request.kindOf",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the kind of a failure of the core, or null for another error (HY-131.32).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/http/request.ts::Request.kindOf",
+                  "signature": "private static kindOf(error: unknown): string | null"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "request.formOf",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the form values and the files of a form of the core (HY-57, HY-113).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/http/request.ts::Request.formOf",
+                  "signature": "private static formOf(form: CoreForm): [Fields, Files]"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-113.23"
+              }
+            },
+            {
+              "id": "request.heldForm",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string",
+                "bytes"
+              ],
+              "output": "heldForm",
+              "errors": [],
+              "state": "Returns the form values and the files of a body held as one value, both null for a part that fails, and whether the type is a multipart type without a boundary (HY-113.23 to HY-113.25).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/http/request.ts::Request.heldForm",
+                  "signature": "private static heldForm(type: string, body: Uint8Array): HeldForm"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-113.24"
               }
             },
             {
@@ -5913,7 +5956,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::received",
-                  "signature": "public static function received(int $limit = PHP_INT_MAX, bool $stream = false, int $valueLimit = PHP_INT_MAX, int $partLimit = PHP_INT_MAX, int $fileLimit = PHP_INT_MAX): self"
+                  "signature": "public static function received(int $limit, bool $stream, int $valueLimit, int $partLimit, int $fileLimit): self"
                 }
               }
             },
@@ -5936,7 +5979,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::withInput",
-                  "signature": "public function withInput(string $source = 'php://input'): self"
+                  "signature": "public function withInput(string $source): self"
                 }
               }
             }
@@ -13332,6 +13375,50 @@
       }
     },
     {
+      "id": "readBody",
+      "visibility": "internal",
+      "unit": "request",
+      "shape": {
+        "fields": {
+          "core": "value",
+          "failure": "optional<string>"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-131.32"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/http/request.ts::ReadBody",
+          "declaration": "export interface ReadBody {\n  readonly core: CoreRequestBody;\n  readonly failure: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "heldForm",
+      "visibility": "private",
+      "unit": "request",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-113.24"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/http/request.ts::HeldForm",
+          "declaration": "type HeldForm = [Fields | null, Files | null, boolean];"
+        }
+      }
+    },
+    {
       "id": "requestInit",
       "visibility": "public",
       "unit": "request",
@@ -15504,7 +15591,8 @@
             }
           },
           "members": [
-            "context.hash"
+            "context.hash",
+            "json-codec.encode"
           ]
         },
         "withContext": {

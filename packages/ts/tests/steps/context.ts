@@ -3,8 +3,8 @@
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { Context, type ContextHandler } from '../../src/app/context.js';
-import { rules } from '../../src/app/core-rules.js';
 import { Csrf } from '../../src/session/csrf.js';
+import { JsonCodec } from '../../src/data/json-codec.js';
 import { parsed } from '../case-rules.js';
 import { decoded } from './session-requests.js';
 import { App, ArraySession, NotFound, Result, type Handlers, type Reply, type RouteHandlers } from '../../src/index.js';
@@ -239,16 +239,17 @@ function bodyOf(form: Map<string, string> | undefined, token: string | null): st
 }
 
 export const steps = {
-  // The JSON text of a context and its hash with the build, which the core gives (HY-125.12, HY-54.18).
+  // The JSON text of a context, which the JSON codec writes, and its hash with the build, which the core gives
+  // (HY-125.12, HY-54.18).
   contexts(reader: CaseReader): void {
     const build = stringField(reader, 'build');
-    const text = rules().jsonCodecEncode(mapOf(parsed(stringField(reader, 'context')), 'context'));
+    const text = JsonCodec.encode(mapOf(parsed(stringField(reader, 'context')), 'context'));
     reader.compare('context', text);
     reader.compare('text', `{"build":"${build}","context":${text}}`);
     reader.compare('hash', Context.hash(build, text));
     if (reader.has('reorderedText')) {
       const reordered = mapOf(parsed(stringField(reader, 'reorderedText')), 'reorderedText');
-      reader.compare('reorderedHash', Context.hash(build, rules().jsonCodecEncode(mapOf(reordered.get('context'), 'the member context of reorderedText'))));
+      reader.compare('reorderedHash', Context.hash(build, JsonCodec.encode(mapOf(reordered.get('context'), 'the member context of reorderedText'))));
     }
   },
 

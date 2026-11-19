@@ -6,6 +6,7 @@ import json
 from urllib.parse import urlencode
 
 from polyspec.hyper.app._context import Context
+from polyspec.hyper.data._json_codec import JsonCodec
 from polyspec.hyper.session._csrf import Csrf
 from polyspec.hyper.http.request import Request
 from polyspec.hyper.session.array_session import ArraySession
@@ -16,7 +17,7 @@ from .recorded import decoded
 
 def contexts(case) -> None:
     build = _string_field(case, "build")
-    text = Context.text(_map_of(decoded(_string_field(case, "context")), "context"))
+    text = JsonCodec.encode(_map_of(decoded(_string_field(case, "context")), "context"))
     case.compare("context", text)
     case.compare("text", '{"build":"' + build + '","context":' + text + "}")
     case.compare("hash", Context.hash(build, text))
@@ -27,7 +28,7 @@ def contexts(case) -> None:
         if "context" not in reordered:
             raise ValueError("reorderedText has no member context")
         context = _map_of(reordered["context"], "the member context of reorderedText")
-        case.compare("reorderedHash", Context.hash(build, Context.text(context)))
+        case.compare("reorderedHash", Context.hash(build, JsonCodec.encode(context)))
 
 
 def _string_field(case, name: str) -> str:

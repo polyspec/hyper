@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The context of an application (HY-124 to HY-128): the map that its handler returns, its JSON text (HY-54), its hash
- * with the build (HY-125) and the check of the `Hyper-Context` header (HY-127); the core places the context in the
+ * The context of an application (HY-124 to HY-128): the map that its handler returns, its hash with the build (HY-125) and the check of the `Hyper-Context` header (HY-127); the core places the context in the
  * shared data of a document (HY-10) and writes the member `context` of a JSON response (HY-128).
  *
  * @internal
@@ -27,16 +26,6 @@ final class Context
         }
 
         return $value;
-    }
-
-    /**
-     * Returns the JSON text of HY-54 of a context map. An empty map is an object (HY-17).
-     *
-     * @param array<array-key, mixed> $map
-     */
-    public static function text(array $map): string
-    {
-        return JsonCodec::encode($map === [] ? new \stdClass() : $map);
     }
 
     /**
