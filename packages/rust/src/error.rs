@@ -287,7 +287,9 @@ impl Error {
     pub fn removal_kind(&self) -> Result<&'static str, Error> {
         match self {
             Error::Form(error) => Ok(error.removal_kind()?),
-            _ => Err(Error::Internal("the removal of a failure that is not partial_target")),
+            _ => Err(Error::Internal(
+                "the removal of a failure that is not partial_target",
+            )),
         }
     }
 
@@ -300,7 +302,9 @@ impl Error {
     pub fn removal_errno(&self) -> Result<Option<i64>, Error> {
         match self {
             Error::Form(error) => Ok(error.removal_errno()?),
-            _ => Err(Error::Internal("the removal of a failure that is not partial_target")),
+            _ => Err(Error::Internal(
+                "the removal of a failure that is not partial_target",
+            )),
         }
     }
 }

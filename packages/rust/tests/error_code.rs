@@ -475,7 +475,10 @@ fn form_failures() -> Vec<(&'static str, polyspec_http_form::Error)> {
         ("Invalid", Form::Invalid),
         ("HeaderLimit", Form::HeaderLimit),
         ("NoBoundary", Form::NoBoundary),
-        ("MalformedContentType", Form::MalformedContentType(polyspec_http_media_type::Error::MalformedMediaType)),
+        (
+            "MalformedContentType",
+            Form::MalformedContentType(polyspec_http_media_type::Error::MalformedMediaType),
+        ),
         ("InvalidContentLength", Form::InvalidContentLength),
         ("BodyLimit", Form::BodyLimit),
         ("ValueLimit", Form::ValueLimit),
@@ -489,7 +492,13 @@ fn form_failures() -> Vec<(&'static str, polyspec_http_form::Error)> {
         ("Removed", Form::Removed),
         ("Io", Form::Io(io())),
         ("SourceLeft", Form::SourceLeft(io())),
-        ("PartialTarget", Form::PartialTarget { failure: io(), removal: io() }),
+        (
+            "PartialTarget",
+            Form::PartialTarget {
+                failure: io(),
+                removal: io(),
+            },
+        ),
         ("Internal", Form::Internal("a detail")),
     ]
 }
@@ -506,7 +515,9 @@ fn every_failure_of_http_form_projects_to_form_and_has_its_row() -> Result<(), S
         assert_eq!(name(error.code()), "Form");
         assert_eq!(binding_core::Kinds::kind(&error), failure.kind());
         assert_eq!(binding_core::Kinds::status(&error), failure.status());
-        expected.insert(format!("polyspec_hyper::ErrorCode::Form/polyspec_http_form::Error::{variant}"));
+        expected.insert(format!(
+            "polyspec_hyper::ErrorCode::Form/polyspec_http_form::Error::{variant}"
+        ));
     }
     assert_eq!(expected.len(), failures.len());
     assert_eq!(rows(&contract()?, Some("http-form")), expected);

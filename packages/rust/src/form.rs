@@ -69,8 +69,18 @@ impl UploadedFile {
     /// # Errors
     ///
     /// `internal` when an invariant of http-form does not hold.
-    pub fn new(name: &str, filename: &str, content_type: &str, content: &[u8]) -> Result<Self, Error> {
-        Ok(UploadedFile(polyspec_http_form::UploadedFile::from_value(name, filename, content_type, content)?))
+    pub fn new(
+        name: &str,
+        filename: &str,
+        content_type: &str,
+        content: &[u8],
+    ) -> Result<Self, Error> {
+        Ok(UploadedFile(polyspec_http_form::UploadedFile::from_value(
+            name,
+            filename,
+            content_type,
+            content,
+        )?))
     }
 
     /// The name of the field of the file.
@@ -142,8 +152,18 @@ impl RequestBody {
         stream: bool,
         limits: &BodyLimits,
     ) -> Result<Self, Error> {
-        let stream = stream && matches!(polyspec_http_form::multipart_boundary(content_type), Ok(Some(_)));
-        Ok(RequestBody(polyspec_http_form::RequestBody::start(io, content_type, content_length, stream, &limits.into())?))
+        let stream = stream
+            && matches!(
+                polyspec_http_form::multipart_boundary(content_type),
+                Ok(Some(_))
+            );
+        Ok(RequestBody(polyspec_http_form::RequestBody::start(
+            io,
+            content_type,
+            content_length,
+            stream,
+            &limits.into(),
+        )?))
     }
 
     /// Reads the next chunk. The first failure of the body is its error and the error of every later call, and the
@@ -220,7 +240,11 @@ impl binding_core::Cleanup for RequestBody {}
 /// # Errors
 ///
 /// `invalid`, `header_limit`, `no_boundary`, `malformed_content_type`, `value_limit` and `internal`.
-pub fn read_held_body(content_type: Option<&[u8]>, body: &[u8], limits: &BodyLimits) -> Result<Form, Error> {
+pub fn read_held_body(
+    content_type: Option<&[u8]>,
+    body: &[u8],
+    limits: &BodyLimits,
+) -> Result<Form, Error> {
     Ok(polyspec_http_form::read_held_body(content_type, body, &limits.into())?.into())
 }
 

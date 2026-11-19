@@ -11,7 +11,10 @@ const TYPE: &[u8] = b"multipart/form-data; boundary=XyZ";
 /// What a body gave: its fields, its files as name, filename, content type and bytes, or the kind of its failure.
 #[derive(Debug, PartialEq, Eq)]
 enum Outcome {
-    Form { fields: Vec<(String, Vec<String>)>, files: Vec<(String, String, String, Vec<u8>)> },
+    Form {
+        fields: Vec<(String, Vec<String>)>,
+        files: Vec<(String, String, String, Vec<u8>)>,
+    },
     Failed(&'static str),
 }
 
@@ -21,7 +24,10 @@ fn io() -> Io {
 
 /// Reads `body` in the chunks that `ends` divides it at, and removes the directory of its files.
 fn read(body: &[u8], ends: &[usize], limits: &BodyLimits) -> Outcome {
-    let mut read = RequestBody::start(io(), Some(TYPE), None, true, limits).expect("the body starts");
+    let mut read = match RequestBody::start(io(), Some(TYPE), None, true, limits) {
+        Ok(read) => read,
+        Err(error) => panic!("the body does not start: {error:?}"),
+    };
     let mut start = 0;
     let mut failure = None;
     for &end in ends.iter().chain(std::iter::once(&body.len())) {
@@ -39,17 +45,31 @@ fn read(body: &[u8], ends: &[usize], limits: &BodyLimits) -> Outcome {
     let outcome = match failure {
         Some(kind) => Outcome::Failed(kind),
         None => {
-            let form = read.parts().expect("the parts of a finished body");
+            let form = match read.parts() {
+                Ok(form) => form,
+                Err(error) => panic!("a finished body has no parts: {error:?}"),
+            };
             let files = form
                 .files
                 .iter()
                 .flat_map(|(_, files)| files.iter())
-                .map(|file| (file.name(), file.filename(), file.content_type(), file.content(io()).expect("the bytes")))
+                .map(|file| {
+                    let content = match file.content(io()) {
+                        Ok(content) => content,
+                        Err(error) => panic!("the bytes of a file are not read: {error:?}"),
+                    };
+                    (file.name(), file.filename(), file.content_type(), content)
+                })
                 .collect();
-            Outcome::Form { fields: form.fields, files }
+            Outcome::Form {
+                fields: form.fields,
+                files,
+            }
         }
     };
-    read.remove(io()).expect("the directory is removed");
+    if let Err(error) = read.remove(io()) {
+        panic!("the directory is not removed: {error:?}");
+    }
     outcome
 }
 
@@ -64,12 +84,21 @@ fn divisions(body: &[u8]) -> Vec<Vec<usize>> {
 fn same_for_every_division(body: &[u8], limits: &BodyLimits) -> Outcome {
     let whole = read(body, &[], limits);
     for ends in divisions(body) {
-        assert_eq!(read(body, &ends, limits), whole, "HY-131.26: the chunks that end at {ends:?} change the result");
+        assert_eq!(
+            read(body, &ends, limits),
+            whole,
+            "HY-131.26: the chunks that end at {ends:?} change the result"
+        );
     }
     whole
 }
 
-const WIDE: BodyLimits = BodyLimits { limit: 100_000, value_limit: 100_000, part_limit: 100, file_limit: 100_000 };
+const WIDE: BodyLimits = BodyLimits {
+    limit: 100_000,
+    value_limit: 100_000,
+    part_limit: 100,
+    file_limit: 100_000,
+};
 
 #[test]
 fn a_form_with_values_and_a_file_does_not_depend_on_its_chunks() {
@@ -79,7 +108,12 @@ fn a_form_with_values_and_a_file_does_not_depend_on_its_chunks() {
         outcome,
         Outcome::Form {
             fields: vec![("a".to_owned(), vec!["1".to_owned()])],
-            files: vec![("f".to_owned(), "one.txt".to_owned(), "text/plain".to_owned(), b"first\r\n--Xy file".to_vec())],
+            files: vec![(
+                "f".to_owned(),
+                "one.txt".to_owned(),
+                "text/plain".to_owned(),
+                b"first\r\n--Xy file".to_vec()
+            )],
         }
     );
 }
@@ -88,13 +122,23 @@ fn a_form_with_values_and_a_file_does_not_depend_on_its_chunks() {
 fn a_part_without_a_name_fails_alike_for_every_division() {
     // HY-113.23: a part without a name parameter fails the body with invalid.
     let body = b"--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n1\r\n--XyZ\r\nContent-Disposition: form-data; filename=\"x.txt\"\r\n\r\nX\r\n--XyZ--\r\n";
-    assert_eq!(same_for_every_division(body, &WIDE), Outcome::Failed("invalid"));
+    assert_eq!(
+        same_for_every_division(body, &WIDE),
+        Outcome::Failed("invalid")
+    );
 }
 
 #[test]
 fn a_passed_value_limit_fails_alike_for_every_division() {
     // HY-131.30: a text value above the value limit fails the body with value_limit.
-    let body = b"--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n0123456789\r\n--XyZ--\r\n";
-    let limits = BodyLimits { value_limit: 4, ..WIDE };
-    assert_eq!(same_for_every_division(body, &limits), Outcome::Failed("value_limit"));
+    let body =
+        b"--XyZ\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n0123456789\r\n--XyZ--\r\n";
+    let limits = BodyLimits {
+        value_limit: 4,
+        ..WIDE
+    };
+    assert_eq!(
+        same_for_every_division(body, &limits),
+        Outcome::Failed("value_limit")
+    );
 }

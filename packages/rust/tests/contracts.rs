@@ -2619,8 +2619,18 @@ fn the_remove_cases_remove_a_body_once_and_then_do_nothing() -> Result<(), Error
     for case in group(&file, "remove") {
         let (args, then) = match case.get("receiver") {
             Some(receiver) => {
-                assert_eq!(text(receiver, "new"), "request_body.start", "{}", case["id"]);
-                (&receiver["args"], receiver["then"].as_array().map_or(0, Vec::len))
+                assert_eq!(
+                    text(receiver, "new"),
+                    "request_body.start",
+                    "{}",
+                    case["id"]
+                );
+                // A receiver without `then` calls no member after its start, so it has no step.
+                let then = match receiver["then"].as_array() {
+                    Some(steps) => steps.len(),
+                    None => 0,
+                };
+                (&receiver["args"], then)
             }
             None => (case, 0),
         };
