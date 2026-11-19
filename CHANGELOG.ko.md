@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 8411a3ec47e4046d40ef3d7b154498c56543ef0331d97b3b14b87f870fb5b5e4 -->
+<!-- source-sha256: bbc3ca71a944319d11b16d94e54d9c6f409ab8e571a12fa7838c6011d28684d6 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- field나 file이 contract의 모양이 아닌 core의 form은 kind `internal`로 실패하고, `make analyse-php`는 `packages/php/src/Form/BodyReader.php`의 오류를 보고하지 않는다(H35.174). 입력: binding stub이 `mixed`로 선언하는 `Form`의 member `fields`와 `files`. 이전 동작: `BodyReader::named`가 검사 없이 그것을 분해하고 map했으며, PHPStan이 오류 13개를 보고했다. 현재 동작: `BodyReader::shaped`가 원소마다 `packages/rust/interface.json`과 대조하고, 맞지 않으면 kind `internal`(HY-133.6)의 `HyperInternalError`를 던진다. 이 검사는 hyper가 binding 행 B2.558의 binding release를 pin하면 지운다. 검증: `make analyse-php`.
 - PHP와 Node의 `UploadedFile`이 constructor로 만들어질 때도 core의 파일을 갖는다(H35.165). 입력: `new UploadedFile(name, filename, contentType, content)` 뒤의 `content()`와 `moveTo(path)`. 이전 동작: 파일이 byte를 직접 갖고 `moveTo`의 파일을 직접 썼으며, 옮겨진 파일이나 있는 경로에 자기의 `InvalidArgumentException`(PHP)이나 `RangeError`(Node)로 실패했다. 현재 동작: constructor가 core의 `FormFile`(form_file, F-22)을 만들고 모든 member가 그것을 부르므로, constructor가 만든 파일도 request body의 파일과 Python 파일처럼 http-form의 kind `moved`와 `exists`로 실패한다(HY-131.15, HY-131.16). Node는 `node-core.test.mts`가 테스트하는 `CoreRules.uploadedFile`로 그 class에 닿는다. `contracts/interfaces.json`은 `uploaded-file.stored`, `createdFile`, `linkedFile`을 지우고 `uploaded-file.ofCore`를 적으며 Node `content`와 `moveTo`를 `Promise<T>`로 적는다. 검증: `make recipe-compare`와 `make hyper-test-scripts TESTS=tests/scripts/node-core.test.mts`.
 - `contracts/interfaces.json`이 `files.sizes`를 internal로 적는다(H35.164). 입력: tree에 대한 `make recipe-compare`. 이전 동작: 계약이 그 member를 public으로 적었고, compare가 그것을 세 host에서 internal이고 어느 section도 적지 않는 public member로 보고했다(6줄). 현재 동작: 항목은 unit `files`처럼 internal이고, 6줄이 없어졌으며, Python rule이 크기를 `fileOver`에 주지 않으므로 Python은 그것을 닿지 않는 member로 보고한다. 검증: `make recipe-compare`.
 - `contracts/interfaces.json`이 더는 `fields.percentDecoded`를 적지 않는다(H35.163). 입력: tree에 대한 `make recipe-compare`. 이전 동작: 계약이 core의 `parseUrlencoded`가 http-form으로 decode하게 되면서 H35.11이 지운 각 host의 private decoder를 적었고, compare가 그것을 PHP, Node, Python에서 없고 닿지 않는 member로 보고했다(6줄). 현재 동작: 항목을 지웠고 6줄이 없어졌다. 검증: `make recipe-compare`.
