@@ -118,7 +118,7 @@
     {
       "id": "app_server_without_its_last_required_argument_is_refused",
       "label": "`app.server` without its last required argument fails with the count error (HY-106.8)",
-      "member": "app.server",
+      "member": "http-host.server",
       "call": "missing",
       "refused": true,
       "only": {
@@ -131,7 +131,7 @@
     {
       "id": "app_server_with_its_required_arguments_runs",
       "label": "`app.server` with only its required arguments runs (HY-106.8)",
-      "member": "app.server",
+      "member": "http-host.server",
       "call": "required",
       "refused": false,
       "only": {
@@ -144,7 +144,7 @@
     {
       "id": "app_server_with_every_argument_runs",
       "label": "`app.server` with every argument runs (HY-106.8)",
-      "member": "app.server",
+      "member": "http-host.server",
       "call": "all",
       "refused": false,
       "only": {
@@ -157,7 +157,7 @@
     {
       "id": "app_server_with_one_more_argument_is_refused",
       "label": "`app.server` with one argument more than its parameters fails with the count error (HY-106.8)",
-      "member": "app.server",
+      "member": "http-host.server",
       "call": "extra",
       "refused": true,
       "only": {
@@ -170,7 +170,7 @@
     {
       "id": "app_listener_without_its_last_required_argument_is_refused",
       "label": "`app.listener` without its last required argument fails with the count error (HY-106.8)",
-      "member": "app.listener",
+      "member": "http-host.listener",
       "call": "missing",
       "refused": true,
       "only": {
@@ -183,7 +183,7 @@
     {
       "id": "app_listener_with_its_required_arguments_runs",
       "label": "`app.listener` with only its required arguments runs (HY-106.8)",
-      "member": "app.listener",
+      "member": "http-host.listener",
       "call": "required",
       "refused": false,
       "only": {
@@ -196,7 +196,7 @@
     {
       "id": "app_listener_with_every_argument_runs",
       "label": "`app.listener` with every argument runs (HY-106.8)",
-      "member": "app.listener",
+      "member": "http-host.listener",
       "call": "all",
       "refused": false,
       "only": {
@@ -209,7 +209,7 @@
     {
       "id": "app_listener_with_one_more_argument_is_refused",
       "label": "`app.listener` with one argument more than its parameters fails with the count error (HY-106.8)",
-      "member": "app.listener",
+      "member": "http-host.listener",
       "call": "extra",
       "refused": true,
       "only": {
