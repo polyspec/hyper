@@ -4900,8 +4900,7 @@
       "session": false,
       "storeCalls": [],
       "requirements": [
-        "HY-59",
-        "HY-120"
+        "HY-59"
       ]
     },
     {
@@ -4924,8 +4923,7 @@
       "session": false,
       "storeCalls": [],
       "requirements": [
-        "HY-59",
-        "HY-120"
+        "HY-59"
       ]
     },
     {

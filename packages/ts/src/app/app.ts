@@ -162,14 +162,6 @@ export type Answer = { stopped: false; response: Response; reply: Reply } | { st
 /** @internal */
 export type SessionOpening = SessionStore | (() => Promise<SessionStore>);
 
-// Carries the failure of the open of a session through the answer, which `respond` throws again as it was raised, so
-// that it escapes the answer as a failed open before the application did (HY-60.14, HY-104.37).
-class SessionOpenFailure extends Error {
-  constructor(cause: unknown) {
-    super('hyper: the session could not be opened', { cause });
-  }
-}
-
 // The names of the options of `open`, the members of its options record (HY-106.9).
 const APP_REQUIRED = ['manifest', 'program', 'handlers', 'timezone'];
 const APP_OPTIONAL = ['basePath', 'https', 'frameAncestors', 'bodyLimit', 'formTypes', 'fileLimit', 'responseLimit', 'valueLimit', 'partLimit', 'onResponse', 'clientRendering', 'onDisconnect', 'log', 'context', 'functions'];
@@ -286,7 +278,7 @@ export class App<S extends object = Record<string, never>> {
     // The core judges the manifest before the server reads the program, so that a manifest that the core refuses
     // fails the open whatever the program holds, as the PHP and the Python server fail: the pages of the manifest alone,
     // without a template and without a read path, open exactly when the core accepts the manifest (HY-2.7, HY-2.9).
-    const manifestBytes = App.readBytes(options.manifest);
+    const manifestBytes = App.fileBytes(options.manifest);
     rules().Application.open(manifestBytes, new Map(), new Map(), { ...pagesOptions, build: '0'.repeat(64) }, new Map());
     const program = options.program;
     // HY-48.19, HY-48.2: the open names the first missing output of the program. HY-106.21: only a missing build file
@@ -355,7 +347,7 @@ export class App<S extends object = Record<string, never>> {
 
   // Reads the bytes of a file of an application. A file that cannot be read fails the open with kind
   // invalid_application and the message of the system error (HY-106.21).
-  private static readBytes(path: string): Buffer {
+  private static fileBytes(path: string): Buffer {
     try {
       return readFileSync(path);
     } catch (error) {
@@ -369,7 +361,7 @@ export class App<S extends object = Record<string, never>> {
   private static routeReads(path: string): Value {
     let value: Value;
     try {
-      value = JsonCodec.decode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(App.readBytes(path)));
+      value = JsonCodec.decode(new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(App.fileBytes(path)));
     } catch (error) {
       // The decoder raises bytes that are not UTF-8 as a TypeError, and the core a text that json refuses and a value
       // outside the data model as its value error (HY-54.21).
@@ -393,7 +385,7 @@ export class App<S extends object = Record<string, never>> {
     for (const name of names) {
       const path = join(directory, name);
       try {
-        sources.set(name, new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(App.readBytes(path)));
+        sources.set(name, new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(App.fileBytes(path)));
       } catch (error) {
         if (!(error instanceof TypeError)) throw error;
         throw rules().valueError(`${path} is not valid UTF-8`, 'invalid_application');
@@ -477,13 +469,24 @@ export class App<S extends object = Record<string, never>> {
     let response: Response;
     // The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
     let failure: string | null = null;
+    // The errors of a failed open of the session of this request, which escape the answer as they were raised, so that
+    // a failed open escapes before the application did (HY-60.14, HY-104.37).
+    const failedOpens: unknown[] = [];
+    const opening = async (): Promise<SessionStore> => {
+      try {
+        return await App.sessionOf(store);
+      } catch (error) {
+        failedOpens.push(error);
+        throw error;
+      }
+    };
     try {
       // HY-74: a warning of the runtime fails the request instead of leaving a wrong page with status 200.
-      response = await WarningsGuard.run(() => this.dispatch(request, store, reply));
+      response = await WarningsGuard.run(() => this.dispatch(request, opening, reply));
     } catch (error) {
       if (error instanceof Disconnected) return { stopped: true, reply };
       // HY-60.14: a failed open of the session is no failure of the application and escapes the answer.
-      if (error instanceof SessionOpenFailure) throw error.cause;
+      if (failedOpens.includes(error)) throw error;
       failure = this.logFailure(error);
       response = Response.text(500, 'Internal Server Error');
     }
@@ -795,12 +798,7 @@ export class App<S extends object = Record<string, never>> {
   // the session opens (HY-120.3).
   // The store of a request, opened by the transport only when a route uses it (HY-104.38).
   private static async sessionOf(store: SessionOpening): Promise<SessionStore> {
-    if (typeof store !== 'function') return store;
-    try {
-      return await store();
-    } catch (error) {
-      throw new SessionOpenFailure(error);
-    }
+    return typeof store === 'function' ? store() : store;
   }
 
   private async storeKept(request: Request, store: SessionOpening): Promise<Response> {

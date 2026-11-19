@@ -14,7 +14,7 @@ import { rules, type Answer, type CorePagesInstance, type PageStepInput } from '
 import type { Container } from '../app/container.js';
 import type { Flash } from '../session/flash.js';
 import type { Session } from '../session/session.js';
-import type { Data } from '../data/values.js';
+import type { PageAction } from './page-action.js';
 
 // The state of the application that the page reads, the one argument of the constructor.
 /** @internal */
@@ -27,15 +27,6 @@ export interface PageParts<S extends object> {
   https: boolean;
   // The context handler of the application (HY-124), or null for an application without a context.
   context: ContextHandler | null;
-}
-
-// The action of a request that answers its route page: the status and the data of its result, or null for an action
-// that let `revision_changed` escape (HY-107.9), and the masked value of the token that the request held before the
-// action, which differs from that of the request of the page after a renewal (HY-72.3).
-/** @internal */
-export interface PageAction {
-  readonly result: { readonly status: number; readonly data: Data } | null;
-  readonly masked: string;
 }
 
 /** @internal */
@@ -131,7 +122,7 @@ export class Page<S extends object> {
     }
     const answer = step.answer;
     if (answer.answer === 'no_page') throw new Error('hyper: the page of a request answered no page');
-    const { json, body, maskedToken, token } = Page.json(answer, masked, session);
+    const { json, body, maskedToken, token } = Page.answerParts(answer, masked, session);
     const computed = rules().pageHeaders({
       status: answer.status,
       json,
@@ -150,7 +141,7 @@ export class Page<S extends object> {
   // The JSON part of an answer: whether it is JSON and its text. HY-53: only a JSON response with status 200 has a tag,
   // which the core computes from the body with the masked token replaced by the token of the session; the session is
   // read for no other response.
-  private static json(answer: Exclude<Answer, { readonly answer: 'no_page' }>, masked: string, session: Session): { json: boolean; body: string; maskedToken: string; token: string } {
+  private static answerParts(answer: Exclude<Answer, { readonly answer: 'no_page' }>, masked: string, session: Session): { json: boolean; body: string; maskedToken: string; token: string } {
     const json = answer.answer === 'json';
     const body = answer.answer === 'json' ? answer.text : answer.html;
     const tagged = json && answer.status === 200;

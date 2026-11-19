@@ -24,7 +24,8 @@ from ..representation._representation_entry import RepresentationEntry
 from ..representation._representation_response import RepresentationResponse
 from ..representation.media_type import MediaType
 from ..page._manifest import Manifest
-from ..page._page import Page, PageAction
+from ..page._page import Page
+from ..page._page_action import PageAction
 from ..page._region import Region
 from ..http.reply import Reply
 from ..http.request import Request
@@ -43,28 +44,7 @@ from ._warnings_guard import WarningsGuard
 
 # The store of a request, or the call that opens it, which a transport gives so that a request of a route without a
 # session opens none (HY-104.38).
-SessionOpening = Union[SessionStore, Callable[[], SessionStore]]
-
-
-class _SessionOpenFailure(Exception):
-    """Carries the failure of the open of a session through the answer, which `_respond` raises again as it was
-    raised, so that it escapes the answer as a failed open before the application did (HY-60.14, HY-104.37)."""
-
-    def __init__(self, error: BaseException) -> None:
-        super().__init__("hyper: the session could not be opened")
-        self.error = error
-
-
-def _session_of(store: SessionOpening) -> SessionStore:
-    """Returns the store of a request, which the transport opens only when a route uses it (HY-104.38)."""
-    # A store is an object of the protocol SessionStore and never a function, so a callable is the opening.
-    if not callable(store):
-        return store
-    try:
-        return store()
-    # Every failure of the open escapes the answer (HY-60.14).
-    except Exception as error:
-        raise _SessionOpenFailure(error) from error
+type _SessionOpening = SessionStore | Callable[[], SessionStore]
 
 
 _FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
@@ -195,7 +175,7 @@ class App:
         """Reads the read paths of the routes from `reads.json` of the program (HY-73.34, HY-73.30) as the value that
         the core takes: the member `routes` of its JSON text. A file that cannot be read, bytes that are not UTF-8 and
         a text that json refuses fail the open (HY-106.21), and so does a text without the routes."""
-        data = App._read_bytes(path)
+        data = App._file_bytes(path)
         try:
             value = core_rules().json_codec_decode(data.decode("utf-8"))
         except (UnicodeDecodeError, ValueError, TypeError) as error:
@@ -228,7 +208,7 @@ class App:
         for name in names:
             path = directory / name
             try:
-                sources[name] = App._read_bytes(path).decode("utf-8")
+                sources[name] = App._file_bytes(path).decode("utf-8")
             except UnicodeDecodeError:
                 raise core_rules().value_error(
                     f"{path} is not valid UTF-8", "invalid_application"
@@ -236,7 +216,7 @@ class App:
         return sources
 
     @staticmethod
-    def _read_bytes(path: Path) -> bytes:
+    def _file_bytes(path: Path) -> bytes:
         """Reads the bytes of a file of an application. A file that cannot be read fails the open with kind
         `invalid_application` and the message of the system error (HY-106.21)."""
         try:
@@ -359,7 +339,7 @@ class App:
             context,
             functions,
             program,
-            App._read_bytes(Path(manifest)),
+            App._file_bytes(Path(manifest)),
         )
 
     @staticmethod
@@ -469,7 +449,7 @@ class App:
         return self._respond(request, store, started)[0]
 
     def _respond(
-        self, request: Request, store: SessionOpening, started: Optional[int] = None
+        self, request: Request, store: _SessionOpening, started: Optional[int] = None
     ) -> tuple[Response, Reply]:
         """Answers one request as `handle` does and returns the response with the reply of the request, which the
         server passes to `disconnected` when it cannot write the response (HY-67)."""
@@ -478,13 +458,27 @@ class App:
         reply = Reply()
         # The failure of a 500 of HY-43 or HY-66, which the hook receives (HY-60).
         failure = None
+        # The errors of a failed open of the session of this request, which escape the answer as they were raised, so
+        # that a failed open escapes before the application did (HY-60.14, HY-104.37).
+        failed_opens: list[Exception] = []
+
+        def opening() -> SessionStore:
+            try:
+                return App._session_of(store)
+            except Exception as error:
+                failed_opens.append(error)
+                raise
+
         try:
             # HY-74: a warning of the runtime fails the request instead of leaving a wrong page with status 200.
-            response = WarningsGuard.run(lambda: self._dispatch(request, store, reply))
-        except _SessionOpenFailure as failed:
+            response = WarningsGuard.run(
+                lambda: self._dispatch(request, opening, reply)
+            )
+        # HY-43: every error of the application answers a plain 500.
+        except Exception as error:
             # HY-60.14: a failed open of the session is no failure of the application and escapes the answer.
-            raise failed.error from None
-        except Exception as error:  # noqa: BLE001 - HY-43: every error of the application answers a plain 500
+            if any(error is failed for failed in failed_opens):
+                raise
             failure = self._log_failure(error)
             response = Response.text(500, "Internal Server Error")
         size = len(response.body.encode("utf-8"))
@@ -545,7 +539,7 @@ class App:
         return str(error)
 
     def _dispatch(
-        self, request: Request, store: SessionOpening, reply: Reply
+        self, request: Request, store: _SessionOpening, reply: Reply
     ) -> Response:
         """Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60)."""
         # HY-131.32: a body that passed the value limit, the part limit or the file limit is answered as a body over
@@ -621,7 +615,7 @@ class App:
         request = request._with_media(chosen)
         # HY-104.38: a route that uses no session reads an empty one, and its request opens none.
         session = Session(
-            ArraySession() if route["session"] is False else _session_of(store)
+            ArraySession() if route["session"] is False else App._session_of(store)
         )
         flash = session.take_flash()
         request = request._with_route(path, match["params"])._with_session(
@@ -957,7 +951,13 @@ class App:
             return Response.text(403, "Forbidden")
         return None
 
-    def _store_kept(self, request: Request, store: SessionOpening) -> Response:
+    @staticmethod
+    def _session_of(store: _SessionOpening) -> SessionStore:
+        """Returns the store of a request, which the transport opens only when a route uses it (HY-104.38)."""
+        # A store is an object of the protocol SessionStore and never a function, so a callable is the opening.
+        return store() if callable(store) else store
+
+    def _store_kept(self, request: Request, store: _SessionOpening) -> Response:
         """Stores a kept value of a `server` path in the session (HY-40); the method and the media type are checked
         before the session opens (HY-120.3)."""
         if request.method != "POST":
@@ -965,7 +965,7 @@ class App:
         refused_media = self._refused_media(request)
         if refused_media is not None:
             return refused_media
-        session = Session(_session_of(store))
+        session = Session(App._session_of(store))
         refused = self._refused_form(request, session)
         if refused is not None:
             return refused
