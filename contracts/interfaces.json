@@ -1252,30 +1252,6 @@
           },
           "members": [
             {
-              "id": "core-rules.shared",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "core-rules",
-              "errors": [],
-              "state": "The one CoreRules of the PHP server over the extension polyspec_hyper, created on its first use; without the extension it fails with the name of the extension, and no rule of the server answers in its place (HY-133.2).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::shared",
-                  "signature": "public static function shared(): self"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-133.2"
-              },
-              "tests": [
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheServerHasOneCoreRulesOverTheExtensionOrFailsWithItsName: The PHP server reaches the core through one CoreRules over the extension polyspec_hyper (HY-133.2); without the extension it fails with the name of the extension."
-              ]
-            },
-            {
               "id": "core-rules.csrfMask",
               "kind": "method",
               "visibility": "internal",
@@ -1530,6 +1506,13 @@
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_value",
                   "signature": "def session_value(self, record: object) -> object"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-104.26"
               }
             },
             {
@@ -1551,6 +1534,13 @@
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.session_record",
                   "signature": "def session_record(self, value: object) -> object"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-104.26"
               }
             },
             {
@@ -2265,33 +2255,6 @@
               }
             },
             {
-              "id": "core-rules.pageOpen",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "corePages",
-                "coreStore",
-                "opening"
-              ],
-              "output": "opened",
-              "errors": [],
-              "state": "Opens the session of a page: takes the flash data, reads the token, checks the token of a POST and reads the kept values (HY-120.6, HY-24, HY-59.8, HY-40).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::dispatch",
-                  "signature": "private function dispatch(Request $request, SessionStore $store, Reply $reply): Response"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageOpen",
-                  "signature": "pageOpen(pages: CorePages, store: CoreStore, opening: Opening): Opened"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._dispatch",
-                  "signature": "def _dispatch( self, request: Request, store: SessionOpening, reply: Reply ) -> Response"
-                }
-              }
-            },
-            {
               "id": "core-rules.pageRequest",
               "kind": "method",
               "visibility": "internal",
@@ -2332,18 +2295,16 @@
               "errors": [],
               "state": "Gives the document of a route from the shared data and the data of each region, at the time now (HY-12.1).",
               "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::respond",
-                  "signature": "public function respond( Request $request, array $route, array $handler, Session $session, Flash $flash, array|ActionOutcomeRevisionChanged|null $action, Reply $reply, string $basePath, ): Response"
-                },
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageDocument",
                   "signature": "pageDocument(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page.respond",
-                  "signature": "def respond( self, request: Request, route: dict, handler: dict, session: Session, flash: Flash, action: Optional[PageAction], reply: Reply, base_path: str, ) -> Response"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-12.1"
               }
             },
             {
@@ -2472,7 +2433,7 @@
               ],
               "output": "plainResponse",
               "errors": [],
-              "state": "Gives a plain answer with a body as UTF-8 text, as Response.text of the server writes it, and a 204 without a body (HY-58).",
+              "state": "Gives a plain answer with a body as UTF-8 text, as Response.text of the server writes it, and a 204 without a body (HY-106.17).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Http/Response.php::Polyspec\\Hyper\\Response::text",
