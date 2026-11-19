@@ -356,12 +356,6 @@ export interface CoreRules {
   // Partial. appFrame: front_functions.frame_headers gives the headers that every response carries (HY-45.5,
   // HY-65.1). The server still adds them to its response, a header of the same name replaced.
   appFrameHeaders(status: number, frameAncestors: string): Record<string, string>;
-  // Partial. appCheckedShell: rules.check_shell_path checks the path of the static shell before the server reads
-  // the file, and rules.shell_text gives the text of its bytes (HY-62). The server still reads the file between both
-  // calls, and checks the data base path of the declaration against the routes and the meta element of the shell
-  // (HY-62.2).
-  appCheckShellPath(path: string): void;
-  appShellText(path: string, bytes: Uint8Array): string;
   // Partial. appDispatch: front_functions.route_request gives the route of a request (HY-62.16 to HY-62.23, HY-27,
   // HY-116, HY-127, HY-59.12). The server still reads the request (HY-42, HY-56, HY-57), answers the limits of the
   // body (HY-59.15, HY-131.32) before this call, calls the selection of client rendering (HY-62.9) and reads the media
@@ -402,9 +396,6 @@ export interface CoreRules {
   // Partial. The name of the cookie of the kept values: rules.keep_name (HYC-13.6). The server still reads the cookie
   // from the request (HY-129).
   keptCookieName(secure: boolean): string;
-  // Partial. buildRead: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23, HY-125.19).
-  // The server still reads the file and names the absolute path of the file in a failure (HY-125.23).
-  buildRead(bytes: Uint8Array): string;
   // Partial. The build id of the command tool: rules.build_id (HY-125.15 to HY-125.17). The command tool still
   // collects the files that one build writes and gives each its path with the prefix of its place.
   buildId(outputs: Iterable<BuildOutput>): string;
@@ -494,10 +485,6 @@ export function coreRules(module: object): CoreRules {
     resultPage: (status) => core.pageStatus(status),
     appVaryHeader: (context) => core.pageVary(context),
     appFrameHeaders: (status, frameAncestors) => Object.fromEntries(core.frameHeaders(status, frameAncestors)),
-    appCheckShellPath: (path) => {
-      core.checkShellPath(path);
-    },
-    appShellText: (path, bytes) => core.shellText(path, bytes),
     appRoute: (pages, chosen, front) => core.routeRequest(pages, chosen, front),
     appPlain: (answer) => plainResponse(answer),
     appStoreKept: (pages, store, request) => plainResponse(core.answerKeepRequest(pages, store, request)),
@@ -512,7 +499,6 @@ export function coreRules(module: object): CoreRules {
     pageParts: (pages, route, shared, regions, now) => pages.renderParts(route, shared, regions, now),
     sessionStoredToken: (stored) => core.storedToken(stored),
     keptCookieName: (secure) => core.keepName(secure),
-    buildRead: (bytes) => core.readBuild(bytes),
     buildId: (outputs) => core.buildId(outputs),
     buildPaths: (outputs) => core.buildPaths(outputs),
     buildStream: (outputs) => core.buildStream(outputs),

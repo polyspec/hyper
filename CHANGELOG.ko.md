@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: d48da706c6b8ab0a62a941164c428b68a95e3fa8e3d61bb13f502bdc361a2774 -->
+<!-- source-sha256: 70d08b70e2d61086825f8283361e94e22bfc677896348d9acbe85299ed7ec585 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+node와 PHP에서 어떤 host도 부르지 않는 shell과 build wrapper를 제거한다(H35.135). 입력: 트리의 `make recipe-check`. 이전 동작: `appCheckShellPath`와 `appShellText`는 node와 PHP에서, `buildRead`는 node에서 호출자가 없었고, 그 줄들이 이것을 도달되지 않은 것으로 보고했다(HY-62, HY-125.23). 기대 동작: shell과 build case는 세 host에서 계속 통과하고, 그 host의 멤버는 계약 항목과 두 shell 멤버의 PHP 단위 행과 함께 제거되며, 그 줄들이 사라진다. `buildRead`는 `Build.php`가 부르는 PHP와 python에 남는다.
 - node와 python host가 reply의 helper 멤버 없이 응답의 Referrer-Policy 헤더를 비교한다(H35.134). 입력: `contracts/reply.json`의 reply case 중 Referrer-Policy가 있는 reply. 이전 동작: node의 `referrerPolicyHeaders`와 python의 `_referrer_policy_headers`에 페이지 경로의 호출자가 없었고, `make recipe-check`이 둘 다 도달되지 않은 것으로 보고했다(HY-103). 기대 동작: 각 host의 페이지 경로는 core가 계산한 페이지 헤더로 헤더를 내보내고, step은 같은 헤더를 비교하며, case가 통과한다. `reply.referrerPolicyHeaders`는 PHP 페이지 경로가 호출하는 PHP 항목을 유지한다.
 - PHP `Kept`이 map의 항목을 node와 python host처럼 자신의 `mapEntries` 멤버로 읽는다(H35.133). 입력: 데이터 값과 다른 종류의 값으로 kept된 list 또는 map. 이전 동작: `Kept`에 `mapEntries` 멤버가 없어 `make recipe-check`이 PHP에서 `kept.mapEntries`를 도달되지 않은 것으로 보고했고, 계약은 소스에 없는 멤버를 가리켰다. 기대 동작: `Kept::mapEntries`는 `JsonCodec::mapEntries`와 같은 항목을 주고, 세 host는 같은 값을 유지하며(HY-104.22), `contracts/keep.json`에 kept list가 map에 닿는 case가 있다.
 - PHP session은 session cookie 이름을 생성자의 셋째 인자로 받고, host가 core에서 그 이름을 읽는다(H35.129). 입력: session을 읽거나 쓰는 PHP 요청. 이전 동작: `NativeSession`이 `CoreRules::sessionCookieName`으로 이름을 직접 읽어 session 멤버가 core 규칙에 닿았고, TS와 Python host는 host에서 읽었다. 현재 동작: `App::serve`가 `CoreRules::shared()->sessionCookieName(...)`을 넘기고(`packages/php/src/App/App.php`), 생성자가 그것을 받는다(HY-104.45). 검증: install 승인 전이라 아직 실행하지 않았다.
