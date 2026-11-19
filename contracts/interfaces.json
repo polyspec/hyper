@@ -2790,14 +2790,17 @@
                   "symbol": "packages/php/src/App/Context.php::Polyspec\\Hyper\\Context::text",
                   "signature": "public static function text(array $map): string"
                 },
-                "node": {
-                  "symbol": "packages/ts/src/app/context.ts::Context.text",
-                  "signature": "static text(map: MapValue): string"
-                },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.text",
                   "signature": "def text(map: dict) -> str"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-125.10"
               }
             },
             {
@@ -2846,11 +2849,14 @@
                 "node": {
                   "symbol": "packages/ts/src/app/context.ts::Context.member",
                   "signature": "static member(build: string, map: MapValue, held: string | null): MapValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.member",
-                  "signature": "def member(build: str, map: dict, held: Optional[str]) -> dict"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "node"
+                ],
+                "sentence": "HY-128.2"
               }
             },
             {
@@ -2875,32 +2881,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.valid_header",
                   "signature": "def valid_header(value: Optional[str]) -> bool"
-                }
-              }
-            },
-            {
-              "id": "context.withContext",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "map<value>",
-                "map<value>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns the shared data with the context in its place.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/Context.php::Polyspec\\Hyper\\Context::withContext",
-                  "signature": "public static function withContext(array $shared, array $map): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/context.ts::Context.withContext",
-                  "signature": "static withContext(shared: MapValue, map: MapValue): MapValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_context.py::Context.with_context",
-                  "signature": "def with_context(shared: dict, map: dict) -> dict"
                 }
               }
             }
