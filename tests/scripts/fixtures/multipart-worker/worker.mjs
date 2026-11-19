@@ -45,15 +45,16 @@ for (const [index, item] of cases.entries()) {
         hash.update(`${Buffer.byteLength(value)}\0${value}\0`);
       }
     }
+    // A file of the core gives its name, filename, content type and size as getters; UploadedFile wraps them in methods.
     for (const [name, list] of parts.files) {
       for (const file of list) {
         files += 1;
-        bytes += file.size();
+        bytes += file.size;
         const target = join(process.argv[3], `node-${index}-${files}`);
         await file.moveTo(target);
         const content = createHash('sha256');
         for await (const block of createReadStream(target)) content.update(block);
-        hash.update(`F\0${name}\0${file.filename()}\0${file.contentType()}\0${file.size()}\0${content.digest('hex')}\0`);
+        hash.update(`F\0${name}\0${file.filename}\0${file.contentType}\0${file.size}\0${content.digest('hex')}\0`);
         unlinkSync(target);
       }
     }
