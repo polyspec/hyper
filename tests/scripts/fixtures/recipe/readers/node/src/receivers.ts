@@ -13,6 +13,7 @@ const MAKERS: Record<string, () => Widget> = { widget: () => new Widget() };
 /** The receivers of the scope reading (HYR-5): what the source writes about the class of each. */
 export class Receivers {
   private kept: Widget | null = null;
+  private held: Widget | Sized | null = null;
 
   run(widget: Widget, items: Map<string, number>): void {
     widget.grow();
@@ -44,6 +45,10 @@ export class Receivers {
 
   united(item: Widget | Sized | null): void {
     item?.grow();
+  }
+
+  heldGrow(): void {
+    this.held?.grow();
   }
 
   listed(widgets: readonly Widget[], others: Array<Widget>): void {

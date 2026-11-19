@@ -663,7 +663,7 @@ test('a passing run prints the three numbers of the fixture: the members stated 
 
 type Kind = 'constructor' | 'method' | 'static method';
 // A member with `phpSymbol` has that PHP symbol as written (a namespace function has no class); its Node code is unchanged.
-type Written = { unit: string; extends?: string; properties?: [string, string][]; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string; phpSymbol?: string; reachDiffers?: ReachDiffer[] }[] };
+type Written = { unit: string; extends?: string; properties?: [string, string | string[]][]; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string; phpSymbol?: string; reachDiffers?: ReachDiffer[] }[] };
 type ReachDiffer = { member: string; reached: 'php' | 'node'; notReached: 'php' | 'node'; sentence: string };
 const FILE: Record<'php' | 'node', (unit: string) => string> = { php: (u) => `src/${u.charAt(0).toUpperCase()}${u.slice(1)}.php`, node: (u) => `src/${u}.ts` };
 const NATIVE: Record<'php' | 'node', (unit: string, name: string) => string> = {
@@ -718,7 +718,7 @@ function stated(
     const classes: SourceClass[] = units.map((w) => ({
       ...ref(w.unit),
       extends: w.extends === undefined ? [] : [ref(w.extends)],
-      properties: (w.properties ?? []).map(([name, unit]) => ({ name, type: ref(unit) })),
+      properties: (w.properties ?? []).map(([name, unit]) => (Array.isArray(unit) ? { name, types: unit.map(ref) } : { name, type: ref(unit) })),
     }));
     const written = scopes(lang, { cls: (unit) => ({ kind: 'class', ...ref(unit) }), ref });
     const all: Scope[] = written.map((s) => ({
@@ -960,6 +960,31 @@ test('a member read through a parameter whose written type is a union of classes
       parameters: [{ name: 'held', types: [e.ref('item'), e.ref('other')] }],
       uses: [{ kind: 'member', of: { kind: 'variable', name: 'held' }, name: 'size', call: true }],
     },
+  ];
+  assert.deepEqual(stated(units, ['box.run'], run).findings, []);
+});
+
+test('the Node and the Python reader write the classes of a property whose written type is a union of two classes, and its read', () => {
+  const second: Record<'node' | 'python', ClassRef> = { node: { file: 'src/sized.ts', name: 'Sized' }, python: { file: 'src/receivers.py', name: 'Receivers' } };
+  const method: Record<'node' | 'python', string> = { node: 'Receivers.heldGrow', python: 'Receivers.held_grow' };
+  for (const lang of ['node', 'python'] as const) {
+    const out = readCopy(lang, path.join(fixture, 'readers', lang), ['--sources', 'src', '--tests', 'tests']);
+    const receivers = out.classes.find((c) => c.file === READER_FILES[lang].receivers && c.name === 'Receivers');
+    assert.deepEqual(receivers?.properties.find((p) => p.name === 'held'), { name: 'held', types: [{ file: READER_FILES[lang].widget, name: 'Widget' }, second[lang]] }, lang);
+    const scope = out.scopes.find((s) => s.file === READER_FILES[lang].receivers && s.name === method[lang]);
+    const read: Expr = { kind: 'member', of: { kind: 'member', of: { kind: 'own' }, name: 'held', call: false }, name: 'grow', call: true };
+    assert.ok(scope?.uses.some((u) => JSON.stringify(u) === JSON.stringify(read)), `${lang} ${JSON.stringify(scope?.uses)}`);
+  }
+});
+
+test('a member read through a property whose written type is a union of classes reaches the member in each class of the union', () => {
+  const units: Written[] = [
+    { unit: 'box', properties: [['held', ['item', 'other']]], members: [{ name: 'run', kind: 'method', visibility: 'public' }] },
+    { unit: 'item', members: [{ name: 'size', kind: 'method', visibility: 'internal' }] },
+    { unit: 'other', members: [{ name: 'size', kind: 'method', visibility: 'internal' }] },
+  ];
+  const run = (): ReturnType<Parameters<typeof stated>[2]> => [
+    { unit: 'box', method: 'run', uses: [{ kind: 'member', of: { kind: 'member', of: { kind: 'own' }, name: 'held', call: false }, name: 'size', call: true }] },
   ];
   assert.deepEqual(stated(units, ['box.run'], run).findings, []);
 });
