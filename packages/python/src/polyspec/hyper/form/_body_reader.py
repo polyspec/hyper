@@ -8,12 +8,15 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from ..app._core_rules import NO_LIMIT, CoreRules
 from ._fields import Fields
 from ._files import Files
 from .uploaded_file import UploadedFile
 
 __all__ = ["NO_LIMIT", "BodyReader"]
+
+# The largest limit that the binding takes: its type uint holds the integers up to 2^53 - 1 and fails a larger one with
+# kind invalid_number (binding GN-12a); no body reaches that size, so it is the limit that does not apply.
+NO_LIMIT = 2**53 - 1
 
 # The status of http-form for a body that passed one of its limits (F-25).
 _PASSED = 413
@@ -38,16 +41,25 @@ class BodyReader:
         """Starts the body of the content type with its four limits; ``stream`` tells whether a multipart body is read
         in chunks, which it is when ``multipart/form-data`` is a form type of the application (HY-131.1). The core
         starts the reader in chunks only for a ``multipart/form-data`` type with a boundary (HY-113.24)."""
-        rules = CoreRules.shared()
-        limits = rules.body_limits(limit, value_limit, part_limit, file_limit)
+        from .._binding import _root
+
+        # The four limits of the body (HY-59.15, HY-131.7 to HY-131.12) as the keyword arguments of the binding, each at
+        # most NO_LIMIT.
+        limits = {
+            "limit": min(limit, NO_LIMIT),
+            "value_limit": min(value_limit, NO_LIMIT),
+            "part_limit": min(part_limit, NO_LIMIT),
+            "file_limit": min(file_limit, NO_LIMIT),
+        }
         self.__over = False
         self.__failed = False
         self.__finished = False
         # HY-131.29: the core fails a Content-Length that is no number with invalid_content_length and a number above
         # the body limit with body_limit before any byte is read; that failure is the failure of the body.
         try:
-            self.__body = rules.form_start(
-                content_type or None, content_length, stream, limits
+            # request_body.start reads the chunks under the four limits in their order (F-9, F-24, F-25, HY-131.32).
+            self.__body = _root.RequestBody.start(
+                content_type or None, content_length, stream, **limits
             )
         except Exception as error:
             if BodyReader._failure_status(error) is None:
@@ -56,7 +68,9 @@ class BodyReader:
                 self.__over = True
             else:
                 self.__failed = True
-            self.__body = rules.form_start(content_type or None, None, stream, limits)
+            self.__body = _root.RequestBody.start(
+                content_type or None, None, stream, **limits
+            )
 
     def feed(self, chunk: bytes) -> bool:
         """Reads the next chunk, and returns False when the body passed a limit, after which it holds no bytes
@@ -149,12 +163,18 @@ class BodyReader:
         """Reads a body held as one value through the core: its form, or None when it fails with ``invalid`` or
         ``header_limit`` (HY-42, HY-113.25), whether it passed a limit (HY-131.32), and whether its type is a
         ``multipart/form-data`` type without a boundary, or with an empty one (HY-113.24)."""
-        rules = CoreRules.shared()
-        limits = rules.body_limits(NO_LIMIT, value_limit, part_limit, file_limit)
+        from .._binding import _root
+
+        limits = {
+            "limit": NO_LIMIT,
+            "value_limit": min(value_limit, NO_LIMIT),
+            "part_limit": min(part_limit, NO_LIMIT),
+            "file_limit": min(file_limit, NO_LIMIT),
+        }
         try:
             return (
                 BodyReader.named(
-                    rules.form_read_held(content_type or None, body, limits)
+                    _root.read_held_body(content_type or None, body, **limits)
                 ),
                 False,
                 False,

@@ -21,9 +21,6 @@ from ._core_binding_error import CoreBindingError
 # The module of the binding that `CoreRules.shared` imports.
 BINDING = "polyspec.hyper._binding._root"
 
-# The largest limit that the binding takes: its type uint holds the integers up to 2^53 - 1 and fails a larger one with
-# kind invalid_number (binding GN-12a); no body reaches that size, so it is the limit that does not apply.
-NO_LIMIT = 2**53 - 1
 
 # The members of the binding that this module calls, which `CoreRules` requires of the module that it receives.
 _MEMBERS = (
@@ -60,10 +57,6 @@ _MEMBERS = (
     "kept_cookie",
     "accept_ranges",
     "file_over",
-    "RequestBody",
-    "FormFile",
-    "read_held_body",
-    "parse_urlencoded",
 )
 
 
@@ -170,51 +163,6 @@ class CoreRules:
         the files."""
         return self._core.file_over(sizes, limit)
 
-    def body_limits(
-        self, limit: int, value_limit: int, part_limit: int, file_limit: int
-    ) -> dict[str, int]:
-        """The fields of the record body_limits of the four limits of a body (HY-59.15, HY-131.7 to HY-131.12), which
-        the binding takes as the keyword arguments of the member that reads the body, each limit at most NO_LIMIT."""
-        return {
-            "limit": min(limit, NO_LIMIT),
-            "value_limit": min(value_limit, NO_LIMIT),
-            "part_limit": min(part_limit, NO_LIMIT),
-            "file_limit": min(file_limit, NO_LIMIT),
-        }
-
-    def form_start(
-        self,
-        content_type: Optional[str],
-        content_length: Optional[str],
-        stream: bool,
-        limits: dict[str, int],
-    ) -> Any:
-        """RequestBody: request_body.start of the core reads the chunks of a body under its four limits and in their
-        order through http-form (F-9, F-24, F-25, HY-131.32); it starts the reader in chunks only for a
-        `multipart/form-data` type with a boundary (HY-113.24), and fails a `Content-Length` that is no number or is above
-        the body limit before any byte is read (HY-131.29)."""
-        return self._core.RequestBody.start(
-            content_type, content_length, stream, **limits
-        )
-
-    def form_read_held(
-        self, content_type: Optional[str], body: bytes, limits: dict[str, int]
-    ) -> Any:
-        """Request: form_functions.read_held_body gives the form of a body held as one value, under its limits, and
-        fails with the kind of http-form (F-21, F-22, F-25.2, HY-113.23, HY-113.25)."""
-        return self._core.read_held_body(content_type, body, **limits)
-
-    def form_parse_urlencoded(self, text: bytes) -> list[Any]:
-        """Fields.parse: form_functions.parse_urlencoded gives the values of an urlencoded text, and fails with
-        `invalid` for a name or a value that is not UTF-8 (F-20, F-21, HY-42, HY-56)."""
-        return self._core.parse_urlencoded(text)
-
-    def uploaded_file(
-        self, name: str, filename: str, content_type: str, content: bytes
-    ) -> Any:
-        """UploadedFile: form_file.new gives a file of the core that holds its bytes as a value (F-22)."""
-        return self._core.FormFile(name, filename, content_type, content)
-
     def request_current_path(self, header: Optional[str]) -> Optional[str]:
         """Request.current_path: rules.current_path of the value of HX-Current-URL (HY-11.5)."""
         return self._core.current_path(header)
@@ -268,53 +216,6 @@ class CoreRules:
         """Partial. The name of the cookie of the kept values: rules.keep_name (HYC-13.6). The server still reads the
         cookie from the request (HY-129)."""
         return self._core.keep_name(secure)
-
-    def library_error(
-        self, library: object, prefix: str, error: BaseException
-    ) -> BaseException:
-        """The error of hyper for an error of a library that hyper uses (HY-133.3), or the error as it is. An error
-        of a library is an instance of a class that the error module of the library, `library`, defines. The class of
-        hyper is the class of the binding of hyper of the same role: the class of the same name, such as
-        `RecordError`, or the category class, whose name has `Hyper` where the category class of the library has
-        `prefix`. The error of hyper has the message, the kind, the status and the errno of the error of the library,
-        so no kind and no category is listed here; a class of the library without a class of hyper of its role is
-        tried by its parent class, and an error that the class of hyper refuses, because the contract of hyper does
-        not list its kind, stays as it is."""
-        from .._binding import _errors as own
-
-        for cls in type(error).__mro__:
-            name = cls.__name__
-            if getattr(library, name, None) is not cls:
-                continue
-            role = getattr(
-                own,
-                f"Hyper{name[len(prefix) :]}" if name.startswith(prefix) else name,
-                None,
-            )
-            if not isinstance(role, type):
-                continue
-            try:
-                converted = role(
-                    str(error),
-                    getattr(error, "kind", None),
-                    getattr(error, "status", None),
-                    getattr(error, "errno", None),
-                )
-            except TypeError, ValueError:
-                return error
-            converted.__cause__ = error
-            return converted
-        return error
-
-    def session_value(self, record: object) -> object:
-        """rules.session_value gives the value of the data model of a PHP value of a session record (HY-104.13), and
-        fails with the kind of the data model for a value outside it."""
-        return self._core.session_value(record)
-
-    def session_record(self, value: object) -> object:
-        """rules.session_record gives the PHP value of a session record of a value of the data model (HY-104.14),
-        and fails with ``data_unsupported_type`` for a native object."""
-        return self._core.session_record(value)
 
     def build_read(self, data: bytes) -> str:
         """Partial. Build.read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23,

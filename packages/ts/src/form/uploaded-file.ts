@@ -3,14 +3,15 @@
 // `FormFile` (form_file), whose bytes are a value or a file in the directory of the request for a body that the server
 // read in chunks (HY-131, F-11, F-22); its read and move wait on the file system, so `content` and `moveTo` give a promise.
 import { ArgumentCountError } from '../app/argument-count-error.js';
-import { rules, type CoreUploadedFile } from '../app/core-rules.js';
+import { binding, type CoreUploadedFile } from '../app/core-rules.js';
 
 export class UploadedFile {
   private core: CoreUploadedFile;
 
   constructor(name: string, filename: string, contentType: string, content: Uint8Array) {
     ArgumentCountError.between(arguments.length, 4, 4);
-    this.core = rules().uploadedFile(name, filename, contentType, content);
+    // form_file.new gives a file of the core that holds its bytes as a value (F-22, HY-113.3).
+    this.core = new (binding().FormFile)(name, filename, contentType, content);
   }
 
   /**

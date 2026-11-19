@@ -7,7 +7,7 @@ import { UploadedFile } from '../form/uploaded-file.js';
 import type { Value } from '../data/values.js';
 import { Disconnected } from '../app/disconnected.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
-import { rules, type BodyLimits, type CoreForm } from '../app/core-rules.js';
+import { binding, rules, type BodyLimits, type CoreForm } from '../app/core-rules.js';
 import type { BodyReader } from '../form/body-reader.js';
 
 // The parts of a request as its host gives them, the named parameters of the constructor (HY-106): the path and the raw
@@ -109,7 +109,7 @@ export class Request {
   // third member is true for the multipart type without a boundary.
   private static heldForm(type: string, body: Uint8Array): HeldForm {
     try {
-      return [...Request.formOf(rules().formReadHeld(type === '' ? null : type, body, UNBOUNDED)), false];
+      return [...Request.formOf(binding().readHeldBody(type === '' ? null : type, body, UNBOUNDED)), false];
     } catch (error) {
       const kind = Request.kindOf(error);
       if (kind === 'malformed_content_type' || kind === 'no_boundary') return [Fields.empty(), Files.empty(), kind === 'no_boundary'];
@@ -186,7 +186,7 @@ export class Request {
     const type = this.headerValues.get('content-type') ?? '';
     const limits: BodyLimits = { limit: Number.MAX_SAFE_INTEGER, valueLimit, partLimit: streams ? partLimit : Number.MAX_SAFE_INTEGER, fileLimit: streams ? fileLimit : Number.MAX_SAFE_INTEGER };
     try {
-      rules().formReadHeld(type === '' ? null : type, this.body, limits);
+      binding().readHeldBody(type === '' ? null : type, this.body, limits);
       return false;
     } catch (error) {
       const kind = Request.kindOf(error);

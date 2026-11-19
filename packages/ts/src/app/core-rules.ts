@@ -234,7 +234,6 @@ export interface CoreBinding {
   sessionName(https: boolean): string;
   keepName(https: boolean): string;
   sessionCookie(identifier: string, https: boolean): string;
-  pageTag(body: string, maskedToken: string, token: string): string;
   representationTag(contentType: string, body: Uint8Array): string;
   mediaType(contentType: string): string;
   pageStatus(status: number): number;
@@ -282,40 +281,6 @@ export interface CoreBinding {
   HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;
 }
 
-
-// The prefix of the name of the category classes of the binding of hyper, which stands in the place of the prefix of
-// the category classes of a library: `SessionStoreStoreError` of the session-store package is `HyperStoreError`.
-const OWN_PREFIX = 'Hyper';
-
-/**
- * Returns the error of hyper for an error of a library that hyper uses (HY-133.3), or the error as it is. An error of
- * a library is an instance of a class that the package of the library exports. The class of hyper is the class of the
- * binding of hyper of the same role: the class of the same name, such as `RecordError`, or the category class, whose
- * name has `Hyper` where the category class of the library has `prefix`. The error of hyper has the message, the kind,
- * the status and the errno of the error of the library, so no kind and no category is listed here; a class of the
- * library without a class of hyper of its role is tried by its parent class, and an error that the class of hyper
- * refuses, because the contract of hyper does not list its kind, stays as it is.
- */
-function libraryError(core: object, library: object, prefix: string, error: unknown): unknown {
-  if (!(error instanceof Error)) return error;
-  for (let type: unknown = Object.getPrototypeOf(error); typeof type === 'object' && type !== null; type = Object.getPrototypeOf(type)) {
-    const made: unknown = (type as { constructor?: unknown }).constructor;
-    const name: unknown = typeof made === 'function' ? made.name : undefined;
-    if (typeof name !== 'string' || name === '' || Reflect.get(library, name) !== made) continue;
-    const role: unknown = Reflect.get(core, name.startsWith(prefix) ? `${OWN_PREFIX}${name.slice(prefix.length)}` : name);
-    if (typeof role !== 'function') continue;
-    const { kind, status, errno } = error as Error & { kind?: unknown; status?: unknown; errno?: unknown };
-    try {
-      // The constructor of an error class of a binding (E-2) takes the message, the kind, the status and the errno.
-      const converted: unknown = Reflect.construct(role, [error.message, kind, status ?? null, errno ?? null]);
-      return converted;
-    } catch {
-      return error;
-    }
-  }
-  return error;
-}
-
 // An error of hyper: its kind and its status, which a caller tells failures apart by (HY-133.1, HY-133.2).
 interface HyperError extends Error {
   readonly kind: string;
@@ -325,7 +290,7 @@ interface HyperError extends Error {
 // The names of the members of `CoreBinding`, which `coreRules` requires of the module that it receives.
 const MEMBERS: readonly (keyof CoreBinding)[] = [
   'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl', 'keepsOutOfSharedCaches',
-  'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
+  'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'buildPaths', 'buildStream', 'shellFile', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'checkFunctionEntry', 'routeRequest', 'computePageHeaders', 'frameHeaders',
   'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'readHeldBody', 'parseUrlencoded', 'FormFile', 'RequestBody', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
@@ -338,16 +303,6 @@ export interface CoreRules {
   // the binding.
   valueError(message: string, kind: string): HyperError & RangeError;
   typeError(message: string, kind: string): HyperError & TypeError;
-  // libraryError: the error of hyper for an error of a library, by the class of the binding of hyper of the same role
-  // as the class of the error, with its message, kind and status (HY-133.3); any other value is returned as it is.
-  // `library` is the module of the package of the library and `prefix` the prefix of the names of its category classes.
-  libraryError(library: object, prefix: string, error: unknown): unknown;
-  // sessionValue: rules.session_value gives the value of the data model of a PHP value of a session record
-  // (HY-104.13), and fails with the kind of the data model for a value outside it.
-  sessionValue(record: unknown): unknown;
-  // sessionRecord: rules.session_record gives the PHP value of a session record of a value of the data model
-  // (HY-104.14), and fails with `data_unsupported_type` for a native object.
-  sessionRecord(value: unknown): unknown;
   // Exact units.
   // csrfMask: rules.csrf_mask (HY-24.2, HY-24.14).
   csrfMask(token: string, mask: string): string;
@@ -389,17 +344,6 @@ export interface CoreRules {
   // requestFileOver: rules.file_over of the bytes of each file of the body and the limit (HY-114.12). The binding
   // throws the kind `invalid_number` for a limit that is no unsigned integer, before the core compares the files.
   requestFileOver(sizes: readonly number[], limit: number): boolean;
-  // Exact. formStart: request_body.start starts the body of a request with its four limits (F-24, F-25, HY-131.1);
-  // its feed, finish and parts read the chunks under the limits in their order and give the form (HY-131.32).
-  formStart(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody>;
-  // Exact. formReadHeld: form_functions.read_held_body gives the form of a body held as one value under its limits
-  // (F-21, F-22, F-25.2, HY-57).
-  formReadHeld(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;
-  // Exact. formParseUrlencoded: form_functions.parse_urlencoded gives the values of a query or of an urlencoded text
-  // (F-20, HY-56).
-  formParseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];
-  // uploadedFile: form_file.new gives a file of the core that holds its bytes as a value (F-22, HY-113.3).
-  uploadedFile(name: string, filename: string, contentType: string, content: Uint8Array): CoreUploadedFile;
   // requestCurrentPath: rules.current_path of the value of HX-Current-URL (HY-11.5).
   requestCurrentPath(header: string | null): string | null;
   // replyCacheControl: rules.cache_control gives the value that the reply keeps (HY-52.6).
@@ -491,9 +435,6 @@ export function coreRules(module: object): CoreRules {
   return {
     valueError: (message, kind) => new core.HyperValueError(message, kind, null),
     typeError: (message, kind) => new core.HyperTypeError(message, kind, null),
-    libraryError: (library, prefix, error) => libraryError(core, library, prefix, error),
-    sessionValue: (record) => core.sessionValue(record),
-    sessionRecord: (value) => core.sessionRecord(value),
     csrfMask: (token, mask) => core.csrfMask(token, mask),
     csrfVerify: (token, value) => core.csrfVerify(token, value),
     csrfBrowserOf: (masked) => core.browser(masked),
@@ -509,10 +450,6 @@ export function coreRules(module: object): CoreRules {
     representationEtag: (contentType, body) => core.representationTag(contentType, encoder.encode(body)),
     requestMediaType: (contentType) => core.mediaType(contentType),
     requestFileOver: (sizes, limit) => core.fileOver(sizes, limit),
-    formStart: (contentType, contentLength, stream, limits) => core.RequestBody.start(contentType, contentLength, stream, limits),
-    formReadHeld: (contentType, body, limits) => core.readHeldBody(contentType, body, limits),
-    formParseUrlencoded: (text) => core.parseUrlencoded(text),
-    uploadedFile: (name, filename, contentType, content) => new core.FormFile(name, filename, contentType, content),
     requestCurrentPath: (header) => core.currentPath(header),
     replyCacheControl: (value) => core.cacheControl(value),
     replyReferrerPolicy: (value) => core.referrerPolicy(value),
@@ -586,3 +523,16 @@ export function sharedRules(load: () => unknown): () => CoreRules {
 // Returns the one CoreRules of the server, from the native addon of the package.
 /** @internal */
 export const rules: () => CoreRules = sharedRules(() => createRequire(import.meta.url)(ENTRY));
+
+// Returns the module of the binding of the core, which the units of the server call directly for the form and the
+// session records, as the PHP server calls the functions of the extension: request_body.start, read_held_body,
+// parse_urlencoded and form_file.new of http-form (F-20 to F-25, HY-113.3, HY-131), and session_value and
+// session_record (HY-104.13, HY-104.14). It loads the module as `rules` does, which fails with CoreBindingError for an
+// addon that does not load and for a module that lacks a member of the binding.
+/** @internal */
+export const binding = (): CoreBinding => {
+  rules();
+  const module: unknown = createRequire(import.meta.url)(ENTRY);
+  if (module === null || typeof module !== 'object' || !isBinding(module, [])) throw new CoreBindingError('hyper: the native addon of the Node package gave no module (HY-133.2)', { cause: module });
+  return module;
+};

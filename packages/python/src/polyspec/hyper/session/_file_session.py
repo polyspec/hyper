@@ -7,7 +7,6 @@ from typing import Callable, Optional, TypeVar
 
 import polyspec.session_store as library
 
-from ..app._core_rules import CoreRules
 from .session_store import SessionStore
 
 T = TypeVar("T")
@@ -32,20 +31,62 @@ class FileSession(SessionStore):
             return call()
         # Every failure is converted or raised again.
         except Exception as error:
-            own = CoreRules.shared().library_error(library, _LIBRARY_PREFIX, error)
+            own = FileSession._library_error(library, _LIBRARY_PREFIX, error)
             if own is error:
                 raise
             raise own from error
+
+    @staticmethod
+    def _library_error(
+        library: object, prefix: str, error: BaseException
+    ) -> BaseException:
+        """The error of hyper for an error of a library that hyper uses (HY-133.3), or the error as it is. An error
+        of a library is an instance of a class that the error module of the library, `library`, defines. The class of
+        hyper is the class of the binding of hyper of the same role: the class of the same name, such as
+        `RecordError`, or the category class, whose name has `Hyper` where the category class of the library has
+        `prefix`. The error of hyper has the message, the kind, the status and the errno of the error of the library,
+        so no kind and no category is listed here; a class of the library without a class of hyper of its role is
+        tried by its parent class, and an error that the class of hyper refuses, because the contract of hyper does
+        not list its kind, stays as it is."""
+        from .._binding import _errors as own
+
+        for cls in type(error).__mro__:
+            name = cls.__name__
+            if getattr(library, name, None) is not cls:
+                continue
+            role = getattr(
+                own,
+                f"Hyper{name[len(prefix) :]}" if name.startswith(prefix) else name,
+                None,
+            )
+            if not isinstance(role, type):
+                continue
+            try:
+                converted = role(
+                    str(error),
+                    getattr(error, "kind", None),
+                    getattr(error, "status", None),
+                    getattr(error, "errno", None),
+                )
+            except TypeError, ValueError:
+                return error
+            converted.__cause__ = error
+            return converted
+        return error
 
     def get(self, key: str) -> object:
         """Returns the value of a key as a value of the data model (HY-104.13), or None for a key that holds no
         value."""
         record = FileSession.converted(lambda: self._session.get(key))
-        return None if record is None else CoreRules.shared().session_value(record)
+        from .._binding import _root
+
+        return None if record is None else _root.session_value(record)
 
     def set(self, key: str, item: object) -> None:
         """Stores a value of the data model as the PHP value of the record (HY-104.14)."""
-        record = CoreRules.shared().session_record(item)
+        from .._binding import _root
+
+        record = _root.session_record(item)
         FileSession.converted(lambda: self._session.set(key, record))
 
     def remove(self, key: str) -> None:
