@@ -19,7 +19,8 @@ from .._binding._errors import HyperValueError
 from ..app.app import App
 from ..session._file_session import FileSession
 from ..session._record_session import RecordSession
-from ..session._library_sessions import LibrarySessions
+from ..session.file_sessions import FileSessions
+from ..session.redis_sessions import RedisSessions
 from ..http.request import Request
 from ..http.response import Response
 
@@ -200,7 +201,7 @@ def plain_failure(app: App) -> Response:
 
 def answer_with(
     app: App,
-    sessions: LibrarySessions,
+    sessions: FileSessions | RedisSessions,
     around: Optional[Callable],
     exchange: Exchange,
 ) -> Response:
@@ -216,9 +217,7 @@ def answer_with(
 
         def open_session() -> FileSession:
             opened.append(
-                FileSession.opened(
-                    sessions.library, given.cookie(RecordSession.cookie_name(secure))
-                )
+                sessions._open(given.cookie(RecordSession.cookie_name(secure)))
             )
             return opened[0]
 

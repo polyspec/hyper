@@ -59,27 +59,21 @@ class SessionRoutesTest(unittest.TestCase):
             )
             order: list[str] = []
 
-            class Observed:
-                """The library store of the sessions, whose second open is the failure that the test
-                states: it would wait for the lock of the held request, so it releases that request
-                first and the order of the answers shows the failure instead of a wait without an
-                end."""
+            class Observed(FileSessions):
+                """A second open is the failure that the test states: it would wait for the lock of
+                the held request, so it releases that request first and the order of the answers
+                shows the failure instead of a wait without an end."""
 
                 opens = 0
 
-                def __init__(self, store):
-                    self.store = store
-
-                def open(self, cookie):
+                def _open(self, cookie):
                     Observed.opens += 1
                     if Observed.opens == 2:
                         order.append("plain opened the session")
                         released.set()
-                    return self.store.open(cookie)
+                    return super()._open(cookie)
 
-            sessions = FileSessions(str(Path(directory) / "sessions"))
-            sessions.library = Observed(sessions.library)
-            application = create_asgi(app, sessions)
+            application = create_asgi(app, Observed(str(Path(directory) / "sessions")))
 
             async def request(path: str, name: str) -> None:
                 events: list[dict] = []
