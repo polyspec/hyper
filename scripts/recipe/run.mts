@@ -33,6 +33,7 @@ export function readAllSources(root: string, spec: Spec, v: Validators, phpAutol
  * The spec without its extension entries (HYR-5): an extension unit names a class of the hyper extension and no file,
  * so no reader reads it and the checks of the sources see it without native entries; make recipe-files checks it. A
  * reexport member (HYR-5) leaves `members` for `passed`, which only keeps its source member from being an added one.
+ * The languages of the extension entries stay in `extensions`, because they are native code for `only` (HYR-6).
  */
 export function withoutExtensions(doc: SpecDocument): Spec {
   return {
@@ -43,7 +44,8 @@ export function withoutExtensions(doc: SpecDocument): Spec {
         // HYR-5 Reexports: a member that passes a call to a library member is not compared, reached or counted.
         const members = u.members.filter((m): m is Member => !isReexport(m));
         const passed = u.members.filter(isReexport).map((m) => m.id);
-        return { ...u, members, ...(passed.length > 0 ? { passed } : {}), native: fileEntries(u.native) };
+        const extensions = LANGS.filter((lang) => { const n = u.native[lang]; return n !== undefined && 'extension' in n; });
+        return { ...u, members, ...(passed.length > 0 ? { passed } : {}), ...(extensions.length > 0 ? { extensions } : {}), native: fileEntries(u.native) };
       }),
     })),
   };

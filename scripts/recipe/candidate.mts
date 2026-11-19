@@ -290,7 +290,7 @@ function withExtensionsOf(spec: Spec, doc: SpecDocument): SpecDocument {
           }
         }
         // HYR-5 Reexports: the reexport members go back after the members, as the spec writes them.
-        const { passed: _passed, ...kept } = unit;
+        const { passed: _passed, extensions: _extensions, ...kept } = unit;
         const reexports = written?.id === unit.id ? written.members.filter(isReexport) : [];
         return { ...kept, members: [...unit.members, ...reexports], native };
       }),
