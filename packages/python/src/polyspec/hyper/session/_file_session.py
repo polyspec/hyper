@@ -7,7 +7,7 @@ from typing import Callable, Optional, TypeVar
 
 import polyspec.session_store as library
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from .session_store import SessionStore
 
 T = TypeVar("T")
@@ -32,7 +32,7 @@ class FileSession(SessionStore):
             return call()
         # Every failure is converted or raised again.
         except Exception as error:
-            own = core_rules().library_error(library, _LIBRARY_PREFIX, error)
+            own = CoreRules.shared().library_error(library, _LIBRARY_PREFIX, error)
             if own is error:
                 raise
             raise own from error
@@ -41,11 +41,11 @@ class FileSession(SessionStore):
         """Returns the value of a key as a value of the data model (HY-104.13), or None for a key that holds no
         value."""
         record = FileSession.converted(lambda: self._session.get(key))
-        return None if record is None else core_rules().session_value(record)
+        return None if record is None else CoreRules.shared().session_value(record)
 
     def set(self, key: str, item: object) -> None:
         """Stores a value of the data model as the PHP value of the record (HY-104.14)."""
-        record = core_rules().session_record(item)
+        record = CoreRules.shared().session_record(item)
         FileSession.converted(lambda: self._session.set(key, record))
 
     def remove(self, key: str) -> None:

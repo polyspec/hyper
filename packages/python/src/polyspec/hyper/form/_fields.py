@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from ._named_values import NamedValues
 
 
@@ -22,7 +22,7 @@ class Fields(NamedValues[str]):
         """Parses ``name=value&name=value`` through the core (form_functions.parse_urlencoded): ``+`` is a space,
         ``%XX`` is its byte and another ``%`` stays. Returns None when a name or a value is not UTF-8 (HY-42, HY-56)."""
         try:
-            pairs = core_rules().parse_urlencoded(text)
+            pairs = CoreRules.shared().form_parse_urlencoded(text)
         except ValueError:
             return None
         return Fields(

@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import re
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 
 _COOKIE_NAME = re.compile(r"[a-z][a-z0-9_-]*\Z")
 _COOKIE_VALUE = re.compile(r"[A-Za-z0-9._~-]+\Z")
@@ -31,7 +31,7 @@ class Reply:
         """Records a value of the request for the response hook; a later note of the same name replaces the value
         and keeps its position. The notes are not part of the response (HY-60)."""
         if not isinstance(name, str):
-            raise core_rules().type_error(
+            raise CoreRules.shared().type_error(
                 "a note name is not a string (HY-60)", "invalid_argument_type"
             )
         self.__notes[name] = value
@@ -45,30 +45,30 @@ class Reply:
         """Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails.
         The types are checked before the values, in the order of the parameters."""
         if not isinstance(name, str):
-            raise core_rules().type_error(
+            raise CoreRules.shared().type_error(
                 "a cookie name is not a string (HY-52)", "invalid_argument_type"
             )
         if not isinstance(value, str):
-            raise core_rules().type_error(
+            raise CoreRules.shared().type_error(
                 "a cookie value is not a string (HY-52)", "invalid_argument_type"
             )
         age = None if max_age is None else Reply._integer(max_age)
         if max_age is not None and age is None:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 "a Max-Age is not an integer within ±(2^53 − 1) (HY-52)",
                 "invalid_number",
             )
         if _COOKIE_NAME.fullmatch(name) is None or name.startswith("hy-"):
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"cookie name {name} is not allowed (HY-52)", "cookie_name_not_allowed"
             )
         if _COOKIE_VALUE.fullmatch(value) is None:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"cookie value of {name} has a character that is not allowed (HY-52)",
                 "cookie_value_not_allowed",
             )
         if age is not None and age < 0:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"cookie {name} has a negative Max-Age (HY-52)", "negative_max_age"
             )
         self.__cookies.append((name, value, age))
@@ -85,10 +85,10 @@ class Reply:
         visitor, so the value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor
         `s-maxage` (HY-52); the core checks the value (HY-133.2)."""
         if not isinstance(value, str):
-            raise core_rules().type_error(
+            raise CoreRules.shared().type_error(
                 "a Cache-Control is not a string (HY-52)", "invalid_argument_type"
             )
-        self.__cache_control = core_rules().reply_cache_control(value)
+        self.__cache_control = CoreRules.shared().reply_cache_control(value)
         return self
 
     def renew_session(self) -> "Reply":
@@ -110,10 +110,10 @@ class Reply:
         """Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is
         not a token of the Referrer-Policy specification fails (HY-103); the core checks the value (HY-133.2)."""
         if not isinstance(value, str):
-            raise core_rules().type_error(
+            raise CoreRules.shared().type_error(
                 "a Referrer-Policy is not a string (HY-103)", "invalid_argument_type"
             )
-        self.__referrer_policy = core_rules().reply_referrer_policy(value)
+        self.__referrer_policy = CoreRules.shared().reply_referrer_policy(value)
         return self
 
     def _referrer_policy_value(self) -> str | None:
@@ -127,11 +127,11 @@ class Reply:
         of another type with `invalid_argument_type`; the core checks the status (HY-133.2)."""
         code = Reply._integer(status)
         if code is None:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 "a page status of a reply is not an integer within ±(2^53 − 1) (HY-69)",
                 "invalid_number",
             )
-        self.__status = core_rules().reply_status(code)
+        self.__status = CoreRules.shared().reply_status(code)
         return self
 
     def _status_value(self) -> int | None:

@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from ..app._core_rules import open_error
+from ..app._core_rules import CoreRules
 
 _LITERAL = re.compile(r"[A-Za-z0-9._~-]+\Z")
 _PARAMETER = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}\Z")
@@ -50,7 +50,9 @@ class Router:
     def _compiled_path(path: str) -> list[Segment]:
         """Compiles one route path; an invalid path fails here (HY-4)."""
         if not path.startswith("/"):
-            raise open_error(f"route path {path} does not start with /")
+            raise CoreRules.shared().open_error(
+                f"route path {path} does not start with /"
+            )
         if path == "/":
             return []
         parts = path[1:].split("/")
@@ -71,7 +73,9 @@ class Router:
             if rest is not None and rest.group(1) not in names:
                 segments.append(("rest", rest.group(1)))
                 continue
-            raise open_error(f"route path {path} has an invalid segment {part}")
+            raise CoreRules.shared().open_error(
+                f"route path {path} has an invalid segment {part}"
+            )
         return segments
 
     @staticmethod

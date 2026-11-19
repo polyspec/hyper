@@ -1,7 +1,7 @@
 """The rules of the Rust core behind the names of the units of the Python server (HY-133.2). `CoreRules` takes the
 module of the Python binding of the core, `polyspec.hyper._binding._root`, and gives each rule under the name of the
 unit of the server that states it, so that a unit of the server calls the core in place of its own rule. The units of
-the server reach one shared instance through `core_rules`, which imports the binding on its first call; a test gives
+the server reach one shared instance through `CoreRules.shared`, which imports the binding on its first call; a test gives
 `CoreRules` a stand-in of that module.
 
 A unit is exact when the core decides everything that the unit of the server decides, and partial when the server still
@@ -14,9 +14,11 @@ and `status` (HY-133.1, HY-133.2). No function here catches or replaces one."""
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
-# The module of the binding that `core_rules` imports.
+from ._core_binding_error import CoreBindingError
+
+# The module of the binding that `CoreRules.shared` imports.
 BINDING = "polyspec.hyper._binding._root"
 
 # The largest limit that the binding takes: its type uint holds the integers up to 2^53 - 1 and fails a larger one with
@@ -69,6 +71,23 @@ _MEMBERS = (
 class CoreRules:
     """The rules of the core under the names of the units of the server. A module that lacks a member of the binding
     fails here with its name, before a request calls it."""
+
+    # The one CoreRules of the process, which the first call of `shared` creates.
+    __shared: ClassVar[Optional[CoreRules]] = None
+
+    @staticmethod
+    def shared() -> CoreRules:
+        """Returns the one `CoreRules` of the process, which the first call creates from the module of the binding. A
+        module that does not import fails with `CoreBindingError`, and the next call imports it again."""
+        if CoreRules.__shared is None:
+            try:
+                from .._binding import _root as module
+            except ImportError as error:
+                raise CoreBindingError(
+                    f"hyper: the binding of the core, the module {BINDING}, does not import: {error}"
+                ) from error
+            CoreRules.__shared = CoreRules(module)
+        return CoreRules.__shared
 
     def __init__(self, core: Any) -> None:
         missing = [name for name in _MEMBERS if not callable(getattr(core, name, None))]
@@ -164,7 +183,7 @@ class CoreRules:
             "file_limit": min(file_limit, NO_LIMIT),
         }
 
-    def request_body_start(
+    def form_start(
         self,
         content_type: Optional[str],
         content_length: Optional[str],
@@ -179,14 +198,14 @@ class CoreRules:
             content_type, content_length, stream, **limits
         )
 
-    def read_held_body(
+    def form_read_held(
         self, content_type: Optional[str], body: bytes, limits: dict[str, int]
     ) -> Any:
         """Request: form_functions.read_held_body gives the form of a body held as one value, under its limits, and
         fails with the kind of http-form (F-21, F-22, F-25.2, HY-113.23, HY-113.25)."""
         return self._core.read_held_body(content_type, body, **limits)
 
-    def parse_urlencoded(self, text: bytes) -> list[Any]:
+    def form_parse_urlencoded(self, text: bytes) -> list[Any]:
         """Fields.parse: form_functions.parse_urlencoded gives the values of an urlencoded text, and fails with
         `invalid` for a name or a value that is not UTF-8 (F-20, F-21, HY-42, HY-56)."""
         return self._core.parse_urlencoded(text)
@@ -320,31 +339,7 @@ class CoreRules:
         (HY-125.23)."""
         return self._core.read_build(data)
 
-
-class CoreBindingError(ImportError):
-    """The binding of the core does not import. The server has no rule of its own in place of the core, so the first
-    unit that needs a rule fails with this error, which names the module (HY-133.2)."""
-
-
-_shared: Optional[CoreRules] = None
-
-
-def core_rules() -> CoreRules:
-    """Returns the one `CoreRules` of the process, which the first call creates from the module of the binding. A
-    module that does not import fails with `CoreBindingError`, and the next call imports it again."""
-    global _shared
-    if _shared is None:
-        try:
-            from .._binding import _root as module
-        except ImportError as error:
-            raise CoreBindingError(
-                f"hyper: the binding of the core, the module {BINDING}, does not import: {error}"
-            ) from error
-        _shared = CoreRules(module)
-    return _shared
-
-
-def open_error(message: str) -> ValueError:
-    """The error with which an application fails to open: the class of the binding of the category value with the
-    kind `invalid_application` (HY-106.21)."""
-    return core_rules().value_error(message, "invalid_application")
+    def open_error(self, message: str) -> ValueError:
+        """The error with which an application fails to open: the class of the binding of the category value with the
+        kind `invalid_application` (HY-106.21)."""
+        return self.value_error(message, "invalid_application")

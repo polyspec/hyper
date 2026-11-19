@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from ._representation_entry import RepresentationEntry
 
 _TOKEN = re.compile(r"[!#$%&'*+\-.^_`|~0-9A-Za-z]+")
@@ -162,4 +162,4 @@ class RepresentationEntries:
     @staticmethod
     def _invalid(message: str) -> ValueError:
         """Returns the error of a representation that fails the open of the application (HY-106.21)."""
-        return core_rules().value_error(message, "invalid_application")
+        return CoreRules.shared().value_error(message, "invalid_application")

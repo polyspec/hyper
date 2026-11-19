@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Optional
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from ._media_range import MediaRange
 
 # The kinds of the core for an `Accept` value that the grammar does not allow or whose weight is not a qvalue; the
@@ -28,7 +28,7 @@ class Accept:
                 tuple((name, text) for name, text in item.parameters),
                 item.weight,
             )
-            for item in core_rules().accept_parse(value)
+            for item in CoreRules.shared().accept_parse(value)
         ]
 
     @staticmethod

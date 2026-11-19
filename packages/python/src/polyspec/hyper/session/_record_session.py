@@ -9,7 +9,7 @@ from typing import Optional
 
 from polyspec.php_serialization import Reference, StdClass, serialize, unserialize
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from .session_store import SessionStore
 
 
@@ -68,12 +68,12 @@ class RecordSession(SessionStore):
     def cookie_name(secure: bool) -> str:
         """Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45); the core
         names it (HY-133.2)."""
-        return core_rules().session_cookie_name(secure)
+        return CoreRules.shared().session_cookie_name(secure)
 
     @staticmethod
     def cookie_header(id: str, secure: bool) -> str:
         """Returns the Set-Cookie value of a new session (HY-45.8); the core writes it (HY-133.2)."""
-        return core_rules().session_cookie_header(id, secure)
+        return CoreRules.shared().session_cookie_header(id, secure)
 
     def _start(self) -> dict:
         """Returns the values of the session, which the first use of the request reads or starts."""

@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from ..app._core_rules import open_error
+from ..app._core_rules import CoreRules
 from ..data._json_codec import JsonCodec
 from ._region import Region
 from ..representation._representation_entries import RepresentationEntries
@@ -43,14 +43,14 @@ class Manifest:
         """Reads and checks a manifest file."""
         path = Path(file)
         if not path.is_file():
-            raise open_error(f"manifest {file} does not exist")
+            raise CoreRules.shared().open_error(f"manifest {file} does not exist")
         try:
             text = path.read_text(encoding="utf-8")
             # HY-2.8: the manifest is JSON text as HY-54 decodes it.
             JsonCodec.decode(text)
             data = json.loads(text)
         except ValueError as error:
-            raise open_error(
+            raise CoreRules.shared().open_error(
                 f"manifest {file} is not valid JSON or UTF-8: {error}"
             ) from None
         if (
@@ -58,29 +58,37 @@ class Manifest:
             or not isinstance(data.get("layout"), str)
             or not isinstance(data.get("title"), str)
         ):
-            raise open_error(f"manifest {file} has no layout or title template")
+            raise CoreRules.shared().open_error(
+                f"manifest {file} has no layout or title template"
+            )
 
         regions: dict[str, Region] = {}
         page: Optional[Region] = None
         for region in Manifest._entries(data, "regions"):
             name = region.get("name") if isinstance(region.get("name"), str) else ""
             if not Manifest._region_name(name) or name in regions:
-                raise open_error(f"manifest region name {name} is not allowed")
+                raise CoreRules.shared().open_error(
+                    f"manifest region name {name} is not allowed"
+                )
             is_page = region.get("page") == True  # noqa: E712 - the manifest states true, not truthiness
             template = region.get("template")
             if isinstance(template, str) == is_page:
-                raise open_error(
+                raise CoreRules.shared().open_error(
                     f"manifest region {name} must have a template unless it is the page region"
                 )
             declared_uses = region.get("uses", [])
             if not isinstance(declared_uses, list):
-                raise open_error(f"manifest region {name} uses an invalid topic")
+                raise CoreRules.shared().open_error(
+                    f"manifest region {name} uses an invalid topic"
+                )
             for topic in declared_uses:
                 if not isinstance(topic, str) or _TOPIC.fullmatch(topic) is None:
-                    raise open_error(f"manifest region {name} uses an invalid topic")
+                    raise CoreRules.shared().open_error(
+                        f"manifest region {name} uses an invalid topic"
+                    )
             # HY-37: only route regions change in the browser, so only they keep values.
             if "keep" in region:
-                raise open_error(
+                raise CoreRules.shared().open_error(
                     f"manifest region {name} cannot keep values; only route regions keep values"
                 )
             regions[name] = Region(
@@ -88,10 +96,12 @@ class Manifest:
             )
             if is_page:
                 if page is not None:
-                    raise open_error("manifest declares more than one page region")
+                    raise CoreRules.shared().open_error(
+                        "manifest declares more than one page region"
+                    )
                 page = regions[name]
         if page is None:
-            raise open_error("manifest declares no page region")
+            raise CoreRules.shared().open_error("manifest declares no page region")
 
         routes: dict[str, dict] = {}
         region_names = set(regions)
@@ -107,9 +117,11 @@ class Manifest:
                     isinstance(item, str) for item in (title, template, route_path)
                 )
             ):
-                raise open_error(f"manifest route {name} is duplicated or incomplete")
+                raise CoreRules.shared().open_error(
+                    f"manifest route {name} is duplicated or incomplete"
+                )
             if route_path.startswith("/_hyper"):
-                raise open_error(
+                raise CoreRules.shared().open_error(
                     f"manifest route {name} uses the reserved path /_hyper (HY-40)"
                 )
             route_regions: list[Region] = []
@@ -123,7 +135,7 @@ class Manifest:
                     or region_name in region_names
                     or not isinstance(region_template, str)
                 ):
-                    raise open_error(
+                    raise CoreRules.shared().open_error(
                         f"manifest route {name} has an invalid or duplicated region {region_name}"
                     )
                 region_names.add(region_name)
@@ -138,7 +150,9 @@ class Manifest:
             # HY-104.38: false for a route that uses no session, whose requests a server answers without opening one.
             uses_session = route.get("session", True)
             if not isinstance(uses_session, bool):
-                raise open_error(f"route {name} has a session that is not a boolean")
+                raise CoreRules.shared().open_error(
+                    f"route {name} has a session that is not a boolean"
+                )
             routes[name] = {
                 "name": name,
                 "path": route_path,
@@ -180,10 +194,10 @@ class Manifest:
         """Returns the objects of the list under a key, which may be absent (HY-2)."""
         declared = obj.get(key, [])
         if not isinstance(declared, list):
-            raise open_error(f"manifest {key} is not a list")
+            raise CoreRules.shared().open_error(f"manifest {key} is not a list")
         for entry in declared:
             if not isinstance(entry, dict):
-                raise open_error(
+                raise CoreRules.shared().open_error(
                     f"manifest {key} contains a value that is not an object"
                 )
         return declared
@@ -193,11 +207,15 @@ class Manifest:
         """Returns the kept paths of a route region by path; the region checks the paths and kinds (HY-37)."""
         declared = region.get("keep", {})
         if not isinstance(declared, dict):
-            raise open_error(f"region {name} has kept paths that are not an object")
+            raise CoreRules.shared().open_error(
+                f"region {name} has kept paths that are not an object"
+            )
         keep: dict[str, str] = {}
         for path, kind in declared.items():
             if not isinstance(path, str) or not isinstance(kind, str):
-                raise open_error(f"region {name} has an invalid kept path {path}")
+                raise CoreRules.shared().open_error(
+                    f"region {name} has an invalid kept path {path}"
+                )
             keep[path] = kind
         return keep
 
