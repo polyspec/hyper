@@ -7486,31 +7486,6 @@
                   "signature": "def from_body(content_type: str, body: bytes) -> Optional[Fields]"
                 }
               }
-            },
-            {
-              "id": "fields.percentDecoded",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "bytes"
-              ],
-              "output": "optional<string>",
-              "errors": [],
-              "state": "Decodes + to a space and %XX to its byte, and returns the text when the bytes are UTF-8, or null (HY-56).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/Fields.php::Polyspec\\Hyper\\Fields::percentDecoded",
-                  "signature": "private static function percentDecoded(string $text): ?string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/fields.ts::Fields.percentDecoded",
-                  "signature": "private static percentDecoded(text: string): string | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/_fields.py::Fields._percent_decoded",
-                  "signature": "def _percent_decoded(text: bytes) -> Optional[str]"
-                }
-              }
             }
           ]
         },
