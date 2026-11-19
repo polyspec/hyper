@@ -1877,6 +1877,53 @@
               ]
             },
             {
+              "id": "core-rules.appCheckShellPath",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "The static shell of App.open: rules.check_shell_path checks its path before the server reads the file (HY-62). The server still reads the file, and checks the data base path of the declaration against the routes and the meta element of the shell (HY-62.2).",
+              "native": {
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_check_shell_path",
+                  "signature": "def app_check_shell_path(self, path: str) -> None"
+                }
+              },
+              "only": {
+                "languages": [
+                  "python"
+                ],
+                "sentence": "HY-62.39"
+              }
+            },
+            {
+              "id": "core-rules.appShellText",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "bytes"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "rules.shell_text gives the text of the bytes of the static shell (HY-62), which the server read.",
+              "native": {
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_shell_text",
+                  "signature": "def app_shell_text(self, path: str, data: bytes) -> str"
+                }
+              },
+              "only": {
+                "languages": [
+                  "python"
+                ],
+                "sentence": "HY-62.3"
+              }
+            },
+            {
               "id": "core-rules.pageTag",
               "kind": "method",
               "visibility": "internal",
