@@ -21,9 +21,8 @@ from .container_steps import SERVICES
 from .recorded import decoded
 
 
-_ORM_FIXTURE = (
-    Path(__file__).resolve().parents[4] / "tests" / "fixtures" / "orm-errors.json"
-)
+_PACKAGES = Path(__file__).resolve().parents[3]
+_ORM_FIXTURE = _PACKAGES / "php" / "tests" / "fixtures" / "orm-errors.json"
 _orm_caught: dict[str, Exception] | None = None
 
 
@@ -45,7 +44,7 @@ def orm_error(thrown: object, what: str) -> Exception:
 
 def _orm_errors() -> dict[str, Exception]:
     """Gets the errors of the orm package that the cases throw by real calls on a SQLite file of
-    tests/fixtures/orm-errors.json in a temporary directory, as the generated tests of orm 0.0.34 make them
+    packages/php/tests/fixtures/orm-errors.json in a temporary directory, as the generated tests of orm 0.0.34 make them
     (test_generated.py): an update with an expected revision that the row does not hold gives `revision_changed` (line
     9203, test_b4_query_update_a_changed_revision), an update with require_match of a key that no row holds gives
     `no_rows` (line 9313), and a connection to a file in a missing directory gives the ORMStoreError `driver` (line

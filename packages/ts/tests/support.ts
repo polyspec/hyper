@@ -59,7 +59,7 @@ export function handlers(): Handlers<Services> {
 let ormCaught: ReadonlyMap<string, Error> | null = null;
 
 /**
- * Gets the errors of the orm package that the cases throw by real calls on a SQLite file of tests/fixtures/orm-errors.json
+ * Gets the errors of the orm package that the cases throw by real calls on a SQLite file of packages/php/tests/fixtures/orm-errors.json
  * in a temporary directory, as the generated tests of orm 0.0.34 make them: an update with an expected revision that the
  * row does not hold gives `revision_changed` (generated.test.mjs:6376, Query.update a_changed_revision), an update with
  * require_match of a key that no row holds gives `no_rows` (:6480, require_match_of_a_row_that_no_key_holds), and a
@@ -68,7 +68,7 @@ let ormCaught: ReadonlyMap<string, Error> | null = null;
  */
 export async function ormErrors(): Promise<void> {
   if (ormCaught !== null) return;
-  const fixture = ormFixtureOf(JSON.parse(readFileSync(new URL('../../../tests/fixtures/orm-errors.json', import.meta.url), 'utf8')));
+  const fixture = ormFixtureOf(JSON.parse(readFileSync(join(FIXTURES, 'orm-errors.json'), 'utf8')));
   const directory = mkdtempSync(join(tmpdir(), 'hyper-orm-errors-'));
   const caught = new Map<string, Error>();
   try {
@@ -116,12 +116,12 @@ interface OrmFixture {
 function ormFixtureOf(value: unknown): OrmFixture {
   const isRecord = (item: unknown): item is Record<string, unknown> => typeof item === 'object' && item !== null && !Array.isArray(item);
   const isNumber = (item: unknown): item is number => typeof item === 'number';
-  if (!isRecord(value) || !isRecord(value.revisionChanged) || !isRecord(value.noRows) || !Array.isArray(value.steps)) throw new Error('tests/fixtures/orm-errors.json is no orm fixture');
+  if (!isRecord(value) || !isRecord(value.revisionChanged) || !isRecord(value.noRows) || !Array.isArray(value.steps)) throw new Error('packages/php/tests/fixtures/orm-errors.json is no orm fixture');
   const { manifest, manifestHash, entity, driver, steps, revisionChanged, noRows } = value;
   const { key, qty, revisionColumn, revision } = revisionChanged;
-  if (typeof manifest !== 'string' || typeof manifestHash !== 'string' || typeof entity !== 'string' || typeof driver !== 'string' || typeof revisionColumn !== 'string') throw new Error('tests/fixtures/orm-errors.json holds a text that is no string');
+  if (typeof manifest !== 'string' || typeof manifestHash !== 'string' || typeof entity !== 'string' || typeof driver !== 'string' || typeof revisionColumn !== 'string') throw new Error('packages/php/tests/fixtures/orm-errors.json holds a text that is no string');
   const texts = steps.filter((step: unknown): step is string => typeof step === 'string');
-  if (texts.length !== steps.length || !isNumber(key) || !isNumber(qty) || !isNumber(revision) || !isNumber(noRows.key) || !isNumber(noRows.qty)) throw new Error('tests/fixtures/orm-errors.json holds a step or a number of another type');
+  if (texts.length !== steps.length || !isNumber(key) || !isNumber(qty) || !isNumber(revision) || !isNumber(noRows.key) || !isNumber(noRows.qty)) throw new Error('packages/php/tests/fixtures/orm-errors.json holds a step or a number of another type');
   return { manifest, manifestHash, entity, driver, steps: texts, revisionChanged: { key, qty, revisionColumn, revision }, noRows: { key: noRows.key, qty: noRows.qty } };
 }
 
