@@ -11727,11 +11727,13 @@
                 "php": {
                   "symbol": "packages/php/src/Page/Region.php::Polyspec\\Hyper\\Region::usesAny",
                   "signature": "public function usesAny(array $topics): bool"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_region.py::Region.uses_any",
-                  "signature": "def uses_any(self, topics: list[str]) -> bool"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-11.1"
               }
             },
             {
@@ -12200,33 +12202,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/page/_region_planner.py::RegionPlanner.changed_topics",
                   "signature": "def changed_topics(request: Request, flash: Flash, base_path: str) -> list[str]"
-                }
-              }
-            },
-            {
-              "id": "region-planner.select",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "manifest",
-                "boolean",
-                "list<string>"
-              ],
-              "output": "list<region>",
-              "errors": [],
-              "state": "Returns the regions that a document or a region response contains.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/RegionPlanner.php::Polyspec\\Hyper\\RegionPlanner::select",
-                  "signature": "public static function select(Polyspec\\Hyper\\Manifest $manifest, bool $document, array $changed): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/page/region-planner.ts::RegionPlanner.select",
-                  "signature": "static select(manifest: Manifest, document: boolean, changed: readonly string[]): RegionDeclaration[]"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_region_planner.py::RegionPlanner.select",
-                  "signature": "def select(manifest: Manifest, document: bool, changed: list[str]) -> list[Region]"
                 }
               }
             }
