@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 94d4e27c2940a426d59de4b691ff0258f795c49d006c125fa10f04dfd6b28070 -->
+<!-- source-sha256: 5c8be2bc600ea81523e9dbd6e6d32b5dc880907dd53087812f7089f66f92a7a8 -->
 # 의존성
 
 [English](dependencies.md).
