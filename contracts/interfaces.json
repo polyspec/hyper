@@ -390,7 +390,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-97.2"
               },
               "tests": [
                 "packages/php/tests/AppTest.php::AppTest::testAnErrorOfAroundAndAValueThatIsNoResponseEscape: Only PHP takes around as an argument of App::open (HY-97.1), so only App::handle of PHP lets the error of around and a return value that is no response leave the call; the test asserts the RuntimeException and the UnexpectedValueException at App::handle, which no case of a response states.",
@@ -448,7 +448,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-43.1"
               },
               "tests": [
                 "packages/php/tests/RunTest.php::RunTest::testRunCallsTheDisconnectHookWhenTheScriptEndsDuringTheAnswerOfAClosedConnection: Only a PHP script can end during the answer; the delivery holds the request and the reply before the answer runs, so the shutdown function calls the disconnect hook (HY-67.5)."
@@ -582,7 +582,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-60.14"
               }
             },
             {
@@ -1154,7 +1154,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-106.20"
               },
               "native": {
                 "php": {
