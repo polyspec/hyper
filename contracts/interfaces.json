@@ -10805,7 +10805,7 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Fails when a value is not a value of the data model, and returns the value.",
+              "state": "Fails when a value is not a value of the data model, and returns the value; Node returns the value that the core reads back from its JSON text (HY-44.13).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::check",
@@ -10819,7 +10819,21 @@
                   "symbol": "packages/python/src/polyspec/hyper/data/_data_model.py::DataModel.check",
                   "signature": "def check(value: object) -> object"
                 }
-              }
+              },
+              "reachDiffers": [
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "php",
+                  "sentence": "HY-44.13"
+                },
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "python",
+                  "sentence": "HY-44.13"
+                }
+              ]
             },
             {
               "id": "data-model.contains",

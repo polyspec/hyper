@@ -5058,6 +5058,12 @@
                   "en": "A value outside the data model fails with the error of the template data model (VAL-2, VAL-3, VAL-13, VAL-20), and hyper passes on its kind, such as `data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth` or `data_unsupported_type`, and its message as they are: the message that a caller receives, as the failure of the response hook does (HY-60), is the whole text of that error as the binding gives it, which starts with the kind, such as `data_number_range: number 9007199254740992 is outside the safe range`, and hyper adds nothing to it and removes nothing from it.",
                   "ko": "데이터 모델 밖의 값은 template 데이터 모델의 오류로 실패하며(VAL-2, VAL-3, VAL-13, VAL-20), hyper는 그 kind(`data_number_range`, `data_number_not_finite`, `data_invalid_utf8`, `data_depth`, `data_unsupported_type` 등)와 message를 그대로 넘긴다: 호출자가 받는 message는, 응답 hook이 받는 failure(HY-60)가 그렇듯, binding이 주는 그 오류의 전체 text이고 kind로 시작하며(예: `data_number_range: number 9007199254740992 is outside the safe range`), hyper는 거기에 아무것도 더하지 않고 거기에서 아무것도 빼지 않는다.",
                   "koSource": "25600438c6861cabec4157c4c0a48e0eb2d17a9d6dbc8c03c2452fa600d93745"
+                },
+                {
+                  "id": "HY-44.13",
+                  "en": "The Node server returns from the check of an application value the value that the core reads back from its JSON text, because a JavaScript value holds a plain object and a bigint where the data model holds a map and a number, while the PHP and Python servers return the value as it was given, whose arrays, dicts and integers are already values of the data model.",
+                  "ko": "Node server는 application 값의 검사에서 core가 그 JSON text에서 다시 읽은 값을 돌려주는데, JavaScript 값은 데이터 모델이 map과 number를 두는 자리에 plain object와 bigint를 두기 때문이며, PHP와 Python server는 받은 값을 그대로 돌려주는데, 그 array, dict, 정수는 이미 데이터 모델의 값이다.",
+                  "koSource": "b1b0386ed5afd1a541b565198942b08be3bf2bc43587a9dc53b0d4747ea7df88"
                 }
               ]
             }
