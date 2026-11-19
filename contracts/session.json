@@ -803,6 +803,31 @@
       }
     },
     {
+      "id": "reading_stored_kept_values_outside_the_data_model_fails",
+      "label": "reading stored kept values that hold the integer 2^53, which is outside the data model, fails with the error of the data model (HY-104.23)",
+      "stored": [
+        [
+          "_hyper_keep",
+          "{\"rows\":{\"sort\":9007199254740992}}"
+        ]
+      ],
+      "calls": [
+        [
+          "kept",
+          [
+            "\"rows\""
+          ]
+        ]
+      ],
+      "results": [],
+      "raises": {
+        "kind": "data_number_range",
+        "status": null,
+        "category": "value",
+        "message": null
+      }
+    },
+    {
       "id": "keeping_an_integer_outside_the_data_model_fails_and_stores_nothing",
       "label": "keep of the integer 2^53, which is outside the data model, fails with the error of the data model, and the region holds no kept value",
       "calls": [
