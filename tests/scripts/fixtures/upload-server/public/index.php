@@ -95,7 +95,7 @@ $upload = static function (Request $request) use ($moved): Response {
         'valid' => $request->validInput(),
         'form' => $request->form(),
         'files' => $files,
-        'held' => count(glob(sys_get_temp_dir() . '/hyper-*') ?: []),
+        'held' => count(glob(sys_get_temp_dir() . '/http-form-*') ?: []),
     ];
     if ($usage) {
         $used = getrusage();

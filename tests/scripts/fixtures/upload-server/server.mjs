@@ -76,14 +76,14 @@ async function upload(request) {
         continue;
       }
       const target = join(moved, `node-${files.length}`);
-      file.moveTo(target);
+      await file.moveTo(target);
       const digest = createHash('sha256');
       for await (const block of createReadStream(target)) digest.update(block);
       files.push([name, file.filename(), file.contentType(), file.size(), digest.digest('hex')]);
       unlinkSync(target);
     }
   }
-  const answer = { valid: request.validInput(), form: request.form(), files, held: readdirSync(tmpdir()).filter((name) => name.startsWith('hyper-')).length };
+  const answer = { valid: request.validInput(), form: request.form(), files, held: readdirSync(tmpdir()).filter((name) => name.startsWith('http-form-')).length };
   if (usage) {
     const used = process.resourceUsage();
     answer.cpu = (used.userCPUTime + used.systemCPUTime) / 1000;
