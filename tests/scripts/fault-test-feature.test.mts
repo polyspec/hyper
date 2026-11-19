@@ -31,7 +31,7 @@ test('the Python tests install the wheel built with fault-test (H35.11-3)', () =
 test('the release recipe of the PHP extension does not enable fault-test (H35.11-3)', () => {
   const commands = lines('hyper-ext');
   assert.doesNotMatch(commands, /fault-test/, commands);
-  assert.match(commands, /build\/hyper-ext\//, commands);
+  assert.match(commands, /build\/hyper-ext(?![\w.-])/, commands);
 });
 
 test('the release recipe of the Python wheel does not enable fault-test (H35.11-3)', () => {
