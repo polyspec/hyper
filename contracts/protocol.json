@@ -7233,9 +7233,9 @@
                 },
                 {
                   "id": "HY-104.40",
-                  "en": "A host opens the session of a request with its store and its session cookie, closes it after the answer and reads the identifier of a new session through members of the core, so that the rule of opening and closing a session is stated once in the core and a host only passes the store and the cookie.",
-                  "ko": "host는 요청의 session을 그 store와 session cookie로 열고, 응답 뒤에 닫고, 새 session의 식별자를 core의 member를 통해 읽는다. 그래서 session을 열고 닫는 규칙은 core에 한 번만 적히고 host는 store와 cookie만 넘긴다.",
-                  "koSource": "7a1612be41512b39581246c145413aa673edc534de3e0327642c8713f90cd623",
+                  "en": "A host opens the session of a request with its store and its session cookie, closes it after the answer is made and before it is sent, and reads the identifier of a new session through members of the core, so that the rule of opening and closing a session is stated once in the core and a host only passes the store and the cookie.",
+                  "ko": "host는 요청의 session을 그 store와 session cookie로 열고, 응답을 만든 뒤 보내기 전에 닫고, 새 session의 식별자를 core의 member를 통해 읽는다. 그래서 session을 열고 닫는 규칙은 core에 한 번만 적히고 host는 store와 cookie만 넘긴다.",
+                  "koSource": "a0f0a8984887f16d2ce780f04cf46e4bd85e4845b5c16e4b0f43c7d1b3008ffc",
                   "unimplemented": "H35.38-1"
                 }
               ]
