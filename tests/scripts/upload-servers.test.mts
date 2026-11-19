@@ -2,8 +2,8 @@
 // server, the server of `App.server` of Node and the `http.server` server of Python are real processes with one
 // application, whose request hook answers what the request gave of its body. The same requests must give the same
 // answers, a file that the hook moved must hold the bytes that were sent, and the directory of a request must be gone
-// when the connection of the request has ended. The Node server ends a connection before it removes the directory, so
-// its removal is tested where the end of its listener is known (packages/ts/tests/http.test.ts).
+// when the server has reported the end of the request. The Node server removes the directory after the close of the
+// response (HY-99, HY-131.14), which the client sees first, so the test reads the directory after that report.
 import assert from 'node:assert/strict';
 import { type ChildProcess, execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -88,12 +88,9 @@ test('the three servers read an upload over HTTP alike and remove its directory 
   requireBuilt('packages', 'packages/ts/dist/index.js');
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
-  const { directory, children, environment } = await started(t);
-  const urls = {
-    php: (await startPhp({ name: 'php', app: FIXTURE, port: 0, extensions: phpServerExtensions(), env: environment('php'), ini: ['enable_post_data_reading=0', 'post_max_size=64M', `session.save_path=${path.join(directory, 'php/sessions')}`], children })).url,
-    node: (await startServer({ name: 'node', command: process.execPath, args: ['--no-warnings', path.join(FIXTURE, 'server.mjs')], env: { ...process.env, ...environment('node') }, ready: READY, children })).url,
-    python: (await startServer({ name: 'python', command: PYTHON, args: [path.join(FIXTURE, 'server.py')], env: { ...process.env, ...environment('python') }, ready: READY, children })).url,
-  };
+  // The servers log their hooks, so that each reports the end of a request, after which its directory is removed
+  // (HY-131.14): the Node server removes it only after the close of the response, which the client sees first.
+  const { hosts } = await hostsOf(t, {});
 
   // A file of 3 MiB whose bytes are a pattern, so that a part that is lost or moved changes its digest.
   const content = Buffer.alloc(3 * 1024 * 1024);
@@ -116,12 +113,14 @@ test('the three servers read an upload over HTTP alike and remove its directory 
     { label: 'a request without a body', headers: {}, body: Buffer.alloc(0), status: 200, answer: { valid: true, form: [], files: [], held: 0 } },
   ];
   for (const request of requests) {
-    for (const server of SERVERS) {
-      const response = await send(urls[server], 'POST', request.headers, request.body);
+    for (const host of hosts) {
+      const server = host.name;
+      const head = [`POST / HTTP/1.1`, 'Host: x', 'Connection: close', `Content-Length: ${request.body.length}`, ...Object.entries(request.headers).map(([name, value]) => `${name}: ${value}`)];
+      const response = await ask(host, Buffer.concat([Buffer.from(`${head.join('\r\n')}\r\n\r\n`), request.body]));
       assert.equal(response.status, request.status, `${server}, ${request.label}: ${response.body.slice(0, 200)}`);
       assert.deepEqual(JSON.parse(response.body), request.answer, `${server}, ${request.label}`);
-      assert.deepEqual(readdirSync(path.join(directory, server, 'moved')), [], `${server}, ${request.label}: a moved file stays`);
-      if (server !== 'node') assert.deepEqual(readdirSync(path.join(directory, server, 'tmp')).filter((name) => name.startsWith('http-form-')), [], `${server}, ${request.label}: the directory of the request stays`);
+      assert.deepEqual(readdirSync(path.join(host.directory, 'moved')), [], `${server}, ${request.label}: a moved file stays`);
+      assert.deepEqual(readdirSync(path.join(host.directory, 'tmp')).filter((name) => name.startsWith('http-form-')), [], `${server}, ${request.label}: the directory of the request stays`);
     }
   }
 });
