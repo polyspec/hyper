@@ -147,6 +147,16 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
       Makefile (`--cargo "$(CARGO)"`), as the binding generator does. A unit or member that the file does not list is
       `REEXPORT_MISSING`, with the file and the name; a crate that is not fetched fails with the name of
       `make hyper-install-crates`. A spec without reexports starts no cargo.
+    - A unit that the package exports from a library without a class or a file of its own is stated as
+      `{"id": "<unit>", "reexport": "<library>:<unit>", "names": [...]}`, with no `native` and no `members`, and with
+      `only` (HYR-6) when only some languages export it; `names` lists the names under which the barrels of those
+      languages export the library unit, because HY-106.18 takes every public name from the entry of the package. The
+      check counts these names as stated in the barrel check of each such language, and verifies that the library
+      unit exists in the `interface.json` of the locked crate, as for a reexport member. Where that file states the
+      words of the unit (`name`), and for a `variant` unit the value of each case, the names that it states are the
+      words of the unit in PascalCase and, for each case, the words of the unit followed by the words of the case in
+      PascalCase, as the binding generator names them; a name of `names` that is none of them is `REEXPORT_MISSING`,
+      with the file and the name.
   - **Types.** A type is a type declaration that is no unit (HYR-3): a Node `type` alias or `interface`, and a Python
     `type` statement. The spec lists it once under `types` with `id` (its words in camelCase), `visibility` (as for a
     member), `unit` (the unit whose file holds it in each language), a neutral `shape` and, for each language that

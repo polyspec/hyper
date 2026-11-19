@@ -106,3 +106,77 @@ test('HYR-5: the schema refuses a reexport member with inputs or native, and a r
   first.members = [];
   assert.equal(schemas.spec(unit), true, JSON.stringify(schemas.spec.errors));
 });
+
+/** The python barrel of the fixture, relative to its root. */
+const BARREL = path.join('packages', 'python', 'src', 'polyspec', 'hyper', '__init__.py');
+
+/**
+ * Runs the check over a copy of the fixture whose python barrel also imports `exported` and whose spec states, when
+ * `unit` is given, that entry as a unit of the first concern (HYR-5 Reexports of a unit with `names`). The cargo stand-in
+ * names the crate polyspec-lib, whose interface.json lists the variant unit `lib_setting` with the cases server and cluster.
+ */
+function runWithNames(exported: string[], unit: Record<string, unknown> | undefined): { status: number | null; stdout: string; stderr: string } {
+  const root = mkdtempSync(path.join(tmpdir(), 'hyper-recipe-reexport-names-'));
+  try {
+    cpSync(fixture, root, { recursive: true });
+    const specFile = path.join(root, 'contracts', 'interfaces.json');
+    const doc = readDoc(specFile);
+    if (unit !== undefined) (doc.concerns[0]?.units as unknown[]).push(unit);
+    writeFileSync(specFile, `${JSON.stringify(doc, null, 2)}\n`);
+    const barrel = path.join(root, BARREL);
+    writeFileSync(barrel, `${readFileSync(barrel, 'utf8')}from polyspec.lib import ${exported.join(', ')}\n`);
+    const crate = path.join(root, 'crate');
+    mkdirSync(crate);
+    const setting = { id: 'lib_setting', name: ['lib', 'setting'], kind: 'variant', cases: [{ value: 'server' }, { value: 'cluster' }], members: [] };
+    writeFileSync(path.join(crate, 'interface.json'), JSON.stringify({ library: 'lib', units: [setting] }));
+    const metadata = JSON.stringify({ packages: [{ name: 'polyspec-lib', manifest_path: path.join(crate, 'Cargo.toml') }] });
+    writeFileSync(path.join(root, 'cargo.mjs'), `process.stdout.write(${JSON.stringify(metadata)});\n`);
+    track(root);
+    return spawnSync(process.execPath, [
+      check, '--root', root, '--php-autoload', path.join(root, 'vendor', 'autoload.php'), '--run-dir', path.join(root, 'results'),
+      '--cargo', `${process.execPath} ${path.join(root, 'cargo.mjs')}`,
+    ], { encoding: 'utf8' });
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+/** A unit that the python barrel exports from the library unit `target` under `names`. */
+function namesUnit(target: string, names: string[]): Record<string, unknown> {
+  return { id: 'lib-setting', reexport: target, names, only: { languages: ['python'], sentence: 'HY-1.1' } };
+}
+
+test('HYR-5: without a unit of names, the names that the barrel imports from a library are extra barrel exports', () => {
+  const result = runWithNames(['LibSettingServer', 'LibSettingCluster'], undefined);
+  assert.match(result.stdout, /^BARREL_EXPORT python barrel exports differ: extra \[LibSettingServer, LibSettingCluster\], missing \[\]$/mu, result.stdout + result.stderr);
+});
+
+test('HYR-5: a unit whose library unit and names exist passes and its names are stated in the barrel', () => {
+  const result = runWithNames(['LibSettingServer', 'LibSettingCluster'], namesUnit('lib:lib_setting', ['LibSettingServer', 'LibSettingCluster']));
+  assert.equal(result.stdout.split('\n').filter((l) => l.includes('BARREL_EXPORT') || l.includes('REEXPORT_MISSING') || l.includes('lib-setting')).join('\n'), '', result.stdout + result.stderr);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('HYR-5: a unit whose library unit is missing yields REEXPORT_MISSING with the file and the name', () => {
+  const result = runWithNames(['LibSettingServer'], namesUnit('lib:absent', ['LibSettingServer']));
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^REEXPORT_MISSING unit lib-setting reexports lib:absent, which \S+crate\/interface\.json does not list$/mu);
+});
+
+test('HYR-5: a name that the library unit does not state yields REEXPORT_MISSING with the file and the name', () => {
+  const result = runWithNames(['LibSettingServer', 'LibSettingOther'], namesUnit('lib:lib_setting', ['LibSettingServer', 'LibSettingOther']));
+  assert.equal(result.status, 1, result.stdout + result.stderr);
+  assert.match(result.stdout, /^REEXPORT_MISSING unit lib-setting reexports lib:lib_setting as LibSettingOther, which \S+crate\/interface\.json does not state$/mu);
+});
+
+test('HYR-5: the schema accepts a unit of names and refuses one with native or members', () => {
+  const doc = (unit: Record<string, unknown>): Doc => {
+    const d = readDoc(path.join(fixture, 'contracts', 'interfaces.json'));
+    (d.concerns[0]?.units as unknown[]).push(unit);
+    return d;
+  };
+  assert.equal(schemas.spec(doc(namesUnit('lib:lib_setting', ['LibSettingServer']))), true, JSON.stringify(schemas.spec.errors));
+  assert.equal(schemas.spec(doc({ ...namesUnit('lib:lib_setting', ['LibSettingServer']), members: [] })), false);
+  assert.equal(schemas.spec(doc({ ...namesUnit('lib:lib_setting', ['LibSettingServer']), native: {} })), false);
+  assert.equal(schemas.spec(doc({ ...namesUnit('lib:lib_setting', []) })), false);
+});

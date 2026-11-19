@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 1a6248dd9a5e3ec4dc03d9869f90799942d696b3a9912dde8cc1700f3d540ee6 -->
+<!-- source-sha256: ebb93828b916a503bf17866a9716be292474d0005dc652676f638c00969e0974 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -140,6 +140,14 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       (`--cargo "$(CARGO)"`)으로 `packages/rust/Cargo.toml`의 `cargo metadata --locked --offline`에서 찾는다. 파일이 적지
       않는 unit 또는 멤버는 파일과 이름을 밝힌 `REEXPORT_MISSING`이다. 가져오지 않은 crate는
       `make hyper-install-crates`의 이름을 밝히며 실패한다. reexport가 없는 spec은 cargo를 시작하지 않는다.
+    - package가 자기 class나 파일 없이 라이브러리에서 export하는 unit은
+      `{"id": "<unit>", "reexport": "<library>:<unit>", "names": [...]}`로 적고, `native`와 `members`를 적지 않으며,
+      일부 언어만 export하면 `only`(HYR-6)를 적는다. `names`는 그 언어들의 barrel이 라이브러리 unit을 export하는 이름을
+      적는다. HY-106.18에 따라 모든 public 이름은 package의 진입점에서 오기 때문이다. 검사는 그런 언어마다 barrel 검사에서
+      이 이름들을 적힌 것으로 세고, reexport 멤버처럼 잠긴 crate의 `interface.json`에 라이브러리 unit이 있는지 확인한다.
+      그 파일이 unit의 단어(`name`)를 적고, `variant` unit이면 각 case의 값을 적는 곳에서, 그 파일이 적는 이름은 binding
+      생성기가 짓듯 PascalCase로 쓴 unit의 단어, 그리고 각 case마다 unit의 단어 뒤에 case의 단어를 이어 PascalCase로 쓴
+      이름이다. 그 어느 것도 아닌 `names`의 이름은 파일과 이름을 밝힌 `REEXPORT_MISSING`이다.
   - **Types.** type은 unit(HYR-3)이 아닌 타입 선언이다: Node의 `type` alias 또는 `interface`, 그리고 Python의 `type` 문.
     spec은 각 type을 `types` 아래에 한 번 적으며, `id`(camelCase로 쓴 단어들), `visibility`(member와 같다), `unit`(각
     언어에서 그 type을 가진 파일의 unit), 중립 `shape`, 그리고 선언하는 언어마다 `native: {symbol, declaration}`을 가진다.
