@@ -19,7 +19,10 @@ export class UploadedFile {
    * @internal
    */
   static ofCore(file: CoreUploadedFile): UploadedFile {
-    const made: UploadedFile = Object.create(UploadedFile.prototype);
+    const made: unknown = Object.create(UploadedFile.prototype);
+    if (!(made instanceof UploadedFile)) {
+      throw new TypeError('Object.create of the prototype of UploadedFile gave no UploadedFile');
+    }
     made.core = file;
     return made;
   }
