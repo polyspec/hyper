@@ -290,7 +290,8 @@ test('UploadedFile gives form_file.new the name, the filename, the content type 
   const content = new Uint8Array([120]);
   const { rules, calls } = rulesOf({});
   const file = rules.uploadedFile('f', 'a.txt', 'text/plain', content);
-  assert.deepEqual((file as unknown as { made: unknown[] }).made, ['f', 'a.txt', 'text/plain', content]);
+  assert.ok('made' in file, 'rules.uploadedFile gave no instance of FormFile of the binding');
+  assert.deepEqual(file.made, ['f', 'a.txt', 'text/plain', content]);
   assert.deepEqual(calls, [['new FormFile', ['f', 'a.txt', 'text/plain', content]]]);
 });
 
