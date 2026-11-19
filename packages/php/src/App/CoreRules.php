@@ -174,16 +174,6 @@ final class CoreRules
     }
 
     /**
-     * Page::kept: rules.kept_cookie reads the cookie of the kept values to a `stdClass` map from each region to the
-     * `stdClass` map of its readable values by path; a cookie that is no JSON object, a region that holds no object
-     * and a value outside the data model give no value (HY-38.2, HY-38.11, HY-42).
-     */
-    public function pageKeptCookie(string $text): mixed
-    {
-        return $this->call('keptCookie', $text);
-    }
-
-    /**
      * Accept::parse: rules.accept_ranges gives the ranges of an Accept value in field order, the range `*`/`*` of the
      * full weight for a request without Accept, and fails with `invalid_accept` or `invalid_weight` of
      * http-negotiation (HY-116.17, HY-116.18).
@@ -337,30 +327,6 @@ final class CoreRules
     }
 
     /**
-     * Partial. rules.keeps_out_of_shared_caches (HY-52.6), which Reply::cacheControl decided inside its check; the
-     * server reads it for no other rule.
-     */
-    public function replyKeepsOutOfSharedCaches(string $value): bool
-    {
-        /** @var bool $result The return type that the extension declares (T-1a). */
-        $result = $this->call('keepsOutOfSharedCaches', $value);
-
-        return $result;
-    }
-
-    /**
-     * Partial. rules.is_application_path (HY-46), the test inside Result::redirect; the server has no caller of it
-     * besides the redirect.
-     */
-    public function resultIsApplicationPath(string $location): bool
-    {
-        /** @var bool $result The return type that the extension declares (T-1a). */
-        $result = $this->call('isApplicationPath', $location);
-
-        return $result;
-    }
-
-    /**
      * Partial. The headers that every response carries: front_functions.frame_headers (HY-45.5, HY-65.1), as a map
      * from each name to its value in the order of the core. The server still adds them to its response, a header of
      * the same name replaced.
@@ -401,15 +367,6 @@ final class CoreRules
     }
 
     /**
-     * Partial. The value check of the kept endpoint: front_functions.kept_value (HY-40.1). The server still checks the
-     * token of the form (HY-24) and stores the value in the session.
-     */
-    public function appKeptValue(object $pages, string $region, string $path, string $text): mixed
-    {
-        return $this->call('keptValue', $pages, $region, $path, $text);
-    }
-
-    /**
      * Partial. Session::csrfToken: rules.stored_token checks the value that the session holds in the place of the
      * token (HY-24.14). The server still reads the store and creates the token of a session that holds none (HY-24.1).
      */
@@ -443,11 +400,5 @@ final class CoreRules
         $result = $this->call('readBuild', $bytes);
 
         return $result;
-    }
-
-    /** Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text. */
-    public function buildCheckId(string $text): void
-    {
-        $this->call('checkBuildId', $text);
     }
 }
