@@ -662,6 +662,19 @@
     },
     {
       "paths": [
+        "scripts/php-wrappers.mts"
+      ],
+      "targets": [
+        "hyper-test-scripts",
+        "typecheck"
+      ],
+      "tests": [
+        "tests/scripts/php-wrappers.test.mts",
+        "tests/scripts/php-check.test.mts"
+      ]
+    },
+    {
+      "paths": [
         "scripts/publish.mts",
         "packages/cli/lib/publish.mjs",
         "scripts/tracked-files.mts"
