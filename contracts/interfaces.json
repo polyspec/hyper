@@ -136,10 +136,6 @@
       "reason": "A rule of the browser code, which no server unit implements."
     },
     {
-      "rule": "HYC-16",
-      "reason": "A rule of the browser code, which no server unit implements."
-    },
-    {
       "rule": "HYC-13",
       "reason": "A rule of the browser code, which no server unit implements."
     },
@@ -182,7 +178,8 @@
         "HY-107",
         "HY-27",
         "HY-106",
-        "HY-133"
+        "HY-133",
+        "HYC-16"
       ],
       "cases": [
         "contracts/context.json",
@@ -14542,6 +14539,7 @@
         "fields": {
           "pages": "value",
           "pageRequest": "value",
+          "formFile": "value",
           "requestBody": "value",
           "hyperValueError": "value",
           "hyperTypeError": "value"
@@ -14557,7 +14555,7 @@
       "native": {
         "node": {
           "symbol": "packages/ts/src/app/core-rules.ts::CoreBinding",
-          "declaration": "export interface CoreBinding {\n  csrfMask(token: string, mask: string): string;\n  csrfVerify(token: string, value: string): boolean;\n  browser(masked: string): string | null;\n  storedToken(stored: string): string;\n  isApplicationPath(location: string): boolean;\n  redirectLocation(location: string): string;\n  cacheControl(value: string): string;\n  keepsOutOfSharedCaches(value: string): boolean;\n  referrerPolicy(value: string): string;\n  sessionName(https: boolean): string;\n  keepName(https: boolean): string;\n  sessionCookie(identifier: string, https: boolean): string;\n  pageTag(body: string, maskedToken: string, token: string): string;\n  representationTag(contentType: string, body: Uint8Array): string;\n  mediaType(contentType: string): string;\n  pageStatus(status: number): number;\n  replyStatus(status: number): number;\n  pageVary(hasContext: boolean): string;\n  contextHash(build: string, text: string): string;\n  currentPath(header: string | null): string | null;\n  checkShellPath(path: string): void;\n  shellText(path: string, bytes: Uint8Array): string;\n  buildId(outputs: Iterable<BuildOutput>): string;\n  buildPaths(outputs: Iterable<BuildOutput>): readonly string[];\n  buildStream(outputs: Iterable<BuildOutput>): string;\n  shellFile(basePath: string, build: string, entryUrl: string, entryCode: string): string;\n  checkBuildId(text: string): void;\n  buildFileText(id: string): string;\n  readBuild(bytes: Uint8Array): string;\n  templateProblems(manifest: Uint8Array, templates: ReadonlyMap<string, string>): readonly string[];\n  routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): unknown;\n  templateReads(templates: ReadonlyMap<string, string>, name: string): unknown;\n  reservedDataTemplate(): DataTemplate;\n  validContextHeader(value: string | null): boolean;\n  checkFunctionEntry(name: string, callable: boolean): void;\n  jsonRead(text: Uint8Array): JsonValue;\n  jsonWrite(value: unknown): string;\n  flashOf(stored: unknown): JsonValue;\n  keptOf(stored: unknown): JsonValue;\n  keptCookie(text: string): JsonValue;\n  acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];\n  fileOver(sizes: Iterable<number>, limit: number): boolean;\n  routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;\n  computePageHeaders(response: PageResponse): PageHeadersResult;\n  frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];\n  keptValue(pages: CorePages, region: string, path: string, text: string): unknown;\n  openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;\n  answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;\n  Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: unknown, options: PagesOptions) => CorePagesInstance;\n  PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;\n  sessionValue(record: unknown): unknown;\n  sessionRecord(value: unknown): unknown;\n  readHeldBody(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;\n  parseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];\n  RequestBody: { start(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody> };\n  HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;\n  HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;\n}"
+          "declaration": "export interface CoreBinding {\n  csrfMask(token: string, mask: string): string;\n  csrfVerify(token: string, value: string): boolean;\n  browser(masked: string): string | null;\n  storedToken(stored: string): string;\n  isApplicationPath(location: string): boolean;\n  redirectLocation(location: string): string;\n  cacheControl(value: string): string;\n  keepsOutOfSharedCaches(value: string): boolean;\n  referrerPolicy(value: string): string;\n  sessionName(https: boolean): string;\n  keepName(https: boolean): string;\n  sessionCookie(identifier: string, https: boolean): string;\n  pageTag(body: string, maskedToken: string, token: string): string;\n  representationTag(contentType: string, body: Uint8Array): string;\n  mediaType(contentType: string): string;\n  pageStatus(status: number): number;\n  replyStatus(status: number): number;\n  pageVary(hasContext: boolean): string;\n  contextHash(build: string, text: string): string;\n  currentPath(header: string | null): string | null;\n  checkShellPath(path: string): void;\n  shellText(path: string, bytes: Uint8Array): string;\n  buildId(outputs: Iterable<BuildOutput>): string;\n  buildPaths(outputs: Iterable<BuildOutput>): readonly string[];\n  buildStream(outputs: Iterable<BuildOutput>): string;\n  shellFile(basePath: string, build: string, entryUrl: string, entryCode: string): string;\n  checkBuildId(text: string): void;\n  buildFileText(id: string): string;\n  readBuild(bytes: Uint8Array): string;\n  templateProblems(manifest: Uint8Array, templates: ReadonlyMap<string, string>): readonly string[];\n  routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): unknown;\n  templateReads(templates: ReadonlyMap<string, string>, name: string): unknown;\n  reservedDataTemplate(): DataTemplate;\n  validContextHeader(value: string | null): boolean;\n  checkFunctionEntry(name: string, callable: boolean): void;\n  jsonRead(text: Uint8Array): JsonValue;\n  jsonWrite(value: unknown): string;\n  flashOf(stored: unknown): JsonValue;\n  keptOf(stored: unknown): JsonValue;\n  keptCookie(text: string): JsonValue;\n  acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];\n  fileOver(sizes: Iterable<number>, limit: number): boolean;\n  routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;\n  computePageHeaders(response: PageResponse): PageHeadersResult;\n  frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];\n  keptValue(pages: CorePages, region: string, path: string, text: string): unknown;\n  openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;\n  answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;\n  Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: unknown, options: PagesOptions) => CorePagesInstance;\n  PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;\n  sessionValue(record: unknown): unknown;\n  sessionRecord(value: unknown): unknown;\n  readHeldBody(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;\n  parseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];\n  FormFile: new (name: string, filename: string, contentType: string, content: Uint8Array) => CoreUploadedFile;\n  RequestBody: { start(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody> };\n  HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;\n  HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;\n}"
         }
       }
     },
@@ -16172,8 +16170,7 @@
           },
           "members": [
             "json-codec.decode",
-            "json-codec.encode",
-            "outside-number.literal"
+            "json-codec.encode"
           ]
         },
         "decode": {
@@ -16341,9 +16338,8 @@
             }
           },
           "members": [
-            "renderer.alone",
-            "renderer.bind",
-            "renderer.open"
+            "app.openPages",
+            "program.pages"
           ]
         },
         "routes": {
@@ -16874,7 +16870,8 @@
             }
           },
           "members": [
-            "renderer.open"
+            "app.openPages",
+            "program.pages"
           ]
         },
         "dataTemplate": {
