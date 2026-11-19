@@ -66,6 +66,8 @@ export type Member = {
   state: string;
   native: Partial<Record<Lang, { symbol: string; signature: string }>>;
   only?: Only;
+  /** The reach differences that this member declares: `member` is reached in `reached` and not in `notReached`, as `sentence` states. */
+  reachDiffers?: { member: string; reached: Lang; notReached: Lang; sentence: string }[];
   tests?: string[];
 };
 

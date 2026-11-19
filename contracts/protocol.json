@@ -7152,6 +7152,12 @@
                   ]
                 },
                 {
+                  "id": "HY-104.46",
+                  "en": "In Node the constructor of a file session store takes the store that `inDirectory` made, because the library makes a store only with a call that waits, so only the Python constructor makes a store and reaches the library error kind.",
+                  "ko": "Node에서 파일 session 저장소의 생성자는 `inDirectory`가 만든 저장소를 받는다. 라이브러리는 기다리는 호출로만 저장소를 만들므로, 저장소를 만들고 라이브러리 오류 kind에 닿는 것은 Python 생성자뿐이다.",
+                  "koSource": "d6dc80f7f15105d813cd84681e67bdf5ccf42c2139fb0124834f0c0e5510bfa9"
+                },
+                {
                   "id": "HY-104.28",
                   "en": "`tests/scripts/session-shared.test.mts` checks it with several processes of each of the three servers on one session.",
                   "ko": "`tests/scripts/session-shared.test.mts`가 세 server 각각의 여러 process로 한 session에 대해 이것을 확인한다.",

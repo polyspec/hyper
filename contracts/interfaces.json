@@ -10571,7 +10571,10 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions.__init__",
                   "signature": "def __init__(self, directory: str, lifetime: int=1440)"
                 }
-              }
+              },
+              "reachDiffers": [
+                { "member": "core-rules.libraryError", "reached": "python", "notReached": "node", "sentence": "HY-104.46" }
+              ]
             },
             {
               "id": "file-sessions.open",
@@ -10847,7 +10850,10 @@
                   "node"
                 ],
                 "sentence": "HY-133.3"
-              }
+              },
+              "reachDiffers": [
+                { "member": "file-session.converted", "reached": "python", "notReached": "node", "sentence": "HY-133.3" }
+              ]
             }
           ],
           "only": {
