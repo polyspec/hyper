@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: de8b375dc15c9b904cf94849b0e87929e995f3c4ed60bbf3cbe955dc65bd3eb2 -->
+<!-- source-sha256: be88d8bd6df47ddc0ccd56458a3d7972dd96b921a98024052dc78fff7ed8cdd2 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `tests/scripts/read-php-functions.test.mts`가 host 파일 `packages/php/src/Host/Run.php`를 읽는다(H35.195, HY-106.20). 입력: 대소문자를 구분하는 file system에서의 그 test. 이전 동작: H35.192 이전의 이름인 `Host/run.php`를 읽어서, 대소문자를 구분하는 file system에서는 파일을 찾지 못했다. 기대: tracked 이름을 읽는다. 검증: `make hyper-test-scripts TESTS=tests/scripts/read-php-functions.test.mts` rc 0, 5 passed.
 - HYR-5가 PHP namespace 함수의 qualified name `Polyspec\Hyper\<member>`를 적고, 그 member 이름은 namespace 뒤의 이름이다(H35.194, HY-106.20). 입력: `docs/spec/recipe.md` HYR-5 "Symbol". 이전 동작: class member의 `Polyspec\Hyper\<Unit>::<member>`만 적어서, `scripts/recipe/names.mts`가 읽는 host 함수 `run`의 형식이 적혀 있지 않았다. 기대: spec이 reader가 읽는 형식을 적는다. 검증: `make docs-check` rc 0.
 - recipe 검사에 reexport 형식, `runners.<language>.tests`, camelCase PHP 파일 규칙이 없다(H35.192, HYR-4, HYR-5, HYR-7). 입력: `contracts/interfaces.json`, `docs/spec/recipe.md`, `scripts/recipe/`. 이전 동작: 검사가 `uploaded-file`의 member를 reexport로 건너뛰고 그것을 위해 `cargo metadata`와 라이브러리의 `interface.json`을 읽었으며, case runner에 test를 `NATIVE_REASON`과 함께 받아들였고, PHP host 파일을 HYR-4와 달리 camelCase의 `src/Host/run.php`로 지었다. 현재 동작: `uploaded-file`은 일곱 member를 PHP, Node, Python native와 함께 적고 기존 검사가 비교한다. case runner의 test는 `cases: none`인 concern `case-runner`의 native test다. host 함수 `run`은 두 manifest의 `autoload.files`가 load하는 `src/Host/Run.php`에 있다. `make recipe-compare`는 finding 28줄 대신 46줄을 보고한다: 어느 section도 적지 않는 `uploaded-file` member 여섯의 `MEMBER_UNSTATED` 18줄이다.
 - `make recipe-compare`가 unit redis-sessions의 줄을 보고하지 않고, 다른 unit의 새 줄도 없다(H35.190, HYR-5, HYR-7). 입력: `contracts/interfaces.json`과 Node, Python의 session 소스. 이전 동작: 어떤 section도 `redis-sessions.constructor`를 적지 않았고, `RedisSessions.open`은 `FileSessions.open` 옆의 두 번째 여는 경로로 Redis 서버만 그것에 닿았으므로, 검사가 줄 4개를 보고했다. 현재 동작: `contracts/arguments.json`의 `counts` section이 생성자를 적고 그 Python step이 호출을 쓴다. `FileSessions`와 `RedisSessions`는 session-store 라이브러리의 저장소를 `library`로 가지는 내부 기반 클래스 `LibrarySessions`를 확장한다. host는 그 기반 클래스로 타입이 정해지고 요청의 session을 `FileSession.opened`로 열며, file-sessions case가 그것에 닿는다. 저장소에는 `open`이 없고, 내부 `RedisSession`은 지워진다. PHP 서버는 이미 하나의 경로로 session을 연다: `App`이 `NativeSession`을 만들고(`packages/php/src/App/App.php:1182`), 그 `session_start`는 PHP 설정이 적는 handler, 파일 또는 phpredis를 쓴다(`packages/php/src/Session/NativeSession.php:60`).
