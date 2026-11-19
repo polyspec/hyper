@@ -968,7 +968,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\run",
-                  "signature": "function run(App $app, ?int $started = null): void"
+                  "signature": "function run(Polyspec\\Hyper\\App $app, ?int $started): void"
                 }
               },
               "only": {
