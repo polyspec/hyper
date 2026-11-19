@@ -70,6 +70,19 @@ function isReference(array $tokens, int $i): bool
     return is_array($prev) && in_array($prev[0], [T_NEW, T_DOUBLE_COLON], true);
 }
 
+/** @return string the name that the `namespace` keyword at index $i declares, up to its `;` or `{` */
+function namespaceAt(array $tokens, int $i): string
+{
+    $namespace = '';
+    for ($j = $i + 1; $tokens[$j] !== ';' && $tokens[$j] !== '{'; $j++) {
+        if (is_array($tokens[$j])) {
+            $namespace .= $tokens[$j][1];
+        }
+    }
+
+    return $namespace;
+}
+
 /** @return list<string> the fully qualified names of the classes, interfaces and traits declared in a file */
 function declaredTypes(string $code): array
 {
@@ -81,12 +94,7 @@ function declaredTypes(string $code): array
             continue;
         }
         if ($token[0] === T_NAMESPACE) {
-            $namespace = '';
-            for ($j = $i + 1; $tokens[$j] !== ';' && $tokens[$j] !== '{'; $j++) {
-                if (is_array($tokens[$j])) {
-                    $namespace .= $tokens[$j][1];
-                }
-            }
+            $namespace = namespaceAt($tokens, $i);
         }
         if (in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT], true) && !isReference($tokens, $i)) {
             $types[] = ($namespace === '' ? '' : $namespace . '\\') . $tokens[$i + 1][1];
@@ -132,12 +140,7 @@ function declaredFunctions(string $code): array
             continue;
         }
         if ($token[0] === T_NAMESPACE && !isReference($tokens, $i)) {
-            $namespace = '';
-            for ($j = $i + 1; $tokens[$j] !== ';' && $tokens[$j] !== '{'; $j++) {
-                if (is_array($tokens[$j])) {
-                    $namespace .= $tokens[$j][1];
-                }
-            }
+            $namespace = namespaceAt($tokens, $i);
             $pendingNamespace = true;
         }
         if (in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT], true) && !isReference($tokens, $i)) {

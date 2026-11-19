@@ -8,7 +8,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use binding_core::Kinds;
-use contract_cases::cases;
+use contract_cases::{cases, json_file};
 use polyspec_hyper::media::{accept_ranges, select, Selected, Selection, Served};
 use polyspec_hyper::{csrf, etag, location, reply, Error};
 use serde_json::Value;
@@ -2555,15 +2555,7 @@ fn armed<T>(case: &Value, member: &str, call: impl FnOnce() -> T) -> T {
 
 /// The cases of tests/cases/form.json.
 fn form_cases() -> Value {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/form.json");
-    let text = match fs::read_to_string(&path) {
-        Ok(text) => text,
-        Err(error) => panic!("{}: {error}", path.display()),
-    };
-    match serde_json::from_str(&text) {
-        Ok(value) => value,
-        Err(error) => panic!("{}: {error}", path.display()),
-    }
+    json_file(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/cases/form.json"))
 }
 
 /// The limits of a case of tests/cases/form.json.

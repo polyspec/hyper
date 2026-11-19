@@ -4,25 +4,7 @@
 // with that package is stored as it is (H35.77).
 import { PhpFloat, StdClass, unserialize } from '@polyspec/php-serialization';
 import { describe, expect, it } from 'vitest';
-import { RecordSession } from '../src/session/record-session.js';
-
-/** A session whose record is the given bytes, as a store of a request gives it. */
-class FixedSession extends RecordSession {
-  private readonly record: Uint8Array;
-
-  constructor(record: Uint8Array) {
-    super('a'.repeat(32));
-    this.record = record;
-  }
-
-  override stored(): Uint8Array {
-    return this.record;
-  }
-
-  async close(): Promise<void> {}
-}
-
-const latin1 = (text: string): Uint8Array => Uint8Array.from(text, (char) => char.charCodeAt(0));
+import { FixedSession, latin1 } from './fixed-session.js';
 
 // The bytes of PHP serialize(["\xff\xfe" => 1, "a" => 1.5, "b" => 1.0, "o" => (object) ["x" => 1]]). A float with an
 // integral value is a PhpFloat, so that it stays a float when it is written again.
