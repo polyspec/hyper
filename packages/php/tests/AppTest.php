@@ -184,7 +184,7 @@ final class AppTest extends TestCase
             },
         ]);
         $request = new Request('GET', '/');
-        $response = $app->handle($request, new NativeSession(false, $request));
+        $response = $app->handle($request, new NativeSession(false, $request, 'hy-session'));
 
         self::assertSame(500, $response->status);
         self::assertSame('load boom', $failure, 'the error of the dispatch is the failure of the request');
