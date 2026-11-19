@@ -1563,8 +1563,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-104.26",
-                "reason": "PHP: HY-104.26 not implemented, row H35.37 [-] until after the first release"
+                "sentence": "HY-104.26"
               }
             },
             {
@@ -1592,8 +1591,7 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-104.26",
-                "reason": "PHP: HY-104.26 not implemented, row H35.37 [-] until after the first release"
+                "sentence": "HY-104.26"
               }
             },
             {
@@ -11136,8 +11134,7 @@
                 "languages": [
                   "node"
                 ],
-                "sentence": "HY-104.48",
-                "reason": "Python refuses a key that is no text when it reads a record through its codec before any key check, and PHP has no record session (HY-104.13 names Node and Python), so this key check has a Node native only."
+                "sentence": "HY-104.48"
               }
             }
           ],
