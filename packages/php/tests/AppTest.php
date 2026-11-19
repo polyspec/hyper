@@ -19,7 +19,8 @@ use Polyspec\Hyper\Tests\Support\Json;
 /**
  * `around` in the process (HY-97), where contracts/app.json does not state it.
  *
- * @phpstan-type Options array{onResponse?: \Closure, around?: \Closure, handlers?: array<string, mixed>}
+ * @phpstan-import-type Handlers from App
+ * @phpstan-type Options array{onResponse?: \Closure, around?: \Closure, handlers?: Handlers}
  */
 final class AppTest extends TestCase
 {

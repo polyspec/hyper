@@ -221,11 +221,12 @@ final class NativeSessionTest extends TestCase
     {
         $directory = sys_get_temp_dir();
         $calls = 0;
-        $session = new NativeSession(false, self::request(), 'hy-session', static function () use (&$calls, $directory): void {
+        $setup = static function () use (&$calls, $directory): void {
             $calls++;
             self::assertSame(PHP_SESSION_NONE, session_status());
             ini_set('session.save_path', $directory);
-        });
+        };
+        $session = new NativeSession(false, self::request(), 'hy-session', $setup);
         self::assertSame(0, $calls, 'a request that uses no session asks nothing');
         $session->set('a', 1);
         self::assertSame(1, $session->get('a'));

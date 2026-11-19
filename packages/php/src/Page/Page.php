@@ -100,7 +100,10 @@ final class Page
                 // HY-107.9: a revision change is the core outcome with no data; the core answers it as the 409 page.
                 $outcome = $action instanceof ActionOutcomeRevisionChanged
                     ? $action
-                    : new ActionOutcomePage($action[0], self::loaderMap($action[1], "the action of route {$route['name']}"));
+                    : new ActionOutcomePage(
+                        $action[0],
+                        self::loaderMap($action[1], "the action of route {$route['name']}"),
+                    );
                 $input = new PageStepInputAction($outcome, null);
             } elseif ($call instanceof CallContext) {
                 // HY-124: the context handler runs after the action and before the shared handler and any loader.
