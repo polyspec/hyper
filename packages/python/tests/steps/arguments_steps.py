@@ -18,7 +18,8 @@ from polyspec.hyper.result.forbidden import Forbidden
 from polyspec.hyper.representation.media_type import MediaType
 from polyspec.hyper.result.not_found import NotFound
 from polyspec.hyper.result.redirect import Redirect
-from polyspec.hyper.session.redis_sessions import RedisSessions, SettingServer
+from polyspec.hyper.session.redis_sessions import RedisSessions
+from polyspec.session_store import SettingServer
 from polyspec.hyper.http.reply import Reply
 from polyspec.hyper.representation.representation import Representation
 from polyspec.hyper.http.request import Request

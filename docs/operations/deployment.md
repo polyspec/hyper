@@ -125,13 +125,16 @@ redis.session.lock_wait_time = 20000
 
 A persistent connection lasts as long as its PHP process, and phpredis 6.3.0 reuses it by scheme, host and port. It sends AUTH again on each reuse, so a wrong password fails, but it verifies the TLS certificate only when the connection opens. A changed CA or another stream option therefore applies only to new connections, so reload php-fpm after such a change, as a Node or Python server restarts for its configuration. A running worker does not detect a wrong CA: the failure appears when it opens a new connection. Check a change of CA after the reload.
 
-The Node and Python servers give `RedisSessions` the connection setting of the Redis store of the session-store library, which keeps its own connections, and the same values: `lockExpire` 30, which has no default, `lockRetries` 100 and `lockWait` 20000 microseconds (Python `lock_expire`, `lock_retries`, `lock_wait`). The setting of one server is its URL, and the URL names TLS by the scheme `rediss` and the ACL user and its password in its user information:
+The Node and Python servers give `RedisSessions` the connection setting of the Redis store of the session-store library, which keeps its own connections, and the same values: `lockExpire` 30, which has no default, `lockRetries` 100 and `lockWait` 20000 microseconds (Python `lock_expire`, `lock_retries`, `lock_wait`). The setting of one server is its URL, and the URL names TLS by the scheme `rediss` and the ACL user and its password in its user information. The settings are types of session-store, so Node takes the type `Setting` from `@polyspec/session-store` and Python imports `SettingServer`, `SettingSentinel` and `SettingCluster` from `polyspec.session_store` (HY-106.23):
 
 ```ts
 new RedisSessions({ setting: { kind: 'server', url: 'redis://redis:6379', authorities: null }, lockExpire: 30 });
 ```
 
 ```python
+from polyspec.hyper import RedisSessions
+from polyspec.session_store import SettingServer
+
 RedisSessions(SettingServer(url="redis://redis:6379", authorities=None), lock_expire=30)
 ```
 

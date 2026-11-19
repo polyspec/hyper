@@ -13581,32 +13581,12 @@
       }
     },
     {
-      "id": "redisSetting",
-      "visibility": "public",
-      "unit": "redis-sessions",
-      "shape": {
-        "term": "value"
-      },
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-115.17"
-      },
-      "native": {
-        "node": {
-          "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSetting",
-          "declaration": "export type RedisSetting = Setting;"
-        }
-      }
-    },
-    {
       "id": "redisSessionsOptions",
       "visibility": "public",
       "unit": "redis-sessions",
       "shape": {
         "fields": {
-          "setting": "redisSetting",
+          "setting": "value",
           "lockExpire": "number",
           "lifetime": "number",
           "prefix": "string",
@@ -13629,7 +13609,7 @@
       "native": {
         "node": {
           "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessionsOptions",
-          "declaration": "export interface RedisSessionsOptions {\n  // The addresses, TLS and the ACL user of the Redis server; the store keeps its own connections.\n  setting: RedisSetting;\n  // Seconds until a lock expires, longer than any request; redis.session.lock_expire of phpredis. It has no default,\n  // because no value is longer than every request of every application (HY-115.28).\n  lockExpire: number;\n  // Seconds after the last request of a session until the session ends; PHP's session.gc_maxlifetime is 1440.\n  lifetime?: number;\n  // The prefix of the keys; the `prefix` of session.save_path of phpredis. Its default is `PHPREDIS_SESSION:`.\n  prefix?: string;\n  // How many more times a request tries a lock that another holds; redis.session.lock_retries of phpredis, 100.\n  lockRetries?: number;\n  // Microseconds between two tries; redis.session.lock_wait_time of phpredis, 20000.\n  lockWait?: number;\n}"
+          "declaration": "export interface RedisSessionsOptions {\n  // The addresses, TLS and the ACL user of the Redis server; the store keeps its own connections.\n  setting: Setting;\n  // Seconds until a lock expires, longer than any request; redis.session.lock_expire of phpredis. It has no default,\n  // because no value is longer than every request of every application (HY-115.28).\n  lockExpire: number;\n  // Seconds after the last request of a session until the session ends; PHP's session.gc_maxlifetime is 1440.\n  lifetime?: number;\n  // The prefix of the keys; the `prefix` of session.save_path of phpredis. Its default is `PHPREDIS_SESSION:`.\n  prefix?: string;\n  // How many more times a request tries a lock that another holds; redis.session.lock_retries of phpredis, 100.\n  lockRetries?: number;\n  // Microseconds between two tries; redis.session.lock_wait_time of phpredis, 20000.\n  lockWait?: number;\n}"
         }
       }
     },

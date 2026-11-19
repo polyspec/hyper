@@ -12,7 +12,6 @@ from typing import Optional
 
 import polyspec.session_store as library
 from polyspec.session_store import Setting as RedisSetting
-from polyspec.session_store import SettingCluster, SettingServer, SettingSentinel
 
 from ._file_session import FileSession
 from ._redis_session import RedisSession
@@ -22,15 +21,9 @@ from ._redis_session import RedisSession
 # password=...)`, whose store asks the Sentinels for the primary of `service` before each request that has a session
 # (HY-115.26), or `SettingCluster(urls=..., user=..., password=...)`, whose user and password are None where the
 # URLs give the credentials. Each takes `authorities`, the path of a PEM file whose authorities alone
-# verify the servers of TLS, or None for the trust store of the machine. This module re-exports them, and `RedisSetting`
-# is the union of the three.
-__all__ = [
-    "RedisSessions",
-    "RedisSetting",
-    "SettingCluster",
-    "SettingSentinel",
-    "SettingServer",
-]
+# verify the servers of TLS, or None for the trust store of the machine. The three are types of session-store, which an
+# application imports from `polyspec.session_store` (HY-106.23); `RedisSetting` names their union inside this module.
+__all__ = ["RedisSessions"]
 
 
 class RedisSessions:

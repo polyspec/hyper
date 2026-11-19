@@ -20,11 +20,9 @@ from polyspec.hyper import (
     App,
     FileSessions,
     RedisSessions,
-    SettingCluster,
-    SettingSentinel,
-    SettingServer,
     create_server,
 )
+from polyspec.session_store import SettingCluster, SettingSentinel, SettingServer
 
 from handlers import Services, handlers
 from posts import Posts
