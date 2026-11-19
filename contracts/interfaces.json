@@ -9580,6 +9580,7 @@
               "inputs": [
                 "boolean",
                 "request",
+                "string",
                 "optional<function() -> none>"
               ],
               "output": "native-session",
@@ -9588,7 +9589,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::__construct",
-                  "signature": "public function __construct(bool $https, Polyspec\\Hyper\\Request $request, ?Closure $setup)"
+                  "signature": "public function __construct(bool $https, Polyspec\\Hyper\\Request $request, string $cookieName, ?Closure $setup)"
                 }
               }
             },
