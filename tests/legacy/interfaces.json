@@ -70,10 +70,11 @@
             "file-session.get",
             "file-session.remove",
             "file-session.renew",
+            "file-session.opened",
             "file-session.set",
             "file-sessions.collect",
             "file-sessions.constructor",
-            "file-sessions.open"
+            "library-sessions.library"
           ]
         }
       }

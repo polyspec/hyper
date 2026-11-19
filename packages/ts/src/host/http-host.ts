@@ -8,8 +8,9 @@ import type { App } from '../app/app.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
 import { rules, type CoreRequestBody } from '../app/core-rules.js';
 import { Cookies } from '../http/cookies.js';
-import type { FileSession } from '../session/file-session.js';
+import { FileSession } from '../session/file-session.js';
 import type { FileSessions } from '../session/file-sessions.js';
+import type { LibrarySessions } from '../session/library-sessions.js';
 import type { RedisSessions } from '../session/redis-sessions.js';
 import { RecordSession } from '../session/record-session.js';
 import { Reply } from '../http/reply.js';
@@ -72,7 +73,7 @@ export function listener<S extends object>(app: App<S>, sessions: FileSessions |
 
 // Returns a server that answers every request with the application. A request whose start line or headers
 // node:http cannot parse, such as a request target with a byte outside ASCII (HY-42), receives a plain 400.
-function createServer<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server {
+function createServer<S extends object>(app: App<S>, sessions: LibrarySessions, options: ServerOptions = {}): Server {
   const server = createHttpServer(createListener(app, sessions, options));
   server.on('clientError', (error: NodeJS.ErrnoException & { rawPacket?: Buffer }, socket: Socket) => {
     const started = performance.now();
@@ -91,7 +92,7 @@ function createServer<S extends object>(app: App<S>, sessions: FileSessions | Re
 
 // Returns the request listener that answers every request of node:http with the application and sessions in files
 // (HY-100). It settles after the write hook and the disconnect hook of the request have run (HY-99, HY-67).
-function createListener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener {
+function createListener<S extends object>(app: App<S>, sessions: LibrarySessions, options: ServerOptions = {}): Listener {
   const files = options.files;
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
   const written = options.written;
@@ -169,7 +170,7 @@ function createListener<S extends object>(app: App<S>, sessions: FileSessions | 
       const answerWith = async (given: Request): Promise<Response> => {
         const opened: { session: FileSession | null } = { session: null };
         const open = async (): Promise<FileSession> => {
-          opened.session = await sessions.open(given.cookie(RecordSession.cookieName(app.https || https)));
+          opened.session = await FileSession.opened(sessions.library, given.cookie(RecordSession.cookieName(app.https || https)));
           return opened.session;
         };
         let answer;
@@ -241,7 +242,7 @@ function requestLine(packet: Buffer | undefined): Request | null {
 }
 
 // Adds the cookie of a new session first, as PHP does when the session starts (HY-45).
-function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, response: Response, created: string | null, https: boolean): Response {
+function withSessionCookie<S extends object>(app: App<S>, sessions: LibrarySessions, response: Response, created: string | null, https: boolean): Response {
   return response.withSessionCookie(created === null ? null : RecordSession.cookieHeader(created, app.https || https));
 }
 

@@ -66,12 +66,14 @@ it('a request of a route without a session answers while the session is held (HY
   const sessions = join(directory, 'sessions');
   mkdirSync(sessions);
   const store = await FileSessions.inDirectory({ directory: sessions });
-  // A second open is the failure that the test states: it would wait for the lock of the held request, so it releases
-  // that request first and the order of the answers shows the failure instead of a wait without an end.
+  // A second open of the library store, in which the host opens the session, is the failure that the test states: it
+  // would wait for the lock of the held request, so it releases that request first and the order of the answers shows
+  // the failure instead of a wait without an end.
   const order: string[] = [];
-  const open = store.open.bind(store);
+  const library = store.library;
+  const open = library.open.bind(library);
   let opens = 0;
-  store.open = (cookie) => {
+  library.open = (cookie) => {
     opens++;
     if (opens === 2) {
       order.push('plain opened the session');

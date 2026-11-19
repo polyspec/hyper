@@ -28,6 +28,12 @@ export class FileSession implements SessionStore {
     }
   }
 
+  // Opens the session of a request with the value of its session cookie in a store of the library, the file store or
+  // the Redis store, and returns it as the session store of the request; a failure is thrown as `converted` does.
+  static async opened(store: library.FileSessions | library.RedisSessions, cookie: string | null): Promise<FileSession> {
+    return new FileSession(await FileSession.awaited(() => store.open(cookie)));
+  }
+
   // Runs a call of the session-store library that waits, and throws its failure as `converted` does.
   static async awaited<T>(call: () => Promise<T>): Promise<T> {
     try {

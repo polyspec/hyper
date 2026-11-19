@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FileSessions } from '../src/index.js';
+import { FileSession } from '../src/session/file-session.js';
 import { present } from './support.js';
 
 let directory: string;
@@ -19,13 +20,13 @@ afterEach(() => {
 
 describe('FileSessions', () => {
   it('runs the requests of one session one after another', async () => {
-    const first = await sessions.open(null);
+    const first = await FileSession.opened(sessions.library, null);
     first.set('n', 1);
     await first.close();
     const id = present(first.created());
     const order: string[] = [];
-    const a = await sessions.open(id);
-    const opening = sessions.open(id).then(async (b) => {
+    const a = await FileSession.opened(sessions.library, id);
+    const opening = FileSession.opened(sessions.library, id).then(async (b) => {
       order.push(`b reads ${String(b.get('n'))}`);
       await b.close();
     });
@@ -38,7 +39,7 @@ describe('FileSessions', () => {
   });
 
   it('HY-104.37: returns null for a key that holds no value, also after its removal', async () => {
-    const session = await sessions.open(null);
+    const session = await FileSession.opened(sessions.library, null);
     expect(session.get('missing')).toBeNull();
     session.set('a', 1);
     session.remove('a');
