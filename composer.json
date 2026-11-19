@@ -53,7 +53,7 @@
             ]
         },
         "files": [
-            "packages/php/src/App/App.php"
+            "packages/php/src/Host/run.php"
         ]
     },
     "autoload-dev": {

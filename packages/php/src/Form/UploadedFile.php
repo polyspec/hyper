@@ -18,7 +18,7 @@ final class UploadedFile
     private bool $moved = false;
 
     /** The file of the core, which reads and moves its bytes, or null for a file whose bytes are a value. */
-    private ?object $core = null;
+    private ?FormFile $core = null;
 
     public function __construct(
         private readonly string $name,
@@ -36,7 +36,7 @@ final class UploadedFile
      *
      * @internal
      */
-    public static function ofCore(object $core): self
+    public static function ofCore(FormFile $core): self
     {
         $file = new self($core->name(), $core->filename(), $core->contentType(), '');
         $file->bytes = null;

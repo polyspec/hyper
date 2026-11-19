@@ -100,10 +100,10 @@ final class NativeSession implements SessionStore
     }
 
     /**
-     * Returns the session options: the cookie name `$name` of HY-45 with `Path=/` and no `Domain`, HttpOnly, SameSite=Lax,
-     * Secure on HTTPS, only identifiers that the server created, no cookie from PHP (`use_cookies`, HY-129), no caching
-     * headers, because the application sets Cache-Control (HY-52), and the record form that the other servers read
-     * (HY-104), and no removal of expired sessions during a request (`gc_probability` 0, HY-104.33).
+     * Returns the session options: the cookie name `$name` of HY-45 with `Path=/` and no `Domain`, HttpOnly,
+     * SameSite=Lax, Secure on HTTPS, only identifiers that the server created, no cookie from PHP (`use_cookies`,
+     * HY-129), no caching headers, because the application sets Cache-Control (HY-52), and the record form that the
+     * other servers read (HY-104), and no removal of expired sessions during a request (`gc_probability` 0, HY-104.33).
      *
      * @return array{name: string, cookie_path: '/', cookie_domain: '', cookie_httponly: true, cookie_samesite: 'Lax',
      *     cookie_secure: bool, use_strict_mode: true, use_only_cookies: true, use_cookies: false, cache_limiter: '',

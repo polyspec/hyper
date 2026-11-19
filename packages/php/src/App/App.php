@@ -946,20 +946,20 @@ final class App
     /**
      * The kind of an error of the ORM, or null for every other error (HY-107.7): an error of one of the error classes
      * of the extension polyspec_orm of the package polyspec/orm, whose method `kind()` gives its kind
-     * (GeneratedTest.php of orm 0.0.34, line 9637). Only the kind string reaches the core (HY-107.10). `instanceof`
-     * of a class that is not loaded is false, so the server runs without the extension.
+     * (GeneratedTest.php of orm 0.0.34, line 9637). Only the kind string reaches the core (HY-107.10). The classes are
+     * compared by their names with the class of the error and its parents, because the package is not a dependency
+     * until H35.45-2 pins its release: the server runs without the extension, and the analysis reads no declaration
+     * of it.
      */
     private static function ormKind(\Throwable $error): ?string
     {
-        foreach (self::ORM_ERROR_CLASSES as $class) {
-            if ($error instanceof $class && method_exists($error, 'kind')) {
-                $kind = $error->kind();
-
-                return is_string($kind) ? $kind : null;
-            }
+        $classes = [$error::class, ...array_values(class_parents($error))];
+        if (array_intersect($classes, self::ORM_ERROR_CLASSES) === [] || !method_exists($error, 'kind')) {
+            return null;
         }
+        $kind = $error->kind();
 
-        return null;
+        return is_string($kind) ? $kind : null;
     }
 
     /** Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72). */
@@ -1204,14 +1204,4 @@ final class App
         ArgumentCount::most(\func_num_args(), 1);
         $this->serve($started);
     }
-}
-
-/**
- * Answers the current PHP request with the application `$app` by calling `App::run`. This host function is the entry
- * that the front controller loads with `use function`; it is not a public member of `App` (HY-106.20).
- */
-function run(App $app, ?int $started = null): void
-{
-    ArgumentCount::most(\func_num_args(), 2);
-    $app->run($started);
 }

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4d9923fdeaed8fa999c9f29c66a8f734a46c052947881cb4f43ace050b92e0d9 -->
+<!-- source-sha256: fca733687dcb3460bf92ae0d37beea6d7262ecd4c101b528a8d81f7867bdffbd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- PHP server가 `make lint-php`를 통과하고, `make analyse-php`는 binding stub이 낳는 지적만 보고한다(H35.159). 입력: `packages/php`에 대한 level max의 PHPStan과 각 Composer package의 lint. 이전 동작: PHPStan 지적 51개(`App::ormKind`가 알 수 없는 orm error class에 부른 `kind()`, `UploadedFile`이 `object`로 가진 core의 file, `tests/Support/CaseRules.php`의 type 없는 orm package 호출, `tests/AppTest.php`의 `handlers` option 포함)가 있었고, autoload file `src/App/App.php`가 class `App`을 선언했으며(K377), phpcs가 120자를 넘는 줄 다섯 개를 보고했다. 현재 동작: `ormKind`는 class 이름을 비교하고, `UploadedFile`은 `FormFile`을 갖고, `CaseRules`는 확인된 호출로 orm package를 부르고, `run`은 autoload file `src/Host/run.php`에 있으며, 긴 줄은 나뉜다. binding stub이 `Form::$fields`와 `Form::$files`를 `mixed`로 선언하므로 `src/Form/BodyReader.php`의 지적 13개는 남는다.
 - Rust core가 다시 `make core-lint`와 `make core-fmt-check`를 통과한다(H35.156). 입력: `packages/rust/tests/form_chunks.rs`와 `packages/rust/tests/contracts.rs`의 http-form body 테스트, 그리고 http-form 변경이 쓴 core의 파일. 이전 동작: clippy가 `Result`에 부른 `expect()` 네 번과 `Option::map_or` 한 번을 거절했고(`clippy.toml`은 None을 그럴듯한 값으로 바꾸므로 그것을 금지한다), rustfmt가 파일 다섯 개를 보고했다. 현재 동작: 각 Err는 match하고 테스트는 그 error와 함께 panic하며, `then`이 없는 receiver는 step이 없는 것으로 match하고, rustfmt가 파일 다섯 개를 썼다. 검증: `make core-lint`와 `make core-fmt-check`.
 - `packages/ts`가 다시 build된다. interface `CoreBinding`이 `sessionValue`와 `sessionRecord`를 선언한다(H35.155). 입력: `packages/ts/src/app/core-rules.ts`를 build하는 `make packages`. 이전 동작: http-form lane의 merge가 `CoreBinding`의 두 선언을 body member로 바꿨는데 member 목록과 `coreRules`는 여전히 둘을 썼으므로, build가 TS2322와 TS2339로 실패했고 그 package를 build하는 모든 target이 실패했다. member 목록에는 같은 줄이 두 번 있었다. 현재 동작: `CoreBinding`은 body member 옆에 두 member를 선언하고, member 목록은 각 member를 한 번씩 적는다. 검증: `make packages`.
 - binding의 모든 native crate가 polyspec-http-form에 의존한다(H35.154). 입력: library http-form의 error variant를 적는 binding 계약 `packages/rust/interface.json`과, `packages/go/internal/ffi`, `packages/php/native`, `packages/python/native`, `packages/ts/native`, `packages/ts/native/wasm`의 native crate. 이전 동작: 그 manifest에 `polyspec-http-form`이 없어서 각 binding crate의 생성 코드가 `cannot find module or crate polyspec_http_form`으로 실패했고, `make bindings-check`가 manifest마다 CK-19를 냈다. 현재 동작: `make bindings-scaffold`가 각 manifest에 tag v0.0.4의 `polyspec-http-form`과 그 `fault-test` feature를 쓰고, `make cargo-lock CRATES=polyspec-http-form`이 `Cargo.lock`을 쓴다. 검증: `make hyper-test-scripts TESTS=tests/scripts/native-dependencies.test.mts`와 `make bindings-check`.
