@@ -7644,31 +7644,6 @@
                   "signature": "def from_body(content_type: str, body: bytes) -> Optional[Fields]"
                 }
               }
-            },
-            {
-              "id": "fields.percentDecoded",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "bytes"
-              ],
-              "output": "optional<string>",
-              "errors": [],
-              "state": "Decodes + to a space and %XX to its byte, and returns the text when the bytes are UTF-8, or null (HY-56).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/Fields.php::Polyspec\\Hyper\\Fields::percentDecoded",
-                  "signature": "private static function percentDecoded(string $text): ?string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/fields.ts::Fields.percentDecoded",
-                  "signature": "private static percentDecoded(text: string): string | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/_fields.py::Fields._percent_decoded",
-                  "signature": "def _percent_decoded(text: bytes) -> Optional[str]"
-                }
-              }
             }
           ]
         },
@@ -7744,7 +7719,7 @@
             {
               "id": "files.sizes",
               "kind": "method",
-              "visibility": "public",
+              "visibility": "internal",
               "inputs": [],
               "output": "list<number>",
               "errors": [],
@@ -7959,31 +7934,27 @@
               }
             },
             {
-              "id": "uploaded-file.stored",
+              "id": "uploaded-file.ofCore",
               "kind": "static method",
               "visibility": "internal",
               "inputs": [
-                "string",
-                "string",
-                "string",
-                "string",
-                "number"
+                "value"
               ],
               "output": "uploaded-file",
               "errors": [],
-              "state": "Returns a file whose bytes are the file of the path, of the size in bytes (HY-131.13).",
+              "state": "Returns the file of hyper over a file of the core, which the body read in chunks or held as one value (HY-131.13, F-22).",
               "native": {
                 "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::stored",
-                  "signature": "public static function stored(string $name, string $filename, string $contentType, string $path, int $size): self"
+                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::ofCore",
+                  "signature": "public static function ofCore(object $core): self"
                 },
                 "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.stored",
-                  "signature": "static stored(name: string, filename: string, contentType: string, path: string, size: number): UploadedFile"
+                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.ofCore",
+                  "signature": "static ofCore(file: CoreUploadedFile): UploadedFile"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile._stored",
-                  "signature": "def _stored(name: str, filename: str, content_type: str, path: str, size: int) -> UploadedFile"
+                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile._of_core",
+                  "signature": "def _of_core(core: Any) -> UploadedFile"
                 }
               }
             },
@@ -8094,7 +8065,7 @@
                 },
                 "node": {
                   "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.content",
-                  "signature": "content(): Uint8Array"
+                  "signature": "async content(): Promise<Uint8Array>"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.content",
@@ -8119,62 +8090,11 @@
                 },
                 "node": {
                   "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.moveTo",
-                  "signature": "moveTo(path: string): void"
+                  "signature": "async moveTo(path: string): Promise<void>"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.move_to",
                   "signature": "def move_to(self, path: str) -> None"
-                }
-              }
-            },
-            {
-              "id": "uploaded-file.createdFile",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Opens a new file at the path for writing, and fails when the path exists (HY-131.16).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::createdFile",
-                  "signature": "private static function createdFile(string $path): mixed"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.createdFile",
-                  "signature": "private static createdFile(path: string): number"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile._created_file",
-                  "signature": "def _created_file(path: str)"
-                }
-              }
-            },
-            {
-              "id": "uploaded-file.linkedFile",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "string",
-                "string"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Gives the file of the source the path as a second name, or copies it there when the file system gives none, and fails when the path exists (HY-131.15).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::linkedFile",
-                  "signature": "private static function linkedFile(string $source, string $path): void"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.linkedFile",
-                  "signature": "private static linkedFile(source: string, path: string): void"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile._linked_file",
-                  "signature": "def _linked_file(source: str, path: str) -> None"
                 }
               }
             }
