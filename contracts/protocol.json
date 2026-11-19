@@ -7158,6 +7158,12 @@
                   "koSource": "d6dc80f7f15105d813cd84681e67bdf5ccf42c2139fb0124834f0c0e5510bfa9"
                 },
                 {
+                  "id": "HY-104.47",
+                  "en": "In Node a value that a session keeps, a flash value and a media type etag are converted to the Node value form, a `Map` for an object, by the JSON decoding of the core, so that the key order of the object is kept (HY-124.10); PHP and Python hold the value as it is.",
+                  "ko": "Node에서 session이 보관하는 값, flash 값, media type etag는 core의 JSON 디코딩으로 Node 값 형식이 된다. 객체는 `Map`이 되어 key 순서를 지킨다(HY-124.10). PHP와 Python은 값을 그대로 보관한다.",
+                  "koSource": "bf4785d616474a5b7e277b21f5dd6d6b0b01c8f2588e99476d693affa09341bb"
+                },
+                {
                   "id": "HY-104.28",
                   "en": "`tests/scripts/session-shared.test.mts` checks it with several processes of each of the three servers on one session.",
                   "ko": "`tests/scripts/session-shared.test.mts`가 세 server 각각의 여러 process로 한 session에 대해 이것을 확인한다.",

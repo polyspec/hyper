@@ -9130,7 +9130,11 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/_session.py::Session.keep",
                   "signature": "def keep(self, region: str, path: str, value: object) -> None"
                 }
-              }
+              },
+              "reachDiffers": [
+                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "php", "sentence": "HY-104.47" },
+                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "python", "sentence": "HY-104.47" }
+              ]
             },
             {
               "id": "session.kept",
