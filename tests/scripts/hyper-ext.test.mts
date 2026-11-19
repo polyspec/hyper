@@ -18,13 +18,21 @@ test('hyper-ext builds packages/php/native through the cargo of the link script 
   assert.match(lines, /publish\.mts directory build\/hyper-ext\.next-\S+ build\/hyper-ext$/mu, lines);
 });
 
-test('hyper-test-php builds the extension and loads it in both PHPUnit runs (H35.25)', () => {
+// The PHP tests load the extension of the tests, built with the feature fault-test into its own directory, so that the
+// fault cases of PHP arm the fault points of http-form (H35.11-3); the session workers load the release extension.
+const HYPER_EXT_TEST = 'build/hyper-ext-test/polyspec_hyper.so';
+
+test('hyper-test-php builds the extension of the tests and loads it in both PHPUnit runs (H35.25, H35.11-3)', () => {
   const lines = dryRun('hyper-test-php').join('\n');
-  assert.match(lines, /polyspec-hyper-php-ext/u, lines);
+  assert.match(lines, /polyspec-hyper-php-ext --features fault-test/u, lines);
+  assert.match(lines, /publish\.mts directory build\/hyper-ext-test\.next-\S+ build\/hyper-ext-test$/mu, lines);
   const runs = lines.split('\n').filter((line) => line.includes('phpunit --cwd'));
   assert.ok(runs.length > 0, lines);
   // The recipe names the absolute path of the library, as every extension that PHP loads (PHP_SERVER_EXTENSIONS).
-  for (const run of runs) assert.match(run, new RegExp(`--php-extension /\\S*/${HYPER_EXT.replaceAll('.', '\\.')}( |$)`, 'u'), run);
+  for (const run of runs) {
+    assert.match(run, new RegExp(`--php-extension /\\S*/${HYPER_EXT_TEST.replaceAll('.', '\\.')}( |$)`, 'u'), run);
+    assert.doesNotMatch(run, new RegExp(`/${HYPER_EXT.replaceAll('.', '\\.')}( |$)`, 'u'), run);
+  }
 });
 
 test('hyper-install builds the extension after it writes the sources of the bindings (H35.25)', () => {

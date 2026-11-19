@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 354e569215e29ae71109f69f0de7ddd1b5d45390efd67c51945f3b063af2f1bf -->
+<!-- source-sha256: 357a4b6c48f4ab54600d46566e34f94f3653286e2689d55d48cfc33380db95c4 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `tests/scripts/hyper-ext.test.mts`가 `make hyper-test-php`가 `fault-test`를 가진 test용 extension을 `build/hyper-ext-test`에 build하고, 각 PHPUnit run에서 release extension이 아니라 `build/hyper-ext-test/polyspec_hyper.so`를 load하기를 기대한다(H35.221, H35.11-3, H35.25). 입력: `make hyper-test-php`의 dry run. 이전 동작: case가 session worker가 load하는 extension인 `build/hyper-ext/polyspec_hyper.so`를 기대해 27번째 줄에서 실패했는데, H35.11-3부터 recipe는 test용 extension을 load한다(`docs/operations/development.md:35`). 기대: `make hyper-test-scripts TESTS=tests/scripts/hyper-ext.test.mts`가 5개 가운데 5개를 통과한다.
 - 식별자를 바꾸는 동안 PHP나 save handler가 경고하면 `NativeSession::renew`가 `error_reporting`이 무엇을 유지하든 `hyper: the session could not be renewed: <warning>`으로 실패하고, session worker가 명령 `renew-warned`를 다시 가진다(H35.219, HY-115.3). 입력: worker가 `error_reporting`에서 `E_USER_WARNING`을 빼고 save handler가 `destroy`에서 경고하는 `tests/scripts/session-lost-lock.test.mts`. 이전 동작: merge 6acf895b가 `tests/scripts/fixtures/session-worker/worker.php`의 `renew-warned` 분기와 `renew`의 error handler를 버려서, 명령이 `write`로 넘어가 142번째 줄에서 `json_decode(): Argument #1 ($json) must be of type string, null given`로 끝났고, `session_regenerate_id` 동안의 경고는 요청을 계속 진행시켰다. 기대: renew가 예외를 던지고, worker가 `renewed` 줄을 출력하지 않으며, `session-lost-lock`의 두 case가 통과한다.
 - `packages/php/tests/RequestTest.php`는 전역 값에서 읽은 각 요청을 host처럼 `release`로 끝낸다(H35.220, HY-131.14, B-10). 입력: `make hyper-test-php PHP_TESTS=tests/RequestTest.php`. 이전 동작: 테스트가 `Request::fromGlobals`로 요청을 만들고 풀지 않았으므로 binding이 "RequestBody was destroyed without remove(), so its destructor released it (B-10)"를 4번 경고했고 실행이 rc 2로 끝났다. 기대: `tearDown`이 각 요청을 풀고, 경고가 없으며 파일이 통과한다.
 - PHP server의 `BodyReader::feed`는 body가 한도를 넘은 뒤에만 false를 돌려주고, byte가 kind `invalid`나 `header_limit`로 실패하는 body는 `contracts/interfaces.json` body-reader.feed와 Python server가 정하듯 계속 읽는다(H35.218, HY-131.32, HY-113.25). 입력: byte가 `invalid`로 실패하는, 조각 단위로 읽는 `multipart/form-data` body. 이전 동작: PHP는 첫 실패에 false를 돌려주고 읽기를 멈췄고 Node multipart worker는 모든 실패에 멈췄으므로, `tests/scripts/multipart-compare.test.mts`가 314개 중 193개 body의 stopped 값이 Python과 다르다고 보고했다. 기대: 세 서버가 그런 body를 끝까지 읽고 form 없이 상태 400을 준다. 한도를 넘은 body만 멈춘다.
