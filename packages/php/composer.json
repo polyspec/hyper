@@ -29,7 +29,10 @@
                 "src/Result/",
                 "src/Session/"
             ]
-        }
+        },
+        "files": [
+            "src/App/App.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
