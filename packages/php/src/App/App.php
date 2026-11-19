@@ -847,20 +847,22 @@ final class App
             if ($request->fileOver($this->fileLimit)) {
                 return Response::text(413, 'Content Too Large');
             }
+            // HY-107.4: only an action that raises REVISION_CHANGED is answered as the page with status 409;
+            // the loaders of that page are loaders, so their renewal (HY-72.4) and their REVISION_CHANGED fail.
+            $result = null;
+            $revisionChanged = false;
             try {
                 $result = $this->container->call(
                     $handler['post'],
                     [Request::class => $request, Reply::class => $reply],
                 );
             } catch (\Throwable $error) {
-                // HY-107.4: only an action that raises REVISION_CHANGED is answered as the page with status 409;
-                // the loaders of that page are loaders, so their renewal (HY-72.4) and their REVISION_CHANGED fail.
                 if (self::ormCode($error) !== 'REVISION_CHANGED') {
                     throw $error;
                 }
-                $result = Result::page(409, []);
+                $revisionChanged = true;
             }
-            if (!$result instanceof Result) {
+            if (!$revisionChanged && !$result instanceof Result) {
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
             // HY-72: the action renews the session after it returns, and a page that it renders carries the new token.
@@ -868,7 +870,7 @@ final class App
                 $session->renew();
                 $request = $request->withSession($flash, Csrf::masked($session->csrfToken()));
             }
-            if ($result->isRedirect()) {
+            if ($result instanceof Result && $result->isRedirect()) {
                 return $this->redirectResponse($request, $session, $result, $basePath);
             }
 
@@ -880,7 +882,8 @@ final class App
                     $handler,
                     $session,
                     $flash,
-                    [$result->status, $result->data],
+                    // HY-107.9: the revision change takes the core outcome, which the core answers as the 409 page.
+                    $revisionChanged ? new ActionOutcomeRevisionChanged() : [$result->status, $result->data],
                     $reply,
                     $basePath,
                 ),
