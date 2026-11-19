@@ -14327,6 +14327,80 @@
           "declaration": "export type SessionOpening = SessionStore | (() => Promise<SessionStore>);"
         }
       }
+    },
+    {
+      "id": "value",
+      "visibility": "public",
+      "unit": "values",
+      "shape": {
+        "union": [
+          "null",
+          "boolean",
+          "number",
+          "string",
+          "list<value>",
+          "mapValue"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-44.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/data/values.ts::Value",
+          "declaration": "export type Value = null | boolean | number | string | Value[] | MapValue;"
+        }
+      }
+    },
+    {
+      "id": "mapValue",
+      "visibility": "public",
+      "unit": "values",
+      "shape": {
+        "term": "map<value>"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-44.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/data/values.ts::MapValue",
+          "declaration": "export type MapValue = Map<string, Value>;"
+        }
+      }
+    },
+    {
+      "id": "jsonValue",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "union": [
+          "null",
+          "boolean",
+          "number",
+          "string",
+          "list<jsonValue>",
+          "map<jsonValue>"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.20"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::JsonValue",
+          "declaration": "type JsonValue = null | boolean | number | string | JsonValue[] | Map<string, JsonValue>;"
+        }
+      }
     }
   ],
   "caseFiles": {
