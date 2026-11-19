@@ -157,11 +157,15 @@ function declaredFunctions(string $code): array
     return $functions;
 }
 
-/** @return ReflectionFunction the function that a file declares, loaded by the autoloader from that file */
+/**
+ * @return ReflectionFunction the function that a file declares. The reader requires the file by its path, once, because
+ *                            the autoloader maps a class to its file and no function to one (HYR-8).
+ */
 function loadFunction(string $file, string $path, string $fqn): ReflectionFunction
 {
+    require_once $path;
     if (!function_exists($fqn)) {
-        fail("$file: the autoloader does not load the function $fqn");
+        fail("$file: the file does not declare the function $fqn");
     }
     $function = new ReflectionFunction($fqn);
     if (realpath((string) $function->getFileName()) !== realpath($path)) {

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 // Reads the PHP server sources for the recipe check (HYR-8) and prints one JSON document on stdout.
 // Usage: php read-php.php <root> --autoload <autoload.php> --sources <dir>... [--tests <dir>...] [--registry <file>]
-// The autoloader of the server package loads each source class by its name; the reader never requires a file itself.
+// The autoloader of the server package loads each source class by its name; the reader requires a file only for the
+// functions it declares, which no autoloader maps (see loadFunction).
 // Reflection is used for members, constants and visibility; signatures are rebuilt from reflection.
 // The functions of the reader are in read-php-functions.php beside this file.
 
