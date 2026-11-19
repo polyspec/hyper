@@ -61,9 +61,32 @@ final class Request
         // that is one value, which fails as a whole (HY-113.23, HY-113.25).
         [$parts, $this->noBoundary] = $read !== null && $read->streamed()
             ? [$read->parts(), false]
-            : Files::heldFormOf($this->header('Content-Type') ?? '', $body);
+            : self::heldForm($this->header('Content-Type') ?? '', $body);
         $this->formFields = $parts[0] ?? null;
         $this->fileParts = $parts[1] ?? null;
+    }
+
+    /**
+     * Returns the fields and the files of a body held as one value, read by `readHeldBody` of the core without a limit,
+     * or null when a part fails with `invalid` or `header_limit` (HY-42, HY-113.23, HY-113.25), and whether its type is
+     * a `multipart/form-data` type without a boundary, or with an empty one, which the route refuses (HY-113.24). A
+     * content type that is no media type, and a multipart type without a boundary, give no field and no file, because
+     * the `Content-Type` is judged after the route (HY-57.15, HY-59.12).
+     *
+     * @return array{0: array{0: Fields, 1: Files}|null, 1: bool}
+     */
+    private static function heldForm(string $type, string $body): array
+    {
+        $none = BodyReader::limits(PHP_INT_MAX, PHP_INT_MAX, PHP_INT_MAX, PHP_INT_MAX);
+        try {
+            return [BodyReader::named(readHeldBody($type === '' ? null : $type, $body, ...$none)), false];
+        } catch (HyperValueError $error) {
+            if (in_array($error->kind(), ['malformed_content_type', 'no_boundary'], true)) {
+                return [[Fields::empty(), Files::empty()], $error->kind() === 'no_boundary'];
+            }
+
+            return [null, false];
+        }
     }
 
     /**

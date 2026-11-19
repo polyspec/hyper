@@ -10,16 +10,12 @@ export class Fields extends NamedValues<string> {
     return new Fields([], new Map());
   }
 
-  // Returns the fields of `[name, values]` pairs, as the core gives them.
-  static of(pairs: readonly (readonly [string, readonly string[]])[]): Fields {
-    return new Fields(pairs.map(([name]) => name), new Map(pairs.map(([name, values]) => [name, [...values]])));
-  }
-
   // Parses `name=value&name=value` with form_functions.parse_urlencoded of the core. Returns null when a name or a
   // value is not UTF-8, the kind `invalid` of http-form (HY-42, HY-56).
   static parse(text: Uint8Array): Fields | null {
     try {
-      return Fields.of(rules().formParseUrlencoded(text));
+      const pairs = rules().formParseUrlencoded(text);
+      return new Fields(pairs.map(([name]) => name), new Map(pairs.map(([name, values]) => [name, [...values]])));
     } catch (error) {
       if (error instanceof Error && 'kind' in error && error.kind === 'invalid') return null;
       throw error;

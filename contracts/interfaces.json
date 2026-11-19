@@ -5289,6 +5289,10 @@
               "errors": [],
               "state": "Returns the form values and the files of a body held as one value, both null for a part that fails, and whether the type is a multipart type without a boundary (HY-113.23 to HY-113.25).",
               "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::heldForm",
+                  "signature": "private static function heldForm(string $type, string $body): array"
+                },
                 "node": {
                   "symbol": "packages/ts/src/http/request.ts::Request.heldForm",
                   "signature": "private static heldForm(type: string, body: Uint8Array): HeldForm"
@@ -5296,6 +5300,7 @@
               },
               "only": {
                 "languages": [
+                  "php",
                   "node"
                 ],
                 "sentence": "HY-113.24"
@@ -7838,32 +7843,6 @@
                   "signature": "def parse(text: bytes) -> Optional[Fields]"
                 }
               }
-            },
-            {
-              "id": "fields.fromBody",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "bytes"
-              ],
-              "output": "optional<fields>",
-              "errors": [],
-              "state": "Returns the values of an application/x-www-form-urlencoded body, the text fields of a multipart/form-data body and none for another type; returns null when the body fails with HY-42 (HY-57.11, HY-113.15).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/Fields.php::Polyspec\\Hyper\\Fields::fromBody",
-                  "signature": "public static function fromBody(string $type, string $body): ?self"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/fields.ts::Fields.fromBody",
-                  "signature": "static fromBody(type: string, body: Uint8Array): Fields | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/_fields.py::Fields.from_body",
-                  "signature": "def from_body(content_type: str, body: bytes) -> Optional[Fields]"
-                }
-              }
             }
           ]
         },
@@ -7907,32 +7886,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/form/_files.py::Files.empty",
                   "signature": "def empty() -> Files"
-                }
-              }
-            },
-            {
-              "id": "files.fromBody",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "bytes"
-              ],
-              "output": "optional<files>",
-              "errors": [],
-              "state": "Returns the files of a multipart/form-data body and none for another type; returns null when the body fails with HY-42 (HY-113.15).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/Files.php::Polyspec\\Hyper\\Files::fromBody",
-                  "signature": "public static function fromBody(string $type, string $body): ?self"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/files.ts::Files.fromBody",
-                  "signature": "static fromBody(type: string, body: Uint8Array): Files | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/_files.py::Files.from_body",
-                  "signature": "def from_body(content_type: str, body: bytes) -> Optional[Files]"
                 }
               }
             },
@@ -8127,31 +8080,7 @@
           "members": [
             {
               "id": "uploaded-file.constructor",
-              "kind": "constructor",
-              "visibility": "public",
-              "inputs": [
-                "string",
-                "string",
-                "string",
-                "bytes"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Holds the name, the filename, the content type and the bytes of a file part as a value (HY-113.3).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::__construct",
-                  "signature": "public function __construct(string $name, string $filename, string $contentType, string $content)"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.constructor",
-                  "signature": "constructor(name: string, filename: string, contentType: string, content: Uint8Array)"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.__init__",
-                  "signature": "def __init__(self, name: str, filename: str, content_type: str, content: bytes)"
-                }
-              }
+              "reexport": "http-form:uploaded_file.new"
             },
             {
               "id": "uploaded-file.ofCore",
@@ -8166,7 +8095,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::ofCore",
-                  "signature": "public static function ofCore(object $core): self"
+                  "signature": "public static function ofCore(Polyspec\\Hyper\\FormFile $core): self"
                 },
                 "node": {
                   "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.ofCore",
@@ -8180,143 +8109,27 @@
             },
             {
               "id": "uploaded-file.name",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [],
-              "output": "string",
-              "errors": [],
-              "state": "Returns the name parameter of the part (HY-113.3).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::name",
-                  "signature": "public function name(): string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.name",
-                  "signature": "name(): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.name",
-                  "signature": "def name(self) -> str"
-                }
-              }
+              "reexport": "http-form:uploaded_file.name"
             },
             {
               "id": "uploaded-file.filename",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [],
-              "output": "string",
-              "errors": [],
-              "state": "Returns the filename parameter of the part, with the escapes of its quoted string undone (HY-113.3, HY-113.20).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::filename",
-                  "signature": "public function filename(): string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.filename",
-                  "signature": "filename(): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.filename",
-                  "signature": "def filename(self) -> str"
-                }
-              }
+              "reexport": "http-form:uploaded_file.filename"
             },
             {
               "id": "uploaded-file.contentType",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [],
-              "output": "string",
-              "errors": [],
-              "state": "Returns the Content-Type header of the part, or the empty text when it has none (HY-113.3).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::contentType",
-                  "signature": "public function contentType(): string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.contentType",
-                  "signature": "contentType(): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.content_type",
-                  "signature": "def content_type(self) -> str"
-                }
-              }
+              "reexport": "http-form:uploaded_file.content_type"
             },
             {
               "id": "uploaded-file.size",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [],
-              "output": "number",
-              "errors": [],
-              "state": "Returns the number of bytes of the part (HY-131.15).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::size",
-                  "signature": "public function size(): int"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.size",
-                  "signature": "size(): number"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.size",
-                  "signature": "def size(self) -> int"
-                }
-              }
+              "reexport": "http-form:uploaded_file.size"
             },
             {
               "id": "uploaded-file.content",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [],
-              "output": "bytes",
-              "errors": [],
-              "state": "Returns the bytes of the part as one value, read from its file when it has one, and fails with the class of HY-46.3 after a move (HY-113.3, HY-131.16).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::content",
-                  "signature": "public function content(): string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.content",
-                  "signature": "async content(): Promise<Uint8Array>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.content",
-                  "signature": "def content(self) -> bytes"
-                }
-              }
+              "reexport": "http-form:uploaded_file.content"
             },
             {
               "id": "uploaded-file.moveTo",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [
-                "string"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Moves the file to the path; a path that is not a string fails with TypeError, and a path that exists or a file that was moved fails with the class of HY-46.3 (HY-131.15, HY-131.16).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::moveTo",
-                  "signature": "public function moveTo(mixed $path): void"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.moveTo",
-                  "signature": "async moveTo(path: string): Promise<void>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.move_to",
-                  "signature": "def move_to(self, path: str) -> None"
-                }
-              }
+              "reexport": "http-form:uploaded_file.move_to"
             }
           ]
         }

@@ -27,21 +27,10 @@ final class Fields extends NamedValues
     public static function parse(string $text): ?self
     {
         try {
-            return self::read($text);
+            $pairs = parseUrlencoded($text);
         } catch (HyperValueError) {
             return null;
         }
-    }
-
-    /**
-     * Parses the text as `parse` does, and fails with the error of the core, kind `invalid` of http-form, where
-     * `parse` returns null (HY-42, HY-56).
-     *
-     * @internal
-     */
-    public static function read(string $text): self
-    {
-        $pairs = parseUrlencoded($text);
         $names = [];
         $values = [];
         foreach ($pairs as [$name, $items]) {
@@ -50,15 +39,5 @@ final class Fields extends NamedValues
         }
 
         return new self($names, $values);
-    }
-
-    /**
-     * Returns the fields of a request body: of an `application/x-www-form-urlencoded` body, or the text fields of a
-     * `multipart/form-data` body; a body of another type has none (HY-57). Returns null when a part of the body fails
-     * (HY-113.15, HY-113.23, HY-113.25).
-     */
-    public static function fromBody(string $type, string $body): ?self
-    {
-        return Files::heldForm($type, $body)[0] ?? null;
     }
 }
