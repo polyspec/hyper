@@ -34,10 +34,12 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
 
   Every file of `git ls-files` below `packages/php/src`, `packages/ts/src` and
   `packages/python/src/polyspec/hyper` belongs to exactly one concern, and every named file exists. A file of a
-  unit holds exactly one unit (HYR-3). The barrel files (`index.ts` and `__init__.py` of the package), `py.typed` and
+  unit holds exactly one unit (HYR-3). The barrel files (`index.ts`, `build.ts` and `__init__.py` of the package), `py.typed` and
   the `__init__.py` of each Python group directory (HYR-4) belong to the concern `index` and hold no unit. The barrel
   files hold only the re-exports of the public members and the public types of HY-106, and HYR-8 checks that list
-  instead of the unit checks.
+  instead of the unit checks. `build.ts` is the entry `@polyspec/hyper/build`, which re-exports the public functions of
+  the unit `build rules` and its type `BuildOutput` for the command tool (HY-48.3), so that a build applies the rules
+  of the core that the servers apply.
 
 - **HYR-3 One unit per file.** A unit has these fields:
   - `id`: its words;
@@ -72,7 +74,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - PHP: PascalCase, `src/<Group>/<Words>.php`, in the namespace `Polyspec\Hyper`. `autoload.psr-4` of
     `packages/php/composer.json` maps `Polyspec\Hyper\` to the list of the group directories that hold a PHP
     unit, and the root `composer.json` maps the same directories.
-  - Node: kebab-case, `src/<group>/<words>.ts`. The barrel is `src/index.ts`.
+  - Node: kebab-case, `src/<group>/<words>.ts`. The barrels are `src/index.ts` and the build entry `src/build.ts`.
   - Python: snake_case, in the package `polyspec/hyper/<group>/`.
     - `<words>.py` is the module of a unit that HY-106 makes public.
     - `_<words>.py` is an internal module.

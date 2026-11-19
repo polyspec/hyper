@@ -25,8 +25,6 @@ final class Manifest
      * @param array<string, RouteDefinition> $routes
      */
     private function __construct(
-        public readonly string $layout,
-        public readonly string $title,
         public readonly array $regions,
         public readonly Region $page,
         public readonly array $routes,
@@ -79,12 +77,10 @@ final class Manifest
             if (!is_array($declaredUses)) {
                 throw new HyperValueError("manifest region {$name} uses an invalid topic", 'invalid_application');
             }
-            $uses = [];
             foreach ($declaredUses as $topic) {
                 if (!is_string($topic) || preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $topic) !== 1) {
                     throw new HyperValueError("manifest region {$name} uses an invalid topic", 'invalid_application');
                 }
-                $uses[] = $topic;
             }
             // HY-37: only route regions change in the browser, so only they keep values.
             if (array_key_exists('keep', $region)) {
@@ -93,7 +89,7 @@ final class Manifest
                     'invalid_application',
                 );
             }
-            $regions[$name] = new Region($name, $isPage, is_string($template) ? $template : null, $uses);
+            $regions[$name] = new Region($name, $isPage, is_string($template) ? $template : null);
             if ($isPage) {
                 if ($page !== null) {
                     throw new HyperValueError('manifest declares more than one page region', 'invalid_application');
@@ -144,7 +140,7 @@ final class Manifest
                 }
                 $regionNames[$regionName] = true;
                 $kept = self::keptKinds($region, $regionName);
-                $routeRegions[] = new Region($regionName, false, $regionTemplate, [], $kept);
+                $routeRegions[] = new Region($regionName, false, $regionTemplate, $kept);
             }
             $routeObject = $routeObjects[$index] ?? null;
             $routes[$name] = [
@@ -165,8 +161,6 @@ final class Manifest
         }
 
         return new self(
-            $data['layout'],
-            $data['title'],
             array_values($regions),
             $page,
             $routes,

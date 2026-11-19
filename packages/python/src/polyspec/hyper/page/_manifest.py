@@ -21,8 +21,6 @@ _TOPIC = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 class Manifest:
     """The checked manifest of an application."""
 
-    layout: str
-    title: str
     regions: list[Region]
     page: Region
     routes: dict[str, dict]
@@ -30,15 +28,11 @@ class Manifest:
 
     def __init__(
         self,
-        layout: str,
-        title: str,
         regions: list[Region],
         page: Region,
         routes: dict[str, dict],
         router: Router,
     ):
-        self.layout = layout
-        self.title = title
         self.regions = regions
         self.page = page
         self.routes = routes
@@ -81,18 +75,16 @@ class Manifest:
             declared_uses = region.get("uses", [])
             if not isinstance(declared_uses, list):
                 raise open_error(f"manifest region {name} uses an invalid topic")
-            uses = []
             for topic in declared_uses:
                 if not isinstance(topic, str) or _TOPIC.fullmatch(topic) is None:
                     raise open_error(f"manifest region {name} uses an invalid topic")
-                uses.append(topic)
             # HY-37: only route regions change in the browser, so only they keep values.
             if "keep" in region:
                 raise open_error(
                     f"manifest region {name} cannot keep values; only route regions keep values"
                 )
             regions[name] = Region(
-                name, is_page, template if isinstance(template, str) else None, uses
+                name, is_page, template if isinstance(template, str) else None
             )
             if is_page:
                 if page is not None:
@@ -140,7 +132,6 @@ class Manifest:
                         region_name,
                         False,
                         region_template,
-                        [],
                         Manifest._kept_kinds(region, region_name),
                     )
                 )
@@ -162,8 +153,6 @@ class Manifest:
             }
 
         return Manifest(
-            data["layout"],
-            data["title"],
             list(regions.values()),
             page,
             routes,

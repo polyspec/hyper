@@ -1,4 +1,5 @@
-"""One manifest region: the page region, or a region with its own template and used topics (HY-2)."""
+"""One manifest region: the page region, or a region with its own template (HY-2). The core selects the regions of a
+response by their used topics from the manifest (HY-18, HY-19), so a region holds no topics."""
 
 from __future__ import annotations
 
@@ -17,7 +18,6 @@ class Region:
     name: str
     page: bool
     template: Optional[str]
-    uses: list[str]
     keep: dict[str, str]
 
     def __init__(
@@ -25,13 +25,11 @@ class Region:
         name: str,
         page: bool,
         template: Optional[str],
-        uses: list[str],
         keep: Optional[dict[str, str]] = None,
     ):
         self.name = name
         self.page = page
         self.template = template
-        self.uses = uses
         self.keep = keep or {}
         for path, kind in self.keep.items():
             if _PATH.fullmatch(path) is None or kind not in KINDS:
