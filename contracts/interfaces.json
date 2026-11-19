@@ -9814,6 +9814,8 @@
             "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testCollectReadsThePathOfASavePathWithDepthZeroAndAMode: NativeSession::collect reads the directory of a PHP save path `0;MODE;/path` as the files handler of PHP reads it (HY-104.33).",
             "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testCollectFailsUnderTheUserHandler: NativeSession::collect fails with invalid_session_handler under the PHP save handler user (HY-104.44, HY-133.14).",
             "packages/php/tests/RunTest.php::RunTest::testASessionThatCannotBeWrittenAnswersThePlain500: NativeSession::close writes the PHP session before the server answers, so a session that cannot be written answers the plain 500 (HY-115.23, HY-43).",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testTheCloseFailsWithTheFirstWarningOfTheWrite: NativeSession::close fails with SessionCloseError for a warning of the save handler while the session is written, whatever error_reporting keeps, and names the first warning (HY-115.23).",
+            "packages/php/tests/NativeSessionTest.php::NativeSessionTest::testAnErrorOfTheSaveHandlerFailsTheClose: NativeSession::close fails with SessionCloseError for an error that the save handler throws while the session is written (HY-115.23).",
             "packages/php/tests/SessionCookieTest.php::SessionCookieTest::testThrowsWhenTheHeadersAreSentBeforeTheCookie: NativeSession throws on a renewal after PHP has sent the headers, and the response holds no Set-Cookie line (HY-45.8)."
           ]
         },
