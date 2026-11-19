@@ -2488,6 +2488,75 @@
                   "signature": "buildFileText(id: string): string"
                 }
               }
+            },
+            {
+              "id": "core-rules.plainResponse",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "Plain"
+              ],
+              "output": "PlainResponse",
+              "errors": [],
+              "state": "Gives a plain answer with a body as UTF-8 text, as Response.text of the server writes it, and a 204 without a body (HY-58).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::plainResponse",
+                  "signature": "function plainResponse(answer: Plain): PlainResponse"
+                }
+              }
+            },
+            {
+              "id": "core-rules.isBinding",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "object",
+                "readonly string[]"
+              ],
+              "output": "module is CoreBinding",
+              "errors": [],
+              "state": "Tells whether a module has every member of the binding of the core (HY-133.2).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::isBinding",
+                  "signature": "function isBinding(module: object, missing: readonly string[]): module is CoreBinding"
+                }
+              }
+            },
+            {
+              "id": "core-rules.coreRules",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "object"
+              ],
+              "output": "CoreRules",
+              "errors": [],
+              "state": "Returns the rules of the core under the names of the units of the server; a module that lacks a member fails with its name (HY-133.2).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::coreRules",
+                  "signature": "export function coreRules(module: object): CoreRules"
+                }
+              }
+            },
+            {
+              "id": "core-rules.sharedRules",
+              "kind": "function",
+              "visibility": "internal",
+              "inputs": [
+                "() => unknown"
+              ],
+              "output": "() => CoreRules",
+              "errors": [],
+              "state": "Returns the accessor of the one CoreRules of the Node server, created on its first use (HY-133.2).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::sharedRules",
+                  "signature": "export function sharedRules(load: () => unknown): () => CoreRules"
+                }
+              }
             }
           ]
         }
