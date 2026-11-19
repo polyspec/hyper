@@ -26,6 +26,8 @@ class Request:
 
     method: str
     https: bool
+    # The file parts of the body, or None when the body fails (HY-113.23, HY-113.25).
+    _file_parts: Optional[Files]
 
     def __init__(
         self,

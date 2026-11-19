@@ -107,7 +107,10 @@ export class Request {
 
   // The form values and the files of a form of the core.
   private static formOf(form: CoreForm): [Fields, Files] {
-    return [Fields.of(form.fields), Files.of(form.files.map(([name, files]) => [name, files.map((file) => UploadedFile.ofCore(file))]))];
+    return [
+      new Fields(form.fields.map(([name]) => name), new Map(form.fields.map(([name, values]) => [name, [...values]]))),
+      new Files(form.files.map(([name]) => name), new Map(form.files.map(([name, files]) => [name, files.map((file) => UploadedFile.ofCore(file))]))),
+    ];
   }
 
   // The form values and the files of a body held as one value, read by form_functions.read_held_body (HY-57, HY-113):

@@ -28,14 +28,3 @@ class Fields(NamedValues[str]):
         return Fields(
             [name for name, _ in pairs], {name: list(values) for name, values in pairs}
         )
-
-    @staticmethod
-    def from_body(content_type: str, body: bytes) -> Optional[Fields]:
-        """Returns the fields of a request body held as one value, as the core reads it: of an
-        ``application/x-www-form-urlencoded`` body, or the text fields of a ``multipart/form-data`` body; a body of
-        another type has none (HY-57). Returns None when the body fails with ``invalid`` or ``header_limit``
-        (HY-42, HY-113.25)."""
-        from ._core_body import NO_LIMIT, held_form
-
-        form, _, _ = held_form(content_type, body, NO_LIMIT, NO_LIMIT, NO_LIMIT)
-        return None if form is None else form[0]

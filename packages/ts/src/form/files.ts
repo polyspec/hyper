@@ -10,11 +10,6 @@ export class Files extends NamedValues<UploadedFile> {
     return new Files([], new Map());
   }
 
-  // Returns the files of `[name, files]` pairs.
-  static of(pairs: readonly (readonly [string, readonly UploadedFile[]])[]): Files {
-    return new Files(pairs.map(([name]) => name), new Map(pairs.map(([name, files]) => [name, [...files]])));
-  }
-
   // Returns the size in bytes of each file, in the order of the pairs (HY-114).
   sizes(): number[] {
     return this.pairs().flatMap(([, files]) => files.map((file) => file.size()));
