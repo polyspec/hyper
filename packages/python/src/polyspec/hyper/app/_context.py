@@ -1,13 +1,12 @@
-"""The context of an application (HY-124 to HY-128): the map that its handler returns, its JSON text (HY-54), its
-hash with the build (HY-125) and the check of the `Hyper-Context` header (HY-127); the core places the context in
-the shared data of a document (HY-10)."""
+"""The context of an application (HY-124 to HY-128): the map that its handler returns, its hash with the build
+(HY-125) and the check of the `Hyper-Context` header (HY-127); the core places the context in the shared data
+of a document (HY-10)."""
 
 from __future__ import annotations
 
 from typing import Callable, Optional
 
 from ._core_rules import core_rules
-from ..data._json_codec import JsonCodec
 
 
 class Context:
@@ -19,11 +18,6 @@ class Context:
         if not isinstance(value, dict):
             raise TypeError("the context handler did not return a map (HY-124)")
         return value
-
-    @staticmethod
-    def text(map: dict) -> str:
-        """Returns the JSON text of HY-54 of a context map."""
-        return JsonCodec.encode(map)
 
     @staticmethod
     def hash(build: str, text: str) -> str:

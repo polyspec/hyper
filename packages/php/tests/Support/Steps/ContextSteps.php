@@ -7,6 +7,7 @@ namespace Polyspec\Hyper\Tests\Support\Steps;
 use Polyspec\Hyper\ArraySession;
 use Polyspec\Hyper\Context;
 use Polyspec\Hyper\Csrf;
+use Polyspec\Hyper\JsonCodec;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\CaseInput;
 use Polyspec\Hyper\Tests\Support\ContextRun;
@@ -17,11 +18,21 @@ final class ContextSteps
 {
     private const PROGRAMS = __DIR__ . '/../../../../../var/contract-programs';
 
+    /**
+     * The JSON text of HY-54 of a context map, which the core gives; an empty map is an object (HY-17).
+     *
+     * @param array<array-key, mixed> $map
+     */
+    private static function text(array $map): string
+    {
+        return JsonCodec::encode($map === [] ? new \stdClass() : $map);
+    }
+
     /** The context of a build and a JSON text: the text is canonical, and it gives the hash of the build. */
     public static function contexts(CaseReader $case): void
     {
         $build = self::stringField($case, 'build');
-        $text = Context::text(Json::map(Json::value(self::stringField($case, 'context')), 'context'));
+        $text = self::text(Json::map(Json::value(self::stringField($case, 'context')), 'context'));
         $case->compare('context', $text);
         $case->compare('text', '{"build":"' . $build . '","context":' . $text . '}');
         $case->compare('hash', Context::hash($build, $text));
@@ -31,7 +42,7 @@ final class ContextSteps
                 throw new \UnexpectedValueException('reorderedText has no member context');
             }
             $context = Json::map($reordered['context'], 'the member context of reorderedText');
-            $case->compare('reorderedHash', Context::hash($build, Context::text($context)));
+            $case->compare('reorderedHash', Context::hash($build, self::text($context)));
         }
     }
 
