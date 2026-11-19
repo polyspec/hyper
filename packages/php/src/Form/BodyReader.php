@@ -72,20 +72,21 @@ final class BodyReader
     }
 
     /**
-     * Reads the next chunk, and returns false when the body failed: when it passed a limit (HY-131.32) or when its
-     * bytes fail with kind `invalid` or `header_limit` (HY-113.23, HY-113.25), after which no chunk is read.
+     * Reads the next chunk, and returns false when the body passed a limit (HY-59.15, HY-131.32), after which no chunk
+     * is read. A body whose bytes fail with kind `invalid` or `header_limit` keeps being read, its chunks given to no
+     * parser, and gives no form (HY-113.23, HY-113.25).
      */
     public function feed(string $chunk): bool
     {
         if ($this->failure !== null) {
-            return false;
+            return !self::overLimit($this->failure);
         }
         try {
             $this->body->feed($chunk);
         } catch (HyperValueError $error) {
             $this->failure = $error;
 
-            return false;
+            return !self::overLimit($error);
         }
 
         return true;
