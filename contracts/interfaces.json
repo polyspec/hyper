@@ -18802,6 +18802,13 @@
               "compare": "exact",
               "sentence": "HY-72.2",
               "state": "`renewals` is the number of renewals that the `ArraySession` counts after `calls`."
+            },
+            "raises": {
+              "role": "expected",
+              "optional": true,
+              "compare": "exact",
+              "sentence": "HY-104.23",
+              "state": "`raises` is the failure of the call of `calls` after the last one that `results` holds: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null; `results` holds the results of the calls before it."
             }
           },
           "members": [
