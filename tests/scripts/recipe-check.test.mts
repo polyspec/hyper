@@ -338,6 +338,25 @@ test('the candidate keeps an extension unit and an error of its kind (HYR-5, H35
   }
 });
 
+test('an extension entry is native code of its language for only (HYR-5, HYR-6, H35.179)', () => {
+  withFixtureCopy('recipe-extension-only-', (root, replaceIn) => {
+    // value-error has an extension entry in every language and no only; ext-only names php in only and has node too.
+    const entry = (name: string): string => JSON.stringify({ extension: name, kind: 'class', internal: true });
+    const all = `{ "php": ${entry('Polyspec\\Hyper\\ValueError')}, "node": ${entry('ValueError')}, "python": ${entry('ValueError')} }`;
+    const two = `{ "php": ${entry('Polyspec\\Hyper\\OnlyError')}, "node": ${entry('OnlyError')} }`;
+    replaceIn(
+      'contracts/interfaces.json',
+      '"units": [\n        {\n          "id": "csrf",',
+      `"units": [\n        { "id": "value-error", "native": ${all}, "members": [] },\n        { "id": "only-error", "native": ${two}, "members": [], "only": { "languages": ["php"], "sentence": "HY-1.2" } },\n        {\n          "id": "csrf",`,
+    );
+    const { output } = checkOf(root);
+    assert.doesNotMatch(output, /SPEC_INVALID|CHECK_ERROR/u, output);
+    assert.doesNotMatch(output, /^ONLY_MISSING unit value-error/mu, 'an extension entry is reported as missing native code');
+    assert.match(output, /^ONLY_MISMATCH unit only-error has node native code its only excludes/mu, 'an extension entry that only excludes is not reported');
+    assert.doesNotMatch(output, /^ONLY_MISSING unit only-error/mu, 'the php extension entry of only-error is reported as missing');
+  });
+});
+
 for (const m of mutations) {
   test(`mutation ${m.id} fails with ${m.code}`, () => {
     const root = mkdtempSync(path.join(tmpdir(), 'recipe-mutation-'));
