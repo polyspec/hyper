@@ -1089,63 +1089,6 @@
                 ],
                 "sentence": "HY-48.19"
               }
-            },
-            {
-              "id": "app.server",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [
-                "value",
-                "serverOptions"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Returns a node:http server whose request listener is the listener of the application (HY-97.9).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/host/http-host.ts::server",
-                  "signature": "export function server<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-97.9"
-              },
-              "tests": [
-                "packages/ts/tests/http.test.ts::server > reports the plain 500 of an escaped error to the write events of its response with its request (HY-60, HY-99): App.server returns a node:http server whose request listener a consumer extends (HY-97.9); the test prepends a listener and asserts that it receives the finish of the plain 500 of an escaped error with its request."
-              ]
-            },
-            {
-              "id": "app.listener",
-              "kind": "method",
-              "visibility": "public",
-              "inputs": [
-                "value",
-                "serverOptions"
-              ],
-              "output": "listener",
-              "errors": [],
-              "state": "Returns the request listener of the application for node:http (HY-100.29).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/host/http-host.ts::listener",
-                  "signature": "export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-100.29"
-              },
-              "tests": [
-                "packages/ts/tests/http.test.ts::the write hook and listener > listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
-                "packages/ts/tests/http.test.ts::the write hook and listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
-              ]
             }
           ]
         },
@@ -3984,7 +3927,7 @@
             "node": {
               "file": "packages/ts/src/host/http-host.ts",
               "kind": "functions",
-              "internal": true
+              "internal": false
             }
           },
           "only": {
@@ -4031,6 +3974,63 @@
                   "signature": "function createListener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
                 }
               }
+            },
+            {
+              "id": "http-host.server",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "value",
+                "serverOptions"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns a node:http server whose request listener is the listener of the application (HY-97.9).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/host/http-host.ts::server",
+                  "signature": "export function server<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-97.9"
+              },
+              "tests": [
+                "packages/ts/tests/http.test.ts::server > reports the plain 500 of an escaped error to the write events of its response with its request (HY-60, HY-99): App.server returns a node:http server whose request listener a consumer extends (HY-97.9); the test prepends a listener and asserts that it receives the finish of the plain 500 of an escaped error with its request."
+              ]
+            },
+            {
+              "id": "http-host.listener",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "value",
+                "serverOptions"
+              ],
+              "output": "listener",
+              "errors": [],
+              "state": "Returns the request listener of the application for node:http (HY-100.29).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/host/http-host.ts::listener",
+                  "signature": "export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
+                }
+              },
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-100.29"
+              },
+              "tests": [
+                "packages/ts/tests/http.test.ts::the write hook and listener > listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
+                "packages/ts/tests/http.test.ts::the write hook and listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
+              ]
             },
             {
               "id": "http-host.requestLine",
@@ -11014,6 +11014,29 @@
                   "signature": "def decode(text: str) -> object"
                 }
               }
+            },
+            {
+              "id": "json-codec.mapEntries",
+              "kind": "static method",
+              "visibility": "public",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<map<value>>",
+              "errors": [],
+              "state": "Returns the entries of a map that the core gives, or none for another value (HY-54.20).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::mapEntries",
+                  "signature": "public static function mapEntries(mixed $value): ?array"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-54.20"
+              }
             }
           ]
         }
@@ -11170,10 +11193,6 @@
               "errors": [],
               "state": "Returns the entries of a map of the data model, or none for another value.",
               "native": {
-                "php": {
-                  "symbol": "packages/php/src/Data/Kept.php::Polyspec\\Hyper\\Kept::mapEntries",
-                  "signature": "private static function mapEntries(mixed $value): ?array"
-                },
                 "node": {
                   "symbol": "packages/ts/src/data/kept.ts::Kept.mapEntries",
                   "signature": "private static mapEntries(value: Value): MapValue | null"
@@ -11182,6 +11201,13 @@
                   "symbol": "packages/python/src/polyspec/hyper/data/_kept.py::Kept._map_entries",
                   "signature": "def _map_entries(value: object) -> Optional[dict]"
                 }
+              },
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-54.20"
               }
             },
             {
@@ -17729,10 +17755,10 @@
             }
           },
           "members": [
-            "app.listener",
             "app.open",
-            "app.server",
             "asgi.createAsgi",
+            "http-host.listener",
+            "http-host.server",
             "server.createServer",
             "wsgi.createWsgi"
           ]
