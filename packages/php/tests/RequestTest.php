@@ -11,6 +11,29 @@ use Polyspec\Hyper\Request;
 
 final class RequestTest extends TestCase
 {
+    /** @var list<Request> The requests that a test read from the globals. */
+    private array $requests = [];
+
+    /**
+     * Ends each request that a test read as the host ends it: `release` removes its body (HY-131.14, B-10).
+     */
+    protected function tearDown(): void
+    {
+        foreach ($this->requests as $request) {
+            $request->release();
+        }
+        $this->requests = [];
+    }
+
+    /** Returns `Request::fromGlobals()`, whose body tearDown removes. */
+    private function fromGlobals(): Request
+    {
+        $request = Request::fromGlobals();
+        $this->requests[] = $request;
+
+        return $request;
+    }
+
     /** HY-100.31: the host passes the method in upper case. */
     public function testTheMethodOfTheSapiIsReadInUpperCase(): void
     {
@@ -18,7 +41,7 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/';
         $_SERVER['REQUEST_METHOD'] = 'purge';
         try {
-            self::assertSame('PURGE', Request::fromGlobals()->method);
+            self::assertSame('PURGE', $this->fromGlobals()->method);
         } finally {
             $_SERVER = $server;
         }
@@ -63,7 +86,7 @@ final class RequestTest extends TestCase
         // The failure of PHPUnit is a \RuntimeException too, so the assertion is made outside the catch.
         $failure = null;
         try {
-            Request::fromGlobals();
+            $this->fromGlobals();
         } catch (\RuntimeException $error) {
             $failure = $error->getMessage();
         } finally {
@@ -80,7 +103,7 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_URI'] = '/t/x:0/y?x=1';
         $_SERVER['REQUEST_METHOD'] = 'GET';
         try {
-            self::assertSame('/t/x:0/y', Request::fromGlobals()->path());
+            self::assertSame('/t/x:0/y', $this->fromGlobals()->path());
         } finally {
             $_SERVER = $server;
         }
@@ -95,7 +118,7 @@ final class RequestTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $_GET = ['ignored' => '1'];
         try {
-            $request = Request::fromGlobals();
+            $request = $this->fromGlobals();
         } finally {
             $_SERVER = $server;
             $_GET = $get;
@@ -114,7 +137,7 @@ final class RequestTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
         $_POST = ['ignored' => '1'];
         try {
-            self::assertSame([], Request::fromGlobals()->form());
+            self::assertSame([], $this->fromGlobals()->form());
         } finally {
             $_SERVER = $server;
             $_POST = $post;
@@ -134,7 +157,7 @@ final class RequestTest extends TestCase
         $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded, text/plain';
         $_SERVER['HTTP_USER_AGENT'] = 'a, b';
         try {
-            $request = Request::fromGlobals();
+            $request = $this->fromGlobals();
         } finally {
             $_SERVER = $server;
         }

@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fef05046ba4131964235f177ae2893d9ff8e7c3cc627dc6e37955bda3964a5de -->
+<!-- source-sha256: 24d4f48ae702f170cf8365341b9f2746548e051e5ce4873358195c4633ca5708 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `packages/php/tests/RequestTest.php`는 전역 값에서 읽은 각 요청을 host처럼 `release`로 끝낸다(H35.220, HY-131.14, B-10). 입력: `make hyper-test-php PHP_TESTS=tests/RequestTest.php`. 이전 동작: 테스트가 `Request::fromGlobals`로 요청을 만들고 풀지 않았으므로 binding이 "RequestBody was destroyed without remove(), so its destructor released it (B-10)"를 4번 경고했고 실행이 rc 2로 끝났다. 기대: `tearDown`이 각 요청을 풀고, 경고가 없으며 파일이 통과한다.
 - PHP server의 `BodyReader::feed`는 body가 한도를 넘은 뒤에만 false를 돌려주고, byte가 kind `invalid`나 `header_limit`로 실패하는 body는 `contracts/interfaces.json` body-reader.feed와 Python server가 정하듯 계속 읽는다(H35.218, HY-131.32, HY-113.25). 입력: byte가 `invalid`로 실패하는, 조각 단위로 읽는 `multipart/form-data` body. 이전 동작: PHP는 첫 실패에 false를 돌려주고 읽기를 멈췄고 Node multipart worker는 모든 실패에 멈췄으므로, `tests/scripts/multipart-compare.test.mts`가 314개 중 193개 body의 stopped 값이 Python과 다르다고 보고했다. 기대: 세 서버가 그런 body를 끝까지 읽고 form 없이 상태 400을 준다. 한도를 넘은 body만 멈춘다.
 - `composer.lock`와 `examples/board/composer.lock`의 `polyspec/hyper` lock 항목이 H35.114부터 `packages/php/composer.json`이 선언하는 `files` autoload `src/Host/Run.php`를 가지고, private root `composer.json`은 그 파일을 더 이상 직접 선언하지 않는다(H35.216). 입력: `examples/board`의 PHP 서버에 보내는 요청. 이전 동작: lock이 package의 `psr-4` autoload만 가졌고 Composer는 lock의 autoload를 설치하므로, board가 `PHP Fatal error: Uncaught Error: Call to undefined function Polyspec\Hyper\run() in examples/board/public/index.php:70`로 500을 답했고, `session-redis-failure`, `session-redis-failover`, `session-redis-cluster`, `session-lost-lock`이 `php opens the form 500 !== 200`로 실패했다. lock이 그 항목을 가지자 root가 자기 `files` 항목과 package를 거쳐 `Run.php`를 두 번 읽어 `Cannot redeclare function Polyspec\Hyper\run()`로 끝났다. 기대: `make composer-lock PACKAGES=polyspec/hyper`가 두 lock을 쓰고, root는 `Run.php`를 package에서만 받으며, 네 test 파일이 통과한다.
 - `tests/scripts/upload-servers.test.mts`의 HY-131 test가 Node 서버에서도, 서버가 요청의 끝을 알린 뒤에 요청의 임시 directory를 확인한다(H35.217, HY-131.14, HY-99). 입력: test의 네 요청을 Node upload server에 보낸다. 이전 동작: 확인은 PHP와 Python에서만 실행됐다. 제외를 없애면 Node에서 `node, a body without its closing delimiter: the directory of the request stays`로 실패했는데, client는 연결이 닫힐 때 directory를 읽고 Node 서버는 HY-131.14대로 response가 닫히고 hook이 끝난 뒤에 directory를 지우기 때문이다. 기대: test가 각 서버의 끝 줄(PHP의 `Closing`, Node와 Python fixture의 `ended <port>`)을 기다린 뒤 세 서버 어디에도 `http-form-` directory가 없다. library는 바뀌지 않는다.
