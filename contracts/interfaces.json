@@ -13366,6 +13366,23 @@
                   "signature": "def _vary_names(route: str, kind: str, raw: object) -> tuple[str, ...]"
                 }
               }
+            },
+            {
+              "id": "representation-entries.invalid",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "hyper-value-error",
+              "errors": [],
+              "state": "Returns the error of a representation that fails the open of the application (HY-106.21).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Representation/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::invalid",
+                  "signature": "private static function invalid(string $message): HyperValueError"
+                }
+              }
             }
           ]
         },
@@ -13778,6 +13795,23 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/representation/_representation_response.py::RepresentationResponse._sent_location",
                   "signature": "def _sent_location(location: object, base_path: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "representation-response.headerBytes",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the bytes of the header field of a UTF-8 text, one byte per character up to U+00FF, and fails with invalid_text (HY-122.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Representation/RepresentationResponse.php::Polyspec\\Hyper\\RepresentationResponse::headerBytes",
+                  "signature": "private static function headerBytes(string $text): string"
                 }
               }
             }
