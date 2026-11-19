@@ -1563,7 +1563,8 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-104.26"
+                "sentence": "HY-104.26",
+                "reason": "PHP: HY-104.26 not implemented, row H35.37 [-] until after the first release"
               }
             },
             {
@@ -1591,7 +1592,8 @@
                   "node",
                   "python"
                 ],
-                "sentence": "HY-104.26"
+                "sentence": "HY-104.26",
+                "reason": "PHP: HY-104.26 not implemented, row H35.37 [-] until after the first release"
               }
             },
             {
