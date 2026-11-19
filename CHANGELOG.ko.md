@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: cc58c3bbeb55bfba7552c25449e70b3609115d84190ab19f4ea7828cd7b1a01d -->
+<!-- source-sha256: 4cbeff7dec2bd9f056a36442722e084f234b57caf0c8c5d961bffc9226d4f681 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make recipe-check`은 자기 실행이 쓴 case 결과만 읽는다(H35.144). 입력: `var/recipe/results`에 남은 이전 실행의 결과 파일과, import에서 실패해 이번 실행에 파일을 쓰지 않은 Node case runner. 이전 동작: 검사가 이전 `node.txt`를 읽었고, 그 파일에 없는 case마다 `RESULT_MISSING`을 냈으며, runner의 실패를 알리는 줄이 없었다. 현재 동작: 각 실행은 `var/recipe/results/<run id>/`에 쓰고, 검사는 그 디렉터리만 읽으며, 이번 실행에 파일을 쓰지 않은 runner는 `RUNNER_NOT_RUN` `runner did not run: <runner> ...`으로 실패한다. 실제 결과의 finding 종류는 바뀌지 않는다.
 - Rust core는 polyspec-http-form v0.0.3 대신 v0.0.4를 고정한다(H35.11). 입력: tag v0.0.3의 `packages/rust/Cargo.toml`(binding 0.0.21에 의존)과 같은 tag의 `config/release-files.json`. 이전 동작: `Cargo.lock`에 `polyspec-binding-core`가 두 개(http-form 아래 0.0.21, hyper 아래 0.0.22) 있었다. 기대 동작: binding 0.0.22 위의 v0.0.4가 유일한 http-form 고정이고, `Cargo.lock`에 `polyspec-binding-core`가 하나이며, `config/release-files.json`은 v0.0.4 asset의 `fields.json`과 `forms.json`을 가리키고 두 sha256 값은 v0.0.3과 같다. 검증: `make hyper-test-scripts TESTS=tests/scripts/release-file-pins.test.mts`.
 - `docs/spec/recipe.md`의 HYR-7은 release의 case 파일의 `caseFiles` 항목이 파일의 모든 최상위 key를 선언하고, PHP, Node, Python의 runner가 그 모든 section을 실행하며, case 목록이 아닌 값의 key는 fixture이고, step이 서버에 없는 member를 필요로 하는 section은 runner가 빼는 section이 아니라 checklist의 행이라고 적는다(H35.11). 입력: `urlencoded`, `multipart`, `streamed` 밖의 section 18개를 어떤 항목도 선언하지 않은 http-form v0.0.3의 `fields.json`과 `forms.json`. 동작: reader가 두 파일의 모든 case를 `FILE_UNDECLARED`로 실패시켰다. 행 H35.11-1, H35.11-2, H35.11-3이 선언과 step, `content_type`과 `boundary`의 member, PHP와 Python의 fault build를 가진다. 검증: `make docs-check`.
 - `contracts/interfaces.json`은 서버가 모든 body를 core로 읽기 시작하면서 H35.11이 파일을 지운 concern `form-values`의 unit `multipart`, `multipart-reader`, `request-body`와, H35.11이 지운 그 concern의 case 파일 `tests/legacy/fields.json`을 더는 선언하지 않는다(H35.11). 입력: 세 서버의 recipe 검사. 이전 동작: 선언이 더는 없는 source와 member 18개를 가리켰다. 기대 동작이자 현재 동작: concern은 서버가 가진 unit을 선언한다. `NamedValues`는 세 서버의 `Fields`와 `Files`가 그것을 상속하므로 남는다. 검증: `make owner-validate`, `make hyper-test-scripts`.

@@ -582,7 +582,11 @@ hyper-test-scripts: $(if $(TESTS),$(shell $(NODE) scripts/test-inputs.mts '$(SCR
 # scripts/recipe/typescript, which `make install-packages` installs from its lock; `typecheck` and `lint-ts` read its declarations. The case results (HYR-7) are the
 # files that each language's case runner writes under RECIPE_RESULTS_DIR; a missing file fails the check.
 RECIPE_TYPESCRIPT := scripts/recipe/typescript/node_modules
-RECIPE_RESULTS_DIR := $(CURDIR)/var/recipe/results
+# Each run writes its results into a directory of its own run id (H35.144, HR-82): a file of an earlier run is never read
+# as the result of this run, and a runner that wrote no file in its run fails the check as not run.
+RECIPE_RESULTS_ROOT := $(CURDIR)/var/recipe/results
+RECIPE_RUN := $(shell date -u +%Y%m%dT%H%M%S)-$(shell echo $$PPID)
+RECIPE_RESULTS_DIR := $(RECIPE_RESULTS_ROOT)/$(RECIPE_RUN)
 
 .PHONY: recipe-check recipe-compare recipe-files recipe-candidates recipe-run-php recipe-run-node recipe-run-python recipe-run-browser recipe-run-build
 # Each case runner writes one line per case to the file that RECIPE_RESULTS names (HYR-7); recipe-check runs the five
@@ -604,7 +608,7 @@ recipe_run_node = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt $(case_run_node)
 recipe_run_python = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt $(case_run_python)
 recipe_run_browser = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/browser.txt $(case_run_browser)
 recipe_run_build = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/build-id.test.mts
-recipe_compare = $(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --results php=$(RECIPE_RESULTS_DIR)/php.txt --results node=$(RECIPE_RESULTS_DIR)/node.txt --results python=$(RECIPE_RESULTS_DIR)/python.txt --results browser=$(RECIPE_RESULTS_DIR)/browser.txt --results build=$(RECIPE_RESULTS_DIR)/build.txt
+recipe_compare = $(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --run-dir $(RECIPE_RESULTS_DIR)
 recipe-run-php: server-fixtures ext hyper-ext ## Run the PHP case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	$(recipe_run_php)
@@ -1206,8 +1210,8 @@ ci-targets: ## Run TARGETS past failures and write CI_REPORT (logs, record.json,
 # (HYR-7); the report that a job uploads holds those files in recipe-results/, so a failed case is named in the report
 # and not only on the runner (HR-84). A group whose targets run no runner has no results file, and its report has none.
 # The make that ci_run starts expands the wildcard after the targets of the group ended.
-ci-results: ## Copy the case results of the recipe runners, RECIPE_RESULTS_DIR/*.txt, into CI_REPORT/recipe-results
-	$(if $(wildcard $(RECIPE_RESULTS_DIR)/*.txt),mkdir -p $(CI_REPORT)/recipe-results && cp $(wildcard $(RECIPE_RESULTS_DIR)/*.txt) $(CI_REPORT)/recipe-results/,@:)
+ci-results: ## Copy the case results of the recipe runners, RECIPE_RESULTS_ROOT/*/*.txt, into CI_REPORT/recipe-results
+	$(if $(wildcard $(RECIPE_RESULTS_ROOT)/*/*.txt),mkdir -p $(CI_REPORT)/recipe-results && cp $(wildcard $(RECIPE_RESULTS_ROOT)/*/*.txt) $(CI_REPORT)/recipe-results/,@:)
 
 ci-summary: ## Write summary.md of CI_REPORT again from its record, also for a run that stopped
 	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) --summary $(CI_REPORT)
