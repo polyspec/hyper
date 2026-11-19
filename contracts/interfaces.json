@@ -993,7 +993,10 @@
                 "packages/php/tests/RunTest.php::RunTest::testAFatalErrorAfterAFlushWithOutputBufferingOnKeepsTheStartedResponseUnended: With output_buffering of PHP on and after a flush that sent the headers, a fatal error keeps the started response, which the write hook receives with ended false (HY-99.7).",
                 "packages/php/tests/RunTest.php::RunTest::testAnExitWithoutOutputGivesTheHookANullResponse: A PHP exit() without output gives the write hook of the shutdown function a null response with ended false and a null failure (HY-99.11).",
                 "packages/php/tests/RunTest.php::RunTest::testAMaxExecutionTimeFatalErrorReportsThePlain500ToTheWriteHook: The max_execution_time fatal error of PHP is an E_ERROR that the shutdown function of App::run answers with the plain 500 and reports to the write hook (HY-60.23).",
-                "packages/php/tests/RunTest.php::RunTest::testWarningsNoticesAndDeprecationsFailTheRequest: Only PHP has the error kinds E_USER_NOTICE and E_USER_DEPRECATED and the silence operator; App::run fails the request for the first two and not for a silenced read (HY-74.5)."
+                "packages/php/tests/RunTest.php::RunTest::testWarningsNoticesAndDeprecationsFailTheRequest: Only PHP has the error kinds E_USER_NOTICE and E_USER_DEPRECATED and the silence operator; App::run fails the request for the first two and not for a silenced read (HY-74.5).",
+                "packages/php/tests/RunTest.php::RunTest::testAFailedReadOfTheBodyAnswersThePlain500AndCallsTheWriteHookOnce: App::run reads the body and writes the response through the PHP SAPI (HY-100.30); a read of php://input that fails answers the plain 500 without a response hook and calls the write hook once with the request as received (HY-60.14, HY-60.17, HY-60.18).",
+                "packages/php/tests/RunTest.php::RunTest::testAFailedReadOfAMultipartBodyLeavesNoDirectoryOfTheRequest: App::run reads the body and writes the response through the PHP SAPI (HY-100.30); a read of a multipart body that fails after a file part started answers the plain 500, calls the write hook once and leaves no directory of the request (HY-60.14, HY-131.14).",
+                "packages/php/tests/RunTest.php::RunTest::testASessionThatCannotBeWrittenAnswersThePlain500: App::run reads the body and writes the response through the PHP SAPI (HY-100.30); a session of the SAPI that cannot be written when it is closed before the answer answers the plain 500 of HY-43 (HY-115.23)."
               ]
             },
             {
@@ -3806,15 +3809,16 @@
                 "map<string>",
                 "map<string>",
                 "boolean",
-                "number"
+                "number",
+                "optional<string>"
               ],
               "output": "request",
               "errors": [],
-              "state": "Returns the request as received before its body is read (HY-60.2).",
+              "state": "Returns the request as received before its body is read (HY-60.2), with the raw query that a transport gives apart from the target (HY-100.24).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/_pipeline.py::head_request",
-                  "signature": "def head_request(method: str, target: str, headers: dict[str, str], cookies: dict[str, str], https: bool, declared: int) -> Request"
+                  "signature": "def head_request(method: str, target: str, headers: dict[str, str], cookies: dict[str, str], https: bool, declared: int, query: Optional[str]=None) -> Request"
                 }
               }
             },
@@ -3994,7 +3998,9 @@
               },
               "tests": [
                 "packages/python/tests/test_wsgi.py::WsgiTest.test_a_start_response_that_raises_is_an_escape_answered_through_start_response_again: Only the Python server has a WSGI callable (HY-100.3); it passes the plain 500 to start_response with the exception information when start_response raised.",
-                "packages/python/tests/test_wsgi.py::WsgiTest.test_a_start_response_that_raises_again_reports_the_write_before_the_error_propagates: Only the Python server has a WSGI callable (HY-100.3); a second start_response that raises returns no iterable, so the callable reports the write before the error propagates (HY-100.36)."
+                "packages/python/tests/test_wsgi.py::WsgiTest.test_a_start_response_that_raises_again_reports_the_write_before_the_error_propagates: Only the Python server has a WSGI callable (HY-100.3); a second start_response that raises returns no iterable, so the callable reports the write before the error propagates (HY-100.36).",
+                "packages/python/tests/test_wsgi.py::WsgiTest.test_a_start_response_that_raises_for_a_public_file_is_an_escape_answered_with_the_plain_failure: Only the Python server has a WSGI callable (HY-100.3); it passes the plain 500 to start_response with the exception information when start_response raised for a file of the public directory, and the write hook receives the failure once (HY-60).",
+                "packages/python/tests/test_wsgi.py::WsgiTest.test_a_failed_stat_of_a_public_file_is_an_escape_answered_with_the_plain_failure: Only the Python server has a WSGI callable (HY-100.3); it answers a stat of a public file that fails for another reason than a missing file with the plain 500 and one write hook call with the request as received (HY-60.14, HY-60.17)."
               ]
             },
             {
@@ -4196,7 +4202,9 @@
               },
               "tests": [
                 "packages/python/tests/test_asgi.py::AsgiTest.test_a_cancelled_send_reports_an_unended_write_and_propagates_the_cancellation: Only the Python server has an ASGI callable (HY-100.15); it reports an unended write for a cancelled send, runs no disconnect hook and lets the cancellation pass.",
-                "packages/python/tests/test_asgi.py::AsgiTest.test_a_failed_send_of_the_plain_failure_reports_it_and_propagates: Only the Python server has an ASGI callable (HY-100.15); it reports a failed send of the plain 500 and lets the error reach the server."
+                "packages/python/tests/test_asgi.py::AsgiTest.test_a_failed_send_of_the_plain_failure_reports_it_and_propagates: Only the Python server has an ASGI callable (HY-100.15); it reports a failed send of the plain 500 and lets the error reach the server.",
+                "packages/python/tests/test_asgi.py::AsgiTest.test_a_failed_stat_of_a_public_file_is_an_escape_answered_with_the_plain_failure: Only the Python server has an ASGI callable (HY-100.15); it answers a stat of a public file that fails for another reason than a missing file with the plain 500 and one write hook call with the request as received (HY-60.14, HY-60.17).",
+                "packages/python/tests/test_asgi.py::AsgiTest.test_a_send_that_fails_for_another_reason_is_logged_and_reported_with_its_failure: Only the Python server has an ASGI callable (HY-100.15); it logs a send that fails for another reason than a closed connection, reports it once to the write hook with its failure, lets it propagate and runs no disconnect hook (HY-60.14, HY-60.21, HY-43)."
               ]
             },
             {
@@ -4774,14 +4782,17 @@
                 "packages/ts/tests/http.test.ts::the write hook and listener > listener(app, sessions) returns the request listener of the application, a function of the host code and no member of App (HY-100.28, HY-106.20): App.listener returns the node:http request listener (HY-100.28); the test installs it alone in a node:http server and receives the page of the application.",
                 "packages/ts/tests/http.test.ts::the write hook and listener > settles the promise of the listener after the write hook and the disconnect hook (HY-100): The promise that the listener of App.listener returns settles after the write hook and the disconnect hook (HY-100.29); the test asserts the order written, disconnect, settled.",
                 "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
-                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
+                "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled.",
+                "packages/ts/tests/http.test.ts::the write hook and listener > answers a request without a target with the plain 500 and calls no write hook (HY-100.2, HY-99.12): Only the Node host is the listener of node:http (HY-100.1); the test gives the listener a request of node:http without its target and asserts the plain 500 and no write hook call.",
+                "packages/ts/tests/http.test.ts::the write hook and listener > answers a failed stat of a file of the public directory with the plain 500 and one write hook call with its request (HY-60.14, HY-60.17): Only the Node host is the listener of node:http (HY-100.1); the test serves a public directory whose subdirectory has no search permission and asserts the plain 500 and one write hook call with the request."
               ]
             }
           ],
           "tests": [
             "packages/ts/tests/http.test.ts::server > answers a request target with a byte outside ASCII with a plain 400 (HY-42): Only the Node server answers and reports the 400 of a request that node:http cannot parse, with a request of the request line or with no request and with an empty reply (HY-60.7, HY-60.8); the test sends raw packets to the server of http-host.createServer.",
             "packages/ts/tests/http.test.ts::server > answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65): Only the Node server answers headers larger than node:http accepts with a 431 that carries Cache-Control: no-store (HY-60.7, HY-65.1).",
-            "packages/ts/tests/http.test.ts::the field lines of a request > reads the lines of a name as one value joined with `, `, the media type of the body included (HY-42.8, HY-42.9): Only the Node host is the listener of node:http (HY-100.1), whose `headers` keeps the first line of `content-type` and `user-agent`; the test sends two lines of each and asserts the joined values that `around` reads.",
+            "packages/ts/tests/http.test.ts::the field lines of a request > reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.8, HY-42.9, HY-42.14, HY-59.13): Only the Node host is the listener of node:http (HY-100.1), whose `headers` keeps the first line of `content-type` and `user-agent`; the test sends two lines of each and asserts the joined values that `around` reads.",
+            "packages/ts/tests/http.test.ts::the field lines of a request > answers a declared length above the body limit with 413 and discards the body unread by the core (HY-131.29, HY-131.31): Only the Node host is the listener of node:http (HY-100.1); it reads the bytes that follow a refused start of the body to discard them; the test sends a declared length above the body limit to the server and asserts the 413.",
             "packages/ts/tests/http.test.ts::the field lines of a request > answers an action with two Content-Type lines with 400, because the joined value is no media type (HY-42.14, HY-59.12): Only the Node host is the listener of node:http (HY-100.1); the test sends two `Content-Type` lines to an action through it.",
             "packages/ts/tests/http.test.ts::the field lines of a request > leaves a request with two Content-Length lines to the 400 of node:http (HY-42.13, HY-60.7): Only the Node server has node:http, which refuses two `Content-Length` lines itself; the test asserts the plain 400 of HY-60.7.",
             "packages/ts/tests/client.test.ts::client rendering (HY-62) > serves the shell over node:http without a session (HY-45, HY-62): Only the Node host is the listener of node:http (HY-100.1); a request for the shell through it leaves the session directory empty."
@@ -6700,12 +6711,12 @@
                   "signature": "public function withSessionCookie(?string $field): self"
                 },
                 "node": {
-                  "symbol": "packages/ts/src/host/http-host.ts::withSessionCookie",
-                  "signature": "function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, response: Response, created: string | null, https: boolean): Response"
+                  "symbol": "packages/ts/src/http/response.ts::Response.withSessionCookie",
+                  "signature": "withSessionCookie(field: string | null): Response"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/host/_pipeline.py::answer_with",
-                  "signature": "def answer_with(app: App, sessions: FileSessions | RedisSessions, around: Optional[Callable], exchange: Exchange) -> Response"
+                  "symbol": "packages/python/src/polyspec/hyper/http/response.py::Response._with_session_cookie",
+                  "signature": "def _with_session_cookie(self, field: str | None) -> 'Response'"
                 }
               }
             }
@@ -7140,31 +7151,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result._changed_topics",
                   "signature": "_changed_topics: list[str]"
-                }
-              }
-            },
-            {
-              "id": "result.hasDotSegment",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "boolean",
-              "errors": [],
-              "state": "Returns true when the path of a location has a segment `.` or `..`, also with a percent-encoded dot.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::hasDotSegment",
-                  "signature": "private static function hasDotSegment(string $location): bool"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/result/result.ts::Result.hasDotSegment",
-                  "signature": "private static hasDotSegment(location: string): boolean"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result._has_dot_segment",
-                  "signature": "def _has_dot_segment(location: str) -> bool"
                 }
               }
             }
@@ -12615,7 +12601,7 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Representation/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::entry",
-                  "signature": "private static function entry(string $route, stdClass $item): Polyspec\\Hyper\\RepresentationEntry"
+                  "signature": "private static function entry(string $route, array $item): Polyspec\\Hyper\\RepresentationEntry"
                 },
                 "node": {
                   "symbol": "packages/ts/src/representation/representation-entries.ts::RepresentationEntries.entry",
@@ -12721,15 +12707,15 @@
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Representation/RepresentationEntries.php::Polyspec\\Hyper\\RepresentationEntries::invalid",
-                  "signature": "private static function invalid(string $message): HyperValueError"
+                  "signature": "private static function invalid(string $message): Polyspec\\Hyper\\HyperValueError"
                 },
                 "node": {
-                  "symbol": "packages/ts/src/representation/representation-entries.ts::invalid",
-                  "signature": "function invalid(message: string): Error"
+                  "symbol": "packages/ts/src/representation/representation-entries.ts::RepresentationEntries.invalid",
+                  "signature": "private static invalid(message: string): Error"
                 },
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::open_error",
-                  "signature": "def open_error(message: str) -> ValueError"
+                  "symbol": "packages/python/src/polyspec/hyper/representation/_representation_entries.py::RepresentationEntries._invalid",
+                  "signature": "def _invalid(message: str) -> ValueError"
                 }
               }
             }

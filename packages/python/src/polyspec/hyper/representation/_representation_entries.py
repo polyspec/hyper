@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 
-from ..app._core_rules import open_error
+from ..app._core_rules import core_rules
 from ._representation_entry import RepresentationEntry
 
 _TOKEN = re.compile(r"[!#$%&'*+\-.^_`|~0-9A-Za-z]+")
@@ -30,7 +30,7 @@ class RepresentationEntries:
         for item in raw:
             entry = RepresentationEntries._entry(route, item)
             if entry.media in media_types:
-                raise open_error(
+                raise RepresentationEntries._invalid(
                     f"route {route} declares the type {entry.type} twice (HY-118)"
                 )
             media_types.add(entry.media)
@@ -46,12 +46,12 @@ class RepresentationEntries:
         declared = [entry.type for entry in entries]
         for entry_type in declared:
             if entry_type not in handlers:
-                raise open_error(
+                raise RepresentationEntries._invalid(
                     f"route {route} has no representation handler for {entry_type} (HY-118)"
                 )
         for entry_type in handlers:
             if entry_type not in declared:
-                raise open_error(
+                raise RepresentationEntries._invalid(
                     f"route {route} has a representation handler for {entry_type}, which the route does not declare (HY-118)"
                 )
 
@@ -59,12 +59,12 @@ class RepresentationEntries:
     def _entry(route: str, item: dict) -> RepresentationEntry:
         for key in ("type", "parameters", "methods", "vary"):
             if key not in item:
-                raise open_error(
+                raise RepresentationEntries._invalid(
                     f"route {route} has a representation without {key} (HY-118)"
                 )
         kind = item["type"]
         if not isinstance(kind, str):
-            raise open_error(
+            raise RepresentationEntries._invalid(
                 f"route {route} has a representation type that is not text (HY-118)"
             )
         # The type and the subtype are tokens as the manifest writes them, so that lower case changes only ASCII letters.
@@ -77,7 +77,7 @@ class RepresentationEntries:
             or "*" in (main, sub)
             or media in _PAGE_TYPES
         ):
-            raise open_error(
+            raise RepresentationEntries._invalid(
                 f"route {route} has the invalid representation type {kind} (HY-118)"
             )
         return RepresentationEntry(
@@ -97,7 +97,7 @@ class RepresentationEntries:
         route: str, kind: str, raw: object
     ) -> tuple[tuple[str, tuple[str, ...]], ...]:
         if not isinstance(raw, dict):
-            raise open_error(
+            raise RepresentationEntries._invalid(
                 f"route {route} has parameters of {kind} that are not an object (HY-118)"
             )
         parameters: list[tuple[str, tuple[str, ...]]] = []
@@ -105,12 +105,12 @@ class RepresentationEntries:
         for name, values in raw.items():
             lower = name.lower()
             if _TOKEN.fullmatch(name) is None or lower == "q" or lower in names:
-                raise open_error(
+                raise RepresentationEntries._invalid(
                     f"route {route} has the invalid parameter {name} of {kind} (HY-118)"
                 )
             names.add(lower)
             if not isinstance(values, list) or values == []:
-                raise open_error(
+                raise RepresentationEntries._invalid(
                     f"route {route} has no served value for {name} of {kind} (HY-118)"
                 )
             served: list[str] = []
@@ -119,7 +119,7 @@ class RepresentationEntries:
                     _TOKEN.fullmatch(value) is None
                     and _QUOTABLE.fullmatch(value) is None
                 ):
-                    raise open_error(
+                    raise RepresentationEntries._invalid(
                         f"route {route} has the invalid value of {name} of {kind} (HY-118)"
                     )
                 served.append(value)
@@ -133,7 +133,7 @@ class RepresentationEntries:
             or raw == []
             or any(m not in _METHODS for m in raw)
         ):
-            raise open_error(
+            raise RepresentationEntries._invalid(
                 f"route {route} has methods of {kind} that are not a nonempty subset of GET, POST, PUT, DELETE (HY-118)"
             )
         return tuple(raw)
@@ -141,20 +141,25 @@ class RepresentationEntries:
     @staticmethod
     def _vary_names(route: str, kind: str, raw: object) -> tuple[str, ...]:
         if not isinstance(raw, list):
-            raise open_error(
+            raise RepresentationEntries._invalid(
                 f"route {route} has vary names of {kind} that are not a list (HY-118)"
             )
         names: list[str] = []
         for name in raw:
             if not isinstance(name, str) or _TOKEN.fullmatch(name) is None:
-                raise open_error(
+                raise RepresentationEntries._invalid(
                     f"route {route} has the vary name {name} of {kind} that is not a field name (HY-118)"
                 )
             if name.lower() in _REJECTED_VARY or name.lower() in (
                 n.lower() for n in names
             ):
-                raise open_error(
+                raise RepresentationEntries._invalid(
                     f"route {route} has the vary name {name} of {kind} that is rejected or repeated (HY-118)"
                 )
             names.append(name)
         return tuple(names)
+
+    @staticmethod
+    def _invalid(message: str) -> ValueError:
+        """Returns the error of a representation that fails the open of the application (HY-106.21)."""
+        return core_rules().value_error(message, "invalid_application")

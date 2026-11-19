@@ -3,11 +3,6 @@
 import { rules } from '../app/core-rules.js';
 import { RepresentationEntry } from './representation-entry.js';
 
-// The failure of a representation declaration or handler, which fails the open of the application (HY-106.21).
-function invalid(message: string): Error {
-  return rules().valueError(message, 'invalid_application');
-}
-
 const TOKEN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
 // The characters that a served value may hold: HTAB, SP and U+0021 to U+007E (HY-118.6), which are valid in a quoted
 // string (RFC 9110, section 5.6.4) and have the same bytes in UTF-8 and ISO-8859-1.
@@ -23,13 +18,13 @@ export class RepresentationEntries {
   // the manifest. `raw` is the value of `representations` of the route, decoded with maps for objects, or undefined.
   static declare(route: string, raw: unknown): RepresentationEntry[] {
     if (raw === undefined) return [];
-    if (!Array.isArray(raw)) throw invalid('manifest representations is not a list');
+    if (!Array.isArray(raw)) throw RepresentationEntries.invalid('manifest representations is not a list');
     const entries: RepresentationEntry[] = [];
     const mediaTypes = new Set<string>();
     for (const item of raw) {
-      if (!(item instanceof Map)) throw invalid('manifest representations contains a value that is not an object');
+      if (!(item instanceof Map)) throw RepresentationEntries.invalid('manifest representations contains a value that is not an object');
       const entry = RepresentationEntries.entry(route, item);
-      if (mediaTypes.has(entry.media)) throw invalid(`route ${route} declares the type ${entry.type} twice (HY-118)`);
+      if (mediaTypes.has(entry.media)) throw RepresentationEntries.invalid(`route ${route} declares the type ${entry.type} twice (HY-118)`);
       mediaTypes.add(entry.media);
       entries.push(entry);
     }
@@ -41,25 +36,25 @@ export class RepresentationEntries {
   static checkHandlers(route: string, entries: readonly RepresentationEntry[], handlers: Record<string, unknown>): void {
     const declared = entries.map((entry) => entry.type);
     for (const type of declared) {
-      if (!Object.hasOwn(handlers, type)) throw invalid(`route ${route} has no representation handler for ${type} (HY-118)`);
+      if (!Object.hasOwn(handlers, type)) throw RepresentationEntries.invalid(`route ${route} has no representation handler for ${type} (HY-118)`);
     }
     for (const type of Object.keys(handlers)) {
-      if (!declared.includes(type)) throw invalid(`route ${route} has a representation handler for ${type}, which the route does not declare (HY-118)`);
+      if (!declared.includes(type)) throw RepresentationEntries.invalid(`route ${route} has a representation handler for ${type}, which the route does not declare (HY-118)`);
     }
   }
 
   private static entry(route: string, item: Map<unknown, unknown>): RepresentationEntry {
     for (const key of ['type', 'parameters', 'methods', 'vary']) {
-      if (!item.has(key)) throw invalid(`route ${route} has a representation without ${key} (HY-118)`);
+      if (!item.has(key)) throw RepresentationEntries.invalid(`route ${route} has a representation without ${key} (HY-118)`);
     }
     const kind: unknown = item.get('type');
-    if (typeof kind !== 'string') throw invalid(`route ${route} has a representation type that is not text (HY-118)`);
+    if (typeof kind !== 'string') throw RepresentationEntries.invalid(`route ${route} has a representation type that is not text (HY-118)`);
     const slash = kind.indexOf('/');
     const main = kind.slice(0, Math.max(slash, 0));
     const sub = kind.slice(slash + 1);
     // The type and the subtype are tokens as the manifest writes them, so that lower case changes only ASCII letters.
     if (slash < 0 || !TOKEN.test(main) || !TOKEN.test(sub) || main === '*' || sub === '*' || PAGE_TYPES.includes(kind.toLowerCase())) {
-      throw invalid(`route ${route} has the invalid representation type ${kind} (HY-118)`);
+      throw RepresentationEntries.invalid(`route ${route} has the invalid representation type ${kind} (HY-118)`);
     }
     return new RepresentationEntry(
       kind,
@@ -71,20 +66,20 @@ export class RepresentationEntries {
   }
 
   private static servedParameters(route: string, kind: string, raw: unknown): [string, string[]][] {
-    if (!(raw instanceof Map)) throw invalid(`route ${route} has parameters of ${kind} that are not an object (HY-118)`);
+    if (!(raw instanceof Map)) throw RepresentationEntries.invalid(`route ${route} has parameters of ${kind} that are not an object (HY-118)`);
     const parameters: [string, string[]][] = [];
     const names = new Set<string>();
     const declared: Map<unknown, unknown> = raw;
     for (const [name, values] of declared) {
-      if (typeof name !== 'string') throw invalid(`route ${route} has a parameter name of ${kind} that is not text (HY-118)`);
+      if (typeof name !== 'string') throw RepresentationEntries.invalid(`route ${route} has a parameter name of ${kind} that is not text (HY-118)`);
       const lower = name.toLowerCase();
-      if (!TOKEN.test(name) || lower === 'q' || names.has(lower)) throw invalid(`route ${route} has the invalid parameter ${name} of ${kind} (HY-118)`);
+      if (!TOKEN.test(name) || lower === 'q' || names.has(lower)) throw RepresentationEntries.invalid(`route ${route} has the invalid parameter ${name} of ${kind} (HY-118)`);
       names.add(lower);
-      if (!Array.isArray(values) || values.length === 0) throw invalid(`route ${route} has no served value for ${name} of ${kind} (HY-118)`);
+      if (!Array.isArray(values) || values.length === 0) throw RepresentationEntries.invalid(`route ${route} has no served value for ${name} of ${kind} (HY-118)`);
       const served: string[] = [];
       const given: unknown[] = values;
       for (const value of given) {
-        if (typeof value !== 'string' || (!TOKEN.test(value) && !QUOTABLE.test(value))) throw invalid(`route ${route} has the invalid value of ${name} of ${kind} (HY-118)`);
+        if (typeof value !== 'string' || (!TOKEN.test(value) && !QUOTABLE.test(value))) throw RepresentationEntries.invalid(`route ${route} has the invalid value of ${name} of ${kind} (HY-118)`);
         served.push(value);
       }
       parameters.push([lower, served]);
@@ -99,22 +94,27 @@ export class RepresentationEntries {
       if (typeof method === 'string' && METHODS.includes(method)) methods.push(method);
     }
     if (methods.length === 0 || methods.length !== given.length) {
-      throw invalid(`route ${route} has methods of ${kind} that are not a nonempty subset of GET, POST, PUT, DELETE (HY-118)`);
+      throw RepresentationEntries.invalid(`route ${route} has methods of ${kind} that are not a nonempty subset of GET, POST, PUT, DELETE (HY-118)`);
     }
     return methods;
   }
 
   private static varyNames(route: string, kind: string, raw: unknown): string[] {
-    if (!Array.isArray(raw)) throw invalid(`route ${route} has vary names of ${kind} that are not a list (HY-118)`);
+    if (!Array.isArray(raw)) throw RepresentationEntries.invalid(`route ${route} has vary names of ${kind} that are not a list (HY-118)`);
     const names: string[] = [];
     const given: unknown[] = raw;
     for (const name of given) {
-      if (typeof name !== 'string' || !TOKEN.test(name)) throw invalid(`route ${route} has the vary name ${String(name)} of ${kind} that is not a field name (HY-118)`);
+      if (typeof name !== 'string' || !TOKEN.test(name)) throw RepresentationEntries.invalid(`route ${route} has the vary name ${String(name)} of ${kind} that is not a field name (HY-118)`);
       if (REJECTED_VARY.includes(name.toLowerCase()) || names.some((other) => other.toLowerCase() === name.toLowerCase())) {
-        throw invalid(`route ${route} has the vary name ${name} of ${kind} that is rejected or repeated (HY-118)`);
+        throw RepresentationEntries.invalid(`route ${route} has the vary name ${name} of ${kind} that is rejected or repeated (HY-118)`);
       }
       names.push(name);
     }
     return names;
+  }
+
+  // The failure of a representation declaration or handler, which fails the open of the application (HY-106.21).
+  private static invalid(message: string): Error {
+    return rules().valueError(message, 'invalid_application');
   }
 }
