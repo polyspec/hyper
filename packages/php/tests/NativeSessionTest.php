@@ -32,7 +32,7 @@ final class NativeSessionTest extends TestCase
     {
         ini_set('session.save_path', sys_get_temp_dir());
         $form = '/^' . PhpSessionIdentifier::pattern() . '$/D';
-        $store = new NativeSession(false, self::request());
+        $store = new NativeSession(false, self::request(), 'hy-session');
         $store->set('a', 1);
         self::assertMatchesRegularExpression($form, (string) session_id());
         $store->renew();
@@ -48,7 +48,7 @@ final class NativeSessionTest extends TestCase
     {
         ini_set('session.save_path', sys_get_temp_dir());
         $unknown = str_repeat('b', 64);
-        $store = new NativeSession(false, self::request(['hy-session' => $unknown]));
+        $store = new NativeSession(false, self::request(['hy-session' => $unknown]), 'hy-session');
         $store->set('a', 1);
         self::assertNotSame($unknown, session_id());
         self::assertMatchesRegularExpression('/^' . PhpSessionIdentifier::pattern() . '$/D', (string) session_id());
@@ -58,7 +58,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testAnObjectOfAnotherClassFailsWithKindRecord(): void
     {
-        $store = new NativeSession(false, self::request());
+        $store = new NativeSession(false, self::request(), 'hy-session');
         $store->set('map', (object) ['a' => 1]);
         self::assertEquals((object) ['a' => 1], $store->get('map'));
         foreach (['top' => new \ArrayObject(), 'nested' => ['x' => [new \DateTimeImmutable('@0')]]] as $key => $value) {
@@ -207,7 +207,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testStartsTheSessionOnFirstUse(): void
     {
-        $store = new NativeSession(false, self::request());
+        $store = new NativeSession(false, self::request(), 'hy-session');
         self::assertSame(PHP_SESSION_NONE, session_status());
 
         $store->set('a', 1);
@@ -221,7 +221,7 @@ final class NativeSessionTest extends TestCase
     {
         $directory = sys_get_temp_dir();
         $calls = 0;
-        $session = new NativeSession(false, self::request(), static function () use (&$calls, $directory): void {
+        $session = new NativeSession(false, self::request(), 'hy-session', static function () use (&$calls, $directory): void {
             $calls++;
             self::assertSame(PHP_SESSION_NONE, session_status());
             ini_set('session.save_path', $directory);
@@ -237,7 +237,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testAnErrorOfTheSetupFailsTheRequest(): void
     {
-        $session = new NativeSession(false, self::request(), static function (): void {
+        $session = new NativeSession(false, self::request(), 'hy-session', static function (): void {
             throw new \RuntimeException('no primary');
         });
         try {
@@ -256,7 +256,7 @@ final class NativeSessionTest extends TestCase
         session_set_save_handler(new RefusingSessionHandler(true));
         set_error_handler(static fn (): bool => true);
         try {
-            (new NativeSession(false, self::request()))->set('a', 1);
+            (new NativeSession(false, self::request(), 'hy-session'))->set('a', 1);
             self::fail('the request went on without its session');
         } catch (\RuntimeException $failure) {
             self::assertSame('hyper: the session could not start', $failure->getMessage());
@@ -268,7 +268,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testNamesTheCookieHySessionOverHttp(): void
     {
-        (new NativeSession(false, self::request()))->set('a', 1);
+        (new NativeSession(false, self::request(), 'hy-session'))->set('a', 1);
 
         self::assertSame('hy-session', session_name());
         self::assertSame(
@@ -283,7 +283,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testNamesTheCookieWithTheHostPrefixOverHttps(): void
     {
-        (new NativeSession(true, self::request()))->set('a', 1);
+        (new NativeSession(true, self::request(), '__Host-hy-session'))->set('a', 1);
 
         self::assertSame('__Host-hy-session', session_name());
         self::assertSame(
@@ -296,12 +296,12 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testResumesTheSessionOfTheRequestCookie(): void
     {
-        (new NativeSession(false, self::request()))->set('a', 1);
+        (new NativeSession(false, self::request(), 'hy-session'))->set('a', 1);
         $identifier = session_id();
         self::assertIsString($identifier);
         session_write_close();
 
-        $store = new NativeSession(false, self::request(['hy-session' => $identifier]));
+        $store = new NativeSession(false, self::request(['hy-session' => $identifier]), 'hy-session');
         self::assertSame(1, $store->get('a'));
         self::assertSame($identifier, session_id());
     }
@@ -311,7 +311,7 @@ final class NativeSessionTest extends TestCase
     public function testReplacesAnIdentifierThatTheServerDidNotCreate(): void
     {
         $unknown = str_repeat('a', 26);
-        $store = new NativeSession(false, self::request(['hy-session' => $unknown]));
+        $store = new NativeSession(false, self::request(['hy-session' => $unknown]), 'hy-session');
 
         self::assertNull($store->get('a'));
         self::assertNotSame($unknown, session_id());
@@ -321,7 +321,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testIgnoresACookieThatIsNotAnIdentifierOfHySession(): void
     {
-        $store = new NativeSession(false, self::request(['hy-session' => 'short']));
+        $store = new NativeSession(false, self::request(['hy-session' => 'short']), 'hy-session');
         $store->set('a', 1);
 
         self::assertNotSame('short', session_id());
@@ -330,7 +330,7 @@ final class NativeSessionTest extends TestCase
     #[RunInSeparateProcess]
     public function testRenewsTheIdentifierAndKeepsTheValues(): void
     {
-        $store = new NativeSession(false, self::request());
+        $store = new NativeSession(false, self::request(), 'hy-session');
         $store->set('a', 1);
         $old = session_id();
 

@@ -13,17 +13,22 @@ final class NativeSession implements SessionStore
     /** The session identifier that the client holds, which is the request's cookie until the server sends another one. */
     private ?string $clientId = null;
 
+    /** The identifier that the session holds after its start or its renewal; the host sends its cookie (HY-45.8). */
+    private ?string $issuedId = null;
+
     /**
      * Prepares the PHP session; it starts on the first read or write, so a request that never uses it creates no
      * session (HY-45) and `setup` runs just before it starts (HY-115). `$request` gives the cookies of the request,
-     * parsed once (HY-129).
+     * parsed once (HY-129). `$cookieName` is the name of the session cookie, which the host reads from the core
+     * (HY-45.1, HY-104.45).
      */
     public function __construct(
         private readonly bool $https,
         private readonly Request $request,
+        private readonly string $cookieName,
         private readonly ?\Closure $setup = null,
     ) {
-        ArgumentCount::most(\func_num_args(), 3);
+        ArgumentCount::most(\func_num_args(), 4);
     }
 
     private function start(): void
@@ -32,7 +37,7 @@ final class NativeSession implements SessionStore
             return;
         }
         $https = $this->secure();
-        $name = self::name($https);
+        $name = $this->cookieName;
         $this->clientId = $this->request->cookie($name);
         // An identifier that is not of HY-45 starts no session, the same as no identifier; PHP and the session-store
         // library accept 22 to 256 characters (HY-104.42).
@@ -52,36 +57,40 @@ final class NativeSession implements SessionStore
         // HY-60.14: a failed open escapes the answer of the request, so it is not handled as an error of the
         // application.
         try {
-            $started = session_start(self::options($https));
+            $started = session_start(self::options($https, $this->cookieName));
         } catch (\Throwable $error) {
             throw new SessionOpenError($error->getMessage(), 0, $error);
         }
         if (!$started) {
             throw new SessionOpenError('hyper: the session could not start');
         }
-        $this->sendCookie();
+        $this->issuedId = $this->identifier();
     }
 
     /**
-     * Sends the session cookie of HY-45 when the session identifier differs from the one that the client holds, with
-     * the field value of HY-45.8. A session whose identifier the server kept sends nothing.
+     * Returns the field value of the session cookie of HY-45 that the client must receive, or null when it already
+     * holds the identifier of the session. The host writes this value into the response (HY-45.8, HY-104.40), and
+     * PHP writes no cookie itself, because `setcookie` would write path and secure in lower case.
+     *
+     * @internal
      */
-    private function sendCookie(): void
+    public function cookieHeader(): ?string
+    {
+        if ($this->issuedId === null || $this->issuedId === $this->clientId) {
+            return null;
+        }
+
+        return CoreRules::shared()->sessionCookieHeader($this->issuedId, $this->secure());
+    }
+
+    private function identifier(): string
     {
         $id = session_id();
         if (!is_string($id)) {
             throw new \RuntimeException('hyper: the session has no identifier');
         }
-        if ($id === $this->clientId) {
-            return;
-        }
-        // The field value of the core, which http-cookie writes (HY-45.8): setcookie of PHP writes path and secure in
-        // lower case, so its bytes would differ from those of the other servers.
-        if (headers_sent()) {
-            throw new \RuntimeException('hyper: the session cookie could not be sent');
-        }
-        header('Set-Cookie: ' . CoreRules::shared()->sessionCookieHeader($id, $this->secure()), false);
-        $this->clientId = $id;
+
+        return $id;
     }
 
     /** Whether the session runs over HTTPS: the request is HTTPS, or the application declares that it is served over HTTPS (HY-45). */
@@ -91,17 +100,7 @@ final class NativeSession implements SessionStore
     }
 
     /**
-     * Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45).
-     *
-     * @internal
-     */
-    public static function name(bool $https): string
-    {
-        return CoreRules::shared()->sessionCookieName($https);
-    }
-
-    /**
-     * Returns the session options: the cookie name of HY-45 with `Path=/` and no `Domain`, HttpOnly, SameSite=Lax,
+     * Returns the session options: the cookie name `$name` of HY-45 with `Path=/` and no `Domain`, HttpOnly, SameSite=Lax,
      * Secure on HTTPS, only identifiers that the server created, no cookie from PHP (`use_cookies`, HY-129), no caching
      * headers, because the application sets Cache-Control (HY-52), and the record form that the other servers read
      * (HY-104), and no removal of expired sessions during a request (`gc_probability` 0, HY-104.33).
@@ -112,10 +111,10 @@ final class NativeSession implements SessionStore
      *
      * @internal
      */
-    public static function options(bool $https): array
+    public static function options(bool $https, string $name): array
     {
         return [
-            'name' => self::name($https),
+            'name' => $name,
             'cookie_path' => '/',
             'cookie_domain' => '',
             'cookie_httponly' => true,
@@ -260,6 +259,6 @@ final class NativeSession implements SessionStore
         if (headers_sent() || !session_regenerate_id(true)) {
             throw new \RuntimeException('hyper: the session cookie could not be sent');
         }
-        $this->sendCookie();
+        $this->issuedId = $this->identifier();
     }
 }

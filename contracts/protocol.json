@@ -7138,6 +7138,20 @@
                   "koSource": "37add125e3e537b7ed4904f0bb731a56ffdcb05250b5e84560ccab48edc4d926"
                 },
                 {
+                  "id": "HY-104.45",
+                  "en": "The PHP server gives the name of the session cookie, which its host reads with `sessionCookieName` of the core (HY-45.1), as the third argument of the constructor of its session store, so that the session reads its cookie and sets its options under that name without calling a core rule for it.",
+                  "ko": "PHP server는 session cookie의 이름을 session 저장소 생성자의 셋째 인자로 준다. host가 core의 `sessionCookieName`(HY-45.1)으로 그 이름을 읽으므로, session은 그 이름으로 cookie를 읽고 session 설정을 하며 이름을 위해 core 규칙을 부르지 않는다.",
+                  "koSource": "99b1ef422fbbc389e9b4d2dd53d53bd5079c5defeaa1bb14fb05fb989d5d842c",
+                  "unimplemented": [
+                    {
+                      "row": "H35.129",
+                      "servers": [
+                        "php"
+                      ]
+                    }
+                  ]
+                },
+                {
                   "id": "HY-104.28",
                   "en": "`tests/scripts/session-shared.test.mts` checks it with several processes of each of the three servers on one session.",
                   "ko": "`tests/scripts/session-shared.test.mts`가 세 server 각각의 여러 process로 한 session에 대해 이것을 확인한다.",

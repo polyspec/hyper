@@ -151,18 +151,14 @@ final class SessionCookieTest extends TestCase
     }
 
     /**
-     * HY-45.8: the cookie of an identifier that is regenerated after the headers were sent is no Set-Cookie line, and
-     * the session throws; the response holds only the cookie of the start.
+     * HY-45.8: the body of the page is flushed before the host writes the cookie, so the headers are sent and the
+     * session throws on the renewal; the response holds no Set-Cookie line.
      */
     public function testThrowsWhenTheHeadersAreSentBeforeTheCookie(): void
     {
         [$setCookies, $body] = $this->request('mode=sent');
 
-        self::assertCount(1, $setCookies);
-        self::assertMatchesRegularExpression(
-            '/^Set-Cookie: hy-session=' . PhpSessionIdentifier::pattern() . '; Path=\/; HttpOnly; SameSite=Lax$/D',
-            $setCookies[0],
-        );
+        self::assertSame([], $setCookies);
         self::assertSame('body hyper: the session cookie could not be sent', $body);
     }
 
