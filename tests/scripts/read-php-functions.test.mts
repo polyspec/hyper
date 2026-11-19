@@ -100,3 +100,11 @@ test('a file with a class and a function is one unit of that name (HYR-3)', () =
   }
 });
 
+test('the App class file declares the run function of the front controller, so its unit is app (HY-106.20)', () => {
+  const app = path.join(repo, 'packages', 'php', 'src', 'App', 'App.php');
+  const script = 'require $argv[1]; echo json_encode(declaredFunctions(file_get_contents($argv[2])));';
+  const result = spawnSync(process.env.RECIPE_PHP ?? 'php', ['-r', script, path.join(repo, 'scripts', 'recipe', 'read-php-functions.php'), app], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), ['Polyspec\\Hyper\\run'], `App.php declares ${result.stdout}`);
+});
+
