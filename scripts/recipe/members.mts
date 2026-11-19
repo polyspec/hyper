@@ -3,7 +3,7 @@
 // parameters of the member that takes it.
 
 import path from 'node:path';
-import { LANGS, type Lang, type Member, type Only, type Runner, type Spec } from './types.mts';
+import { LANGS, type Lang, type Member, type Only, type Runner, type Spec, type Unit } from './types.mts';
 import type { Ctx } from './context.mts';
 import { errorKnown, expectedNative, expectedVisibility, fieldWords, hasAcronym, readerKey, specKey, symbolName, termKnown, words } from './names.mts';
 
@@ -34,6 +34,13 @@ export function checkOnly(
   }
 }
 
+/** HYR-6: the languages a unit has native code for, a file entry or an extension entry (HYR-5), as `checkOnly` reads them. */
+export function nativeOf(u: Unit): Partial<Record<Lang, unknown>> {
+  const native: Partial<Record<Lang, unknown>> = { ...u.native };
+  for (const lang of u.extensions ?? []) native[lang] = true;
+  return native;
+}
+
 /** HYR-5 options record: the fields of the record that apply to a language, as words. */
 function recordNames(spec: Spec, term: string, lang: Lang): string[] | undefined {
   const t = spec.types.find((x) => x.id === term);
@@ -59,7 +66,7 @@ export function checkMembers(ctx: Ctx): void {
   }
 
   for (const u of units) {
-    checkOnly(add, `unit ${u.id}`, u.native, LANGS, u.only);
+    checkOnly(add, `unit ${u.id}`, nativeOf(u), LANGS, u.only);
     for (const lang of LANGS) {
       if (!u.native[lang]) continue;
       const unitMembers = sources[lang].members.filter((r) => words(r.unit) === u.id);

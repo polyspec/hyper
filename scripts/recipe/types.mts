@@ -48,6 +48,8 @@ export type Unit = {
   reexport?: string;
   /** HYR-5 Reexports: the ids of the members that pass a call to a library member, which the check does not compare. */
   passed?: string[];
+  /** HYR-5 Extension classes: the languages whose native entry names an extension class, which `only` counts (HYR-6). */
+  extensions?: Lang[];
   only?: Only;
   tests?: string[];
 };
@@ -61,7 +63,7 @@ export type ReexportMember = { id: string; reexport: string };
  * reexport (HYR-5), which `withoutExtensions` moves to `passed`.
  */
 export type SpecDocument = Omit<Spec, 'concerns'> & {
-  concerns: (Omit<Concern, 'units'> & { units: (Omit<Unit, 'native' | 'members' | 'passed'> & { native: Partial<Record<Lang, FileNative | ExtensionNative>>; members: (Member | ReexportMember)[] })[] })[];
+  concerns: (Omit<Concern, 'units'> & { units: (Omit<Unit, 'native' | 'members' | 'passed' | 'extensions'> & { native: Partial<Record<Lang, FileNative | ExtensionNative>>; members: (Member | ReexportMember)[] })[] })[];
 };
 
 export type Member = {

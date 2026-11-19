@@ -4,7 +4,7 @@
 import { LANGS } from './types.mts';
 import type { Ctx } from './context.mts';
 import { expectedDirectory, expectedFile, words } from './names.mts';
-import { checkOnly } from './members.mts';
+import { checkOnly, nativeOf } from './members.mts';
 
 export function checkUnits(ctx: Ctx): void {
   const { spec, sources, add } = ctx;
@@ -30,7 +30,7 @@ export function checkUnits(ctx: Ctx): void {
     for (const [file, count] of perFile) if (count > 1) add('FILE_UNITS', `${lang} file ${file} holds ${count} units; HYR-4 allows one`);
   }
   for (const c of spec.concerns) for (const u of c.units) {
-    checkOnly(add, `unit ${u.id}`, u.native, LANGS, u.only);
+    checkOnly(add, `unit ${u.id}`, nativeOf(u), LANGS, u.only);
     for (const lang of LANGS) {
       const n = u.native[lang];
       if (!n) continue;
