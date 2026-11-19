@@ -2076,6 +2076,82 @@
                   "signature": "def build_check_id(self, text: str) -> None"
                 }
               }
+            },
+            {
+              "id": "core-rules.jsonCodecEncode",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "JsonCodec.encode: rules.json_write gives the JSON text of a value of the data model, and fails with the kind of the data model for a value that has no JSON form (HY-54.18, HY-54.21).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::jsonCodecEncode",
+                  "signature": "public function jsonCodecEncode(mixed $value): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.jsonCodecEncode",
+                  "signature": "jsonCodecEncode(value: unknown): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.json_codec_encode",
+                  "signature": "def json_codec_encode(self, value: object) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestMediaType",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Request.mediaType: rules.media_type of the value of Content-Type, which raises the kind malformed_content_type (status 400) for a value that is no media type (HY-59.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestMediaType",
+                  "signature": "public function requestMediaType(string $contentType): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.requestMediaType",
+                  "signature": "requestMediaType(contentType: string): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.request_media_type",
+                  "signature": "def request_media_type(self, content_type: str) -> str"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestFileOver",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<number>",
+                "number"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Request.fileOver: rules.file_over of the bytes of each file of the body and the limit; the binding raises the kind invalid_number for a limit that is no unsigned integer (HY-114).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestFileOver",
+                  "signature": "public function requestFileOver(array $sizes, int $limit): bool"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.requestFileOver",
+                  "signature": "requestFileOver(sizes: readonly number[], limit: number): boolean"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.request_file_over",
+                  "signature": "def request_file_over(self, sizes: list[int], limit: int) -> bool"
+                }
+              }
             }
           ]
         }
