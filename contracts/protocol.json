@@ -541,6 +541,12 @@
                   "en": "The server sends the time zone in every JSON response.",
                   "ko": "서버는 모든 JSON 응답에 시간대를 담아 보낸다.",
                   "koSource": "7168b979de9fedfd03982987cdbef64dc446e065e9dbeced7c53eaa90df6987e"
+                },
+                {
+                  "id": "HY-14.3",
+                  "en": "A server reads the current time once for a response, as a whole number of seconds of Unix time, and every region of that response renders with it.",
+                  "ko": "서버는 응답 하나에 대해 현재 시각을 Unix 시간의 정수 초로 한 번 읽고, 그 응답의 모든 region은 그 시각으로 렌더한다.",
+                  "koSource": "57b6f5eec8113b02ec18fe674a5aa3b0e8d3dc9f95ff48af37ef2df01ee5cd55"
                 }
               ]
             }
