@@ -91,7 +91,6 @@ final class App
             $this->container,
             $https,
             $context,
-            $this->varyHeader(),
         );
     }
 
