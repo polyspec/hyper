@@ -200,11 +200,18 @@ hyper-install-php: ## Install only the locked root and board Composer projects a
 # into the venv without its dependencies. The native module includes packages/python/native/generated/lib.rs, which
 # make bindings writes, so the target writes it first: a setup step of CI runs it without hyper-install (H34.10).
 MATURIN := $(KIT_TOOLS)/mise/shims/maturin
+PY_WHEEL_FEATURES_FLAG = $(if $(PY_WHEEL_FEATURES),--features $(PY_WHEEL_FEATURES))
+
+# The wheel of the tests carries the fault injection points of http-form (H35.11-3); the release wheel enables none.
+.PHONY: hyper-install-python-test
+hyper-install-python-test: bindings ## Install the Python server package with the wheel built with fault-test (H35.11-3)
+	$(MAKE) --no-print-directory hyper-install-python PY_WHEEL_FEATURES=fault-test
+
 hyper-install-python: bindings ## Make the venv of the Python server package anew and install the package into it non-editable with its dependencies (S5, H35.24)
 	rm -rf $(PYTHON_VENV)
 	$(NODE) $(KIT)/python-venv.$(KIT_EXT) $(PYTHON_VENV)
 	UV_SYNC='--locked --quiet --no-editable --no-install-project --project $(PYTHON_PACKAGE)' $(ONLINE) $(NODE) $(KIT)/uv-install.$(KIT_EXT) .
-	wheels=$(CURDIR)/var/python-wheel.next-$$$$ && trap 'rm -rf '"$$wheels" EXIT && trap 'exit 130' INT TERM && MATURIN=$(MATURIN) $(NODE) $(KIT)/link.$(KIT_EXT) maturin $(CURDIR)/$(PYTHON_PACKAGE) build --locked --offline --out "$$wheels" && $(UV) pip install --offline --python $(PYTHON_VENV)/bin/python --no-deps --reinstall "$$wheels"/*.whl
+	wheels=$(CURDIR)/var/python-wheel.next-$$$$ && trap 'rm -rf '"$$wheels" EXIT && trap 'exit 130' INT TERM && MATURIN=$(MATURIN) $(NODE) $(KIT)/link.$(KIT_EXT) maturin $(CURDIR)/$(PYTHON_PACKAGE) build --locked --offline $(PY_WHEEL_FEATURES_FLAG) --out "$$wheels" && $(UV) pip install --offline --python $(PYTHON_VENV)/bin/python --no-deps --reinstall "$$wheels"/*.whl
 	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts write $(PYTHON_VENV)
 
 hyper-install-browser: ## Install Chromium of the pinned Playwright and its system libraries; the CI group board runs it (HR-91)
@@ -386,11 +393,21 @@ HYPER_EXT := build/hyper-ext/polyspec_hyper.so
 php_api_target = headers="$$(php-config --vernum)" && build="$$(php -n -r 'echo PHP_DEBUG ? "-debug" : "", "-", PHP_ZTS ? "zts" : "nts";')" && target="$(CARGO_TARGET)/php-$$headers$$build"
 PHP_EXT_CARGO = $(php_api_target) && CARGO_TARGET_DIR="$$target" $(CARGO)
 .PHONY: hyper-ext
+HYPER_EXT_DIR := build/hyper-ext
+HYPER_EXT_FEATURES_FLAG = $(if $(HYPER_EXT_FEATURES),--features $(HYPER_EXT_FEATURES))
+
+# The PHP extension of the tests carries the fault injection points of http-form, so the fault cases of PHP arm them
+# (H35.11-3). The release recipe hyper-ext enables no feature; hyper-ext-test runs it again with the feature into its own
+# directory, and hyper-test-php loads that library.
+.PHONY: hyper-ext-test
+hyper-ext-test: bindings ## Build the PHP extension of the tests with fault-test into build/hyper-ext-test (H35.11-3)
+	$(MAKE) --no-print-directory hyper-ext HYPER_EXT_DIR=build/hyper-ext-test HYPER_EXT_FEATURES=fault-test
+
 hyper-ext: bindings ## Build the PHP extension polyspec_hyper of packages/php/native into build/hyper-ext (HY-133.2, H35.25)
 	@test -n "$(LLVM_MAJOR)" || { echo 'hyper-ext: LLVM_MAJOR is empty, since packages/release.mk, which make release-recipes writes, is missing' >&2; exit 2; }
 	@test -x "$(LLVM_ROOT)/bin/clang" && ls "$(LLVM_ROOT)/lib" 2>/dev/null | grep -q '^libclang' || { echo 'hyper-ext: the bindgen of ext-php-rs needs the libclang and the clang of LLVM $(LLVM_MAJOR) (config/toolchain.json) in $(LLVM_ROOT)' >&2; exit 2; }
-	$(php_api_target) && PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang CARGO_TARGET_DIR="$$target" $(CARGO) build --locked --offline -p polyspec-hyper-php-ext
-	$(php_api_target) && mkdir -p build/hyper-ext.next-$$$$ && trap 'rm -rf build/hyper-ext.next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$target/debug/libpolyspec_hyper.$(CDYLIB)" build/hyper-ext.next-$$$$/polyspec_hyper.so && php -n -d extension=$(CURDIR)/build/hyper-ext.next-$$$$/polyspec_hyper.so -r 'exit(extension_loaded("polyspec_hyper") ? 0 : 1);' && $(NODE) scripts/publish.mts directory build/hyper-ext.next-$$$$ build/hyper-ext
+	$(php_api_target) && PHP="$$(command -v php)" PHP_CONFIG="$$(command -v php-config)" LIBCLANG_PATH=$(LLVM_ROOT)/lib CLANG_PATH=$(LLVM_ROOT)/bin/clang CARGO_TARGET_DIR="$$target" $(CARGO) build --locked --offline -p polyspec-hyper-php-ext $(HYPER_EXT_FEATURES_FLAG)
+	$(php_api_target) && mkdir -p $(HYPER_EXT_DIR).next-$$$$ && trap 'rm -rf $(HYPER_EXT_DIR).next-$$$$' EXIT && trap 'exit 130' INT TERM && cp "$$target/debug/libpolyspec_hyper.$(CDYLIB)" $(HYPER_EXT_DIR).next-$$$$/polyspec_hyper.so && php -n -d extension=$(CURDIR)/$(HYPER_EXT_DIR).next-$$$$/polyspec_hyper.so -r 'exit(extension_loaded("polyspec_hyper") ? 0 : 1);' && $(NODE) scripts/publish.mts directory $(HYPER_EXT_DIR).next-$$$$ $(HYPER_EXT_DIR)
 
 # A build that fails or is interrupted leaves no staging directory: the shell of each line removes its own when it ends
 # (HR-87).
@@ -490,7 +507,8 @@ endif
 PHP_SERVER_EXTENSIONS = $(PHP_EXTENSIONS) $(abspath $(HYPER_EXT))
 PHP_SERVER_ARGUMENTS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--extension $(library))
 PHPUNIT_EXTENSIONS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--php-extension $(library))
-hyper-test-php: server-fixtures ext hyper-ext ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions; CASES="<file|file#section|id> ..." runs only those cases of the case runner; PHP_TESTS="<path> ..." runs only those test files of the package
+hyper-test-php: HYPER_EXT := build/hyper-ext-test/polyspec_hyper.so
+hyper-test-php: server-fixtures ext hyper-ext-test ## Run the server package tests, the case runner included (HYR-7), with the json, the template and the hyper extensions; CASES="<file|file#section|id> ..." runs only those cases of the case runner; PHP_TESTS="<path> ..." runs only those test files of the package
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 ifneq ($(strip $(PHP_TESTS)),)
 	$(call tests_guard,PHP_TESTS,$(PHP_PACKAGE))
@@ -501,7 +519,7 @@ else
 	$(call cases_selected,php) $(case_run_php)
 endif
 
-hyper-test-python: server-fixtures ## Run the Python server package tests, the case runner included (HYR-7); CASES="<file|file#section|id> ..." runs only those cases of the case runner; PYTHON_TESTS="<path> ..." runs only those test files of the package
+hyper-test-python: server-fixtures hyper-install-python-test ## Run the Python server package tests, the case runner included (HYR-7); CASES="<file|file#section|id> ..." runs only those cases of the case runner; PYTHON_TESTS="<path> ..." runs only those test files of the package
 ifneq ($(strip $(PYTHON_TESTS)),)
 	$(NODE) $(CURDIR)/scripts/python-install-stamp.mts check $(PYTHON_VENV)
 	$(call tests_guard,PYTHON_TESTS,$(PYTHON_PACKAGE))
