@@ -8,11 +8,13 @@ hyper of the same category with the kind of the library (HY-133.3)."""
 
 from __future__ import annotations
 
+from typing import Optional
+
 import polyspec.session_store as library
 from polyspec.session_store import Setting as RedisSetting
 
 from ._file_session import FileSession
-from ._library_sessions import LibrarySessions
+from ._redis_session import RedisSession
 
 # The connection settings of the store (HY-115.17, HY-115.29): `SettingServer(url=...)` with a URL `redis://` or
 # `rediss://` that may name an ACL user and its password, `SettingSentinel(urls=..., service=..., tls=..., user=...,
@@ -24,7 +26,7 @@ from ._library_sessions import LibrarySessions
 __all__ = ["RedisSessions"]
 
 
-class RedisSessions(LibrarySessions[library.RedisSessions]):
+class RedisSessions:
     """Opens one session store per request (HY-115). `lock_expire` is seconds with no default, because no value is
     longer than every request of every application (HY-115.28); `lock_retries` and `lock_wait`, in microseconds, are
     `redis.session.lock_retries` and `redis.session.lock_wait_time` of phpredis (HY-115.29). Every server of one Redis
@@ -41,7 +43,7 @@ class RedisSessions(LibrarySessions[library.RedisSessions]):
         lock_retries: int = 100,
         lock_wait: int = 20000,
     ):
-        store = FileSession.converted(
+        self._store = FileSession.converted(
             lambda: library.RedisSessions(
                 setting,
                 lock_expire=lock_expire,
@@ -51,4 +53,8 @@ class RedisSessions(LibrarySessions[library.RedisSessions]):
                 lock_wait=lock_wait,
             )
         )
-        super().__init__(store)
+
+    def _open(self, cookie: Optional[str]) -> RedisSession:
+        """Returns the store of a request with the value of its session cookie; it holds the lock of the session until
+        `close`. An identifier in another form or without a key names no session (HY-45)."""
+        return RedisSession(FileSession.converted(lambda: self._store.open(cookie)))

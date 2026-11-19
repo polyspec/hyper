@@ -2,7 +2,6 @@
 // HY-104): the file store of the session-store library, whose rule the storage of a session is (HY-104.25).
 import { FileSessions as LibraryFileSessions } from '@polyspec/session-store';
 import { FileSession } from './file-session.js';
-import { LibrarySessions } from './library-sessions.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
 
 export interface FileSessionsOptions {
@@ -24,13 +23,13 @@ const FILE_SESSIONS_OPTIONAL = ['lifetime'];
 // process in a queue and waits for the lock of the other processes on a thread of its own, with no retry and no pause
 // (HY-104.27), so the event loop of this process goes on. A failure of the library is an error of hyper of the same
 // category with the kind of the library (HY-133.3).
-// The session of a request, which a host opens in the file store of the library after the earlier requests of the same
-// session have ended, holds the lock of its file until `close`.
-export class FileSessions extends LibrarySessions<LibraryFileSessions> {
+export class FileSessions {
+  private readonly store: LibraryFileSessions;
+
   // Holds the store that the library made: the library makes a store only with a call that waits, so the constructor
   // takes the store that `inDirectory` of the library made (HY-104.46).
   constructor(store: LibraryFileSessions) {
-    super(store);
+    this.store = store;
   }
 
   // Makes the store of an existing absolute directory. Making it with another directory fails with the kind
@@ -46,19 +45,26 @@ export class FileSessions extends LibrarySessions<LibraryFileSessions> {
 
   /** @internal */
   get directory(): string {
-    const directory = this.library.directory;
+    const directory = this.store.directory;
     return typeof directory === 'string' ? directory : Buffer.from(directory).toString('latin1');
   }
 
   /** @internal */
   get lifetime(): number {
-    return this.library.lifetime;
+    return this.store.lifetime;
+  }
+
+  // Opens the store of a request with the value of its session cookie, after the earlier requests of the same
+  // session have ended. The caller calls `close` of the store when the response is complete.
+  /** @internal */
+  async open(cookie: string | null): Promise<FileSession> {
+    return new FileSession(await FileSession.awaited(() => this.store.open(cookie)));
   }
 
   // Removes the files of the sessions that ended and returns how many it removed; a file whose lock a request holds
   // is skipped. The store never collects by itself: a server calls this on a schedule of its choice.
   async collect(): Promise<number> {
     ArgumentCountError.between(arguments.length, 0, 0);
-    return FileSession.awaited(() => this.library.collect());
+    return FileSession.awaited(() => this.store.collect());
   }
 }

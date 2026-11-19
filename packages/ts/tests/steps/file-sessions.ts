@@ -4,7 +4,6 @@ import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FileSessions as LibraryFileSessions } from '@polyspec/session-store';
-import { FileSession } from '../../src/session/file-session.js';
 import { FileSessions } from '../../src/session/file-sessions.js';
 import { RecordSession } from '../../src/session/record-session.js';
 import type { CaseReader } from '../case-reader.js';
@@ -56,7 +55,7 @@ export async function sessionFileRequests(reader: CaseReader): Promise<void> {
     const records: [string, string][][] = [];
     const touched: string[][] = [];
     const outcome = await requests(reader.input('steps'), {
-      open: (cookie) => FileSession.opened(sessions.library, cookie),
+      open: (cookie) => sessions.open(cookie),
       // The names that the case files give the two failures of a record, by the kind of the error of hyper: a record
       // that cannot be decoded (kind `record`) is `unserialize`, and a record that holds no array (kind
       // `record_not_array`) is `record`.
@@ -124,7 +123,7 @@ export const steps = {
         // @ts-expect-error -- a case gives the lifetime as a JSON value of any type, which the maker refuses (HY-104.32)
         const sessions = await FileSessions.inDirectory(lifetime === undefined ? { directory } : { directory, lifetime });
         if (cookie !== null) {
-          const store = await FileSession.opened(sessions.library, cookie);
+          const store = await sessions.open(cookie);
           try {
             store.get('a');
           } catch (error) {

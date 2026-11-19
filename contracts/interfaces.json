@@ -3987,7 +3987,7 @@
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/_pipeline.py::answer_with",
-                  "signature": "def answer_with(app: App, sessions: LibrarySessions, around: Optional[Callable], exchange: Exchange) -> Response"
+                  "signature": "def answer_with(app: App, sessions: FileSessions | RedisSessions, around: Optional[Callable], exchange: Exchange) -> Response"
                 }
               }
             }
@@ -4664,7 +4664,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::createServer",
-                  "signature": "function createServer<S extends object>(app: App<S>, sessions: LibrarySessions, options: ServerOptions = {}): Server"
+                  "signature": "function createServer<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server"
                 }
               }
             },
@@ -4683,7 +4683,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::createListener",
-                  "signature": "function createListener<S extends object>(app: App<S>, sessions: LibrarySessions, options: ServerOptions = {}): Listener"
+                  "signature": "function createListener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
                 }
               }
             },
@@ -4749,7 +4749,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::withSessionCookie",
-                  "signature": "function withSessionCookie<S extends object>(app: App<S>, sessions: LibrarySessions, response: Response, created: string | null, https: boolean): Response"
+                  "signature": "function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, response: Response, created: string | null, https: boolean): Response"
                 }
               }
             },
@@ -10312,70 +10312,6 @@
           }
         },
         {
-          "id": "library-sessions",
-          "native": {
-            "node": {
-              "file": "packages/ts/src/session/library-sessions.ts",
-              "kind": "class",
-              "internal": true
-            },
-            "python": {
-              "file": "packages/python/src/polyspec/hyper/session/_library_sessions.py",
-              "kind": "class",
-              "internal": true
-            }
-          },
-          "members": [
-            {
-              "id": "library-sessions.constructor",
-              "kind": "constructor",
-              "visibility": "internal",
-              "inputs": [
-                "value"
-              ],
-              "output": "library-sessions",
-              "errors": [],
-              "state": "Holds the store of the session-store library, the file store or the Redis store, that the constructor of a session store gives (HY-104.25, HY-115).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/library-sessions.ts::LibrarySessions.constructor",
-                  "signature": "constructor(store: Store)"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_library_sessions.py::LibrarySessions.__init__",
-                  "signature": "def __init__(self, store: Store) -> None"
-                }
-              }
-            },
-            {
-              "id": "library-sessions.library",
-              "kind": "property",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "value",
-              "errors": [],
-              "state": "Returns the store of the session-store library, in which a host opens the session of a request with file-session.opened (HY-104.25, HY-115.3).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/library-sessions.ts::LibrarySessions.library",
-                  "signature": "readonly library: Store"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_library_sessions.py::LibrarySessions.library",
-                  "signature": "library: Store"
-                }
-              }
-            }
-          ],
-          "only": {
-            "languages": [
-              "node",
-              "python"
-            ],
-            "sentence": "HY-104.26"
-          }
-        },
-        {
           "id": "file-sessions",
           "native": {
             "node": {
@@ -10451,7 +10387,39 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions.__init__",
                   "signature": "def __init__(self, directory: str, lifetime: int=1440)"
                 }
-              }
+              },
+              "reachDiffers": [
+                {
+                  "member": "file-session.libraryError",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-104.46"
+                }
+              ]
+            },
+            {
+              "id": "file-sessions.open",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "file-session",
+              "errors": [],
+              "state": "Returns the store of a request with the value of its session cookie, which holds the lock of the session file until it closes (HY-104.3, HY-104.10).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.open",
+                  "signature": "async open(cookie: string | null): Promise<FileSession>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions._open",
+                  "signature": "def _open(self, cookie: Optional[str]) -> 'FileSession'"
+                }
+              },
+              "tests": [
+                "packages/ts/tests/sessions.test.ts::FileSessions > runs the requests of one session one after another: The requests of one session in one Node process wait in a queue of that process before they try the lock (HY-104.29); the test opens one session twice in one event loop and asserts that the second open reads the value that the first wrote."
+              ]
             },
             {
               "id": "file-sessions.collect",
@@ -10695,31 +10663,6 @@
               }
             },
             {
-              "id": "file-session.opened",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "value",
-                "optional<string>"
-              ],
-              "output": "file-session",
-              "errors": [],
-              "state": "Opens the session of a request with the value of its session cookie in a store of the session-store library, the file store or the Redis store, and returns it as the session store of the request; a failure of the library is the error of hyper of the same role (HY-104.25, HY-115.3, HY-133.3).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/file-session.ts::FileSession.opened",
-                  "signature": "static async opened(store: library.FileSessions | library.RedisSessions, cookie: string | null): Promise<FileSession>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_file_session.py::FileSession.opened",
-                  "signature": "def opened(store: library.FileSessions | library.RedisSessions, cookie: Optional[str]) -> FileSession"
-                }
-              },
-              "tests": [
-                "packages/ts/tests/sessions.test.ts::FileSessions > runs the requests of one session one after another: The requests of one session in one Node process wait in a queue of that process before they try the lock (HY-104.29); the test opens one session twice in one event loop and asserts that the second open reads the value that the first wrote."
-              ]
-            },
-            {
               "id": "file-session.converted",
               "kind": "static method",
               "visibility": "internal",
@@ -10815,6 +10758,27 @@
                   "signature": "def __init__(self, setting: RedisSetting, *, lock_expire: int, lifetime: int=1440, prefix: str='PHPREDIS_SESSION:', lock_retries: int=100, lock_wait: int=20000)"
                 }
               }
+            },
+            {
+              "id": "redis-sessions.open",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "redis-session",
+              "errors": [],
+              "state": "Returns the store of a request with the value of its session cookie, which holds the lock of the session until it closes (HY-115.3, HY-115.4).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/session/redis-sessions.ts::RedisSessions.open",
+                  "signature": "async open(cookie: string | null): Promise<RedisSession>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/session/redis_sessions.py::RedisSessions._open",
+                  "signature": "def _open(self, cookie: Optional[str]) -> RedisSession"
+                }
+              }
             }
           ],
           "only": {
@@ -10823,6 +10787,29 @@
               "python"
             ],
             "sentence": "HY-115.29"
+          }
+        },
+        {
+          "id": "redis-session",
+          "native": {
+            "node": {
+              "file": "packages/ts/src/session/redis-session.ts",
+              "kind": "class",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/python/src/polyspec/hyper/session/_redis_session.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [],
+          "only": {
+            "languages": [
+              "node",
+              "python"
+            ],
+            "sentence": "HY-104.26"
           }
         }
       ]
@@ -18225,11 +18212,10 @@
             "file-session.get",
             "file-session.remove",
             "file-session.renew",
-            "file-session.opened",
             "file-session.set",
             "file-sessions.collect",
             "file-sessions.constructor",
-            "library-sessions.library"
+            "file-sessions.open"
           ]
         },
         "cookie": {

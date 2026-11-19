@@ -5,7 +5,6 @@ import tempfile
 import time
 from pathlib import Path
 
-from polyspec.hyper.session._file_session import FileSession
 from polyspec.hyper.session._record_session import RecordSession
 from polyspec.hyper.session.file_sessions import FileSessions
 
@@ -38,7 +37,7 @@ def requests(case) -> None:
                 aged[file.name] = start - entry["age"] / 2
         store = FileSessions(directory)
         run = StoreRequests(
-            lambda cookie: FileSession.opened(store.library, cookie),
+            store._open,
             _failure_class,
             {"directory": lambda: sorted(_names(directory, run.identifiers).values())},
             [entry["identifier"] for entry in files],
@@ -100,7 +99,7 @@ def store_failures(case) -> None:
                 else FileSessions(directory)
             )
             if case.has("cookie"):
-                session = FileSession.opened(store.library, case.input("cookie"))
+                session = store._open(case.input("cookie"))
                 # The first failure counts: the session is closed also after a read that failed.
                 try:
                     session.get("a")
