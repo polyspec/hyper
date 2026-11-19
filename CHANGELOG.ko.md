@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: fd88d958b03f47e881224b54b73f5789bbc254f0f19b17388531497004eae752 -->
+<!-- source-sha256: 5da92dfbba34c0c24a3e7be3a101e94c2d288f4560a13fcca102b828c550a909 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `contracts/protocol.json`이 `packages/php/src/Page/Page.php`, `packages/python/src/polyspec/hyper/page/_page.py`, `packages/ts/src/page/page.ts`가 인용하는 HY-14의 statement HY-14.3을 갖는다: 서버는 응답 하나에 대해 현재 시각을 Unix 시간의 정수 초로 한 번 읽고, 그 응답의 모든 region은 그 시각으로 렌더한다(H35.205). 입력: `HY-14.3`의 세 인용. 이전: 그 id를 가진 statement가 없었다. 이제 `docs/spec/protocol.md`와 `docs/spec/protocol.ko.md`가 그것을 렌더한다. `make spec-docs-check`로 검증했다.
 - `contracts/interfaces.json`, source, test, `docs/features.md`, `docs/operations/deployment.md`, `contracts/protocol.json`의 statement 문장에 있는 statement id 인용은 모두 계약이 가진 statement를 가리킨다. 어느 현재 statement도 적지 않는 두 개는 예외다(H35.198). 입력: `CHANGELOG*`, `docs/plans/**`, 자기 계약을 가진 fixture를 뺀 tracked file을 `HY-n.m`으로 검색한다. 이전 동작: 인용된 id 41개를 어느 statement도 갖지 않았다. 예를 들어 uploaded-file member의 state에 있는 `HY-113.3`, `HY-131.15`, `HY-131.16`이다. 기대: 각 인용은 지금 그 뜻을 적는 statement를 가리킨다. 예를 들어 HY-113.21, HY-131.28, HY-131.34다. 문장이 그런 id를 인용하던 statement HY-42.8, HY-42.10, HY-62.37, HY-106.21, HY-132.5, HY-132.10은 뜻이 그대로이므로 id를 유지한다. 남은 것: `packages/php/src/Page/Page.php`, `packages/python/src/polyspec/hyper/page/_page.py`, `packages/ts/src/page/page.ts`의 `HY-14.3`(render마다 같은 정수 초)은 어느 statement도 가진 적이 없고, HY-42.8의 `HY-129.4`는 `Cookie` 줄을 `; `로 잇는다고 적지만 HY-129.14는 host가 잇지 않는다고 적는다. 검증: `make docs-check`, `make spec-docs-check`, 새 줄이 없는 `make recipe-compare`.
 - PHP, Node, Python의 내부 class `NamedValues`에 method `names`가 없고, `contracts/interfaces.json`에 member `named-values.names`가 없다(H35.202, HY-56.4, HYR-7). 입력: `make recipe-compare`. 이전 동작: H35.162가 `fields.names()`를 호출하던 `fields.json`의 http-form case step을 지운 뒤로 어떤 소스와 test도 `names`를 호출하지 않아, 검사가 `MEMBER_UNREACHED internal member named-values.names is named by no section and reached by no stated member` 줄 3개를 보고했다. 지금: 이름은 이전처럼 `pairs`로 순서대로 읽는다. `make recipe-compare`는 finding 17줄 대신 14줄을 보고하고 새 줄은 없다.
 - `contracts/interfaces.json`이 Node helper `values.isMapValue`와 type `plain`을 `packages/ts/src/data/values.ts`와 `packages/ts/src/app/core-rules.ts`가 선언하는 대로 `export` 없는 private로 적는다(H35.200). 입력: 계약과 그 두 파일. H35.175가 자기 파일에서만 쓰이는 두 이름의 export를 없앴다. 이전 동작: 계약이 둘을 export된 internal로 적었고, `make recipe-compare`가 `values.isMapValue`의 `MEMBER_SIGNATURE`와 `MEMBER_VISIBILITY`, `plain`의 `TYPE_CHANGED`와 `TYPE_VISIBILITY`를 보고했다. 검증: `make recipe-compare`가 네 줄 가운데 어느 것도 보고하지 않고 새 줄도 없다.
