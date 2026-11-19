@@ -28,7 +28,7 @@ for (const { target, runner, alone } of TARGETS) {
     assert.equal(lines.length, 1, `one command of make -n ${target} names a results file:\n${lines.join('\n')}`);
     const line = lines[0] ?? '';
     assert.ok(line.includes(`RECIPE_CASES='${SELECTION}' `), line);
-    assert.match(line, new RegExp(`RECIPE_RESULTS=\\S+/var/recipe/results/${runner}\\.selected\\.txt `, 'u'), line);
+    assert.match(line, new RegExp(`RECIPE_RESULTS=\\S+/var/recipe/results/[^/\\s]+/${runner}\\.selected\\.txt `, 'u'), line);
     assert.ok(line.includes(alone), `the command starts the case runner: ${line}`);
     if (runner === 'php') assert.ok(line.endsWith('-- --filter CaseRunnerTest'), line);
     // The selected run is one command: no type check and no second test run follows it.
@@ -41,7 +41,7 @@ for (const { target, runner, alone } of TARGETS) {
       assert.equal(lines.length, 1, lines.join('\n'));
       const line = lines[0] ?? '';
       assert.doesNotMatch(line, /RECIPE_CASES|\.selected\.txt/u, line);
-      assert.match(line, new RegExp(`RECIPE_RESULTS=\\S+/var/recipe/results/${runner}\\.txt `, 'u'), line);
+      assert.match(line, new RegExp(`RECIPE_RESULTS=\\S+/var/recipe/results/[^/\\s]+/${runner}\\.txt `, 'u'), line);
     }
   });
 }
@@ -50,6 +50,6 @@ test('make recipe-check CASES=... gives no runner a selection and names the resu
   const lines = runnerLines('recipe-check', [`CASES=${SELECTION}`]).join('\n');
   assert.doesNotMatch(lines, /RECIPE_CASES|\.selected\.txt/u, lines);
   for (const runner of ['php', 'node', 'python', 'browser', 'build']) {
-    assert.ok(lines.includes(`/var/recipe/results/${runner}.txt `), `recipe-check reads ${runner}.txt:\n${lines}`);
+    assert.match(lines, new RegExp(`/var/recipe/results/[^/\\s]+/${runner}\\.txt `, 'u'), `recipe-check reads ${runner}.txt:\n${lines}`);
   }
 });

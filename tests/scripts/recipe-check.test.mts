@@ -32,7 +32,7 @@ test('the schema term is the vocabulary: a status number is not a term', () => {
 const mutations = readMutations(path.join(fixture, 'mutations.json'));
 
 function resultArguments(root: string): string[] {
-  return ['php', 'node', 'python', 'browser', 'build'].flatMap((lang) => ['--results', `${lang}=${path.join(root, 'results', `${lang}.txt`)}`]);
+  return ['--run-dir', path.join(root, 'results')];
 }
 
 /** Runs the check over a tree, after it made every file of the tree a tracked one. */

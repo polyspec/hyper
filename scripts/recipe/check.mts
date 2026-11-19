@@ -1,7 +1,8 @@
 // The recipe check (HYR-8): validates contracts/interfaces.json, runs the three readers, compares them with the spec and
 // checks the case results of the five runners (HYR-7). The mutation cases of the readers are no part of a run:
 // tests/scripts/recipe-check.test.mts runs them.
-// Usage: node scripts/recipe/check.mts [--root <dir>] --php-autoload <autoload.php> [--results <php|node|python|browser|build>=<file>]...
+// Usage: node scripts/recipe/check.mts [--root <dir>] --php-autoload <autoload.php> --run-dir <dir>
+// The run directory holds the results that this run wrote, one file per runner (H35.144); no other directory is read.
 // Prints one `CODE message` line per finding and exits 1 on any.
 
 import path from 'node:path';
@@ -17,16 +18,12 @@ function argumentOf(name: string): string | undefined {
   return at < 0 ? undefined : process.argv[at + 1];
 }
 
-/** The `--results <runner>=<file>` arguments, one per runner. */
+/** The result file of each runner in the run directory `--run-dir`: `<runner>.txt`, which this run's runner writes. */
 function resultArguments(): Results {
+  const runDir = argumentOf('--run-dir');
+  if (runDir === undefined) throw new Error('--run-dir <dir> is required: the directory of the results that this run wrote');
   const out: Results = {};
-  process.argv.forEach((arg, i) => {
-    if (arg !== '--results') return;
-    const value = process.argv[i + 1] ?? '';
-    const runner = RUNNERS.find((r) => value.startsWith(`${r}=`));
-    if (runner === undefined) throw new Error(`--results takes <php|node|python|browser|build>=<file>, got ${value}`);
-    out[runner] = path.resolve(value.slice(runner.length + 1));
-  });
+  for (const runner of RUNNERS) out[runner] = path.resolve(runDir, `${runner}.txt`);
   return out;
 }
 

@@ -51,7 +51,8 @@ export function checkResults(root: string, spec: Spec, results: Results): Findin
     const expectedKeys = new Set(expected.map((c) => key(c.file, c.id)));
     const file = results[runner];
     if (file === undefined || !existsSync(file)) {
-      for (const c of expected) out.push({ code: 'RESULT_MISSING', message: `${runner} prints no line for ${c.file} ${c.id}` });
+      // The runner wrote no file in this run, so it did not start or did not finish its output (H35.144, HR-82).
+      out.push({ code: 'RUNNER_NOT_RUN', message: `runner did not run: ${runner} wrote no results file in this run${file === undefined ? '' : ` (${file})`}` });
       continue;
     }
     const seen = new Set<string>();
