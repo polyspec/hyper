@@ -37,8 +37,9 @@ def cache_control(case) -> None:
 def referrer_policy(case) -> None:
     """Records the Referrer-Policy of the reply and its headers (HY-103)."""
     reply = _applied(case, True)
-    case.compare("value", reply._referrer_policy_value())
-    case.compare("headers", reply._referrer_policy_headers())
+    value = reply._referrer_policy_value()
+    case.compare("value", value)
+    case.compare("headers", {} if value is None else {"Referrer-Policy": value})
 
 
 def status(case) -> None:

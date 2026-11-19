@@ -348,25 +348,6 @@ final class CoreRules
     }
 
     /**
-     * Partial. The static shell of App::open: rules.check_shell_path checks its path before the server reads the file
-     * (HY-62). The server still reads the file, and checks the data base path of the declaration against the routes
-     * and the meta element of the shell (HY-62.2).
-     */
-    public function appCheckShellPath(string $path): void
-    {
-        $this->call('checkShellPath', $path);
-    }
-
-    /** Partial. rules.shell_text gives the text of the bytes of the static shell (HY-62), which the server read. */
-    public function appShellText(string $path, string $bytes): string
-    {
-        /** @var string $result The return type that the extension declares (T-1a). */
-        $result = $this->call('shellText', $path, $bytes);
-
-        return $result;
-    }
-
-    /**
      * Partial. Session::csrfToken: rules.stored_token checks the value that the session holds in the place of the
      * token (HY-24.14). The server still reads the store and creates the token of a session that holds none (HY-24.1).
      */

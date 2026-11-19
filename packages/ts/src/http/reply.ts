@@ -95,11 +95,6 @@ export class Reply {
     return this.referrerPolicyText;
   }
 
-  /** @internal */
-  referrerPolicyHeaders(): Record<string, string> {
-    return this.referrerPolicyText === null ? {} : { 'Referrer-Policy': this.referrerPolicyText };
-  }
-
   // Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in place of
   // the data that the request may not see; another status fails (HY-69).
   status(status: number): this {
