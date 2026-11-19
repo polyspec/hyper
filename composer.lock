@@ -235,7 +235,10 @@
                         "src/Result/",
                         "src/Session/"
                     ]
-                }
+                },
+                "files": [
+                    "src/Host/functions.php"
+                ]
             },
             "autoload-dev": {
                 "psr-4": {
