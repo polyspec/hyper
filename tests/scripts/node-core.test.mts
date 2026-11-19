@@ -126,7 +126,6 @@ const EXACT: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[
   ['Request.fileOver (HY-114.12)', 'fileOver', (rules) => rules.requestFileOver([3, 9], 8), [[3, 9], 8], true],
   ['Session.flashOf (HY-25.2)', 'flashOf', (rules) => rules.sessionFlashOf(STORED), [STORED], FLASH],
   ['Session.keptOf (HY-104.22)', 'keptOf', (rules) => rules.sessionKeptOf(STORED), [STORED], KEPT],
-  ['Page.keptCookie (HY-38.2)', 'keptCookie', (rules) => rules.pageKeptCookie('{"rows":{"open":true}}'), ['{"rows":{"open":true}}'], KEPT],
   ['RecordSession.cookieName (HY-45.1)', 'sessionName', (rules) => rules.sessionCookieName(true), [true], '__Host-hy-session'],
   ['Request.mediaType (HY-59.13)', 'mediaType', (rules) => rules.requestMediaType('text/plain; charset=UTF-8'), ['text/plain; charset=UTF-8'], 'text/plain'],
   ['Request.currentPath (HY-11.5)', 'currentPath', (rules) => rules.requestCurrentPath('http://a.test/b?c'), ['http://a.test/b?c'], '/b'],
@@ -243,13 +242,9 @@ test('Page.request gives the core the pages and the input of a page, and steps i
 // The other partial units, which return the result of their member as it is.
 const PARTIAL: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknown[], unknown][] = [
   ['RecordSession.cookieHeader (HY-45.8)', 'sessionCookie', (rules) => rules.sessionCookieHeader('id', true), ['id', true], '__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax'],
-  ['Reply.keepsOutOfSharedCaches (HY-52.6)', 'keepsOutOfSharedCaches', (rules) => rules.replyKeepsOutOfSharedCaches('private'), ['private'], true],
-  ['Result.isApplicationPath (HY-46)', 'isApplicationPath', (rules) => rules.resultIsApplicationPath('//a'), ['//a'], false],
-  ['App.keptValue (HY-40.1)', 'keptValue', (rules) => rules.appKeptValue(PAGES, 'rows', 'open', 'true'), [PAGES, 'rows', 'open', 'true'], true],
   ['Session.storedToken (HY-24.14)', 'storedToken', (rules) => rules.sessionStoredToken(TOKEN), [TOKEN], TOKEN],
   ['Kept.cookieName (HYC-13.6)', 'keepName', (rules) => rules.keptCookieName(false), [false], 'hy-keep'],
   ['Build.read (HY-125.23)', 'readBuild', (rules) => rules.buildRead(new Uint8Array([123])), [new Uint8Array([123])], '1'.repeat(64)],
-  ['Build.checkId (HY-125.19)', 'checkBuildId', (rules) => rules.buildCheckId('1'.repeat(64)), ['1'.repeat(64)], undefined],
   ['Build.id (HY-125.15)', 'buildId', (rules) => rules.buildId([{ path: 'program/reads.json', bytes: new Uint8Array() }]), [[{ path: 'program/reads.json', bytes: new Uint8Array() }]], '2'.repeat(64)],
   ['Build.paths (HY-125.3)', 'buildPaths', (rules) => rules.buildPaths([]), [[]], ['program/reads.json']],
   ['Build.stream (HY-125.3)', 'buildStream', (rules) => rules.buildStream([]), [[]], '00'],

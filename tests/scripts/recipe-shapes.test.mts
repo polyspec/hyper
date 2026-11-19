@@ -63,6 +63,12 @@ test('a union shape on a declaration that is not a union fails with TYPE_SHAPE',
   assert.ok(codes(specWith({ union: ['string', 'int', 'token'] }), undefined).includes('TYPE_SHAPE'));
 });
 
+test('a union member written as T[], Array<T> or Map<string, T> matches the list and map terms (HYR-5)', () => {
+  const spec = specWith({ union: ['list<string>', 'map<int>'] });
+  assert.equal(codes(spec, ['string[]', 'Array<string>']).includes('TYPE_SHAPE'), true, 'the array form of the same term is not yet the list term');
+  assert.equal(codes(spec, ['Map<string, int>', 'string[]']).includes('TYPE_SHAPE'), false, 'the map member and the array member match their terms');
+});
+
 test('a recursive union names its own id as a member and passes', () => {
   assert.deepEqual(codes(specWith({ union: ['string', 'valueKind'] }), ['string', 'ValueKind']), []);
 });

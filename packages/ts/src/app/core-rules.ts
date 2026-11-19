@@ -315,10 +315,6 @@ export interface CoreRules {
   // path, and fails with `invalid_session_record` for kept values of another form, those of every region (HY-104.22,
   // HY-104.23).
   sessionKeptOf(stored: unknown): JsonValue;
-  // pageKeptCookie: rules.kept_cookie reads the cookie of the kept values to a map from each region to the map of its
-  // readable values by path; a cookie that is no JSON object, a region that holds no object and a value outside the
-  // data model give no value (HY-38.2, HY-38.11, HY-42).
-  pageKeptCookie(text: string): JsonValue;
   // acceptParse: rules.accept_ranges gives the ranges of an Accept value in field order, the range `*/*` of the full
   // weight for a request without Accept, and fails with `invalid_accept` or `invalid_weight` of http-negotiation
   // (HY-116.17, HY-116.18).
@@ -344,16 +340,10 @@ export interface CoreRules {
   replyReferrerPolicy(value: string): string;
   // replyStatus: rules.reply_status gives the page status that the reply keeps (HY-69).
   replyStatus(status: number): number;
-  // Partial. rules.keeps_out_of_shared_caches (HY-52.6), which replyCacheControl decided inside its check; the
-  // server reads it for no other rule.
-  replyKeepsOutOfSharedCaches(value: string): boolean;
   // resultRedirect: rules.redirect_location gives the location of the result (HY-46).
   resultRedirect(location: string): string;
   // resultPage: rules.page_status gives the status of the result (HY-58).
   resultPage(status: number): number;
-  // Partial. rules.is_application_path (HY-46), the test inside resultRedirect; the server has no caller of it
-  // besides the redirect.
-  resultIsApplicationPath(location: string): boolean;
   // appVaryHeader: rules.page_vary (HY-117.1).
   appVaryHeader(context: boolean): string;
   // Partial. appFrame: front_functions.frame_headers gives the headers that every response carries (HY-45.5,
@@ -365,9 +355,6 @@ export interface CoreRules {
   // (HY-62.2).
   appCheckShellPath(path: string): void;
   appShellText(path: string, bytes: Uint8Array): string;
-  // Partial. The value check of the kept endpoint: front_functions.kept_value (HY-40.1), for a caller that stores the
-  // value itself.
-  appKeptValue(pages: CorePages, region: string, path: string, text: string): unknown;
   // The tag of a JSON response of pageRespond: rules.page_tag (HY-53.1).
   pageTag(body: string, maskedToken: string, token: string): string;
   // Partial. The headers of pageRespond: front_functions.compute_page_headers (HY-15.3, HY-52, HY-53, HY-65,
@@ -394,8 +381,6 @@ export interface CoreRules {
   // Partial. buildRead: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23, HY-125.19).
   // The server still reads the file and names the absolute path of the file in a failure (HY-125.23).
   buildRead(bytes: Uint8Array): string;
-  // Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text.
-  buildCheckId(text: string): void;
   // Partial. The build id of the command tool: rules.build_id (HY-125.15 to HY-125.17). The command tool still
   // collects the files that one build writes and gives each its path with the prefix of its place.
   buildId(outputs: Iterable<BuildOutput>): string;
@@ -461,7 +446,6 @@ export function coreRules(module: object): CoreRules {
     jsonCodecEncode: (value) => core.jsonWrite(value),
     sessionFlashOf: (stored) => core.flashOf(stored),
     sessionKeptOf: (stored) => core.keptOf(stored),
-    pageKeptCookie: (text) => core.keptCookie(text),
     acceptParse: (value) => core.acceptRanges(value === null ? [] : [value]),
     sessionCookieName: (secure) => core.sessionName(secure),
     sessionCookieHeader: (id, secure) => core.sessionCookie(id, secure),
@@ -472,17 +456,14 @@ export function coreRules(module: object): CoreRules {
     replyCacheControl: (value) => core.cacheControl(value),
     replyReferrerPolicy: (value) => core.referrerPolicy(value),
     replyStatus: (status) => core.replyStatus(status),
-    replyKeepsOutOfSharedCaches: (value) => core.keepsOutOfSharedCaches(value),
     resultRedirect: (location) => core.redirectLocation(location),
     resultPage: (status) => core.pageStatus(status),
-    resultIsApplicationPath: (location) => core.isApplicationPath(location),
     appVaryHeader: (context) => core.pageVary(context),
     appFrameHeaders: (status, frameAncestors) => Object.fromEntries(core.frameHeaders(status, frameAncestors)),
     appCheckShellPath: (path) => {
       core.checkShellPath(path);
     },
     appShellText: (path, bytes) => core.shellText(path, bytes),
-    appKeptValue: (pages, region, path, text) => core.keptValue(pages, region, path, text),
     pageTag: (body, maskedToken, token) => core.pageTag(body, maskedToken, token),
     pageHeaders: (response) => {
       const computed = core.computePageHeaders(response);
@@ -494,9 +475,6 @@ export function coreRules(module: object): CoreRules {
     sessionStoredToken: (stored) => core.storedToken(stored),
     keptCookieName: (secure) => core.keepName(secure),
     buildRead: (bytes) => core.readBuild(bytes),
-    buildCheckId: (text) => {
-      core.checkBuildId(text);
-    },
     buildId: (outputs) => core.buildId(outputs),
     buildPaths: (outputs) => core.buildPaths(outputs),
     buildStream: (outputs) => core.buildStream(outputs),
