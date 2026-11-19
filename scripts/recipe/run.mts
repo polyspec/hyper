@@ -10,8 +10,7 @@ import { checkResults, type Results } from './results.mts';
 import { readProtocol } from './protocol.mts';
 import { withLegacy } from './legacy.mts';
 import type { Counts } from './stated.mts';
-import { LANGS, type ExtensionNative, type FileNative, type Finding, type Lang, type Member, type Sources, type Spec, type SpecDocument } from './types.mts';
-import { isReexport, reexportFindings } from './reexport.mts';
+import { LANGS, type ExtensionNative, type FileNative, type Finding, type Lang, type Sources, type Spec, type SpecDocument } from './types.mts';
 
 export type Validators = { spec: ValidateFunction<SpecDocument>; sources: ValidateFunction<Sources> };
 
@@ -31,8 +30,7 @@ export function readAllSources(root: string, spec: Spec, v: Validators, phpAutol
 
 /**
  * The spec without its extension entries (HYR-5): an extension unit names a class of the hyper extension and no file,
- * so no reader reads it and the checks of the sources see it without native entries; make recipe-files checks it. A
- * reexport member (HYR-5) leaves `members` for `passed`, which only keeps its source member from being an added one.
+ * so no reader reads it and the checks of the sources see it without native entries; make recipe-files checks it.
  * The languages of the extension entries stay in `extensions`, because they are native code for `only` (HYR-6).
  */
 export function withoutExtensions(doc: SpecDocument): Spec {
@@ -41,11 +39,8 @@ export function withoutExtensions(doc: SpecDocument): Spec {
     concerns: doc.concerns.map((c) => ({
       ...c,
       units: c.units.map((u) => {
-        // HYR-5 Reexports: a member that passes a call to a library member is not compared, reached or counted.
-        const members = u.members.filter((m): m is Member => !isReexport(m));
-        const passed = u.members.filter(isReexport).map((m) => m.id);
         const extensions = LANGS.filter((lang) => { const n = u.native[lang]; return n !== undefined && 'extension' in n; });
-        return { ...u, members, ...(passed.length > 0 ? { passed } : {}), ...(extensions.length > 0 ? { extensions } : {}), native: fileEntries(u.native) };
+        return { ...u, ...(extensions.length > 0 ? { extensions } : {}), native: fileEntries(u.native) };
       }),
     })),
   };
@@ -60,19 +55,15 @@ function fileEntries(native: Partial<Record<Lang, FileNative | ExtensionNative>>
   return kept;
 }
 
-/**
- * Runs the checks of a tree; `counts`, when given, receives the three numbers of HYR-5. `cargo` is the cargo command of
- * the Makefile, which finds the interface.json of a library that a reexport names (HYR-5).
- */
-export function runChecks(root: string, v: Validators, results: Results, phpAutoload: string, counts?: Counts, cargo: string[] = []): Finding[] {
+/** Runs the checks of a tree; `counts`, when given, receives the three numbers of HYR-5. */
+export function runChecks(root: string, v: Validators, results: Results, phpAutoload: string, counts?: Counts): Finding[] {
   const specDoc: unknown = withLegacy(root, JSON.parse(readFileSync(path.join(root, 'contracts', 'interfaces.json'), 'utf8')));
   if (!v.spec(specDoc)) {
     return (v.spec.errors ?? []).map((e) => ({ code: 'SPEC_INVALID', message: `${e.instancePath} ${e.message}` }));
   }
-  const reexports = reexportFindings(root, specDoc, cargo);
   const spec = withoutExtensions(specDoc);
   const sources = readAllSources(root, spec, v, phpAutoload);
   const readDir = (lang: Lang, dir: string): Sources => readTree(root, lang, [dir], [], v.sources, extraOf(lang, phpAutoload));
   const protocol = readProtocol(readFileSync(path.join(root, 'contracts', 'protocol.json'), 'utf8'));
-  return [...reexports, ...compare(spec, sources, root, protocol, readDir, counts), ...checkResults(root, spec, results)];
+  return [...compare(spec, sources, root, protocol, readDir, counts), ...checkResults(root, spec, results)];
 }

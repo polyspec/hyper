@@ -48,9 +48,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
 
   In every language a file holds exactly one unit.
   - A PHP `functions` unit is one class of static methods without a constructor, which extends no class and is not
-    abstract, because a class that extends another class or is abstract has instances. A PHP file that declares
-    functions in the namespace `Polyspec\Hyper` and no class, such as `src/Host/run.php` of the host function `run`
-    (HY-106.20), is also a `functions` unit, named by its file, whose members are those functions.
+    abstract, because a class that extends another class or is abstract has instances.
   - A Node `functions` unit is internal when each of its exported functions carries the JSDoc tag `@internal`.
   - A unit that only some languages have carries `only` (HYR-6).
   - Each class, interface and trait of a concern is its own unit, and so is each Python class, `Protocol` and
@@ -75,9 +73,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - `representation` holds the representations of a route and the selection of one by the `Accept` header.
   - PHP: PascalCase, `src/<Group>/<Words>.php`, in the namespace `Polyspec\Hyper`. `autoload.psr-4` of
     `packages/php/composer.json` maps `Polyspec\Hyper\` to the list of the group directories that hold a PHP
-    unit, and the root `composer.json` maps the same directories. The file of a unit of namespace functions is
-    `src/<Group>/<words>.php` in camelCase, which `autoload.files` of both manifests loads, because PSR-4 maps a class
-    to its file and no function to one, and a PascalCase name would read as the file of a class.
+    unit, and the root `composer.json` maps the same directories.
   - Node: kebab-case, `src/<group>/<words>.ts`. The barrels are `src/index.ts` and the build entry `src/build.ts`.
   - Python: snake_case, in the package `polyspec/hyper/<group>/`.
     - `<words>.py` is the module of a unit that HY-106 makes public.
@@ -138,19 +134,6 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
         the kind alone.
     - `state`: one sentence of what it does.
     - `native`: for each language, the exact `symbol` and the exact `signature` (see below).
-    - **Reexports.** A member of a hyper unit that only passes a call to a member of a library in `release` and converts
-      its types at the boundary is stated as `{"id": "<unit>.<member>", "reexport": "<library>:<unit>.<member>"}`, with
-      no `kind`, `visibility`, `inputs`, `output`, `errors`, `state` or `native`; the library part names the unit and
-      the member by their ids in the library. A unit whose members are all such entries is stated with
-      `"reexport": "<library>:<unit>"` on the unit and an empty `members`. The check does not compare such a member, or
-      the members of such a unit, with the sources, does not reach it and does not count it in the numbers of HYR-5,
-      because the library states and checks that member itself. It verifies that the library unit and member exist in
-      the pinned release: it reads the `interface.json` that the crate `polyspec-<library>` of the library ships beside
-      its `Cargo.toml`, the crate that `packages/rust/Cargo.toml` pins by its tag and `Cargo.lock` locks, and finds the
-      crate by `cargo metadata --locked --offline` of `packages/rust/Cargo.toml` with the cargo command of the
-      Makefile (`--cargo "$(CARGO)"`), as the binding generator does. A unit or member that the file does not list is
-      `REEXPORT_MISSING`, with the file and the name; a crate that is not fetched fails with the name of
-      `make hyper-install-crates`. A spec without reexports starts no cargo.
   - **Types.** A type is a type declaration that is no unit (HYR-3): a Node `type` alias or `interface`, and a Python
     `type` statement. The spec lists it once under `types` with `id` (its words in camelCase), `visibility` (as for a
     member), `unit` (the unit whose file holds it in each language), a neutral `shape` and, for each language that
@@ -170,9 +153,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
       language. A field that only some languages have carries `only` (HYR-6), as a member does.
   - **Symbol.** The symbol is `<path>::<qualified name>`.
     - `<path>` is the repository-relative path of the file.
-    - The qualified name of a PHP member is `Polyspec\Hyper\<Unit>::<member>` for a class member, and
-      `Polyspec\Hyper\<member>` for a namespace function, such as `Polyspec\Hyper\run`, the member `run.run` of HY-106.20;
-      the name of the member is the last name after the namespace.
+    - The qualified name of a PHP member is `Polyspec\Hyper\<Unit>::<member>`.
     - In Node and Python it is `<Unit>.<member>` for a class member, and `<member>` for a module function.
     - A constructor is `__construct` in PHP, `constructor` in Node and `__init__` in Python.
     - The member `invoke` of a PHP class is its method `__invoke`, which makes its object callable.
@@ -287,14 +268,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     `runners` names the runner of each of `php`, `node`, `python`, `browser` and `build`. `browser` and `build` read
     their sections through `caseReaders.node`, and the check counts the results of all five runners.
     For `php`, `node` and `python`, `runners` also names the directory of the steps (`steps`) and the registry of the
-    runner (`registry`), the file that maps each section to its step, and in `tests` the tests of that case runner
-    and its case reader, each as `<test file>::<test name>: HYR-<n> <reason>`, where HYR-n is the rule of the runner
-    that the test checks, such as the selection of cases below or the `raises` rule of HYR-11.
-    A runner whose environment holds the names of a selection in `RECIPE_CASES`, which are its words, runs only the cases that they select:
-    a file name selects the cases of the file, `<file>#<section>` those of the section, and an id those of the id in
-    every file. It runs each selected case once in its own order, fails before a case runs for a name that selects no
-    case and for a selection without a name, and writes the line `SELECTION <names>` first
-    (`docs/operations/development.md`).
+    runner (`registry`), the file that maps each section to its step.
     The case file `file-store-sessions.json`, whose cases the session-store library holds, is read from
     `tests/legacy` with their declaration in `tests/legacy/interfaces.json`.
     hyper's recipe covers only hyper's own units: a case file of a dependency, such as `fields.json` and `forms.json` of
@@ -363,9 +337,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     languages have is a case with `only: {languages, sentence}` (HYR-6), which the other runners leave out, and the
     check takes the case ids of each language from the sections whose `runners` name it, from the cases without `only`
     and those whose `only` names it.
-    - The spec names each one under that unit, member or concern as `<test file>::<test name>: <reason>`. A test of
-      the case runner of one language is no native test of a unit: `runners.<language>.tests` names it, as stated
-      above, and HYR-8 fails it when it lies in another test tree or its reason does not start with its HYR rule.
+    - The spec names each one under that unit, member or concern as `<test file>::<test name>: <reason>`.
     - HYR-8 lists every test of each language's test tree by that language's own parser. It fails for a test that is
       neither the runner nor named in the spec, for a named test that is missing, for an empty reason, and for a
       native test named under a unit or member whose `only` does not name exactly one language, or a concern with

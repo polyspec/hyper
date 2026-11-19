@@ -608,7 +608,7 @@ recipe_run_node = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/node.txt $(case_run_node)
 recipe_run_python = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/python.txt $(case_run_python)
 recipe_run_browser = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/browser.txt $(case_run_browser)
 recipe_run_build = RECIPE_RESULTS=$(RECIPE_RESULTS_DIR)/build.txt $(NODE) $(KIT)/run-tests.$(KIT_EXT) node -- --test-concurrency=1 tests/scripts/build-id.test.mts
-recipe_compare = $(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --run-dir $(RECIPE_RESULTS_DIR) --cargo "$(CARGO)"
+recipe_compare = $(NODE) scripts/recipe/check.mts --root . --php-autoload $(PHP_VENDOR)/autoload.php --run-dir $(RECIPE_RESULTS_DIR)
 recipe-run-php: server-fixtures ext hyper-ext ## Run the PHP case runner with its results file (HYR-7)
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	$(recipe_run_php)

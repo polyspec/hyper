@@ -26,8 +26,7 @@
     "node": {
       "runner": "packages/ts/tests/case-runner.test.mts::cases",
       "steps": "packages/ts/tests/steps",
-      "registry": "packages/ts/tests/case-runner.test.mts",
-      "tests": ["packages/ts/tests/case-runner.test.mts::selection: HYR-7 selects the cases that the names of a run give"]
+      "registry": "packages/ts/tests/case-runner.test.mts"
     },
     "python": {
       "runner": "packages/python/tests/test_case_runner.py::CaseRunner.test_cases",

@@ -80,8 +80,6 @@ export function checkMembers(ctx: Ctx): void {
         }
         // HYR-5: a private property is not a member of the public API; the readers report it, the spec does not list it.
         if (r.kind === 'property' && r.visibility !== 'public') continue;
-        // HYR-5 Reexports: a member that passes a call to a library member, or any member of a reexport unit, is not compared.
-        if (u.reexport !== undefined || (u.passed ?? []).some((id) => words(id.slice(id.indexOf('.') + 1)) === readerKey(r.name, r.kind))) continue;
         if (!u.members.some((m) => m.native[lang] && specKey(m) === readerKey(r.name, r.kind))) {
           add('MEMBER_ADDED', `${lang} ${r.symbol} is not in the spec`);
         }

@@ -13,4 +13,3 @@ export const STEPS = {
 
 test('cases', () => {});
 test('build', () => {});
-test('selection', () => {});

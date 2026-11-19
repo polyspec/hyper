@@ -35,11 +35,9 @@ export function expectedDirectory(lang: Lang, group: string): string {
  * The base name HYR-4 gives the file of a unit, in the directory of its group: PascalCase for PHP, kebab for Node,
  * snake for Python with `_` when internal.
  */
-export function expectedFile(lang: Lang, id: string, internal: boolean, namespaceFunctions = false): string {
+export function expectedFile(lang: Lang, id: string, internal: boolean): string {
   const parts = id.split('-');
-  // HYR-4: a PHP file of namespace functions declares no class, so its name is camelCase and names no class of PSR-4.
-  const pascal = parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
-  if (lang === 'php') return `${namespaceFunctions ? pascal.charAt(0).toLowerCase() + pascal.slice(1) : pascal}.php`;
+  if (lang === 'php') return `${parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('')}.php`;
   if (lang === 'node') return `${id}.ts`;
   return `${internal ? '_' : ''}${parts.join('_')}.py`;
 }

@@ -31,7 +31,7 @@
             ]
         },
         "files": [
-            "src/Host/run.php"
+            "src/Host/Run.php"
         ]
     },
     "autoload-dev": {

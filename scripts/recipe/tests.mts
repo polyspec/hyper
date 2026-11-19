@@ -37,16 +37,6 @@ export function checkTests(ctx: Ctx): void {
     const tests = lang === undefined ? [...readerTests] : sources[lang].tests.map((t) => `${t.file}::${t.name}`);
     if (!tests.includes(key)) add('NATIVE_TEST_MISSING', `${label} names native test ${key}, which is not a test`);
   };
-  // HYR-7: a test of the case runner of a language lies in the test tree of that language, and its reason starts with
-  // the HYR rule of the runner that it checks.
-  for (const lang of LANGS) {
-    for (const ref of spec.runners[lang].tests ?? []) {
-      nativeTest(ref, `runner ${lang}`, [lang]);
-      const key = testKey(ref, new Set(readerTests));
-      const reason = ref.slice(key.length + 2).trim();
-      if (reason !== '' && !/^HYR-\d+\b/.test(reason)) add('NATIVE_REASON', `runner ${lang} names test ${key} without the HYR rule of the runner that it checks`);
-    }
-  }
   for (const c of spec.concerns) {
     if (!Array.isArray(c.cases)) for (const ref of c.cases.tests) nativeTest(ref, `concern ${c.id}`, undefined);
   }
