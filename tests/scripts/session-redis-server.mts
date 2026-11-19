@@ -11,7 +11,7 @@ import { after, before } from 'node:test';
 import { createClient, type RedisClientType } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
-import { requireBuilt } from './requires.mts';
+import { NODE_ADDON, requireBuilt } from './requires.mts';
 import { COMMANDS, HYPER_EXT, IDENTIFIER, ROOT, type Server } from './session-workers.mts';
 
 // A certificate authority, the certificate of the servers that it signed, and the password of the ACL user hyper.
@@ -232,6 +232,7 @@ export function redisRun(prefix: string, started: () => Promise<void>, ending: (
   before(async () => {
     requireBuilt('hyper-install-redis', 'var/redis/redis-server', 'var/redis/redis.so');
     requireBuilt('packages', 'packages/ts/dist/index.js');
+    requireBuilt('node-addon', NODE_ADDON);
     requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
     requireBuilt('hyper-install-php', 'vendor/autoload.php');
     requireBuilt('hyper-ext', HYPER_EXT);

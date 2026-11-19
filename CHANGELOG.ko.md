@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 668d5b100b4b52b08a5892f21b50e2918a80629a1b05efa464491788a0d134fc -->
+<!-- source-sha256: e802f9e14e37cb366fee7298a4a542308f4c7734a1439198e8cb39cae33a8feb -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `tests/scripts`에서 Node package의 Node 서버나 worker를 시작하는 test는 모두 시작하기 전에 직접, 또는 `session-board.mts`의 `requireServers`와 `session-redis-server.mts`의 `redisRun`을 거쳐 native addon을 `requireBuilt('node-addon', NODE_ADDON)`으로 적고, `tests/scripts/requires.mts`의 `NODE_ADDON`이 그 경로의 유일한 정의다(H35.209, HR-85, HY-133.2). 입력: `make node-addon`을 하지 않은 checkout. 이전 동작: `benchmark-uploads`, `multipart-compare`, `session-holder`, `session-redis-failure`, `session-redis-failover`, `session-shared-redis`, `session-redis-cluster`, `session-lost-lock`이 Node process에서 `CoreBindingError: ... Cannot find module './hyper.<platform>.node'`로 실패했고, `session-shared`, `upload-servers`, `fixture-program`은 각자 경로를 복사해 가졌다. 지금: 각 test가 없는 경로와 `make node-addon`을 적고 실패한다.
 - `contracts/session.json`의 Rust case step이 PHP step `record`처럼 저장된 각 JSON text의 record를 data model 없이 저장한다(H35.212, HY-104.23). 입력: 저장된 `_hyper_keep`가 정수 2^53을 가지고 호출 `kept`가 `data_number_range`를 기대하는 case `reading_stored_kept_values_outside_the_data_model_fails`. 이전 동작: `packages/rust/tests/contracts.rs`가 저장할 text를 data model로 읽은 뒤 저장해서 `data_number_range: number 9007199254740992 is outside the safe range`로 panic했고, `make core-test`가 40개 가운데 1개에서 실패했다. 기대: step이 decode한 JSON을 record에 쓰고, 호출 `kept`가 `data_number_range`로 실패하며, `make core-test`가 통과한다.
 - scope가 written type이 class의 union인 property를 거쳐 읽는 member가 parameter를 거칠 때처럼 그 member를 가진 union의 각 class에서 닿는다(H35.211, HYR-5). 입력: H35.204부터 Node와 Python reader가 `types`로 쓰는 `held: Widget | Sized | null` 같은 property와 읽기 `this.held.grow()`. 이전 동작: `scripts/recipe/stated.mts`가 parameter의 `types`만 읽어서 그 property에는 class가 없었고 그 읽기는 어느 member에도 닿지 않았다. 기대: 그 property가 union의 각 class를 가진다. `make recipe-compare`는 이전과 같은 줄을 보고한다.
 - recipe check의 Node reader가 Python reader처럼(H35.208부터) 모듈 상수의 읽기를 그 값의 scope에 대한 use로 읽는다(H35.210, HYR-5). 입력: 함수 `refused`가 읽는 `packages/ts/tests/steps/arguments.ts`의 `MEMBERS`처럼 callable을 담은 최상위 상수. 이전 동작: `scripts/recipe/read-node-scopes.mts`는 상수에 scope를 썼지만 함수가 그 이름을 읽는 곳에 use를 쓰지 않아서, 표만을 거친 호출이 인정되지 않았다. `make recipe-compare`가 줄을 보고하지 않은 것은 `argumentsOf`가 `RedisSessions`도 만들기 때문일 뿐이었다. 기대: reader가 use `{kind: member, of: module, name, call: false}`를 쓰고, `make recipe-compare`는 이전과 같은 줄을 보고한다.

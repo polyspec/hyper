@@ -10,7 +10,7 @@ import path from 'node:path';
 import { after, before, test } from 'node:test';
 
 import { stopServers } from '../../scripts/board-servers.mts';
-import { requireBuilt } from './requires.mts';
+import { NODE_ADDON, requireBuilt } from './requires.mts';
 import { holders, holding } from './session-redis-server.mts';
 import { IDENTIFIER } from './session-workers.mts';
 
@@ -18,6 +18,7 @@ let directory = '';
 
 before(() => {
   requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('node-addon', NODE_ADDON);
   directory = mkdtempSync(path.join(tmpdir(), 'hyper-session-holder-'));
   writeFileSync(path.join(directory, `sess_${IDENTIFIER}`), 'a:1:{s:1:"n";i:0;}');
 });

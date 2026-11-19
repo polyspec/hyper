@@ -6,12 +6,13 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-import { phpServerExtensions, requireBuilt } from './requires.mts';
+import { NODE_ADDON, phpServerExtensions, requireBuilt } from './requires.mts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 test('the benchmark of the uploads measures each implementation for each body', { timeout: 300_000 }, async () => {
   requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('node-addon', NODE_ADDON);
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   const { stdout } = await promisify(execFile)(process.execPath, ['benchmarks/uploads.mts', '--size', '1048576', '--runs', '2', '--json', ...phpServerExtensions().flatMap((file) => ['--extension', file])], { cwd: ROOT, maxBuffer: 1 << 24 });
