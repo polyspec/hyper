@@ -1124,6 +1124,22 @@
         "core-lint",
         "core-fmt-check"
       ]
+    },
+    {
+      "paths": [
+        "packages/go/internal/ffi/Cargo.toml",
+        "packages/php/native/Cargo.toml",
+        "packages/python/native/Cargo.toml",
+        "packages/ts/native/Cargo.toml",
+        "packages/ts/native/wasm/Cargo.toml"
+      ],
+      "targets": [
+        "hyper-test-scripts",
+        "typecheck"
+      ],
+      "tests": [
+        "tests/scripts/native-dependencies.test.mts"
+      ]
     }
   ]
 }
