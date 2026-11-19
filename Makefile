@@ -1036,8 +1036,8 @@ ifeq ($(TOOLS),npm)
 	$(ONLINE) $(BOOTSTRAP_NODE) $(KIT)/bootstrap/bootstrap.$(KIT_EXT)
 else
 	minor="$$(tr -d '[:space:]' < .php-version)"; \
-	php="$$($(NODE) scripts/php-wrappers.mts path "$$minor")" || exit 1; \
-	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-tools.$(KIT_EXT) --no-self-update --php="$$php" $(TOOLS)
+	php="$$($(NODE) scripts/php-wrappers.mts path "$$minor" --if-present)" || exit 1; \
+	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-tools.$(KIT_EXT) --no-self-update $${php:+--php="$$php"} $(TOOLS)
 	@$(MAKE) --no-print-directory php-check-installed
 endif
 

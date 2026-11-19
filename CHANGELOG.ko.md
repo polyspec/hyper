@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 4cbeff7dec2bd9f056a36442722e084f234b57caf0c8c5d961bffc9226d4f681 -->
+<!-- source-sha256: 3cad019168917ddc4fde678aeb6aeda116814685c2132d33c72bde1aa89cde01 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make install-tools`는 PATH에서 `.php-version`의 PHP를 찾고, PHP를 쓰지 않는 group의 도구도 설치한다(H35.153). 입력: setup 단계가 PHP 8.4를 PATH에 설치하고 Homebrew prefix에는 PHP가 없는 CI runner에서, 그리고 PHP를 쓰지 않는 group(python, node, asset job)에서 실행한 `make install-tools TOOLS="..."`. 이전 동작: `scripts/php-wrappers.mts`가 Homebrew prefix만 찾아 `no php of PHP 8.4 exists`로 실패했고, 그래서 CI 실행의 모든 job이 첫 target 전에 멈췄다. 현재 동작: script는 PATH의 각 디렉터리의 `php`도 찾고 자기 version 조회가 그 minor를 보고하는 첫 php를 고르므로, PATH 앞쪽에 있는 다른 minor의 PHP는 여전히 건너뛴다. `--if-present`이면 찾지 못할 때 아무것도 출력하지 않고, install-tools는 script가 경로를 출력했을 때만 kit에 `--php`를 넘긴다. 검증: `make hyper-test-scripts TESTS=tests/scripts/php-wrappers.test.mts`.
 - `make recipe-check`은 자기 실행이 쓴 case 결과만 읽는다(H35.144). 입력: `var/recipe/results`에 남은 이전 실행의 결과 파일과, import에서 실패해 이번 실행에 파일을 쓰지 않은 Node case runner. 이전 동작: 검사가 이전 `node.txt`를 읽었고, 그 파일에 없는 case마다 `RESULT_MISSING`을 냈으며, runner의 실패를 알리는 줄이 없었다. 현재 동작: 각 실행은 `var/recipe/results/<run id>/`에 쓰고, 검사는 그 디렉터리만 읽으며, 이번 실행에 파일을 쓰지 않은 runner는 `RUNNER_NOT_RUN` `runner did not run: <runner> ...`으로 실패한다. 실제 결과의 finding 종류는 바뀌지 않는다.
 - Rust core는 polyspec-http-form v0.0.3 대신 v0.0.4를 고정한다(H35.11). 입력: tag v0.0.3의 `packages/rust/Cargo.toml`(binding 0.0.21에 의존)과 같은 tag의 `config/release-files.json`. 이전 동작: `Cargo.lock`에 `polyspec-binding-core`가 두 개(http-form 아래 0.0.21, hyper 아래 0.0.22) 있었다. 기대 동작: binding 0.0.22 위의 v0.0.4가 유일한 http-form 고정이고, `Cargo.lock`에 `polyspec-binding-core`가 하나이며, `config/release-files.json`은 v0.0.4 asset의 `fields.json`과 `forms.json`을 가리키고 두 sha256 값은 v0.0.3과 같다. 검증: `make hyper-test-scripts TESTS=tests/scripts/release-file-pins.test.mts`.
 - `docs/spec/recipe.md`의 HYR-7은 release의 case 파일의 `caseFiles` 항목이 파일의 모든 최상위 key를 선언하고, PHP, Node, Python의 runner가 그 모든 section을 실행하며, case 목록이 아닌 값의 key는 fixture이고, step이 서버에 없는 member를 필요로 하는 section은 runner가 빼는 section이 아니라 checklist의 행이라고 적는다(H35.11). 입력: `urlencoded`, `multipart`, `streamed` 밖의 section 18개를 어떤 항목도 선언하지 않은 http-form v0.0.3의 `fields.json`과 `forms.json`. 동작: reader가 두 파일의 모든 case를 `FILE_UNDECLARED`로 실패시켰다. 행 H35.11-1, H35.11-2, H35.11-3이 선언과 step, `content_type`과 `boundary`의 member, PHP와 Python의 fault build를 가진다. 검증: `make docs-check`.
