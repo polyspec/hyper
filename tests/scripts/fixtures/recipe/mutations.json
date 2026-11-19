@@ -343,6 +343,20 @@
     "code": "NATIVE_TEST_MISSING"
   },
   {
+    "id": "runner-test-without-rule",
+    "file": "contracts/interfaces.json",
+    "from": "case-runner.test.mts::selection: HYR-7 selects",
+    "to": "case-runner.test.mts::selection: selects",
+    "code": "NATIVE_REASON"
+  },
+  {
+    "id": "runner-test-of-another-language",
+    "file": "contracts/interfaces.json",
+    "from": "\"registry\": \"packages/python/tests/steps/__init__.py\"",
+    "to": "\"registry\": \"packages/python/tests/steps/__init__.py\",\n      \"tests\": [\"packages/ts/tests/case-runner.test.mts::selection: HYR-7 selects the cases that the names of a run give\"]",
+    "code": "NATIVE_TEST_MISSING"
+  },
+  {
     "id": "result-form-lowercase",
     "file": "results/php.txt",
     "from": "raw-token PASS",
