@@ -3,6 +3,7 @@
 import os
 import tempfile
 
+from polyspec.hyper.form._body_reader import BodyReader
 from polyspec.hyper.form.uploaded_file import UploadedFile
 from polyspec.hyper.http._cookies import Cookies
 from polyspec.hyper.http.request import Request
@@ -55,6 +56,30 @@ def files(case) -> None:
             raises = raises_of(failure)
         case.compare("over", over)
         case.compare("raises", raises)
+
+
+def bodies(case) -> None:
+    """Reads the chunks of the case with a body reader in chunks under the four limits of the case and compares what
+    each feed returns, whether a limit was passed, and whether the body, ended after the chunks, gives a form
+    (HY-59.15, HY-113.25, HY-131.32)."""
+    limits = case.input("limits")
+    read = BodyReader(
+        case.input("type"),
+        limits["body"],
+        True,
+        limits["value"],
+        limits["part"],
+        limits["file"],
+    )
+    try:
+        case.compare(
+            "fed",
+            [read.feed(chunk.encode("latin-1")) for chunk in case.input("chunks")],
+        )
+        case.compare("exceeded", read.exceeded())
+        case.compare("form", read.parts() is not None)
+    finally:
+        read.remove()
 
 
 def _kind_of(failure: BaseException) -> dict:

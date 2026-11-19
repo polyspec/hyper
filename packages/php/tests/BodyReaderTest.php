@@ -44,34 +44,4 @@ final class BodyReaderTest extends TestCase
 
         self::assertSame([$fields, [['f', []]]], BodyReader::shaped($fields, [['f', []]]));
     }
-
-    /**
-     * A body whose bytes fail with kind `invalid` keeps being read: `feed` returns false only after a passed limit
-     * (contracts/interfaces.json body-reader.feed, HY-131.32), and the body gives no form (HY-113.25).
-     */
-    public function testFeedOfAnInvalidBodyKeepsReading(): void
-    {
-        $read = new BodyReader('multipart/form-data; boundary=b', 1 << 20, true, 1 << 20, 1000, 1 << 20);
-        try {
-            self::assertTrue($read->feed("--b\r\nno header line\r\n\r\nx\r\n"));
-            self::assertTrue($read->feed("--b--\r\n"));
-            $read->finish();
-            self::assertFalse($read->exceeded());
-            self::assertNull($read->parts());
-        } finally {
-            $read->remove();
-        }
-    }
-
-    /** A body that passes the body limit stops being read: `feed` returns false (HY-131.32). */
-    public function testFeedOfABodyAboveTheLimitStops(): void
-    {
-        $read = new BodyReader('multipart/form-data; boundary=b', 8, true, 8, 1000, 8);
-        try {
-            self::assertFalse($read->feed("--b\r\nContent-Disposition: form-data; name=\"a\"\r\n\r\n"));
-            self::assertTrue($read->exceeded());
-        } finally {
-            $read->remove();
-        }
-    }
 }

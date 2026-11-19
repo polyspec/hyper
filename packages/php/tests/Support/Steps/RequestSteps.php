@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests\Support\Steps;
 
+use Polyspec\Hyper\BodyReader;
 use Polyspec\Hyper\Cookies;
 use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
@@ -69,6 +70,39 @@ final class RequestSteps
             $outcome = CaseRules::failureOf(static fn (): array => array_map($request->fileOver(...), $limits));
             $case->compare('over', $outcome['result']);
             $case->compare('raises', $outcome['raises']);
+        }
+    }
+
+    /**
+     * Reads the chunks of the case with a body reader in chunks under the four limits of the case and compares what
+     * each feed returns, whether a limit was passed, and whether the body, ended after the chunks, gives a form
+     * (HY-59.15, HY-113.25, HY-131.32).
+     */
+    public static function bodies(CaseReader $case): void
+    {
+        $limits = (array) $case->input('limits');
+        $limit = static fn (string $name): int => Json::integer(
+            $limits[$name] ?? null,
+            "the {$name} limit of the case",
+        );
+        $read = new BodyReader(
+            Bytes::of(Json::string($case->input('type'))),
+            $limit('body'),
+            true,
+            $limit('value'),
+            $limit('part'),
+            $limit('file'),
+        );
+        try {
+            $case->compare('fed', array_map(
+                static fn (mixed $chunk): bool => $read->feed(Bytes::of(Json::string($chunk))),
+                Json::list($case->input('chunks')),
+            ));
+            $case->compare('exceeded', $read->exceeded());
+            $read->finish();
+            $case->compare('form', $read->parts() !== null);
+        } finally {
+            $read->remove();
         }
     }
 

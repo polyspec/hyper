@@ -64,6 +64,7 @@ final class CaseSteps
             'request.json bytes' => RequestSteps::bytes(...),
             'request.json files' => RequestSteps::files(...),
             'request.json uploads' => RequestSteps::uploads(...),
+            'request.json bodies' => RequestSteps::bodies(...),
             'reply.json cacheControl' => ReplySteps::cacheControl(...),
             'reply.json referrerPolicy' => ReplySteps::referrerPolicy(...),
             'reply.json status' => ReplySteps::status(...),

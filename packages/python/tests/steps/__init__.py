@@ -83,6 +83,7 @@ STEPS = {
     ("request.json", "texts"): request_steps.texts,
     ("request.json", "files"): request_steps.files,
     ("request.json", "uploads"): request_steps.uploads,
+    ("request.json", "bodies"): request_steps.bodies,
     ("request.json", "targets"): request_steps.targets,
     ("request.json", "values"): request_steps.values,
     ("reply.json", "cacheControl"): reply_steps.cache_control,

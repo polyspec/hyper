@@ -17643,6 +17643,48 @@
             "uploaded-file.moveTo"
           ]
         },
+        "bodies": {
+          "runners": [
+            "php",
+            "python"
+          ],
+          "uses": [],
+          "fields": {
+            "id": {
+              "role": "id"
+            },
+            "label": {
+              "role": "label"
+            },
+            "type": {
+              "role": "input"
+            },
+            "chunks": {
+              "role": "input"
+            },
+            "limits": {
+              "role": "input"
+            },
+            "fed": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.32",
+              "state": "`fed` holds, for each chunk of `chunks` in order, what `feed` of a body reader returns for the content type `type` read in chunks under the body, value, part and file limits of `limits`; `type` and `chunks` are text whose characters U+0000 to U+00FF are bytes."
+            },
+            "exceeded": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-131.32",
+              "state": "`exceeded` is what `exceeded` returns after the chunks."
+            },
+            "form": {
+              "role": "expected",
+              "compare": "exact",
+              "sentence": "HY-113.25",
+              "state": "`form` is true when the body, ended after the chunks, gives its fields and files, and false when it gives none."
+            }
+          }
+        },
         "targets": {
           "runners": [
             "php",
