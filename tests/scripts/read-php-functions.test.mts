@@ -61,3 +61,22 @@ test('a method after a string interpolation of a class is no function of the fil
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('a function of a file that the autoloader does not load is read from its file (HYR-8)', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'read-php-functions-'));
+  try {
+    cpSync(fixture, dir, { recursive: true });
+    for (const args of [['init', '-q'], ['add', '-A']]) {
+      const git = spawnSync('git', ['-C', dir, ...args], { encoding: 'utf8' });
+      assert.equal(git.status, 0, git.stderr);
+    }
+    const bin = process.env.RECIPE_PHP ?? 'php';
+    const result = spawnSync(bin, [reader, dir, '--autoload', path.join(dir, 'autoload.php'), '--sources', 'src'], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    const out = JSON.parse(result.stdout);
+    assert.ok(out.members.some((m: { file: string; name: string; kind: string }) => m.file === 'src/Loose.php' && m.name === 'loose' && m.kind === 'function'), 'loose is not a function member of src/Loose.php');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
