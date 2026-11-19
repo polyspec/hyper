@@ -11008,7 +11008,7 @@
             {
               "id": "values.isMapValue",
               "kind": "function",
-              "visibility": "internal",
+              "visibility": "private",
               "inputs": [
                 "value"
               ],
@@ -11018,7 +11018,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/data/values.ts::isMapValue",
-                  "signature": "export function isMapValue(input: unknown): input is MapValue"
+                  "signature": "function isMapValue(input: unknown): input is MapValue"
                 }
               }
             }
@@ -14368,7 +14368,7 @@
     },
     {
       "id": "plain",
-      "visibility": "internal",
+      "visibility": "private",
       "unit": "core-rules",
       "shape": {
         "fields": {
@@ -14390,7 +14390,7 @@
       "native": {
         "node": {
           "symbol": "packages/ts/src/app/core-rules.ts::Plain",
-          "declaration": "export interface Plain {\n  readonly status: number;\n  readonly body: Uint8Array;\n  readonly varyAccept: boolean;\n  readonly allow?: string | null;\n}"
+          "declaration": "interface Plain {\n  readonly status: number;\n  readonly body: Uint8Array;\n  readonly varyAccept: boolean;\n  readonly allow?: string | null;\n}"
         }
       }
     },

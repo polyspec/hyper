@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 7e227207952b190339160a07f8140916ee326dc9b72b72499675d32c6789677d -->
+<!-- source-sha256: 25dd2553be25196c5207d934dd41cfdb2acfed7a0de7e4dc41a2658d3bc5b6a4 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `contracts/interfaces.json`이 Node helper `values.isMapValue`와 type `plain`을 `packages/ts/src/data/values.ts`와 `packages/ts/src/app/core-rules.ts`가 선언하는 대로 `export` 없는 private로 적는다(H35.200). 입력: 계약과 그 두 파일. H35.175가 자기 파일에서만 쓰이는 두 이름의 export를 없앴다. 이전 동작: 계약이 둘을 export된 internal로 적었고, `make recipe-compare`가 `values.isMapValue`의 `MEMBER_SIGNATURE`와 `MEMBER_VISIBILITY`, `plain`의 `TYPE_CHANGED`와 `TYPE_VISIBILITY`를 보고했다. 검증: `make recipe-compare`가 네 줄 가운데 어느 것도 보고하지 않고 새 줄도 없다.
 - `make recipe-compare`가 core-rules의 이름이 바뀐 Python test와 file-sessions의 낡은 도달 차이의 줄을 보고하지 않는다(H35.199, HYR-5). 입력: `contracts/interfaces.json`. 이전 동작: `core-rules.csrfMask`의 native test가 H35.193이 `test_there_are_twenty_exact_units`로 바꾼 `test_there_are_twenty_two_exact_units`를 적었고(`NATIVE_TEST_MISSING`, `TEST_UNNAMED`), `file-sessions.constructor`가 H35.190이 지운 `file-session.libraryError`의 도달 차이를 선언했다(`MEMBER_REACH_STALE`). 지금: 계약이 멤버 스무 개와 함께 `test_there_are_twenty_exact_units`를 적고 `file-sessions.constructor`에 도달 차이를 선언하지 않는다.
 - PHP, Node, Python runner가 실행하는 `contracts/request.json`의 section `uploads`가 생성자로 `UploadedFile`을 만들고 `name()`, `contentType()`, `size()`, `content()`, `moveTo(path)`로 새 경로에 옮긴 결과, 그 뒤 `content()`와 두 번째 이동의 실패 `moved`, 이미 있는 경로로의 이동의 실패 `exists`를 비교한다(H35.196, HY-113.8, HY-113.21, HY-131.28). 입력: `contracts/interfaces.json`과 `contracts/request.json`. 이전 동작: section이 적는 member는 `uploaded-file.filename`뿐이었고, `make recipe-compare`가 그 unit의 `MEMBER_UNSTATED` 줄 18개를 보고했다. 검증: `make hyper-test-php CASES=request.json`과 `make hyper-test-python CASES=request.json`이 통과하고, `make recipe-compare`가 18줄 가운데 어느 것도 보고하지 않는다.
 - `tests/scripts/read-php-functions.test.mts`가 host 파일 `packages/php/src/Host/Run.php`를 읽는다(H35.195, HY-106.20). 입력: 대소문자를 구분하는 file system에서의 그 test. 이전 동작: H35.192 이전의 이름인 `Host/run.php`를 읽어서, 대소문자를 구분하는 file system에서는 파일을 찾지 못했다. 기대: tracked 이름을 읽는다. 검증: `make hyper-test-scripts TESTS=tests/scripts/read-php-functions.test.mts` rc 0, 5 passed.
