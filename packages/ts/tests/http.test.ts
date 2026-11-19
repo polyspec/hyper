@@ -131,13 +131,13 @@ describe('server', () => {
   });
 });
 
-// The field lines of a request (HY-42.8, HY-42.9, HY-42.13, HY-42.14): node:http gives the lines of a name apart in
+// The field lines of a request (HY-42.15, HY-42.9, HY-42.13, HY-42.14): node:http gives the lines of a name apart in
 // headersDistinct, and the server reads them as one value joined with `, `.
 describe('the field lines of a request', () => {
   const lines = 'Content-Type: application/x-www-form-urlencoded\r\nContent-Type: text/plain\r\nUser-Agent: a\r\nUser-Agent: b\r\n';
   const post = Buffer.from(`POST /add HTTP/1.1\r\nHost: x\r\n${lines}Content-Length: 3\r\nConnection: close\r\n\r\na=1`);
 
-  it('reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.8, HY-42.9, HY-42.14, HY-59.13)', async () => {
+  it('reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.15, HY-42.9, HY-42.14, HY-59.13)', async () => {
     const seen: unknown[] = [];
     const app = await new Fixture().app();
     const listener = hostListener(app, await FileSessions.inDirectory({ directory }), {

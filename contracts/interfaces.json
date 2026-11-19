@@ -3732,7 +3732,7 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the headers of the request with the lines of a name joined with `, ` (HY-42.8).",
+              "state": "Returns the headers of the request with the lines of a name joined with `, ` (HY-42.15).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/server.py::_headers",
@@ -3740,7 +3740,7 @@
                 }
               },
               "tests": [
-                "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_reads_the_lines_of_a_name_as_one_value: Only the Python server has the `http.server` server of `create_server` (HY-100.1); two `Content-Type` and two `User-Agent` lines reach the application joined with `, `, the media type of the body included (HY-42.8, HY-42.9).",
+                "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_reads_the_lines_of_a_name_as_one_value: Only the Python server has the `http.server` server of `create_server` (HY-100.1); two `Content-Type` and two `User-Agent` lines reach the application joined with `, `, the media type of the body included (HY-42.15, HY-42.9).",
                 "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_refuses_two_content_length_lines: Only the `http.server` server of `create_server` reads the body by `Content-Length` itself; two lines joined are no decimal digits, so it answers 400 and no request reaches the application (HY-42.13).",
                 "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_create_server_refuses_two_transfer_encoding_lines: Only the `http.server` server of `create_server` reads a chunked body itself; two `Transfer-Encoding` lines joined are no `chunked` alone, so it answers 400 and no request reaches the application (HY-42.13)."
               ]
@@ -4388,7 +4388,7 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the request headers of a scope with the headers of a name joined with `, ` (HY-42.8).",
+              "state": "Returns the request headers of a scope with the headers of a name joined with `, ` (HY-42.15).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/asgi.py::_scope_headers",
@@ -4396,7 +4396,7 @@
                 }
               },
               "tests": [
-                "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_the_asgi_callable_reads_the_lines_of_a_name_as_one_value: Only the Python server has an ASGI callable (HY-100.15); two `content-type` and two `user-agent` headers of the scope reach the application joined with `, `, the media type of the body included (HY-42.8, HY-42.9)."
+                "packages/python/tests/test_header_lines.py::HeaderLinesTest.test_the_asgi_callable_reads_the_lines_of_a_name_as_one_value: Only the Python server has an ASGI callable (HY-100.15); two `content-type` and two `user-agent` headers of the scope reach the application joined with `, `, the media type of the body included (HY-42.15, HY-42.9)."
               ]
             }
           ],
@@ -4886,7 +4886,7 @@
           "tests": [
             "packages/ts/tests/http.test.ts::server > answers a request target with a byte outside ASCII with a plain 400 (HY-42): Only the Node server answers and reports the 400 of a request that node:http cannot parse, with a request of the request line or with no request and with an empty reply (HY-60.7, HY-60.8); the test sends raw packets to the server of http-host.createServer.",
             "packages/ts/tests/http.test.ts::server > answers a request with headers larger than node:http accepts with a 431 that no cache stores (HY-65): Only the Node server answers headers larger than node:http accepts with a 431 that carries Cache-Control: no-store (HY-60.7, HY-65.1).",
-            "packages/ts/tests/http.test.ts::the field lines of a request > reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.8, HY-42.9, HY-42.14, HY-59.13): Only the Node host is the listener of node:http (HY-100.1), whose `headers` keeps the first line of `content-type` and `user-agent`; the test sends two lines of each and asserts the joined values that `around` reads.",
+            "packages/ts/tests/http.test.ts::the field lines of a request > reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.15, HY-42.9, HY-42.14, HY-59.13): Only the Node host is the listener of node:http (HY-100.1), whose `headers` keeps the first line of `content-type` and `user-agent`; the test sends two lines of each and asserts the joined values that `around` reads.",
             "packages/ts/tests/http.test.ts::the field lines of a request > answers a declared length above the body limit with 413 and discards the body unread by the core (HY-131.29, HY-131.31): Only the Node host is the listener of node:http (HY-100.1); it reads the bytes that follow a refused start of the body to discard them; the test sends a declared length above the body limit to the server and asserts the 413.",
             "packages/ts/tests/http.test.ts::the field lines of a request > answers an action with two Content-Type lines with 400, because the joined value is no media type (HY-42.14, HY-59.12): Only the Node host is the listener of node:http (HY-100.1); the test sends two `Content-Type` lines to an action through it.",
             "packages/ts/tests/http.test.ts::the field lines of a request > leaves a request with two Content-Length lines to the 400 of node:http (HY-42.13, HY-60.7): Only the Node server has node:http, which refuses two `Content-Length` lines itself; the test asserts the plain 400 of HY-60.7.",

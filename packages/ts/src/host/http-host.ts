@@ -129,7 +129,7 @@ function createListener<S extends object>(app: App<S>, sessions: LibrarySessions
       const target = incoming.url;
       if (target === undefined) throw new Error('hyper: the request has no target (HY-100)');
       // HY-42.9: every line of a name, which `headers` of node:http keeps only the first of for the names that it reads
-      // as one value; `requestOf` joins them (HY-42.8). The request as received exists before the public directory is
+      // as one value; `requestOf` joins them (HY-42.15). The request as received exists before the public directory is
       // read, so that a failed stat of its file is an escaped error that the write hook receives with it (HY-60.14,
       // HY-60.17); a file that is served returns before the hooks (HY-100.7).
       request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, https });
@@ -248,7 +248,7 @@ function withSessionCookie<S extends object>(app: App<S>, sessions: LibrarySessi
 
 // Returns the request of the parts that node:http gives (HY-100): the method in upper case, the path and the raw query
 // of the request target, each header as one value, and the cookies of the one parse of the Cookie header (HY-129).
-// Several Cookie lines are one header joined with `; `, and the lines of another name join with `, ` (HY-42.8). `read`
+// Several Cookie lines are one header joined with `; `, and the lines of another name join with `, ` (HY-42.15). `read`
 // is the body as the host read it.
 /** @internal */
 export function requestOf(

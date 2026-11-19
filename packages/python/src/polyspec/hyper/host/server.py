@@ -93,7 +93,7 @@ def create_server(
             self.headers_started = False
             try:
                 # The request as received so far: an unread body is empty and its size is the declared one (HY-60).
-                # HY-42.8: every read takes the lines of a name joined as one value.
+                # HY-42.15: every read takes the lines of a name joined as one value.
                 headers = _headers(self.headers)
                 cookies = Cookies.parse(_cookie_header(self.headers))
                 exchange.request = head_request(

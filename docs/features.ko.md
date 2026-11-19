@@ -1,5 +1,5 @@
 <!-- doc-id: features -->
-<!-- source-sha256: 87300e6d4641a1a227d0e8ec5b107e02f0b95e3e85c23d5c1debe79dc2d4ed38 -->
+<!-- source-sha256: bac7a0c9509587547a1edef744880ba422d90882fdb104201ed499dc90230c20 -->
 # 기능 상태
 
 [English](features.md).
@@ -34,7 +34,7 @@
 | page-statuses | loader와 action의 잘못된 요청 멈춤, 200, 409, 422로 페이지를 렌더하는 action 결과(HY-58) | implemented | `make test-php`, `make hyper-test-node`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/result.json`의 case |
 | page-forbidden | loader나 action은 reply로 그 요청의 페이지에 상태 403을 준다. 요청이 볼 수 없는 데이터 대신 다른 데이터를 보이는 페이지를 위한 것이다(HY-69) | implemented | `make test-php`, `make hyper-test-node`, `make recipe-run-php`, `make recipe-run-node`, `make recipe-run-python`이 실행하는 `contracts/reply.json`의 case |
 | body-checks | 애플리케이션의 body 한도와 받는 폼 type, 413, 415, CSRF 403 순서의 검사(HY-59) | implemented | `make test-php`, `make hyper-test-node`, `make server-parity` |
-| field-lines | 여러 field line으로 오는 요청 field는 모든 server에서 `, `로 이은 값 하나이며, body의 media type과 선언된 길이를 포함한 server의 모든 읽기가 그 값을 쓰고, `http.server` 서버는 그 값으로 읽을 수 없는 body에 400으로 응답한다(HY-42.8~HY-42.13) | 진행 중: 세 server가 자기 test를 통과한다. 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python` |
+| field-lines | 여러 field line으로 오는 요청 field는 모든 server에서 `, `로 이은 값 하나이며, body의 media type과 선언된 길이를 포함한 server의 모든 읽기가 그 값을 쓰고, `http.server` 서버는 그 값으로 읽을 수 없는 body에 400으로 응답한다(HY-42.9~HY-42.15) | 진행 중: 세 server가 자기 test를 통과한다. 전체 실행은 아직 검증하지 않았다 | `make hyper-test-php`, `make hyper-test-node`, `make hyper-test-python` |
 | failure-cache | 상태가 400 이상인 모든 응답의 `Cache-Control: no-store`(HY-65) | implemented | `make test-php`, `make hyper-test-node` |
 | response-limit | 애플리케이션의 응답 한도. 더 큰 body는 보내지 않고 요청은 텍스트 500을 받는다(HY-66) | implemented | `make test-php`, `make hyper-test-node` |
 | disconnect-hook | client가 연결을 닫은 요청의 연결 끊김 hook. Node 서버는 요청을 멈추고, PHP는 첫 실패한 쓰기에서 script를 끝내며, Python 서버는 응답의 첫 실패한 쓰기를 알린다(HY-67) | implemented | `make test-php`, `make hyper-test-node`, `make hyper-test-python-render` |
