@@ -9,7 +9,7 @@ import { beforeEach, test } from 'node:test';
 import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
-import { requireBuilt } from './requires.mts';
+import { NODE_ADDON, requireBuilt } from './requires.mts';
 import { assertKeepsCookie, post, shareAcross, startBoards } from './session-board.mts';
 import { EXTENSION, holding, keyEvents, keyGone, redisRun, startRedis, stopRedis } from './session-redis-server.mts';
 import { IDENTIFIER, NAMES, run as runWorker, type Server } from './session-workers.mts';
@@ -31,6 +31,7 @@ const state = redisRun(
   'hyper-session-failure-',
   async () => {
     requireBuilt('node-server', 'examples/board/build/node/server.mjs');
+    requireBuilt('node-addon', NODE_ADDON);
     requireBuilt('board', 'examples/board/build/program');
     redis = await connected();
   },

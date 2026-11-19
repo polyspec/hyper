@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { test, type TestContext } from 'node:test';
 
-import { requireBuilt } from './requires.mts';
+import { NODE_ADDON, requireBuilt } from './requires.mts';
 import { CANONICAL, COMMANDS, HYPER_EXT, IDENTIFIER, NAMED, NAMES, PYTHON, ROOT, run as runWorker, VALUES, type Server } from './session-workers.mts';
 
 const PROCESSES = 3;
@@ -23,9 +23,6 @@ function directoryOf(t: TestContext): string {
 const run = (server: Server, directory: string, ...args: string[]) => runWorker(server, directory, {}, ...args);
 
 const file = (directory: string) => path.join(directory, `sess_${IDENTIFIER}`);
-
-// The Node addon of this platform, which the node-addon target writes beside the Node package (HY-104).
-const NODE_ADDON = `packages/ts/native/generated/hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`;
 
 /** Requires the builds that the three servers run from: the packages, the Python and PHP installs, the extension and the addon. */
 function requireServers(): void {

@@ -4,7 +4,7 @@ import type { ChildProcess } from 'node:child_process';
 import path from 'node:path';
 
 import { startNode, startPhp, startPython } from '../../scripts/board-servers.mts';
-import { phpServerExtensions, requireBuilt } from './requires.mts';
+import { NODE_ADDON, phpServerExtensions, requireBuilt } from './requires.mts';
 import { ROOT } from './session-workers.mts';
 
 const BOARD = path.join(ROOT, 'examples/board');
@@ -13,6 +13,7 @@ const BOARD = path.join(ROOT, 'examples/board');
 export function requireServers(): void {
   requireBuilt('hyper-install-redis', 'var/redis/redis-server', 'var/redis/redis.so');
   requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('node-addon', NODE_ADDON);
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
   requireBuilt('node-server', 'examples/board/build/node/server.mjs');

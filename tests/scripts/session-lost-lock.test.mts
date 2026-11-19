@@ -10,7 +10,7 @@ import { test } from 'node:test';
 import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
-import { requireBuilt } from './requires.mts';
+import { NODE_ADDON, requireBuilt } from './requires.mts';
 import { assertKeepsCookie, cookieOf, post, startBoards, tokenOf } from './session-board.mts';
 import { redisRun } from './session-redis-server.mts';
 import { run as runWorker } from './session-workers.mts';
@@ -22,6 +22,7 @@ const state = redisRun(
   'hyper-session-lost-lock-',
   async () => {
     requireBuilt('node-server', 'examples/board/build/node/server.mjs');
+    requireBuilt('node-addon', NODE_ADDON);
     requireBuilt('board', 'examples/board/build/program');
     redis = await connected();
   },

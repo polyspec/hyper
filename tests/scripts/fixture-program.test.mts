@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test, type TestContext } from 'node:test';
 import { reservedTemplate, shellFile } from '@polyspec/hyper/build';
-import { requireBuilt } from './requires.mts';
+import { NODE_ADDON, requireBuilt } from './requires.mts';
 
 const fixtures = resolve('packages/php/tests/fixtures');
 
@@ -45,7 +45,7 @@ test('the program holds no copy of the reserved template (HY-31.9, HY-48.21)', (
 });
 
 test('the program names the literal key of an index in reads.json by its text (HY-73.33)', (t) => {
-  requireBuilt('packages node-addon', 'packages/ts/dist/build.js', `packages/ts/native/generated/hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`);
+  requireBuilt('packages node-addon', 'packages/ts/dist/build.js', NODE_ADDON);
   const directory = mkdtempSync(join(tmpdir(), 'hyper-fixture-program-'));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const templates = join(directory, 'templates');
