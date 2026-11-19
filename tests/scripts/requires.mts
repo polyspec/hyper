@@ -14,6 +14,9 @@ export function requireBuilt(target: string, ...paths: string[]): void {
   assert.deepEqual(missing, [], `${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} missing; \`make ${target}\` writes ${missing.length === 1 ? 'it' : 'them'}; run it before \`make hyper-test-scripts\``);
 }
 
+/** The Node addon of this platform, which `make node-addon` writes beside the Node package, named as NODE_ADDON of the Makefile (HY-133.2). */
+export const NODE_ADDON = `packages/ts/native/generated/hyper.${process.platform}-${process.arch}${process.platform === 'linux' ? '-gnu' : ''}.node`;
+
 /**
  * The PHP extensions that a PHP server of a test loads, in their order: the json, the template and the hyper extension
  * (HY-48.23, HY-133.2). `make hyper-test-scripts` passes them in HYPER_PHP_EXTENSIONS, from PHP_SERVER_EXTENSIONS of the

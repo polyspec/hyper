@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import { promisify } from 'node:util';
 
 import { dryRun } from './make-dry-run.mts';
-import { phpServerExtensions, requireBuilt } from './requires.mts';
+import { NODE_ADDON, phpServerExtensions, requireBuilt } from './requires.mts';
 import { NAMES, ROOT } from './session-workers.mts';
 
 interface Result { server: string; processes: number; requests: number; requestsPerSecond: number }
@@ -15,6 +15,7 @@ interface Result { server: string; processes: number; requests: number; requests
 function requireInputs(): void {
   requireBuilt('hyper-install-redis', 'var/redis/redis-server', 'var/redis/redis.so');
   requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('node-addon', NODE_ADDON);
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
 }
