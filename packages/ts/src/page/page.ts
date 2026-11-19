@@ -10,7 +10,7 @@ import { RegionPlanner } from './region-planner.js';
 import type { Reply } from '../http/reply.js';
 import type { Request } from '../http/request.js';
 import { Response } from '../http/response.js';
-import { rules, type CorePagesInstance, type PageStepInput } from '../app/core-rules.js';
+import { rules, type Answer, type CorePagesInstance, type PageStepInput } from '../app/core-rules.js';
 import type { Container } from '../app/container.js';
 import type { Flash } from '../session/flash.js';
 import type { Session } from '../session/session.js';
@@ -131,24 +131,30 @@ export class Page<S extends object> {
     }
     const answer = step.answer;
     if (answer.answer === 'no_page') throw new Error('hyper: the page of a request answered no page');
-    const json = answer.answer === 'json';
-    const body = answer.answer === 'json' ? answer.text : answer.html;
-    // HY-53: only a JSON response with status 200 has a tag, which the core computes from the body with the masked
-    // token replaced by the token of the session; the session is read for no other response.
-    const tagged = json && answer.status === 200;
+    const { json, body, maskedToken, token } = Page.json(answer, masked, session);
     const computed = rules().pageHeaders({
       status: answer.status,
       json,
       body,
       context: context !== null,
-      maskedToken: tagged ? masked : '',
-      token: tagged ? session.csrfToken() : '',
+      maskedToken,
+      token,
       method: request.method,
       cacheControl: reply.cacheControlValue(),
       ifNoneMatch: request.header('If-None-Match'),
       referrerPolicy: reply.referrerPolicyValue(),
     });
     return new Response(computed.status, computed.headers, computed.body ? body : '');
+  }
+
+  // The JSON part of an answer: whether it is JSON and its text. HY-53: only a JSON response with status 200 has a tag,
+  // which the core computes from the body with the masked token replaced by the token of the session; the session is
+  // read for no other response.
+  private static json(answer: Exclude<Answer, { readonly answer: 'no_page' }>, masked: string, session: Session): { json: boolean; body: string; maskedToken: string; token: string } {
+    const json = answer.answer === 'json';
+    const body = answer.answer === 'json' ? answer.text : answer.html;
+    const tagged = json && answer.status === 200;
+    return { json, body, maskedToken: tagged ? masked : '', token: tagged ? session.csrfToken() : '' };
   }
 
   // Returns the result of a handler as the map that a step of the core takes (HY-44.4): a Map as it is, and a plain
