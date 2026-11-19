@@ -286,6 +286,13 @@ final class PhpScope
             foreach ($nodes as $node) {
                 $this->use($node);
             }
+            // An instanceof check of a local with a class of the tree narrows the local to that class (HYR-5).
+            if ($expr['kind'] === 'variable' && tokenId($t[$end] ?? ';') === T_INSTANCEOF && in_array(tokenId($t[$end + 1] ?? ';'), SCOPE_NAMES, true)) {
+                $narrowed = classNamed($this->tree, $this->file, tokenText($t[$end + 1]));
+                if ($narrowed !== null) {
+                    $this->assigns[] = ['target' => $expr['name'], 'value' => ['kind' => 'other'], 'type' => $narrowed];
+                }
+            }
             if ($assigned && tokenId($t[$end]) === '=') {
                 $target = null;
                 if ($expr['kind'] === 'variable') {
