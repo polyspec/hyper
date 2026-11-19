@@ -2,7 +2,7 @@
 // process (HY-115): the Redis store of the session-store library, whose rule the storage of a session is.
 import { RedisSessions as LibraryRedisSessions, type Setting } from '@polyspec/session-store';
 import { FileSession } from './file-session.js';
-import { RedisSession } from './redis-session.js';
+import { LibrarySessions } from './library-sessions.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
 
 // The connection settings of the store (HY-115.17, HY-115.29): `{ kind: 'server', url, authorities }` with a URL
@@ -40,19 +40,12 @@ const REDIS_SESSIONS_OPTIONAL = ['lifetime', 'prefix', 'lockRetries', 'lockWait'
 // library is an error of hyper of the same category with the kind of the library (HY-133.3): a lifetime or a lock
 // expiry of 0 fails with `invalid_lifetime` or `invalid_lock_expire`, a lock whose tries end with `lock_timeout` and a
 // lost lock with `lock_lost`.
-export class RedisSessions {
-  private readonly store: LibraryRedisSessions;
-
+// The session of a request, which a host opens in the Redis store of the library, holds its lock until `close`.
+export class RedisSessions extends LibrarySessions<LibraryRedisSessions> {
   constructor(options: RedisSessionsOptions) {
     ArgumentCountError.between(arguments.length, 1, 1);
     ArgumentCountError.members(options, REDIS_SESSIONS_REQUIRED, REDIS_SESSIONS_OPTIONAL);
     const { setting, ...rest } = options;
-    this.store = FileSession.converted(() => new LibraryRedisSessions(setting, rest));
-  }
-
-  // Opens the store of a request with the value of its session cookie; it holds the lock of the session until `close`.
-  /** @internal */
-  async open(cookie: string | null): Promise<RedisSession> {
-    return new RedisSession(await FileSession.awaited(() => this.store.open(cookie)));
+    super(FileSession.converted(() => new LibraryRedisSessions(setting, rest)));
   }
 }

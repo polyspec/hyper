@@ -74,6 +74,15 @@ class FileSession(SessionStore):
             return converted
         return error
 
+    @staticmethod
+    def opened(
+        store: library.FileSessions | library.RedisSessions, cookie: Optional[str]
+    ) -> FileSession:
+        """Opens the session of a request with the value of its session cookie in a store of the library, the file
+        store or the Redis store, and returns it as the session store of the request; a failure is raised as
+        `converted` raises it."""
+        return FileSession(FileSession.converted(lambda: store.open(cookie)))
+
     def get(self, key: str) -> object:
         """Returns the value of a key as a value of the data model (HY-104.13), or None for a key that holds no
         value."""

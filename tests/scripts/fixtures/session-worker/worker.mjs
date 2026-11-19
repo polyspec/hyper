@@ -8,6 +8,9 @@ import { once } from 'node:events';
 // The Redis store of the session-store library keeps its own connections; HYPER_SESSION_TLS_CA turns TLS on and is the
 // file of the authorities that the store trusts.
 import { FileSessions, RedisSessions } from '@polyspec/hyper';
+// The internal session store of a request, which the host opens in the library store of the sessions; the package
+// exports no path to it, so the worker imports the module of the built package that `@polyspec/hyper` resolves to.
+import { FileSession } from '../../../../packages/ts/dist/session/file-session.js';
 
 const [directory, id, command, first, second] = process.argv.slice(2);
 const port = process.env.HYPER_SESSION_REDIS;
@@ -59,7 +62,7 @@ const mapped = (text) => {
 };
 
 const session = async (use) => {
-  const store = await sessions.open(id);
+  const store = await FileSession.opened(sessions.library, id);
   try {
     return await use(store);
   } finally {

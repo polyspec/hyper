@@ -573,6 +573,15 @@ def counts(case) -> None:
     """Calls the member of the case with the number of arguments that `call` names, and compares whether the call
     failed with the count error."""
     row = _row(case)
+    if case.input("member") == "redis-sessions.constructor":
+        # The step writes the call of the Redis store itself, as the Node step makes the store, so that the recipe
+        # check reads the constructor that the section names (HYR-7).
+        row = _Row(
+            RedisSessions,
+            lambda receiver, arguments, named: RedisSessions(*arguments, **named),
+            row.values,
+            named=True,
+        )
     form = case.input("call")
     with tempfile.TemporaryDirectory(prefix="hyper-arguments-") as directory:
         names, required = row.parameters()

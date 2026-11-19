@@ -13,6 +13,7 @@ from urllib.parse import quote
 
 from polyspec.hyper import FileSessions, RedisSessions
 from polyspec.session_store import SettingCluster, SettingSentinel, SettingServer
+from polyspec.hyper.session._file_session import FileSession
 
 
 def stores(directory):
@@ -79,14 +80,14 @@ def main(directory, identifier, command, first=None, second=None):
     sessions = stores(directory)
     if command == "count":
         for _ in range(int(first)):
-            session = sessions._open(identifier)
+            session = FileSession.opened(sessions.library, identifier)
             try:
                 session.set("n", session.get("n") + 1)
                 session.set(second, (session.get(second) or 0) + 1)
             finally:
                 session.close()
         return
-    session = sessions._open(identifier)
+    session = FileSession.opened(sessions.library, identifier)
     if command == "hold":
         session.get("n")
         print("held", flush=True)
