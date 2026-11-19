@@ -96,6 +96,89 @@ function declaredTypes(string $code): array
     return $types;
 }
 
+/**
+ * @return list<string> the fully qualified names of the functions a file declares outside every class, interface,
+ *                      trait and function body, which a namespace block does not count as
+ */
+function declaredFunctions(string $code): array
+{
+    $tokens = significant($code);
+    $namespace = '';
+    $stack = [];
+    $pendingType = false;
+    $pendingNamespace = false;
+    $functions = [];
+    foreach ($tokens as $i => $token) {
+        if ($token === '{') {
+            $stack[] = $pendingType ? 'type' : ($pendingNamespace ? 'namespace' : 'block');
+            $pendingType = false;
+            $pendingNamespace = false;
+            continue;
+        }
+        if ($token === '}') {
+            array_pop($stack);
+            continue;
+        }
+        if ($token === ';') {
+            $pendingNamespace = false;
+            continue;
+        }
+        if (!is_array($token)) {
+            continue;
+        }
+        if ($token[0] === T_NAMESPACE && !isReference($tokens, $i)) {
+            $namespace = '';
+            for ($j = $i + 1; $tokens[$j] !== ';' && $tokens[$j] !== '{'; $j++) {
+                if (is_array($tokens[$j])) {
+                    $namespace .= $tokens[$j][1];
+                }
+            }
+            $pendingNamespace = true;
+        }
+        if (in_array($token[0], [T_CLASS, T_INTERFACE, T_TRAIT], true) && !isReference($tokens, $i)) {
+            $pendingType = true;
+        }
+        $inBody = array_filter($stack, static fn(string $s): bool => $s !== 'namespace') !== [];
+        if (
+            $token[0] === T_FUNCTION
+            && !$inBody
+            && is_array($tokens[$i + 1] ?? null)
+            && $tokens[$i + 1][0] === T_STRING
+        ) {
+            $functions[] = ($namespace === '' ? '' : $namespace . '\\') . $tokens[$i + 1][1];
+        }
+    }
+
+    return $functions;
+}
+
+/** @return ReflectionFunction the function that a file declares, loaded by the autoloader from that file */
+function loadFunction(string $file, string $path, string $fqn): ReflectionFunction
+{
+    if (!function_exists($fqn)) {
+        fail("$file: the autoloader does not load the function $fqn");
+    }
+    $function = new ReflectionFunction($fqn);
+    if (realpath((string) $function->getFileName()) !== realpath($path)) {
+        fail("$file: the autoloader loads $fqn from {$function->getFileName()}");
+    }
+
+    return $function;
+}
+
+function functionSignature(ReflectionFunction $function): string
+{
+    $params = [];
+    foreach ($function->getParameters() as $p) {
+        $type = $p->getType() === null ? '' : $p->getType() . ' ';
+        $prefix = ($p->isPassedByReference() ? '&' : '') . ($p->isVariadic() ? '...' : '');
+        $params[] = $type . $prefix . '$' . $p->getName();
+    }
+    $return = $function->getReturnType() === null ? '' : ': ' . $function->getReturnType();
+
+    return 'function ' . $function->getShortName() . '(' . implode(', ', $params) . ')' . $return;
+}
+
 /** @return list<string> the test methods of a test file, as Class::method */
 function testNames(string $code): array
 {
