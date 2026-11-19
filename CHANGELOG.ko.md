@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 567c8a71c47566b0fe8a7e52decec4e4b15b6094ff0c84c4f5b3fd3e9433c251 -->
+<!-- source-sha256: d044a966e58831dc21f942edc9d5faaf92322c7f3fb1bd06e862ed787a2ed69e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `contracts/interfaces.json`이 `files.sizes`를 internal로 적는다(H35.164). 입력: tree에 대한 `make recipe-compare`. 이전 동작: 계약이 그 member를 public으로 적었고, compare가 그것을 세 host에서 internal이고 어느 section도 적지 않는 public member로 보고했다(6줄). 현재 동작: 항목은 unit `files`처럼 internal이고, 6줄이 없어졌으며, Python rule이 크기를 `fileOver`에 주지 않으므로 Python은 그것을 닿지 않는 member로 보고한다. 검증: `make recipe-compare`.
 - `contracts/interfaces.json`이 더는 `fields.percentDecoded`를 적지 않는다(H35.163). 입력: tree에 대한 `make recipe-compare`. 이전 동작: 계약이 core의 `parseUrlencoded`가 http-form으로 decode하게 되면서 H35.11이 지운 각 host의 private decoder를 적었고, compare가 그것을 PHP, Node, Python에서 없고 닿지 않는 member로 보고했다(6줄). 현재 동작: 항목을 지웠고 6줄이 없어졌다. 검증: `make recipe-compare`.
 - `make duplication-check`가 통과한다. 반복된 코드 조각 아홉 개가 각각 한 번만 있다(H35.160). 입력: check가 읽는 source와 test. 이전 동작: check가 clone 아홉 개를 보고했다. `App`과 `Page`의 method `varyHeader`, Python과 TypeScript session record 테스트의 테스트 session `FixedSession`, Rust 계약 테스트의 JSON 파일 읽기, `scripts/recipe/read-php-functions.php`의 namespace 이름 읽기, 테스트 네 개가 fixture에 reader를 실행하는 부분, session 테스트의 테스트 세 개의 `requireBuilt` 다섯 줄이다. 현재 동작: `App`은 자기 page의 Vary를 쓰고, 테스트 session은 각 package의 module `fixed_session.py`와 `fixed-session.ts`이며, `contract_cases::json_file`이 JSON 파일을 읽고, `namespaceAt`이 namespace 이름을 읽고, 테스트는 `readFixture`와 `requireServers`를 부른다. 검증: `make duplication-check`.
 - `make language-check`가 통과하고 `make lint-ts`는 `packages/ts/tests/support.ts`의 해결되지 않는 `@polyspec/orm` import만 보고한다(H35.157). 입력: TypeScript source와 테스트에 대한 `make lint-ts`와 `make language-check`. 이전 동작: `packages/ts/tests/http.test.ts`가 async 함수 밖에서 await하여 `make language-check`의 parser가 멈췄고, `make lint-ts`가 쓰지 않는 interface `Environment`와 `STORE`, 지워진 core-rules wrapper 호출 세 개, content length 없는 `formStart` 호출, 안전하지 않은 type 단언, `any`와 `error` 값의 안전하지 않은 사용 약 90개를 보고했다. 현재 동작: callback은 async이고, 쓰지 않는 선언과 지워진 wrapper의 테스트는 없으며, `formStart`는 다른 runner처럼 null content length를 받고, reader 테스트는 `readTree`와 Sources 문서의 schema로 출력을 읽으며, shape 테스트의 spec은 완전하고, `node-core.test.mts`는 node rule이 부르지 않는 binding member를 나열한다. 기대: `support.ts`의 41줄은 orm 0.0.34가 선언되면 없어진다(H35.45-4). 변경된 script 테스트 세 개에 대한 `make language-check`와 `make hyper-test-scripts`로 검증했다.

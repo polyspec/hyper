@@ -7561,7 +7561,7 @@
             {
               "id": "files.sizes",
               "kind": "method",
-              "visibility": "public",
+              "visibility": "internal",
               "inputs": [],
               "output": "list<number>",
               "errors": [],
