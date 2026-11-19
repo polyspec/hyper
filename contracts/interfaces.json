@@ -390,7 +390,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-97.2"
               },
               "tests": [
                 "packages/php/tests/AppTest.php::AppTest::testAnErrorOfAroundAndAValueThatIsNoResponseEscape: Only PHP takes around as an argument of App::open (HY-97.1), so only App::handle of PHP lets the error of around and a return value that is no response leave the call; the test asserts the RuntimeException and the UnexpectedValueException at App::handle, which no case of a response states.",
@@ -448,7 +448,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-43.1"
               },
               "tests": [
                 "packages/php/tests/RunTest.php::RunTest::testRunCallsTheDisconnectHookWhenTheScriptEndsDuringTheAnswerOfAClosedConnection: Only a PHP script can end during the answer; the delivery holds the request and the reply before the answer runs, so the shutdown function calls the disconnect hook (HY-67.5)."
@@ -582,7 +582,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-60.14"
               }
             },
             {
@@ -1108,6 +1108,10 @@
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.refusedMedia",
                   "signature": "private refusedMedia(request: Request): Response | null"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._refused_media",
+                  "signature": "def _refused_media(self, request: Request) -> Optional[Response]"
                 }
               }
             },
@@ -1129,6 +1133,10 @@
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.readMediaType",
                   "signature": "private static readMediaType(request: Request): string | null"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._read_media_type",
+                  "signature": "def _read_media_type(request: Request) -> Optional[str]"
                 }
               }
             },
@@ -1146,7 +1154,7 @@
                 "languages": [
                   "php"
                 ],
-                "sentence": "HY-100.30"
+                "sentence": "HY-106.20"
               },
               "native": {
                 "php": {
@@ -1169,6 +1177,14 @@
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.opened",
                   "signature": "private static opened<S extends object>(options: AppOptions<S>): App<S>"
+                },
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::open",
+                  "signature": "public static function open(string $manifest, string $program, array $handlers, ...)"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App.open",
+                  "signature": "def open(manifest: str, program: str, handlers: dict, ...) -> App"
                 }
               }
             },
@@ -1182,10 +1198,21 @@
               "output": "function() -> sessionStore",
               "errors": [],
               "state": "Returns the session store of a request, opened by the transport only when a route uses it (HY-104.38).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-104.38"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.sessionOf",
                   "signature": "private static async sessionOf(store: SessionOpening): Promise<SessionStore>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::_session_of",
+                  "signature": "def _session_of(store: SessionOpening) -> SessionStore"
                 }
               }
             }
@@ -1498,6 +1525,13 @@
               "output": "value",
               "errors": [],
               "state": "Returns the error of hyper for an error of a library that hyper uses, by the class of the binding of hyper of the same role as the class of the error, with its message, kind, status and errno, and any other value as it is (HY-133.3).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-133.3"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.libraryError",
@@ -1996,16 +2030,18 @@
               "output": "core-rules",
               "errors": [],
               "state": "Takes the namespace of the functions of the binding and fails with the name of a function that the binding lacks (HY-133.2).",
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-133.2"
-              },
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::__construct",
                   "signature": "public function __construct(string $namespace)"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.__init__",
+                  "signature": "def __init__(self, core: Any) -> None"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::coreRules",
+                  "signature": "export function coreRules(module: object): CoreRules"
                 }
               }
             },
@@ -2076,6 +2112,10 @@
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.acceptParse",
                   "signature": "acceptParse(value: string | null): readonly AcceptRange[]"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.accept_parse",
+                  "signature": "def accept_parse(self, value: Optional[str]) -> list[Any]"
                 }
               }
             },
@@ -2163,61 +2203,6 @@
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.typeError",
                   "signature": "typeError(message: string, kind: string): HyperError & TypeError"
-                }
-              }
-            },
-            {
-              "id": "core-rules.appRoute",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "corePages",
-                "boolean",
-                "front"
-              ],
-              "output": "route",
-              "errors": [],
-              "state": "Gives the route of a request as the application selects it (HY-62.16).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appRoute",
-                  "signature": "appRoute(pages: CorePages, chosen: boolean, front: Front): Route"
-                }
-              }
-            },
-            {
-              "id": "core-rules.appPlain",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "plain"
-              ],
-              "output": "plainResponse",
-              "errors": [],
-              "state": "Gives a plain answer of the core as the parts of a response (HY-58).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appPlain",
-                  "signature": "appPlain(answer: Plain): PlainResponse"
-                }
-              }
-            },
-            {
-              "id": "core-rules.appStoreKept",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "corePages",
-                "coreStore",
-                "keepRequest"
-              ],
-              "output": "plainResponse",
-              "errors": [],
-              "state": "Answers a request to the kept endpoint after its route (HY-40.1).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appStoreKept",
-                  "signature": "appStoreKept(pages: CorePages, store: CoreStore, request: KeepRequest): PlainResponse"
                 }
               }
             },
@@ -2327,6 +2312,12 @@
               "output": "string",
               "errors": [],
               "state": "Gives the build id of the files that one build writes (HY-125.15 to HY-125.17).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-125.15"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildId",
@@ -2344,6 +2335,12 @@
               "output": "list<string>",
               "errors": [],
               "state": "Gives the paths that the build id hashes, in the order in which it hashes them (HY-125.3).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-125.3"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildPaths",
@@ -2361,6 +2358,12 @@
               "output": "string",
               "errors": [],
               "state": "Gives the hexadecimal text of the bytes that the build id hashes (HY-125.3).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-125.3"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildStream",
@@ -2381,6 +2384,12 @@
               "output": "string",
               "errors": [],
               "state": "Gives the text of the static shell (HYC-16.23).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HYC-16.23"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildShellFile",
@@ -2398,6 +2407,12 @@
               "output": "string",
               "errors": [],
               "state": "Gives the text of build.json with the build id (HY-125.23).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-125.23"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildFileText",
@@ -2433,6 +2448,12 @@
               "output": "function(value) -> boolean",
               "errors": [],
               "state": "Tells whether a module has every member of the binding of the core (HY-133.2).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-133.2"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::isBinding",
@@ -2450,6 +2471,12 @@
               "output": "coreRules",
               "errors": [],
               "state": "Returns the rules of the core under the names of the units of the server; a module that lacks a member fails with its name (HY-133.2).",
+              "only": {
+                "languages": [
+                  "node"
+                ],
+                "sentence": "HY-133.2"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::coreRules",
@@ -9645,18 +9672,8 @@
                 }
               },
               "reachDiffers": [
-                {
-                  "member": "core-rules.jsonCodecDecode",
-                  "reached": "node",
-                  "notReached": "php",
-                  "sentence": "HY-104.47"
-                },
-                {
-                  "member": "core-rules.jsonCodecDecode",
-                  "reached": "node",
-                  "notReached": "python",
-                  "sentence": "HY-104.47"
-                }
+                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "php", "sentence": "HY-104.47" },
+                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "python", "sentence": "HY-104.47" }
               ]
             },
             {
@@ -11045,12 +11062,7 @@
                 }
               },
               "reachDiffers": [
-                {
-                  "member": "core-rules.libraryError",
-                  "reached": "python",
-                  "notReached": "node",
-                  "sentence": "HY-104.46"
-                }
+                { "member": "core-rules.libraryError", "reached": "python", "notReached": "node", "sentence": "HY-104.46" }
               ]
             },
             {
@@ -11332,12 +11344,7 @@
                 "sentence": "HY-133.3"
               },
               "reachDiffers": [
-                {
-                  "member": "file-session.converted",
-                  "reached": "python",
-                  "notReached": "node",
-                  "sentence": "HY-133.3"
-                }
+                { "member": "file-session.converted", "reached": "python", "notReached": "node", "sentence": "HY-133.3" }
               ]
             }
           ],
@@ -12011,6 +12018,10 @@
               "errors": [],
               "state": "Returns the entries of a map of the data model, or none for another value.",
               "native": {
+                "php": {
+                  "symbol": "packages/php/src/Data/Kept.php::Polyspec\\Hyper\\Kept::mapEntries",
+                  "signature": "private static function mapEntries(mixed $value): ?array"
+                },
                 "node": {
                   "symbol": "packages/ts/src/data/kept.ts::Kept.mapEntries",
                   "signature": "private static mapEntries(value: Value): MapValue | null"
@@ -12019,13 +12030,6 @@
                   "symbol": "packages/python/src/polyspec/hyper/data/_kept.py::Kept._map_entries",
                   "signature": "def _map_entries(value: object) -> Optional[dict]"
                 }
-              },
-              "only": {
-                "languages": [
-                  "node",
-                  "python"
-                ],
-                "sentence": "HY-54.20"
               }
             },
             {
