@@ -234,7 +234,6 @@ export interface CoreBinding {
   sessionName(https: boolean): string;
   keepName(https: boolean): string;
   sessionCookie(identifier: string, https: boolean): string;
-  pageTag(body: string, maskedToken: string, token: string): string;
   representationTag(contentType: string, body: Uint8Array): string;
   mediaType(contentType: string): string;
   pageStatus(status: number): number;
@@ -291,7 +290,7 @@ interface HyperError extends Error {
 // The names of the members of `CoreBinding`, which `coreRules` requires of the module that it receives.
 const MEMBERS: readonly (keyof CoreBinding)[] = [
   'csrfMask', 'csrfVerify', 'browser', 'storedToken', 'isApplicationPath', 'redirectLocation', 'cacheControl', 'keepsOutOfSharedCaches',
-  'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'pageTag', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
+  'referrerPolicy', 'sessionName', 'keepName', 'sessionCookie', 'representationTag', 'mediaType', 'pageStatus', 'replyStatus', 'pageVary',
   'contextHash', 'currentPath', 'checkShellPath', 'shellText', 'buildId', 'buildPaths', 'buildStream', 'shellFile', 'checkBuildId', 'buildFileText', 'readBuild', 'templateProblems',
   'routeReads', 'templateReads', 'reservedDataTemplate', 'validContextHeader', 'checkFunctionEntry', 'routeRequest', 'computePageHeaders', 'frameHeaders',
   'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'readHeldBody', 'parseUrlencoded', 'FormFile', 'RequestBody', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
