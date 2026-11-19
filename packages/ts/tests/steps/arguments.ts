@@ -475,6 +475,8 @@ const setting = { kind: 'server', url: 'redis://127.0.0.1:1', authorities: null 
 async function receiverOf(unit: string): Promise<unknown> {
   switch (unit) {
     case 'app':
+    // The host functions take the application as their first argument, which the case gives as the receiver (HY-106.20).
+    case 'http-host':
       return new Fixture().app();
     case 'media-type':
       return new MediaType(new Map(), 'application/json');
