@@ -1,23 +1,17 @@
 // The requests of the cases of contracts/file-sessions.json (HY-104): each
 // step of a case opens the store of one request, applies its calls and closes it.
-import type { SessionStore } from '../../src/session/session-store.js';
+import type { FileSession } from '../../src/session/file-session.js';
 import { parsed } from '../case-rules.js';
 import { textOf } from '../inputs.js';
 
 // A call of a case: a method and the decoded values of its arguments.
 type Call = [string, unknown[]];
 
-// The store of one request of a store of files or of Redis: a session store that the request closes, and the identifier
-// that it created.
-interface RequestStore extends SessionStore {
-  close(): Promise<void>;
-  created(): string | null;
-}
-
 // What a case file gives the requests of its cases.
 interface Host {
-  // Opens the store of a request with the value of its session cookie.
-  open(cookie: string | null): Promise<RequestStore>;
+  // Opens the store of a request with the value of its session cookie: the record session of the library, of files or of
+  // Redis, which the request closes and which gives the identifier that it created.
+  open(cookie: string | null): Promise<FileSession>;
   // Returns the name that the case file gives the class of a failure, or null for a class that it does not name.
   failure(error: unknown): string | null;
   // Runs a call that is no method of the store, with the identifiers that the steps created so far, and returns its
@@ -66,7 +60,7 @@ function cookieOf(value: unknown, made: readonly (string | null)[]): string | nu
 }
 
 // Applies one call to the store of a request and returns its entry of `results`, or undefined for a call without one.
-function applied(store: RequestStore,[method, args]: Call, host: Host, made: readonly (string | null)[]): unknown {
+function applied(store: FileSession,[method, args]: Call, host: Host, made: readonly (string | null)[]): unknown {
   switch (method) {
     case 'get': {
       // The value that the store read, null for no value (HY-104.13, HY-115.4).
@@ -115,7 +109,7 @@ export async function requests(steps: unknown, host: Host): Promise<Outcome> {
       if (!failed) outcome.message = error instanceof Error ? error.message : String(error);
       failed = true;
     };
-    let store: RequestStore | null = null;
+    let store: FileSession | null = null;
     try {
       store = await host.open(cookie);
     } catch (error) {

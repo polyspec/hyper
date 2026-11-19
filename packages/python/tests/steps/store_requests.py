@@ -4,7 +4,7 @@
 import re
 from collections.abc import Callable
 
-from polyspec.hyper.session._record_session import RecordSession
+from polyspec.hyper.session._file_session import FileSession
 
 from .recorded import decoded
 
@@ -44,7 +44,7 @@ class StoreRequests:
         results: list = []
         failure: list | None = None
         try:
-            store: RecordSession = self._opener(cookie)
+            store: FileSession = self._opener(cookie)
         except Exception as error:  # noqa: BLE001 - the classes of the case decide what the failure is
             self._record(results, None, self._failed("open", error), None)
             return

@@ -16,19 +16,6 @@ T = TypeVar("T")
 _LIBRARY_PREFIX = "SessionStore"
 
 
-def converted(call: Callable[[], T]) -> T:
-    """Runs a call of the session-store library. A failure of the library is raised as the error of hyper of the same
-    role, with its kind, status and message (HY-133.3); any other failure is raised as it is."""
-    try:
-        return call()
-    # Every failure is converted or raised again.
-    except Exception as error:
-        own = core_rules().library_error(library, _LIBRARY_PREFIX, error)
-        if own is error:
-            raise
-        raise own from error
-
-
 class FileSession(SessionStore):
     """The session store of one request (HY-24, HY-45, HY-72)."""
 
@@ -37,29 +24,42 @@ class FileSession(SessionStore):
         # The identifier that the close wrote for a new session, which the response sets as the session cookie.
         self._made: Optional[str] = None
 
+    @staticmethod
+    def converted(call: Callable[[], T]) -> T:
+        """Runs a call of the session-store library. A failure of the library is raised as the error of hyper of the same
+        role, with its kind, status and message (HY-133.3); any other failure is raised as it is."""
+        try:
+            return call()
+        # Every failure is converted or raised again.
+        except Exception as error:
+            own = core_rules().library_error(library, _LIBRARY_PREFIX, error)
+            if own is error:
+                raise
+            raise own from error
+
     def get(self, key: str) -> object:
         """Returns the value of a key as a value of the data model (HY-104.13), or None for a key that holds no
         value."""
-        record = converted(lambda: self._session.get(key))
+        record = FileSession.converted(lambda: self._session.get(key))
         return None if record is None else core_rules().session_value(record)
 
     def set(self, key: str, item: object) -> None:
         """Stores a value of the data model as the PHP value of the record (HY-104.14)."""
         record = core_rules().session_record(item)
-        converted(lambda: self._session.set(key, record))
+        FileSession.converted(lambda: self._session.set(key, record))
 
     def remove(self, key: str) -> None:
-        converted(lambda: self._session.remove(key))
+        FileSession.converted(lambda: self._session.remove(key))
 
     def renew(self) -> None:
         """Gives the values a new identifier, which the response sets as the session cookie; closing deletes the old
         session (HY-72)."""
-        converted(self._session.renew)
+        FileSession.converted(self._session.renew)
 
     def close(self) -> None:
         """Writes the values that the request changed, releases the lock of the session and its turn, and keeps the
         identifier that the store wrote for a new session."""
-        self._made = converted(self._session.close)
+        self._made = FileSession.converted(self._session.close)
 
     def created(self) -> Optional[str]:
         """Returns the identifier that this request created, which the response sets as the session cookie, or None.

@@ -7,27 +7,6 @@ import type { SessionStore } from './session-store.js';
 // The prefix of the names of the category classes of the session-store package, such as `SessionStoreStoreError`.
 const LIBRARY_PREFIX = 'SessionStore';
 
-// Runs a call of the session-store library that returns at once. A failure of the library is thrown as the error of
-// hyper of the same role, with its kind, status and message (HY-133.3); any other failure is thrown as it is.
-/** @internal */
-export function converted<T>(call: () => T): T {
-  try {
-    return call();
-  } catch (error) {
-    throw rules().libraryError(library, LIBRARY_PREFIX, error);
-  }
-}
-
-// Runs a call of the session-store library that waits, and throws its failure as `converted` does.
-/** @internal */
-export async function awaited<T>(call: () => Promise<T>): Promise<T> {
-  try {
-    return await call();
-  } catch (error) {
-    throw rules().libraryError(library, LIBRARY_PREFIX, error);
-  }
-}
-
 /** @internal */
 export class FileSession implements SessionStore {
   private readonly session: library.FileSession | library.RedisSession;
@@ -39,23 +18,42 @@ export class FileSession implements SessionStore {
     this.made = null;
   }
 
+  // Runs a call of the session-store library that returns at once. A failure of the library is thrown as the error of
+  // hyper of the same role, with its kind, status and message (HY-133.3); any other failure is thrown as it is.
+  static converted<T>(call: () => T): T {
+    try {
+      return call();
+    } catch (error) {
+      throw rules().libraryError(library, LIBRARY_PREFIX, error);
+    }
+  }
+
+  // Runs a call of the session-store library that waits, and throws its failure as `converted` does.
+  static async awaited<T>(call: () => Promise<T>): Promise<T> {
+    try {
+      return await call();
+    } catch (error) {
+      throw rules().libraryError(library, LIBRARY_PREFIX, error);
+    }
+  }
+
   // Returns the value of a key as a value of the data model (HY-104.13), or null for a key that holds no value
   // (HY-104.37). The library gives one value for a key that holds none and for a key that holds the PHP value null.
   get(key: string): unknown {
-    const record = converted(() => this.session.get(key));
+    const record = FileSession.converted(() => this.session.get(key));
     return record === null ? null : rules().sessionValue(record);
   }
 
   // Stores a value of the data model as the PHP value of the record (HY-104.14).
   set(key: string, item: unknown): void {
     const record = rules().sessionRecord(item);
-    converted(() => {
+    FileSession.converted(() => {
       this.session.set(key, record);
     });
   }
 
   remove(key: string): void {
-    converted(() => {
+    FileSession.converted(() => {
       this.session.remove(key);
     });
   }
@@ -63,7 +61,7 @@ export class FileSession implements SessionStore {
   // Gives the values a new identifier, which the response sets as the session cookie; closing deletes the old session
   // (HY-72).
   renew(): void {
-    converted(() => {
+    FileSession.converted(() => {
       this.session.renew();
     });
   }
@@ -71,7 +69,7 @@ export class FileSession implements SessionStore {
   // Writes the values that the request changed, releases the lock of the session and its turn, and keeps the
   // identifier that the store wrote for a new session.
   async close(): Promise<void> {
-    this.made = await awaited(() => this.session.close());
+    this.made = await FileSession.awaited(() => this.session.close());
   }
 
   // Returns the identifier that this request created, which the response sets as the session cookie, or null. It is

@@ -66,15 +66,14 @@
           },
           "members": [
             "file-session.close",
+            "file-session.created",
+            "file-session.get",
+            "file-session.remove",
+            "file-session.renew",
+            "file-session.set",
             "file-sessions.collect",
             "file-sessions.constructor",
-            "file-sessions.open",
-            "record-session.close",
-            "record-session.created",
-            "record-session.get",
-            "record-session.remove",
-            "record-session.renew",
-            "record-session.set"
+            "file-sessions.open"
           ]
         }
       }
