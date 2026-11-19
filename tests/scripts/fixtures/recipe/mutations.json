@@ -186,7 +186,7 @@
     "id": "result-file-deleted",
     "file": "results/node.txt",
     "delete": true,
-    "code": "RESULT_MISSING"
+    "code": "RUNNER_NOT_RUN"
   },
   {
     "id": "result-line-missing",
@@ -533,7 +533,7 @@
     "id": "browser-result-deleted",
     "file": "results/browser.txt",
     "delete": true,
-    "code": "RESULT_MISSING"
+    "code": "RUNNER_NOT_RUN"
   },
   {
     "id": "protocol-statement-retired",
