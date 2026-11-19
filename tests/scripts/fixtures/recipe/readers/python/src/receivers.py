@@ -14,8 +14,15 @@ def either() -> None:
     """A function of the module whose name a variable of a method also has."""
 
 
+# A table of the module whose values make a class: a function that reads the table reaches what the table makes.
+MAKERS: dict[str, object] = {"widget": lambda: Widget()}
+
+
 class Receivers:
     kept: Optional[Widget]
+
+    def tabled(self) -> None:
+        MAKERS["widget"]()
 
     def made(self) -> "Optional[Widget]":
         return self.kept

@@ -597,6 +597,17 @@ test('each reader writes the receiver of a name: an object, a class, the own cla
   }
 });
 
+test('the Python reader writes a scope for a table of the module and a use of the table where a method reads it', () => {
+  const out = readCopy('python', path.join(fixture, 'readers', 'python'), ['--sources', 'src', '--tests', 'tests']);
+  const file = READER_FILES.python.receivers;
+  const table = out.scopes.find((s) => s.file === file && s.name === 'MAKERS');
+  assert.ok(table !== undefined, `python has no scope MAKERS: ${out.scopes.map((s) => s.name).join(', ')}`);
+  assert.ok(table.uses.some((u) => JSON.stringify(u) === JSON.stringify({ kind: 'new', class: { file: READER_FILES.python.widget, name: 'Widget' } })), JSON.stringify(table.uses));
+  const tabled = out.scopes.find((s) => s.file === file && s.name === 'Receivers.tabled');
+  const read: Expr = { kind: 'member', of: { kind: 'module', file }, name: 'MAKERS', call: false };
+  assert.ok(tabled?.uses.some((u) => JSON.stringify(u) === JSON.stringify(read)), JSON.stringify(tabled?.uses));
+});
+
 const RECIPE_TREES: Record<Lang, string[]> = {
   php: ['--sources', 'packages/php/src', '--tests', 'packages/php/tests', '--registry', 'packages/php/tests/CaseSteps.php'],
   node: ['--sources', 'packages/ts/src', '--tests', 'packages/ts/tests', '--registry', 'packages/ts/tests/case-runner.test.mts'],
