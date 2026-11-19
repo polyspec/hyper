@@ -132,7 +132,7 @@ function createListener<S extends object>(app: App<S>, sessions: LibrarySessions
       // as one value; `requestOf` joins them (HY-42.15). The request as received exists before the public directory is
       // read, so that a failed stat of its file is an escaped error that the write hook receives with it (HY-60.14,
       // HY-60.17); a file that is served returns before the hooks (HY-100.7).
-      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, https });
+      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, rawHeaders: incoming.rawHeaders, https });
       const file = files === undefined ? null : publicFile(files, incoming, target);
       if (file !== null) {
         serveFile(outgoing, incoming, file);
@@ -161,7 +161,7 @@ function createListener<S extends object>(app: App<S>, sessions: LibrarySessions
       read = { core: body, failure: refused };
       const failure = refused ?? await readBody(incoming, body, app.bodyLimit);
       read = { core: body, failure };
-      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, body: body.held(), bodySize: failure === 'body_limit' ? Math.max(body.size(), app.bodyLimit + 1) : body.size(), https }, read);
+      request = requestOf({ method: incoming.method ?? 'GET', target, headers: incoming.headersDistinct, rawHeaders: incoming.rawHeaders, body: body.held(), bodySize: failure === 'body_limit' ? Math.max(body.size(), app.bodyLimit + 1) : body.size(), https }, read);
       holder = request;
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
       const last: { request?: Request; reply?: Reply } = {};
@@ -247,12 +247,12 @@ function withSessionCookie<S extends object>(app: App<S>, sessions: LibrarySessi
 }
 
 // Returns the request of the parts that node:http gives (HY-100): the method in upper case, the path and the raw query
-// of the request target, each header as one value, the lines of a name joined with `, ` (HY-42.15), and the cookies of
-// the one parse of the Cookie lines, which the host passes apart and in order (HY-129.14). `read` is the body as the
-// host read it.
+// of the request target, each header as one value, the lines of a name joined with `, ` and the Cookie lines with `; `
+// (HY-42.15), and the cookies of the one parse of the Cookie lines of `rawHeaders`, which the host passes apart and in
+// order (HY-129.14). `read` is the body as the host read it.
 /** @internal */
 export function requestOf(
-  parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean },
+  parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; rawHeaders?: readonly string[]; body?: Uint8Array; bodySize?: number; https?: boolean },
   read: BodyReader | null = null,
 ): Request {
   const headers: Record<string, string> = {};
@@ -260,8 +260,12 @@ export function requestOf(
   for (const [name, value] of Object.entries(parts.headers ?? {})) {
     if (value === undefined) continue;
     const key = name.toLowerCase();
-    headers[key] = Array.isArray(value) ? value.join(', ') : value;
-    if (key === 'cookie') lines.push(...(Array.isArray(value) ? value : [value]));
+    headers[key] = Array.isArray(value) ? value.join(key === 'cookie' ? '; ' : ', ') : value;
+  }
+  // rawHeaders holds each field line as a name followed by its value.
+  const raw = parts.rawHeaders ?? [];
+  for (let index = 0; index + 1 < raw.length; index += 2) {
+    if (raw[index]?.toLowerCase() === 'cookie') lines.push(raw[index + 1] ?? '');
   }
   return new Request({
     method: parts.method.toUpperCase(),

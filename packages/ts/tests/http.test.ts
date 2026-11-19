@@ -132,9 +132,10 @@ describe('server', () => {
 });
 
 // The field lines of a request (HY-42.15, HY-42.9, HY-42.13, HY-42.14): node:http gives the lines of a name apart in
-// headersDistinct, and the server reads them as one value joined with `, `.
+// headersDistinct, and the server reads them as one value joined with `, `, the Cookie lines joined with `; `; the
+// cookies are parsed from the Cookie lines of rawHeaders (HY-129.14).
 describe('the field lines of a request', () => {
-  const lines = 'Content-Type: application/x-www-form-urlencoded\r\nContent-Type: text/plain\r\nUser-Agent: a\r\nUser-Agent: b\r\n';
+  const lines = 'Content-Type: application/x-www-form-urlencoded\r\nContent-Type: text/plain\r\nUser-Agent: a\r\nUser-Agent: b\r\nCookie: a=1\r\nCookie: b=x,y\r\n';
   const post = Buffer.from(`POST /add HTTP/1.1\r\nHost: x\r\n${lines}Content-Length: 3\r\nConnection: close\r\n\r\na=1`);
 
   it('reads the lines of a name as one value joined with `, `, and the joined Content-Type as no media type (HY-42.15, HY-42.9, HY-42.14, HY-59.13)', async () => {
@@ -142,7 +143,7 @@ describe('the field lines of a request', () => {
     const app = await new Fixture().app();
     const listener = hostListener(app, await FileSessions.inDirectory({ directory }), {
       around: (request) => {
-        seen.push(request.header('Content-Type'), request.header('User-Agent'));
+        seen.push(request.header('Content-Type'), request.header('User-Agent'), request.header('Cookie'), request.cookie('a'), request.cookie('b'));
         // The read of the media type reads the joined value, which the core reads as no media type.
         try {
           seen.push(request.mediaType());
@@ -155,7 +156,7 @@ describe('the field lines of a request', () => {
     server = createHttpServer(listener);
     await listen(server);
     expect((await raw(post)).startsWith('HTTP/1.1 200 ')).toBe(true);
-    expect(seen).toEqual(['application/x-www-form-urlencoded, text/plain', 'a, b', 'malformed_content_type']);
+    expect(seen).toEqual(['application/x-www-form-urlencoded, text/plain', 'a, b', 'a=1; b=x,y', '1', 'x,y', 'malformed_content_type']);
   });
 
   it('answers an action with two Content-Type lines with 400, because the joined value is no media type (HY-42.14, HY-59.12)', async () => {

@@ -4815,9 +4815,9 @@
                 },
                 {
                   "id": "HY-42.15",
-                  "en": "A request field that arrives in several field lines is one header whose value is the values of its lines in their order joined with `, ` (RFC 9110, section 5.3), so no line is kept alone and none is dropped: `header(name)` and every read of the server, the media type of the body (HY-59.13), its declared length (HY-59.5) and its transfer coding included, read that one value in every server; the cookies are read from the `Cookie` lines themselves (HY-129.14).",
-                  "ko": "여러 field line으로 오는 요청 field는 header 하나이며, 그 값은 그 줄들의 값을 순서대로 `, `로 이은 것이다(RFC 9110, 5.3절). 그래서 어떤 줄도 홀로 남거나 버려지지 않는다: `header(name)`과, body의 media type(HY-59.13), 선언된 길이(HY-59.5), transfer coding을 포함한 서버의 모든 읽기는 모든 서버에서 그 값 하나를 읽는다. cookie는 `Cookie` 줄 자체에서 읽는다(HY-129.14).",
-                  "koSource": "9ef88b421c1f2c5c7dbb8b2e14ceef960681372b4e76ebaee3bececd6c5208ec"
+                  "en": "A request field that arrives in several field lines is one header whose value is the values of its lines in their order joined with `, ` (RFC 9110, section 5.3), and for `Cookie`, which is no list field, joined with `; ` (RFC 9113, section 8.2.3), so no line is kept alone and none is dropped: `header(name)` and every read of the server, the media type of the body (HY-59.13), its declared length (HY-59.5) and its transfer coding included, read that one value in every server; the cookie reader receives the `Cookie` lines themselves (HY-129.14).",
+                  "ko": "여러 field line으로 오는 요청 field는 header 하나이며, 그 값은 그 줄들의 값을 순서대로 `, `로 이은 것이고(RFC 9110, 5.3절) list field가 아닌 `Cookie`는 `; `로 이은 것이다(RFC 9113, 8.2.3절). 그래서 어떤 줄도 홀로 남거나 버려지지 않는다: `header(name)`과, body의 media type(HY-59.13), 선언된 길이(HY-59.5), transfer coding을 포함한 서버의 모든 읽기는 모든 서버에서 그 값 하나를 읽는다. cookie reader는 `Cookie` 줄 자체를 받는다(HY-129.14).",
+                  "koSource": "56669f6093caa64f96bd7b6c2c609e67d93d2ae086e45852b20ba39d2448628c"
                 },
                 {
                   "id": "HY-42.9",

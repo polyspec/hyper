@@ -265,11 +265,14 @@ def _cookie_lines(scope: dict) -> list[str]:
 
 
 def _scope_headers(scope: dict) -> dict[str, str]:
-    """Returns the request headers of the scope in lower case; a repeated header joins its values,
-    as HTTP reads it."""
+    """Returns the request headers of the scope in lower case; a repeated header joins its values
+    with `, `, and `cookie` with `; ` (HY-42.15)."""
     joined: dict[str, list[str]] = {}
     for key, value in scope.get("headers", []):
         joined.setdefault(key.decode("latin-1").lower(), []).append(
             value.decode("latin-1")
         )
-    return {name: ", ".join(values) for name, values in joined.items()}
+    return {
+        name: ("; " if name == "cookie" else ", ").join(values)
+        for name, values in joined.items()
+    }

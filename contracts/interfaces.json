@@ -3732,7 +3732,7 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the headers of the request with the lines of a name joined with `, ` (HY-42.15).",
+              "state": "Returns the headers of the request with the lines of a name joined with `, `, and the Cookie lines with `; ` (HY-42.15).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/server.py::_headers",
@@ -4388,7 +4388,7 @@
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the request headers of a scope with the headers of a name joined with `, ` (HY-42.15).",
+              "state": "Returns the request headers of a scope with the headers of a name joined with `, `, and the cookie headers with `; ` (HY-42.15).",
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/asgi.py::_scope_headers",
@@ -4767,7 +4767,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::requestOf",
-                  "signature": "export function requestOf( parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean }, read: BodyReader | null = null, ): Request"
+                  "signature": "export function requestOf( parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; rawHeaders?: readonly string[]; body?: Uint8Array; bodySize?: number; https?: boolean }, read: BodyReader | null = null, ): Request"
                 }
               },
               "tests": [

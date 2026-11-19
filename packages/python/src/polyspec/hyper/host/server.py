@@ -249,11 +249,15 @@ def _cookie_lines(headers) -> list[str]:
 
 
 def _headers(headers) -> dict[str, str]:
-    """Returns the request headers in lower case; a repeated header joins its values, as HTTP reads it."""
+    """Returns the request headers in lower case; a repeated header joins its values with `, `, and `cookie` with `; `
+    (HY-42.15)."""
     joined: dict[str, list[str]] = {}
     for name, value in headers.items():
         joined.setdefault(name.lower(), []).append(value)
-    return {name: ", ".join(values) for name, values in joined.items()}
+    return {
+        name: ("; " if name == "cookie" else ", ").join(values)
+        for name, values in joined.items()
+    }
 
 
 def _now_ns() -> int:
