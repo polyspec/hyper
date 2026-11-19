@@ -804,7 +804,11 @@
               ],
               "output": "response",
               "errors": [],
-              "state": "Answers a request of a route: the action of a POST with its checks, the renewal, the redirect or the page (HY-25.1, HY-72.2, HY-107.9).",
+              "state": "Answers a request of a route: the action of a POST with its checks, the renewal, the redirect or the page (HY-25.1, HY-72.2, HY-104.38, HY-107.9).",
+              "tests": [
+                "packages/ts/tests/session-routes.test.ts::a request of a route without a session answers while the session is held (HY-104.38): HY-104.38 (a route with session false opens no session)",
+                "packages/python/tests/test_session_routes.py::SessionRoutesTest.test_a_request_of_a_route_without_a_session_answers_while_the_session_is_held: HY-104.38 (a route with session false opens no session)"
+              ],
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::routed",
@@ -8858,7 +8862,10 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Returns the value stored under a key, or null.",
+              "state": "Returns the value stored under a key, or null (HY-104.37).",
+              "tests": [
+                "packages/ts/tests/session.test.ts::ArraySession > HY-104.37: returns null for a key that holds no value, also after its removal: HY-104.37 (a store returns null for a key that holds no value)"
+              ],
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Session/ArraySession.php::Polyspec\\Hyper\\ArraySession::get",
@@ -10719,7 +10726,10 @@
               ],
               "output": "value",
               "errors": [],
-              "state": "Returns the value of a key as a value of the data model (HY-104.13), or no value for a key that holds none.",
+              "state": "Returns the value of a key as a value of the data model (HY-104.13, HY-104.37), or no value for a key that holds none.",
+              "tests": [
+                "packages/ts/tests/sessions.test.ts::FileSessions > HY-104.37: returns null for a key that holds no value, also after its removal: HY-104.37 (a store returns null for a key that holds no value)"
+              ],
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-session.ts::FileSession.get",
