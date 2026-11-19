@@ -622,7 +622,8 @@ test('a passing run prints the three numbers of the fixture: the members stated 
 
 type Kind = 'constructor' | 'method' | 'static method';
 // A member with `phpSymbol` has that PHP symbol as written (a namespace function has no class); its Node code is unchanged.
-type Written = { unit: string; extends?: string; properties?: [string, string][]; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string; phpSymbol?: string }[] };
+type Written = { unit: string; extends?: string; properties?: [string, string][]; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string; phpSymbol?: string; reachDiffers?: ReachDiffer[] }[] };
+type ReachDiffer = { member: string; reached: 'php' | 'node'; notReached: 'php' | 'node'; sentence: string };
 const FILE: Record<'php' | 'node', (unit: string) => string> = { php: (u) => `src/${u.charAt(0).toUpperCase()}${u.slice(1)}.php`, node: (u) => `src/${u}.ts` };
 const NATIVE: Record<'php' | 'node', (unit: string, name: string) => string> = {
   php: (u, n) => `${FILE.php(u)}::Fx\\${u.charAt(0).toUpperCase()}${u.slice(1)}::${n === 'constructor' ? '__construct' : n}`,
@@ -651,6 +652,7 @@ function stated(
       errors: [],
       state: 'A member.',
       native: { php: { symbol: m.phpSymbol ?? NATIVE.php(w.unit, m.name), signature: '' }, node: { symbol: NATIVE.node(w.unit, m.name), signature: '' } },
+      ...(m.reachDiffers === undefined ? {} : { reachDiffers: m.reachDiffers }),
     })),
   }));
   const spec: Spec = {
@@ -729,6 +731,49 @@ test('an internal method that a PHP namespace function calls is reached by the f
       { unit: 'box', method: 'helper' },
     ];
   assert.deepEqual(stated(unit, ['box.run'], calls).findings, []);
+});
+
+/**
+ * A unit whose internal `error` is reached by `run` and `other` in PHP and by `other` in Node, and by `run` too when
+ * `nodeRunCalls` holds; `run` declares the reach difference `declaration` names, when it is given.
+ */
+function reachBox(declaration: ReachDiffer[] | undefined, nodeRunCalls: boolean): { units: Written[]; scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr }) => { unit: string; method: string; uses: Expr[] }[] } {
+  const units: Written[] = [{
+    unit: 'box',
+    members: [
+      { name: 'run', kind: 'method', visibility: 'public', ...(declaration === undefined ? {} : { reachDiffers: declaration }) },
+      { name: 'other', kind: 'method', visibility: 'public' },
+      { name: 'error', kind: 'method', visibility: 'internal' },
+    ],
+  }];
+  const scopes = (lang: 'php' | 'node', e: { cls: (unit: string) => Expr }): { unit: string; method: string; uses: Expr[] }[] => {
+    const call: Expr = { kind: 'member', of: e.cls('box'), name: 'error', call: true };
+    if (lang === 'php') return [{ unit: 'box', method: 'run', uses: [call] }, { unit: 'box', method: 'other', uses: [call] }];
+    return [
+      { unit: 'box', method: 'other', uses: [call] },
+      ...(nodeRunCalls ? [{ unit: 'box', method: 'run', uses: [call] }] : []),
+    ];
+  };
+  return { units, scopes };
+}
+
+test('a reach difference that the member declares passes the stated check (HY-104.46 for the declared pair)', () => {
+  const { units, scopes } = reachBox([{ member: 'box.error', reached: 'php', notReached: 'node', sentence: 'HY-104.46' }], false);
+  assert.deepEqual(stated(units, ['box.run', 'box.other'], scopes).findings, []);
+});
+
+test('a reach difference that no member declares fails the stated check with MEMBER_REACH_DIFFERS', () => {
+  const { units, scopes } = reachBox(undefined, false);
+  assert.deepEqual(stated(units, ['box.run', 'box.other'], scopes).findings, [
+    'MEMBER_REACH_DIFFERS internal member box.error is reached from box.run in php and not in node',
+  ]);
+});
+
+test('a declared reach difference that the check does not find fails with MEMBER_REACH_STALE', () => {
+  const { units, scopes } = reachBox([{ member: 'box.error', reached: 'php', notReached: 'node', sentence: 'HY-104.46' }], true);
+  assert.deepEqual(stated(units, ['box.run', 'box.other'], scopes).findings, [
+    'MEMBER_REACH_STALE box.run declares a reach difference of box.error in php and not in node, and the check finds none',
+  ]);
 });
 
 test('the variable of a loop over the list that a member returns has the class inside the list, and an output that names no unit gives none', () => {
