@@ -64,18 +64,10 @@ export interface PageInput {
   readonly heldHash?: string | null;
 }
 
-type Call =
-  | { readonly call: 'action' | 'context' | 'shared' | 'route_loader' | 'reply' }
-  | { readonly call: 'route_region_loader' | 'region_loader'; readonly region: string };
-
-type ActionOutcome =
-  | { readonly outcome: 'page'; readonly status: number; readonly data: ReadonlyMap<string, unknown> }
-  | { readonly outcome: 'revision_changed' | 'no_page' };
-
 /** @internal */
 export type PageStepInput =
   | { readonly input: 'start' | 'absent' | 'no_handler' }
-  | { readonly input: 'action'; readonly outcome: ActionOutcome; readonly csrf?: string | null }
+  | { readonly input: 'action'; readonly outcome: { readonly outcome: 'page'; readonly status: number; readonly data: ReadonlyMap<string, unknown> } | { readonly outcome: 'revision_changed' | 'no_page' }; readonly csrf?: string | null }
   | { readonly input: 'context'; readonly context: ReadonlyMap<string, unknown> }
   | { readonly input: 'shared'; readonly shared: ReadonlyMap<string, unknown> }
   | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, unknown> }
@@ -85,8 +77,6 @@ type Answer =
   | { readonly answer: 'document'; readonly status: number; readonly html: string }
   | { readonly answer: 'json'; readonly status: number; readonly text: string }
   | { readonly answer: 'no_page' };
-
-type Step = { readonly step: 'call'; readonly call: Call } | { readonly step: 'answer'; readonly answer: Answer };
 
 interface Front {
   readonly method: string;
@@ -124,12 +114,6 @@ interface PageResponse {
   readonly referrerPolicy?: string | null;
 }
 
-interface PageHeaders {
-  readonly status: number;
-  readonly headers: Iterable<readonly [string, string]>;
-  readonly body: boolean;
-}
-
 interface Opening {
   readonly route: string;
   readonly params: Iterable<readonly [string, string]>;
@@ -156,19 +140,12 @@ interface KeepRequest {
   readonly formCsrf?: string | null;
 }
 
-// The environment of a render, which a function of a template receives as its second argument (HYC-24.10): the time
-// zone of the server and the `now` of the response in seconds since the Unix epoch.
-interface Environment {
-  readonly timezone: string;
-  readonly now: number;
-}
-
 // A function of the templates as the binding calls it (HYC-24.10): the list of its arguments and the environment.
-export type HostFunction = (args: readonly unknown[], environment: Environment) => unknown;
+export type HostFunction = (args: readonly unknown[], environment: { readonly timezone: string; readonly now: number }) => unknown;
 type CoreHostFunction = HostFunction;
 
 interface CorePageRequest {
-  next(input: PageStepInput): Step;
+  next(input: PageStepInput): { readonly step: 'call'; readonly call: { readonly call: 'action' | 'context' | 'shared' | 'route_loader' | 'reply' } | { readonly call: 'route_region_loader' | 'region_loader'; readonly region: string } } | { readonly step: 'answer'; readonly answer: Answer };
 }
 
 // The title and the regions of a document, each rendered alone (HY-13.1 to HY-13.3).
@@ -235,7 +212,7 @@ export interface CoreBinding {
   acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];
   fileOver(sizes: Iterable<number>, limit: number): boolean;
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
-  computePageHeaders(response: PageResponse): PageHeaders;
+  computePageHeaders(response: PageResponse): { readonly status: number; readonly headers: Iterable<readonly [string, string]>; readonly body: boolean };
   frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];
   keptValue(pages: CorePages, region: string, path: string, text: string): unknown;
   openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;
@@ -303,13 +280,6 @@ interface PlainResponse {
   readonly status: number;
   readonly headers: Record<string, string>;
   readonly body: string;
-}
-
-// The headers of a page response as the server holds them, a record in the order of the core.
-interface PageHeaderParts {
-  readonly status: number;
-  readonly headers: Record<string, string>;
-  readonly body: boolean;
 }
 
 /** @internal */
@@ -421,7 +391,7 @@ export interface CoreRules {
   pageTag(body: string, maskedToken: string, token: string): string;
   // Partial. The headers of pageRespond: front_functions.compute_page_headers (HY-15.3, HY-52, HY-53, HY-65,
   // HY-103.5, HY-117.1). The server still writes the body and adds the cookies of the reply (HY-52.13).
-  pageHeaders(response: PageResponse): PageHeaderParts;
+  pageHeaders(response: PageResponse): { readonly status: number; readonly headers: Record<string, string>; readonly body: boolean };
   // Partial. The session of a page in appDispatch: opening_functions.open_page takes the flash data, reads the
   // token, checks the token of a POST and reads the kept values (HY-120.6, HY-24, HY-59.8, HY-40). The server still
   // draws the mask of the response (HY-24.3), reads the cookie `hy-keep` (HY-38.10) and the clock, and opens and
