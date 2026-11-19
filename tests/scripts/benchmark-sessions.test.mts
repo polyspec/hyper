@@ -1,12 +1,13 @@
 // The benchmark of the Redis sessions runs each server and reports what it counted (HY-115). Its PHP server loads the
-// json, the template and the hyper extension, as every PHP server of a run does (HY-48.23, HY-132.2).
+// json, the template, the session-store and the hyper extension, as every PHP server of a run does (HY-48.23, HY-48.25,
+// HY-132.2).
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { test } from 'node:test';
 import { promisify } from 'node:util';
 
 import { dryRun } from './make-dry-run.mts';
-import { phpServerExtensions, requireBuilt } from './requires.mts';
+import { NODE_ADDON, phpServerExtensions, requireBuilt } from './requires.mts';
 import { NAMES, ROOT } from './session-workers.mts';
 
 interface Result { server: string; processes: number; requests: number; requestsPerSecond: number }
@@ -14,6 +15,7 @@ interface Result { server: string; processes: number; requests: number; requests
 function requireInputs(): void {
   requireBuilt('hyper-install-redis', 'var/redis/redis-server', 'var/redis/redis.so');
   requireBuilt('packages', 'packages/ts/dist/index.js');
+  requireBuilt('node-addon', NODE_ADDON);
   requireBuilt('hyper-install-python', 'packages/python/.venv/bin/python');
   requireBuilt('hyper-install-php', 'vendor/autoload.php');
 }
@@ -50,5 +52,6 @@ test('make bench-sessions passes the PHP extensions of a server in their order t
   const words = (lines[0] ?? '').split(' ');
   const libraries = words.flatMap((word, index) => (word === '--extension' ? [words[index + 1] ?? ''] : []));
   // The linked template library is libpolyspec_template of a cargo build; the others are the libraries of PIE and of hyper-ext.
-  assert.deepEqual(libraries.map((file) => file.slice(file.lastIndexOf('/') + 1).replace(/^lib/, '').replace(/\..*$/, '')), ['polyspec_json', 'polyspec_template', 'polyspec_hyper']);
+  // PHP loads polyspec_session_store beside json and template, before polyspec_hyper (HY-48.25).
+  assert.deepEqual(libraries.map((file) => file.slice(file.lastIndexOf('/') + 1).replace(/^lib/, '').replace(/\..*$/, '')), ['polyspec_json', 'polyspec_template', 'polyspec_session_store', 'polyspec_hyper']);
 });

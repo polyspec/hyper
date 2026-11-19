@@ -501,9 +501,9 @@ else
 	$(call cases_selected,node) $(case_run_node)
 endif
 
-# PHP loads the json extension, then the template extension, then polyspec_hyper (HY-48.23, HY-133.2). Every PHP server
-# of a check, a test and the demo loads PHP_SERVER_EXTENSIONS: scripts take them as --extension arguments, and the tests
-# of hyper-test-scripts read them from HYPER_PHP_EXTENSIONS.
+# PHP loads the json extension, then the template extension, the session-store extension beside them (HY-48.25), then
+# polyspec_hyper (HY-48.23, HY-133.2). Every PHP server of a check, a test and the demo loads PHP_SERVER_EXTENSIONS:
+# scripts take them as --extension arguments, and the tests of hyper-test-scripts read them from HYPER_PHP_EXTENSIONS.
 PHP_SERVER_EXTENSIONS = $(PHP_EXTENSIONS) $(abspath $(HYPER_EXT))
 PHP_SERVER_ARGUMENTS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--extension $(library))
 PHPUNIT_EXTENSIONS = $(foreach library,$(PHP_SERVER_EXTENSIONS),--php-extension $(library))
@@ -910,7 +910,7 @@ bench-server: board ext hyper-ext ## Measure PHP request handling and rendering 
 bench-browser: board ext hyper-ext ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	$(NODE) benchmarks/browser.mts --runs 15 $(PHP_SERVER_ARGUMENTS)
 
-bench-sessions: packages ext hyper-ext ## Measure the requests per second of the three servers on one Redis server; the PHP server loads the json, the template and the hyper extension
+bench-sessions: packages ext hyper-ext ## Measure the requests per second of the three servers on one Redis server; the PHP server loads the json, the template, the session-store and the hyper extension
 	$(NODE) benchmarks/sessions.mts --requests 20000 $(PHP_SERVER_ARGUMENTS)
 
 bench-uploads: packages ext hyper-ext ## Measure the time, the processor time and the memory of an upload in the three servers and in the reader of PHP itself
