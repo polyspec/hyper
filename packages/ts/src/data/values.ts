@@ -1,5 +1,5 @@
 // Values of the template data model that loaders and actions give the server (HY-44, HY-54).
-import { DataModel } from './data-model.js';
+import { rules } from '../app/core-rules.js';
 
 // A value of the data model as the server holds it: null, a boolean, a number, a string, an array of values or a Map
 // of string keys to values.
@@ -15,7 +15,7 @@ export type Data = Record<string, unknown> | Map<string, unknown>;
 // Any other value fails, and the request fails with HY-43 (HY-44).
 /** @internal */
 export function toValue(input: unknown): Value {
-  return DataModel.check(input);
+  return rules().jsonCodecDecode(rules().jsonCodecEncode(input));
 }
 
 // Returns true for a value of the data model as the server stores it: null, a boolean, a number, a string, an array of
