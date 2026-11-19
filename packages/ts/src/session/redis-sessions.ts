@@ -10,12 +10,12 @@ import { ArgumentCountError } from '../app/argument-count-error.js';
 // password, authorities }`, whose store asks the Sentinels for the primary of `service` before each request that has a
 // session (HY-115.26), or `{ kind: 'cluster', urls, user, password, authorities }`, whose `user` and `password` are null where the URLs
 // give the credentials. `authorities` is the path of a PEM file whose
-// authorities alone verify the servers of TLS, or null for the trust store of the machine.
-export type RedisSetting = Setting;
+// authorities alone verify the servers of TLS, or null for the trust store of the machine. `Setting` is a type of
+// session-store, which an application takes from `@polyspec/session-store` (HY-106.23).
 
 export interface RedisSessionsOptions {
   // The addresses, TLS and the ACL user of the Redis server; the store keeps its own connections.
-  setting: RedisSetting;
+  setting: Setting;
   // Seconds until a lock expires, longer than any request; redis.session.lock_expire of phpredis. It has no default,
   // because no value is longer than every request of every application (HY-115.28).
   lockExpire: number;

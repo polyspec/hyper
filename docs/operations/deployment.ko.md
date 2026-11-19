@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: eb2d2e49e1ea5e3ac9c5d0d38648391a18de5c259bbc7c8e0a08f4549ae00464 -->
+<!-- source-sha256: b78f92c56a7830f742304b22a38dbe52b84d879129fd4f0ee9a43e252f26b7ab -->
 # 배포
 
 [English](deployment.md).
@@ -126,13 +126,16 @@ redis.session.lock_wait_time = 20000
 
 Persistent 연결은 PHP process가 살아 있는 동안 유지되고, phpredis 6.3.0은 scheme, host, port로 이를 재사용한다. 재사용할 때마다 AUTH를 다시 보내므로 잘못된 비밀번호는 실패하지만, TLS 인증서는 연결을 열 때만 검증한다. 따라서 바뀐 CA나 다른 stream 옵션은 새 연결에만 적용되므로, 이런 변경 뒤에는 php-fpm을 reload한다. Node나 Python 서버가 설정을 바꾸려고 재시작하는 것과 같다. 실행 중인 worker는 잘못된 CA를 알아채지 못하고, 새 연결을 열 때 실패가 드러난다. CA 변경은 reload 뒤에 확인한다.
 
-Node와 Python 서버는 `RedisSessions`에 session-store 라이브러리의 Redis store의 연결 설정과 같은 값을 준다. store는 자기 연결을 유지한다. 값은 기본값이 없는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이크로초다(Python은 `lock_expire`, `lock_retries`, `lock_wait`). 서버 하나의 설정은 그 URL이며, URL은 scheme `rediss`로 TLS를, user 정보로 ACL 사용자와 비밀번호를 나타낸다.
+Node와 Python 서버는 `RedisSessions`에 session-store 라이브러리의 Redis store의 연결 설정과 같은 값을 준다. store는 자기 연결을 유지한다. 값은 기본값이 없는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이크로초다(Python은 `lock_expire`, `lock_retries`, `lock_wait`). 서버 하나의 설정은 그 URL이며, URL은 scheme `rediss`로 TLS를, user 정보로 ACL 사용자와 비밀번호를 나타낸다. 설정은 session-store의 타입이므로 Node는 타입 `Setting`을 `@polyspec/session-store`에서 가져오고, Python은 `SettingServer`, `SettingSentinel`, `SettingCluster`를 `polyspec.session_store`에서 가져온다(HY-106.23).
 
 ```ts
 new RedisSessions({ setting: { kind: 'server', url: 'redis://redis:6379', authorities: null }, lockExpire: 30 });
 ```
 
 ```python
+from polyspec.hyper import RedisSessions
+from polyspec.session_store import SettingServer
+
 RedisSessions(SettingServer(url="redis://redis:6379", authorities=None), lock_expire=30)
 ```
 

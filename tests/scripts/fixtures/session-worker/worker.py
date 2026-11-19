@@ -11,13 +11,8 @@ import sys
 
 from urllib.parse import quote
 
-from polyspec.hyper import (
-    FileSessions,
-    RedisSessions,
-    SettingCluster,
-    SettingSentinel,
-    SettingServer,
-)
+from polyspec.hyper import FileSessions, RedisSessions
+from polyspec.session_store import SettingCluster, SettingSentinel, SettingServer
 
 
 def stores(directory):
