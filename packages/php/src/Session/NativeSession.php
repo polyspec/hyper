@@ -256,8 +256,27 @@ final class NativeSession implements SessionStore
         $this->start();
         // PHP keeps the identifier when the headers are sent, so the client would keep an identifier that the renewal
         // was to replace; the cookie of a new identifier cannot be sent then (HY-129).
-        if (headers_sent() || !session_regenerate_id(true)) {
+        if (headers_sent()) {
             throw new \RuntimeException('hyper: the session cookie could not be sent');
+        }
+        // A warning that PHP or the save handler raises while the identifier is replaced, such as a lock that the
+        // handler could not release, fails the request whatever error_reporting() keeps (HY-115.3): the request would
+        // otherwise go on with a session that was not moved.
+        $warning = null;
+        set_error_handler(static function (int $level, string $message) use (&$warning): bool {
+            $warning ??= $message;
+
+            return true;
+        });
+        try {
+            $renewed = session_regenerate_id(true);
+        } finally {
+            restore_error_handler();
+        }
+        if (!$renewed || $warning !== null) {
+            throw new \RuntimeException(
+                'hyper: the session could not be renewed' . ($warning === null ? '' : ": {$warning}"),
+            );
         }
         $this->issuedId = $this->identifier();
     }
