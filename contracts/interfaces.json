@@ -1512,31 +1512,6 @@
               }
             },
             {
-              "id": "core-rules.pageKeptCookie",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "map<map<value>>",
-              "errors": [],
-              "state": "Page.kept: rules.kept_cookie reads the cookie of the kept values to a map from each region to the map of its readable values by path; a cookie that is no JSON object, a region that holds no object and a value outside the data model give no value (HY-38.2, HY-38.11, HY-42).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::pageKeptCookie",
-                  "signature": "public function pageKeptCookie(string $text): mixed"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageKeptCookie",
-                  "signature": "pageKeptCookie(text: string): JsonValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.page_kept_cookie",
-                  "signature": "def page_kept_cookie(self, text: str) -> object"
-                }
-              }
-            },
-            {
               "id": "core-rules.sessionCookieName",
               "kind": "method",
               "visibility": "internal",
@@ -1714,31 +1689,6 @@
               }
             },
             {
-              "id": "core-rules.replyKeepsOutOfSharedCaches",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "boolean",
-              "errors": [],
-              "state": "rules.keeps_out_of_shared_caches (HY-52.6), which Reply.cache_control decided inside its check; the server reads it for no other rule.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::replyKeepsOutOfSharedCaches",
-                  "signature": "public function replyKeepsOutOfSharedCaches(string $value): bool"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.replyKeepsOutOfSharedCaches",
-                  "signature": "replyKeepsOutOfSharedCaches(value: string): boolean"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.reply_keeps_out_of_shared_caches",
-                  "signature": "def reply_keeps_out_of_shared_caches(self, value: str) -> bool"
-                }
-              }
-            },
-            {
               "id": "core-rules.resultRedirect",
               "kind": "method",
               "visibility": "internal",
@@ -1785,31 +1735,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.result_page",
                   "signature": "def result_page(self, status: int) -> int"
-                }
-              }
-            },
-            {
-              "id": "core-rules.resultIsApplicationPath",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "boolean",
-              "errors": [],
-              "state": "rules.is_application_path (HY-46), the test inside Result.redirect; the server has no caller of it besides the redirect.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::resultIsApplicationPath",
-                  "signature": "public function resultIsApplicationPath(string $location): bool"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.resultIsApplicationPath",
-                  "signature": "resultIsApplicationPath(location: string): boolean"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.result_is_application_path",
-                  "signature": "def result_is_application_path(self, location: str) -> bool"
                 }
               }
             },
@@ -1920,37 +1845,6 @@
               }
             },
             {
-              "id": "core-rules.appKeptValue",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "value",
-                "string",
-                "string",
-                "string"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "The value check of the kept endpoint: front_functions.kept_value (HY-40.1). The server still checks the token of the form (HY-24) and stores the value in the session.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::appKeptValue",
-                  "signature": "public function appKeptValue(object $pages, string $region, string $path, string $text): mixed"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appKeptValue",
-                  "signature": "appKeptValue(pages: CorePages, region: string, path: string, text: string): CoreValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_kept_value",
-                  "signature": "def app_kept_value(self, pages: Any, region: str, path: str, text: str) -> Any"
-                }
-              },
-              "tests": [
-                "packages/php/tests/CoreRulesTest.php::CoreRulesTest::testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields: Every server opens the rules of the core through one unit (HY-133.2); the kept value check gives the core the pages and the fields of the form (HY-40.1)."
-              ]
-            },
-            {
               "id": "core-rules.pageTag",
               "kind": "method",
               "visibility": "internal",
@@ -2049,31 +1943,6 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.build_read",
                   "signature": "def build_read(self, data: bytes) -> str"
-                }
-              }
-            },
-            {
-              "id": "core-rules.buildCheckId",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "rules.check_build_id (HY-125.19), for a caller that holds a build id as text.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::buildCheckId",
-                  "signature": "public function buildCheckId(string $text): void"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildCheckId",
-                  "signature": "buildCheckId(text: string): void"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.build_check_id",
-                  "signature": "def build_check_id(self, text: str) -> None"
                 }
               }
             }

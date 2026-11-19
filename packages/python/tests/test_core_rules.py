@@ -106,13 +106,6 @@ EXACT = [
         {"r": {}},
     ),
     (
-        "Page._kept (HY-38.11)",
-        "kept_cookie",
-        lambda rules: rules.page_kept_cookie("{}"),
-        ("{}",),
-        {"r": {}},
-    ),
-    (
         "RecordSession.cookie_name (HY-45.1)",
         "session_name",
         lambda rules: rules.session_cookie_name(True),
@@ -208,20 +201,6 @@ PARTIAL = [
         "__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax",
     ),
     (
-        "Reply.keeps_out_of_shared_caches (HY-52.6)",
-        "keeps_out_of_shared_caches",
-        lambda rules: rules.reply_keeps_out_of_shared_caches("private"),
-        ("private",),
-        True,
-    ),
-    (
-        "Result.is_application_path (HY-46)",
-        "is_application_path",
-        lambda rules: rules.result_is_application_path("//a"),
-        ("//a",),
-        False,
-    ),
-    (
         "App.check_shell_path (HY-62)",
         "check_shell_path",
         lambda rules: rules.app_check_shell_path("/srv/csr/index.html"),
@@ -234,13 +213,6 @@ PARTIAL = [
         lambda rules: rules.app_shell_text("/srv/csr/index.html", b"<html>"),
         ("/srv/csr/index.html", b"<html>"),
         "<html>",
-    ),
-    (
-        "App.kept_value (HY-40.1)",
-        "kept_value",
-        lambda rules: rules.app_kept_value(PAGES, "rows", "open", "true"),
-        (PAGES, "rows", "open", "true"),
-        True,
     ),
     (
         "Session.stored_token (HY-24.14)",
@@ -262,13 +234,6 @@ PARTIAL = [
         lambda rules: rules.build_read(b"{}"),
         (b"{}",),
         "1" * 64,
-    ),
-    (
-        "Build.check_id (HY-125.19)",
-        "check_build_id",
-        lambda rules: rules.build_check_id("1" * 64),
-        ("1" * 64,),
-        None,
     ),
 ]
 

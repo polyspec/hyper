@@ -47,7 +47,6 @@ final class CoreRulesTest extends TestCase
             'JsonCodec::encode (HY-54.18)' => ['jsonCodecEncode', [[1]], 'jsonWrite', '[1]'],
             'Session::takeFlash (HY-25.2)' => ['sessionFlashOf', [['values' => []]], 'flashOf', ['changed' => []]],
             'Session::kept (HY-104.22)' => ['sessionKeptOf', [['r' => []]], 'keptOf', ['r' => []]],
-            'Page::kept (HY-38.11)' => ['pageKeptCookie', ['{}'], 'keptCookie', ['r' => []]],
             'Program::pages (HYC-24.7)' => ['programFunctionEntry', ['shout', true], 'checkFunctionEntry', null],
             'the session cookie name (HY-45.1)' => ['sessionCookieName', [true], 'sessionName', '__Host-hy-session'],
             'RepresentationResponse::etag (HY-122.10)' => [
@@ -93,13 +92,6 @@ final class CoreRulesTest extends TestCase
                 'sessionCookie',
                 '__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax',
             ],
-            'Reply keeps out of shared caches (HY-52.6)' => [
-                'replyKeepsOutOfSharedCaches',
-                ['private'],
-                'keepsOutOfSharedCaches',
-                true,
-            ],
-            'Result is an application path (HY-46)' => ['resultIsApplicationPath', ['//a'], 'isApplicationPath', false],
             'the path of the static shell (HY-62)' => [
                 'appCheckShellPath',
                 ['/srv/csr/index.html'],
@@ -119,12 +111,6 @@ final class CoreRulesTest extends TestCase
                 ['{}'],
                 'readBuild',
                 '1111111111111111111111111111111111111111111111111111111111111111',
-            ],
-            'the form of a build id (HY-125.19)' => [
-                'buildCheckId',
-                ['1111111111111111111111111111111111111111111111111111111111111111'],
-                'checkBuildId',
-                null,
             ],
         ];
     }
@@ -146,16 +132,7 @@ final class CoreRulesTest extends TestCase
 
     public function testThereAreTwentyThreeExactUnits(): void
     {
-        self::assertCount(23, self::exactUnits());
-    }
-
-    public function testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields(): void
-    {
-        // HY-40.1
-        $pages = new \stdClass();
-        Calls::$results = ['keptValue' => true];
-        self::assertTrue((new CoreRules(self::STAND_IN))->appKeptValue($pages, 'rows', 'open', 'true'));
-        self::assertSame([['keptValue', [$pages, 'rows', 'open', 'true']]], Calls::$calls);
+        self::assertCount(22, self::exactUnits());
     }
 
     public function testTheAcceptParseGivesTheCoreOneFieldLineOrNoneForAMissingField(): void
