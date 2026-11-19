@@ -9740,7 +9740,7 @@
               "inputs": [],
               "output": "none",
               "errors": [],
-              "state": "Writes and closes the started session before the answer is sent, and fails the request with status 500 when the write fails (HY-115.23).",
+              "state": "Writes and closes the started session before the answer is sent; a write that fails, the first warning raised meanwhile whatever error_reporting keeps, or an error of the save handler fails the close with session-close-error, so the request answers status 500 (HY-115.23).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::close",

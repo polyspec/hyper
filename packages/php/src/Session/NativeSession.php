@@ -231,15 +231,19 @@ final class NativeSession implements SessionStore
         // PHP 8.4 returns true from session_write_close() when the write fails and only warns: the function returns
         // true after php_session_flush(), whose save of the state returns nothing (ext/session/session.c:2837-2838
         // and :1767-1773 of php-8.4.27). So a warning raised during the call, read here and not raised, fails the
-        // close as a return of false does; the handler covers that call alone, so no other warning counts.
+        // close as a return of false does; the handler covers that call alone, so no other warning counts. The first
+        // warning is kept, since it names the cause; an error that the save handler throws fails the close in the same
+        // way.
         $warning = null;
         set_error_handler(static function (int $level, string $message) use (&$warning): bool {
-            $warning = $message;
+            $warning ??= $message;
 
             return true;
         });
         try {
             $closed = session_write_close();
+        } catch (\Throwable $error) {
+            throw new SessionCloseError($error->getMessage(), 0, $error);
         } finally {
             restore_error_handler();
         }

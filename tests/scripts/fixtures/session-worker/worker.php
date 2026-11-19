@@ -67,11 +67,15 @@ if ($cluster !== false) {
     ini_set('session.save_path', $directory);
 }
 
-/** Runs one request with a session store; closing the PHP session ends the request. */
+/**
+ * Runs one request with a session store; the close of the session, which the server runs before it answers, ends the
+ * request, and a close that fails ends the process with the error (HY-115.23).
+ */
 $request = static function (callable $use) use ($identifier, $setup): mixed {
     $cookies = new Request('GET', '/', cookies: ['hy-session' => $identifier]);
-    $result = $use(new NativeSession(false, $cookies, 'hy-session', $setup));
-    session_write_close();
+    $store = new NativeSession(false, $cookies, 'hy-session', $setup);
+    $result = $use($store);
+    $store->close();
 
     return $result;
 };

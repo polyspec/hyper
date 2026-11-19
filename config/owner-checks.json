@@ -41,7 +41,7 @@
     {
       "paths": [
         "packages/php/{src,tests}/**",
-        "packages/php/{composer.json,phpstan-max.neon,phpunit.xml,pint.json}",
+        "packages/php/{composer.json,phpstan-max.neon,phpstan-session.stub,phpunit.xml,pint.json}",
         "composer.json",
         "composer.lock"
       ],

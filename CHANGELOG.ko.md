@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 357a4b6c48f4ab54600d46566e34f94f3653286e2689d55d48cfc33380db95c4 -->
+<!-- source-sha256: 1145b3281a4bb8f6fbc94f125cb7c8d00f186bc7fbccf427119cfa3ee3357136 -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `NativeSession::close`가 session을 쓰는 동안 PHP나 save handler가 낸 첫 경고와 save handler가 던진 오류에 대해 `SessionCloseError`로 실패하고, PHP session worker가 다시 `NativeSession::close`로 닫는다(H35.222, HY-115.23). 입력: 두 번 경고하거나 예외를 던지는 PHP session 요청의 쓰기와, lock을 잃은 `tests/scripts/session-shared-redis.test.mts`의 PHP 요청. 이전 동작: merge 6acf895b(H35.19)가 3630fec5의 작업을 버렸다. close는 마지막 경고를 보관하고 handler의 오류를 감싸지 않고 내보냈으며, worker는 `session_write_close()`로 닫아서 lock을 잃은 PHP 요청이 0으로 끝났고, 그 요청과 failover 기다림의 test는 assertion을 잃었다. 기대: 오류가 첫 경고를 적고 handler의 오류를 감싸며, PHP 요청이 Node와 Python처럼 실패하고, failover test가 끝난 process의 pid를 적는다. PHPStan 2.3.3은 parameter와 argument 없이 호출한 built-in 함수에 암묵적 throw point를 주지 않아 그 catch를 dead로 보고했으므로, `packages/php/phpstan-max.neon`이 load하는 `packages/php/phpstan-session.stub`가 `session_write_close`가 예외를 던진다고 선언한다.
 - `tests/scripts/hyper-ext.test.mts`가 `make hyper-test-php`가 `fault-test`를 가진 test용 extension을 `build/hyper-ext-test`에 build하고, 각 PHPUnit run에서 release extension이 아니라 `build/hyper-ext-test/polyspec_hyper.so`를 load하기를 기대한다(H35.221, H35.11-3, H35.25). 입력: `make hyper-test-php`의 dry run. 이전 동작: case가 session worker가 load하는 extension인 `build/hyper-ext/polyspec_hyper.so`를 기대해 27번째 줄에서 실패했는데, H35.11-3부터 recipe는 test용 extension을 load한다(`docs/operations/development.md:35`). 기대: `make hyper-test-scripts TESTS=tests/scripts/hyper-ext.test.mts`가 5개 가운데 5개를 통과한다.
 - 식별자를 바꾸는 동안 PHP나 save handler가 경고하면 `NativeSession::renew`가 `error_reporting`이 무엇을 유지하든 `hyper: the session could not be renewed: <warning>`으로 실패하고, session worker가 명령 `renew-warned`를 다시 가진다(H35.219, HY-115.3). 입력: worker가 `error_reporting`에서 `E_USER_WARNING`을 빼고 save handler가 `destroy`에서 경고하는 `tests/scripts/session-lost-lock.test.mts`. 이전 동작: merge 6acf895b가 `tests/scripts/fixtures/session-worker/worker.php`의 `renew-warned` 분기와 `renew`의 error handler를 버려서, 명령이 `write`로 넘어가 142번째 줄에서 `json_decode(): Argument #1 ($json) must be of type string, null given`로 끝났고, `session_regenerate_id` 동안의 경고는 요청을 계속 진행시켰다. 기대: renew가 예외를 던지고, worker가 `renewed` 줄을 출력하지 않으며, `session-lost-lock`의 두 case가 통과한다.
 - `packages/php/tests/RequestTest.php`는 전역 값에서 읽은 각 요청을 host처럼 `release`로 끝낸다(H35.220, HY-131.14, B-10). 입력: `make hyper-test-php PHP_TESTS=tests/RequestTest.php`. 이전 동작: 테스트가 `Request::fromGlobals`로 요청을 만들고 풀지 않았으므로 binding이 "RequestBody was destroyed without remove(), so its destructor released it (B-10)"를 4번 경고했고 실행이 rc 2로 끝났다. 기대: `tearDown`이 각 요청을 풀고, 경고가 없으며 파일이 통과한다.
