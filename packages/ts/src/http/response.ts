@@ -27,6 +27,15 @@ export class Response {
     return cookies.length === 0 ? this : new Response(this.status, { ...this.headers, 'Set-Cookie': cookies }, this.body);
   }
 
+  // Returns a copy whose first cookie is the session cookie, when the session sets one (HY-45.8, HY-97.3). The host
+  // writes it, so the session passes only the field value.
+  /** @internal */
+  withSessionCookie(field: string | null): Response {
+    if (field === null) return this;
+    const cookies = this.headers['Set-Cookie'];
+    return new Response(this.status, { ...this.headers, 'Set-Cookie': [field, ...(Array.isArray(cookies) ? cookies : [])] }, this.body);
+  }
+
   // Returns a plain text response.
   static text(status: number, body: string): Response {
     ArgumentCountError.between(arguments.length, 2, 2);

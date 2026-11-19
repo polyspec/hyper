@@ -228,20 +228,9 @@ def answer_with(
                 session.close()
         exchange.answered[:] = [(given, reply)]
         created = opened[0].created() if opened else None
-        if created is None:
-            return response
         # A new session sets its cookie first, as PHP does when the session starts (HY-45).
-        existing = response.headers.get("Set-Cookie", [])
-        return Response(
-            response.status,
-            {
-                **response.headers,
-                "Set-Cookie": [
-                    RecordSession.cookie_header(created, secure),
-                    *(existing if isinstance(existing, list) else []),
-                ],
-            },
-            response.body,
+        return response._with_session_cookie(
+            None if created is None else RecordSession.cookie_header(created, secure)
         )
 
     request = exchange.request

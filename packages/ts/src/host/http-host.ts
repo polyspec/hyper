@@ -241,10 +241,7 @@ function requestLine(packet: Buffer | undefined): Request | null {
 
 // Adds the cookie of a new session first, as PHP does when the session starts (HY-45).
 function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, response: Response, created: string | null, https: boolean): Response {
-  if (created === null) return response;
-  const cookie = RecordSession.cookieHeader(created, app.https || https);
-  const cookies = response.headers['Set-Cookie'];
-  return new Response(response.status, { ...response.headers, 'Set-Cookie': [cookie, ...(Array.isArray(cookies) ? cookies : [])] }, response.body);
+  return response.withSessionCookie(created === null ? null : RecordSession.cookieHeader(created, app.https || https));
 }
 
 // Returns the request of the parts that node:http gives (HY-100): the method in upper case, the path and the raw query
