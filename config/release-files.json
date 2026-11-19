@@ -4,14 +4,14 @@
   "releases": {
     "http-form": {
       "repository": "https://github.com/polyspec/http-form",
-      "tag": "v0.0.3",
+      "tag": "v0.0.4",
       "files": {
         "contracts/fields.json": {
-          "url": "https://github.com/polyspec/http-form/releases/download/v0.0.3/fields.json",
+          "url": "https://github.com/polyspec/http-form/releases/download/v0.0.4/fields.json",
           "sha256": "33ae74494eafb0b1bef992e7cfb27f6ab83338b064727553ce5d074400af5375"
         },
         "contracts/forms.json": {
-          "url": "https://github.com/polyspec/http-form/releases/download/v0.0.3/forms.json",
+          "url": "https://github.com/polyspec/http-form/releases/download/v0.0.4/forms.json",
           "sha256": "d0a9214bff65d0a2484feb3571e3b345f4dc5b563a373a4e59ae8d0cd912ae22"
         }
       }

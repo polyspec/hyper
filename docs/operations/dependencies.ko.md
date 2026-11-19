@@ -56,7 +56,7 @@ PHP 8.4의 기본 `request_parse_body()`도 검토했으나 채택하지 않았�
 
 ## release의 plain 파일 고정
 
-H35.11이 구현했고 아직 실행하지 않았다. `config/release-files.json`이 binding 0.0.21 위의 release인 http-form v0.0.3의 파일을 고정하고, `make hyper-install-release-files`가 그것을 설치하며, `tests/scripts/release-file-pins.test.mts`가 그 pin을 테스트하고, `contracts/interfaces.json`의 `caseFiles`가 `fields.json`과 `forms.json`을 `release: "http-form"`으로 선언하며, recipe check와 세 언어의 case reader가 그것을 설치된 파일로 찾는다. `tests/legacy/fields.json`은 지웠다.
+H35.11이 구현했고 아직 실행하지 않았다. `config/release-files.json`이 binding 0.0.22 위의 release인 http-form v0.0.4의 파일을 고정하고, `make hyper-install-release-files`가 그것을 설치하며, `tests/scripts/release-file-pins.test.mts`가 그 pin을 테스트하고, `contracts/interfaces.json`의 `caseFiles`가 `fields.json`과 `forms.json`을 `release: "http-form"`으로 선언하며, recipe check와 세 언어의 case reader가 그것을 설치된 파일로 찾는다. `tests/legacy/fields.json`은 지웠다.
 
 패키지 관리자는 패키지를 lock으로 고정한다. http-form의 case 파일 `fields.json`과 `forms.json`처럼 release가 asset으로 내는 plain 파일에는 패키지 관리자가 없으므로, 저장소가 release tag와 파일의 sha256으로 직접 고정한다(HR-80).
 

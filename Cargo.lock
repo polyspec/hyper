@@ -1065,17 +1065,6 @@ checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
 
 [[package]]
 name = "polyspec-binding-core"
-version = "0.0.21"
-source = "git+https://github.com/polyspec/binding.git?tag=v0.0.21#253ce88906757a7a74b46245538d1af943b03736"
-dependencies = [
- "indexmap",
- "libc",
- "serde_json",
- "tokio-util",
-]
-
-[[package]]
-name = "polyspec-binding-core"
 version = "0.0.22"
 source = "git+https://github.com/polyspec/binding.git?tag=v0.0.22#dfd23b7b3fbb3ff415e51a9c60487fe70bf77f2d"
 dependencies = [
@@ -1091,27 +1080,19 @@ name = "polyspec-http-cookie"
 version = "0.0.10"
 source = "git+https://github.com/polyspec/http-cookie.git?tag=v0.0.10#2588a09584a8eb09302cdd86b818522e32a7b217"
 dependencies = [
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
 ]
 
 [[package]]
 name = "polyspec-http-form"
-version = "0.0.3"
-source = "git+https://github.com/polyspec/http-form.git?tag=v0.0.3#07e2042e36e49bf8dd6c1facfe8c9f443de8b7a4"
+version = "0.0.4"
+source = "git+https://github.com/polyspec/http-form.git?tag=v0.0.4#df9c6b55e75527a3d7c85bdf6ab47a3394940210"
 dependencies = [
  "memchr",
- "polyspec-binding-core 0.0.21",
- "polyspec-http-media-type 0.0.9",
+ "polyspec-binding-core",
+ "polyspec-http-media-type",
  "rustix",
  "tempfile",
-]
-
-[[package]]
-name = "polyspec-http-media-type"
-version = "0.0.9"
-source = "git+https://github.com/polyspec/http-media-type.git?tag=v0.0.9#000722bb3f88e652983a1d3f170fafd40b00110e"
-dependencies = [
- "polyspec-binding-core 0.0.21",
 ]
 
 [[package]]
@@ -1119,7 +1100,7 @@ name = "polyspec-http-media-type"
 version = "0.0.10"
 source = "git+https://github.com/polyspec/http-media-type.git?tag=v0.0.10#c0121f48d396d1028996ad935281efdede59b4bb"
 dependencies = [
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
 ]
 
 [[package]]
@@ -1127,18 +1108,18 @@ name = "polyspec-http-negotiation"
 version = "0.0.7"
 source = "git+https://github.com/polyspec/http-negotiation.git?tag=v0.0.7#c96e6fdcb06160c2b6d1f0e6b8e81d1d956742eb"
 dependencies = [
- "polyspec-binding-core 0.0.22",
- "polyspec-http-media-type 0.0.10",
+ "polyspec-binding-core",
+ "polyspec-http-media-type",
 ]
 
 [[package]]
 name = "polyspec-hyper"
 version = "0.0.40"
 dependencies = [
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "polyspec-http-cookie",
  "polyspec-http-form",
- "polyspec-http-media-type 0.0.10",
+ "polyspec-http-media-type",
  "polyspec-http-negotiation",
  "polyspec-hyper",
  "polyspec-json",
@@ -1153,7 +1134,7 @@ dependencies = [
 name = "polyspec-hyper-go"
 version = "0.0.40"
 dependencies = [
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
@@ -1169,7 +1150,7 @@ dependencies = [
  "napi",
  "napi-build",
  "napi-derive",
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
@@ -1183,7 +1164,7 @@ name = "polyspec-hyper-php-ext"
 version = "0.0.40"
 dependencies = [
  "ext-php-rs",
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
@@ -1196,7 +1177,7 @@ dependencies = [
 name = "polyspec-hyper-python"
 version = "0.0.40"
 dependencies = [
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
@@ -1211,7 +1192,7 @@ name = "polyspec-hyper-wasm"
 version = "0.0.40"
 dependencies = [
  "js-sys",
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "polyspec-http-cookie",
  "polyspec-http-negotiation",
  "polyspec-hyper",
@@ -1226,7 +1207,7 @@ name = "polyspec-json"
 version = "0.0.40"
 source = "git+https://github.com/polyspec/json.git?tag=v0.0.40#de6016c4be5567902e7751909a2f97d081a501d7"
 dependencies = [
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "ryu-js",
  "serde",
  "serde_json",
@@ -1237,7 +1218,7 @@ name = "polyspec-php-serialization"
 version = "0.0.17"
 source = "git+https://github.com/polyspec/php-serialization.git?tag=v0.0.17#9356dfae31a7803ac48ed52b07083e8ead656157"
 dependencies = [
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "ryu",
 ]
 
@@ -1257,7 +1238,7 @@ version = "0.0.8"
 source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.8#4fd527d4b9291e063fbf0919a53454460de8da6a"
 dependencies = [
  "getrandom 0.3.4",
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "polyspec-php-serialization",
 ]
 
@@ -1266,7 +1247,7 @@ name = "polyspec-session-store-file"
 version = "0.0.8"
 source = "git+https://github.com/polyspec/session-store.git?tag=v0.0.8#4fd527d4b9291e063fbf0919a53454460de8da6a"
 dependencies = [
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "polyspec-php-serialization",
  "polyspec-session-store-core",
  "rustix",
@@ -1278,7 +1259,7 @@ version = "0.0.32"
 source = "git+https://github.com/polyspec/template.git?tag=v0.0.32#b48a81943a6db2389ee834c6bcab7094944c912e"
 dependencies = [
  "js-sys",
- "polyspec-binding-core 0.0.22",
+ "polyspec-binding-core",
  "polyspec-json",
  "winapi-util",
 ]
@@ -1700,7 +1681,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys",
