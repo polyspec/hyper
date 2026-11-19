@@ -5620,6 +5620,12 @@
                   "en": "The 400 and 431 responses of HY-60.7 call no write hook.",
                   "ko": "HY-60.7의 400과 431 response는 write hook을 호출하지 않는다.",
                   "koSource": "00d5b997309322aa2bbb9df73cc0d08475ade7007f97e742382a41058284c975"
+                },
+                {
+                  "id": "HY-99.17",
+                  "en": "A plain 500 of a session that cannot be written is an escaped error of HY-60.14: the write hook receives it once (HY-60.17) and no response hook does (HY-60.16), so the output of its request holds the write line and no response line.",
+                  "ko": "쓸 수 없는 session의 plain 500은 HY-60.14의 escape된 error다. write hook은 그것을 한 번 받고(HY-60.17), response hook은 받지 않으므로(HY-60.16), 그 요청의 출력은 write 줄을 가지며 response 줄은 없다.",
+                  "koSource": "07257d6122b65d6dfc8596ddd78b8f7c07d4aaa86af4356a06bdeb6238197b65"
                 }
               ]
             }
