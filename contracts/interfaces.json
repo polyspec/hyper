@@ -13575,7 +13575,8 @@
             "only": {
               "languages": [
                 "php",
-                "python"
+                "python",
+                "node"
               ],
               "sentence": "HY-48.1"
             }
@@ -13611,7 +13612,7 @@
             }
           },
           "renderer": {
-            "term": "renderer",
+            "term": "value",
             "only": {
               "languages": [
                 "php",
@@ -13647,12 +13648,48 @@
               "sentence": "HY-105.4"
             }
           },
-          "reads": "value",
-          "build": "string",
-          "timezone": "string",
+          "reads": {
+            "term": "value",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "build": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "timezone": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
           "https": "boolean",
           "context": "optional<contextHandler>",
-          "vary": "string"
+          "vary": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          }
         },
         "optional": []
       },
@@ -13700,7 +13737,8 @@
             "only": {
               "languages": [
                 "php",
-                "python"
+                "python",
+                "node"
               ],
               "sentence": "HY-48.1"
             }
