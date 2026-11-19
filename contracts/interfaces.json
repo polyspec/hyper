@@ -10943,31 +10943,6 @@
                   "signature": "def contains(value: object) -> bool"
                 }
               }
-            },
-            {
-              "id": "data-model.walk",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Fails at the first item of a value that is not a value of the data model.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::walk",
-                  "signature": "private static function walk(mixed $value): void"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/data/data-model.ts::DataModel.walk",
-                  "signature": "private static walk(value: Value): void"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_data_model.py::DataModel._walk",
-                  "signature": "def _walk(value: object) -> None"
-                }
-              }
             }
           ]
         },
