@@ -28,7 +28,6 @@ final class Page
      * @param ?\Closure $shared the shared handler, or null without one
      * @param array<string, \Closure> $regionLoaders the loaders of the regions that are no route regions
      * @param ?\Closure $context the context handler (HY-124), or null without one
-     * @param string $vary the Vary of a response with text/html or application/vnd.hyper+json (HY-117)
      */
     public function __construct(
         private readonly Manifest $manifest,
@@ -38,8 +37,13 @@ final class Page
         private readonly Container $container,
         private readonly bool $https,
         private readonly ?\Closure $context,
-        private readonly string $vary,
     ) {
+    }
+
+    /** Returns the Vary of a response with text/html or application/vnd.hyper+json, built per response (HY-117). */
+    private function varyHeader(): string
+    {
+        return CoreRules::shared()->appVaryHeader($this->context !== null);
     }
 
     /**
@@ -169,7 +173,7 @@ final class Page
         return new Response($status, [
             'Content-Type' => 'text/html; charset=utf-8',
             'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
-            'Vary' => $this->vary,
+            'Vary' => $this->varyHeader(),
             ...$reply->referrerPolicyHeaders(),
         ], $body);
     }
@@ -180,7 +184,7 @@ final class Page
         $headers = [
             'Content-Type' => self::DATA_TYPE,
             'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
-            'Vary' => $this->vary,
+            'Vary' => $this->varyHeader(),
             ...$reply->referrerPolicyHeaders(),
         ];
         if ($status !== 200) {
