@@ -187,19 +187,92 @@ final class BodyReader
      */
     public static function named(Form $form): array
     {
+        [$fields, $files] = self::shaped($form->fields, $form->files);
         $names = [];
         $values = [];
-        foreach ($form->fields as [$name, $items]) {
+        foreach ($fields as [$name, $items]) {
             $names[] = $name;
             $values[$name] = $items;
         }
         $fileNames = [];
-        $files = [];
-        foreach ($form->files as [$name, $items]) {
+        $uploads = [];
+        foreach ($files as [$name, $items]) {
             $fileNames[] = $name;
-            $files[$name] = array_map(static fn (object $file): UploadedFile => UploadedFile::ofCore($file), $items);
+            $uploads[$name] = array_map(static fn (FormFile $file): UploadedFile => UploadedFile::ofCore($file), $items);
         }
 
-        return [new Fields($names, $values), new Files($fileNames, $files)];
+        return [new Fields($names, $values), new Files($fileNames, $uploads)];
+    }
+
+    /**
+     * Returns the fields and the files of a form of the core in the shape of the contract, and fails with kind
+     * `internal` (HY-133.6) when they do not have it: the fields a list of pairs of a text and a list of texts, and the
+     * files a list of pairs of a text and a list of files of the core.
+     *
+     * The binding stub types `Form::$fields` and `Form::$files` as mixed, against packages/rust/interface.json:4705-4735,
+     * so this check holds the shape at the boundary; it is removed when hyper pins the binding release that carries
+     * binding row B2.558, which types them.
+     *
+     * @return array{0: list<array{0: string, 1: list<string>}>, 1: list<array{0: string, 1: list<FormFile>}>}
+     *
+     * @internal
+     */
+    public static function shaped(mixed $fields, mixed $files): array
+    {
+        $checkedFields = [];
+        foreach (self::pairs($fields, 'fields') as [$name, $items]) {
+            $texts = [];
+            foreach ($items as $item) {
+                if (!is_string($item)) {
+                    throw self::broken('fields');
+                }
+                $texts[] = $item;
+            }
+            $checkedFields[] = [$name, $texts];
+        }
+        $checkedFiles = [];
+        foreach (self::pairs($files, 'files') as [$name, $items]) {
+            $cores = [];
+            foreach ($items as $item) {
+                if (!$item instanceof FormFile) {
+                    throw self::broken('files');
+                }
+                $cores[] = $item;
+            }
+            $checkedFiles[] = [$name, $cores];
+        }
+
+        return [$checkedFields, $checkedFiles];
+    }
+
+    /**
+     * Returns the pairs of a name and a list of a member of a form of the core.
+     *
+     * @return list<array{0: string, 1: list<mixed>}>
+     */
+    private static function pairs(mixed $value, string $member): array
+    {
+        if (!is_array($value) || !array_is_list($value)) {
+            throw self::broken($member);
+        }
+        $pairs = [];
+        foreach ($value as $pair) {
+            if (!is_array($pair) || !array_is_list($pair) || count($pair) !== 2) {
+                throw self::broken($member);
+            }
+            [$name, $items] = $pair;
+            if (!is_string($name) || !is_array($items) || !array_is_list($items)) {
+                throw self::broken($member);
+            }
+            $pairs[] = [$name, $items];
+        }
+
+        return $pairs;
+    }
+
+    /** The error of kind `internal` (HY-133.6) for a member of a form of the core without the shape of the contract. */
+    private static function broken(string $member): HyperInternalError
+    {
+        return new HyperInternalError("the {$member} of a form of the core do not have the shape of the contract", 'internal');
     }
 }
