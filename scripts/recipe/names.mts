@@ -35,9 +35,11 @@ export function expectedDirectory(lang: Lang, group: string): string {
  * The base name HYR-4 gives the file of a unit, in the directory of its group: PascalCase for PHP, kebab for Node,
  * snake for Python with `_` when internal.
  */
-export function expectedFile(lang: Lang, id: string, internal: boolean): string {
+export function expectedFile(lang: Lang, id: string, internal: boolean, namespaceFunctions = false): string {
   const parts = id.split('-');
-  if (lang === 'php') return `${parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('')}.php`;
+  // HYR-4: a PHP file of namespace functions declares no class, so its name is camelCase and names no class of PSR-4.
+  const pascal = parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+  if (lang === 'php') return `${namespaceFunctions ? pascal.charAt(0).toLowerCase() + pascal.slice(1) : pascal}.php`;
   if (lang === 'node') return `${id}.ts`;
   return `${internal ? '_' : ''}${parts.join('_')}.py`;
 }
@@ -69,7 +71,7 @@ export function expectedNative(lang: Lang, member: Pick<Member, 'id' | 'kind' | 
 
 /** The last name of a native symbol: `Csrf.raw`, `Polyspec\Hyper\Csrf::raw` and `_csrf.py::Csrf.__init__` all give the member. */
 export function symbolName(symbol: string): string {
-  return symbol.split('::').pop()?.split('.').pop() ?? symbol;
+  return symbol.split('::').pop()?.split('.').pop()?.split('\\').pop() ?? symbol;
 }
 
 /** The field keys of a spec type that apply to a language, as words; quotes around a key do not count. */

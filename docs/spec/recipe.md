@@ -48,7 +48,9 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
 
   In every language a file holds exactly one unit.
   - A PHP `functions` unit is one class of static methods without a constructor, which extends no class and is not
-    abstract, because a class that extends another class or is abstract has instances.
+    abstract, because a class that extends another class or is abstract has instances. A PHP file that declares
+    functions in the namespace `Polyspec\Hyper` and no class, such as `src/Host/run.php` of the host function `run`
+    (HY-106.20), is also a `functions` unit, named by its file, whose members are those functions.
   - A Node `functions` unit is internal when each of its exported functions carries the JSDoc tag `@internal`.
   - A unit that only some languages have carries `only` (HYR-6).
   - Each class, interface and trait of a concern is its own unit, and so is each Python class, `Protocol` and
@@ -73,7 +75,9 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     - `representation` holds the representations of a route and the selection of one by the `Accept` header.
   - PHP: PascalCase, `src/<Group>/<Words>.php`, in the namespace `Polyspec\Hyper`. `autoload.psr-4` of
     `packages/php/composer.json` maps `Polyspec\Hyper\` to the list of the group directories that hold a PHP
-    unit, and the root `composer.json` maps the same directories.
+    unit, and the root `composer.json` maps the same directories. The file of a unit of namespace functions is
+    `src/<Group>/<words>.php` in camelCase, which `autoload.files` of both manifests loads, because PSR-4 maps a class
+    to its file and no function to one, and a PascalCase name would read as the file of a class.
   - Node: kebab-case, `src/<group>/<words>.ts`. The barrels are `src/index.ts` and the build entry `src/build.ts`.
   - Python: snake_case, in the package `polyspec/hyper/<group>/`.
     - `<words>.py` is the module of a unit that HY-106 makes public.
@@ -166,7 +170,9 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
       language. A field that only some languages have carries `only` (HYR-6), as a member does.
   - **Symbol.** The symbol is `<path>::<qualified name>`.
     - `<path>` is the repository-relative path of the file.
-    - The qualified name of a PHP member is `Polyspec\Hyper\<Unit>::<member>`.
+    - The qualified name of a PHP member is `Polyspec\Hyper\<Unit>::<member>` for a class member, and
+      `Polyspec\Hyper\<member>` for a namespace function, such as `Polyspec\Hyper\run`, the member `run.run` of HY-106.20;
+      the name of the member is the last name after the namespace.
     - In Node and Python it is `<Unit>.<member>` for a class member, and `<member>` for a module function.
     - A constructor is `__construct` in PHP, `constructor` in Node and `__init__` in Python.
     - The member `invoke` of a PHP class is its method `__invoke`, which makes its object callable.
