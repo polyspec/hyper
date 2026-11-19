@@ -137,9 +137,15 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     member), `unit` (the unit whose file holds it in each language), a neutral `shape` and, for each language that
     declares it, `native: {symbol, declaration}`.
     - The shape is `fields`, a map from neutral names to vocabulary terms with an `optional` list, for a record;
-      `function` with `inputs` and `output` for a function type; or a vocabulary term.
+      `function` with `inputs` and `output` for a function type; `union`, the list of the vocabulary terms of its
+      members, for a union type; or a vocabulary term.
+    - An object literal type is a record, `fields`. A union type or an object literal type is stated as what the code
+      declares, never as one term that stands for it: a term hides the members or the fields that a declaration changes,
+      so the check could not fail that change. A member of a union is a term of the vocabulary, and a type may name its
+      own id as a member, which states a recursive union.
     - The check fails a type that is missing, added, moved or of another visibility, and a declaration whose fields,
-      written by the names of HYR-5, differ from the shape.
+      written by the names of HYR-5, differ from the shape, and a union declaration whose members differ from the
+      `union` in number or in term.
     - An options record is the runtime form of named parameters (HY-106): its fields are the named `inputs` of the
       member that takes it, and the check fails when they differ from the named parameters of that member in another
       language. A field that only some languages have carries `only` (HYR-6), as a member does.

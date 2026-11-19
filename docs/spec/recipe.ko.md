@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 2aa93385e8ef412d755abcc35736a7fb29a9898407ea836d9c46205a33066779 -->
+<!-- source-sha256: e960009d489705f2c8b498b8417e6cfca5f6ebfe24c5e602f249b7ede2830b06 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -131,9 +131,12 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     spec은 각 type을 `types` 아래에 한 번 적으며, `id`(camelCase로 쓴 단어들), `visibility`(member와 같다), `unit`(각
     언어에서 그 type을 가진 파일의 unit), 중립 `shape`, 그리고 선언하는 언어마다 `native: {symbol, declaration}`을 가진다.
     - shape는 record이면 중립 이름에서 어휘 용어로 가는 map인 `fields`와 `optional` 목록, 함수 타입이면 `inputs`와
-      `output`을 가진 `function`, 또는 어휘 용어 하나다.
+      `output`을 가진 `function`, union type이면 멤버인 어휘 용어들의 목록 `union`, 또는 어휘 용어 하나다.
+    - object literal type은 record이므로 `fields`다. union type과 object literal type은 코드가 선언한 그대로 적으며, 한
+      용어가 그것을 대신하게 하지 않는다. 용어 하나는 선언이 바꾼 멤버나 필드를 가리므로 check가 그 변경을 실패시킬 수
+      없기 때문이다. union의 멤버는 어휘의 용어이며, type은 자기 id를 멤버로 적을 수 있어 재귀 union을 나타낸다.
     - check는 빠졌거나, 추가되었거나, 옮겨졌거나, visibility가 다른 type을 실패시키며, HYR-5의 이름으로 쓴 필드가 shape와
-      다른 선언을 실패시킨다.
+      다른 선언을 실패시킨다. 또한 union 선언의 멤버가 `union`과 개수나 용어가 다르면 실패시킨다.
     - options record는 이름 붙은 parameter의 runtime 형식이다(HY-106). 그 필드는 그것을 받는 member의 이름 붙은
       `inputs`이며, 다른 언어에서 같은 member의 이름 붙은 parameter와 다르면 check가 실패시킨다. 일부 언어에만 있는
       필드는 member처럼 `only`를 가진다(HYR-6).
