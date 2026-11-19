@@ -6374,31 +6374,6 @@
               }
             },
             {
-              "id": "result.hasDotSegment",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "string"
-              ],
-              "output": "boolean",
-              "errors": [],
-              "state": "Returns true when the path of a location has a segment `.` or `..`, also with a percent-encoded dot.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Result/Result.php::Polyspec\\Hyper\\Result::hasDotSegment",
-                  "signature": "private static function hasDotSegment(string $location): bool"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/result/result.ts::Result.hasDotSegment",
-                  "signature": "private static hasDotSegment(location: string): boolean"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/result/result.py::Result._has_dot_segment",
-                  "signature": "def _has_dot_segment(location: str) -> bool"
-                }
-              }
-            },
-            {
               "id": "result.location",
               "kind": "property",
               "visibility": "public",
