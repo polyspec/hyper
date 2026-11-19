@@ -12751,6 +12751,77 @@
                   "signature": "def _decoded_cookie(text: Optional[str]) -> object"
                 }
               }
+            },
+            {
+              "id": "page.varyHeader",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the Vary of the page responses of the application (HY-117.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::varyHeader",
+                  "signature": "private function varyHeader(): string"
+                }
+              }
+            },
+            {
+              "id": "page.json",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request",
+                "session",
+                "reply",
+                "number",
+                "string"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Answers the JSON text of a page with its headers, its tag and the 304 of a matching tag (HY-53).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::json",
+                  "signature": "private function json(Request $request, Session $session, Reply $reply, int $status, string $body): Response"
+                }
+              }
+            },
+            {
+              "id": "page.map",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "string"
+              ],
+              "output": "map<value>",
+              "errors": [],
+              "state": "Returns the map that a context handler, the shared handler or a loader returned, and fails for another value (HY-44.4).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::map",
+                  "signature": "private static function map(mixed $value, string $source): array"
+                }
+              }
+            },
+            {
+              "id": "page.utf8",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the text, the empty text for bytes that are not UTF-8, or null for an absent value (HY-42).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::utf8",
+                  "signature": "private static function utf8(?string $text): ?string"
+                }
+              }
             }
           ]
         }
