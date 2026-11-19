@@ -442,13 +442,15 @@
                 "php": {
                   "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::respondWith",
                   "signature": "private function respondWith(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\SessionStore $store, int|float $started, Polyspec\\Hyper\\Reply $reply): Polyspec\\Hyper\\Response"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.respond",
+                  "signature": "async respond(request: Request, store: SessionOpening, started: number): Promise<Answer>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._respond",
+                  "signature": "def _respond(self, request: Request, store: SessionOpening, started: Optional[int] = None) -> tuple[Response, Reply]"
                 }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-43.1"
               },
               "tests": [
                 "packages/php/tests/RunTest.php::RunTest::testRunCallsTheDisconnectHookWhenTheScriptEndsDuringTheAnswerOfAClosedConnection: Only a PHP script can end during the answer; the delivery holds the request and the reply before the answer runs, so the shutdown function calls the disconnect hook (HY-67.5)."
@@ -969,13 +971,15 @@
                 "php": {
                   "symbol": "packages/php/src/Host/functions.php::Polyspec\\Hyper\\run",
                   "signature": "function run(App $app, ?int $started = null): void"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/host/http-host.ts::listener",
+                  "signature": "export function listener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/host/wsgi.py::application",
+                  "signature": "def application(environ: dict, start_response: Callable) -> object"
                 }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-100.30"
               },
               "tests": [
                 "packages/php/tests/RunTest.php::RunTest::testRunTurnsOffErrorOutputAndTheDefaultContentType: App::run sets the ini settings display_errors and default_mimetype of PHP (HY-43.3); the test reads them with ini_get after a run.",
@@ -1028,17 +1032,22 @@
               "output": "value",
               "errors": [],
               "state": "Reads the bytes of the manifest or of a file of the program directory by its absolute path (HY-48.19).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-48.19"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.readBytes",
                   "signature": "private static readBytes(path: string): Buffer"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._read_bytes",
+                  "signature": "def _read_bytes(path: Path) -> bytes"
                 }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-48.19"
               },
               "tests": [
                 "packages/ts/tests/app.test.ts::App > opens only when every output of the build exists and names the first missing one (HY-48): The Node server reads the manifest by the absolute path of its option and names the first missing output of the program directory (HY-48.19); the test asserts that the error of a missing program names its reads.json, that the error of a missing manifest names its path, and that a program path that is not absolute fails."
@@ -1054,17 +1063,22 @@
               "output": "value",
               "errors": [],
               "state": "Reads the routes of `reads.json` of the program directory as the value that the core takes (HY-48.19).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-48.19"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.routeReads",
                   "signature": "private static routeReads(path: string): Value"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._route_reads",
+                  "signature": "def _route_reads(path: Path) -> object"
                 }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-48.19"
               }
             },
             {
@@ -1077,17 +1091,22 @@
               "output": "map<string>",
               "errors": [],
               "state": "Reads the sources of the templates of the directory `templates` of the program directory by their names (HY-48.19).",
+              "only": {
+                "languages": [
+                  "node",
+                  "python"
+                ],
+                "sentence": "HY-48.19"
+              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/app.ts::App.templateSources",
                   "signature": "private static templateSources(directory: string): Map<string, string>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/app.py::App._template_sources",
+                  "signature": "def _template_sources(directory: Path) -> dict[str, str]"
                 }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-48.19"
               }
             },
             {
@@ -2473,16 +2492,18 @@
               "output": "coreRules",
               "errors": [],
               "state": "Returns the rules of the core under the names of the units of the server; a module that lacks a member fails with its name (HY-133.2).",
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-133.2"
-              },
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::coreRules",
                   "signature": "export function coreRules(module: object): CoreRules"
+                },
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::__construct",
+                  "signature": "public function __construct(string $namespace)"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.__init__",
+                  "signature": "def __init__(self, core: Any) -> None"
                 }
               }
             },
