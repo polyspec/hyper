@@ -1,12 +1,12 @@
 <!-- doc-id: hyper-python-readme -->
-<!-- source-sha256: 0b0df607713a243703632f01436b1ca8bc38b3a7902cc657b6fe3d9d8512cd01 -->
+<!-- source-sha256: bfcd7efd4c5fd7b7f4cd69db661394e92553b28d2119675b68a449fb0cab9e6f -->
 # polyspec-hyper
 
 [English](README.md).
 
 [Region protocol](../../docs/spec/protocol.md)의 Python 서버: routing, query와 form 값, mask된 CSRF token,
 PHP 서버와 같은 바이트의 JSON text를 같은 규칙의 독립 구현으로 제공한다. `contracts/routes.json`,
-`rest.json`, `csrf.json`, `fields.json`, `json.json`의 conformance 사례가 `unittest` test로 돌아간다
+`rest.json`, `csrf.json`, `json.json`의 conformance 사례가 `unittest` test로 돌아간다
 (`make hyper-test-python`).
 
 `vX.Y.Z`를 `packages/python`을 담은 첫 release tag로 바꾼다. 아직 package를 담은 release tag가 없다.
