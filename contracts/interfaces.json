@@ -1146,6 +1146,74 @@
                 "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
                 "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
               ]
+            },
+            {
+              "id": "app.opened",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "AppOptions<S>"
+              ],
+              "output": "App<S>",
+              "errors": [],
+              "state": "Checks the base path and the other options of the application and returns the application that App.open gives (HY-48.2).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.opened",
+                  "signature": "private static opened<S extends object>(options: AppOptions<S>): App<S>"
+                }
+              }
+            },
+            {
+              "id": "app.refusedMedia",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "Request"
+              ],
+              "output": "Response | null",
+              "errors": [],
+              "state": "Returns the refusal of a form request: 400 for a Content-Type that is no media type and 415 for a media type that the application does not accept (HY-59.1), or null.",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.refusedMedia",
+                  "signature": "private refusedMedia(request: Request): Response | null"
+                }
+              }
+            },
+            {
+              "id": "app.readMediaType",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "Request"
+              ],
+              "output": "string | null",
+              "errors": [],
+              "state": "Returns the media type of a request as the core reads it, or null for a Content-Type that is no media type (HY-59.13).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.readMediaType",
+                  "signature": "private static readMediaType(request: Request): string | null"
+                }
+              }
+            },
+            {
+              "id": "app.sessionOf",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "SessionOpening"
+              ],
+              "output": "Promise<SessionStore>",
+              "errors": [],
+              "state": "Returns the session store of a request, opened by the transport only when a route uses it (HY-104.38).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.sessionOf",
+                  "signature": "private static async sessionOf(store: SessionOpening): Promise<SessionStore>"
+                }
+              }
             }
           ]
         },
