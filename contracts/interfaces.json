@@ -2032,12 +2032,6 @@
               "output": "core-rules",
               "errors": [],
               "state": "Takes the namespace of the functions of the binding and fails with the name of a function that the binding lacks (HY-133.2).",
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-133.2"
-              },
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::__construct",
