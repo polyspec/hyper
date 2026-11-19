@@ -2830,36 +2830,6 @@
               }
             },
             {
-              "id": "context.member",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "map<value>",
-                "optional<string>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns the member context of a JSON response: the hash, and the value unless the held hash equals it.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/Context.php::Polyspec\\Hyper\\Context::member",
-                  "signature": "public static function member(string $build, array $map, ?string $held): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/context.ts::Context.member",
-                  "signature": "static member(build: string, map: MapValue, held: string | null): MapValue"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php",
-                  "node"
-                ],
-                "sentence": "HY-128.2"
-              }
-            },
-            {
               "id": "context.validHeader",
               "kind": "static method",
               "visibility": "internal",
@@ -9490,21 +9460,6 @@
               }
             },
             {
-              "id": "native-session.sendCookie",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [],
-              "output": "none",
-              "errors": [],
-              "state": "Sends the session cookie with the identifier of the session.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::sendCookie",
-                  "signature": "private function sendCookie(): void"
-                }
-              }
-            },
-            {
               "id": "native-session.secure",
               "kind": "method",
               "visibility": "private",
@@ -9516,23 +9471,6 @@
                 "php": {
                   "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::secure",
                   "signature": "private function secure(): bool"
-                }
-              }
-            },
-            {
-              "id": "native-session.name",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "boolean"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Returns the name of the session cookie, with the host prefix over HTTPS (HY-45).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::name",
-                  "signature": "public static function name(bool $https): string"
                 }
               }
             },
@@ -10987,24 +10925,6 @@
                   "signature": "export function isMapValue(input: unknown): input is MapValue"
                 }
               }
-            },
-            {
-              "id": "values.replaced",
-              "kind": "function",
-              "visibility": "internal",
-              "inputs": [
-                "map<value>",
-                "map<value>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns a map with the members of the second map over those of the first.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/data/values.ts::replaced",
-                  "signature": "export function replaced(base: MapValue, other: MapValue): MapValue"
-                }
-              }
             }
           ],
           "tests": [
@@ -11045,38 +10965,6 @@
             }
           },
           "members": [
-            {
-              "id": "json-codec.value",
-              "kind": "static method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "string",
-                "map<string>",
-                "string",
-                "optional<map<value>>",
-                "map<value>",
-                "map<map<value>>",
-                "map<map<value>>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns the JSON response value of a page with its members in their order.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::value",
-                  "signature": "public static function value(string $timezone, string $route, array $params, string $build, ?array $context, array $shared, array $regions, array $kept): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/data/json-codec.ts::JsonCodec.value",
-                  "signature": "static value(timezone: string, route: string, params: MapValue, build: string, context: MapValue | null, shared: MapValue, regions: MapValue, kept: MapValue): MapValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec.value",
-                  "signature": "def value(timezone: str, route: str, params: dict, build: str, context: Optional[dict], shared: dict, regions: dict, kept: dict) -> dict"
-                }
-              }
-            },
             {
               "id": "json-codec.encode",
               "kind": "static method",
@@ -11125,29 +11013,6 @@
                   "symbol": "packages/python/src/polyspec/hyper/data/_json_codec.py::JsonCodec.decode",
                   "signature": "def decode(text: str) -> object"
                 }
-              }
-            },
-            {
-              "id": "json-codec.map",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "map<value>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns an empty PHP array as an object, so that it encodes and binds as a map.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::map",
-                  "signature": "private static function map(array $value): stdClass|array"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-17.1"
               }
             }
           ]
@@ -12109,36 +11974,6 @@
                   "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._loader_map",
                   "signature": "def _loader_map(value: object, source: str) -> dict"
                 }
-              }
-            },
-            {
-              "id": "page.document",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "request",
-                "value",
-                "map<value>",
-                "optional<map<value>>",
-                "map<value>",
-                "map<string>",
-                "map<value>",
-                "boolean"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Renders the document with the kept values applied, and without them when they fail the rendering (HY-17.1).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::document",
-                  "signature": "private function document(Polyspec\\Hyper\\Request $request, array $route, array $shared, ?array $context, array $data, array $templates, array $kept, bool $embed): string"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-48.1"
               }
             }
           ]
