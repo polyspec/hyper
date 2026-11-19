@@ -14623,6 +14623,141 @@
           "declaration": "export interface PageAction {\n  readonly result: { readonly status: number; readonly data: Data } | null;\n  readonly masked: string;\n}"
         }
       }
+    },
+    {
+      "id": "route",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-62.16"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::Route",
+          "declaration": "type Route =\n  | { readonly route: 'plain'; readonly answer: Plain }\n  | { readonly route: 'shell' | 'keep' }\n  | { readonly route: 'representation'; readonly name: string; readonly params: readonly (readonly [string, string])[]; readonly entry: number; readonly values: readonly string[] }\n  | { readonly route: 'page'; readonly name: string; readonly params: readonly (readonly [string, string])[]; readonly kind: PageKind; readonly action: boolean };"
+        }
+      }
+    },
+    {
+      "id": "pageResponse",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "status": "number",
+          "json": "boolean",
+          "body": "string",
+          "context": "boolean",
+          "maskedToken": "string",
+          "token": "string",
+          "method": "string",
+          "cacheControl": "optional<string>",
+          "ifNoneMatch": "optional<string>",
+          "referrerPolicy": "optional<string>"
+        },
+        "optional": [
+          "cacheControl",
+          "ifNoneMatch",
+          "referrerPolicy"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.3"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageResponse",
+          "declaration": "interface PageResponse {\n  readonly status: number;\n  readonly json: boolean;\n  readonly body: string;\n  readonly context: boolean;\n  readonly maskedToken: string;\n  readonly token: string;\n  readonly method: string;\n  readonly cacheControl?: string | null;\n  readonly ifNoneMatch?: string | null;\n  readonly referrerPolicy?: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "pageInput",
+      "visibility": "internal",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "route": "string",
+          "params": "map<string>",
+          "kind": "pageKind",
+          "action": "boolean",
+          "csrf": "string",
+          "changed": "list<string>",
+          "now": "number",
+          "keepCookie": "optional<string>",
+          "heldHash": "optional<string>"
+        },
+        "optional": [
+          "keepCookie",
+          "heldHash"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageInput",
+          "declaration": "export interface PageInput {\n  readonly route: string;\n  readonly params: ReadonlyMap<string, string>;\n  readonly kind: PageKind;\n  readonly action: boolean;\n  readonly csrf: string;\n  readonly changed: Iterable<string>;\n  readonly now: number;\n  readonly keepCookie?: string | null;\n  readonly heldHash?: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "corePageRequest",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::CorePageRequest",
+          "declaration": "interface CorePageRequest {\n  next(input: PageStepInput): { readonly step: 'call'; readonly call: { readonly call: 'action' | 'context' | 'shared' | 'route_loader' | 'reply' } | { readonly call: 'route_region_loader' | 'region_loader'; readonly region: string } } | { readonly step: 'answer'; readonly answer: Answer };\n}"
+        }
+      }
+    },
+    {
+      "id": "pageHeadersResult",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "status": "number",
+          "headers": "list<list<string>>",
+          "body": "boolean"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.3"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageHeadersResult",
+          "declaration": "interface PageHeadersResult {\n  readonly status: number;\n  readonly headers: Iterable<readonly [string, string]>;\n  readonly body: boolean;\n}"
+        }
+      }
     }
   ],
   "caseFiles": {
