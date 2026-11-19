@@ -1146,6 +1146,63 @@
                 "packages/ts/tests/http.test.ts::a multipart body read in chunks > gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14): The Node server removes the directory of a request after its files are closed and after the connection ended (HY-131.33), so only the end of the promise of App.listener (HY-100.29) tells when it is removed; the test asserts the directory at the write hook and its absence when the listener settled.",
                 "packages/ts/tests/http.test.ts::a multipart body read in chunks > removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5): The Node server removes the directory of a body that is not valid after its files are closed (HY-131.33), which only the end of the promise of App.listener (HY-100.29) shows; the test asserts an empty temporary directory when the listener settled."
               ]
+            },
+            {
+              "id": "app.refusedMedia",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [
+                "request"
+              ],
+              "output": "optional<response>",
+              "errors": [],
+              "state": "Returns the 400 for a Content-Type that is no media type, the 415 for a media type that the application does not accept, or null (HY-59.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::refusedMedia",
+                  "signature": "private function refusedMedia(Request $request): ?Response"
+                }
+              }
+            },
+            {
+              "id": "app.readMediaType",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "request"
+              ],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the media type of the request, or null for a Content-Type that is no media type (HY-59.12, HY-59.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::readMediaType",
+                  "signature": "private static function readMediaType(Request $request): ?string"
+                }
+              }
+            },
+            {
+              "id": "app.serve",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<number>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Answers the request of the SAPI for the host function `run`, which calls it (HY-106.20).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::serve",
+                  "signature": "public function serve(?int $started = null): void"
+                }
+              }
             }
           ]
         },
