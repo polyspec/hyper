@@ -121,7 +121,7 @@ test('the three servers read an upload over HTTP alike and remove its directory 
       assert.equal(response.status, request.status, `${server}, ${request.label}: ${response.body.slice(0, 200)}`);
       assert.deepEqual(JSON.parse(response.body), request.answer, `${server}, ${request.label}`);
       assert.deepEqual(readdirSync(path.join(directory, server, 'moved')), [], `${server}, ${request.label}: a moved file stays`);
-      if (server !== 'node') assert.deepEqual(readdirSync(path.join(directory, server, 'tmp')).filter((name) => name.startsWith('http-form-')), [], `${server}, ${request.label}: the directory of the request stays`);
+      assert.deepEqual(readdirSync(path.join(directory, server, 'tmp')).filter((name) => name.startsWith('http-form-')), [], `${server}, ${request.label}: the directory of the request stays`);
     }
   }
 });
