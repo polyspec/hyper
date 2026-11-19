@@ -3846,9 +3846,10 @@
             },
             {
               "id": "http-host.server",
-              "kind": "method",
+              "kind": "function",
               "visibility": "public",
               "inputs": [
+                "app",
                 "value",
                 "serverOptions"
               ],
@@ -3873,9 +3874,10 @@
             },
             {
               "id": "http-host.listener",
-              "kind": "method",
+              "kind": "function",
               "visibility": "public",
               "inputs": [
+                "app",
                 "value",
                 "serverOptions"
               ],
@@ -8933,8 +8935,18 @@
                 }
               },
               "reachDiffers": [
-                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "php", "sentence": "HY-104.47" },
-                { "member": "core-rules.jsonCodecDecode", "reached": "node", "notReached": "python", "sentence": "HY-104.47" }
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "php",
+                  "sentence": "HY-104.47"
+                },
+                {
+                  "member": "core-rules.jsonCodecDecode",
+                  "reached": "node",
+                  "notReached": "python",
+                  "sentence": "HY-104.47"
+                }
               ]
             },
             {
@@ -10276,7 +10288,12 @@
                 }
               },
               "reachDiffers": [
-                { "member": "core-rules.libraryError", "reached": "python", "notReached": "node", "sentence": "HY-104.46" }
+                {
+                  "member": "core-rules.libraryError",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-104.46"
+                }
               ]
             },
             {
@@ -10558,7 +10575,12 @@
                 "sentence": "HY-133.3"
               },
               "reachDiffers": [
-                { "member": "file-session.converted", "reached": "python", "notReached": "node", "sentence": "HY-133.3" }
+                {
+                  "member": "file-session.converted",
+                  "reached": "python",
+                  "notReached": "node",
+                  "sentence": "HY-133.3"
+                }
               ]
             }
           ],
