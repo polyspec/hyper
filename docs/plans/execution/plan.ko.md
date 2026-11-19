@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 16890f91908de5dfe5177f1766a6cd3bd5494819c35fb7346f63da1aeeba0a81 -->
+<!-- source-sha256: e41d0c8931feee8dfd1f7e55c884e07bc01c9a2a84fe931ab4a33b9b067189e3 -->
 # 실행
 
 [English](plan.md).
@@ -227,7 +227,7 @@ Depends on: none. 새 checkout은 core를 부르지 않는 서버만 설치하�
 
 첫 릴리스는 template의 그 release를 기다린다. 서버들이 template의 두 engine으로 렌더하기 때문이다. Node 서버와 브라우저는 JS render engine으로, PHP와 Python 서버는 Rust core의 binding으로 렌더한다. 그 release가 없으면 Node 서버와 PHP·Python 서버는 한 template에 대해 다른 결과를 준다.
 
-0.0.41 릴리스의 범위는 그 릴리스를 준비할 때의 작업 상태다. 릴리스 0.0.41은 `lane/preflight`에 이미 병합된 행을 그 상태와 내용대로 담고, 그때 lane이나 worker가 있는 열린 행(`[ ]` 또는 `[!]`)을 담으며, CI가 통과하는 데 필요한 행을 담는다. lane도 worker도 없는 열린 행은 릴리스 0.0.42로 넘어가고, 그 행은 그대로 둔다. 이유는 릴리스할 준비가 된 tree를 먼저 공개하고, 아직 시작하지 않은 작업이 그 릴리스를 붙잡지 않게 하기 위해서다.
+0.0.41 릴리스의 범위는 그 릴리스를 준비할 때의 작업 상태다. 릴리스 0.0.41은 `lane/preflight`에 이미 병합된 행을 그 상태와 내용대로 담고, 그때 lane이나 worker가 있는 열린 행(`[ ]` 또는 `[!]`)을 담으며, CI가 통과하는 데 필요한 행을 담는다. lane도 worker도 없는 열린 행은 릴리스 0.0.42로 넘어가고, 그 행은 그대로 둔다. 이 규칙의 구성원으로 행 id를 적는다. H35.144, H35.113, H35.141은 lane이나 worker가 있는 열린 행이고, H35.11은 `[-]`로 철회되었으며 그 행이 적은 재시도 조건(`polyspec-http-form`이 `packages/rust/Cargo.toml`에 들어옴)이 성립하면 다시 시작한다. 이유는 릴리스할 준비가 된 tree를 먼저 공개하고, 아직 시작하지 않은 작업이 그 릴리스를 붙잡지 않게 하기 위해서다.
 
 H35.32 설계의 입력. Node 서버(`packages/ts/src/page/page.ts`, `packages/ts/src/app/app.ts`)와 browser 코드(`packages/client`)는 template의 JS render engine(`@polyspec/template/render`)으로 렌더하고, 서버는 `@polyspec/hyper-client`의 `createApplication`과 `renderDocument`를 거친다. PHP 서버(`packages/php/src/Page/Renderer.php`)와 Python 서버(`packages/python/src/polyspec/hyper/page/_renderer.py`)는 template Rust core의 binding으로 렌더한다. hyper core의 page 렌더(`packages/rust/src/render.rs`의 `render_document`, `packages/rust/src/steps.rs`의 `Pages`와 `PageRequest`, `packages/rust/src/read_paths.rs`의 `route_reads`와 `template_reads`. binding member는 `Pages`, `PageRequest.next`, `routeReads`, `templateReads`)는 어떤 서버도 부르지 않는다. 두 engine은 template 명세가 거부하는 입력에서 다르다. 분수 숫자 인덱스를 JS engine은 렌더하고 core는 `runtime_type`으로 실패시킨다. Node 서버를 core의 page 렌더로 옮기는 일은 한 행이 아니며 첫 릴리스에 들지 않는다. core에 두 부분이 없고 세 부분은 이 이전을 위해 만들었으며, 이 이전이 `App.open`의 입력, page 응답, statement 아홉 개를 바꾸기 때문이다. H35.32-2의 설계 문서가 먼저이며, 그 문서는 아래 네 목록을 입력으로 받는다.
 
