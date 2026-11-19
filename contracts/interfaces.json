@@ -6296,6 +6296,23 @@
                   "signature": "body: str"
                 }
               }
+            },
+            {
+              "id": "response.withSessionCookie",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "response",
+              "errors": [],
+              "state": "Returns a copy whose first cookie is the session cookie, when the session sets one (HY-45.8, HY-97.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Response.php::Polyspec\\Hyper\\Response::withSessionCookie",
+                  "signature": "public function withSessionCookie(?string $field): self"
+                }
+              }
             }
           ]
         }
@@ -9902,6 +9919,36 @@
                 "php": {
                   "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::renew",
                   "signature": "public function renew(): void"
+                }
+              }
+            },
+            {
+              "id": "native-session.cookieHeader",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<string>",
+              "errors": [],
+              "state": "Returns the value of the session cookie when the session issued a new identifier, or null (HY-45.8, HY-104.40).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::cookieHeader",
+                  "signature": "public function cookieHeader(): ?string"
+                }
+              }
+            },
+            {
+              "id": "native-session.identifier",
+              "kind": "method",
+              "visibility": "private",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the identifier of the PHP session, or fails when the session has none (HY-45).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::identifier",
+                  "signature": "private function identifier(): string"
                 }
               }
             }
