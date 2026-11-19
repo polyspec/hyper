@@ -53,7 +53,7 @@ final class Page
      *
      * @param RouteDefinition $route
      * @param RouteHandler $handler
-     * @param array{int, array<array-key, mixed>}|null $action
+     * @param array{int, array<array-key, mixed>}|ActionOutcomeRevisionChanged|null $action
      *
      * @internal
      */
@@ -63,7 +63,7 @@ final class Page
         array $handler,
         Session $session,
         Flash $flash,
-        ?array $action,
+        array|ActionOutcomeRevisionChanged|null $action,
         Reply $reply,
         string $basePath,
     ): Response {
@@ -93,10 +93,11 @@ final class Page
                 if ($action === null) {
                     throw new \LogicException('a page without an action asked for its action');
                 }
-                $input = new PageStepInputAction(
-                    new ActionOutcomePage($action[0], self::map($action[1], "the action of route {$route['name']}")),
-                    null,
-                );
+                // HY-107.9: a revision change is the core outcome with no data; the core answers it as the 409 page.
+                $outcome = $action instanceof ActionOutcomeRevisionChanged
+                    ? $action
+                    : new ActionOutcomePage($action[0], self::map($action[1], "the action of route {$route['name']}"));
+                $input = new PageStepInputAction($outcome, null);
             } elseif ($call instanceof CallContext) {
                 // HY-124: the context handler runs after the action and before the shared handler and any loader.
                 if ($this->context === null) {
