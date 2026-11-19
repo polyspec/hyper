@@ -938,3 +938,12 @@ test('a local that an isinstance check narrows to a class of the tree has that c
   const scope = out.scopes.find((s) => s.name === 'App.routed');
   assert.deepEqual(scope?.assigns.filter((a) => a.target === 'result' && a.type !== undefined).map((a) => a.type), [{ file: 'src/result.py', name: 'Result' }]);
 });
+
+test('a local that a PHP instanceof check narrows to a class of the tree has that class as its type (HYR-5)', () => {
+  // The fixture narrows `$result` by `$result instanceof Result` before `$result->isRedirect()`, as App.php of the PHP server does.
+  const out = readCopy('php', path.join(fixture, 'readers', 'php-narrowed'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'App.routed');
+  assert.deepEqual(scope?.assigns.filter((a) => a.target === 'result' && a.type !== undefined).map((a) => a.type), [{ file: 'src/Result.php', name: 'Result' }]);
+  const isRedirect = scope?.uses.find((u) => u.kind === 'member' && u.name === 'isRedirect');
+  assert.deepEqual(isRedirect, { kind: 'member', of: { kind: 'variable', name: 'result' }, name: 'isRedirect', call: true });
+});
