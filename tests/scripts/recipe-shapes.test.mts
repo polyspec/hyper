@@ -5,18 +5,26 @@ import { test } from 'node:test';
 import type { Ctx } from '../../scripts/recipe/context.mts';
 import { expectedVisibility } from '../../scripts/recipe/names.mts';
 import { checkShapes } from '../../scripts/recipe/shapes.mts';
-import { emptySources, type Lang, type Sources, type Spec } from '../../scripts/recipe/types.mts';
+import { emptySources, type Lang, type Sources, type Spec, type SpecType } from '../../scripts/recipe/types.mts';
 
 const FILE = 'src/value-kind.ts';
 const DECLARATION = "type ValueKind = 'string' | 'int' | Token;";
 
 /** The spec of one type `valueKind` of the unit `token` with the given shape; the type is declared in node only. */
-function specWith(shape: Record<string, unknown>, id = 'valueKind'): Spec {
+function specWith(shape: SpecType['shape'], id = 'valueKind'): Spec {
+  const language = { sources: [], tests: [], barrel: [] };
+  const runner = { runner: '', steps: '', registry: '' };
   return {
     schema: 1,
-    concerns: [{ id: 'token', units: [{ id: 'token', native: {}, members: [] }] }],
+    languages: { php: language, node: language, python: language },
+    runners: { php: runner, node: runner, python: runner, browser: { runner: '' }, build: { runner: '' } },
+    caseReaders: { php: '', node: '', python: '' },
+    outside: [],
+    groups: [],
+    concerns: [{ id: 'token', rules: [], cases: [], units: [{ id: 'token', native: {}, members: [] }] }],
     types: [{ id, visibility: 'public', unit: 'token', shape, only: { languages: ['node'], sentence: 'HY-44.6' }, native: { node: { symbol: `${FILE}::ValueKind`, declaration: DECLARATION } } }],
-  } as unknown as Spec;
+    caseFiles: {},
+  };
 }
 
 /** The findings of the shape check, by code, for a node declaration with the given members (none for a non-union). */
@@ -29,15 +37,15 @@ function codes(spec: Spec, members: string[] | undefined): string[] {
     declaration: DECLARATION,
     ...(members === undefined ? {} : { members }),
   };
-  const sources = {
+  const sources: Record<Lang, Sources> = {
     php: emptySources('php'),
     python: emptySources('python'),
     node: { ...emptySources('node'), types: [type] },
-  } as unknown as Record<Lang, Sources>;
+  };
   const ctx: Ctx = {
     spec,
     root: '',
-    protocol: { rules: new Map(), retiredRules: new Set(), terms: new Set(['string', 'int']), statuses: '' } as unknown as Ctx['protocol'],
+    protocol: { rules: new Map(), retiredRules: new Set(), terms: new Set(['string', 'int']), statuses: '' },
     sources,
     readDir: () => {
       throw new Error('the shape check reads no directory');

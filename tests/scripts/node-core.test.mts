@@ -99,8 +99,14 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
 // The members of the binding that a test of this file below calls by its own statement, outside the tables EXACT and
 // PARTIAL.
 const OWN_TEST = [
-  'representationTag', 'openPage', 'answerKeepRequest', 'routeRequest', 'frameHeaders', 'computePageHeaders', 'checkShellPath', 'shellText',
-  'jsonRead', 'acceptRanges', 'Pages', 'PageRequest', 'RequestBody', 'HyperValueError', 'HyperTypeError',
+  'representationTag', 'frameHeaders', 'computePageHeaders', 'jsonRead', 'acceptRanges', 'Pages', 'PageRequest', 'RequestBody', 'HyperValueError',
+  'HyperTypeError',
+];
+// The members of the binding that coreRules requires and no rule of the node server calls: the other hosts of the
+// core call them, and the node host does their work itself.
+const NOT_CALLED = [
+  'openPage', 'answerKeepRequest', 'routeRequest', 'checkShellPath', 'shellText', 'readBuild', 'isApplicationPath', 'keepsOutOfSharedCaches',
+  'checkBuildId', 'keptCookie', 'keptValue',
 ];
 
 function rulesOf(results: Record<string, unknown>): { rules: CoreRules; calls: Call[] } {
@@ -111,7 +117,6 @@ function rulesOf(results: Record<string, unknown>): { rules: CoreRules; calls: C
 const TOKEN = 'a'.repeat(64);
 const MASK = 'b'.repeat(64);
 const PAGES = { pages: true };
-const STORE = { store: true };
 // A value that a session holds, and the values of the data model that the binding gives for a flash and for kept values.
 const STORED = { stored: true };
 const FLASH = new Map<string, unknown>([['values', new Map()], ['changed', []]]);
@@ -208,14 +213,6 @@ test('the headers of Page.respond are those of compute_page_headers in their ord
   assert.deepEqual(calls, [['computePageHeaders', [response]]]);
 });
 
-test('App.checkShellPath and App.shellText call the two rules of the static shell, the path first (HY-62)', () => {
-  const bytes = new TextEncoder().encode('<html>');
-  const { rules, calls } = rulesOf({ shellText: '<html>' });
-  rules.appCheckShellPath('/srv/csr/index.html');
-  assert.equal(rules.appShellText('/srv/csr/index.html', bytes), '<html>');
-  assert.deepEqual(calls, [['checkShellPath', ['/srv/csr/index.html']], ['shellText', ['/srv/csr/index.html', bytes]]]);
-});
-
 test('Application.open opens the pages and registers each host function in its order (HY-48, HYC-24)', () => {
   const manifest = new TextEncoder().encode('{}');
   const templates = new Map([['layout.tpl', '']]);
@@ -252,7 +249,6 @@ const PARTIAL: [string, keyof CoreBinding, (rules: CoreRules) => unknown, unknow
   ['RecordSession.cookieHeader (HY-45.8)', 'sessionCookie', (rules) => rules.sessionCookieHeader('id', true), ['id', true], '__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax'],
   ['Session.storedToken (HY-24.14)', 'storedToken', (rules) => rules.sessionStoredToken(TOKEN), [TOKEN], TOKEN],
   ['Kept.cookieName (HYC-13.6)', 'keepName', (rules) => rules.keptCookieName(false), [false], 'hy-keep'],
-  ['Build.read (HY-125.23)', 'readBuild', (rules) => rules.buildRead(new Uint8Array([123])), [new Uint8Array([123])], '1'.repeat(64)],
   ['Build.id (HY-125.15)', 'buildId', (rules) => rules.buildId([{ path: 'program/reads.json', bytes: new Uint8Array() }]), [[{ path: 'program/reads.json', bytes: new Uint8Array() }]], '2'.repeat(64)],
   ['Build.paths (HY-125.3)', 'buildPaths', (rules) => rules.buildPaths([]), [[]], ['program/reads.json']],
   ['Build.stream (HY-125.3)', 'buildStream', (rules) => rules.buildStream([]), [[]], '00'],
@@ -283,7 +279,7 @@ test('the host gives request_body.start the content type, the Content-Length, th
 });
 
 test('each member that coreRules requires has a test of the unit that calls it', () => {
-  const tested = new Set<string>([...OWN_TEST, ...[...EXACT, ...PARTIAL].map(([, name]) => name)]);
+  const tested = new Set<string>([...OWN_TEST, ...NOT_CALLED, ...[...EXACT, ...PARTIAL].map(([, name]) => name)]);
   assert.deepEqual(REQUIRED.filter((name) => !tested.has(name)), [], 'core-rules.ts requires these members, which no test of this file calls');
   assert.deepEqual([...tested].filter((name) => !REQUIRED.includes(name)), [], 'this file tests these members, which core-rules.ts does not require');
 });

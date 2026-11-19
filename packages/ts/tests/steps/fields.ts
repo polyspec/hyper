@@ -30,7 +30,7 @@ function bytes(reader: CaseReader, name: string): Uint8Array {
 function limitsOf(reader: CaseReader): BodyLimits {
   const value = reader.input('limits');
   const read = (name: string): number => {
-    const limit = typeof value === 'object' && value !== null ? (value as Record<string, unknown>)[name] : undefined;
+    const limit: unknown = typeof value === 'object' && value !== null ? Reflect.get(value, name) : undefined;
     if (typeof limit !== 'number') throw new Error(`the limit ${name} of the case is not a number`);
     return limit;
   };
@@ -89,7 +89,7 @@ export const fieldsSteps = {
     const chunk = reader.input('chunk');
     const move = text(reader, 'move');
     if (typeof chunk !== 'number') throw new Error('the chunk of the case is not a number');
-    const read: CoreRequestBody = await rules().formStart(text(reader, 'content_type'), reader.input('stream') === true, limitsOf(reader));
+    const read: CoreRequestBody = await rules().formStart(text(reader, 'content_type'), null, reader.input('stream') === true, limitsOf(reader));
     const scratch = mkdtempSync(join(tmpdir(), 'hyper-case-'));
     try {
       let failure: unknown = null;
