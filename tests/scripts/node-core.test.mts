@@ -90,7 +90,15 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
       return results['RequestBody.start'];
     }
   }
-  const classes: Record<string, unknown> = { Pages, PageRequest, RequestBody, HyperValueError, HyperTypeError };
+  class FormFile {
+    readonly made: unknown[];
+
+    constructor(...args: unknown[]) {
+      calls.push(['new FormFile', args]);
+      this.made = args;
+    }
+  }
+  const classes: Record<string, unknown> = { Pages, PageRequest, RequestBody, FormFile, HyperValueError, HyperTypeError };
   const module: Record<string, unknown> = {};
   for (const name of REQUIRED) module[name] = classes[name] ?? member(name);
   return { core: module, calls };
@@ -99,7 +107,7 @@ function standIn(results: Record<string, unknown>): { core: Record<string, unkno
 // The members of the binding that a test of this file below calls by its own statement, outside the tables EXACT and
 // PARTIAL.
 const OWN_TEST = [
-  'representationTag', 'frameHeaders', 'computePageHeaders', 'jsonRead', 'acceptRanges', 'Pages', 'PageRequest', 'RequestBody', 'HyperValueError',
+  'representationTag', 'frameHeaders', 'computePageHeaders', 'jsonRead', 'acceptRanges', 'Pages', 'PageRequest', 'RequestBody', 'FormFile', 'HyperValueError',
   'HyperTypeError',
 ];
 // The members of the binding that coreRules requires and no rule of the node server calls: the other hosts of the
@@ -276,6 +284,14 @@ test('the host gives request_body.start the content type, the Content-Length, th
   const { rules, calls } = rulesOf({ 'RequestBody.start': Promise.resolve(body) });
   assert.equal(await rules.formStart('multipart/form-data; boundary=x', '12', true, LIMITS), body);
   assert.deepEqual(calls, [['RequestBody.start', ['multipart/form-data; boundary=x', '12', true, LIMITS]]]);
+});
+
+test('UploadedFile gives form_file.new the name, the filename, the content type and the bytes, and holds the file of the core (HY-113.3, F-22)', () => {
+  const content = new Uint8Array([120]);
+  const { rules, calls } = rulesOf({});
+  const file = rules.uploadedFile('f', 'a.txt', 'text/plain', content);
+  assert.deepEqual((file as unknown as { made: unknown[] }).made, ['f', 'a.txt', 'text/plain', content]);
+  assert.deepEqual(calls, [['new FormFile', ['f', 'a.txt', 'text/plain', content]]]);
 });
 
 test('each member that coreRules requires has a test of the unit that calls it', () => {
