@@ -41,9 +41,9 @@ test('cases', () => {
   if (results === undefined) throw new Error('RECIPE_RESULTS is not set: the case runner writes its results to the file that it names');
   for (const reader of CaseReader.cases('build')) {
     try {
-      if (reader.section() === 'manifest.json:templateChecks') {
+      if (`${reader.file()}:${reader.section()}` === 'manifest.json:templateChecks') {
         reader.compare('problems', problemsOf(reader));
-      } else if (reader.section() === 'build.json:dataTemplate') {
+      } else if (`${reader.file()}:${reader.section()}` === 'build.json:dataTemplate') {
         const reserved = reservedTemplate();
         reader.compare('name', reserved.name);
         reader.compare('source', reserved.source);
@@ -62,7 +62,8 @@ test('cases', () => {
 test('a duplicate path fails with the kind invalid_build and names the path (HY-125.17)', () => {
   const bytes = Buffer.from('x', 'utf8');
   assert.throws(() => buildId([{ path: 'public/assets/hyper-a1.js', bytes }, { path: 'public/assets/hyper-a1.js', bytes }]), (error: unknown) => {
-    assert.equal((error as { kind?: unknown }).kind, 'invalid_build');
+    assert.ok(error instanceof Error && 'kind' in error, String(error));
+    assert.equal(error.kind, 'invalid_build');
     assert.match(String(error), /public\/assets\/hyper-a1\.js/);
     return true;
   });

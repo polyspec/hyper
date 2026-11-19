@@ -179,7 +179,8 @@ final class RunTest extends TestCase
         $server = null;
         try {
             // The server listens on a port that the system assigns and reports it, so no other process can take the
-            // port between its choice and its use (HR-89). ignore_user_abort is on here, so the host function `run` must turn it off.
+            // port between its choice and its use (HR-89). ignore_user_abort is on here, so the host function `run`
+            // must turn it off.
             [$server, $stderr, $port] = self::startServer(
                 [
                     PHP_BINARY,
@@ -265,8 +266,11 @@ final class RunTest extends TestCase
         [$status, , $body, $lines, $entries] = self::escape(
             'read-fails-multipart',
             '0',
-            ['multipart/form-data; boundary=b', "--b\r\nContent-Disposition: form-data; name=\"f\"; filename=\"a.txt\"\r\n"
-                . "Content-Type: text/plain\r\n\r\nthe file\r\n--b--\r\n"],
+            [
+                'multipart/form-data; boundary=b',
+                "--b\r\nContent-Disposition: form-data; name=\"f\"; filename=\"a.txt\"\r\n"
+                    . "Content-Type: text/plain\r\n\r\nthe file\r\n--b--\r\n",
+            ],
         );
 
         self::assertSame(500, $status);
@@ -276,6 +280,26 @@ final class RunTest extends TestCase
             $lines,
         );
         self::assertSame([], $entries);
+    }
+
+    /**
+     * HY-115.23: the server closes the session before it answers, so a session that cannot be written, as the session
+     * of a request that lost its lock, answers the plain 500 of HY-43 and not the status of the application.
+     */
+    public function testASessionThatCannotBeWrittenAnswersThePlain500(): void
+    {
+        [$status, , $body, $lines] = self::escape(
+            'session-write-fails',
+            '0',
+            ['application/x-www-form-urlencoded', '_csrf=x'],
+        );
+
+        self::assertSame(500, $status);
+        self::assertSame('Internal Server Error', $body);
+        self::assertMatchesRegularExpression(
+            '/\Aresponse \d+\nwritten 500 true "hyper: the session could not be written[^"]*"\n\z/',
+            $lines,
+        );
     }
 
     /** HY-99: a fatal error after the host function `run` sent the response reports ended false with the failure, and no second response. */

@@ -14,7 +14,8 @@ export class ArraySession implements SessionStore {
 
   get(key: string): unknown {
     ArgumentCountError.between(arguments.length, 1, 1);
-    return this.values.get(key);
+    // A key that holds no value gives null (HY-104.37).
+    return this.values.has(key) ? this.values.get(key) : null;
   }
 
   set(key: string, value: unknown): void {

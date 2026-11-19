@@ -47,7 +47,7 @@ export function fixtureHandlers(): { regions: Record<string, Loader<Services>>; 
           const counter = services.get('counter');
           counter.actions++;
           if (request.formString('name') === 'taken') return Result.page(409, { name: 'taken', error: 'conflict' });
-          // HY-133: the name away sends the browser to an outside location.
+          // HY-132: the name away sends the browser to an outside location.
           if (request.formString('name') === 'away') return Result.outside('https://outside.example/back');
           counter.count++;
           return Result.redirect('/');
@@ -258,7 +258,8 @@ export const steps = {
       reader.compare('json.params', json.params);
       reader.compare('json.regions', record(json.regions));
     }
-    reader.compare('session', inner.get('_hyper_csrf') !== undefined);
+    // A store gives null for a key that holds no value (HY-104.37).
+    reader.compare('session', inner.get('_hyper_csrf') !== null);
     reader.compare('actions', counter.actions);
     reader.compare('handled', calls.handled);
     reader.compare('selections', selections);

@@ -35,12 +35,25 @@ export type Concern = {
   units: Unit[];
 };
 
+/** The native entry of a unit that a source file of a server declares (HYR-5). */
+export type FileNative = { file: string; kind: string; internal: boolean };
+/** The native entry of an extension unit (HYR-5): a class that the hyper extension defines, with no file. */
+export type ExtensionNative = { extension: string; kind: string; internal: boolean };
+
 export type Unit = {
   id: string;
-  native: Partial<Record<Lang, { file: string; kind: string; internal: boolean }>>;
+  native: Partial<Record<Lang, FileNative>>;
   members: Member[];
   only?: Only;
   tests?: string[];
+};
+
+/**
+ * The spec as `contracts/interfaces.json` holds it: a unit may also have extension entries. The checks of the sources
+ * read the `Spec` that `withoutExtensions` makes of it, because no reader reads an extension class.
+ */
+export type SpecDocument = Omit<Spec, 'concerns'> & {
+  concerns: (Omit<Concern, 'units'> & { units: (Omit<Unit, 'native'> & { native: Partial<Record<Lang, FileNative | ExtensionNative>> })[] })[];
 };
 
 export type Member = {
@@ -53,6 +66,8 @@ export type Member = {
   state: string;
   native: Partial<Record<Lang, { symbol: string; signature: string }>>;
   only?: Only;
+  /** The reach differences that this member declares: `member` is reached in `reached` and not in `notReached`, as `sentence` states. */
+  reachDiffers?: { member: string; reached: Lang; notReached: Lang; sentence: string }[];
   tests?: string[];
 };
 
@@ -60,7 +75,7 @@ export type SpecType = {
   id: string;
   visibility: 'public' | 'internal' | 'private';
   unit: string;
-  shape: { fields?: Record<string, string | { term: string; only: Only }>; optional?: string[]; function?: { inputs: string[]; output: string }; term?: string };
+  shape: { fields?: Record<string, string | { term: string; only: Only }>; optional?: string[]; function?: { inputs: string[]; output: string }; union?: string[]; term?: string };
   only?: Only;
   native: Partial<Record<Lang, { symbol: string; declaration: string }>>;
 };
@@ -95,7 +110,7 @@ export type Sources = {
   language: Lang;
   files: string[];
   units: { file: string; name: string; kind: string; internal: boolean }[];
-  types: { file: string; name: string; visibility: Visibility; declaration: string; fields?: string[]; parameters?: number }[];
+  types: { file: string; name: string; visibility: Visibility; declaration: string; fields?: string[]; parameters?: number; members?: string[] }[];
   members: { file: string; unit: string; name: string; kind: string; visibility: Visibility; symbol: string; signature: string; parameters: string[] }[];
   constants: { file: string; unit?: string; name: string; visibility: Visibility }[];
   exports: { file: string; name: string }[];

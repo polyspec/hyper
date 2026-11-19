@@ -12,7 +12,7 @@
 // Usage: node scripts/serve-demo.mts --db examples/board/var/board.db --ssr 8080 --edge 8081 --api 8082
 //          --lock /tmp/hyper-serve-demo.lock --extension build/json-ext/polyspec_json.so
 //          --extension build/ext/polyspec_template.so --extension build/hyper-ext/polyspec_hyper.so
-// Each --extension loads a PHP extension into both PHP servers in the given order (HY-48.23, HY-132.2).
+// Each --extension loads a PHP extension into both PHP servers in the given order (HY-48.23, HY-133.2).
 import type { ChildProcess } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

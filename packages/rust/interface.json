@@ -175,6 +175,10 @@
         "category": "store"
       },
       {
+        "variant": "polyspec_hyper::ErrorCode::InvalidSessionHandler",
+        "category": "value"
+      },
+      {
         "variant": "polyspec_hyper::ErrorCode::SharedHoldsContext",
         "category": "value"
       },
@@ -603,7 +607,7 @@
       "fills": [
         "internal"
       ],
-      "reason": "HY-132.6",
+      "reason": "HY-133.6",
       "place": "each check of an invariant of the core that gives Error::Internal: polyspec_hyper::front::route_request, polyspec_hyper::client_rendering, polyspec_hyper::media::select, polyspec_hyper::manifest::Manifest::page, polyspec_hyper::read_paths, polyspec_hyper::render, polyspec_hyper::session, polyspec_hyper::build, polyspec_hyper::steps"
     }
   ],
@@ -833,7 +837,7 @@
           "returns": {
             "optional": "text"
           },
-          "optional_reason": "HY-133.13",
+          "optional_reason": "HY-132.13",
           "raises": [],
           "wait": "none",
           "core": "polyspec_hyper::location::origin"
@@ -4533,7 +4537,7 @@
     {
       "id": "argument-types",
       "rule": "HY-52.15",
-      "reason": "HY-52.15, HY-25.7, HY-60.32, HY-69.10, HY-103.9, B-2: an argument of another type is refused by the binding with invalid_argument_type or invalid_number, without a message of hyper",
+      "reason": "HY-52.15, HY-25.7, HY-60.32, HY-69.11, HY-103.9, B-2: an argument of another type is refused by the binding with invalid_argument_type or invalid_number, without a message of hyper",
       "symbol": "Reply.cookie, Reply.removeCookie, Reply.cacheControl, Reply.status, Reply.referrerPolicy, Reply.note, Result.flash, Result.changed",
       "from": {
         "php": "throws \\TypeError('a cookie name is not a string (HY-52)')",
@@ -4544,8 +4548,8 @@
     },
     {
       "id": "float-integer",
-      "rule": "HY-52.19",
-      "reason": "HY-52.19, B-2: a float is no integer of the interface contract in PHP and Python, so Max-Age 60.0 and status 403.0 fail with invalid_number, as an integer outside ±(2^53 − 1) does, which is outside the type int",
+      "rule": "HY-52.20",
+      "reason": "HY-52.20, B-2: a float is no integer of the interface contract in PHP and Python, so Max-Age 60.0 and status 403.0 fail with invalid_number, as an integer outside ±(2^53 − 1) does, which is outside the type int",
       "symbol": "Reply.cookie, Reply.status",
       "from": {
         "php": "cookie(string $name, string $value, int|float|null $maxAge = null)",
@@ -4556,7 +4560,7 @@
     {
       "id": "value-error-classes",
       "rule": "HY-46.3",
-      "reason": "HY-46.3, HY-132.2, B-4: every error is the class Hyper<Category>Error of its category with kind and status, in place of the built-in classes",
+      "reason": "HY-46.3, HY-133.2, B-4: every error is the class Hyper<Category>Error of its category with kind and status, in place of the built-in classes",
       "symbol": "Result.redirect, Result.page, Reply, Csrf",
       "from": {
         "php": "throws \\InvalidArgumentException",

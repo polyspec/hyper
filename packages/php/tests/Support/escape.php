@@ -8,50 +8,25 @@ declare(strict_types=1);
 // sent the response, `after-send-flushed` flushes the output first; `exit` ends the script with exit() in the shared
 // loader, before any output; `read-fails` replaces the `php` stream wrapper with one whose read of php://input fails,
 // so that `run` fails while it reads the body (HY-60.14); `read-fails-multipart` accepts multipart/form-data and
-// gives the head of a file part before the read fails, so that the request has a directory (HY-131.14). Every response hook call appends a `response` line and every write hook call appends a
+// gives the head of a file part before the read fails, so that the request has a directory (HY-131.14);
+// `session-write-fails` keeps the session with a handler whose write fails, as phpredis does for a request that lost
+// its lock (HY-115.23). Every response hook call appends a `response` line and every write hook call appends a
 // `written` line to the file of HYPER_ESCAPE_LOG, so a test reads how often each hook ran and in which order.
 
 require __DIR__ . '/../../../../vendor/autoload.php';
 require_once __DIR__ . '/FrontController.php';
 
 use Polyspec\Hyper\Reply;
+use Polyspec\Hyper\Tests\Support\FailingInput;
+use Polyspec\Hyper\Tests\Support\FailingWriteSessionHandler;
 use Polyspec\Hyper\Tests\Support\FrontController;
 
 use function Polyspec\Hyper\run;
 
-/** A `php` stream wrapper whose stream opens and whose every read fails, as a read of a broken input does. */
-final class FailingInput
-{
-    /** @var resource|null set by PHP for a stream wrapper */
-    public $context;
-
-    public function stream_open(string $path, string $mode, int $options, ?string &$opened): bool
-    {
-        return true;
-    }
-
-    /** The bytes that the first read gives before the reads fail, so that a part with a file has started. */
-    public static string $head = '';
-
-    public function stream_read(int $count): string|false
-    {
-        $head = self::$head;
-        self::$head = '';
-
-        return $head === '' ? false : $head;
-    }
-
-    public function stream_eof(): bool
-    {
-        return false;
-    }
-
-    public function stream_close(): void
-    {
-    }
-}
-
 $mode = (string) getenv('HYPER_ESCAPE_MODE');
+if ($mode === 'session-write-fails') {
+    session_set_save_handler(new FailingWriteSessionHandler());
+}
 $log = (string) getenv('HYPER_ESCAPE_LOG');
 $app = FrontController::open(
     $log,

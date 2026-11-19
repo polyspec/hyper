@@ -37,7 +37,7 @@ export class RecordingStore implements SessionStore {
 }
 
 // Gives the reader whether the message of a failure starts with a prefix of the runtime, which a message of an error of
-// hyper never has (HY-106.19, HY-132.4).
+// hyper never has (HY-106.19, HY-133.4).
 export function messageStart(reader: CaseReader, failure: unknown): void {
   const message = failure instanceof Error ? failure.message : '';
   reader.outcome('messageStart', [message.startsWith('hyper:'), false]);

@@ -14,6 +14,9 @@ _.daemon_threads
 _.__signature__
 _.__annotations__
 
+# Python reads __cause__ of an exception as its cause, which core_rules.library_error sets on the error it converts.
+_.__cause__
+
 # unittest discovers the TestCase classes of tests/test_*.py by their base class.
 CaseRunner
 # FileParts of test_files.py: unittest runs its three tests, as its base FixtureTest is a TestCase (proved by python -m unittest -v).

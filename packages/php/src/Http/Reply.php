@@ -33,7 +33,7 @@ final class Reply
     public function note(mixed $name, mixed $value): self
     {
         ArgumentCount::most(\func_num_args(), 2);
-        // HY-60.28: a declared type would convert an integer name for a caller without strict types.
+        // HY-60.32: a declared type would convert an integer name for a caller without strict types.
         if (!is_string($name)) {
             throw new HyperTypeError('a note name is not a string (HY-60)', 'invalid_argument_type');
         }
@@ -242,7 +242,7 @@ final class Reply
 
     /**
      * Returns an integer of the data model, or null for another value: an int within ±(2^53 − 1); a float is no
-     * integer of the interface contract, even without a fraction (HY-52.19).
+     * integer of the interface contract, even without a fraction (HY-52.20).
      */
     private static function integer(mixed $value): ?int
     {

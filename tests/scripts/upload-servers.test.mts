@@ -245,7 +245,9 @@ const gates = new Set<Server>();
 
 const FILLER = 6 * 1024 * 1024;
 const FORM = 'application/x-www-form-urlencoded';
-const SESSION = { php: '[A-Za-z0-9,-]{22,128}', node: '[0-9a-f]{64}', python: '[0-9a-f]{64}' };
+// The identifiers that each server creates (HY-104.43): 64 lowercase hexadecimal digits in Node and Python; the
+// identifier of the PHP runtime in PHP, whose settings hyper does not change, so only the accepted range of HY-104.42.
+const SESSION = { php: '[A-Za-z0-9,-]{22,256}', node: '[0-9a-f]{64}', python: '[0-9a-f]{64}' };
 const PLAIN_500: Wanted = { status: 500, body: 'Internal Server Error', headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "frame-ancestors 'self'" }, absent: ['set-cookie'] };
 const NOTED = '{"stage":"shared"}';
 

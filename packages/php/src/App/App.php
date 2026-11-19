@@ -91,7 +91,6 @@ final class App
             $this->container,
             $https,
             $context,
-            $this->varyHeader(),
         );
     }
 
@@ -873,20 +872,22 @@ final class App
             if ($request->fileOver($this->fileLimit)) {
                 return Response::text(413, 'Content Too Large');
             }
+            // HY-107.4: only an action that raises REVISION_CHANGED is answered as the page with status 409;
+            // the loaders of that page are loaders, so their renewal (HY-72.4) and their REVISION_CHANGED fail.
+            $result = null;
+            $revisionChanged = false;
             try {
                 $result = $this->container->call(
                     $handler['post'],
                     [Request::class => $request, Reply::class => $reply],
                 );
             } catch (\Throwable $error) {
-                // HY-107.4: only an action that raises REVISION_CHANGED is answered as the page with status 409;
-                // the loaders of that page are loaders, so their renewal (HY-72.4) and their REVISION_CHANGED fail.
                 if (self::ormCode($error) !== 'REVISION_CHANGED') {
                     throw $error;
                 }
-                $result = Result::page(409, []);
+                $revisionChanged = true;
             }
-            if (!$result instanceof Result) {
+            if (!$revisionChanged && !$result instanceof Result) {
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
             // HY-72: the action renews the session after it returns, and a page that it renders carries the new token.
@@ -894,7 +895,7 @@ final class App
                 $session->renew();
                 $request = $request->withSession($flash, Csrf::masked($session->csrfToken()));
             }
-            if ($result->isRedirect()) {
+            if ($result instanceof Result && $result->isRedirect()) {
                 return $this->redirectResponse($request, $session, $result, $basePath);
             }
 
@@ -906,7 +907,8 @@ final class App
                     $handler,
                     $session,
                     $flash,
-                    [$result->status, $result->data],
+                    // HY-107.9: the revision change takes the core outcome, which the core answers as the 409 page.
+                    $revisionChanged ? new ActionOutcomeRevisionChanged() : [$result->status, $result->data],
                     $reply,
                     $basePath,
                 ),
@@ -959,7 +961,7 @@ final class App
     /**
      * Stores the flash values and changed topics of a redirect result and responds with 303 (HY-25, HY-50); an outside
      * redirect stores nothing, takes no base path and responds to a request with `HX-Request: true` and to a document
-     * request with 200 and `HX-Redirect`, and to every other request with 303 (HY-133).
+     * request with 200 and `HX-Redirect`, and to every other request with 303 (HY-132).
      */
     private function redirectResponse(Request $request, Session $session, Result $result, string $basePath): Response
     {
@@ -1155,9 +1157,20 @@ final class App
             $received->release();
         });
         $request = $received->withInput();
-        $store = new NativeSession($this->https, $request, $this->sessionSetup);
+        // HY-45.1, HY-104.45: the host reads the cookie name from the core and gives it to the session.
+        $https = $this->https || $request->https;
+        $store = new NativeSession(
+            $this->https,
+            $request,
+            CoreRules::shared()->sessionCookieName($https),
+            $this->sessionSetup,
+        );
         $response = $this->through($request, $store, $started, $delivery);
+        // HY-115.23: the session is closed before the response is sent; a failed write is an escaped error.
+        $store->close();
         $delivery->response = $response;
-        $response->send();
+        // HY-45.8, HY-104.40: the host writes the session cookie, which the session only names; it is not part of the
+        // response that the hooks received (HY-60.4).
+        $response->withSessionCookie($store->cookieHeader())->send();
     }
 }

@@ -1,0 +1,7 @@
+{
+  "tag_name": "v0.0.40",
+  "assets": [
+    { "name": "packages.json", "digest": "sha256:6d4d630e27141611e9b139c931d59234b36f261a8db42975fb481098ccb88bf9" },
+    { "name": "polyspec_json-0.0.40-cp314-abi3-macosx_11_0_arm64.whl", "digest": "sha256:9336f7aed9e79a9febb215d5d2cb57a703073aa854cb965fb513f0f5090502f8" }
+  ]
+}

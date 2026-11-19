@@ -17,7 +17,12 @@ from .result.bad_request import BadRequest
 from .result.forbidden import Forbidden
 from .result.not_found import NotFound
 from .result.redirect import Redirect
-from .session.redis_sessions import RedisSessions, SettingCluster, SettingSentinel, SettingServer
+from .session.redis_sessions import (
+    RedisSessions,
+    SettingCluster,
+    SettingSentinel,
+    SettingServer,
+)
 from .result.result import Result
 from .session.array_session import ArraySession
 from .host.server import create_server

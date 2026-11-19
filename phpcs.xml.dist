@@ -15,4 +15,9 @@
     <rule ref="Generic.PHP.NoSilencedErrors"/>
     <!-- The stubs of a PHP extension are the input of php-src's gen_stub.php, which declares every class of the extension in one file by its design. -->
     <exclude-pattern>*.stub.php</exclude-pattern>
+    <!-- The classes and the test of the PHP reader fixture are input data whose layout is the case that recipe-check.test.mts
+         reads (H35.105), such as a static method on one line, so they keep that layout. The autoload.php of the fixture
+         runs in the reader and stays linted. -->
+    <exclude-pattern>tests/scripts/fixtures/recipe/readers/php/src/*</exclude-pattern>
+    <exclude-pattern>tests/scripts/fixtures/recipe/readers/php/tests/*</exclude-pattern>
 </ruleset>

@@ -90,7 +90,7 @@ def public_file(files: str, method: str, target: str) -> Optional[Path]:
     file = Path(files) / path.lstrip("/")
     try:
         mode = file.stat().st_mode
-    except (FileNotFoundError, NotADirectoryError):
+    except FileNotFoundError, NotADirectoryError:
         return None
     return file if stat.S_ISREG(mode) else None
 
@@ -216,7 +216,9 @@ def answer_with(
         opened: list[FileSession] = []
 
         def open_session() -> FileSession:
-            opened.append(sessions._open(given.cookie(RecordSession.cookie_name(secure))))
+            opened.append(
+                sessions._open(given.cookie(RecordSession.cookie_name(secure)))
+            )
             return opened[0]
 
         try:

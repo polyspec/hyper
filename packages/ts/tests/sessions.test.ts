@@ -36,4 +36,13 @@ describe('FileSessions', () => {
     await opening;
     expect(order).toEqual(['a writes 2', 'b reads 2']);
   });
+
+  it('HY-104.37: returns null for a key that holds no value, also after its removal', async () => {
+    const session = await sessions.open(null);
+    expect(session.get('missing')).toBeNull();
+    session.set('a', 1);
+    session.remove('a');
+    expect(session.get('a')).toBeNull();
+    await session.close();
+  });
 });

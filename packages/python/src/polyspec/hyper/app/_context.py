@@ -28,11 +28,11 @@ class Context:
     @staticmethod
     def hash(build: str, text: str) -> str:
         """Returns the context hash: the lowercase hexadecimal SHA-256 digest of `{"build":"<build id>","context":`,
-        the JSON text of the context and `}` (HY-125); the core computes it (HY-132.2)."""
+        the JSON text of the context and `}` (HY-125); the core computes it (HY-133.2)."""
         return core_rules().context_hash(build, text)
 
     @staticmethod
     def valid_header(value: Optional[str]) -> bool:
         """Returns True for a request without `Hyper-Context` or with a context hash, 64 lowercase hexadecimal
-        (HY-127); the core checks it (HY-132.2)."""
+        (HY-127); the core checks it (HY-133.2)."""
         return core_rules().context_valid_header(value)

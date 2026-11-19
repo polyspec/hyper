@@ -5,6 +5,7 @@
 // Prints one `CODE message` line per finding and exits 1 on any.
 
 import path from 'node:path';
+import { report, runCommand } from './exit.mts';
 import type { Results } from './results.mts';
 import { runChecks } from './run.mts';
 import type { Counts } from './stated.mts';
@@ -38,19 +39,11 @@ function main(): number {
   process.stderr.write(`recipe-check: the three readers read ${root} and the check compares them with contracts/interfaces.json\n`);
   const counts: Counts = { direct: 0, internal: 0, private: 0 };
   const findings = runChecks(root, v, resultArguments(), path.resolve(phpAutoload), counts);
-  for (const f of findings) process.stdout.write(`${f.code} ${f.message}\n`);
-  if (findings.length === 0) {
-    // HYR-8: a run that passes prints the three numbers of HYR-5.
-    process.stdout.write(
-      `recipe-check: ${LANGS.length} languages agree with the spec; ${counts.direct} members stated directly, ${counts.internal} internal and ${counts.private} private members stated through their callers\n`,
-    );
-  }
-  return findings.length === 0 ? 0 : 1;
+  // HYR-8: a run that passes prints the three numbers of HYR-5.
+  return report(
+    findings.map((f) => `${f.code} ${f.message}`),
+    `recipe-check: ${LANGS.length} languages agree with the spec; ${counts.direct} members stated directly, ${counts.internal} internal and ${counts.private} private members stated through their callers`,
+  );
 }
 
-try {
-  process.exitCode = main();
-} catch (error) {
-  process.stdout.write(`CHECK_ERROR ${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-}
+runCommand(main);

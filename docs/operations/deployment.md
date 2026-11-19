@@ -21,7 +21,7 @@ The server tells the two kinds of requests apart by their headers (HY-15). A dir
 
 PHP runs without a base path. Responses carry `Vary: Accept, HX-Request, HX-Current-URL`.
 
-Deploy `build/program`, which `make board` writes with `hyper build`, next to the PHP code; the application opens it with `App::open(program: ...)`. PHP renders `build/program/templates/` with the core in the extension `polyspec_hyper` (HY-48.22): load the json extension `polyspec_json`, then the template extension `polyspec_template` and then `polyspec_hyper` with the `extension` setting of `php.ini`, each built for the PHP version of the server (HY-48.23).
+Deploy `build/program`, which `make board` writes with `hyper build`, next to the PHP code; the application opens it with `App::open(program: ...)`. PHP renders `build/program/templates/` with the core in the extension `polyspec_hyper` (HY-48.22): load the json extension `polyspec_json`, then the template extension `polyspec_template` and then `polyspec_hyper` with the `extension` setting of `php.ini`, each built for the PHP version of the server (HY-48.23). Load the session-store extension `polyspec_session_store` too: `NativeSession::collect` removes the expired session files with its `FileSessions`, so that the rule of the removal lives once in the core of session-store (HY-48.25).
 
 One build is deployed as one set: upload the new files of `public/assets` first, then replace `client/` and `program/` on every server, because a page of the new build names files of `public/assets` that must exist before a server sends it. Every server of one deployment reads the outputs of the same build, also servers of several runtimes that share sessions (HY-125.20). `public/assets` keeps the files of the build before, which a page that is still open loads; on a deployment remove a file only when no `client/assets.json` of a build in use lists it. In its own application directory the build keeps the files of the build before it and removes the files of the build two lists back that neither of the two newer lists names (HR-34, HYC-16.18), so a page of the build before finds its files there as well, for one different build.
 
@@ -162,7 +162,11 @@ new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: fa
 ```python
 RedisSessions(
     SettingSentinel(
-        urls=["redis://sentinel-1:26379", "redis://sentinel-2:26379", "redis://sentinel-3:26379"],
+        urls=[
+            "redis://sentinel-1:26379",
+            "redis://sentinel-2:26379",
+            "redis://sentinel-3:26379",
+        ],
         service="hyper",
         tls=False,
         user=None,
@@ -200,7 +204,12 @@ new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', '
 
 ```python
 RedisSessions(
-    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"], user=None, password=None, authorities=None),
+    SettingCluster(
+        urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"],
+        user=None,
+        password=None,
+        authorities=None,
+    ),
     lock_expire=30,
 )
 ```
@@ -220,7 +229,12 @@ new RedisSessions({ setting: { kind: 'server', url: 'rediss://hyper:secret@redis
 ```
 
 ```python
-RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379", authorities="/etc/redis/ca.pem"), lock_expire=30)
+RedisSessions(
+    SettingServer(
+        url="rediss://hyper:secret@redis:6379", authorities="/etc/redis/ca.pem"
+    ),
+    lock_expire=30,
+)
 ```
 
 `authorities` is the file of the authorities that the store trusts alone, as `stream[cafile]` of the PHP server; null uses the trust store of the machine.
@@ -235,7 +249,11 @@ new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: tr
 ```python
 RedisSessions(
     SettingSentinel(
-        urls=["rediss://hyper:secret@sentinel-1:26379", "rediss://hyper:secret@sentinel-2:26379", "rediss://hyper:secret@sentinel-3:26379"],
+        urls=[
+            "rediss://hyper:secret@sentinel-1:26379",
+            "rediss://hyper:secret@sentinel-2:26379",
+            "rediss://hyper:secret@sentinel-3:26379",
+        ],
         service="hyper",
         tls=True,
         user="hyper",

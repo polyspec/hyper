@@ -1,4 +1,4 @@
-# The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58, HY-133): the results of actions and the stops.
+# The steps of contracts/result.json (HY-25, HY-27, HY-46, HY-50, HY-58, HY-132): the results of actions and the stops.
 from polyspec.hyper.result.bad_request import BadRequest
 from polyspec.hyper.result.forbidden import Forbidden
 from polyspec.hyper.result.not_found import NotFound
@@ -26,7 +26,7 @@ def redirect(case) -> None:
 
 
 def outside(case) -> None:
-    """Makes an outside redirect to the location, or records the failure with which it fails (HY-133)."""
+    """Makes an outside redirect to the location, or records the failure with which it fails (HY-132)."""
     location = _text(case, "location")
     result = None
     raises = None
@@ -40,13 +40,13 @@ def outside(case) -> None:
 
 
 def origin(case) -> None:
-    """Records the origin of the text, or None for a text that is no outside location (HY-133)."""
+    """Records the origin of the text, or None for a text that is no outside location (HY-132)."""
     case.compare("origin", Result.origin(_text(case, "text")))
 
 
 def outside_stores(case) -> None:
     """Calls `flash` or `changed` of an outside redirect with the decoded argument, and records the failure with which
-    it fails (HY-133)."""
+    it fails (HY-132)."""
     call = _text(case, "call")
     if call not in ("flash", "changed"):
         raise ValueError(f"the call {call} of the case is unknown")

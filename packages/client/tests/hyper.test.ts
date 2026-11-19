@@ -69,7 +69,7 @@ class FakeDocument {
   assign(url: string): void {
     this.assigned.push(url);
   }
-  // the URLs that replace the location of the page, which keeps no history entry of the current URL (HY-133)
+  // the URLs that replace the location of the page, which keeps no history entry of the current URL (HY-132)
   readonly replaced: string[] = [];
   replace(url: string): void {
     this.replaced.push(url);
@@ -1191,16 +1191,16 @@ describe('obtaining the data of a page without embedded data (HYC-7)', () => {
   });
 });
 
-// The outside location of the cases of HY-133.
+// The outside location of the cases of HY-132.
 const OUTSIDE = 'https://outside.example/back?state=a1';
 
 // The response of an outside redirect to a request with HX-Request: true or a document request: status 200, the header
-// HX-Redirect and no body (HY-133).
+// HX-Redirect and no body (HY-132).
 function outsideResponse(): Response {
   return new Response(null, { status: 200, headers: { 'HX-Redirect': OUTSIDE } });
 }
 
-describe('outside redirects (HY-133)', () => {
+describe('outside redirects (HY-132)', () => {
   it('replaces the location for HX-Redirect of the latest render of a location and renders nothing (HYC-8.4)', async () => {
     const page = new FakeDocument();
     const hyper = clientRendering(page, async () => outsideResponse());

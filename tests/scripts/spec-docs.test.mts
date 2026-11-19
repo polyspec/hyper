@@ -1,13 +1,13 @@
 // The protocol document generator (scripts/spec-docs.mts) over a fixture contract: write renders the expected bytes, check
 // fails on any byte difference, and each broken contract fails both modes with the finding that names it.
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { after, test } from 'node:test';
+import { assertFails, runScript, type ScriptResult } from './script-run.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
@@ -62,14 +62,8 @@ function makeRoot(options: { docs?: boolean; contract?: (edit: Edit) => void; fi
   return root;
 }
 
-function run(mode: 'write' | 'check', root: string): { status: number | null; stderr: string } {
-  const result = spawnSync(process.execPath, [script, mode, '--root', root], { encoding: 'utf8' });
-  return { status: result.status, stderr: result.stderr };
-}
-
-function assertFails(result: { status: number | null; stderr: string }, messages: string[]): void {
-  assert.equal(result.status, 1, result.stderr);
-  for (const message of messages) assert.ok(result.stderr.includes(message), `missing "${message}" in:\n${result.stderr}`);
+function run(mode: 'write' | 'check', root: string): ScriptResult {
+  return runScript(script, [mode, '--root', root]);
 }
 
 function docBytes(root: string, name: string): string {

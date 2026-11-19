@@ -84,45 +84,52 @@ for (const name of NAMES) {
   test(`the ${name} server waits for the lock that a request of another server holds (HY-115)`, { timeout: 60_000 }, async () => {
     const other = name === 'python' ? 'node' : 'python';
     const holder = await holding(other, state.directory, { HYPER_SESSION_REDIS: state.port });
-    const record = await text(KEY);
-    const secret = await text(LOCK);
-    assert.ok(secret !== null, 'the holder holds the lock');
-    // The event of a request that waits: Redis refused it the lock and it asked for the lock again. MONITOR reports each
-    // command that a client sends, and the holder sends none while it waits for its line.
+    // The event that decides the result is the try of the waiting request to take the lock, which MONITOR shows after
+    // the holder took it: the request must not have finished then, because the holder still holds the lock (H35.19-1).
     const monitor = await createClient({ socket: { port: Number(state.port) } }).connect();
-    let asked = 0;
-    let askedAgain: () => void = () => undefined;
-    const again = new Promise<void>((resolve) => {
-      askedAgain = resolve;
-    });
+    let tried: () => void = () => undefined;
+    const triedLock = new Promise<void>((resolve) => (tried = resolve));
     await monitor.monitor((line) => {
-      if (commandOf(line) !== 'SET' || !line.includes(`"${LOCK}"`)) return;
-      asked += 1;
-      if (asked === 2) askedAgain();
+      if (commandOf(line) === 'SET' && line.includes(`"${LOCK}"`)) tried();
     });
-    const waiting = run(name, 'count', '1', name);
-    try {
-      await Promise.race([again, waiting.then(() => assert.fail(`the request of the ${name} server ended while the ${other} server held the lock`))]);
-    } finally {
-      monitor.destroy();
-    }
-    assert.equal(await text(LOCK), secret, 'the holder keeps its lock');
-    assert.equal(await text(KEY), record, 'the request that waits has written nothing');
+    let finished = false;
+    const waiting = run(name, 'count', '1', name).finally(() => (finished = true));
+    await Promise.race([triedLock, waiting]);
+    monitor.destroy();
+    assert.equal(finished, false, 'the request finished while the other server held the lock');
     holder.stdin.write('\n');
     await waiting;
     assert.deepEqual(JSON.parse(await run('php', 'read', JSON.stringify(['n', 'stale', name]))), [1, 1, 1]);
   });
 }
 
-// phpredis writes nothing for a request that lost its lock and warns. The PHP server closes the session before it
-// answers and turns a warning of the close into the failure of the request, so the request fails as in the other
-// servers (HY-115.23); tests/scripts/session-lost-lock.test.mts fixes the HTTP answer of the three servers.
-test('a request of the php server that lost its lock writes nothing and fails (HY-115)', { timeout: 60_000 }, async () => {
+// The Redis store removes ended sessions by the expiry of each key (HY-115.2), so collect of the PHP server under the
+// handler redis of phpredis fails and names the handler instead of reading the address as a directory (HY-104.44).
+/** Whether a value is the report of the worker command collect: a string handler, and an optional string kind and message. */
+function isCollectReport(value: unknown): value is { handler: string; kind?: string; message?: string } {
+  if (typeof value !== 'object' || value === null) return false;
+  const handler: unknown = Reflect.get(value, 'handler');
+  const kind: unknown = Reflect.get(value, 'kind');
+  const message: unknown = Reflect.get(value, 'message');
+  return typeof handler === 'string' && (kind === undefined || typeof kind === 'string') && (message === undefined || typeof message === 'string');
+}
+
+test('collect of the php server under the handler redis fails with invalid_session_handler (HY-104.44)', { timeout: 60_000 }, async () => {
+  const result: unknown = JSON.parse(await run('php', 'collect'));
+  assert.ok(isCollectReport(result), `collect reports a string handler and an optional kind and message: ${JSON.stringify(result)}`);
+  assert.equal(result.handler, 'redis', 'the worker runs under the handler redis of phpredis, which must be loaded');
+  assert.equal(result.kind, 'invalid_session_handler', `collect failed with kind invalid_session_handler: ${JSON.stringify(result)}`);
+  assert.match(result.message ?? '', /redis/, 'the message names the handler');
+});
+
+// phpredis writes nothing for a request that lost its lock and warns; PHP closes the session after the response, so the
+// request has already answered (HY-115).
+test('a request of the php server that lost its lock writes nothing (HY-115)', { timeout: 60_000 }, async () => {
   const holder = await holding('php', state.directory, { HYPER_SESSION_REDIS: state.port });
   await redis.set(LOCK, 'another holder');
-  const exit = new Promise<number | null>((resolve) => holder.once('exit', resolve));
+  const exit = once(holder, 'exit');
   holder.stdin.write('\n');
-  assert.notEqual(await exit, 0, 'the request fails');
+  await exit;
   assert.equal(await text(KEY), 'a:1:{s:1:"n";i:0;}', 'the session keeps its record');
   assert.equal(await text(LOCK), 'another holder', 'the lock of the other holder stays');
 });

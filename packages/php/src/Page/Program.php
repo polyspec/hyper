@@ -46,7 +46,7 @@ final class Program
         }
         // HYC-24.5, HYC-24.7: the core fails an entry that is not a function.
         foreach ($functions as $name => $function) {
-            CoreRules::shared()->programFunctionEntry((string) $name, is_callable($function));
+            CoreRules::shared()->checkFunctionEntry((string) $name, is_callable($function));
         }
         $pages = new Pages(
             (string) file_get_contents($manifest),

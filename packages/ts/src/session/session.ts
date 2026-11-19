@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { rules } from '../app/core-rules.js';
 import { Flash } from './flash.js';
 import type { SessionStore } from './session-store.js';
-import { isMapValue, toValue, type MapValue, type Value } from '../data/values.js';
+import { toValue, type MapValue, type Value } from '../data/values.js';
 
 const TOKEN = '_hyper_csrf';
 const FLASH = '_hyper_flash';
@@ -20,7 +20,7 @@ export class Session {
   }
 
   // Returns the CSRF token, 64 lowercase hexadecimal digits, and creates it on first use (HY-24.1). A stored text of
-  // another form fails, which the core checks (HY-24.14, HY-132.2).
+  // another form fails, which the core checks (HY-24.14, HY-133.2).
   csrfToken(): string {
     const token = this.store.get(TOKEN);
     if (typeof token === 'string') return rules().sessionStoredToken(token);
@@ -79,9 +79,9 @@ export class Session {
     return new Map(Session.coreMap(rules().sessionKeptOf(stored)));
   }
 
-  // Returns a map that the core gave as a map of the data model.
+  // Returns a stored map as it is: a value read from the store enters the data model without a check (HY-104.13), and
+  // a kept value that does not conform is ignored at render (HY-38.7). A value that is not a map gives an empty map.
   private static coreMap(value: unknown): MapValue {
-    const map = toValue(value);
-    return isMapValue(map) ? map : new Map<string, Value>();
+    return value instanceof Map ? (value as MapValue) : new Map<string, Value>();
   }
 }

@@ -22,7 +22,7 @@ const FILE_SESSIONS_OPTIONAL = ['lifetime'];
 // flock on the session file from its opening to its closing, as PHP does: the library orders the requests of this
 // process in a queue and waits for the lock of the other processes on a thread of its own, with no retry and no pause
 // (HY-104.27), so the event loop of this process goes on. A failure of the library is an error of hyper of the same
-// category with the kind of the library (HY-132.3).
+// category with the kind of the library (HY-133.3).
 export class FileSessions {
   private readonly store: LibraryFileSessions;
 

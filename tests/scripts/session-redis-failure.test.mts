@@ -5,14 +5,13 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import path from 'node:path';
 import { beforeEach, test } from 'node:test';
-import { setTimeout as delay } from 'node:timers/promises';
 
 import { createClient } from 'redis';
 
 import { stopServers } from '../../scripts/board-servers.mts';
 import { requireBuilt } from './requires.mts';
 import { assertKeepsCookie, post, shareAcross, startBoards } from './session-board.mts';
-import { EXTENSION, holding, redisRun, startRedis, stopRedis } from './session-redis-server.mts';
+import { EXTENSION, holding, keyEvents, keyGone, redisRun, startRedis, stopRedis } from './session-redis-server.mts';
 import { IDENTIFIER, NAMES, run as runWorker, type Server } from './session-workers.mts';
 
 const KEY = `PHPREDIS_SESSION:${IDENTIFIER}`;
@@ -48,7 +47,7 @@ for (const [index, name] of NAMES.entries()) {
 
   test(`a request of the ${name} server whose lock really expired does not overwrite the request of the ${other} server that took it (HY-115)`, { timeout: 60_000 }, async () => {
     const holder = await holding(name, state.directory, { HYPER_SESSION_REDIS: state.port, HYPER_SESSION_EXPIRE: EXPIRE });
-    while ((await redis.exists(LOCK)) === 1) await delay(50);
+    await keyGone(state.port, undefined, LOCK, [holder, ...(state.server === null ? [] : [state.server])]);
     await runWorker(other, state.directory, environment(), 'write', '{"x":1}');
     const exit = once(holder, 'exit');
     holder.stdin.write('\n');
@@ -96,11 +95,12 @@ test('the three HTTP servers share a session by its cookie, answer status 500 wh
     state.server = await startRedis(state.directory, state.port);
     redis = await connected();
     for (const board of boards) {
+      // HY-115.12: a request that cannot reach Redis answers 500, and the sessions go on after Redis starts again. The
+      // first request after the start may meet the connection to the ended server and answer 500; the store drops a
+      // connection that failed, and the next request makes it again (session-store v0.0.7,
+      // packages/redis/rust/src/connection.rs:339-345), so the next request reaches the started one.
       let response: Response = await post(board, session.cookie, session.token, `after ${board.name}`);
-      while (response.status === 500) {
-        await delay(100);
-        response = await post(board, session.cookie, session.token, `after ${board.name}`);
-      }
+      if (response.status === 500) response = await post(board, session.cookie, session.token, `after ${board.name}`);
       assert.equal(response.status, 303, `${board.name} goes on with the session after the start of Redis`);
     }
   } finally {
@@ -123,10 +123,14 @@ test('a persistent connection of the PHP server authenticates again on each reus
     const env = { ...environment(), HYPER_SESSION_PERSISTENT: '1', HYPER_SESSION_RETRIES: '5', HYPER_SESSION_USER: 'hyper', HYPER_SESSION_PASSWORD: 'before' };
     const writer = runWorker('php', state.directory, env, 'count', '10000000', 'php');
     const failed = assert.rejects(writer, 'the process fails once its password is refused');
-    for (;;) {
-      if (Number(/"n";i:(\d+);/.exec(String(await redis.get(KEY)))?.[1] ?? 0) >= 5) break;
-      await delay(20);
-    }
+    // The writes of the record are the keyspace events of its key; after each, the record is read once.
+    await redis.sendCommand(['CONFIG', 'SET', 'notify-keyspace-events', 'K$']);
+    await Promise.race([
+      keyEvents(state.port, undefined, KEY, state.server === null ? [] : [state.server], async () => Number(/"n";i:(\d+);/.exec(String(await redis.get(KEY)))?.[1] ?? 0) >= 5),
+      writer.then(() => {
+        throw new Error('the writer ended before it wrote five times');
+      }),
+    ]);
     // Changing a password keeps the open connections of Redis, so only a new AUTH can notice it.
     await redis.sendCommand(['ACL', 'SETUSER', 'hyper', 'resetpass', '>after']);
     await failed;

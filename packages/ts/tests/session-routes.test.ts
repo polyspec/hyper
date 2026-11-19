@@ -28,8 +28,13 @@ afterEach(async () => {
 function manifest(): string {
   // The route `item` of the fixture, whose program the fixture builds, uses no session; a route that the program does
   // not hold could not render.
-  const app = JSON.parse(readFileSync(`${FIXTURES}app.json`, 'utf8')) as { routes: { name: string; session?: boolean }[] };
-  for (const route of app.routes) if (route.name === 'item') route.session = false;
+  const app: unknown = JSON.parse(readFileSync(`${FIXTURES}app.json`, 'utf8'));
+  const routes: unknown = typeof app === 'object' && app !== null ? Reflect.get(app, 'routes') : undefined;
+  if (!Array.isArray(routes)) throw new Error(`${FIXTURES}app.json holds no routes`);
+  const list: unknown[] = routes;
+  for (const route of list) {
+    if (typeof route === 'object' && route !== null && Reflect.get(route, 'name') === 'item') Reflect.set(route, 'session', false);
+  }
   const file = join(directory, 'app.json');
   writeFileSync(file, JSON.stringify(app));
   return file;

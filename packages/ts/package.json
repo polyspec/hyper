@@ -34,10 +34,9 @@
   },
   "dependencies": {
     "@polyspec/hyper-client": "0.0.40",
-    "@polyspec/php-serialization": "0.0.16",
-    "@polyspec/php-serialize": "0.0.6",
-    "@polyspec/session-store": "0.0.7",
-    "@polyspec/template": "0.0.31"
+    "@polyspec/php-serialization": "0.0.17",
+    "@polyspec/session-store": "0.0.8",
+    "@polyspec/template": "0.0.32"
   },
   "napi": {
     "binaryName": "hyper",

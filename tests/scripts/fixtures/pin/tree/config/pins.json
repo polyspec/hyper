@@ -1,0 +1,9 @@
+{
+  "description": "The fixture of make pin and make pin-check: the declared release of each sibling polyspec package.",
+  "versions": {
+    "binding": { "repository": "polyspec/binding", "version": "0.0.21" },
+    "json": { "repository": "polyspec/json", "version": "0.0.38" },
+    "php-serialize": { "repository": "polyspec/php-serialization", "version": "0.0.6" },
+    "session-store": { "repository": "polyspec/session-store", "version": "0.0.7" }
+  }
+}

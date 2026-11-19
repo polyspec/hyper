@@ -3,11 +3,10 @@
 declare(strict_types=1);
 
 // One PHP server process over one session (tests/scripts/session-workers.mts): the arguments are the session directory,
-// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, `renew`,
-// `renew-warned`, whose save handler warns while the identifier is replaced, or `hold` or `stale`, which reads or
-// writes a value and closes after a line of its input. With HYPER_SESSION_REDIS, the port
-// of a Redis server, it keeps the session there through phpredis; HYPER_SESSION_SENTINEL names the ports of Sentinels
-// instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection;
+// the identifier, and `count <requests> <name>`, `read <names as JSON>`, `write <values as JSON>`, `renew`, `collect`,
+// or `hold` or `stale`, which reads or writes a value and closes after a line of its input. With HYPER_SESSION_REDIS,
+// the port of a Redis server, it keeps the session there through phpredis; HYPER_SESSION_SENTINEL names the ports of
+// Sentinels instead, and HYPER_SESSION_TLS_CA, HYPER_SESSION_USER and HYPER_SESSION_PASSWORD secure the connection;
 // HYPER_SESSION_PERSISTENT keeps one connection for the requests of the process, and HYPER_SESSION_CLUSTER names the
 // ports of nodes of a Redis Cluster.
 
@@ -33,7 +32,7 @@ if ($cluster !== false) {
             explode(',', $cluster),
         ),
         (int) (getenv('HYPER_SESSION_EXPIRE') ?: 30),
-        (int) (getenv('HYPER_SESSION_RETRIES') ?: -1),
+        (int) (getenv('HYPER_SESSION_RETRIES') ?: 1000000),
         2000,
         1.0,
         $user === false ? null : [$user, (string) $password],
@@ -50,7 +49,7 @@ if ($cluster !== false) {
     ini_set('session.save_path', ($ca === false ? 'tcp' : 'tls') . "://127.0.0.1:{$port}{$query}");
     ini_set('redis.session.locking_enabled', '1');
     ini_set('redis.session.lock_expire', getenv('HYPER_SESSION_EXPIRE') ?: '30');
-    ini_set('redis.session.lock_retries', getenv('HYPER_SESSION_RETRIES') ?: '-1');
+    ini_set('redis.session.lock_retries', getenv('HYPER_SESSION_RETRIES') ?: '1000000');
     ini_set('redis.session.lock_wait_time', '2000');
     if ($sentinels !== false) {
         $setup = (new RedisSentinelSessions(array_map(
@@ -67,15 +66,11 @@ if ($cluster !== false) {
     ini_set('session.save_path', $directory);
 }
 
-/**
- * Runs one request with a session store; the close of the session, which the server runs before it answers, ends the
- * request, and a close that fails ends the process with the error (HY-115.23).
- */
+/** Runs one request with a session store; closing the PHP session ends the request. */
 $request = static function (callable $use) use ($identifier, $setup): mixed {
     $cookies = new Request('GET', '/', cookies: ['hy-session' => $identifier]);
-    $store = new NativeSession(false, $cookies, $setup);
-    $result = $use($store);
-    $store->close();
+    $result = $use(new NativeSession(false, $cookies, $setup));
+    session_write_close();
 
     return $result;
 };
@@ -127,26 +122,16 @@ if ($command === 'count') {
 
         return (string) session_id();
     });
-} elseif ($command === 'renew-warned') {
-    // A save handler whose removal of the old session warns, as RedisClusterSessions does when the release of its lock
-    // fails, in a process whose error_reporting does not keep that warning (HY-115.3).
-    $handler = new class () extends \SessionHandler {
-        public function destroy(string $id): bool
-        {
-            trigger_error('hyper: the session lock was not released: the stand-in of the test', E_USER_WARNING);
-
-            return parent::destroy($id);
-        }
-    };
-    error_reporting(E_ALL & ~E_USER_WARNING);
-    $cookies = new Request('GET', '/', cookies: ['hy-session' => $identifier]);
-    $store = new NativeSession(false, $cookies, static function () use ($handler): void {
-        session_set_save_handler($handler, false);
-    });
-    $store->set('renewed', 1);
-    $store->renew();
-    $store->close();
-    echo 'renewed ', (string) session_id();
+} elseif ($command === 'collect') {
+    // HY-104.44: collect outside a request, under the handler of the settings above; prints the handler, then the
+    // count or the kind and the message of the failure, as JSON.
+    $handler = (string) ini_get('session.save_handler');
+    try {
+        echo json_encode(['handler' => $handler, 'count' => NativeSession::collect()], JSON_THROW_ON_ERROR);
+    } catch (\Polyspec\Hyper\HyperValueError $failure) {
+        $failed = ['handler' => $handler, 'kind' => $failure->kind(), 'message' => $failure->getMessage()];
+        echo json_encode($failed, JSON_THROW_ON_ERROR);
+    }
 } elseif ($command === 'read') {
     $names = json_decode($first, true, 512, JSON_THROW_ON_ERROR);
     echo json_encode($request(static fn (NativeSession $store): array => array_map(

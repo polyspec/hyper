@@ -133,7 +133,7 @@
   "request": [
     {
       "id": "the_page_request_of_a_route_of_the_application_is_made",
-      "rule": "HY-132.2",
+      "rule": "HY-133.2",
       "pages": {
         "new": "pages.open",
         "args": {

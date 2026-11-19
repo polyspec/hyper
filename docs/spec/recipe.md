@@ -114,13 +114,22 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     An assignment in a method body is not a property.
   - **Fields of a member.**
     - `id`: `<unit>.<member>`, with the language-neutral name in camelCase.
-    - `kind`: one of constructor, method, static method, function or property.
+    - `kind`: one of constructor, method, static method, function or property. A Node `get` or `set` accessor, static or
+      not, is a property, because it is read and written as a field is. `MEMBER_SIGNATURE` names each item of a member
+      that differs from the spec: its signature, its kind and its number of parameters.
     - `visibility`: one of public, internal or private.
     - `inputs`, `output` and `errors`: in the terms of the vocabulary. The vocabulary is the terms of
       `contracts/protocol.json`, the units and types of the spec, and `list<T>`, `map<T>`, `optional<T>` and
       `function(...) -> T` of them; no union term, a Node `Promise<T>` is `T`, an iterator or generator is `list<T>`,
       and a callable is `function(...) -> T`. A term outside it fails HYR-8.
       An error is a status that a statement of `contracts/protocol.json` names or an error unit of the spec.
+      - **Extension classes.** An error class that the hyper extension defines, and no source file of a server, is a
+        unit whose native entry is `{"extension": "<qualified class name>", "kind": "class", "internal": <boolean>}` and
+        has no `file`; the unit has no members, because the extension declares them and no reader reads them.
+      - **Kinds.** An error of such a class with a kind is `<unit>:<kind>`, for example
+        `hyper-value-error:invalid_session_handler`. `make recipe-files` fails an error whose unit is no extension unit
+        and a kind that no statement of `contracts/protocol.json` names, because a caller tells these failures apart by
+        the kind alone.
     - `state`: one sentence of what it does.
     - `native`: for each language, the exact `symbol` and the exact `signature` (see below).
   - **Types.** A type is a type declaration that is no unit (HYR-3): a Node `type` alias or `interface`, and a Python
@@ -128,9 +137,15 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
     member), `unit` (the unit whose file holds it in each language), a neutral `shape` and, for each language that
     declares it, `native: {symbol, declaration}`.
     - The shape is `fields`, a map from neutral names to vocabulary terms with an `optional` list, for a record;
-      `function` with `inputs` and `output` for a function type; or a vocabulary term.
+      `function` with `inputs` and `output` for a function type; `union`, the list of the vocabulary terms of its
+      members, for a union type; or a vocabulary term.
+    - An object literal type is a record, `fields`. A union type or an object literal type is stated as what the code
+      declares, never as one term that stands for it: a term hides the members or the fields that a declaration changes,
+      so the check could not fail that change. A member of a union is a term of the vocabulary, and a type may name its
+      own id as a member, which states a recursive union.
     - The check fails a type that is missing, added, moved or of another visibility, and a declaration whose fields,
-      written by the names of HYR-5, differ from the shape.
+      written by the names of HYR-5, differ from the shape, and a union declaration whose members differ from the
+      `union` in number or in term.
     - An options record is the runtime form of named parameters (HY-106): its fields are the named `inputs` of the
       member that takes it, and the check fails when they differ from the named parameters of that member in another
       language. A field that only some languages have carries `only` (HYR-6), as a member does.
@@ -266,7 +281,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
       `steps/recorded.py`), and only a section that names a member of the JSON codec in `members` calls the codec. The
       check fails a step that reaches a member of the unit `json-codec` that its section does not name.
   - **Reading a case.** A runner reads each case only through the case reader of its language, one unit of the test
-    tree with the same members in every language: the public members `cases`, `section`, `id`, `has`, `input`,
+    tree with the same members in every language: the public members `cases`, `file`, `section`, `id`, `has`, `input`,
     `compare`, `outcome`, `fail` and `line`, and the private members `declaration`, `matches` and `equal`. `compare`
     compares a field and `outcome` an outcome of the step.
     - `caseFiles` of `contracts/interfaces.json` is the one source of the roles and comparisons of the case files
@@ -386,7 +401,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - `keys`: the expected list equals the keys of the observed map in their order;
   - `raises`: when the expected value is true, the step fails with the error of hyper of the kind that the statement of
     the field or the outcome states, and when it is false, the step does not fail. The kinds of a statement are those
-    that the kind tables of HY-132 (HY-132.3, HY-132.9) give to it in their column Rule, and the runner reads them from
+    that the kind tables of HY-133 (HY-133.3, HY-133.9) give to it in their column Rule, and the runner reads them from
     those tables in `contracts/protocol.json`, never from the text of the statement: HY-106.21 gives
     `invalid_application` and `invalid_build`, and HY-42.7 gives `invalid_text` of the binding. An outcome whose
     statement the tables do not name is an open failure and expects the open error, the hyper class of the category
@@ -403,7 +418,7 @@ The PHP, Node and Python servers implement one protocol (`contracts/protocol.jso
   - Every runner that `caseFiles` names compares every case by these comparisons and by no other. A case that compares
     nothing for its runner fails with `CASE_EMPTY`; fields and outcomes whose `only` leaves that runner out do not count.
   - `raises` on a step: the runner catches every error of the step and gives it, or null, to the reader, which reads it
-    through `raisesOf`. For an outcome whose statement the kind tables of HY-132 name, the reader checks that its kind
+    through `raisesOf`. For an outcome whose statement the kind tables of HY-133 name, the reader checks that its kind
     is one of the kinds that they give to the statement; for an open failure it checks that its category is `value`
     and its kind is `invalid_application` (HY-106.21); for `creation` of `hooks.json` it checks only that the error is
     an error of hyper (HY-97.7, H35.29-6).

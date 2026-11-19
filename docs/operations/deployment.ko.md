@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 6027577be92347ca4ac2b7ce5359dde3c11a85072974ba664d3d5f8dd7715d82 -->
+<!-- source-sha256: eb2d2e49e1ea5e3ac9c5d0d38648391a18de5c259bbc7c8e0a08f4549ae00464 -->
 # 배포
 
 [English](deployment.md).
@@ -13,11 +13,7 @@
 
 ## 서버와 CDN(권장)
 
-서버는 요청 헤더로 두 종류의 요청을 구분한다(HY-15).
-- **직접 요청:** 주소창 입력, 새로고침, 북마크, 검색 크롤러, 링크 미리보기 봇의 요청이다. `HX-Request`가 없으며 완성된 문서를 받는다.
-- **htmx 요청:** 페이지 안에서 htmx가 보내는 요청이다. `Accept: application/vnd.hyper+json`과 `HX-Request`를 가지며 JSON을 받고, 브라우저가 이를 렌더한다.
-
-따라서 검색엔진과 링크 미리보기는 언제나 제목이 들어 있는 완성된 문서를 받는다.
+서버는 요청 헤더로 두 종류의 요청을 구분한다(HY-15). 직접 요청(주소창 입력, 새로고침, 북마크, 검색 크롤러, 링크 미리보기 봇)은 `HX-Request`가 없으며 완성된 문서를 받는다. 페이지 안에서 htmx가 보내는 요청은 `Accept: application/vnd.hyper+json`과 `HX-Request`를 가지며 JSON을 받고, 브라우저가 이를 렌더한다. 따라서 검색엔진과 링크 미리보기는 언제나 제목이 들어 있는 완성된 문서를 받는다.
 
 | 경로 패턴 | 오리진 | 동작 |
 |---|---|---|
@@ -26,7 +22,7 @@
 
 PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request, HX-Current-URL`이 붙는다.
 
-`make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. PHP는 확장 `polyspec_hyper`에 있는 core로 `build/program/templates/`를 렌더한다(HY-48.22). 서버의 PHP 버전에 맞춰 각각 빌드한 json 확장 `polyspec_json`, 그다음 템플릿 확장 `polyspec_template`, 그다음 `polyspec_hyper`를 `php.ini`의 `extension` 설정으로 불러온다(HY-48.23).
+`make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. PHP는 확장 `polyspec_hyper`에 있는 core로 `build/program/templates/`를 렌더한다(HY-48.22). 서버의 PHP 버전에 맞춰 각각 빌드한 json 확장 `polyspec_json`, 그다음 템플릿 확장 `polyspec_template`, 그다음 `polyspec_hyper`를 `php.ini`의 `extension` 설정으로 불러온다(HY-48.23). session-store 확장 `polyspec_session_store`도 불러온다. `NativeSession::collect`가 그 `FileSessions`로 만료된 session 파일을 지우므로, 제거 규칙이 session-store의 core 한 곳에 있다(HY-48.25).
 
 build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). `public/assets`는 아직 열린 페이지가 불러오는 앞선 build의 파일을 담으므로, 배포에서 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다. build는 자기 애플리케이션 디렉터리에서 앞선 build의 파일을 남기고, 두 목록 전 build의 파일 중 더 새로운 두 목록이 모두 적지 않는 것을 지우므로(HR-34, HYC-16.18), 앞선 build의 페이지는 다른 build 하나 동안 거기서도 자기 파일을 찾는다.
 
@@ -52,16 +48,9 @@ build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을
 
 `make board`는 `examples/board/build/client/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HYC-16), 템플릿마다 파일 하나를 담은 `assets/templates/`, 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`(HYC-15), 그리고 페이지의 head가 적고 브라우저가 그 페이지를 보이기 전에 만드는 module script `assets/reader.js`와 `assets/after-reader.js`다(HYC-25). `make board`는 `--static`으로 `public/assets/`의 이 넷을 밝힌다.
 
-1. S3 버킷에 다음과 같이 올린다.
-   - `index.html`: `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`
-   - `assets/templates/*`: `Content-Type: application/json`, `Cache-Control: public, max-age=31536000, immutable`
-   - `assets/*.css`: 이름에 해시가 없으므로 `Content-Type: text/css; charset=utf-8`, `Cache-Control: no-cache`
-   - `assets/reader.js`, `assets/after-reader.js`: 이름에 해시가 없으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: no-cache`
+1. S3 버킷에 `index.html`을 `Content-Type: text/html; charset=utf-8`과 `Cache-Control: no-cache`로, `assets/templates/*`를 `Content-Type: application/json`과 `Cache-Control: public, max-age=31536000, immutable`로, `assets/*.css`를 `Content-Type: text/css; charset=utf-8`과 `Cache-Control: no-cache`로, `assets/reader.js`와 `assets/after-reader.js`를 `Content-Type: text/javascript; charset=utf-8`과 `Cache-Control: no-cache`로 올린다. 이 파일들은 이름에 해시가 없기 때문이다.
 2. PHP를 환경 변수 `BOARD_BASE_PATH=/api`로 실행한다(HY-8).
-3. 라우팅을 다음과 같이 설정한다.
-   - `/api/*`: 위 표와 같이 PHP로 보낸다.
-   - `/assets/*`: S3로 보낸다.
-   - 그 밖의 모든 경로: 뷰어 요청 단계의 CloudFront Function으로 `/index.html`로 보낸다.
+3. `/api/*`는 위 표와 같이 PHP로, `/assets/*`는 S3로, 그 밖의 모든 경로는 뷰어 요청 단계의 CloudFront Function으로 `/index.html`로 보낸다.
 4. 인라인한 진입 파일을 해시로, 조각 파일과 link한 스타일시트를 `'self'`로 허용하는 Content Security Policy를 보낸다. 그 정책은 `make board`가 출력한다. 조각 파일 `assets/hyper-chunk-*.js`는 이름에 해시가 있으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: public, max-age=31536000, immutable`로 올린다.
 
 모든 페이지 경로가 같은 빈 셸을 반환한다. 그래서 JavaScript를 실행하지 않는 검색 크롤러와 링크 미리보기 봇은 내용도 제목도 보지 못한다. 이 형태는 그런 노출이 필요 없는 화면에만 쓴다.
@@ -174,7 +163,11 @@ new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: fa
 ```python
 RedisSessions(
     SettingSentinel(
-        urls=["redis://sentinel-1:26379", "redis://sentinel-2:26379", "redis://sentinel-3:26379"],
+        urls=[
+            "redis://sentinel-1:26379",
+            "redis://sentinel-2:26379",
+            "redis://sentinel-3:26379",
+        ],
         service="hyper",
         tls=False,
         user=None,
@@ -212,7 +205,12 @@ new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', '
 
 ```python
 RedisSessions(
-    SettingCluster(urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"], user=None, password=None, authorities=None),
+    SettingCluster(
+        urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"],
+        user=None,
+        password=None,
+        authorities=None,
+    ),
     lock_expire=30,
 )
 ```
@@ -232,7 +230,12 @@ new RedisSessions({ setting: { kind: 'server', url: 'rediss://hyper:secret@redis
 ```
 
 ```python
-RedisSessions(SettingServer(url="rediss://hyper:secret@redis:6379", authorities="/etc/redis/ca.pem"), lock_expire=30)
+RedisSessions(
+    SettingServer(
+        url="rediss://hyper:secret@redis:6379", authorities="/etc/redis/ca.pem"
+    ),
+    lock_expire=30,
+)
 ```
 
 `authorities`는 store가 단독으로 신뢰하는 기관의 파일이며, PHP 서버의 `stream[cafile]`에 해당한다. null이면 machine의 trust store를 쓴다.
@@ -247,7 +250,11 @@ new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: tr
 ```python
 RedisSessions(
     SettingSentinel(
-        urls=["rediss://hyper:secret@sentinel-1:26379", "rediss://hyper:secret@sentinel-2:26379", "rediss://hyper:secret@sentinel-3:26379"],
+        urls=[
+            "rediss://hyper:secret@sentinel-1:26379",
+            "rediss://hyper:secret@sentinel-2:26379",
+            "rediss://hyper:secret@sentinel-3:26379",
+        ],
         service="hyper",
         tls=True,
         user="hyper",

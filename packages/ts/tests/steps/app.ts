@@ -147,7 +147,7 @@ function evaluated(value: unknown, argument: Argument): unknown {
   return new Map([...map].map(([key, item]) => [key, evaluated(item, argument)]));
 }
 
-// Returns the redirect result of a step, or its outside redirect (HY-133): its location, its flash values and its changed
+// Returns the redirect result of a step, or its outside redirect (HY-132): its location, its flash values and its changed
 // topics in their order.
 function redirectOf(step: Map<string, unknown>, argument: Argument): Result {
   let result = step.has('outside') ? Result.outside(textOf(step.get('outside'), 'the location of an outside redirect')) : Result.redirect(textOf(step.get('redirect'), 'the path of a redirect'));
@@ -694,7 +694,7 @@ export const steps = {
     reader.compare('tokenRenewed', token !== tokenBefore);
     reader.compare('tokenForm', typeof token === 'string' && /^[0-9a-f]{64}$/u.test(token));
     reader.compare('tokenInBody', typeof token === 'string' && body.includes(token));
-    reader.compare('session', token !== undefined);
+    reader.compare('session', token !== null);
     if (reader.has('restored')) reader.compare('restored', await warnedOutside());
   },
 

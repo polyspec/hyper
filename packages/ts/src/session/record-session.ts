@@ -1,11 +1,17 @@
 // The session record that the PHP, Node and Python servers share, in the form php_serialize of PHP, and the part of a
 // session store that holds its values, whatever keeps the record (HY-104, HY-115).
 import { randomBytes } from 'node:crypto';
-import { PhpFloat, Reference, serialize, StdClass, unserialize, type ArrayKey, type Value as Stored } from '@polyspec/php-serialize';
+import { PhpFloat, Reference, serialize, StdClass, unserialize } from '@polyspec/php-serialization';
 import { rules } from '../app/core-rules.js';
 import type { SessionStore } from './session-store.js';
 
-const IDENTIFIER = /^[A-Za-z0-9,-]{22,128}$/;
+// A value that a record holds, as unserialize of @polyspec/php-serialization gives it and serialize takes it; the
+// package exports no type of it, so a value is narrowed where it is read.
+type Stored = unknown;
+
+function isArrayKey(key: unknown): key is number | bigint | string | Uint8Array {
+  return typeof key === 'number' || typeof key === 'bigint' || typeof key === 'string' || key instanceof Uint8Array;
+}
 
 // The values of one session in one request (HY-24, HY-45, HY-72): the record as it was read and as the request changed
 // it. A value that the request did not set stays what PHP wrote, so a request that does not change it writes the same
@@ -41,7 +47,9 @@ export abstract class RecordSession implements SessionStore {
   }
 
   get(key: string): unknown {
-    return RecordSession.recordValue(this.start().get(key));
+    // A key that holds no value gives null (HY-104.37).
+    const items = this.start();
+    return items.has(key) ? RecordSession.recordValue(items.get(key)) : null;
   }
 
   set(key: string, item: unknown): void {
@@ -72,11 +80,6 @@ export abstract class RecordSession implements SessionStore {
     return this.items === null || this.id === null ? null : serialize(this.items);
   }
 
-  // Returns the value of a session cookie in the form of an identifier, or null (HY-104.9).
-  static accepted(cookie: string | null): string | null {
-    return cookie !== null && IDENTIFIER.test(cookie) ? cookie : null;
-  }
-
   // Returns the session cookie name: `__Host-hy-session` over HTTPS and `hy-session` otherwise (HY-45).
   static cookieName(secure: boolean): string {
     return rules().sessionCookieName(secure);
@@ -105,14 +108,15 @@ export abstract class RecordSession implements SessionStore {
 
   // Returns the key of the data model of an array key: an integer is its decimal text, and bytes that are not UTF-8 stay
   // bytes (HY-104.13).
-  private static recordKey(key: ArrayKey): string | Uint8Array {
+  private static recordKey(key: unknown): string | Uint8Array {
+    if (!isArrayKey(key)) throw new TypeError('hyper: a session record has a key that is no array key');
     return typeof key === 'number' || typeof key === 'bigint' ? String(key) : key;
   }
 
   // Returns the value of the data model of a value that a record holds: a float is its number, a stdClass is a map and a
   // reference is its value. Bytes that are not UTF-8 and an integer outside the data model stay what they are, and the
   // application fails on them as on any other value (HY-104.13).
-  private static recordValue(stored: Stored | undefined): unknown {
+  private static recordValue(stored: Stored): unknown {
     if (stored instanceof Reference) return RecordSession.recordValue(stored.value);
     if (stored instanceof PhpFloat) return stored.value;
     if (stored instanceof StdClass || stored instanceof Map) {

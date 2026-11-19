@@ -1,5 +1,5 @@
 <!-- doc-id: plan-execution -->
-<!-- source-sha256: 9f909124a8ffa9be8474f6504232c69dc89c528c580a6e46da62147771415519 -->
+<!-- source-sha256: ae5876e9b2dd6b57105db77a99f927f8931993c316a303ebbf1c820800e900ae -->
 # 실행
 
 [English](plan.md).
@@ -215,7 +215,7 @@ core를 부르지 않는 서버와 core는 모두 `contracts/`의 case를 실행
 
 Depends on: none. 새 checkout은 core를 부르지 않는 서버만 설치하고 검사한다. `make hyper-install`은 `make bindings`가 소스를 쓰기 전에 바인딩의 Python 패키지를 설치하고(H35.1), 어떤 CI group도 core나 바인딩의 target을 실행하지 않으며(H35.2), Git은 `make bindings`가 쓰는 Python 패키지를 무시하지 않으며(H35.3), `Cargo.lock`의 binding은 session-store의 callback unit과 function result에 대해 Go와 WASM을 생성하지 않으며(H35.4), 다음 binding은 음의 0의 case를 바꾼다(H35.5). core는 사본이 여럿인 kept 값을 첫 릴리스 뒤에 맡는다(H35.6). H35.7은 로컬 provider에 대한 전체 실행이 지목한 결함을 고친다. H35.8은 npm과 Cargo에서 각 provider를 그 release로 받는다.
 
-이 wave의 첫 릴리스의 범위. 첫 릴리스는 다음 행을 가지며, H35.32와 H35.33의 행은 그 뒤에 온다.
+이 wave의 첫 릴리스의 범위. 첫 릴리스는 다음 행과 H35.32 및 그 행을 가지며, H35.32-9, H35.32-11, H35.33만 그 뒤에 온다.
 
 - H35.34와 H35.34-1: `hyper build`가 쓰는 `reads.json`의 read path, 그리고 PHP와 Python case runner가 그 파일을 비교하는 일.
 - H35.31-2-1: core의 규칙인 파일 limit 검사.
@@ -335,3 +335,5 @@ H35.38, 교체와 함께 없어지는 것. `flock.ts`의 호출자는 `file-sess
 H35.38, 라이브러리 오류의 변환. 서버에는 category를 받아 hyper의 class를 주는 함수가 없다. `packages/ts/src/app/core-rules.ts`의 `valueError`와 `typeError`(431행과 432행), `_core_rules.py`의 `value_error`와 `type_error`, `CoreRules.php`의 같은 쌍은 각각 class 하나를 지정한다. hyper binding의 class는 라이브러리의 kind를 자기 category에서 받아들인다. `packages/rust/interface.json`이 `errors.kinds` 아래에 `library: session-store`로 그것들을 나열하기 때문이며, unit `record_error`는 kind `record`와 `record_write`를 위한 class `RecordError`를 hyper에 준다. 그래서 kind의 표 없이 서버에서 일반 변환 하나가 가능하다: class chain에 라이브러리 package의 class를 가진 오류에 대해, 같은 역할의 hyper class, 곧 `RecordError`에는 `RecordError`를, `SessionStore<Category>Error`에는 `Hyper<Category>Error`를 골라 그 오류의 message, kind, 상태로 만든다. binding 경로에서는 고정된 binding 0.0.17로 contract가 이를 선언할 수 없다. 라이브러리의 store는 다른 repository의 callback unit으로 `opening_functions.open_page`에 들어가고, 그 언어 코드의 예외는 `Failure::Raised`이며 core가 이를 그대로 넘긴다(`packages/rust/src/session.rs`의 `from_store`). 그리고 binding은 다른 라이브러리의 error unit을 recognize하는 이 contract의 callback unit을 이름으로 거절한다(G-4를 인용하는, binding generator의 recognized error 규칙). 그래서 store가 core 안에서 발생시킨 라이브러리의 오류는 라이브러리의 class로 도착하고, 변환은 서버에서 core 호출을 감싸거나, 변환해 주는 binding을 기다린다.
 
 H35.38, adapter를 정하는 열린 질문. (a) Node 생성자: 공개 API의 비동기 maker인가, 첫 open에서의 실패인가. (b) `@polyspec/php-serialization` 위의 file session codec: 이 단계에서 쓰는가, 라이브러리에 데이터 모델의 값을 요청하는가. (c) binding 경로의 변환: 서버에서 `openPage`와 `answerKeepRequest`를 감싸는가, binding에 요청하는가. (b)가 그렇게 정해질 때의 라이브러리 요청 외에 다른 요청은 찾지 못했다. `flock`이 없는 플랫폼과 쓸 수 없는 `node:ffi`의 실패는 `flock.ts`와 함께 끝나기 때문이다.
+
+H35.75, `make pin`의 모델. 다른 polyspec repository의 pin script는 manifest의 Cargo tag와 npm release URL을 주어진 version으로 다시 쓰고, 각 wheel의 sha256을 입력으로 받으며, lock을 쓰지 않고, check mode에서 다른 version을 pin하는 파일과 함께 실패한다. `make pin`은 plain version, Composer, Makefile, php-ext의 곳과 wheel digest도 쓰고, 이 repository의 lock target을 실행하며, `make pin-check`는 다른 각 곳의 줄을 이름한다.

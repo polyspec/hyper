@@ -72,6 +72,22 @@ final class RequestSteps
         }
     }
 
+    /**
+     * Creates a request whose path, raw query and headers are the UTF-8 bytes of the texts of the case and compares
+     * its failure, or null: a PHP string holds bytes, so a character above U+00FF is its bytes (HY-42.7).
+     */
+    public static function bytes(CaseReader $case): void
+    {
+        $headers = [];
+        foreach ((array) $case->input('headers') as $name => $value) {
+            $headers[(string) $name] = Json::string($value);
+        }
+        $path = Json::string($case->input('path'));
+        $query = Json::string($case->input('query'));
+        $outcome = CaseRules::failureOf(static fn (): Request => new Request('GET', $path, $headers, $query));
+        $case->compare('raises', $outcome['raises']);
+    }
+
     /** Records the path and the raw query of a request target, whose characters are bytes (HY-42, HY-56). */
     public static function targets(CaseReader $case): void
     {

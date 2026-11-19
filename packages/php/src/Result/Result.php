@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The outcome of an action: a redirect (HY-25, HY-46), an outside redirect (HY-133) or a page with a status (HY-26,
+ * The outcome of an action: a redirect (HY-25, HY-46), an outside redirect (HY-132) or a page with a status (HY-26,
  * HY-58), with the flash values and the changed topics that it stores for the next request.
  */
 final class Result
 {
     /**
-     * An outside location (HY-133.2) with its scheme, its host and its port, of ASCII characters only: the class of the
+     * An outside location (HY-132.2) with its scheme, its host and its port, of ASCII characters only: the class of the
      * rest holds every visible ASCII character except the backslash.
      */
     private const OUTSIDE = '#^([Hh][Tt][Tt][Pp][Ss]?)://([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*)(?::([1-9][0-9]{0,4}))?'
@@ -35,7 +35,7 @@ final class Result
 
     /**
      * Returns a redirect to a path of this application (HY-46); the core checks the location and refuses a text that
-     * is not UTF-8 with `invalid_text` (HY-46.1, HY-132.2).
+     * is not UTF-8 with `invalid_text` (HY-46.1, HY-133.2).
      */
     public static function redirect(string $location): self
     {
@@ -44,13 +44,13 @@ final class Result
         return new self(CoreRules::shared()->resultRedirect($location), 303, [], [], []);
     }
 
-    /** Returns an outside redirect to an outside location (HY-133). */
+    /** Returns an outside redirect to an outside location (HY-132). */
     public static function outside(string $location): self
     {
         ArgumentCount::most(\func_num_args(), 1);
         if (self::origin($location) === null) {
             throw new HyperValueError(
-                'an outside location is not an http or https URL with a host (HY-133)',
+                'an outside location is not an http or https URL with a host (HY-132)',
                 'not_outside_location',
             );
         }
@@ -60,7 +60,7 @@ final class Result
 
     /**
      * Returns the origin of an outside location, its scheme and its host in lower case and its port or the default port
-     * of its scheme, or null for a text that is no outside location (HY-133).
+     * of its scheme, or null for a text that is no outside location (HY-132).
      */
     public static function origin(string $text): ?string
     {
@@ -154,7 +154,7 @@ final class Result
     }
 
     /**
-     * Returns true for an outside redirect, whose location is no application path (HY-133).
+     * Returns true for an outside redirect, whose location is no application path (HY-132).
      *
      * @internal
      */
@@ -163,12 +163,12 @@ final class Result
         return $this->location !== null && !str_starts_with($this->location, '/');
     }
 
-    /** Fails for an outside redirect, which stores no flash value and no changed topic (HY-133). */
+    /** Fails for an outside redirect, which stores no flash value and no changed topic (HY-132). */
     private function refuseOutside(): void
     {
         if ($this->isOutside()) {
             throw new HyperValueError(
-                'an outside redirect holds no flash value or changed topic (HY-133)',
+                'an outside redirect holds no flash value or changed topic (HY-132)',
                 'outside_redirect_stores',
             );
         }

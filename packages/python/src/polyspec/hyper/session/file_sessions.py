@@ -6,7 +6,7 @@ another form or without an unexpired file starts a new session. The session star
 request that never uses it creates no session. A request holds `flock` on the session file from its opening to its
 closing, as PHP does: the library orders the requests of this process in a queue and waits for the lock of the other
 processes with no retry and no pause (HY-104.27), and the operating system releases the lock of a process that
-ended. A failure of the library is an error of hyper of the same category with the kind of the library (HY-132.3)."""
+ended. A failure of the library is an error of hyper of the same category with the kind of the library (HY-133.3)."""
 
 from __future__ import annotations
 
@@ -26,7 +26,9 @@ class FileSessions:
         `invalid_directory` and with a lifetime of 0 with `invalid_lifetime` (HY-104.32); the binding of the library
         refuses a lifetime that is no integer of 0 or more with `invalid_number`, and one that is no number with
         `invalid_argument_type`."""
-        self._store = converted(lambda: library.FileSessions.in_directory(directory, lifetime))
+        self._store = converted(
+            lambda: library.FileSessions.in_directory(directory, lifetime)
+        )
 
     def _open(self, cookie: Optional[str]) -> "FileSession":
         """Returns the store of a request with the value of its session cookie, after the earlier requests of the same
@@ -34,7 +36,8 @@ class FileSessions:
         without a file names no session (HY-45)."""
         return FileSession(converted(lambda: self._store.open(cookie)))
 
-    def _collect(self) -> int:
+    def collect(self) -> int:
         """Removes the files of the sessions that ended and returns how many it removed; a file whose lock a request
-        holds is skipped. The store never collects by itself."""
+        holds is skipped. The store never collects by itself: the application calls this when it chooses, such as
+        from a scheduled task (HY-104.33, SF-5)."""
         return converted(self._store.collect)

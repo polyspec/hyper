@@ -9,9 +9,10 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { applyMutation, readMutations, track } from '../../scripts/recipe/mutations.mts';
 import { checkStated } from '../../scripts/recipe/stated.mts';
-import { expectedDirectory } from '../../scripts/recipe/names.mts';
-import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type Unit } from '../../scripts/recipe/types.mts';
+import { expectedDirectory, testKey } from '../../scripts/recipe/names.mts';
+import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type SpecDocument, type Unit } from '../../scripts/recipe/types.mts';
 import { validators } from '../../scripts/recipe/validators.mts';
+import { withoutExtensions } from '../../scripts/recipe/run.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
@@ -60,8 +61,19 @@ function withFixtureCopy(prefix: string, run: (root: string, replaceIn: (file: s
 
 const schemas = validators();
 
-/** The spec of a file, which must pass the schema of the spec. */
+/**
+ * The spec of a file, which must pass the schema of the spec and hold no extension unit (HYR-5): the tests write it
+ * back, and the `Spec` of the checks has no extension entries to write.
+ */
 function specOf(file: string): Spec {
+  const doc = documentOf(file);
+  const spec = withoutExtensions(doc);
+  assert.deepEqual(spec, doc, `${file} holds an extension unit, which a test cannot write back`);
+  return spec;
+}
+
+/** The spec of a file as the file holds it, extension units included, which must pass the schema of the spec. */
+function documentOf(file: string): SpecDocument {
   const doc: unknown = JSON.parse(readFileSync(file, 'utf8'));
   if (!schemas.spec(doc)) throw new Error(`${file} is no spec: ${JSON.stringify(schemas.spec.errors?.[0])}`);
   return doc;
@@ -233,33 +245,11 @@ test('the candidate derives the units and concerns from an empty skeleton', () =
   }
 });
 
-test('the candidate derives the members of a unit that the spec lists without members', () => {
-  const dir = mkdtempSync(path.join(tmpdir(), 'recipe-members-'));
-  const root = mkdtempSync(path.join(tmpdir(), 'recipe-members-root-'));
-  try {
-    cpSync(fixture, root, { recursive: true });
-    track(root);
-    const spec = specOf(path.join(fixture, 'contracts', 'interfaces.json'));
-    const csrf = spec.concerns.find((c) => c.id === 'csrf');
-    assert.ok(csrf?.units[0] !== undefined, 'the fixture has no unit of csrf');
-    const expected = csrf.units[0].members.length;
-    csrf.units[0].members = [];
-    writeFileSync(path.join(root, 'contracts', 'interfaces.json'), JSON.stringify(spec));
-    const output = path.join(dir, 'interfaces.candidate.json');
-    const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
-    assert.equal(result.status, 0, result.stdout + result.stderr);
-    const derived = listAt(readJson(output), 'concerns').find((c) => at(c, 'id') === 'csrf');
-    const members = listAt(derived, 'units', 0, 'members');
-    assert.ok(expected > 0, 'the fixture unit of csrf has no members');
-    assert.equal(members.length, expected);
-    assert.ok(members.every((m) => keysAt(m, 'native').length > 0), 'a derived member names no native symbol');
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-    rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test('the candidate adds a member that the sources hold and the spec of a listed unit lacks (H35.56)', () => {
+/**
+ * Runs the candidate on a copy of the fixture whose first unit of csrf `edit` changes, and gives `inspect` the members
+ * of that unit in the candidate, the candidate file and its directory; the copy and the directory are removed after.
+ */
+function csrfCandidate(edit: (unit: Unit) => void, inspect: (members: unknown[], output: string, dir: string) => void): void {
   const dir = mkdtempSync(path.join(tmpdir(), 'recipe-members-'));
   const root = mkdtempSync(path.join(tmpdir(), 'recipe-members-root-'));
   try {
@@ -267,26 +257,84 @@ test('the candidate adds a member that the sources hold and the spec of a listed
     track(root);
     const spec = specOf(path.join(fixture, 'contracts', 'interfaces.json'));
     const unit = spec.concerns.find((c) => c.id === 'csrf')?.units[0];
-    assert.ok(unit !== undefined && unit.members.length >= 2, 'the fixture unit of csrf has fewer than two members');
-    const expected = unit.members.map((m) => m.id);
-    unit.members = unit.members.slice(0, 1);
+    assert.ok(unit !== undefined, 'the fixture has no unit of csrf');
+    edit(unit);
     writeFileSync(path.join(root, 'contracts', 'interfaces.json'), JSON.stringify(spec));
     const output = path.join(dir, 'interfaces.candidate.json');
     const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stdout + result.stderr);
     const derived = listAt(readJson(output), 'concerns').find((c) => at(c, 'id') === 'csrf');
-    const ids = listAt(derived, 'units', 0, 'members').map((m) => at(m, 'id'));
-    assert.deepEqual([...ids].sort(), [...expected].sort(), 'the candidate does not hold every member of the sources');
-    const handWritten = listAt(readJson(path.join(dir, 'interfaces.candidate.hand-written.json')));
-    const ci = listAt(readJson(output), 'concerns').findIndex((c) => at(c, 'id') === 'csrf');
-    for (let mi = 1; mi < ids.length; mi += 1) {
-      for (const field of ['inputs', 'output', 'errors', 'state']) {
-        assert.ok(handWritten.includes(`/concerns/${ci}/units/0/members/${mi}/${field}`), `the added member ${String(ids[mi])} is not marked for its ${field}`);
-      }
-    }
+    inspect(listAt(derived, 'units', 0, 'members'), output, dir);
   } finally {
     rmSync(dir, { recursive: true, force: true });
     rmSync(root, { recursive: true, force: true });
+  }
+}
+
+test('the candidate derives the members of a unit that the spec lists without members', () => {
+  let expected = 0;
+  csrfCandidate(
+    (unit) => {
+      expected = unit.members.length;
+      unit.members = [];
+    },
+    (members) => {
+      assert.ok(expected > 0, 'the fixture unit of csrf has no members');
+      assert.equal(members.length, expected);
+      assert.ok(members.every((m) => keysAt(m, 'native').length > 0), 'a derived member names no native symbol');
+    },
+  );
+});
+
+test('the candidate adds a member that the sources hold and the spec of a listed unit lacks (H35.56)', () => {
+  let expected: string[] = [];
+  csrfCandidate(
+    (unit) => {
+      assert.ok(unit.members.length >= 2, 'the fixture unit of csrf has fewer than two members');
+      expected = unit.members.map((m) => m.id);
+      unit.members = unit.members.slice(0, 1);
+    },
+    (members, output, dir) => {
+      const ids = members.map((m) => at(m, 'id'));
+      const byText = (a: unknown, b: unknown): number => String(a).localeCompare(String(b));
+      assert.deepEqual([...ids].sort(byText), [...expected].sort(byText), 'the candidate does not hold every member of the sources');
+      const handWritten = listAt(readJson(path.join(dir, 'interfaces.candidate.hand-written.json')));
+      const ci = listAt(readJson(output), 'concerns').findIndex((c) => at(c, 'id') === 'csrf');
+      for (let mi = 1; mi < ids.length; mi += 1) {
+        for (const field of ['inputs', 'output', 'errors', 'state']) {
+          assert.ok(handWritten.includes(`/concerns/${ci}/units/0/members/${mi}/${field}`), `the added member ${String(ids[mi])} is not marked for its ${field}`);
+        }
+      }
+    },
+  );
+});
+
+test('the candidate keeps an extension unit and an error of its kind (HYR-5, H35.96)', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'recipe-extension-'));
+  try {
+    withFixtureCopy('recipe-extension-root-', (root, replaceIn) => {
+      const entry = { extension: 'Polyspec\\Hyper\\ValueError', kind: 'class', internal: true };
+      replaceIn(
+        'contracts/interfaces.json',
+        '"units": [\n        {\n          "id": "csrf",',
+        `"units": [\n        { "id": "value-error", "native": { "php": ${JSON.stringify(entry)} }, "members": [] },\n        {\n          "id": "csrf",`,
+      );
+      replaceIn('contracts/interfaces.json', '"errors": [],', '"errors": ["value-error:token"],');
+      track(root);
+      const output = path.join(dir, 'interfaces.candidate.json');
+      const result = spawnSync(process.execPath, [candidate, '--root', root, '--php-autoload', phpAutoload(root), '--output', output], { encoding: 'utf8' });
+      const printed = result.stdout + result.stderr;
+      assert.equal(result.status, 0, printed);
+      const units = listAt(readJson(output), 'concerns').flatMap((c) => listAt(c, 'units'));
+      const unit = units.find((u) => at(u, 'id') === 'value-error');
+      assert.ok(unit !== undefined, 'the candidate dropped the extension unit value-error');
+      assert.deepEqual(at(unit, 'native', 'php'), entry, 'the candidate changed the extension entry');
+      const errors = units.flatMap((u) => listAt(u, 'members')).flatMap((m) => listAt(m, 'errors'));
+      assert.ok(errors.includes('value-error:token'), 'the candidate dropped the error value-error:token');
+      assert.doesNotMatch(printed, /^CANDIDATE_STALE .*value-error|^CANDIDATE_STALE \/concerns\/\d+\/units\/0\/native\/php/mu, 'the candidate reports the extension entry as stale');
+    });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });
 
@@ -375,6 +423,27 @@ test('the Python reader counts a variadic parameter as one input, as PHP and Nod
   assert.deepEqual(grow?.parameters, ['sizes'], `python reads the parameters of grow as ${JSON.stringify(grow?.parameters)}`);
 });
 
+/** Asserts that the reader of `lang` reads the class `unit` of its reader fixture with `twice` and no constructor. */
+function assertNoGuard(lang: 'node' | 'php', unit: string): void {
+  const members = readFixture(lang, path.join(fixture, 'readers', lang)).members.filter((m) => m.unit === unit);
+  const names = members.map((m) => m.name);
+  assert.ok(names.includes('twice'), `${lang} does not read ${unit}: ${names.join(', ')}`);
+  assert.ok(!members.some((m) => m.kind === 'constructor'), `${lang} counts the empty private constructor of ${unit} as a member: ${names.join(', ')}`);
+}
+
+test('the Node reader counts no empty private constructor of a class of static methods (HYR-6, H35.105)', () => {
+  assertNoGuard('node', 'StaticOnly');
+});
+
+test('the PHP reader counts no empty private constructor of a class of static methods (HYR-6, H35.105)', () => {
+  assertNoGuard('php', 'StaticOnly');
+});
+
+test('the PHP reader counts no empty private constructor whose body holds a comment or that is one line (HYR-6, H35.105)', () => {
+  assertNoGuard('php', 'StaticCommented');
+  assertNoGuard('php', 'StaticInline');
+});
+
 test('the PHP reader lists a trait member under the trait, not under the class that uses it', () => {
   const names = readFixture('php', path.join(fixture, 'readers', 'php')).members.filter((m) => m.unit === 'Gadget').map((m) => m.name);
   assert.ok(names.includes('size'), `Gadget does not list size: ${names.join(', ')}`);
@@ -425,13 +494,15 @@ test('the Node reader reads a test called on any receiver, and an each table wri
   assert.deepEqual(out.dynamicTests.map((t) => t.line), [3], `dynamic lines: ${out.dynamicTests.map((t) => t.line).join(', ')}`);
 });
 
-test('the Node reader lists an accessor as a method, with its head and not its body', () => {
+// An accessor is read as a field is read, so the reader gives it the kind property, static or not, as the spec declares
+// it.
+test('the Node reader lists an accessor as a property, with its head and not its body', () => {
   const members = readFixture('node', path.join(fixture, 'readers', 'node')).members.filter((m) => m.unit === 'Accessed');
   const size = members.find((m) => m.name === 'size');
   const kind = members.find((m) => m.name === 'kind');
-  assert.equal(size?.kind, 'method', `size is ${size?.kind}`);
+  assert.equal(size?.kind, 'property', `size is ${size?.kind}`);
   assert.equal(size?.signature, 'get size(): number', `size signature: ${size?.signature}`);
-  assert.equal(kind?.kind, 'static method', `kind is ${kind?.kind}`);
+  assert.equal(kind?.kind, 'property', `kind is ${kind?.kind}`);
   assert.equal(kind?.signature, 'static get kind(): string', `kind signature: ${kind?.signature}`);
 });
 
@@ -550,7 +621,9 @@ test('a passing run prints the three numbers of the fixture: the members stated 
 // reading and not a difference between the languages.
 
 type Kind = 'constructor' | 'method' | 'static method';
-type Written = { unit: string; extends?: string; properties?: [string, string][]; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string }[] };
+// A member with `phpSymbol` has that PHP symbol as written (a namespace function has no class); its Node code is unchanged.
+type Written = { unit: string; extends?: string; properties?: [string, string][]; members: { name: string; kind: Kind; visibility: Member['visibility']; output?: string; phpSymbol?: string; reachDiffers?: ReachDiffer[] }[] };
+type ReachDiffer = { member: string; reached: 'php' | 'node'; notReached: 'php' | 'node'; sentence: string };
 const FILE: Record<'php' | 'node', (unit: string) => string> = { php: (u) => `src/${u.charAt(0).toUpperCase()}${u.slice(1)}.php`, node: (u) => `src/${u}.ts` };
 const NATIVE: Record<'php' | 'node', (unit: string, name: string) => string> = {
   php: (u, n) => `${FILE.php(u)}::Fx\\${u.charAt(0).toUpperCase()}${u.slice(1)}::${n === 'constructor' ? '__construct' : n}`,
@@ -565,7 +638,7 @@ const cls = (unit: string): string => `${unit.charAt(0).toUpperCase()}${unit.sli
 function stated(
   units: Written[],
   named: string[],
-  scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr; ref: (unit: string) => ClassRef }) => { unit: string; method: string; uses?: Expr[]; assigns?: Scope['assigns']; loops?: Scope['loops']; returns?: ClassRef; parameters?: Parameter[] }[],
+  scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr; ref: (unit: string) => ClassRef }) => { unit: string; method: string; function?: boolean; uses?: Expr[]; assigns?: Scope['assigns']; loops?: Scope['loops']; returns?: ClassRef; parameters?: Parameter[] }[],
 ): { findings: string[] } {
   const specUnits: Unit[] = units.map((w) => ({
     id: w.unit,
@@ -578,7 +651,8 @@ function stated(
       output: m.output ?? 'string',
       errors: [],
       state: 'A member.',
-      native: { php: { symbol: NATIVE.php(w.unit, m.name), signature: '' }, node: { symbol: NATIVE.node(w.unit, m.name), signature: '' } },
+      native: { php: { symbol: m.phpSymbol ?? NATIVE.php(w.unit, m.name), signature: '' }, node: { symbol: NATIVE.node(w.unit, m.name), signature: '' } },
+      ...(m.reachDiffers === undefined ? {} : { reachDiffers: m.reachDiffers }),
     })),
   }));
   const spec: Spec = {
@@ -608,8 +682,8 @@ function stated(
     const written = scopes(lang, { cls: (unit) => ({ kind: 'class', ...ref(unit) }), ref });
     const all: Scope[] = written.map((s) => ({
       file: FILE[lang](s.unit),
-      name: `${cls(s.unit)}.${s.method === 'constructor' && lang === 'php' ? '__construct' : s.method}`,
-      class: cls(s.unit),
+      name: s.function === true ? s.method : `${cls(s.unit)}.${s.method === 'constructor' && lang === 'php' ? '__construct' : s.method}`,
+      ...(s.function === true ? {} : { class: cls(s.unit) }),
       parameters: s.parameters ?? [],
       uses: s.uses ?? [],
       assigns: s.assigns ?? [],
@@ -635,6 +709,72 @@ const BOX: Written[] = [
   { unit: 'box', members: [{ name: 'run', kind: 'method', visibility: 'public' }, { name: 'all', kind: 'static method', visibility: 'public', output: 'list<item>' }] },
   { unit: 'item', members: [{ name: 'size', kind: 'method', visibility: 'internal' }] },
 ];
+
+test('an internal method that a PHP namespace function calls is reached by the function, and no MEMBER_UNREACHED is reported', () => {
+  const unit: Written[] = [
+    {
+      unit: 'box',
+      members: [
+        { name: 'run', kind: 'method', visibility: 'public', phpSymbol: `${FILE.php('box')}::Fx\\run` },
+        { name: 'helper', kind: 'method', visibility: 'internal', phpSymbol: NATIVE.php('box', 'helper') },
+      ],
+    },
+  ];
+  // PHP: the function `run` calls `helper`, so the reach from `run` fails in PHP only if its key is wrong.
+  // Node: the method `run` calls `helper`, so `helper` is reached in Node.
+  const calls = (lang: 'php' | 'node', e: { cls: (unit: string) => Expr }): { unit: string; method: string; function?: boolean; uses?: Expr[] }[] =>
+    lang === 'php' ? [
+      { unit: 'box', method: 'run', function: true, uses: [{ kind: 'member', of: e.cls('box'), name: 'helper', call: true }] },
+      { unit: 'box', method: 'helper' },
+    ] : [
+      { unit: 'box', method: 'run', uses: [{ kind: 'member', of: e.cls('box'), name: 'helper', call: true }] },
+      { unit: 'box', method: 'helper' },
+    ];
+  assert.deepEqual(stated(unit, ['box.run'], calls).findings, []);
+});
+
+/**
+ * A unit whose internal `error` is reached by `run` and `other` in PHP and by `other` in Node, and by `run` too when
+ * `nodeRunCalls` holds; `run` declares the reach difference `declaration` names, when it is given.
+ */
+function reachBox(declaration: ReachDiffer[] | undefined, nodeRunCalls: boolean): { units: Written[]; scopes: (lang: 'php' | 'node', e: { cls: (unit: string) => Expr }) => { unit: string; method: string; uses: Expr[] }[] } {
+  const units: Written[] = [{
+    unit: 'box',
+    members: [
+      { name: 'run', kind: 'method', visibility: 'public', ...(declaration === undefined ? {} : { reachDiffers: declaration }) },
+      { name: 'other', kind: 'method', visibility: 'public' },
+      { name: 'error', kind: 'method', visibility: 'internal' },
+    ],
+  }];
+  const scopes = (lang: 'php' | 'node', e: { cls: (unit: string) => Expr }): { unit: string; method: string; uses: Expr[] }[] => {
+    const call: Expr = { kind: 'member', of: e.cls('box'), name: 'error', call: true };
+    if (lang === 'php') return [{ unit: 'box', method: 'run', uses: [call] }, { unit: 'box', method: 'other', uses: [call] }];
+    return [
+      { unit: 'box', method: 'other', uses: [call] },
+      ...(nodeRunCalls ? [{ unit: 'box', method: 'run', uses: [call] }] : []),
+    ];
+  };
+  return { units, scopes };
+}
+
+test('a reach difference that the member declares passes the stated check (HY-104.46 for the declared pair)', () => {
+  const { units, scopes } = reachBox([{ member: 'box.error', reached: 'php', notReached: 'node', sentence: 'HY-104.46' }], false);
+  assert.deepEqual(stated(units, ['box.run', 'box.other'], scopes).findings, []);
+});
+
+test('a reach difference that no member declares fails the stated check with MEMBER_REACH_DIFFERS', () => {
+  const { units, scopes } = reachBox(undefined, false);
+  assert.deepEqual(stated(units, ['box.run', 'box.other'], scopes).findings, [
+    'MEMBER_REACH_DIFFERS internal member box.error is reached from box.run in php and not in node',
+  ]);
+});
+
+test('a declared reach difference that the check does not find fails with MEMBER_REACH_STALE', () => {
+  const { units, scopes } = reachBox([{ member: 'box.error', reached: 'php', notReached: 'node', sentence: 'HY-104.46' }], true);
+  assert.deepEqual(stated(units, ['box.run', 'box.other'], scopes).findings, [
+    'MEMBER_REACH_STALE box.run declares a reach difference of box.error in php and not in node, and the check finds none',
+  ]);
+});
 
 test('the variable of a loop over the list that a member returns has the class inside the list, and an output that names no unit gives none', () => {
   const loop = (lang: 'php' | 'node', e: { cls: (unit: string) => Expr }): ReturnType<Parameters<typeof stated>[2]> => [
@@ -818,11 +958,49 @@ test('the Node reader writes the call of the parent constructor in the construct
 });
 
 test('the PSR-4 list of each composer.json is the directory of each group that holds a PHP unit (HYR-4)', () => {
-  const spec = specOf(path.join(repo, 'contracts', 'interfaces.json'));
+  // An extension unit has no file, so only the units that name a file hold a PHP directory (HYR-5).
+  const spec = withoutExtensions(documentOf(path.join(repo, 'contracts', 'interfaces.json')));
   const groups = spec.groups.filter((g) => spec.concerns.some((c) => c.group === g && c.units.some((u) => u.native.php !== undefined)));
   const directories = groups.map((g) => `src/${expectedDirectory('php', g)}/`).sort();
   assert.ok(directories.length > 0, 'no group of the spec holds a PHP unit');
   const psr4 = (file: string): unknown => at(readJson(path.join(repo, file)), 'autoload', 'psr-4', 'Polyspec\\Hyper\\');
   assert.deepEqual(psr4('packages/php/composer.json'), directories);
   assert.deepEqual(psr4('composer.json'), directories.map((d) => `packages/php/${d}`));
+});
+
+test('a member called on the result of a const declared with a function type is read with that type as its receiver (HYR-5)', () => {
+  // The fixture declares rules as `() => CoreRules` with a call initializer, as packages/ts/src/app/core-rules.ts does.
+  const out = readCopy('node', path.join(fixture, 'readers', 'node-declared-rules'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'Csrf.mask');
+  // The receiver of csrfMask is the call of rules, which the checker resolves to the return type `CoreRules` (HY-24.2).
+  const rulesCall = { kind: 'member', of: { kind: 'module', file: 'src/core-rules.ts' }, name: 'rules', call: true };
+  assert.deepEqual(scope?.uses.find((u) => u.kind === 'member' && u.name === 'csrfMask'), { kind: 'member', of: rulesCall, name: 'csrfMask', call: true });
+});
+
+test('a local that an isinstance check narrows to a class of the tree has that class as its type (HYR-5)', () => {
+  // The fixture narrows `result` by `isinstance(result, Result)` before `result._is_redirect()`, as app.py of the Python server does.
+  const out = readCopy('python', path.join(fixture, 'readers', 'python-narrowed'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'App.routed');
+  assert.deepEqual(scope?.assigns.filter((a) => a.target === 'result' && a.type !== undefined).map((a) => a.type), [{ file: 'src/result.py', name: 'Result' }]);
+});
+
+test('a local that a PHP instanceof check narrows to a class of the tree has that class as its type (HYR-5)', () => {
+  // The fixture narrows `$result` by `$result instanceof Result` before `$result->isRedirect()`, as App.php of the PHP server does.
+  const out = readCopy('php', path.join(fixture, 'readers', 'php-narrowed'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'App.routed');
+  assert.deepEqual(scope?.assigns.filter((a) => a.target === 'result' && a.type !== undefined).map((a) => a.type), [{ file: 'src/Result.php', name: 'Result' }]);
+  const isRedirect = scope?.uses.find((u) => u.kind === 'member' && u.name === 'isRedirect');
+  assert.deepEqual(isRedirect, { kind: 'member', of: { kind: 'variable', name: 'result' }, name: 'isRedirect', call: true });
+});
+
+test('a native test name that contains ": " is keyed by its whole name when the test exists (H35.113)', () => {
+  // The reference is `<file>::<name>: <reason>`, and a name may contain `: ` itself, so the key is the name that the
+  // test file declares, not the text up to the first `: `.
+  const known = new Set(['packages/ts/tests/http.test.ts::the field lines > joined: no media type']);
+  assert.equal(
+    testKey('packages/ts/tests/http.test.ts::the field lines > joined: no media type: HY-42.14 gives 400', known),
+    'packages/ts/tests/http.test.ts::the field lines > joined: no media type',
+  );
+  // Without a declared name the first `: ` still ends the key, as before.
+  assert.equal(testKey('packages/ts/tests/x.test.ts::a name: a reason'), 'packages/ts/tests/x.test.ts::a name');
 });

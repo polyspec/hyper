@@ -23,7 +23,7 @@ export class CaseReader {
   private error: string | undefined;
 
   private readonly runner: string;
-  private readonly file: string;
+  private readonly caseFile: string;
   private readonly sectionName: string;
   private readonly item: unknown;
   private readonly section_: Section;
@@ -32,7 +32,7 @@ export class CaseReader {
 
   private constructor(runner: string, file: string, sectionName: string, item: unknown, section_: Section, contract: unknown, undeclared: string | undefined) {
     this.runner = runner;
-    this.file = file;
+    this.caseFile = file;
     this.sectionName = sectionName;
     this.item = item;
     this.section_ = section_;
@@ -63,16 +63,16 @@ export class CaseReader {
   }
 
   section(): string {
-    return `${this.file}:${this.sectionName}`;
+    return this.sectionName;
   }
 
   id(): string {
     return String(member(this.item, 'id'));
   }
 
-  // The file, the section and the id of the case, by which a selection of the runner names it.
-  name(): { file: string; section: string; id: string } {
-    return { file: this.file, section: this.sectionName, id: this.id() };
+  // The file that declares the case, as PHP's reader gives it.
+  file(): string {
+    return this.caseFile;
   }
 
   // Whether the case states a field, with dotted names for the fields of a nested field.
@@ -127,7 +127,7 @@ export class CaseReader {
 
   // Returns the result line of the case: its first failure in the order of HYR-7.
   line(): string {
-    const head = `CASE ${this.file} ${this.id()}`;
+    const head = `CASE ${this.caseFile} ${this.id()}`;
     if (this.undeclared !== undefined) return `${head} FAIL FILE_UNDECLARED ${this.undeclared}`;
     if (this.error !== undefined) return `${head} FAIL ${this.error}`;
     if (this.compared.size === 0) return `${head} FAIL CASE_EMPTY`;

@@ -1,6 +1,6 @@
 """The values of the template data model that handlers give the server (HY-44). The core judges a value: the binding
 converts it and the core checks it, and a value outside the data model fails with the kind and the message of the
-core (HY-44.12, HY-132.3). The server writes no message of its own."""
+core (HY-44.12, HY-133.3). The server writes no message of its own."""
 
 from __future__ import annotations
 
