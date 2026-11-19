@@ -14776,7 +14776,8 @@
             "only": {
               "languages": [
                 "php",
-                "python"
+                "python",
+                "node"
               ],
               "sentence": "HY-48.1"
             }
@@ -14812,7 +14813,7 @@
             }
           },
           "renderer": {
-            "term": "renderer",
+            "term": "value",
             "only": {
               "languages": [
                 "php",
@@ -14848,12 +14849,48 @@
               "sentence": "HY-105.4"
             }
           },
-          "reads": "value",
-          "build": "string",
-          "timezone": "string",
+          "reads": {
+            "term": "value",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "build": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
+          "timezone": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          },
           "https": "boolean",
           "context": "optional<contextHandler>",
-          "vary": "string"
+          "vary": {
+            "term": "string",
+            "only": {
+              "languages": [
+                "php",
+                "python"
+              ],
+              "sentence": "HY-48.1"
+            }
+          }
         },
         "optional": []
       },
@@ -14901,7 +14938,8 @@
             "only": {
               "languages": [
                 "php",
-                "python"
+                "python",
+                "node"
               ],
               "sentence": "HY-48.1"
             }
@@ -15526,6 +15564,399 @@
         "node": {
           "symbol": "packages/ts/src/app/app.ts::SessionOpening",
           "declaration": "export type SessionOpening = SessionStore | (() => Promise<SessionStore>);"
+        }
+      }
+    },
+    {
+      "id": "value",
+      "visibility": "public",
+      "unit": "values",
+      "shape": {
+        "union": [
+          "null",
+          "boolean",
+          "number",
+          "string",
+          "list<value>",
+          "mapValue"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-44.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/data/values.ts::Value",
+          "declaration": "export type Value = null | boolean | number | string | Value[] | MapValue;"
+        }
+      }
+    },
+    {
+      "id": "mapValue",
+      "visibility": "public",
+      "unit": "values",
+      "shape": {
+        "term": "map<value>"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-44.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/data/values.ts::MapValue",
+          "declaration": "export type MapValue = Map<string, Value>;"
+        }
+      }
+    },
+    {
+      "id": "jsonValue",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "union": [
+          "null",
+          "boolean",
+          "number",
+          "string",
+          "list<jsonValue>",
+          "map<jsonValue>"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-54.20"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::JsonValue",
+          "declaration": "type JsonValue = null | boolean | number | string | JsonValue[] | Map<string, JsonValue>;"
+        }
+      }
+    },
+    {
+      "id": "stored",
+      "visibility": "private",
+      "unit": "record-session",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-104.14"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/session/record-session.ts::Stored",
+          "declaration": "type Stored = unknown;"
+        }
+      }
+    },
+    {
+      "id": "pageKind",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "string"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageKind",
+          "declaration": "type PageKind = 'html' | 'document_json' | 'region_json';"
+        }
+      }
+    },
+    {
+      "id": "dataTemplate",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "name": "string",
+          "source": "string"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-31.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::DataTemplate",
+          "declaration": "interface DataTemplate {\n  readonly name: string;\n  readonly source: string;\n}"
+        }
+      }
+    },
+    {
+      "id": "pagesOptions",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "build": "string",
+          "timezone": "string",
+          "context": "boolean",
+          "basePath": "string",
+          "formTypes": "list<string>",
+          "dataBasePath": "optional<string>"
+        },
+        "optional": [
+          "dataBasePath"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-106.9"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PagesOptions",
+          "declaration": "interface PagesOptions {\n  readonly build: string;\n  readonly timezone: string;\n  readonly context: boolean;\n  readonly basePath: string;\n  readonly formTypes: Iterable<string>;\n  readonly dataBasePath?: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "pageStepInput",
+      "visibility": "internal",
+      "unit": "core-rules",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageStepInput",
+          "declaration": "export type PageStepInput =\n  | { readonly input: 'start' | 'absent' | 'no_handler' }\n  | { readonly input: 'action'; readonly outcome: { readonly outcome: 'page'; readonly status: number; readonly data: ReadonlyMap<string, unknown> } | { readonly outcome: 'revision_changed' | 'no_page' }; readonly csrf?: string | null }\n  | { readonly input: 'context'; readonly context: ReadonlyMap<string, unknown> }\n  | { readonly input: 'shared'; readonly shared: ReadonlyMap<string, unknown> }\n  | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, unknown> }\n  | { readonly input: 'reply'; readonly embeds: boolean; readonly stored: ReadonlyMap<string, ReadonlyMap<string, unknown>>; readonly status?: number | null };"
+        }
+      }
+    },
+    {
+      "id": "hostFunction",
+      "visibility": "public",
+      "unit": "core-rules",
+      "shape": {
+        "function": {
+          "inputs": [
+            "list<value>",
+            "value"
+          ],
+          "output": "value"
+        }
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HYC-24.10"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::HostFunction",
+          "declaration": "export type HostFunction = (args: readonly unknown[], environment: { readonly timezone: string; readonly now: number }) => unknown;"
+        }
+      }
+    },
+    {
+      "id": "coreHostFunction",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "hostFunction"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HYC-24.10"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::CoreHostFunction",
+          "declaration": "type CoreHostFunction = HostFunction;"
+        }
+      }
+    },
+    {
+      "id": "pageAction",
+      "visibility": "internal",
+      "unit": "page",
+      "shape": {
+        "fields": {
+          "result": "optional<value>",
+          "masked": "string"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-72.3"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/page/page.ts::PageAction",
+          "declaration": "export interface PageAction {\n  readonly result: { readonly status: number; readonly data: Data } | null;\n  readonly masked: string;\n}"
+        }
+      }
+    },
+    {
+      "id": "route",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-62.16"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::Route",
+          "declaration": "type Route =\n  | { readonly route: 'plain'; readonly answer: Plain }\n  | { readonly route: 'shell' | 'keep' }\n  | { readonly route: 'representation'; readonly name: string; readonly params: readonly (readonly [string, string])[]; readonly entry: number; readonly values: readonly string[] }\n  | { readonly route: 'page'; readonly name: string; readonly params: readonly (readonly [string, string])[]; readonly kind: PageKind; readonly action: boolean };"
+        }
+      }
+    },
+    {
+      "id": "pageResponse",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "status": "number",
+          "json": "boolean",
+          "body": "string",
+          "context": "boolean",
+          "maskedToken": "string",
+          "token": "string",
+          "method": "string",
+          "cacheControl": "optional<string>",
+          "ifNoneMatch": "optional<string>",
+          "referrerPolicy": "optional<string>"
+        },
+        "optional": [
+          "cacheControl",
+          "ifNoneMatch",
+          "referrerPolicy"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.3"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageResponse",
+          "declaration": "interface PageResponse {\n  readonly status: number;\n  readonly json: boolean;\n  readonly body: string;\n  readonly context: boolean;\n  readonly maskedToken: string;\n  readonly token: string;\n  readonly method: string;\n  readonly cacheControl?: string | null;\n  readonly ifNoneMatch?: string | null;\n  readonly referrerPolicy?: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "pageInput",
+      "visibility": "internal",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "route": "string",
+          "params": "map<string>",
+          "kind": "pageKind",
+          "action": "boolean",
+          "csrf": "string",
+          "changed": "list<string>",
+          "now": "number",
+          "keepCookie": "optional<string>",
+          "heldHash": "optional<string>"
+        },
+        "optional": [
+          "keepCookie",
+          "heldHash"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageInput",
+          "declaration": "export interface PageInput {\n  readonly route: string;\n  readonly params: ReadonlyMap<string, string>;\n  readonly kind: PageKind;\n  readonly action: boolean;\n  readonly csrf: string;\n  readonly changed: Iterable<string>;\n  readonly now: number;\n  readonly keepCookie?: string | null;\n  readonly heldHash?: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "corePageRequest",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::CorePageRequest",
+          "declaration": "interface CorePageRequest {\n  next(input: PageStepInput): { readonly step: 'call'; readonly call: { readonly call: 'action' | 'context' | 'shared' | 'route_loader' | 'reply' } | { readonly call: 'route_region_loader' | 'region_loader'; readonly region: string } } | { readonly step: 'answer'; readonly answer: Answer };\n}"
+        }
+      }
+    },
+    {
+      "id": "pageHeadersResult",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "status": "number",
+          "headers": "list<list<string>>",
+          "body": "boolean"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-15.3"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PageHeadersResult",
+          "declaration": "interface PageHeadersResult {\n  readonly status: number;\n  readonly headers: Iterable<readonly [string, string]>;\n  readonly body: boolean;\n}"
         }
       }
     }
