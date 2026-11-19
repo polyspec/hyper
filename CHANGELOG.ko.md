@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 241cf38a385d3062b7fe770bb44270a57cad76282d213c6d0959a2cad3988e57 -->
+<!-- source-sha256: 7e227207952b190339160a07f8140916ee326dc9b72b72499675d32c6789677d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make recipe-compare`가 core-rules의 이름이 바뀐 Python test와 file-sessions의 낡은 도달 차이의 줄을 보고하지 않는다(H35.199, HYR-5). 입력: `contracts/interfaces.json`. 이전 동작: `core-rules.csrfMask`의 native test가 H35.193이 `test_there_are_twenty_exact_units`로 바꾼 `test_there_are_twenty_two_exact_units`를 적었고(`NATIVE_TEST_MISSING`, `TEST_UNNAMED`), `file-sessions.constructor`가 H35.190이 지운 `file-session.libraryError`의 도달 차이를 선언했다(`MEMBER_REACH_STALE`). 지금: 계약이 멤버 스무 개와 함께 `test_there_are_twenty_exact_units`를 적고 `file-sessions.constructor`에 도달 차이를 선언하지 않는다.
 - PHP, Node, Python runner가 실행하는 `contracts/request.json`의 section `uploads`가 생성자로 `UploadedFile`을 만들고 `name()`, `contentType()`, `size()`, `content()`, `moveTo(path)`로 새 경로에 옮긴 결과, 그 뒤 `content()`와 두 번째 이동의 실패 `moved`, 이미 있는 경로로의 이동의 실패 `exists`를 비교한다(H35.196, HY-113.8, HY-113.21, HY-131.28). 입력: `contracts/interfaces.json`과 `contracts/request.json`. 이전 동작: section이 적는 member는 `uploaded-file.filename`뿐이었고, `make recipe-compare`가 그 unit의 `MEMBER_UNSTATED` 줄 18개를 보고했다. 검증: `make hyper-test-php CASES=request.json`과 `make hyper-test-python CASES=request.json`이 통과하고, `make recipe-compare`가 18줄 가운데 어느 것도 보고하지 않는다.
 - `tests/scripts/read-php-functions.test.mts`가 host 파일 `packages/php/src/Host/Run.php`를 읽는다(H35.195, HY-106.20). 입력: 대소문자를 구분하는 file system에서의 그 test. 이전 동작: H35.192 이전의 이름인 `Host/run.php`를 읽어서, 대소문자를 구분하는 file system에서는 파일을 찾지 못했다. 기대: tracked 이름을 읽는다. 검증: `make hyper-test-scripts TESTS=tests/scripts/read-php-functions.test.mts` rc 0, 5 passed.
 - HYR-5가 PHP namespace 함수의 qualified name `Polyspec\Hyper\<member>`를 적고, 그 member 이름은 namespace 뒤의 이름이다(H35.194, HY-106.20). 입력: `docs/spec/recipe.md` HYR-5 "Symbol". 이전 동작: class member의 `Polyspec\Hyper\<Unit>::<member>`만 적어서, `scripts/recipe/names.mts`가 읽는 host 함수 `run`의 형식이 적혀 있지 않았다. 기대: spec이 reader가 읽는 형식을 적는다. 검증: `make docs-check` rc 0.
