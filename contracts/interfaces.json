@@ -9636,6 +9636,21 @@
                   "signature": "public function renew(): void"
                 }
               }
+            },
+            {
+              "id": "native-session.close",
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Writes and closes the started session before the answer is sent, and fails the request with status 500 when the write fails (HY-115.23).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Session/NativeSession.php::Polyspec\\Hyper\\NativeSession::close",
+                  "signature": "public function close(): void"
+                }
+              }
             }
           ],
           "only": {
