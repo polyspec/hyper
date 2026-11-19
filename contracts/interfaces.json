@@ -1220,14 +1220,12 @@
               "extension": "HyperValueError",
               "kind": "class",
               "internal": true
+            },
+            "node": {
+              "extension": "HyperValueError",
+              "kind": "class",
+              "internal": true
             }
-          },
-          "only": {
-            "languages": [
-              "php",
-              "python"
-            ],
-            "sentence": "HY-133.2"
           },
           "members": []
         },
@@ -3074,27 +3072,6 @@
               }
             }
           ]
-        },
-        {
-          "id": "invalid-build",
-          "native": {
-            "php": {
-              "extension": "Polyspec\\Hyper\\InvalidBuild",
-              "kind": "class",
-              "internal": true
-            },
-            "node": {
-              "extension": "InvalidBuild",
-              "kind": "class",
-              "internal": true
-            },
-            "python": {
-              "extension": "InvalidBuild",
-              "kind": "class",
-              "internal": true
-            }
-          },
-          "members": []
         }
       ]
     },
@@ -6576,6 +6553,14 @@
                 "php": {
                   "symbol": "packages/php/src/Http/Response.php::Polyspec\\Hyper\\Response::withSessionCookie",
                   "signature": "public function withSessionCookie(?string $field): self"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/host/http-host.ts::withSessionCookie",
+                  "signature": "function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, response: Response, created: string | null, https: boolean): Response"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/host/_pipeline.py::answer_with",
+                  "signature": "def answer_with(app: App, sessions: FileSessions | RedisSessions, around: Optional[Callable], exchange: Exchange) -> Response"
                 }
               }
             }
@@ -7493,6 +7478,10 @@
                 "node": {
                   "symbol": "packages/ts/src/form/files.ts::Files.sizes",
                   "signature": "sizes(): number[]"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_files.py::Files.sizes",
+                  "signature": "def sizes(self) -> list[int]"
                 }
               }
             }
@@ -11578,6 +11567,12 @@
                   "symbol": "packages/php/src/Data/DataModel.php::Polyspec\\Hyper\\DataModel::plain",
                   "signature": "public static function plain(mixed $value): mixed"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-44.6"
               }
             }
           ]
@@ -11837,6 +11832,12 @@
                   "symbol": "packages/php/src/Data/JsonCodec.php::Polyspec\\Hyper\\JsonCodec::isList",
                   "signature": "public static function isList(mixed $value): bool"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-54.20"
               }
             },
             {
@@ -12933,6 +12934,14 @@
                 "php": {
                   "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::varyHeader",
                   "signature": "private function varyHeader(): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/app/app.ts::App.varyHeader",
+                  "signature": "private varyHeader(): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.app_vary_header",
+                  "signature": "def app_vary_header(self, context: bool) -> str"
                 }
               }
             },
@@ -12955,6 +12964,12 @@
                   "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::json",
                   "signature": "private function json(Request $request, Session $session, Reply $reply, int $status, string $body): Response"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-53"
               }
             },
             {
@@ -12972,6 +12987,14 @@
                 "php": {
                   "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::map",
                   "signature": "private static function map(mixed $value, string $source): array"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/page/page.ts::Page.loaderMap",
+                  "signature": "private static loaderMap(value: unknown, source: string): ReadonlyMap<string, unknown>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._loader_map",
+                  "signature": "def _loader_map(value: object, source: str) -> dict"
                 }
               }
             },
@@ -12990,6 +13013,12 @@
                   "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::utf8",
                   "signature": "private static function utf8(?string $text): ?string"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-42"
               }
             },
             {
@@ -13581,6 +13610,10 @@
                 "node": {
                   "symbol": "packages/ts/src/representation/representation-entries.ts::invalid",
                   "signature": "function invalid(message: string): Error"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::open_error",
+                  "signature": "def open_error(message: str) -> ValueError"
                 }
               }
             }
@@ -14013,6 +14046,12 @@
                   "symbol": "packages/php/src/Representation/RepresentationResponse.php::Polyspec\\Hyper\\RepresentationResponse::headerBytes",
                   "signature": "private static function headerBytes(string $text): string"
                 }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-122.14"
               }
             }
           ]
