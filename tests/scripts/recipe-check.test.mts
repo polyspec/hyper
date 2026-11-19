@@ -931,3 +931,10 @@ test('a member called on the result of a const declared with a function type is 
   const rulesCall = { kind: 'member', of: { kind: 'module', file: 'src/core-rules.ts' }, name: 'rules', call: true };
   assert.deepEqual(scope?.uses.find((u) => u.kind === 'member' && u.name === 'csrfMask'), { kind: 'member', of: rulesCall, name: 'csrfMask', call: true });
 });
+
+test('a local that an isinstance check narrows to a class of the tree has that class as its type (HYR-5)', () => {
+  // The fixture narrows `result` by `isinstance(result, Result)` before `result._is_redirect()`, as app.py of the Python server does.
+  const out = readCopy('python', path.join(fixture, 'readers', 'python-narrowed'), ['--sources', 'src', '--tests', 'tests']);
+  const scope = out.scopes.find((s) => s.name === 'App.routed');
+  assert.deepEqual(scope?.assigns.filter((a) => a.target === 'result' && a.type !== undefined).map((a) => a.type), [{ file: 'src/result.py', name: 'Result' }]);
+});
