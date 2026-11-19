@@ -53,7 +53,7 @@ function requestOfCase(reader: CaseReader): Request {
   const target = textIn(stated, 'target', null);
   const headers = stated.has('headers') ? textsIn(stated.get('headers'), 'the case field request.headers') : {};
   const header = Object.entries(headers).find(([name]) => name.toLowerCase() === 'cookie')?.[1] ?? null;
-  const cookies = stated.has('cookies') ? new Map(Object.entries(textsIn(stated.get('cookies'), 'the case field request.cookies'))) : Cookies.parse(header);
+  const cookies = stated.has('cookies') ? new Map(Object.entries(textsIn(stated.get('cookies'), 'the case field request.cookies'))) : Cookies.parse(header === null ? [] : [header]);
   let request = new Request({
     method: textIn(stated, 'method', 'GET'),
     path: Request.targetPath(target),

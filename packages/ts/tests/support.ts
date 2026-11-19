@@ -189,7 +189,7 @@ export function json(response: Response): Record<string, unknown> & { shared: Re
 export function requestFrom(parts: { method: string; target: string; headers?: Record<string, string>; body?: Uint8Array; https?: boolean }): Request {
   const headers = Object.fromEntries(Object.entries(parts.headers ?? {}).map(([name, value]) => [name.toLowerCase(), value]));
   const { method, target, body, https = false } = parts;
-  const init: RequestInit = { method: method.toUpperCase(), path: Request.targetPath(target), query: Request.targetQuery(target), headers, cookies: Cookies.parse(headers.cookie ?? null), https };
+  const init: RequestInit = { method: method.toUpperCase(), path: Request.targetPath(target), query: Request.targetQuery(target), headers, cookies: Cookies.parse(headers.cookie === undefined ? [] : [headers.cookie]), https };
   if (body !== undefined) init.body = body;
   return new Request(init);
 }

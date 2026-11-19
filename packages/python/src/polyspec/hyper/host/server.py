@@ -95,7 +95,7 @@ def create_server(
                 # The request as received so far: an unread body is empty and its size is the declared one (HY-60).
                 # HY-42.15: every read takes the lines of a name joined as one value.
                 headers = _headers(self.headers)
-                cookies = Cookies.parse(_cookie_header(self.headers))
+                cookies = Cookies.parse(_cookie_lines(self.headers))
                 exchange.request = head_request(
                     self.command,
                     self.path,
@@ -242,11 +242,10 @@ def create_server(
     return ThreadingHTTPServer((host, port), Handler)
 
 
-def _cookie_header(headers) -> Optional[bytes]:
-    """Returns the `Cookie` lines of the request joined with `; ` (HY-129), or None when it has none. The header
-    lines are text with one character per byte, so Latin-1 gives back their bytes."""
-    lines = headers.get_all("Cookie")
-    return None if lines is None else "; ".join(lines).encode("latin-1")
+def _cookie_lines(headers) -> list[str]:
+    """Returns the field values of the `Cookie` lines of the request in their order, not joined (HY-129.14), each text
+    with one character per byte; a request without the field has none."""
+    return list(headers.get_all("Cookie") or [])
 
 
 def _headers(headers) -> dict[str, str]:

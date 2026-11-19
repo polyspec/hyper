@@ -151,7 +151,7 @@ def _answer(
     method = environ["REQUEST_METHOD"].upper()
     target = _request_target(environ)
     declared = declared_length(environ.get("CONTENT_LENGTH"))
-    cookies = Cookies.parse(_cookie_header(environ))
+    cookies = Cookies.parse(_cookie_lines(environ))
     # The request is HTTPS when the application was opened with https or the WSGI server says so.
     https = app.https or environ.get("wsgi.url_scheme") == "https"
     exchange.request = head_request(
@@ -194,11 +194,11 @@ def _answer(
     return answer_with(app, sessions, around, exchange)
 
 
-def _cookie_header(environ: dict) -> Optional[bytes]:
-    """Returns the `Cookie` header of the environ (HY-129) as the bytes that the server received: PEP 3333 gives it as
-    text with one character per byte, so Latin-1 gives back those bytes. Returns None when the request has none."""
+def _cookie_lines(environ: dict) -> list[str]:
+    """Returns the `Cookie` field of the environ as one line (HY-129.15): the WSGI server joined the lines, and PEP 3333
+    gives the value as text with one character per byte. A request without the field has no line."""
     value = environ.get("HTTP_COOKIE")
-    return None if value is None else value.encode("latin-1")
+    return [] if value is None else [value]
 
 
 def _request_target(environ: dict) -> str:

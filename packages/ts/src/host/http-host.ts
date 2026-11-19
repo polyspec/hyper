@@ -247,19 +247,21 @@ function withSessionCookie<S extends object>(app: App<S>, sessions: LibrarySessi
 }
 
 // Returns the request of the parts that node:http gives (HY-100): the method in upper case, the path and the raw query
-// of the request target, each header as one value, and the cookies of the one parse of the Cookie header (HY-129).
-// Several Cookie lines are one header joined with `; `, and the lines of another name join with `, ` (HY-42.15). `read`
-// is the body as the host read it.
+// of the request target, each header as one value, the lines of a name joined with `, ` (HY-42.15), and the cookies of
+// the one parse of the Cookie lines, which the host passes apart and in order (HY-129.14). `read` is the body as the
+// host read it.
 /** @internal */
 export function requestOf(
   parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean },
   read: BodyReader | null = null,
 ): Request {
   const headers: Record<string, string> = {};
+  const lines: string[] = [];
   for (const [name, value] of Object.entries(parts.headers ?? {})) {
     if (value === undefined) continue;
     const key = name.toLowerCase();
-    headers[key] = Array.isArray(value) ? value.join(key === 'cookie' ? '; ' : ', ') : value;
+    headers[key] = Array.isArray(value) ? value.join(', ') : value;
+    if (key === 'cookie') lines.push(...(Array.isArray(value) ? value : [value]));
   }
   return new Request({
     method: parts.method.toUpperCase(),
@@ -267,7 +269,7 @@ export function requestOf(
     headers,
     query: Request.targetQuery(parts.target),
     ...(parts.body === undefined ? {} : { body: parts.body }),
-    cookies: Cookies.parse(headers.cookie ?? null),
+    cookies: Cookies.parse(lines),
     https: parts.https ?? false,
     ...(parts.bodySize === undefined ? {} : { bodySize: parts.bodySize }),
     read,

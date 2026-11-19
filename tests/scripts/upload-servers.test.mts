@@ -799,12 +799,13 @@ test('public-files-are-served-before-around (HY-97.6, HY-60.12, HY-99.12, HY-100
   });
 });
 
-test('several-cookie-lines-are-one-cookie-header (HY-129.13, HY-129.14, HY-129.15, HY-129.6)', SCENARIO, async (t) => {
+test('several-cookie-lines-are-read-one-after-another (HY-129.13, HY-129.14, HY-129.15, HY-129.6)', SCENARIO, async (t) => {
   const { hosts } = await hostsOf(t, { env: { UPLOAD_ANSWER: 'cookies' } });
-  // The PHP built-in server joins the lines with `, ` before PHP reads them (HY-129.6).
-  const expected = { php: '{"a":"1, b=2","b":null}', node: '{"a":"1","b":"2"}', python: '{"a":"1","b":"2"}' };
+  // Node and Python pass the lines apart, so the end of the first line ends its pair and the `,` of the second is part
+  // of its value (HY-129.14); the PHP built-in server joins the lines with `, ` before PHP reads them (HY-129.6).
+  const expected = { php: '{"a":"1, b=x,y","b":null}', node: '{"a":"1","b":"x,y"}', python: '{"a":"1","b":"x,y"}' };
   await eachHost(t, hosts, async (host, check) => {
-    check.response('GET / with two Cookie lines', await ask(host, Buffer.from('GET / HTTP/1.1\r\nHost: x\r\nCookie: a=1\r\nCookie: b=2\r\nConnection: close\r\n\r\n')), { status: 200, body: expected[host.name] });
+    check.response('GET / with two Cookie lines', await ask(host, Buffer.from('GET / HTTP/1.1\r\nHost: x\r\nCookie: a=1\r\nCookie: b=x,y\r\nConnection: close\r\n\r\n')), { status: 200, body: expected[host.name] });
   });
 });
 

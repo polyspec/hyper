@@ -3707,19 +3707,19 @@
               }
             },
             {
-              "id": "server.cookieHeader",
+              "id": "server.cookieLines",
               "kind": "function",
               "visibility": "internal",
               "inputs": [
                 "value"
               ],
-              "output": "optional<bytes>",
+              "output": "list<string>",
               "errors": [],
-              "state": "Returns the bytes of the Cookie headers joined with a semicolon, or None (HY-129.6).",
+              "state": "Returns the field values of the Cookie lines in their order, not joined (HY-129.14).",
               "native": {
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/host/server.py::_cookie_header",
-                  "signature": "def _cookie_header(headers) -> Optional[bytes]"
+                  "symbol": "packages/python/src/polyspec/hyper/host/server.py::_cookie_lines",
+                  "signature": "def _cookie_lines(headers) -> list[str]"
                 }
               }
             },
@@ -4123,19 +4123,19 @@
               ]
             },
             {
-              "id": "wsgi.cookieHeader",
+              "id": "wsgi.cookieLines",
               "kind": "function",
               "visibility": "internal",
               "inputs": [
                 "value"
               ],
-              "output": "optional<bytes>",
+              "output": "list<string>",
               "errors": [],
-              "state": "Returns the bytes of HTTP_COOKIE, or None (HY-129.6).",
+              "state": "Returns HTTP_COOKIE as one line, or no line without it (HY-129.15).",
               "native": {
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/host/wsgi.py::_cookie_header",
-                  "signature": "def _cookie_header(environ: dict) -> Optional[bytes]"
+                  "symbol": "packages/python/src/polyspec/hyper/host/wsgi.py::_cookie_lines",
+                  "signature": "def _cookie_lines(environ: dict) -> list[str]"
                 }
               }
             },
@@ -4248,7 +4248,7 @@
                 "packages/python/tests/test_asgi.py::AsgiTest.test_a_new_session_sets_its_cookie_first: Only the Python server has an ASGI callable (HY-100.15); it sets the cookie of a new session as the first Set-Cookie of the response.",
                 "packages/python/tests/test_asgi.py::AsgiTest.test_a_public_file_is_served_before_around: Only the Python server has an ASGI callable (HY-100.15); it serves a public file before around through its transport.",
                 "packages/python/tests/test_asgi.py::AsgiTest.test_around_answers_without_the_application: Only the Python server has an ASGI callable (HY-100.15); it writes the response of an around that does not call the application.",
-                "packages/python/tests/test_asgi.py::AsgiTest.test_several_cookie_headers_join_with_a_semicolon: Only the Python server has an ASGI callable (HY-100.15); it joins the cookie headers of the scope with `; `.",
+                "packages/python/tests/test_asgi.py::AsgiTest.test_the_cookie_headers_of_the_scope_are_its_lines: Only the Python server has an ASGI callable (HY-100.15); it passes the cookie headers of the scope to the parse as its lines, not joined (HY-129.14).",
                 "packages/python/tests/test_asgi.py::AsgiTest.test_the_method_reaches_the_application_in_upper_case: Only the Python server has an ASGI callable (HY-100.15); it passes the method in upper case.",
                 "packages/python/tests/test_asgi.py::AsgiTest.test_the_pipeline_runs_in_a_worker_thread: Only the Python server has an ASGI callable (HY-100.15); it runs the pipeline in a worker thread, off the event loop.",
                 "packages/python/tests/test_asgi.py::AsgiTest.test_the_request_is_https_when_the_application_or_the_server_says_so: Only the Python server has an ASGI callable (HY-100.15); it takes https from the application option or from the scheme that its transport gives, which no other host has.",
@@ -4363,19 +4363,19 @@
               }
             },
             {
-              "id": "asgi.cookieHeader",
+              "id": "asgi.cookieLines",
               "kind": "function",
               "visibility": "internal",
               "inputs": [
                 "value"
               ],
-              "output": "optional<bytes>",
+              "output": "list<string>",
               "errors": [],
-              "state": "Returns the bytes of the cookie headers joined with a semicolon, or None (HY-129.6).",
+              "state": "Returns the cookie headers of the scope as lines in their order, not joined (HY-129.14).",
               "native": {
                 "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/host/asgi.py::_cookie_header",
-                  "signature": "def _cookie_header(scope: dict) -> Optional[bytes]"
+                  "symbol": "packages/python/src/polyspec/hyper/host/asgi.py::_cookie_lines",
+                  "signature": "def _cookie_lines(scope: dict) -> list[str]"
                 }
               }
             },
@@ -8573,73 +8573,23 @@
               "kind": "static method",
               "visibility": "internal",
               "inputs": [
-                "optional<bytes>"
+                "list<string>"
               ],
               "output": "map<string>",
               "errors": [],
-              "state": "Returns the cookies of a Cookie header by name, the first pair of a name that gives a cookie, or none without the header.",
+              "state": "Returns the cookies of the Cookie lines of a request by name, as parse_cookie of the core gives them, the first cookie of a name only (HY-129.13).",
               "native": {
                 "php": {
                   "symbol": "packages/php/src/Http/Cookies.php::Polyspec\\Hyper\\Cookies::parse",
-                  "signature": "public static function parse(?string $header): array"
+                  "signature": "public static function parse(array $lines): array"
                 },
                 "node": {
                   "symbol": "packages/ts/src/http/cookies.ts::Cookies.parse",
-                  "signature": "static parse(header: string | null): Map<string, string>"
+                  "signature": "static parse(lines: readonly string[]): Map<string, string>"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/http/_cookies.py::Cookies.parse",
-                  "signature": "def parse(header: Optional[bytes]) -> dict[str, str]"
-                }
-              }
-            },
-            {
-              "id": "cookies.percentDecode",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "bytes"
-              ],
-              "output": "bytes",
-              "errors": [],
-              "state": "Replaces each percent sign with two hexadecimal digits by its byte.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Http/Cookies.php::Polyspec\\Hyper\\Cookies::percentDecode",
-                  "signature": "private static function percentDecode(string $bytes): string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/http/cookies.ts::Cookies.percentDecode",
-                  "signature": "private static percentDecode(bytes: string): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/http/_cookies.py::Cookies._percent_decode",
-                  "signature": "def _percent_decode(data: bytes) -> bytes"
-                }
-              }
-            },
-            {
-              "id": "cookies.utf8",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "bytes"
-              ],
-              "output": "optional<string>",
-              "errors": [],
-              "state": "Returns the bytes as UTF-8 text, or none when they are not UTF-8.",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Http/Cookies.php::Polyspec\\Hyper\\Cookies::utf8",
-                  "signature": "private static function utf8(string $bytes): ?string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/http/cookies.ts::Cookies.utf8",
-                  "signature": "private static utf8(bytes: string): string | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/http/_cookies.py::Cookies._utf8",
-                  "signature": "def _utf8(data: bytes) -> Optional[str]"
+                  "signature": "def parse(lines: list[str]) -> dict[str, str]"
                 }
               }
             }
@@ -14491,7 +14441,7 @@
       "native": {
         "node": {
           "symbol": "packages/ts/src/app/core-rules.ts::CoreBinding",
-          "declaration": "export interface CoreBinding {\n  csrfMask(token: string, mask: string): string;\n  csrfVerify(token: string, value: string): boolean;\n  browser(masked: string): string | null;\n  storedToken(stored: string): string;\n  isApplicationPath(location: string): boolean;\n  redirectLocation(location: string): string;\n  cacheControl(value: string): string;\n  keepsOutOfSharedCaches(value: string): boolean;\n  referrerPolicy(value: string): string;\n  sessionName(https: boolean): string;\n  keepName(https: boolean): string;\n  sessionCookie(identifier: string, https: boolean): string;\n  representationTag(contentType: string, body: Uint8Array): string;\n  mediaType(contentType: string): string;\n  pageStatus(status: number): number;\n  replyStatus(status: number): number;\n  pageVary(hasContext: boolean): string;\n  contextHash(build: string, text: string): string;\n  currentPath(header: string | null): string | null;\n  checkShellPath(path: string): void;\n  shellText(path: string, bytes: Uint8Array): string;\n  buildId(outputs: Iterable<BuildOutput>): string;\n  buildPaths(outputs: Iterable<BuildOutput>): readonly string[];\n  buildStream(outputs: Iterable<BuildOutput>): string;\n  shellFile(basePath: string, build: string, entryUrl: string, entryCode: string): string;\n  checkBuildId(text: string): void;\n  buildFileText(id: string): string;\n  readBuild(bytes: Uint8Array): string;\n  templateProblems(manifest: Uint8Array, templates: ReadonlyMap<string, string>): readonly string[];\n  routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): unknown;\n  templateReads(templates: ReadonlyMap<string, string>, name: string): unknown;\n  reservedDataTemplate(): DataTemplate;\n  validContextHeader(value: string | null): boolean;\n  checkFunctionEntry(name: string, callable: boolean): void;\n  jsonRead(text: Uint8Array): JsonValue;\n  jsonWrite(value: unknown): string;\n  flashOf(stored: unknown): JsonValue;\n  keptOf(stored: unknown): JsonValue;\n  keptCookie(text: string): JsonValue;\n  acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];\n  fileOver(sizes: Iterable<number>, limit: number): boolean;\n  routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;\n  computePageHeaders(response: PageResponse): PageHeadersResult;\n  frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];\n  keptValue(pages: CorePages, region: string, path: string, text: string): unknown;\n  openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;\n  answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;\n  Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: unknown, options: PagesOptions) => CorePagesInstance;\n  PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;\n  sessionValue(record: unknown): unknown;\n  sessionRecord(value: unknown): unknown;\n  readHeldBody(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;\n  parseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];\n  FormFile: new (name: string, filename: string, contentType: string, content: Uint8Array) => CoreUploadedFile;\n  RequestBody: { start(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody> };\n  HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;\n  HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;\n}"
+          "declaration": "export interface CoreBinding {\n  csrfMask(token: string, mask: string): string;\n  csrfVerify(token: string, value: string): boolean;\n  browser(masked: string): string | null;\n  storedToken(stored: string): string;\n  isApplicationPath(location: string): boolean;\n  redirectLocation(location: string): string;\n  cacheControl(value: string): string;\n  keepsOutOfSharedCaches(value: string): boolean;\n  referrerPolicy(value: string): string;\n  sessionName(https: boolean): string;\n  keepName(https: boolean): string;\n  sessionCookie(identifier: string, https: boolean): string;\n  representationTag(contentType: string, body: Uint8Array): string;\n  mediaType(contentType: string): string;\n  pageStatus(status: number): number;\n  replyStatus(status: number): number;\n  pageVary(hasContext: boolean): string;\n  contextHash(build: string, text: string): string;\n  currentPath(header: string | null): string | null;\n  checkShellPath(path: string): void;\n  shellText(path: string, bytes: Uint8Array): string;\n  buildId(outputs: Iterable<BuildOutput>): string;\n  buildPaths(outputs: Iterable<BuildOutput>): readonly string[];\n  buildStream(outputs: Iterable<BuildOutput>): string;\n  shellFile(basePath: string, build: string, entryUrl: string, entryCode: string): string;\n  checkBuildId(text: string): void;\n  buildFileText(id: string): string;\n  readBuild(bytes: Uint8Array): string;\n  templateProblems(manifest: Uint8Array, templates: ReadonlyMap<string, string>): readonly string[];\n  routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): unknown;\n  templateReads(templates: ReadonlyMap<string, string>, name: string): unknown;\n  reservedDataTemplate(): DataTemplate;\n  validContextHeader(value: string | null): boolean;\n  checkFunctionEntry(name: string, callable: boolean): void;\n  jsonRead(text: Uint8Array): JsonValue;\n  jsonWrite(value: unknown): string;\n  flashOf(stored: unknown): JsonValue;\n  keptOf(stored: unknown): JsonValue;\n  keptCookie(text: string): JsonValue;\n  acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];\n  parseCookie(lines: Iterable<string>): readonly (readonly [string, string])[];\n  fileOver(sizes: Iterable<number>, limit: number): boolean;\n  routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;\n  computePageHeaders(response: PageResponse): PageHeadersResult;\n  frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];\n  keptValue(pages: CorePages, region: string, path: string, text: string): unknown;\n  openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;\n  answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;\n  Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: unknown, options: PagesOptions) => CorePagesInstance;\n  PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;\n  sessionValue(record: unknown): unknown;\n  sessionRecord(value: unknown): unknown;\n  readHeldBody(contentType: string | null, body: Uint8Array, limits: BodyLimits): CoreForm;\n  parseUrlencoded(text: Uint8Array): readonly (readonly [string, readonly string[]])[];\n  FormFile: new (name: string, filename: string, contentType: string, content: Uint8Array) => CoreUploadedFile;\n  RequestBody: { start(contentType: string | null, contentLength: string | null, stream: boolean, limits: BodyLimits): Promise<CoreRequestBody> };\n  HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;\n  HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;\n}"
         }
       }
     },
