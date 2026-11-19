@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 1a6248dd9a5e3ec4dc03d9869f90799942d696b3a9912dde8cc1700f3d540ee6 -->
+<!-- source-sha256: 10327ded232585bd0d7dcfa958f024ade64166229b1f22976c9297ed9b10f09d -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -47,7 +47,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
 
   모든 언어에서 파일은 정확히 하나의 unit을 가진다.
   - PHP의 `functions` unit은 생성자가 없고 다른 class를 확장하지 않으며 abstract가 아닌 static method들의 class
-    하나다. 다른 class를 확장하거나 abstract인 class는 instance를 가지기 때문이다.
+    하나다. 다른 class를 확장하거나 abstract인 class는 instance를 가지기 때문이다. namespace `Polyspec\Hyper`에 함수를
+    선언하고 class를 선언하지 않는 PHP 파일도, 예를 들어 host 함수 `run`의 `src/Host/run.php`(HY-106.20)도, 그 파일로
+    이름 붙인 `functions` unit이며 그 member는 그 함수들이다.
   - Node의 `functions` unit은 export한 함수마다 JSDoc tag `@internal`이 있을 때 internal이다.
   - 일부 언어에만 있는 unit은 `only`를 가진다(HYR-6).
   - concern의 각 class, interface, trait은 자기 unit이며, Python의 각 class도 `Protocol`과 `TypedDict`를 포함하여 자기
@@ -72,7 +74,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     - `representation`은 route의 representation과, `Accept` header로 그 하나를 고르는 선택을 담는다.
   - PHP: PascalCase, `src/<Group>/<Words>.php`, namespace `Polyspec\Hyper`에 속한다.
     `packages/php/composer.json`의 `autoload.psr-4`는 `Polyspec\Hyper\`를 PHP unit이 있는 group 디렉터리의
-    목록에 연결하고, root `composer.json`도 같은 디렉터리를 연결한다.
+    목록에 연결하고, root `composer.json`도 같은 디렉터리를 연결한다. namespace 함수 unit의 파일은 camelCase의
+    `src/<Group>/<words>.php`이며 두 manifest의 `autoload.files`가 load한다. PSR-4는 class를 그 파일에 연결하고 함수는
+    어떤 파일에도 연결하지 않으며, PascalCase 이름은 class의 파일로 읽히기 때문이다.
   - Node: kebab-case, `src/<group>/<words>.ts`. barrel은 `src/index.ts`와 빌드 entry `src/build.ts`다.
   - Python: snake_case, package `polyspec/hyper/<group>/` 안에 둔다.
     - `<words>.py`는 HY-106이 public으로 만드는 unit의 module이다.
@@ -155,7 +159,9 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       필드는 member처럼 `only`를 가진다(HYR-6).
   - **Symbol.** symbol은 `<path>::<qualified name>`이다.
     - `<path>`는 파일의 repository 기준 상대 경로다.
-    - PHP member의 qualified name은 `Polyspec\Hyper\<Unit>::<member>`다.
+    - PHP member의 qualified name은 class member에서 `Polyspec\Hyper\<Unit>::<member>`이고, namespace 함수에서
+      `Polyspec\Hyper\<member>`이다. 예를 들어 HY-106.20의 member `run.run`은 `Polyspec\Hyper\run`이다. member의
+      이름은 namespace 뒤의 마지막 이름이다.
     - Node와 Python에서 class member는 `<Unit>.<member>`, module 함수는 `<member>`다.
     - constructor는 PHP에서 `__construct`, Node에서 `constructor`, Python에서 `__init__`이다.
     - PHP class의 member `invoke`는 그 object를 호출할 수 있게 하는 method `__invoke`이다.

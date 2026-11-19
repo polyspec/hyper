@@ -954,47 +954,6 @@
               }
             },
             {
-              "id": "app.run",
-              "kind": "function",
-              "visibility": "public",
-              "inputs": [
-                "app",
-                "optional<number>"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Answers the request of the SAPI with the application and registers the shutdown function of the write hook and the disconnect hook: the host entry of the front controller, no member of App (HY-100.30, HY-106.20).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\run",
-                  "signature": "function run(Polyspec\\Hyper\\App $app, ?int $started): void"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-100.30"
-              },
-              "tests": [
-                "packages/php/tests/RunTest.php::RunTest::testRunTurnsOffErrorOutputAndTheDefaultContentType: App::run sets the ini settings display_errors and default_mimetype of PHP (HY-43.3); the test reads them with ini_get after a run.",
-                "packages/php/tests/RunTest.php::RunTest::testRunRefusesALimitThatPhpCannotDeliver: App::run fails before it answers when post_max_size is smaller than the body limit or multipart/form-data is a form type while enable_post_data_reading is on (HY-59.9); these are ini settings of PHP.",
-                "packages/php/tests/RunTest.php::RunTest::testRunReportsTheElapsedTimeSinceTheRequestStarted: App::run takes the start of the request from its caller as an hrtime(true) value (HY-60.5); the test passes a start 1.5 seconds back and asserts the elapsed time that the response hook receives.",
-                "packages/php/tests/RunTest.php::RunTest::testRunReportsNoNegativeElapsedTimeWhenTheWallClockMovesBackwards: App::run does not subtract REQUEST_TIME_FLOAT of the SAPI (HY-60.6); the test sets it 10 seconds ahead and asserts an elapsed time that is not negative.",
-                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorBeforeTheResponseHookWritesThePlain500AndReportsItToTheWriteHook: The shutdown function of App::run writes the plain 500 of a fatal error of PHP, here the memory limit, and reports it to the write hook (HY-60.23, HY-99.6); only PHP ends a request with a fatal error.",
-                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorAfterTheResponseHookWritesThePlain500AndReportsItToTheWriteHook: The shutdown function of App::run writes the plain 500 of a fatal error that the response hook raises and reports it to the write hook after the response hook (HY-60.23, HY-99.6).",
-                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorAfterTheHeadersWereSentReportsAnUnendedWrite: A fatal error of PHP after the headers were sent keeps the started response, and the write hook receives it with ended false (HY-99.6, HY-60.20).",
-                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorWithOutputBufferingOnReplacesTheResponseAndReportsThePlain500: With output_buffering of PHP on and no output flushed, a fatal error after App::run replaces the response with the plain 500, which the write hook receives with ended true (HY-99.7).",
-                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorAfterAFlushWithOutputBufferingOnKeepsTheStartedResponseUnended: With output_buffering of PHP on and after a flush that sent the headers, a fatal error keeps the started response, which the write hook receives with ended false (HY-99.7).",
-                "packages/php/tests/RunTest.php::RunTest::testAnExitWithoutOutputGivesTheHookANullResponse: A PHP exit() without output gives the write hook of the shutdown function a null response with ended false and a null failure (HY-99.11).",
-                "packages/php/tests/RunTest.php::RunTest::testAMaxExecutionTimeFatalErrorReportsThePlain500ToTheWriteHook: The max_execution_time fatal error of PHP is an E_ERROR that the shutdown function of App::run answers with the plain 500 and reports to the write hook (HY-60.23).",
-                "packages/php/tests/RunTest.php::RunTest::testWarningsNoticesAndDeprecationsFailTheRequest: Only PHP has the error kinds E_USER_NOTICE and E_USER_DEPRECATED and the silence operator; App::run fails the request for the first two and not for a silenced read (HY-74.5).",
-                "packages/php/tests/RunTest.php::RunTest::testAFailedReadOfTheBodyAnswersThePlain500AndCallsTheWriteHookOnce: App::run reads the body and writes the response through the PHP SAPI (HY-100.30); a read of php://input that fails answers the plain 500 without a response hook and calls the write hook once with the request as received (HY-60.14, HY-60.17, HY-60.18).",
-                "packages/php/tests/RunTest.php::RunTest::testAFailedReadOfAMultipartBodyLeavesNoDirectoryOfTheRequest: App::run reads the body and writes the response through the PHP SAPI (HY-100.30); a read of a multipart body that fails after a file part started answers the plain 500, calls the write hook once and leaves no directory of the request (HY-60.14, HY-131.14).",
-                "packages/php/tests/RunTest.php::RunTest::testASessionThatCannotBeWrittenAnswersThePlain500: App::run reads the body and writes the response through the PHP SAPI (HY-100.30); a session of the SAPI that cannot be written when it is closed before the answer answers the plain 500 of HY-43 (HY-115.23)."
-              ]
-            },
-            {
               "id": "app.absolutePaths",
               "kind": "static method",
               "visibility": "private",
@@ -3784,6 +3743,65 @@
         "contracts/hooks.json"
       ],
       "units": [
+        {
+          "id": "run",
+          "native": {
+            "php": {
+              "file": "packages/php/src/Host/run.php",
+              "kind": "functions",
+              "internal": false
+            }
+          },
+          "members": [
+            {
+              "id": "run.run",
+              "kind": "function",
+              "visibility": "public",
+              "inputs": [
+                "app",
+                "optional<number>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Answers the request of the SAPI with the application and registers the shutdown function of the write hook and the disconnect hook: the host entry of the front controller, no member of App (HY-100.30, HY-106.20).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Host/run.php::Polyspec\\Hyper\\run",
+                  "signature": "function run(Polyspec\\Hyper\\App $app, ?int $started): void"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              },
+              "tests": [
+                "packages/php/tests/RunTest.php::RunTest::testRunTurnsOffErrorOutputAndTheDefaultContentType: run sets the ini settings display_errors and default_mimetype of PHP (HY-43.3); the test reads them with ini_get after a run.",
+                "packages/php/tests/RunTest.php::RunTest::testRunRefusesALimitThatPhpCannotDeliver: run fails before it answers when post_max_size is smaller than the body limit or multipart/form-data is a form type while enable_post_data_reading is on (HY-59.9); these are ini settings of PHP.",
+                "packages/php/tests/RunTest.php::RunTest::testRunReportsTheElapsedTimeSinceTheRequestStarted: run takes the start of the request from its caller as an hrtime(true) value (HY-60.5); the test passes a start 1.5 seconds back and asserts the elapsed time that the response hook receives.",
+                "packages/php/tests/RunTest.php::RunTest::testRunReportsNoNegativeElapsedTimeWhenTheWallClockMovesBackwards: run does not subtract REQUEST_TIME_FLOAT of the SAPI (HY-60.6); the test sets it 10 seconds ahead and asserts an elapsed time that is not negative.",
+                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorBeforeTheResponseHookWritesThePlain500AndReportsItToTheWriteHook: The shutdown function of run writes the plain 500 of a fatal error of PHP, here the memory limit, and reports it to the write hook (HY-60.23, HY-99.6); only PHP ends a request with a fatal error.",
+                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorAfterTheResponseHookWritesThePlain500AndReportsItToTheWriteHook: The shutdown function of run writes the plain 500 of a fatal error that the response hook raises and reports it to the write hook after the response hook (HY-60.23, HY-99.6).",
+                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorAfterTheHeadersWereSentReportsAnUnendedWrite: A fatal error of PHP after the headers were sent keeps the started response, and the write hook receives it with ended false (HY-99.6, HY-60.20).",
+                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorWithOutputBufferingOnReplacesTheResponseAndReportsThePlain500: With output_buffering of PHP on and no output flushed, a fatal error after run replaces the response with the plain 500, which the write hook receives with ended true (HY-99.7).",
+                "packages/php/tests/RunTest.php::RunTest::testAFatalErrorAfterAFlushWithOutputBufferingOnKeepsTheStartedResponseUnended: With output_buffering of PHP on and after a flush that sent the headers, a fatal error keeps the started response, which the write hook receives with ended false (HY-99.7).",
+                "packages/php/tests/RunTest.php::RunTest::testAnExitWithoutOutputGivesTheHookANullResponse: A PHP exit() without output gives the write hook of the shutdown function a null response with ended false and a null failure (HY-99.11).",
+                "packages/php/tests/RunTest.php::RunTest::testAMaxExecutionTimeFatalErrorReportsThePlain500ToTheWriteHook: The max_execution_time fatal error of PHP is an E_ERROR that the shutdown function of run answers with the plain 500 and reports to the write hook (HY-60.23).",
+                "packages/php/tests/RunTest.php::RunTest::testWarningsNoticesAndDeprecationsFailTheRequest: Only PHP has the error kinds E_USER_NOTICE and E_USER_DEPRECATED and the silence operator; run fails the request for the first two and not for a silenced read (HY-74.5).",
+                "packages/php/tests/RunTest.php::RunTest::testAFailedReadOfTheBodyAnswersThePlain500AndCallsTheWriteHookOnce: run reads the body and writes the response through the PHP SAPI (HY-100.30); a read of php://input that fails answers the plain 500 without a response hook and calls the write hook once with the request as received (HY-60.14, HY-60.17, HY-60.18).",
+                "packages/php/tests/RunTest.php::RunTest::testAFailedReadOfAMultipartBodyLeavesNoDirectoryOfTheRequest: run reads the body and writes the response through the PHP SAPI (HY-100.30); a read of a multipart body that fails after a file part started answers the plain 500, calls the write hook once and leaves no directory of the request (HY-60.14, HY-131.14).",
+                "packages/php/tests/RunTest.php::RunTest::testASessionThatCannotBeWrittenAnswersThePlain500: run reads the body and writes the response through the PHP SAPI (HY-100.30); a session of the SAPI that cannot be written when it is closed before the answer answers the plain 500 of HY-43 (HY-115.23)."
+              ]
+            }
+          ],
+          "only": {
+            "languages": [
+              "php"
+            ],
+            "sentence": "HY-100.30"
+          }
+        },
         {
           "id": "delivery",
           "native": {

@@ -43,7 +43,10 @@ export function checkUnits(ctx: Ctx): void {
         if (found.internal !== n.internal) add('UNIT_VISIBILITY', `${lang} unit ${u.id} internal=${found.internal}, spec says ${n.internal}`);
       }
       const base = n.file.split('/').pop() ?? '';
-      if (base !== expectedFile(lang, u.id, n.internal)) add('UNIT_FILE', `${lang} unit ${u.id} file ${base} should be ${expectedFile(lang, u.id, n.internal)}`);
+      // HYR-3: a PHP functions unit whose members are all functions is a file of namespace functions, not a class.
+      const namespaceFunctions = lang === 'php' && n.kind === 'functions' && u.members.length > 0 && u.members.every((m) => m.kind === 'function');
+      const file = expectedFile(lang, u.id, n.internal, namespaceFunctions);
+      if (base !== file) add('UNIT_FILE', `${lang} unit ${u.id} file ${base} should be ${file}`);
       if (c.group !== undefined && spec.groups.includes(c.group)) {
         const root = spec.languages[lang].sources.find((r) => n.file.startsWith(`${r}/`)) ?? spec.languages[lang].sources[0] ?? '';
         const expected = `${root}/${expectedDirectory(lang, c.group)}/${base}`;

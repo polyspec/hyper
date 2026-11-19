@@ -104,8 +104,8 @@
     },
     {
       "id": "app_run_with_one_more_argument_is_refused",
-      "label": "`app.run` with one argument more than its parameters fails with the count error (HY-106.8)",
-      "member": "app.run",
+      "label": "`run.run` with one argument more than its parameters fails with the count error (HY-106.8)",
+      "member": "run.run",
       "call": "extra",
       "refused": true,
       "only": {

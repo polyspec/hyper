@@ -41,7 +41,7 @@ final class ArgumentsSteps
         'app.bind' => [App::class, 'bind'],
         'app.handle' => [App::class, 'handle'],
         // HY-106.20: a host function, whose first parameter is the application that the case gives as the receiver.
-        'app.run' => [null, 'Polyspec\Hyper\run'],
+        'run.run' => [null, 'Polyspec\Hyper\run'],
         'media-type.constructor' => [MediaType::class, '__construct'],
         'media-type.parameters' => [MediaType::class, 'parameters'],
         'media-type.etag' => [MediaType::class, 'etag'],
@@ -337,7 +337,7 @@ final class ArgumentsSteps
             ],
             'app.bind', 'container.bind' => [Counter::class, $service],
             'app.handle' => [self::request(), new ArraySession(), 0],
-            'app.run' => [0],
+            'run.run' => [0],
             'media-type.constructor' => [[], 'application/json'],
             'media-type.etag' => ['x'],
             'request.withHeader', 'response.withHeader' => ['X-A', 'b'],
@@ -397,7 +397,7 @@ final class ArgumentsSteps
                 'app.bind' => Untyped::call($receiver->bind(...))(...$arguments),
                 'app.handle' => Untyped::call($receiver->handle(...))(...$arguments),
                 // HY-106.20: the host entry is a function of the host code whose first argument is the application.
-                'app.run' => Untyped::call(\Polyspec\Hyper\run(...))($receiver, ...$arguments),
+                'run.run' => Untyped::call(\Polyspec\Hyper\run(...))($receiver, ...$arguments),
                 default => throw new \UnexpectedValueException("the member {$member} of the case is unknown"),
             },
             $receiver instanceof Request => match ($member) {
