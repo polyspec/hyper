@@ -10,11 +10,6 @@ export abstract class NamedValues<T> {
     this.byName = values;
   }
 
-  // Returns the names in the order of their first occurrence.
-  names(): string[] {
-    return [...this.order];
-  }
-
   // Returns the values of a name in request order; an absent name has none.
   get(name: string): T[] {
     return [...(this.byName.get(name) ?? [])];

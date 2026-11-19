@@ -15,10 +15,6 @@ class NamedValues(Generic[T]):
         self.__names = names
         self.__values = values
 
-    def names(self) -> list[str]:
-        """Returns the names in the order of their first occurrence."""
-        return list(self.__names)
-
     def get(self, name: str) -> list[T]:
         """Returns the values of a name in request order; an absent name has none."""
         return list(self.__values.get(name, []))

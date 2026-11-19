@@ -25,16 +25,6 @@ abstract class NamedValues
     }
 
     /**
-     * Returns the names in the order of their first occurrence.
-     *
-     * @return list<string>
-     */
-    public function names(): array
-    {
-        return $this->names;
-    }
-
-    /**
      * Returns the values of a name in request order; an absent name has none.
      *
      * @return list<T>

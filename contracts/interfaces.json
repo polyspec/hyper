@@ -8246,29 +8246,6 @@
               }
             },
             {
-              "id": "named-values.names",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "list<string>",
-              "errors": [],
-              "state": "Returns the names in the order of their first occurrence (HY-56).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/NamedValues.php::Polyspec\\Hyper\\NamedValues::names",
-                  "signature": "public function names(): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/named-values.ts::NamedValues.names",
-                  "signature": "names(): string[]"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/_named_values.py::NamedValues.names",
-                  "signature": "def names(self) -> list[str]"
-                }
-              }
-            },
-            {
               "id": "named-values.get",
               "kind": "method",
               "visibility": "internal",
