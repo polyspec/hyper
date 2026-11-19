@@ -2123,6 +2123,75 @@
                   "signature": "private function call(string $name, mixed ...$arguments): mixed"
                 }
               }
+            },
+            {
+              "id": "core-rules.jsonCodecEncode",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "rules.json_write gives the JSON text of a value of the data model, and fails for a value that has no JSON form (HY-54.18, HY-54.19).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::jsonCodecEncode",
+                  "signature": "public function jsonCodecEncode(mixed $value): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.acceptParse",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<string>"
+              ],
+              "output": "list<accept>",
+              "errors": [],
+              "state": "rules.accept_ranges gives the ranges of an Accept value in field order, and fails with invalid_accept or invalid_weight (HY-116.17, HY-116.18).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::acceptParse",
+                  "signature": "public function acceptParse(?string $value): array"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestMediaType",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "rules.media_type gives the media type of a Content-Type value, and fails with malformed_content_type for a value that is no media type (HY-59.13).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestMediaType",
+                  "signature": "public function requestMediaType(string $contentType): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestFileOver",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "list<number>",
+                "number"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "rules.file_over tells whether a file of the body is larger than the limit, from the size of each file (HY-114.12).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::requestFileOver",
+                  "signature": "public function requestFileOver(array $sizes, int $limit): bool"
+                }
+              }
             }
           ]
         }
