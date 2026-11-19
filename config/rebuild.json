@@ -138,6 +138,10 @@
       "kind": "policy",
       "reason": "writes the cases of contracts/ in the case form of binding for the rows of cases of the contract (HR-100); no tool of an ecosystem converts between the two case forms of this repository"
     },
+    "scripts/install-release-files.mts": {
+      "kind": "ecosystem",
+      "tool": "fetch downloads each file that config/release-files.json pins by its URL, node:crypto compares its sha256 with the pin, and writeFileAtomic publishes it with one rename (HR-80, HR-82)"
+    },
     "scripts/install-redis.mts": {
       "kind": "ecosystem",
       "tool": "the make of the Redis release archive, checked by its sha256, and PIE build the Redis server and phpredis"
@@ -157,6 +161,10 @@
     "scripts/pin.mts": {
       "kind": "policy",
       "reason": "writes and checks the version of each sibling release of config/pins.json in every place together: release asset URLs, npm requirements, Cargo tags and lock sources, Composer platform versions, Makefile variables, config/php-ext-pins.json and Go modules (H35.75); no ecosystem tool covers these places together, and a tool that picks versions queries a live registry, which HR-89 forbids"
+    },
+    "scripts/php-wrappers.mts": {
+      "kind": "ecosystem",
+      "tool": "node:child_process runs the version query of each php candidate under the Homebrew prefixes and on PATH, and prints the one of the minor release of .php-version for install-tools of kit (HR-81, H35.137)"
     },
     "scripts/php-ext-requires.mts": {
       "kind": "ecosystem",

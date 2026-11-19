@@ -50,7 +50,7 @@ final class CaseRules
 
     /**
      * Gets the errors of the orm package that the cases throw by real calls on a SQLite file of
-     * tests/fixtures/orm-errors.json in a temporary directory, as the generated tests of orm 0.0.34 make them
+     * packages/php/tests/fixtures/orm-errors.json in a temporary directory, as the generated tests of orm 0.0.34 make them
      * (GeneratedTest.php): an update with an expected revision that the row does not hold gives `revision_changed`
      * (line 9603, testB4QueryUpdateAChangedRevision), an update with requireMatch of a key that no row holds gives
      * `no_rows` (line 9719), and a connection to a file in a missing directory gives the OrmStoreError `driver` (line
@@ -63,7 +63,7 @@ final class CaseRules
         if (self::$ormCaught !== null) {
             return self::$ormCaught;
         }
-        $fixture = Json::file(__DIR__ . '/../../../../tests/fixtures/orm-errors.json');
+        $fixture = Json::file(__DIR__ . '/../fixtures/orm-errors.json');
         $changedRow = Json::map($fixture['revisionChanged'] ?? null, 'revisionChanged');
         $missingRow = Json::map($fixture['noRows'] ?? null, 'noRows');
         $entity = Json::string($fixture['entity'] ?? null);
