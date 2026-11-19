@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 5223440fa1ac379ded8e66602f706265491763e5080c0b37768cb70f26698595 -->
+<!-- source-sha256: f7dec3bdb8fdccc52f1246feb0e0b1188da46e40b395382ed9053720917a8dbd -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- recipe check의 Node reader가 Python reader처럼(H35.208부터) 모듈 상수의 읽기를 그 값의 scope에 대한 use로 읽는다(H35.210, HYR-5). 입력: 함수 `refused`가 읽는 `packages/ts/tests/steps/arguments.ts`의 `MEMBERS`처럼 callable을 담은 최상위 상수. 이전 동작: `scripts/recipe/read-node-scopes.mts`는 상수에 scope를 썼지만 함수가 그 이름을 읽는 곳에 use를 쓰지 않아서, 표만을 거친 호출이 인정되지 않았다. `make recipe-compare`가 줄을 보고하지 않은 것은 `argumentsOf`가 `RedisSessions`도 만들기 때문일 뿐이었다. 기대: reader가 use `{kind: member, of: module, name, call: false}`를 쓰고, `make recipe-compare`는 이전과 같은 줄을 보고한다.
 - recipe check의 Python reader가 모듈의 변수를 그 값의 scope로, 그 변수의 읽기를 그 scope의 use로 읽는다(H35.208, HYR-5). 입력: `packages/python/tests/steps/arguments_steps.py`. 그 step `counts`는 `_row`를 거쳐 표 `_ROWS`를 읽고, 그 표의 행 `redis-sessions.constructor`는 `RedisSessions(...)`를 호출한다. 이전 동작: reader가 모듈의 대입에 scope를 쓰지 않고 그 이름의 읽기에 use를 쓰지 않아서, `make recipe-compare`가 `STEP_MEMBER_UNCALLED python step packages/python/tests/steps/arguments_steps.py::counts of arguments.json section counts does not call redis-sessions.constructor (__init__)`를 보고했다. 기대: 그 줄이 없어지고 다른 줄은 더해지지 않는다. recipe와 reader test를 실행한 `make hyper-test-scripts`가 통과하고, 새 test는 fixture `readers/python`의 표 `MAKERS`를 읽는다.
 - `make bench-sessions`의 script test는 Node 서버를 실행하기 전에 이 platform의 Node addon을 `requireBuilt('node-addon', NODE_ADDON)`으로 적는다. Node 서버는 `FileSession`을 통해 그것을 불러온다(H35.206, HR-85, HY-133.2). 입력: `packages/ts/native/generated/hyper.<platform>.node`가 없는 checkout. 이전 동작: test "counts the requests of each server"가 Node worker에서 `CoreBindingError: ... Cannot find module './hyper.darwin-arm64.node'`로 실패했다. 지금: 없는 경로와 `make node-addon`을 적고 실패한다. `tests/scripts/requires.mts`가 Makefile NODE_ADDON의 경로인 `NODE_ADDON`을 export한다. 검증: `make node-addon` 뒤 `make hyper-test-scripts TESTS=tests/scripts/benchmark-sessions.test.mts`가 test 3개를 통과한다.
 - `make bench-sessions`의 script test는 recipe가 넘기는 PHP 확장 넷, 곧 `polyspec_json`, `polyspec_template`, `polyspec_session_store`, `polyspec_hyper`를 그 순서로 기대한다(H35.206, HY-48.23, HY-48.25). 입력: `make bench-sessions`의 dry run. 이전 동작: H35.107이 HY-48.25가 요구하고 `packages/php/composer.json`이 `ext-polyspec_session_store`로 요구하는 `polyspec_session_store`를 `PHP_EXTENSIONS`에 더했는데, test는 아직 확장 셋을 기대해 `make hyper-test-scripts TESTS=tests/scripts/benchmark-sessions.test.mts`가 `Expected values to be strictly deep-equal`로 실패했다. 지금: test가 넷을 기대하고, recipe는 그대로이며, `bench-sessions`의 도움말이 session-store 확장을 적는다.
