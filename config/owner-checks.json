@@ -1062,11 +1062,13 @@
         "scripts/schema/**",
         "tests/scripts/fixtures/recipe/**",
         "tests/scripts/recipe-check.test.mts",
-        "tests/scripts/recipe-files.test.mts"
+        "tests/scripts/recipe-files.test.mts",
+        "tests/scripts/recipe-reexport.test.mts"
       ],
       "tests": [
         "tests/scripts/recipe-check.test.mts",
-        "tests/scripts/recipe-files.test.mts"
+        "tests/scripts/recipe-files.test.mts",
+        "tests/scripts/recipe-reexport.test.mts"
       ],
       "targets": [
         "typecheck"

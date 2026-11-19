@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: edb5423a9ff3f5fc767ba7cf2d9a92c370b47b3d8602a7933e55de23d76f2273 -->
+<!-- source-sha256: 8572def2607e0bcf40c9876f58114cd1c6ae79c4b55358cb86e433b3238df137 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -127,6 +127,17 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
         붙이지 않는 kind를 실패시킨다. 호출자는 이 실패들을 kind만으로 구별하기 때문이다.
     - `state`: member가 하는 일을 한 문장으로 쓴다.
     - `native`: 언어마다 정확한 `symbol`과 정확한 `signature`(아래 참조).
+    - **Reexports.** `release`의 라이브러리 멤버에 호출을 넘기고 경계에서 타입만 변환하는 hyper unit의 멤버는
+      `{"id": "<unit>.<member>", "reexport": "<library>:<unit>.<member>"}`로 적고, `kind`, `visibility`, `inputs`,
+      `output`, `errors`, `state`, `native`를 적지 않는다. 라이브러리 부분은 unit과 멤버를 라이브러리의 id로 쓴다. 멤버가
+      모두 그런 항목인 unit은 unit에 `"reexport": "<library>:<unit>"`을 적고 `members`를 비운다. 검사는 그런 멤버와 그런
+      unit의 멤버를 소스와 비교하지 않고, 도달을 따지지 않으며, HYR-5의 수에 세지 않는다. 라이브러리가 그 멤버를 스스로
+      적고 검사하기 때문이다. 검사는 고정된 릴리스에 라이브러리의 unit과 멤버가 있는지 확인한다:
+      `packages/rust/Cargo.toml`이 tag로 고정하고 `Cargo.lock`이 잠그는 라이브러리의 crate `polyspec-<library>`가 자기
+      `Cargo.toml` 옆에 싣는 `interface.json`을 읽고, 그 crate는 binding 생성기처럼 Makefile의 cargo 명령
+      (`--cargo "$(CARGO)"`)으로 `packages/rust/Cargo.toml`의 `cargo metadata --locked --offline`에서 찾는다. 파일이 적지
+      않는 unit 또는 멤버는 파일과 이름을 밝힌 `REEXPORT_MISSING`이다. 가져오지 않은 crate는
+      `make hyper-install-crates`의 이름을 밝히며 실패한다. reexport가 없는 spec은 cargo를 시작하지 않는다.
   - **Types.** type은 unit(HYR-3)이 아닌 타입 선언이다: Node의 `type` alias 또는 `interface`, 그리고 Python의 `type` 문.
     spec은 각 type을 `types` 아래에 한 번 적으며, `id`(camelCase로 쓴 단어들), `visibility`(member와 같다), `unit`(각
     언어에서 그 type을 가진 파일의 unit), 중립 `shape`, 그리고 선언하는 언어마다 `native: {symbol, declaration}`을 가진다.
