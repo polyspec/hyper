@@ -69,7 +69,7 @@ if ($cluster !== false) {
 /** Runs one request with a session store; closing the PHP session ends the request. */
 $request = static function (callable $use) use ($identifier, $setup): mixed {
     $cookies = new Request('GET', '/', cookies: ['hy-session' => $identifier]);
-    $result = $use(new NativeSession(false, $cookies, $setup));
+    $result = $use(new NativeSession(false, $cookies, 'hy-session', $setup));
     session_write_close();
 
     return $result;
