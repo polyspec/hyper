@@ -6850,6 +6850,12 @@
                   "en": "An application takes every public name from the entry of the package: the namespace `Polyspec\\Hyper` in PHP, the package `@polyspec/hyper` in Node and the package `polyspec.hyper` in Python; the directory, the file and the module that hold a name are not part of the public API.",
                   "ko": "애플리케이션은 모든 public 이름을 package의 진입점에서 가져온다: PHP는 namespace `Polyspec\\Hyper`, Node는 package `@polyspec/hyper`, Python은 package `polyspec.hyper`이며, 이름을 담은 디렉터리, 파일, module은 public API에 속하지 않는다.",
                   "koSource": "694a843d4d99f3bacb5e36fe2e87b6d124c41033b93a701123c2beb8dd62f18a"
+                },
+                {
+                  "id": "HY-106.23",
+                  "en": "A type that a dependency of hyper defines, such as `SettingServer`, `SettingSentinel` and `SettingCluster` of session-store, is no public name of hyper: an application imports it from that dependency, and the entry of hyper neither re-exports it nor names it again.",
+                  "ko": "hyper의 의존성이 정의하는 타입, 예를 들어 session-store의 `SettingServer`, `SettingSentinel`, `SettingCluster`는 hyper의 public 이름이 아니다: 애플리케이션은 그것을 그 의존성에서 가져오고, hyper의 진입점은 그것을 다시 export하지도 다른 이름으로 다시 부르지도 않는다.",
+                  "koSource": "474a110af249ee7c62a9d83828b30a5bc42b51d81316717a9f4bba7f877da5a9"
                 }
               ]
             }
