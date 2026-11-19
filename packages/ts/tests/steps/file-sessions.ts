@@ -3,6 +3,7 @@
 import { chmodSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { FileSessions as LibraryFileSessions } from '@polyspec/session-store';
 import { FileSessions } from '../../src/session/file-sessions.js';
 import { RecordSession } from '../../src/session/record-session.js';
 import type { CaseReader } from '../case-reader.js';
@@ -49,7 +50,8 @@ export async function sessionFileRequests(reader: CaseReader): Promise<void> {
       utimesSync(path, time, time);
       aged.set(`${PREFIX}${identifier}`, age);
     }
-    const sessions = await FileSessions.inDirectory({ directory });
+    // The constructor of Node takes the store that the library made (HY-104.46).
+    const sessions = new FileSessions(await LibraryFileSessions.inDirectory(directory));
     const records: [string, string][][] = [];
     const touched: string[][] = [];
     const outcome = await requests(reader.input('steps'), {

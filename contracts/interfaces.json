@@ -10048,186 +10048,6 @@
           },
           "members": [
             {
-              "id": "record-session.constructor",
-              "kind": "constructor",
-              "visibility": "internal",
-              "inputs": [
-                "optional<string>"
-              ],
-              "output": "record-session",
-              "errors": [],
-              "state": "Holds the identifier of the session cookie of a request, or null when the cookie names no session.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.constructor",
-                  "signature": "constructor(cookieId: string | null)"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.__init__",
-                  "signature": "def __init__(self, cookie_id: Optional[str]) -> None"
-                }
-              }
-            },
-            {
-              "id": "record-session.created",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "optional<string>",
-              "errors": [],
-              "state": "Returns the identifier that this request created, which the response sets as the session cookie, or null (HY-45).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.created",
-                  "signature": "created(): string | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.created",
-                  "signature": "def created(self) -> Optional[str]"
-                }
-              }
-            },
-            {
-              "id": "record-session.get",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Returns the session value of a key as a value of the data model, or null (HY-104.13).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.get",
-                  "signature": "get(key: string): unknown"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.get",
-                  "signature": "def get(self, key: str) -> object"
-                }
-              }
-            },
-            {
-              "id": "record-session.set",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string",
-                "value"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Stores a session value under a key, and fails for a value outside the data model (HY-104.14).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.set",
-                  "signature": "set(key: string, item: unknown): void"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.set",
-                  "signature": "def set(self, key: str, item: object) -> None"
-                }
-              }
-            },
-            {
-              "id": "record-session.remove",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [
-                "string"
-              ],
-              "output": "none",
-              "errors": [],
-              "state": "Removes the session value of a key.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.remove",
-                  "signature": "remove(key: string): void"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.remove",
-                  "signature": "def remove(self, key: str) -> None"
-                }
-              }
-            },
-            {
-              "id": "record-session.renew",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "none",
-              "errors": [],
-              "state": "Gives the values a new identifier, which the response sets as the session cookie; closing deletes the old session (HY-72).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.renew",
-                  "signature": "renew(): void"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.renew",
-                  "signature": "def renew(self) -> None"
-                }
-              }
-            },
-            {
-              "id": "record-session.close",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "none",
-              "errors": [],
-              "state": "Writes the values that the request changed and releases the session; the store of the request gives it (HY-104.7, HY-115).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.close",
-                  "signature": "abstract close(): Promise<void>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.close",
-                  "signature": "def close(self) -> None"
-                }
-              }
-            },
-            {
-              "id": "record-session.stored",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "optional<bytes>",
-              "errors": [],
-              "state": "Returns the record of the session of the cookie, or null when it names no session that can go on; the store of a request gives it.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.stored",
-                  "signature": "stored(): Uint8Array | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.stored",
-                  "signature": "def stored(self) -> Optional[bytes]"
-                }
-              }
-            },
-            {
-              "id": "record-session.serialized",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "optional<bytes>",
-              "errors": [],
-              "state": "Returns the record to keep at closing, or null when the request did not use the session.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.serialized",
-                  "signature": "serialized(): Uint8Array | null"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.serialized",
-                  "signature": "def serialized(self) -> Optional[bytes]"
-                }
-              }
-            },
-            {
               "id": "record-session.cookieName",
               "kind": "static method",
               "visibility": "internal",
@@ -10268,133 +10088,6 @@
                   "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession.cookie_header",
                   "signature": "def cookie_header(id: str, secure: bool) -> str"
                 }
-              }
-            },
-            {
-              "id": "record-session.start",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns the values of the session, which the first use of the request reads or starts.",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.start",
-                  "signature": "private start(): Map<string | Uint8Array, Stored>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession._start",
-                  "signature": "def _start(self) -> dict"
-                }
-              }
-            },
-            {
-              "id": "record-session.recordKey",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Returns the key of the data model of an array key: an integer is its decimal text (HY-104.13).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.recordKey",
-                  "signature": "private static recordKey(key: unknown): string | Uint8Array"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession._record_key",
-                  "signature": "def _record_key(key: object) -> object"
-                }
-              }
-            },
-            {
-              "id": "record-session.recordValue",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Returns the value of the data model of a value that a record holds (HY-104.13).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.recordValue",
-                  "signature": "private static recordValue(stored: Stored): unknown"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession._record_value",
-                  "signature": "def _record_value(stored: object) -> object"
-                }
-              }
-            },
-            {
-              "id": "record-session.recorded",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Returns what the record holds for a value of the data model, and fails for a value outside it (HY-104.14).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.recorded",
-                  "signature": "private static recorded(input: unknown): Stored"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession._recorded",
-                  "signature": "def _recorded(input: object) -> object"
-                }
-              }
-            },
-            {
-              "id": "record-session.recordValues",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "bytes",
-                "string"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns the values of a session record by name, and fails for a record that is no array (HY-104.8).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.recordValues",
-                  "signature": "private static recordValues(record: Uint8Array, id: string): Map<string | Uint8Array, Stored>"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/session/_record_session.py::RecordSession._record_values",
-                  "signature": "def _record_values(record: bytes, id: str) -> dict"
-                }
-              }
-            },
-            {
-              "id": "record-session.isArrayKey",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value"
-              ],
-              "output": "function(value) -> boolean",
-              "errors": [],
-              "state": "Tells whether a key is an array key of the data model: an integer, a text or bytes (HY-104.13).",
-              "native": {
-                "node": {
-                  "symbol": "packages/ts/src/session/record-session.ts::RecordSession.isArrayKey",
-                  "signature": "private static isArrayKey(key: unknown): key is number | bigint | string | Uint8Array"
-                }
-              },
-              "only": {
-                "languages": [
-                  "node"
-                ],
-                "sentence": "HY-104.48"
               }
             }
           ],
@@ -10476,7 +10169,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/session/file-sessions.ts::FileSessions.constructor",
-                  "signature": "private constructor(store: LibraryFileSessions)"
+                  "signature": "constructor(store: LibraryFileSessions)"
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/session/file_sessions.py::FileSessions.__init__",
@@ -10485,13 +10178,7 @@
               },
               "reachDiffers": [
                 {
-                  "member": "core-rules.coreRules",
-                  "reached": "python",
-                  "notReached": "node",
-                  "sentence": "HY-104.46"
-                },
-                {
-                  "member": "core-rules.sharedRules",
+                  "member": "core-rules.libraryError",
                   "reached": "python",
                   "notReached": "node",
                   "sentence": "HY-104.46"
@@ -14889,26 +14576,6 @@
       }
     },
     {
-      "id": "stored",
-      "visibility": "private",
-      "unit": "record-session",
-      "shape": {
-        "term": "value"
-      },
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-104.14"
-      },
-      "native": {
-        "node": {
-          "symbol": "packages/ts/src/session/record-session.ts::Stored",
-          "declaration": "type Stored = unknown;"
-        }
-      }
-    },
-    {
       "id": "pageKind",
       "visibility": "private",
       "unit": "core-rules",
@@ -18288,13 +17955,7 @@
               "sentence": "HY-133.3",
               "state": "The step makes a store of session files with `lifetime`, or its default, over a temporary directory of the case that holds the session files `files`, or over what `directory` names in place of it: `missing` a path below it that does not exist, `file` the path of a file below it and `relative` a relative path. With `cookie` it opens the session of that cookie value, reads the key `a` and closes the session. `raises` is the first failure of these calls, compared through the call of the store by the runner, because the answer of a server to a failed session open is the plain 500 of HY-60.14, which carries no class and no kind: its `kind`, its HTTP `status` or null, its `category` and its `message` when a rule states the message, or null."
             }
-          },
-          "members": [
-            "file-session.close",
-            "file-session.get",
-            "file-sessions.constructor",
-            "file-sessions.open"
-          ]
+          }
         }
       }
     },
