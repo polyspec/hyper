@@ -38,51 +38,17 @@
     "php": {
       "runner": "packages/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases",
       "steps": "packages/php/tests/Support/Steps",
-      "registry": "packages/php/tests/Support/CaseSteps.php",
-      "tests": [
-        "packages/php/tests/CaseRulesTest.php::CaseRulesTest::testAnErrorOfHyperIsRaises: HYR-11 an error of hyper, whose classes include one named Hyper<Category>Error, is the failure that a step compares as `raises`.",
-        "packages/php/tests/CaseRulesTest.php::CaseRulesTest::testAnErrorOfTheStepIsNoRaises: HYR-7 any other error is an error of the step, which fails the case as it was raised.",
-        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testAFileNameSelectsTheCasesOfTheFile: HYR-7 a file name of RECIPE_CASES selects the cases of the file.",
-        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testAFileAndASectionSelectTheCasesOfTheSection: HYR-7 `<file>#<section>` of RECIPE_CASES selects the cases of the section.",
-        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testAnIdSelectsItsCasesInEveryFile: HYR-7 an id of RECIPE_CASES selects the cases of the id in every file.",
-        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testSeveralNamesSelectEachCaseOnceInTheOrderOfTheRunner: HYR-7 several names select each case once, in the order of the runner.",
-        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testANameThatSelectsNoCaseFailsWithTheSelection: HYR-7 a name that selects no case fails before a case runs.",
-        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testASelectionWithoutANameFails: HYR-7 a selection without a name fails.",
-        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testTheNamesOfASelectionAreItsWords: HYR-7 the names of a selection are the words of RECIPE_CASES."
-      ]
+      "registry": "packages/php/tests/Support/CaseSteps.php"
     },
     "node": {
       "runner": "packages/ts/tests/case-runner.test.ts::cases",
       "steps": "packages/ts/tests/steps",
-      "registry": "packages/ts/tests/case-runner.test.ts",
-      "tests": [
-        "packages/ts/tests/case-rules.test.ts::reports an error of hyper as raises: HYR-11 an error of hyper, whose classes include one named Hyper<Category>Error, is the failure that a step compares as `raises`.",
-        "packages/ts/tests/case-rules.test.ts::throws an error of the step again: HYR-7 any other error is an error of the step, which fails the case as it was raised.",
-        "packages/ts/tests/case-selection.test.ts::selects the cases of a file: HYR-7 a file name of RECIPE_CASES selects the cases of the file.",
-        "packages/ts/tests/case-selection.test.ts::selects the cases of a section of a file: HYR-7 `<file>#<section>` of RECIPE_CASES selects the cases of the section.",
-        "packages/ts/tests/case-selection.test.ts::selects the cases of an id in every file: HYR-7 an id of RECIPE_CASES selects the cases of the id in every file.",
-        "packages/ts/tests/case-selection.test.ts::selects the cases of several names once, in the order of the runner: HYR-7 several names select each case once, in the order of the runner.",
-        "packages/ts/tests/case-selection.test.ts::fails for a name that selects no case, and names it and the selection: HYR-7 a name that selects no case fails, and the failure names it and the selection.",
-        "packages/ts/tests/case-selection.test.ts::fails for a selection without a name: HYR-7 a selection without a name fails.",
-        "packages/ts/tests/case-selection.test.ts::runs only the selected cases and states the selection in the first line of the results file: HYR-7 a selected run runs only the selected cases and writes the line SELECTION first.",
-        "packages/ts/tests/case-selection.test.ts::fails before a case runs for a name that selects no case, and writes no results file: HYR-7 a name that selects no case fails before a case runs."
-      ]
+      "registry": "packages/ts/tests/case-runner.test.ts"
     },
     "python": {
       "runner": "packages/python/tests/test_case_runner.py::CaseRunner.test_cases",
       "steps": "packages/python/tests/steps",
-      "registry": "packages/python/tests/steps/__init__.py",
-      "tests": [
-        "packages/python/tests/test_case_rules.py::CaseRulesTest.test_an_error_of_hyper_is_raises: HYR-11 an error of hyper, whose classes include one named Hyper<Category>Error, is the failure that a step compares as `raises`.",
-        "packages/python/tests/test_case_rules.py::CaseRulesTest.test_an_error_of_the_step_is_no_raises: HYR-7 any other error is an error of the step, which fails the case as it was raised.",
-        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_file_name_selects_the_cases_of_the_file: HYR-7 a file name of RECIPE_CASES selects the cases of the file.",
-        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_file_and_a_section_select_the_cases_of_the_section: HYR-7 `<file>#<section>` of RECIPE_CASES selects the cases of the section.",
-        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_an_id_selects_its_cases_in_every_file: HYR-7 an id of RECIPE_CASES selects the cases of the id in every file.",
-        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_several_names_select_each_case_once_in_the_order_of_the_runner: HYR-7 several names select each case once, in the order of the runner.",
-        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_name_that_selects_no_case_fails_with_the_selection: HYR-7 a name that selects no case fails before a case runs.",
-        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_selection_without_a_name_fails: HYR-7 a selection without a name fails.",
-        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_the_names_of_a_selection_are_its_words: HYR-7 the names of a selection are the words of RECIPE_CASES."
-      ]
+      "registry": "packages/python/tests/steps/__init__.py"
     },
     "browser": {
       "runner": "packages/client/tests/case-runner.test.ts::cases"
@@ -3769,7 +3735,7 @@
           "id": "run",
           "native": {
             "php": {
-              "file": "packages/php/src/Host/run.php",
+              "file": "packages/php/src/Host/Run.php",
               "kind": "functions",
               "internal": false
             }
@@ -3788,7 +3754,7 @@
               "state": "Answers the request of the SAPI with the application and registers the shutdown function of the write hook and the disconnect hook: the host entry of the front controller, no member of App (HY-100.30, HY-106.20).",
               "native": {
                 "php": {
-                  "symbol": "packages/php/src/Host/run.php::Polyspec\\Hyper\\run",
+                  "symbol": "packages/php/src/Host/Run.php::Polyspec\\Hyper\\run",
                   "signature": "function run(Polyspec\\Hyper\\App $app, ?int $started): void"
                 }
               },
@@ -8605,7 +8571,31 @@
           "members": [
             {
               "id": "uploaded-file.constructor",
-              "reexport": "http-form:uploaded_file.new"
+              "kind": "constructor",
+              "visibility": "public",
+              "inputs": [
+                "string",
+                "string",
+                "string",
+                "bytes"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Holds the name, the filename, the content type and the bytes of a file part as a value (HY-113.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::__construct",
+                  "signature": "public function __construct(string $name, string $filename, string $contentType, string $content)"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.constructor",
+                  "signature": "constructor(name: string, filename: string, contentType: string, content: Uint8Array)"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.__init__",
+                  "signature": "def __init__(self, name: str, filename: str, content_type: str, content: bytes)"
+                }
+              }
             },
             {
               "id": "uploaded-file.ofCore",
@@ -8634,27 +8624,143 @@
             },
             {
               "id": "uploaded-file.name",
-              "reexport": "http-form:uploaded_file.name"
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the name parameter of the part (HY-113.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::name",
+                  "signature": "public function name(): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.name",
+                  "signature": "name(): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.name",
+                  "signature": "def name(self) -> str"
+                }
+              }
             },
             {
               "id": "uploaded-file.filename",
-              "reexport": "http-form:uploaded_file.filename"
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the filename parameter of the part, with the escapes of its quoted string undone (HY-113.3, HY-113.20).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::filename",
+                  "signature": "public function filename(): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.filename",
+                  "signature": "filename(): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.filename",
+                  "signature": "def filename(self) -> str"
+                }
+              }
             },
             {
               "id": "uploaded-file.contentType",
-              "reexport": "http-form:uploaded_file.content_type"
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "string",
+              "errors": [],
+              "state": "Returns the Content-Type header of the part, or the empty text when it has none (HY-113.3).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::contentType",
+                  "signature": "public function contentType(): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.contentType",
+                  "signature": "contentType(): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.content_type",
+                  "signature": "def content_type(self) -> str"
+                }
+              }
             },
             {
               "id": "uploaded-file.size",
-              "reexport": "http-form:uploaded_file.size"
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the number of bytes of the part (HY-131.15).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::size",
+                  "signature": "public function size(): int"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.size",
+                  "signature": "size(): number"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.size",
+                  "signature": "def size(self) -> int"
+                }
+              }
             },
             {
               "id": "uploaded-file.content",
-              "reexport": "http-form:uploaded_file.content"
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the bytes of the part as one value, read from its file when it has one, and fails with the class of HY-46.3 after a move (HY-113.3, HY-131.16).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::content",
+                  "signature": "public function content(): string"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.content",
+                  "signature": "async content(): Promise<Uint8Array>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.content",
+                  "signature": "def content(self) -> bytes"
+                }
+              }
             },
             {
               "id": "uploaded-file.moveTo",
-              "reexport": "http-form:uploaded_file.move_to"
+              "kind": "method",
+              "visibility": "public",
+              "inputs": [
+                "string"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Moves the file to the path; a path that is not a string fails with TypeError, and a path that exists or a file that was moved fails with the class of HY-46.3 (HY-131.15, HY-131.16).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/UploadedFile.php::Polyspec\\Hyper\\UploadedFile::moveTo",
+                  "signature": "public function moveTo(mixed $path): void"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/form/uploaded-file.ts::UploadedFile.moveTo",
+                  "signature": "async moveTo(path: string): Promise<void>"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/uploaded_file.py::UploadedFile.move_to",
+                  "signature": "def move_to(self, path: str) -> None"
+                }
+              }
             }
           ]
         }
@@ -13309,6 +13415,44 @@
       "units": []
     },
     {
+      "id": "case-runner",
+      "rules": [],
+      "cases": {
+        "none": "The case runners of PHP, Node and Python and their case readers are the machinery of HYR-7 and HYR-11, which runs the case files and is no behaviour of hyper; their own tests are native tests of this concern.",
+        "tests": [
+          "packages/php/tests/CaseRulesTest.php::CaseRulesTest::testAnErrorOfHyperIsRaises: HYR-11 an error of hyper, whose classes include one named Hyper<Category>Error, is the failure that a step compares as `raises`.",
+          "packages/php/tests/CaseRulesTest.php::CaseRulesTest::testAnErrorOfTheStepIsNoRaises: HYR-7 any other error is an error of the step, which fails the case as it was raised.",
+          "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testAFileNameSelectsTheCasesOfTheFile: HYR-7 a file name of RECIPE_CASES selects the cases of the file.",
+          "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testAFileAndASectionSelectTheCasesOfTheSection: HYR-7 `<file>#<section>` of RECIPE_CASES selects the cases of the section.",
+          "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testAnIdSelectsItsCasesInEveryFile: HYR-7 an id of RECIPE_CASES selects the cases of the id in every file.",
+          "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testSeveralNamesSelectEachCaseOnceInTheOrderOfTheRunner: HYR-7 several names select each case once, in the order of the runner.",
+          "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testANameThatSelectsNoCaseFailsWithTheSelection: HYR-7 a name that selects no case fails before a case runs.",
+          "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testASelectionWithoutANameFails: HYR-7 a selection without a name fails.",
+          "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testTheNamesOfASelectionAreItsWords: HYR-7 the names of a selection are the words of RECIPE_CASES.",
+          "packages/ts/tests/case-rules.test.ts::reports an error of hyper as raises: HYR-11 an error of hyper, whose classes include one named Hyper<Category>Error, is the failure that a step compares as `raises`.",
+          "packages/ts/tests/case-rules.test.ts::throws an error of the step again: HYR-7 any other error is an error of the step, which fails the case as it was raised.",
+          "packages/ts/tests/case-selection.test.ts::selects the cases of a file: HYR-7 a file name of RECIPE_CASES selects the cases of the file.",
+          "packages/ts/tests/case-selection.test.ts::selects the cases of a section of a file: HYR-7 `<file>#<section>` of RECIPE_CASES selects the cases of the section.",
+          "packages/ts/tests/case-selection.test.ts::selects the cases of an id in every file: HYR-7 an id of RECIPE_CASES selects the cases of the id in every file.",
+          "packages/ts/tests/case-selection.test.ts::selects the cases of several names once, in the order of the runner: HYR-7 several names select each case once, in the order of the runner.",
+          "packages/ts/tests/case-selection.test.ts::fails for a name that selects no case, and names it and the selection: HYR-7 a name that selects no case fails, and the failure names it and the selection.",
+          "packages/ts/tests/case-selection.test.ts::fails for a selection without a name: HYR-7 a selection without a name fails.",
+          "packages/ts/tests/case-selection.test.ts::runs only the selected cases and states the selection in the first line of the results file: HYR-7 a selected run runs only the selected cases and writes the line SELECTION first.",
+          "packages/ts/tests/case-selection.test.ts::fails before a case runs for a name that selects no case, and writes no results file: HYR-7 a name that selects no case fails before a case runs.",
+          "packages/python/tests/test_case_rules.py::CaseRulesTest.test_an_error_of_hyper_is_raises: HYR-11 an error of hyper, whose classes include one named Hyper<Category>Error, is the failure that a step compares as `raises`.",
+          "packages/python/tests/test_case_rules.py::CaseRulesTest.test_an_error_of_the_step_is_no_raises: HYR-7 any other error is an error of the step, which fails the case as it was raised.",
+          "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_file_name_selects_the_cases_of_the_file: HYR-7 a file name of RECIPE_CASES selects the cases of the file.",
+          "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_file_and_a_section_select_the_cases_of_the_section: HYR-7 `<file>#<section>` of RECIPE_CASES selects the cases of the section.",
+          "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_an_id_selects_its_cases_in_every_file: HYR-7 an id of RECIPE_CASES selects the cases of the id in every file.",
+          "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_several_names_select_each_case_once_in_the_order_of_the_runner: HYR-7 several names select each case once, in the order of the runner.",
+          "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_name_that_selects_no_case_fails_with_the_selection: HYR-7 a name that selects no case fails before a case runs.",
+          "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_selection_without_a_name_fails: HYR-7 a selection without a name fails.",
+          "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_the_names_of_a_selection_are_its_words: HYR-7 the names of a selection are the words of RECIPE_CASES."
+        ]
+      },
+      "units": []
+    },
+    {
       "id": "argument-count",
       "group": "app",
       "rules": [
@@ -17658,7 +17802,8 @@
           "members": [
             "request.file",
             "request.fileOver",
-            "request.files"
+            "request.files",
+            "uploaded-file.filename"
           ]
         },
         "targets": {

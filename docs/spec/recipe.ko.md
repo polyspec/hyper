@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: add37007c2e6d5bcb1434bd93730c05525128e6ab93f4125d8d8636c190af8ef -->
+<!-- source-sha256: e0f0032d983f709c139f609e49759b985e176b3e63a95c6d8418fed98bb654fe -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -47,9 +47,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
 
   모든 언어에서 파일은 정확히 하나의 unit을 가진다.
   - PHP의 `functions` unit은 생성자가 없고 다른 class를 확장하지 않으며 abstract가 아닌 static method들의 class
-    하나다. 다른 class를 확장하거나 abstract인 class는 instance를 가지기 때문이다. namespace `Polyspec\Hyper`에 함수를
-    선언하고 class를 선언하지 않는 PHP 파일도, 예를 들어 host 함수 `run`의 `src/Host/run.php`(HY-106.20)도, 그 파일로
-    이름 붙인 `functions` unit이며 그 member는 그 함수들이다.
+    하나다. 다른 class를 확장하거나 abstract인 class는 instance를 가지기 때문이다.
   - Node의 `functions` unit은 export한 함수마다 JSDoc tag `@internal`이 있을 때 internal이다.
   - 일부 언어에만 있는 unit은 `only`를 가진다(HYR-6).
   - concern의 각 class, interface, trait은 자기 unit이며, Python의 각 class도 `Protocol`과 `TypedDict`를 포함하여 자기
@@ -74,9 +72,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     - `representation`은 route의 representation과, `Accept` header로 그 하나를 고르는 선택을 담는다.
   - PHP: PascalCase, `src/<Group>/<Words>.php`, namespace `Polyspec\Hyper`에 속한다.
     `packages/php/composer.json`의 `autoload.psr-4`는 `Polyspec\Hyper\`를 PHP unit이 있는 group 디렉터리의
-    목록에 연결하고, root `composer.json`도 같은 디렉터리를 연결한다. namespace 함수 unit의 파일은 camelCase의
-    `src/<Group>/<words>.php`이며 두 manifest의 `autoload.files`가 load한다. PSR-4는 class를 그 파일에 연결하고 함수는
-    어떤 파일에도 연결하지 않으며, PascalCase 이름은 class의 파일로 읽히기 때문이다.
+    목록에 연결하고, root `composer.json`도 같은 디렉터리를 연결한다.
   - Node: kebab-case, `src/<group>/<words>.ts`. barrel은 `src/index.ts`와 빌드 entry `src/build.ts`다.
   - Python: snake_case, package `polyspec/hyper/<group>/` 안에 둔다.
     - `<words>.py`는 HY-106이 public으로 만드는 unit의 module이다.
@@ -133,17 +129,6 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
         붙이지 않는 kind를 실패시킨다. 호출자는 이 실패들을 kind만으로 구별하기 때문이다.
     - `state`: member가 하는 일을 한 문장으로 쓴다.
     - `native`: 언어마다 정확한 `symbol`과 정확한 `signature`(아래 참조).
-    - **Reexports.** `release`의 라이브러리 멤버에 호출을 넘기고 경계에서 타입만 변환하는 hyper unit의 멤버는
-      `{"id": "<unit>.<member>", "reexport": "<library>:<unit>.<member>"}`로 적고, `kind`, `visibility`, `inputs`,
-      `output`, `errors`, `state`, `native`를 적지 않는다. 라이브러리 부분은 unit과 멤버를 라이브러리의 id로 쓴다. 멤버가
-      모두 그런 항목인 unit은 unit에 `"reexport": "<library>:<unit>"`을 적고 `members`를 비운다. 검사는 그런 멤버와 그런
-      unit의 멤버를 소스와 비교하지 않고, 도달을 따지지 않으며, HYR-5의 수에 세지 않는다. 라이브러리가 그 멤버를 스스로
-      적고 검사하기 때문이다. 검사는 고정된 릴리스에 라이브러리의 unit과 멤버가 있는지 확인한다:
-      `packages/rust/Cargo.toml`이 tag로 고정하고 `Cargo.lock`이 잠그는 라이브러리의 crate `polyspec-<library>`가 자기
-      `Cargo.toml` 옆에 싣는 `interface.json`을 읽고, 그 crate는 binding 생성기처럼 Makefile의 cargo 명령
-      (`--cargo "$(CARGO)"`)으로 `packages/rust/Cargo.toml`의 `cargo metadata --locked --offline`에서 찾는다. 파일이 적지
-      않는 unit 또는 멤버는 파일과 이름을 밝힌 `REEXPORT_MISSING`이다. 가져오지 않은 crate는
-      `make hyper-install-crates`의 이름을 밝히며 실패한다. reexport가 없는 spec은 cargo를 시작하지 않는다.
   - **Types.** type은 unit(HYR-3)이 아닌 타입 선언이다: Node의 `type` alias 또는 `interface`, 그리고 Python의 `type` 문.
     spec은 각 type을 `types` 아래에 한 번 적으며, `id`(camelCase로 쓴 단어들), `visibility`(member와 같다), `unit`(각
     언어에서 그 type을 가진 파일의 unit), 중립 `shape`, 그리고 선언하는 언어마다 `native: {symbol, declaration}`을 가진다.
@@ -159,9 +144,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       필드는 member처럼 `only`를 가진다(HYR-6).
   - **Symbol.** symbol은 `<path>::<qualified name>`이다.
     - `<path>`는 파일의 repository 기준 상대 경로다.
-    - PHP member의 qualified name은 class member에서 `Polyspec\Hyper\<Unit>::<member>`이고, namespace 함수에서
-      `Polyspec\Hyper\<member>`이다. 예를 들어 HY-106.20의 member `run.run`은 `Polyspec\Hyper\run`이다. member의
-      이름은 namespace 뒤의 마지막 이름이다.
+    - PHP member의 qualified name은 `Polyspec\Hyper\<Unit>::<member>`다.
     - Node와 Python에서 class member는 `<Unit>.<member>`, module 함수는 `<member>`다.
     - constructor는 PHP에서 `__construct`, Node에서 `constructor`, Python에서 `__init__`이다.
     - PHP class의 member `invoke`는 그 object를 호출할 수 있게 하는 method `__invoke`이다.
@@ -264,13 +247,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `runners`는 `php`, `node`, `python`, `browser`, `build` 각각의 runner를 적는다. `browser`와 `build`는 section을
     `caseReaders.node`를 통해 읽으며, check는 다섯 runner의 결과를 모두 센다.
     `runners`는 `php`, `node`, `python`에 대해 step의 디렉터리(`steps`)와 runner의 registry(`registry`), 곧 각 section을
-    그 step에 대응시키는 파일도 적고, `tests`에 그 case runner와 case reader의 test를 각각
-    `<test file>::<test name>: HYR-<n> <reason>` 형식으로 적는다. HYR-n은 그 test가 검사하는 runner의 규칙이며, 예를 들어
-    아래의 case 선택이나 HYR-11의 `raises` 규칙이다.
-    환경의 `RECIPE_CASES`에 선택의 이름, 곧 그 단어들을 가진 runner는 그 이름이 선택하는 case만 실행한다: 파일 이름은 그 파일의 case를,
-    `<file>#<section>`은 그 section의 case를, id는 모든 파일에서 그 id의 case를 선택한다. runner는 선택된 각 case를 자신의
-    순서로 한 번 실행하고, 아무 case도 선택하지 않는 이름과 이름이 없는 선택에 대해서는 case를 실행하기 전에 실패하며,
-    `SELECTION <names>` 줄을 먼저 쓴다(`docs/operations/development.md`).
+    그 step에 대응시키는 파일도 적는다.
     session-store library가 가진 case 파일 `file-store-sessions.json`은 `tests/legacy`에서 읽으며,
     그 선언은 `tests/legacy/interfaces.json`에 있다.
     hyper의 recipe는 hyper 자신의 unit만 다룬다: 의존성의 case 파일, 예를 들어 http-form의 `fields.json`과 `forms.json`은
@@ -328,8 +305,6 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `only: {languages, sentence}`(HYR-6)를 가진 case이며, 다른 runner는 그 case를 빼고 실행한다. check는 각 언어의 case
     id를 `runners`가 그 언어를 가리키는 section의, `only`가 없는 case와 `only`가 그 언어를 가리키는 case에서 얻는다.
     - spec은 각 native test를 그 unit, member 또는 concern 아래에 `<test file>::<test name>: <reason>` 형식으로 적는다.
-      한 언어의 case runner의 test는 unit의 native test가 아니다: 위에서 적은 대로 `runners.<language>.tests`가 그것을
-      적으며, HYR-8은 그 test가 다른 test tree에 있거나 그 reason이 HYR 규칙으로 시작하지 않으면 실패시킨다.
     - HYR-8은 언어마다 그 언어의 파서로 test tree의 모든 test를 나열한다. runner도 아니고 spec에 이름이 적히지도 않은 test, spec에 이름이 적혔으나 없는
       test, 빈 reason, 그리고 `only`가 정확히 한 언어를 가리키지 않는 unit이나 member 또는 case가 있는 concern 아래에 적힌
       native test는 실패시킨다.

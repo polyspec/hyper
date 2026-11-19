@@ -44,8 +44,7 @@ function main(): number {
       findings.push(`EXTENSION_MEMBERS unit ${unit.id} is an extension class and lists ${unit.members.length} members`);
     }
     for (const member of unit.members) {
-      // HYR-5 Reexports: a reexport member states no error.
-      for (const error of 'errors' in member ? member.errors : []) {
+      for (const error of member.errors) {
         const at = error.indexOf(':');
         if (at < 0) continue;
         const [owner, kind] = [error.slice(0, at), error.slice(at + 1)];

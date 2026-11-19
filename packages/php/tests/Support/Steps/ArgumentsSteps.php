@@ -254,7 +254,8 @@ final class ArgumentsSteps
         }
 
         return match ($unit) {
-            'app' => ClientApp::open(
+            // HY-106.20: the host function run of the unit run takes the application as its receiver.
+            'app', 'run' => ClientApp::open(
                 new ClientRendering(ClientApp::SHELL, '/_props', static fn (): Choice => new Choice(false, null)),
                 new Counter(),
             ),
