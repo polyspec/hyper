@@ -28,7 +28,7 @@ from ._pipeline import (
     served_file,
     validate,
 )
-from ..form._core_body import RequestBody
+from ..form._body_reader import BodyReader
 from ..http.request import Request
 from ..http.response import Response
 
@@ -172,7 +172,7 @@ async def _answer(
         return served
     # HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
     headers = _scope_headers(scope)
-    exchange.body = RequestBody(
+    exchange.body = BodyReader(
         next(
             (
                 value
@@ -215,7 +215,7 @@ async def _answer(
     )
 
 
-async def _read_body(receive: Callable, body: RequestBody) -> None:
+async def _read_body(receive: Callable, body: BodyReader) -> None:
     """Gives the request body of the receive events to `body`. A body that passes the limit is read to its end and
     discarded, so that the response can be sent (HY-59). A chunk of a body that is read into files is given in a
     worker thread, so that the write of a file does not stop the event loop (HY-131.21)."""

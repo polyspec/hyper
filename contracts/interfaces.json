@@ -4065,7 +4065,7 @@
               "visibility": "internal",
               "inputs": [
                 "value",
-                "request-body",
+                "body-reader",
                 "number"
               ],
               "output": "none",
@@ -4074,7 +4074,7 @@
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/_pipeline.py::read_body",
-                  "signature": "def read_body(read: Callable[[int], bytes], body: RequestBody, length: int) -> None"
+                  "signature": "def read_body(read: Callable[[int], bytes], body: BodyReader, length: int) -> None"
                 }
               }
             },
@@ -4084,7 +4084,7 @@
               "visibility": "internal",
               "inputs": [
                 "value",
-                "request-body"
+                "body-reader"
               ],
               "output": "boolean",
               "errors": [],
@@ -4092,7 +4092,7 @@
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/_pipeline.py::read_chunks",
-                  "signature": "def read_chunks(source: BinaryIO, body: RequestBody) -> bool"
+                  "signature": "def read_chunks(source: BinaryIO, body: BodyReader) -> bool"
                 }
               },
               "tests": [
@@ -4514,7 +4514,7 @@
               "visibility": "internal",
               "inputs": [
                 "value",
-                "request-body"
+                "body-reader"
               ],
               "output": "none",
               "errors": [],
@@ -4522,7 +4522,7 @@
               "native": {
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/host/asgi.py::_read_body",
-                  "signature": "def _read_body(receive: Callable, body: RequestBody) -> None"
+                  "signature": "def _read_body(receive: Callable, body: BodyReader) -> None"
                 }
               },
               "tests": [
@@ -4966,7 +4966,7 @@
               "visibility": "internal",
               "inputs": [
                 "value",
-                "optional<readBody>"
+                "optional<body-reader>"
               ],
               "output": "request",
               "errors": [],
@@ -4974,7 +4974,7 @@
               "native": {
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::requestOf",
-                  "signature": "export function requestOf( parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean }, read: ReadBody | null = null, ): Request"
+                  "signature": "export function requestOf( parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean }, read: BodyReader | null = null, ): Request"
                 }
               },
               "tests": [
@@ -5156,7 +5156,7 @@
                 },
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/http/request.py::Request.__init__",
-                  "signature": "def __init__(self, method: str, path: str, headers: Optional[dict[str, str]]=None, query: str='', body: bytes=b'', flash: Optional[dict]=None, csrf_token: str='', params: Optional[dict[str, str]]=None, cookies: Optional[dict[str, str]]=None, https: bool=False, selection: object=None, body_size: Optional[int]=None, media: Optional[str]=None, read: Optional[RequestBody]=None, json: object=None)"
+                  "signature": "def __init__(self, method: str, path: str, headers: Optional[dict[str, str]]=None, query: str='', body: bytes=b'', flash: Optional[dict]=None, csrf_token: str='', params: Optional[dict[str, str]]=None, cookies: Optional[dict[str, str]]=None, https: bool=False, selection: object=None, body_size: Optional[int]=None, media: Optional[str]=None, read: Optional[BodyReader]=None, json: object=None)"
                 }
               }
             },
@@ -7774,6 +7774,490 @@
         "contracts/app.json"
       ],
       "units": [
+        {
+          "id": "body-reader",
+          "native": {
+            "php": {
+              "file": "packages/php/src/Form/BodyReader.php",
+              "kind": "class",
+              "internal": true
+            },
+            "node": {
+              "file": "packages/ts/src/form/body-reader.ts",
+              "kind": "interface",
+              "internal": true
+            },
+            "python": {
+              "file": "packages/python/src/polyspec/hyper/form/_body_reader.py",
+              "kind": "class",
+              "internal": true
+            }
+          },
+          "members": [
+            {
+              "id": "body-reader.constructor",
+              "kind": "constructor",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "number",
+                "boolean",
+                "number",
+                "number",
+                "number",
+                "optional<string>"
+              ],
+              "output": "none",
+              "errors": [],
+              "state": "Starts the body of the content type under its four limits; a Content-Length that is no number or above the body limit is the failure of the body before any byte is read (HY-131.1, HY-131.29).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::__construct",
+                  "signature": "public function __construct(string $type, int $limit, bool $stream, int $valueLimit, int $partLimit, int $fileLimit, ?string $contentLength)"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.__init__",
+                  "signature": "def __init__(self, content_type: str, limit: int, stream: bool, value_limit: int, part_limit: int, file_limit: int, content_length: Optional[str]=None)"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.feed",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "bytes"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Reads the next chunk, and returns false when the body passed a limit (HY-59.15, HY-131.32).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::feed",
+                  "signature": "public function feed(string $chunk): bool"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.feed",
+                  "signature": "def feed(self, chunk: bytes) -> bool"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.exceeded",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the body passed the body limit, the value limit, the part limit or the file limit (HY-131.32).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::exceeded",
+                  "signature": "public function exceeded(): bool"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.exceeded",
+                  "signature": "def exceeded(self) -> bool"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.size",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "number",
+              "errors": [],
+              "state": "Returns the number of bytes that were read.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::size",
+                  "signature": "public function size(): int"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.size",
+                  "signature": "def size(self) -> int"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.held",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "bytes",
+              "errors": [],
+              "state": "Returns the body as one value: no bytes for a body read in chunks and for a body that failed.",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::held",
+                  "signature": "public function held(): string"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.held",
+                  "signature": "def held(self) -> bytes"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.streamed",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the body is read in chunks (HY-131.1).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::streamed",
+                  "signature": "public function streamed(): bool"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.streamed",
+                  "signature": "def streamed(self) -> bool"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.parts",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "optional<value>",
+              "errors": [],
+              "state": "Returns the text fields and the files of a body read in chunks, or none when it failed (HY-131.5, HY-113.25).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::parts",
+                  "signature": "public function parts(): ?array"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.parts",
+                  "signature": "def parts(self) -> Optional[tuple[Fields, Files]]"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.remove",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Removes the directory of the files with the files that were not moved (HY-131.14).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::remove",
+                  "signature": "public function remove(): void"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.remove",
+                  "signature": "def remove(self) -> None"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.named",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the fields and the files of a form of the core as the containers of the server (HY-131.5).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::named",
+                  "signature": "public static function named(Polyspec\\Hyper\\Form $form): array"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.named",
+                  "signature": "def named(form: Any) -> tuple[Fields, Files]"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php",
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.limits",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "number",
+                "number",
+                "number",
+                "number"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the record of the four limits that the binding takes, each at most the largest integer of its type uint (HY-131.32).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::limits",
+                  "signature": "public static function limits(int $limit, int $valueLimit, int $partLimit, int $fileLimit): array"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.finish",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "none",
+              "errors": [],
+              "state": "Ends the body; a failure at its end is the failure of the body (HY-131.32).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::finish",
+                  "signature": "public function finish(): void"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.overLimit",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "optional<value>"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Returns true when the failure is one of a limit, whose status is 413 (HY-131.32).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::overLimit",
+                  "signature": "public static function overLimit(?Throwable $failure): bool"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.read",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the parts as parts does, and fails with the failure of the body where parts returns none (HY-131.32).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::read",
+                  "signature": "public function read(): array"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.shaped",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "value",
+                "value"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the fields and the files of a form of the core in the shape of the contract, and fails with kind internal when they do not have it (HY-133.6).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::shaped",
+                  "signature": "public static function shaped(mixed $fields, mixed $files): array"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-133.6"
+              },
+              "tests": [
+                "packages/php/tests/BodyReaderTest.php::BodyReaderTest::testFormWithoutTheShapeOfTheContractFailsWithKindInternal: Only the PHP binding stub types the fields and the files of a form of the core as mixed, so only PHP checks their shape at the boundary (HY-133.6).",
+                "packages/php/tests/BodyReaderTest.php::BodyReaderTest::testFormWithTheShapeOfTheContractPasses: Only the PHP binding stub types the fields and the files of a form of the core as mixed, so only PHP checks their shape at the boundary (HY-133.6)."
+              ]
+            },
+            {
+              "id": "body-reader.pairs",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value",
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the pairs of a name and a list of a member of a form of the core (HY-133.6).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::pairs",
+                  "signature": "private static function pairs(mixed $value, string $member): array"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-133.6"
+              }
+            },
+            {
+              "id": "body-reader.broken",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Returns the error of kind internal for a member of a form of the core without the shape of the contract (HY-133.6).",
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Form/BodyReader.php::Polyspec\\Hyper\\BodyReader::broken",
+                  "signature": "private static function broken(string $member): Polyspec\\Hyper\\HyperInternalError"
+                }
+              },
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-133.6"
+              }
+            },
+            {
+              "id": "body-reader.failureStatus",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "value"
+              ],
+              "output": "optional<number>",
+              "errors": [],
+              "state": "Returns the status of a failure of http-form that the binding raises, or none for another error (HY-131.32).",
+              "native": {
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader._failure_status",
+                  "signature": "def _failure_status(error: BaseException) -> Optional[int]"
+                }
+              },
+              "only": {
+                "languages": [
+                  "python"
+                ],
+                "sentence": "HY-131.32"
+              }
+            },
+            {
+              "id": "body-reader.heldForm",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "bytes",
+                "number",
+                "number",
+                "number"
+              ],
+              "output": "value",
+              "errors": [],
+              "state": "Reads a body held as one value through the core: its form or none, whether it passed a limit, and whether its type is multipart/form-data without a boundary (HY-113.24, HY-131.32).",
+              "native": {
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/form/_body_reader.py::BodyReader.held_form",
+                  "signature": "def held_form(content_type: str, body: bytes, value_limit: int, part_limit: int, file_limit: int) -> tuple[Optional[tuple[Fields, Files]], bool, bool]"
+                }
+              },
+              "only": {
+                "languages": [
+                  "python"
+                ],
+                "sentence": "HY-113.24"
+              }
+            }
+          ]
+        },
         {
           "id": "fields",
           "native": {
@@ -13434,30 +13918,6 @@
       }
     },
     {
-      "id": "readBody",
-      "visibility": "internal",
-      "unit": "request",
-      "shape": {
-        "fields": {
-          "core": "value",
-          "failure": "optional<string>"
-        },
-        "optional": []
-      },
-      "only": {
-        "languages": [
-          "node"
-        ],
-        "sentence": "HY-131.32"
-      },
-      "native": {
-        "node": {
-          "symbol": "packages/ts/src/http/request.ts::ReadBody",
-          "declaration": "export interface ReadBody {\n  readonly core: CoreRequestBody;\n  readonly failure: string | null;\n}"
-        }
-      }
-    },
-    {
       "id": "heldForm",
       "visibility": "private",
       "unit": "request",
@@ -13496,7 +13956,7 @@
           "selection": "value",
           "bodySize": "optional<number>",
           "media": "optional<string>",
-          "read": "optional<request-body>",
+          "read": "optional<body-reader>",
           "json": "value",
           "signal": {
             "term": "value",
@@ -13534,7 +13994,7 @@
       "native": {
         "node": {
           "symbol": "packages/ts/src/http/request.ts::RequestInit",
-          "declaration": "export interface RequestInit {\n  method: string;\n  path: string;\n  // The header values by their names in any case.\n  headers?: Record<string, string>;\n  // The raw query: the request target after its first `?` up to its first `#`.\n  query?: string;\n  body?: Uint8Array;\n  flash?: ReadonlyMap<string, Value>;\n  csrfToken?: string;\n  params?: Record<string, string>;\n  // The cookie values by name, of the one parse of the Cookie header (HY-129).\n  cookies?: ReadonlyMap<string, string>;\n  https?: boolean;\n  // The value of the choice of the client rendering selection (HY-62).\n  selection?: unknown;\n  // The size of the body that the host received, when it stopped reading a body larger than the limit (HY-59); the\n  // default is the length of the body.\n  bodySize?: number | null;\n  // The media type that the selection of HY-116 chose, or null before the selection.\n  media?: string | null;\n  /**\n   * The body as the host read it, whose directory holds the files of a body read in chunks (HY-131), or null.\n   *\n   * @internal\n   */\n  read?: RequestBody | null;\n  // The decoded JSON body of a representation request (HY-121).\n  json?: Value;\n  /**\n   * The signal of the connection of the request, which is aborted when the client closed the connection (HY-67).\n   *\n   * @internal\n   */\n  signal?: AbortSignal;\n}"
+          "declaration": "export interface RequestInit {\n  method: string;\n  path: string;\n  // The header values by their names in any case.\n  headers?: Record<string, string>;\n  // The raw query: the request target after its first `?` up to its first `#`.\n  query?: string;\n  body?: Uint8Array;\n  flash?: ReadonlyMap<string, Value>;\n  csrfToken?: string;\n  params?: Record<string, string>;\n  // The cookie values by name, of the one parse of the Cookie header (HY-129).\n  cookies?: ReadonlyMap<string, string>;\n  https?: boolean;\n  // The value of the choice of the client rendering selection (HY-62).\n  selection?: unknown;\n  // The size of the body that the host received, when it stopped reading a body larger than the limit (HY-59); the\n  // default is the length of the body.\n  bodySize?: number | null;\n  // The media type that the selection of HY-116 chose, or null before the selection.\n  media?: string | null;\n  /**\n   * The body as the host read it, whose directory holds the files of a body read in chunks (HY-131), or null.\n   *\n   * @internal\n   */\n  read?: BodyReader | null;\n  // The decoded JSON body of a representation request (HY-121).\n  json?: Value;\n  /**\n   * The signal of the connection of the request, which is aborted when the client closed the connection (HY-67).\n   *\n   * @internal\n   */\n  signal?: AbortSignal;\n}"
         }
       }
     },

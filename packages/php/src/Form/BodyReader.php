@@ -162,18 +162,6 @@ final class BodyReader
         return self::named($this->body->parts());
     }
 
-    /** Returns the failure of the body, or null while it reads. */
-    public function failure(): ?\Throwable
-    {
-        return $this->failure;
-    }
-
-    /** Returns the directory of the files of the body, or null for a body that is one value. */
-    public function directory(): ?string
-    {
-        return $this->body->directory();
-    }
-
     /** Removes the directory of the files with the files that were not moved (HY-131.14). */
     public function remove(): void
     {

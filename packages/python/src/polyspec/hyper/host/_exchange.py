@@ -6,7 +6,7 @@ from __future__ import annotations
 import time
 from typing import Callable, Optional
 
-from ..form._core_body import RequestBody
+from ..form._body_reader import BodyReader
 from ..app.app import App
 from ..http.reply import Reply
 from ..http.request import Request
@@ -21,7 +21,7 @@ class Exchange:
     def __init__(self, written: Optional[Callable], started: int):
         self.request: Optional[Request] = None
         # The body as the transport reads it, whose directory holds the files of a body read in chunks (HY-131).
-        self.body: Optional[RequestBody] = None
+        self.body: Optional[BodyReader] = None
         self.written = written
         self.started = started
         self.answered: list[tuple[Request, Reply]] = []

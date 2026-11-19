@@ -21,9 +21,11 @@ class Files(NamedValues[UploadedFile]):
     def from_body(content_type: str, body: bytes) -> Optional[Files]:
         """Returns the files of a ``multipart/form-data`` body held as one value, as the core reads it, and none for another body type. Returns None when a
         part of the body fails with HY-42 (HY-113.15)."""
-        from ._core_body import NO_LIMIT, held_form
+        from ._body_reader import NO_LIMIT, BodyReader
 
-        form, _, _ = held_form(content_type, body, NO_LIMIT, NO_LIMIT, NO_LIMIT)
+        form, _, _ = BodyReader.held_form(
+            content_type, body, NO_LIMIT, NO_LIMIT, NO_LIMIT
+        )
         return None if form is None else form[1]
 
     def sizes(self) -> list[int]:

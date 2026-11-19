@@ -35,7 +35,9 @@ class Fields(NamedValues[str]):
         ``application/x-www-form-urlencoded`` body, or the text fields of a ``multipart/form-data`` body; a body of
         another type has none (HY-57). Returns None when the body fails with ``invalid`` or ``header_limit``
         (HY-42, HY-113.25)."""
-        from ._core_body import NO_LIMIT, held_form
+        from ._body_reader import NO_LIMIT, BodyReader
 
-        form, _, _ = held_form(content_type, body, NO_LIMIT, NO_LIMIT, NO_LIMIT)
+        form, _, _ = BodyReader.held_form(
+            content_type, body, NO_LIMIT, NO_LIMIT, NO_LIMIT
+        )
         return None if form is None else form[0]

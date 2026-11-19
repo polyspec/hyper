@@ -14,7 +14,7 @@ from typing import BinaryIO, Callable, Optional
 
 from ._exchange import Exchange
 from ._file_response import FileResponse
-from ..form._core_body import RequestBody
+from ..form._body_reader import BodyReader
 from ..app._core_rules import CoreRules
 from ..app.app import App
 from ..session._file_session import FileSession
@@ -111,7 +111,7 @@ def served_file(
     )
 
 
-def read_body(read: Callable[[int], bytes], body: RequestBody, length: int) -> None:
+def read_body(read: Callable[[int], bytes], body: BodyReader, length: int) -> None:
     """Gives a request body of `length` bytes to `body` in chunks of at most 65536 bytes. A body that passes the
     limit is read to its end and discarded, so that the response can be sent (HY-59, HY-131.32)."""
     size = 0
@@ -125,7 +125,7 @@ def read_body(read: Callable[[int], bytes], body: RequestBody, length: int) -> N
             reading = body.feed(chunk)
 
 
-def read_chunks(source: BinaryIO, body: RequestBody) -> bool:
+def read_chunks(source: BinaryIO, body: BodyReader) -> bool:
     """Gives a request body that is sent in chunks (`Transfer-Encoding: chunked`) to `body`, and returns False for a
     body that is not in that form or ends early. A chunk extension and the trailer fields are read and not used. A
     body that passes the limit is read to its end and discarded, as `read_body` does (HY-59.10)."""

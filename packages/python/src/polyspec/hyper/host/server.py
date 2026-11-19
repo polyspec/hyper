@@ -34,7 +34,7 @@ from ._pipeline import (
     read_chunks,
     validate,
 )
-from ..form._core_body import RequestBody
+from ..form._body_reader import BodyReader
 from ..http.request import Request
 from ..http.response import Response
 
@@ -115,7 +115,7 @@ def create_server(
                 # HY-131: a multipart body of an application with that form type is read in chunks into files of the
                 # request.
                 declared = declared_length(headers.get("content-length"))
-                exchange.body = RequestBody(
+                exchange.body = BodyReader(
                     headers.get("content-type") or "",
                     application.body_limit,
                     "multipart/form-data" in application._form_types,

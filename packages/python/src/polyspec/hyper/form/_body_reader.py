@@ -13,7 +13,7 @@ from ._fields import Fields
 from ._files import Files
 from .uploaded_file import UploadedFile
 
-__all__ = ["NO_LIMIT", "RequestBody", "body_form", "held_form"]
+__all__ = ["NO_LIMIT", "BodyReader"]
 
 # The status of http-form for a body that passed one of its limits (F-25).
 _PASSED = 413
@@ -22,29 +22,7 @@ _PASSED = 413
 _NO_READING = ("no_boundary", "malformed_content_type")
 
 
-def _status(error: BaseException) -> Optional[int]:
-    """The status of a failure of http-form that the binding raises, or None for another error."""
-    status = getattr(error, "status", None)
-    return status if isinstance(status, int) else None
-
-
-def body_form(form: Any) -> tuple[Fields, Files]:
-    """The fields and the files of the hyper server for the form record of the core."""
-    fields = Fields(
-        [name for name, _ in form.fields],
-        {name: list(values) for name, values in form.fields},
-    )
-    files = Files(
-        [name for name, _ in form.files],
-        {
-            name: [UploadedFile._of_core(item) for item in items]
-            for name, items in form.files
-        },
-    )
-    return fields, files
-
-
-class RequestBody:
+class BodyReader:
     """Reads the chunks of a request body through the core."""
 
     def __init__(
@@ -65,7 +43,6 @@ class RequestBody:
         self.__over = False
         self.__failed = False
         self.__finished = False
-        self.__failure: Optional[BaseException] = None
         # HY-131.29: the core fails a Content-Length that is no number with invalid_content_length and a number above
         # the body limit with body_limit before any byte is read; that failure is the failure of the body.
         try:
@@ -73,10 +50,9 @@ class RequestBody:
                 content_type or None, content_length, stream, limits
             )
         except Exception as error:
-            if _status(error) is None:
+            if BodyReader._failure_status(error) is None:
                 raise
-            self.__failure = error
-            if _status(error) == _PASSED:
+            if BodyReader._failure_status(error) == _PASSED:
                 self.__over = True
             else:
                 self.__failed = True
@@ -93,10 +69,9 @@ class RequestBody:
         try:
             self.__body.feed(chunk)
         except Exception as error:
-            if _status(error) is None:
+            if BodyReader._failure_status(error) is None:
                 raise
-            self.__failure = error
-            if _status(error) == _PASSED:
+            if BodyReader._failure_status(error) == _PASSED:
                 self.__over = True
                 return False
             self.__failed = True
@@ -128,51 +103,69 @@ class RequestBody:
             if not self.__finished:
                 self.__finished = True
                 self.__body.finish()
-            return body_form(self.__body.parts())
+            return BodyReader.named(self.__body.parts())
         except Exception as error:
-            if _status(error) is None:
+            if BodyReader._failure_status(error) is None:
                 raise
-            self.__failure = error
-            if _status(error) == _PASSED:
+            if BodyReader._failure_status(error) == _PASSED:
                 self.__over = True
             self.__failed = True
             return None
-
-    def failure(self) -> Optional[BaseException]:
-        """Returns the first failure of the body as http-form gives it, or None (HY-113.25, HY-131.32)."""
-        return self.__failure
-
-    def directory(self) -> Optional[str]:
-        """Returns the directory of the files of the body, or None for a body that is one value."""
-        directory = self.__body.directory()
-        return None if directory is None else str(directory)
 
     def remove(self) -> None:
         """Removes the directory of the files with the files that were not moved (HY-131.14)."""
         self.__body.remove()
 
+    @staticmethod
+    def _failure_status(error: BaseException) -> Optional[int]:
+        """The status of a failure of http-form that the binding raises, or None for another error."""
+        status = getattr(error, "status", None)
+        return status if isinstance(status, int) else None
 
-def held_form(
-    content_type: str, body: bytes, value_limit: int, part_limit: int, file_limit: int
-) -> tuple[Optional[tuple[Fields, Files]], bool, bool]:
-    """Reads a body held as one value through the core: its form, or None when it fails with ``invalid`` or
-    ``header_limit`` (HY-42, HY-113.25), whether it passed a limit (HY-131.32), and whether its type is a
-    ``multipart/form-data`` type without a boundary, or with an empty one (HY-113.24)."""
-    rules = CoreRules.shared()
-    limits = rules.body_limits(NO_LIMIT, value_limit, part_limit, file_limit)
-    try:
-        return (
-            body_form(rules.form_read_held(content_type or None, body, limits)),
-            False,
-            False,
+    @staticmethod
+    def named(form: Any) -> tuple[Fields, Files]:
+        """The fields and the files of the hyper server for the form record of the core."""
+        fields = Fields(
+            [name for name, _ in form.fields],
+            {name: list(values) for name, values in form.fields},
         )
-    except Exception as error:
-        status = _status(error)
-        if status is None:
-            raise
-        # HY-113.24, HY-59.12: a type without a boundary or that is no media type fails no reading and gives no form
-        # value; its Content-Type is judged after the route.
-        kind = getattr(error, "kind", None)
-        if kind in _NO_READING:
-            return (Fields.empty(), Files.empty()), False, kind == "no_boundary"
-        return None, status == _PASSED, False
+        files = Files(
+            [name for name, _ in form.files],
+            {
+                name: [UploadedFile._of_core(item) for item in items]
+                for name, items in form.files
+            },
+        )
+        return fields, files
+
+    @staticmethod
+    def held_form(
+        content_type: str,
+        body: bytes,
+        value_limit: int,
+        part_limit: int,
+        file_limit: int,
+    ) -> tuple[Optional[tuple[Fields, Files]], bool, bool]:
+        """Reads a body held as one value through the core: its form, or None when it fails with ``invalid`` or
+        ``header_limit`` (HY-42, HY-113.25), whether it passed a limit (HY-131.32), and whether its type is a
+        ``multipart/form-data`` type without a boundary, or with an empty one (HY-113.24)."""
+        rules = CoreRules.shared()
+        limits = rules.body_limits(NO_LIMIT, value_limit, part_limit, file_limit)
+        try:
+            return (
+                BodyReader.named(
+                    rules.form_read_held(content_type or None, body, limits)
+                ),
+                False,
+                False,
+            )
+        except Exception as error:
+            status = BodyReader._failure_status(error)
+            if status is None:
+                raise
+            # HY-113.24, HY-59.12: a type without a boundary or that is no media type fails no reading and gives no form
+            # value; its Content-Type is judged after the route.
+            kind = getattr(error, "kind", None)
+            if kind in _NO_READING:
+                return (Fields.empty(), Files.empty()), False, kind == "no_boundary"
+            return None, status == _PASSED, False
