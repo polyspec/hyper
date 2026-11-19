@@ -17,6 +17,7 @@ from ._file_response import FileResponse
 from ..form._core_body import RequestBody
 from ..app._core_rules import core_rules
 from ..app.app import App
+from ..session._file_session import FileSession
 from ..session._record_session import RecordSession
 from ..session.file_sessions import FileSessions
 from ..session.redis_sessions import RedisSessions
@@ -89,7 +90,7 @@ def public_file(files: str, method: str, target: str) -> Optional[Path]:
     file = Path(files) / path.lstrip("/")
     try:
         mode = file.stat().st_mode
-    except (FileNotFoundError, NotADirectoryError):
+    except FileNotFoundError, NotADirectoryError:
         return None
     return file if stat.S_ISREG(mode) else None
 
@@ -205,19 +206,28 @@ def answer_with(
     exchange: Exchange,
 ) -> Response:
     """Answers the request of the exchange through the request hook `around` (HY-97) and the application:
-    `around` is None or it receives the request and an `answer` function; `answer` opens the session of the
-    request by its session cookie, answers with `App._respond`, closes the session and returns the response
+    `around` is None or it receives the request and an `answer` function; `answer` answers with `App._respond`, which
+    opens the session of the request by its session cookie for a route that uses it (HY-104.38), closes an opened session and returns the response
     with the cookie of a new session first (HY-45). The reply of the last call of `answer` is kept in the
     exchange for the disconnect hook (HY-67, HY-97)."""
 
     def answer(given: Request) -> Response:
-        session = sessions._open(given.cookie(RecordSession.cookie_name(secure)))
+        # The application opens the session only for a route that uses it (HY-104.38).
+        opened: list[FileSession] = []
+
+        def open_session() -> FileSession:
+            opened.append(
+                sessions._open(given.cookie(RecordSession.cookie_name(secure)))
+            )
+            return opened[0]
+
         try:
-            response, reply = app._respond(given, session, exchange.started)
+            response, reply = app._respond(given, open_session, exchange.started)
         finally:
-            session.close()
+            for session in opened:
+                session.close()
         exchange.answered[:] = [(given, reply)]
-        created = session.created()
+        created = opened[0].created() if opened else None
         if created is None:
             return response
         # A new session sets its cookie first, as PHP does when the session starts (HY-45).

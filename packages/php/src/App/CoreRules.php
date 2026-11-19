@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Polyspec\Hyper;
 
 /**
- * The rules of the Rust core behind the names of the units of the PHP server (HY-132.2). The binding of the core gives
+ * The rules of the Rust core behind the names of the units of the PHP server (HY-133.2). The binding of the core gives
  * its rules as functions of one namespace, `Polyspec\Hyper` of the extension `polyspec_hyper`; this class takes that
  * namespace and gives each rule under the name of the unit of the server that states it today, the name of the unit
  * followed by the name of its member, so that a unit of the server calls the core in place of its own rule. A test
@@ -17,7 +17,7 @@ namespace Polyspec\Hyper;
  * unit here.
  *
  * A failure of the core reaches the caller as the binding raises it: an error of the class of its category with
- * `kind()` and `status()` (HY-132.1, HY-132.2). No method here catches or replaces one.
+ * `kind()` and `status()` (HY-133.1, HY-133.2). No method here catches or replaces one.
  *
  * @internal
  */
@@ -33,7 +33,7 @@ final class CoreRules
         'checkFunctionEntry',
     ];
 
-    /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-132.2). */
+    /** The extension that holds the binding of the core in the namespace `Polyspec\\Hyper` (HY-133.2). */
     private const string EXTENSION = 'polyspec_hyper';
 
     private static ?self $shared = null;
@@ -41,7 +41,7 @@ final class CoreRules
     private readonly string $namespace;
 
     /**
-     * The one CoreRules of the server, over the extension `polyspec_hyper`, created on its first use (HY-132.2). A
+     * The one CoreRules of the server, over the extension `polyspec_hyper`, created on its first use (HY-133.2). A
      * server without the extension stops here with the name of the extension; no rule of the server answers in its
      * place.
      */
@@ -51,7 +51,7 @@ final class CoreRules
             if (!extension_loaded(self::EXTENSION)) {
                 throw new \RuntimeException(
                     'hyper: the PHP extension ' . self::EXTENSION . ' is not loaded; the server calls the rules of '
-                    . 'the core through it (HY-132.2)',
+                    . 'the core through it (HY-133.2)',
                 );
             }
             self::$shared = new self(__NAMESPACE__);
@@ -174,16 +174,6 @@ final class CoreRules
     }
 
     /**
-     * Page::kept: rules.kept_cookie reads the cookie of the kept values to a `stdClass` map from each region to the
-     * `stdClass` map of its readable values by path; a cookie that is no JSON object, a region that holds no object
-     * and a value outside the data model give no value (HY-38.2, HY-38.11, HY-42).
-     */
-    public function pageKeptCookie(string $text): mixed
-    {
-        return $this->call('keptCookie', $text);
-    }
-
-    /**
      * Accept::parse: rules.accept_ranges gives the ranges of an Accept value in field order, the range `*`/`*` of the
      * full weight for a request without Accept, and fails with `invalid_accept` or `invalid_weight` of
      * http-negotiation (HY-116.17, HY-116.18).
@@ -246,7 +236,7 @@ final class CoreRules
      * Program::pages: rules.check_function_entry fails an entry of `functions` that is not a function with kind
      * `invalid_application` and the message of the core (HYC-24.7).
      */
-    public function programFunctionEntry(string $name, bool $callable): void
+    public function checkFunctionEntry(string $name, bool $callable): void
     {
         $this->call('checkFunctionEntry', $name, $callable);
     }
@@ -337,30 +327,6 @@ final class CoreRules
     }
 
     /**
-     * Partial. rules.keeps_out_of_shared_caches (HY-52.6), which Reply::cacheControl decided inside its check; the
-     * server reads it for no other rule.
-     */
-    public function replyKeepsOutOfSharedCaches(string $value): bool
-    {
-        /** @var bool $result The return type that the extension declares (T-1a). */
-        $result = $this->call('keepsOutOfSharedCaches', $value);
-
-        return $result;
-    }
-
-    /**
-     * Partial. rules.is_application_path (HY-46), the test inside Result::redirect; the server has no caller of it
-     * besides the redirect.
-     */
-    public function resultIsApplicationPath(string $location): bool
-    {
-        /** @var bool $result The return type that the extension declares (T-1a). */
-        $result = $this->call('isApplicationPath', $location);
-
-        return $result;
-    }
-
-    /**
      * Partial. The headers that every response carries: front_functions.frame_headers (HY-45.5, HY-65.1), as a map
      * from each name to its value in the order of the core. The server still adds them to its response, a header of
      * the same name replaced.
@@ -401,15 +367,6 @@ final class CoreRules
     }
 
     /**
-     * Partial. The value check of the kept endpoint: front_functions.kept_value (HY-40.1). The server still checks the
-     * token of the form (HY-24) and stores the value in the session.
-     */
-    public function appKeptValue(object $pages, string $region, string $path, string $text): mixed
-    {
-        return $this->call('keptValue', $pages, $region, $path, $text);
-    }
-
-    /**
      * Partial. Session::csrfToken: rules.stored_token checks the value that the session holds in the place of the
      * token (HY-24.14). The server still reads the store and creates the token of a session that holds none (HY-24.1).
      */
@@ -443,11 +400,5 @@ final class CoreRules
         $result = $this->call('readBuild', $bytes);
 
         return $result;
-    }
-
-    /** Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text. */
-    public function buildCheckId(string $text): void
-    {
-        $this->call('checkBuildId', $text);
     }
 }

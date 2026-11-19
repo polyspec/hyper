@@ -22,56 +22,26 @@ const port = Number(env('BOARD_PORT'));
 
 // BOARD_SENTINEL, `host:port` of each Sentinel separated by commas, keeps the sessions on the primary hyper that they name,
 // BOARD_CLUSTER, `host:port` of nodes of a Redis Cluster separated by commas, keeps them on that cluster, and
-// BOARD_REDIS, the URL of a Redis server, keeps them there; otherwise they are files in BOARD_SESSIONS. A command fails while the
-// connection is down, instead of waiting in the queue of the client, so the request answers status 500 (HY-115).
+// BOARD_REDIS, the URL of a Redis server, keeps them there; otherwise they are files in BOARD_SESSIONS. The Redis store
+// keeps its own connections, and a request whose command fails answers status 500 (HY-115). A lock expires after 30
+// seconds, longer than any request of the board.
 const sessionStore = async (): Promise<FileSessions | RedisSessions> => {
   const nodes = process.env.BOARD_CLUSTER;
   if (nodes !== undefined && nodes !== '') {
-    const { createCluster, RESP_TYPES } = await import('redis');
-    const cluster = await createCluster({
-      rootNodes: nodes.split(',').map((item) => ({ url: `redis://${item}` })),
-      defaults: { disableOfflineQueue: true },
-    }).on('error', (error: unknown) => {
-      process.stderr.write(`board: redis: ${String(error)}\n`);
-    }).connect();
-    const bytes = cluster.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
-    // A cluster client routes a command by its key, the first argument, or the fourth of EVAL.
-    return new RedisSessions({
-      command: (words) => {
-        const args = words.map((word) => Buffer.from(word));
-        return bytes.sendCommand(args[words[0] === 'EVAL' ? 3 : 1], false, args);
-      },
-    });
+    return new RedisSessions({ setting: { kind: 'cluster', urls: nodes.split(',').map((item) => `redis://${item}`), user: null, password: null, authorities: null }, lockExpire: 30 });
   }
   const sentinels = process.env.BOARD_SENTINEL;
   if (sentinels !== undefined && sentinels !== '') {
-    const { createSentinel, RESP_TYPES } = await import('redis');
-    const sentinel = await createSentinel({
-      name: 'hyper',
-      sentinelRootNodes: sentinels.split(',').map((item) => {
-        const [host, port] = item.split(':');
-        return { host: host ?? '', port: Number(port) };
-      }),
-      nodeClientOptions: { disableOfflineQueue: true },
-    }).on('error', (error: unknown) => {
-      process.stderr.write(`board: redis: ${String(error)}\n`);
-    }).connect();
-    const bytes = sentinel.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
-    return new RedisSessions({ command: (words) => bytes.sendCommand(false, words.map((word) => Buffer.from(word))) });
+    const urls = sentinels.split(',').map((item) => `redis://${item}`);
+    return new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: false, user: null, password: null, authorities: null }, lockExpire: 30 });
   }
   const url = process.env.BOARD_REDIS;
   if (url === undefined || url === '') {
     const directory = env('BOARD_SESSIONS');
     mkdirSync(directory, { recursive: true, mode: 0o700 });
-    return new FileSessions({ directory });
+    return FileSessions.inDirectory({ directory });
   }
-  const { createClient, RESP_TYPES } = await import('redis');
-  const client = createClient({ url, disableOfflineQueue: true }).on('error', (error: unknown) => {
-    process.stderr.write(`board: redis: ${String(error)}\n`);
-  });
-  await client.connect();
-  const bytes = client.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
-  return new RedisSessions({ command: (words) => bytes.sendCommand(words.map((word) => Buffer.from(word))) });
+  return new RedisSessions({ setting: { kind: 'server', url, authorities: null }, lockExpire: 30 });
 };
 
 const app = await App.open<Services>({

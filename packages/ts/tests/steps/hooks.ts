@@ -49,7 +49,7 @@ export const steps = {
     // A session store over a directory of the step, which no entry uses, because no entry listens.
     const directory = mkdtempSync(join(tmpdir(), 'hyper-hooks-'));
     try {
-      const sessions = new FileSessions({ directory });
+      const sessions = await FileSessions.inDirectory({ directory });
       // The text stands in the place of the hook, which each host entry checks (HY-97.7, HY-99.14).
       const options: ServerOptions = { [hook]: 'no function' };
       const errors: [Error, Error] = [

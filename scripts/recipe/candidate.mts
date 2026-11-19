@@ -6,12 +6,13 @@
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { readAllSources, type Validators } from './run.mts';
+import { readAllSources, withoutExtensions, type Validators } from './run.mts';
+import { runCommand } from './exit.mts';
 import { readerKey, words } from './names.mts';
-import { LANGS, type Concern, type Lang, type Member, type Sources, type Spec, type SpecType, type Unit, type Visibility } from './types.mts';
+import { LANGS, type Concern, type ExtensionNative, type FileNative, type Lang, type Member, type Sources, type Spec, type SpecDocument, type SpecType, type Unit, type Visibility } from './types.mts';
 import { validators } from './validators.mts';
 
-export type Candidate = { spec: Spec; handWritten: string[]; stale: string[] };
+export type Candidate = { spec: SpecDocument; handWritten: string[]; stale: string[] };
 
 type ReaderMember = Sources['members'][number];
 type ReaderType = Sources['types'][number];
@@ -203,7 +204,8 @@ export function buildCandidate(root: string, phpAutoload: string, v: Validators)
   if (!v.spec(specDoc)) {
     throw new Error(`SPEC_INVALID ${v.spec.errors?.[0]?.instancePath ?? ''} ${v.spec.errors?.[0]?.message ?? ''}`);
   }
-  const spec: Spec = structuredClone(specDoc);
+  // HYR-5: the readers and the refresh see the spec without its extension entries, which the candidate keeps as written.
+  const spec: Spec = withoutExtensions(structuredClone(specDoc));
   const sources = readAllSources(root, spec, v, phpAutoload);
   const handWritten: string[] = [];
   const stale: string[] = [];
@@ -257,10 +259,36 @@ export function buildCandidate(root: string, phpAutoload: string, v: Validators)
     }
   });
 
-  if (!v.spec(spec)) {
+  const candidate = withExtensionsOf(spec, specDoc);
+  if (!v.spec(candidate)) {
     throw new Error(`CANDIDATE_INVALID ${v.spec.errors?.[0]?.instancePath ?? ''} ${v.spec.errors?.[0]?.message ?? ''}`);
   }
-  return { spec, handWritten, stale };
+  return { spec: candidate, handWritten, stale };
+}
+
+/**
+ * The candidate with the extension entries of the spec put back as the spec writes them (HYR-5). The refresh keeps the
+ * order of the concerns and units of a listed spec, so a unit takes the extension entries of the unit at its place; a
+ * derived spec has no listed concerns and no extension entries.
+ */
+function withExtensionsOf(spec: Spec, doc: SpecDocument): SpecDocument {
+  return {
+    ...spec,
+    concerns: spec.concerns.map((concern, ci) => ({
+      ...concern,
+      units: concern.units.map((unit, ui) => {
+        const written = doc.concerns[ci]?.units[ui];
+        const native: Partial<Record<Lang, FileNative | ExtensionNative>> = { ...unit.native };
+        if (written?.id === unit.id) {
+          for (const lang of LANGS) {
+            const n = written.native[lang];
+            if (n !== undefined && 'extension' in n) native[lang] = n;
+          }
+        }
+        return { ...unit, native };
+      }),
+    })),
+  };
 }
 
 function main(): number {
@@ -283,9 +311,4 @@ function argumentOf(name: string): string | undefined {
   return at < 0 ? undefined : process.argv[at + 1];
 }
 
-try {
-  process.exitCode = main();
-} catch (error) {
-  process.stdout.write(`CHECK_ERROR ${error instanceof Error ? error.message : String(error)}\n`);
-  process.exitCode = 1;
-}
+runCommand(main);

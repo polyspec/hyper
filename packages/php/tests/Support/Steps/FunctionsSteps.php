@@ -94,7 +94,11 @@ final class FunctionsSteps
                 'suffix' => static fn (array $arguments, Environment $environment): string
                     => Json::string($arguments[0] ?? null) . '!',
                 // HYC-24.10: the second argument is the environment of the render, with the time zone of the server.
-                'zone' => static fn (array $arguments, Environment $environment): string => $environment->timezone,
+                // The stub of the extension declares the property mixed, so the case checks that it is a text.
+                'zone' => static fn (array $arguments, Environment $environment): string
+                    => \is_string($environment->timezone)
+                        ? $environment->timezone
+                        : throw new \LogicException('the time zone of the environment is no text (HYC-24.10)'),
                 'not_a_function' => 'x',
                 default => throw new \LogicException("the kind {$kind} of the contract is unknown"),
             };

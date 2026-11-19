@@ -233,6 +233,15 @@
     },
     {
       "paths": [
+        "tests/scripts/fixtures/spec-released/**",
+        "tests/scripts/spec-released.test.mts"
+      ],
+      "tests": [
+        "tests/scripts/spec-released.test.mts"
+      ]
+    },
+    {
+      "paths": [
         "docs/spec/protocol.md",
         "docs/spec/protocol.ko.md"
       ],
@@ -249,11 +258,65 @@
         "scripts/schema/protocol.schema.json"
       ],
       "tests": [
-        "tests/scripts/spec-docs.test.mts"
+        "tests/scripts/spec-docs.test.mts",
+        "tests/scripts/spec-released.test.mts"
       ],
       "targets": [
         "typecheck",
+        "spec-docs-check",
+        "spec-released-check"
+      ]
+    },
+    {
+      "paths": [
+        "contracts/protocol.json"
+      ],
+      "targets": [
+        "spec-released-check"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/fixtures/spec-renumber/**",
+        "tests/scripts/spec-renumber.test.mts"
+      ],
+      "tests": [
+        "tests/scripts/spec-renumber.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "config/renumber/*.json"
+      ],
+      "tests": [
+        "tests/scripts/spec-renumber.test.mts"
+      ],
+      "targets": [
         "spec-docs-check"
+      ]
+    },
+    {
+      "paths": [
+        "scripts/spec-renumber.mts"
+      ],
+      "tests": [
+        "tests/scripts/spec-renumber.test.mts"
+      ],
+      "targets": [
+        "typecheck"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/script-run.mts"
+      ],
+      "tests": [
+        "tests/scripts/spec-docs.test.mts",
+        "tests/scripts/spec-released.test.mts",
+        "tests/scripts/spec-renumber.test.mts"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {
@@ -262,17 +325,13 @@
         "packages/php/src/Session/NativeSession.php",
         "packages/python/src/polyspec/hyper/session/file_sessions.py",
         "packages/ts/src/session/file-sessions.ts",
-        "packages/ts/src/session/flock.ts",
         "packages/python/src/polyspec/hyper/session/_record_session.py",
         "packages/python/src/polyspec/hyper/session/_file_session.py",
         "packages/python/src/polyspec/hyper/session/_redis_session.py",
-        "packages/python/src/polyspec/hyper/session/session_lock_error.py",
         "packages/python/src/polyspec/hyper/session/redis_sessions.py",
         "packages/ts/src/session/record-session.ts",
         "packages/ts/src/session/file-session.ts",
         "packages/ts/src/session/redis-session.ts",
-        "packages/ts/src/session/session-lock-error.ts",
-        "packages/ts/src/session/session-turns.ts",
         "packages/ts/src/session/redis-sessions.ts",
         "scripts/install-redis.mts",
         "tests/scripts/session-workers.mts",
@@ -289,7 +348,22 @@
         "tests/scripts/session-redis-failover.test.mts",
         "tests/scripts/session-redis-cluster.test.mts",
         "tests/scripts/benchmark-sessions.test.mts",
-        "tests/scripts/session-holder.test.mts"
+        "tests/scripts/session-holder.test.mts",
+        "tests/scripts/no-polling.test.mts",
+        "tests/scripts/session-worker-settings.test.mts",
+        "tests/scripts/session-identifier.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/documents.mts"
+      ],
+      "tests": [
+        "tests/scripts/no-commit-names.test.mts",
+        "tests/scripts/twin-shape.test.mts"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {
@@ -554,7 +628,10 @@
         "scripts/test-inputs.mts",
         "scripts/python-install-stamp.mts",
         "scripts/php-ext-pins.mts",
-        "tests/scripts/fixtures/php-ext-pins/**"
+        "tests/scripts/fixtures/php-ext-pins/**",
+        "scripts/pin.mts",
+        "config/pins.json",
+        "tests/scripts/fixtures/pin/**"
       ],
       "targets": [
         "typecheck"
@@ -566,7 +643,8 @@
         "tests/scripts/test-inputs.test.mts",
         "tests/scripts/python-install-stamp.test.mts",
         "tests/scripts/node-package-deps.test.mts",
-        "tests/scripts/php-ext-pins.test.mts"
+        "tests/scripts/php-ext-pins.test.mts",
+        "tests/scripts/pin.test.mts"
       ]
     },
     {
@@ -732,7 +810,19 @@
         "tests/scripts/ci-workflow.test.mts",
         "tests/scripts/template-ext.test.mts",
         "tests/scripts/case-selection.test.mts",
-        "tests/scripts/test-selection.test.mts"
+        "tests/scripts/test-selection.test.mts",
+        "tests/scripts/preflight.test.mts"
+      ]
+    },
+    {
+      "paths": [
+        "tests/scripts/preflight.test.mts"
+      ],
+      "tests": [
+        "tests/scripts/preflight.test.mts"
+      ],
+      "targets": [
+        "typecheck"
       ]
     },
     {
@@ -945,10 +1035,12 @@
         "scripts/recipe/**",
         "scripts/schema/**",
         "tests/scripts/fixtures/recipe/**",
-        "tests/scripts/recipe-check.test.mts"
+        "tests/scripts/recipe-check.test.mts",
+        "tests/scripts/recipe-files.test.mts"
       ],
       "tests": [
-        "tests/scripts/recipe-check.test.mts"
+        "tests/scripts/recipe-check.test.mts",
+        "tests/scripts/recipe-files.test.mts"
       ],
       "targets": [
         "typecheck"

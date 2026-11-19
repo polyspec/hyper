@@ -28,7 +28,6 @@ final class Page
      * @param ?\Closure $shared the shared handler, or null without one
      * @param array<string, \Closure> $regionLoaders the loaders of the regions that are no route regions
      * @param ?\Closure $context the context handler (HY-124), or null without one
-     * @param string $vary the Vary of a response with text/html or application/vnd.hyper+json (HY-117)
      */
     public function __construct(
         private readonly Manifest $manifest,
@@ -38,8 +37,13 @@ final class Page
         private readonly Container $container,
         private readonly bool $https,
         private readonly ?\Closure $context,
-        private readonly string $vary,
     ) {
+    }
+
+    /** Returns the Vary of a response with text/html or application/vnd.hyper+json, built per response (HY-117). */
+    private function varyHeader(): string
+    {
+        return CoreRules::shared()->appVaryHeader($this->context !== null);
     }
 
     /**
@@ -49,7 +53,7 @@ final class Page
      *
      * @param RouteDefinition $route
      * @param RouteHandler $handler
-     * @param array{int, array<array-key, mixed>}|null $action
+     * @param array{int, array<array-key, mixed>}|ActionOutcomeRevisionChanged|null $action
      *
      * @internal
      */
@@ -59,7 +63,7 @@ final class Page
         array $handler,
         Session $session,
         Flash $flash,
-        ?array $action,
+        array|ActionOutcomeRevisionChanged|null $action,
         Reply $reply,
         string $basePath,
     ): Response {
@@ -89,27 +93,28 @@ final class Page
                 if ($action === null) {
                     throw new \LogicException('a page without an action asked for its action');
                 }
-                $input = new PageStepInputAction(
-                    new ActionOutcomePage($action[0], self::map($action[1], "the action of route {$route['name']}")),
-                    null,
-                );
+                // HY-107.9: a revision change is the core outcome with no data; the core answers it as the 409 page.
+                $outcome = $action instanceof ActionOutcomeRevisionChanged
+                    ? $action
+                    : new ActionOutcomePage($action[0], self::loaderMap($action[1], "the action of route {$route['name']}"));
+                $input = new PageStepInputAction($outcome, null);
             } elseif ($call instanceof CallContext) {
                 // HY-124: the context handler runs after the action and before the shared handler and any loader.
                 if ($this->context === null) {
                     throw new \LogicException('a page without a context handler asked for its context');
                 }
                 $input = new PageStepInputContext(
-                    self::map(Context::held($this->context, $request->selection()), 'the context handler'),
+                    self::loaderMap(Context::held($this->context, $request->selection()), 'the context handler'),
                 );
             } elseif ($call instanceof CallShared) {
                 $input = $this->shared === null
                     ? new PageStepInputNoHandler()
                     : new PageStepInputShared(
-                        self::map($this->container->call($this->shared, $provided), 'the shared handler'),
+                        self::loaderMap($this->container->call($this->shared, $provided), 'the shared handler'),
                     );
             } elseif ($call instanceof CallRouteLoader) {
                 $input = isset($handler['load'])
-                    ? new PageStepInputLoaded(self::map(
+                    ? new PageStepInputLoaded(self::loaderMap(
                         $this->container->call($handler['load'], $provided),
                         "the loader of route {$route['name']}",
                     ))
@@ -128,7 +133,7 @@ final class Page
                     if ($loaded === null) {
                         $input = new PageStepInputAbsent();
                     } else {
-                        $input = new PageStepInputLoaded(self::map($loaded, "the loader of region {$region}"));
+                        $input = new PageStepInputLoaded(self::loaderMap($loaded, "the loader of region {$region}"));
                         $present[] = $region;
                     }
                 }
@@ -138,7 +143,7 @@ final class Page
                 $loader = $this->regionLoaders[$region] ?? null;
                 $input = $loader === null
                     ? new PageStepInputNoHandler()
-                    : new PageStepInputLoaded(self::map(
+                    : new PageStepInputLoaded(self::loaderMap(
                         $this->container->call($loader, $provided),
                         "the loader of region {$region}",
                     ));
@@ -148,7 +153,7 @@ final class Page
                 // states whether a document embeds its data and the status of a page with status 200.
                 $stored = [];
                 foreach ($present as $name) {
-                    $stored[$name] = self::map($session->kept($name), "the kept values of region {$name}");
+                    $stored[$name] = self::loaderMap($session->kept($name), "the kept values of region {$name}");
                 }
                 $input = new PageStepInputReply($reply->embedsData(), $stored, $reply->statusValue());
             }
@@ -169,7 +174,7 @@ final class Page
         return new Response($status, [
             'Content-Type' => 'text/html; charset=utf-8',
             'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
-            'Vary' => $this->vary,
+            'Vary' => $this->varyHeader(),
             ...$reply->referrerPolicyHeaders(),
         ], $body);
     }
@@ -180,7 +185,7 @@ final class Page
         $headers = [
             'Content-Type' => self::DATA_TYPE,
             'Cache-Control' => $status === 200 ? ($reply->cacheControlValue() ?? 'no-store') : 'no-store',
-            'Vary' => $this->vary,
+            'Vary' => $this->varyHeader(),
             ...$reply->referrerPolicyHeaders(),
         ];
         if ($status !== 200) {
@@ -206,7 +211,7 @@ final class Page
      *
      * @return array<array-key, mixed>
      */
-    private static function map(mixed $value, string $source): array
+    private static function loaderMap(mixed $value, string $source): array
     {
         if (!is_array($value) || ($value !== [] && array_is_list($value))) {
             throw new \LogicException("{$source} did not return a map");

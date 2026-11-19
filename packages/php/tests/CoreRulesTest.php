@@ -10,7 +10,7 @@ use Polyspec\Hyper\CoreRules;
 use Polyspec\Hyper\Tests\Support\CoreStandIn\Calls;
 
 /**
- * The rules of the core behind the names of the units of the PHP server (CoreRules, HY-132.2), against stand-in
+ * The rules of the core behind the names of the units of the PHP server (CoreRules, HY-133.2), against stand-in
  * functions of the binding, which record each call and return the value that the test gives them, so the tests need no
  * extension. They state which function of the binding each unit calls, with which arguments, and what the unit
  * returns; the rules themselves are tested in the core.
@@ -47,8 +47,7 @@ final class CoreRulesTest extends TestCase
             'JsonCodec::encode (HY-54.18)' => ['jsonCodecEncode', [[1]], 'jsonWrite', '[1]'],
             'Session::takeFlash (HY-25.2)' => ['sessionFlashOf', [['values' => []]], 'flashOf', ['changed' => []]],
             'Session::kept (HY-104.22)' => ['sessionKeptOf', [['r' => []]], 'keptOf', ['r' => []]],
-            'Page::kept (HY-38.11)' => ['pageKeptCookie', ['{}'], 'keptCookie', ['r' => []]],
-            'Program::pages (HYC-24.7)' => ['programFunctionEntry', ['shout', true], 'checkFunctionEntry', null],
+            'Program::pages (HYC-24.7)' => ['checkFunctionEntry', ['shout', true], 'checkFunctionEntry', null],
             'the session cookie name (HY-45.1)' => ['sessionCookieName', [true], 'sessionName', '__Host-hy-session'],
             'RepresentationResponse::etag (HY-122.10)' => [
                 'representationEtag',
@@ -93,13 +92,6 @@ final class CoreRulesTest extends TestCase
                 'sessionCookie',
                 '__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax',
             ],
-            'Reply keeps out of shared caches (HY-52.6)' => [
-                'replyKeepsOutOfSharedCaches',
-                ['private'],
-                'keepsOutOfSharedCaches',
-                true,
-            ],
-            'Result is an application path (HY-46)' => ['resultIsApplicationPath', ['//a'], 'isApplicationPath', false],
             'the path of the static shell (HY-62)' => [
                 'appCheckShellPath',
                 ['/srv/csr/index.html'],
@@ -119,12 +111,6 @@ final class CoreRulesTest extends TestCase
                 ['{}'],
                 'readBuild',
                 '1111111111111111111111111111111111111111111111111111111111111111',
-            ],
-            'the form of a build id (HY-125.19)' => [
-                'buildCheckId',
-                ['1111111111111111111111111111111111111111111111111111111111111111'],
-                'checkBuildId',
-                null,
             ],
         ];
     }
@@ -146,16 +132,7 @@ final class CoreRulesTest extends TestCase
 
     public function testThereAreTwentyThreeExactUnits(): void
     {
-        self::assertCount(23, self::exactUnits());
-    }
-
-    public function testTheKeptValueCheckGivesTheFunctionThePagesAndTheFormFields(): void
-    {
-        // HY-40.1
-        $pages = new \stdClass();
-        Calls::$results = ['keptValue' => true];
-        self::assertTrue((new CoreRules(self::STAND_IN))->appKeptValue($pages, 'rows', 'open', 'true'));
-        self::assertSame([['keptValue', [$pages, 'rows', 'open', 'true']]], Calls::$calls);
+        self::assertCount(22, self::exactUnits());
     }
 
     public function testTheAcceptParseGivesTheCoreOneFieldLineOrNoneForAMissingField(): void
@@ -184,7 +161,7 @@ final class CoreRulesTest extends TestCase
 
     public function testAFailureOfTheBindingReachesTheCallerAsTheBindingRaisedIt(): void
     {
-        // HY-132.1, HY-132.2; HY-24.14 for a session that holds another value in the place of the token.
+        // HY-133.1, HY-133.2; HY-24.14 for a session that holds another value in the place of the token.
         $failure = new \InvalidArgumentException('the session holds a token of another form');
         Calls::$results = ['storedToken' => $failure];
         try {
@@ -197,7 +174,7 @@ final class CoreRulesTest extends TestCase
 
     public function testTheServerHasOneCoreRulesOverTheExtensionOrFailsWithItsName(): void
     {
-        // HY-132.2: the run with the extension gets one instance; the run without it gets the error that names it.
+        // HY-133.2: the run with the extension gets one instance; the run without it gets the error that names it.
         if (extension_loaded('polyspec_hyper')) {
             self::assertSame(CoreRules::shared(), CoreRules::shared());
 

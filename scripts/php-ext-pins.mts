@@ -6,9 +6,14 @@
 // repository and the extension of each package stay as the file has them. The script only writes, with one rename
 // (HR-82): it downloads no asset, because the install that downloads one verifies it by its pin (scripts/php-ext-verify.mts,
 // scripts/php-ext-requires.mts). The make target php-ext-pins runs it under $(ONLINE); no check runs it (HR-89).
+// `record` writes into DIR, for each pinned package, <repository name>-v<version>.json with the body of that response as
+// it came, each with one rename: the recorded responses that the tests of the writer read (make php-ext-pins-record,
+// H35.74-1).
 //
 // Usage: node scripts/php-ext-pins.mts write PINS
+//        node scripts/php-ext-pins.mts record PINS DIR
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeFileAtomic } from '../packages/cli/lib/output-files.mjs';
 
@@ -60,6 +65,42 @@ export function pinsText(text: string, release: ReleaseOf): string {
   return `${JSON.stringify({ ...pins, packages }, null, 2)}\n`;
 }
 
+/** The body of the response of releases/tags/v`version` of `repository`, as the releases API sent it. */
+export type BodyOf = (repository: string, version: string) => string;
+
+/**
+ * The recorded release responses of the packages of the pin file `text` (H35.74-1): for each, the file
+ * <repository name>-v<version>.json with the body that `body` gives, kept as it came, which the tests of the writer read.
+ * A body that is no release with assets throws before anything is written.
+ */
+export function recordedFiles(text: string, body: BodyOf): Record<string, string> {
+  const pins: unknown = JSON.parse(text);
+  if (!isRecord(pins) || !isRecord(pins.packages)) throw new Error('the pin file has no member packages');
+  const files: Record<string, string> = {};
+  for (const [name, entry] of Object.entries(pins.packages)) {
+    if (!isRecord(entry) || typeof entry.repository !== 'string' || typeof entry.version !== 'string') throw new Error(`${name} names no repository and version`);
+    const received = body(entry.repository, entry.version);
+    const release: unknown = JSON.parse(received);
+    if (!isRecord(release) || !Array.isArray(release.assets)) throw new Error(`${entry.repository} v${entry.version}: the response is no release with assets`);
+    files[`${entry.repository.split('/').at(-1) ?? entry.repository}-v${entry.version}.json`] = received;
+  }
+  return files;
+}
+
+/** The bodies of the release responses of the packages of `text`, read from the GitHub releases API. */
+async function bodies(text: string): Promise<BodyOf> {
+  const pins: unknown = JSON.parse(text);
+  const entries = isRecord(pins) && isRecord(pins.packages) ? Object.values(pins.packages).filter(isRecord) : [];
+  const received = new Map<string, string>();
+  for (const entry of entries) {
+    const url = `https://api.github.com/repos/${String(entry.repository)}/releases/tags/v${String(entry.version)}`;
+    const response = await fetch(url, { headers: { accept: 'application/vnd.github+json' } });
+    if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
+    received.set(`${String(entry.repository)} ${String(entry.version)}`, await response.text());
+  }
+  return (repository, version) => received.get(`${repository} ${version}`) ?? '';
+}
+
 /** Reads the release responses of the packages of `text` from the GitHub releases API. */
 async function releases(text: string): Promise<ReleaseOf> {
   const pins: unknown = JSON.parse(text);
@@ -76,13 +117,25 @@ async function releases(text: string): Promise<ReleaseOf> {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const [mode, file] = process.argv.slice(2);
-  if (mode !== 'write' || file === undefined) {
-    process.stderr.write('Usage: node scripts/php-ext-pins.mts write PINS\n');
+  const [mode, file, directory] = process.argv.slice(2);
+  if (!((mode === 'write' && file !== undefined && directory === undefined) || (mode === 'record' && file !== undefined && directory !== undefined))) {
+    process.stderr.write('Usage: node scripts/php-ext-pins.mts write PINS\n       node scripts/php-ext-pins.mts record PINS DIR\n');
     process.exit(2);
   }
   const text = readFileSync(file, 'utf8');
-  releases(text)
+  if (mode === 'record') {
+    bodies(text)
+      .then((body) => {
+        for (const [name, received] of Object.entries(recordedFiles(text, body))) {
+          writeFileAtomic(path.join(directory ?? '', name), received);
+          process.stdout.write(`php-ext-pins: recorded ${path.join(directory ?? '', name)}\n`);
+        }
+      })
+      .catch((error: unknown) => {
+        process.stderr.write(`php-ext-pins: ${error instanceof Error ? error.message : String(error)}\n`);
+        process.exit(1);
+      });
+  } else releases(text)
     .then((release) => {
       writeFileAtomic(file, pinsText(text, release));
       process.stdout.write(`php-ext-pins: wrote ${file}\n`);

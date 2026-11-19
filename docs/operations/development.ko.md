@@ -1,5 +1,5 @@
 <!-- doc-id: development -->
-<!-- source-sha256: 91e79bdaf95bfeba5f4503cd24a2d60a50810eb99d8a64c76514f7bff69ef59b -->
+<!-- source-sha256: 23adca736a3f70a27f985c86c5a045497729feee0c0dbacb00eed9bf13d930cc -->
 # 개발
 
 [English](development.md).
@@ -8,9 +8,9 @@
 
 - pin한 도구(HR-81): `mise.toml`의 Node.js와 Python(mise가 `mise.lock`의 digest에 맞춰 설치한다. Node.js는 `make install-tools TOOLS=npm`이, Python은 `make install-tools`가 설치한다), `pdo_sqlite`가 있는 `.php-version`의 PHP, GNU Make 3.81 이상, 네이티브 확장을 위한 그 PHP의 phpize, php-config와 C compiler. `make hyper-install`은 `package.json`의 `devEngines`가 이름하는 `mise.toml`의 npm과 `config/toolchain.json`의 Composer를 `var/tools`에 설치한다(`make install-tools`). 없는 도구는 그것을 실행하는 target을 실패시킨다(kit K854).
 - checkout의 PHP: `make install-tools`는 그 시점에 PATH에서 처음 나오는 php의 wrapper인 `var/tools/bin/php`를 쓰고 그 옆에 `php-config`와 `phpize`의 wrapper를 쓰며, 이후의 `make install-tools`는 이미 있는 wrapper를 그대로 둔다. `make php-check`는 그 wrapper가 `.php-version`의 minor release를 실행하지 않으면 실패한다. recipe가 PHP, Composer, PIE, PHPUnit, PHPStan, phpcs, Pint, PHP 서버 또는 PHP header에 대한 build를 시작하는 모든 target(Makefile의 `PHP_TARGETS`)의 선행 조건이고, `make install-tools`는 설치 후 같은 검사를 `make php-check-installed`로 실행하며, 이것은 wrapper가 없는 checkout에서 통과한다. checkout의 PHP를 바꾸려면 pin한 minor의 php를 PATH의 처음에 두고(Homebrew: `php@<minor>`) `var/tools/bin/php`를 지운 뒤 `make install-tools`를 실행하고, 이어서 그 PHP에 맞게 확장을 build하는 `make hyper-install-php`와 `make hyper-ext`를 실행한다.
-- 공유 도구: `@polyspec/kit`은 `package.json`의 릴리즈 URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `devEngines`가 이름하는 정확한 version의 기본 npm을 checkout 밖에서 `--prefix`로 사용해(kit K938) `npm ci --ignore-scripts`를 실행한다. 이어 `make install-tools TOOLS=npm`, `make install-packages`, `make install-tools`로 checkout 도구를 준비한다. Makefile은 kit의 파일을 include하지 않고 hyper의 모든 레시피를 담는다. 각 레시피는 설치 package의 유틸리티를 명시적 인자로 실행한다. 기본 로컬 package link도 같은 경로를 사용하고 형제 checkout을 필수로 요구하지 않는다. Makefile은 link에서는 소스(`scripts/kit/*.mts`)를, pack된 archive에서는 dist(`dist/*.mjs`)를 실행한다. 도구의 설정은 hyper의 기본 파일이다: `.npmrc`(와 `tests/package-install/.npmrc`)의 `allow-remote=root`, mise와 uv를 위한 `mise.toml`의 `[settings]`와 `[env]`, 린트 설정 `knip.json`, `.oxlintrc.json`, `ruff.toml`, `phpcs.xml.dist`, `phpstan.dist.neon`. kit의 각 유틸리티는 실행할 때 자기가 읽는 `config/*.json`을 schema로 확인한다.
+- 공유 도구: `@polyspec/kit`은 `package.json`의 릴리즈 URL과 `package-lock.json`의 integrity로 고정한다. 깨끗한 checkout은 `make bootstrap`으로 `devEngines`가 이름하는 정확한 version의 기본 npm을 checkout 밖에서 `--prefix`로 사용해(kit K938) download를 명시적으로 허용한 채 `npm ci --ignore-scripts`를 실행한다. 이어 `make install-tools TOOLS=npm`, `make install-packages`, `make install-tools`로 checkout 도구를 준비한다. Makefile은 kit의 파일을 include하지 않고 hyper의 모든 레시피를 담는다. 각 레시피는 설치 package의 유틸리티를 명시적 인자로 실행한다. 기본 로컬 package link도 같은 경로를 사용하고 형제 checkout을 필수로 요구하지 않는다. Makefile은 link에서는 소스(`scripts/kit/*.mts`)를, pack된 archive에서는 dist(`dist/*.mjs`)를 실행한다. 도구의 설정은 hyper의 기본 파일이다: `.npmrc`(와 `tests/package-install/.npmrc`)의 `allow-remote=root`, mise와 uv를 위한 `mise.toml`의 `[settings]`와 `[env]`, 린트 설정 `knip.json`, `.oxlintrc.json`, `ruff.toml`, `phpcs.xml.dist`, `phpstan.dist.neon`. kit의 각 유틸리티는 실행할 때 자기가 읽는 `config/*.json`을 schema로 확인한다.
 - template package: npm은 `@polyspec/template`과 그 platform package를 template release의 tarball에서 `package.json`과 그 lock이 고정한 대로, uv는 platform의 wheel을 `packages/python/pyproject.toml`과 `uv.lock`이 고정한 대로 설치한다(HR-70). `make hyper-install`이 이를 download한다.
-- 네이티브 template 확장: template release 0.0.31(`TEMPLATE_VERSION`, tag `TEMPLATE_TAG`)의 php-ext package `polyspec/template`이며, PIE(`make install-tools TOOLS=pie`가 설치하는 `mise.toml`의 `http:pie`)가 release의 Composer repository `https://github.com/polyspec/template/releases/download/v0.0.31/packages.json`에서 build한다(H14.1-7, H27.45, H31.5). `make hyper-install`이 `$(ONLINE)`을 거쳐 `make template-ext`를 실행한다. 그 recipe가 빈 `var/pie/polyspec/template`에서 `pie repository:add`와 `pie build`를 직접 실행하고, PIE가 거기에 기록한 library 하나를 `scripts/pie-binary.mts`로 가져와 `build/ext/polyspec_template.so`에 게시한다(H27.51). `pie install`은 기기의 PHP에 쓰므로 쓰지 않는다. `make ext`는 아무것도 build하지 않고 그 library만 요구한다. Composer manifest는 확장을 `ext-polyspec_template`으로 요구하며 template package를 lock하지 않는다.
+- 네이티브 template 확장: template release 0.0.32(`TEMPLATE_VERSION`, tag `TEMPLATE_TAG`)의 php-ext package `polyspec/template`이며, PIE(`make install-tools TOOLS=pie`가 설치하는 `mise.toml`의 `http:pie`)가 release의 Composer repository `https://github.com/polyspec/template/releases/download/v0.0.32/packages.json`에서 build한다(H14.1-7, H27.45, H31.5). `make hyper-install`이 `$(ONLINE)`을 거쳐 `make template-ext`를 실행한다. 그 recipe가 빈 `var/pie/polyspec/template`에서 `pie repository:add`와 `pie build`를 직접 실행하고, PIE가 거기에 기록한 library 하나를 `scripts/pie-binary.mts`로 가져와 `build/ext/polyspec_template.so`에 게시한다(H27.51). `pie install`은 기기의 PHP에 쓰므로 쓰지 않는다. `make ext`는 아무것도 build하지 않고 그 library만 요구한다. Composer manifest는 확장을 `ext-polyspec_template`으로 요구하며 template package를 lock하지 않는다.
 - network: `make install-tools`, `make install-packages`, `make hyper-install`, `make hyper-install-browser`만 download한다. 다른 모든 recipe는 npm, Composer를 offline으로 실행하므로(`npm_config_offline`, `COMPOSER_DISABLE_NETWORK`) 없는 download는 바로 실패하고 그것을 만드는 설치 target을 밝힌다(HR-89).
 - Playwright용 Chromium: `make hyper-install-browser`. pin한 Playwright의 Chromium과, Linux에서는 그 system library를 설치한다.
 
@@ -32,7 +32,7 @@
 | `make composer-lock PACKAGES="<vendor/package> ..."` | manifest에서 pin이 바뀐 뒤, checkout의 Composer의 `composer update --no-install`로 `$(ONLINE)`을 통해 적은 패키지에 대해서만 `composer.lock`과 `examples/board/composer.lock`을 쓴다. 모든 패키지의 update는 실행 시점에 각 range를 해석하므로 `PACKAGES` 없이는 실패한다(HR-89, H35.41) |
 | `make hyper-php-install` | `packages/php`를 가리키는 symbolic link로 `polyspec/hyper`를 설치하는 board의 Composer 의존성을 설치한다(HR-79). 의존성을 설치할 때 이 target을 명시적으로 실행한다 |
 | `make ext` | `make hyper-install-php`의 `make json-ext`와 `make template-ext`가 json과 template release의 Composer repository(`packages.json`)에서 PIE로 가져온 json 확장 `build/json-ext/polyspec_json.so`와 template 확장이 없으면 실패한다. 링크된 실행에서 template 확장은 `vendor/polyspec/template`이 링크하는 template checkout의 `target/release/libpolyspec_template`이다. offline으로 실행하며 아무것도 build하지 않는다(HY-48.23, H27.45) |
-| `make hyper-ext` | `packages/php/native`의 PHP 확장 `polyspec_hyper`를 checkout의 php와 php-config에 대해 Cargo로 build하고, 그 PHP가 확장을 load하는지 확인한 뒤 `build/hyper-ext`에 publish한다. PHP는 build의 입력이고, `PHP`와 `PHP_CONFIG`에 주는 wrapper의 경로는 그 뒤의 PHP가 바뀌어도 같으므로, 출력이 자기 입력을 이름으로 밝힌다(HR-80). Cargo는 확장의 crate를 그 PHP의 API가 정하는 target 디렉터리 `target/php-<headers><build>`에서 build한다. `<headers>`는 header의 release(`php-config --vernum`)이고 `<build>`는 `release-php-ext`가 PHP의 build를 쓰는 형식인 `-nts`, `-zts`, `-debug-nts`, `-debug-zts` 중 하나다. 예를 들면 `target/php-80427-nts`이다. recipe는 그 디렉터리를 `CARGO_TARGET_DIR`로 Cargo에 주고, `make lint-bindings`와 `make test-bindings`도 그 crate의 clippy와 test를 같은 디렉터리에서 실행한다. 다른 PHP는 다른 디렉터리에서 build하므로 다른 API의 library가 복사되는 일이 없고, 어떤 recipe도 target 디렉터리를 지우지 않는다. checkout이 더 이상 build하지 않는 API의 디렉터리는 손으로 지운다. `build/hyper-ext`는 마지막 build의 library를 담는다. `hyper-ext`는 그것을 load하는 모든 target의 선행 조건이므로, 각 실행은 library를 load하기 전에 checkout의 PHP에 맞는 library를 publish한다(HY-132.2) |
+| `make hyper-ext` | `packages/php/native`의 PHP 확장 `polyspec_hyper`를 checkout의 php와 php-config에 대해 Cargo로 build하고, 그 PHP가 확장을 load하는지 확인한 뒤 `build/hyper-ext`에 publish한다. PHP는 build의 입력이고, `PHP`와 `PHP_CONFIG`에 주는 wrapper의 경로는 그 뒤의 PHP가 바뀌어도 같으므로, 출력이 자기 입력을 이름으로 밝힌다(HR-80). Cargo는 확장의 crate를 그 PHP의 API가 정하는 target 디렉터리 `target/php-<headers><build>`에서 build한다. `<headers>`는 header의 release(`php-config --vernum`)이고 `<build>`는 `release-php-ext`가 PHP의 build를 쓰는 형식인 `-nts`, `-zts`, `-debug-nts`, `-debug-zts` 중 하나다. 예를 들면 `target/php-80427-nts`이다. recipe는 그 디렉터리를 `CARGO_TARGET_DIR`로 Cargo에 주고, `make lint-bindings`와 `make test-bindings`도 그 crate의 clippy와 test를 같은 디렉터리에서 실행한다. 다른 PHP는 다른 디렉터리에서 build하므로 다른 API의 library가 복사되는 일이 없고, 어떤 recipe도 target 디렉터리를 지우지 않는다. checkout이 더 이상 build하지 않는 API의 디렉터리는 손으로 지운다. `build/hyper-ext`는 마지막 build의 library를 담는다. `hyper-ext`는 그것을 load하는 모든 target의 선행 조건이므로, 각 실행은 library를 load하기 전에 checkout의 PHP에 맞는 library를 publish한다(HY-133.2) |
 | `make packages` | `@polyspec/hyper-client`와 `@polyspec/hyper`의 JavaScript module과 type 선언을 각 package가 선언한 build(npm의 bin link인 `tsc`를 실행하는 `npm run build`)로 각자의 `dist` 디렉터리에 build하고 각 build를 파일 단위로 publish한다. npm은 workspace를 link하므로 `node_modules`는 build를 바로 보여 준다(HR-79, HR-82). Node 서버 test, board 에셋 build, `make package-check`, `make hyper-test-scripts`는 package를 exports로 가져오므로 이것을 먼저 실행한다(HR-61). build script는 `data-template.json`, `checkManifest`, `templateReferences`를 script 옆 `packages/client`의 소스에서 읽으므로 `dist`가 필요 없고 어느 작업 디렉터리에서도 실행된다 |
 | `make package-check` | 두 package를 그 `package-lock.json`에서 `npm ci --offline`으로 `tests/package-install`에 offline 설치해 그 디렉터리에 link하고(HR-89), `npm pack`이 publish하는 파일을 확인하며, 그 test를 `erasableSyntaxOnly`로 선언에 대해 type 검사한 뒤 `node`로 실행한다(HR-61) 테스트는 `NPM_BIN`으로 고정된 npm을 받으며 `tests/package-install/var/`에는 ignore된 기본 링크 상태를 저장한다. |
 | `make server-fixtures` | PHP 테스트 픽스처의 서버 프로그램을 그 `build.json`의 고정 build id로 빌드한다([빌드](#빌드) 참조) |
@@ -43,7 +43,7 @@
 | `make hyper-test-node` | Node 서버 test를 실행한다. 같은 fixture로 PHP 서버 test의 사례, `contracts/json.json`의 JSON 사례, session, HTTP 서버, 타입 검사를 실행한다 |
 | `make test-php` | 라우터 적합성 사례를 포함한 서버 패키지 테스트를 json 확장, template 확장, `polyspec_hyper`를 이 순서로 불러와 실행한다 |
 | `make lint` | PHP 형식을 검사한다 |
-| `make analyse-php` | `packages/php/phpstan-max.neon`으로 `packages/php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 cache를 `build/phpstan`에 쓴다. 메모리 제한은 `--memory-limit=256M`이다. 먼저 `make ext`를 실행한다 |
+| `make analyse-php` | `packages/php/phpstan-max.neon`으로 `packages/php`의 소스와 테스트에 레벨 `max`의 PHPStan을 실행한다. 기준선(baseline)과 무시하는 오류는 없다. PHPStan은 cache를 `build/phpstan`에 쓴다. cache가 없는 실행은 worker에서 132 MB가 필요해 PHP의 기본 한도 128M을 넘으므로 `--memory-limit=256M`으로 실행한다. 먼저 `make ext`를 실행한다 |
 | `make templates-check` | board에 `hyper check`를 실행한다: 매니페스트(HY-2), 레이아웃 템플릿만 `hx-` 속성을 가지는지(HC-6), 레이아웃이 `{# title}`과 `{# data}`를 한 번씩 배치하는지, 레이아웃과 각 라우트 템플릿의 모든 영역이 블록 인자 없이 `id`가 영역 이름인 요소 바로 안에 한 번씩 배치되는지(HY-3, HY-30) 검사한다 |
 | `make typecheck` | `node_modules`의 tsc와 root `tsconfig.json`(strict, `erasableSyntaxOnly`)으로 `scripts/`, `tests/`, `benchmarks/`의 TypeScript type을 검사한다. Node는 이 `.mts` 파일을 type stripping으로 실행하며 검사하지 않는다(S9). `scripts/check-parity.mts`가 `@polyspec/hyper-client`의 build가 쓰는 type을 import하므로 먼저 `make packages`를 실행한다 |
 | `make lint-ts` | kit의 oxlint(`.oxlintrc.json`, type-aware)로 TypeScript를 검사하고, knip(`knip.json`)으로 쓰이지 않는 파일, 의존성, export를 검사한다. `make check`와 CI 항목 `gates`의 target이다(H23.13) |
@@ -60,7 +60,6 @@
 | `make hooks` | changelog와 checklist의 merge driver를 선언한다([Hooks](#hooks) 참조) |
 | `make hooks-check` | `make hooks`의 merge driver가 선언되지 않았으면 실패한다 |
 | `make ci-check` | CI group `NAME`을 `ci.yml`의 job처럼 실행한다. setup, 끝까지 실행하는 target, 보고서 `var/ci/<name>`이다([CI](#ci) 참고) |
-| `make ci-bench` | `bench.yml`의 job을 실행한다. group `bench`의 setup, `make bench`, `make bench-sessions`, 보고서 `var/ci/bench`이다([CI](#ci) 참고) |
 | `make ci-targets` | make target `TARGETS`를 끝까지 실행하고 보고서 `CI_REPORT`를 쓴다([CI](#ci) 참고) |
 | `make ci-summary` | 보고서 `CI_REPORT`의 요약과 job summary를 쓴다([CI](#ci) 참고) |
 | `make ci-passed` | `RESULTS`, 곧 `needs`의 JSON의 모든 job의 결과가 `success`가 아니면 실패한다([CI](#ci) 참고) |
@@ -70,6 +69,7 @@
 | `make bench-server-smoke` | PHP 측정기를 측정마다 한 번씩 실행한다. 측정기를 깨는 변경이 실패하도록 `make check`에 들어 있다 |
 | `make bench` | 서버와 브라우저 성능을 보고하는 `make bench-server`와 `make bench-browser`를 실행한다([성능 측정](benchmark.ko.md) 참조). `make check`에는 포함하지 않는다 |
 | `make check` | 위의 모든 검사를 기본 최종 검증 실행기를 거쳐 실행한다(아래 참조) |
+| `make preflight` | checkout이 자기 process로 실행하는 CI group의 target을 끝까지 실행하고, CI만 실행하는 것을 이름한다([Preflight](#preflight) 참조) |
 
 Darwin virtiofs 검사는 Makefile의 digest로 고정한 `VIRTIOFS_IMAGE`를 읽는다. `make hyper-install-virtiofs`가 그 image를 명시적으로 설치한다. 검사는 로컬 image를 먼저 확인하고 없으면 해당 설치 target을 밝히고 실패한다. 검사는 이 checkout과 외부 소스 제공 저장소를 원래 경로에 읽기 전용으로 mount한다. 제공 저장소 root는 설치된 template과 compiler 모듈 진입점에서 `git rev-parse --show-toplevel`로 찾는다. 컨테이너 안에서도 기본 package 소스 link와 그 의존성 해석을 유지한다.
 
@@ -93,6 +93,18 @@ Script 검사는 runner 전에 `assets`와 `server`를 요구한다. `package-ch
 
 보고서에서 실패 target 이름을 읽는다. 소유 검사를 직접 실행하거나, 수정을 commit하고 활성 항목이 없을 때 `make ci-targets TARGETS="<failed targets>" CI_REPORT=var/report/failed-owners`로 그 target만 묶어 실행한다. 원본 보고서를 보존하고 수정 검사는 별도 보고서에 기록한다. 소유 검사 재실행은 해당 수정의 근거이며 원본 전체 실행을 다른 tree의 성공으로 바꾸지 않는다.
 
+## Preflight
+
+`make preflight`는 checkout이 자기 process로 제공하는 CI suite 부분을 로컬에서 실행하므로(H35.92), 기본 결함이 push 전에 드러난다. 그 목록은 `CI_GROUPS_MEASURE`에 없는 `CI_GROUPS`의 모든 group의 `CI_TARGETS_<group>` target에서 필요를 선언하는 target(아래)을 뺀 것이므로, CI group이 얻는 target은 다른 선언 없이 그 목록에 오른다. kit의 report runner로 `var/report/preflight`에 모든 target을 끝까지 실행하고, 그 뒤 실패한 각 target을 이름하며 실패한다(HR-86).
+
+먼저 CI만 실행하므로 건너뛰는 것을 출력한다.
+
+- checkout이 마련할 수 없는 것을 `CI_NEEDS_<target> := browser|container|redis`로 선언하는 각 target. `e2e`, `bench-browser`, `bench`는 browser가, `bench-sessions`는 Redis server가, `virtiofs-check`는 Apple container가 필요하다. `tests/scripts/preflight.test.mts`는 target의 dry run이 닿지 않는 선언과, 선언 없이 playwright, `container`, bay나 Redis server에 닿는 검사 target을 실패시킨다. `make parity`는 browser code를 Node에서 render하므로 아무것도 선언하지 않는다
+- 보고만 하고 실패하지 않는 측정 group의 target `bench`와 `bench-sessions`
+- Redis server를 시작하는 `tests/scripts`의 test 파일이며, 그것은 `./session-redis-server.mts`에서 import하는 파일이다. `hyper-test-scripts`는 나머지 파일을 실행한다
+
+release asset(`ci-assets-*`)은 어떤 CI group에도 없으므로 목록에 오르지 않는다. AGENTS.md가 밝히듯, test가 자기 process에서 system이 정하는 port로 시작하는 server는 실행된다.
+
 ## Hooks
 
 hyper는 Git hook을 두지 않는다. `make hooks`는 `CHANGELOG.md`, checklist와 그 한국어 짝의 merge driver를 `.git/info/attributes`와 git 설정에 선언하고, git은 각 driver를 `make twin-merge`로 실행한다. `make commit`은 commit message를 쓰며 그것을 판정하지 않는다(kit K1053). push는 검사하지 않는다. commit의 CI 실행은 release에서 읽는다.
@@ -113,7 +125,7 @@ git push origin main
 
 | Job | Run step | recipe가 이 순서로 실행하고 첫 실패에서 멈추는 것 |
 |---|---|---|
-| `tag` | `make ci-release-tag RUN=<id> AUTO=<workflow_run이면 1>` | `release-tag`, 그다음 뒤 job에 `TAG`와 `VERSION`을 주는 `release-tag-output`. tag를 만들지 않았으면 뒤 job은 실행하지 않는다 |
+| `tag` | `make ci-release-tag RUN=<id> AUTO=<1 for a workflow_run>` | `release-tag`, 그다음 뒤 job에 `TAG`와 `VERSION`을 주는 `release-tag-output`. tag를 만들지 않았으면 뒤 job은 실행하지 않는다 |
 | `assets` | tag와 `release: true`로 `.github/workflows/assets.yml`을 부른다 | 그 workflow의 job `platform`, `php`, `npm`. 각각 `make ci-assets-<job> RELEASE=true`이다([릴리스만 실행하는 step](#릴리스만-실행하는-step) 참조) |
 | `release` | `make ci-release-release TAG=<tag> VERSION=<version>` | `release-tools`, `release-assets`, `release-publish`, job `assets`의 download된 asset을 폴더와 함께 `var/release/assets`로 복사(`cp -R`), `release-recipes`, `binding-cases`, `release-go-module`, `release-go-module-push`, `release-platform-assets`, `release-undraft` |
 
@@ -137,7 +149,7 @@ consumer는 자기 package manager로 archive를 설치해 릴리스를 확인�
 | `assets.yml`의 `npm`: `ci-assets-npm RELEASE=true` | `install-tools TOOLS="rust go"`, `release-recipes`, `binding-cases`, `release-binding-check`, `packages`, `release-assets-npm`(`install-wasm-bindgen`, `release-npm`) | Rust와 Go: `install-tools` 줄. wasm-bindgen: `install-wasm-bindgen` | `platform`과 같다 | `release-binding-check`의 결과 |
 | `release`: `ci-release-release` | `release-tools`, `release-assets`, `release-publish`, `cp -R var/release/downloaded/. var/release/assets/`, `release-recipes`, `binding-cases`, `release-go-module`, `release-go-module-push`, `release-platform-assets`, `release-undraft` | checkout의 모든 도구: `release-tools`. `gh`, `git`, `tar`, `unzip`: runner image | group `node`의 `release-candidate-assets`가 `release-assets`의 packer를 실행한다. 다른 make는 어떤 job도 실행하지 않는다 | artifact의 download, draft와 그 notes, `GITHUB_ACTOR`의 identity로 하는 Go module의 commit과 tag, 하나라도 없으면 실패하는 platform asset의 upload, 공개된 릴리스 |
 
-binding의 두 check는 모두 `go mod download`로 `packages/go/go.mod`의 `go.sum`을 계산하므로, 각 recipe는 check 전에 Go를 설치한다. check의 도구가 없는 job은 CI에서 실패한다. release check는 `Cargo.toml`의 개발 형태 의존성을 보고하는 규칙 CK-70을 더한다. 개발 형태는 branch나 Go version `v0.0.0` 같은 것이다. core와 각 binding crate의 `Cargo.toml`은 `polyspec-template`을 tag `v0.0.31`으로 받고, `packages/go/go.mod`는 template module을 `v0.0.31`으로 require하므로(H31.5), template의 의존성 중 개발 형태인 것은 없다. CI는 release check를 릴리스의 `assets.yml`에서 tag 뒤에만 실행하므로, checkout에서 `make release-binding-check`를 실행하면 릴리스 전에 그 결과가 보인다.
+binding의 두 check는 모두 `go mod download`로 `packages/go/go.mod`의 `go.sum`을 계산하므로, 각 recipe는 check 전에 Go를 설치한다. check의 도구가 없는 job은 CI에서 실패한다. release check는 `Cargo.toml`의 개발 형태 의존성을 보고하는 규칙 CK-70을 더한다. 개발 형태는 branch나 Go version `v0.0.0` 같은 것이다. core와 각 binding crate의 `Cargo.toml`은 `polyspec-template`을 tag `v0.0.32`로 받고, `packages/go/go.mod`는 template module을 `v0.0.32`로 require하므로(H31.5), template의 의존성 중 개발 형태인 것은 없다. CI는 release check를 릴리스의 `assets.yml`에서 tag 뒤에만 실행하므로, checkout에서 `make release-binding-check`를 실행하면 릴리스 전에 그 결과가 보인다.
 
 `tests/scripts/ci-workflow.test.mts`는 `release.yml`의 세 job, `ci.yml`과 `release.yml`의 `assets.yml` 호출, 각 platform의 runner, 각 recipe의 make의 순서를 검사한다. `tests/scripts/ci-group-tools.test.mts`는 job `release`와 `assets.yml`의 각 job의 make의 dry run을 `RELEASE=true`가 있을 때와 없을 때 모두 읽고, 어떤 명령 줄이 도구를 설치하는 줄보다 먼저 그 도구를 시작하면 실패한다. `binding check`와 `binding release-go-module`은 Go를 시작하는 것으로 센다. 이 test는 CI group, `assets.yml`의 job 또는 릴리스의 명령 줄이 `rust-toolchain.toml`에 없는 Rust target이나 Rust component를 필요로 하면 실패한다. 곧 WASM target, `release-go-static`의 musl target, 그리고 그 target이 `llvm-strip`을 시작하는 component `llvm-tools`이다. kit의 utility가 자기 process 안에서 시작하는 것, 곧 `npm pack`, `git archive`, `gh`는 어떤 dry run에도 없고 어떤 test도 판정하지 않는다.
 
@@ -151,7 +163,7 @@ Python 패키지 `packages/python`은 `release-wheel`이 각 platform의 runner�
 
 ### 개발 구성
 
-private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/cli`, `packages/ts`(HR-79)와, `@polyspec/template`을 template release의 tarball URL로, 그 platform package 세 개를 각자의 URL로 `optionalDependencies`에 선언한다. npm은 workspace가 요구하는 정확한 버전을 이 tarball로 해석하므로 manifest는 `overrides`를 두지 않는다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/php`에서 root `vendor`로 설치하고, template release의 Composer repository `packages.json`을 선언하며, template 확장 `ext-polyspec_template`을 `config.platform`의 그 version과 함께 요구하고, `packages/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.31을 받는다(HR-70). 그 tag는 `make template-ext`가 php-ext package `polyspec/template`을 build하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
+private root는 checkout 안의 패키지를 찾아 주며 공개되지 않는다. root `package.json`은 npm이 link하는 npm workspace `packages/client`, `packages/cli`, `packages/ts`(HR-79)와, `@polyspec/template`을 template release의 tarball URL로, 그 platform package 세 개를 각자의 URL로 `optionalDependencies`에 선언한다. npm은 workspace가 요구하는 정확한 버전을 이 tarball로 해석하므로 manifest는 `overrides`를 두지 않는다. npm 12는 기본으로 URL 의존성을 설치하지 않으므로 `.npmrc`가 `allow-remote=root`를 둔다. root `composer.json`은 path repository `packages/php`에서 root `vendor`로 설치하고, template release의 Composer repository `packages.json`을 선언하며, template 확장 `ext-polyspec_template`을 `config.platform`의 그 version과 함께 요구하고, `packages/php`의 namespace를 tree에 연결한다. `composer.lock`이 그 lock이다. 두 root는 template release v0.0.32를 받는다(HR-70). 그 tag는 `make template-ext`가 php-ext package `polyspec/template`을 build하는 Makefile의 `TEMPLATE_TAG`이다(HR-80).
 
 ### 릴리스 에셋 설치
 
@@ -200,7 +212,7 @@ workflow `.github/workflows/ci.yml`은 `main`의 push와 모든 수동 실행(`w
 
 group의 local 실행은 그 job의 호출과 같은 `make ci-check NAME=<group>`이다. bootstrap action처럼 `make bootstrap`, `make install-tools TOOLS=npm`, `make install-packages`를 실행한 checkout에서 실행한다. 어떤 group도 가리키지 않는 `NAME`은 어떤 step보다 먼저 실패하고 group들을 적는다.
 
-recipe `ci-check`는 group의 setup step을 순서대로 각각 별도의 make로 실행하고 첫 실패에서 멈춘다. 뒤의 step과 target이 그 step이 설치하는 것을 읽기 때문이다. 첫 step은 `make install-tools TOOLS="<group의 CI_TOOLS>"`이다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. `make hyper-install-php`가 네이티브 template 확장을 build하는 `docs`, `php`, `board` group은 `pie`를 선택한다. npm은 별도 bootstrap을 사용하고 `gates` group은 `make lint-php`가 php-parser를 읽는 PHP symbol extractor를 `make install-symbols EXTRACTORS="php"`(`CI_SYMBOLS_gates`)로 설치한다. kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)는 그 target이 실행하는 `gates` group만 설치하고, `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
+recipe `ci-check`는 group의 setup step을 순서대로 각각 별도의 make로 실행하고 첫 실패에서 멈춘다. 뒤의 step과 target이 그 step이 설치하는 것을 읽기 때문이다. 첫 step은 `make install-tools TOOLS="<CI_TOOLS of the group>"`이다. Kit은 선택, 필수 도구 의존성, version과 hash 검증, 일치하는 설치 도구 재사용을 소유한다. Hyper는 별도 도구 설치기를 선언하지 않는다. `make hyper-install-php`가 네이티브 template 확장을 build하는 `docs`, `php`, `board` group은 `pie`를 선택한다. npm은 별도 bootstrap을 사용하고 `gates` group은 `make lint-php`가 php-parser를 읽는 PHP symbol extractor를 `make install-symbols EXTRACTORS="php"`(`CI_SYMBOLS_gates`)로 설치한다. kit의 lint 도구(phpcs, phpstan, ruff, alint, vulture)는 그 target이 실행하는 `gates` group만 설치하고, `make hyper-lint`와 `make analyse-php`는 `vendor`의 pint와 PHPStan을 실행한다.
 
 `make hyper-install-crates`는 `Cargo.lock`이 고정한 crate, 곧 polyspec crate의 git tag와 crates.io의 crate를 lock의 모든 target에 대해 `cargo fetch --locked`로 가져온다. `gates`를 뺀 모든 CI group의 두 번째 setup step이다. 그 group들이 각각 cargo, maturin, binding 생성기를 시작하고 이들은 crate를 offline으로 읽기 때문이다. 그 밖의 모든 recipe는 cargo를 `--offline`으로 시작하며, 그런 target 각각의 prerequisite인 `make crates-check`는 `crates-check: a crate that Cargo.lock pins is not fetched, or the lock does not match the manifests; run make hyper-install-crates`로 실패한다(HR-89). `make hyper-install-php`는 기존 설치 lock 안에서 고정 PHP archive와 root 및 board Composer lock만 설치한다. `make hyper-install-python`은 `uv sync --locked`를 실행하는 kit의 `uv-install` 유틸리티로 Python 환경만 설치한다(kit K850). `make hyper-install-redis`는 `docs`를 위해 session test의 Redis server를 build하고, `make hyper-install-browser`는 `board`를 위해 Chromium을 설치한다. Node 의존성은 기존 npm lock 설치를 사용한다. Native source 개발 link는 별도 로컬 설치 선택으로 유지한다.
 
@@ -208,15 +220,15 @@ Build 선행 조건은 각 job의 검사가 소유한다. 언어 job은 다른 �
 
 각 구현의 자기 test가 `contracts/`의 공유 vector를 실행하며, 언어 간 test 이름을 맞추는 gate는 없다(H27.91). Browser가 필요한 server 간 비교는 세 구현과 Chromium을 직접 설치하는 `board`가 소유한다. Python 렌더링 검사는 Python job이 소유한다. Matrix 집계는 `ci-passed`에 모든 group 결과를 요구한다.
 
-job의 나머지 step은 `uses:` step이다. hyper를 history와 함께 workspace root에 checkout하고, checkout 바로 다음에 `mise.toml`의 Node를 사용하는 hyper의 bootstrap action(`./.github/actions/bootstrap`)을 실행하며, 도구에 PHP가 있는 group(항목의 `php: true`)은 setup-php로 `.php-version`의 PHP를 준비하고, 앞 step이 실패해도 보고서를 upload한다(`if: ${{ !cancelled() }}`). 어떤 job도 다른 저장소를 checkout하지 않으며, 고정 release asset이 template package와 확장 소스를 준다. setup 뒤에 `make ci-targets TARGETS="<group의 CI_TARGETS>" CI_REPORT=var/ci/<name>`이 group의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓰며, 이어 `make ci-summary CI_REPORT=var/ci/<name>`이 항상 각 setup step의 결과(`success`, `failure`, `skipped`)와 함께 요약과 job summary를 쓴다. `make ci-check`의 상태는 setup과 target의 상태이며, 요약을 쓰지 못하면 실패한다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
+job의 나머지 step은 `uses:` step이다. hyper를 history와 함께 workspace root에 checkout하고, checkout 바로 다음에 `mise.toml`의 Node를 사용하는 hyper의 bootstrap action(`./.github/actions/bootstrap`)을 실행하며, 도구에 PHP가 있는 group(항목의 `php: true`)은 setup-php로 `.php-version`의 PHP를 준비하고, 앞 step이 실패해도 보고서를 upload한다(`if: ${{ !cancelled() }}`). 어떤 job도 다른 저장소를 checkout하지 않으며, 고정 release asset이 template package와 확장 소스를 준다. setup 뒤에 `make ci-targets TARGETS="<CI_TARGETS of the group>" CI_REPORT=var/ci/<name>`이 group의 모든 target을 자기 `make -k <target>`으로 끝까지 실행하고 보고서를 쓰며, 이어 `make ci-summary CI_REPORT=var/ci/<name>`이 항상 각 setup step의 결과(`success`, `failure`, `skipped`)와 함께 요약과 job summary를 쓴다. `make ci-check`의 상태는 setup과 target의 상태이며, 요약을 쓰지 못하면 실패한다. job은 artifact `ci-<name>-<run id>-<attempt>`, 곧 디렉터리 `var/ci/<name>/`을 upload한다.
 
 - `summary.md`: tree, Node.js, npm, patch를 포함한 PHP, Composer, make의 실행 중인 release, 각 setup step의 결과, target의 상태, 시간, 첫 실패 줄의 표, 그리고 실패한 각 target의 첫 실패 줄;
 - `record.json`: 같은 내용의 data이며 각 target 앞뒤에 쓰므로, 멈춘 runner는 실행 중이던 target을 남긴다;
 - `targets/<target>.log`: 각 target의 명령, 전체 출력, make가 끝난 방식.
 
-마지막 job `ci-passed`는 다른 모든 job 뒤에 실행되고 `make ci-passed RESULTS='<needs의 JSON>'`을 실행한다. 이 target은 필요한 모든 job의 결과를 출력하고 하나라도 `success`가 아니면 실패한다. 다른 job의 결과를 판정하므로 CI에만 있다. `ci.yml`에 추가한 job은 `needs`에 나열한다. `tests/scripts/ci-workflow.test.mts`는 `ci-passed`가 없거나, 마지막 job이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need하지 않거나, 다른 runner에서 실행하거나, 다른 step을 실행하면 실패하고, `ci.yml`이나 `bench.yml`의 job이 make 변수를 받는 `make ci-<job>` 하나 말고 다른 run step을 가지면 실패한다.
+마지막 job `ci-passed`는 다른 모든 job 뒤에 실행되고 `make ci-passed RESULTS='<JSON of needs>'`을 실행한다. 이 target은 필요한 모든 job의 결과를 출력하고 하나라도 `success`가 아니면 실패한다. 다른 job의 결과를 판정하므로 CI에만 있다. `ci.yml`에 추가한 job은 `needs`에 나열한다. `tests/scripts/ci-workflow.test.mts`는 `ci-passed`가 없거나, 마지막 job이 아니거나, `if: ${{ always() }}`가 없거나, 다른 모든 job을 need하지 않거나, 다른 runner에서 실행하거나, 다른 step을 실행하면 실패하고, `ci.yml`의 job이 make 변수를 받는 `make ci-<job>` 하나 말고 다른 run step을 가지면 실패한다.
 
-workflow `.github/workflows/bench.yml`은 수동 실행에서 benchmark를 실행한다. 그 job 하나는 `make ci-bench`를 실행하고, 이 recipe는 Makefile의 group `bench`의 setup, 이어 `make ci-targets`로 `var/ci/bench`에 `make bench`와 `make bench-sessions`, 그리고 요약을 실행한다. job은 보고서를 upload한다. local 실행도 같은 `make ci-bench`이다. 그 결과는 어떤 검사도 통과시키거나 실패시키지 않으며, `ci-passed`와 release는 이를 읽지 않는다([성능 측정](benchmark.ko.md) 참고).
+`ci.yml`의 group `bench`는 모든 실행에서 benchmark를 실행한다. `make ci-check NAME=bench`는 Redis를 설치하는 그 setup, 이어 `make ci-targets`로 `var/ci/bench`에 `make bench`와 `make bench-sessions`, 그리고 요약을 실행하고, job은 보고서를 upload한다. 한도를 넘는 측정은 `WARNING` 줄을 출력하고 통과하므로, job은 benchmark를 실행할 수 없을 때만 실패한다([성능 측정](benchmark.ko.md) 참고).
 
 ## Test 실행
 
@@ -238,7 +250,7 @@ runner는 이름이 선택한 case를 전체 실행의 순서대로 한 번씩 �
 
 선택이 있으면 target의 recipe는 명령 하나, 곧 case runner뿐이다. PHPUnit의 `CaseRunnerTest`, package의 `tests/case-runner.test.ts`, 또는 `test_case_runner.py`이다. target의 다른 test, `hyper-test-js`와 `hyper-test-node`의 type check, `hyper-test-python`의 package data test는 실행하지 않는다. target의 prerequisite은 전체 실행과 같이 build한다. 따라서 case가 소유하는 체크리스트 행은 그런 명령을 검증으로 적는다. 예: `make hyper-test-php CASES="reads.json"`.
 
-선택한 실행은 `var/recipe/results/<runner>.selected.txt`를 쓴다. 첫 줄은 `SELECTION <이름들>`이고 나머지 줄은 선택한 case의 결과 줄이다. 전체 실행의 파일이며 `make recipe-check`가 읽는 `var/recipe/results/<runner>.txt`는 쓰지 않는다. `make recipe-check`와 target `recipe-run-*`는 runner에 선택을 주지 않으므로 `CASES`의 값과 무관하게 모든 case를 실행한다. Makefile은 선택을 환경 변수 `RECIPE_CASES`로 runner에 준다. 빈 `CASES`는 전체 실행이다.
+선택한 실행은 `var/recipe/results/<runner>.selected.txt`를 쓴다. 첫 줄은 `SELECTION <names>`이고 나머지 줄은 선택한 case의 결과 줄이다. 전체 실행의 파일이며 `make recipe-check`가 읽는 `var/recipe/results/<runner>.txt`는 쓰지 않는다. `make recipe-check`와 target `recipe-run-*`는 runner에 선택을 주지 않으므로 `CASES`의 값과 무관하게 모든 case를 실행한다. Makefile은 선택을 환경 변수 `RECIPE_CASES`로 runner에 준다. 빈 `CASES`는 전체 실행이다.
 
 `make e2e`의 `CASES`는 이름만 같은 다른 변수이다. Playwright가 case의 제목과 맞춰 보는 pattern이다.
 
@@ -299,8 +311,8 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 | 유지 값 | `contracts/keep.json`을 `make test-php`와 `make test-js`가 실행한다(HY-38). |
 | JSON 텍스트 | `contracts/json.json`을 `make test-php`와 `make hyper-test-node`가 실행한다. 모든 서버는 core의 `rules.json_write`로 JSON 텍스트를 쓰고 core의 `rules.json_read`로 읽는다(HY-54). |
 | 라우팅 | `contracts/routes.json`을 `make test-php`와 `make test-js`가 실행한다. 렌더할 때 브라우저는 자기 라우트가 서버가 보고한 라우트와 같은지도 확인한다(HYC-1). |
-| Node 서버 | `make server-parity`는 parity 단계의 모든 요청을 각자 데이터베이스와 session을 가진 PHP 서버와 board Node 서버에 보내고, session 식별자, 응답마다 가린 CSRF token, `ETag` 값을 placeholder로 바꾼 뒤 상태, header, body가 같은지 확인한다(HR-55). |
 | 문서 렌더 | `make parity`는 비교 단계마다 같은 세션에서 HTML 문서, 문서 JSON, 영역 JSON을 요청한다. 라우트 영역, 내장 데이터, `server`와 `cookie` 유지 값(HY-30, HY-31, HY-38)을 포함한 문서 JSON의 브라우저 렌더 결과는 응답마다 다른 가린 CSRF 토큰(HY-24)을 각 응답에서 `<csrf>`로 바꾼 뒤 PHP 문서와 바이트 단위로 같아야 하고, 영역 JSON의 모든 부분이 그 문서에 나타나야 한다. 검사는 단계가 시작할 때 한 줄을, 끝나면 결과와 경과 밀리초를 출력한다. 10초 안에 응답이 없는 요청은 그 단계의 이름으로 실패하고 검사를 끝낸다. |
+| Node 서버 | `make server-parity`는 parity 단계의 모든 요청을 각자 데이터베이스와 session을 가진 PHP 서버와 board Node 서버에 보내고, session 식별자, 응답마다 가린 CSRF token, `ETag` 값을 placeholder로 바꾼 뒤 상태, header, body가 같은지 확인한다(HR-55). |
 | 브라우저에서의 동작 | `make e2e`는 SSR과 CSR에서 같은 흐름을 실행한다. 이동, 액션, 데이터 요청 없는 `hy-set` 변경, 새로고침과 새 탭에서의 유지 종류 네 가지, 라우트에 필요한 템플릿만 불러오기, 페이지를 보이기 전에 불러오고 다른 페이지가 link하지 않으면 제거하는 layout의 stylesheet link(HYC-15), SSR body와 CSR body가 같은지 확인하는 비교 페이지를 포함한다. |
 
 ## 측정한 크기
@@ -322,9 +334,7 @@ BOARD_DB=$PWD/examples/board/var/node.db BOARD_SESSIONS=$PWD/examples/board/var/
 
 상한을 넘는 크기는 실패가 아니라 warning이다(AGENTS). 출력이 상한보다 커지는 변경은 같은 변경 안에서 상한을 고치고 그 증가가 필요한 이유를 적는다. 출력이 작아지는 변경은 같은 규칙으로 상한을 낮춘다.
 
-브라우저는 렌더가 닿는 템플릿만 불러오고(HYC-12), 템플릿 파일은 해시가 붙은 이름으로 캐시된다.
-- 템플릿 AST는 노드마다 소스 위치를 기록하므로 압축 후 크기가 소스의 약 2배다.
-- `config/bundle-size.json`은 템플릿 파일 하나를 4,096 gzip 바이트로 제한한다. 이보다 커지는 템플릿은 블록으로 나눈다.
+브라우저는 렌더가 닿는 템플릿만 불러오고(HYC-12), 템플릿 파일은 해시가 붙은 이름으로 캐시된다. 템플릿 AST는 노드마다 소스 위치를 기록하므로 압축 후 크기가 소스의 약 2배다. `config/bundle-size.json`은 템플릿 파일 하나를 4,096 gzip 바이트로 제한하므로, 이보다 커지는 템플릿은 블록으로 나눈다.
 
 Package virtual environment를 사용하는 Python discovery를 포함해 모든 runtime test target은 설치된 Kit runner를 사용한다. 범위를 제한한 Python 검사는 정확한 discovery 파일명 또는 `--cwd`와 dotted module 이름을 사용하며 앱 전용 unittest harness는 없다. 지원하지 않거나 잘못된 runner 동작은 runner를 교체하거나 CI 식별을 바꾸는 대신 Kit GitHub issue로 보고한다. 완료된 과거 검증 기록의 원래 명령은 유지하며 현재 실행 지침으로 사용하지 않는다.
 

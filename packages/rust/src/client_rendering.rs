@@ -183,7 +183,7 @@ pub fn shell_answer(
             };
             Ok(ShellAnswer::Listing(crate::media::listing(page_only, &[])?))
         }
-        // HY-116.18: only a field that NG-5.7 refuses is a 400 (HY-132.6).
+        // HY-116.18: only a field that NG-5.7 refuses is a 400 (HY-133.6).
         Err(Error::Negotiate(
             polyspec_http_negotiation::Error::InvalidAccept
             | polyspec_http_negotiation::Error::InvalidWeight,

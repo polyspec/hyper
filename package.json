@@ -23,8 +23,8 @@
   "devDependencies": {
     "@napi-rs/cli": "3.10.12",
     "@playwright/test": "1.64.1",
-    "@polyspec/binding": "https://github.com/polyspec/binding/releases/download/v0.0.21/polyspec-binding-0.0.21.tgz",
-    "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.122/polyspec-kit-0.0.122.tgz",
+    "@polyspec/binding": "https://github.com/polyspec/binding/releases/download/v0.0.22/polyspec-binding-0.0.22.tgz",
+    "@polyspec/kit": "https://github.com/polyspec/kit/releases/download/v0.0.124/polyspec-kit-0.0.124.tgz",
     "@types/node": "26.6.5",
     "ajv": "^8.20.0",
     "esbuild": "0.28.2",
@@ -39,24 +39,23 @@
     "fsevents@2.3.3": true
   },
   "dependencies": {
-    "@polyspec/json": "https://github.com/polyspec/json/releases/download/v0.0.38/polyspec-json-0.0.38.tgz",
-    "@polyspec/php-serialization": "https://github.com/polyspec/php-serialization/releases/download/v0.0.16/polyspec-php-serialization-0.0.16.tgz",
-    "@polyspec/php-serialize": "https://github.com/polyspec/php-serialization/releases/download/v0.0.6/polyspec-php-serialize-0.0.6.tgz",
-    "@polyspec/session-store": "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec-session-store-0.0.7.tgz",
-    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec-template-0.0.31.tgz"
+    "@polyspec/json": "https://github.com/polyspec/json/releases/download/v0.0.40/polyspec-json-0.0.40.tgz",
+    "@polyspec/php-serialization": "https://github.com/polyspec/php-serialization/releases/download/v0.0.17/polyspec-php-serialization-0.0.17.tgz",
+    "@polyspec/session-store": "https://github.com/polyspec/session-store/releases/download/v0.0.8/polyspec-session-store-0.0.8.tgz",
+    "@polyspec/template": "https://github.com/polyspec/template/releases/download/v0.0.32/polyspec-template-0.0.32.tgz"
   },
   "optionalDependencies": {
-    "@polyspec/json-darwin-arm64": "https://github.com/polyspec/json/releases/download/v0.0.38/polyspec-json-darwin-arm64-0.0.38.tgz",
-    "@polyspec/json-linux-arm64-gnu": "https://github.com/polyspec/json/releases/download/v0.0.38/polyspec-json-linux-arm64-gnu-0.0.38.tgz",
-    "@polyspec/json-linux-x64-gnu": "https://github.com/polyspec/json/releases/download/v0.0.38/polyspec-json-linux-x64-gnu-0.0.38.tgz",
-    "@polyspec/php-serialization-darwin-arm64": "https://github.com/polyspec/php-serialization/releases/download/v0.0.16/polyspec-php-serialization-darwin-arm64-0.0.16.tgz",
-    "@polyspec/php-serialization-linux-arm64-gnu": "https://github.com/polyspec/php-serialization/releases/download/v0.0.16/polyspec-php-serialization-linux-arm64-gnu-0.0.16.tgz",
-    "@polyspec/php-serialization-linux-x64-gnu": "https://github.com/polyspec/php-serialization/releases/download/v0.0.16/polyspec-php-serialization-linux-x64-gnu-0.0.16.tgz",
-    "@polyspec/session-store-darwin-arm64": "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec-session-store-darwin-arm64-0.0.7.tgz",
-    "@polyspec/session-store-linux-arm64-gnu": "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec-session-store-linux-arm64-gnu-0.0.7.tgz",
-    "@polyspec/session-store-linux-x64-gnu": "https://github.com/polyspec/session-store/releases/download/v0.0.7/polyspec-session-store-linux-x64-gnu-0.0.7.tgz",
-    "@polyspec/template-darwin-arm64": "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec-template-darwin-arm64-0.0.31.tgz",
-    "@polyspec/template-linux-arm64-gnu": "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec-template-linux-arm64-gnu-0.0.31.tgz",
-    "@polyspec/template-linux-x64-gnu": "https://github.com/polyspec/template/releases/download/v0.0.31/polyspec-template-linux-x64-gnu-0.0.31.tgz"
+    "@polyspec/json-darwin-arm64": "https://github.com/polyspec/json/releases/download/v0.0.40/polyspec-json-darwin-arm64-0.0.40.tgz",
+    "@polyspec/json-linux-arm64-gnu": "https://github.com/polyspec/json/releases/download/v0.0.40/polyspec-json-linux-arm64-gnu-0.0.40.tgz",
+    "@polyspec/json-linux-x64-gnu": "https://github.com/polyspec/json/releases/download/v0.0.40/polyspec-json-linux-x64-gnu-0.0.40.tgz",
+    "@polyspec/php-serialization-darwin-arm64": "https://github.com/polyspec/php-serialization/releases/download/v0.0.17/polyspec-php-serialization-darwin-arm64-0.0.17.tgz",
+    "@polyspec/php-serialization-linux-arm64-gnu": "https://github.com/polyspec/php-serialization/releases/download/v0.0.17/polyspec-php-serialization-linux-arm64-gnu-0.0.17.tgz",
+    "@polyspec/php-serialization-linux-x64-gnu": "https://github.com/polyspec/php-serialization/releases/download/v0.0.17/polyspec-php-serialization-linux-x64-gnu-0.0.17.tgz",
+    "@polyspec/session-store-darwin-arm64": "https://github.com/polyspec/session-store/releases/download/v0.0.8/polyspec-session-store-darwin-arm64-0.0.8.tgz",
+    "@polyspec/session-store-linux-arm64-gnu": "https://github.com/polyspec/session-store/releases/download/v0.0.8/polyspec-session-store-linux-arm64-gnu-0.0.8.tgz",
+    "@polyspec/session-store-linux-x64-gnu": "https://github.com/polyspec/session-store/releases/download/v0.0.8/polyspec-session-store-linux-x64-gnu-0.0.8.tgz",
+    "@polyspec/template-darwin-arm64": "https://github.com/polyspec/template/releases/download/v0.0.32/polyspec-template-darwin-arm64-0.0.32.tgz",
+    "@polyspec/template-linux-arm64-gnu": "https://github.com/polyspec/template/releases/download/v0.0.32/polyspec-template-linux-arm64-gnu-0.0.32.tgz",
+    "@polyspec/template-linux-x64-gnu": "https://github.com/polyspec/template/releases/download/v0.0.32/polyspec-template-linux-x64-gnu-0.0.32.tgz"
   }
 }

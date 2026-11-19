@@ -127,6 +127,45 @@ function ownMethods(ReflectionClass $class): array
     ));
 }
 
+/**
+ * Whether a method is an empty private constructor without parameters (HYR-6): it only stops the construction of a
+ * class of static methods, a runtime idiom that no rule names, so it is no member. Reflection does not tell an empty
+ * body, so the tokens of the lines that Reflection names are read: once whitespace and comments are dropped, the tokens
+ * after the name are only `(`, `)`, `{` and `}`.
+ */
+function isConstructionGuard(ReflectionMethod $method): bool
+{
+    if ($method->getName() !== '__construct' || !$method->isPrivate() || $method->getNumberOfParameters() !== 0) {
+        return false;
+    }
+    // A class with an instance method or property makes its instances through the constructor, which is a member.
+    $class = $method->getDeclaringClass();
+    foreach ($class->getMethods() as $other) {
+        if ($other->getName() !== '__construct' && !$other->isStatic()) {
+            return false;
+        }
+    }
+    foreach ($class->getProperties() as $property) {
+        if (!$property->isStatic()) {
+            return false;
+        }
+    }
+    $file = $method->getFileName();
+    $start = $method->getStartLine();
+    $end = $method->getEndLine();
+    if ($file === false || $start === false || $end === false) {
+        return false;
+    }
+    $lines = array_slice(file($file), $start - 1, $end - $start + 1);
+    $tokens = array_values(array_filter(
+        PhpToken::tokenize('<?php ' . implode('', $lines)),
+        static fn(PhpToken $t) => !$t->is([T_OPEN_TAG, T_WHITESPACE, T_COMMENT, T_DOC_COMMENT]),
+    ));
+    $texts = array_map(static fn(PhpToken $t) => $t->text, $tokens);
+    $name = array_search('__construct', $texts, true);
+    return $name !== false && array_slice($texts, $name + 1) === ['(', ')', '{', '}'];
+}
+
 /** @return list<ReflectionProperty> the properties a class declares itself, not the ones its traits declare */
 function ownProperties(ReflectionClass $class): array
 {

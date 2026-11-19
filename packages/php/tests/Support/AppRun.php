@@ -353,7 +353,7 @@ final class AppRun
     }
 
     /**
-     * Returns the redirect result of a step, or its outside redirect (HY-133), with its flash values and its changed
+     * Returns the redirect result of a step, or its outside redirect (HY-132), with its flash values and its changed
      * topics in their order.
      *
      * @param array<array-key, mixed> $step

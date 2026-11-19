@@ -32,6 +32,8 @@ function nativeKey(lang: Lang, symbol: string): string {
   const rest = symbol.slice(at + 2);
   if (lang === 'php') {
     const [fqcn = '', name = ''] = rest.split('::');
+    // A namespace function has no second `::`: its whole symbol is the name after the last backslash, with no class.
+    if (name === '') return memberKey(file, '', fqcn.slice(fqcn.lastIndexOf('\\') + 1));
     return memberKey(file, fqcn.slice(fqcn.lastIndexOf('\\') + 1), name);
   }
   const dot = rest.indexOf('.');
@@ -386,6 +388,34 @@ export function checkStated(ctx: Ctx): Counts {
     reachers.set(lang, byMember);
   }
 
+  // A member that reaches another member in one language and not in another is a difference, and it is accepted only
+  // when the member that reaches it declares that pair (`reachDiffers`) and the check finds it. `reachGap` gives the
+  // stated members that reach `m` in `a` and not in `b`; it is empty where the check reads no difference.
+  const reachKey = (id: string, a: Lang, b: Lang): string => `${id}|${a}|${b}`;
+  const reachGap = (m: Member, a: Lang, b: Lang): string[] => {
+    const langs = languagesOf(m);
+    if (m.visibility === 'public' || !langs.includes(a) || !langs.includes(b)) return [];
+    const reachedIn = (lang: Lang): Set<string> => reachers.get(lang)?.get(m.id) ?? new Set<string>();
+    if (reachedIn(b).size === 0) return [];
+    const both = (id: string): boolean => {
+      const r = memberById.get(id);
+      return r !== undefined && r.native[a] !== undefined && r.native[b] !== undefined;
+    };
+    return [...reachedIn(a)].filter((id) => both(id) && !reachedIn(b).has(id)).sort();
+  };
+  const declared = new Set<string>();
+  for (const x of memberById.values()) {
+    for (const d of x.reachDiffers ?? []) declared.add(reachKey(d.member, d.reached, d.notReached));
+  }
+  for (const x of memberById.values()) {
+    for (const d of x.reachDiffers ?? []) {
+      const target = memberById.get(d.member);
+      if (target === undefined || reachGap(target, d.reached, d.notReached).length === 0) {
+        add('MEMBER_REACH_STALE', `${x.id} declares a reach difference of ${d.member} in ${d.reached} and not in ${d.notReached}, and the check finds none`);
+      }
+    }
+  }
+
   const counts: Counts = { direct: 0, internal: 0, private: 0 };
   for (const m of memberById.values()) {
     const langs = languagesOf(m);
@@ -397,10 +427,8 @@ export function checkStated(ctx: Ctx): Counts {
       continue;
     }
     let stated = true;
-    const sets = new Map<Lang, Set<string>>();
     for (const lang of langs) {
       const set = reachers.get(lang)?.get(m.id) ?? new Set<string>();
-      sets.set(lang, set);
       if (set.size === 0) {
         add('MEMBER_UNREACHED', `${m.visibility} member ${m.id} is named by no section and reached by no stated member in ${lang}`);
         stated = false;
@@ -409,12 +437,8 @@ export function checkStated(ctx: Ctx): Counts {
     for (const a of langs) {
       for (const b of langs) {
         if (a === b) continue;
-        const both = (id: string): boolean => {
-          const r = memberById.get(id);
-          return r !== undefined && r.native[a] !== undefined && r.native[b] !== undefined;
-        };
-        const only = [...(sets.get(a) ?? [])].filter((id) => both(id) && !(sets.get(b)?.has(id) ?? false)).sort();
-        if (only.length > 0 && (sets.get(b)?.size ?? 0) > 0) {
+        const only = reachGap(m, a, b);
+        if (only.length > 0 && !declared.has(reachKey(m.id, a, b))) {
           add('MEMBER_REACH_DIFFERS', `${m.visibility} member ${m.id} is reached from ${only.join(', ')} in ${a} and not in ${b}`);
           stated = false;
         }

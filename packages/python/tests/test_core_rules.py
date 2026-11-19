@@ -1,5 +1,5 @@
 # The rules of the core behind the names of the units of the Python server (polyspec/hyper/app/_core_rules.py,
-# HY-132.2), against a stand-in of the module of the Python binding: the stand-in records each call and returns the
+# HY-133.2), against a stand-in of the module of the Python binding: the stand-in records each call and returns the
 # value that the test gives it, so the tests need no native module. They state which member of the binding each unit
 # calls, with which arguments, and what the unit returns; the rules themselves are tested in the core.
 import sys
@@ -106,13 +106,6 @@ EXACT = [
         {"r": {}},
     ),
     (
-        "Page._kept (HY-38.11)",
-        "kept_cookie",
-        lambda rules: rules.page_kept_cookie("{}"),
-        ("{}",),
-        {"r": {}},
-    ),
-    (
         "RecordSession.cookie_name (HY-45.1)",
         "session_name",
         lambda rules: rules.session_cookie_name(True),
@@ -208,20 +201,6 @@ PARTIAL = [
         "__Host-hy-session=id; Path=/; Secure; HttpOnly; SameSite=Lax",
     ),
     (
-        "Reply.keeps_out_of_shared_caches (HY-52.6)",
-        "keeps_out_of_shared_caches",
-        lambda rules: rules.reply_keeps_out_of_shared_caches("private"),
-        ("private",),
-        True,
-    ),
-    (
-        "Result.is_application_path (HY-46)",
-        "is_application_path",
-        lambda rules: rules.result_is_application_path("//a"),
-        ("//a",),
-        False,
-    ),
-    (
         "App.check_shell_path (HY-62)",
         "check_shell_path",
         lambda rules: rules.app_check_shell_path("/srv/csr/index.html"),
@@ -234,13 +213,6 @@ PARTIAL = [
         lambda rules: rules.app_shell_text("/srv/csr/index.html", b"<html>"),
         ("/srv/csr/index.html", b"<html>"),
         "<html>",
-    ),
-    (
-        "App.kept_value (HY-40.1)",
-        "kept_value",
-        lambda rules: rules.app_kept_value(PAGES, "rows", "open", "true"),
-        (PAGES, "rows", "open", "true"),
-        True,
     ),
     (
         "Session.stored_token (HY-24.14)",
@@ -262,13 +234,6 @@ PARTIAL = [
         lambda rules: rules.build_read(b"{}"),
         (b"{}",),
         "1" * 64,
-    ),
-    (
-        "Build.check_id (HY-125.19)",
-        "check_build_id",
-        lambda rules: rules.build_check_id("1" * 64),
-        ("1" * 64,),
-        None,
     ),
 ]
 
@@ -308,7 +273,7 @@ class CoreRulesTest(unittest.TestCase):
         )
 
     def test_a_failure_of_the_binding_reaches_the_caller_as_the_binding_raised_it(self):
-        # HY-132.1, HY-132.2; HY-24.14 for a session that holds another value in the place of the token.
+        # HY-133.1, HY-133.2; HY-24.14 for a session that holds another value in the place of the token.
         failure = ValueError("the session holds a token of another form")
         failure.kind = "invalid_session_token"
         core, _ = stand_in({"csrf_mask": failure, "stored_token": failure})
@@ -354,7 +319,7 @@ class BodyLimitsTest(unittest.TestCase):
 
 class SharedCoreRulesTest(unittest.TestCase):
     """`core_rules` gives the units of the server one `CoreRules` of the binding module, and a binding that does not
-    import fails with an error that names the module, with no rule of the server in its place (HY-132.2)."""
+    import fails with an error that names the module, with no rule of the server in its place (HY-133.2)."""
 
     def setUp(self):
         from polyspec.hyper.app import _core_rules

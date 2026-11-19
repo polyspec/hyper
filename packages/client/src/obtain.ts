@@ -22,7 +22,7 @@ export class OutsideRedirect extends Error {
 }
 
 // Returns the location of the outside redirect of a response, status 200 with the header HX-Redirect, or null for
-// another response (HY-133).
+// another response (HY-132).
 export function outsideLocation(status: number | undefined, headers: { get(name: string): string | null }): string | null {
   return status === 200 ? headers.get('HX-Redirect') : null;
 }
@@ -36,7 +36,7 @@ export function documentHeaders(context: string | null): Record<string, string> 
 }
 
 // Sends the document request of a URL (HY-15, HYC-7) with the held context hash and returns the JSON value of a response
-// with status 200 and the URL of the response after redirects, or the location of an outside redirect (HY-133). Another
+// with status 200 and the URL of the response after redirects, or the location of an outside redirect (HY-132). Another
 // response, a network failure or a body that is not JSON fails with the status of the response, or `0` without one.
 export async function requestDocument(request: Fetch, url: string, context: string | null): Promise<{ value: Value; url: string } | { outside: string }> {
   let response: Response;

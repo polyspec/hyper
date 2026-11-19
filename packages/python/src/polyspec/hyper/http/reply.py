@@ -83,7 +83,7 @@ class Reply:
     def cache_control(self, value: str) -> "Reply":
         """Sets the Cache-Control of a page response with status 200. A page carries the session token of its
         visitor, so the value keeps it out of shared caches: it has `private` or `no-store` and neither `public` nor
-        `s-maxage` (HY-52); the core checks the value (HY-132.2)."""
+        `s-maxage` (HY-52); the core checks the value (HY-133.2)."""
         if not isinstance(value, str):
             raise core_rules().type_error(
                 "a Cache-Control is not a string (HY-52)", "invalid_argument_type"
@@ -108,7 +108,7 @@ class Reply:
 
     def referrer_policy(self, value: str) -> "Reply":
         """Sets the Referrer-Policy of the page and JSON answers of the request, whatever their status; a value that is
-        not a token of the Referrer-Policy specification fails (HY-103); the core checks the value (HY-132.2)."""
+        not a token of the Referrer-Policy specification fails (HY-103); the core checks the value (HY-133.2)."""
         if not isinstance(value, str):
             raise core_rules().type_error(
                 "a Referrer-Policy is not a string (HY-103)", "invalid_argument_type"
@@ -132,7 +132,7 @@ class Reply:
         """Gives a page response that has status 200 otherwise the status 403, for a page that shows other data in
         place of the data that the request may not see; another status fails (HY-69). A status that is no integer
         of the data model fails with `invalid_number` before the core is called, because the binding refuses a value
-        of another type with `invalid_argument_type`; the core checks the status (HY-132.2)."""
+        of another type with `invalid_argument_type`; the core checks the status (HY-133.2)."""
         code = Reply._integer(status)
         if code is None:
             raise core_rules().value_error(
@@ -166,7 +166,7 @@ class Reply:
     @staticmethod
     def _integer(value: object) -> int | None:
         """Returns an integer of the data model, or None for another value: an int within ±(2^53 − 1); a float,
-        even without a fraction, and a bool are not one (HY-52.19)."""
+        even without a fraction, and a bool are not one (HY-52.20)."""
         if isinstance(value, bool):
             return None
         if isinstance(value, int):

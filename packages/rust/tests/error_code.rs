@@ -1,4 +1,4 @@
-//! The code of an error (HY-132.1, HY-132.3): `Error::code` gives the variant of `ErrorCode` that the interface contract
+//! The code of an error (HY-133.1, HY-133.3): `Error::code` gives the variant of `ErrorCode` that the interface contract
 //! lists as the kind of the failure (binding GN-7b), and a failure of a library that hyper passes on is the variant of
 //! that library with the code of the library (binding GN-7c). Each match below has no wildcard, so a variant that a
 //! library adds does not compile until the contract has its row.
@@ -52,6 +52,7 @@ fn name(code: ErrorCode<'_>) -> &'static str {
         ErrorCode::InvalidCsrfForm => "InvalidCsrfForm",
         ErrorCode::InvalidSessionToken => "InvalidSessionToken",
         ErrorCode::InvalidSessionRecord => "InvalidSessionRecord",
+        ErrorCode::InvalidSessionHandler => "InvalidSessionHandler",
         ErrorCode::SharedHoldsContext => "SharedHoldsContext",
         ErrorCode::NotSelected => "NotSelected",
         ErrorCode::MalformedContentType => "MalformedContentType",
@@ -341,6 +342,10 @@ fn a_failure_of_hyper_projects_to_its_own_code_which_the_contract_lists() -> Res
         (Error::InvalidCsrfForm, ErrorCode::InvalidCsrfForm),
         (Error::InvalidSessionToken, ErrorCode::InvalidSessionToken),
         (Error::InvalidSessionRecord, ErrorCode::InvalidSessionRecord),
+        (
+            Error::InvalidSessionHandler,
+            ErrorCode::InvalidSessionHandler,
+        ),
         (Error::SharedHoldsContext, ErrorCode::SharedHoldsContext),
         (Error::NotSelected, ErrorCode::NotSelected),
         (Error::MalformedContentType, ErrorCode::MalformedContentType),
@@ -610,7 +615,7 @@ fn category_differences(
     Ok(differences)
 }
 
-/// HY-132.1, binding E-1b: a failure that a library gives keeps the category that the contract of the library gives
+/// HY-133.1, binding E-1b: a failure that a library gives keeps the category that the contract of the library gives
 /// its kind, for every variant of the four libraries and for both carriers of a code of the template language.
 #[test]
 fn a_failure_of_a_library_has_the_category_of_the_contract_of_the_library() -> Result<(), String> {

@@ -9,7 +9,7 @@ import { client, Fixture, port, SHELL } from './support.js';
 describe('client rendering (HY-62)', () => {
   it('serves the shell over node:http without a session (HY-45, HY-62)', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'hyper-client-'));
-    const server = hostServer(await new Fixture().app({ clientRendering: client(() => new Choice(true, null)) }), new FileSessions({ directory }));
+    const server = hostServer(await new Fixture().app({ clientRendering: client(() => new Choice(true, null)) }), await FileSessions.inDirectory({ directory }));
     try {
       await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
       const response = await fetch(`http://127.0.0.1:${port(server)}/items/7`);

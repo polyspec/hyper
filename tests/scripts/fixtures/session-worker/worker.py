@@ -9,62 +9,65 @@ import json
 import os
 import sys
 
-from polyspec.hyper import FileSessions, RedisSessions
+from urllib.parse import quote
+
+from polyspec.hyper import (
+    FileSessions,
+    RedisSessions,
+    SettingCluster,
+    SettingSentinel,
+    SettingServer,
+)
 
 
 def stores(directory):
-    """Returns the session stores of the process."""
+    """Returns the session stores of the process. The Redis store of the session-store library keeps its own
+    connections; HYPER_SESSION_TLS_CA turns TLS on and is the file of the authorities that the store trusts."""
     port = os.environ.get("HYPER_SESSION_REDIS")
     sentinels = os.environ.get("HYPER_SESSION_SENTINEL")
     nodes = os.environ.get("HYPER_SESSION_CLUSTER")
     if port is None and sentinels is None and nodes is None:
         return FileSessions(directory)
-    import redis
-    from redis.cluster import ClusterNode, RedisCluster
-    from redis.sentinel import Sentinel
+    # The file of the authority of the test, which the store trusts alone (SR-6.7 of session-store), or None.
+    authorities = os.environ.get("HYPER_SESSION_TLS_CA")
+    tls = authorities is not None
+    user = os.environ.get("HYPER_SESSION_USER")
+    password = os.environ.get("HYPER_SESSION_PASSWORD")
 
-    ca = os.environ.get("HYPER_SESSION_TLS_CA")
-    secure = {
-        "username": os.environ.get("HYPER_SESSION_USER"),
-        "password": os.environ.get("HYPER_SESSION_PASSWORD"),
-        **({} if ca is None else {"ssl": True, "ssl_ca_certs": ca}),
-    }
-    if nodes is not None:
-        return RedisSessions(
-            RedisCluster(
-                startup_nodes=[
-                    ClusterNode("127.0.0.1", int(item)) for item in nodes.split(",")
-                ],
-                socket_timeout=1,
-                socket_connect_timeout=1,
-                **secure,
-            ).execute_command,
-            lock_retries=int(os.environ.get("HYPER_SESSION_RETRIES", "1000000")),
-            lock_wait=0.002,
-            lock_expire=int(os.environ.get("HYPER_SESSION_EXPIRE", "30")),
+    def url(item: str) -> str:
+        """The URL of a node: the scheme `rediss` for TLS and the ACL user and its password in its user information."""
+        credentials = (
+            ""
+            if user is None and password is None
+            else f"{quote(user or '', safe='')}:{quote(password or '', safe='')}@"
         )
+        return f"{'rediss' if tls else 'redis'}://{credentials}127.0.0.1:{item}"
 
-    client = (
-        Sentinel(
-            [("127.0.0.1", int(item)) for item in sentinels.split(",")],
-            sentinel_kwargs={
-                **secure,
-                "socket_timeout": 1,
-                "socket_connect_timeout": 1,
-            },
-            socket_timeout=1,
-            socket_connect_timeout=1,
-            **secure,
-        ).master_for("hyper")
-        if sentinels is not None
-        else redis.Redis(host="127.0.0.1", port=int(port), **secure)
-    )
+    if nodes is not None:
+        setting = SettingCluster(
+            urls=[url(item) for item in nodes.split(",")],
+            user=None,
+            password=None,
+            authorities=authorities,
+        )
+    elif sentinels is not None:
+        setting = SettingSentinel(
+            # The Sentinels of a test with an authority take TLS and the ACL user alone, as the Redis servers do, and
+            # a Sentinel takes them from its address (SR-6.1 of session-store).
+            urls=[url(item) for item in sentinels.split(",")],
+            service="hyper",
+            tls=tls,
+            user=user,
+            password=password,
+            authorities=authorities,
+        )
+    else:
+        setting = SettingServer(url=url(port), authorities=authorities)
     return RedisSessions(
-        client.execute_command,
+        setting,
         lock_retries=int(os.environ.get("HYPER_SESSION_RETRIES", "1000000")),
-        lock_wait=0.002,
+        lock_wait=2000,
         lock_expire=int(os.environ.get("HYPER_SESSION_EXPIRE", "30")),
-        setup=None if sentinels is None else client.connection_pool.get_master_address,
     )
 
 

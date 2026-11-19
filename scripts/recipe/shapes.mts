@@ -6,6 +6,21 @@ import type { Ctx } from './context.mts';
 import { expectedVisibility, fieldWords, termKnown, words } from './names.mts';
 import { checkOnly, termsOf } from './members.mts';
 
+/**
+ * A member of a union in one form, so that a source member and a spec term compare: `T[]` and `Array<T>` are
+ * `list<T>`, `Map<string, T>` is `map<T>`, a generic term keeps its form, and a name is its words (HYR-5).
+ */
+export function canonTerm(text: string): string {
+  const s = text.trim().replace(/^["']|["']$/gu, '');
+  const array = /^(.+)\[\]$/u.exec(s) ?? /^Array<(.+)>$/u.exec(s);
+  if (array !== null) return `list<${canonTerm(array[1] ?? '')}>`;
+  const map = /^Map<\s*string\s*,\s*(.+)>$/u.exec(s);
+  if (map !== null) return `map<${canonTerm(map[1] ?? '')}>`;
+  const generic = /^(list|map|optional)<(.+)>$/u.exec(s);
+  if (generic !== null) return `${generic[1] ?? ''}<${canonTerm(generic[2] ?? '')}>`;
+  return words(s);
+}
+
 export function checkShapes(ctx: Ctx): void {
   const { spec, sources, add } = ctx;
   const units = spec.concerns.flatMap((c) => c.units);
@@ -27,6 +42,9 @@ export function checkShapes(ctx: Ctx): void {
       if (!termKnown(term, ids)) add('TERM_UNKNOWN', `${t.id} function input ${i + 1} uses ${term}, which is outside the vocabulary (HYR-5)`);
     });
     if (fn?.output !== undefined && !termKnown(fn.output, ids)) add('TERM_UNKNOWN', `${t.id} function output uses ${fn.output}, which is outside the vocabulary (HYR-5)`);
+    t.shape.union?.forEach((term) => {
+      if (!termKnown(term, ids)) add('TERM_UNKNOWN', `${t.id} union member ${term} is outside the vocabulary (HYR-5)`);
+    });
   }
 
   for (const t of spec.types) {
@@ -49,6 +67,14 @@ export function checkShapes(ctx: Ctx): void {
       const fn = t.shape.function;
       if (fn !== undefined && rt.parameters !== undefined && rt.parameters !== fn.inputs.length) {
         add('TYPE_SHAPE', `${lang} type ${t.id} takes ${rt.parameters} parameters, spec says ${fn.inputs.length}`);
+      }
+      if (t.shape.union !== undefined) {
+        // HYR-5: a union type is stated by its members, which the declaration gives in the same number and the same terms.
+        const declared = (rt.members ?? []).map(canonTerm).sort();
+        const want = t.shape.union.map(canonTerm).sort();
+        if (rt.members === undefined || declared.join(',') !== want.join(',')) {
+          add('TYPE_SHAPE', `${lang} type ${t.id} members differ from its union: spec says ${t.shape.union.join(' | ')} (HYR-5)`);
+        }
       }
     }
   }

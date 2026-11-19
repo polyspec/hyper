@@ -377,7 +377,7 @@ fn a_refused_request_opens_no_session() {
 
 #[test]
 fn errors_name_their_kind_and_category() {
-    // HY-132.1 to HY-132.3
+    // HY-133.1 to HY-133.3
     assert_eq!(Error::NotApplicationPath.category().as_str(), "value");
     assert_eq!(Error::NotSelected.category().as_str(), "type");
     assert_eq!(Error::InvalidSessionRecord.category().as_str(), "store");
@@ -836,7 +836,7 @@ fn a_joined_hyper_context_is_no_context_hash() {
 
 #[test]
 fn an_integer_outside_the_data_model_is_out_of_range() {
-    // HY-52.19, HY-69.10: a binding refuses such an integer with its type int before the core runs; the core refuses
+    // HY-52.20, HY-69.11: a binding refuses such an integer with its type int before the core runs; the core refuses
     // the i64 that a Rust caller gives with integer_range, before the sign of a Max-Age and the status are checked.
     use polyspec_hyper::{reply, Error};
     for value in [9_007_199_254_740_992, -9_007_199_254_740_992] {
@@ -942,9 +942,18 @@ fn the_paths_and_the_stream_of_a_build_as_the_binding_gives_them() -> Result<(),
     // compares through the binding.
     use polyspec_hyper::build::{paths, stream_hex, Output};
     let outputs = [
-        Output { path: "program/b".to_owned(), bytes: b"y".to_vec() },
-        Output { path: "client/a".to_owned(), bytes: b"x".to_vec() },
-        Output { path: "program/build.json".to_owned(), bytes: b"{}".to_vec() },
+        Output {
+            path: "program/b".to_owned(),
+            bytes: b"y".to_vec(),
+        },
+        Output {
+            path: "client/a".to_owned(),
+            bytes: b"x".to_vec(),
+        },
+        Output {
+            path: "program/build.json".to_owned(),
+            bytes: b"{}".to_vec(),
+        },
     ];
     assert_eq!(paths(&outputs)?, vec!["client/a", "program/b"]);
     assert_eq!(

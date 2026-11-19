@@ -8,11 +8,10 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { after, before, beforeEach, test } from 'node:test';
-import { setTimeout as delay } from 'node:timers/promises';
 
 import { stopServers } from '../../scripts/board-servers.mts';
 import { requireServers, shareAcross, startBoards } from './session-board.mts';
-import { ask, certificates, EXTENSION, freePort, holders, holding, startRedis, stopRedis, until, type Secure } from './session-redis-server.mts';
+import { ask, certificates, EXTENSION, freePort, holders, holding, keyEvents, keyGone, linesOf, startRedis, stopRedis, type Secure } from './session-redis-server.mts';
 import { IDENTIFIER, NAMES, run as runWorker, type Server } from './session-workers.mts';
 
 const KEY = `PHPREDIS_SESSION:${IDENTIFIER}`;
@@ -24,6 +23,20 @@ let directory = '';
 const processes: Parameters<typeof stopServers>[0] = [];
 
 interface Node { port: string; bus: string; server: ChildProcessWithoutNullStreams }
+
+// The lines of the Redis source at the tag of REDIS_VERSION (8.10.3) that the waits read as events (H35.19-2):
+// - src/cluster_legacy.c:5399-5401 serverLog(new_state == CLUSTER_OK ? LL_NOTICE : LL_WARNING, "Cluster state changed:
+//   %s", new_state == CLUSTER_OK ? "ok" : "fail"), which a node logs when every slot has a primary in its view, so it
+//   knows the primaries of every slot;
+// - src/cluster_legacy.c:4564-4565 serverLog(LL_NOTICE, "Failover election won: I'm the new master."), when a replica
+//   takes the slots of its failed primary;
+// - src/replication.c:2769 serverLog(LL_NOTICE, "MASTER <-> REPLICA sync: Finished with success"), when a replica holds
+//   the data of its primary.
+// No line at the default loglevel names a node that a node learns by gossip: "Handshake with node %.40s completed."
+// (src/cluster_legacy.c:3091) is LL_DEBUG, so the wait for a new node that knows the cluster is its own state ok.
+const STATE_OK = 'Cluster state changed: ok';
+const ELECTED = "Failover election won: I'm the new master.";
+const SYNCED = 'MASTER <-> REPLICA sync: Finished with success';
 
 // A cluster of the run, of three primaries that share the slots.
 class Cluster {
@@ -42,6 +55,21 @@ class Cluster {
 
   ask(port: string, ...words: string[]): Promise<unknown> {
     return ask(port, this.secure, ...words);
+  }
+
+  // The servers of the nodes that still run, whose end fails a wait.
+  servers(): ChildProcessWithoutNullStreams[] {
+    return this.nodes.map((node) => node.server).filter((server) => server.exitCode === null && server.signalCode === null);
+  }
+
+  // Resolves when `key` is gone from the node of `port`, by its keyspace events, and fails when `also` or a node ends first.
+  gone(port: string, key: string, also: ChildProcessWithoutNullStreams[]): Promise<void> {
+    return keyGone(port, this.secure, key, [...also, ...this.servers()]);
+  }
+
+  // Resolves when the node logged STATE_OK at the line `from` or after it.
+  stateOk(node: Node, from = 0, also: ChildProcessWithoutNullStreams[] = []): Promise<number> {
+    return linesOf(node.server).until(from, (line) => line.includes(STATE_OK), 'the cluster state ok', [...also, ...this.servers()]);
   }
 
   // Starts one node. Its bus has a port of its own, because the default, the port plus 10000, is out of range for a port that the
@@ -74,12 +102,7 @@ class Cluster {
     const [first] = this.nodes;
     assert.ok(first !== undefined);
     for (const node of this.nodes.slice(1)) await this.ask(first.port, 'CLUSTER', 'MEET', '127.0.0.1', node.port, node.bus);
-    for (const node of this.nodes) {
-      await until(async () => {
-        const info = String(await this.ask(node.port, 'CLUSTER', 'INFO'));
-        return info.includes('cluster_state:ok') && info.includes(`cluster_known_nodes:${String(PRIMARIES)}`);
-      });
-    }
+    for (const node of this.nodes) await this.stateOk(node);
   }
 
   // Returns the port of the primary that owns the slot of a key, as a node that answers states it.
@@ -111,13 +134,13 @@ class Cluster {
       const keys = await this.ask(source, 'CLUSTER', 'GETKEYSINSLOT', slot, '100');
       assert.ok(Array.isArray(keys));
       if (keys.length === 0) break;
-      await delay(20);
       await this.ask(source, 'MIGRATE', '127.0.0.1', target, '', '0', '5000', 'KEYS', ...keys.map(String));
     }
     for (const port of [target, source, ...this.ports.filter((item) => item !== source && item !== target)]) {
       await this.ask(port, 'CLUSTER', 'SETSLOT', slot, 'NODE', targetId);
     }
-    await until(async () => (await this.ownerOf(key)) === target);
+    // Every node took SETSLOT NODE before it answered, so the node that ownerOf asks names the target at once.
+    assert.equal(await this.ownerOf(key), target, 'the nodes name the new owner of the slot');
   }
 }
 
@@ -169,7 +192,16 @@ for (const [what, key] of [['session', KEY], ['lock', LOCK]] as const) {
     const writers = NAMES.map((name) => runWorker(name, directory, env, 'count', '3000', name).finally(() => {
       finished += 1;
     }));
-    await delay(200);
+    // The slot moves after the first write of the record by a writer, which is a keyspace event of its key.
+    const recordOwner = await cluster.ownerOf(KEY);
+    await cluster.ask(recordOwner, 'CONFIG', 'SET', 'notify-keyspace-events', 'K$');
+    let events = 0;
+    await Promise.race([
+      keyEvents(recordOwner, undefined, KEY, cluster.servers(), async () => (events += 1) > 1),
+      Promise.all(writers).then(() => {
+        throw new Error('the writers ended before the first write of the record');
+      }),
+    ]);
     await cluster.moveSlot(key);
     assert.equal(finished, 0, 'the writers still ran when the slot had moved');
     assert.notEqual(await cluster.ownerOf(key), owner);
@@ -185,7 +217,7 @@ for (const [index, name] of NAMES.entries()) {
     const env = environment();
     const lockOwner = await cluster.ownerOf(LOCK);
     const holder = await holding(name, directory, { ...env, HYPER_SESSION_EXPIRE: '1' });
-    await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0);
+    await cluster.gone(lockOwner, LOCK, [holder]);
     await runWorker(other, directory, env, 'write', '{"x":1}');
     const exit = once(holder, 'exit');
     holder.stdin.write('\n');
@@ -210,7 +242,7 @@ test('a request of the PHP server whose lock expired leaves the lock of the next
   const env = environment();
   const lockOwner = await cluster.ownerOf(LOCK);
   const expired = await holding('php', directory, { ...env, HYPER_SESSION_EXPIRE: '1' }, 'hold');
-  await until(async () => (await cluster.ask(lockOwner, 'EXISTS', LOCK)) === 0);
+  await cluster.gone(lockOwner, LOCK, [expired]);
   const next = await holding('node', directory, env);
   const ended = once(expired, 'exit');
   expired.stdin.write('\n');
@@ -305,26 +337,22 @@ test('a replica takes over a primary that dies and the three servers go on with 
   const replica = await cluster.startNode('replica');
   await cluster.ask(ownerPort, 'CLUSTER', 'MEET', '127.0.0.1', replica.port, replica.bus);
   const ownerId = String(await cluster.ask(ownerPort, 'CLUSTER', 'MYID'));
-  await until(async () => String(await cluster.ask(replica.port, 'CLUSTER', 'NODES')).includes(ownerId));
+  // The new node knows the owner when its own view covers every slot, which it logs as STATE_OK.
+  await cluster.stateOk(replica, 0, [replica.server]);
   await cluster.ask(replica.port, 'CLUSTER', 'REPLICATE', ownerId);
-  await until(async () => String(await cluster.ask(replica.port, 'INFO', 'replication')).includes('master_link_status:up'));
+  await linesOf(replica.server).until(0, (line) => line.includes(SYNCED), 'the sync of the replica', cluster.servers());
   for (const name of NAMES) await runWorker(name, directory, env, 'write', JSON.stringify({ [`before_${name}`]: 1 }));
   assert.equal(await cluster.ask(ownerPort, 'WAIT', '1', '10000'), 1, 'the replica acknowledged');
+  const mark = linesOf(replica.server).length;
   await stopRedis(owner.server, 'SIGKILL');
   cluster.nodes.splice(cluster.nodes.indexOf(owner), 1, replica);
-  await until(async () => String(await cluster.ask(replica.port, 'CLUSTER', 'INFO')).includes('cluster_state:ok') && String(await cluster.ask(replica.port, 'INFO', 'replication')).includes('role:master'));
+  // The replica wins the election for the slots of the dead primary and then sees every slot covered again.
+  const won = await linesOf(replica.server).until(mark, (line) => line.includes(ELECTED), 'the election of the replica', cluster.servers());
+  await cluster.stateOk(replica, won + 1);
   const after_ = { ...env, HYPER_SESSION_CLUSTER: [ownerPort, ...cluster.ports].join(',') };
   const names = JSON.stringify(NAMES.map((name) => `before_${name}`));
   for (const name of NAMES) {
-    let values = '';
-    for (let attempt = 1; values === ''; attempt += 1) {
-      try {
-        values = await runWorker(name, directory, after_, 'read', names);
-      } catch (error) {
-        if (attempt === 150) throw error;
-        await delay(200);
-      }
-    }
+    const values = await runWorker(name, directory, after_, 'read', names);
     assert.deepEqual(JSON.parse(values), [1, 1, 1], `${name} reads the session from the replica that took over, with a dead node among its seeds`);
   }
 });

@@ -17,7 +17,7 @@ final class Build
      * holds exactly the key `build` with a build id of 64 lowercase hexadecimal characters; a failure names the path
      * of the file (HY-125.5, HY-125.23).
      *
-     * @throws HyperValueError of the kind `invalid_build` (HY-132.2)
+     * @throws HyperValueError of the kind `invalid_build` (HY-133.2)
      */
     public static function read(string $file): string
     {

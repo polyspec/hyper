@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: 90cd1264202ec80575c2b2ceb335a01bb3f035f6a4aa1624a7bafa74ae4ab976 -->
+<!-- source-sha256: edb5423a9ff3f5fc767ba7cf2d9a92c370b47b3d8602a7933e55de23d76f2273 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -111,21 +111,32 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     method 본문의 대입은 property가 아니다.
   - **Fields of a member.**
     - `id`: `<unit>.<member>`, 언어 중립 이름을 camelCase로 쓴다.
-    - `kind`: constructor, method, static method, function, property 중 하나.
+    - `kind`: constructor, method, static method, function, property 중 하나. Node의 `get` 또는 `set` 접근자는 static이든
+      아니든 property다. 필드처럼 읽고 쓰기 때문이다. `MEMBER_SIGNATURE`는 멤버에서 spec과 다른 항목을 각각 밝힌다:
+      시그니처, 종류, 매개변수의 수.
     - `visibility`: public, internal, private 중 하나.
     - `inputs`, `output`, `errors`: 어휘의 용어로 쓴다. 어휘는 `contracts/protocol.json`의 용어, spec의 unit과 type, 그리고 이들의
       `list<T>`, `map<T>`, `optional<T>`, `function(...) -> T`다. union 용어는 없고, Node의 `Promise<T>`는 `T`이며, iterator 또는
       generator는 `list<T>`, callable은 `function(...) -> T`다. 이 밖의 용어는 HYR-8에 실패한다. error는
       `contracts/protocol.json`의 statement가 이름을 붙이는 status 또는 spec의 error unit이다.
+      - **Extension classes.** 서버의 소스 파일이 아니라 hyper extension이 정의하는 error class는 native 항목이
+        `{"extension": "<qualified class name>", "kind": "class", "internal": <boolean>}`이고 `file`이 없는 unit이다. 이
+        unit은 member를 가지지 않는다. extension이 member를 선언하고 어떤 reader도 그것을 읽지 않기 때문이다.
+      - **Kinds.** 그런 class의 kind가 있는 error는 `<unit>:<kind>`로 쓴다. 예: `hyper-value-error:invalid_session_handler`.
+        `make recipe-files`는 unit이 extension unit이 아닌 error와 `contracts/protocol.json`의 어떤 statement도 이름을
+        붙이지 않는 kind를 실패시킨다. 호출자는 이 실패들을 kind만으로 구별하기 때문이다.
     - `state`: member가 하는 일을 한 문장으로 쓴다.
     - `native`: 언어마다 정확한 `symbol`과 정확한 `signature`(아래 참조).
   - **Types.** type은 unit(HYR-3)이 아닌 타입 선언이다: Node의 `type` alias 또는 `interface`, 그리고 Python의 `type` 문.
     spec은 각 type을 `types` 아래에 한 번 적으며, `id`(camelCase로 쓴 단어들), `visibility`(member와 같다), `unit`(각
     언어에서 그 type을 가진 파일의 unit), 중립 `shape`, 그리고 선언하는 언어마다 `native: {symbol, declaration}`을 가진다.
     - shape는 record이면 중립 이름에서 어휘 용어로 가는 map인 `fields`와 `optional` 목록, 함수 타입이면 `inputs`와
-      `output`을 가진 `function`, 또는 어휘 용어 하나다.
+      `output`을 가진 `function`, union type이면 멤버인 어휘 용어들의 목록 `union`, 또는 어휘 용어 하나다.
+    - object literal type은 record이므로 `fields`다. union type과 object literal type은 코드가 선언한 그대로 적으며, 한
+      용어가 그것을 대신하게 하지 않는다. 용어 하나는 선언이 바꾼 멤버나 필드를 가리므로 check가 그 변경을 실패시킬 수
+      없기 때문이다. union의 멤버는 어휘의 용어이며, type은 자기 id를 멤버로 적을 수 있어 재귀 union을 나타낸다.
     - check는 빠졌거나, 추가되었거나, 옮겨졌거나, visibility가 다른 type을 실패시키며, HYR-5의 이름으로 쓴 필드가 shape와
-      다른 선언을 실패시킨다.
+      다른 선언을 실패시킨다. 또한 union 선언의 멤버가 `union`과 개수나 용어가 다르면 실패시킨다.
     - options record는 이름 붙은 parameter의 runtime 형식이다(HY-106). 그 필드는 그것을 받는 member의 이름 붙은
       `inputs`이며, 다른 언어에서 같은 member의 이름 붙은 parameter와 다르면 check가 실패시킨다. 일부 언어에만 있는
       필드는 member처럼 `only`를 가진다(HYR-6).
@@ -235,7 +246,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `caseReaders.node`를 통해 읽으며, check는 다섯 runner의 결과를 모두 센다.
     `runners`는 `php`, `node`, `python`에 대해 step의 디렉터리(`steps`)와 runner의 registry(`registry`), 곧 각 section을
     그 step에 대응시키는 파일도 적는다.
-    case를 다른 library가 가진 case 파일 `file-store-sessions.json`, `redis-sessions.json`은 `tests/legacy`에서 읽으며,
+    session-store library가 가진 case 파일 `file-store-sessions.json`은 `tests/legacy`에서 읽으며,
     그 선언은 `tests/legacy/interfaces.json`에 있다. `caseFiles` 항목이 `release`에 library를 적은 case 파일, 곧
     http-form의 `fields.json`과 `forms.json`은 `var/release-files/<library>/<tag>/contracts/<file>`에서 읽는다. 이 파일은
     `make hyper-install-release-files`가 `config/release-files.json`의 pin으로 쓰며, 그것을 찾지 못한 reader는 그 경로와
@@ -256,7 +267,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       `members`에 JSON codec의 member를 적은 section만 codec을 호출한다. check는 자기 section이 적지 않은 unit
       `json-codec`의 member에 닿는 step을 실패시킨다.
   - **Reading a case.** runner는 각 case를 그 언어의 case reader를 통해서만 읽는다. case reader는 모든 언어에서 같은
-    member를 가진 test tree의 unit 하나다: public member `cases`, `section`, `id`, `has`, `input`, `compare`, `outcome`,
+    member를 가진 test tree의 unit 하나다: public member `cases`, `file`, `section`, `id`, `has`, `input`, `compare`, `outcome`,
     `fail`, `line`과 private member `declaration`, `matches`, `equal`. `compare`는 필드를, `outcome`은 단계의 결과를
     비교한다.
     - `contracts/interfaces.json`의 `caseFiles`는 case 파일의 역할과 비교의 유일한 출처다(HYR-11). 파일마다 최상위 key(`fixtures`)를,
@@ -359,7 +370,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - `prefix`: expected list가 관찰된 list의 첫 item들과 같다;
   - `keys`: expected list가 관찰된 map의 key를 그 순서대로 나열한 list와 같다;
   - `raises`: expected 값이 true이면 단계는 필드나 결과의 statement가 정하는 kind의 hyper 오류로 실패하고, false이면 단계는
-    실패하지 않는다. statement의 kind는 HY-132의 kind 표(HY-132.3, HY-132.9)가 열 규칙에서 그 statement에 주는 kind이며,
+    실패하지 않는다. statement의 kind는 HY-133의 kind 표(HY-133.3, HY-133.9)가 열 규칙에서 그 statement에 주는 kind이며,
     runner는 그것을 statement의 text가 아니라 `contracts/protocol.json`의 그 표에서 읽는다: HY-106.21은 `invalid_application`과
     `invalid_build`를, HY-42.7은 binding의 `invalid_text`를 준다. 표가 statement를 가리키지 않는 결과는 open 실패이며 open
     error를 기대한다. open error는 kind `invalid_application`을 가진 category `value`의 hyper class이고, 열리지 않는
@@ -374,7 +385,7 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
   - `caseFiles`가 가리키는 모든 runner는 모든 case를 이 비교들로만 비교한다. 자기 runner에 대해 아무것도 비교하지 않는 case는
     `CASE_EMPTY`로 실패하며, `only`가 그 runner를 빼는 필드와 결과는 세지 않는다.
   - 단계의 `raises`: runner는 단계의 모든 error를 잡아 그것 또는 null을 reader에 넘기고, reader는 그것을 `raisesOf`로
-    읽는다. HY-132의 kind 표가 statement를 가리키는 결과에 대해 reader는 그 kind가 표가 그 statement에 주는 kind 가운데
+    읽는다. HY-133의 kind 표가 statement를 가리키는 결과에 대해 reader는 그 kind가 표가 그 statement에 주는 kind 가운데
     하나인지 확인하고, open 실패에 대해 그 category가 `value`이고 kind가 `invalid_application`인지 확인하며(HY-106.21),
     `hooks.json`의 `creation`에 대해 그 오류가 hyper의 오류인지만 확인한다(HY-97.7, H35.29-6).
   - 각 case는 `requirements`를 가진다. 이는 response 필드가 확인하는 규칙의 목록이다. `requirements`는 필드가 아니다: reader는

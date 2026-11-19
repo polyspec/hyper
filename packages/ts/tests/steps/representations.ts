@@ -185,7 +185,8 @@ export const steps = {
     reader.compare('body', response.body);
     reader.compare('page', String(response.headers['Content-Type'] ?? '').split(';')[0]);
     reader.compare('handled', calls.length);
-    reader.compare('session', store.get('_hyper_csrf') !== undefined);
+    // A store gives null for a key that holds no value (HY-104.37).
+    reader.compare('session', store.get('_hyper_csrf') !== null);
     if (!reader.has('received')) return;
     reader.compare('received.method', observed?.method);
     reader.compare('received.browser', observed === undefined ? null : observed.request.browser());

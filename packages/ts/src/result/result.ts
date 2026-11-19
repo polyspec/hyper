@@ -1,10 +1,10 @@
-// The outcome of an action: a redirect (HY-25, HY-46), an outside redirect (HY-133) or a page with a status (HY-26,
+// The outcome of an action: a redirect (HY-25, HY-46), an outside redirect (HY-132) or a page with a status (HY-26,
 // HY-58), with the flash values and the changed topics that it stores for the next request.
 import { toValue, type Data, type Value } from '../data/values.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
 import { rules } from '../app/core-rules.js';
 
-// An outside location (HY-133.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
+// An outside location (HY-132.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
 // holds every visible ASCII character except the backslash.
 const OUTSIDE = /^([Hh][Tt][Tt][Pp][Ss]?):\/\/([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*)(?::([1-9][0-9]{0,4}))?(?:[/?#][\x21-\x5B\x5D-\x7E]*)?$/;
 
@@ -31,15 +31,15 @@ export class Result {
     return new Result(rules().resultRedirect(location), 303, {}, new Map(), []);
   }
 
-  // Returns an outside redirect to an outside location (HY-133).
+  // Returns an outside redirect to an outside location (HY-132).
   static outside(location: string): Result {
     ArgumentCountError.between(arguments.length, 1, 1);
-    if (Result.origin(location) === null) throw rules().valueError('an outside location is not an http or https URL with a host (HY-133)', 'not_outside_location');
+    if (Result.origin(location) === null) throw rules().valueError('an outside location is not an http or https URL with a host (HY-132)', 'not_outside_location');
     return new Result(location, 303, {}, new Map(), []);
   }
 
   // Returns the origin of an outside location, its scheme and its host in lower case and its port or the default port of
-  // its scheme, or null for a text that is no outside location (HY-133).
+  // its scheme, or null for a text that is no outside location (HY-132).
   static origin(text: string): string | null {
     ArgumentCountError.between(arguments.length, 1, 1);
     const parts = OUTSIDE.exec(text);
@@ -53,7 +53,7 @@ export class Result {
   // Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58).
   static page(status: number, data: Data): Result {
     ArgumentCountError.between(arguments.length, 2, 2);
-    // The core checks the status (HY-58.6) and fails with the kind `page_status_not_allowed` (HY-132.2).
+    // The core checks the status (HY-58.6) and fails with the kind `page_status_not_allowed` (HY-133.2).
     return new Result(null, rules().resultPage(status), data, new Map(), []);
   }
 
@@ -87,14 +87,14 @@ export class Result {
     return this.location !== null;
   }
 
-  // Returns true for an outside redirect, whose location is no application path (HY-133).
+  // Returns true for an outside redirect, whose location is no application path (HY-132).
   /** @internal */
   isOutside(): boolean {
     return this.location !== null && !this.location.startsWith('/');
   }
 
-  // Fails for an outside redirect, which stores no flash value and no changed topic (HY-133).
+  // Fails for an outside redirect, which stores no flash value and no changed topic (HY-132).
   private refuseOutside(): void {
-    if (this.isOutside()) throw rules().valueError('an outside redirect holds no flash value or changed topic (HY-133)', 'outside_redirect_stores');
+    if (this.isOutside()) throw rules().valueError('an outside redirect holds no flash value or changed topic (HY-132)', 'outside_redirect_stores');
   }
 }

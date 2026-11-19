@@ -82,6 +82,9 @@ foreach ($sourceFiles as $file) {
         $internal = docInternal($class->getDocComment());
         $out['units'][] = ['file' => $file, 'name' => $unit, 'kind' => unitKind($class), 'internal' => $internal];
         foreach (ownMethods($class) as $method) {
+            if (isConstructionGuard($method)) {
+                continue;
+            }
             $kind = match (true) {
                 $method->getName() === '__construct' => 'constructor',
                 $method->isStatic() => 'static method',

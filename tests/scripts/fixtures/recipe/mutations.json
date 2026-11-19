@@ -25,7 +25,24 @@
     "file": "packages/php/src/Representation/MediaType.php",
     "from": "essence(): string",
     "to": "essence(): int",
-    "code": "MEMBER_SIGNATURE"
+    "code": "MEMBER_SIGNATURE",
+    "detail": "): int\", spec says \""
+  },
+  {
+    "id": "member-kind-differs",
+    "file": "contracts/interfaces.json",
+    "from": "\"id\": \"csrf.mask\",\n              \"kind\": \"method\",",
+    "to": "\"id\": \"csrf.mask\",\n              \"kind\": \"static method\",",
+    "code": "MEMBER_SIGNATURE",
+    "detail": "node member csrf.mask has the kind method, spec says static method"
+  },
+  {
+    "id": "member-arity-differs",
+    "file": "contracts/interfaces.json",
+    "from": "\"id\": \"csrf.mask\",\n              \"kind\": \"method\",\n              \"visibility\": \"internal\",\n              \"inputs\": [\"string\"],",
+    "to": "\"id\": \"csrf.mask\",\n              \"kind\": \"method\",\n              \"visibility\": \"internal\",\n              \"inputs\": [\"string\", \"string\"],",
+    "code": "MEMBER_SIGNATURE",
+    "detail": "node member csrf.mask has 1 parameters, spec says 2"
   },
   {
     "id": "visibility-public-to-internal",
@@ -874,5 +891,13 @@
     "from": "\"\"\"The session group of the package (HYR-4).\"\"\"\n",
     "to": "\"\"\"The session group of the package (HYR-4).\"\"\"\n\nfrom ._csrf import Csrf\n",
     "code": "GROUP_INIT"
+  },
+  {
+    "id": "barrel-unit-class-missing",
+    "file": "packages/ts/src/representation/media-type.ts",
+    "from": "export class MediaType {",
+    "to": "export class OtherType {",
+    "code": "UNIT_CLASS_MISSING",
+    "detail": "node unit media-type is public, and packages/ts/src/representation/media-type.ts declares no class of its name, so the barrel check cannot name its export"
   }
 ]

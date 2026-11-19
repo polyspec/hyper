@@ -17,6 +17,12 @@ export class Context {
     return value;
   }
 
+  // Returns the context hash: the lowercase hexadecimal SHA-256 digest of `{"build":"<build id>","context":`, the JSON
+  // text of the context and `}` (HY-125.12). The core computes it, so every host gives the same hash.
+  static hash(build: string, text: string): string {
+    return rules().contextHash(build, text);
+  }
+
   // Returns true for a request without Hyper-Context or with a context hash, 64 lowercase hexadecimal (HY-127).
   static validHeader(value: string | null): boolean {
     return rules().contextValidHeader(value);

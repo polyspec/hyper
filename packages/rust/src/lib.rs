@@ -40,7 +40,7 @@ mod values;
 
 pub use error::{Error, ErrorCode};
 
-/// The fault injection points of the core (binding design G-5, X-1; HY-132), which the interface contract names in
+/// The fault injection points of the core (binding design G-5, X-1; HY-133), which the interface contract names in
 /// `faults`. A point does nothing unless the feature `fault-test` of this crate is on: the macro `point!` of binding_core
 /// judges the feature of the crate that writes the point, so the feature of another core does not turn it on.
 pub mod fault {

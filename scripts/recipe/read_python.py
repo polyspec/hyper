@@ -109,6 +109,18 @@ def parameters(
     return names[1:] if receiver and not is_static(node) and names else names
 
 
+def is_union(node: ast.expr) -> bool:
+    """A union type `A | B` of a type alias (HYR-5)."""
+    return isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr)
+
+
+def union_members(node: ast.expr) -> list[str]:
+    """The members of a union `A | B | C` in the order written; a member that is itself a union is flattened."""
+    if is_union(node):
+        return union_members(node.left) + union_members(node.right)
+    return [ast.unparse(node)]
+
+
 def is_record(node: ast.ClassDef) -> bool:
     """A class of typing.TypedDict or typing.NamedTuple: a record, whose fields are its annotated names."""
     return any(
@@ -245,14 +257,15 @@ def read_module(root: Path, rel: str, out: dict) -> None:
                 )
         if isinstance(node, ast.TypeAlias):
             name = node.name.id
-            out["types"].append(
-                {
-                    "file": rel,
-                    "name": name,
-                    "visibility": visibility(name, module_internal),
-                    "declaration": ast.unparse(node),
-                }
-            )
+            entry = {
+                "file": rel,
+                "name": name,
+                "visibility": visibility(name, module_internal),
+                "declaration": ast.unparse(node),
+            }
+            if is_union(node.value):
+                entry["members"] = union_members(node.value)
+            out["types"].append(entry)
         if isinstance(node, ast.ImportFrom) and node.module != "__future__":
             for alias in node.names:
                 out["exports"].append({"file": rel, "name": alias.asname or alias.name})

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Polyspec\Hyper\Tests\Support;
 
-use Polyspec\Hyper\Request;
 use Polyspec\Hyper\Tests\CaseReader;
 use Polyspec\Hyper\Tests\Support\Steps\AcceptSteps;
 use Polyspec\Hyper\Tests\Support\Steps\AppSteps;
@@ -67,8 +66,7 @@ final class CaseSteps
             'result.json redirect' => ResultSteps::redirect(...),
             'result.json stop' => ResultSteps::stop(...),
             'reply.json cookies' => ReplySteps::cookies(...),
-            'request.json texts' => RequestSteps::texts(...),
-            'request.json bytes' => self::requestBytes(...),
+            'request.json bytes' => RequestSteps::bytes(...),
             'request.json files' => RequestSteps::files(...),
             'reply.json cacheControl' => ReplySteps::cacheControl(...),
             'reply.json referrerPolicy' => ReplySteps::referrerPolicy(...),
@@ -109,21 +107,5 @@ final class CaseSteps
             'representations.json values' => RepresentationsSteps::values(...),
             default => null,
         };
-    }
-
-    /**
-     * Creates a request whose path, raw query and headers are the UTF-8 bytes of the texts of the case and compares
-     * its failure, or null: a PHP string holds bytes, so a character above U+00FF is its bytes (HY-42.7).
-     */
-    private static function requestBytes(CaseReader $case): void
-    {
-        $headers = [];
-        foreach ((array) $case->input('headers') as $name => $value) {
-            $headers[(string) $name] = Json::string($value);
-        }
-        $path = Json::string($case->input('path'));
-        $query = Json::string($case->input('query'));
-        $outcome = CaseRules::failureOf(static fn (): Request => new Request('GET', $path, $headers, $query));
-        $case->compare('raises', $outcome['raises']);
     }
 }

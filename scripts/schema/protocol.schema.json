@@ -29,6 +29,7 @@
     }
   },
   "$defs": {
+    "row": { "type": "string", "pattern": "^H[1-9][0-9]*\\.[1-9][0-9]*(-[1-9][0-9]*)*$" },
     "line": { "type": "string", "pattern": "^[^\\n]+$" },
     "text": {
       "type": "object",
@@ -50,7 +51,24 @@
         "ko": { "$ref": "#/$defs/line" },
         "koSource": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "term": { "type": "string", "minLength": 1 },
-        "unimplemented": { "type": "string", "pattern": "^H[1-9][0-9]*\\.[1-9][0-9]*(-[1-9][0-9]*)*$" }
+        "unimplemented": {
+          "oneOf": [
+            { "$ref": "#/$defs/row" },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["row", "servers"],
+                "properties": {
+                  "row": { "$ref": "#/$defs/row" },
+                  "servers": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["php", "node", "python"] } }
+                }
+              }
+            }
+          ]
+        }
       }
     },
     "block": {

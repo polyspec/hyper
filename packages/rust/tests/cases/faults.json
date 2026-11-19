@@ -1,9 +1,9 @@
 {
-  "comment": "The cases of the interface contract that arm the fault injection points of the core, of http-negotiation and of template, whose error enums the core passes on (binding design G-5, X-1; HY-132.6), in the case form of binding (G-5). The group internal arms front_functions.route_request with the smallest application that routes the request GET / to its page; without the faults the request is the page home. The group template arms rules.template_reads with a template whose else-if branch the parser of template adds to its open block; without the faults the template has its read paths. A case of the group template without faults names a template that is missing and raises invalid_application, the other kind of rules.template_reads (HY-73.2). The group session arms session_store.random for opening_functions.open_page with a file session of the directory of the test that found no record, whose first get makes a new token by the call of random_hex of the core, and raises random; without the faults the page opens with a new token. The case that arms session_store.internal is in core-faults.json, because that point breaks only inside the store, which the package of session-store makes with its own binding_core (binding B2.487). Its other cases give a file session whose file of the case holds a stored value of another form and raise the kinds of open_page that an input gives (HY-24.14, HY-104.23). The group session_memory gives open_page a session of the memory store of session-store, which takes no directory, and a mask that is no token, and raises invalid_csrf_form (HY-24.14); it runs on every target, while the group session, whose store takes a directory of the type path, runs on no WASM target (binding GN-6y, GN-13h; HY-104.32). A directory is a relative path that the test resolves in a directory of its own, and a file of a case is written there (binding GN-6y, GN-13i).",
+  "comment": "The cases of the interface contract that arm the fault injection points of the core, of http-negotiation and of template, whose error enums the core passes on (binding design G-5, X-1; HY-133.6), in the case form of binding (G-5). The group internal arms front_functions.route_request with the smallest application that routes the request GET / to its page; without the faults the request is the page home. The group template arms rules.template_reads with a template whose else-if branch the parser of template adds to its open block; without the faults the template has its read paths. A case of the group template without faults names a template that is missing and raises invalid_application, the other kind of rules.template_reads (HY-73.2). The group session arms session_store.random for opening_functions.open_page with a file session of the directory of the test that found no record, whose first get makes a new token by the call of random_hex of the core, and raises random; without the faults the page opens with a new token. The case that arms session_store.internal is in core-faults.json, because that point breaks only inside the store, which the package of session-store makes with its own binding_core (binding B2.487). Its other cases give a file session whose file of the case holds a stored value of another form and raise the kinds of open_page that an input gives (HY-24.14, HY-104.23). The group session_memory gives open_page a session of the memory store of session-store, which takes no directory, and a mask that is no token, and raises invalid_csrf_form (HY-24.14); it runs on every target, while the group session, whose store takes a directory of the type path, runs on no WASM target (binding GN-6y, GN-13h; HY-104.32). A directory is a relative path that the test resolves in a directory of its own, and a file of a case is written there (binding GN-6y, GN-13i).",
   "internal": [
     {
       "id": "a_broken_invariant_of_the_core_is_internal",
-      "rule": "HY-132.6",
+      "rule": "HY-133.6",
       "pages": {
         "new": "pages.open",
         "args": {
@@ -89,7 +89,7 @@
     },
     {
       "id": "a_broken_index_of_the_weights_is_internal",
-      "rule": "HY-132.6",
+      "rule": "HY-133.6",
       "pages": {
         "new": "pages.open",
         "args": {
@@ -177,7 +177,7 @@
   "template": [
     {
       "id": "a_missing_open_block_of_the_template_is_internal",
-      "rule": "HY-132.6",
+      "rule": "HY-133.6",
       "templates": [
         [
           "page.tpl",
@@ -219,7 +219,7 @@
   "session": [
     {
       "id": "a_new_token_without_random_bytes_is_random",
-      "rule": "HY-132.6",
+      "rule": "HY-133.6",
       "pages": {
         "new": "pages.open",
         "args": {

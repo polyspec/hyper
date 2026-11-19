@@ -20,7 +20,6 @@ import { steps as jsonSteps } from './steps/json.js';
 import { steps as keepSteps } from './steps/keep.js';
 import { steps as manifestSteps } from './steps/manifest.js';
 import { steps as mediaTypeSteps } from './steps/media-type.js';
-import { steps as redisSessionsSteps } from './steps/redis-sessions.js';
 import { steps as representationsSteps } from './steps/representations.js';
 import { steps as requestSteps } from './steps/request.js';
 import { steps as restSteps } from './steps/rest.js';
@@ -52,7 +51,6 @@ const STEPS: Record<string, Step> = {
   ...prefixed('keep.json', keepSteps),
   ...prefixed('manifest.json', manifestSteps),
   ...prefixed('media-type.json', mediaTypeSteps),
-  ...prefixed('redis-sessions.json', redisSessionsSteps),
   ...prefixed('representations.json', representationsSteps),
   ...prefixed('request.json', requestSteps),
   ...prefixed('rest.json', restSteps),

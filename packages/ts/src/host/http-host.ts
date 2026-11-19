@@ -8,6 +8,7 @@ import type { App } from '../app/app.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
 import { rules, type CoreRequestBody } from '../app/core-rules.js';
 import { Cookies } from '../http/cookies.js';
+import type { FileSession } from '../session/file-session.js';
 import type { FileSessions } from '../session/file-sessions.js';
 import type { RedisSessions } from '../session/redis-sessions.js';
 import { RecordSession } from '../session/record-session.js';
@@ -70,8 +71,7 @@ export function listener<S extends object>(app: App<S>, sessions: FileSessions |
 
 // Returns a server that answers every request with the application. A request whose start line or headers
 // node:http cannot parse, such as a request target with a byte outside ASCII (HY-42), receives a plain 400.
-/** @internal */
-export function createServer<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server {
+function createServer<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Server {
   const server = createHttpServer(createListener(app, sessions, options));
   server.on('clientError', (error: NodeJS.ErrnoException & { rawPacket?: Buffer }, socket: Socket) => {
     const started = performance.now();
@@ -90,8 +90,7 @@ export function createServer<S extends object>(app: App<S>, sessions: FileSessio
 
 // Returns the request listener that answers every request of node:http with the application and sessions in files
 // (HY-100). It settles after the write hook and the disconnect hook of the request have run (HY-99, HY-67).
-/** @internal */
-export function createListener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener {
+function createListener<S extends object>(app: App<S>, sessions: FileSessions | RedisSessions, options: ServerOptions = {}): Listener {
   const files = options.files;
   if (files !== undefined && (!isAbsolute(files) || !statSync(files).isDirectory())) throw new Error(`hyper: ${files} is not an absolute directory`);
   const written = options.written;
@@ -164,21 +163,25 @@ export function createListener<S extends object>(app: App<S>, sessions: FileSess
       holder = request;
       // The last call of `answer`: its request and its reply, which the disconnect hook receives (HY-67, HY-97).
       const last: { request?: Request; reply?: Reply } = {};
-      // Opens the session of the request by its session cookie, answers with the application, closes the session and
-      // adds the cookie of a new session first (HY-45).
+      // Answers with the application, which opens the session of the request by its session cookie only for a route that
+      // uses it (HY-104.38), closes an opened session and adds the cookie of a new session first (HY-45).
       const answerWith = async (given: Request): Promise<Response> => {
-        const session = await sessions.open(given.cookie(RecordSession.cookieName(app.https || https)));
+        const opened: { session: FileSession | null } = { session: null };
+        const open = async (): Promise<FileSession> => {
+          opened.session = await sessions.open(given.cookie(RecordSession.cookieName(app.https || https)));
+          return opened.session;
+        };
         let answer;
         try {
-          answer = await app.respond(given.withSignal(closed.signal), session, started);
+          answer = await app.respond(given.withSignal(closed.signal), open, started);
         } finally {
-          await session.close();
+          await opened.session?.close();
         }
         last.request = given;
         last.reply = answer.reply;
         // A request whose client closed the connection has no response to write (HY-67).
         if (answer.stopped) throw new Disconnected();
-        return withSessionCookie(app, sessions, answer.response, session.created(), https);
+        return withSessionCookie(app, sessions, answer.response, opened.session?.created() ?? null, https);
       };
       try {
         const given = around === undefined ? await answerWith(request) : await around(request, answerWith);

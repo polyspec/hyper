@@ -62,7 +62,7 @@
         [
           [
             "sess_#0",
-            "a:1:{s:1:\"a\";a:1:{s:1:\"b\";a:3:{i:0;i:1;i:1;d:-0;i:2;s:1:\"c\";}}}"
+            "a:1:{s:1:\"a\";a:1:{s:1:\"b\";a:3:{i:0;i:1;i:1;i:0;i:2;s:1:\"c\";}}}"
           ]
         ]
       ],
@@ -111,7 +111,7 @@
           "record"
         ]
       ],
-      "message": "the session of eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee holds no map of values",
+      "message": "the session of eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee holds no array of values",
       "records": [
         [
           [
@@ -452,13 +452,13 @@
         [
           [
             "sess_#0",
-            "a:1:{s:1:\"a\";a:1:{s:1:\"b\";a:3:{i:0;i:1;i:1;d:-0;i:2;s:1:\"c\";}}}"
+            "a:1:{s:1:\"a\";a:1:{s:1:\"b\";a:3:{i:0;i:1;i:1;i:0;i:2;s:1:\"c\";}}}"
           ]
         ],
         [
           [
             "sess_#0",
-            "a:1:{s:1:\"a\";a:1:{s:1:\"b\";a:3:{i:0;i:1;i:1;d:-0;i:2;s:1:\"c\";}}}"
+            "a:1:{s:1:\"a\";a:1:{s:1:\"b\";a:3:{i:0;i:1;i:1;i:0;i:2;s:1:\"c\";}}}"
           ]
         ]
       ],
@@ -944,91 +944,6 @@
       "requirements": [
         "HY-72"
       ],
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
-    }
-  ],
-  "open": [
-    {
-      "id": "a_relative_session_directory_fails",
-      "label": "a relative session directory fails",
-      "directory": "var/sessions",
-      "error": "session directory var/sessions must be an existing absolute directory",
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
-    },
-    {
-      "id": "a_session_lifetime_of_zero_fails",
-      "label": "a session lifetime of zero fails",
-      "directory": "temporary",
-      "lifetime": 0,
-      "error": "session lifetime must be a positive number of seconds",
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
-    },
-    {
-      "id": "a_negative_session_lifetime_fails",
-      "label": "a negative session lifetime fails",
-      "directory": "temporary",
-      "lifetime": -1,
-      "error": "session lifetime must be a positive number of seconds",
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
-    },
-    {
-      "id": "a_session_lifetime_that_is_no_integer_fails",
-      "label": "a session lifetime that is no integer fails",
-      "directory": "temporary",
-      "lifetime": 1.5,
-      "error": "session lifetime must be a positive number of seconds",
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
-    },
-    {
-      "id": "a_session_lifetime_that_is_a_text_fails",
-      "label": "a session lifetime that is a text fails",
-      "directory": "temporary",
-      "lifetime": "60",
-      "error": "session lifetime must be a positive number of seconds",
-      "only": {
-        "languages": [
-          "node",
-          "python"
-        ],
-        "sentence": "HY-104.26"
-      }
-    },
-    {
-      "id": "a_session_lifetime_that_is_a_boolean_fails",
-      "label": "a session lifetime that is a boolean fails",
-      "directory": "temporary",
-      "lifetime": true,
-      "error": "session lifetime must be a positive number of seconds",
       "only": {
         "languages": [
           "node",

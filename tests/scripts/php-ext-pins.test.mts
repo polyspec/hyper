@@ -10,7 +10,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { dryRun } from './make-dry-run.mts';
 import { jsonObject, jsonObjects } from '../../scripts/json.mts';
-import { pinsText } from '../../scripts/php-ext-pins.mts';
+import { pinsText, recordedFiles } from '../../scripts/php-ext-pins.mts';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repository = path.resolve(here, '..', '..');
@@ -39,4 +39,30 @@ test('the writer refuses an asset of a pinned file that has no digest (H35.58)',
     return { ...release, assets: assets.map((asset) => (asset.name === 'packages.json' ? { ...asset, digest: null } : asset)) };
   };
   assert.throws(() => pinsText(committed, withoutDigest), /packages\.json.*no sha256 digest/u);
+});
+
+// The recorder (H35.74-1): make php-ext-pins-record writes, for each pinned package, the body of the response of its
+// release as the fixture that the tests above read; the tests give it the bodies, so no test reads the network.
+const PINNED = `${JSON.stringify({ packages: { 'polyspec/json': { repository: 'polyspec/json', version: '0.0.40', packages: '', extension: 'polyspec_json', zips: {} } } }, null, 2)}\n`;
+const BODY = '{"tag_name":"v0.0.40","assets":[{"name":"packages.json","digest":"sha256:00"}]}';
+
+test('the recorder names the fixture of each pinned release after its repository and version and keeps the body as it came (H35.74-1)', () => {
+  const asked: string[] = [];
+  const files = recordedFiles(PINNED, (repository, version) => {
+    asked.push(`${repository} ${version}`);
+    return BODY;
+  });
+  assert.deepEqual(asked, ['polyspec/json 0.0.40']);
+  assert.deepEqual(files, { 'json-v0.0.40.json': BODY });
+});
+
+test('the recorder refuses a body that is no release with assets, before it writes (H35.74-1)', () => {
+  assert.throws(() => recordedFiles(PINNED, () => '{"message":"Not Found"}'), /polyspec\/json v0\.0\.40.*no release with assets/u);
+});
+
+test('make php-ext-pins-record records the fixtures with the script under $(ONLINE) (HR-89, H35.74-1)', () => {
+  const lines = dryRun('php-ext-pins-record');
+  const line = lines.find((text) => text.endsWith('/scripts/php-ext-pins.mts record config/php-ext-pins.json tests/scripts/fixtures/php-ext-pins'));
+  assert.ok(line !== undefined, `make -n php-ext-pins-record runs no scripts/php-ext-pins.mts record:\n${lines.join('\n')}`);
+  assert.match(line, /^env -u npm_config_offline -u COMPOSER_DISABLE_NETWORK /u, 'the recorder reads the releases API without $(ONLINE)');
 });

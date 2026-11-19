@@ -141,15 +141,15 @@ def compared_names(section: dict, case: dict) -> list[str]:
     ]
 
 
-# The base classes of the categories of HY-132.2, which a step catches around the call of a case; raises_of raises an
+# The base classes of the categories of HY-133.2, which a step catches around the call of a case; raises_of raises an
 # error of these classes that is no error of hyper again.
 FAILURES = (ValueError, TypeError, OSError, RuntimeError)
 _CATEGORY_CLASS = re.compile(r"Hyper([A-Z][a-z]+)Error")
 
 
 def raises_of(error: BaseException) -> dict:
-    """The failure of HY-132 that an error gives, as a field `raises` states it: its kind, its status, the category
-    that the first class `Hyper<Category>Error` of its classes names (HY-132.2), and its message. An error without such a
+    """The failure of HY-133 that an error gives, as a field `raises` states it: its kind, its status, the category
+    that the first class `Hyper<Category>Error` of its classes names (HY-133.2), and its message. An error without such a
     class is no error of hyper but an error of the step, which is raised again so that it fails the case."""
     category = next(
         (
@@ -182,7 +182,7 @@ def open_error(observed: BaseException | None) -> bool:
 
 def outcome_error(sentence: str | None, observed: BaseException | None) -> bool:
     """HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites.
-    A statement to which the kind tables of HY-132 give kinds, such as HY-106.21 with `invalid_application` and
+    A statement to which the kind tables of HY-133 give kinds, such as HY-106.21 with `invalid_application` and
     `invalid_build` or HY-42.7 with `invalid_text`, accepts an error of one of them (stated_kinds); the creation of a
     server fails with an error of hyper whose kind HY-97.7 does not state, so that only its class is checked until
     H35.29-6; a statement that the tables do not name is an open failure and expects the open error (HY-106.21)."""
@@ -215,29 +215,29 @@ def _cell_text(cell: Any) -> str:
     """The English text of a cell of a table of contracts/protocol.json."""
     if not isinstance(cell, dict) or not isinstance(cell.get("en"), str):
         raise LookupError(
-            f"a cell of the kind tables of HY-132 has no English text: {cell!r}"
+            f"a cell of the kind tables of HY-133 has no English text: {cell!r}"
         )
     return cell["en"]
 
 
 def _kinds_by_statement() -> dict[str, list[str]]:
-    """The kinds that each statement states, by its id, from the kind tables of HY-132 (HY-132.3, HY-132.9): the first
+    """The kinds that each statement states, by its id, from the kind tables of HY-133 (HY-133.3, HY-133.9): the first
     cell of a row is the kind in backticks, and its last cell the ids of the statements that state it, separated by
     ", "."""
-    rule = _rule_of(contract("protocol.json"), "HY-132") or {}
+    rule = _rule_of(contract("protocol.json"), "HY-133") or {}
     tables = [
         block
         for block in rule.get("blocks", [])
         if isinstance(block, dict) and block.get("kind") == "table"
     ]
     if not tables:
-        raise LookupError("contracts/protocol.json holds no kind table of HY-132")
+        raise LookupError("contracts/protocol.json holds no kind table of HY-133")
     table: dict[str, list[str]] = {}
     for block in tables:
         for row in block.get("rows", []):
             if not isinstance(row, list) or len(row) < 2:
                 raise LookupError(
-                    f"a row of the kind tables of HY-132 has no kind and rule: {row!r}"
+                    f"a row of the kind tables of HY-133 has no kind and rule: {row!r}"
                 )
             kind = _cell_text(row[0]).replace("`", "")
             for statement in _cell_text(row[-1]).split(", "):
@@ -249,7 +249,7 @@ _KINDS: dict[str, list[str]] = {}
 
 
 def stated_kinds(sentence: str) -> list[str]:
-    """The kinds that the kind tables of HY-132 give to a statement, in their order; none for a statement they do not
+    """The kinds that the kind tables of HY-133 give to a statement, in their order; none for a statement they do not
     name."""
     if not _KINDS:
         _KINDS.update(_kinds_by_statement())
@@ -258,7 +258,7 @@ def stated_kinds(sentence: str) -> list[str]:
 
 def stated_message(name: str, expected: Any, observed: Any) -> Any:
     """The observed failure of a field `raises` without its message when the case states none: a case compares only a
-    message that a rule states (HY-132.4). Any other field as observed."""
+    message that a rule states (HY-133.4). Any other field as observed."""
     if (
         name != "raises"
         or not isinstance(expected, dict)

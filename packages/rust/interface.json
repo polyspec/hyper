@@ -49,6 +49,10 @@
     "template_value": {
       "library": "template",
       "unit": "template_value"
+    },
+    "php_value": {
+      "library": "php-serialization",
+      "unit": "php_value"
     }
   },
   "errors": {
@@ -172,6 +176,10 @@
       {
         "variant": "polyspec_hyper::ErrorCode::InvalidSessionRecord",
         "category": "store"
+      },
+      {
+        "variant": "polyspec_hyper::ErrorCode::InvalidSessionHandler",
+        "category": "value"
       },
       {
         "variant": "polyspec_hyper::ErrorCode::SharedHoldsContext",
@@ -697,7 +705,7 @@
       "fills": [
         "internal"
       ],
-      "reason": "HY-132.6",
+      "reason": "HY-133.6",
       "place": "each check of an invariant of the core that gives Error::Internal: polyspec_hyper::front::route_request, polyspec_hyper::client_rendering, polyspec_hyper::media::select, polyspec_hyper::manifest::Manifest::page, polyspec_hyper::read_paths, polyspec_hyper::render, polyspec_hyper::session, polyspec_hyper::build, polyspec_hyper::steps"
     }
   ],
@@ -927,7 +935,7 @@
           "returns": {
             "optional": "text"
           },
-          "optional_reason": "HY-133.13",
+          "optional_reason": "HY-132.13",
           "raises": [],
           "wait": "none",
           "core": "polyspec_hyper::location::origin"
@@ -1950,6 +1958,61 @@
           ],
           "wait": "none",
           "core": "polyspec_hyper::session::kept_record"
+        },
+        {
+          "id": "rules.session_value",
+          "name": [
+            "session",
+            "value"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "record"
+              ],
+              "type": "php_value",
+              "required": true
+            }
+          ],
+          "returns": "template_value",
+          "raises": [
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberRange",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataNumberNotFinite",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataInvalidUtf8",
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataDepth",
+            "polyspec_hyper::ErrorCode::RecordValue",
+            "polyspec_hyper::ErrorCode::Internal"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::session::from_record"
+        },
+        {
+          "id": "rules.session_record",
+          "name": [
+            "session",
+            "record"
+          ],
+          "kind": "function",
+          "visibility": "internal",
+          "parameters": [
+            {
+              "name": [
+                "value"
+              ],
+              "type": "template_value",
+              "required": true
+            }
+          ],
+          "returns": "php_value",
+          "raises": [
+            "polyspec_hyper::ErrorCode::Template/polyspec_template::ErrorCode::DataUnsupportedType",
+            "polyspec_hyper::ErrorCode::RecordValue",
+            "polyspec_hyper::ErrorCode::Internal"
+          ],
+          "wait": "none",
+          "core": "polyspec_hyper::session::to_record"
         },
         {
           "id": "rules.kept_cookie",
@@ -5290,7 +5353,7 @@
     {
       "id": "argument-types",
       "rule": "HY-52.15",
-      "reason": "HY-52.15, HY-25.7, HY-60.32, HY-69.10, HY-103.9, B-2: an argument of another type is refused by the binding with invalid_argument_type or invalid_number, without a message of hyper",
+      "reason": "HY-52.15, HY-25.7, HY-60.32, HY-69.11, HY-103.9, B-2: an argument of another type is refused by the binding with invalid_argument_type or invalid_number, without a message of hyper",
       "symbol": "Reply.cookie, Reply.removeCookie, Reply.cacheControl, Reply.status, Reply.referrerPolicy, Reply.note, Result.flash, Result.changed",
       "from": {
         "php": "throws \\TypeError('a cookie name is not a string (HY-52)')",
@@ -5301,8 +5364,8 @@
     },
     {
       "id": "float-integer",
-      "rule": "HY-52.19",
-      "reason": "HY-52.19, B-2: a float is no integer of the interface contract in PHP and Python, so Max-Age 60.0 and status 403.0 fail with invalid_number, as an integer outside ±(2^53 − 1) does, which is outside the type int",
+      "rule": "HY-52.20",
+      "reason": "HY-52.20, B-2: a float is no integer of the interface contract in PHP and Python, so Max-Age 60.0 and status 403.0 fail with invalid_number, as an integer outside ±(2^53 − 1) does, which is outside the type int",
       "symbol": "Reply.cookie, Reply.status",
       "from": {
         "php": "cookie(string $name, string $value, int|float|null $maxAge = null)",
@@ -5313,7 +5376,7 @@
     {
       "id": "value-error-classes",
       "rule": "HY-46.3",
-      "reason": "HY-46.3, HY-132.2, B-4: every error is the class Hyper<Category>Error of its category with kind and status, in place of the built-in classes",
+      "reason": "HY-46.3, HY-133.2, B-4: every error is the class Hyper<Category>Error of its category with kind and status, in place of the built-in classes",
       "symbol": "Result.redirect, Result.page, Reply, Csrf",
       "from": {
         "php": "throws \\InvalidArgumentException",
@@ -5398,8 +5461,8 @@
     },
     {
       "id": "array-session",
-      "rule": "HY-104.30",
-      "reason": "HY-104.30, C-6: the store that keeps one session in memory belongs to the session-store library as MemoryStore, which hyper uses through the store interface",
+      "rule": "HY-104.37",
+      "reason": "HY-104.37, C-6: the store that keeps one session in memory belongs to the session-store library as MemoryStore, which hyper uses through the store interface",
       "symbol": "ArraySession",
       "from": {
         "php": "Polyspec\\Hyper\\ArraySession",
