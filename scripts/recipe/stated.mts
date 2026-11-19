@@ -15,7 +15,7 @@ export type Counts = { direct: number; internal: number; private: number };
 const CONSTRUCTOR: Record<Lang, string> = { php: '__construct', node: 'constructor', python: '__init__' };
 const CODEC_UNITS = ['json-codec'];
 
-type Value = { kind: 'class'; ref: ClassRef } | { kind: 'module'; file: string } | undefined;
+type Value = { kind: 'class'; ref: ClassRef } | { kind: 'classes'; refs: ClassRef[] } | { kind: 'module'; file: string } | undefined;
 
 const refKey = (ref: ClassRef): string => `${ref.file}::${ref.name}`;
 const memberKey = (file: string, cls: string, name: string): string => `${file}::${cls}::${name}`;
@@ -63,6 +63,8 @@ class Language {
   private readonly propertyItems = new Map<string, ClassRef>();
   /** The class inside the written list type of a parameter, by the key of its scope and its name. */
   private readonly parameterItems = new Map<string, ClassRef>();
+  /** The classes of the written union of classes of a parameter, by the key of its scope and its name. */
+  private readonly parameterTypes = new Map<string, ClassRef[]>();
   private readonly unitClass = new Map<string, ClassRef>();
   private readonly envs = new Map<string, Map<string, ClassRef>>();
 
@@ -70,7 +72,10 @@ class Language {
     this.lang = lang;
     for (const s of sources.scopes) {
       this.scopes.set(scopeKey(s), s);
-      for (const p of s.parameters) if (p.items !== undefined) this.parameterItems.set(`${scopeKey(s)}::${p.name}`, p.items);
+      for (const p of s.parameters) {
+        if (p.items !== undefined) this.parameterItems.set(`${scopeKey(s)}::${p.name}`, p.items);
+        if (p.types !== undefined) this.parameterTypes.set(`${scopeKey(s)}::${p.name}`, p.types);
+      }
     }
     for (const c of sources.classes) {
       const key = refKey(c);
@@ -204,7 +209,10 @@ class Language {
         return { kind: 'module', file: e.file };
       case 'variable': {
         const ref = env.get(e.name);
-        return ref === undefined ? undefined : { kind: 'class', ref };
+        if (ref !== undefined) return { kind: 'class', ref };
+        // A parameter whose written type is a union of classes has each class of the union.
+        const refs = this.parameterTypes.get(`${scopeKey(s)}::${e.name}`);
+        return refs === undefined ? undefined : { kind: 'classes', refs };
       }
       case 'new':
         return { kind: 'class', ref: e.class };
@@ -270,8 +278,12 @@ class Language {
       return this.members.has(key) || this.scopes.has(key) ? [key] : [];
     }
     // PHP keeps the properties and the methods of a class apart: a read without a call reaches only a property.
-    if (this.lang === 'php' && !e.call) return this.lookup(of.ref, e.name, true, (key) => this.members.get(key)?.kind.endsWith('property') === true);
-    return this.lookup(of.ref, e.name);
+    const refs = of.kind === 'classes' ? of.refs : [of.ref];
+    // A receiver of a union of classes reaches the member in each class of the union that has it.
+    const found = refs.flatMap((ref) =>
+      this.lang === 'php' && !e.call ? this.lookup(ref, e.name, true, (key) => this.members.get(key)?.kind.endsWith('property') === true) : this.lookup(ref, e.name),
+    );
+    return [...new Set(found)];
   }
 
   /** The keys of the scopes of a class of a file. */
