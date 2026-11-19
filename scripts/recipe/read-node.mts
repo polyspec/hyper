@@ -268,6 +268,8 @@ function readTypeAlias(file: string, sf: ts.SourceFile, st: ts.TypeAliasDeclarat
     entry.fields = st.type.members.filter(ts.isPropertySignature).map((m) => nameOf(m));
   } else if (ts.isFunctionTypeNode(st.type)) {
     entry.parameters = st.type.parameters.length;
+  } else if (ts.isUnionTypeNode(st.type)) {
+    entry.members = st.type.types.map((m) => m.getText(sf));
   }
   out.types.push(entry);
 }

@@ -75,7 +75,7 @@ export type SpecType = {
   id: string;
   visibility: 'public' | 'internal' | 'private';
   unit: string;
-  shape: { fields?: Record<string, string | { term: string; only: Only }>; optional?: string[]; function?: { inputs: string[]; output: string }; term?: string };
+  shape: { fields?: Record<string, string | { term: string; only: Only }>; optional?: string[]; function?: { inputs: string[]; output: string }; union?: string[]; term?: string };
   only?: Only;
   native: Partial<Record<Lang, { symbol: string; declaration: string }>>;
 };
@@ -110,7 +110,7 @@ export type Sources = {
   language: Lang;
   files: string[];
   units: { file: string; name: string; kind: string; internal: boolean }[];
-  types: { file: string; name: string; visibility: Visibility; declaration: string; fields?: string[]; parameters?: number }[];
+  types: { file: string; name: string; visibility: Visibility; declaration: string; fields?: string[]; parameters?: number; members?: string[] }[];
   members: { file: string; unit: string; name: string; kind: string; visibility: Visibility; symbol: string; signature: string; parameters: string[] }[];
   constants: { file: string; unit?: string; name: string; visibility: Visibility }[];
   exports: { file: string; name: string }[];

@@ -27,6 +27,9 @@ export function checkShapes(ctx: Ctx): void {
       if (!termKnown(term, ids)) add('TERM_UNKNOWN', `${t.id} function input ${i + 1} uses ${term}, which is outside the vocabulary (HYR-5)`);
     });
     if (fn?.output !== undefined && !termKnown(fn.output, ids)) add('TERM_UNKNOWN', `${t.id} function output uses ${fn.output}, which is outside the vocabulary (HYR-5)`);
+    t.shape.union?.forEach((term) => {
+      if (!termKnown(term, ids)) add('TERM_UNKNOWN', `${t.id} union member ${term} is outside the vocabulary (HYR-5)`);
+    });
   }
 
   for (const t of spec.types) {
@@ -49,6 +52,14 @@ export function checkShapes(ctx: Ctx): void {
       const fn = t.shape.function;
       if (fn !== undefined && rt.parameters !== undefined && rt.parameters !== fn.inputs.length) {
         add('TYPE_SHAPE', `${lang} type ${t.id} takes ${rt.parameters} parameters, spec says ${fn.inputs.length}`);
+      }
+      if (t.shape.union !== undefined) {
+        // HYR-5: a union type is stated by its members, which the declaration gives in the same number and the same terms.
+        const declared = (rt.members ?? []).map((m) => words(m.replace(/^["']|["']$/gu, ''))).sort();
+        const want = t.shape.union.map((term) => words(term)).sort();
+        if (rt.members === undefined || declared.join(',') !== want.join(',')) {
+          add('TYPE_SHAPE', `${lang} type ${t.id} members differ from its union: spec says ${t.shape.union.join(' | ')} (HYR-5)`);
+        }
       }
     }
   }

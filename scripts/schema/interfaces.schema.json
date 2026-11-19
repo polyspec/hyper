@@ -291,6 +291,14 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": ["union"],
+          "properties": {
+            "union": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/term" } }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "required": ["term"],
           "properties": { "term": { "$ref": "#/$defs/term" } }
         }
