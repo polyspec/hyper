@@ -603,8 +603,9 @@ recipe-run-build: packages ## Run the build case runner with its results file (H
 	@mkdir -p $(RECIPE_RESULTS_DIR)
 	$(recipe_run_build)
 
-recipe-check: server-fixtures ext hyper-ext packages node-fixtures hyper-install-python ## Check contracts/interfaces.json against the sources of the three servers and their case results (HYR-7, HYR-8)
+recipe-check: server-fixtures ext hyper-ext packages node-fixtures ## Check contracts/interfaces.json against the sources of the three servers and their case results (HYR-7, HYR-8)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-check needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
+	@test -d $(PYTHON_VENV) || { echo 'recipe-check needs the Python venv $(PYTHON_PACKAGE)/.venv: run make hyper-install-python'; exit 1; }
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,the PHP case runner,$(recipe_run_php)) \
 	$(call check,the Node case runner,$(recipe_run_node)) \
