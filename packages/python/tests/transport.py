@@ -233,14 +233,14 @@ class Upload:
 
     def assert_stored(self, case: unittest.TestCase) -> None:
         """Requires that the request of `stored_body` gave its file from a file of the request, that the directory
-        of the request was there at the write hook, and that only the moved file stays (HY-131.13, HY-131.14)."""
+        of the request was there at the write hook, and that only the moved file stays (HY-131.28, HY-131.14)."""
         case.assertEqual([True, [("a", ["1"])], "big.bin", 1500000, 1], self.seen)
         case.assertEqual(["http-form-", "kept.bin"], self.at_hook)
         case.assertEqual(["kept.bin"], self.entries())
 
     def assert_cut(self, case: unittest.TestCase) -> None:
         """Requires that the input of the request of `cut_body` is not valid and that its directory is removed
-        (HY-131.5)."""
+        (HY-131.26)."""
         case.assertEqual([False, [], None, None, 1], self.seen)
         case.assertEqual([], self.entries())
 

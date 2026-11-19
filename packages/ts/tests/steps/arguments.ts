@@ -463,7 +463,7 @@ const MEMBERS: Record<string, Member> = {
 // The members that take one options record (HY-106.9).
 const RECORDS = ['app.open', 'request.constructor', 'file-sessions.constructor', 'redis-sessions.constructor'];
 
-// The request of the cases: its selected media type lets `wantsJson` and `isRegionRequest` run (HY-116.16).
+// The request of the cases: its selected media type lets `wantsJson` and `isRegionRequest` run (HY-116.21).
 function request(): Request {
   return new Request({ method: 'GET', path: '/', media: 'text/html' });
 }

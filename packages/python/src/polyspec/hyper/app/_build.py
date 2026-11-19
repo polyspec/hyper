@@ -15,7 +15,7 @@ class Build:
     def read(file: str) -> str:
         """Reads the build id of a `build.json` file. The file must exist, be valid JSON and hold exactly the key
         `build` with a build id of 64 lowercase hexadecimal characters; a failure names the path of the file
-        (HY-125.5)."""
+        (HY-125.23)."""
         try:
             data = Path(file).read_bytes()
         except OSError as error:
@@ -25,7 +25,7 @@ class Build:
             failure.add_note(f"hyper: the build file is {file}")
             raise failure from error
         # HY-133.2: the core reads the build id of the bytes and fails with invalid_build; the note of the failure
-        # names the path of the file (HY-125.5).
+        # names the path of the file (HY-125.23).
         try:
             return CoreRules.shared().build_read(data)
         except ValueError as error:

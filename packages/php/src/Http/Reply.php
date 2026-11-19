@@ -60,9 +60,9 @@ final class Reply
     }
 
     /**
-     * Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails. The types
-     * are checked before the values, in the order of the parameters; a declared type would convert them for a caller
-     * without strict types.
+     * Adds a cookie; a name, value or Max-Age of another type (HY-52.15, HY-52.20) or outside HY-52 (HY-52.16) fails.
+     * The types are checked before the values, in the order of the parameters; a declared type would convert them for
+     * a caller without strict types.
      */
     public function cookie(mixed $name, mixed $value, mixed $maxAge = null): self
     {

@@ -115,7 +115,7 @@ def copies(case) -> None:
 
 def types(case) -> None:
     """Calls `flash` or `changed` with the decoded argument, and records the failure with which it fails, or None
-    (HY-25.6)."""
+    (HY-25.7)."""
     call = _text(case, "call")
     if call not in ("flash", "changed"):
         raise ValueError(f"the call {call} of the case is unknown")

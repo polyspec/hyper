@@ -10,7 +10,7 @@ from ..app._core_rules import CoreRules
 from ._media_range import MediaRange
 
 # The kinds of the core for an `Accept` value that the grammar does not allow or whose weight is not a qvalue; the
-# server answers both with status 400 (HY-116.5, HY-116.18).
+# server answers both with status 400 (HY-116.18).
 _INVALID = frozenset({"invalid_accept", "invalid_weight"})
 
 

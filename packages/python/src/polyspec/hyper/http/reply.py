@@ -43,7 +43,7 @@ class Reply:
         return list(self.__notes.items())
 
     def cookie(self, name: str, value: str, max_age: int | None = None) -> "Reply":
-        """Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails.
+        """Adds a cookie; a name, value or Max-Age of another type (HY-52.15, HY-52.20) or outside HY-52 (HY-52.16) fails.
         The types are checked before the values, in the order of the parameters."""
         if not isinstance(name, str):
             raise HyperTypeError(

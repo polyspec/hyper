@@ -4,7 +4,7 @@ import { rules } from '../app/core-rules.js';
 import { MediaRange } from './media-range.js';
 
 // The kinds of the core for an Accept value that the grammar does not allow or whose weight is not a qvalue; the
-// server answers both with status 400 (HY-116.5, HY-116.18).
+// server answers both with status 400 (HY-116.18).
 const INVALID = new Set(['invalid_accept', 'invalid_weight']);
 
 /** @internal */

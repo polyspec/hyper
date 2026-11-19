@@ -11,7 +11,7 @@ fn invalid(cause: String) -> Error {
     Error::InvalidApplication(std::borrow::Cow::Owned(cause + " (HY-62)"))
 }
 
-/// Checks the path of the shell file before the host reads it (HY-62.35).
+/// Checks the path of the shell file before the host reads it (HY-62.39).
 ///
 /// # Errors
 /// `invalid_application` for a path that is not absolute, naming the shell with its path (HY-62.37).
@@ -25,7 +25,7 @@ pub fn check_shell_path(path: &str) -> Result<(), Error> {
     }
 }
 
-/// The failure of a shell file that does not exist or that the host cannot read (HY-62.35, HY-62.37).
+/// The failure of a shell file that does not exist or that the host cannot read (HY-62.39, HY-62.37).
 #[must_use]
 pub fn unreadable_shell(path: &str) -> Error {
     invalid(format!(
@@ -33,7 +33,7 @@ pub fn unreadable_shell(path: &str) -> Error {
     ))
 }
 
-/// The text of the shell file: its bytes as UTF-8 (HY-62.35).
+/// The text of the shell file: its bytes as UTF-8 (HY-62.39).
 ///
 /// # Errors
 /// `invalid_application` for bytes that are not UTF-8, naming the shell with its path (HY-62.37).

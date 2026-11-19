@@ -1,4 +1,4 @@
-# The steps of contracts/media-type.json (HY-119.3, HY-122.10, HY-122.11): the parameters of a media type that the
+# The steps of contracts/media-type.json (HY-119.5, HY-122.10, HY-122.11): the parameters of a media type that the
 # constructor received and the tag of a body of the type.
 from polyspec.hyper.representation.media_type import MediaType
 

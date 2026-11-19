@@ -2762,9 +2762,9 @@
                 },
                 {
                   "id": "HY-62.37",
-                  "en": "The message of a failure of HY-62.15 or HY-62.35 names its cause: the static shell with its path, the data base path, or the route that lies under the data base path.",
-                  "ko": "HY-62.15나 HY-62.35의 실패 message는 그 원인을 말한다: 경로와 함께 static shell, data base path, 또는 data base path 아래에 놓인 라우트이다.",
-                  "koSource": "993b94ffaabd7740e194505386da166690c5deea88b78e88d3e1dd22d587395c"
+                  "en": "The message of a failure of HY-62.15 or HY-62.39 names its cause: the static shell with its path, the data base path, or the route that lies under the data base path.",
+                  "ko": "HY-62.15나 HY-62.39의 실패 message는 그 원인을 말한다: 경로와 함께 static shell, data base path, 또는 data base path 아래에 놓인 라우트이다.",
+                  "koSource": "fd80bc0706bf4ee0f31f6e9623baff1bc53a412493dceb5a0c3df60591172b88"
                 },
                 {
                   "id": "HY-62.38",
@@ -3023,9 +3023,9 @@
                 },
                 {
                   "id": "HY-132.5",
-                  "en": "Making an outside redirect of a text that is no outside location fails with the error `an outside location is not an http or https URL with a host (HY-132)`, of the classes of HY-46.2.",
-                  "ko": "outside location이 아닌 text로 outside redirect를 만들면 HY-46.2의 class로 오류 `an outside location is not an http or https URL with a host (HY-132)`를 내며 실패한다.",
-                  "koSource": "6fe3520f0c8823a59a7f33cf9ea50bc81cc3ed5c1620241eeac50669272cae8f"
+                  "en": "Making an outside redirect of a text that is no outside location fails with the error `an outside location is not an http or https URL with a host (HY-132)`, of the classes of HY-46.3.",
+                  "ko": "outside location이 아닌 text로 outside redirect를 만들면 HY-46.3의 class로 오류 `an outside location is not an http or https URL with a host (HY-132)`를 내며 실패한다.",
+                  "koSource": "60fc6b3f838348c8f2fd2496551dde2ba8c0c384e64b5cd547ca67460a530e99"
                 },
                 {
                   "id": "HY-132.6",
@@ -3053,9 +3053,9 @@
                 },
                 {
                   "id": "HY-132.10",
-                  "en": "An outside redirect stores no flash value and no changed topic, and `flash` and `changed` of an outside redirect fail with the error `an outside redirect holds no flash value or changed topic (HY-132)`, of the classes of HY-46.2, before they check their arguments (HY-25.6).",
-                  "ko": "outside redirect는 flash 값도 바뀐 topic도 저장하지 않으며, outside redirect의 `flash`와 `changed`는 인자를 검사하기 전에(HY-25.6) HY-46.2의 class로 오류 `an outside redirect holds no flash value or changed topic (HY-132)`를 내며 실패한다.",
-                  "koSource": "04a0bb2d713f78ad12bad5724756783ae1c39b729a7ac228b3bd9eb3fa6207eb"
+                  "en": "An outside redirect stores no flash value and no changed topic, and `flash` and `changed` of an outside redirect fail with the error `an outside redirect holds no flash value or changed topic (HY-132)`, of the classes of HY-46.3, before they check their arguments (HY-25.7).",
+                  "ko": "outside redirect는 flash 값도 바뀐 topic도 저장하지 않으며, outside redirect의 `flash`와 `changed`는 인자를 검사하기 전에(HY-25.7) HY-46.3의 class로 오류 `an outside redirect holds no flash value or changed topic (HY-132)`를 내며 실패한다.",
+                  "koSource": "d6b01bcb93429a5feafc2ebddd99b8706a6178770c03ab2c1aa73f8753f8134d"
                 },
                 {
                   "id": "HY-132.11",
@@ -4814,9 +4814,9 @@
                 },
                 {
                   "id": "HY-42.8",
-                  "en": "A request field that arrives in several field lines is one header whose value is the values of its lines in their order joined with `, ` (RFC 9110, section 5.3), and for `Cookie` joined with `; ` (HY-129.4), so no line is kept alone and none is dropped: `header(name)` and every read of the server, the media type of the body (HY-59.11), its declared length (HY-59.5) and its transfer coding included, read that one value in every server.",
-                  "ko": "여러 field line으로 오는 요청 field는 header 하나이며, 그 값은 그 줄들의 값을 순서대로 `, `로 이은 것이고(RFC 9110, 5.3절) `Cookie`는 `; `로 이은 것이다(HY-129.4). 그래서 어떤 줄도 홀로 남거나 버려지지 않는다: `header(name)`과, body의 media type(HY-59.11), 선언된 길이(HY-59.5), transfer coding을 포함한 서버의 모든 읽기는 모든 서버에서 그 값 하나를 읽는다.",
-                  "koSource": "9a071c9d57be2eb4315dc7dec6b7fda6400ff0d752d93fb8188b8bc0b3147c5d"
+                  "en": "A request field that arrives in several field lines is one header whose value is the values of its lines in their order joined with `, ` (RFC 9110, section 5.3), and for `Cookie` joined with `; ` (HY-129.4), so no line is kept alone and none is dropped: `header(name)` and every read of the server, the media type of the body (HY-59.13), its declared length (HY-59.5) and its transfer coding included, read that one value in every server.",
+                  "ko": "여러 field line으로 오는 요청 field는 header 하나이며, 그 값은 그 줄들의 값을 순서대로 `, `로 이은 것이고(RFC 9110, 5.3절) `Cookie`는 `; `로 이은 것이다(HY-129.4). 그래서 어떤 줄도 홀로 남거나 버려지지 않는다: `header(name)`과, body의 media type(HY-59.13), 선언된 길이(HY-59.5), transfer coding을 포함한 서버의 모든 읽기는 모든 서버에서 그 값 하나를 읽는다.",
+                  "koSource": "a49f279266e42c4af39a9ef02db0206461e0ba9ad8a91ab525c4cadd634ba8e5"
                 },
                 {
                   "id": "HY-42.9",
@@ -4826,9 +4826,9 @@
                 },
                 {
                   "id": "HY-42.10",
-                  "en": "A host that receives a field joined takes it as given (HY-129.5): PHP takes the `HTTP_` keys, `CONTENT_TYPE` and `CONTENT_LENGTH` of `$_SERVER` from its SAPI, and the Python WSGI callable the same keys of the environ from its WSGI server.",
-                  "ko": "이어진 field를 받는 host는 받은 그대로 쓴다(HY-129.5): PHP는 SAPI가 주는 `$_SERVER`의 `HTTP_` key, `CONTENT_TYPE`, `CONTENT_LENGTH`를 쓰고, Python WSGI callable은 WSGI server가 주는 environ의 같은 key를 쓴다.",
-                  "koSource": "20abba705ab163fe691c8df5edb408d4bd9216ade821be7d555b0c303dbe01bc"
+                  "en": "A host that receives a field joined takes it as given (HY-129.15): PHP takes the `HTTP_` keys, `CONTENT_TYPE` and `CONTENT_LENGTH` of `$_SERVER` from its SAPI, and the Python WSGI callable the same keys of the environ from its WSGI server.",
+                  "ko": "이어진 field를 받는 host는 받은 그대로 쓴다(HY-129.15): PHP는 SAPI가 주는 `$_SERVER`의 `HTTP_` key, `CONTENT_TYPE`, `CONTENT_LENGTH`를 쓰고, Python WSGI callable은 WSGI server가 주는 environ의 같은 key를 쓴다.",
+                  "koSource": "7a7f395e487170c16f0d8a5e897005c4fbd49d113315ef85f1aefc83050fd18b"
                 },
                 {
                   "id": "HY-42.11",
@@ -6763,9 +6763,9 @@
                 },
                 {
                   "id": "HY-106.21",
-                  "en": "An application that fails to open raises an error of kind `invalid_application` (HY-133), also when a file that it reads is not valid JSON or not valid UTF-8, and only the build file (HY-125.5), when it is missing, not readable, not valid UTF-8 or JSON, or does not hold a build id, raises kind `invalid_build`.",
-                  "ko": "열리지 않는 애플리케이션은 kind `invalid_application`의 오류를 던지며(HY-133), 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아닐 때에도 그렇다. build 파일(HY-125.5)만, 없거나 읽을 수 없거나 유효한 UTF-8이나 JSON이 아니거나 build id를 담지 않을 때 kind `invalid_build`를 던진다.",
-                  "koSource": "d29beb6b9601352bad2034075ec44c791a9f9ec9fbc4a8a9684391589ca7974f"
+                  "en": "An application that fails to open raises an error of kind `invalid_application` (HY-133), also when a file that it reads is not valid JSON or not valid UTF-8, and only the build file (HY-125.23), when it is missing, not readable, not valid UTF-8 or JSON, or does not hold a build id, raises kind `invalid_build`.",
+                  "ko": "열리지 않는 애플리케이션은 kind `invalid_application`의 오류를 던지며(HY-133), 읽는 파일이 유효한 JSON이나 유효한 UTF-8이 아닐 때에도 그렇다. build 파일(HY-125.23)만, 없거나 읽을 수 없거나 유효한 UTF-8이나 JSON이 아니거나 build id를 담지 않을 때 kind `invalid_build`를 던진다.",
+                  "koSource": "d9d18c20bc9432fc717763b5f67246c16382b38db91a86bed07b829f6315111d"
                 },
                 {
                   "id": "HY-106.22",

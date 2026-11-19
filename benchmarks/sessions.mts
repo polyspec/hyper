@@ -3,7 +3,7 @@
 // requests per second show what the machine gives; the requests per second of Redis CPU show the cost to the Redis server, the
 // limit of one Redis server, which runs commands on one thread. Each --extension loads a PHP extension into the PHP
 // server in the given order: the json extension, then the template extension that requires it, then polyspec_hyper
-// (HY-48.15, HY-132.2), which `make bench-sessions` passes from PHP_SERVER_EXTENSIONS; the benchmark measures nothing
+// (HY-48.23, HY-132.2), which `make bench-sessions` passes from PHP_SERVER_EXTENSIONS; the benchmark measures nothing
 // with a PHP that does not load the three.
 // Usage: node benchmarks/sessions.mts --requests <n> [--json] --extension <library>...
 import { spawn, spawnSync } from 'node:child_process';

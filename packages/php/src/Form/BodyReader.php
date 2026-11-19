@@ -47,7 +47,7 @@ final class BodyReader
 
     /**
      * Starts the body of the content type with the four limits; `$stream` tells whether a multipart body is read in
-     * chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.1). `$contentLength` is
+     * chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.26). `$contentLength` is
      * the value of the `Content-Length` field, or null without one: the core fails a value that is no number with
      * `invalid_content_length` and a number above the body limit with `body_limit` before any byte is read
      * (HY-131.29); that failure is the failure of the body, which then reads no chunk.
@@ -135,7 +135,7 @@ final class BodyReader
     }
 
     /**
-     * Returns the text fields and the files of a body read in chunks, or null when it failed (HY-131.5).
+     * Returns the text fields and the files of a body read in chunks, or null when it failed (HY-131.26).
      *
      * @return array{0: Fields, 1: Files}|null
      */

@@ -12,7 +12,7 @@ use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\UploadedFile;
 
-/** HY-11, HY-42, HY-56, HY-57, HY-97, HY-113.2, HY-116.16, HY-129: the cases of contracts/request.json. */
+/** HY-11, HY-42, HY-56, HY-57, HY-97, HY-113.2, HY-116.21, HY-129: the cases of contracts/request.json. */
 final class RequestSteps
 {
     /**
@@ -180,7 +180,7 @@ final class RequestSteps
                 $cookies[Bytes::of((string) $name)] = Bytes::of(Json::string($value));
             }
         } else {
-            // HY-129.1: the one parse of the Cookie header.
+            // HY-129.13: the one parse of the Cookie header.
             $cookies = Cookies::parse($cookie);
         }
         $original = new Request(
@@ -261,7 +261,7 @@ final class RequestSteps
 
     /**
      * Returns the result of a member that reads the selected media type, or the text `caller error` when it raises the
-     * error of a request that holds none (HY-116.16).
+     * error of a request that holds none (HY-116.21).
      *
      * @param \Closure(): bool $member
      */

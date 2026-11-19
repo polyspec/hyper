@@ -1,4 +1,4 @@
-// The steps of contracts/request.json: the text that a host gives a request (HY-42.6), the files of a request
+// The steps of contracts/request.json: the text that a host gives a request (HY-42.7), the files of a request
 // (HY-113.2), the path and the query of a request target (HY-42, HY-56) and the values that a request gives.
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -46,7 +46,7 @@ function pairsIn(reader: CaseReader, field: string): [string, unknown][] {
 }
 
 // Builds the request of a case as a host does: the path and the query of its target, its headers as they are, its body
-// as bytes, and the cookies of the one parse of its Cookie header (HY-129.1) or the cookie map that the case states.
+// as bytes, and the cookies of the one parse of its Cookie header (HY-129.13) or the cookie map that the case states.
 function requestOfCase(reader: CaseReader): Request {
   const stated = reader.input('request');
   if (!(stated instanceof Map)) throw new Error('the case field request is not a map');
@@ -69,7 +69,7 @@ function requestOfCase(reader: CaseReader): Request {
 }
 
 // Returns the answer of a question about the selected media type of a request, or the text `caller error` when the
-// request holds none and the question fails with the logic error of HY-116.16, an error of exactly the class Error.
+// request holds none and the question fails with the logic error of HY-116.21, an error of exactly the class Error.
 function kindOf(ask: () => boolean): boolean | string {
   try {
     return ask();

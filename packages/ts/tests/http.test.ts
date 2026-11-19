@@ -298,7 +298,7 @@ describe('a multipart body read in chunks', () => {
     }
   }
 
-  it('gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.13, HY-131.14)', async () => {
+  it('gives a file of 1.5 MiB from a file of the request, and removes the directory after the write hook (HY-131.28, HY-131.14)', async () => {
     const content = Buffer.alloc(1_500_000, 'x');
     const body = Buffer.concat([part('form-data; name="a"', Buffer.from('1')), part('form-data; name="f"; filename="big.bin"', content), Buffer.from('--XyZ--\r\n')]);
     const result = await upload(body, true);
@@ -309,7 +309,7 @@ describe('a multipart body read in chunks', () => {
     expect(result.after).toEqual(['kept.bin']);
   });
 
-  it('removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.5)', async () => {
+  it('removes the directory of a body without its closing delimiter, whose input is not valid (HY-131.26)', async () => {
     const body = part('form-data; name="f"; filename="cut.bin"', Buffer.alloc(200_000, 'y'));
     const result = await upload(body, false);
     expect(result.seen).toEqual([false, [], null, null, 1]);

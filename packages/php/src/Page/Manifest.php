@@ -43,7 +43,7 @@ final class Manifest
         try {
             $text = (string) file_get_contents($file);
             $data = json_decode($text, true, flags: JSON_THROW_ON_ERROR);
-            // HY-2.8: the manifest is JSON text as HY-54 decodes it. The value of the core tells an empty object from
+            // HY-2.9: the manifest is JSON text as HY-54 decodes it. The value of the core tells an empty object from
             // an empty list, which the representations of a route need (HY-118.7).
             $objects = JsonCodec::decode($text);
             $decoded = true;

@@ -174,7 +174,7 @@ final class ClientSteps
         }
     }
 
-    /** HY-62.15, HY-62.35: opening the application fails for a client rendering that cannot be used. */
+    /** HY-62.15, HY-62.39: opening the application fails for a client rendering that cannot be used. */
     public static function openRejections(CaseReader $case): void
     {
         $basePath = Json::string($case->input('basePath'));

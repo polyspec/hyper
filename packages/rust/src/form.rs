@@ -10,13 +10,13 @@ use binding_core::Io;
 
 use crate::Error;
 
-/// The four limits of a body (F-25, HY-59.15, HY-131.7 to HY-131.12): the body limit, the value limit of a body that
+/// The four limits of a body (F-25, HY-59.15, HY-131.27, HY-131.8 to HY-131.10, HY-131.30): the body limit, the value limit of a body that
 /// is one value and of the text values of a body read in chunks, the part limit and the file limit.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BodyLimits {
     /// The body limit in bytes (F-25.1, HY-59.15).
     pub limit: u64,
-    /// The value limit in bytes (F-25.2, HY-131.7).
+    /// The value limit in bytes (F-25.2, HY-131.27).
     pub value_limit: u64,
     /// The part limit of a body read in chunks (F-25.3, HY-131.10).
     pub part_limit: u64,
@@ -136,7 +136,7 @@ impl RequestBody {
     /// `Content-Length` field as the host received it, or none without one: a value that is no number fails with
     /// `invalid_content_length` and a number above the body limit with `body_limit`, before any byte is read (HY-131.29,
     /// F-9, F-25.1). `stream` tells whether a multipart body is
-    /// read in chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.1). The reader
+    /// read in chunks, which it is when `multipart/form-data` is a form type of the application (HY-131.26). The reader
     /// in chunks starts only for a `multipart/form-data` type with a boundary: any other content type, one that is no
     /// media type and a multipart type without a boundary or with an empty one included, is held as one value and
     /// fails no reading, because its `Content-Type` is judged after the route (HY-57.15, HY-59.12, HY-113.24).
@@ -187,7 +187,7 @@ impl RequestBody {
         Ok(self.0.finish(io)?)
     }
 
-    /// The text fields and the files of a body read in chunks (HY-131.5).
+    /// The text fields and the files of a body read in chunks (HY-131.26).
     ///
     /// # Errors
     ///

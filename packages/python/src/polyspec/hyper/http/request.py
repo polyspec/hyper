@@ -48,7 +48,7 @@ class Request:
         read: Optional[BodyReader] = None,
         json: object = None,
     ):
-        # HY-42.6, HY-42.7: the text that a host gives holds bytes, one for each character, and a character above
+        # HY-42.7: the text that a host gives holds bytes, one for each character, and a character above
         # U+00FF fails with the kind invalid_text of the binding, in the message of the binding for its subject.
         texts = [("path", path), ("query", query)]
         for name, value in (headers or {}).items():
@@ -105,7 +105,7 @@ class Request:
         if read is not None and (read.exceeded() or read.streamed()):
             return read.exceeded()
         # The core judges a body that is one value: the value limit always, the part limit and the file limit only
-        # when the application reads a multipart body in chunks (HY-131.7 to HY-131.12).
+        # when the application reads a multipart body in chunks (HY-131.27, HY-131.8 to HY-131.10, HY-131.30).
         _, passed, _ = BodyReader.held_form(
             self.header("Content-Type") or "",
             self._body,

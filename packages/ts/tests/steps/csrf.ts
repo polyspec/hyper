@@ -10,7 +10,7 @@ function text(reader: CaseReader, name: string): string {
 }
 
 export const steps = {
-  // Masks the token with the mask, or records the failure with which it fails (HY-24.9).
+  // Masks the token with the mask, or records the failure with which it fails (HY-24.14).
   mask(reader: CaseReader): void {
     const token = text(reader, 'token');
     const mask = text(reader, 'mask');
@@ -18,7 +18,7 @@ export const steps = {
     reader.compare('value', outcome.result);
     reader.compare('raises', outcome.raises);
   },
-  // Verifies the value against the token, or records the failure with which it fails (HY-24.9).
+  // Verifies the value against the token, or records the failure with which it fails (HY-24.14).
   verify(reader: CaseReader): void {
     const token = text(reader, 'token');
     const value = text(reader, 'value');

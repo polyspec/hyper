@@ -25,7 +25,7 @@ export abstract class NamedValues<T> {
     return this.byName.get(name)?.at(-1) ?? null;
   }
 
-  // Returns each name with its values, in the order of the names (HY-56.4).
+  // Returns each name with its values, in the order of the names (HY-56.9).
   pairs(): [string, T[]][] {
     return this.order.map((name) => [name, this.get(name)]);
   }

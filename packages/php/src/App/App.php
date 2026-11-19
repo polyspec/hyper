@@ -791,7 +791,7 @@ final class App
             if ($mediaType !== 'application/json') {
                 return Response::text(415, 'Unsupported Media Type')->withHeader('Vary', $vary);
             }
-            // HY-121.8: a text that json refuses and a value outside the data model are no value that a handler reads.
+            // HY-121.11: a text that json refuses and a value outside the data model are no value that a handler reads.
             try {
                 $value = JsonCodec::decode($request->bodyBytes());
             } catch (HyperValueError) {
@@ -882,7 +882,7 @@ final class App
             if ($request->fileOver($this->fileLimit)) {
                 return Response::text(413, 'Content Too Large');
             }
-            // HY-107.4: only an action that raises REVISION_CHANGED is answered as the page with status 409;
+            // HY-107.9: only an action that raises REVISION_CHANGED is answered as the page with status 409;
             // the loaders of that page are loaders, so their renewal (HY-72.4) and their REVISION_CHANGED fail.
             $result = null;
             $revisionChanged = false;

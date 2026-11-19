@@ -29,5 +29,5 @@ class NamedValues(Generic[T]):
         return values[-1] if values else None
 
     def pairs(self) -> list[tuple[str, list[T]]]:
-        """Returns each name with its values, in the order of the names (HY-56.4)."""
+        """Returns each name with its values, in the order of the names (HY-56.9)."""
         return [(name, self.get(name)) for name in self.__names]

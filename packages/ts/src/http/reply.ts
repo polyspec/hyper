@@ -29,7 +29,7 @@ export class Reply {
     return [...this.noted];
   }
 
-  // Adds a cookie; a name, value or Max-Age of another type (HY-52.11) or outside HY-52 (HY-52.12) fails. The types are
+  // Adds a cookie; a name, value or Max-Age of another type (HY-52.15, HY-52.20) or outside HY-52 (HY-52.16) fails. The types are
   // checked before the values, in the order of the parameters.
   cookie(name: string, value: string, maxAge: number | null = null): this {
     ArgumentCountError.between(arguments.length, 2, 3);

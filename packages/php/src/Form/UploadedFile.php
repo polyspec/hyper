@@ -21,7 +21,7 @@ final class UploadedFile
     }
 
     /**
-     * Returns the file of a form of the core (HY-131.13, H35.11).
+     * Returns the file of a form of the core (HY-131.28, H35.11).
      *
      * @internal
      */
@@ -40,7 +40,7 @@ final class UploadedFile
         return $this->core->name();
     }
 
-    /** Returns the filename parameter of the part, as it was sent (HY-113.14). */
+    /** Returns the filename parameter of the part, as it was sent (HY-113.21). */
     public function filename(): string
     {
         ArgumentCount::most(\func_num_args(), 0);
@@ -54,14 +54,14 @@ final class UploadedFile
         return $this->core->contentType();
     }
 
-    /** Returns the number of bytes of the part (HY-131.15). */
+    /** Returns the number of bytes of the part (HY-131.28). */
     public function size(): int
     {
         ArgumentCount::most(\func_num_args(), 0);
         return $this->core->size();
     }
 
-    /** Returns the bytes of the part as one value, and fails with the kind `moved` of http-form after a move (HY-131.16). */
+    /** Returns the bytes of the part as one value, and fails with the kind `moved` of http-form after a move (HY-131.28). */
     public function content(): string
     {
         ArgumentCount::most(\func_num_args(), 0);
@@ -70,7 +70,7 @@ final class UploadedFile
 
     /**
      * Moves the file to the path through the core, which fails with the kind `exists` when the path exists and with
-     * `moved` when the file was moved (HY-131.15, HY-131.16, F-11).
+     * `moved` when the file was moved (HY-131.28, F-11).
      */
     public function moveTo(mixed $path): void
     {

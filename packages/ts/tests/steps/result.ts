@@ -126,7 +126,7 @@ export const steps = {
     reader.compare('raises', outcome.raises);
   },
   // Calls `flash` or `changed` with the decoded argument as a JavaScript caller may, and records the failure
-  // with which it fails, or null (HY-25.6).
+  // with which it fails, or null (HY-25.7).
   types(reader: CaseReader): void {
     stores(reader, Result.redirect('/'));
   },

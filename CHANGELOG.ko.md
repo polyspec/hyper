@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 241cf38a385d3062b7fe770bb44270a57cad76282d213c6d0959a2cad3988e57 -->
+<!-- source-sha256: 47222b0ddf0f75c109f823d9f686a14aaec0323ed83e9ddba338a5927555712a -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `contracts/interfaces.json`, source, test, `docs/features.md`, `docs/operations/deployment.md`, `contracts/protocol.json`의 statement 문장에 있는 statement id 인용은 모두 계약이 가진 statement를 가리킨다. 어느 현재 statement도 적지 않는 두 개는 예외다(H35.198). 입력: `CHANGELOG*`, `docs/plans/**`, 자기 계약을 가진 fixture를 뺀 tracked file을 `HY-n.m`으로 검색한다. 이전 동작: 인용된 id 41개를 어느 statement도 갖지 않았다. 예를 들어 uploaded-file member의 state에 있는 `HY-113.3`, `HY-131.15`, `HY-131.16`이다. 기대: 각 인용은 지금 그 뜻을 적는 statement를 가리킨다. 예를 들어 HY-113.21, HY-131.28, HY-131.34다. 문장이 그런 id를 인용하던 statement HY-42.8, HY-42.10, HY-62.37, HY-106.21, HY-132.5, HY-132.10은 뜻이 그대로이므로 id를 유지한다. 남은 것: `packages/php/src/Page/Page.php`, `packages/python/src/polyspec/hyper/page/_page.py`, `packages/ts/src/page/page.ts`의 `HY-14.3`(render마다 같은 정수 초)은 어느 statement도 가진 적이 없고, HY-42.8의 `HY-129.4`는 `Cookie` 줄을 `; `로 잇는다고 적지만 HY-129.14는 host가 잇지 않는다고 적는다. 검증: `make docs-check`, `make spec-docs-check`, 새 줄이 없는 `make recipe-compare`.
 - PHP, Node, Python runner가 실행하는 `contracts/request.json`의 section `uploads`가 생성자로 `UploadedFile`을 만들고 `name()`, `contentType()`, `size()`, `content()`, `moveTo(path)`로 새 경로에 옮긴 결과, 그 뒤 `content()`와 두 번째 이동의 실패 `moved`, 이미 있는 경로로의 이동의 실패 `exists`를 비교한다(H35.196, HY-113.8, HY-113.21, HY-131.28). 입력: `contracts/interfaces.json`과 `contracts/request.json`. 이전 동작: section이 적는 member는 `uploaded-file.filename`뿐이었고, `make recipe-compare`가 그 unit의 `MEMBER_UNSTATED` 줄 18개를 보고했다. 검증: `make hyper-test-php CASES=request.json`과 `make hyper-test-python CASES=request.json`이 통과하고, `make recipe-compare`가 18줄 가운데 어느 것도 보고하지 않는다.
 - `tests/scripts/read-php-functions.test.mts`가 host 파일 `packages/php/src/Host/Run.php`를 읽는다(H35.195, HY-106.20). 입력: 대소문자를 구분하는 file system에서의 그 test. 이전 동작: H35.192 이전의 이름인 `Host/run.php`를 읽어서, 대소문자를 구분하는 file system에서는 파일을 찾지 못했다. 기대: tracked 이름을 읽는다. 검증: `make hyper-test-scripts TESTS=tests/scripts/read-php-functions.test.mts` rc 0, 5 passed.
 - HYR-5가 PHP namespace 함수의 qualified name `Polyspec\Hyper\<member>`를 적고, 그 member 이름은 namespace 뒤의 이름이다(H35.194, HY-106.20). 입력: `docs/spec/recipe.md` HYR-5 "Symbol". 이전 동작: class member의 `Polyspec\Hyper\<Unit>::<member>`만 적어서, `scripts/recipe/names.mts`가 읽는 host 함수 `run`의 형식이 적혀 있지 않았다. 기대: spec이 reader가 읽는 형식을 적는다. 검증: `make docs-check` rc 0.

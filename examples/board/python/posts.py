@@ -105,7 +105,7 @@ class Posts:
 
     def attachment_path(self, identifier: int) -> str:
         """Returns the path of the file of a post in the directory `<database>.uploads`, which is created when it
-        does not exist. An action moves an uploaded file to it (HY-131.15)."""
+        does not exist. An action moves an uploaded file to it (HY-131.28)."""
         directory = f"{self._file}.uploads"
         os.makedirs(directory, mode=0o700, exist_ok=True)
         return os.path.join(directory, str(identifier))

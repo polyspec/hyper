@@ -7,7 +7,7 @@ from ..case_rules import FAILURES, raises_of
 
 
 def mask(case) -> None:
-    """Masks the token with the mask, or records the failure with which it fails (HY-24.9)."""
+    """Masks the token with the mask, or records the failure with which it fails (HY-24.14)."""
     token = _string_field(case, "token")
     mask_text = _string_field(case, "mask")
     value = None
@@ -21,7 +21,7 @@ def mask(case) -> None:
 
 
 def verify(case) -> None:
-    """Verifies the value against the token, or records the failure with which it fails (HY-24.9)."""
+    """Verifies the value against the token, or records the failure with which it fails (HY-24.14)."""
     token = _string_field(case, "token")
     value = _string_field(case, "value")
     valid = None

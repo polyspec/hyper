@@ -734,7 +734,7 @@ class App:
                 return Response.text(415, "Unsupported Media Type").with_header(
                     "Vary", vary
                 )
-            # HY-121.8: bytes that are not UTF-8, a text that json refuses and a value outside the data model are no
+            # HY-121.11: bytes that are not UTF-8, a text that json refuses and a value outside the data model are no
             # value that a handler reads; the core raises the last two as its value error.
             try:
                 value = JsonCodec.decode(request._body_bytes().decode("utf-8"))

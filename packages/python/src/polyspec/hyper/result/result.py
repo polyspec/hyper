@@ -85,7 +85,7 @@ class Result:
 
     def flash(self, name: str, value: object) -> Result:
         """Returns a copy that stores a flash value, a value of the data model, for the next request; a value outside
-        the data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.6)."""
+        the data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.7)."""
         self._refuse_outside()
         if not isinstance(name, str):
             raise HyperTypeError(
@@ -102,7 +102,7 @@ class Result:
 
     def changed(self, *topics: str) -> Result:
         """Returns a copy that records changed topics for the next request; a topic that it records already keeps its
-        place; a topic that is not a string fails with TypeError (HY-25.6)."""
+        place; a topic that is not a string fails with TypeError (HY-25.7)."""
         self._refuse_outside()
         if not all(isinstance(topic, str) for topic in topics):
             raise HyperTypeError(

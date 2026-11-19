@@ -68,7 +68,7 @@ export class Result {
   flash(name: string, value: unknown): Result {
     ArgumentCountError.between(arguments.length, 2, 2);
     this.refuseOutside();
-    // HY-25.6: a caller in JavaScript may pass a name that is not a string.
+    // HY-25.7: a caller in JavaScript may pass a name that is not a string.
     if (typeof name !== 'string') throw rules().typeError('a flash name is not a string (HY-25)', 'invalid_argument_type');
     return new Result(this.location, this.status, this.data, new Map(this.flashValues).set(name, toValue(value)), this.changedTopics);
   }
@@ -76,7 +76,7 @@ export class Result {
   // Returns a copy that records changed topics for the next request; a topic that it records already keeps its place.
   changed(...topics: string[]): Result {
     this.refuseOutside();
-    // HY-25.6: a caller in JavaScript may pass a topic that is not a string.
+    // HY-25.7: a caller in JavaScript may pass a topic that is not a string.
     if (!topics.every((topic) => typeof topic === 'string')) throw rules().typeError('a changed topic is not a string (HY-25)', 'invalid_argument_type');
     return new Result(this.location, this.status, this.data, this.flashValues, [...new Set([...this.changedTopics, ...topics])]);
   }

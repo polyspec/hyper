@@ -101,13 +101,13 @@ final class Result
 
     /**
      * Returns a copy that stores a flash value, a value of the data model, for the next request; a value outside the
-     * data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.6).
+     * data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.7).
      */
     public function flash(mixed $name, mixed $value): self
     {
         ArgumentCount::most(\func_num_args(), 2);
         $this->refuseOutside();
-        // HY-25.6: a declared type would convert an integer name for a caller without strict types.
+        // HY-25.7: a declared type would convert an integer name for a caller without strict types.
         if (!is_string($name)) {
             throw new HyperTypeError('a flash name is not a string (HY-25)', 'invalid_argument_type');
         }
@@ -123,12 +123,12 @@ final class Result
 
     /**
      * Returns a copy that records changed topics for the next request; a topic that it records already keeps its
-     * place, and a topic that is not a string fails with TypeError (HY-25.6).
+     * place, and a topic that is not a string fails with TypeError (HY-25.7).
      */
     public function changed(mixed ...$topics): self
     {
         $this->refuseOutside();
-        // HY-25.6: a declared type would convert an integer topic for a caller without strict types.
+        // HY-25.7: a declared type would convert an integer topic for a caller without strict types.
         foreach ($topics as $topic) {
             if (!is_string($topic)) {
                 throw new HyperTypeError('a changed topic is not a string (HY-25)', 'invalid_argument_type');
