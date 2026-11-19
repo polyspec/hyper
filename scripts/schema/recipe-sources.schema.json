@@ -133,7 +133,8 @@
         "visibility": { "$ref": "#/$defs/visibility" },
         "declaration": { "type": "string", "minLength": 1 },
         "fields": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "parameters": { "type": "integer", "minimum": 0 }
+        "parameters": { "type": "integer", "minimum": 0 },
+        "members": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
       }
     },
     "member": {

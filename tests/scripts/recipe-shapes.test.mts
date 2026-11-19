@@ -15,7 +15,7 @@ function specWith(shape: Record<string, unknown>, id = 'valueKind'): Spec {
   return {
     schema: 1,
     concerns: [{ id: 'token', units: [{ id: 'token', native: {}, members: [] }] }],
-    types: [{ id, visibility: 'public', unit: 'token', shape, native: { node: { symbol: `${FILE}::ValueKind`, declaration: DECLARATION } } }],
+    types: [{ id, visibility: 'public', unit: 'token', shape, only: { languages: ['node'], sentence: 'HY-44.6' }, native: { node: { symbol: `${FILE}::ValueKind`, declaration: DECLARATION } } }],
   } as unknown as Spec;
 }
 
