@@ -3,8 +3,26 @@
 // test gives it, so the tests need no native module. They state which member of the binding each unit calls, with
 // which arguments, and what the unit returns; the rules themselves are tested in the core.
 import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
 import { test } from 'node:test';
-import { coreRules, sharedRules, type CoreBinding, type CoreRules, type PageInput } from '../../packages/ts/src/app/core-rules.ts';
+import type * as CoreRulesModule from '../../packages/ts/src/app/core-rules.ts';
+import type { CoreBinding, CoreRules, PageInput } from '../../packages/ts/src/app/core-rules.ts';
+import { requireBuilt } from './requires.mts';
+
+// The test reads core-rules as `make packages` builds it, because its source imports its siblings by their built names
+// (`./core-binding-error.js`), which node does not resolve to the sources (HR-85).
+const BUILT = 'packages/ts/dist/app/core-rules.js';
+requireBuilt('packages', BUILT);
+
+function isCoreRulesModule(value: unknown): value is typeof CoreRulesModule {
+  return typeof value === 'object' && value !== null
+    && 'coreRules' in value && typeof value.coreRules === 'function'
+    && 'sharedRules' in value && typeof value.sharedRules === 'function';
+}
+
+const loaded: unknown = createRequire(import.meta.url)(`../../${BUILT}`);
+assert.ok(isCoreRulesModule(loaded), `${BUILT} exports no coreRules and sharedRules`);
+const { coreRules, sharedRules } = loaded;
 
 type Call = [string, unknown[]];
 
