@@ -23,11 +23,12 @@ test('node-package writes deps from the closure of this run and keeps no packed 
   writeFileSync(npm, ['#!/bin/sh', 'while [ "$1" != "--pack-destination" ]; do shift; done', 'touch "$2/$(basename "$PWD").tgz"', ''].join('\n'));
   chmodSync(npm, 0o755);
 
-  // A recipe line that a backslash continues prints as several lines; each command is joined back into one.
+  // A recipe line that a backslash continues prints as several lines, and make drops the tab of each continued line;
+  // each command is joined back into one line.
   const commands = dryRun('node-package', { variables: [`BINDINGS_VAR=${bindings}`, `NPM=${npm}`] })
     .join('\n')
-    .replaceAll('\\\n', '\n')
-    .split(/(?<!\n)\n(?![\t ])/u);
+    .replaceAll('\\\n', ' ')
+    .split('\n');
   const lines = commands.filter((line) => line.includes(deps));
   assert.ok(lines.some((line) => line.includes('--pack-destination')), `node-package packs nothing into ${deps}:\n${lines.join('\n')}`);
   for (const line of lines) {

@@ -251,7 +251,7 @@ A runner runs each case that a name selects once, in the order of a full run, an
 
 With a selection the recipe of the target is one command, the case runner alone: `CaseRunnerTest` of PHPUnit, `tests/case-runner.test.ts` of the package, or `test_case_runner.py`. The other tests of the target, the type check of `hyper-test-js` and `hyper-test-node` and the package data tests of `hyper-test-python` do not run. The prerequisites of the target are built as for a full run. A row of the checklist whose cases own it therefore names such a command as its verification, for example `make hyper-test-php CASES="reads.json"`.
 
-A selected run writes `var/recipe/results/<runner>.selected.txt`, whose first line is `SELECTION <names>` and whose other lines are the result lines of the selected cases. It does not write `var/recipe/results/<runner>.txt`, the file of a full run, which `make recipe-check` reads. `make recipe-check` and the targets `recipe-run-*` give their runners no selection and run every case, whatever `CASES` holds. The Makefile gives the selection to the runner in the environment variable `RECIPE_CASES`; a blank `CASES` is a full run.
+A selected run writes `var/recipe/results/<run>/<runner>.selected.txt`, whose first line is `SELECTION <names>` and whose other lines are the result lines of the selected cases. It does not write `var/recipe/results/<run>/<runner>.txt`, the file of a full run, which `make recipe-check` reads. `make recipe-check` and the targets `recipe-run-*` give their runners no selection and run every case, whatever `CASES` holds. The Makefile gives the selection to the runner in the environment variable `RECIPE_CASES`; a blank `CASES` is a full run.
 
 `CASES` of `make e2e` is another variable of the same name: a pattern that Playwright matches against the titles of its cases.
 
@@ -269,7 +269,7 @@ With a selection the recipe runs those files alone with the test runner of the t
 
 `make hyper-test-scripts` takes a selection of files of `tests/scripts` in `TESTS`, for example `make hyper-test-scripts TESTS=tests/scripts/php-ext-requires.test.mts`. Its full set first builds `packages`, `board`, `node-server`, `ext` and `hyper-ext`; a selection builds only those of them that its files, and the modules that they import by a relative path, name with `requireBuilt` (or `phpServerExtensions`, which names `ext` and `hyper-ext`), as `scripts/test-inputs.mts` reads them, so a selection that reads no built input builds nothing (HR-85, H35.55).
 
-A selected run does not write `var/recipe/results/<runner>.txt`, the file of a full run: a case runner among the selected files writes `var/recipe/results/<runner>.files.txt`. `make recipe-check` reads none of the three variables. A blank value is a full run.
+A selected run does not write `var/recipe/results/<run>/<runner>.txt`, the file of a full run: a case runner among the selected files writes `var/recipe/results/<run>/<runner>.files.txt`. `make recipe-check` reads none of the three variables. A blank value is a full run.
 
 ## Servers of a run
 

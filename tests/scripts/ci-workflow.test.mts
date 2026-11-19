@@ -393,19 +393,24 @@ test('H35.46 make ci-results copies the case results of the recipe runners into 
   const report = path.join(work, 'report');
   mkdirSync(report);
   const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => !['MAKEFLAGS', 'MFLAGS', 'MAKELEVEL', 'MAKEOVERRIDES'].includes(name)));
-  const run = () => spawnSync('make', ['--no-print-directory', 'ci-results', `RECIPE_RESULTS_DIR=${results}`, `CI_REPORT=${report}`], { cwd: ROOT, encoding: 'utf8', env });
+  const run = () => spawnSync('make', ['--no-print-directory', 'ci-results', `RECIPE_RESULTS_ROOT=${results}`, `CI_REPORT=${report}`], { cwd: ROOT, encoding: 'utf8', env });
   // A group whose targets run no recipe runner writes no results; its report is complete without them.
   const none = run();
   assert.equal(none.status, 0, `${none.stdout}${none.stderr}`);
   assert.deepEqual(readdirSync(report), []);
-  mkdirSync(results);
+  // Each run of a runner writes its own folder (H35.144); two runs of one runner leave two files of the same name.
+  mkdirSync(path.join(results, 'run-1'), { recursive: true });
+  mkdirSync(path.join(results, 'run-2'));
   const failed = 'CASE browser.json render r1 FAIL expected <p>, got <div>\n';
-  writeFileSync(path.join(results, 'browser.txt'), failed);
-  writeFileSync(path.join(results, 'node.txt'), 'CASE node.json reads r1 PASS\n');
+  writeFileSync(path.join(results, 'run-1', 'browser.txt'), failed);
+  writeFileSync(path.join(results, 'run-1', 'node.txt'), 'CASE node.json reads r1 PASS\n');
+  writeFileSync(path.join(results, 'run-2', 'browser.txt'), 'CASE browser.json render r1 PASS\n');
   const copied = run();
   assert.equal(copied.status, 0, `${copied.stdout}${copied.stderr}`);
-  assert.deepEqual(readdirSync(path.join(report, 'recipe-results')).sort(), ['browser.txt', 'node.txt']);
-  assert.equal(readFileSync(path.join(report, 'recipe-results', 'browser.txt'), 'utf8'), failed);
+  assert.deepEqual(readdirSync(path.join(report, 'recipe-results')).sort(), ['run-1', 'run-2']);
+  assert.deepEqual(readdirSync(path.join(report, 'recipe-results', 'run-1')).sort(), ['browser.txt', 'node.txt']);
+  assert.equal(readFileSync(path.join(report, 'recipe-results', 'run-1', 'browser.txt'), 'utf8'), failed);
+  assert.equal(readFileSync(path.join(report, 'recipe-results', 'run-2', 'browser.txt'), 'utf8'), 'CASE browser.json render r1 PASS\n');
 });
 
 /** The makes of `steps` that the dry run of `goal` does not start in their order, each a make of its own. */

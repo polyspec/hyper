@@ -252,7 +252,7 @@ runner는 이름이 선택한 case를 전체 실행의 순서대로 한 번씩 �
 
 선택이 있으면 target의 recipe는 명령 하나, 곧 case runner뿐이다. PHPUnit의 `CaseRunnerTest`, package의 `tests/case-runner.test.ts`, 또는 `test_case_runner.py`이다. target의 다른 test, `hyper-test-js`와 `hyper-test-node`의 type check, `hyper-test-python`의 package data test는 실행하지 않는다. target의 prerequisite은 전체 실행과 같이 build한다. 따라서 case가 소유하는 체크리스트 행은 그런 명령을 검증으로 적는다. 예: `make hyper-test-php CASES="reads.json"`.
 
-선택한 실행은 `var/recipe/results/<runner>.selected.txt`를 쓴다. 첫 줄은 `SELECTION <names>`이고 나머지 줄은 선택한 case의 결과 줄이다. 전체 실행의 파일이며 `make recipe-check`가 읽는 `var/recipe/results/<runner>.txt`는 쓰지 않는다. `make recipe-check`와 target `recipe-run-*`는 runner에 선택을 주지 않으므로 `CASES`의 값과 무관하게 모든 case를 실행한다. Makefile은 선택을 환경 변수 `RECIPE_CASES`로 runner에 준다. 빈 `CASES`는 전체 실행이다.
+선택한 실행은 `var/recipe/results/<run>/<runner>.selected.txt`를 쓴다. 첫 줄은 `SELECTION <names>`이고 나머지 줄은 선택한 case의 결과 줄이다. 전체 실행의 파일이며 `make recipe-check`가 읽는 `var/recipe/results/<run>/<runner>.txt`는 쓰지 않는다. `make recipe-check`와 target `recipe-run-*`는 runner에 선택을 주지 않으므로 `CASES`의 값과 무관하게 모든 case를 실행한다. Makefile은 선택을 환경 변수 `RECIPE_CASES`로 runner에 준다. 빈 `CASES`는 전체 실행이다.
 
 `make e2e`의 `CASES`는 이름만 같은 다른 변수이다. Playwright가 case의 제목과 맞춰 보는 pattern이다.
 
@@ -270,7 +270,7 @@ runner는 이름이 선택한 case를 전체 실행의 순서대로 한 번씩 �
 
 `make hyper-test-scripts`는 `tests/scripts`의 파일 선택을 `TESTS`로 받는다. 예: `make hyper-test-scripts TESTS=tests/scripts/php-ext-requires.test.mts`. 전체 실행은 먼저 `packages`, `board`, `node-server`, `ext`, `hyper-ext`를 build한다. 선택은 그중에서 그 파일들과 그것이 상대 경로로 import하는 module이 `requireBuilt`(또는 `ext`와 `hyper-ext`를 지정하는 `phpServerExtensions`)로 지정한 것만, `scripts/test-inputs.mts`가 읽는 대로 build하므로, build된 입력을 읽지 않는 선택은 아무것도 build하지 않는다(HR-85, H35.55).
 
-선택 실행은 전체 실행의 파일인 `var/recipe/results/<runner>.txt`를 쓰지 않는다. 선택한 파일에 case runner가 있으면 `var/recipe/results/<runner>.files.txt`를 쓴다. `make recipe-check`는 세 변수 중 어느 것도 읽지 않는다. 빈 값은 전체 실행이다.
+선택 실행은 전체 실행의 파일인 `var/recipe/results/<run>/<runner>.txt`를 쓰지 않는다. 선택한 파일에 case runner가 있으면 `var/recipe/results/<run>/<runner>.files.txt`를 쓴다. `make recipe-check`는 세 변수 중 어느 것도 읽지 않는다. 빈 값은 전체 실행이다.
 
 ## 한 실행의 서버
 

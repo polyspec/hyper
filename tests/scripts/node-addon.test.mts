@@ -3,10 +3,19 @@
 // addon and put it there, and the Node server tests find the addon that they load.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { test } from 'node:test';
-import { ENTRY } from '../../packages/ts/src/app/core-rules.ts';
 import { dryRun } from './make-dry-run.mts';
+import { requireBuilt } from './requires.mts';
+
+// The test reads core-rules as `make packages` builds it, because its source imports its siblings by their built names
+// (`./core-binding-error.js`), which node does not resolve to the sources (HR-85).
+const BUILT = 'packages/ts/dist/app/core-rules.js';
+requireBuilt('packages', BUILT);
+const loaded: unknown = createRequire(import.meta.url)(`../../${BUILT}`);
+const ENTRY: unknown = typeof loaded === 'object' && loaded !== null ? Reflect.get(loaded, 'ENTRY') : undefined;
+assert.ok(typeof ENTRY === 'string', `${BUILT} exports no ENTRY`);
 
 test('node-addon puts the addon beside the generated entry of the Node package (H35.9-1)', () => {
   const lines = dryRun('node-addon').join('\n');

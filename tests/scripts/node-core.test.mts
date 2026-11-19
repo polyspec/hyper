@@ -137,7 +137,7 @@ const NOT_CALLED = [
 // The members of the binding that the units of the server call directly through `binding`, as the PHP server calls the
 // functions of the extension, with no member of CoreRules between: the tests of those units and the case runner, which
 // run on the binding itself, test them.
-const DIRECT = ['sessionValue', 'sessionRecord', 'readHeldBody', 'parseUrlencoded', 'RequestBody', 'FormFile'];
+const DIRECT = ['sessionValue', 'sessionRecord', 'readHeldBody', 'parseUrlencoded', 'RequestBody', 'FormFile', 'parseCookie'];
 
 function rulesOf(results: Record<string, unknown>): { rules: CoreRules; calls: Call[] } {
   const { core, calls } = standIn(results);

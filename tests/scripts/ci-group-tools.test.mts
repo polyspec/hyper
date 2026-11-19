@@ -36,8 +36,9 @@ const MAKEFILE = readFileSync(path.join(ROOT, 'Makefile'), 'utf8');
 
 // The tools that a command line of a setup step installs.
 const INSTALLS: readonly { name: string; tools: (line: string) => string[] }[] = [
-  // install-tools of kit installs the selectors that follow its option.
-  { name: 'install-tools of kit', tools: (line) => (/\/install-tools\.m[jt]s --no-self-update (.+)$/u.exec(line)?.[1] ?? '').split(' ').filter(Boolean) },
+  // install-tools of kit installs the selectors that follow its option; an option between them, such as the --php of
+  // the job, is no selector.
+  { name: 'install-tools of kit', tools: (line) => (/\/install-tools\.m[jt]s --no-self-update (.+)$/u.exec(line)?.[1] ?? '').split(' ').filter((word) => /^[a-z][\w-]*$/u.test(word)) },
   // install-wasm-bindgen of packages/release.mk installs the wasm-bindgen CLI alone with the mise of the checkout.
   { name: 'mise install of wasm-bindgen', tools: (line) => (line.endsWith('/var/tools/bin/mise install --locked github:wasm-bindgen/wasm-bindgen') ? ['wasm-bindgen'] : []) },];
 
@@ -47,8 +48,9 @@ const STARTED: readonly { program: string; pattern: RegExp; tools: readonly stri
   { program: 'cargo', pattern: /\/link\.m[jt]s cargo /u, tools: ['rust'] },
   // maturin builds the native module of the Python package with Cargo.
   { program: 'maturin', pattern: /\/link\.m[jt]s maturin |\/mise\/shims\/maturin\b/u, tools: ['maturin', 'rust'] },
-  // var/tools/bin/php is the wrapper that install-tools writes for the php of the job; a recipe also starts php by its name.
-  { program: 'php', pattern: /\/var\/tools\/bin\/php\b|(?:^|&& |\|\| |; |\(command -v )php(?:-config)?\b/u, tools: ['php'] },
+  // var/tools/bin/php is the wrapper that install-tools writes for the php of the job; a recipe also starts php by its name,
+  // and a shell assignment `php=` starts nothing.
+  { program: 'php', pattern: /\/var\/tools\/bin\/php\b|(?:^|&& |\|\| |; |\(command -v )php(?:-config)?\b(?!=)/u, tools: ['php'] },
   { program: 'composer', pattern: /\/mise\/shims\/composer\b/u, tools: ['composer'] },
   { program: 'pie', pattern: /\/mise\/shims\/pie\b/u, tools: ['pie'] },
   { program: 'go', pattern: /\/mise\/shims\/go(?:fmt)?\b/u, tools: ['go'] },

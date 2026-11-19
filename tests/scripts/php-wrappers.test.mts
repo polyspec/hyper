@@ -33,9 +33,12 @@ function php(root: string, formula: string, minor: string): void {
   chmodSync(file, 0o755);
 }
 
-/** Runs the script with the arguments, without any other PATH than the one of the test. */
-function run(...args: string[]): { status: number | null; stdout: string; stderr: string } {
-  return runWithPath('/usr/bin:/bin', ...args);
+/**
+ * Runs the script with the arguments and a PATH of one directory of the test that holds no php, so the test states
+ * every place where the script may find a php: a php of the machine, such as /usr/bin/php, is not one of them.
+ */
+function run(root: string, ...args: string[]): { status: number | null; stdout: string; stderr: string } {
+  return runWithPath(path.join(root, 'no-php'), ...args);
 }
 
 /** Runs the script with the arguments and the given PATH. */
@@ -57,7 +60,7 @@ test('path prints the php of the pinned minor release, even when another minor r
   const root = prefix(t);
   php(root, `php@${PINNED}`, PINNED);
   php(root, 'php', OTHER);
-  const result = run('path', PINNED, `--prefix=${root}`);
+  const result = run(root, 'path', PINNED, `--prefix=${root}`);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.trim(), path.join(root, 'opt', `php@${PINNED}`, 'bin/php'));
 });
@@ -65,7 +68,7 @@ test('path prints the php of the pinned minor release, even when another minor r
 test('path fails and names the minor release and the prefixes it searched when no php of that minor release exists (H35.137)', (t) => {
   const root = prefix(t);
   php(root, 'php', OTHER);
-  const result = run('path', PINNED, `--prefix=${root}`);
+  const result = run(root, 'path', PINNED, `--prefix=${root}`);
   assert.notEqual(result.status, 0, result.stdout);
   assert.equal(result.stdout, '');
   assert.ok(result.stderr.includes(`php-wrappers: no php of PHP ${PINNED} exists`), result.stderr);
@@ -75,7 +78,7 @@ test('path fails and names the minor release and the prefixes it searched when n
 test('path fails for a php whose version query does not report the minor release it is named for (H35.137)', (t) => {
   const root = prefix(t);
   php(root, `php@${PINNED}`, OTHER);
-  const result = run('path', PINNED, `--prefix=${root}`);
+  const result = run(root, 'path', PINNED, `--prefix=${root}`);
   assert.notEqual(result.status, 0, result.stdout);
   assert.ok(result.stderr.includes(`php-wrappers: no php of PHP ${PINNED} exists`), result.stderr);
 });
@@ -91,7 +94,7 @@ test('path finds the php of the pinned minor release in PATH when no prefix hold
   const root = prefix(t);
   phpOnPath(path.join(root, 'other'), OTHER);
   const pinned = phpOnPath(path.join(root, 'pinned'), PINNED);
-  const searchPath = [path.join(root, 'other'), path.join(root, 'pinned'), '/usr/bin', '/bin'].join(path.delimiter);
+  const searchPath = [path.join(root, 'other'), path.join(root, 'pinned')].join(path.delimiter);
   const result = runWithPath(searchPath, 'path', PINNED, `--prefix=${path.join(root, 'empty')}`);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.trim(), pinned);
@@ -100,7 +103,7 @@ test('path finds the php of the pinned minor release in PATH when no prefix hold
 test('path --if-present prints nothing and exits 0 when no php of the pinned minor release exists (H35.153)', (t) => {
   const root = prefix(t);
   phpOnPath(path.join(root, 'other'), OTHER);
-  const searchPath = [path.join(root, 'other'), '/usr/bin', '/bin'].join(path.delimiter);
+  const searchPath = [path.join(root, 'other')].join(path.delimiter);
   const result = runWithPath(searchPath, 'path', PINNED, '--if-present', `--prefix=${path.join(root, 'empty')}`);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout, '');

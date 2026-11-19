@@ -949,7 +949,7 @@ CI_SETUP_gates := install-tools install-symbols hyper-install-php
 CI_SYMBOLS_gates := php
 CI_TARGETS_gates := $(GATE_TARGETS)
 CI_TOOLS_docs := node php composer pie python uv rust maturin
-CI_SETUP_docs := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-redis hyper-ext
+CI_SETUP_docs := install-tools hyper-install-crates hyper-install-php hyper-install-python hyper-install-redis hyper-ext hyper-install-release-files
 CI_TARGETS_docs := typecheck hyper-test-scripts spec-docs-check spec-released-check recipe-check
 CI_TOOLS_php := node php composer pie rust
 CI_SETUP_php := install-tools hyper-install-crates hyper-install-php
@@ -1207,11 +1207,12 @@ ci-targets: ## Run TARGETS past failures and write CI_REPORT (logs, record.json,
 	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) -k $(CI_REPORT) $(TARGETS)
 
 # A recipe runner fails with the count of its failed cases and the path of its results file, whose lines name each case
-# (HYR-7); the report that a job uploads holds those files in recipe-results/, so a failed case is named in the report
-# and not only on the runner (HR-84). A group whose targets run no runner has no results file, and its report has none.
-# The make that ci_run starts expands the wildcard after the targets of the group ended.
-ci-results: ## Copy the case results of the recipe runners, RECIPE_RESULTS_ROOT/*/*.txt, into CI_REPORT/recipe-results
-	$(if $(wildcard $(RECIPE_RESULTS_ROOT)/*/*.txt),mkdir -p $(CI_REPORT)/recipe-results && cp $(wildcard $(RECIPE_RESULTS_ROOT)/*/*.txt) $(CI_REPORT)/recipe-results/,@:)
+# (HYR-7); the report that a job uploads holds those files in recipe-results/<run>/, so a failed case is named in the
+# report and not only on the runner (HR-84). Each run of a runner writes its own folder (H35.144), so two runs of one
+# runner keep both files. A group whose targets run no runner has no results file, and its report has none. The make
+# that ci_run starts expands the wildcard after the targets of the group ended.
+ci-results: ## Copy the case results of the recipe runners, RECIPE_RESULTS_ROOT/<run>/*.txt, into CI_REPORT/recipe-results/<run>
+	$(if $(wildcard $(RECIPE_RESULTS_ROOT)/*/*.txt),mkdir -p $(CI_REPORT)/recipe-results && cp -R $(RECIPE_RESULTS_ROOT)/. $(CI_REPORT)/recipe-results/,@:)
 
 ci-summary: ## Write summary.md of CI_REPORT again from its record, also for a run that stopped
 	$(NODE) $(KIT)/ci-targets.$(KIT_EXT) --summary $(CI_REPORT)

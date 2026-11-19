@@ -41,8 +41,8 @@ for (const { target, variable, runner, directory, files, starts } of TARGETS) {
     assert.equal(guard.length, 1, `one line of make -n ${target} is the guard:\n${guard.join('\n')}`);
     const line = runners.join('\n');
     assert.ok(line.includes(starts), `the recipe starts the test runner of the target: ${line}`);
-    assert.doesNotMatch(line, new RegExp(`/var/recipe/results/${runner}\\.txt|\\.selected\\.txt|RECIPE_CASES`, 'u'), line);
-    assert.match(line, new RegExp(`RECIPE_RESULTS=\\S+/var/recipe/results/${runner}\\.files\\.txt `, 'u'), line);
+    assert.doesNotMatch(line, new RegExp(`/var/recipe/results/[^/\\s]+/${runner}\\.txt|\\.selected\\.txt|RECIPE_CASES`, 'u'), line);
+    assert.match(line, new RegExp(`RECIPE_RESULTS=\\S+/var/recipe/results/[^/\\s]+/${runner}\\.files\\.txt `, 'u'), line);
     // No type check and no other test run follows the selected files.
     assert.doesNotMatch(line, /tsc|tests\/python_package|test_\*\.py/u, line);
     if (runner === 'python') {
@@ -76,7 +76,7 @@ for (const { target, variable, runner, directory, files, starts } of TARGETS) {
   test(`make ${target} with a blank ${variable} is the full run`, () => {
     const { guard, runners } = recipe(target, [`${variable}=  `]);
     assert.deepEqual(guard, []);
-    assert.match(runners.join('\n'), new RegExp(`/var/recipe/results/${runner}\\.txt `, 'u'));
+    assert.match(runners.join('\n'), new RegExp(`/var/recipe/results/[^/\\s]+/${runner}\\.txt `, 'u'));
   });
 }
 
