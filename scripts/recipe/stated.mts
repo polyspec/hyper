@@ -61,6 +61,8 @@ class Language {
   private readonly properties = new Map<string, ClassRef>();
   /** The class inside the written list type of a property, by the key of the property. */
   private readonly propertyItems = new Map<string, ClassRef>();
+  /** The classes of the written union of classes of a property, by the key of the property. */
+  private readonly propertyTypes = new Map<string, ClassRef[]>();
   /** The class inside the written list type of a parameter, by the key of its scope and its name. */
   private readonly parameterItems = new Map<string, ClassRef>();
   /** The classes of the written union of classes of a parameter, by the key of its scope and its name. */
@@ -84,6 +86,7 @@ class Language {
       for (const p of c.properties) {
         if (p.type !== undefined) this.properties.set(`${key}::${p.name}`, p.type);
         if (p.items !== undefined) this.propertyItems.set(`${key}::${p.name}`, p.items);
+        if (p.types !== undefined) this.propertyTypes.set(`${key}::${p.name}`, p.types);
       }
     }
     const byFile = new Map<string, string[]>();
@@ -220,6 +223,9 @@ class Language {
         const of = e.call ? undefined : this.classOf(this.value(e.of, s, env));
         const property = of === undefined ? undefined : this.property(of, e.name);
         if (property !== undefined) return { kind: 'class', ref: property };
+        // A property whose written type is a union of classes has each class of the union, as a parameter has.
+        const union = of === undefined ? undefined : this.upward(of, (c) => this.propertyTypes.get(`${refKey(c)}::${e.name}`));
+        if (union !== undefined) return { kind: 'classes', refs: union };
         const [key] = this.keys(e, s, env);
         if (key === undefined) return undefined;
         const written = this.properties.get(key);
