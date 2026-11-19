@@ -55,7 +55,7 @@ test('a method after a string interpolation of a class is no function of the fil
     const result = spawnSync(bin, [reader, dir, '--autoload', path.join(dir, 'autoload.php'), '--sources', 'src'], { encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
     const out = JSON.parse(result.stdout);
-    const stray = out.members.filter((m: { file: string; name: string }) => m.file === 'src/Interpolated.php' && m.kind === 'function');
+    const stray = out.members.filter((m: { file: string; name: string; kind: string }) => m.file === 'src/Interpolated.php' && m.kind === 'function');
     assert.deepEqual(stray, [], `the methods of Interpolated are read as functions: ${stray.map((m: { name: string }) => m.name).join(', ')}`);
   } finally {
     rmSync(dir, { recursive: true, force: true });
