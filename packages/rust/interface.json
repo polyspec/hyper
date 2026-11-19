@@ -2427,23 +2427,13 @@
             },
             {
               "name": [
-                "sessions"
+                "started"
               ],
               "type": {
-                "unit": "store",
-                "library": "session-store"
-              },
-              "required": true
-            },
-            {
-              "name": [
-                "options"
-              ],
-              "type": {
-                "unit": "host_options"
+                "optional": "int"
               },
               "default": {
-                "empty": "object"
+                "literal": null
               }
             }
           ],
