@@ -113,12 +113,6 @@ class CoreRules:
         those of every region (HY-104.22, HY-104.23)."""
         return self._core.kept_of(stored)
 
-    def page_kept_cookie(self, text: str) -> object:
-        """Page._kept: rules.kept_cookie reads the cookie of the kept values to a map from each region to the map of
-        its readable values by path; a cookie that is no JSON object, a region that holds no object and a value
-        outside the data model give no value (HY-38.2, HY-38.11, HY-42)."""
-        return self._core.kept_cookie(text)
-
     def accept_parse(self, value: Optional[str]) -> list[Any]:
         """Accept.parse: rules.accept_ranges gives the ranges of an `Accept` value in field order, the range `*/*` of
         the full weight for a request without `Accept`, and fails with `invalid_accept` or `invalid_weight` of
@@ -166,11 +160,6 @@ class CoreRules:
         """Reply.status: rules.reply_status gives the page status that the reply keeps (HY-69)."""
         return self._core.reply_status(status)
 
-    def reply_keeps_out_of_shared_caches(self, value: str) -> bool:
-        """Partial. rules.keeps_out_of_shared_caches (HY-52.6), which Reply.cache_control decided inside its check; the
-        server reads it for no other rule."""
-        return self._core.keeps_out_of_shared_caches(value)
-
     def result_redirect(self, location: str) -> str:
         """Result.redirect: rules.redirect_location gives the location of the result (HY-46)."""
         return self._core.redirect_location(location)
@@ -178,11 +167,6 @@ class CoreRules:
     def result_page(self, status: int) -> int:
         """Result.page: rules.page_status gives the status of the result (HY-58)."""
         return self._core.page_status(status)
-
-    def result_is_application_path(self, location: str) -> bool:
-        """Partial. rules.is_application_path (HY-46), the test inside Result.redirect; the server has no caller of it
-        besides the redirect."""
-        return self._core.is_application_path(location)
 
     def app_vary_header(self, context: bool) -> str:
         """App._vary_header: rules.page_vary (HY-117.1)."""
@@ -202,11 +186,6 @@ class CoreRules:
     def app_shell_text(self, path: str, data: bytes) -> str:
         """Partial. rules.shell_text gives the text of the bytes of the static shell (HY-62), which the server read."""
         return self._core.shell_text(path, data)
-
-    def app_kept_value(self, pages: Any, region: str, path: str, text: str) -> Any:
-        """Partial. The value check of the kept endpoint: front_functions.kept_value (HY-40.1). The server still
-        checks the token of the form (HY-24) and stores the value in the session."""
-        return self._core.kept_value(pages, region, path, text)
 
     def page_tag(self, body: str, masked_token: str, token: str) -> str:
         """The tag of a JSON response of Page.respond: rules.page_tag (HY-53.1)."""
@@ -287,10 +266,6 @@ class CoreRules:
         HY-125.19). The server still reads the file and names the absolute path of the file in a failure
         (HY-125.23)."""
         return self._core.read_build(data)
-
-    def build_check_id(self, text: str) -> None:
-        """Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text."""
-        self._core.check_build_id(text)
 
 
 class CoreBindingError(ImportError):

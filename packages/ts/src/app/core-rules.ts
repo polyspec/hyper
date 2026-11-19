@@ -275,13 +275,6 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'sessionValue', 'sessionRecord',
 ];
 
-// A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
-interface PlainResponse {
-  readonly status: number;
-  readonly headers: Record<string, string>;
-  readonly body: string;
-}
-
 /** @internal */
 export interface CoreRules {
   // The error of hyper of the category value and of the category type with its kind (HY-133.2), of the classes of
@@ -322,10 +315,6 @@ export interface CoreRules {
   // path, and fails with `invalid_session_record` for kept values of another form, those of every region (HY-104.22,
   // HY-104.23).
   sessionKeptOf(stored: unknown): JsonValue;
-  // pageKeptCookie: rules.kept_cookie reads the cookie of the kept values to a map from each region to the map of its
-  // readable values by path; a cookie that is no JSON object, a region that holds no object and a value outside the
-  // data model give no value (HY-38.2, HY-38.11, HY-42).
-  pageKeptCookie(text: string): JsonValue;
   // acceptParse: rules.accept_ranges gives the ranges of an Accept value in field order, the range `*/*` of the full
   // weight for a request without Accept, and fails with `invalid_accept` or `invalid_weight` of http-negotiation
   // (HY-116.17, HY-116.18).
@@ -351,16 +340,10 @@ export interface CoreRules {
   replyReferrerPolicy(value: string): string;
   // replyStatus: rules.reply_status gives the page status that the reply keeps (HY-69).
   replyStatus(status: number): number;
-  // Partial. rules.keeps_out_of_shared_caches (HY-52.6), which replyCacheControl decided inside its check; the
-  // server reads it for no other rule.
-  replyKeepsOutOfSharedCaches(value: string): boolean;
   // resultRedirect: rules.redirect_location gives the location of the result (HY-46).
   resultRedirect(location: string): string;
   // resultPage: rules.page_status gives the status of the result (HY-58).
   resultPage(status: number): number;
-  // Partial. rules.is_application_path (HY-46), the test inside resultRedirect; the server has no caller of it
-  // besides the redirect.
-  resultIsApplicationPath(location: string): boolean;
   // appVaryHeader: rules.page_vary (HY-117.1).
   appVaryHeader(context: boolean): string;
   // Partial. appFrame: front_functions.frame_headers gives the headers that every response carries (HY-45.5,
@@ -372,31 +355,11 @@ export interface CoreRules {
   // (HY-62.2).
   appCheckShellPath(path: string): void;
   appShellText(path: string, bytes: Uint8Array): string;
-  // Partial. appDispatch: front_functions.route_request gives the route of a request (HY-62.16 to HY-62.23, HY-27,
-  // HY-116, HY-127, HY-59.12). The server still reads the request (HY-42, HY-56, HY-57), answers the limits of the
-  // body (HY-59.15, HY-131.32) before this call, calls the selection of client rendering (HY-62.9) and reads the media
-  // type of the body (HY-59.13).
-  appRoute(pages: CorePages, chosen: boolean, front: Front): Route;
-  // Partial. The text responses of appDispatch: a plain answer of the core as the parts of a response (HY-58,
-  // HY-27.6, HY-117.3). The server still frames it (HY-45.5) and reports it (HY-60).
-  appPlain(answer: Plain): PlainResponse;
-  // Partial. appStoreKept: opening_functions.answer_keep_request answers a request to the kept endpoint after its
-  // route (HY-40.1, HY-59.8, HY-120.7). The server still opens and closes the session of the store (HY-97, HY-104) and
-  // reads the form fields (HY-57).
-  appStoreKept(pages: CorePages, store: CoreStore, request: KeepRequest): PlainResponse;
-  // Partial. The value check of appStoreKept: front_functions.kept_value (HY-40.1), for a caller that stores the
-  // value itself.
-  appKeptValue(pages: CorePages, region: string, path: string, text: string): unknown;
   // The tag of a JSON response of pageRespond: rules.page_tag (HY-53.1).
   pageTag(body: string, maskedToken: string, token: string): string;
   // Partial. The headers of pageRespond: front_functions.compute_page_headers (HY-15.3, HY-52, HY-53, HY-65,
   // HY-103.5, HY-117.1). The server still writes the body and adds the cookies of the reply (HY-52.13).
   pageHeaders(response: PageResponse): { readonly status: number; readonly headers: Record<string, string>; readonly body: boolean };
-  // Partial. The session of a page in appDispatch: opening_functions.open_page takes the flash data, reads the
-  // token, checks the token of a POST and reads the kept values (HY-120.6, HY-24, HY-59.8, HY-40). The server still
-  // draws the mask of the response (HY-24.3), reads the cookie `hy-keep` (HY-38.10) and the clock, and opens and
-  // closes the session of the store (HY-97, HY-104).
-  pageOpen(pages: CorePages, store: CoreStore, opening: Opening): Opened;
   // Partial. pageRespond: `page_request.new` and `page_request.next` give the steps of a page (HY-15, HY-26, HY-58,
   // HY-73, HY-75, HY-124). The server still calls each handler that a step names and gives its result to the next
   // step (HY-30, HY-54), and answers the stops of a handler (HY-50, HY-51, HY-107).
@@ -418,8 +381,6 @@ export interface CoreRules {
   // Partial. buildRead: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23, HY-125.19).
   // The server still reads the file and names the absolute path of the file in a failure (HY-125.23).
   buildRead(bytes: Uint8Array): string;
-  // Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text.
-  buildCheckId(text: string): void;
   // Partial. The build id of the command tool: rules.build_id (HY-125.15 to HY-125.17). The command tool still
   // collects the files that one build writes and gives each its path with the prefix of its place.
   buildId(outputs: Iterable<BuildOutput>): string;
@@ -455,18 +416,8 @@ export interface CoreRules {
   };
 }
 
-// The body of a plain answer is UTF-8 bytes, and the tag of a representation is computed from the UTF-8 bytes of its body.
-const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+// The tag of a representation is computed from the UTF-8 bytes of its body.
 const encoder = new TextEncoder();
-
-// A plain answer with a body is text, as `Response.text` of the server writes it (HY-58); the 204 of the kept endpoint
-// has no body and no `Content-Type` (HY-40.1).
-function plainResponse(answer: Plain): PlainResponse {
-  const headers: Record<string, string> = answer.status === 204 ? {} : { 'Content-Type': 'text/plain; charset=utf-8' };
-  if (answer.allow !== undefined && answer.allow !== null) headers.Allow = answer.allow;
-  if (answer.varyAccept) headers.Vary = 'Accept';
-  return { status: answer.status, headers, body: decoder.decode(answer.body) };
-}
 
 // A module is the binding of the core when it has every member (MEMBERS), a function each.
 function isBinding(module: object, missing: readonly string[]): module is CoreBinding {
@@ -495,7 +446,6 @@ export function coreRules(module: object): CoreRules {
     jsonCodecEncode: (value) => core.jsonWrite(value),
     sessionFlashOf: (stored) => core.flashOf(stored),
     sessionKeptOf: (stored) => core.keptOf(stored),
-    pageKeptCookie: (text) => core.keptCookie(text),
     acceptParse: (value) => core.acceptRanges(value === null ? [] : [value]),
     sessionCookieName: (secure) => core.sessionName(secure),
     sessionCookieHeader: (id, secure) => core.sessionCookie(id, secure),
@@ -506,35 +456,25 @@ export function coreRules(module: object): CoreRules {
     replyCacheControl: (value) => core.cacheControl(value),
     replyReferrerPolicy: (value) => core.referrerPolicy(value),
     replyStatus: (status) => core.replyStatus(status),
-    replyKeepsOutOfSharedCaches: (value) => core.keepsOutOfSharedCaches(value),
     resultRedirect: (location) => core.redirectLocation(location),
     resultPage: (status) => core.pageStatus(status),
-    resultIsApplicationPath: (location) => core.isApplicationPath(location),
     appVaryHeader: (context) => core.pageVary(context),
     appFrameHeaders: (status, frameAncestors) => Object.fromEntries(core.frameHeaders(status, frameAncestors)),
     appCheckShellPath: (path) => {
       core.checkShellPath(path);
     },
     appShellText: (path, bytes) => core.shellText(path, bytes),
-    appRoute: (pages, chosen, front) => core.routeRequest(pages, chosen, front),
-    appPlain: (answer) => plainResponse(answer),
-    appStoreKept: (pages, store, request) => plainResponse(core.answerKeepRequest(pages, store, request)),
-    appKeptValue: (pages, region, path, text) => core.keptValue(pages, region, path, text),
     pageTag: (body, maskedToken, token) => core.pageTag(body, maskedToken, token),
     pageHeaders: (response) => {
       const computed = core.computePageHeaders(response);
       return { status: computed.status, headers: Object.fromEntries(computed.headers), body: computed.body };
     },
-    pageOpen: (pages, store, opening) => core.openPage(pages, store, opening),
     pageRequest: (pages, input) => new core.PageRequest(pages, input),
     pageDocument: (pages, route, shared, regions, now) => pages.renderDocument(route, shared, regions, now),
     pageParts: (pages, route, shared, regions, now) => pages.renderParts(route, shared, regions, now),
     sessionStoredToken: (stored) => core.storedToken(stored),
     keptCookieName: (secure) => core.keepName(secure),
     buildRead: (bytes) => core.readBuild(bytes),
-    buildCheckId: (text) => {
-      core.checkBuildId(text);
-    },
     buildId: (outputs) => core.buildId(outputs),
     buildPaths: (outputs) => core.buildPaths(outputs),
     buildStream: (outputs) => core.buildStream(outputs),
