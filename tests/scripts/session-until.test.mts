@@ -34,8 +34,8 @@ test('a wait for a line resolves with its index when the line is written, and le
   const stub = spawn(process.execPath, ['-e', "process.stdin.once('data', () => { console.log('READY'); process.exit(0); })"], { stdio: ['pipe', 'pipe', 'ignore'] });
   readLines('the stub server', stub);
   const exit = once(stub, 'exit');
+  stub.stdin.write('\n');
   const index = await linesOf(stub).until(0, (line) => line === 'READY', 'the stub line');
   assert.equal(index, 0);
-  stub.stdin.write('\n');
   await exit;
 });
