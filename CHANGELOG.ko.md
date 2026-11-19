@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 2e9f2fc16b806b34394051549c05826fab0343cb11671ec8fcabff484090c1cf -->
+<!-- source-sha256: 71f8ca618df9b0d90785097717cfa59aac6424efb06f3c772a9b6d8c2abb2f2e -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- 식별자를 바꾸는 동안 PHP나 save handler가 경고하면 `NativeSession::renew`가 `error_reporting`이 무엇을 유지하든 `hyper: the session could not be renewed: <warning>`으로 실패하고, session worker가 명령 `renew-warned`를 다시 가진다(H35.219, HY-115.3). 입력: worker가 `error_reporting`에서 `E_USER_WARNING`을 빼고 save handler가 `destroy`에서 경고하는 `tests/scripts/session-lost-lock.test.mts`. 이전 동작: merge 6acf895b가 `tests/scripts/fixtures/session-worker/worker.php`의 `renew-warned` 분기와 `renew`의 error handler를 버려서, 명령이 `write`로 넘어가 142번째 줄에서 `json_decode(): Argument #1 ($json) must be of type string, null given`로 끝났고, `session_regenerate_id` 동안의 경고는 요청을 계속 진행시켰다. 기대: renew가 예외를 던지고, worker가 `renewed` 줄을 출력하지 않으며, `session-lost-lock`의 두 case가 통과한다.
 - `composer.lock`와 `examples/board/composer.lock`의 `polyspec/hyper` lock 항목이 H35.114부터 `packages/php/composer.json`이 선언하는 `files` autoload `src/Host/Run.php`를 가지고, private root `composer.json`은 그 파일을 더 이상 직접 선언하지 않는다(H35.216). 입력: `examples/board`의 PHP 서버에 보내는 요청. 이전 동작: lock이 package의 `psr-4` autoload만 가졌고 Composer는 lock의 autoload를 설치하므로, board가 `PHP Fatal error: Uncaught Error: Call to undefined function Polyspec\Hyper\run() in examples/board/public/index.php:70`로 500을 답했고, `session-redis-failure`, `session-redis-failover`, `session-redis-cluster`, `session-lost-lock`이 `php opens the form 500 !== 200`로 실패했다. lock이 그 항목을 가지자 root가 자기 `files` 항목과 package를 거쳐 `Run.php`를 두 번 읽어 `Cannot redeclare function Polyspec\Hyper\run()`로 끝났다. 기대: `make composer-lock PACKAGES=polyspec/hyper`가 두 lock을 쓰고, root는 `Run.php`를 package에서만 받으며, 네 test 파일이 통과한다.
 - `tests/scripts/upload-servers.test.mts`의 HY-131 test가 Node 서버에서도, 서버가 요청의 끝을 알린 뒤에 요청의 임시 directory를 확인한다(H35.217, HY-131.14, HY-99). 입력: test의 네 요청을 Node upload server에 보낸다. 이전 동작: 확인은 PHP와 Python에서만 실행됐다. 제외를 없애면 Node에서 `node, a body without its closing delimiter: the directory of the request stays`로 실패했는데, client는 연결이 닫힐 때 directory를 읽고 Node 서버는 HY-131.14대로 response가 닫히고 hook이 끝난 뒤에 directory를 지우기 때문이다. 기대: test가 각 서버의 끝 줄(PHP의 `Closing`, Node와 Python fixture의 `ended <port>`)을 기다린 뒤 세 서버 어디에도 `http-form-` directory가 없다. library는 바뀌지 않는다.
 - `tests/scripts/multipart-compare.test.mts`의 Node worker는 core 파일의 크기, filename, content type을 getter로 읽는다(H35.215, HY-131.28). 입력: 생성한 요청 body에 대한 세 서버의 비교. 이전 동작: H35.11부터 core 파일은 이것들을 getter로 주는데 `tests/scripts/fixtures/multipart-worker/worker.mjs`는 method로 불러 `TypeError: file.size is not a function`으로 실패했다. 기대: worker가 getter를 읽고 비교가 통과한다. Node package의 `UploadedFile`은 method를 유지한다.
