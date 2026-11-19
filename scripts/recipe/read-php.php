@@ -77,26 +77,6 @@ $out = [
 
 foreach ($sourceFiles as $file) {
     $path = $root . '/' . $file;
-    // A file that declares functions outside every class is a functions unit, named by its file (HYR-3); each of its
-    // functions is a function member, and an @internal docblock makes it internal.
-    $functionNames = declaredFunctions(file_get_contents($path));
-    if ($functionNames !== []) {
-        $unit = pathinfo($file, PATHINFO_FILENAME);
-        $out['units'][] = ['file' => $file, 'name' => $unit, 'kind' => 'functions', 'internal' => false];
-        foreach ($functionNames as $fqn) {
-            $function = loadFunction($file, $path, $fqn);
-            $out['members'][] = [
-                'file' => $file,
-                'unit' => $unit,
-                'name' => $function->getShortName(),
-                'kind' => 'function',
-                'visibility' => docInternal($function->getDocComment()) ? 'internal' : 'public',
-                'symbol' => "$file::$fqn",
-                'signature' => functionSignature($function),
-                'parameters' => array_map(static fn($p) => $p->getName(), $function->getParameters()),
-            ];
-        }
-    }
     foreach (declaredTypes(file_get_contents($path)) as $fqcn) {
         $class = loadClass($file, $path, $fqcn);
         $unit = $class->getShortName();
@@ -145,6 +125,28 @@ foreach ($sourceFiles as $file) {
                 'visibility' => visibility($constant, $internal),
             ];
         }
+    }
+    // A file that declares functions outside every class is a functions unit named by its file, unless its classes
+    // already make a unit of that name (HYR-3); each of its functions is a function member, and an @internal docblock
+    // makes it internal.
+    $functionNames = declaredFunctions(file_get_contents($path));
+    $unit = pathinfo($file, PATHINFO_FILENAME);
+    $named = array_filter($out['units'], static fn(array $u): bool => $u['file'] === $file && $u['name'] === $unit);
+    if ($functionNames !== [] && $named === []) {
+        $out['units'][] = ['file' => $file, 'name' => $unit, 'kind' => 'functions', 'internal' => false];
+    }
+    foreach ($functionNames as $fqn) {
+        $function = loadFunction($file, $path, $fqn);
+        $out['members'][] = [
+            'file' => $file,
+            'unit' => $unit,
+            'name' => $function->getShortName(),
+            'kind' => 'function',
+            'visibility' => docInternal($function->getDocComment()) ? 'internal' : 'public',
+            'symbol' => "$file::$fqn",
+            'signature' => functionSignature($function),
+            'parameters' => array_map(static fn($p) => $p->getName(), $function->getParameters()),
+        ];
     }
 }
 
