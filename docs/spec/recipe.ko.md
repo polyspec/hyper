@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: e0f0032d983f709c139f609e49759b985e176b3e63a95c6d8418fed98bb654fe -->
+<!-- source-sha256: 0afbd73c2bd60585a2a211080e4b1c3df3b4a0a5c04ec08d5bf909990e179fc0 -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -144,7 +144,8 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
       필드는 member처럼 `only`를 가진다(HYR-6).
   - **Symbol.** symbol은 `<path>::<qualified name>`이다.
     - `<path>`는 파일의 repository 기준 상대 경로다.
-    - PHP member의 qualified name은 `Polyspec\Hyper\<Unit>::<member>`다.
+    - PHP member의 qualified name은 `Polyspec\Hyper\<Unit>::<member>`이고, HY-106.20의 host 함수 `run` 같은 PHP namespace
+      함수의 qualified name은 `Polyspec\Hyper\<member>`이며 그 member 이름은 namespace 뒤의 이름이다.
     - Node와 Python에서 class member는 `<Unit>.<member>`, module 함수는 `<member>`다.
     - constructor는 PHP에서 `__construct`, Node에서 `constructor`, Python에서 `__init__`이다.
     - PHP class의 member `invoke`는 그 object를 호출할 수 있게 하는 method `__invoke`이다.
