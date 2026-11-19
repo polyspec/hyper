@@ -121,28 +121,28 @@ test('collect of the php server under the handler redis fails with invalid_sessi
   assert.match(result.message ?? '', /redis/, 'the message names the handler');
 });
 
-// phpredis writes nothing for a request that lost its lock and warns. The PHP server closes the session before it
-// answers and turns a warning of the close into the failure of the request, so the request fails as in the other
-// servers (HY-115.23); tests/scripts/session-lost-lock.test.mts fixes the HTTP answer of the three servers.
-test('a request of the php server that lost its lock writes nothing and fails (HY-115)', { timeout: 60_000 }, async () => {
-  const holder = await holding('php', state.directory, { HYPER_SESSION_REDIS: state.port });
+// Holds the session of the server `name`, lets another holder take its lock, and checks that the request fails and
+// writes nothing: the record and the lock of the other holder stay (HY-115).
+async function lostLock(name: Server): Promise<void> {
+  const holder = await holding(name, state.directory, { HYPER_SESSION_REDIS: state.port });
   await redis.set(LOCK, 'another holder');
   const exit = new Promise<number | null>((resolve) => holder.once('exit', resolve));
   holder.stdin.write('\n');
   assert.notEqual(await exit, 0, 'the request fails');
   assert.equal(await text(KEY), 'a:1:{s:1:"n";i:0;}', 'the session keeps its record');
   assert.equal(await text(LOCK), 'another holder', 'the lock of the other holder stays');
+}
+
+// phpredis writes nothing for a request that lost its lock and warns. The PHP server closes the session before it
+// answers and turns a warning of the close into the failure of the request, so the request fails as in the other
+// servers (HY-115.23); tests/scripts/session-lost-lock.test.mts fixes the HTTP answer of the three servers.
+test('a request of the php server that lost its lock writes nothing and fails (HY-115)', { timeout: 60_000 }, async () => {
+  await lostLock('php');
 });
 
 for (const name of ['python', 'node'] as const) {
   test(`a request of the ${name} server that lost its lock writes nothing and fails (HY-115)`, { timeout: 60_000 }, async () => {
-    const holder = await holding(name, state.directory, { HYPER_SESSION_REDIS: state.port });
-    await redis.set(LOCK, 'another holder');
-    const exit = new Promise<number | null>((resolve) => holder.once('exit', resolve));
-    holder.stdin.write('\n');
-    assert.notEqual(await exit, 0, 'the request fails');
-    assert.equal(await text(KEY), 'a:1:{s:1:"n";i:0;}', 'the session keeps its record');
-    assert.equal(await text(LOCK), 'another holder', 'the lock of the other holder stays');
+    await lostLock(name);
   });
 
   test(`a renewal of the ${name} server moves the session and PHP reads it (HY-72, HY-115)`, { timeout: 60_000 }, async () => {

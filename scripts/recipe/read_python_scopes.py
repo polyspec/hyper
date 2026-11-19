@@ -157,6 +157,20 @@ def bindings(tree: ast.Module) -> dict[str, tuple[int, str, str]]:
     return names
 
 
+def _written_type(text: str) -> ast.expr | None:
+    """The expression of a type written in a string, or none for a string that is no expression."""
+    try:
+        return ast.parse(text, mode="eval").body
+    except SyntaxError:
+        return None
+
+
+def _subscript_name(node: ast.Subscript) -> str:
+    """The name of the generic of a subscript type, `Optional` of `Optional[X]` and of `typing.Optional[X]`."""
+    base = node.value
+    return base.attr if isinstance(base, ast.Attribute) else getattr(base, "id", "")
+
+
 def _without_none(node: ast.BinOp) -> ast.expr | None:
     """The one side of a union `X | None` that is not None, or None for a union of two other types."""
     parts = [
@@ -216,17 +230,10 @@ class Scope:
         if node is None:
             return None
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            try:
-                return self.type_of(ast.parse(node.value, mode="eval").body)
-            except SyntaxError:
-                return None
+            written = _written_type(node.value)
+            return None if written is None else self.type_of(written)
         if isinstance(node, ast.Subscript):
-            base = node.value
-            name = (
-                base.attr
-                if isinstance(base, ast.Attribute)
-                else getattr(base, "id", "")
-            )
+            name = _subscript_name(node)
             return self.type_of(node.slice) if name == "Optional" else None
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
             only = _without_none(node)
@@ -242,17 +249,10 @@ class Scope:
         if node is None:
             return None
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
-            try:
-                return self.types_of(ast.parse(node.value, mode="eval").body)
-            except SyntaxError:
-                return None
+            written = _written_type(node.value)
+            return None if written is None else self.types_of(written)
         if isinstance(node, ast.Subscript):
-            base = node.value
-            name = (
-                base.attr
-                if isinstance(base, ast.Attribute)
-                else getattr(base, "id", "")
-            )
+            name = _subscript_name(node)
             if name == "Optional":
                 return self.types_of(node.slice)
             if name != "Union":

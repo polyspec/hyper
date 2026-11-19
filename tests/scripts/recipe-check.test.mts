@@ -597,26 +597,25 @@ test('each reader writes the receiver of a name: an object, a class, the own cla
   }
 });
 
-test('the Python reader writes a scope for a table of the module and a use of the table where a method reads it', () => {
-  const out = readCopy('python', path.join(fixture, 'readers', 'python'), ['--sources', 'src', '--tests', 'tests']);
-  const file = READER_FILES.python.receivers;
+// Checks that the reader of `lang` writes a scope for the table MAKERS of the module, with the class that it makes, and a
+// use of the table in the method Receivers.tabled that reads it.
+function assertTable(lang: 'python' | 'node'): void {
+  const out = readCopy(lang, path.join(fixture, 'readers', lang), ['--sources', 'src', '--tests', 'tests']);
+  const file = READER_FILES[lang].receivers;
   const table = out.scopes.find((s) => s.file === file && s.name === 'MAKERS');
-  assert.ok(table !== undefined, `python has no scope MAKERS: ${out.scopes.map((s) => s.name).join(', ')}`);
-  assert.ok(table.uses.some((u) => JSON.stringify(u) === JSON.stringify({ kind: 'new', class: { file: READER_FILES.python.widget, name: 'Widget' } })), JSON.stringify(table.uses));
+  assert.ok(table !== undefined, `${lang} has no scope MAKERS: ${out.scopes.map((s) => s.name).join(', ')}`);
+  assert.ok(table.uses.some((u) => JSON.stringify(u) === JSON.stringify({ kind: 'new', class: { file: READER_FILES[lang].widget, name: 'Widget' } })), JSON.stringify(table.uses));
   const tabled = out.scopes.find((s) => s.file === file && s.name === 'Receivers.tabled');
   const read: Expr = { kind: 'member', of: { kind: 'module', file }, name: 'MAKERS', call: false };
   assert.ok(tabled?.uses.some((u) => JSON.stringify(u) === JSON.stringify(read)), JSON.stringify(tabled?.uses));
+}
+
+test('the Python reader writes a scope for a table of the module and a use of the table where a method reads it', () => {
+  assertTable('python');
 });
 
 test('the Node reader writes a use of a table of the module where a method reads it', () => {
-  const out = readCopy('node', path.join(fixture, 'readers', 'node'), ['--sources', 'src', '--tests', 'tests']);
-  const file = READER_FILES.node.receivers;
-  const table = out.scopes.find((s) => s.file === file && s.name === 'MAKERS');
-  assert.ok(table !== undefined, `node has no scope MAKERS: ${out.scopes.map((s) => s.name).join(', ')}`);
-  assert.ok(table.uses.some((u) => JSON.stringify(u) === JSON.stringify({ kind: 'new', class: { file: READER_FILES.node.widget, name: 'Widget' } })), JSON.stringify(table.uses));
-  const tabled = out.scopes.find((s) => s.file === file && s.name === 'Receivers.tabled');
-  const read: Expr = { kind: 'member', of: { kind: 'module', file }, name: 'MAKERS', call: false };
-  assert.ok(tabled?.uses.some((u) => JSON.stringify(u) === JSON.stringify(read)), JSON.stringify(tabled?.uses));
+  assertTable('node');
 });
 
 const RECIPE_TREES: Record<Lang, string[]> = {
@@ -871,6 +870,11 @@ test('a call on a class reaches the member of the nearest class that it extends 
   assert.deepEqual(stated(units, ['box.run'], run).findings, []);
 });
 
+// The call of the member `member` of the value of the own property `property`.
+function throughProperty(property: string, member: string): Expr {
+  return { kind: 'member', of: { kind: 'member', of: { kind: 'own' }, name: property, call: false }, name: member, call: true };
+}
+
 test('a read of a property whose type is written has that class, also when a class that it extends declares it', () => {
   const units: Written[] = [
     { unit: 'base', properties: [['held', 'item']], members: [] },
@@ -882,8 +886,8 @@ test('a read of a property whose type is written has that class, also when a cla
       unit: 'box',
       method: 'run',
       uses: [
-        { kind: 'member', of: { kind: 'member', of: { kind: 'own' }, name: 'item', call: false }, name: 'size', call: true },
-        { kind: 'member', of: { kind: 'member', of: { kind: 'own' }, name: 'held', call: false }, name: 'grow', call: true },
+        throughProperty('item', 'size'),
+        throughProperty('held', 'grow'),
       ],
     },
   ];
@@ -984,7 +988,7 @@ test('a member read through a property whose written type is a union of classes 
     { unit: 'other', members: [{ name: 'size', kind: 'method', visibility: 'internal' }] },
   ];
   const run = (): ReturnType<Parameters<typeof stated>[2]> => [
-    { unit: 'box', method: 'run', uses: [{ kind: 'member', of: { kind: 'member', of: { kind: 'own' }, name: 'held', call: false }, name: 'size', call: true }] },
+    { unit: 'box', method: 'run', uses: [throughProperty('held', 'size')] },
   ];
   assert.deepEqual(stated(units, ['box.run'], run).findings, []);
 });
