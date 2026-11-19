@@ -1,11 +1,12 @@
 <!-- doc-id: changelog -->
-<!-- source-sha256: 59061f01761114c5176de18a77aaa917b5f438af875451a00a6e4a17eb720d6a -->
+<!-- source-sha256: 6e380c6b982a3de142a8dd809f5e574e2100aaed193c2f7ca76357add5f5ed8d -->
 # 변경 기록
 
 [English](CHANGELOG.md).
 
 ## Unreleased
 
+- `make hyper-test-python PYTHON_TESTS="tests/test_core_rules.py"`가 테스트 10개를 통과한다(H35.193). 입력: `packages/python/tests/test_core_rules.py`의 표 `EXACT`, 그 21행은 binding의 멤버 20개를 적는다. 이전 동작: H35.113이 `kept_cookie`를, H35.180이 `page_tag`를 Python `CoreRules`에서 지운 뒤에도 `test_there_are_twenty_two_exact_units`가 멤버 22개를 세어 `AssertionError: 20 != 22`로 실패했다. 지금: `test_there_are_twenty_exact_units`가 표가 적는 멤버 20개를 센다.
 - `make recipe-compare`가 확장 unit에 `ONLY_MISSING` 줄을 보고하지 않는다(H35.179, HYR-5, HYR-6). 입력: native 항목이 확장 class를 적는 `contracts/interfaces.json`의 unit, 예를 들어 `hyper-value-error`. 이전 동작: `checkOnly`가 `withoutExtensions`가 확장 항목을 지운 뒤의 spec을 읽어 `ONLY_MISSING unit hyper-value-error has no <lang> native code` 6줄을 보고했고, `only`가 제외하는 확장 항목은 보고하지 않았다. 현재 동작: `withoutExtensions`가 확장 항목의 언어를 `extensions`에 남기고, `checkOnly`는 그것을 native 코드로 세며, 제외된 확장 항목은 `ONLY_MISMATCH`로 실패하고, candidate는 `extensions`를 다시 쓰지 않는다. `make hyper-test-scripts TESTS=tests/scripts/recipe-check.test.mts`와 `make recipe-compare`로 확인했다.
 - `make hyper-test-scripts TESTS=tests/scripts/node-core.test.mts`가 테스트 46개를 통과한다(H35.188-1). 입력: Node 서버의 `coreRules`가 binding에 요구하는 멤버. 이전 동작: `core-rules.pageTag`가 PHP만의 멤버가 된 뒤(H35.180) 어떤 Node unit도 `pageTag`를 부르지 않는데 `MEMBERS`와 `CoreBinding`이 그것을 적어서, "each member that coreRules requires has a test of the unit that calls it" 테스트가 `pageTag`로 실패했다. 지금: Node는 `pageTag`를 요구하지 않고, `contracts/interfaces.json`의 `CoreBinding` 선언도 그것을 적지 않는다.
 - `make recipe-compare`가 새 줄 없이 70개 대신 67개 줄을 보고한다(H35.188). 입력: Node와 Python 서버의 form 해석과 session record. 이전 동작: `Fields.parse`, `BodyReader`, `UploadedFile`, `Request`, `FileSession`이 binding 함수 하나로 넘기기만 하는 core-rules 멤버(`formStart`, `formReadHeld`, `formParseUrlencoded`, `uploadedFile`, `sessionValue`, `sessionRecord`)를 부르고, body의 한도를 그곳에서 계산하고(`bodyLimits`), library 오류를 그곳에서 변환했다(`libraryError`). 그래서 Python 멤버 `request.constructor`, `request.withHeader`, `request.withMedia`, `request.withSelection`, `session.putFlash`, `session.renew`가 PHP 멤버는 닿지 않는 `core-rules.shared`와 `core-rules.constructor`에 닿았고, Node는 계약이 적지 않은 `CoreRules.uploadedFile`을 가졌다. 지금: 세 서버가 PHP가 extension 함수를 부르듯이 form과 session record에 binding을 직접 부른다. Python은 `polyspec.hyper._binding._root`로, Node는 `core-rules.ts`의 `binding()`으로 부른다. `BodyReader`가 한도를 직접 `NO_LIMIT`로 제한하고, library 오류 변환은 private 멤버 `file-session.libraryError`이며, 그 멤버들은 core-rules와 그 계약 항목에서 빠진다. 검증: `make recipe-compare`(정렬한 diff: 이 3줄이 사라지고 추가된 줄 없음), `make lint-python`, `make typecheck`.

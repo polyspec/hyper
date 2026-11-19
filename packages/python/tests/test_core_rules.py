@@ -238,8 +238,9 @@ class CoreRulesTest(unittest.TestCase):
                 self.assertEqual(call(CoreRules(core)), result)
                 self.assertEqual(calls, [(name, args)])
 
-    def test_there_are_twenty_two_exact_units(self):
-        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 22)
+    def test_there_are_twenty_exact_units(self):
+        # Two rows of Csrf.browser_of name one member, so 21 rows name 20 members.
+        self.assertEqual(len({name for _, name, _, _, _ in EXACT}), 20)
 
     def test_the_frame_headers_are_a_record_in_the_order_of_the_core(self):
         # HY-45.5, HY-65.1
