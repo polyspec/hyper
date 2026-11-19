@@ -3174,13 +3174,6 @@
                   "symbol": "packages/ts/src/app/context.ts::Context.text",
                   "signature": "static text(map: MapValue): string"
                 }
-              },
-              "only": {
-                "languages": [
-                  "php",
-                  "python"
-                ],
-                "sentence": "HY-125.10"
               }
             },
             {
@@ -12963,13 +12956,15 @@
                 "php": {
                   "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::json",
                   "signature": "private function json(Request $request, Session $session, Reply $reply, int $status, string $body): Response"
+                },
+                "node": {
+                  "symbol": "packages/ts/src/page/page.ts::Page.json",
+                  "signature": "private static json(answer: Exclude<Answer, { readonly answer: 'no_page' }>, masked: string, session: Session): { json: boolean; body: string; maskedToken: string; token: string }"
+                },
+                "python": {
+                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._json",
+                  "signature": "def _json(answer: Any, masked: str, session: Session) -> tuple[bool, str, str, str]"
                 }
-              },
-              "only": {
-                "languages": [
-                  "php"
-                ],
-                "sentence": "HY-53"
               }
             },
             {

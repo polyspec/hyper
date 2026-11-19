@@ -73,7 +73,7 @@ export type PageStepInput =
   | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, unknown> }
   | { readonly input: 'reply'; readonly embeds: boolean; readonly stored: ReadonlyMap<string, ReadonlyMap<string, unknown>>; readonly status?: number | null };
 
-type Answer =
+export type Answer =
   | { readonly answer: 'document'; readonly status: number; readonly html: string }
   | { readonly answer: 'json'; readonly status: number; readonly text: string }
   | { readonly answer: 'no_page' };
