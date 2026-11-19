@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { applyMutation, readMutations, track } from '../../scripts/recipe/mutations.mts';
 import { checkStated } from '../../scripts/recipe/stated.mts';
-import { expectedDirectory } from '../../scripts/recipe/names.mts';
+import { expectedDirectory, testKey } from '../../scripts/recipe/names.mts';
 import { emptySources, type ClassRef, type Expr, type Lang, type Member, type Parameter, type Scope, type SourceClass, type Sources, type Spec, type SpecDocument, type Unit } from '../../scripts/recipe/types.mts';
 import { validators } from '../../scripts/recipe/validators.mts';
 import { withoutExtensions } from '../../scripts/recipe/run.mts';
@@ -991,4 +991,16 @@ test('a local that a PHP instanceof check narrows to a class of the tree has tha
   assert.deepEqual(scope?.assigns.filter((a) => a.target === 'result' && a.type !== undefined).map((a) => a.type), [{ file: 'src/Result.php', name: 'Result' }]);
   const isRedirect = scope?.uses.find((u) => u.kind === 'member' && u.name === 'isRedirect');
   assert.deepEqual(isRedirect, { kind: 'member', of: { kind: 'variable', name: 'result' }, name: 'isRedirect', call: true });
+});
+
+test('a native test name that contains ": " is keyed by its whole name when the test exists (H35.113)', () => {
+  // The reference is `<file>::<name>: <reason>`, and a name may contain `: ` itself, so the key is the name that the
+  // test file declares, not the text up to the first `: `.
+  const known = new Set(['packages/ts/tests/http.test.ts::the field lines > joined: no media type']);
+  assert.equal(
+    testKey('packages/ts/tests/http.test.ts::the field lines > joined: no media type: HY-42.14 gives 400', known),
+    'packages/ts/tests/http.test.ts::the field lines > joined: no media type',
+  );
+  // Without a declared name the first `: ` still ends the key, as before.
+  assert.equal(testKey('packages/ts/tests/x.test.ts::a name: a reason'), 'packages/ts/tests/x.test.ts::a name');
 });
