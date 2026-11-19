@@ -17,7 +17,7 @@ export function isObject(v: unknown): v is Json {
 export type Spec = {
   schema: 1;
   languages: Record<Lang, { sources: string[]; tests: string[]; barrel: string[] }>;
-  runners: Record<Lang, { runner: string; steps: string; registry: string }> & Record<'browser' | 'build', { runner: string }>;
+  runners: Record<Lang, { runner: string; steps: string; registry: string; tests?: string[] }> & Record<'browser' | 'build', { runner: string }>;
   caseReaders: Record<Lang, string>;
   outside: { rule: string; reason: string }[];
   // The groups of HYR-4: each is a directory of the sources that holds the files of the units of its concerns.

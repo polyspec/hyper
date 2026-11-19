@@ -38,17 +38,51 @@
     "php": {
       "runner": "packages/php/tests/CaseRunnerTest.php::CaseRunnerTest::testCases",
       "steps": "packages/php/tests/Support/Steps",
-      "registry": "packages/php/tests/Support/CaseSteps.php"
+      "registry": "packages/php/tests/Support/CaseSteps.php",
+      "tests": [
+        "packages/php/tests/CaseRulesTest.php::CaseRulesTest::testAnErrorOfHyperIsRaises: HYR-11 an error of hyper, whose classes include one named Hyper<Category>Error, is the failure that a step compares as `raises`.",
+        "packages/php/tests/CaseRulesTest.php::CaseRulesTest::testAnErrorOfTheStepIsNoRaises: HYR-7 any other error is an error of the step, which fails the case as it was raised.",
+        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testAFileNameSelectsTheCasesOfTheFile: HYR-7 a file name of RECIPE_CASES selects the cases of the file.",
+        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testAFileAndASectionSelectTheCasesOfTheSection: HYR-7 `<file>#<section>` of RECIPE_CASES selects the cases of the section.",
+        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testAnIdSelectsItsCasesInEveryFile: HYR-7 an id of RECIPE_CASES selects the cases of the id in every file.",
+        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testSeveralNamesSelectEachCaseOnceInTheOrderOfTheRunner: HYR-7 several names select each case once, in the order of the runner.",
+        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testANameThatSelectsNoCaseFailsWithTheSelection: HYR-7 a name that selects no case fails before a case runs.",
+        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testASelectionWithoutANameFails: HYR-7 a selection without a name fails.",
+        "packages/php/tests/CaseSelectionTest.php::CaseSelectionTest::testTheNamesOfASelectionAreItsWords: HYR-7 the names of a selection are the words of RECIPE_CASES."
+      ]
     },
     "node": {
       "runner": "packages/ts/tests/case-runner.test.ts::cases",
       "steps": "packages/ts/tests/steps",
-      "registry": "packages/ts/tests/case-runner.test.ts"
+      "registry": "packages/ts/tests/case-runner.test.ts",
+      "tests": [
+        "packages/ts/tests/case-rules.test.ts::reports an error of hyper as raises: HYR-11 an error of hyper, whose classes include one named Hyper<Category>Error, is the failure that a step compares as `raises`.",
+        "packages/ts/tests/case-rules.test.ts::throws an error of the step again: HYR-7 any other error is an error of the step, which fails the case as it was raised.",
+        "packages/ts/tests/case-selection.test.ts::selects the cases of a file: HYR-7 a file name of RECIPE_CASES selects the cases of the file.",
+        "packages/ts/tests/case-selection.test.ts::selects the cases of a section of a file: HYR-7 `<file>#<section>` of RECIPE_CASES selects the cases of the section.",
+        "packages/ts/tests/case-selection.test.ts::selects the cases of an id in every file: HYR-7 an id of RECIPE_CASES selects the cases of the id in every file.",
+        "packages/ts/tests/case-selection.test.ts::selects the cases of several names once, in the order of the runner: HYR-7 several names select each case once, in the order of the runner.",
+        "packages/ts/tests/case-selection.test.ts::fails for a name that selects no case, and names it and the selection: HYR-7 a name that selects no case fails, and the failure names it and the selection.",
+        "packages/ts/tests/case-selection.test.ts::fails for a selection without a name: HYR-7 a selection without a name fails.",
+        "packages/ts/tests/case-selection.test.ts::runs only the selected cases and states the selection in the first line of the results file: HYR-7 a selected run runs only the selected cases and writes the line SELECTION first.",
+        "packages/ts/tests/case-selection.test.ts::fails before a case runs for a name that selects no case, and writes no results file: HYR-7 a name that selects no case fails before a case runs."
+      ]
     },
     "python": {
       "runner": "packages/python/tests/test_case_runner.py::CaseRunner.test_cases",
       "steps": "packages/python/tests/steps",
-      "registry": "packages/python/tests/steps/__init__.py"
+      "registry": "packages/python/tests/steps/__init__.py",
+      "tests": [
+        "packages/python/tests/test_case_rules.py::CaseRulesTest.test_an_error_of_hyper_is_raises: HYR-11 an error of hyper, whose classes include one named Hyper<Category>Error, is the failure that a step compares as `raises`.",
+        "packages/python/tests/test_case_rules.py::CaseRulesTest.test_an_error_of_the_step_is_no_raises: HYR-7 any other error is an error of the step, which fails the case as it was raised.",
+        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_file_name_selects_the_cases_of_the_file: HYR-7 a file name of RECIPE_CASES selects the cases of the file.",
+        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_file_and_a_section_select_the_cases_of_the_section: HYR-7 `<file>#<section>` of RECIPE_CASES selects the cases of the section.",
+        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_an_id_selects_its_cases_in_every_file: HYR-7 an id of RECIPE_CASES selects the cases of the id in every file.",
+        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_several_names_select_each_case_once_in_the_order_of_the_runner: HYR-7 several names select each case once, in the order of the runner.",
+        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_name_that_selects_no_case_fails_with_the_selection: HYR-7 a name that selects no case fails before a case runs.",
+        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_a_selection_without_a_name_fails: HYR-7 a selection without a name fails.",
+        "packages/python/tests/test_case_selection.py::CaseSelectionTest.test_the_names_of_a_selection_are_its_words: HYR-7 the names of a selection are the words of RECIPE_CASES."
+      ]
     },
     "browser": {
       "runner": "packages/client/tests/case-runner.test.ts::cases"
@@ -6207,6 +6241,7 @@
                 "sentence": "HY-100.30"
               },
               "tests": [
+                "packages/php/tests/RequestTest.php::RequestTest::testFromGlobalsFailsWithoutARequestUri: Only the PHP server reads the request target from REQUEST_URI of the SAPI; a request without it fails, so that run answers it with the plain 500 of HY-60, and is not read as the request of the path / (HY-100.2).",
                 "packages/php/tests/RequestTest.php::RequestTest::testTheMethodOfTheSapiIsReadInUpperCase: Only PHP reads the request from the variables of the SAPI; the test sets REQUEST_METHOD to a lower case method and asserts that Request::fromGlobals holds it in upper case (HY-100.31).",
                 "packages/php/tests/RequestTest.php::RequestTest::testFromGlobalsTakesTheTargetFromTheRequestUri: Only the PHP server builds a request from the values of the SAPI; the target is REQUEST_URI (HY-42.1).",
                 "packages/php/tests/RequestTest.php::RequestTest::testFromGlobalsReadsTheQueryFromTheRequestUriAndNotFromGet: Only the PHP server has $_GET beside the request target; the query is read from REQUEST_URI (HY-56.1).",
@@ -11044,9 +11079,6 @@
                 }
               }
             }
-          ],
-          "tests": [
-            "packages/ts/tests/session.test.ts::Session > fails for stored flash values or kept values that are not a map of values: Only a JavaScript session store can hold a Map with a symbol value or a key that is no string (HY-54.12); the test asserts that Session fails for stored flash and kept values that values.isMapValue refuses and for a region name that is no string."
           ]
         }
       ]
