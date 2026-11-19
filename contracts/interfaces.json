@@ -12110,33 +12110,6 @@
               }
             },
             {
-              "id": "page.kept",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "request",
-                "session",
-                "map<value>"
-              ],
-              "output": "map<value>",
-              "errors": [],
-              "state": "Returns the conforming kept values of the server and of the cookie, by region and path (HY-38.1).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::kept",
-                  "signature": "private function kept(Polyspec\\Hyper\\Request $request, Polyspec\\Hyper\\Session $session, array $data): array"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/page/page.ts::Page.kept",
-                  "signature": "private kept(request: Request, session: Session, data: Map<string, MapValue>): MapValue"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._kept",
-                  "signature": "def _kept(self, request: Request, session: Session, data: dict) -> dict"
-                }
-              }
-            },
-            {
               "id": "page.document",
               "kind": "method",
               "visibility": "private",
@@ -12157,109 +12130,13 @@
                 "php": {
                   "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::document",
                   "signature": "private function document(Polyspec\\Hyper\\Request $request, array $route, array $shared, ?array $context, array $data, array $templates, array $kept, bool $embed): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._document",
-                  "signature": "def _document(self, request: Request, route: dict, shared: dict, context: Optional[dict], data: dict, templates: dict, kept: dict, embed: bool) -> str"
                 }
               },
               "only": {
                 "languages": [
-                  "php",
-                  "python"
+                  "php"
                 ],
                 "sentence": "HY-48.1"
-              }
-            },
-            {
-              "id": "page.present",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "value",
-                "map<value>"
-              ],
-              "output": "list<string>",
-              "errors": [],
-              "state": "Returns the names of the route regions that are present in the data (HY-75.2).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::present",
-                  "signature": "private static function present(array $route, array $data): array"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._present",
-                  "signature": "def _present(route: dict, data: dict) -> list[str]"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php",
-                  "python"
-                ],
-                "sentence": "HY-48.1"
-              }
-            },
-            {
-              "id": "page.renderDocument",
-              "kind": "method",
-              "visibility": "private",
-              "inputs": [
-                "request",
-                "value",
-                "map<value>",
-                "optional<map<value>>",
-                "value",
-                "map<value>",
-                "map<value>",
-                "map<string>",
-                "map<value>",
-                "boolean"
-              ],
-              "output": "string",
-              "errors": [],
-              "state": "Renders the layout with the regions of the route and the embedded data (HY-12.1, HY-31.1).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::renderDocument",
-                  "signature": "private function renderDocument(Polyspec\\Hyper\\Request $request, array $route, array $shared, ?array $context, Polyspec\\Template\\BoundMap $boundShared, array $data, array $applied, array $templates, array $kept, bool $embed): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._render_document",
-                  "signature": "def _render_document(self, request: Request, route: dict, shared: dict, context: Optional[dict], bound_shared, data: dict, applied: dict, templates: dict, kept: dict, embed: bool) -> str"
-                }
-              },
-              "only": {
-                "languages": [
-                  "php",
-                  "python"
-                ],
-                "sentence": "HY-48.1"
-              }
-            },
-            {
-              "id": "page.decodedCookie",
-              "kind": "static method",
-              "visibility": "private",
-              "inputs": [
-                "optional<string>"
-              ],
-              "output": "value",
-              "errors": [],
-              "state": "Returns the readable values of the hy-keep cookie by region, which rules.kept_cookie of the core reads, or null for a cookie that is absent (HY-38.11, HY-42.1).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Page/Page.php::Polyspec\\Hyper\\Page::decodedCookie",
-                  "signature": "private static function decodedCookie(?string $text): mixed"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/page/page.ts::Page.decodedCookie",
-                  "signature": "private static decodedCookie(text: string | null): Value"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/page/_page.py::Page._decoded_cookie",
-                  "signature": "def _decoded_cookie(text: Optional[str]) -> object"
-                }
               }
             }
           ]
