@@ -1,5 +1,5 @@
 <!-- doc-id: dependencies -->
-<!-- source-sha256: 5c8be2bc600ea81523e9dbd6e6d32b5dc880907dd53087812f7089f66f92a7a8 -->
+<!-- source-sha256: 7833d4c87f4c92889599c6ca073c3ed0e47860346737f00b7627014c77b62423 -->
 # 의존성
 
 [English](dependencies.md).
@@ -56,7 +56,7 @@ PHP 8.4의 기본 `request_parse_body()`도 검토했으나 채택하지 않았�
 
 ## release의 plain 파일 고정
 
-H35.11이 구현했고 아직 실행하지 않았다. `config/release-files.json`이 binding 0.0.22 위의 release인 http-form v0.0.4의 파일을 고정하고, `make hyper-install-release-files`가 그것을 설치하며, `tests/scripts/release-file-pins.test.mts`가 그 pin을 테스트하고, `contracts/interfaces.json`의 `caseFiles`가 `fields.json`과 `forms.json`을 `release: "http-form"`으로 선언하며, recipe check와 세 언어의 case reader가 그것을 설치된 파일로 찾는다. `tests/legacy/fields.json`은 지웠다.
+H35.11이 구현했고 아직 실행하지 않았다. `config/release-files.json`이 binding 0.0.22 위의 release인 http-form v0.0.4의 파일을 고정하고, `make hyper-install-release-files`가 그것을 설치하며, `tests/scripts/release-file-pins.test.mts`가 그 pin을 테스트하고. H35.162부터 `contracts/interfaces.json`은 http-form이 스스로 검증하는 http-form의 case 파일을 적지 않으므로(`docs/spec/recipe.md`의 HYR-7), 어떤 case runner와 recipe check도 설치된 파일을 읽지 않는다. `tests/legacy/fields.json`은 지웠다.
 
 패키지 관리자는 패키지를 lock으로 고정한다. http-form의 case 파일 `fields.json`과 `forms.json`처럼 release가 asset으로 내는 plain 파일에는 패키지 관리자가 없으므로, 저장소가 release tag와 파일의 sha256으로 직접 고정한다(HR-80).
 
@@ -82,6 +82,6 @@ H35.11이 구현했고 아직 실행하지 않았다. `config/release-files.json
 - **설치 target.** `make hyper-install-release-files`는 `$(ONLINE)`으로 `scripts/install-release-files.mts`를 실행하고, `make hyper-install`이 그것을 실행한다. script는 각 항목의 파일마다 URL을 자기 process의 staging 파일로 내려받고 byte의 sha256을 계산하며, digest가 고정된 것일 때만 rename 한 번으로 파일을 낸다(`writeFileAtomic`, HR-82). 다른 digest는 URL, 고정된 digest, 계산한 digest를 밝히며 실패하고 아무것도 쓰지 않는다. 고정된 digest로 이미 있는 파일은 다시 내려받지 않으므로 target은 멱등이다. script는 `files.json`도 release의 목록도 읽지 않는다. 검사나 설치는 release가 무엇을 가졌는지 live service에 묻지 않기 때문이다(HR-89). `npm ci`가 lock이 고정한 것을 내려받듯 고정된 URL만 내려받는다.
 - **파일의 자리.** `var/release-files/<library>/<tag>/<path>`, 예를 들어 `var/release-files/http-form/vX.Y.Z/contracts/fields.json`이다. `/var/`는 ignore되어 있고, 경로의 tag는 고정이 옮겨진 뒤에 이전 고정의 파일이 읽히지 않게 한다.
 - **고정의 테스트.** `tests/scripts/template-pins.test.mts`의 형태를 따르는 `tests/scripts/release-file-pins.test.mts`다. 항목의 tag는 `v`와 정확한 version이며 그 라이브러리의 Cargo 의존성 줄의 tag와 같다. 각 URL은 `<repository>/releases/download/<tag>/<경로의 base name>`이다. 각 sha256은 소문자 16진수 64자리다. 설치 target의 recipe는 `$(ONLINE)`으로 내려받으며, 이는 dry run에서 읽는다(`tests/scripts/make-dry-run.mts`의 `dryRun`, HR-83). 그리고 `requireBuilt('hyper-install-release-files', <설치된 경로>)` 뒤에, 설치된 각 파일의 sha256은 고정된 것이다. 테스트는 요청을 하지 않는다.
-- **case runner가 파일을 찾는 방법.** `contracts/interfaces.json`의 `caseFiles`는 `tests/legacy/interfaces.json`의 선언 대신 `fields.json`과 `forms.json`을 `release: "http-form"`으로 선언하고, 각 언어의 case reader(`packages/ts/tests/case-rules.ts`의 `caseFileUrl`과 PHP, Python의 같은 것)는 그런 파일을 `config/release-files.json`의 tag와 경로로 위의 경로에 대응시킨다. 파일을 찾지 못한 reader는 그 경로와 그것을 쓰는 target `make hyper-install-release-files`를 밝히며 실패하고 아무것도 내려받지 않는다. 어떤 검사도 처음 쓸 때 설치하지 않기 때문이다(HR-81, HR-85). 그 파일을 읽는 script 테스트는 `requireBuilt`와 그 target으로 파일을 지명한다. case runner를 실행하는 CI group은 설치에 그 target을 적는다.
+- **case runner가 파일을 찾는 방법.** `contracts/interfaces.json`의 `caseFiles` 항목은 `release`로 library를 적으며(H35.162부터 그런 항목은 없다), 각 언어의 case reader(`packages/ts/tests/case-rules.ts`의 `caseFileUrl`과 PHP, Python의 같은 것)는 그런 파일을 `config/release-files.json`의 tag와 경로로 위의 경로에 대응시킨다. 파일을 찾지 못한 reader는 그 경로와 그것을 쓰는 target `make hyper-install-release-files`를 밝히며 실패하고 아무것도 내려받지 않는다. 어떤 검사도 처음 쓸 때 설치하지 않기 때문이다(HR-81, HR-85). 그 파일을 읽는 script 테스트는 `requireBuilt`와 그 target으로 파일을 지명한다. case runner를 실행하는 CI group은 설치에 그 target을 적는다.
 - **경로 밖에서 바뀌는 것.** http-form의 case는 binding의 case 형태다. body와 text는 `{"hex": …}`, content type은 `content_type`, 제한은 record `limits`, 실패는 kind, 상태, category를 가진 `raises`다. 고정 사본은 text, `type`, 제한 field 넷, null 결과를 가진다. 그래서 section의 선언과 세 runner의 step이 고정과 함께 바뀌고, runner는 http-form의 `packages/rust/interface.json`이 연결한 group과 scenario group `streamed`, `body`를 읽는다.
 

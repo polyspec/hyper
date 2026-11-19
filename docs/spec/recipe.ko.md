@@ -1,5 +1,5 @@
 <!-- doc-id: recipe -->
-<!-- source-sha256: edb5423a9ff3f5fc767ba7cf2d9a92c370b47b3d8602a7933e55de23d76f2273 -->
+<!-- source-sha256: 112631cd6ec4799b6386b2eb90f9091e825154d0db238db2185fb27b3737c32d -->
 # 서버의 레시피
 
 PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을 구현한다. 이 서버들의 레시피는 세 부분으로 이루어진다.
@@ -247,15 +247,11 @@ PHP, Node, Python 서버는 하나의 프로토콜(`contracts/protocol.json`)을
     `runners`는 `php`, `node`, `python`에 대해 step의 디렉터리(`steps`)와 runner의 registry(`registry`), 곧 각 section을
     그 step에 대응시키는 파일도 적는다.
     session-store library가 가진 case 파일 `file-store-sessions.json`은 `tests/legacy`에서 읽으며,
-    그 선언은 `tests/legacy/interfaces.json`에 있다. `caseFiles` 항목이 `release`에 library를 적은 case 파일, 곧
-    http-form의 `fields.json`과 `forms.json`은 `var/release-files/<library>/<tag>/contracts/<file>`에서 읽는다. 이 파일은
-    `make hyper-install-release-files`가 `config/release-files.json`의 pin으로 쓰며, 그것을 찾지 못한 reader는 그 경로와
-    그 target을 적고 실패한다.
-    그런 파일의 `caseFiles` 항목은 파일의 모든 최상위 key를 선언하고, `php`, `node`, `python`의 각 runner는 그 모든
-    section을 실행한다. runner가 뺀 section은 hyper가 받는 release의 case를 좁히고, reader는 항목이 선언하지 않은 key를
-    실패시킨다(`FILE_UNDECLARED`). case 목록이 아닌 값의 key, 예를 들어 binding 계층의 case를 나열하는 `forms.json`의
-    `binding`은 `fixtures`에 선언한다. step이 서버에 없는 member를 필요로 하는 section은 release를 고정하는 행 아래의
-    checklist 행이 되어 필요한 member를 적으며, runner가 빼는 section이 되지 않는다.
+    그 선언은 `tests/legacy/interfaces.json`에 있다.
+    hyper의 recipe는 hyper 자신의 unit만 다룬다: 의존성의 case 파일, 예를 들어 http-form의 `fields.json`과 `forms.json`은
+    그 의존성이 검증하며, hyper의 contract는 의존성의 case 파일을 적지 않는다. hyper의 case 파일은
+    `contracts/interfaces.json`의 `caseFiles` 항목이고, 그 reader는 `caseReaders`가 적는 case reader와 `runners`가 적는
+    registry의 step이다(이 규칙).
   - **Steps.** 한 언어에서 section의 step은 그 언어의 `steps` 디렉터리 아래, case 파일의 words와 section의 이름이 정하는
     자리에 있는 함수 하나다: PHP는 `<Words>Steps.php`의 class `<Words>Steps`의 static method `<section>`, Node는
     `<words>.ts`가 export하는 객체 `steps`의 property `<section>`, Python은 `<words>_steps.py`의 snake_case 함수

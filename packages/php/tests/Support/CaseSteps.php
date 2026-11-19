@@ -14,7 +14,6 @@ use Polyspec\Hyper\Tests\Support\Steps\ContextSteps;
 use Polyspec\Hyper\Tests\Support\Steps\ContainerSteps;
 use Polyspec\Hyper\Tests\Support\Steps\CookiesSteps;
 use Polyspec\Hyper\Tests\Support\Steps\CsrfSteps;
-use Polyspec\Hyper\Tests\Support\Steps\FieldsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\FunctionsSteps;
 use Polyspec\Hyper\Tests\Support\Steps\JsonSteps;
 use Polyspec\Hyper\Tests\Support\Steps\KeepSteps;
@@ -48,10 +47,6 @@ final class CaseSteps
             'csrf.json masked' => CsrfSteps::masked(...),
             'csrf.json verify' => CsrfSteps::verify(...),
             'csrf.json browser' => CsrfSteps::browser(...),
-            'fields.json urlencoded' => FieldsSteps::urlencoded(...),
-            'fields.json multipart' => FieldsSteps::multipart(...),
-            'fields.json streamed' => FieldsSteps::streamed(...),
-            'forms.json multipart' => FieldsSteps::multipart(...),
             'json.json encode' => JsonSteps::encode(...),
             'json.json decode' => JsonSteps::decode(...),
             'keep.json cases' => KeepSteps::cases(...),
