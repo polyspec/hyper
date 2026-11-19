@@ -7452,6 +7452,21 @@
                   "signature": "def largest(self) -> int"
                 }
               }
+            },
+            {
+              "id": "files.sizes",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [],
+              "output": "number[]",
+              "errors": [],
+              "state": "Returns the size in bytes of each file of the body (HY-114).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/form/files.ts::Files.sizes",
+                  "signature": "sizes(): number[]"
+                }
+              }
             }
           ]
         },
@@ -10892,6 +10907,23 @@
                   "signature": "def _record_values(record: bytes, id: str) -> dict"
                 }
               }
+            },
+            {
+              "id": "record-session.isArrayKey",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "unknown"
+              ],
+              "output": "key is number | bigint | string | Uint8Array",
+              "errors": [],
+              "state": "Tells whether a key is an array key of the data model: an integer, a text or bytes (HY-104.13).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/session/record-session.ts::isArrayKey",
+                  "signature": "function isArrayKey(key: unknown): key is number | bigint | string | Uint8Array"
+                }
+              }
             }
           ],
           "only": {
@@ -12896,6 +12928,24 @@
                   "signature": "def _decoded_cookie(text: Optional[str]) -> object"
                 }
               }
+            },
+            {
+              "id": "page.resultMap",
+              "kind": "static method",
+              "visibility": "private",
+              "inputs": [
+                "unknown",
+                "string"
+              ],
+              "output": "ReadonlyMap<string, unknown>",
+              "errors": [],
+              "state": "Returns the result of a handler as the map that a step of the core takes: a Map as it is, and a plain object as the map of its own entries (HY-44.4).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/page/page.ts::Page.resultMap",
+                  "signature": "private static resultMap(value: unknown, source: string): ReadonlyMap<string, unknown>"
+                }
+              }
             }
           ]
         }
@@ -13438,6 +13488,23 @@
                 "python": {
                   "symbol": "packages/python/src/polyspec/hyper/representation/_representation_entries.py::RepresentationEntries._vary_names",
                   "signature": "def _vary_names(route: str, kind: str, raw: object) -> tuple[str, ...]"
+                }
+              }
+            },
+            {
+              "id": "representation-entries.invalid",
+              "kind": "function",
+              "visibility": "private",
+              "inputs": [
+                "string"
+              ],
+              "output": "Error",
+              "errors": [],
+              "state": "Returns the failure of a representation declaration or handler, which fails the open of the application (HY-118.5).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/representation/representation-entries.ts::invalid",
+                  "signature": "function invalid(message: string): Error"
                 }
               }
             }
