@@ -1918,19 +1918,17 @@
               ],
               "output": "string",
               "errors": [],
-              "state": "The tag of a JSON response of Page.respond: rules.page_tag (HY-53.1).",
+              "state": "The tag of a JSON response of Page.respond: rules.page_tag (HY-53.1). Only the PHP server writes the headers of a JSON response itself; the Node and the Python servers take the tag with the other headers from compute_page_headers of the core.",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-53.1"
+              },
               "native": {
                 "php": {
                   "symbol": "packages/php/src/App/CoreRules.php::Polyspec\\Hyper\\CoreRules::pageTag",
                   "signature": "public function pageTag(string $body, string $maskedToken, string $token): string"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageTag",
-                  "signature": "pageTag(body: string, maskedToken: string, token: string): string"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.page_tag",
-                  "signature": "def page_tag(self, body: str, masked_token: str, token: str) -> str"
                 }
               }
             },
@@ -2182,8 +2180,7 @@
               "state": "The error of hyper of the category value with its kind, of the classes of the binding, that is a RangeError (HY-133.2).",
               "only": {
                 "languages": [
-                  "node",
-                  "python"
+                  "node"
                 ],
                 "sentence": "HY-133.2"
               },
@@ -2191,10 +2188,6 @@
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.valueError",
                   "signature": "valueError(message: string, kind: string): HyperError & RangeError"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.value_error",
-                  "signature": "def value_error(self, message: str, kind: str) -> ValueError"
                 }
               }
             },
@@ -2211,8 +2204,7 @@
               "state": "The error of hyper of the category type with its kind, of the classes of the binding, that is a TypeError (HY-133.2).",
               "only": {
                 "languages": [
-                  "node",
-                  "python"
+                  "node"
                 ],
                 "sentence": "HY-133.2"
               },
@@ -2220,10 +2212,6 @@
                 "node": {
                   "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.typeError",
                   "signature": "typeError(message: string, kind: string): HyperError & TypeError"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/app/_core_rules.py::CoreRules.type_error",
-                  "signature": "def type_error(self, message: str, kind: str) -> TypeError"
                 }
               }
             },

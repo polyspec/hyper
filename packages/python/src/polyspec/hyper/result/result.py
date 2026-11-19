@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 
 from ..app._core_rules import CoreRules
+from .._binding._errors import HyperTypeError, HyperValueError
 from ..data._data_model import DataModel
 
 # An outside location (HY-132.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
@@ -48,7 +49,7 @@ class Result:
     def outside(location: str) -> Result:
         """Returns an outside redirect to an outside location (HY-132)."""
         if Result.origin(location) is None:
-            raise CoreRules.shared().value_error(
+            raise HyperValueError(
                 "an outside location is not an http or https URL with a host (HY-132)",
                 "not_outside_location",
             )
@@ -87,7 +88,7 @@ class Result:
         the data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.6)."""
         self._refuse_outside()
         if not isinstance(name, str):
-            raise CoreRules.shared().type_error(
+            raise HyperTypeError(
                 "a flash name is not a string (HY-25)", "invalid_argument_type"
             )
         DataModel.check(value)
@@ -104,7 +105,7 @@ class Result:
         place; a topic that is not a string fails with TypeError (HY-25.6)."""
         self._refuse_outside()
         if not all(isinstance(topic, str) for topic in topics):
-            raise CoreRules.shared().type_error(
+            raise HyperTypeError(
                 "a changed topic is not a string (HY-25)", "invalid_argument_type"
             )
         return Result(
@@ -126,7 +127,7 @@ class Result:
     def _refuse_outside(self) -> None:
         """Fails for an outside redirect, which stores no flash value and no changed topic (HY-132)."""
         if self._is_outside():
-            raise CoreRules.shared().value_error(
+            raise HyperValueError(
                 "an outside redirect holds no flash value or changed topic (HY-132)",
                 "outside_redirect_stores",
             )
